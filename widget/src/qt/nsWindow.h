@@ -18,45 +18,15 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 #ifndef Window_h__
 #define Window_h__
 
-#include "nsISupports.h"
 #include "nsWidget.h"
-#include "nsQEventHandler.h"
-#include "nsIAppShell.h"
-#include "nsString.h"
 
-#include <qlayout.h>
-
-class nsFont;
-
-#define NSRGB_2_COLOREF(color) \
-            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
-
-
-//=============================================================================
-//
-// nsQWidget class
-//
-//=============================================================================
-class nsQWidget : public QWidget , public nsQBaseWidget
-{
-    Q_OBJECT
-public:
-	nsQWidget(nsWidget * widget,
-              QWidget * parent = 0, 
-              const char * name = 0, 
-              WFlags f = WResizeNoErase);
-	~nsQWidget();
-        void Destroy();
-};
-
-/**
- * Native QT window wrapper.
- */
-
+/* Native QT window wrapper */
 class nsWindow : public nsWidget
 {
 public:
@@ -67,20 +37,19 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIWidget interface
-    virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+    virtual void ConvertToDeviceCoordinates(nscoord &aX,nscoord &aY);
 
     NS_IMETHOD PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD Scroll(PRInt32 aDx,PRInt32 aDy,nsRect *aClipRect);
 
-    NS_IMETHOD SetTitle(const nsString& aTitle);
+    NS_IMETHOD ConstrainPosition(PRInt32 *aX,PRInt32 *aY);
+    NS_IMETHOD Move(PRInt32 aX,PRInt32 aY);
 
-    NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
-    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
-                                   PRBool aDoCapture,PRBool aConsumeRollupEvent);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
+                                   PRBool aDoCapture,
+                                   PRBool aConsumeRollupEvent);
     NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
     NS_IMETHOD UpdateTooltips(nsRect* aNewTips[]);
     NS_IMETHOD RemoveTooltips();
@@ -89,45 +58,33 @@ public:
     NS_IMETHOD EndResizingChildren(void);
     NS_IMETHOD SetFocus(PRBool aRaise);
 
+    NS_IMETHOD GetBounds(nsRect &aRect);
+    NS_IMETHOD GetBoundsAppUnits(nsRect &aRect,float aAppUnits);
+    NS_IMETHOD GetClientBounds(nsRect &aRect);
+    NS_IMETHOD GetScreenBounds(nsRect &aRect);
+
     virtual PRBool IsChild() const;
     virtual PRBool IsPopup() const { return mIsPopup; };
     virtual PRBool IsDialog() const { return mIsDialog; };
 
-    virtual void SetIsDestroying( PRBool val) { mIsDestroying = val; };
-
-    PRBool IsDestroying() const { return mIsDestroying; }
-
     // Utility methods
     virtual PRBool OnPaint(nsPaintEvent &event);
-    PRBool OnKey(nsKeyEvent &aEvent);
-    PRBool DispatchFocus(nsGUIEvent &aEvent);
-    virtual PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+    virtual PRBool OnKey(nsKeyEvent &aEvent);
+    virtual PRBool DispatchFocus(nsGUIEvent &aEvent);
+    virtual PRBool OnScroll(nsScrollbarEvent &aEvent,PRUint32 cPos);
 
-    char gInstanceClassName[256];
-  
 protected:
-    virtual void InitCallbacks(char * aName = nsnull);
+    virtual void InitCallbacks(char *aName = nsnull);
     NS_IMETHOD CreateNative(QWidget *parentWidget);
 
-    nsIFontMetrics * mFontMetrics;
-    PRBool           mVisible;
-    PRBool           mDisplayed;
-    PRBool           mIsDestroying;
-    PRBool           mBlockFocusEvents;
-    PRBool           mIsDialog;
-    PRBool           mIsPopup;
-
-    // XXX Temporary, should not be caching the font
-    nsFont         * mFont;
-
-    // Resize event management
-    nsRect           mResizeRect;
-    int              mResized;
-    PRBool           mLowerLeft;
+    PRBool mBlockFocusEvents;
+    PRBool mIsDialog;
+    PRBool mIsPopup;
 
     // are we doing a grab?
-    static PRBool      mIsGrabbing;
-    static nsWindow   *mGrabWindow;
+    static PRBool    mIsGrabbing;
+    static nsWindow  *mGrabWindow;
+    PRInt32	     mWindowID;
 };
 
 //
@@ -139,7 +96,8 @@ public:
   ChildWindow();
   ~ChildWindow();
   virtual PRBool IsChild() const;
-  NS_IMETHOD CreateNative(QWidget *parentWidget);
+
+  PRInt32 mChildID;
 };
 
 #endif // Window_h__

@@ -18,19 +18,22 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsCOMPtr.h"
 #include "nsAppShell.h"
-#include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
-#include <stdlib.h>
-#include "nsWidget.h"
-#include <qwindowdefs.h>
-#include "X11/Xlib.h"
+
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRInt32 gAppShellCount = 0;
+PRInt32 gAppShellID = 0;
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -49,13 +52,15 @@ PRBool nsAppShell::mRunning = PR_FALSE;
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::nsAppShell()\n"));
-    NS_INIT_REFCNT();
-    mDispatchListener = 0;
-    mEventQueue = nsnull;
-    mApplication = nsnull;
+  NS_INIT_REFCNT();
+  mDispatchListener = 0;
+  mEventQueue = nsnull;
+  mApplication = nsnull;
+#ifdef DBG_JCG
+  gAppShellCount++;
+  mID = gAppShellID++;
+  printf("JCG: nsAppShell CTOR (%p) ID: %d, Count: %d\n",this,mID,gAppShellCount);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -65,11 +70,14 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::~nsAppShell()\n"));
-      mApplication->Release();
-      mApplication = nsnull;
+  if (mApplication) {
+    mApplication->Release();
+  }
+  mApplication = nsnull;
+#ifdef DBG_JCG
+  gAppShellCount--;
+  printf("JCG: nsAppShell DTOR (%p) ID: %d, Count: %d\n",this,mID,gAppShellCount);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -83,11 +91,8 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 NS_METHOD 
 nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::SetDispatchListener()\n"));
-    mDispatchListener = aDispatchListener;
-    return NS_OK;
+  mDispatchListener = aDispatchListener;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -98,53 +103,26 @@ nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 NS_METHOD nsAppShell::Create(int *bac, char **bav)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::Create()\n"));
+  int argc = bac ? *bac : 0;
+  char **argv = bav;
+  nsresult rv;
 
-    int        argc        = bac ? *bac : 0;
-    char    ** argv        = bav;
-    nsresult   rv          = NS_OK;
-    Display  * aDisplay    = nsnull;
-    Screen   * aScreen     = nsnull;
-
-    // Open the display
-    aDisplay = XOpenDisplay(NULL);
-    
-    if (aDisplay == NULL) {
-      fprintf(stderr, "%s: Cannot connect to X server\n",argv[0]);
-      exit(1);
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
+  if (cmdLineArgs) {
+    rv = cmdLineArgs->GetArgc(&argc);
+    if (NS_FAILED(rv)) {
+      argc = bac ? *bac : 0;
     }
-
-    aScreen = DefaultScreenOfDisplay(aDisplay);
-    
-    nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID);
-    if (cmdLineArgs) {
-        rv = cmdLineArgs->GetArgc(&argc);
-        if(NS_FAILED(rv)) {
-            argc = bac ? *bac : 0;
-        }
-
-        rv = cmdLineArgs->GetArgv(&argv);
-        if(NS_FAILED(rv)) {
-            argv = bav;
-        }
+    rv = cmdLineArgs->GetArgv(&argv);
+    if (NS_FAILED(rv)) {
+      argv = bav;
     }
-
-    if (aDisplay && aScreen) {
-        mApplication = nsQApplication::Instance(aDisplay);
-    }
-    else {
-        mApplication = nsQApplication::Instance(argc, argv);
-    }
-
-    if (!mApplication) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
-
-    mApplication->setStyle(new QWindowsStyle);
-
-    return NS_OK;
+  }
+  mApplication = nsQApplication::Instance(argc,argv);
+  if (!mApplication) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -154,39 +132,39 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spinup()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::Spinup()\n"));
-    nsresult   rv = NS_OK;
+  nsresult rv = NS_OK;
 
-    // Get the event queue service 
-     nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) {
-        NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
-        return rv;
-    }
-    //Get the event queue for the thread.
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+  if (mApplication == nsnull)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    // If a queue already present use it.
-    if (mEventQueue) {
-        goto done;
-    }
-    // Create the event queue for the thread
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_OK != rv) {
-        NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
-        return rv;
-    }
-    //Get the event queue for the thread
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-    if (NS_OK != rv) {
-        NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
-        return rv;
-    }    
+  // Get the event queue service 
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID,&rv);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not obtain event queue service",PR_FALSE);
+    return rv;
+  }
+  //Get the event queue for the thread.
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(mEventQueue));
+
+  // If a queue already present use it.
+  if (mEventQueue) {
+    goto done;
+  }
+  // Create the event queue for the thread
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not create the thread event queue",PR_FALSE);
+    return rv;
+  }
+  //Get the event queue for the thread
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(mEventQueue));
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not obtain the thread event queue",PR_FALSE);
+    return rv;
+  }    
 done:
-    mApplication->AddEventProcessorCallback(mEventQueue);
-    return NS_OK;
+  mApplication->AddEventProcessorCallback(mEventQueue);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -196,16 +174,15 @@ done:
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spindown()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::Spindown()\n"));
-    if (mEventQueue) {
-      mApplication->RemoveEventProcessorCallback(mEventQueue);
-      mEventQueue = nsnull;
-    }
-    return NS_OK;
-}
+  if (mApplication == nsnull)
+    return NS_ERROR_NOT_INITIALIZED;
 
+  if (mEventQueue) {
+    mApplication->RemoveEventProcessorCallback(mEventQueue);
+    mEventQueue = nsnull;
+  }
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -214,22 +191,21 @@ NS_METHOD nsAppShell::Spindown()
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Run()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::Run()\n"));
+  if (mApplication == nsnull)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    if (!mEventQueue)
-      Spinup();
+  if (!mEventQueue) {
+    Spinup();
+  }
+  if (!mEventQueue) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  mRunning = PR_TRUE;
+  mApplication->exec();
+  mRunning = PR_FALSE;
 
-    if (!mEventQueue)
-      return NS_ERROR_NOT_INITIALIZED;
-
-    mRunning = PR_TRUE;
-    mApplication->exec();
-    mRunning = PR_FALSE;
-
-    Spindown();
-    return NS_OK;
+  Spindown();
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -240,36 +216,31 @@ NS_METHOD nsAppShell::Run()
 
 NS_METHOD nsAppShell::Exit()
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::Exit()\n"));
-    if (mRunning)
-      mApplication->exit(0);
+  if (mApplication == nsnull)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    return NS_OK;
+  if (mRunning)
+    mApplication->exit(0);
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::GetNativeEvent()\n"));
-    aRealEvent = PR_FALSE;
-    aEvent = 0;
-    return NS_OK;
+  aRealEvent = PR_FALSE;
+  aEvent = 0;
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::DispatchNativeEvent()\n"));
-    if (!mRunning)
-      return NS_ERROR_NOT_INITIALIZED;
+  if (mApplication == nsnull)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    mApplication->processEvents();
+  if (!mRunning)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    return NS_OK;
+  mApplication->processEvents(1);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,

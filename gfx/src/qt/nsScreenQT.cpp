@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsScreenQT.h"
@@ -25,16 +27,32 @@
 #include <qcolor.h>
 #include <qapplication.h>
 
-nsScreenQT :: nsScreenQT (  )
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gScreenCount = 0;
+PRUint32 gScreenID = 0;
+#endif
+
+nsScreenQT::nsScreenQT()
 {
+#ifdef DBG_JCG
+  gScreenCount++;
+  mID = gScreenID++;
+  printf("JCG: nsScreenQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gScreenCount);
+#endif
   NS_INIT_REFCNT();
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.
 }
 
-nsScreenQT :: ~nsScreenQT()
+nsScreenQT::~nsScreenQT()
 {
+#ifdef DBG_JCG
+  gScreenCount--;
+  printf("JCG: nsScreenQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gScreenCount);
+#endif
   // nothing to see here.
 }
 
@@ -42,7 +60,8 @@ nsScreenQT :: ~nsScreenQT()
 NS_IMPL_ISUPPORTS(nsScreenQT, NS_GET_IID(nsIScreen))
 
 NS_IMETHODIMP
-nsScreenQT :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenQT::GetRect(PRInt32 *outLeft,PRInt32 *outTop,
+                    PRInt32 *outWidth,PRInt32 *outHeight)
 {
   *outTop = 0;
   *outLeft = 0;
@@ -53,7 +72,8 @@ nsScreenQT :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRIn
 } // GetRect
  
 NS_IMETHODIMP
-nsScreenQT :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsScreenQT::GetAvailRect(PRInt32 *outLeft,PRInt32 *outTop,
+                         PRInt32 *outWidth,PRInt32 *outHeight)
 {
   *outTop = 0;
   *outLeft = 0;
@@ -64,14 +84,14 @@ nsScreenQT :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth,
 } // GetAvailRect
  
 NS_IMETHODIMP 
-nsScreenQT :: GetPixelDepth(PRInt32 *aPixelDepth)
+nsScreenQT::GetPixelDepth(PRInt32 *aPixelDepth)
 {
   *aPixelDepth = (PRInt32)QColor::numBitPlanes();
   return NS_OK;
 } // GetPixelDepth
 
 NS_IMETHODIMP 
-nsScreenQT :: GetColorDepth(PRInt32 *aColorDepth)
+nsScreenQT::GetColorDepth(PRInt32 *aColorDepth)
 {
   return GetPixelDepth(aColorDepth);
 } // GetColorDepth

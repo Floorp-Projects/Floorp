@@ -39,7 +39,8 @@ NS_IMPL_ISUPPORTS2(nsFontRetrieverService, nsIFontRetrieverService, nsIFontNameI
 //----------------------------------------------------------
 nsFontRetrieverService::nsFontRetrieverService()
 {
-printf("JCG: nsFontRetrieverService CTOR.\n");
+printf("JCG nsFontRetrieverService CTOR\n");
+
   NS_INIT_REFCNT();
 
   mFontList     = nsnull;
@@ -50,7 +51,8 @@ printf("JCG: nsFontRetrieverService CTOR.\n");
 //----------------------------------------------------------
 nsFontRetrieverService::~nsFontRetrieverService()
 {
-printf("JCG: nsFontRetrieverService DTOR.\n");
+printf("JCG nsFontRetrieverService DTOR\n");
+
   if (nsnull != mFontList) {
     for (PRInt32 i=0;i<mFontList->Count();i++) {
       FontInfo * font = (FontInfo *)mFontList->ElementAt(i);
@@ -131,10 +133,6 @@ NS_IMETHODIMP nsFontRetrieverService::Reset()
 //----------------------------------------------------------
 NS_IMETHODIMP nsFontRetrieverService::Get( nsString* aFontName )
 {
-char *tmp;
-printf("JCG: nsFontRetrieverService::Get. FontName: %s\n",(tmp = aFontName->ToNewCString()));
-nsMemory::Free((void*)tmp);
-
   if (mNameIterInx < mFontList->Count()) {
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
     *aFontName = fontInfo->mName;

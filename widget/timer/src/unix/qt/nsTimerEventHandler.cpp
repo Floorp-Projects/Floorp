@@ -18,35 +18,63 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #include "nsTimerEventHandler.h"
 
-#include <qtimer.h>
+//JCG #define DBG_JCG 1
 
-nsTimerEventHandler::nsTimerEventHandler(nsITimer * aTimer,
+#ifdef DBG_JCG
+PRUint32 gTimerHandlerCount = 0;
+PRUint32 gTimerHandlerID = 0;
+#endif
+
+nsTimerEventHandler::nsTimerEventHandler(nsITimer *aTimer,
                                          nsTimerCallbackFunc aFunc,
                                          void *aClosure,
                                          nsITimerCallback *aCallback)
 {
-    mTimer    = aTimer;
-    mFunc     = aFunc;
-    mClosure  = aClosure;
-    mCallback = aCallback;
+#ifdef DBG_JCG
+  gTimerHandlerCount++;
+  mTimerHandlerID = gTimerHandlerID++;
+  printf("JCG: nsTimerEventHandler CTOR (%p) ID: %d, Count: %d\n",
+         this,mTimerHandlerID,gTimerHandlerCount);
+#endif
+  mTimer    = aTimer;
+  mFunc     = aFunc;
+  mClosure  = aClosure;
+  mCallback = aCallback;
 }
     
+nsTimerEventHandler::~nsTimerEventHandler()
+{
+#ifdef DBG_JCG
+  gTimerHandlerCount--;
+  printf("JCG: nsTimerEventHandler DTOR (%p) ID: %d, Count: %d\n",
+         this,mTimerHandlerID,gTimerHandlerCount);
+#endif
+}
+
 void nsTimerEventHandler::FireTimeout()
 {
-    //debug("nsTimerEventHandler::FireTimeout called");
-    if (mFunc != NULL) 
-    {
-        (*mFunc)(mTimer, mClosure);
-    }
-    else if (mCallback != NULL) 
-    {
-        mCallback->Notify(mTimer); // Fire the timer
-    }
-    
-// Always repeating here
-    
+#ifdef DBG_JCG
+  printf("JCG: nsTimerEventHandler::FireTimeout (%p) ID: %d\n",
+         this,mTimerHandlerID);
+#endif
+  //because Notify can cause 'this' to get destroyed,
+  // we need to hold a ref
+  nsCOMPtr<nsITimer> kungFuDeathGrip = mTimer;
+  if (mFunc != NULL) {
+#ifdef DBG_JCG
+  printf("JCG: nsTimerEventHandler::FireTimeout: Calling Function\n");
+#endif
+    (*mFunc)(mTimer,mClosure);
+  }
+  else if (mCallback != NULL) {
+#ifdef DBG_JCG
+  printf("JCG: nsTimerEventHandler::FireTimeout: Calling Notify\n");
+#endif
+    mCallback->Notify(mTimer); // Fire the timer
+  }
 }

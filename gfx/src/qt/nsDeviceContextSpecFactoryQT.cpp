@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
  */
 
 #include "nsDeviceContextSpecFactoryQT.h"
@@ -27,16 +28,25 @@
 #include "plstr.h"
 #include <qapplication.h>
 
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gDCSpecFactoryCount = 0;
+PRUint32 gDCSpecFactoryID = 0;
+#endif
+
 /** -------------------------------------------------------
  *  Constructor
  *  @update   dc 2/16/98
  */
 nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
 {
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT\n"));
-     NS_INIT_REFCNT();
+#ifdef DBG_JCG
+  gDCSpecFactoryCount++;
+  mID = gDCSpecFactoryID++;
+  printf("JCG: nsDeviceContextSpecFactoryQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecFactoryCount);
+#endif
+   NS_INIT_REFCNT();
 }
 
 /** -------------------------------------------------------
@@ -45,9 +55,10 @@ nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
  */
 nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT()
 {
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT\n"));
+#ifdef DBG_JCG
+  gDCSpecFactoryCount--;
+  printf("JCG: nsDeviceContextSpecFactoryQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecFactoryCount);
+#endif
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, 
@@ -66,9 +77,6 @@ NS_IMPL_RELEASE(nsDeviceContextSpecFactoryQT)
  */
 NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
 {
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDeviceContextSpecFactoryQT::Init\n"));
     return NS_OK;
 }
 
@@ -76,18 +84,15 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
  *  Get a device context specification
  *  @update   dc 2/16/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
-                                                                    nsIDeviceContextSpec *&aNewSpec,
-                                                                    PRBool aQuiet)
+NS_IMETHODIMP
+nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                      nsIDeviceContextSpec *&aNewSpec,
+                                                      PRBool aQuiet)
 {
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec\n"));
     nsresult  rv = NS_ERROR_FAILURE;
     nsIDeviceContextSpec  *devSpec = nsnull;
 
-    nsComponentManager::CreateInstance(kDeviceContextSpecCID, 
-                                       nsnull, 
+    nsComponentManager::CreateInstance(kDeviceContextSpecCID,nsnull, 
                                        kIDeviceContextSpecIID, 
                                        (void **)&devSpec);
 

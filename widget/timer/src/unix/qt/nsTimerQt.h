@@ -18,70 +18,66 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef __nsTimerQt_h__
 #define __nsTimerQt_h__
 
-#include "nsTimerEventHandler.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
-/*
- * Implementation of timers using Qt QTimer class 
- */
+class nsTimerEventHandler;
+class QTimer;
+
+/* Implementation of timers using Qt QTimer class */
 class nsTimerQt : public nsITimer
-                  
 {
 public:
-
-
     nsTimerQt();
     virtual ~nsTimerQt();
     
     virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-                PRUint32 aDelay,
-                PRUint32 aPriority = NS_PRIORITY_NORMAL,
-                PRUint32 aType = NS_TYPE_ONE_SHOT
-                );
+                          void *aClosure,PRUint32 aDelay,
+                          PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                          PRUint32 aType = NS_TYPE_ONE_SHOT);
 
     virtual nsresult Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay,
-                PRUint32 aPriority = NS_PRIORITY_NORMAL,
-                PRUint32 aType = NS_TYPE_ONE_SHOT
-                );
+                          PRUint32 aDelay,
+                          PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                          PRUint32 aType = NS_TYPE_ONE_SHOT);
     
     NS_DECL_ISUPPORTS
     
     virtual void Cancel();
 
     virtual PRUint32 GetDelay() { return mDelay; }
-    virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
+    virtual void SetDelay(PRUint32 aDelay) { mDelay = aDelay; };
 
     virtual PRUint32 GetPriority() { return mPriority; }
-    virtual void SetPriority(PRUint32 aPriority) { mPriority=aPriority; }
+    virtual void SetPriority(PRUint32 aPriority) { mPriority = aPriority; }
 
     virtual PRUint32 GetType() { return mType; }
-    virtual void SetType(PRUint32 aType) { mType=aType; }
+    virtual void SetType(PRUint32 aType) { mType = aType; }
 
-    virtual void* GetClosure() { return mClosure; }
+    virtual void *GetClosure() { return mClosure; }
 
     void FireTimeout();
     
 private:
     nsresult Init(PRUint32 aDelay);
     
-private:
     PRUint32            mDelay;
     PRUint32            mPriority;
     PRUint32            mType;
     nsTimerCallbackFunc mFunc;
-    void              * mClosure;
-    nsITimerCallback  * mCallback;
+    void                *mClosure;
+    nsITimerCallback    *mCallback;
     PRBool              mRepeat;
-    nsTimerQt         * mNext;
-    QTimer            * mTimer;
-    nsTimerEventHandler  * mEventHandler;
+    nsTimerQt           *mNext;
+    QTimer              *mTimer;
+    nsTimerEventHandler *mEventHandler;
+    PRUint32            mTimerID;
 };
 
 #endif // __nsTimerQt_h__
-

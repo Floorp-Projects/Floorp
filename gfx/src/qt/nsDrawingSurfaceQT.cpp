@@ -18,30 +18,43 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsDrawingSurfaceQT.h"
 #include "nsRenderingContextQT.h"
 #include <qpaintdevicemetrics.h>
 
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gDSCount = 0;
+PRUint32 gDSID = 0;
+#endif
+
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceQT, nsIDrawingSurface, nsIDrawingSurfaceQT) 
 
 nsDrawingSurfaceQT::nsDrawingSurfaceQT()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::nsDrawingSurfaceQT\n"));
-    NS_INIT_REFCNT();
+#ifdef DBG_JCG
+  gDSCount++;
+  mID = gDSID++;
+  printf("JCG: nsDrawingSurfaceQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDSCount);
+#endif
 
-    mPaintDevice = nsnull;
-    mPixmap      = nsnull;
-    mGC          = nsnull;
-    mDepth       = -1;
-    mWidth       = 0;
-    mHeight      = 0;
-    mFlags       = 0;
-    mLockWidth   = 0;
-    mLockHeight  = 0;
-    mLockFlags   = 0;
-    mLocked      = PR_FALSE;
+  NS_INIT_REFCNT();
+  mPaintDevice = nsnull;
+  mPixmap      = nsnull;
+  mGC          = nsnull;
+  mDepth       = -1;
+  mWidth       = 0;
+  mHeight      = 0;
+  mFlags       = 0;
+  mLockWidth   = 0;
+  mLockHeight  = 0;
+  mLockFlags   = 0;
+  mLocked      = PR_FALSE;
 
   // I have no idea how to compute these values.
   // FIXME
@@ -58,40 +71,34 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
 
 nsDrawingSurfaceQT::~nsDrawingSurfaceQT()
 {
-    PR_LOG(QtGfxLM,PR_LOG_DEBUG,("nsDrawingSurfaceQT::~nsDrawingSurfaceQT\n"));
+#ifdef DBG_JCG
+  gDSCount--;
+  printf("JCG: nsDrawingSurfaceQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDSCount);
+#endif
 
-    if (mGC && mGC->isActive()) {
-        PR_LOG(QtGfxLM, 
-               PR_LOG_DEBUG, 
-               ("nsDrawingSurfaceQT::~nsDrawingSurfaceQT: calling QPainter::end for %p\n",
-                mPaintDevice));
-        mGC->end();
-    }
-    if (mGC) {
-      delete mGC;
-      mGC = nsnull;
-    }
-    if (mPixmap) {
-      delete mPixmap;
-      mPixmap = nsnull;
-    }
-    if (mPaintDevice) {
-      if (mIsOffscreen && !mPaintDevice->paintingActive())
-        delete mPaintDevice;
-      mPaintDevice = nsnull;
-    }
+  if (mGC && mGC->isActive()) {
+    mGC->end();
+  }
+  if (mGC) {
+    delete mGC;
+    mGC = nsnull;
+  }
+  if (mPixmap) {
+    delete mPixmap;
+    mPixmap = nsnull;
+  }
+  if (mPaintDevice) {
+    if (mIsOffscreen && !mPaintDevice->paintingActive())
+      delete mPaintDevice;
+    mPaintDevice = nsnull;
+  }
 }
 
-NS_IMETHODIMP nsDrawingSurfaceQT::Lock(PRInt32   aX, 
-                                       PRInt32   aY,
-                                       PRUint32  aWidth, 
-                                       PRUint32  aHeight,
-                                       void   ** aBits, 
-                                       PRInt32 * aStride,
-                                       PRInt32 * aWidthBytes, 
-                                       PRUint32  aFlags)
+NS_IMETHODIMP nsDrawingSurfaceQT::Lock(PRInt32 aX,PRInt32 aY,
+                                       PRUint32 aWidth,PRUint32 aHeight,
+                                       void **aBits,PRInt32 *aStride,
+                                       PRInt32 *aWidthBytes,PRUint32 aFlags)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::Lock\n"));
     if (mLocked) {
         NS_ASSERTION(0, "nested lock attempt");
         return NS_ERROR_FAILURE;
@@ -119,27 +126,25 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Lock(PRInt32   aX,
 
 NS_IMETHODIMP nsDrawingSurfaceQT::Unlock(void)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::Unlock\n"));
-    if (!mLocked) {
-        NS_ASSERTION(0, "attempting to unlock an DrawingSurface that isn't locked");
-        return NS_ERROR_FAILURE;
-    }
-    if (!mPixmap) {
-        NS_ASSERTION(0, "NULL pixmap in unlock attempt");
-        return NS_ERROR_FAILURE;
-    }
-    if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY)) {
-        mGC->drawPixmap(0, 0, *mPixmap, mLockY, mLockY, mLockWidth, mLockHeight);
-    }
-    mLocked = PR_FALSE;
+  if (!mLocked) {
+    NS_ASSERTION(0,"attempting to unlock an DrawingSurface that isn't locked");
+    return NS_ERROR_FAILURE;
+  }
+  if (!mPixmap) {
+    NS_ASSERTION(0, "NULL pixmap in unlock attempt");
+    return NS_ERROR_FAILURE;
+  }
+  if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY)) {
+    mGC->drawPixmap(0,0,*mPixmap,mLockY,mLockY,mLockWidth,mLockHeight);
+  }
+  mLocked = PR_FALSE;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceQT::GetDimensions(PRUint32 *aWidth, 
                                                 PRUint32 *aHeight)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetDimensions\n"));
     *aWidth = mWidth;
     *aHeight = mHeight;
 
@@ -148,21 +153,18 @@ NS_IMETHODIMP nsDrawingSurfaceQT::GetDimensions(PRUint32 *aWidth,
 
 NS_IMETHODIMP nsDrawingSurfaceQT::IsOffscreen(PRBool *aOffScreen)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::IsOffscreen\n"));
     *aOffScreen = mIsOffscreen;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceQT::IsPixelAddressable(PRBool *aAddressable)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::IsPixelAddressable\n"));
     *aAddressable = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceQT::GetPixelFormat(nsPixelFormat *aFormat)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetPixelFormat\n"));
     *aFormat = mPixFormat;
 
     return NS_OK;
@@ -171,10 +173,6 @@ NS_IMETHODIMP nsDrawingSurfaceQT::GetPixelFormat(nsPixelFormat *aFormat)
 NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPaintDevice *aPaintDevice, 
                                        QPainter *aGC)
 {
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDrawingSurfaceQT::Init: paintdevice=%p, painter=%p\n",
-            aPaintDevice, aGC));
     QPaintDeviceMetrics qMetrics(aPaintDevice);
     mGC = aGC;
  
@@ -197,67 +195,43 @@ NS_IMETHODIMP nsDrawingSurfaceQT::Init(QPainter *aGC,
                                        PRUint32 aHeight, 
                                        PRUint32 aFlags)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::Init: with no paintdevice\n"));
-
-    if (nsnull == aGC || aWidth <= 0 || aHeight <= 0) {
-        return NS_ERROR_FAILURE;
-    }
-    mGC          = aGC;
-    mWidth       = aWidth;
-    mHeight      = aHeight;
-    mFlags       = aFlags;
+  if (nsnull == aGC || aWidth <= 0 || aHeight <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+  mGC     = aGC;
+  mWidth  = aWidth;
+  mHeight = aHeight;
+  mFlags  = aFlags;
  
-    PR_LOG(QtGfxLM, 
-           PR_LOG_DEBUG, 
-           ("nsDrawingSurfaceQT::Init: creating pixmap w=%d, h=%d, d=%d\n", 
-            mWidth, mHeight, mDepth));
-    mPixmap = new QPixmap(mWidth, mHeight, mDepth);
-    mPaintDevice = mPixmap;
+  mPixmap = new QPixmap(mWidth, mHeight, mDepth);
+  mPaintDevice = mPixmap;
 
-    mIsOffscreen = PR_TRUE;
+  mIsOffscreen = PR_TRUE;
 
-    if (!mImage.isNull())
-      mImage.reset();
+  if (!mImage.isNull())
+    mImage.reset();
 
-    return CommonInit();
+  return CommonInit();
 }
 
 NS_IMETHODIMP nsDrawingSurfaceQT::CommonInit()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::CommonInit\n"));
-
-    if (nsnull  == mGC || nsnull == mPaintDevice) {
-        return NS_ERROR_FAILURE;
-    }
-    if (mGC->isActive()) {
-        PR_LOG(QtGfxLM, 
-               PR_LOG_DEBUG, 
-               ("nsDrawingSurfaceQT::CommonInit: calling QPainter::end\n"));
-        mGC->end();
-    }
-    if (mGC->begin(mPaintDevice)) {
-        PR_LOG(QtGfxLM, 
-               PR_LOG_DEBUG, 
-               ("nsDrawingSurfaceQT::CommonInit: QPainter::begin succeeded for %p\n",
-                mPaintDevice));
-    }
-    else {
-        PR_LOG(QtGfxLM, 
-               PR_LOG_DEBUG, 
-               ("nsDrawingSurfaceQT::CommonInit: QPainter::begin failed for %p\n",
-                mPaintDevice));
-    }
-    return NS_OK;
+  if (nsnull  == mGC || nsnull == mPaintDevice) {
+    return NS_ERROR_FAILURE;
+  }
+  if (mGC->isActive()) {
+    mGC->end();
+  }
+  mGC->begin(mPaintDevice);
+  return NS_OK;
 }
 
 QPainter* nsDrawingSurfaceQT::GetGC()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetGC\n"));
     return mGC;
 }
 
 QPaintDevice* nsDrawingSurfaceQT::GetPaintDevice()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDrawingSurfaceQT::GetPaintDevice\n"));
     return mPaintDevice;
 }

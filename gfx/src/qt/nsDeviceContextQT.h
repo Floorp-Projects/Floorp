@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef nsDeviceContextQT_h___
 #define nsDeviceContextQT_h___
 
@@ -29,7 +30,7 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
-#include "nsRenderingContextQT.h"
+class QWidget;
 
 class nsDeviceContextQT : public DeviceContextImpl
 {
@@ -42,12 +43,18 @@ public:
     NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
     NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
-    NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return(DeviceContextImpl::CreateRenderingContext(aView,aContext));}
-    NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
+    NS_IMETHOD  CreateRenderingContext(nsIView *aView,nsIRenderingContext *&aContext)
+    {
+      return(DeviceContextImpl::CreateRenderingContext(aView,aContext));
+    }
+    NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget,nsIRenderingContext *&aContext)
+    {
+      return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));
+    }
 
     NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
-    NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+    NS_IMETHOD  GetScrollBarDimensions(float &aWidth,float &aHeight) const;
     NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, 
                                    SystemAttrStruct * aInfo) const;
 
@@ -58,26 +65,26 @@ public:
     NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, 
                                  nsDrawingSurface &aSurface);
 
-    NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
-    NS_IMETHOD CheckFontExistence(const nsString& aFontName);
+    NS_IMETHOD ConvertPixel(nscolor aColor,PRUint32 &aPixel);
+    NS_IMETHOD CheckFontExistence(const nsString &aFontName);
 
-    NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+    NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth,PRInt32 &aHeight);
     NS_IMETHOD GetClientRect(nsRect &aRect);
     NS_IMETHOD GetRect(nsRect &aRect);
 
     NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                    nsIDeviceContext *&aContext);
 
-    NS_IMETHOD BeginDocument(PRUnichar * aTitle);
+    NS_IMETHOD BeginDocument(PRUnichar *aTitle);
     NS_IMETHOD EndDocument(void);
 
     NS_IMETHOD BeginPage(void);
     NS_IMETHOD EndPage(void);
 
     // Overridden DeviceContextImpl functions.
-    NS_IMETHOD GetDepth(PRUint32& aDepth);
+    NS_IMETHOD GetDepth(PRUint32 &aDepth);
 
-    static int prefChanged(const char *aPref, void *aClosure);
+    static int prefChanged(const char *aPref,void *aClosure);
     nsresult   SetDPI(PRInt32 dpi);
 
 private:
@@ -89,12 +96,17 @@ private:
     PRInt16       mScrollbarWidth;
     PRInt16       mWindowBorderWidth;
     PRInt16       mWindowBorderHeight;
-    QWidget *     mWidget;    
+    QWidget 	  *mWidget;    
     PRInt32       mWidth;
     PRInt32       mHeight; 
     float         mWidthFloat;
     float         mHeightFloat; 
+
     static nscoord mDpi;
+
+    nsresult GetSystemFontInfo(nsFont *aFont) const;
+
+    PRUint32 mID;
 };
 
 #endif /* nsDeviceContextQT_h___ */

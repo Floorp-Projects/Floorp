@@ -18,37 +18,24 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
-
 
 #include "nsWidget.h"
 #include "nsWindow.h"
-#include "nsTextWidget.h"
-#include "nsCheckButton.h"
-#include "nsRadioButton.h"
-#include "nsScrollbar.h"
-#include "nsFileWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuListener.h"
-#include "stdio.h"
 #include "nsQEventHandler.h"
 
-//JCG #define DBG 1
-#ifdef DBG
-PRUint32                    gQEventHandlerCount = 0;
+//JCG #define DBG_JCG 1
+#ifdef DBG_JCG
+PRUint32 gQEventHandlerCount = 0;
 #endif
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
+static NS_DEFINE_IID(kCWindow, NS_WINDOW_CID);
+static NS_DEFINE_IID(kCChild, NS_CHILD_CID);
 
-struct EventInfo 
-{
-    nsWidget *widget;  // the widget
-    nsRect   *rect;    // the rect
-};
-
+#if 0 //JCG
 struct nsKeyConverter 
 {
     int vkCode; // Platform independent key code
@@ -176,6 +163,7 @@ struct nsKeyConverter nsKeycodes[] =
     { NS_VK_CLOSE_BRACKET, Qt::Key_ParenRight },
     { NS_VK_QUOTE,         Qt::Key_QuoteDbl }
 };
+#endif //JCG
 
 PRLogModuleInfo * QtEventsLM   = PR_NewLogModule("QtEvents");
 
@@ -185,23 +173,23 @@ PRLogModuleInfo * QtEventsLM   = PR_NewLogModule("QtEvents");
  */
 nsQEventHandler::nsQEventHandler(nsWidget *aWidget) : QObject()
 {
-    PR_LOG(QtEventsLM, PR_LOG_DEBUG, ("nsQEventHandler::nsQEventHandler()\n"));
-    mEnabled = true;
-    mDestroyed = false;
-    mWidget = aWidget;
-#ifdef DBG
+  PR_LOG(QtEventsLM, PR_LOG_DEBUG, ("nsQEventHandler::nsQEventHandler()\n"));
+  mEnabled = true;
+  mDestroyed = false;
+  mWidget = aWidget;
+#ifdef DBG_JCG
   gQEventHandlerCount++;
-  printf("DBG: nsQEventHandler CTOR. Count: %d\n",gQEventHandlerCount);
+  printf("JCG: nsQEventHandler CTOR. Count: %d\n",gQEventHandlerCount);
 #endif
 }
 
 nsQEventHandler::~nsQEventHandler()
 {
-    PR_LOG(QtEventsLM, PR_LOG_DEBUG, ("nsQEventHandler::~nsQEventHandler()\n"));
-    mWidget = nsnull;
-#ifdef DBG
+  PR_LOG(QtEventsLM, PR_LOG_DEBUG, ("nsQEventHandler::~nsQEventHandler()\n"));
+  mWidget = nsnull;
+#ifdef DBG_JCG
   gQEventHandlerCount--;
-  printf("DBG: nsQEventHandler DTOR. Count: %d\n",gQEventHandlerCount);
+  printf("JCG: nsQEventHandler DTOR. Count: %d\n",gQEventHandlerCount);
 #endif
 }
 
@@ -210,13 +198,13 @@ void nsQEventHandler::Enable(bool aEnable)
   mEnabled = aEnable;
 }
 
-void nsQEventHandler::Destroy(void)
+void nsQEventHandler::Destroy()
 {
   mDestroyed = true;
   mWidget = nsnull;
 }
 
-bool nsQEventHandler::eventFilter(QObject * object, QEvent * event)
+bool nsQEventHandler::eventFilter(QObject* object, QEvent* event)
 {
     bool handled = false;
 
@@ -224,109 +212,173 @@ bool nsQEventHandler::eventFilter(QObject * object, QEvent * event)
       return true;
 
     switch (event->type()) {
+#if 0 //JCG
       case QEvent::MouseButtonPress:
-        if (mEnabled)
-          handled = MouseButtonEvent((QMouseEvent *) event, mWidget, true, 1);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Button Pushed. Widget: %p\n",mWidget);
+#endif
+          handled = MouseButtonEvent((QMouseEvent*)event, mWidget, true, 1);
+        }
         else
           handled = true;
         break;
 
       case QEvent::MouseButtonRelease:
-        if (mEnabled)
-          handled = MouseButtonEvent((QMouseEvent *) event, mWidget, false, 1);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Button Released widget: %p\n",mWidget);
+#endif
+          handled = MouseButtonEvent((QMouseEvent*)event, mWidget, false, 1);
+        }
         else
           handled = true;
         break;
 
       case QEvent::MouseButtonDblClick:
-        if (mEnabled)
-          handled = MouseButtonEvent((QMouseEvent *) event, mWidget, true, 2);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Button Double-clicked widget: %p\n",mWidget);
+#endif
+          handled = MouseButtonEvent((QMouseEvent*)event, mWidget, true, 2);
+        }
         else
           handled = true;
         break;
+#endif //JCG
 
       case QEvent::MouseMove:
-        if (mEnabled)
-          handled = MouseMovedEvent((QMouseEvent *) event, mWidget);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Moved widget: %p\n",mWidget);
+#endif
+          handled = MouseMovedEvent((QMouseEvent*)event, mWidget);
+        }
         else
           handled = true;
         break;
 
+#if 0 //JCG
       case QEvent::KeyPress:
-        if (mEnabled)
-          handled = KeyPressEvent((QKeyEvent *) event, mWidget);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Key Pressed widget: %p\n",mWidget);
+#endif
+          handled = KeyPressEvent((QKeyEvent*)event, mWidget);
+        }
         else
           handled = true;
         break;
         
       case QEvent::KeyRelease:
-        if (mEnabled)
-          handled = KeyReleaseEvent((QKeyEvent *) event, mWidget);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Key Released widget: %p\n",mWidget);
+#endif
+          handled = KeyReleaseEvent((QKeyEvent*)event, mWidget);
+        }
         else
           handled = true;
         break;
 
       case QEvent::Enter:
-        if (mEnabled)
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Enter widget: %p\n",mWidget);
+#endif
           handled = MouseEnterEvent(event, mWidget);
+        }
         else
           handled = true;
         break;
 
       case QEvent::Leave:
-        if (mEnabled)
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Mouse Exit widget: %p\n",mWidget);
+#endif
           handled = MouseExitEvent(event, mWidget);
+        }
         else
           handled = true;
         break;
 
       case QEvent::Close:
         if (!mWidget->IsPopup()) {
-          handled = DestroyEvent((QCloseEvent *) event, mWidget);
+#ifdef DBG_JCG
+          printf("JCG: Close widget: %p\n",mWidget);
+#endif
+          handled = DestroyEvent((QCloseEvent*)event, mWidget);
         }
         break;
 
       case QEvent::Destroy:
-        handled = DestroyEvent((QCloseEvent *) event, mWidget);
+#ifdef DBG_JCG
+        printf("JCG: Destroy widget: %p\n",mWidget);
+#endif
+        handled = DestroyEvent((QCloseEvent*)event, mWidget);
         break;
 
       case QEvent::Resize:
-        handled = ResizeEvent((QResizeEvent *) event, mWidget);
+#ifdef DBG_JCG
+        printf("JCG: Resize widget: %p\n",mWidget);
+#endif
+        handled = ResizeEvent((QResizeEvent*)event, mWidget);
         break;
 
       case QEvent::Move:
-        handled = MoveEvent((QMoveEvent *) event, mWidget);
+#ifdef DBG_JCG
+        printf("JCG: Move widget: %p\n",mWidget);
+#endif
+        handled = MoveEvent((QMoveEvent*)event, mWidget);
         break;
+#endif //JCG
 
       case QEvent::Paint:
-        handled = PaintEvent((QPaintEvent *) event, mWidget);
+#ifdef DBG_JCG
+        printf("JCG: Paint widget: %p\n",mWidget);
+#endif
+        handled = PaintEvent((QPaintEvent*)event, mWidget);
         break;
 
+#if 0 //JCG
       case QEvent::FocusIn:
-        if (mEnabled)
-          handled = FocusInEvent((QFocusEvent *) event, mWidget);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Focus In widget: %p\n",mWidget);
+#endif
+          handled = FocusInEvent((QFocusEvent*)event, mWidget);
+        }
         else
           handled = true;
         break;
 
       case QEvent::FocusOut:
-        if (mEnabled)
-          handled = FocusOutEvent((QFocusEvent *) event, mWidget);
+        if (mEnabled) {
+#ifdef DBG_JCG
+          printf("JCG: Focus In widget: %p\n",mWidget);
+#endif
+          handled = FocusOutEvent((QFocusEvent*)event, mWidget);
+        }
         else
           handled = true;
         break;
+#endif //JCG
 
       default:
+#ifdef DBG_JCG
+        printf("JCG: widget: %p, Other: %d\n",mWidget,event->type());
+#endif
         break;
     }
     return handled;
 }
 
 
-bool nsQEventHandler::MouseButtonEvent(QMouseEvent * event, 
-                                       nsWidget    * widget,
-                                       bool          buttonDown,
-                                       int           clickCnt)
+bool nsQEventHandler::MouseButtonEvent(QMouseEvent *event, 
+                                       nsWidget    *widget,
+                                       bool         buttonDown,
+                                       int          clickCnt)
 {
     if (event && widget) {
         nsMouseEvent nsEvent;
@@ -338,18 +390,18 @@ bool nsQEventHandler::MouseButtonEvent(QMouseEvent * event,
 
         switch (event->button()) {
           case LeftButton:
-            nsEvent.message = buttonDown ? NS_MOUSE_LEFT_BUTTON_DOWN : 
-                NS_MOUSE_LEFT_BUTTON_UP;
+            nsEvent.message = buttonDown ? NS_MOUSE_LEFT_BUTTON_DOWN
+                                         : NS_MOUSE_LEFT_BUTTON_UP;
             break;
 
           case RightButton:
-            nsEvent.message = buttonDown ? NS_MOUSE_RIGHT_BUTTON_DOWN :
-                NS_MOUSE_RIGHT_BUTTON_UP;
+            nsEvent.message = buttonDown ? NS_MOUSE_RIGHT_BUTTON_DOWN
+                                         : NS_MOUSE_RIGHT_BUTTON_UP;
             break;
 
           case MidButton:
-            nsEvent.message = buttonDown ? NS_MOUSE_MIDDLE_BUTTON_DOWN :
-                NS_MOUSE_MIDDLE_BUTTON_UP;
+            nsEvent.message = buttonDown ? NS_MOUSE_MIDDLE_BUTTON_DOWN
+                                         : NS_MOUSE_MIDDLE_BUTTON_UP;
             break;
 
           default:
@@ -369,7 +421,7 @@ bool nsQEventHandler::MouseButtonEvent(QMouseEvent * event,
         nsEvent.isControl       = (event->state() & ControlButton) ? PR_TRUE : PR_FALSE;
         nsEvent.isAlt           = (event->state() & AltButton) ? PR_TRUE : PR_FALSE;
         nsEvent.isMeta		= PR_FALSE;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
         widget->AddRef();
         widget->DispatchMouseEvent(nsEvent);
         widget->Release();
@@ -380,26 +432,23 @@ bool nsQEventHandler::MouseButtonEvent(QMouseEvent * event,
     /* nsWidget & nsWindow, unless either the EventHandler is destroyed */
     /* (i.e. "widget" is NULL) or the widget is deleted (i.e. IsInDTOR  */
     /* returns TRUE).  The last item is particularly slimey...          */
-
+    bool handled = true;
     if (widget && !widget->IsInDTOR()) {
       if (widget->GetName() == QWidget::tr("nsWindow")
           || widget->GetName() == QWidget::tr("nsWidget")) {
         if (buttonDown) {
-          return false;
-        }
-        else {
-          return true;
+          handled = false;
         }
       }
       else {
-          return false;
+          handled = false;
       }
     }
-    else
-      return true;
+    return handled;
 }
 
-bool nsQEventHandler::MouseMovedEvent(QMouseEvent * event, nsWidget * widget)
+bool nsQEventHandler::MouseMovedEvent(QMouseEvent *event,
+                                      nsWidget *widget)
 {
     if (event && widget) {
       // Generate XPFE mouse moved event
@@ -414,9 +463,14 @@ bool nsQEventHandler::MouseMovedEvent(QMouseEvent * event, nsWidget * widget)
       nsEvent.point.y         = event->y();
       nsEvent.message         = NS_MOUSE_MOVE;
       nsEvent.widget          = widget;
-      nsEvent.nativeMsg	    = (void*)event;
+      nsEvent.nativeMsg	      = (void*)event;
       nsEvent.eventStructType = NS_MOUSE_EVENT;
-      nsEvent.time       = PR_IntervalNow();
+      nsEvent.time            = PR_IntervalNow();
+      nsEvent.isShift         = (event->state() & ShiftButton) ? PR_TRUE : PR_FALSE;
+      nsEvent.isControl       = (event->state() & ControlButton) ? PR_TRUE : PR_FALSE;
+      nsEvent.isAlt           = (event->state() & AltButton) ? PR_TRUE : PR_FALSE;
+      nsEvent.isMeta	      = PR_FALSE;
+
       widget->AddRef();
       widget->DispatchMouseEvent(nsEvent);
       widget->Release();
@@ -426,19 +480,21 @@ bool nsQEventHandler::MouseMovedEvent(QMouseEvent * event, nsWidget * widget)
     /* native widgets (i.e. NOT nsWidget or nsWindow AND IsInDTOR       */
     /* returns FALSE)  Using IsInDTOR like this is particularly slimey! */
 
+    bool handled = false;
     if (widget && !widget->IsInDTOR()) {
       if (widget->GetName() == QWidget::tr("nsWindow")
           || widget->GetName() == QWidget::tr("nsWidget")) {
-        return true;
+        handled = true;
       }
-      else
-        return false;
     }
     else
-      return true;
+      handled = true;
+
+    return handled;
 }
 
-bool nsQEventHandler::MouseEnterEvent(QEvent * event, nsWidget * widget)
+bool nsQEventHandler::MouseEnterEvent(QEvent *event,
+                                      nsWidget *widget)
 {
     if (event && widget) {
         nsMouseEvent nsEvent;
@@ -452,7 +508,8 @@ bool nsQEventHandler::MouseEnterEvent(QEvent * event, nsWidget * widget)
         nsEvent.widget          = widget;
         nsEvent.nativeMsg	= (void*)event;
         nsEvent.eventStructType = NS_MOUSE_EVENT;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
+
         widget->AddRef();
         widget->DispatchMouseEvent(nsEvent);
         widget->Release();
@@ -460,7 +517,8 @@ bool nsQEventHandler::MouseEnterEvent(QEvent * event, nsWidget * widget)
     return true;
 }
 
-bool nsQEventHandler::MouseExitEvent(QEvent * event, nsWidget * widget)
+bool nsQEventHandler::MouseExitEvent(QEvent *event,
+                                     nsWidget *widget)
 {
     if (event && widget) {
         nsMouseEvent nsEvent;
@@ -474,7 +532,8 @@ bool nsQEventHandler::MouseExitEvent(QEvent * event, nsWidget * widget)
         nsEvent.widget          = widget;
         nsEvent.nativeMsg	= (void*)event;
         nsEvent.eventStructType = NS_MOUSE_EVENT;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
+
         widget->AddRef();
         widget->DispatchMouseEvent(nsEvent);
         widget->Release();
@@ -482,7 +541,8 @@ bool nsQEventHandler::MouseExitEvent(QEvent * event, nsWidget * widget)
     return true;
 }
 
-bool nsQEventHandler::DestroyEvent(QCloseEvent * event, nsWidget * widget)
+bool nsQEventHandler::DestroyEvent(QCloseEvent *event,
+                                   nsWidget *widget)
 {
     if (event && widget) {
       // Generate XPFE destroy event
@@ -492,55 +552,34 @@ bool nsQEventHandler::DestroyEvent(QCloseEvent * event, nsWidget * widget)
              ("nsQEventHandler::DestroyEvent for %s\n", 
               widget->GetName()));
 
-      ((nsWindow *)widget)->SetIsDestroying(PR_TRUE);
       widget->Destroy();
     }
     return true;
 }
 
-bool nsQEventHandler::ResizeEvent(QResizeEvent * event, nsWidget * widget)
+bool nsQEventHandler::ResizeEvent(QResizeEvent *event,
+                                  nsWidget *widget)
 {
     if (event && widget) {
       // Generate XPFE resize event
-      nsSizeEvent nsEvent;
-
       PR_LOG(QtEventsLM, 
              PR_LOG_DEBUG, 
              ("nsQEventHandler::ResizeEvent for %s(%p)\n", 
               widget->GetName(),
               widget));
 
-      nsEvent.message = NS_SIZE;
-      nsEvent.widget  = widget;
-      nsEvent.eventStructType = NS_SIZE_EVENT;
+      nsRect rect;
+      widget->GetBounds(rect);
+      rect.width = event->size().width();
+      rect.height = event->size().height();
 
-      PR_LOG(QtEventsLM, 
-             PR_LOG_DEBUG, 
-             ("nsQEventHandler::ResizeEvent: old size:%dx%d, new size:%dx%d\n",
-             event->oldSize().width(),
-             event->oldSize().height(),
-             event->size().width(),
-             event->size().height()));
-
-      nsRect * rect   = new nsRect();
-      widget->GetBounds(*rect);
-      rect->width     = event->size().width();
-      rect->height    = event->size().height();
-
-      nsEvent.point.x    = 0;
-      nsEvent.point.y    = 0;
-      nsEvent.windowSize = rect;
-      nsEvent.mWinHeight = event->size().height();
-      nsEvent.mWinWidth  = event->size().width();
-      nsEvent.time       = PR_IntervalNow();
-
-      widget->OnResize(*rect);
-      delete rect;
+      widget->OnResize(rect);
     }
     return false;
 }
 
-bool nsQEventHandler::MoveEvent(QMoveEvent * event, nsWidget * widget)
+bool nsQEventHandler::MoveEvent(QMoveEvent *event,
+                                nsWidget *widget)
 {
     if (event && widget) {
         PR_LOG(QtEventsLM, 
@@ -554,7 +593,8 @@ bool nsQEventHandler::MoveEvent(QMoveEvent * event, nsWidget * widget)
     return true;
 }
 
-bool nsQEventHandler::PaintEvent(QPaintEvent * event, nsWidget * widget)
+bool nsQEventHandler::PaintEvent(QPaintEvent *event,
+                                 nsWidget *widget)
 {
     if (event && widget) {
         // Generate XPFE paint event
@@ -566,26 +606,23 @@ bool nsQEventHandler::PaintEvent(QPaintEvent * event, nsWidget * widget)
                 widget->GetName(),
                 widget));
 
-        nsEvent.message = NS_PAINT;
-        nsEvent.widget  = widget;
+        nsEvent.message         = NS_PAINT;
+        nsEvent.widget          = widget;
         nsEvent.eventStructType = NS_PAINT_EVENT;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
         
-        QRect qrect = event->rect();
-
-        PR_LOG(QtEventsLM, 
-               PR_LOG_DEBUG, 
+        PR_LOG(QtEventsLM,PR_LOG_DEBUG, 
                ("nsQEventHandler::PaintEvent: need to paint:x=%d,y=%d,w=%d,h=%d\n",
-                qrect.x(), qrect.y(), qrect.width(), qrect.height()));
+                event->rect().x(),event->rect().y(),
+                event->rect().width(),event->rect().height()));
 
-        nsRect * rect = new nsRect(qrect.x(), qrect.y(), qrect.width(), qrect.height());
-        nsEvent.rect = rect;
+        nsRect rect(event->rect().x(),event->rect().y(),
+                    event->rect().width(),event->rect().height());
+        nsEvent.rect = &rect;
 
         widget->AddRef();
         widget->OnPaint(nsEvent);
         widget->Release();
-
-        delete rect;
     }
     if (widget && widget->GetName() == QWidget::tr("nsWindow")
         || widget->GetName() == QWidget::tr("nsWidget")) {
@@ -596,7 +633,8 @@ bool nsQEventHandler::PaintEvent(QPaintEvent * event, nsWidget * widget)
     }
 }
 
-bool nsQEventHandler::KeyPressEvent(QKeyEvent * event, nsWidget * widget)
+bool nsQEventHandler::KeyPressEvent(QKeyEvent *event,
+                                    nsWidget *widget)
 {
     if (event && widget) {
         PR_LOG(QtEventsLM, 
@@ -604,8 +642,9 @@ bool nsQEventHandler::KeyPressEvent(QKeyEvent * event, nsWidget * widget)
                ("nsQEventHandler::KeyPressEvent for %s\n", 
                 widget->GetName()));
 
-        if (event->key() == Qt::Key_Shift || event->key() == Qt::Key_Control 
-            || event->key() == Qt::Key_Alt)
+        if (event->key() == Qt::Key_Shift
+            || event->key() == Qt::Key_Control 
+             || event->key() == Qt::Key_Alt)
            return false;
 
         nsKeyEvent nsEvent;
@@ -613,29 +652,29 @@ bool nsQEventHandler::KeyPressEvent(QKeyEvent * event, nsWidget * widget)
         nsEvent.message         = NS_KEY_DOWN;
         nsEvent.eventStructType = NS_KEY_EVENT;
         nsEvent.widget          = widget;
-        nsEvent.keyCode         = GetNSKey(event->key(), event->state());
-        nsEvent.isShift         = (event->state() & ShiftButton) ? PR_TRUE : PR_FALSE;
-        nsEvent.isControl       = (event->state() & ControlButton) ? PR_TRUE : PR_FALSE;
-        nsEvent.isAlt           = (event->state() & AltButton) ? PR_TRUE : PR_FALSE;
+        nsEvent.keyCode         = GetNSKey(event->key(),event->state());
+        nsEvent.isShift         = event->state() & ShiftButton;
+        nsEvent.isControl       = event->state() & ControlButton;
+        nsEvent.isAlt           = event->state() & AltButton;
         nsEvent.isMeta		= PR_FALSE;
         nsEvent.point.x         = 0;
         nsEvent.point.y         = 0;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
 
         nsEvent.charCode = 0;
         widget->AddRef();
-        ((nsWindow *)widget)->OnKey(nsEvent);
+        ((nsWindow*)widget)->OnKey(nsEvent);
 
         nsEvent.message         = NS_KEY_PRESS;
         nsEvent.eventStructType = NS_KEY_EVENT;
         nsEvent.widget          = widget;
-        nsEvent.isShift         = (event->state() & ShiftButton) ? PR_TRUE : PR_FALSE;
-        nsEvent.isControl       = (event->state() & ControlButton) ? PR_TRUE : PR_FALSE;
-        nsEvent.isAlt           = (event->state() & AltButton) ? PR_TRUE : PR_FALSE;
+        nsEvent.isShift         = event->state() & ShiftButton;
+        nsEvent.isControl       = event->state() & ControlButton;
+        nsEvent.isAlt           = event->state() & AltButton;
         nsEvent.isMeta		= PR_FALSE;
         nsEvent.point.x         = 0;
         nsEvent.point.y         = 0;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.time            = PR_IntervalNow();
         if (event->text().length() && event->text()[0].isPrint()) {
             nsEvent.charCode = (PRInt32)event->text()[0].unicode();
         }
@@ -647,15 +686,16 @@ bool nsQEventHandler::KeyPressEvent(QKeyEvent * event, nsWidget * widget)
            nsEvent.isShift = PR_FALSE;
         }
         else
-          nsEvent.keyCode = GetNSKey(event->key(), event->state());
+          nsEvent.keyCode = GetNSKey(event->key(),event->state());
 
-        ((nsWindow *)widget)->OnKey(nsEvent);
+        ((nsWindow*)widget)->OnKey(nsEvent);
         widget->Release();
     }
     return true;
 }
 
-bool nsQEventHandler::KeyReleaseEvent(QKeyEvent * event, nsWidget * widget)
+bool nsQEventHandler::KeyReleaseEvent(QKeyEvent *event,
+                                      nsWidget *widget)
 {
     if (event && widget) {
 
@@ -670,26 +710,27 @@ bool nsQEventHandler::KeyReleaseEvent(QKeyEvent * event, nsWidget * widget)
 
         nsKeyEvent nsEvent;
 
-        nsEvent.message = NS_KEY_UP;
+        nsEvent.message         = NS_KEY_UP;
         nsEvent.eventStructType = NS_KEY_EVENT;
-        nsEvent.widget = widget;
-        nsEvent.charCode = 0;
-        nsEvent.keyCode = GetNSKey(event->key(), event->state());
-        nsEvent.isShift = event->state() & ShiftButton;
-        nsEvent.isControl = event->state() & ControlButton;
-        nsEvent.isAlt = event->state() & AltButton;
-        nsEvent.isMeta = PR_FALSE;
-        nsEvent.time       = PR_IntervalNow();
+        nsEvent.widget          = widget;
+        nsEvent.charCode        = 0;
+        nsEvent.keyCode         = GetNSKey(event->key(), event->state());
+        nsEvent.isShift         = event->state() & ShiftButton;
+        nsEvent.isControl       = event->state() & ControlButton;
+        nsEvent.isAlt           = event->state() & AltButton;
+        nsEvent.isMeta          = PR_FALSE;
+        nsEvent.time            = PR_IntervalNow();
+
         widget->AddRef();
-        ((nsWindow *)widget)->OnKey(nsEvent);
+        ((nsWindow*)widget)->OnKey(nsEvent);
         widget->Release();
     }
     return true;
 }
 
-PRInt32 nsQEventHandler::GetNSKey(PRInt32 key, PRInt32 state)
+#if 0 //JCG
+PRInt32 nsQEventHandler::GetNSKey(PRInt32 key,PRInt32 state)
 {
-    PRInt32 nsKey = 0;
     PRInt32 length = sizeof(nsKeycodes) / sizeof(nsKeyConverter);
 
     for (PRInt32 i = 0; i < length; i++) {
@@ -697,10 +738,12 @@ PRInt32 nsQEventHandler::GetNSKey(PRInt32 key, PRInt32 state)
             return nsKeycodes[i].vkCode;
         }
     }
-    return nsKey;
+    return 0;
 }
+#endif //JCG
 
-bool nsQEventHandler::FocusInEvent(QFocusEvent * event, nsWidget * widget)
+bool nsQEventHandler::FocusInEvent(QFocusEvent *event,
+                                   nsWidget *widget)
 {
     if (event && widget) {
         nsGUIEvent aEvent;
@@ -713,17 +756,19 @@ bool nsQEventHandler::FocusInEvent(QFocusEvent * event, nsWidget * widget)
         aEvent.message         = NS_GOTFOCUS;
         aEvent.eventStructType = NS_GUI_EVENT;
         aEvent.widget          = widget;
-        aEvent.time       = PR_IntervalNow();
-        aEvent.point.x = 0;
-        aEvent.point.y = 0;
+        aEvent.time            = PR_IntervalNow();
+        aEvent.point.x         = 0;
+        aEvent.point.y         = 0;
+
         widget->AddRef();
-        ((nsWindow *)widget)->DispatchFocus(aEvent);
+        ((nsWindow*)widget)->DispatchFocus(aEvent);
         widget->Release();
     }    
     return true;
 }
 
-bool nsQEventHandler::FocusOutEvent(QFocusEvent * event, nsWidget * widget)
+bool nsQEventHandler::FocusOutEvent(QFocusEvent *event,
+                                    nsWidget *widget)
 {
     if (event && widget) {
         nsGUIEvent aEvent;
@@ -736,12 +781,12 @@ bool nsQEventHandler::FocusOutEvent(QFocusEvent * event, nsWidget * widget)
         aEvent.message         = NS_LOSTFOCUS;
         aEvent.eventStructType = NS_GUI_EVENT;
         aEvent.widget          = widget;
-        aEvent.time       = PR_IntervalNow();
-        aEvent.point.x = 0;
-        aEvent.point.y = 0;
+        aEvent.time            = PR_IntervalNow();
+        aEvent.point.x         = 0;
+        aEvent.point.y         = 0;
 
         widget->AddRef();
-        ((nsWindow *)widget)->DispatchFocus(aEvent);
+        ((nsWindow*)widget)->DispatchFocus(aEvent);
         widget->Release();
     }
     return true;

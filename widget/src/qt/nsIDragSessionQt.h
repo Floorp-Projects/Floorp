@@ -14,34 +14,34 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ * Contributor(s):
+ *      Denis Issoupov <denis@macadamian.com>
  *
  */
+#ifndef nsIDragSessionQt_h__
+#define nsIDragSessionQt_h__
 
-#ifndef nsDeviceContextSpecFactoryQT_h___
-#define nsDeviceContextSpecFactoryQT_h___
+#include "nsISupports.h"
+#include <qdragobject.h> 
 
-#include "nsIDeviceContextSpecFactory.h"
-#include "nsIDeviceContextSpec.h"
+#define NS_IDRAGSESSIONQT_IID      \
+{ 0x36c4c381, 0x09e3, 0x11d4, { 0xb0, 0x33, 0xa4, 0x20, 0xf4, 0x2c, 0xfd, 0x7c } };
 
-class nsDeviceContextSpecFactoryQT : public nsIDeviceContextSpecFactory
+class nsIDragSessionQt : public nsISupports
 {
-public:
-    nsDeviceContextSpecFactoryQT();
+  public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONQT_IID)
 
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD Init(void);
-    NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
-                                       nsIDeviceContextSpec *&aNewSpec,
-                                       PRBool aQuiet);
-
-protected:
-    virtual ~nsDeviceContextSpecFactoryQT();
+  /**
+    * Since the drag may originate in an external application, we need some
+    * way of communicating the QDragObject to the session so it can use it
+    * when filling in data requests.
+    *
+    */
+   NS_IMETHOD SetDragReference(QMimeSource* aDragRef) = 0; 
 };
 
 #endif

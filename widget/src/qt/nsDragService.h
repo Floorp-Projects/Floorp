@@ -18,79 +18,58 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *      Denis Issoupov <denis@macadamian.com>
+ *
  */
-
 #ifndef nsDragService_h__
 #define nsDragService_h__
 
 #include "nsBaseDragService.h"
+#include "nsClipboard.h"
+#include "nsIDragSessionQt.h"
 
+#include <qwidget.h> 
+#include <qdragobject.h> 
 
-/**
- * Native QT DragService wrapper
- */
-
-class nsDragService : public nsBaseDragService
+//----------------------------------------------------------
+/* Native Qt DragService wrapper */
+class nsDragService : public nsBaseDragService, public nsIDragSessionQt
 {
-
 public:
-    nsDragService();
-    virtual ~nsDragService();
+  nsDragService();
+  virtual ~nsDragService();
 
-    //nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
-  
+  //nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
   
     //nsIDragService
-    NS_IMETHOD StartDragSession (nsITransferable * aTransferable, 
-                                 PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode,
+                               nsISupportsArray *anArrayTransferables,
+                               nsIScriptableRegion *aRegion,
+                               PRUint32 aActionType);
+  NS_IMETHOD StartDragSession();
+  NS_IMETHOD EndDragSession();
 
-#if 0
-    // Native Impl.
-    NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
+  // nsIDragSession
+  NS_IMETHOD SetCanDrop(PRBool aCanDrop);
+  NS_IMETHOD GetCanDrop(PRBool *aCanDrop);
+  NS_IMETHOD GetNumDropItems(PRUint32 *aNumItems);
+  NS_IMETHOD GetData(nsITransferable *aTransferable,PRUint32 aItemIndex);
+  NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor,PRBool *_retval);
 
-    static void SetTopLevelWidget(QWidget* w);
-
-    static Qwidget  *sWidget;
+  // nsIDragSessionQt
+  NS_IMETHOD SetDragReference(QMimeSource* aDragRef); 
 
 protected:
-    static PRBool gHaveDrag;
+  QDragObject *RegisterDragFlavors(nsITransferable* transferable);
 
-    static void DragLeave(QWidget      *widget,
-                          QDragContext *context,
-                          unsigned int time);
+private:
+  // the source of our drags
+  QWidget     *mHiddenWidget;
+  QDragObject *mDragObject;
 
-    static PRBool DragMotion(QWidget      *widget,
-                             QDragContext *context,
-                             int          x,
-                             int          y,
-                             unsigned int time);
-
-    static PRBool DragDrop(QWidget      *widget,
-                           QDragContext *context,
-                           int          x,
-                           int          y,
-                           unsigned int time);
-
-    static void DragDataReceived(QWidget        *widget,
-                                 QDragContext   *context,
-                                 int            x,
-                                 int            y,
-                                 QSelectionData *data,
-                                 unsigned int   info,
-                                 unsigned int   time);
-
-    static void DragDataGet(QWidget          *widget,
-                            QDragContext     *context,
-                            QSelectionData   *selection_data,
-                            unsigned int     info,
-                            unsigned int     time,
-                            void*            data);
-
-    static void  DragDataDelete(QWidget          *widget,
-                                QDragContext     *context,
-                                void*            data);
-#endif
+  // our source data items
+  nsCOMPtr<nsISupportsArray> mSourceDataItems;
 };
 
 #endif // nsDragService_h__

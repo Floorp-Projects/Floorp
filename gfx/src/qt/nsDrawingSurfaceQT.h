@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #ifndef nsDrawingSurfaceQT_h___
@@ -27,70 +29,65 @@
 #include "nsIDrawingSurfaceQT.h"
 
 #include <qpainter.h>
-#include <qpixmap.h>
 #include <qimage.h>
+
+class QPixmap;
 
 class nsDrawingSurfaceQT : public nsIDrawingSurface,
                            public nsIDrawingSurfaceQT
 {
 public:
-    nsDrawingSurfaceQT();
-    virtual ~nsDrawingSurfaceQT();
+  nsDrawingSurfaceQT();
+  virtual ~nsDrawingSurfaceQT();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    //nsIDrawingSurface interface
+  //nsIDrawingSurface interface
+  NS_IMETHOD Lock(PRInt32 aX,PRInt32 aY, 
+                  PRUint32 aWidth,PRUint32 aHeight,
+                  void **aBits,PRInt32 *aStride, 
+                  PRInt32 *aWidthBytes,PRUint32 aFlags);
+  NS_IMETHOD Unlock(void);
+  NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
+  NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
+  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
+  NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
-    NS_IMETHOD Lock(PRInt32 aX, 
-                    PRInt32 aY, 
-                    PRUint32 aWidth, 
-                    PRUint32 aHeight,
-                    void **aBits, 
-                    PRInt32 *aStride, 
-                    PRInt32 *aWidthBytes,
-                    PRUint32 aFlags);
-    NS_IMETHOD Unlock(void);
-    NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
-    NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
-    NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
-    NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
+  //nsIDrawingSurfaceQT interface
+  NS_IMETHOD Init(QPaintDevice * aPaintDevice, QPainter *aGC);
+  NS_IMETHOD Init(QPainter *aGC,PRUint32 aWidth,PRUint32 aHeight,
+                  PRUint32 aFlags);
 
-    //nsIDrawingSurfaceQT interface
-
-    NS_IMETHOD Init(QPaintDevice * aPaintDevice, QPainter *aGC);
-    NS_IMETHOD Init(QPainter *aGC, 
-                    PRUint32 aWidth, 
-                    PRUint32 aHeight, 
-                    PRUint32 aFlags);
-
-    // utility functions.
-    PRInt32 GetDepth() { return mDepth; }
-    QPainter * GetGC(void);
-    QPaintDevice  * GetPaintDevice(void);
+  // utility functions.
+  PRInt32 GetDepth() { return mDepth; }
+  QPainter *GetGC(void);
+  QPaintDevice  *GetPaintDevice(void);
 
 protected:
-    NS_IMETHOD CommonInit();
+  NS_IMETHOD CommonInit();
 
 private:
-    /* general */
-    QPaintDevice  *mPaintDevice;
-    QPixmap       *mPixmap;
-    QPainter	  *mGC;
-    int		  mDepth;
-    nsPixelFormat mPixFormat;
-    PRUint32      mWidth;
-    PRUint32      mHeight;
-    PRUint32	  mFlags;
-    PRBool        mIsOffscreen;
+  /* general */
+  QPaintDevice  *mPaintDevice;
+  QPixmap       *mPixmap;
+  QPainter      *mGC;
+  int           mDepth;
+  nsPixelFormat mPixFormat;
+  PRUint32      mWidth;
+  PRUint32      mHeight;
+  PRUint32      mFlags;
+  PRBool        mIsOffscreen;
 
-    /* for locks */
-    QImage        mImage;
-    PRInt32	  mLockX;
-    PRInt32	  mLockY;
-    PRUint32      mLockWidth;
-    PRUint32      mLockHeight;
-    PRUint32      mLockFlags;
-    PRBool	  mLocked;
+  /* for locks */
+  QImage        mImage;
+  PRInt32       mLockX;
+  PRInt32       mLockY;
+  PRUint32      mLockWidth;
+  PRUint32      mLockHeight;
+  PRUint32      mLockFlags;
+  PRBool        mLocked;
+
+  PRUint32      mID;
 };
 
 #endif

@@ -18,442 +18,371 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsScrollbar.h"
-#include "nsToolkit.h"
 #include "nsGUIEvent.h"
-#include "nsUnitConversion.h"
-#include "nsWindow.h"
 
-PRLogModuleInfo * QtScrollLM = PR_NewLogModule("QtScroll");
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gQBaseSBCount = 0;
+PRUint32 gQBaseSBID = 0;
+
+PRUint32 gQSBCount = 0;
+PRUint32 gQSBID = 0;
+
+PRUint32 gNsSBCount = 0;
+PRUint32 gNsSBID = 0;
+#endif
 
 //=============================================================================
-//
-// nsQScrollBar class
-//
+// nsQBaseScrollBar class
 //=============================================================================
-nsQScrollBar::nsQScrollBar(nsWidget * widget,
-                           int minValue, 
-                           int maxValue, 
-                           int LineStep, 
-                           int PageStep, 
-                           int value, 
-                           Orientation orientation,
-                           QWidget * parent, 
-                           const char * name)
-	: QScrollBar(minValue, 
-                 maxValue, 
-                 LineStep, 
-                 PageStep, 
-                 value,
-                 orientation, 
-                 parent, 
-                 name),
-      nsQBaseWidget(widget)
+nsQBaseScrollBar::nsQBaseScrollBar(nsWidget *aWidget)
+      : nsQBaseWidget(aWidget)
 {
-    connect((QScrollBar *)this,
-            SIGNAL(valueChanged(int)),
-            SLOT(SetValue(int)));
+#ifdef DBG_JCG
+  gQBaseSBCount++;
+  mQBaseSBID = gQBaseSBID++;
+  printf("JCG: nsQBaseScrollBar CTOR (%p) ID: %d, Count: %d\n",
+         this,mQBaseSBID,gQBaseSBCount);
+#endif
+}
+
+nsQBaseScrollBar::~nsQBaseScrollBar()
+{
+#ifdef DBG_JCG
+  gQBaseSBCount--;
+  printf("JCG: nsQBaseScrollBar DTOR (%p) ID: %d, Count: %d\n",
+         this,mQBaseSBID,gQBaseSBCount);
+#endif
+}
+
+void nsQBaseScrollBar::ValueChanged(int aValue)
+{
+  ScrollBarMoved(NS_SCROLLBAR_POS,aValue);
+}
+
+void nsQBaseScrollBar::ScrollBarMoved(int aMessage,int aValue)
+{
+  if (mWidget) {
+     nsScrollbarEvent nsEvent;
+
+     nsEvent.message         = aMessage;
+     nsEvent.widget          = mWidget;
+     nsEvent.eventStructType = NS_SCROLLBAR_EVENT;
+     nsEvent.position        = aValue;
+        
+     ((nsScrollbar*)mWidget)->OnScroll(nsEvent,aValue);
+  }
+}
+
+PRBool nsQBaseScrollBar::CreateNative(int aMinValue,int aMaxValue,
+                                      int aLineStep,int aPageStep,int aValue,
+                                      Orientation aOrientation,QWidget *aParent,
+                                      const char *aName)
+{
+  if (!(mQWidget = new nsQScrollBar(aMinValue,aMaxValue,aLineStep,aPageStep,aValue,
+                                    aOrientation,aParent,aName))) {
+    return PR_FALSE;
+  }
+  connect((QScrollBar*)mQWidget,SIGNAL(valueChanged(int)),this,SLOT(ValueChanged(int)));
+  mQWidget->installEventFilter(this);
+  return PR_TRUE;
+}
+
+void nsQBaseScrollBar::Destroy()
+{
+  mEnabled = PR_FALSE;
+
+  if (mWidget) {
+    mWidget = nsnull;
+  }
+}
+
+PRBool nsQBaseScrollBar::MouseButtonEvent(QMouseEvent *aEvent,PRBool aButtonDown,
+                                          int aClickCount)
+{
+  return PR_FALSE;
+}
+
+PRBool nsQBaseScrollBar::MouseMovedEvent(QMouseEvent *aEvent)
+{
+  return PR_FALSE;
+}
+
+PRBool nsQBaseScrollBar::PaintEvent(QPaintEvent *aEvent)
+{
+  return PR_FALSE;
+}
+
+//=============================================================================
+// nsQScrollBar class
+//=============================================================================
+nsQScrollBar::nsQScrollBar(int aMinValue,int aMaxValue,
+                           int aLineStep,int aPageStep,int aValue,
+                           Orientation aOrientation,QWidget *aParent,
+                           const char *aName)
+              : QScrollBar(aMinValue,aMaxValue,aLineStep,aPageStep,aValue,
+                           aOrientation,aParent,aName)
+{
+#ifdef DBG_JCG
+  gQSBCount++;
+  mQSBID = gQSBID++;
+  printf("JCG: nsQScrollBar CTOR (%p) ID: %d, Count: %d\n",this,mQSBID,gQSBCount);
+#endif
+  setMouseTracking(PR_TRUE);
+  setTracking(PR_TRUE);
 }
 
 nsQScrollBar::~nsQScrollBar()
 {
+#ifdef DBG_JCG
+  gQSBCount--;
+  printf("JCG: nsQScrollBar DTOR (%p) ID: %d, Count: %d\n",this,mQSBID,gQSBCount);
+#endif
 }
 
-void nsQScrollBar::SetValue(int value)
+void nsQScrollBar::closeEvent(QCloseEvent *aEvent)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::SetValue: setting %d\n",
-            value));
-    ScrollBarMoved(NS_SCROLLBAR_POS, value);
+  aEvent->ignore();
 }
 
-void nsQScrollBar::PreviousLine()
-{
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::PreviousLine()\n"));
-    ScrollBarMoved(NS_SCROLLBAR_LINE_PREV);
-}
-
-void nsQScrollBar::NextLine()
-{
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::NextLine()\n"));
-    ScrollBarMoved(NS_SCROLLBAR_LINE_NEXT);
-}
-
-void nsQScrollBar::PreviousPage()
-{
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::PreviousPage()\n"));
-    ScrollBarMoved(NS_SCROLLBAR_PAGE_PREV);
-}
-
-void nsQScrollBar::NextPage()
-{
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::NextPage()\n"));
-    ScrollBarMoved(NS_SCROLLBAR_PAGE_NEXT);
-}
-
-void nsQScrollBar::ScrollBarMoved(int message, int value)
-{
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsQScrollBar::ScrollBarMoved()\n"));
-    if (mWidget)
-    {
-        nsScrollbarEvent nsEvent;
-
-        nsEvent.message         = message;
-        nsEvent.widget          = mWidget;
-        NS_IF_ADDREF(nsEvent.widget);
-        nsEvent.eventStructType = NS_SCROLLBAR_EVENT;
-        nsEvent.position        = value;
-        
-        ((nsScrollbar *)mWidget)->OnScroll(nsEvent, value);
-        NS_IF_RELEASE(nsEvent.widget);
-    }
-}
-
-void nsQScrollBar::closeEvent(QCloseEvent *ce)
-{
-  ce->ignore();
-}
-
-NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWidget);
-NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWidget);
-NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
+//=============================================================================
+// nsScrollBar class
+//=============================================================================
+NS_IMPL_ADDREF_INHERITED(nsScrollbar,nsWidget);
+NS_IMPL_RELEASE_INHERITED(nsScrollbar,nsWidget);
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar,nsIScrollbar,nsIWidget)
 
 //-------------------------------------------------------------------------
-//
 // nsScrollbar constructor
-//
 //-------------------------------------------------------------------------
-nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget (), nsIScrollbar ()
+nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::nsScrollbar()\n"));
-    mOrientation = aIsVertical ? QScrollBar::Vertical : QScrollBar::Horizontal;
-    mLineStep = 1;
-    mPageStep = 10;
-    mMaxValue = 100;
-    mValue    = 0;
-    mListenForResizes = PR_TRUE;
+#ifdef DBG_JCG
+  gNsSBCount++;
+  mNsSBID = gNsSBID++;
+  printf("JCG: nsScrollBar CTOR (%p) ID: %d, Count: %d\n",this,mNsSBID,gNsSBCount);
+#endif
+  mOrientation = aIsVertical ? QScrollBar::Vertical : QScrollBar::Horizontal;
+  mLineStep = 1;
+  mPageStep = 10;
+  mMaxValue = 100;
+  mValue    = 0;
+  mListenForResizes = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
-//
 // nsScrollbar destructor
-//
 //-------------------------------------------------------------------------
 nsScrollbar::~nsScrollbar()
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::~nsScrollbar()\n"));
+#ifdef DBG_JCG
+  gNsSBCount--;
+  printf("JCG: nsScrollBar DTOR (%p) ID: %d, Count: %d\n",this,mNsSBID,gNsSBCount);
+#endif
 }
 
 //-------------------------------------------------------------------------
-//
 // Define the range settings
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::SetMaxRange()\n"));
-    mMaxValue = aEndRange;
-
-    ((QScrollBar*)mWidget)->setRange(0, mMaxValue - mPageStep);
-
-    return NS_OK;
+  mMaxValue = aEndRange;
+  ((nsQBaseScrollBar*)mWidget)->SetRange(0,mMaxValue - mPageStep);
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Return the range settings
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
+NS_METHOD nsScrollbar::GetMaxRange(PRUint32 &aMaxRange)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::GetMaxRange: %d\n",
-            aMaxRange));
-    aMaxRange = mMaxValue;
-
-    return NS_OK;
+  aMaxRange = mMaxValue;
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Set the thumb position
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::SetPosition()\n"));
-    mValue = aPos;
-
-    ((QScrollBar*)mWidget)->setValue(mValue);
-
-    return NS_OK;
+  mValue = aPos;
+  ((nsQBaseScrollBar*)mWidget)->SetValue(mValue);
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Get the current thumb position.
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
+NS_METHOD nsScrollbar::GetPosition(PRUint32 &aPos)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::GetPosition %u\n", 
-            mValue));
-    aPos = mValue;
-
-    return NS_OK;
+  aPos = mValue;
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Set the thumb size
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::SetThumbSize()\n"));
-    if (aSize > 0)
-    {
-        mPageStep = aSize;
+  if (aSize > 0) {
+    mPageStep = aSize;
         
-        ((QScrollBar*)mWidget)->setSteps(mLineStep, mPageStep);
-    }
-
-    return NS_OK;
+    ((nsQBaseScrollBar*)mWidget)->SetSteps(mLineStep,mPageStep);
+  }
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Get the thumb size
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
+NS_METHOD nsScrollbar::GetThumbSize(PRUint32 &aThumbSize)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::GetThumbSize: %u\n",
-            mPageStep));
-    aThumbSize = mPageStep;
-
-    return NS_OK;
+  aThumbSize = mPageStep;
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Set the line increment for this scrollbar
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::SetLineIncrement\n"));
-    if (aLineIncrement > 0)
-    {
-        mLineStep = aLineIncrement;
+  if (aLineIncrement > 0) {
+    mLineStep = aLineIncrement;
 
-        ((QScrollBar*)mWidget)->setSteps(mLineStep, mPageStep);
-    }
-
-    return NS_OK;
+    ((nsQBaseScrollBar*)mWidget)->SetSteps(mLineStep,mPageStep);
+  }
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Get the line increment for this scrollbar
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 & aLineInc)
+NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 &aLineInc)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::GetLineIncrement: %u\n",
-            mLineStep));
-    aLineInc = mLineStep;
-
-    return NS_OK;
+  aLineInc = mLineStep;
+  return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
-//
 // Set all scrolling parameters
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, 
-                                     PRUint32 aThumbSize,
-                                     PRUint32 aPosition, 
-                                     PRUint32 aLineIncrement)
+NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange,PRUint32 aThumbSize,
+                                     PRUint32 aPosition,PRUint32 aLineIncrement)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::SetParameters: max=%d,thumb=%d,pos=%d,inc=%d\n", 
-            aMaxRange, 
-            aThumbSize, 
-            aPosition, 
-            aLineIncrement));
-    mPageStep = (int)(((int)aThumbSize > 0) ? aThumbSize : 1);
-    mValue    = (int)(((int)aPosition > 0) ? aPosition : 0);
-    mLineStep = (int)(((int)aLineIncrement > 0) ? aLineIncrement : 1);
-    mMaxValue = (int)(((int)aMaxRange > 0) ? aMaxRange : 10);
+  mPageStep = (aThumbSize > 0) ? aThumbSize : 1;
+  mValue    = (aPosition > 0) ? aPosition : 0;
+  mLineStep = (aLineIncrement > 0) ? aLineIncrement : 1;
+  mMaxValue = (aMaxRange > 0) ? aMaxRange : 10;
     
-    ((QScrollBar*)mWidget)->setValue(mValue);
-    ((QScrollBar*)mWidget)->setSteps(mLineStep, mPageStep);
-    ((QScrollBar*)mWidget)->setRange(0, mMaxValue - mPageStep);
-
-    return NS_OK;
+  ((nsQBaseScrollBar*)mWidget)->SetValue(mValue);
+  ((nsQBaseScrollBar*)mWidget)->SetSteps(mLineStep,mPageStep);
+  ((nsQBaseScrollBar*)mWidget)->SetRange(0,mMaxValue - mPageStep);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-//
 // Deal with scrollbar messages (actually implemented only in nsScrollbar)
-//
 //-------------------------------------------------------------------------
-PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
+PRBool nsScrollbar::OnScroll(nsScrollbarEvent &aEvent,PRUint32 cPos)
 {
-    PR_LOG(QtScrollLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::OnScroll()\n"));
-    PRBool result = PR_TRUE;
+  PRBool result = PR_TRUE;
 
-    switch (aEvent.message)
-    {
-      // scroll one line right or down
-      case NS_SCROLLBAR_LINE_NEXT:
-        ((QScrollBar*)mWidget)->addLine();
-        
-        mValue = ((QScrollBar*)mWidget)->value();
+  switch (aEvent.message) {
+    // scroll one line right or down
+    case NS_SCROLLBAR_LINE_NEXT:
+      ((nsQBaseScrollBar*)mWidget)->AddLine();
+      mValue = ((nsQBaseScrollBar*)mWidget)->Value();
 
-        // if an event callback is registered, give it the chance
-        // to change the increment
-        if (mEventCallback)
-        {
-            aEvent.position = (PRUint32) mValue;
-            result = ConvertStatus ((*mEventCallback) (&aEvent));
-            mValue = aEvent.position;
-        }
-        break;
+      // if an event callback is registered, give it the chance
+      // to change the increment
+      if (mEventCallback) {
+        aEvent.position = (PRUint32)mValue;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        mValue = aEvent.position;
+      }
+      break;
 
-      // scroll one line left or up
-      case NS_SCROLLBAR_LINE_PREV:
-        ((QScrollBar*)mWidget)->subtractLine();
-        mValue = ((QScrollBar*)mWidget)->value();
+    // scroll one line left or up
+    case NS_SCROLLBAR_LINE_PREV:
+      ((nsQBaseScrollBar*)mWidget)->SubtractLine();
+      mValue = ((nsQBaseScrollBar*)mWidget)->Value();
 
-        // if an event callback is registered, give it the chance
-        // to change the decrement
-        if (mEventCallback)
-        {
-            aEvent.position = (PRUint32) mValue;
-            result = ConvertStatus ((*mEventCallback) (&aEvent));
-            mValue = aEvent.position;
-        }
-        break;
+      // if an event callback is registered, give it the chance
+      // to change the decrement
+      if (mEventCallback) {
+        aEvent.position = (PRUint32)mValue;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        mValue = aEvent.position;
+      }
+      break;
 
-      // Scrolls one page right or down
-      case NS_SCROLLBAR_PAGE_NEXT:
-        ((QScrollBar*)mWidget)->addPage();
-        mValue = ((QScrollBar*)mWidget)->value();
+    // Scrolls one page right or down
+    case NS_SCROLLBAR_PAGE_NEXT:
+      ((nsQBaseScrollBar*)mWidget)->AddPage();
+      mValue = ((nsQBaseScrollBar*)mWidget)->Value();
 
-        // if an event callback is registered, give it the chance
-        // to change the increment
-        if (mEventCallback)
-        {
-            aEvent.position = (PRUint32) mValue;
-            result = ConvertStatus ((*mEventCallback) (&aEvent));
-            mValue = aEvent.position;
-        }
-        break;
+      // if an event callback is registered, give it the chance
+      // to change the increment
+      if (mEventCallback) {
+        aEvent.position = (PRUint32)mValue;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        mValue = aEvent.position;
+      }
+      break;
 
-      // Scrolls one page left or up.
-      case NS_SCROLLBAR_PAGE_PREV:
-        ((QScrollBar*)mWidget)->subtractPage();
-        mValue = ((QScrollBar*)mWidget)->value();
+    // Scrolls one page left or up.
+    case NS_SCROLLBAR_PAGE_PREV:
+      ((nsQBaseScrollBar*)mWidget)->SubtractPage();
+      mValue = ((nsQBaseScrollBar*)mWidget)->Value();
 
-        // if an event callback is registered, give it the chance
-        // to change the increment
-        if (mEventCallback)
-        {
-            aEvent.position = (PRUint32) mValue;
-            result = ConvertStatus ((*mEventCallback) (&aEvent));
-            mValue = aEvent.position;
-        }
-        break;
+      // if an event callback is registered, give it the chance
+      // to change the increment
+      if (mEventCallback) {
+        aEvent.position = (PRUint32)mValue;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        mValue = aEvent.position;
+      }
+      break;
 
-      // Scrolls to the absolute position. The current position is specified by
-      // the cPos parameter.
-      case NS_SCROLLBAR_POS:
-        mValue = cPos;
+    // Scrolls to the absolute position. The current position is specified by
+    // the cPos parameter.
+    case NS_SCROLLBAR_POS:
+      mValue = cPos;
 
-        // if an event callback is registered, give it the chance
-        // to change the increment
-        if (mEventCallback)
-        {
-            aEvent.position = (PRUint32) mValue;
-            result = ConvertStatus ((*mEventCallback) (&aEvent));
-            mValue = aEvent.position;
-        }
-        break;
+      // if an event callback is registered, give it the chance
+      // to change the increment
+      if (mEventCallback) {
+        aEvent.position = (PRUint32)mValue;
+        result = ConvertStatus((*mEventCallback)(&aEvent));
+        mValue = aEvent.position;
+      }
+      break;
     }
     return result;
 }
 
 //-------------------------------------------------------------------------
-//
 // Create the native scrollbar widget
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::CreateNative(QWidget * parentWindow)
+NS_METHOD nsScrollbar::CreateNative(QWidget *aParentWindow)
 {
-    PR_LOG(QtScrollLM,
-           PR_LOG_DEBUG,
-           ("nsScrollBar::CreateNative: max=%d, linestep=%d, pagestep=%d\n",
-            mMaxValue,
-            mLineStep,
-            mPageStep));
-    mWidget = new nsQScrollBar(this, 0, mMaxValue, mLineStep, mPageStep,
-                               mValue, mOrientation, parentWindow,
-                               QScrollBar::tr("nsScrollBar"));
- 
-    if (mWidget) {
-        ((QScrollBar*)mWidget)->setTracking(true);
-    }
- 
-    return nsWidget::CreateNative(parentWindow);
-}
+  mWidget = new nsQBaseScrollBar(this);
 
-const char *nsScrollbar::GetName()
-{
-  return nsWidget::GetName();
+  if (!mWidget)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!((nsQBaseScrollBar*)mWidget)->CreateNative(0,mMaxValue,mLineStep,mPageStep,
+                                                  mValue,mOrientation,aParentWindow,
+                                                  QScrollBar::tr("nsScrollBar"))) {
+    delete mWidget;
+    mWidget = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return nsWidget::CreateNative(aParentWindow);
 }

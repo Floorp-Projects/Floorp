@@ -17,7 +17,8 @@
  * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
  *
  * Contributor(s): 
- *   Christopher Blizzzard <blizzard@mozilla.org>
+ *   John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsIGenericFactory.h"
@@ -50,34 +51,29 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorQT)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQT)
 
 // our custom constructors
-
-static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static nsresult nsScriptableRegionConstructor(nsISupports *aOuter,REFNSIID aIID,void **aResult)
 {
   nsresult rv;
 
   nsIScriptableRegion *inst;
 
-  if ( NULL == aResult )
-  {
+  if (NULL == aResult) {
     rv = NS_ERROR_NULL_POINTER;
     return rv;
   }
   *aResult = NULL;
-  if (NULL != aOuter)
-  {
+  if (NULL != aOuter) {
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
   }
   // create an nsRegionQT and get the scriptable region from it
   nsCOMPtr <nsIRegion> rgn;
   NS_NEWXPCOM(rgn, nsRegionQT);
-  if (rgn != nsnull)
-  {
+  if (rgn != nsnull) {
     nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
     inst = scriptableRgn;
   }
-  if (NULL == inst)
-  {
+  if (NULL == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     return rv;
   }
@@ -88,23 +84,21 @@ static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID
   return rv;
 }
 
-static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+static nsresult nsImageManagerConstructor(nsISupports *aOuter,REFNSIID aIID,void **aResult)
 {
     nsresult rv;
 
-  if ( NULL == aResult )
-  {
+  if (NULL == aResult) {
     rv = NS_ERROR_NULL_POINTER;
     return rv;
   }
   *aResult = NULL;
-  if (NULL != aOuter)
-  {
+  if (NULL != aOuter) {
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
   }
   // this will return an image manager with a count of 1
-  rv = NS_NewImageManager((nsIImageManager **)aResult);
+  rv = NS_NewImageManager((nsIImageManager**)aResult);
   return rv;
 }
 

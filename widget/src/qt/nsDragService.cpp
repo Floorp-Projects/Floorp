@@ -19,27 +19,35 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Denis Issoupov <denis@macadamian.com>
+ *   John C. Griggs <johng@corel.com>
+ *
  */
+#ifdef NDEBUG
+#define NO_DEBUG
+#endif
 
 #include "nsDragService.h"
-#include "nsITransferable.h"
 #include "nsIServiceManager.h"
-
+#include "nsISupportsPrimitives.h"
+#include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
+#include "nsMime.h"
 #include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
+static NS_DEFINE_IID(kIDragSessionQtIID, NS_IDRAGSESSIONQT_IID);
 static NS_DEFINE_CID(kCDragServiceCID,   NS_DRAGSERVICE_CID);
-
-// The class statics:
-//GtkWidget* nsDragService::sWidget = 0;
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
+NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragSessionQt )
 
 //-------------------------------------------------------------------------
 // static variables
 //-------------------------------------------------------------------------
-  //static PRBool gHaveDrag = PR_FALSE;
+static PRBool gHaveDrag = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -48,7 +56,10 @@ NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+
+  // our hidden source widget
+  mHiddenWidget = new QWidget(0,QWidget::tr("DragDrop"),0);
 }
 
 //-------------------------------------------------------------------------
@@ -58,139 +69,217 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
-}
-
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-    if (NULL == aInstancePtr) 
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    nsresult rv = NS_NOINTERFACE;
-
-    if (aIID.Equals(NS_GET_IID(nsIDragService))) 
-    {
-        *aInstancePtr = (void*) ((nsIDragService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-return rv;
+  delete mHiddenWidget;
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP nsDragService::StartDragSession(nsITransferable * aTransferable,
-                                              PRUint32 aActionType)
-
+NS_IMETHODIMP
+nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+                                 nsISupportsArray *aArrayTransferables,
+                                 nsIScriptableRegion *aRegion,
+                                 PRUint32 aActionType)
 {
-    return NS_OK;
+  PRUint32 numItemsToDrag = 0;
+
+  nsBaseDragService::InvokeDragSession(aDOMNode, aArrayTransferables,
+                                       aRegion, aActionType);
+
+  // make sure that we have an array of transferables to use
+  if (!aArrayTransferables) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // set our reference to the transferables.  this will also addref
+  // the transferables since we're going to hang onto this beyond the
+  // length of this call
+  mSourceDataItems = aArrayTransferables;
+
+  mSourceDataItems->Count(&numItemsToDrag);
+  if (!numItemsToDrag) {
+    return NS_ERROR_FAILURE;
+  }
+  if (numItemsToDrag > 1) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsISupports> genericItem;
+
+  mSourceDataItems->GetElementAt(0,getter_AddRefs(genericItem));
+
+  nsCOMPtr<nsITransferable> transferable(do_QueryInterface(genericItem));
+
+  mDragObject = RegisterDragFlavors(transferable);
+  gHaveDrag = PR_TRUE;
+
+  if (aActionType == DRAGDROP_ACTION_MOVE)
+    mDragObject->dragMove();
+  else
+    mDragObject->dragCopy();
+
+  gHaveDrag = PR_FALSE;
+  mDragObject = 0;
+  return NS_OK;
 }
 
-#if 0 //JCG
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetData(nsITransferable * aTransferable,
+QDragObject *nsDragService::RegisterDragFlavors(nsITransferable *transferable)
+{
+  nsMimeStore *pMimeStore = new nsMimeStore();
+  nsCOMPtr<nsISupportsArray> flavorList;
+
+  if (NS_SUCCEEDED(transferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList)))) {
+    PRUint32 numFlavors;
+
+    flavorList->Count(&numFlavors);
+
+    for (PRUint32 flavorIndex = 0; flavorIndex < numFlavors; ++flavorIndex) { 
+      nsCOMPtr<nsISupports> genericWrapper;
+
+      flavorList->GetElementAt(flavorIndex,getter_AddRefs(genericWrapper));
+
+      nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericWrapper));
+
+      if (currentFlavor) {
+	nsXPIDLCString flavorStr;
+
+	currentFlavor->ToString(getter_Copies(flavorStr));
+  
+	PRUint32   len;
+	void* data;
+	nsCOMPtr<nsISupports> clip;
+
+	transferable->GetTransferData(flavorStr,getter_AddRefs(clip),&len);
+        nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr,clip,&data,len);
+        pMimeStore->AddFlavorData(flavorStr,data,len);
+      }
+    } // foreach flavor in item              
+  } // if valid flavor list
+#ifdef NS_DEBUG
+  else
+   printf(" DnD ERROR: cannot export any flavor\n");
+#endif
+  return new nsDragObject(pMimeStore,mHiddenWidget);
+} // RegisterDragItemsAndFlavors
+
+NS_IMETHODIMP nsDragService::StartDragSession()
+{
+#ifdef NS_DEBUG
+  printf(" DnD: StartDragSession\n");
+#endif
+  return nsBaseDragService::StartDragSession();
+}
+
+NS_IMETHODIMP nsDragService::EndDragSession()
+{
+#ifdef NS_DEBUG
+  printf(" DnD: EndDragSession\n");
+#endif
+  mDragObject = 0;
+  return nsBaseDragService::EndDragSession();
+}
+
+// nsIDragSession
+NS_IMETHODIMP nsDragService::SetCanDrop(PRBool aCanDrop)
+{
+  mCanDrop = aCanDrop;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDragService::GetCanDrop(PRBool *aCanDrop)
+{
+  *aCanDrop = mCanDrop;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDragService::GetNumDropItems(PRUint32 *aNumItems)
+{
+  *aNumItems = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable,
                                      PRUint32 aItemIndex)
 {
-    return NS_ERROR_FAILURE;
-}
+  // make sure that we have a transferable
+  if (!aTransferable)
+    return NS_ERROR_INVALID_ARG;
 
-//-------------------------------------------------------------------------
-void nsDragService::SetTopLevelWidget(QWidget* w)
-{
-    printf("  nsDragService::SetTopLevelWidget\n");
-  
-    // Don't set up any more event handlers if we're being called twice
-    // for the same toplevel widget
-    if (sWidget == w)
-        return;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupportsArray> flavorList;
 
-    sWidget = w;
+  rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  if (NS_FAILED(rv))
+    return rv;
 
-    // Get the DragService from the service manager.
-    nsresult rv;
-    NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+  // count the number of flavors
+  PRUint32 cnt;
 
-    if (NS_FAILED(rv)) 
-    {
-        return;
+  flavorList->Count(&cnt);
+
+  // Now walk down the list of flavors. When we find one that is
+  // actually present, copy out the data into the transferable in that
+  // format. SetTransferData() implicitly handles conversions.
+  for (unsigned int i = 0; i < cnt; ++i) {
+    nsCAutoString foundFlavor;
+    nsCOMPtr<nsISupports> genericWrapper;
+
+    flavorList->GetElementAt(i,getter_AddRefs(genericWrapper));
+
+    nsCOMPtr<nsISupportsString> currentFlavor;
+
+    currentFlavor = do_QueryInterface(genericWrapper);
+    if (currentFlavor) {
+      nsXPIDLCString flavorStr;
+
+      currentFlavor->ToString(getter_Copies(flavorStr));
+      foundFlavor = nsCAutoString(flavorStr);
+      
+      if (mDragObject && mDragObject->provides(flavorStr)) {
+	QByteArray ba = mDragObject->encodedData((const char*)flavorStr);
+        nsCOMPtr<nsISupports> genericDataWrapper;
+	PRUint32 len = (PRUint32)ba.count();
+
+        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor, 
+ 						   (void*)ba.data(),len, 
+                                                   getter_AddRefs(genericDataWrapper));
+
+        aTransferable->SetTransferData(foundFlavor,genericDataWrapper,len);
+      }
     }
-
-    // We're done with our reference to the dragService.
-    //NS_IF_RELEASE(dragService);
+  }
+  return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-void  
-nsDragService::DragLeave(QWidget	*widget,
-			 QDragContext   *context,
-                         unsigned int   time)
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
+                                                   PRBool *_retval)
 {
-    printf("leave\n");
+  if (!_retval)
+    return NS_ERROR_INVALID_ARG;
+
+  *_retval = PR_FALSE;
+
+  if (mDragObject)
+     *_retval = mDragObject->provides(aDataFlavor);
+
+#ifdef NS_DEBUG
+  if (!*_retval)
+    printf("nsDragService::IsDataFlavorSupported not provides [%s] \n", aDataFlavor);
+#endif
+  return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-PRBool
-nsDragService::DragMotion(QWidget	 *widget,
-			  QDragContext   *context,
-			  int            x,
-			  int            y,
-			  unsigned int   time)
+NS_IMETHODIMP nsDragService::SetDragReference(QMimeSource* aDragRef)
 {
-    printf("drag motion\n");
-    return PR_TRUE;
-}
+   nsMimeStore*  pMimeStore = new nsMimeStore();
+   int c = 0;
+   const char* format;
 
-//-------------------------------------------------------------------------
-PRBool
-nsDragService::DragDrop(QWidget	       *widget,
-			QDragContext   *context,
-			int            x,
-			int            y,
-			unsigned int   time)
-{
-    printf("drop\n");
-    return PR_FALSE;
-}
+   while ((format = aDragRef->format(c++)) != 0) {
+     // this is usualy between different processes
+     // so, we need to copy datafrom one to onother
 
-//-------------------------------------------------------------------------
-void  
-nsDragService::DragDataReceived(QWidget          *widget,
-                                QDragContext     *context,
-                                int              x,
-                                int              y,
-                                QSelectionData   *data,
-                                unsigned int     info,
-                                guint               time)
-{
-    printf("Data Received!\n");
+     QByteArray ba = aDragRef->encodedData(format);
+     char *data = new char[ba.size()];
+     memcpy(data,ba.data(),ba.size());
+     pMimeStore->AddFlavorData(format,data,ba.size());
+   }
+   mDragObject = new nsDragObject(pMimeStore,mHiddenWidget);
+   return NS_OK;
 }
-  
-//-------------------------------------------------------------------------
-void  
-nsDragService::DragDataGet(QWidget          *widget,
-		           QDragContext     *context,
-		           QSelectionData   *selection_data,
-		           unsigned int     info,
-		           unsigned int     time,
-		           void             *data)
-{
-    printf("Get the data!\n");
-}
-
-//-------------------------------------------------------------------------
-void  
-nsDragService::DragDataDelete(QWidget          *widget,
-			      QDragContext     *context,
-			      void             *data)
-{
-    printf("Delete the data!\n");
-}
-#endif /* JCG */
