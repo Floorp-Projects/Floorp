@@ -306,7 +306,10 @@ BASIC_LIBS	+= \
 		  $(NULL)
 
 ifdef MOZ_LDAP
-BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
+BASIC_LIBS	+= \
+		$(DIST)/lib/libldap.a \
+		$(DIST)/lib/liblber.a \
+		$(NULL)
 endif
 
 ifdef MOZ_MAIL_NEWS
