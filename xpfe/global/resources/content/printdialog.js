@@ -398,17 +398,20 @@ function onAccept()
     gPrintSettings.toFileName   = dialog.fileInput.value;
     gPrintSettings.printerName  = dialog.printerList.value;
 
-    var sfile = Components.classes["@mozilla.org/file/local;1"]
-                .createInstance(Components.interfaces.nsILocalFile);
-    sfile.initWithPath(gPrintSettings.toFileName);
-    if (sfile.exists() &&
-        gPrintSettings.printToFile &&
-        gPrintSettings.toFileName != gFileFromPicker) {
-      var desc = stringBundle.formatStringFromName("fileConfirm.exists",
-                                                   [gPrintSettings.toFileName],
-                                                   1);
-      if (!promptService.confirm(this.window, null, desc)) {
+    if (gPrintSettings.printToFile) {
+      if (gPrintSettings.toFileName == "")
         return false;
+      var sfile = Components.classes["@mozilla.org/file/local;1"]
+                  .createInstance(Components.interfaces.nsILocalFile);
+      sfile.initWithPath(gPrintSettings.toFileName);
+      if (sfile.exists() &&
+        gPrintSettings.toFileName != gFileFromPicker) {
+        var desc = stringBundle.formatStringFromName("fileConfirm.exists",
+                                                     [gPrintSettings.toFileName],
+                                                     1);
+        if (!promptService.confirm(this.window, null, desc)) {
+          return false;
+        }
       }
     }
 
