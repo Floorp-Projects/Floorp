@@ -109,6 +109,15 @@ nsPositionedInlineFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) 
 }
 
 NS_IMETHODIMP
+nsPositionedInlineFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::positionedInlineFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
