@@ -65,7 +65,7 @@ export::
 	@echo +++ NOTE, you must have the org.w3c.dom classes in your classpath!
 	@echo +++ If you do not have org.w3c.dom classes, webclient will not build.
 	@echo +++ You can get the required dom classes at 
-	@echo +++ http://www.mozilla.org/projects/blackwood/webclient/bin/m3/dom2-20000307.jar
+	@echo +++ http://www.mozilla.org/projects/blackwood/webclient/bin/m3/files.html
 	@echo +++
 	@echo +++ checking that org.mozilla.dom classes have been built...
 	if not exist $(MOZ_SRC)\mozilla\dist\classes\org\mozilla\dom\DOMAccessor.class \
