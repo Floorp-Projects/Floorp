@@ -35,6 +35,11 @@ PR_BEGIN_EXTERN_C
 #define NS_A4_SIZE        3
 #endif
 
+#ifdef NTO
+// XXX Perhaps an NSPR macro would be a better solution.
+#define PATH_MAX _POSIX_PATH_MAX
+#endif
+
 typedef struct unixprdata {
         PRBool toPrinter;          /* If PR_TRUE, print to printer */
         PRBool fpf;                /* If PR_TRUE, first page first */
