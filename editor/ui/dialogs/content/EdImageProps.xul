@@ -226,7 +226,7 @@
           <spring class="spacer"/>
           <stack>
             <menulist id = "alignTypeSelect" oncommand="changeAlignment(event.target)" 
-                      style="height: 15px">
+                      style="height: 15px" onfocus="onAlignFocus();" onblur="onAlignBlur();">
               <menupopup valign="middle">
                 <menuitem class="middle" valign="middle" autostretch="never">
                   <spring class="spacer"/>
@@ -263,7 +263,7 @@
               mousethrough="always">
               <image id="alignImage"/>
               <spring class="spacer"/>
-              <text id="alignText" class="label"/>
+              <text id="alignText" class="label menu-list"/>
             </box>
           </stack>
         </titledbox>
