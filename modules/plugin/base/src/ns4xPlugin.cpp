@@ -60,10 +60,6 @@ ns4xPlugin::CheckClassInitialized(void)
     CALLBACKS.size = sizeof(CALLBACKS);
     CALLBACKS.version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
 
-#if !TARGET_CARBON
-// pinkerton - these macros rely on BuildRoutineDescriptor(), which is no longer in
-// Carbon. Our easy solution to this is to drop support for 68K plugins. Now we just
-// need to do the work...
     CALLBACKS.geturl           = NewNPN_GetURLProc(_geturl);
     CALLBACKS.posturl          = NewNPN_PostURLProc(_posturl);
     CALLBACKS.requestread      = NewNPN_RequestReadProc(_requestread);
@@ -85,10 +81,9 @@ ns4xPlugin::CheckClassInitialized(void)
     CALLBACKS.invalidaterect   = NewNPN_InvalidateRectProc(_invalidaterect);
     CALLBACKS.invalidateregion = NewNPN_InvalidateRegionProc(_invalidateregion);
     CALLBACKS.forceredraw      = NewNPN_ForceRedrawProc(_forceredraw);
-#endif
 
     initialized = TRUE;
-};
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports stuff
@@ -313,9 +308,14 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 		return NS_ERROR_UNEXPECTED;
 #endif
 
-#if defined(XP_MAC) && !TARGET_CARBON
+#if defined(XP_MAC)
+#if TARGET_CARBON
+	// get the main entry point
+	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
+#else
 	// get the mainRD entry point
 	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
+#endif
 	if(pfnMain == NULL)
 		return NS_ERROR_FAILURE;
 		
@@ -335,14 +335,13 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 		const nsFileSpec& file = iter;
 		if (pluginsDir.IsPluginFile(file)) 
 		{
-				FSSpec spec = file;
-				char* fileName = p2cstrdup(spec.name);
-				if(!PL_strcmp(fileName, aFileName))
-					{
-					Boolean targetIsFolder, wasAliased;
-					OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-					pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
-					}
+            FSSpec spec = file;
+            if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
+            {
+                Boolean targetIsFolder, wasAliased;
+                OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
+                pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
+            }
 		}
 	}
 
@@ -438,10 +437,8 @@ ns4xPlugin::Shutdown(void)
 	printf("shutting down plugin %08x\n",(int)this);
 #endif
 #ifdef XP_MAC
-#if !TARGET_CARBON
 	CallNPP_ShutdownProc(fShutdownEntry);
 	::CloseResFile(fPluginRefNum);
-#endif
 #else
   NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary);
 #endif

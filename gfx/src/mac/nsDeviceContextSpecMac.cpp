@@ -55,9 +55,7 @@ nsDeviceContextSpecMac :: ~nsDeviceContextSpecMac()
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecMac, kDeviceContextSpecIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecMac)
-NS_IMPL_RELEASE(nsDeviceContextSpecMac)
+NS_IMPL_ISUPPORTS2(nsDeviceContextSpecMac, nsIDeviceContextSpec, nsIPrintingContext)
 
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecMac
@@ -115,3 +113,39 @@ PRBool	isPMOpen;
 	
 	return NS_OK;
 }  
+
+NS_IMETHODIMP nsDeviceContextSpecMac::BeginDocument()
+{
+    nsresult rv = NS_OK;
+    return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecMac::EndDocument()
+{
+    nsresult rv = NS_OK;
+    return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecMac::BeginPage()
+{
+    nsresult rv = NS_OK;
+    return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecMac::EndPage()
+{
+    nsresult rv = NS_OK;
+    return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecMac::GetPrinterResolution(double* aResolution)
+{
+    nsresult rv = NS_OK;
+    return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecMac::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
+{
+    nsresult rv = NS_OK;
+    return rv;
+}

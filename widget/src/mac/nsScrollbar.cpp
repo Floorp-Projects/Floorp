@@ -51,7 +51,7 @@ nsScrollbar::nsScrollbar(PRBool /*aIsVertical*/)
 	WIDGET_SET_CLASSNAME("nsScrollbar");
 	SetControlType(kControlScrollBarLiveProc);
 	if (!sControlActionProc)
-		sControlActionProc = NewControlActionProc(nsScrollbar::ScrollActionProc);
+		sControlActionProc = NewControlActionUPP(nsScrollbar::ScrollActionProc);
 	// Unfortunately, not disposed when the app quits, but that's still a non-issue.
 }
 

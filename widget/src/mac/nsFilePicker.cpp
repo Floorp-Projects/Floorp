@@ -283,8 +283,8 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
-	NavObjectFilterUPP filterProc = NewNavObjectFilterProc(FileDialogFilterProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
+	NavObjectFilterUPP filterProc = NewNavObjectFilterUPP(FileDialogFilterProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -357,7 +357,7 @@ nsFilePicker::GetLocalFolder(Str255 & inTitle, FSSpec* outSpec)
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
 
 	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
 	if (anErr == noErr)	{	
@@ -413,7 +413,7 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
  	PRInt16 retVal = returnCancel;
 	NavReplyRecord reply;
 	NavDialogOptions dialogOptions;
-	NavEventUPP eventProc = NewNavEventProc(FileDialogEventHandlerProc);  // doesn't really matter if this fails
+	NavEventUPP eventProc = NewNavEventUPP(FileDialogEventHandlerProc);  // doesn't really matter if this fails
 	OSType				typeToSave = 'TEXT';
 	OSType				creatorToSave = 'MOZZ';
 

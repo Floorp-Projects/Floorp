@@ -35,6 +35,8 @@
  *    recordID->metadata
  */
 
+#include <fcntl.h>
+
 #include "nsDBAccessor.h"
 #include "nscore.h"
 

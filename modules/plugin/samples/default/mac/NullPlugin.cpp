@@ -113,8 +113,10 @@ char*		CPlugin::sJavaScriptPage	= NULL;
 FSSpec		CPlugin::sDataFileSpec;
 
 extern short 		gResFile;
-extern QDGlobals*	gQDPtr;
 
+#if !TARGET_API_MAC_CARBON
+extern QDGlobals*	gQDPtr;
+#endif
 
 // 'cicn'
 const short rBrokenPluginIcon = 326;
@@ -696,7 +698,12 @@ void CPlugin::Draw(HiliteState hilite)
 	RGBForeColor(&black);
 	RGBBackColor(&white);
 
+#if !TARGET_API_MAC_CARBON
 	FillRect(&drawRect, &(gQDPtr->white));
+#else
+    Pattern qdWhite;
+    FillRect(&drawRect, GetQDGlobalsWhite(&qdWhite));
+#endif
 
 	if (hilite == kHilited) {
 		hiliteColor.red = 0xFFFF;
@@ -784,8 +791,14 @@ Boolean CPlugin::FocusDraw()
 	{
 		GetPort(&fSavePort);
 		SetPort((GrafPtr) ourPort);
-		fSavePortTop = ourPort->portRect.top;
-		fSavePortLeft = ourPort->portRect.left;
+        Rect portRect;
+#if !TARGET_API_MAC_CARBON
+        portRect = ourPort->portRect;
+#else
+        GetPortBounds(ourPort, &portRect);
+#endif
+		fSavePortTop = portRect.top;
+		fSavePortLeft = portRect.left;
 		GetClip(fSaveClip);
 		
 		fRevealedRect.top = fWindow->clipRect.top + npport->porty;
@@ -1051,8 +1064,13 @@ void CPlugin::AskAndLoadURL()
 
 		// NOTE: We need to set the cursor because almost always we will have set it to the
 		// hand cursor before we get here.
+#if !TARGET_API_MAC_CARBON
 		SetCursor(&(gQDPtr->arrow));
-		
+#else
+        Cursor qdArrow;
+		SetCursor(GetQDGlobalsArrow(&qdArrow));
+#endif
+
 		// Now that we’ve queried the user about this mime type,
 		// add it to our list so we won’t bug them again.
 		AddMimeTypeToList(ourType);

@@ -159,6 +159,10 @@ int ap_encode_file_infor(
 	}
 
 	/* get a file comment, if possible */
+#if TARGET_CARBON
+    // not sure why working directories are needed here...
+    comlen = 0;
+#else
 	procID = 0;
 	GetWDInfo(p_ap_encode_obj->vRefNum, &fpb->ioVRefNum, &fpb->ioDirID, &procID);
 	memset((void *) &vinfo, '\0', sizeof (vinfo));
@@ -182,6 +186,7 @@ int ap_encode_file_infor(
 				comlen = dtp.ioDTActCount;
 		}
 	}
+#endif
 	
 	/* write header */
 //	head.magic = dfork ? APPLESINGLE_MAGIC : APPLEDOUBLE_MAGIC;

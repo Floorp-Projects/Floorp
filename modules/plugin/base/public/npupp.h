@@ -22,7 +22,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.3 $
+ *  npupp.h $Revision: 3.4 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -56,7 +56,9 @@
 
 /* NPP_Initialize */
 
-#if TARGET_RT_MAC_CFM
+#define _NPUPP_USE_UPP_ (TARGET_RT_MAC_CFM && !TARGET_API_MAC_CARBON)
+
+#if _NPUPP_USE_UPP_
 typedef UniversalProcPtr NPP_InitializeUPP;
 
 enum {
@@ -83,7 +85,7 @@ typedef void (* NP_LOADDS NPP_InitializeUPP)(void);
 
 /* NPP_Shutdown */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 typedef UniversalProcPtr NPP_ShutdownUPP;
 
 enum {
@@ -110,7 +112,7 @@ typedef void (* NP_LOADDS NPP_ShutdownUPP)(void);
 
 /* NPP_New */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 typedef UniversalProcPtr NPP_NewUPP;
 
 enum {
@@ -143,7 +145,7 @@ typedef NPError	(* NP_LOADDS NPP_NewUPP)(NPMIMEType pluginType, NPP instance, ui
 
 /* NPP_Destroy */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_DestroyUPP;
 enum {
@@ -169,7 +171,7 @@ typedef NPError	(* NP_LOADDS NPP_DestroyUPP)(NPP instance, NPSavedData** save);
 
 /* NPP_SetWindow */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_SetWindowUPP;
 enum {
@@ -196,7 +198,7 @@ typedef NPError	(* NP_LOADDS NPP_SetWindowUPP)(NPP instance, NPWindow* window);
 
 /* NPP_NewStream */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_NewStreamUPP;
 enum {
@@ -224,7 +226,7 @@ typedef NPError	(* NP_LOADDS NPP_NewStreamUPP)(NPP instance, NPMIMEType type, NP
 
 /* NPP_DestroyStream */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_DestroyStreamUPP;
 enum {
@@ -252,7 +254,7 @@ typedef NPError	(* NP_LOADDS NPP_DestroyStreamUPP)(NPP instance, NPStream* strea
 
 /* NPP_WriteReady */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_WriteReadyUPP;
 enum {
@@ -279,7 +281,7 @@ typedef int32 (* NP_LOADDS NPP_WriteReadyUPP)(NPP instance, NPStream* stream);
 
 /* NPP_Write */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_WriteUPP;
 enum {
@@ -309,7 +311,7 @@ typedef int32 (* NP_LOADDS NPP_WriteUPP)(NPP instance, NPStream* stream, int32 o
 
 /* NPP_StreamAsFile */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_StreamAsFileUPP;
 enum {
@@ -336,7 +338,7 @@ typedef void (* NP_LOADDS NPP_StreamAsFileUPP)(NPP instance, NPStream* stream, c
 
 /* NPP_Print */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_PrintUPP;
 enum {
@@ -363,7 +365,7 @@ typedef void (* NP_LOADDS NPP_PrintUPP)(NPP instance, NPPrint* platformPrint);
 
 /* NPP_HandleEvent */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_HandleEventUPP;
 enum {
@@ -390,7 +392,7 @@ typedef int16 (* NP_LOADDS NPP_HandleEventUPP)(NPP instance, void* event);
 
 /* NPP_URLNotify */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_URLNotifyUPP;
 enum {
@@ -419,7 +421,7 @@ typedef void (* NP_LOADDS NPP_URLNotifyUPP)(NPP instance, const char* url, NPRea
 
 /* NPP_GetValue */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_GetValueUPP;
 enum {
@@ -445,7 +447,7 @@ typedef NPError	(* NP_LOADDS NPP_GetValueUPP)(NPP instance, NPPVariable variable
 
 /* NPP_SetValue */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_SetValueUPP;
 enum {
@@ -478,7 +480,7 @@ typedef NPError	(* NP_LOADDS NPP_SetValueUPP)(NPP instance, NPNVariable variable
 
 /* NPN_GetValue */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_GetValueUPP;
 enum {
@@ -504,7 +506,7 @@ typedef NPError	(* NP_LOADDS NPN_GetValueUPP)(NPP instance, NPNVariable variable
 
 /* NPN_SetValue */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_SetValueUPP;
 enum {
@@ -530,7 +532,7 @@ typedef NPError	(* NP_LOADDS NPN_SetValueUPP)(NPP instance, NPPVariable variable
 
 /* NPN_GetUrlNotify */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_GetURLNotifyUPP;
 enum {
@@ -557,7 +559,7 @@ typedef NPError	(* NP_LOADDS NPN_GetURLNotifyUPP)(NPP instance, const char* url,
 
 /* NPN_PostUrlNotify */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_PostURLNotifyUPP;
 enum {
@@ -587,7 +589,7 @@ typedef NPError (* NP_LOADDS NPN_PostURLNotifyUPP)(NPP instance, const char* url
 
 /* NPN_GetUrl */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_GetURLUPP;
 enum {
@@ -613,7 +615,7 @@ typedef NPError	(* NP_LOADDS NPN_GetURLUPP)(NPP instance, const char* url, const
 
 /* NPN_PostUrl */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_PostURLUPP;
 enum {
@@ -642,7 +644,7 @@ typedef NPError (* NP_LOADDS NPN_PostURLUPP)(NPP instance, const char* url, cons
 
 /* NPN_RequestRead */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_RequestReadUPP;
 enum {
@@ -669,7 +671,7 @@ typedef NPError	(* NP_LOADDS NPN_RequestReadUPP)(NPStream* stream, NPByteRange* 
 
 /* NPN_NewStream */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_NewStreamUPP;
 enum {
@@ -698,7 +700,7 @@ typedef NPError	(* NP_LOADDS NPN_NewStreamUPP)(NPP instance, NPMIMEType type, co
 
 /* NPN_Write */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_WriteUPP;
 enum {
@@ -727,7 +729,7 @@ typedef int32 (* NP_LOADDS NPN_WriteUPP)(NPP instance, NPStream* stream, int32 l
 
 /* NPN_DestroyStream */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_DestroyStreamUPP;
 enum {
@@ -755,7 +757,7 @@ typedef NPError (* NP_LOADDS NPN_DestroyStreamUPP)(NPP instance, NPStream* strea
 
 /* NPN_Status */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_StatusUPP;
 enum {
@@ -781,7 +783,7 @@ typedef void (* NP_LOADDS NPN_StatusUPP)(NPP instance, const char* message);
 
 
 /* NPN_UserAgent */
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_UserAgentUPP;
 enum {
@@ -807,7 +809,7 @@ typedef const char*	(* NP_LOADDS NPN_UserAgentUPP)(NPP instance);
 
 
 /* NPN_MemAlloc */
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_MemAllocUPP;
 enum {
@@ -834,7 +836,7 @@ typedef void* (* NP_LOADDS NPN_MemAllocUPP)(uint32 size);
 
 /* NPN__MemFree */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_MemFreeUPP;
 enum {
@@ -860,7 +862,7 @@ typedef void (* NP_LOADDS NPN_MemFreeUPP)(void* ptr);
 
 /* NPN_MemFlush */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_MemFlushUPP;
 enum {
@@ -888,7 +890,7 @@ typedef uint32 (* NP_LOADDS NPN_MemFlushUPP)(uint32 size);
 
 /* NPN_ReloadPlugins */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_ReloadPluginsUPP;
 enum {
@@ -915,7 +917,7 @@ typedef void (* NP_LOADDS NPN_ReloadPluginsUPP)(NPBool reloadPages);
 
 /* NPN_GetJavaEnv */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_GetJavaEnvUPP;
 enum {
@@ -940,7 +942,7 @@ typedef JRIEnv* (* NP_LOADDS NPN_GetJavaEnvUPP)(void);
 
 /* NPN_GetJavaPeer */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_GetJavaPeerUPP;
 enum {
@@ -967,7 +969,7 @@ typedef jref (* NP_LOADDS NPN_GetJavaPeerUPP)(NPP instance);
 
 /* NPN_InvalidateRect */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_InvalidateRectUPP;
 enum {
@@ -995,7 +997,7 @@ typedef void (* NP_LOADDS NPN_InvalidateRectUPP)(NPP instance, NPRect *rect);
 
 /* NPN_InvalidateRegion */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_InvalidateRegionUPP;
 enum {
@@ -1022,7 +1024,7 @@ typedef void (* NP_LOADDS NPN_InvalidateRegionUPP)(NPP instance, NPRegion region
 
 /* NPN_ForceRedraw */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPN_ForceRedrawUPP;
 enum {
@@ -1121,7 +1123,7 @@ typedef struct _NPNetscapeFuncs {
  * and NPPShutdownUPP for Netscape's use.
  */
 
-#if TARGET_RT_MAC_CFM
+#if _NPUPP_USE_UPP_
 
 typedef UniversalProcPtr NPP_MainEntryUPP;
 enum {

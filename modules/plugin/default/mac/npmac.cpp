@@ -90,7 +90,9 @@
 //
 //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+#if !TARGET_API_MAC_CARBON
 QDGlobals*		gQDPtr;				// Pointer to Netscape’s QuickDraw globals
+#endif
 short			gResFile;			// Refnum of the plugin’s resource file
 NPNetscapeFuncs	gNetscapeFuncs;		// Function table for procs in Netscape called by plugin
 
@@ -461,6 +463,7 @@ void SetUpQD(void)
 	//
 	gResFile = CurResFile();
 	
+#if !TARGET_API_MAC_CARBON
 	//
 	// Ask the system if CFM is available.
 	//
@@ -526,21 +529,22 @@ void SetUpQD(void)
 		//
 		gQDPtr = (QDGlobals*)(*((long*)SetCurrentA5()) - (sizeof(QDGlobals) - sizeof(GrafPtr)));
 	}
-
+#endif
 }
 
 
 
 NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp);
 
+#if !TARGET_API_MAC_CARBON
 #pragma export on
 #if GENERATINGCFM
 RoutineDescriptor mainRD = BUILD_ROUTINE_DESCRIPTOR(uppNPP_MainEntryProcInfo, main);
 #endif
 #pragma export off
+#endif /* !TARGET_API_MAC_CARBON */
 
-
-NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp)
+DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownUPP* unloadUpp)
 {
 	EnterCodeResource();
 	PLUGINDEBUGSTR("\pmain");

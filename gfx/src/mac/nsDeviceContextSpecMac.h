@@ -24,11 +24,11 @@
 #define nsDeviceContextSpecMac_h___
 
 #include "nsIDeviceContextSpec.h"
+#include "nsIPrintingContext.h"
 #include "nsDeviceContextMac.h"
 #include <Printing.h>
 
-class nsDeviceContextSpecMac : public nsIDeviceContextSpec
-{
+class nsDeviceContextSpecMac : public nsIDeviceContextSpec, public nsIPrintingContext {
 public:
 /**
  * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
@@ -65,6 +65,17 @@ public:
  */
   NS_IMETHOD ClosePrintManager();
 
+    NS_IMETHOD BeginDocument();
+    
+    NS_IMETHOD EndDocument();
+    
+    NS_IMETHOD BeginPage();
+    
+    NS_IMETHOD EndPage();
+
+    NS_IMETHOD GetPrinterResolution(double* aResolution);
+    
+    NS_IMETHOD GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight);
 protected:
 /**
  * Destuct a nsDeviceContextSpecMac, this will release the printrecord

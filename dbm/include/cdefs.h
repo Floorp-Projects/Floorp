@@ -101,7 +101,7 @@
 #if defined(__cplusplus)
 #define	__inline	inline		/* convert to C++ keyword */
 #else
-#ifndef __GNUC__
+#if !defined(__GNUC__) && !defined(__MWERKS__)
 #define	__inline			/* delete GCC keyword */
 #endif /* !__GNUC__ */
 #endif /* !__cplusplus */

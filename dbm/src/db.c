@@ -47,9 +47,7 @@ static char sccsid[] = "@(#)db.c	8.4 (Berkeley) 2/21/94";
 #endif
 
 #include <errno.h>
-#ifndef macintosh
 #include <fcntl.h>
-#endif
 #include <stddef.h>
 #include <stdio.h>
 

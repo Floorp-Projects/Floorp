@@ -34,6 +34,9 @@
 /* Read compiler options */
 #include "IDE_Options.h"
 
+/* Read generated build options. */
+#include "DefinesOptions.h"		// written at build time
+
 /* Read file of defines global to the Mac build */
 #include "DefinesMac.h"
 

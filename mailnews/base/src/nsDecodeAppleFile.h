@@ -26,9 +26,24 @@
 #include "nsCom.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsILocalFileMac.h"
-#include "nsIOutputStream.h"
+#include "nsFileSpec.h"
+
+class ProcessAppleDoubleResourceFork
+{
+public:
+  ProcessAppleDoubleResourceFork();
+  virtual ~ProcessAppleDoubleResourceFork();
+  
+  OSErr Initialize(nsFileSpec& file);
+  OSErr Write(unsigned char *buffer, PRUint32 bufferSize, PRUint32* writeCount);
+  
+private:
+  OSErr Decodeheaders(unsigned char *buffer, PRUint32 bufferSize, PRUint32* processCount);
+  
+  FSSpec m_fsFileSpec;
+  SInt16 m_rfRefNum;
+  PRBool m_bNeedToDecodeHeaders;
+};
 
 /*
 ** applefile definitions used 
@@ -58,17 +73,17 @@
 typedef struct ap_header 
 {
 	PRInt32 	magic;
-	PRInt32   version;
-	PRInt32 	fill[4];
-	PRInt16 	entriesCount;
+	PRInt32	version;
+	char 	fill[16];
+	PRInt16 	entries;
 
 } ap_header;
 
 typedef struct ap_entry 
 {
-	PRInt32   id;
-	PRInt32	  offset;
-	PRInt32	  length;
+	PRInt32  id;
+	PRInt32	offset;
+	PRInt32	length;
 	
 } ap_entry;
 
@@ -90,47 +105,4 @@ enum {
   errADNotSupported,
   errADBadVersion
 };
-
-
-class nsDecodeAppleFile : public nsIOutputStream
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTPUTSTREAM
-  
-  nsDecodeAppleFile();
-  virtual ~nsDecodeAppleFile();
-  
-  nsresult Initialize(nsIOutputStream *output, nsIFile *file);
-  
-private:
-  #define MAX_BUFFERSIZE    1024
-  enum ParserState {parseHeaders, parseEntries, parseLookupPart, parsePart, parseSkipPart,
-                    parseDataFork, parseResourceFork, parseWriteThrough};
-  
-  nsCOMPtr<nsIOutputStream> m_output;
-  FSSpec            m_fsFileSpec;
-  SInt16            m_rfRefNum;
-  
-  unsigned char *   m_dataBuffer;
-  PRInt32           m_dataBufferLength;
-  ParserState       m_state;
-  ap_header         m_headers;
-  ap_entry *        m_entries;
-  PRInt32           m_offset;
-  PRInt32           m_dataForkOffset;
-  PRInt32           m_totalDataForkWritten;
-  PRInt32           m_totalResourceForkWritten;
-  PRBool            m_headerOk;
-  
-  PRInt32           m_currentPartID;
-  PRInt32           m_currentPartLength;
-  PRInt32           m_currentPartCount;
-  
-  Str255            m_comment;
-  ap_dates          m_dates;
-  FInfo             m_finderInfo;
-  FXInfo            m_finderExtraInfo;
-};
-
 #endif

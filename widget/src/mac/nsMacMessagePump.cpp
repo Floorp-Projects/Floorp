@@ -828,6 +828,7 @@ void	nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 	// The app can handle its menu commands here or
 	// in the nsNativeBrowserWindow and nsNativeViewerApp
 	
+#if !TARGET_CARBON
 extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently requires
 									// APPLE_MENU_HACK to be defined in nsMenu.h
 									// One of these days it'll become a non-hack
@@ -844,14 +845,14 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 			
 			::GetMenuItemText(::GetMenuHandle(kAppleMenuID), theItem, daName);
 			::GetPort(&savePort);
-#if !TARGET_CARBON
 			::OpenDeskAcc(daName);
-#endif
 			::SetPort(savePort);
 			HiliteMenu(0);
 			return;
 		}
 	}
+#endif
+
 	// Note that we still give Raptor a shot at the event as it will eventually
 	// handle the About... selection
 	

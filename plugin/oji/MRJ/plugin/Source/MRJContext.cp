@@ -51,6 +51,8 @@
 
 #include <string>
 
+using namespace std;
+
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
 
