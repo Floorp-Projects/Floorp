@@ -2419,8 +2419,7 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
         // the next declaration.
       }
     }
-    if (dropDeclaration ||
-        (0 == count)) { // didn't get any XXX is this ok with the DOM?
+    if (dropDeclaration) {
       if (nsnull != declaration) {
         declaration->RuleAbort();
         declaration = nsnull;
