@@ -1124,33 +1124,49 @@ nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
   // Calculate how much space is available for margins
   nscoord availMarginSpace = cbrs->computedWidth - aComputedWidth -
     mComputedBorderPadding.left - mComputedBorderPadding.right;
-
-  // See whether we're over constrained
-
-  // XXX NOTE: do ont mess with tables so that they can be centered;
-  // we need a better way to factor this in!!!
-  if (mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-    if (!isAutoLeftMargin && !isAutoRightMargin) {
-      // Neither margin is 'auto' so we're over constrained. Use the
-      // 'direction' property to tell which margin to ignore
-      if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
-        isAutoRightMargin = PR_TRUE;
-      } else {
-        isAutoLeftMargin = PR_TRUE;
-      }
+  if (availMarginSpace < 0) {
+    // Whoops - the element is too large for the available space. In
+    // this case use the "direction" property to pin the element to
+    // the left or right side. Note that we look at the parent's
+    // direction since the parent will be placing this element.
+    computedMargin.left = 0;
+    computedMargin.right = 0;
+    const nsHTMLReflowState* prs = (const nsHTMLReflowState*)parentReflowState;
+    if (prs && (NS_STYLE_DIRECTION_RTL == prs->mStyleDisplay->mDirection)) {
+      computedMargin.left = availMarginSpace;
     }
   }
+  else {
+    // See whether we're over constrained
 
-  if (isAutoLeftMargin) {
-    if (isAutoRightMargin) {
-      // Both margins are 'auto' so their computed values are equal
-      computedMargin.left = availMarginSpace / 2;
-      computedMargin.right = availMarginSpace - computedMargin.left;
-    } else {
-      computedMargin.left = availMarginSpace - computedMargin.right;
+    // XXX NOTE: do not mess with tables so that they can be centered;
+    // we need a better way to factor this in!!!
+    if (mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+      if (!isAutoLeftMargin && !isAutoRightMargin) {
+        // Neither margin is 'auto' so we're over constrained. Use the
+        // 'direction' property of the parent to tell which margin to
+        // ignore
+        const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
+          parentReflowState;
+        isAutoRightMargin = PR_TRUE;
+        if (prs &&
+            (NS_STYLE_DIRECTION_RTL == prs->mStyleDisplay->mDirection)) {
+          isAutoLeftMargin = PR_TRUE;
+        }
+      }
     }
-  } else if (isAutoRightMargin) {
-    computedMargin.right = availMarginSpace - computedMargin.left;
+
+    if (isAutoLeftMargin) {
+      if (isAutoRightMargin) {
+        // Both margins are 'auto' so their computed values are equal
+        computedMargin.left = availMarginSpace / 2;
+        computedMargin.right = availMarginSpace - computedMargin.left;
+      } else {
+        computedMargin.left = availMarginSpace - computedMargin.right;
+      }
+    } else if (isAutoRightMargin) {
+      computedMargin.right = availMarginSpace - computedMargin.left;
+    }
   }
 }
 
