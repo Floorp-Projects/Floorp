@@ -264,6 +264,24 @@ Miscellaneous Improvements
 What's Changed?
 ***************
 
+
+Flag names
+----------
+
+Prerelease versions of Bugzilla 2.17 and 2.18 inadvertantly allowed
+commas and spaces in the names of flags, which due to the way they're
+processed, caused lots of internal havoc if you named flags to have
+any commas or spaces in them.  Having commas or spaces in the names
+can cause errors in the notification emails and in the bug activity
+log.  The ability to create new flags with these characters has been
+removed.  If you have any existing flags that you named that way,
+running checksetup will attempt to automatically rename them by
+replacing commas and spaces with underscores.
+
+
+Rules for changing fields
+-------------------------
+
 There have been some changes to the rules governing who can change which fields
 of a bug report.  The rules for Bugzilla version 2.16 and 2.18, along with
 differences between them, are listed below.  Bear in mind that there are other
