@@ -1689,8 +1689,8 @@ mips-sony-newsos*)
     MDCPUCFG_H=_os2.cfg
     RESOLVE_LINK_SYMBOLS=1
 
-    case "$target" in
-    *-os2_emx)
+    # EMX/GCC build
+    if test "$GNU_CC"; then
         AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2)
         AR=emxomfar
@@ -1714,8 +1714,10 @@ mips-sony-newsos*)
           EXEFLAGS='-Zmtd -o $@'
           DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
         fi
-        ;;
-    *-os2_vacpp)
+    fi
+    
+    # Visual Age C++ build
+    if test "$VACPP" = "yes"; then
         AC_DEFINE(XP_OS2_VACPP)
         AC_DEFINE(OS2,4)
         AC_DEFINE(TCPV40HDRS)
@@ -1751,9 +1753,7 @@ mips-sony-newsos*)
         fi
         LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
         LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
-        ;;
-    esac
-
+    fi
     ;;
 
 *)

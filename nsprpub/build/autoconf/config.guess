@@ -1100,16 +1100,7 @@ EOF
 	echo ${UNAME_MACHINE}-unknown-plan9
 	exit 0 ;;
     i*86:OS/2:*:*)
-	# If we were able to find `uname', then EMX Unix compatibility
-	# is probably installed.
-	# echo ${UNAME_MACHINE}-pc-os2-emx
-#### MozillaHack 
- 	if test "$VACPP" = "yes"; then
-		echo "i386-pc-os2_vacpp"
-	else
-		echo "i386-pc-os2_emx"
-	fi
-#### End MozillaHack 
+        echo ${UNAME_MACHINE}-pc-os2-emx
 	exit 0 ;;
     *:TOPS-10:*:*)
 	echo pdp10-unknown-tops10
