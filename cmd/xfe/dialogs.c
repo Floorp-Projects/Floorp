@@ -6155,10 +6155,10 @@ FE_SecurityDialog (MWContext *context, int state, XP_Bool *prefs_toggle)
 
 /* Temporary stub. */
 XP_Bool 
-FE_Select(MWContext  *pContext,
-		  char       *pMessage,
-		  char       **pList,
-		  int        *pCount) 
+XFE_SelectDialog(MWContext  *pContext,
+				 const char *pMessage,
+				 const char **pList,
+				 int16      *pCount) 
 {
     int i;
     char *message = 0;
@@ -6179,14 +6179,13 @@ FE_Select(MWContext  *pContext,
     return FALSE;
 }
 
-
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
 XP_Bool
-FE_CheckConfirm (MWContext  *pContext,
-				 char       *pConfirmMessage,
-				 char       *pCheckMessage,
+XFE_CheckConfirm(MWContext  *pContext,
+				 const char *pConfirmMessage,
+				 const char *pCheckMessage,
 				 const char *pOKMessage,     /* text on the OK button */
 				 const char *pCancelMessage, /* text on the cancel button */
 				 XP_Bool    *pChecked)
@@ -6195,4 +6194,3 @@ FE_CheckConfirm (MWContext  *pContext,
     *pChecked = FE_Confirm (pContext, pCheckMessage);
     return userHasAccepted;
 }
-
