@@ -389,7 +389,7 @@ nsOutlinerBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
       desiredRows = rows.ToInteger(&err);
       mHasFixedRowCount = PR_TRUE;
     } else
-      desiredRows = 1;
+      desiredRows = 0;
   }
 
   aSize.height = GetRowHeight() * desiredRows;
