@@ -49,32 +49,32 @@ public:
   // NS_DECL_NSSUPPORTSWEAKREFERENCE
 
   nsWalletlibService();
+  nsresult Init();
 
   // NS_DECL_NSIFORMSUBMITOBSERVER
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
   
 protected:
   virtual ~nsWalletlibService();
-
-private:
-  void    Init();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSingleSignOnPrompt : public nsISingleSignOnPrompt
+class nsSingleSignOnPrompt : public nsISingleSignOnPrompt,
+                             public nsIObserver,
+                             public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROMPT
   NS_DECL_NSISINGLESIGNONPROMPT
+  NS_DECL_NSIOBSERVER
 
   nsSingleSignOnPrompt() { NS_INIT_REFCNT(); }
   virtual ~nsSingleSignOnPrompt() {}
-
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
+  
+  nsresult Init();
+  
 protected:
   nsCOMPtr<nsIPrompt>   mPrompt;
 };

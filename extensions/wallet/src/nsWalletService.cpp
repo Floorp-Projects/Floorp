@@ -43,6 +43,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nsIProfileChangeStatus.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -53,9 +54,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 nsWalletlibService::nsWalletlibService()
 {
   NS_INIT_REFCNT();
-  ++mRefCnt; // Stabilization that can't accidentally |Release()| me
-    Init();
-  --mRefCnt;
 }
 
 nsWalletlibService::~nsWalletlibService()
@@ -200,9 +198,12 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
+NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar*) 
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
+    WLLT_ClearUserData();
+  }
+  return NS_OK;
 }
 
 #define CRLF "\015\012"   
@@ -215,28 +216,31 @@ NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInter
   return NS_OK;
 }
 
-void nsWalletlibService::Init() 
+nsresult nsWalletlibService::Init() 
 {
-  nsIObserverService *svc = 0;
-  nsIDocumentLoader *docLoaderService;
+  nsresult rv;
 
-  nsresult rv = nsServiceManager::GetService
-    (NS_OBSERVERSERVICE_CONTRACTID, NS_GET_IID(nsIObserverService), (nsISupports**)&svc );
-  if ( NS_SUCCEEDED( rv ) && svc ) {
-    nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-    rv = svc->AddObserver( this, topic.GetUnicode());
-    nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
+  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && svc) {
+    // Register as an observer of form submission
+    nsAutoString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
+    svc->AddObserver(this, topic.GetUnicode());
+    // Register as an observer of profile changes
+    svc->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
   }
+  else
+    NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
 
   // Get the global document loader service...  
-  rv = nsServiceManager::GetService
-    (kDocLoaderServiceCID, NS_GET_IID(nsIDocumentLoader), (nsISupports **)&docLoaderService);
+  NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv)
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     //Register ourselves as an observer for the new doc loader
     docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
-    nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService );
   }
-
+  else
+    NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -462,7 +466,26 @@ nsWalletlibService::WALLET_Decrypt (const char *crypt, PRUnichar **text) {
 ////////////////////////////////////////////////////////////////////////////////
 // nsSingleSignOnPrompt
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSingleSignOnPrompt, nsISingleSignOnPrompt, nsIPrompt)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsSingleSignOnPrompt,
+                              nsISingleSignOnPrompt,
+                              nsIPrompt,
+                              nsIObserver,
+                              nsISupportsWeakReference)
+
+nsresult
+nsSingleSignOnPrompt::Init()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && svc) {
+    // Register as an observer of profile changes
+    svc->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+  }
+  else
+    NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
+  
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
@@ -556,25 +579,21 @@ nsSingleSignOnPrompt::UniversalDialog(const PRUnichar *titleMessage, const PRUni
 // nsISingleSignOnPrompt methods:
 
 NS_IMETHODIMP
-nsSingleSignOnPrompt::Init(nsIPrompt* dialogs)
+nsSingleSignOnPrompt::SetPromptDialogs(nsIPrompt* dialogs)
 {
   mPrompt = dialogs;
   return NS_OK;
 }
 
-NS_METHOD
-nsSingleSignOnPrompt::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+// nsIObserver methods:
 
-  nsSingleSignOnPrompt* prompt = new nsSingleSignOnPrompt();
-  if (prompt == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(prompt);
-  nsresult rv = prompt->QueryInterface(aIID, aResult);
-  NS_RELEASE(prompt);
-  return rv;
+NS_IMETHODIMP
+nsSingleSignOnPrompt::Observe(nsISupports*, const PRUnichar *aTopic, const PRUnichar*) 
+{
+  if (!nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC)) {
+    SI_ClearUserData();
+  }
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -116,6 +116,9 @@ SI_FindValueInArgs(const nsString& results, const nsString& name, nsString& valu
 extern void
 SI_DeleteAll();
 
+extern void
+SI_ClearUserData();
+
 extern PRBool
 SINGSIGN_ReencryptAll();
 

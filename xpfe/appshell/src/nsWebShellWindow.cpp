@@ -2114,7 +2114,7 @@ nsWebShellWindow::GetPrompter(nsIPrompt* *result)
     nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(kSingleSignOnPromptCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       // then single sign-on is installed
-      rv = siPrompt->Init(prompt);
+      rv = siPrompt->SetPromptDialogs(prompt);
       if (NS_FAILED(rv)) return rv;
       mPrompter = siPrompt;
     }

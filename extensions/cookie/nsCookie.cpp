@@ -2236,14 +2236,11 @@ cookie_Load() {
 PUBLIC int
 COOKIE_ReadCookies()
 {
-  static PRBool sReadCookies = PR_FALSE;
-  
-  if (sReadCookies)
-    NS_WARNING("We are reading the cookies more than once. Probably bad");
+  if (cookie_cookieList || cookie_permissionList)
+    NS_WARNING("We are reading the cookies when we already have some. Probably bad");
     
   cookie_Load();
   permission_Load();
-  sReadCookies = PR_TRUE;
   return 0;
 }
 

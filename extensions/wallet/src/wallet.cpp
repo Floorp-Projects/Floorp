@@ -2545,11 +2545,13 @@ Wallet_ReleaseAllLists() {
  * initialization for wallet session (done only once)
  */
 
+static PRBool wallet_tablesInitialized = PR_FALSE;
+static PRBool wallet_ValuesReadIn = PR_FALSE;
+static PRBool namesInitialized = PR_FALSE;
+static PRBool wallet_URLListInitialized = PR_FALSE;
+
 static void
 wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
-  static PRBool wallet_tablesInitialized = PR_FALSE;
-  static PRBool wallet_ValuesReadIn = PR_FALSE;
-  static PRBool namesInitialized = PR_FALSE;
 
 #ifdef DEBUG
 //wallet_ClearStopwatch();
@@ -2638,8 +2640,8 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
 
 static void
 wallet_InitializeURLList() {
-  static PRBool wallet_URLListInitialized = PR_FALSE;
   if (!wallet_URLListInitialized) {
+    wallet_Clear(&wallet_URL_list);
     wallet_ReadFromFile(URLFileName, wallet_URL_list, PR_TRUE);
     wallet_URLListInitialized = PR_TRUE;
   }
@@ -3083,6 +3085,13 @@ WLLT_DeleteAll() {
   wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
   SI_DeleteAll();
   SI_SetBoolPref(pref_Crypto, PR_FALSE);
+}
+
+PUBLIC void
+WLLT_ClearUserData() {
+  wallet_ValuesReadIn = PR_FALSE;
+  namesInitialized = PR_FALSE;
+  wallet_URLListInitialized = PR_FALSE;
 }
 
 MODULE_PRIVATE int PR_CALLBACK

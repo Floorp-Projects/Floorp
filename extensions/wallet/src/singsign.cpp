@@ -88,6 +88,7 @@ si_SaveSignonDataInKeychain();
  ******************/
 
 char* signonFileName = nsnull;
+static PRBool gLoadedUserData = FALSE;
 
 
 /***************************
@@ -287,6 +288,11 @@ si_RegisterSignonPrefCallbacks(void) {
   static PRBool first_time = PR_TRUE;
   if(first_time) {
     first_time = PR_FALSE;
+    SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
+  }
+  
+  if (!gLoadedUserData) {
+    gLoadedUserData = PR_TRUE;
     SI_LoadSignonData();
 #ifdef DefaultIsOff
     x = SI_GetBoolPref(pref_Notified, PR_FALSE);
@@ -294,7 +300,6 @@ si_RegisterSignonPrefCallbacks(void) {
 #endif
     x = SI_GetBoolPref(pref_rememberSignons, PR_FALSE);
     si_SetSignonRememberingPref(x);
-    SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
   }
 }
 
@@ -1200,6 +1205,12 @@ SI_DeleteAll() {
   si_PartiallyLoaded = PR_FALSE;
   si_signon_list_changed = PR_TRUE;
   si_SaveSignonDataLocked();
+}
+
+PUBLIC void
+SI_ClearUserData() {
+  SI_RemoveAllSignonData();
+  gLoadedUserData = PR_FALSE;
 }
 
 /****************************
