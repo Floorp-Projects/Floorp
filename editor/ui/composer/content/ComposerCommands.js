@@ -327,7 +327,7 @@ var nsOpenCommand =
      */
     if (fp.file && fp.file.path.length > 0) {
       SaveFilePickerDirectory(fp, "html");
-      EditorOpenUrl(fp.file.URL);
+      EditorOpenUrl(fp.fileURL.spec);
     }
   }
 };
