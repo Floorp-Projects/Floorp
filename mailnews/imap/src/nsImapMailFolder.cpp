@@ -2451,7 +2451,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
           server->SetPerformingBiff(PR_TRUE);
         
         SetNumNewMessages(keysToFetch.GetSize());
-        SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
       }
     }
     SyncFlags(flagState);
@@ -4491,14 +4490,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     if (mailUrl)
       rv = mailUrl->UnRegisterListener(this);
 
-    if (!msgWindow) // if we don't have a window then we are probably running a biff url
-    {
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      GetServer(getter_AddRefs(server));
-      if (server)
-        server->SetPerformingBiff(PR_FALSE);
-      m_performingBiff = PR_FALSE;
-    }
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
 
@@ -4792,6 +4783,10 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
   if (mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   SetSizeOnDisk(mFolderSize); 
+  PRInt32 numNewBiffMsgs = 0;
+  if (m_performingBiff)
+    GetNumNewMessages(PR_FALSE, &numNewBiffMsgs);
+
   if (m_moveCoalescer)
   {
     m_moveCoalescer->PlaybackMoves ();
@@ -4844,7 +4839,23 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     }
   }
 
-  CallFilterPlugins(msgWindow);
+  PRBool filtersRun;
+  CallFilterPlugins(msgWindow, &filtersRun);
+  if (!filtersRun && m_performingBiff && mDatabase && numNewBiffMsgs > 0)
+  {
+    // If we are performing biff for this folder, tell the
+    // stand-alone biff about the new high water mark
+    // We must ensure that the server knows that we are performing biff.
+    // Otherwise the stand-alone biff won't fire.
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+      server->SetPerformingBiff(PR_TRUE);
+    
+    SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
+    if (server)
+      server->SetPerformingBiff(PR_FALSE);
+    m_performingBiff = PR_FALSE;
+  }
 
   if (m_filterList)
     (void)m_filterList->FlushLogIfNecessary();
@@ -7265,6 +7276,7 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
   if (m_moveCoalescer)
   {
     nsMsgKeyArray *keysToClassify = m_moveCoalescer->GetKeyBucket((aClassification == nsIJunkMailPlugin::JUNK) ? 0 : 1);
+    NS_ASSERTION(keysToClassify, "error getting key bucket");
     if (keysToClassify)
       keysToClassify->Add(msgKey);
   }
@@ -7337,6 +7349,17 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     if (nonJunkKeysToClassify && nonJunkKeysToClassify->GetSize() > 0)
       StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
     m_moveCoalescer->PlaybackMoves();
+    // If we are performing biff for this folder, tell the server object
+    if (m_performingBiff)
+    {
+      // we don't need to adjust the num new messages in this folder because
+      // the playback moves code already did that.
+      (void) PerformBiffNotifications();
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+        server->SetPerformingBiff(PR_FALSE);
+      m_performingBiff = PR_FALSE;
+    }
     junkKeysToClassify->RemoveAll();
     nonJunkKeysToClassify->RemoveAll();
   }

@@ -122,7 +122,7 @@ public:
   NS_IMETHOD SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo);
   NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
   NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
-  NS_IMETHOD CallFilterPlugins(nsIMsgWindow *aMsgWindow);
+  NS_IMETHOD CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun);
   NS_IMETHOD GetLastMessageLoaded(nsMsgKey *aMsgKey);
   NS_IMETHOD SetLastMessageLoaded(nsMsgKey aMsgKey);
 
@@ -150,6 +150,8 @@ protected:
   nsresult MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result);
   nsresult GetPromptPurgeThreshold(PRBool *aPrompt);
   nsresult GetPurgeThreshold(PRInt32 *aThreshold);
+
+  nsresult PerformBiffNotifications(void); // if there are new, non spam messages, do biff
 
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);

@@ -712,9 +712,10 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
     else if (mCopyState)
       mCopyState->m_notifyFolderLoaded = PR_TRUE; //defer folder loaded notification
   }
+  PRBool filtersRun;
   // if we have new messages, try the filter plugins.
   if (NS_SUCCEEDED(rv) && (mFlags & MSG_FOLDER_FLAG_GOT_NEW))
-    (void) CallFilterPlugins(aWindow);
+    (void) CallFilterPlugins(aWindow, &filtersRun);
   return rv;
 }
 
@@ -2182,10 +2183,10 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
   }
 
   rv = fileSpec->OpenStreamForReading();
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (NS_FAILED(rv)) goto done;
 
   rv = fileSpec->GetInputStream(getter_AddRefs(inputStream));
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (NS_FAILED(rv)) goto done;
   
   rv = NS_ERROR_NULL_POINTER;
   if (inputStream)
@@ -2199,15 +2200,11 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
   if (NS_FAILED(rv)) goto done;
 
   if (msgToReplace && mDatabase)  //mDatabase should have been initialized above - if we got msgDb
-  {
     rv = DeleteMessage(msgToReplace, msgWindow, PR_TRUE, PR_TRUE);
-  }
 
 done:
   if(NS_FAILED(rv))
-  {
     (void) OnCopyCompleted(fileSupport, PR_FALSE);
-  }
 
   fileSpec->CloseStream();
   return rv;
@@ -2364,21 +2361,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMsgDBHdr *message)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 aLength)
 {
-	//check to make sure we have control of the write.
+  //check to make sure we have control of the write.
   PRBool haveSemaphore;
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   
-	rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
-                     &haveSemaphore);
-	if(NS_FAILED(rv))
-		return rv;
-	if(!haveSemaphore)
-		return NS_MSG_FOLDER_BUSY;
+  rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this),
+    &haveSemaphore);
+  if(NS_FAILED(rv))
+    return rv;
+  if(!haveSemaphore)
+    return NS_MSG_FOLDER_BUSY;
   
   if (!mCopyState) 
     return NS_ERROR_OUT_OF_MEMORY;
-
-	PRUint32 readCount;
+  
+  PRUint32 readCount;
   if ( aLength + mCopyState->m_leftOver > mCopyState->m_dataBufferSize )
   {
     mCopyState->m_dataBuffer = (char *) PR_REALLOC(mCopyState->m_dataBuffer, aLength + mCopyState->m_leftOver+ 1);
@@ -2386,13 +2383,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
       return NS_ERROR_OUT_OF_MEMORY;
     mCopyState->m_dataBufferSize = aLength + mCopyState->m_leftOver;
   }
-
-	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+  
+  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
   char *start, *end;
   PRUint32 linebreak_len = 0;
-
+  
   rv = aIStream->Read(mCopyState->m_dataBuffer + mCopyState->m_leftOver,
-                      aLength, &readCount);
+    aLength, &readCount);
   NS_ENSURE_SUCCESS(rv, rv);
   mCopyState->m_leftOver += readCount;
   mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
@@ -2402,14 +2399,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
    	end = (char *) memchr(start, '\n', mCopyState->m_leftOver);
   else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
     linebreak_len = 2;
-
+  
   if (linebreak_len == 0) // not set yet
     linebreak_len = 1;
-
+  
   nsCString line;
   char tmpChar = 0;
   PRInt32 lineLength, bytesWritten;
-
+  
   while (start && end)
   {
     if (mCopyState->m_fromLineSeen)
@@ -2417,7 +2414,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
       if (strncmp(start, "From ", 5) == 0)
       {
         line = ">";
-     
+        
         tmpChar = *end;
         *end = 0;
         line += start;
@@ -2432,10 +2429,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
           mCopyState->m_writeFailed = PR_TRUE;
           return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
         }
-
+        
         if (mCopyState->m_parseMsgState)
           mCopyState->m_parseMsgState->ParseAFolderLine(line.get(),
-                                                         line.Length());
+          line.Length());
         goto keepGoing;
       }
     }
@@ -2443,7 +2440,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     {
       mCopyState->m_fromLineSeen = PR_TRUE;
       NS_ASSERTION(strncmp(start, "From ", 5) == 0, 
-                   "Fatal ... bad message format\n");
+        "Fatal ... bad message format\n");
     }
     
     lineLength = end-start+linebreak_len;
@@ -2454,14 +2451,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
       mCopyState->m_writeFailed = PR_TRUE;
       return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
     }
-
+    
     if (mCopyState->m_parseMsgState)
       mCopyState->m_parseMsgState->ParseAFolderLine(start,
-                                                       end-start+linebreak_len);
-    keepGoing:
-      start = end+linebreak_len;
+      end-start+linebreak_len);
+keepGoing:
+    start = end+linebreak_len;
     if (start >=
-         &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
+      &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
     {
       mCopyState->m_leftOver = 0;
       break;
@@ -2487,7 +2484,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     {
       mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
       memcpy (mCopyState->m_dataBuffer, start,
-                          mCopyState->m_leftOver+1);
+        mCopyState->m_leftOver+1);
     }
   }
   return rv;
@@ -3485,10 +3482,12 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  if (--mNumFilterClassifyRequests == 0 && mSpamKeysToMove.GetSize() > 0)
+  if (--mNumFilterClassifyRequests == 0)
   {
-    if (!mSpamFolderURI.IsEmpty())
+    if (mSpamKeysToMove.GetSize() > 0)
     {
+      if (!mSpamFolderURI.IsEmpty())
+      {
         nsCOMPtr<nsIMsgFolder> folder;
         rv = GetExistingFolder(mSpamFolderURI.get(), getter_AddRefs(folder));
         if (NS_SUCCEEDED(rv) && folder) {      
@@ -3504,16 +3503,24 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
               messages->AppendElement(iSupports);
             }
           }
-          
+        
           nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv,rv);
-          
+        
           rv = copySvc->CopyMessages(this, messages, folder, PR_TRUE,
             /*nsIMsgCopyServiceListener* listener*/ nsnull, nsnull, PR_FALSE /*allowUndo*/);
           NS_ASSERTION(NS_SUCCEEDED(rv), "CopyMessages failed");
         }
+      }
     }
+    PRInt32 numNewMessages;
+    GetNumNewMessages(PR_FALSE, &numNewMessages);
+    SetNumNewMessages(numNewMessages - mSpamKeysToMove.GetSize());
     mSpamKeysToMove.RemoveAll();
+    // check if this is the inbox first...
+    if (mFlags & MSG_FOLDER_FLAG_INBOX)
+      PerformBiffNotifications();
+
   }
 
   return NS_OK;

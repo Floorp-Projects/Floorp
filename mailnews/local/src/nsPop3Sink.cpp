@@ -60,6 +60,7 @@ nsPop3Sink::nsPop3Sink()
     m_authed = PR_FALSE;
     m_accountUrl = nsnull;
     m_biffState = 0;
+    m_numNewMessages = 0;
     m_senderAuthed = PR_FALSE;
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
@@ -248,7 +249,11 @@ nsPop3Sink::EndMailDelivery()
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
-  m_folder->CallFilterPlugins(nsnull); // ??? do we need msgWindow?
+  PRBool filtersRun;
+  m_folder->CallFilterPlugins(nsnull, &filtersRun); // ??? do we need msgWindow?
+  m_folder->SetNumNewMessages(m_numNewMessages); // we'll adjust this for spam later
+  if (!filtersRun && m_numNewMessages > 0)
+    m_folder->SetBiffState(m_biffState);
 
   // note that size on disk has possibly changed.
   nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);
@@ -270,12 +275,13 @@ nsPop3Sink::EndMailDelivery()
   m_folder->UpdateSummaryTotals(PR_TRUE);
  
   // check if the folder open in this window is not the current folder, and if it has new
-  // message, in which case we need to try to run the
-  // filter plugin.
+  // message, in which case we need to try to run the filter plugin.
   if (m_newMailParser)
   {
     nsCOMPtr <nsIMsgWindow> msgWindow;
     m_newMailParser->GetMsgWindow(getter_AddRefs(msgWindow));
+    // this breaks down if it's biff downloading new mail because
+    // there's no msgWindow...
     if (msgWindow)
     {
       nsCOMPtr <nsIMsgFolder> openFolder;
@@ -290,7 +296,7 @@ nsPop3Sink::EndMailDelivery()
           PRBool hasNew;
           (void) openFolder->GetHasNewMessages(&hasNew);
           if (hasNew)
-            openFolder->CallFilterPlugins(nsnull);
+            openFolder->CallFilterPlugins(nsnull, &filtersRun);
         }
       }
     }
@@ -576,11 +582,7 @@ nsresult
 nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 {
   m_biffState = aBiffState;
-  if(m_folder)
-  {
-    m_folder->SetNumNewMessages(numNewMessages);
-    m_folder->SetBiffState(aBiffState);
-  }
+  m_numNewMessages = numNewMessages;
   return NS_OK;
 }
 

@@ -2214,8 +2214,17 @@ nsPop3Protocol::GetMsg()
   {
     /* Oh, gee, we're all done. */
     if(m_pop3ConData->msg_del_started)
+    {
+      if (!m_pop3ConData->only_uidl) 
+      {
+        if (m_pop3ConData->only_check_for_new_mail)
+          m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, m_pop3ConData->really_new_messages);	
+        /* update old style biff */
+        else 
+            m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->really_new_messages);
+      }
       m_nsIPop3Sink->EndMailDelivery();
-    
+    }
     
     m_pop3ConData->next_state = POP3_SEND_QUIT;
     return 0;
@@ -3328,10 +3337,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       */
       if (!m_pop3ConData->only_uidl) 
       {
-        if (m_pop3ConData->only_check_for_new_mail)
-          m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, m_pop3ConData->really_new_messages);	
         /* update old style biff */
-        else 
+        if (!m_pop3ConData->only_check_for_new_mail)
         {
         /* We don't want to pop up a warning message any more (see
         bug 54116), so instead we put the "no new messages" or
@@ -3359,8 +3366,6 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
               nsCRT::free(statusTemplate);
               
             }
-            
-            m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->really_new_messages);
           }
         }
       }

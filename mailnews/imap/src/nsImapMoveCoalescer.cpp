@@ -44,6 +44,8 @@
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsMsgFolderFlags.h"
+
 
 NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)
 
@@ -132,10 +134,14 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         PRInt32 numKeysToAdd = keysToAdd->GetSize();
         if (numKeysToAdd == 0)
           continue;
-        
-        destFolder->SetNumNewMessages(numKeysToAdd);
-        destFolder->SetHasNewMessages(PR_TRUE);
 
+        PRUint32 destFlags;
+        destFolder->GetFlags(&destFlags);
+        if (! (destFlags & MSG_FOLDER_FLAG_JUNK)) // don't set has new on junk folder
+        {
+          destFolder->SetNumNewMessages(numKeysToAdd);
+          destFolder->SetHasNewMessages(PR_TRUE);
+        }
         // adjust the new message count on the source folder
         PRInt32 oldNewMessageCount = 0;
         m_sourceFolder->GetNumNewMessages(PR_FALSE, &oldNewMessageCount);
@@ -174,9 +180,10 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
 
 nsMsgKeyArray *nsImapMoveCoalescer::GetKeyBucket(PRInt32 keyArrayIndex)
 {
-  if (m_keyBuckets.Count() < keyArrayIndex + 1)
+  PRInt32 bucketCount = m_keyBuckets.Count();
+  if (bucketCount < keyArrayIndex + 1)
   {
-    for (PRInt32 i = 0; i < keyArrayIndex + 1 - m_keyBuckets.Count(); i++)
+    for (PRInt32 i = 0; i < keyArrayIndex + 1 - bucketCount; i++)
     {
         nsMsgKeyArray *keysToAdd = new nsMsgKeyArray;
         if (!keysToAdd)

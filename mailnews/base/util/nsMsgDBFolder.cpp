@@ -281,77 +281,77 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharsetOverride(PRBool aCharsetOverride)
 
 NS_IMETHODIMP nsMsgDBFolder::GetHasNewMessages(PRBool *hasNewMessages)
 {
-	if(!hasNewMessages)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = NS_OK;
-	*hasNewMessages = mNewMessages;
-
-	return rv;
+  if(!hasNewMessages)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult rv = NS_OK;
+  *hasNewMessages = mNewMessages;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::SetHasNewMessages(PRBool curNewMessages)
 {
-	if (curNewMessages != mNewMessages) 
-	{
-		/** @params
-		  * nsIAtom* property, PRBool oldValue, PRBool newValue
+  if (curNewMessages != mNewMessages) 
+  {
+    /** @params
+    * nsIAtom* property, PRBool oldValue, PRBool newValue
 		  */
-		PRBool oldNewMessages = mNewMessages;
-		mNewMessages = curNewMessages;
-		NotifyBoolPropertyChanged(kNewMessagesAtom, oldNewMessages, curNewMessages);
-	}
-
-	return NS_OK;
+    PRBool oldNewMessages = mNewMessages;
+    mNewMessages = curNewMessages;
+    NotifyBoolPropertyChanged(kNewMessagesAtom, oldNewMessages, curNewMessages);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetGettingNewMessages(PRBool *gettingNewMessages)
 {
-	if(!gettingNewMessages)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = NS_OK;
-	*gettingNewMessages = mGettingNewMessages;
-
-	return rv;
+  if(!gettingNewMessages)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult rv = NS_OK;
+  *gettingNewMessages = mGettingNewMessages;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::SetGettingNewMessages(PRBool gettingNewMessages)
 {
-	mGettingNewMessages = gettingNewMessages;
+  mGettingNewMessages = gettingNewMessages;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage)
 {
-	//If there's not a db then there can't be new messages.  Return failure since you
-	//should use HasNewMessages first.
-	if(!mDatabase)
-		return NS_ERROR_FAILURE;
-
-	nsresult rv;
-	nsMsgKey key;
-	rv = mDatabase->GetFirstNew(&key);
-	if(NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsIMsgDBHdr> hdr;
-	rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(hdr));
-	if(NS_FAILED(rv))
-		return rv;
-
-	return  mDatabase->GetMsgHdrForKey(key, firstNewMessage);
+  //If there's not a db then there can't be new messages.  Return failure since you
+  //should use HasNewMessages first.
+  if(!mDatabase)
+    return NS_ERROR_FAILURE;
+  
+  nsresult rv;
+  nsMsgKey key;
+  rv = mDatabase->GetFirstNew(&key);
+  if(NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsIMsgDBHdr> hdr;
+  rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(hdr));
+  if(NS_FAILED(rv))
+    return rv;
+  
+  return  mDatabase->GetMsgHdrForKey(key, firstNewMessage);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
 {
-	nsresult rv = NS_OK;
-	//If there's no db then there's nothing to clear.
-	if(mDatabase)
-	{
-		rv = mDatabase->ClearNewList(PR_TRUE);
-	}
-	return rv;
+  nsresult rv = NS_OK;
+  //If there's no db then there's nothing to clear.
+  if(mDatabase)
+  {
+    rv = mDatabase->ClearNewList(PR_TRUE);
+  }
+  return rv;
 }
 
 // helper function that gets the cache element that corresponds to the passed in file spec.
@@ -359,141 +359,141 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
 // nsMsgDBFolder. If it lived at a higher level, we could cache the account manager and folder cache.
 nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement)
 {
-	nsresult result;
-	if (!fileSpec || !cacheElement)
-		return NS_ERROR_NULL_POINTER;
-	nsCOMPtr <nsIMsgFolderCache> folderCache;
+  nsresult result;
+  if (!fileSpec || !cacheElement)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr <nsIMsgFolderCache> folderCache;
 #ifdef DEBUG_bienvenu1
-	PRBool exists;
-	NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
+  PRBool exists;
+  NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
 #endif
-	nsCOMPtr<nsIMsgAccountManager> accountMgr = 
-	         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &result); 
-	if(NS_SUCCEEDED(result))
-	{
-		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
-		if (NS_SUCCEEDED(result) && folderCache)
-		{
-			nsXPIDLCString persistentPath;
-			fileSpec->GetPersistentDescriptorString(getter_Copies(persistentPath));
-			result = folderCache->GetCacheElement(persistentPath, PR_FALSE, cacheElement);
-		}
-	}
-	return result;
+  nsCOMPtr<nsIMsgAccountManager> accountMgr = 
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &result); 
+  if(NS_SUCCEEDED(result))
+  {
+    result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
+    if (NS_SUCCEEDED(result) && folderCache)
+    {
+      nsXPIDLCString persistentPath;
+      fileSpec->GetPersistentDescriptorString(getter_Copies(persistentPath));
+      result = folderCache->GetCacheElement(persistentPath, PR_FALSE, cacheElement);
+    }
+  }
+  return result;
 }
 
 nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 {
-	// Since it turns out to be pretty expensive to open and close
-	// the DBs all the time, if we have to open it once, get everything
-	// we might need while we're here
-
-	nsresult result=NS_ERROR_FAILURE;
-
-	// don't need to reload from cache if we've already read from cache,
-	// and, we might get stale info, so don't do it.
-	if (!mInitializedFromCache)
-	{
-		nsCOMPtr <nsIFileSpec> dbPath;
-
-		result = GetFolderCacheKey(getter_AddRefs(dbPath));
-
-		if (dbPath)
-		{
-			nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-			result = GetFolderCacheElemFromFileSpec(dbPath, getter_AddRefs(cacheElement));
-			if (NS_SUCCEEDED(result) && cacheElement)
-			{
-				result = ReadFromFolderCacheElem(cacheElement);
-			}
-		}
-	}
-//	if (m_master->InitFolderFromCache (this))
-//		return err;
-
-	if (force || !mInitializedFromCache)
+  // Since it turns out to be pretty expensive to open and close
+  // the DBs all the time, if we have to open it once, get everything
+  // we might need while we're here
+  
+  nsresult result=NS_ERROR_FAILURE;
+  
+  // don't need to reload from cache if we've already read from cache,
+  // and, we might get stale info, so don't do it.
+  if (!mInitializedFromCache)
+  {
+    nsCOMPtr <nsIFileSpec> dbPath;
+    
+    result = GetFolderCacheKey(getter_AddRefs(dbPath));
+    
+    if (dbPath)
     {
-        nsCOMPtr<nsIDBFolderInfo> folderInfo;
-        nsCOMPtr<nsIMsgDatabase> db; 
-        result = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
-        if(NS_SUCCEEDED(result))
+      nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+      result = GetFolderCacheElemFromFileSpec(dbPath, getter_AddRefs(cacheElement));
+      if (NS_SUCCEEDED(result) && cacheElement)
+      {
+        result = ReadFromFolderCacheElem(cacheElement);
+      }
+    }
+  }
+  //	if (m_master->InitFolderFromCache (this))
+  //		return err;
+  
+  if (force || !mInitializedFromCache)
+  {
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    nsCOMPtr<nsIMsgDatabase> db; 
+    result = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+    if(NS_SUCCEEDED(result))
+    {
+      mIsCachable = PR_TRUE;
+      if (folderInfo)
+      {
+        if (!mInitializedFromCache)
         {
-			mIsCachable = PR_TRUE;
-            if (folderInfo)
-            {
-              if (!mInitializedFromCache)
-              {
-                folderInfo->GetFlags((PRInt32 *)&mFlags);
+          folderInfo->GetFlags((PRInt32 *)&mFlags);
 #ifdef DEBUG_bienvenu1
-                nsXPIDLString name;
-                GetName(getter_Copies(name));
-                NS_ASSERTION(Compare(name, kLocalizedTrashName) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+          nsXPIDLString name;
+          GetName(getter_Copies(name));
+          NS_ASSERTION(Compare(name, kLocalizedTrashName) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
 #endif
-                mInitializedFromCache = PR_TRUE;
-              }
-
-				folderInfo->GetNumMessages(&mNumTotalMessages);
-				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
+          mInitializedFromCache = PR_TRUE;
+        }
+        
+        folderInfo->GetNumMessages(&mNumTotalMessages);
+        folderInfo->GetNumNewMessages(&mNumUnreadMessages);
         folderInfo->GetExpungedBytes((PRInt32 *)&mExpungedBytes);
-
+        
         nsXPIDLCString utf8Name;
         folderInfo->GetFolderName(getter_Copies(utf8Name));
         if (!utf8Name.IsEmpty())
           mName = NS_ConvertUTF8toUCS2(utf8Name.get());
-
-				//These should be put in IMAP folder only.
-				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
-				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
-
-				PRBool defaultUsed;
-				folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
-				if (defaultUsed)
-					mCharset.Assign(NS_LITERAL_STRING(""));
-				folderInfo->GetCharacterSetOverride(&mCharsetOverride);
         
-				if (db) {
-					PRBool hasnew;
-					nsresult rv;
-					rv = db->HasNew(&hasnew);
-					if (NS_FAILED(rv)) return rv;
-					if (!hasnew && mNumPendingUnreadMessages <= 0) {
-						ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
-					}
-				}
-            }
-
+        //These should be put in IMAP folder only.
+        //folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
+        //folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
+        
+        PRBool defaultUsed;
+        folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
+        if (defaultUsed)
+          mCharset.Assign(NS_LITERAL_STRING(""));
+        folderInfo->GetCharacterSetOverride(&mCharsetOverride);
+        
+        if (db) {
+          PRBool hasnew;
+          nsresult rv;
+          rv = db->HasNew(&hasnew);
+          if (NS_FAILED(rv)) return rv;
+          if (!hasnew && mNumPendingUnreadMessages <= 0) {
+            ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
+          }
         }
-		folderInfo = nsnull;
-        if (db)
-	        db->Close(PR_FALSE);
+      }
+      
     }
-
-	return result;
-	
+    folderInfo = nsnull;
+    if (db)
+      db->Close(PR_FALSE);
+  }
+  
+  return result;
+  
 }
 
 nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags)
 {
-	nsresult rv = NS_OK;
-
-	PRUint32 changedFlags = oldFlags ^ newFlags;
-   
-    if((changedFlags & MSG_FLAG_READ)  && (changedFlags & MSG_FLAG_NEW))
-    {
-      //..so..if the msg is read in the folder and the folder has new msgs clear the account level and status bar biffs.
-      rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
-      rv = SetBiffState(nsMsgBiffState_NoMail);
-    }
-    else if(changedFlags & (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED
-      | MSG_FLAG_IMAP_DELETED | MSG_FLAG_NEW | MSG_FLAG_OFFLINE))
-	{
-      rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
-    }
-    else if((changedFlags & MSG_FLAG_MARKED))
-    {
-      rv = NotifyPropertyFlagChanged(item, kFlaggedAtom, oldFlags, newFlags);
-    }
-    return rv;
+  nsresult rv = NS_OK;
+  
+  PRUint32 changedFlags = oldFlags ^ newFlags;
+  
+  if((changedFlags & MSG_FLAG_READ)  && (changedFlags & MSG_FLAG_NEW))
+  {
+    //..so..if the msg is read in the folder and the folder has new msgs clear the account level and status bar biffs.
+    rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
+    rv = SetBiffState(nsMsgBiffState_NoMail);
+  }
+  else if(changedFlags & (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED
+    | MSG_FLAG_IMAP_DELETED | MSG_FLAG_NEW | MSG_FLAG_OFFLINE))
+  {
+    rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
+  }
+  else if((changedFlags & MSG_FLAG_MARKED))
+  {
+    rv = NotifyPropertyFlagChanged(item, kFlaggedAtom, oldFlags, newFlags);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *)
@@ -1680,160 +1680,163 @@ nsMsgDBFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURIC
  * Call the filter plugins (XXX currently just one)
  */
 NS_IMETHODIMP
-nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
+nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
 {
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    nsCOMPtr<nsISpamSettings> spamSettings;
-    nsCOMPtr<nsIAbMDBDirectory> whiteListDirectory;
-    nsCOMPtr<nsIMsgHeaderParser> headerParser;
-    PRBool useWhiteList = PR_FALSE;
-    PRInt32 spamLevel = 0;
-    nsXPIDLCString whiteListAbURI;
- 
-    // if this is the junk folder, or the trash folder
-    // don't analyze for spam, because we don't care
-    //
-    // if it's the sent, unsent, templates, or drafts, 
-    // don't analyze for spam, because the user
-    // created that message
-    //
-    // if it's a public imap folder, or another users
-    // imap folder, don't analyze for spam, because
-    // it's not ours to analyze
-    if (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
-                 MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_QUEUE |
-                 MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_TEMPLATES |
-                 MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER))
-      return NS_OK;
+  NS_ENSURE_ARG_POINTER(aFiltersRun);
+  *aFiltersRun = PR_FALSE;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsISpamSettings> spamSettings;
+  nsCOMPtr<nsIAbMDBDirectory> whiteListDirectory;
+  nsCOMPtr<nsIMsgHeaderParser> headerParser;
+  PRBool useWhiteList = PR_FALSE;
+  PRInt32 spamLevel = 0;
+  nsXPIDLCString whiteListAbURI;
 
-    nsresult rv = GetServer(getter_AddRefs(server));
-    NS_ENSURE_SUCCESS(rv, rv); 
-    rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
-    nsCOMPtr <nsIMsgFilterPlugin> filterPlugin;
-    server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
-    if (!filterPlugin) // it's not an error not to have the filter plugin.
-      return NS_OK;
+  // if this is the junk folder, or the trash folder
+  // don't analyze for spam, because we don't care
+  //
+  // if it's the sent, unsent, templates, or drafts, 
+  // don't analyze for spam, because the user
+  // created that message
+  //
+  // if it's a public imap folder, or another users
+  // imap folder, don't analyze for spam, because
+  // it's not ours to analyze
+  if (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
+               MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_QUEUE |
+               MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_TEMPLATES |
+               MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER))
+    return NS_OK;
 
-    NS_ENSURE_SUCCESS(rv, rv); 
-    spamSettings->GetLevel(&spamLevel);
-    if (!spamLevel)
-      return NS_OK;
-    nsCOMPtr<nsIMsgMailSession> mailSession = 
-        do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    if (!mDatabase) 
-    {
-        rv = GetDatabase(nsnull);   // XXX is nsnull a reasonable arg here?
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+  nsresult rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
+  nsCOMPtr <nsIMsgFilterPlugin> filterPlugin;
+  server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+  if (!filterPlugin) // it's not an error not to have the filter plugin.
+    return NS_OK;
 
-    // get the list of new messages
-    //
-    nsMsgKeyArray *newMessageKeys;
-    rv = mDatabase->GetNewList(&newMessageKeys);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // if there weren't any, just return 
-    //
-    if (!newMessageKeys || !newMessageKeys->GetSize()) 
-        return NS_OK;
-
-    spamSettings->GetUseWhiteList(&useWhiteList);
-    if (useWhiteList)
-    {
-      spamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI));
+  NS_ENSURE_SUCCESS(rv, rv); 
+  spamSettings->GetLevel(&spamLevel);
+  if (!spamLevel)
+    return NS_OK;
+  nsCOMPtr<nsIMsgMailSession> mailSession = 
+      do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!mDatabase) 
+  {
+      rv = GetDatabase(nsnull);   // XXX is nsnull a reasonable arg here?
       NS_ENSURE_SUCCESS(rv, rv);
-      if (!whiteListAbURI.IsEmpty())
-      {
-        nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
-        NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-        nsCOMPtr <nsIRDFResource> resource;
-        rv = rdfService->GetResource(whiteListAbURI, getter_AddRefs(resource));
-        NS_ENSURE_SUCCESS(rv, rv);
+  // get the list of new messages
+  //
+  nsMsgKeyArray *newMessageKeys;
+  rv = mDatabase->GetNewList(&newMessageKeys);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-        whiteListDirectory = do_QueryInterface(resource, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        headerParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      // if we can't get the db, we probably want to continue firing spam filters.
-    }
+  // if there weren't any, just return 
+  //
+  if (!newMessageKeys || !newMessageKeys->GetSize()) 
+      return NS_OK;
 
-    // build up list of keys to classify
-    //
-    nsXPIDLCString uri;
-    nsMsgKeyArray keysToClassify;
-
-    PRUint32 numNewMessages = newMessageKeys->GetSize();
-    for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
+  spamSettings->GetUseWhiteList(&useWhiteList);
+  if (useWhiteList)
+  {
+    spamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!whiteListAbURI.IsEmpty())
     {
-        nsXPIDLCString junkScore;
-        nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        nsMsgKey msgKey = newMessageKeys->GetAt(i);
-        rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
-        if (!NS_SUCCEEDED(rv))
-          continue;
+      nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        msgHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
-        if (!junkScore.IsEmpty()) // ignore already scored messages.
-          continue;
-      // check whitelist first:
-        if (whiteListDirectory)
+      nsCOMPtr <nsIRDFResource> resource;
+      rv = rdfService->GetResource(whiteListAbURI, getter_AddRefs(resource));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      whiteListDirectory = do_QueryInterface(resource, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      headerParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // if we can't get the db, we probably want to continue firing spam filters.
+  }
+
+  // build up list of keys to classify
+  //
+  nsXPIDLCString uri;
+  nsMsgKeyArray keysToClassify;
+
+  PRUint32 numNewMessages = newMessageKeys->GetSize();
+  for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
+  {
+      nsXPIDLCString junkScore;
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      nsMsgKey msgKey = newMessageKeys->GetAt(i);
+      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
+      if (!NS_SUCCEEDED(rv))
+        continue;
+
+      msgHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
+      if (!junkScore.IsEmpty()) // ignore already scored messages.
+        continue;
+    // check whitelist first:
+      if (whiteListDirectory)
+      {
+        if (NS_SUCCEEDED(rv))
         {
+          PRBool cardExists = PR_FALSE;
+          nsXPIDLCString author;
+          nsXPIDLCString authorEmailAddress;
+          msgHdr->GetAuthor(getter_Copies(author));
+          rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author.get(), getter_Copies(authorEmailAddress));
+          // don't want to abort the rest of the scoring.
           if (NS_SUCCEEDED(rv))
+            rv = whiteListDirectory->HasCardForEmailAddress(authorEmailAddress, &cardExists);
+          if (NS_SUCCEEDED(rv) && cardExists)
           {
-            PRBool cardExists = PR_FALSE;
-            nsXPIDLCString author;
-            nsXPIDLCString authorEmailAddress;
-            msgHdr->GetAuthor(getter_Copies(author));
-            rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author.get(), getter_Copies(authorEmailAddress));
-            // don't want to abort the rest of the scoring.
-            if (NS_SUCCEEDED(rv))
-              rv = whiteListDirectory->HasCardForEmailAddress(authorEmailAddress, &cardExists);
-            if (NS_SUCCEEDED(rv) && cardExists)
-            {
-              // mark this msg as non-junk, because we whitelisted it.
-              mDatabase->SetStringProperty(msgKey, "junkscore", "0");
-              mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
-              continue; // skip this msg since it's in the white list
-            }
+            // mark this msg as non-junk, because we whitelisted it.
+            mDatabase->SetStringProperty(msgKey, "junkscore", "0");
+            mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
+            continue; // skip this msg since it's in the white list
           }
         }
-
-        keysToClassify.Add(newMessageKeys->GetAt(i));
-
-    }
-
-    if (keysToClassify.GetSize() > 0)
-    {
-      PRUint32 numMessagesToClassify = keysToClassify.GetSize();
-      char ** messageURIs = (char **) PR_MALLOC(sizeof(const char *) * numMessagesToClassify);
-      if (!messageURIs)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      for ( PRUint32 msgIndex=0 ; msgIndex < numMessagesToClassify ; ++msgIndex ) 
-      {
-          // generate a URI for the message
-          //
-          rv = GenerateMessageURI(keysToClassify.GetAt(msgIndex), &messageURIs[msgIndex]);
-          if (NS_FAILED(rv)) 
-              NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): could not"
-                         " generate URI for message");
       }
-      // filterMsgs
-      //
-      nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
-      rv = SpamFilterClassifyMessages((const char **) messageURIs, numMessagesToClassify, aMsgWindow, junkMailPlugin); 
 
-      for ( PRUint32 freeIndex=0 ; freeIndex < numMessagesToClassify ; ++freeIndex ) 
-        PR_Free(messageURIs[freeIndex]);
-      PR_Free(messageURIs);
+      keysToClassify.Add(newMessageKeys->GetAt(i));
 
+  }
+
+  if (keysToClassify.GetSize() > 0)
+  {
+    PRUint32 numMessagesToClassify = keysToClassify.GetSize();
+    char ** messageURIs = (char **) PR_MALLOC(sizeof(const char *) * numMessagesToClassify);
+    if (!messageURIs)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    for ( PRUint32 msgIndex=0 ; msgIndex < numMessagesToClassify ; ++msgIndex ) 
+    {
+        // generate a URI for the message
+        //
+        rv = GenerateMessageURI(keysToClassify.GetAt(msgIndex), &messageURIs[msgIndex]);
+        if (NS_FAILED(rv)) 
+            NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): could not"
+                       " generate URI for message");
     }
-    NS_DELETEXPCOM(newMessageKeys);
-    return rv;
+    // filterMsgs
+    //
+    *aFiltersRun = PR_TRUE;
+    nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
+    rv = SpamFilterClassifyMessages((const char **) messageURIs, numMessagesToClassify, aMsgWindow, junkMailPlugin); 
+
+    for ( PRUint32 freeIndex=0 ; freeIndex < numMessagesToClassify ; ++freeIndex ) 
+      PR_Free(messageURIs[freeIndex]);
+    PR_Free(messageURIs);
+
+  }
+  NS_DELETEXPCOM(newMessageKeys);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1919,3 +1922,23 @@ nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsI
   while (NS_SUCCEEDED(rv) && rv != NS_MSG_PASSWORD_PROMPT_CANCELLED && userDidntCancel && !passwordCorrect);
   return (!passwordCorrect) ? NS_ERROR_FAILURE : rv;
 }
+
+
+nsresult nsMsgDBFolder::PerformBiffNotifications(void)
+{
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32  numBiffMsgs = 0;
+  nsCOMPtr<nsIMsgFolder> root;
+  rv = GetRootFolder(getter_AddRefs(root));
+  root->GetNumNewMessages(PR_TRUE, &numBiffMsgs);
+  if (numBiffMsgs > 0) 
+  {
+    server->SetPerformingBiff(true);
+    SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
+    server->SetPerformingBiff(false);
+  }
+  return NS_OK;
+}
+
