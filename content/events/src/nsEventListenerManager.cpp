@@ -103,16 +103,15 @@ nsIDOMEventGroup* gDOM2EventGroup;
 
 PRUint32 nsEventListenerManager::mInstanceCount = 0;
 
-nsEventListenerManager::nsEventListenerManager() 
+nsEventListenerManager::nsEventListenerManager() :
+  mManagerType(NS_ELM_NONE),
+  mListenersRemoved(PR_FALSE),
+  mSingleListenerType(eEventArrayType_None),
+  mSingleListener(nsnull),
+  mMultiListeners(nsnull),
+  mGenericListeners(nsnull),
+  mTarget(nsnull)
 {
-  mManagerType = NS_ELM_NONE;
-  mSingleListener = nsnull;
-  mSingleListenerType = eEventArrayType_None;
-  mMultiListeners = nsnull;
-  mGenericListeners = nsnull;
-  mListenersRemoved = PR_FALSE;
-
-  mTarget = nsnull;
   ++mInstanceCount;
 }
 
