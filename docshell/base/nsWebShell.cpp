@@ -199,6 +199,7 @@ public:
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
   NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
+  NS_IMETHOD GetReferrer(nsIURI **aReferrer);
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD RemoveChild(nsIWebShell* aChild);
@@ -1574,6 +1575,12 @@ nsWebShell::GetParentEvenIfChrome(nsIWebShell*& aParent)
   aParent = mParent;
   NS_IF_ADDREF(mParent);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetReferrer(nsIURI **aReferrer)
+{
+  return NS_NewURI(aReferrer, mReferrer, nsnull);
 }
 
 NS_IMETHODIMP
