@@ -80,7 +80,7 @@
 #include "nsIChromeRegistry.h"
 
 #ifdef	XP_MAC
-#include "Files.h"
+#include <Files.h>
 #endif
 
 #ifdef	XP_WIN
@@ -147,7 +147,8 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
       if (NS_FAILED(rv))
           return rv;
   }
-  const char *urlSpec = newSpec;
+  
+  nsCAutoString urlSpec(newSpec);
   uri->SetSpec(urlSpec);
 
   /* won't deal remote URI yet */
@@ -160,7 +161,7 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
   nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
    
   NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
-   
+  
   if ((tmpStr != fileStr)) {
        /* resolve to fileURL */
        nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
