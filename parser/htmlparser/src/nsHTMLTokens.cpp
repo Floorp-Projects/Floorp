@@ -1005,172 +1005,223 @@ CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLT
   mTextValue.Assign(aName);
 }
 
-/*
- *  This method consumes a comment using the (CORRECT) comment parsing
- *  algorithm according to ISO 8879 (SGML).
- *  
- *  @update  gess 01/04/99
- *  @param   
- *  @param   
- *  @return  
- */
+// We must test if we have whitespace and >
+static PRBool IsGoodCommentEnd(
+  const nsReadingIterator<PRUnichar>& aCurrent, 
+  const nsReadingIterator<PRUnichar>& aEnd, 
+  nsReadingIterator<PRUnichar>& aGt)
+{
+  nsReadingIterator<PRUnichar> current = aCurrent;
+
+  while (current != aEnd) {
+    if (*current == kGreaterThan) {
+      aGt = current;
+      return PR_TRUE;
+    }
+    if (!nsString::IsSpace(*current))
+      break;
+    ++current;
+  }
+
+  return PR_FALSE;
+}
+
 static
-nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
-  nsresult  result=NS_OK;
-  static const PRUnichar theTerminalsChars[] = 
-    { PRUnichar('-'), PRUnichar('>'), PRUnichar(0) };
-  static const nsReadEndCondition endCommentCondition(theTerminalsChars);
- 
+nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
+  aString.Truncate();
+
+  // <!--[... -- ... -- ...]*-->
   /*********************************************************
     NOTE: This algorithm does a fine job of handling comments
           when they're formatted per spec, but if they're not
-          we don't handle them well. For example, we gack
-          on the following:
-
-          <!-- xx -- xx --> 
+          we don't handle them well.
    *********************************************************/
+  nsReadingIterator<PRUnichar> end, current, gt;
+  aScanner.EndReading(end);
+  aScanner.CurrentPosition(current);
 
-  aString.Assign(NS_LITERAL_STRING("<!"));
-  while(NS_OK==result) {
-    result=aScanner.GetChar(aChar);
-    if(NS_OK==result) {
-      aString+=aChar;
-      if(kMinus==aChar) {
-        result=aScanner.GetChar(aChar);
-        if(NS_OK==result) {
-          if(kMinus==aChar) {
-               //in this case, we're reading a long-form comment <-- xxx -->
-            aString+=aChar;
-            if(NS_OK==result) {
-              //Find the first ending sequence '--'
-              PRBool found = PR_FALSE;
-              nsAutoString temp;
-              do {
-                result = aScanner.ReadUntil(temp,kMinus,PR_TRUE);
-                if (NS_FAILED(result)) return result;
-                  
-                result = aScanner.Peek(aChar);
-                if (NS_FAILED(result)) return result;
-                  
-                if (aChar == kMinus) {
-                  // found matching '--'
-                  found = PR_TRUE;
-                  aScanner.GetChar(aChar);
-                  aString += temp;
-                  aString += aChar;
-                  // Read until "-" or ">"
-                  result = aScanner.ReadUntil(aString,endCommentCondition,PR_FALSE);
-                }
-              } while (!found);
-            }
-          } //
-          else break; //go find '>'
-        }
-      }//if
-      else if(kGreaterThan==aChar) {
-        return result;
+  nsReadingIterator<PRUnichar> currentEnd = end, beginData = end;
+  PRBool balancedComment = PR_TRUE;
+
+  static NS_NAMED_LITERAL_STRING(dashes,"--");
+
+  while (FindInReadable(dashes, current, currentEnd)) {
+    current.advance(2);
+    if (beginData == end) {
+      beginData = current;
+    }
+    balancedComment = !balancedComment; // We need to match '--' with '--'
+    
+    if (balancedComment && IsGoodCommentEnd(current, end, gt)) {
+      // done
+      current.advance(-2);
+      if (beginData != current) { // protects from <!---->
+#if 0
+        // XXX We should do this, but it HANGS until bug 112943 is fixed:
+        aString = Substring(beginData, current);
+#else
+        // XXX Instead we can do this EVIL HACK (from jag):
+        PRUint32 len = Distance(beginData, current);
+        aString.SetLength(len);
+        PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+        copy_string(beginData, current, dest);
+#endif
       }
-      else break; //go find '>'
-    }//if
-  }//while
-  if(NS_OK==result) {
-     //Read up to the closing '>', unless you already did!  (such as <!>).
-    if(kGreaterThan!=aChar) {
-      result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+      aScanner.SetPosition(++gt);
+      return NS_OK;
+    } else {
+      // Continue after the last '--'
+      currentEnd = end;
     }
   }
-  return result;
+  
+  return kEOF; // not really an nsresult, but...
 }
 
-/*
- *  This method consumes a comment using common (actually non-standard)
- *  algorithm that seems to work against the content on the web.
- *  
- *  @update  gess 01/04/99
- *  @param   
- *  @param   
- *  @return  
- */
 static
-nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
-  
+nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
+  aString.Truncate();
 
-  nsresult  result=NS_OK;
- 
+  // <![-[-]] ... [[-]-|--!]>
   /*********************************************************
     NOTE: This algorithm does a fine job of handling comments
           commonly used, but it doesn't really consume them
           per spec (But then, neither does IE or Nav).
    *********************************************************/
+  nsReadingIterator<PRUnichar> end, current;
+  aScanner.EndReading(end);
+  aScanner.CurrentPosition(current);
+  nsReadingIterator<PRUnichar> beginData = current, beginLastMinus = end;
 
-  nsReadingIterator<PRUnichar> theStartOffset, theCurrOffset, theBestAltPos, endPos;
-  aScanner.EndReading(endPos);
-  theBestAltPos = endPos;
+  // When we get here, we have always already consumed <!
+  // Skip over possible leading minuses
+  if (current != end && *current == kMinus) {
+    beginLastMinus = current;
+    ++current;
+    ++beginData;
+    if (current != end && *current == kMinus) { // <!--
+      beginLastMinus = current;
+      ++current;
+      ++beginData;
+      // Long form comment
 
-  aScanner.CurrentPosition(theStartOffset);
-  result=aScanner.GetChar(aChar);
-  if(NS_OK==result) {
-    if(kMinus==aChar) {
-      result=aScanner.GetChar(aChar);
-      if(NS_OK==result) {
-        if(kMinus==aChar) {
-          //in this case, we're reading a long-form comment <-- xxx -->
-
-          theCurrOffset = theStartOffset;
-        
-          while((NS_OK==result)) {
-            if (FindCharInReadable(PRUnichar(kGreaterThan), theCurrOffset, endPos)) {
-              ++theCurrOffset;
-              nsReadingIterator<PRUnichar> temp = theCurrOffset;
-              temp.advance(-3);
-              aChar=*temp;
-              if(kMinus==aChar) {
-                ++temp;
-                aChar=*temp;
-                if(kMinus==aChar) {
-                  theStartOffset.advance(-2); // Include "<!" also..
-                  CopyUnicodeTo(theStartOffset, theCurrOffset, aString);
-                  aScanner.SetPosition(theCurrOffset);
-                  return result; // We have found the dflt end comment delimiter ("-->")
-                }
-              }
-              if(theBestAltPos == endPos) {
-                // If we did not find the dflt then assume that '>' is the end comment
-                // until we find '-->'. Nav. Compatibility -- Ref: Bug# 24006
-                theBestAltPos=theCurrOffset;
-              }
-            }
-            else {
-              result=kEOF;
-            }
-          } //while
-          if((endPos==theCurrOffset) && (!aScanner.IsIncremental())) {
-            //if you're here, then we're in a special state. 
-            //The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
-            //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
-            //If so, rewind just pass than, and use everything up to that point as your comment.
-            //If not, the document has no end comment and should be treated as one big comment.
-            if(endPos != theBestAltPos) {
-              theStartOffset.advance(-2);// Include "<!" also..
-              CopyUnicodeTo(theStartOffset, theBestAltPos, aString);
-              aScanner.SetPosition(theBestAltPos);
-              result=NS_OK;
+      nsReadingIterator<PRUnichar> currentEnd = end, gt = end;
+      
+      // Find the end of the comment
+      while (FindCharInReadable(kGreaterThan, current, currentEnd)) {
+        gt = current;
+        --current;
+        PRBool goodComment = PR_FALSE;
+        if (current != beginLastMinus && *current == kMinus) { // ->
+          --current;
+          if (current != beginLastMinus && *current == kMinus) { // -->
+            goodComment = PR_TRUE;
+            --current;
+          }
+        } else if (current != beginLastMinus && *current == '!') {
+          --current;
+          if (current != beginLastMinus && *current == kMinus) {
+            --current;
+            if (current != beginLastMinus && *current == kMinus) { // --!>
+              --current;
+              goodComment = PR_TRUE;
             }
           }
-          return result;
-
-        } //if
-      }//if
-    }//if
-  }//if
-  if(NS_OK==result) {
-     //Read up to the closing '>', unless you already did!  (such as <!>).
-    if(kGreaterThan!=aChar) {
-      aString.Append(NS_LITERAL_STRING("<!- "));
-      result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+        } else if (current == beginLastMinus) {
+          goodComment = PR_TRUE;
+        }
+    
+        if (goodComment) {
+          // done
+          if (beginLastMinus != current) { // protects from <!---->
+#if 0
+            // XXX We should do this, but it HANGS until bug 112943 is fixed:
+            aString = Substring(beginData, ++current);
+#else
+            // XXX Instead we can do this EVIL HACK (from jag):
+            PRUint32 len = Distance(beginData, ++current);
+            aString.SetLength(len);
+            PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+            copy_string(beginData, current, dest);
+#endif
+          }
+          aScanner.SetPosition(++gt);
+          return NS_OK;
+        } else {
+          // try again starting after the last '>'
+          current = ++gt;
+          currentEnd = end;
+        }
+      } //while
+  
+      if (gt != end && !aScanner.IsIncremental()) {
+        // If you're here, then we're in a special state. 
+        // The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
+        // In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
+        // If so, rewind just pass that, and use everything up to that point as your comment.
+        // If not, the document has no end comment and should be treated as one big comment.
+        if (beginData != gt) { // protects from <!-->
+#if 0
+          // XXX We should do this, but it HANGS until bug 112943 is fixed:
+          aString = Substring(beginData, ++gt);
+#else
+          // XXX Instead we can do this EVIL HACK (from jag):
+          PRUint32 len = Distance(beginData, ++gt);
+          aString.SetLength(len);
+          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+          copy_string(beginData, gt, dest);
+#endif
+        } else {
+          ++gt;
+        }
+        aScanner.SetPosition(gt);
+        return NS_OK;
+      } else {
+        return kEOF;  // not really an nsresult, but...
+      }
     }
   }
-  return result;
+  
+  // This could be short form of comment
+  // Find the end of the comment
+  current = beginData;
+  if (FindCharInReadable(kGreaterThan, current, end)) {
+    nsReadingIterator<PRUnichar> gt = current;
+    if (current != beginData) {
+      --current;
+      if (current != beginData && *current == kMinus) { // ->
+        --current;
+        if (current != beginData && *current == kMinus) { // -->
+          --current;
+        }
+      } else if (current != beginData && *current == '!') { // !>
+        --current;
+        if (current != beginData && *current == kMinus) { // -!>
+          --current;
+          if (current != beginData && *current == kMinus) { // --!>
+            --current;
+          }
+        }
+      }
+    }
+
+    if (current != gt) {
+#if 0
+      // XXX We should do this, but it HANGS until bug 112943 is fixed:
+      aString = Substring(beginData, ++current);
+#else
+      // XXX Instead we can do this EVIL HACK (from jag):
+      PRUint32 len = Distance(beginData, ++current);
+      aString.SetLength(len);
+      PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+      copy_string(beginData, current, dest);
+#endif
+    }
+    aScanner.SetPosition(++gt);
+    return NS_OK;
+  }
+
+  return kEOF; // not really an nsresult, but...
 }
 
 /*
@@ -1187,10 +1238,10 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
   
   if (aFlag & NS_IPARSER_FLAG_STRICT_MODE) {
     //Enabling strict comment parsing for Bug 53011 and  2749 contradicts!!!!
-    result=ConsumeStrictComment(aChar,aScanner,mTextValue);
+    result=ConsumeStrictComment(aScanner,mTextValue);
   }
   else {
-    result=ConsumeComment(aChar,aScanner,mTextValue);
+    result=ConsumeComment(aScanner,mTextValue);
   }
   return result;
 }
