@@ -1,3 +1,12 @@
+      ____  _     ___ _____ 
+ THE |  _ \| |   |_ _|  ___|
+     | |_) | |    | || |_   
+     |  __/| |___ | ||  _|  
+     |_|   |_____|___|_|   DOCUMENTATION
+
+[Stylistic Note: The quote character is ". The apostrophe is '.
+Functions and methods end with (). Caps are used to indicate a new
+term. Variables are quoted, method names are not.]
 
 _______________________
 CHAPTER 1: INTRODUCTION
@@ -63,8 +72,8 @@ experience, food quality, or prices.
 What on earth does this have to do with Perl?
 
 Well, clearly you need to eat Pizza in order to code. Also, it just
-struck me that this is in fact a good metaphor for the whole PLIF
-thing that someone mentioned earlier. See Table 1.
+struck me that, coincidentally, this is in fact a good metaphor for
+the whole PLIF thing that someone mentioned earlier. See Table 1.
 
   Real Life          | Perl Program
  --------------------+-----------------------------------------
@@ -139,7 +148,7 @@ Hence, the name of the method is "getService" -- it gets the
 appropriate service. I tried making it more obvious, but it was hard,
 so I gave up. There are several other methods that return services,
 and they are explained in the chapter describing the workings of the
-application object.
+application object, called "using get service" or some such.
 
 You should also notice that getService() gets passed a string -- that
 string is used to determine whether or not each registered module
@@ -148,7 +157,8 @@ provides the service or not. ("Providing a service" is called
 
 The string is generally opaque, although that depends on the
 module. What I mean by "opaque" is that modules don't try to parse it
-to work out whether or not to claim to support a particular service.
+to work out whether or not to claim to support a particular service,
+they just do a straight string comparison with it.
 
 The next thing to notice is that getService() returns an object, and
 that it is therefore directly used as such -- the method on the data
@@ -159,7 +169,7 @@ that is stored in $string.
 So, in summary: If you want to do something that might be done in
 several different ways and the code you are immediately dealing with
 doesn't need to know the difference, then you would implement the
-'something' as a Service and use the 'getService()' method on the
+"something" as a Service and use the getService() method on the
 application object to get a reference to an instance of the service.
 
 Questions raised by this:
@@ -210,7 +220,7 @@ five debugging aids:
 
    debug(message)
    Same as dump(7, message). According to the code, level 7 is
-   'typical checkpoints (e.g. someone tried to do some output)'.
+   "typical checkpoints (e.g. someone tried to do some output)".
 
    notImplemented()
    Calls error() with predefined arguments.
@@ -437,12 +447,138 @@ In the next chapter we shall look at how to use it.
 
 ____________________________
 CHAPTER 5: USING GET SERVICE
-| Wherein a family of methods is brought to the front and examined as
-| if for a college entrance exam, resulting in the discovery that one
-| of the methods is not very bright.
+| Wherein the reader is introduced to the concept of magic and is then
+| walked through the steps of taming the magic for his own purposes.
 
-At this point I shall mention that some services get more than just
-the $app as an argument on construction...
+In Chapter 2, we learnt about services. It turns out that there is
+more than one kind of service.
+
+   The Plain Old Service - what was described in Chapter 2. There is
+   one instance of each plain old service. If two parts of the
+   codebase both ask for a particular service, they get given the same
+   instance. The same instance of a plain old service is used for the
+   lifetime of the application.
+
+   The Service Instance - an instance of a service created especially
+   for the requester, and not cached. The lifetime of a service
+   instance is typically very short.
+
+   The Object - an instance of a service that is create by one service
+   and added to the list of objects. The lifetime of an object is well
+   defined. All services that request objects providing a particular
+   service will be given the same instance(s).
+
+Each of these has an associated "get" method on the controller.
+
+   getService(name)
+   Returns the instance of the first service found providing
+   "name". The service's constructor will be called with one argument,
+   a reference to the controller, which must not under any
+   circumstances be held onto.
+
+   getServiceInstance(name, arguments)
+   Returns a new instance of the first service found providing
+   "name". The constructor will be passed a reference to the
+   controller followed by the "arguments" parameter.
+
+   getObject(name)
+   Returns the instance of the first registered object found providing
+   "name" as an object service.
+
+In addition to the first qualifying service or object, one can also
+retrieve the list of all qualifying services or objects. The two
+methods available to do this are:
+
+   getServiceList()
+   Returns a list containing instances of all the services found
+   providing "name". The services' constructors will be called with
+   one argument, a reference to the controller, which must not under
+   any circumstances be held onto.
+   
+   getObjectList()
+   Returns a list containing the instances of all the registered
+   objects found providing "name" as an object service.
+
+A convenient way of using these lists is through Magic Arrays. Magic
+arrays are array references that act as normal objects. The easiest
+way to explain these is by example:
+
+    my @languages = $app->getCollectingServiceList('example.text')->language;
+
+Pretty simple looking, huh. But that one line does a lot of work.
+Let's expand the example to two lines and then study each bit in turn:
+
+    my $magicArray = $app->getCollectingServiceList('example.text');
+    my @languages = $magicArray->language;
+
+The first line returns a Collecting Magic Array of all the services
+that are registered and claim to provide the "example.text" service.
+This works just like the getService() method, except that instead of
+just finding and returning the first match, it finds, instantiates and
+returns all the matches (like getServiceList()) wrapped in a
+Collecting Magic Array (unlike getServiceList()).
+
+So where's the magic? Well, that's what the second line shows us.
+Imagine if you will that the "example.text" service is defined as
+having a "language" property that is a single string. If you wanted to
+get the list of all the values of the "language" property as returned
+by each service in your service list, you would have to use some sort
+of "foreach" loop... or, you could just call the method on the magic
+array, which then forwards the call to each of the services and
+collects the return values into one long list (whence the name).
+
+There are three different types of Magic Arrays.
+
+   Collecting - Calls each service in turn, and returns a list
+   containing the concatenated results of all the calls.
+
+   Piping - Calls each service in turn, and returns a list with each
+   item being a reference to the array which was returned for the
+   respective service.
+
+   Selecting - Calls each service in turn until one returns a defined
+   value, and returns that value. (Note: always executes the method
+   calls in an array context, and then returns the first value in a
+   scalar context.)
+
+There are six methods on the controller ($app) that return magic
+arrays. They are:
+
+   getCollectingServiceList()
+   getCollectingObjectList()
+   getPipingServiceList()
+   getPipingObjectList()
+   getSelectingServiceList()
+   getSelectingObjectList()
+
+The get*ServiceList() methods act just like getServiceList() but
+return the appropriate magic array instead of a list, and the
+get*ObjectList() methods similarly return the appropriate magic array
+primed with what getObjectList() would return.
+
+
+As you may have noticed in the descriptions of the methods above,
+service constructors get passed different arguments depending on
+exactly what type of service they are.
+
+Normal services have the lifetime of the $app, and therefore can be
+created from any random part of the application. For this reason,
+there is no way of choosing a particular set of arguments for the
+constructor, and so a simple convention has been picked: the only
+argument is the $app reference. (NOTE: services must not hold a
+reference to the $app object! If they do, there will be a circular
+ownership model and the services and the application will never get
+freed. See chapter 7, "Weak References".)
+
+Service Instances, on the other hand, are created on a per-request
+basis, and therefore the time of construction is very well defined.
+They can be passed particular arguments by passing the relevant
+arguments to the getServiceInstance() method.
+
+Objects are inserted into the object list using the addObject()
+method, and therefore construction is out of the control of the $app
+and so no firm rules can be said about passing arguments to object
+constructors.
 
 __________________________________
 CHAPTER 6: THE MAGIC OF PROPERTIES
@@ -462,8 +598,9 @@ on the author's development machine.
 
 ______________________________________
 CHAPTER 8: THE MAIN APPLICATION OBJECT
-| Wherein the reader is introduced to the concept of magic and is then
-| walked through the steps of taming the magic for his own purposes.
+| Wherein a family of methods is brought to the front and examined as
+| if for a college entrance exam, resulting in the discovery that one
+| of the methods is not very bright.
 
 Or not.
 
@@ -473,8 +610,14 @@ CHAPTER 9: INPUT AND OUTPUT
 
 Some day.
 
+_________________________________
+CHAPTER 10: THE SERVICE REFERENCE
+| or, what does what do, and how?
+
+You have _got_ to be kidding.
+
 ___________________________
-CHAPTER 10: COMMON MISTAKES
+CHAPTER 11: COMMON MISTAKES
 | Wherein perls of wisdom are given out in order to save the reader
 | some time.
 
@@ -482,7 +625,7 @@ If you get an error message of the form:
 
    Can't locate object method "myMethod" via package "a.service.name" at SomePath/SomeModule.pm line 42
 
-...then you are probably calling 'getService' on the $self object
+...then you are probably calling getService() on the $self object
 instead of the $app object. The error happens because 
 
    $aPLIFObject->getService('a.service.name')->myMethod();
@@ -493,15 +636,20 @@ the method call being invoked on the string, as in:
 
    'a.service.name'->myMethod();
 
-...which of course will fail, since hte package 'a.service.name'
+...which of course will fail, since the package "a.service.name"
 doesn't exist and thus doesn't have a method called myMethod().
 
 For the same reason, this error can happen if you misspell the name of
 the service getter method (e.g., if you use |$app->getServiceList()|
 instead of |$app->getCollectingServiceList()|).
 
+Another common mistake is tipping the delivery guy $200 for a single
+pizza. Ok, it's not a common mistake. However, it is a serious
+mistake. Don't do it.
+
 _____________________
 CHAPTER n: CONCLUSION
+
 | Wherein it is revealed that all is subject to change, only available
 | while stocks last, and void where prohibited by law.
 
