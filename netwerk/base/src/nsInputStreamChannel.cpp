@@ -217,7 +217,6 @@ NS_IMETHODIMP
 nsInputStreamChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
     mCallbacks = aCallbacks;
-    mProgressSink = do_GetInterface(mCallbacks);
     return NS_OK;
 }
 
@@ -294,6 +293,9 @@ nsInputStreamChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
     NS_ENSURE_TRUE(mContentStream, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
+
+    // Initialize mProgressSink
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
     // if content length is unknown, then we must guess... in this case, we
     // assume the stream can tell us.  if the stream is a pipe, then this will

@@ -90,6 +90,7 @@
 #include "nsStreamUtils.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsComponentManagerObsolete.h"
+#include "nsInterfaceRequestorAgg.h"
 
 void XXXNeverCalled()
 {
@@ -193,4 +194,5 @@ void XXXNeverCalled()
 
       nsServiceManager::GetGlobalServiceManager(nsnull);
     }
+    NS_NewInterfaceRequestorAggregation(nsnull, nsnull, nsnull);
 }

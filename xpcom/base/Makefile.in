@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsID.cpp \
 		nsMemoryImpl.cpp \
 		nsTraceRefcntImpl.cpp \
+		nsInterfaceRequestorAgg.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -78,6 +79,7 @@ EXPORTS		= \
 		nsISupportsObsolete.h \
 		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
+		nsInterfaceRequestorAgg.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

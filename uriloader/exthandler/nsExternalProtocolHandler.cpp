@@ -52,9 +52,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrompt.h"
 #include "nsEventQueueUtils.h"
-#include "nsIChannel.h"
-#include "nsNetCID.h"
-#include "netCore.h"
+#include "nsNetUtil.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
@@ -90,6 +88,7 @@ private:
     nsresult mStatus;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsExtProtocolChannel)
@@ -110,26 +109,25 @@ nsExtProtocolChannel::~nsExtProtocolChannel()
 
 NS_IMETHODIMP nsExtProtocolChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
-    *aLoadGroup = nsnull;
-    return NS_OK;
+  NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
+  mLoadGroup = aLoadGroup;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
+NS_IMETHODIMP nsExtProtocolChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 {
-  NS_PRECONDITION(aNotificationCallbacks, "No out param?");
-  *aNotificationCallbacks = mCallbacks;
-  NS_IF_ADDREF(*aNotificationCallbacks);
+  NS_IF_ADDREF(*aCallbacks = mCallbacks);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
+NS_IMETHODIMP nsExtProtocolChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-  mCallbacks = aNotificationCallbacks;
+  mCallbacks = aCallbacks;
   return NS_OK;
 }
 
@@ -182,11 +180,7 @@ nsresult nsExtProtocolChannel::OpenURL()
 
     // get an nsIPrompt from the channel if we can
     nsCOMPtr<nsIPrompt> prompt;
-    if (mCallbacks)
-    {
-      mCallbacks->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
-    }
-
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, prompt);
     return extProtService->LoadURI(mUrl, prompt);
   }
   return NS_ERROR_FAILURE;

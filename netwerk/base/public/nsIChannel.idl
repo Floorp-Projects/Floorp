@@ -94,6 +94,12 @@ interface nsIChannel : nsIRequest
      * 
      * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
      * and nsIAuthPrompt.
+     *
+     * NOTE: channels generally query this attribute when they are opened and
+     * retain references to the resulting interfaces until they are done.  A
+     * channel may ignore changes to the notificationCallbacks attribute after
+     * it has been opened.  This rule also applies to notificationCallbacks
+     * queried from the channel's loadgroup.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 

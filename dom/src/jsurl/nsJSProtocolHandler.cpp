@@ -116,34 +116,6 @@ nsresult nsJSThunk::Init(nsIURI* uri)
     return NS_OK;
 }
 
-static void
-GetInterfaceFromChannel(nsIChannel* aChannel,
-                        const nsIID &aIID,
-                        void **aResult)
-{
-    NS_PRECONDITION(aChannel, "Must have a channel");
-    NS_PRECONDITION(aResult, "Null out param");
-    *aResult = nsnull;
-
-    // Get an interface requestor from the channel callbacks.
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (callbacks) {
-        callbacks->GetInterface(aIID, aResult);
-    }
-    if (!*aResult) {
-        // Try the loadgroup
-        nsCOMPtr<nsILoadGroup> loadGroup;
-        aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-        if (loadGroup) {
-            loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
-            if (callbacks) {
-                callbacks->GetInterface(aIID, aResult);
-            }
-        }
-    }
-}
-
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 {
     nsresult rv;
@@ -157,8 +129,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 
     // The the global object owner from the channel
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-    GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIScriptGlobalObjectOwner),
-                            getter_AddRefs(globalOwner));
+    NS_QueryNotificationCallbacks(aChannel, globalOwner);
     NS_ASSERTION(globalOwner, 
                  "Unable to get an nsIScriptGlobalObjectOwner from the "
                  "channel!");
@@ -372,8 +343,7 @@ nsresult nsJSChannel::StopAll()
 {
     nsresult rv = NS_ERROR_UNEXPECTED;
     nsCOMPtr<nsIWebNavigation> webNav;
-    GetInterfaceFromChannel(mStreamChannel, NS_GET_IID(nsIWebNavigation),
-                            getter_AddRefs(webNav));
+    NS_QueryNotificationCallbacks(mStreamChannel, webNav);
 
     NS_ASSERTION(webNav, "Can't get nsIWebNavigation from channel!");
     if (webNav) {
@@ -564,8 +534,7 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
             // ok. If so, stop all pending network loads.
 
             nsCOMPtr<nsIDocShell> docShell;
-            GetInterfaceFromChannel(mStreamChannel, NS_GET_IID(nsIDocShell),
-                                    getter_AddRefs(docShell));
+            NS_QueryNotificationCallbacks(mStreamChannel, docShell);
             if (docShell) {
                 nsCOMPtr<nsIContentViewer> cv;
                 docShell->GetContentViewer(getter_AddRefs(cv));

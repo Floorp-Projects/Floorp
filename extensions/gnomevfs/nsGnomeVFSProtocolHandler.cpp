@@ -141,30 +141,6 @@ MapGnomeVFSResult(GnomeVFSResult result)
 
 //-----------------------------------------------------------------------------
 
-// Query the channel for a nsIAuthPrompt reference (use the canonical method of
-// searching the channel's notification callbacks first, and its loadgroup's
-// callbacks seconds).  XXX This should really live somewhere else.
-static void
-GetAuthPromptFromChannel(nsIChannel *channel, nsIAuthPrompt **result)
-{
-  nsCOMPtr<nsIInterfaceRequestor> cbs;
-  channel->GetNotificationCallbacks(getter_AddRefs(cbs));
-  if (cbs)
-    CallGetInterface(cbs.get(), result);
-
-  if (!*result)
-  {
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    channel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (loadGroup)
-    {
-      loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-      if (cbs)
-        CallGetInterface(cbs.get(), result);
-    }
-  }
-}
-
 static void
 ProxiedAuthCallback(gconstpointer in,
                     gsize         in_size,
@@ -185,7 +161,7 @@ ProxiedAuthCallback(gconstpointer in,
     return;
 
   nsCOMPtr<nsIAuthPrompt> prompt;
-  GetAuthPromptFromChannel(channel, getter_AddRefs(prompt));
+  NS_QueryNotificationCallbacks(channel, prompt);
 
   // If no auth prompt, then give up.  We could failover to using the
   // WindowWatcher service, but that might defeat a consumer's purposeful

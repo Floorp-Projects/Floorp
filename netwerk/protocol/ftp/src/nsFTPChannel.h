@@ -117,9 +117,6 @@ protected:
 
     // various callback interfaces
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
-    nsCOMPtr<nsIPrompt>             mPrompter;
-    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
-    nsCOMPtr<nsIAuthPrompt>         mAuthPrompter;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mIsPending;
@@ -138,7 +135,6 @@ protected:
     nsFtpState*                     mFTPState;   
 
     nsCString                       mHost;
-    PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
     PRPackedBool                    mCanceled;

@@ -260,6 +260,11 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     PR_LOG(gGopherLog, PR_LOG_DEBUG, ("nsGopherChannel::AsyncOpen() called [this=%x]\n",
                                       this));
 
+    // get callback interfaces...
+
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mPrompter);
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
+
     nsresult rv;
 
     PRInt32 port;
@@ -295,7 +300,6 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
         if (eventQ)
             mTransport->SetEventSink(this, eventQ);
     }
-    mTransport->SetSecurityCallbacks(mCallbacks);
 
     // open buffered, asynchronous socket input stream, and use a input stream
     // pump to read from it.
@@ -411,17 +415,15 @@ nsGopherChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsGopherChannel::SetContentType(const nsACString &aContentType)
 {
-    if (mIsPending) {
-        // only changes mContentCharset if a charset is parsed
-        NS_ParseContentType(aContentType, mContentType, mContentCharset);
-    } else {
-        // We are being given a content-type hint.  Since we have no ways of
-        // determining a charset on our own, just set mContentCharset from the
-        // charset part of this.        
-        nsCAutoString charsetBuf;
-        NS_ParseContentType(aContentType, mContentTypeHint, mContentCharset);
-    }
-    
+    // If AsyncOpen has been called, then treat this value as a content-type
+    // override.  Otherwise, treat it as a content-type hint.
+    //
+    // In the case in which we are being given a content-type hint, we have no
+    // ways of determining a charset on our own, so just set mContentCharset
+    // from the charset part of this.
+
+    nsCString *contentType = mIsPending ? &mContentType : &mContentTypeHint;
+    NS_ParseContentType(aContentType, *contentType, mContentCharset);
     return NS_OK;
 }
 
@@ -486,25 +488,16 @@ nsGopherChannel::SetOwner(nsISupports* aOwner)
 }
 
 NS_IMETHODIMP
-nsGopherChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
+nsGopherChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
 {
-    *aNotificationCallbacks = mCallbacks.get();
-    NS_IF_ADDREF(*aNotificationCallbacks);
+    NS_IF_ADDREF(*aCallbacks = mCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
+nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-    mCallbacks = aNotificationCallbacks;
-    if (mCallbacks) {
-        mPrompter = do_GetInterface(mCallbacks);
-        mProgressSink = do_GetInterface(mCallbacks);
-    }
-    else {
-        mPrompter = 0;
-        mProgressSink = 0;
-    }
+    mCallbacks = aCallbacks;
     return NS_OK;
 }
 
@@ -594,16 +587,8 @@ nsGopherChannel::SendRequest()
             // We require a query string here - if we don't have one,
             // then we need to ask the user
             if (!mPrompter) {
-                if (mLoadGroup) {
-                    nsCOMPtr<nsIInterfaceRequestor> cbs;
-                    rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-                    if (NS_SUCCEEDED(rv))
-                        mPrompter = do_GetInterface(cbs);
-                }
-                if (!mPrompter) {
-                    NS_ERROR("We need a prompter!");
-                    return NS_ERROR_FAILURE;
-                }
+                NS_ERROR("We need a prompter!");
+                return NS_ERROR_FAILURE;
             }
 
             if (!mStringBundle) {
