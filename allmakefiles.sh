@@ -825,14 +825,35 @@ extensions/typeaheadfind/Makefile
 
 MAKEFILES_phoenix="
 browser/Makefile
+browser/app/Makefile
 browser/base/Makefile
 browser/components/Makefile
+browser/components/bookmarks/Makefile
+browser/components/build/Makefile
+browser/components/console/Makefile
+browser/components/downloads/Makefile
+browser/components/downloads/public/Makefile
+browser/components/download/src/Makefile
 browser/components/prefwindow/Makefile
+browser/components/prefwindow/content/Makefile
+browser/components/prefwindow/content/unix/Makefile
+browser/components/prefwindow/content/win/Makefile
+browser/components/prefwindow/locale/Makefile
+browser/components/prefwindow/locale/unix/Makefile
+browser/components/prefwindow/locale/win/Makefile
 browser/components/search/Makefile
 browser/components/search/resources/Makefile
 toolkit/Makefile
+toolkit/components/autocomplete/Makefile
+toolkit/components/autocomplete/public/Makefile
+toolkit/components/autocomplete/src/Makefile
+toolkit/components/build/Makefile
+toolkit/components/satchel/Makefile
+toolkit/components/satchel/public/Makefile
+toolkit/components/satchel/src/Makefile
 toolkit/skin/unix/Makefile
 toolkit/skin/win/Makefile
+toolkit/xre/Makefile
 "
 
 MAKEFILES_minotaur="
