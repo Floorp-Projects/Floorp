@@ -45,14 +45,12 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
         NS_IMETHOD    CompareTo(const nsString& aString, PRInt32* aReturn);
         NS_IMETHOD    CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);
 
-        static nsresult StringToVersionNumbers(const nsString& version, PRInt32 *aMajor, PRInt32 *aMinor, PRInt32 *aRelease, PRInt32 *aBuild);
-
     private:
         void *mScriptObject;
-        PRInt32 major;
-        PRInt32 minor;
-        PRInt32 release;
-        PRInt32 build;
+        PRInt32 mMajor;
+        PRInt32 mMinor;
+        PRInt32 mRelease;
+        PRInt32 mBuild;
 };
 
 

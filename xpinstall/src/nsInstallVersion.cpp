@@ -42,12 +42,12 @@
 #include "nsIDOMInstallVersion.h"
 
 #include "nscore.h"
+#include "nsString.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIScriptGlobalObject.h"
 
 #include "prprf.h"
-#include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -64,7 +64,7 @@ nsInstallVersion::~nsInstallVersion()
 {
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsInstallVersion::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 {
     if (aInstancePtr == NULL)
@@ -103,26 +103,26 @@ NS_IMPL_RELEASE(nsInstallVersion)
 
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsInstallVersion::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
     NS_PRECONDITION(nsnull != aScriptObject, "null arg");
     nsresult res = NS_OK;
-    
-    if (nsnull == mScriptObject) 
+
+    if (!mScriptObject)
     {
-        res = NS_NewScriptInstallVersion(aContext, 
-                                         (nsISupports *)(nsIDOMInstallVersion*)this, 
-                                         nsnull, 
+        res = NS_NewScriptInstallVersion(aContext,
+                                         (nsISupports *)(nsIDOMInstallVersion*)this,
+                                         nsnull,
                                          &mScriptObject);
     }
-  
+
 
     *aScriptObject = mScriptObject;
     return res;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsInstallVersion::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
@@ -130,109 +130,104 @@ nsInstallVersion::SetScriptObject(void *aScriptObject)
 }
 
 //  this will go away when our constructors can have parameters.
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::Init(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild)
 {
-    major   = aMajor;
-    minor   = aMinor;
-    release = aRelease;
-    build   = aBuild;
+    mMajor   = aMajor;
+    mMinor   = aMinor;
+    mRelease = aRelease;
+    mBuild   = aBuild;
 
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::Init(const nsString& version)
 {
-    PRInt32 errorCode;
-    PRInt32 aMajor, aMinor, aRelease, aBuild;
+    mMajor = mMinor = mRelease = mBuild = 0;
 
-    major = minor = release = build = 0;
-    
-    errorCode = nsInstallVersion::StringToVersionNumbers(version, &aMajor, &aMinor, &aRelease, &aBuild);    
-    if (NS_SUCCEEDED(errorCode)) 
-    {
-        Init(aMajor, aMinor, aRelease, aBuild);
-    }
-    
+    // nsString is a flat string
+    if (PR_sscanf(NS_ConvertUTF16toUTF8(version).get(),"%d.%d.%d.%d",&mMajor,&mMinor,&mRelease,&mBuild) < 1)
+        return NS_ERROR_UNEXPECTED;
+
     return NS_OK;
 }
 
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::GetMajor(PRInt32* aMajor)
 {
-    *aMajor = major;
+    *aMajor = mMajor;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::SetMajor(PRInt32 aMajor)
 {
-    major = aMajor;
+    mMajor = aMajor;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::GetMinor(PRInt32* aMinor)
 {
-    *aMinor = minor;
+    *aMinor = mMinor;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::SetMinor(PRInt32 aMinor)
 {
-    minor = aMinor;
+    mMinor = aMinor;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::GetRelease(PRInt32* aRelease)
 {
-    *aRelease = release;
+    *aRelease = mRelease;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::SetRelease(PRInt32 aRelease)
 {
-    release = aRelease;
+    mRelease = aRelease;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::GetBuild(PRInt32* aBuild)
 {
-    *aBuild = build;
+    *aBuild = mBuild;
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::SetBuild(PRInt32 aBuild)
 {
-    build = aBuild;
+    mBuild = aBuild;
     return NS_OK;
 }
 
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::CompareTo(nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
     PRInt32 aMajor, aMinor, aRelease, aBuild;
-    
+
     aVersion->GetMajor(&aMajor);
     aVersion->GetMinor(&aMinor);
     aVersion->GetRelease(&aRelease);
     aVersion->GetBuild(&aBuild);
 
     CompareTo(aMajor, aMinor, aRelease, aBuild, aReturn);
-    
+
     return NS_OK;
 }
 
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::CompareTo(const nsString& aString, PRInt32* aReturn)
 {
     nsInstallVersion inVersion;
@@ -241,35 +236,35 @@ nsInstallVersion::CompareTo(const nsString& aString, PRInt32* aReturn)
     return CompareTo(&inVersion, aReturn);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
 {
     int diff;
-    
-    if ( major == aMajor ) 
+
+    if ( mMajor == aMajor )
     {
-        if ( minor == aMinor ) 
+        if ( mMinor == aMinor )
         {
-            if ( release == aRelease ) 
+            if ( mRelease == aRelease )
             {
-                if ( build == aBuild )
+                if ( mBuild == aBuild )
                     diff = EQUAL;
-                else if ( build > aBuild )
+                else if ( mBuild > aBuild )
                     diff = BLD_DIFF;
                 else
                     diff = BLD_DIFF_MINUS;
             }
-            else if ( release > aRelease )
+            else if ( mRelease > aRelease )
                 diff = REL_DIFF;
             else
                 diff = REL_DIFF_MINUS;
         }
-        else if (  minor > aMinor )
+        else if (  mMinor > aMinor )
             diff = MINOR_DIFF;
         else
             diff = MINOR_DIFF_MINUS;
     }
-    else if ( major > aMajor )
+    else if ( mMajor > aMajor )
         diff = MAJOR_DIFF;
     else
         diff = MAJOR_DIFF_MINUS;
@@ -279,82 +274,14 @@ nsInstallVersion::CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PR
     return NS_OK;
 }
 
-
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallVersion::ToString(nsString& aReturn)
 {
-    char *result=NULL;
-    result = PR_sprintf_append(result, "%d.%d.%d.%d", major, minor, release, build);
-    
-    aReturn.AssignWithConversion(result);
+    char buf[128];
+    PRUint32 len;
 
-    PR_FREEIF(result);
+    len=PR_snprintf(buf, sizeof(buf), "%d.%d.%d.%d", mMajor, mMinor, mRelease, mBuild);
+    aReturn.AssignASCII(buf,len);
 
     return NS_OK;
 }
-
-
-nsresult
-nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajor, PRInt32 *aMinor, PRInt32 *aRelease, PRInt32 *aBuild)    
-{
-    PRInt32 errorCode = nsInstall::UNEXPECTED_ERROR;
-
-    if (!aMajor || !aMinor || !aRelease || !aBuild)
-        return nsInstall::INVALID_ARGUMENTS;
-
-    *aMajor = *aMinor = *aRelease = *aBuild = 0;
-
-    int dot = version.FindChar('.', 0);
-
-    if ( dot == -1 ) 
-    {
-        *aMajor = version.ToInteger(&errorCode);
-    }
-    else  
-    {
-        nsString majorStr;
-        version.Mid(majorStr, 0, dot);
-        *aMajor  = majorStr.ToInteger(&errorCode);
-
-        int prev = dot+1;
-        dot = version.FindChar('.',prev);
-        if ( dot == -1 ) 
-        {
-            nsString minorStr;
-            version.Mid(minorStr, prev, version.Length() - prev);
-            *aMinor = minorStr.ToInteger(&errorCode);
-        }
-        else 
-        {
-            nsString minorStr;
-            version.Mid(minorStr, prev, dot - prev);
-            *aMinor = minorStr.ToInteger(&errorCode);
-
-            prev = dot+1;
-            dot = version.FindChar('.',prev);
-            if ( dot == -1 ) 
-            {
-                nsString releaseStr;
-                version.Mid(releaseStr, prev, version.Length() - prev);
-                *aRelease = releaseStr.ToInteger(&errorCode);
-            }
-            else 
-            {
-                nsString releaseStr;
-                version.Mid(releaseStr, prev, dot - prev);
-                *aRelease = releaseStr.ToInteger(&errorCode);
-    
-                prev = dot+1;
-                if ( (int)version.Length() > dot ) 
-                {
-                    nsString buildStr;
-                    version.Mid(buildStr, prev, version.Length() - prev);
-                    *aBuild = buildStr.ToInteger(&errorCode);
-               }
-            }
-        }
-    }
-
-    return errorCode;
-}
-
