@@ -185,42 +185,6 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
 }
 
 nsresult
-nsImapURI2UserName(const char* rootURI, const char* uriStr,
-                   nsString& username)
-{
-    nsAutoString uri = uriStr;
-    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
-    PRInt32 userStart = PL_strlen(rootURI);
-    while (uri[userStart] == '/') userStart++;
-    uri.Cut(0, userStart);
-    PRInt32 userEnd = uri.FindChar('@');
-    if (userEnd < 1)
-        return NS_ERROR_FAILURE;
-    uri.SetLength(userEnd);
-    username = uri;
-    return NS_OK;
-}
-
-nsresult
-nsImapURI2HostName(const char* rootURI, const char* uriStr, 
-                   nsString& hostname)
-{
-    nsAutoString uri = uriStr;
-    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
-    PRInt32 hostStart = PL_strlen(rootURI);
-    while (uri[hostStart] == '/') hostStart++;
-    uri.Cut(0, hostStart);
-    hostStart = uri.FindChar('@'); // skip username
-    if (hostStart > 0)
-        uri.Cut(0, hostStart+1);
-    PRInt32 hostEnd = uri.FindChar('/');
-    if (hostEnd > 0)
-        uri.SetLength(hostEnd);
-    hostname = uri;
-    return NS_OK;
-}
-
-nsresult
 nsURI2ProtocolType(const char* uriStr, nsString& type)
 {
     nsAutoString uri = uriStr;

@@ -32,7 +32,7 @@
 #include "nsIMsgDatabase.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
-
+#include "nsIURL.h"
  /* 
   * MsgFolder
   */ 
@@ -103,8 +103,8 @@ public:
   NS_IMETHOD RememberPassword(const char *password);
   NS_IMETHOD GetRememberedPassword(char * *aRememberedPassword);
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *_retval);
-  // NS_IMETHOD GetUsername(char * *aUsername);
-  // NS_IMETHOD GetHostname(char * *aHostname);
+  NS_IMETHOD GetUsername(char * *aUsername);
+  NS_IMETHOD GetHostname(char * *aHostname);
   NS_IMETHOD SetFlag(PRUint32 flag);
   NS_IMETHOD ClearFlag(PRUint32 flag);
   NS_IMETHOD GetFlag(PRUint32 flag, PRBool *_retval);
@@ -205,17 +205,7 @@ public:
 	void UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages);
 #endif
 
-#if 0
-  NS_IMETHOD GetUsername(char **userName);
-  NS_IMETHOD GetHostname(char **hostName);
-#endif
-  
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
-
-
-
-
-
 
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
@@ -236,7 +226,6 @@ protected:
 	virtual const char* GetIncomingServerType() = 0;
 
 protected:
-  nsString mName;
   PRUint32 mFlags;
   nsIFolder *mParent;     //This won't be refcounted for ownership reasons.
   PRInt32 mNumUnreadMessages;        /* count of unread messages (-1 means
@@ -266,7 +255,16 @@ protected:
   PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;
+
+  //
+  // stuff from the uri
+  //
+  
   PRBool mIsServer;
+  nsCString mUsername;
+  nsCString mHostname;
+  nsString mName;
+  
 };
 
 #endif

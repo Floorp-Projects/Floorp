@@ -470,9 +470,20 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 	rv = aURL->GetPreHost(getter_Copies(m_userName));
 	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr <nsIMsgIncomingServer> server;
-	
-	rv = nsGetNewsServer((const char *)m_userName, (const char *)m_hostName, getter_AddRefs(server));   
+    // retrieve the AccountManager
+    NS_WITH_SERVICE(nsIMsgMailSession, session, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgAccountManager> accountManager;
+    rv = session->GetAccountManager(getter_AddRefs(accountManager));
+    if (NS_FAILED(rv)) return rv;                  
+    
+    // find the news host
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = accountManager->FindServer(m_userName,
+                                    m_hostName,
+                                    "nntp",
+                                    getter_AddRefs(server));
+    
 	if (NS_SUCCEEDED(rv) && server) {
 		nsCOMPtr <nsINntpIncomingServer> nntpServer = do_QueryInterface(server, &rv);
 		if (NS_SUCCEEDED(rv) && nntpServer) {

@@ -75,7 +75,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(nsnull)
 {
   /* we're parsing the newsrc file, and the line breaks are platform specific.
    * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
@@ -91,12 +91,6 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
 	if (mPath) {
 		delete mPath;
     mPath = nsnull;
-  }
-
-  // mHostname allocated in nsGetNewsHostName() with new char[]
-  if (mHostname) {
-    delete [] mHostname;
-    mHostname = nsnull;
   }
 
   PR_FREEIF(mOptionLines);
@@ -811,33 +805,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 {
   NS_ASSERTION(0, "GetSizeOnDisk not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::GetUsername(char** userName)
-{
-  return nsGetNewsUsername(kNewsRootURI, mURI, userName);
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::GetHostname(char** hostName)
-{
-  nsresult rv = NS_OK;
-  
-  if (!mHostname) {
-    // mHostname gets freed in the destructor
-    rv = nsGetNewsHostName(kNewsRootURI, mURI, &mHostname);
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-	if (mHostname) {
-    *hostName = PL_strdup(mHostname);
-		if(!*hostName)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-  else {
-    return NS_ERROR_FAILURE;
-  }
-  
-	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)

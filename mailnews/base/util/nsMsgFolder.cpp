@@ -45,7 +45,6 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
-    mName(""),
     mFlags(0),
     mParent(nsnull),
     mNumUnreadMessages(-1),
@@ -114,29 +113,55 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)
 {
+  // for now, just initialize everything during Init()
 
-  // this parsing is totally hacky. we really should generalize this,
-  // but I'm not going to do this until we can eliminate the
-  // nsXXX2Name/etc routines
-  // -alecf
+  nsresult rv;
+
+  rv = nsRDFResource::Init(aURI);
+
+  nsCOMPtr<nsIURL> url;
+  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
+                                          NS_GET_IID(nsIURL),
+                                          (void **)getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
   
-  // do initial parsing of the URI
-  const char *cp=aURI;
+  rv = url->SetSpec(aURI);
+  if (NS_FAILED(rv)) return rv;
+  
+  // empty path => server
+  nsXPIDLCString path;
+  rv = url->GetPath(getter_Copies(path));
+  if (NS_SUCCEEDED(rv)) {
+    if (!nsCRT::strcmp(path, "/"))
+      mIsServer = PR_TRUE;
+    else
+      mIsServer = PR_FALSE;
+  }
 
-  // skip to initial //
-  while (*cp && (*cp != '/'))
-    cp++;
+  // mUsername:
+  nsXPIDLCString userName;
+  rv = url->GetPreHost(getter_Copies(userName));
+  if (NS_SUCCEEDED(rv)) {
+    mUsername = userName;
+  }
 
-  // skip past //
-  while (*cp && (*cp == '/'))
-    cp++;
+  // mHostname
+  nsXPIDLCString hostName;
+  rv = url->GetHost(getter_Copies(hostName));
+  if (NS_SUCCEEDED(rv)) {
+    mHostname = hostName;
+  }
+  
+  // mName:
+  // the name is the trailing directory in the path
+  nsXPIDLCString fileName;
+  rv = url->GetFileName(getter_Copies(fileName));
+  if (NS_SUCCEEDED(rv)) {
+    // XXX conversion to unicode here? is fileName in UTF8?
+    mName = fileName;
+  }
 
-  if (PL_strchr(cp, '/'))
-    mIsServer = PR_FALSE;
-  else
-    mIsServer = PR_TRUE;
-
-  return nsRDFResource::Init(aURI);
+  return NS_OK;
 }
 
 
@@ -252,6 +277,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 	if(NS_FAILED(rv)) 
 		return rv;
 
+  // XXX use necko here
 	nsCAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
@@ -468,21 +494,6 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 	if (!name)
 		return NS_ERROR_NULL_POINTER;
   
-  *name = nsnull;
-
-  // cache the name in mName
-  if (mName.IsEmpty()) {
-    // return the leaf of this URI
-    char *lastSlash = PL_strrchr(mURI, '/');
-    if (lastSlash) {
-      lastSlash++;
-      mName = lastSlash;
-    } else {
-      // no slashes, return the whole URI
-      mName = mURI;
-    }
-  }
-
   *name = mName.ToNewUnicode();
   
   if (!(*name)) return NS_ERROR_OUT_OF_MEMORY;
@@ -1414,25 +1425,20 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 	return NS_OK;
 }
 
-#if 0
 NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  nsresult rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-  
-  return server->GetUsername(userName);
+  NS_ENSURE_ARG_POINTER(userName);
+
+  *userName = mUsername.ToNewCString();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
 {
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  nsresult rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-  
-  return server->GetHostname(hostName);
+  NS_ENSURE_ARG_POINTER(hostName);
+  *hostName = mHostname.ToNewCString();
+  return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetNewMessages()
 {
@@ -1741,7 +1747,6 @@ nsresult nsMsgFolder::NotifyFolderLoaded()
 
 	return NS_OK;
 }
-
 
 nsresult
 nsGetMailFolderSeparator(nsString& result)

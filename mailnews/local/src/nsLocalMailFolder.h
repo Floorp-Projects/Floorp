@@ -107,8 +107,6 @@ public:
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32* size);
 
-	NS_IMETHOD GetUsername(char** userName);
-	NS_IMETHOD GetHostname(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
@@ -130,8 +128,6 @@ public:
 
 	// nsIMsgMailFolder
 	NS_IMETHOD GetPath(nsIFileSpec ** aPathName);
-
-	NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
 
     // overriding nsMsgDBFolder::GetMsgDatabase() method
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase **aMsgDatabase);

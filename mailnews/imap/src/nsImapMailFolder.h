@@ -129,8 +129,6 @@ public:
     
 	NS_IMETHOD GetSizeOnDisk(PRUint32 * size);
     
-	NS_IMETHOD GetUsername(char** userName);
-	NS_IMETHOD GetHostname(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);

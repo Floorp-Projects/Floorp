@@ -1003,28 +1003,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* size)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetUsername(char** userName)
-{
-  return nsGetMailboxUserName(kMailboxRootURI, mURI, userName);
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::GetHostname(char** hostName)
-{
-	nsresult rv;
-	char *host;
-	rv = nsGetMailboxHostName(kMailboxRootURI, mURI, &host);
-	//I'm recopying it because otherwise we'll have a free mismatched memory.
-	//We should really be using allocators to do all of this.
-	if(NS_SUCCEEDED(rv) && host)
-	{
-        *hostName = PL_strdup(host);
-		PL_strfree(host);
-		if(!*hostName)
-			return NS_ERROR_OUT_OF_MEMORY;
-	}
-	return rv;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
 {
 #ifdef HAVE_PORT
@@ -1114,44 +1092,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsIFileSpec ** aPathName)
   rv = NS_NewFileSpecWithSpec(*mPath, aPathName);
 
   return rv;
-}
-
-// OK, this is kind of silly, but for now, we'll just tack the subFolderName
-// onto our URI, and ask RDF to find it for us.
-NS_IMETHODIMP 
-nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
-{
-	return nsMsgFolder::FindSubFolder(subFolderName, aFolder);
-
-/*	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-  
-	if(NS_FAILED(rv)) 
-		return rv;
-
-	nsCString uri;
-	uri.Append(mURI);
-	uri.Append('/');
-
-	uri.Append(subFolderName);
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsIFolder> folder(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;
-	if (aFolder)
-	{
-		*aFolder = folder;
-		NS_ADDREF(*aFolder);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-*/
 }
 
 nsresult
@@ -1650,7 +1590,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     {
       char* start = mCopyState->m_dataBuffer;
       char* end = nsnull;
-      char* strPtr = nsnull;
 	  PRUint32 linebreak_len = 1;      
       end = PL_strstr(mCopyState->m_dataBuffer, "\r");
       if (!end)

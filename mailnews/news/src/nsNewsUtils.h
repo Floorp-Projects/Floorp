@@ -30,15 +30,6 @@ static const char kNewsMessageRootURI[] = "news_message:/";
 #define kNewsMessageRootURILen 14
 
 extern nsresult
-nsGetNewsServer(const char* username, const char *hostname, nsIMsgIncomingServer** aResult);
-
-extern nsresult
-nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName);
-
-extern nsresult
-nsGetNewsUsername(const char *rootURI, const char *uriStr, char **userName);
-
-extern nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 extern nsresult
