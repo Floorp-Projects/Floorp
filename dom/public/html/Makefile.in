@@ -48,6 +48,7 @@ EXPORTS		= \
 		nsIDOMHTMLFieldSetElement.h \
 		nsIDOMHTMLFontElement.h \
 		nsIDOMHTMLFormElement.h \
+		nsIDOMHTMLFormControlList.h \
 		nsIDOMNSHTMLFormElement.h \
 		nsIDOMHTMLFrameElement.h \
 		nsIDOMHTMLFrameSetElement.h \

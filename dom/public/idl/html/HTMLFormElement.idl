@@ -20,6 +20,6 @@
 
      readonly attribute wstring encoding;
 
-     Element namedItem(in wstring name);
+     jsval namedItem(/* ... */);
      Element item(in unsigned long index);
    };

@@ -283,33 +283,12 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (checkNamedItem) {
-    nsIDOMElement* prop;
     nsIDOMNSHTMLFormElement* b;
-    nsAutoString name;
-
-    JSString *jsstring = JS_ValueToString(cx, id);
-    if (nsnull != jsstring) {
-      name.SetString(JS_GetStringChars(jsstring));
-    }
-    else {
-      name.SetString("");
-    }
-
+    nsresult result = NS_OK;
     if (NS_OK == a->QueryInterface(kINSHTMLFormElementIID, (void **)&b)) {
-      nsresult result = NS_OK;
-      result = b->NamedItem(name, &prop);
-      if (NS_SUCCEEDED(result)) {
-        NS_RELEASE(b);
-        if (NULL != prop) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
-        }
-      }
-      else {
-        NS_RELEASE(b);
+      result = b->NamedItem(cx, &id, 1, vp);
+      NS_RELEASE(b);
+      if (NS_FAILED(result)) {
         return nsJSUtils::nsReportError(cx, obj, result);
       }
     }
@@ -575,8 +554,7 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
-  nsIDOMElement* nativeRet;
-  nsAutoString b0;
+  jsval nativeRet;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
     return JS_TRUE;
@@ -600,18 +578,13 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
   }
 
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->NamedItem(b0, &nativeRet);
+    result = nativeThis->NamedItem(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+    *rval = nativeRet;
   }
 
   return JS_TRUE;
@@ -719,7 +692,7 @@ static JSFunctionSpec HTMLFormElementMethods[] =
 {
   {"submit",          HTMLFormElementSubmit,     0},
   {"reset",          HTMLFormElementReset,     0},
-  {"namedItem",          NSHTMLFormElementNamedItem,     1},
+  {"namedItem",          NSHTMLFormElementNamedItem,     0},
   {"item",          NSHTMLFormElementItem,     1},
   {0}
 };

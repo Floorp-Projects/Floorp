@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsJSHTMLFieldSetElement.cpp \
 		nsJSHTMLFontElement.cpp \
 		nsJSHTMLFormElement.cpp \
+		nsJSHTMLFormControlList.cpp \
 		nsJSHTMLFrameElement.cpp \
 		nsJSHTMLFrameSetElement.cpp \
 		nsJSHTMLHRElement.cpp \

@@ -48,6 +48,7 @@ IDLSRCS		= \
 		HTMLFieldsetElement.idl \
 		HTMLFontElement.idl \
 		HTMLFormElement.idl \
+		HTMLFormControlList.idl \
 		HTMLFrameElement.idl \
 		HTMLFrameSetElement.idl \
 		HTMLHRElement.idl \
