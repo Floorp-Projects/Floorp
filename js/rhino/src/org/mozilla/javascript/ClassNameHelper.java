@@ -58,4 +58,6 @@ public interface ClassNameHelper {
     public ClassOutput getClassOutput();
 
     public void setClassOutput(ClassOutput classOutput);
+    
+    public void reset();
 }
