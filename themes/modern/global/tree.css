@@ -56,8 +56,10 @@ tree {
 
 /* ::::: tree rows ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-row,
 treechildren:-moz-tree-row {
   border: 1px solid transparent;
+  background-color: transparent;
   min-height: 18px;
   height: 1.3em;
 }
@@ -81,7 +83,9 @@ treechildren:-moz-tree-cell {
   padding: 0px 2px 0px 2px;
 }
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text,
 treechildren:-moz-tree-cell-text {
+  border: 1px solid transparent;
   color: inherit;
 }
 
@@ -89,12 +93,27 @@ treechildren:-moz-tree-cell-text(selected) {
   color: #000000;
 }
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected) {
+  background-color: #C7D0D9;
+  color: #000000;
+}
+
 treechildren:-moz-tree-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected, focus) {
+  background-color: #424F63;
+  color: #FFFFFF;
+}
+
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, current, focus) {
+  border-color: #000000;
+}
+
 /* ::::: lines connecting cells ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-line,
 treechildren:-moz-tree-line {
   border: 1px dotted #808080;
 }
@@ -112,6 +131,7 @@ treechildren:-moz-tree-separator {
 
 /* ::::: drop feedback ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, dropOn),
 treechildren:-moz-tree-cell-text(primary, dropOn) {
   background-color: #424F63;
   color: #FFFFFF;

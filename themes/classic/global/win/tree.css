@@ -44,8 +44,10 @@ tree {
 
 /* ::::: tree rows ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-row,
 treechildren:-moz-tree-row {
   border: 1px solid transparent;
+  background-color: transparent;
   min-height: 18px;
   height: 1.3em;
 }
@@ -72,7 +74,9 @@ treechildren:-moz-tree-cell {
   padding: 0px 2px 0px 2px;
 }
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text,
 treechildren:-moz-tree-cell-text {
+  border: 1px solid transparent;
   color: inherit;
 }
 
@@ -80,13 +84,32 @@ treechildren:-moz-tree-cell-text(selected) {
   color: -moz-DialogText;
 }
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected) {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
 treechildren:-moz-tree-cell-text(selected, focus) {
   color: HighlightText;
+}
+
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected, focus) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, current, focus) {
+  border: 1px dotted #000000;
+}
+
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected, current, focus) {
+  border: 1px dotted #C0C0C0;
 }
 
 
 /* ::::: lines connecting cells ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-line,
 treechildren:-moz-tree-line {
   border: 1px dotted ThreeDShadow;
 }
@@ -106,6 +129,7 @@ treechildren:-moz-tree-separator {
 
 /* ::::: drop feedback ::::: */
 
+tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, dropOn),
 treechildren:-moz-tree-cell-text(primary, dropOn) {
   background-color: Highlight;
   color: HighlightText;
