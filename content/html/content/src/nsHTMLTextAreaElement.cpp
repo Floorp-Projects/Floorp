@@ -140,8 +140,8 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  nsresult GetInnerHTML(nsAString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -776,13 +776,13 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);

@@ -164,8 +164,8 @@ public:
     return rv;
   }
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  nsresult GetInnerHTML(nsAString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAString& aInnerHTML);
   
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -299,13 +299,13 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
-NS_IMETHODIMP
+nsresult
 nsHTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   SetEnableUpdates(PR_FALSE);

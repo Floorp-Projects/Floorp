@@ -64,8 +64,8 @@ public:
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  nsresult GetInnerHTML(nsAString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -147,7 +147,7 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   nsCOMPtr<nsIAtom> tag;
@@ -159,7 +159,7 @@ nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
   return nsGenericHTMLContainerElement::GetInnerHTML(aInnerHTML);  
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   nsCOMPtr<nsIAtom> tag;

@@ -91,8 +91,8 @@ public:
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML);
+  nsresult GetInnerHTML(nsAString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -302,13 +302,13 @@ NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 
-NS_IMETHODIMP
+nsresult
 nsHTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   return GetContentsAsText(aInnerHTML);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
