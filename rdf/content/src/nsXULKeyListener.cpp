@@ -64,6 +64,9 @@
 #include "nsIPresContext.h"
 #include "nsIDOMEventTarget.h"
 
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+
   enum {
     VK_CANCEL = 3,
     VK_BACK = 8,
@@ -199,13 +202,25 @@ enum eEventType {
   eKeyUp
 };
 
+class nsXULKeyBindingDeleter : nsIObserver {
+public:
+  nsXULKeyBindingDeleter();
+  virtual ~nsXULKeyBindingDeleter() { };
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
+};
+
 ////////////////////////////////////////////////////////////////////////
 // KeyListenerImpl
 //
 //   This is the key listener implementation for keybinding
 //
 class nsXULKeyListenerImpl : public nsIXULKeyListener,
-                           public nsIDOMKeyListener
+                             public nsIDOMKeyListener
 {
 public:
     nsXULKeyListenerImpl(void);
@@ -219,6 +234,9 @@ public:
     NS_IMETHOD Init(
       nsIDOMElement  * aElement,
       nsIDOMDocument * aDocument);
+
+    // to release the keybindings table from module shutdown
+    static void Shutdown(void);
 
     // nsIDOMKeyListener
 
@@ -288,7 +306,6 @@ private:
     nsIDOMElement* element; // Weak reference. The element will go away first.
     nsIDOMXULDocument* mDOMDocument; // Weak reference.
 
-    static PRUint32 gRefCnt;
     static nsSupportsHashtable* mKeyBindingTable;
 
     // The "xul key" modifier can be any of the known modifiers:
@@ -297,7 +314,6 @@ private:
     } mXULKeyModifier;
 };
 
-PRUint32 nsXULKeyListenerImpl::gRefCnt = 0;
 nsSupportsHashtable* nsXULKeyListenerImpl::mKeyBindingTable = nsnull;
 
 class nsProxyStream : public nsIInputStream
@@ -355,29 +371,51 @@ NS_IMPL_ISUPPORTS(nsProxyStream, NS_GET_IID(nsIInputStream));
 
 ////////////////////////////////////////////////////////////////////////
 
+nsXULKeyBindingDeleter::nsXULKeyBindingDeleter(void)
+{
+  NS_INIT_ISUPPORTS();
+
+  nsresult rv;
+  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_FAILED(rv)) { return; }
+  nsAutoString topic;
+  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  observerService->AddObserver(this,topic.GetUnicode()); 
+}
+
+NS_IMPL_ISUPPORTS1(nsXULKeyBindingDeleter, nsIObserver);
+
+NS_IMETHODIMP
+nsXULKeyBindingDeleter::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+#ifdef DEBUG
+  nsAutoString topic;
+  topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  NS_ASSERTION(topic.EqualsWithConversion(aTopic), "not shutdown");
+#endif
+  nsXULKeyListenerImpl::Shutdown();
+  NS_RELEASE_THIS(); // we don't need to exist anymore
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
 
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {
   NS_INIT_REFCNT();
-  gRefCnt++;
-  if (gRefCnt == 1) {
+  if (!mKeyBindingTable) {
     mKeyBindingTable = new nsSupportsHashtable();
 
-#define LEAK_KEY_BINDINGS_TABLE_BUG_27739
-#ifdef LEAK_KEY_BINDINGS_TABLE_BUG_27739
     // XXX This is a total hack to deal with bug 27739. At some point,
-    // the keybindings table will go away, and we won't need to worry
-    // about this leak anymore.
-    ++gRefCnt;
-#endif
+    // the keybindings table will go away.
+    nsXULKeyBindingDeleter *deleter = new nsXULKeyBindingDeleter();
+    NS_IF_ADDREF(deleter); // this will delete itself, and the
+                           // keybindings table, on XPCOM shutdown
   }
 }
 
 nsXULKeyListenerImpl::~nsXULKeyListenerImpl(void)
 {
-  gRefCnt--;
-  if (gRefCnt == 0)
-    delete mKeyBindingTable;
 }
 
 NS_IMPL_ADDREF(nsXULKeyListenerImpl)
@@ -432,6 +470,50 @@ nsXULKeyListenerImpl::Init(
   mXULKeyModifier = xulKeyControl;
 #endif
   return NS_OK;
+}
+
+static PRBool PR_CALLBACK BreakScriptObjectCycle(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsIDOMXULDocument* domdoc = dont_AddRef(NS_STATIC_CAST(nsIDOMXULDocument*, aData));
+  nsCOMPtr<nsIDocument> document( do_QueryInterface(domdoc) );
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  document->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsCOMPtr<nsIScriptContext> context;
+  if (globalObject) {
+    // get the context for GC below
+    globalObject->GetContext(getter_AddRefs(context));
+
+    // break circular references
+    globalObject->SetNewDocument(nsnull);
+  }
+
+  // break circular references  (could this be in the if block above?)
+  document->SetScriptGlobalObject(nsnull);
+
+  if (globalObject) {
+    // break circular references
+    // this must be after SetScriptGlobalObject(nsnull)
+    // XXX Should this be SetDocShell instead?
+    globalObject->SetDocShell(nsnull);
+  }
+
+  if (context) {
+    // we must call GC on this context to clear newborn objects
+    context->GC();
+  }
+
+  return PR_TRUE;
+}
+
+//static
+void
+nsXULKeyListenerImpl::Shutdown(void)
+{
+  if (mKeyBindingTable) {
+    mKeyBindingTable->Enumerate(BreakScriptObjectCycle);
+    delete mKeyBindingTable;
+    mKeyBindingTable = nsnull;
+  }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -516,7 +598,6 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   nsCAutoString editorPlatformFile = "chrome://communicator/content/platformEditorBindings.xul";
 
   nsresult result;
-  nsCOMPtr<nsIDOMXULDocument> document;
 
   if (!handled) {
     while (piWindow && !handled) {
@@ -543,6 +624,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
          docShell->GetPresShell(getter_AddRefs(presShell));
 
         PRBool editorHasBindings = PR_FALSE;
+        nsCOMPtr<nsIDOMXULDocument> document;
         nsCOMPtr<nsIDOMXULDocument> platformDoc;
         if (presShell) {
           PRBool isEditor;
@@ -1053,6 +1135,9 @@ PRBool nsXULKeyListenerImpl::IsMatchingCharCode(const nsString &theChar, const n
 NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr, nsIDOMXULDocument** aResult)
 {
   nsCOMPtr<nsIDOMXULDocument> document;
+  // This could only happen after shutdown.  Is this right??
+  NS_ASSERTION(mKeyBindingTable, "Doing stuff after module shutdown!");
+  if (!mKeyBindingTable) return NS_ERROR_NULL_POINTER;
   if (!aURLStr.IsEmpty()) {
     nsCOMPtr<nsIURL> uri;
     nsComponentManager::CreateInstance("component://netscape/network/standard-url",
