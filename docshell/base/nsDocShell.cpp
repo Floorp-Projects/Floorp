@@ -64,8 +64,8 @@
 #include "nsIScriptError.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID,  NS_PLATFORMCHARSET_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -1517,21 +1517,13 @@ NS_IMETHODIMP nsDocShell::GetMainWidget(nsIWidget** aMainWidget)
 
 NS_IMETHODIMP nsDocShell::SetFocus()
 {
-   //XXX First Check
-  /**
-  * Give the window focus.
-  */
+   nsCOMPtr<nsIWidget> mainWidget;
+   GetMainWidget(getter_AddRefs(mainWidget));
 
-   /* XXX implement
+   if(mainWidget)
+      mainWidget->SetFocus();
 
-     if (mWindow) {
-    mWindow->SetFocus();
-  }
-
-  return NS_OK;
-
-   */
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
