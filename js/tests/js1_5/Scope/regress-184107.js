@@ -41,8 +41,8 @@
 * In fact, any variable defined in a with-block should be created
 * in global scope, i.e. should be a property of the global object.
 *
-* The with-block syntax allows existing local variables to be set,
-* but does not allow new local variables to be created.
+* The with-block syntax allows existing local variables to be SET,
+* but does not allow new local variables to be CREATED.
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=159849#c11
 */
