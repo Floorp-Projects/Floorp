@@ -220,7 +220,6 @@ nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = NS_NewAtom("textControlFrame");
-  NS_IF_ADDREF(*aType);
   return NS_OK;
 }
 
@@ -2063,7 +2062,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
 
 #ifdef NOISY
-  printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
+  printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d\n",
            aDesiredSize.width, aDesiredSize.height);
 #endif
 
