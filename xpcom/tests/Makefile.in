@@ -75,6 +75,7 @@ CPPSRCS		= \
 		TestAutoPtr.cpp \
 		TestMinStringAPI.cpp \
 		TestStrings.cpp \
+		TestStorageStream.cpp \
 		$(NULL)
 
 #CPPSRCS		+= TimerTest.cpp
