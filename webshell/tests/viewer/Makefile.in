@@ -104,6 +104,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 GTK_GLUE		= -lgtksuperwin
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+TK_LIBS += -framework Cocoa
+endif
+
 XP_DIST_LIBS		= \
 			-lgkgfx \
 			$(NULL)
