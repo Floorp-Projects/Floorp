@@ -248,8 +248,12 @@ typedef int (*FARPROC)();
 #ifndef _INT32
 #define _INT32
 #endif
+#ifndef _UINT16
 #define _UINT16
+#endif
+#ifndef _UINT32
 #define _UINT32
+#endif
 #endif
 
 /* function classifications */
