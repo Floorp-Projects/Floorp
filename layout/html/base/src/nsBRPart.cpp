@@ -120,9 +120,9 @@ BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
     aMetrics.width = 1;
   }
 
-  aMetrics.height = fm->GetHeight();
-  aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = 0;
+  aMetrics.ascent = fm->GetMaxAscent();
+  aMetrics.descent = fm->GetMaxDescent();
+  aMetrics.height = aMetrics.ascent + aMetrics.descent;
   NS_RELEASE(fm);
 
   // Return our inline reflow status
