@@ -70,24 +70,24 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 // Registry Keys
 
-NS_NAMED_LITERAL_STRING(kRegistryYesString, "yes");
-NS_NAMED_LITERAL_STRING(kRegistryNoString, "no");
+#define kRegistryYesString (NS_LITERAL_STRING("yes"))
+#define kRegistryNoString (NS_LITERAL_STRING("no"))
 
-NS_NAMED_LITERAL_STRING(kRegistryProfileSubtreeString, "Profiles");
-NS_NAMED_LITERAL_STRING(kRegistryCurrentProfileString, "CurrentProfile");
-NS_NAMED_LITERAL_STRING(kRegistryNCServiceDenialString, "NCServiceDenial");
-NS_NAMED_LITERAL_STRING(kRegistryNCProfileNameString, "NCProfileName");
-NS_NAMED_LITERAL_STRING(kRegistryNCUserEmailString, "NCEmailAddress");
-NS_NAMED_LITERAL_STRING(kRegistryNCHavePREGInfoString, "NCHavePregInfo");
-NS_NAMED_LITERAL_STRING(kRegistryHavePREGInfoString, "HavePregInfo");
-NS_NAMED_LITERAL_STRING(kRegistryMigratedString, "migrated");
-NS_NAMED_LITERAL_STRING(kRegistryDirectoryString, "directory");
-NS_NAMED_LITERAL_STRING(kRegistryNeedMigrationString, "NeedMigration");
-NS_NAMED_LITERAL_STRING(kRegistryMozRegDataMovedString, "OldRegDataMoved");
+#define kRegistryProfileSubtreeString (NS_LITERAL_STRING("Profiles"))
+#define kRegistryCurrentProfileString (NS_LITERAL_STRING("CurrentProfile"))
+#define kRegistryNCServiceDenialString (NS_LITERAL_STRING("NCServiceDenial"))
+#define kRegistryNCProfileNameString (NS_LITERAL_STRING("NCProfileName"))
+#define kRegistryNCUserEmailString (NS_LITERAL_STRING("NCEmailAddress"))
+#define kRegistryNCHavePREGInfoString (NS_LITERAL_STRING("NCHavePregInfo"))
+#define kRegistryHavePREGInfoString (NS_LITERAL_STRING("HavePregInfo"))
+#define kRegistryMigratedString (NS_LITERAL_STRING("migrated"))
+#define kRegistryDirectoryString (NS_LITERAL_STRING("directory"))
+#define kRegistryNeedMigrationString (NS_LITERAL_STRING("NeedMigration"))
+#define kRegistryMozRegDataMovedString (NS_LITERAL_STRING("OldRegDataMoved"))
 
-NS_NAMED_LITERAL_STRING(kRegistryVersionString, "Version");
-NS_NAMED_LITERAL_STRING(kRegistryVersion_1_0, "1.0");
-NS_NAMED_LITERAL_STRING(kRegistryCurrentVersion, "1.0");
+#define kRegistryVersionString (NS_LITERAL_STRING("Version"))
+#define kRegistryVersion_1_0 (NS_LITERAL_STRING("1.0"))
+#define kRegistryCurrentVersion (NS_LITERAL_STRING("1.0"))
 
 // **********************************************************************
 // class nsProfileAccess
@@ -374,13 +374,13 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     nsRegistryKey profilesTreeKey;
 
     rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
+                            kRegistryProfileSubtreeString, 
                             &profilesTreeKey);
 
     if (NS_FAILED(rv)) 
     {
         rv = registry->AddKey(nsIRegistry::Common, 
-                                kRegistryProfileSubtreeString.get(), 
+                                kRegistryProfileSubtreeString, 
                                 &profilesTreeKey);
         if (NS_FAILED(rv)) return rv;
     }
@@ -400,7 +400,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
     // Get the current profile
     rv = registry->GetString(profilesTreeKey, 
-                               kRegistryCurrentProfileString.get(), 
+                               kRegistryCurrentProfileString, 
                                getter_Copies(tmpCurrentProfile));
 
     if (tmpCurrentProfile)
@@ -417,7 +417,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
     // Get the profile version
     rv = registry->GetString(profilesTreeKey, 
-                             kRegistryVersionString.get(), 
+                             kRegistryVersionString, 
                              getter_Copies(tmpVersion));
 
     if (tmpVersion == nsnull)
@@ -428,7 +428,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
     // Get the preg info
     rv = registry->GetString(profilesTreeKey, 
-                             kRegistryHavePREGInfoString.get(), 
+                             kRegistryHavePREGInfoString, 
                              getter_Copies(tmpPREGInfo));
 
     if (tmpPREGInfo == nsnull)
@@ -478,7 +478,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         if (NS_FAILED(rv)) return rv;
 
         rv = registry->GetString(profKey, 
-                                 kRegistryMigratedString.get(), 
+                                 kRegistryMigratedString, 
                                  getter_Copies(isMigrated));
         if (NS_FAILED(rv)) return rv;
         nsLiteralString isMigratedString(isMigrated);
@@ -487,19 +487,19 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         // are for activation, they are optional and their values 
         // do not call for a return
         registry->GetString(profKey, 
-                            kRegistryNCProfileNameString.get(), 
+                            kRegistryNCProfileNameString, 
                             getter_Copies(NCProfileName));
 
         registry->GetString(profKey, 
-                            kRegistryNCServiceDenialString.get(), 
+                            kRegistryNCServiceDenialString, 
                             getter_Copies(NCDeniedService));
 
         registry->GetString(profKey, 
-                            kRegistryNCUserEmailString.get(), 
+                            kRegistryNCUserEmailString, 
                             getter_Copies(NCEmailAddress));
 
         registry->GetString(profKey, 
-                            kRegistryNCHavePREGInfoString.get(), 
+                            kRegistryNCHavePREGInfoString, 
                             getter_Copies(NCHavePregInfo));
 
         // Make sure that mCurrentProfile is valid
@@ -762,7 +762,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
     // Get the major subtree
     rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryProfileSubtreeString.get(), 
+                          kRegistryProfileSubtreeString, 
                           &profilesTreeKey);
     if (NS_FAILED(rv)) return rv;
 
@@ -770,20 +770,20 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     if (!mCurrentProfile.IsEmpty()) {
 
         rv = registry->SetString(profilesTreeKey, 
-                                 kRegistryCurrentProfileString.get(), 
+                                 kRegistryCurrentProfileString, 
                                  mCurrentProfile.GetUnicode());
         if (NS_FAILED(rv)) return rv;
     }
 
     // Set the registry version
     rv = registry->SetString(profilesTreeKey, 
-                             kRegistryVersionString.get(), 
-                             kRegistryCurrentVersion.get());
+                             kRegistryVersionString, 
+                             kRegistryCurrentVersion);
     if (NS_FAILED(rv)) return rv;
 
     // Set preg info
     rv = registry->SetString(profilesTreeKey, 
-                             kRegistryHavePREGInfoString.get(), 
+                             kRegistryHavePREGInfoString, 
                              mHavePREGInfo.GetUnicode());
     if (NS_FAILED(rv)) return rv;
 
@@ -835,24 +835,24 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             if (NS_FAILED(rv)) return rv;
 
             rv = registry->SetString(profKey, 
-                                     kRegistryMigratedString.get(), 
-                                     profileItem->isMigrated ? kRegistryYesString.get() : kRegistryNoString.get());
+                                     kRegistryMigratedString, 
+                                     profileItem->isMigrated ? kRegistryYesString : kRegistryNoString);
             if (NS_FAILED(rv)) return rv;
 
             registry->SetString(profKey, 
-                                kRegistryNCProfileNameString.get(),  
+                                kRegistryNCProfileNameString,  
                                 profileItem->NCProfileName.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCServiceDenialString.get(), 
+                                kRegistryNCServiceDenialString, 
                                 profileItem->NCDeniedService.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCUserEmailString.get(), 
+                                kRegistryNCUserEmailString, 
                                 profileItem->NCEmailAddress.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCHavePREGInfoString.get(), 
+                                kRegistryNCHavePREGInfoString, 
                                 profileItem->NCHavePregInfo.GetUnicode());
 
             rv = profileItem->ExternalizeLocation(registry, profKey);
@@ -884,24 +884,24 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             if (NS_FAILED(rv)) return rv;
 
             rv = registry->SetString(profKey, 
-                                     kRegistryMigratedString.get(), 
-                                     profileItem->isMigrated ? kRegistryYesString.get() : kRegistryNoString.get());
+                                     kRegistryMigratedString, 
+                                     profileItem->isMigrated ? kRegistryYesString : kRegistryNoString);
             if (NS_FAILED(rv)) return rv;
 
             registry->SetString(profKey, 
-                                kRegistryNCProfileNameString.get(), 
+                                kRegistryNCProfileNameString, 
                                 profileItem->NCProfileName.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCServiceDenialString.get(), 
+                                kRegistryNCServiceDenialString, 
                                 profileItem->NCDeniedService.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCUserEmailString.get(), 
+                                kRegistryNCUserEmailString, 
                                 profileItem->NCEmailAddress.GetUnicode());
 
             registry->SetString(profKey, 
-                                kRegistryNCHavePREGInfoString.get(), 
+                                kRegistryNCHavePREGInfoString, 
                                 profileItem->NCHavePregInfo.GetUnicode());
 
             rv = profileItem->ExternalizeLocation(registry, profKey);
@@ -1258,7 +1258,10 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
             *info = nsCRT::strdup(NS_STATIC_CAST(const char*, pregC));
         }
         else
-            *info = ToNewCString(kRegistryNoString);
+        {
+            nsCAutoString noCString; noCString.AssignWithConversion(kRegistryNoString);
+            *info = nsCRT::strdup(NS_STATIC_CAST(const char*, noCString));
+        }
     }
 }
 
@@ -1282,13 +1285,13 @@ nsProfileAccess::GetMozRegDataMovedFlag(PRBool *isDataMoved)
     if (NS_FAILED(rv)) return rv;
 
     rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
+                            kRegistryProfileSubtreeString, 
                             &profilesTreeKey);
 
     if (NS_SUCCEEDED(rv)) 
     {
         rv = registry->GetString(profilesTreeKey, 
-                         kRegistryMozRegDataMovedString.get(), 
+                         kRegistryMozRegDataMovedString, 
                          getter_Copies(tmpRegDataMoved));
          
         nsAutoString isDataMovedString(tmpRegDataMoved);
@@ -1298,7 +1301,7 @@ nsProfileAccess::GetMozRegDataMovedFlag(PRBool *isDataMoved)
     else
     {
         rv = registry->AddKey(nsIRegistry::Common, 
-                                kRegistryProfileSubtreeString.get(), 
+                                kRegistryProfileSubtreeString, 
                                 &profilesTreeKey);
     }
     return rv;        
@@ -1323,14 +1326,14 @@ nsProfileAccess::SetMozRegDataMovedFlag(nsIFile* regName)
     if (NS_FAILED(rv)) return rv;
 
     rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
+                            kRegistryProfileSubtreeString, 
                             &profilesTreeKey);
 
     if (NS_SUCCEEDED(rv)) 
     {
         rv = registry->SetString(profilesTreeKey, 
-                         kRegistryMozRegDataMovedString.get(), 
-                         kRegistryYesString.get());
+                         kRegistryMozRegDataMovedString, 
+                         kRegistryYesString);
     }
 
     return rv;        
@@ -1430,9 +1433,8 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     if (is4x)
     {
         nsXPIDLString profLoc;
-        NS_NAMED_LITERAL_STRING(locString, "ProfileLocation");
         
-        rv = aRegistry->GetString( profKey, locString.get(), getter_Copies(profLoc));
+        rv = aRegistry->GetString( profKey, NS_LITERAL_STRING("ProfileLocation"), getter_Copies(profLoc));
         if (NS_FAILED(rv)) return rv;
         regLocationData = profLoc;
 		
@@ -1470,7 +1472,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             nsAutoString dirNameString;
 
             rv = aRegistry->GetString(profKey, 
-                                      kRegistryDirectoryString.get(), 
+                                      kRegistryDirectoryString, 
                                       getter_Copies(regData));
             if (NS_FAILED(rv)) return rv;
 
@@ -1535,7 +1537,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         else
         {
             rv = aRegistry->GetString(profKey, 
-                                      kRegistryDirectoryString.get(), 
+                                      kRegistryDirectoryString, 
                                       getter_Copies(regData));
             if (NS_FAILED(rv)) return rv;
             regLocationData = regData;
@@ -1601,7 +1603,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #endif
 
         rv = aRegistry->SetString(profKey,
-                                 kRegistryDirectoryString.get(),
+                                 kRegistryDirectoryString,
                                  regData.GetUnicode());
 
     }
@@ -1609,7 +1611,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     {
         // Write the original data back out - maybe it can be resolved later. 
         rv = aRegistry->SetString(profKey, 
-                                 kRegistryDirectoryString.get(), 
+                                 kRegistryDirectoryString, 
                                  regLocationData.GetUnicode());
     }
     else
