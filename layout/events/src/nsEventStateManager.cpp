@@ -428,7 +428,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+#ifdef DEBUG_hyatt
       printf("Got focus.\n");
+#endif
 
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
