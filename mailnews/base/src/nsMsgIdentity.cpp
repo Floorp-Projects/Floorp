@@ -29,23 +29,28 @@ NS_IMPL_ISUPPORTS(nsMsgIdentity, nsIMsgIdentity::GetIID());
 nsMsgIdentity::nsMsgIdentity()
 {
 	NS_INIT_REFCNT();
+
+	m_popName = nsnull;
+	m_smtpName = nsnull;
+	m_smtpHost = nsnull;
+	m_popHost = nsnull;
+
 	m_organization = nsnull;
 	m_userFullName = nsnull;
 	m_userEmail = nsnull;
-	m_userName = nsnull;
 	m_userPassword = nsnull;
-	m_smtpHost = nsnull;
-	m_popHost = nsnull;
+
 	m_rootPath = nsnull;
 	InitializeIdentity();
 }
 
 nsMsgIdentity::~nsMsgIdentity()
 {
+	PR_FREEIF(m_smtpName);
+	PR_FREEIF(m_popName);
 	PR_FREEIF(m_organization);
 	PR_FREEIF(m_userFullName);
 	PR_FREEIF(m_userEmail);
-	PR_FREEIF(m_userName);
 	PR_FREEIF(m_userPassword);
 	PR_FREEIF(m_smtpHost);
 	PR_FREEIF(m_popHost);
@@ -90,9 +95,14 @@ void nsMsgIdentity::InitializeIdentity()
 			m_smtpHost = PL_strdup(prefValue);
 		
 		prefLength = PREF_LENGTH;
-		rv = prefs->GetCharPref("mailnews.user_name", prefValue, &prefLength);
+		rv = prefs->GetCharPref("mailnews.pop_name", prefValue, &prefLength);
 		if (NS_SUCCEEDED(rv) && prefLength > 0)
-			m_userName = PL_strdup(prefValue);
+			m_popName = PL_strdup(prefValue);
+
+		prefLength = PREF_LENGTH;
+		rv = prefs->GetCharPref("mailnews.smtp_name", prefValue, &prefLength);
+		if (NS_SUCCEEDED(rv) && prefLength > 0)
+			m_smtpName = PL_strdup(prefValue);
 
 		prefLength = PREF_LENGTH;
 		rv = prefs->GetCharPref("mailnews.pop_password", prefValue, &prefLength);
@@ -100,6 +110,24 @@ void nsMsgIdentity::InitializeIdentity()
 			m_userPassword = PL_strdup(prefValue);
 
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
+}
+
+nsresult nsMsgIdentity::GetPopName(const char ** aUserName)
+{
+	if (aUserName)
+		*aUserName = m_popName;
+	return NS_OK;
+}
+
+nsresult nsMsgIdentity::GetSmtpName(const char ** aSmtpName)
+{
+	if (aSmtpName)
+	{
+		if (m_smtpName && *m_smtpName)  
+			*aSmtpName = m_smtpName;
+		else							// if we don't have a smtp name use the pop name...
+			return GetPopName(aSmtpName); 
 	}
 }
 
@@ -131,12 +159,6 @@ nsresult nsMsgIdentity::GetPopPassword(const char ** aUserPassword)
 	return NS_OK;
 }
 
-nsresult nsMsgIdentity::GetUserName(const char ** aUserName)
-{
-	if (aUserName)
-		*aUserName = m_userName;
-	return NS_OK;
-}
 
 nsresult nsMsgIdentity::GetPopServer(const char ** aHostName)
 {

@@ -41,19 +41,21 @@ public:
 	// user name, pwd, mail server to use, etc....
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetRootFolderPath(const char ** aRootFolderPath);
+	NS_IMETHOD GetPopName(const char ** aPopName); // right now it is pop & smtp user name
+	NS_IMETHOD GetSmtpName(const char ** aSmtpName);
 	NS_IMETHOD GetOrganization(const char ** aOrganization);
 	NS_IMETHOD GetUserFullName(const char ** aUserFullName); // User real name
 	NS_IMETHOD GetUserEmail(const char ** aUserEmail);
-	NS_IMETHOD GetUserName(const char ** aUserName); // right now it is pop & smtp user name
 	NS_IMETHOD GetPopPassword(const char ** aUserPassword);
 	NS_IMETHOD GetPopServer(const char ** aHostName);
 	NS_IMETHOD GetSmtpServer(const char ** aHostName);
 
 protected:
+	char	*m_popName;
+	char	*m_smtpName;
 	char	*m_organization;
 	char	*m_userFullName;
 	char	*m_userEmail;
-	char	*m_userName;
 	char	*m_userPassword;
 	char	*m_smtpHost;
 	char	*m_popHost;
