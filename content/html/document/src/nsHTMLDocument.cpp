@@ -2703,9 +2703,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
         mDocumentURL = subjectURI;
         NS_ADDREF(mDocumentURL);
 
-        NS_IF_RELEASE(mPrincipal);
         mPrincipal = subject;
-        NS_ADDREF(mPrincipal);
       }
     }
   }

@@ -529,7 +529,6 @@ nsDocument::nsDocument() : mSubDocuments(nsnull),
   mHeaderData = nsnull;
   mChildNodes = nsnull;
   mModCount = 0;
-  mPrincipal = nsnull;
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
   mDTD = 0;
   mBoxObjectTable = nsnull;
@@ -567,7 +566,7 @@ nsDocument::~nsDocument()
     }
   }
 
-  NS_IF_RELEASE(mPrincipal);
+  mPrincipal = nsnull;
   mDocumentLoadGroup = nsnull;
 
   mParentDocument = nsnull;
@@ -752,7 +751,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
     if (owner)
-      owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+      mPrincipal = do_QueryInterface(owner);
   }
 
   return rv;
@@ -766,7 +765,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mDocumentTitle.Truncate();
 
   NS_IF_RELEASE(mDocumentURL);
-  NS_IF_RELEASE(mPrincipal);
+  mPrincipal = nsnull;
   mDocumentLoadGroup = nsnull;
 
   // Delete references to sub-documents and kill the subdocument map,
@@ -924,7 +923,7 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
         return rv;
     NS_WARN_IF_FALSE(mDocumentURL, "no URL!");
     if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
-                                                             &mPrincipal)))
+                                                  getter_AddRefs(mPrincipal))))
         return rv;
   }
 

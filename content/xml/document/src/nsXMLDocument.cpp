@@ -394,14 +394,13 @@ nsXMLDocument::Load(const nsAString& aUrl)
 
   // Partial Reset, need to restore principal for security reasons and
   // event listener manager so that load listeners etc. will remain.
-  nsCOMPtr<nsIPrincipal> principal(dont_QueryInterface(mPrincipal));
-  nsCOMPtr<nsIEventListenerManager> elm(dont_QueryInterface(mListenerManager));
+  nsCOMPtr<nsIPrincipal> principal = mPrincipal;
+  nsCOMPtr<nsIEventListenerManager> elm = mListenerManager;
 
   Reset(nsnull, nsnull);
   
   mPrincipal = principal;
   mListenerManager = elm;
-  NS_IF_ADDREF(mPrincipal);
   NS_IF_ADDREF(mListenerManager);
   
   SetDocumentURL(uri);
@@ -433,15 +432,15 @@ nsXMLDocument::Load(const nsAString& aUrl)
   if (NS_FAILED(rv)) return rv;
 
   // Set a principal for this document
-  NS_IF_RELEASE(mPrincipal);
+  mPrincipal = nsnull;
   nsCOMPtr<nsISupports> channelOwner;
   rv = channel->GetOwner(getter_AddRefs(channelOwner));
   if (NS_SUCCEEDED(rv) && channelOwner)
-      rv = channelOwner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
+      mPrincipal = do_QueryInterface(channelOwner, &rv);
 
   if (NS_FAILED(rv) || !channelOwner)
   {
-    rv = secMan->GetCodebasePrincipal(uri, &mPrincipal);
+    rv = secMan->GetCodebasePrincipal(uri, getter_AddRefs(mPrincipal));
     if (!mPrincipal) return rv;
   }
 
