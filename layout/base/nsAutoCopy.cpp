@@ -131,8 +131,10 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
 {
   nsresult rv;
 
-  if (!(aReason & nsISelectionListener::MOUSEUP_REASON))
-    return NS_OK; //dont care if we are still dragging. or if its not from a mouseup
+  if (!(aReason & nsISelectionListener::MOUSEUP_REASON   || 
+        aReason & nsISelectionListener::SELECTALL_REASON ||
+        aReason & nsISelectionListener::KEYPRESS_REASON))
+    return NS_OK; //dont care if we are still dragging
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
 #ifdef DEBUG_CLIPBOARD
