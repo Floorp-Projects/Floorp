@@ -95,9 +95,11 @@ lookup_static_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
 
     class_descriptor = JS_GetPrivate(cx, obj);
     if (!class_descriptor) {
-        JS_ReportError(cx, "illegal operation on JavaClass prototype object");
-        return JS_FALSE;
+        *class_descriptorp = NULL;
+        *memberp = NULL;
+        return JS_TRUE;
     }
+    
     if (class_descriptorp)
         *class_descriptorp = class_descriptor;
     
@@ -185,7 +187,7 @@ JavaClass_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     jsval idval;
     JNIEnv *jEnv;
 
-    printf("In JavaClass_setProperty\n");
+    /* printf("In JavaClass_setProperty\n"); */
 
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_MapJSContextToJSJThread(cx, &jEnv);
@@ -247,7 +249,7 @@ JavaClass_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 {
     JNIEnv *jEnv;
 
-    printf("In JavaClass_lookupProperty()\n");
+    /* printf("In JavaClass_lookupProperty()\n"); */
 
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_MapJSContextToJSJThread(cx, &jEnv);
@@ -303,7 +305,7 @@ JavaClass_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 JavaClass_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-    printf("In JavaClass_defaultValue()\n");
+    /* printf("In JavaClass_defaultValue()\n"); */
     return JavaClass_convert(cx, obj, JSTYPE_STRING, vp);
 }
 
@@ -455,13 +457,99 @@ JavaClass_getObjectOps(JSContext *cx, JSClass *clazz)
     return &JavaClass_ops;
 }
 
-
 JSClass JavaClass_class = {
     "JavaClass", JSCLASS_HAS_PRIVATE,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JavaClass_convert, JavaClass_finalize,
     JavaClass_getObjectOps,
 };
+
+JSObject *
+jsj_new_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject* parent_obj,
+                  JavaClassDescriptor *class_descriptor)
+{
+    JSObject *JavaClass_obj;
+
+    JavaClass_obj = JS_NewObject(cx, &JavaClass_class, 0, parent_obj);
+    if (!JavaClass_obj)
+        return NULL;
+
+    JS_SetPrivate(cx, JavaClass_obj, (void *)class_descriptor);
+
+#ifdef DEBUG
+    /*    printf("JavaClass \'%s\' created\n", class_descriptor->name); */
+#endif
+
+    return JavaClass_obj;
+}
+
+JSObject *
+jsj_define_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject* parent_obj,
+                     const char *simple_class_name,
+                     jclass java_class)
+{
+    JavaClassDescriptor *class_descriptor;
+    JSObject *JavaClass_obj;
+
+    class_descriptor = jsj_GetJavaClassDescriptor(cx, jEnv, java_class);
+    if (!class_descriptor)
+        return NULL;
+
+    JavaClass_obj = jsj_new_JavaClass(cx, jEnv, parent_obj, class_descriptor);
+    if (!JavaClass_obj)
+        return NULL;
+
+    if (!JS_DefineProperty(cx, parent_obj, simple_class_name,
+                           OBJECT_TO_JSVAL(JavaClass_obj), 0, 0,
+                           JSPROP_PERMANENT|JSPROP_READONLY|JSPROP_ENUMERATE))
+        return NULL;
+    return JavaClass_obj;
+}
+
+
+/*
+ * The getClass() native JS method is defined as a property of the global
+ * object.  Given a JavaObject it returns the corresponding JavaClass.  This
+ * is useful for accessing static methods and fields.
+ *
+ *    js> getClass(new java.lang.String("foo"))
+ *    [JavaClass java.lang.String]
+ */
+static JSBool
+getClass(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *obj_arg, *JavaClass_obj;
+    JavaObjectWrapper *java_wrapper;
+    JavaClassDescriptor *class_descriptor;
+    JNIEnv *jEnv;
+
+    jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
+
+    if (argc != 1 ||
+	!JSVAL_IS_OBJECT(argv[0]) ||
+	!(obj_arg = JSVAL_TO_OBJECT(argv[0])) ||
+	(!JS_InstanceOf(cx, obj_arg, &JavaObject_class, 0) &&
+         !JS_InstanceOf(cx, obj_arg, &JavaArray_class, 0))) {
+        JS_ReportError(cx, "getClass expects a Java object argument");
+	return JS_FALSE;
+    }
+
+    java_wrapper = JS_GetPrivate(cx, obj_arg);
+    if (!java_wrapper) {
+        JS_ReportError(cx, "getClass called on prototype object");
+        return JS_FALSE;
+    }
+
+    class_descriptor = java_wrapper->class_descriptor;
+
+    JavaClass_obj = jsj_new_JavaClass(cx, jEnv, NULL, class_descriptor);
+    if (!JavaClass_obj)
+        return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(JavaClass_obj);
+    return JS_TRUE;
+}
 
 extern PR_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
@@ -475,44 +563,10 @@ jsj_init_JavaClass(JSContext *cx, JSObject *global_obj)
     if (!JS_InitClass(cx, global_obj, 0, &JavaClass_class, 0, 0, 0, 0, 0, 0))
         return JS_FALSE;
 
+    if (!JS_DefineFunction(cx, global_obj, "getClass", getClass, 0,
+                           JSPROP_READONLY))
+        return JS_FALSE;
+
     return jsj_InitJavaClassReflectionsTable();
 }
 
-JSObject *
-jsj_define_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject* parent_obj,
-                     const char *simple_class_name,
-                     const char *fully_qualified_class_name,
-                     jclass java_class)
-{
-    JSObject *JavaClass_obj;
-    JavaClassDescriptor *class_descriptor;
-
-    JavaClass_obj = JS_DefineObject(cx, parent_obj, simple_class_name,
-                                    &JavaClass_class, 0,
-                                    JSPROP_PERMANENT | JSPROP_READONLY);
-    if (!JavaClass_obj)
-        return NULL;
-            
-    /* Set the prototype so that objects constructed with
-       "new" have the right JSClass
-    if (!JS_DefineProperty(cx, JavaClass_obj, "prototype",
-                           JSVAL_NULL, 0, 0, JSPROP_PERMANENT | JSPROP_READONLY))
-        goto error; */
-
-    /* Attach private, native data to the JS object */
-    class_descriptor = jsj_GetJavaClassDescriptor(cx, jEnv, java_class);
-    if (!class_descriptor)
-        goto error;
-
-    JS_SetPrivate(cx, JavaClass_obj, (void *)class_descriptor);
-
-#ifdef DEBUG
-    /*    printf("JavaClass \'%s\' created\n", class_descriptor->name); */
-#endif
-
-    return JavaClass_obj;
-
-error:
-    JS_DeleteProperty(cx, parent_obj, simple_class_name);
-    return NULL;
-}

@@ -168,7 +168,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     if (jclazz) {
         JSObject *newClass;
 
-        newClass = jsj_define_JavaClass(cx, jEnv, obj, subPath, newPath, jclazz);
+        newClass = jsj_define_JavaClass(cx, jEnv, obj, subPath, jclazz);
         if (!newClass) {
             ok = JS_FALSE;
             goto out;

@@ -313,7 +313,6 @@ jsj_ReleaseJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, JavaClassDescriptor 
 extern JSObject *
 jsj_define_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
                      const char *unqualified_class_name,
-                     const char *fully_qualified_class_name,
                      jclass jclazz);
 
 extern JavaMemberDescriptor *

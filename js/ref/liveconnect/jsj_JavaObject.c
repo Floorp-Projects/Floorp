@@ -507,7 +507,7 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 {
     JNIEnv *jEnv;
 
-    printf("In JavaObject_lookupProperty()\n");
+    /* printf("In JavaObject_lookupProperty()\n"); */
     
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_MapJSContextToJSJThread(cx, &jEnv);
@@ -690,6 +690,6 @@ jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
         0, 0,
         0, 0))
         return JS_FALSE;
-    
+
     return init_java_obj_reflections_table();
 }

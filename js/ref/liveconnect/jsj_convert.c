@@ -101,16 +101,7 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
             return JS_TRUE;
         }
         
-        /* JS functions can be wrapped as a netscape.javascript.JSObject */
-        if (JS_TypeOfValue(cx, v) == JSTYPE_FUNCTION) {
-            if (convert_js_obj_to_JSObject_wrapper(cx, jEnv, js_obj, signature, cost, java_value))
-                return JS_TRUE;
-            
-            /* That didn't work, so fall through, to attempt conversion to
-               a java.lang.String ... */
-            
-            /* Check for a Java object wrapped inside a JS object */
-        } else if (JS_InstanceOf(cx, js_obj, &JavaObject_class, 0) ||
+        if (JS_InstanceOf(cx, js_obj, &JavaObject_class, 0) ||
             JS_InstanceOf(cx, js_obj, &JavaArray_class, 0)) {
             
             /* The source value is a Java object wrapped inside a JavaScript
@@ -150,6 +141,15 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
             
             /* Fall through, to attempt conversion to a Java string */
             
+        } else if (JS_TypeOfValue(cx, v) == JSTYPE_FUNCTION) {
+            /* JS functions can be wrapped as a netscape.javascript.JSObject */
+            if (convert_js_obj_to_JSObject_wrapper(cx, jEnv, js_obj, signature, cost, java_value))
+                return JS_TRUE;
+            
+            /* That didn't work, so fall through, to attempt conversion to
+               a java.lang.String ... */
+            
+            /* Check for a Java object wrapped inside a JS object */
         } else {
             /* Otherwise, see if the target type is the  netscape.javascript.JSObject
                wrapper class or one of its subclasses, in which case a

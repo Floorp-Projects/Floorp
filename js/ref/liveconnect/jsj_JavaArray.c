@@ -207,7 +207,7 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 JavaArray_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-    printf("In JavaArray_defaultValue()\n");
+    /* printf("In JavaArray_defaultValue()\n"); */
     return JavaObject_convert(cx, obj, JSTYPE_STRING, vp);
 }
 
