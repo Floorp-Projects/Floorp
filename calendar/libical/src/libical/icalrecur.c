@@ -3,7 +3,7 @@
   FILE: icalrecur.c
   CREATOR: eric 16 May 2000
   
-  $Id: icalrecur.c,v 1.60 2004/05/10 22:47:28 acampi Exp $
+  $Id: icalrecur.c,v 1.1.1.1 2005/01/05 20:09:16 mvl%exedo.nl Exp $
   $Locker:  $
     
 
@@ -2271,11 +2271,6 @@ struct icaltimetype icalrecur_iterator_next(icalrecur_iterator *impl)
                 return icaltime_null_time();
 	    }
 	}    
-	
-	if(impl->last.year >= 2038 ){
-	    /* HACK */
-	    return icaltime_null_time();
-	}
 	
     } while(!check_contracting_rules(impl) 
 	    || icaltime_compare(impl->last,impl->dtstart) < 0
