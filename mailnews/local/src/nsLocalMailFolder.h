@@ -29,9 +29,15 @@
 #include "nsMailDatabase.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
+#include "nsICopyMessageListener.h"
+#include "nsFileStream.h"
+
+typedef struct {
+	nsOutputFileStream *fileStream;
+} nsLocalMailCopyState;
 
 class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder,
-															public nsIDBChangeListener
+							public nsIDBChangeListener, public nsICopyMessageListener
 {
 public:
 	nsMsgLocalMailFolder(void);
@@ -111,11 +117,16 @@ public:
 	//nsIDBChangeListener
 	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
                          nsIDBChangeListener * aInstigator);
-  NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
                           nsIDBChangeListener * aInstigator);
-  NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
                         nsIDBChangeListener * aInstigator);
-  NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
+	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
+
+	//nsICopyMessageListener
+	NS_IMETHOD BeginCopy();
+	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
+	NS_IMETHOD EndCopy();
 
 
 protected:
@@ -132,6 +143,7 @@ protected:
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
 	nsMailDatabase* mMailDatabase;
+	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
 };
 
 #endif // nsMsgLocalMailFolder_h__
