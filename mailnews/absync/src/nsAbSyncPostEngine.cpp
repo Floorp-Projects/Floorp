@@ -303,7 +303,7 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
                                    void *tagData, const char *postData)
 {
   nsresult rv;
-  nsIInputStream *postStream = nsnull;
+  nsCOMPtr<nsIInputStream> postStream;
 
   if (!postData)
     return NS_ERROR_INVALID_ARG;
@@ -311,18 +311,22 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
   nsCOMPtr<nsIChannel> channel;
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
   
-/**
+/***
   // RICHIE
   // Tag the post stream onto the channel...but never seemed to work...so putting it
   // directly on the URL spec
+  //
+  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-
   httpChannel->SetRequestMethod(method);
   httpChannel->SetUploadStream(postStream);
+  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
+  {
+    httpChannel->SetUploadStream(postStream);
+  }
 **/
 
   // let's try uri dispatching...
@@ -511,6 +515,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
   if (!tSpec)
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the string */
 
+  printf("POST: %s\n", aProtocolRequest);
   rv = nsEngineNewURI(&workURI, tSpec, nsnull);
   if (NS_FAILED(rv) || (!workURI))
     return NS_ERROR_FAILURE;

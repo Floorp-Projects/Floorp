@@ -146,6 +146,7 @@ private:
   PRBool          ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *syncRecord, nsString &protLine);
   void            InternalInit();
   nsresult        InternalCleanup();
+  nsresult        CleanServerTable(nsVoidArray *aArray);
 
   nsCOMPtr<nsIAbSyncPostEngine>   mPostEngine;
   nsString                        mPostString;
@@ -171,8 +172,7 @@ private:
   syncMappingRecord               *mOldSyncMapingTable;  // Old history table...
   PRUint32                        mNewTableSize;
   syncMappingRecord               *mNewSyncMapingTable;   // New table after reading address book
-  PRUint32                        mNewServerTableSize;
-  syncMappingRecord               *mNewServerTable;       // New entries from the server
+  nsVoidArray                     *mNewServerTable;       // New entries from the server
 
   char                            *mProtocolResponse;     // what the server said...
   char                            *mProtocolOffset;       // where in the buffer are we?
