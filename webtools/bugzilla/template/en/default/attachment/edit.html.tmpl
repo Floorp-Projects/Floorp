@@ -24,7 +24,7 @@
 [%# Define strings that will serve as the title and header of this page %]
 [% title = BLOCK %]Edit Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %][% END %]
 [% h1 = BLOCK %]Edit Attachment #[% attachid %] for
-  [%+ GetBugLink(bugid, "$terms.Bugs $bugid") %][% END %]
+  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl
