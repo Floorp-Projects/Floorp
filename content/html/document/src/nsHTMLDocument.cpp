@@ -1938,7 +1938,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 
     result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
     if (NS_FAILED(result)) return result;
-/*
+
     //Before we reset the doc notify the globalwindow of the change.
     if (mScriptGlobalObject) {
       //Hold onto ourselves on the offchance that we're down to one ref
@@ -1946,7 +1946,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       result = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip);
       if (NS_FAILED(result)) return result;
     }
-*/
+
     result = Reset(channel, group);
     if (NS_FAILED(result)) return result;
     if (NS_OK == result) {

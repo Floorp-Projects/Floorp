@@ -249,8 +249,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
   nsListenerStruct* ls;
   nsresult rv;
   nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
-
-  aListener->QueryInterface(kIScriptEventListenerIID, (void**)&sel);
   
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
@@ -264,7 +262,7 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       //method to verify equality.
       nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
       if (NS_SUCCEEDED(rv) && regSel) {
-		PRBool equal;
+		    PRBool equal;
         if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
           if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
             found = PR_TRUE;
