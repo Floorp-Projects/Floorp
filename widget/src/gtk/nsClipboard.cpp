@@ -843,7 +843,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   g_print("  aSD->type == %s\n  aSD->target == %s\n", gdk_atom_name(aSelectionData->type),
           gdk_atom_name(aSelectionData->target));
 #endif
-  char *dataFlavor = nsnull;
+  const char *dataFlavor = nsnull;
   char *tstr = gdk_atom_name(aInfo);
   nsCAutoString type(tstr);
   g_free(tstr);
