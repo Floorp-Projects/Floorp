@@ -376,30 +376,19 @@ nsresult nsSocketTransport::CloseCurrentConnection()
 	nsresult rv = NS_OK;
 	URL_Struct_ * URL_s = nsnull;
 
-	if (m_url)  // we want to interrupt this url...that will kill the underlying sockstub instance...
-	{
-		nsINetService * pNetService = nsnull;
-		rv = NS_NewINetService(&pNetService, NULL);
-		if (pNetService)
-		{
-            // hmmm...if the underlying transport was a file socket,
-            // then we appear to be interrupting the stream twice:
-            // once by mkfile when it is done reading in the file
-            // and a second time when the protocol closes the transport.
-            // (which is how we get here). So if we are a file
-            // transport, we aren't going to interrupt the stream
-            // because it already has been interrupted. I'd like
-            // to find a cleaner way to do this (such as allowing
-            // you to safely interrupt the stream again) but I'm
-            // not sure how to do that yet. This hack is less
-            // risky...
+	// mscott --> we used to interrupt the stream for the current url
+	// here. However, the stream has already been interrupted! A typical
+	// scenario: we lose a connection with the server. the stream is interrupted
+	// and it tells the protocol that the connection is going down (through an 
+	// on stop binding call). The protocol is then releasing the transport which 
+	// is causing close current connection to get called. But the stream
+	// has already been interrupted.....that's what started the whole process.
+	// so don't add code to interrupt it again.
 
-            if (!m_isFileConnection)
-                rv = pNetService->InterruptStream(m_url);
-			NS_RELEASE(pNetService);
-		}
-		
-	}
+	// Note: If we need to provide the ability for the protocol to interrupt
+	// the stream manually then we need a separate method in the transport
+	// interface which would be used explicitly for protocol driven close
+	// connection rather than netlib driven close connection...
 
 	// now free any per socket state information...
 	m_socketIsOpen = PR_FALSE;
