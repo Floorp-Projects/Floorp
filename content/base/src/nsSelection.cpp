@@ -4371,23 +4371,6 @@ nsTypedSelection::nsTypedSelection()
 
 nsTypedSelection::~nsTypedSelection()
 {
-  PRUint32 cnt = 0;
-  if (mSelectionListeners)
-  {
-    nsresult rv = mSelectionListeners->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i=0;i < cnt; i++)
-	  {
-	    mSelectionListeners->RemoveElementAt(i);
-	  }
-  }
-  nsresult rv = mRangeArray->Count(&cnt);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRUint32 j;
-  for (j=0; j<cnt; j++)
-	{
-	  mRangeArray->RemoveElementAt(0);
-	}
   setAnchorFocusRange(-1);
 
   if (mAutoScrollTimer) {
@@ -4508,7 +4491,7 @@ void nsTypedSelection::setAnchorFocusRange(PRInt32 indx)
     return;
   if (indx < 0) //release all
   {
-    mAnchorFocusRange = nsCOMPtr<nsIDOMRange>();
+    mAnchorFocusRange = nsnull;
   }
   else{
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(indx));
