@@ -312,7 +312,7 @@ void nsNetlibThread::NetlibMainLoop()
 class nsStreamListenerProxy : public nsIStreamListener
 {
 public:
-    nsStreamListenerProxy(nsIStreamListener* aListener);
+    nsStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
 
     NS_DECL_ISUPPORTS
 
@@ -334,6 +334,7 @@ protected:
 
 private:
     nsresult mStatus;
+    PLEventQueue* mEventQ;
 };
 
 
@@ -344,7 +345,7 @@ struct ProxyEvent : public PLEvent
   virtual ~ProxyEvent();
   virtual void InitEvent();
   NS_IMETHOD HandleEvent() = 0;
-  void Fire(void);
+  void Fire(PLEventQueue* aEventQ);
 
   static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
@@ -387,13 +388,14 @@ void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
 extern PLEventQueue* gWebShell_UnixEventQueue;
 #endif
 
-void ProxyEvent::Fire() 
+void ProxyEvent::Fire(PLEventQueue* aEventQ) 
 {
   PLEventQueue* eventQueue;
   InitEvent();
 
 #if defined(XP_PC)
-  eventQueue = PL_GetMainEventQueue();
+  NS_PRECONDITION(nsnull != aEventQ, "PLEventQueue for thread is null");
+  eventQueue = aEventQ;
 #elif defined(XP_UNIX)
   eventQueue = gWebShell_UnixEventQueue;
 #endif
@@ -615,13 +617,15 @@ OnDataAvailableProxyEvent::HandleEvent()
 
 /*--------------------------------------------------------------------------*/
 
-nsStreamListenerProxy::nsStreamListenerProxy(nsIStreamListener* aListener)
+nsStreamListenerProxy::nsStreamListenerProxy(nsIStreamListener* aListener,
+                                             PLEventQueue* aEventQ)
 {
     NS_INIT_REFCNT();
 
     mRealListener = aListener;
     NS_ADDREF(mRealListener);
 
+    mEventQ = aEventQ;
     mStatus = NS_OK;
 }
 
@@ -665,7 +669,7 @@ nsStreamListenerProxy::OnStartBinding(nsIURL* aURL, const char *aContentType)
       if (nsnull == ev) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       } else {
-        ev->Fire();
+        ev->Fire(mEventQ);
       }
     }
   } else {
@@ -689,7 +693,7 @@ nsStreamListenerProxy::OnProgress(nsIURL* aURL, PRUint32 aProgress,
       if (nsnull == ev) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       } else {
-        ev->Fire();
+        ev->Fire(mEventQ);
       }
     }
   } else {
@@ -712,7 +716,7 @@ nsStreamListenerProxy::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
       if (nsnull == ev) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       } else {
-        ev->Fire();
+        ev->Fire(mEventQ);
       }
     }
   } else {
@@ -736,7 +740,7 @@ nsStreamListenerProxy::OnStopBinding(nsIURL* aURL, nsresult aStatus,
       if (nsnull == ev) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       } else {
-        ev->Fire();
+        ev->Fire(mEventQ);
       }
     }
   } else {
@@ -776,7 +780,7 @@ nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream,
       if (nsnull == ev) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       } else {
-        ev->Fire();
+        ev->Fire(mEventQ);
       }
     }
   } else {
@@ -793,9 +797,10 @@ nsStreamListenerProxy::~nsStreamListenerProxy()
     NS_RELEASE(mRealListener);
 }
 
-nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener)
+nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
+                                             PLEventQueue* aEventQ)
 {
-    return new nsStreamListenerProxy(aListener);
+    return new nsStreamListenerProxy(aListener, aEventQ);
 }
 
 
@@ -867,16 +872,24 @@ net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
   CallExitRoutineProxyEvent* ev;
 
   /*
-   * Always use a PLEvent to call the exit_routine(...).  This is necessary 
-   * because when a connection is interrupted, the exit_routine(...) is called
-   * inside of the LIBNET_LOCK().  
-   * 
-   * By always using an event, we are sure that the exit_routine(...) is not 
-   * called while the thread is holding the LIBNET_LOCK().
+   * Make sure that the URL_Struct was opened by the nsINetService...
+   * Otherwise, we cannot look at the URL_s->owner_data
    */
-  ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
-                                     format_out, window_id);
-  if (nsnull != ev) {
-    ev->Fire();
+  if (NULL != window_id->modular_data) {
+    /*
+     * Always use a PLEvent to call the exit_routine(...).  This is necessary 
+     * because when a connection is interrupted, the exit_routine(...) is called
+     * inside of the LIBNET_LOCK().  
+     * 
+     * By always using an event, we are sure that the exit_routine(...) is not 
+     * called while the thread is holding the LIBNET_LOCK().
+     */
+    ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
+                                       format_out, window_id);
+    if (nsnull != ev) {
+      ev->Fire((PLEventQueue*)URL_s->owner_data);
+    }
+  } else {
+    net_CallExitRoutine(exit_routine, URL_s, status, format_out, window_id);
   }
 }
