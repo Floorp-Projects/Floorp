@@ -284,6 +284,8 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   nsPoint tmp;
   *aFrame = this;
 
+  nsIFrame *childFrame = 0;
+
   // Attempt to find the first child that contains the desired
   // point. We try to use a quick check on the child frames bbox to
   // avoid a potentially expensive recursion into the child frames
@@ -297,31 +299,23 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
       // contains the point.
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
 
-#ifdef KIPPS_FIX_FOR_BUG_1413
-
       nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
-      if (NS_SUCCEEDED(rv)) {
+
+      if (NS_SUCCEEDED(rv) && *aFrame) {
         // We found the target frame somewhere in the child frame.
-        return rv;
+        childFrame = *aFrame;
+      }
+      else {
+        // We didn't find the target frame in any of the children,
+        // but save the fact that this kid contains the point.
+        childFrame = kid;
       }
 
-      // We failed to find in the child frame the target frame. We
-      // need to break out of this loop and look elsewhere so that
+      // We need to break out of this loop and look elsewhere so that
       // situations where overlap occurs (e.g. floaters overlapping
       // the background of a block element) find the floater.
+
       break;
-
-#else
-
-      // XXX: The following code backs out Kipp's fix for 1413 temporarily
-      //      so we could prevent bug #18002 and #18006 from happening
-      //      and get M11 out the door. I will reenable the code above after
-      //      M11 branches, and make sure that #18002 and #18006 are properly
-      //      fixed. -- kin@netscape.com
-
-      return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
-
-#endif
     }
     kid->GetNextSibling(&kid);
   }
@@ -344,6 +338,14 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
     }
     kid->GetNextSibling(&kid);
   }
+
+  if (childFrame) {
+    // We didn't find any overlapping frames that contain
+    // the point, so just return the original childFrame.
+    *aFrame = childFrame;
+    return NS_OK;
+  }
+
   return NS_ERROR_FAILURE;
 }
 
