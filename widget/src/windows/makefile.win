@@ -23,6 +23,8 @@ REQUIRES=xpcom gfxwin raptor dom network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =              \
+	nsNativeDragTarget.cpp      \
+	nsNativeDragSource.cpp      \
 	nsDraggedObject.cpp      \
 	nsDragTarget.cpp      \
 	nsDragSource.cpp      \
@@ -30,11 +32,6 @@ CPPSRCS =              \
 	Ienumfe.cpp      \
 	nsDataObj.cpp      \
 	nsClipboard.cpp      \
-#	DataObj.cpp      \
-#	DragDrop.cpp      \
-#	DropSrc.cpp      \
-#	DropTar.cpp      \
-	nsDropTarget.cpp      \
 	nsPopUpMenu.cpp      \
 	nsMenuBar.cpp        \
 	nsMenu.cpp           \
@@ -64,6 +61,8 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
+	.\$(OBJDIR)\nsNativeDragTarget.obj  \
+	.\$(OBJDIR)\nsNativeDragSource.obj  \
 	.\$(OBJDIR)\nsDraggedObject.obj  \
 	.\$(OBJDIR)\nsDragSource.obj  \
 	.\$(OBJDIR)\nsDragTarget.obj  \
@@ -71,11 +70,6 @@ OBJS =                             \
 	.\$(OBJDIR)\Ienumfe.obj  \
 	.\$(OBJDIR)\nsDataObj.obj  \
 	.\$(OBJDIR)\nsClipboard.obj  \
-#	.\$(OBJDIR)\DataObj.obj  \
-#	.\$(OBJDIR)\DragDrop.obj  \
-#	.\$(OBJDIR)\DropSrc.obj  \
-#	.\$(OBJDIR)\DropTar.obj  \
-	.\$(OBJDIR)\nsDropTarget.obj  \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
