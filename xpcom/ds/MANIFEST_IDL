@@ -9,7 +9,6 @@ nsIProperties.idl
 nsIPropertyBag.idl
 nsISerializable.idl
 nsISimpleEnumerator.idl
-nsIStopwatch.idl
 nsISupportsArray.idl
 nsITimelineService.idl
 nsISupportsIterators.idl
