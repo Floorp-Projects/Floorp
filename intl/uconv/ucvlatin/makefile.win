@@ -30,7 +30,9 @@ CPPSRCS =				\
 	nsLatin1ToUnicode.cpp		\
 	nsISO88597ToUnicode.cpp		\
 	nsCP1253ToUnicode.cpp		\
+	nsUnicodeToLatin1.cpp		\
 	ns1ByteToUnicodeBase.cpp	\
+	nsUCvLatinSupport.cpp		\
 	nsUCvLatinDll.cpp		\
 	$(NULL)
 
@@ -38,7 +40,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsLatin1ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1253ToUnicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeToLatin1.obj		\
 	.\$(OBJDIR)\ns1ByteToUnicodeBase.obj 		\
+	.\$(OBJDIR)\nsUCvLatinSupport.obj		\
 	.\$(OBJDIR)\nsUCvLatinDll.obj 			\
 	$(NULL)
 
