@@ -156,7 +156,7 @@ nsFilePicker.prototype = {
     o.mode = this.mMode;
     o.displayDirectory = this.mDisplayDirectory;
     o.defaultString = this.mDefaultString;
-    o.filterIndex = this.mFilterIndex;</pre>
+    o.filterIndex = this.mFilterIndex;
     o.filters = new Object();
     o.filters.titles = this.mFilterTitles;
     o.filters.types = this.mFilters;
@@ -185,7 +185,7 @@ nsFilePicker.prototype = {
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
       this.mFile = o.retvals.file;
-      this.mFilterIndex = o.retvals.filterindex;</pre>
+      this.mFilterIndex = o.retvals.filterindex;
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }
