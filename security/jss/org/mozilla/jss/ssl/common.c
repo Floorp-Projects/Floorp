@@ -40,6 +40,7 @@
 #include <jss_exceptions.h>
 #include <java_ids.h>
 #include <pk11util.h>
+#include "_jni/org_mozilla_jss_ssl_SSLSocket.h"
 #include "jssl.h"
 
 /*
@@ -219,6 +220,9 @@ PRInt32 JSSL_enums[] = {
     SSL_REQUIRE_CERTIFICATE,    /* 6 */
     SSL_REQUEST_CERTIFICATE,    /* 7 */
     SSL_NO_CACHE,               /* 8 */
+    SSL_POLICY_DOMESTIC,        /* 9 */
+    SSL_POLICY_EXPORT,          /* 10 */
+    SSL_POLICY_FRANCE,          /* 11 */
 
     0
 };

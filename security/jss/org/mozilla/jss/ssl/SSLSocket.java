@@ -210,7 +210,7 @@ public class SSLSocket extends java.net.Socket {
 
     public native void setKeepAlive(boolean on) throws SocketException;
 
-    public native boolean getKeepAlive(boolean on) throws SocketException;
+    public native boolean getKeepAlive() throws SocketException;
 
     public void shutdownInput() throws IOException {
         shutdownNative(PR_SHUTDOWN_RCV);
@@ -244,7 +244,7 @@ public class SSLSocket extends java.net.Socket {
     public native void setSendBufferSize(int size) throws SocketException;
     public native int getSendBufferSize() throws SocketException;
     public native void setReceiveBufferSize(int size) throws SocketException;
-    public native int getReceiveBufferSize(int size) throws SocketException;
+    public native int getReceiveBufferSize() throws SocketException;
 
     public void close() throws IOException {
         if( sockProxy != null ) {
@@ -376,6 +376,9 @@ public class SSLSocket extends java.net.Socket {
     private static final int SSL_REQUIRE_CERTIFICATE = 6;
     private static final int SSL_REQUEST_CERTIFICATE = 7;
     private static final int SSL_NO_CACHE = 8;
+    private static final int SSL_POLICY_DOMESTIC = 9;
+    private static final int SSL_POLICY_EXPORT = 10;
+    private static final int SSL_POLICY_FRANCE = 11;
 
     /**
      * SO_TIMEOUT timeout in millis. I don't know why we have to keep it here
@@ -442,6 +445,28 @@ public class SSLSocket extends java.net.Socket {
     protected void finalize() throws Throwable {
         close();
     }
+
+    public static class CipherPolicy {
+        private int enum;
+        private CipherPolicy(int enum) { }
+
+        int getEnum() { return enum; }
+
+        public static final CipherPolicy DOMESTIC =
+            new CipherPolicy(SSL_POLICY_DOMESTIC);
+        public static final CipherPolicy EXPORT =
+            new CipherPolicy(SSL_POLICY_EXPORT);
+        public static final CipherPolicy FRANCE =
+            new CipherPolicy(SSL_POLICY_FRANCE);
+
+    }
+
+    public static void setCipherPolicy(CipherPolicy cp) throws SocketException {
+        setCipherPolicyNative(cp.getEnum());
+    }
+
+    private static native void setCipherPolicyNative(int policyEnum)
+        throws SocketException;
 
     public final static int SSL2_RC4_128_WITH_MD5                  = 0xFF01;
     public final static int SSL2_RC4_128_EXPORT40_WITH_MD5         = 0xFF02;

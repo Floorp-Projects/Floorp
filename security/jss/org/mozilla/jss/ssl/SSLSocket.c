@@ -40,6 +40,7 @@
 #include <jss_exceptions.h>
 #include <java_ids.h>
 #include <pk11util.h>
+#include "_jni/org_mozilla_jss_ssl_SSLSocket.h"
 #include "jssl.h"
 
 JNIEXPORT void JNICALL
@@ -904,4 +905,33 @@ Java_org_mozilla_jss_ssl_SSLSocket_setNeedClientAuthNoExpiryCheck(
     JNIEnv *env, jobject self, jboolean b)
 {
     JSSL_setNeedClientAuthNoExpiryCheck(env, self, b);
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setCipherPolicyNative(
+    JNIEnv *env, jobject self, jint policyEnum)
+{
+    SECStatus status;
+
+    switch(policyEnum) {
+      case SSL_POLICY_DOMESTIC:
+        status = NSS_SetDomesticPolicy();
+        break;
+      case SSL_POLICY_EXPORT:
+        status = NSS_SetExportPolicy();
+        break;
+      case SSL_POLICY_FRANCE:
+        status = NSS_SetFrancePolicy();
+        break;
+      default:
+        PR_ASSERT(PR_FALSE);
+        status = SECFailure;
+    }
+
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to set cipher policy");
+        goto finish;
+    }
+
+finish:
 }
