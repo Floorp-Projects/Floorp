@@ -7171,21 +7171,25 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       frameManager->SetPrimaryFrameFor(content, newFrame);
 
       if (placeholderFrame) {
-        // Remove the association between the old frame and its placeholder
-        frameManager->SetPlaceholderFrameFor(aFrame, nsnull);
-
         // Reuse the existing placeholder frame, and add an association to the
         // new frame
         frameManager->SetPlaceholderFrameFor(newFrame, placeholderFrame);
-
-        // Placeholder frames have a pointer back to the out-of-flow frame.
-        // Make sure that's correct
-        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
       }
 
       // Replace the old frame with the new frame
       frameManager->ReplaceFrame(*aPresContext, *presShell, parentFrame,
                                  listName, aFrame, newFrame);
+
+      // Now that we've replaced the primary frame, if there's a placeholder
+      // frame then complete the transition from image frame to new frame
+      if (placeholderFrame) {
+        // Remove the association between the old frame and its placeholder
+        frameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+        
+        // Placeholder frames have a pointer back to the out-of-flow frame.
+        // Make sure that's correct, too.
+        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
+      }
     }
 
   } else if ((nsHTMLAtoms::object == tag.get()) ||
