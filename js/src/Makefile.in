@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= mozjs
 MODULE		= js
 
-SIMPLE_PROGRAMS	= jscpucfg
-
 CSRCS		= jsapi.c \
 		  jsarena.c \
 		  jsarray.c \
@@ -144,7 +142,9 @@ DEFINES		+= -DEXPORT_JS_API
 
 INCLUDES	+= -I$(srcdir)
 
-GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp
+GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
+
+TARGETS		+= jscpucfg
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
@@ -270,6 +270,12 @@ jsautocfg.h: jscpucfg
 	@rm -f $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
+
+# jscpucfg is a strange target
+# Needs to be built with the host compiler but needs to include
+# the mdcpucfg for the target so it needs the appropriate target defines
+jscpucfg: jscpucfg.c
+	$(HOST_CC) $(DEFINES) $(NSPR_CFLAGS) -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG) -o $@ $<
 
 ifeq ($(OS_ARCH),OpenVMS)
 # force a posix build for OpenVMS
