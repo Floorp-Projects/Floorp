@@ -23,6 +23,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Christian Reis <kiko@async.com.br>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -333,7 +334,7 @@ sub ValidateBugID {
     } else {
         DisplayError(
           qq|You are not authorized to access bug #$id.  To see this bug, you
-          must first <a href="show_bug.cgi?id=$id&GoAheadAndLogIn=1">log in 
+          must first <a href="show_bug.cgi?id=$id&amp;GoAheadAndLogIn=1">log in 
           to an account</a> with the appropriate permissions.|
         );
     }
@@ -555,7 +556,7 @@ sub make_selection_widget {
                     if ($type eq "CHECKBOX") {
                         $popup .= "<INPUT NAME=$groupname type=checkbox VALUE=\"$item\" CHECKED>$displaytext<br>";
                     } elsif ($type eq "RADIO") {
-                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" check>$displaytext<br>";
+                        $popup .= "<INPUT NAME=$groupname type=radio VALUE=\"$item\" CHECKED>$displaytext<br>";
                     } else {
                         $popup .= "<OPTION SELECTED VALUE=\"$item\">$displaytext\n";
                     }
@@ -1133,26 +1134,32 @@ sub PutHeader {
         $jscript = "";
     }
 
-    print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
-    print Param("headerhtml") . "\n$jscript\n</HEAD>\n";
-    print "<BODY " . Param("bodyhtml") . " $extra>\n";
-
-    print PerformSubsts(Param("bannerhtml"), undef);
-
-    print "<TABLE BORDER=0 CELLSPACING=0 WIDTH=\"100%\">\n";
-    print " <TR>\n";
-    print "  <TD WIDTH=10% VALIGN=TOP ALIGN=LEFT>\n";
-    print "   <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2>\n";
-    print "    <TR><TD VALIGN=TOP ALIGN=LEFT NOWRAP>\n";
-    print "     <FONT SIZE=+1><B>$h1</B></FONT>";
-    print "    </TD></TR>\n";
-    print "   </TABLE>\n";
-    print "  </TD>\n";
-    print "  <TD VALIGN=CENTER>&nbsp;</TD>\n";
-    print "  <TD VALIGN=CENTER ALIGN=LEFT>\n";
-
-    print "$h2\n";
-    print "</TD></TR></TABLE>\n";
+    print qq|
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE>$title</TITLE>
+| . Param("headerhtml") . qq|
+$jscript
+</HEAD>
+<BODY | . Param("bodyhtml") . qq| $extra>
+| . PerformSubsts(Param("bannerhtml"), undef) . qq|
+<TABLE BORDER="0" CELLSPACING="0">
+<TR>
+<TD VALIGN="TOP" ALIGN="LEFT">
+    <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2">
+    <TR><TD VALIGN="TOP" ALIGN="LEFT">
+        <FONT SIZE="+1">
+        <B>$h1</B>
+        </FONT>
+    </TD></TR>
+    </TABLE>
+</TD>
+<TD VALIGN="MIDDLE">&nbsp;</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">
+$h2
+</TD></TR></TABLE>
+    |;
 
     if (Param("shutdownhtml")) {
         # If we are dealing with the params page, we want
@@ -1275,7 +1282,7 @@ sub DumpBugActivity {
     my $incomplete_data = 0;
     while (@row = FetchSQLData()) {
         my ($field,$attachid,$when,$removed,$added,$who) = (@row);
-        $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&action=view">Attachment #$attachid<\/a>/ 
+        $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&amp;action=view">Attachment #$attachid<\/a>/ 
           if (Param('useattachmenttracker') && $attachid);
         $removed = html_quote($removed);
         $added = html_quote($added);
@@ -1310,26 +1317,27 @@ sub GetCommandMenu {
     if (!defined $::anyvotesallowed) {
         GetVersionTable();
     }
-    my $html = "";
-    $html .= <<"--endquote--";
-<FORM METHOD=GET ACTION="show_bug.cgi">
+    my $html = qq {
+<FORM METHOD="GET" ACTION="show_bug.cgi">
 <TABLE width="100%"><TR><TD>
 Actions:
 </TD><TD VALIGN="middle" NOWRAP>
-<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a> |
---endquote--
+<a href="enter_bug.cgi">New</a> | 
+<a href="query.cgi">Query</a> |
+};
 
     if (-e "query2.cgi") {
-        $html .= "[<a href='query2.cgi'>beta</a>]";
+        $html .= "[<a href=\"query2.cgi\">beta</a>]";
     }
     
-    $html .=
-        qq{ <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
-
-    $html .= " | <a href='reports.cgi'>Reports</a>"; 
+    $html .= qq{ 
+<INPUT TYPE="SUBMIT" VALUE="Find"> bug \# 
+<INPUT NAME="id" SIZE="6">
+| <a href="reports.cgi">Reports</a> 
+};
     if ($loggedin) {
         if ($::anyvotesallowed) {
-            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>";
+            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>\n";
         }
     }
     if ($loggedin) {
@@ -1339,41 +1347,48 @@ Actions:
         my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
         
         #Begin settings
-        $html .= "</TD><TD>&nbsp;</TD><TD VALIGN=middle><NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
+        $html .= qq{
+</TD><TD>
+    &nbsp;
+</TD><TD VALIGN="middle">
+Edit <a href="userprefs.cgi">prefs</a>
+};
         if (UserInGroup("tweakparams")) {
-            $html .= ", <a href=editparams.cgi>parameters</a>";
+            $html .= ", <a href=\"editparams.cgi\">parameters</a>\n";
         }
         if (UserInGroup("editusers") || $blessgroupset) {
-            $html .= ", <a href=editusers.cgi>users</a>";
+            $html .= ", <a href=\"editusers.cgi\">users</a>\n";
         }
         if (UserInGroup("editcomponents")) {
-            $html .= ", <a href=editproducts.cgi>components</a>";
-            $html .= ", <a href=editattachstatuses.cgi><NOBR>attachment statuses</NOBR></a>"
-              if Param('useattachmenttracker');
+            $html .= ", <a href=\"editproducts.cgi\">components</a>\n";
+            $html .= ", <a href=\"editattachstatuses.cgi\">
+              attachment&nbsp;statuses</a>\n" if Param('useattachmenttracker');
         }
         if (UserInGroup("creategroups")) {
-            $html .= ", <a href=editgroups.cgi>groups</a>";
+            $html .= ", <a href=\"editgroups.cgi\">groups</a>\n";
         }
         if (UserInGroup("editkeywords")) {
-            $html .= ", <a href=editkeywords.cgi>keywords</a>";
+            $html .= ", <a href=\"editkeywords\".cgi>keywords</a>\n";
         }
         if (UserInGroup("tweakparams")) {
-            $html .= " | <a href=sanitycheck.cgi><NOBR>Sanity check</NOBR></a>";
+            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a> |\n";
         }
 
-        $html .= " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
-        $html .= "</TD></TR>";
+        $html .= qq{ 
+| <a href="relogin.cgi">Log&nbsp;out</a> $::COOKIE{'Bugzilla_login'}
+</TD></TR> 
+};
         
 		#begin preset queries
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
         $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
         $html .= "<TR>";
-        $html .= "<TD>Preset Queries: </TD>";
+        $html .= "<TD>Preset&nbsp;Queries: </TD>";
         $html .= "<TD colspan=3>\n";
         if ($mybugslink) {
             my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-            $html = $html . "<A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
+            $html = $html . "<A HREF=\"$mybugsurl\">My&nbsp;bugs</A>\n";
         }
         SendSQL("SELECT name FROM namedqueries " .
                 "WHERE userid = $userid AND linkinfooter");
@@ -1382,16 +1397,17 @@ Actions:
             my ($name) = (FetchSQLData());
             if ($anynamedqueries || $mybugslink) { $html .= " | " }
             $anynamedqueries = 1;
-            $html .= "<A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
-                     url_quote($name) . "\"><NOBR>$name</NOBR></A>";
+            $name =~ s/ /&nbsp;/g;
+            $html .= "<A HREF=\"buglist.cgi?cmdtype=runnamed&amp;namedcmd=" .
+                     url_quote($name) . "\">$name</A>\n";
         }
         $html .= "</TD></TR>\n";
     } else {
-    $html .= "</TD><TD>&nbsp;</TD><TD valign=middle align=right>\n";
+    $html .= "</TD><TD>&nbsp;</TD><TD valign=\"middle\" align=\"right\">\n";
         $html .=
-            " <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
+            " <a href=\"createaccount.cgi\">New&nbsp;account</a>\n";
         $html .=
-            " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
+            " | <a href=\"query.cgi?GoAheadAndLogIn=1\">Log&nbsp;in</a>";
         $html .= "</TD></TR>";
     }
     $html .= "</TABLE>";                
