@@ -37,7 +37,7 @@ MOZILLA_BUILD = /export/home/grail/codemonkey/mozilla/mozilla
 GRENDEL_BUILD = /export/home/grail/codemonkey/mozilla/grendel
 MOZILLA_HOME = /usr/local/netscape-4.5
 JAVAC	= javac
-
+LIBS	= $(TOPDIR)/extlib/mail.jar:$(TOPDIR)/extlib/activation.jar:$(TOPDIR)/extlib/jaxp.jar:$(TOPDIR)/extlib/parser.jar:$(TOPDIR)/extlib/jhall.jar:$(TOPDIR)/extlib/ldapjdk.jar:$(TOPDIR)/extlib/OROMatcher.jar
 RM	= rm -f
 DISTDIR = $(TOPDIR)/dist/classes
 
@@ -46,19 +46,19 @@ OBJS	= $(subst .java,.class,$(SRCS))
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) -J-mx64m -d $(DISTDIR) -g $*.java
+	$(JAVAC) -J-mx64m -classpath $(LIBS) -sourcepath $(TOPDIR)/sources -d $(DISTDIR) -g $*.java
 
 all:: $(OBJS)
 
 distclean::
 	$(RM) *.class *~ core
 
-all clean distclean::
+all clean distclean resources::
 	@sd="$(SUBDIRS)" ;		\
 	for dir in $$sd; do		\
-	  ( cd $$dir ; $(MAKE) $@ );	\
+	  ( cd $$dir ; echo "Making $@ in $$dir" ; $(MAKE) $@ );	\
 	done
 
 run::
-	java grendel.Main
+	java -classpath $(DISTDIR):extlib/OROMatcher.jar:extlib/activation.jar:extlib/jaxp.jar:extlib/jhall.jar:extlib/ldapjdk.jar:extlib/mail.jar:extlib/parser.jar grendel.Main
 
