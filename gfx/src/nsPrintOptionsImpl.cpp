@@ -590,6 +590,21 @@ NS_IMETHODIMP nsPrintOptions::SetIsCancelled(PRBool aIsCancelled)
   return NS_OK;
 }
 
+
+/* attribute long isCancelled; */
+NS_IMETHODIMP nsPrintOptions::GetPrintSilent(PRBool *aPrintSilent)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSilent);
+  *aPrintSilent = mPrintSilent;
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintSilent(PRBool aPrintSilent)
+{
+  mPrintSilent = aPrintSilent;
+  return NS_OK;
+}
+
+
 //-----------------------------------------------------
 //-- Protected Methods
 //-----------------------------------------------------
