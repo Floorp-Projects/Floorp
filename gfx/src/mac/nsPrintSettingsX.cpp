@@ -67,12 +67,69 @@ nsPrintSettingsX::nsPrintSettingsX() :
 
 /** ---------------------------------------------------
  */
+nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
+  mPageFormat(kPMNoPageFormat),
+  mPrintSettings(kPMNoPrintSettings)
+{
+  NS_INIT_REFCNT();
+  *this = src;
+}
+
+/** ---------------------------------------------------
+ */
 nsPrintSettingsX::~nsPrintSettingsX()
 {
   if (mPageFormat != kPMNoPageFormat) {
     ::PMDisposePageFormat(mPageFormat);
     mPageFormat = kPMNoPageFormat;
   }
+}
+
+/** ---------------------------------------------------
+ */
+nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
+{
+  if (this == &rhs) {
+    return *this;
+  }
+  
+  nsPrintSettings::operator=(rhs);
+
+  OSStatus status;
+   
+  if (mPageFormat != kPMNoPageFormat) {
+    ::PMDisposePageFormat(mPageFormat);
+    mPageFormat = kPMNoPageFormat;
+  }
+  if (rhs.mPageFormat != kPMNoPageFormat) {
+    PMPageFormat pageFormat;
+    status = ::PMNewPageFormat(&pageFormat);
+    if (status == noErr) {
+      status = ::PMCopyPageFormat(rhs.mPageFormat, pageFormat);
+      if (status == noErr)
+        mPageFormat = pageFormat;
+      else
+        ::PMDisposePageFormat(pageFormat);
+    }
+  }
+  
+  if (mPrintSettings != kPMNoPrintSettings) {
+    ::PMDisposePrintSettings(mPrintSettings);
+    mPrintSettings = kPMNoPrintSettings;
+  }
+  if (rhs.mPrintSettings != kPMNoPrintSettings) {
+    PMPrintSettings    printSettings;
+    status = ::PMNewPrintSettings(&printSettings);
+    if (status == noErr) {
+      status = ::PMCopyPrintSettings(rhs.mPrintSettings, printSettings);
+      if (status == noErr)
+        mPrintSettings = printSettings;
+      else
+        ::PMDisposePrintSettings(printSettings);
+    }
+  }
+
+  return *this;
 }
 
 /** ---------------------------------------------------
@@ -252,3 +309,29 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
 
   return prefBranch->SetCharPref(MAC_OS_X_PAGE_SETUP_PREFNAME, encodedData);
 }
+
+//-------------------------------------------
+nsresult nsPrintSettingsX::_Clone(nsIPrintSettings **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  
+  nsPrintSettingsX *newSettings = new nsPrintSettingsX(*this);
+  if (!newSettings)
+    return NS_ERROR_FAILURE;
+  *_retval = newSettings;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+
+//-------------------------------------------
+NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
+{
+  nsPrintSettingsX *printSettingsX = dynamic_cast<nsPrintSettingsX*>(aPS);
+  if (!printSettingsX)
+    return NS_ERROR_UNEXPECTED;
+  *this = *printSettingsX;
+  return NS_OK;
+}
+

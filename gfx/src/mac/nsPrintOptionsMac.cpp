@@ -60,8 +60,7 @@ nsPrintOptionsMac::~nsPrintOptionsMac()
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
  */
-/* nsIPrintSettings CreatePrintSettings (); */
-NS_IMETHODIMP nsPrintOptionsMac::CreatePrintSettings(nsIPrintSettings **_retval)
+NS_IMETHODIMP nsPrintOptionsMac::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   nsresult rv;
   nsPrintSettingsMac* printSettings = new nsPrintSettingsMac(); // does not initially ref count

@@ -56,9 +56,8 @@ public:
   
   NS_IMETHOD  GetNativeData(PRInt16 aDataType, void * *_retval);
 
-  NS_IMETHOD  CreatePrintSettings(nsIPrintSettings **_retval);
-
 protected:
+  nsresult    _CreatePrintSettings(nsIPrintSettings **_retval);
 
   nsresult    ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
   nsresult    WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);

@@ -172,6 +172,11 @@ interface nsIPrintSettings : nsISupports
     nsIPrintSettings clone();
 
   /**
+   * Assigns the internal values from the "in" arg to the current object
+   */
+    void assign(in nsIPrintSettings aPS);
+
+  /**
    * Data Members
    */
   attribute long    startPageRange;    

@@ -63,10 +63,40 @@ nsPrintSettingsMac::nsPrintSettingsMac() :
 
 /** ---------------------------------------------------
  */
+nsPrintSettingsMac::nsPrintSettingsMac(const nsPrintSettingsMac& src) :
+    mPrintRecord(nsnull)
+{
+  NS_INIT_REFCNT();
+  *this = src;
+}
+
+/** ---------------------------------------------------
+ */
 nsPrintSettingsMac::~nsPrintSettingsMac()
 {
 	if (mPrintRecord)
 		::DisposeHandle((Handle)mPrintRecord);
+}
+
+/** ---------------------------------------------------
+ */
+nsPrintSettingsMac& nsPrintSettingsMac::operator=(const nsPrintSettingsMac& rhs)
+{
+  if (this == &rhs) {
+    return *this;
+  }
+
+  nsPrintSettings::operator=(rhs);
+
+  if (mPrintRecord) {
+    ::DisposeHandle((Handle)mPrintRecord);
+	mPrintRecord = nsnull;
+  }
+  Handle copyH = (Handle)rhs.mPrintRecord;
+  if (::HandToHand(&copyH) == noErr)
+    mPrintRecord = (THPrint)copyH;
+
+  return *this;
 }
 
 /** ---------------------------------------------------
@@ -181,3 +211,28 @@ NS_IMETHODIMP nsPrintSettingsMac::WritePageSetupToPrefs()
 
   return prefBranch->SetCharPref(MAC_OS_PAGE_SETUP_PREFNAME, encodedData);
 }
+
+//-------------------------------------------
+nsresult nsPrintSettingsMac::_Clone(nsIPrintSettings **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  
+  nsPrintSettingsMac *newSettings = new nsPrintSettingsMac(*this);
+  if (!newSettings)
+    return NS_ERROR_FAILURE;
+  *_retval = newSettings;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+//-------------------------------------------
+nsresult nsPrintSettingsMac::_Assign(nsIPrintSettings *aPS)
+{
+  nsPrintSettingsMac *printSettingsMac = dynamic_cast<nsPrintSettingsMac*>(aPS);
+  if (!printSettingsMac)
+    return NS_ERROR_UNEXPECTED;
+  *this = *printSettingsMac;
+  return NS_OK;
+}
+

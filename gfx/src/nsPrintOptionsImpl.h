@@ -60,6 +60,9 @@ protected:
   virtual nsresult WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags);
   const char* GetPrefName(const char *     aPrefName, 
                           const nsString&  aPrinterName);
+  
+  // May be implemented by the platform-specific derived class                       
+  virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
 
   // Members 
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;

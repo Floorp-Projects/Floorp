@@ -46,6 +46,11 @@ public:
   nsresult Init();
 
 protected:
+  nsPrintSettingsMac(const nsPrintSettingsMac& src);
+  nsPrintSettingsMac& operator=(const nsPrintSettingsMac& rhs);
+
+  nsresult _Clone(nsIPrintSettings **_retval);
+  nsresult _Assign(nsIPrintSettings *aPS);
 
   THPrint mPrintRecord;
 
