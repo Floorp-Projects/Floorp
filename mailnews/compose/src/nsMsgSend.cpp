@@ -86,7 +86,6 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgMailSession.h"
 #include "nsTextFormatter.h"
-#include "nsIWebShell.h"
 #include "nsIPrompt.h"
 #include "nsMailHeaders.h"
 #include "nsIDocShell.h"

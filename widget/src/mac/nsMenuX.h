@@ -76,14 +76,14 @@ public:
     nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aWebShell);
+                                void * menuNode, void * aDocShell);
     nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);
 
     // nsIMenu Methods
     NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) ;
+                        nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) ;
     NS_IMETHOD GetParent(nsISupports *&aParent);
     NS_IMETHOD GetLabel(nsString &aText);
     NS_IMETHOD SetLabel(const nsAString &aText);
@@ -133,7 +133,7 @@ protected:
     void LoadSeparator ( nsIContent* menuitemContent );
 
     nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                                      void* unused, void* aWebShell);
+                                      void* unused, void* aDocShell);
 
     MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
 
@@ -144,7 +144,7 @@ protected:
 
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
-    nsWeakPtr                   mWebShellWeakRef;       // weak ref to webshell
+    nsWeakPtr                   mDocShellWeakRef;       // weak ref to docshell
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
 

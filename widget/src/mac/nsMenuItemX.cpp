@@ -95,11 +95,11 @@ nsMenuItemX::~nsMenuItemX()
 
 NS_METHOD nsMenuItemX::Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
                                 EMenuItemType aItemType, PRBool aEnabled, 
-                                nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
+                                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode )
 {
   mContent = aNode;         // addref
   mMenuParent = aParent;    // weak
-  mWebShellWeakRef = do_GetWeakReference(aShell);
+  mDocShellWeakRef = do_GetWeakReference(aShell);
   
   mEnabled = aEnabled;
   mMenuType = aItemType;
@@ -226,7 +226,7 @@ nsEventStatus nsMenuItemX::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * menuNode,
-    void              * aWebShell)
+    void              * aDocShell)
 {
     return nsEventStatus_eIgnore;
 }
@@ -267,7 +267,7 @@ NS_METHOD nsMenuItemX::DoCommand()
             /* the AttributeChanged code will update all the internal state */
     }
 
-    return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, mContent);
+    return MenuHelpersX::DispatchCommandTo(mDocShellWeakRef, mContent);
 }
     
    

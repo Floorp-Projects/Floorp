@@ -41,7 +41,7 @@
 
 class nsIAppShell;
 class nsIFactory;
-class nsIWebShell;
+class nsIDocShell;
 class nsString;
 class nsIPresShell;
 class nsIDOMElement;
@@ -136,7 +136,7 @@ public:
 
   NS_IMETHOD GetTitle(const PRUnichar** aResult) = 0;
 
-  NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
+  NS_IMETHOD GetDocShell(nsIDocShell*& aResult) = 0;
 
   NS_IMETHOD LoadURL(const nsString &aURL) = 0;
 

@@ -52,7 +52,6 @@ struct nsRect;
 struct nsHTMLReflowState;
 struct nsSize;
 class  nsIAtom;
-class  nsIWebShell;
 class  nsHTMLFramesetBorderFrame;
 struct nsGUIEvent;
 class  nsHTMLFramesetFrame;

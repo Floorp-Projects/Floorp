@@ -55,7 +55,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebShell.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
@@ -92,7 +91,6 @@
 #include "nsIEventSink.h"
 #endif
 
-static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -1128,7 +1126,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
 
-   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
+   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/webshell;1"));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
    // get the system default window background colour

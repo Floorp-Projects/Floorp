@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 
 class nsIMenuBar;
 class nsIMenu;
@@ -70,7 +70,7 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) = 0;
+                          nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
 
    /**
     * Get the Menu's Parent

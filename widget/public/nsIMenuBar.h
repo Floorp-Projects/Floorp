@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIMenu.h"
-#include "nsIWebShell.h"
 
 class nsIWidget;
 

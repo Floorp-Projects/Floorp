@@ -53,7 +53,6 @@
 #include "nsIWebBrowser.h"
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -87,8 +86,7 @@ class nsIContent;
  */
 class nsBrowserWindow : public nsIBaseWindow,
                         public nsIInterfaceRequestor,
-                        public nsIProgressEventSink,
-                        public nsIWebShellContainer
+                        public nsIProgressEventSink
 {
 friend class nsWebBrowserChrome;
 
@@ -124,22 +122,11 @@ public:
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
-  NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
-  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
+  NS_IMETHOD GetDocShell(nsIDocShell*& aResult);
+  NS_IMETHOD GetContentDocShell(nsIDocShell **aResult);
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
-
-  // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 
   // nsBrowserWindow
   void SetWebCrawler(nsWebCrawler* aWebCrawler);

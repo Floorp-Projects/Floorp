@@ -62,7 +62,6 @@
 #include "nsIMsgMailSession.h"
 #include "nsIPrefService.h"
 #include "nsIDocShell.h"
-#include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIAuthPrompt.h"
 #include "nsIObserverService.h"
@@ -866,9 +865,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
       rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
       if (NS_FAILED(rv)) return rv;
       
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
-      if (NS_FAILED(rv)) return rv;
-      dialog = do_GetInterface(webShell, &rv);
+      dialog = do_GetInterface(docShell, &rv);
       if (NS_FAILED(rv)) return rv;
     }
     else

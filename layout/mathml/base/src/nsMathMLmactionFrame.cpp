@@ -48,7 +48,6 @@
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
-#include "nsIWebShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"

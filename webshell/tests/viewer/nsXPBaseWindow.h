@@ -39,7 +39,6 @@
 
 #include "nsIXPBaseWindow.h"
 #include "nsIStreamListener.h"
-#include "nsIWebShell.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -57,7 +56,6 @@ class nsIPresShell;
  * 
  */
 class nsXPBaseWindow : public nsIXPBaseWindow,
-                       public nsIWebShellContainer,
                        public nsIDOMMouseListener
 {
 public:
@@ -88,24 +86,12 @@ public:
   NS_IMETHOD Close();
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
   NS_IMETHOD GetTitle(const PRUnichar** aResult);
-  NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
+  NS_IMETHOD GetDocShell(nsIDocShell*& aResult);
   NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell);
 
   //NS_IMETHOD HandleEvent(nsGUIEvent * anEvent);
 
   NS_IMETHOD LoadURL(const nsString &aURL);
-
-  // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
 
@@ -147,7 +133,7 @@ protected:
   nsString     mDialogURL;
 
   nsIWidget*   mWindow;
-  nsIWebShell* mWebShell;
+  nsIDocShell* mDocShell;
 
   nsIWindowListener * mWindowListener; // XXX Someday this will be a list
   PRBool       mDocIsLoaded;

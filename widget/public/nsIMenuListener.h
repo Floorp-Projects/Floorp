@@ -83,7 +83,7 @@ class nsIMenuListener : public nsISupports {
 
     virtual nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent,
                                           nsIWidget* aParentWindow, void* aNode,
-                                          void* aWebShell) = 0;
+                                          void* aDocShell) = 0;
 
     virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
     

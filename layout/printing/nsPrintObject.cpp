@@ -80,11 +80,9 @@ nsPrintObject::~nsPrintObject()
 //------------------------------------------------------------------
 // Resets PO by destroying the presentation
 nsresult 
-nsPrintObject::Init(nsIWebShell* aWebShell)
+nsPrintObject::Init(nsIDocShell* aDocShell)
 {
-  mWebShell = aWebShell;
-
-  mDocShell = do_QueryInterface(mWebShell);
+  mDocShell = aDocShell;
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   mDocShell->GetPresShell(getter_AddRefs(mDisplayPresShell));

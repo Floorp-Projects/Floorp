@@ -44,7 +44,6 @@
 #include "nsReadableUtils.h"
 #include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"

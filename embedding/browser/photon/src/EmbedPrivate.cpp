@@ -522,7 +522,6 @@ EmbedPrivate::Paste()
 	    clipboard->Paste();
 }
 
-#include <nsIWebShell.h>
 void
 EmbedPrivate::SelectAll()
 {

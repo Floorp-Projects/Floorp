@@ -84,8 +84,9 @@ interface nsIMsgMessageService : nsISupports {
     /////////////////////////////////////////////////////////////////////
     //  DisplayMessage: When you want a message displayed....
     //  aMessageURI	  is a uri representing the message to display.
-    //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
-    //  the message into. 
+    //  aDisplayConsumer is (for now) an nsIDocShell which we'll use to load 
+    //  the message into.
+    //  XXXbz Should it be an nsIWebNavigation or something?
 	  //	aCharsetOverride  (optional) character set over ride to force the message to
 	  //  use.
 	  //
@@ -142,8 +143,9 @@ interface nsIMsgMessageService : nsISupports {
      //  DisplayMessageForPrinting: When you want a message displayed in a
      //  format that is suitable for printing....
      //  aMessageURI is a uri representing the message to display.
-     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
-     // the message into. 
+     //  aDisplayConsumer is (for now) a nsIDocShell which we'll use to load 
+     //  the message into.
+     //  XXXbz should it be an nsIWebNavigation?
      ///////////////////////////////////////////////////////////////////
 
 	void DisplayMessageForPrinting(in string aMessageURI, in nsISupports aDisplayConsumer, 

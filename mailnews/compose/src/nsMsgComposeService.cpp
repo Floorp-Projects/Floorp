@@ -63,8 +63,6 @@
 
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIXULWindow.h"
@@ -77,6 +75,8 @@
 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
+
+#include "nsIInterfaceRequestorUtils.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 #include "prlog.h"
@@ -826,14 +826,14 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
 
   nsIDocShell *docShell = globalScript->GetDocShell();
 
-  nsCOMPtr <nsIWebShell> webShell = do_QueryInterface(docShell, &rv);
+  nsCOMPtr <nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIWebShellContainer> webShellContainer;
-  rv = webShell->GetContainer(*getter_AddRefs(webShellContainer));
+  nsCOMPtr <nsIDocShellTreeOwner> treeOwner;
+  rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  if (webShellContainer) {
+  if (treeOwner) {
 
     // the window need to be sticky before we hide it.
     nsCOMPtr<nsIContentViewer> contentViewer;
@@ -844,16 +844,6 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     NS_ENSURE_SUCCESS(rv,rv);
 
     // disable (enable) the cached window
-    nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docShell, &rv));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-    NS_ENSURE_SUCCESS(rv,rv);
-
     nsCOMPtr<nsIBaseWindow> baseWindow;
     baseWindow = do_QueryInterface(treeOwner, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -861,7 +851,7 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     baseWindow->SetEnabled(aShow);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIXULWindow> xulWindow = do_QueryInterface(webShellWindow, &rv);
+    nsCOMPtr <nsIXULWindow> xulWindow = do_GetInterface(treeOwner, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsIWindowMediator> windowMediator = 
@@ -875,7 +865,7 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     }
 
     // hide (show) the cached window
-    rv = webShellWindow->Show(aShow);
+    rv = baseWindow->SetVisibility(aShow);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // if hiding, remove the window from the mediator,

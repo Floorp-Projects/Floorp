@@ -42,7 +42,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDOMElement.h"
 
 
@@ -81,7 +81,7 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
                           EMenuItemType aItemType, PRBool aEnabled, 
-                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) = 0;
+                          nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
     
    /**
     * Get the MenuItem label

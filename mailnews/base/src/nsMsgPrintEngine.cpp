@@ -48,7 +48,6 @@
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
@@ -66,9 +65,8 @@
 #include "nsMsgPrintEngine.h"
 #include "nsMsgBaseCID.h"
 #include "nsIDocumentLoader.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
-#include "nsIWebShellWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -314,25 +312,15 @@ nsMsgPrintEngine::ShowWindow(PRBool aShow)
 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIWebShell> webShell =
+  nsCOMPtr <nsIDocShellTreeItem> treeItem =
     do_QueryInterface(globalScript->GetDocShell(), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIWebShellContainer> webShellContainer;
-  rv = webShell->GetContainer(*getter_AddRefs(webShellContainer));
+  nsCOMPtr <nsIDocShellTreeOwner> treeOwner;
+  rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  if (webShellContainer) {
-    nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(webShell, &rv));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-    NS_ENSURE_SUCCESS(rv,rv);
-
+  if (treeOwner) {
     // disable (enable) the window
     nsCOMPtr<nsIBaseWindow> baseWindow;
     baseWindow = do_QueryInterface(treeOwner, &rv);
@@ -342,7 +330,7 @@ nsMsgPrintEngine::ShowWindow(PRBool aShow)
     NS_ENSURE_SUCCESS(rv,rv);
 
     // hide or show the window
-    rv = webShellWindow->Show(aShow);
+    baseWindow->SetVisibility(aShow);
   }
   return rv;
 }
@@ -561,8 +549,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
 
   if (NS_SUCCEEDED(rv) && messageService)
   {
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    rv = messageService->DisplayMessageForPrinting(tString, webShell, nsnull, nsnull, nsnull);
+    rv = messageService->DisplayMessageForPrinting(tString, mDocShell, nsnull, nsnull, nsnull);
   }
   //If it's not something we know about, then just load try loading it directly.
   else

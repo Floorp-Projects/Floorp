@@ -154,9 +154,9 @@ nsMenuX::~nsMenuX()
 //
 NS_METHOD 
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
+                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode )
 {
-  mWebShellWeakRef = do_GetWeakReference(aShell);
+  mDocShellWeakRef = do_GetWeakReference(aShell);
   mMenuContent = aNode;
 
   // register this menu to be notified when changes are made to our content object
@@ -510,16 +510,16 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
       if (mNeedsRebuild)
         RemoveAll();
 
-      nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-      if (!webShell) {
-        NS_ERROR("No web shell");
+      nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+      if (!docShell) {
+        NS_ERROR("No doc shell");
         return nsEventStatus_eConsumeNoDefault;
       }
       if (mIsHelpMenu) {
-        HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, webShell);	      
+        HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, docShell);	      
         mConstructed = true;
       } else {
-        MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, webShell);
+        MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, nsnull, docShell);
         mConstructed = true;
       }	
     } 
@@ -563,7 +563,7 @@ nsEventStatus nsMenuX::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * /* menuNode */,
-	  void              * aWebShell)
+	  void              * aDocShell)
 {
   mConstructed = false;
   gConstructingMenu = PR_TRUE;
@@ -608,7 +608,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * /* menuNode */,
-    void              * aWebShell)
+    void              * aDocShell)
 {
   //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUCS2toASCII(mLabel).get(), mMacMenuHandle);
  
@@ -856,13 +856,13 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     else if ( type.EqualsLiteral("radio") )
       itemType = nsIMenuItem::eRadio;
       
-    nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
-    if (!webShell)
+    nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
+    if (!docShell)
       return;
 
     // Create the item.
     pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, 
-                          enabled, mManager, webShell, inMenuItemContent);   
+                          enabled, mManager, docShell, inMenuItemContent);   
 
     //
     // Set key shortcut and modifiers
@@ -940,11 +940,11 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
   nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
   if (pnsMenu) {
     // Call Create
-    nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-    if (!webShell)
+    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+    if (!docShell)
         return;
     nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
-    pnsMenu->Create(supports, menuName, EmptyString(), mManager, webShell, inMenuItemContent);
+    pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuItemContent);
 
     // set if it's enabled or disabled
     nsAutoString disabled;
@@ -990,13 +990,13 @@ nsMenuX::OnCreate()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell) {
-    NS_ERROR("No web shell");
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell) {
+    NS_ERROR("No doc shell");
     return PR_FALSE;
   }
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -1072,13 +1072,13 @@ nsMenuX::OnCreated()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell) {
-    NS_ERROR("No web shell");
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell) {
+    NS_ERROR("No doc shell");
     return PR_FALSE;
   }
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext) );
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -1105,9 +1105,9 @@ nsMenuX::OnDestroy()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(NS_XUL_POPUP_HIDING);
   
-  nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell) {
-    NS_WARNING("No web shell so can't run the OnDestroy");
+  nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell) {
+    NS_WARNING("No doc shell so can't run the OnDestroy");
     return PR_FALSE;
   }
 
@@ -1115,7 +1115,7 @@ nsMenuX::OnDestroy()
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext (docShell, getter_AddRefs(presContext) );
   if (presContext )  {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -1135,9 +1135,9 @@ nsMenuX::OnDestroyed()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(NS_XUL_POPUP_HIDDEN);
   
-  nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
-  if (!webShell) {
-    NS_WARNING("No web shell so can't run the OnDestroy");
+  nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell) {
+    NS_WARNING("No doc shell so can't run the OnDestroy");
     return PR_FALSE;
   }
 
@@ -1145,7 +1145,7 @@ nsMenuX::OnDestroyed()
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext (docShell, getter_AddRefs(presContext) );
   if (presContext )  {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;

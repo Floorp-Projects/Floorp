@@ -66,7 +66,6 @@
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
-#include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"

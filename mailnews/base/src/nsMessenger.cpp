@@ -79,7 +79,6 @@
 #include "nsLayoutCID.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h" 
-#include "nsIWebShell.h" 
 
 // embedding
 #include "nsIWebBrowserPrint.h"
@@ -569,8 +568,7 @@ nsMessenger::OpenURL(const char *aURL)
   
   if (NS_SUCCEEDED(rv) && messageService)
   {
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    messageService->DisplayMessage(aURL, webShell, mMsgWindow, nsnull, nsnull, nsnull);
+    messageService->DisplayMessage(aURL, mDocShell, mMsgWindow, nsnull, nsnull, nsnull);
     mLastDisplayURI = aURL; // remember the last uri we displayed....
   }
   //If it's not something we know about, then just load the url.
@@ -1518,8 +1516,7 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const char *characterSet)
     
     if (NS_SUCCEEDED(rv) && messageService)
     {
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      messageService->DisplayMessage(mLastDisplayURI.get(), webShell, mMsgWindow, nsnull, characterSet, nsnull);
+      messageService->DisplayMessage(mLastDisplayURI.get(), mDocShell, mMsgWindow, nsnull, characterSet, nsnull);
     }
   }
   

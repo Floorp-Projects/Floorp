@@ -179,7 +179,7 @@ public:
   nsresult ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink);
   nsresult CalcPageFrameLocation(nsIPresShell * aPresShell,
                                   nsPrintObject*   aPO);
-  nsPrintObject * FindPrintObjectByWS(nsPrintObject* aPO, nsIWebShell * aWebShell);
+  nsPrintObject * FindPrintObjectByDS(nsPrintObject* aPO, nsIDocShell * aDocShell);
   void MapContentForPO(nsPrintObject*   aRootObject,
                        nsIPresShell*  aPresShell,
                        nsIContent*    aContent);
@@ -215,8 +215,8 @@ public:
                                PRUint32         aDelay);
 
   PRBool IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow);
-  PRBool IsParentAFrameSet(nsIWebShell * aParent);
-  PRBool IsThereAnIFrameSelected(nsIWebShell* aWebShell,
+  PRBool IsParentAFrameSet(nsIDocShell * aParent);
+  PRBool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
                                  nsIDOMWindow* aDOMWin,
                                  PRPackedBool& aIsParentFrameSet);
 

@@ -73,7 +73,6 @@
 
 #include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
-#include "nsIWebShell.h"
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 
@@ -1383,10 +1382,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
       if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
-      if (NS_FAILED(rv)) return rv;
-
-      dialog = do_GetInterface(webShell, &rv);
+      dialog = do_GetInterface(docShell, &rv);
 			if (NS_FAILED(rv)) return rv;
     }
     else 
@@ -1454,9 +1450,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       nsCOMPtr<nsIDocShell> docShell;
       rv = aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
       if (NS_FAILED(rv)) return rv;
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
-      if (NS_FAILED(rv)) return rv;
-      dialog = do_GetInterface(webShell, &rv);
+      dialog = do_GetInterface(docShell, &rv);
       if (NS_FAILED(rv)) return rv;
     }
     else 

@@ -49,10 +49,10 @@ class nsIParser;
 
 /*  
    This interface is defined to be serverd as an Adaptor between
-   nsIWebShell, nsICharsetDetector and nsIParserFilter
+   nsIWebShellServices, nsICharsetDetector and nsIParserFilter
 
    It make the nsICharsetDetector implementation independent from the
-   nsIParserFilter and nsIWebShell
+   nsIParserFilter and nsIWebShellServices
  */
 
 class nsICharsetDetectionAdaptor : public nsISupports {
@@ -60,7 +60,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONADAPTOR_IID)
   /*   
      Initialize it by setup the nsICharsetDetector and the 
-     nsIWebShell
+     nsIWebShellServices
    */
   NS_IMETHOD Init(nsIWebShellServices* aWebShell, nsICharsetDetector *aDetector, 
                   nsIDocument* aDocument, nsIParser* aParser, 

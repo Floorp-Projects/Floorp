@@ -66,7 +66,6 @@
 #ifdef OJI
 #include "nsIJVMPluginTagInfo.h"
 #endif
-#include "nsIWebShell.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
 #include "nsIScrollableView.h"

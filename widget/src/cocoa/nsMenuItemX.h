@@ -68,7 +68,7 @@ public:
   // nsIMenuItem Methods
   NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
                         EMenuItemType aItemType, PRBool aEnabled, 
-                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) ;
+                        nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) ;
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
@@ -91,7 +91,7 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aWebShell);
+                                void * menuNode, void * aDocShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   nsEventStatus CheckRebuild(PRBool & aMenuEvent);
   nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -109,7 +109,7 @@ protected:
   nsCOMPtr<nsIWidget>       mTarget;              // never set?
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
-  nsWeakPtr                 mWebShellWeakRef;     // weak ref to webshell
+  nsWeakPtr                 mDocShellWeakRef;     // weak ref to docshell
   nsCOMPtr<nsIContent>      mContent; 
   
   PRUint8           mModifiers;

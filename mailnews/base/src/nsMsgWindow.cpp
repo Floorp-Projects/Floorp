@@ -66,8 +66,6 @@
 #include "nsMsgI18N.h"
 #include "nsIWebNavigation.h"
 #include "nsISupportsObsolete.h"
-// XXX Remove
-#include "nsIWebShell.h"
 
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"

@@ -50,7 +50,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
-#include "nsIWebShell.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
