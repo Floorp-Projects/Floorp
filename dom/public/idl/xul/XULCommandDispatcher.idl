@@ -6,6 +6,7 @@ interface XULCommandDispatcher {
 	attribute Element focusedElement;
 	attribute Window focusedWindow;
     attribute boolean suppressFocus;
+	attribute boolean suppressFocusScroll;
     attribute boolean active;
 
 	void addCommandUpdater(in Element updater, in DOMString events, in DOMString targets);

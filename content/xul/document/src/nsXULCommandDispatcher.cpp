@@ -580,6 +580,20 @@ nsXULCommandDispatcher::GetControllerForCommand(const nsString& command, nsICont
 }
 
 NS_IMETHODIMP
+nsXULCommandDispatcher::GetSuppressFocusScroll(PRBool* aSuppressFocusScroll)
+{
+  *aSuppressFocusScroll = mSuppressFocusScroll;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::SetSuppressFocusScroll(PRBool aSuppressFocusScroll)
+{
+  mSuppressFocusScroll = aSuppressFocusScroll;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULCommandDispatcher::GetSuppressFocus(PRBool* aSuppressFocus)
 {
   *aSuppressFocus = mSuppressFocus;
