@@ -23,19 +23,35 @@
 
 /*
 
-  The converts a filesystem directory into an "HTTP index" stream.
+  The converts a filesystem directory into an "HTTP index" stream per
+  Lou Montulli's original spec:
+
+    http://www.area.com/~roeber/file_format.html
 
  */
 
 #include "nsEscape.h"
 #include "nsDirectoryIndexStream.h"
+#include "nsXPIDLString.h"
 #include "prio.h"
+#include "prlog.h"
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
 
 nsDirectoryIndexStream::nsDirectoryIndexStream()
     : mOffset(0)
 {
     NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsDirectoryIndexStream");
+#endif
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsDirectoryIndexStream[%p]: created", this));
 }
 
 nsresult
@@ -48,6 +64,16 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     NS_PRECONDITION(isDir, "not a directory");
     if (!isDir)
         return NS_ERROR_ILLEGAL_VALUE;
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString path;
+        aDir->GetPath(getter_Copies(path));
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("nsDirectoryIndexStream[%p]: initialized on %s",
+                this, (const char*) path));
+    }
+#endif
 
     mDir = aDir;
 
@@ -62,6 +88,8 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
 nsDirectoryIndexStream::~nsDirectoryIndexStream()
 {
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsDirectoryIndexStream[%p]: destroyed", this));
 }
 
 nsresult
@@ -141,11 +169,26 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             nsCOMPtr<nsIFile> current = do_QueryInterface(cur, &rv);
             if (NS_FAILED(rv)) return rv; 
 
+#ifdef PR_LOGGING
+            if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+                nsXPIDLCString path;
+                current->GetPath(getter_Copies(path));
+                PR_LOG(gLog, PR_LOG_DEBUG,
+                       ("nsDirectoryIndexStream[%p]: iterated %s",
+                        this, (const char*) path));
+            }
+#endif
+
             // rjc: don't return hidden files/directories!
             PRBool hidden;
             rv = current->IsHidden(&hidden);
             if (NS_FAILED(rv)) return rv; 
-            if (hidden) continue;
+            if (hidden) {
+                PR_LOG(gLog, PR_LOG_DEBUG,
+                       ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
+                        this));
+                continue;
+            }
 
             char* path;
             rv = current->GetPath(&path);
