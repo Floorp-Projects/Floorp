@@ -79,14 +79,14 @@ compile_all_code: build
 	@echo
 	@echo "----- Testing if perl can compile code -----"
 	find $(builddir) -type f | \
-	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \
+	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
 	  xargs -l perl -T -c 
 
 compile_bin_code: build
 	@echo
 	@echo "----- Testing if perl can compile all files in the bin directory -----"
 	find $(builddir)/bin -type f | \
-	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \
+	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|initrc|Storable.pm" | \
 	  xargs -l perl -T -c 
 
 gen_test: compile_bin_code
@@ -98,7 +98,7 @@ gen_test: compile_bin_code
 
 link_test:
 	find $(builddir) -type f -print | \
-	egrep -v -i "test|mage" | \
+	egrep -v -i "test|mage|clientbin" | \
 	xargs egrep -i "<a +href"
 
 STAGE_FILE := \
