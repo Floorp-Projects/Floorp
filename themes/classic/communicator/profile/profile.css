@@ -47,11 +47,12 @@ window.dialog {
   padding: 0;
 }
 
-#profiles > listitem {
+treechildren::-moz-tree-image {
+  margin-right: 2px;
   list-style-image: url("chrome://communicator/skin/profile/profileicon-large.gif");
 }
 
-#profiles > listitem[rowMigrate="no"] {
+treechildren::-moz-tree-image(rowMigrate-no) {
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 

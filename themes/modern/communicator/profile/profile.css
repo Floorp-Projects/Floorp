@@ -47,11 +47,12 @@
 
 /* ::::: Profile Selection dialog ::::: */
 
-#profiles > listitem {
+treechildren::-moz-tree-image {
+  margin-right: 2px;
   list-style-image: url("chrome://communicator/skin/profile/profile.gif");
 }
 
-#profiles > listitem[rowMigrate="no"] {
+treechildren::-moz-tree-image(rowMigrate-no) {
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 
