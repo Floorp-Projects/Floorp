@@ -52,9 +52,9 @@ struct nsGlobalNameStruct
   } mType;
 
   union {
-    nsCID mCID;
-    nsIID mIID;
-    PRInt32 mDOMClassInfoID;
+    PRInt32 mDOMClassInfoID; // eTypeClassConstructor
+    nsIID mIID; // eTypeClassProto
+    nsCID mCID; // All other types...
   };
 
 private:
