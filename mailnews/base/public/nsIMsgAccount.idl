@@ -32,6 +32,9 @@
 [scriptable, uuid(da368bd0-e624-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccount : nsISupports {
   
+  /* init function */
+  void init();
+
   /* internal key identifying itself */
   attribute string key;
   

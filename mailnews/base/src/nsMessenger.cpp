@@ -98,6 +98,9 @@ static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
+#if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
+#define DEBUG_MESSENGER
+#endif
 
 class nsMessenger : public nsIMessenger
 {
@@ -380,7 +383,7 @@ nsMessenger::OpenURL(const char * url)
 {
 	if (url)
 	{
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#ifdef DEBUG_MESSENGER
 		printf("nsMessenger::OpenURL(%s)\n",url);
 #endif    
 		nsIMsgMessageService * messageService = nsnull;
@@ -1168,17 +1171,15 @@ nsMessenger::LoadFirstDraft()
 
 NS_IMETHODIMP nsMessenger::DoPrint()
 {
-#ifdef DEBUG_seth
+#ifdef DEBUG_MESSENGER
   printf("nsMessenger::DoPrint()\n");
 #endif
 
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewer> viewer;
 
+  NS_ASSERTION(mWebShell,"can't print, there is no webshell");
   if (!mWebShell) {
-#ifdef DEBUG_seth
-	printf("can't print, there is no webshell\n");
-#endif
 	return rv;
   }
 
@@ -1187,7 +1188,7 @@ NS_IMETHODIMP nsMessenger::DoPrint()
   if (viewer) {
     rv = viewer->Print();
   }
-#ifdef DEBUG_seth
+#ifdef DEBUG_MESSENGER
   else {
 	printf("failed to get the viewer for printing\n");
   }
@@ -1199,8 +1200,8 @@ NS_IMETHODIMP nsMessenger::DoPrint()
 NS_IMETHODIMP nsMessenger::DoPrintPreview()
 {
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-#ifdef DEBUG_seth
-  printf("nsMessenger::DoPrintPreview()\n");
+#ifdef DEBUG_MESSENGER
+  printf("nsMessenger::DoPrintPreview() not implemented yet\n");
 #endif
   return rv;  
 }

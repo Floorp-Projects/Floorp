@@ -47,7 +47,6 @@
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
 
-#define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -61,7 +60,26 @@ static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
-
+#define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
+#define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
+#define PREF_4X_MAIL_IDENTITY_USERNAME "mail.identity.username"
+#define PREF_4X_MAIL_IDENTITY_REPLY_TO "mail.identity.reply_to"    
+#define PREF_4X_MAIL_IDENTITY_ORGANIZATION "mail.identity.organization"
+#define PREF_4X_MAIL_COMPOSE_HTML "mail.compose_html"
+#define PREF_4X_MAIL_POP_NAME "mail.pop_name"
+#define PREF_4X_MAIL_REMEMBER_PASSWORD "mail.remember_password"
+#define PREF_4X_MAIL_POP_PASSWORD "mail.pop_password"
+#define PREF_4X_NETWORK_HOSTS_POP_SERVER "network.hosts.pop_server"
+#define PREF_4X_MAIL_CHECK_NEW_MAIL "mail.check_new_mail"
+#define PREF_4X_MAIL_CHECK_TIME "mail.check_time"
+#define PREF_4X_MAIL_LEAVE_ON_SERVER "mail.leave_on_server"
+#define PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER "mail.delete_mail_left_on_server"
+#define PREF_4X_NETWORK_HOSTS_SMTP_SERVER "network.hosts.smtp_server"
+#define PREF_4X_MAIL_SMTP_NAME "mail.smtp_name"
+#define PREF_4X_MAIL_SERVER_TYPE "mail.server_type"
+#define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"
+#define PREF_4X_NEWS_DIRECTORY "news.directory"
+        
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
 typedef struct _findServerEntry {
@@ -195,8 +213,6 @@ private:
   
   PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
-
-  nsresult SetPasswordForServer(nsIMsgIncomingServer * server);
 
   nsresult getPrefService();
   nsIPref *m_prefs;
@@ -383,13 +399,20 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   // serverType is the short server type, like "pop3", "imap", etc
   nsXPIDLCString serverType;
   rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
-
+  
     // the server type doesn't exist. That's bad.
   if (NS_FAILED(rv))
     return NS_ERROR_NOT_INITIALIZED;
 
   rv = createKeyedServer(key, serverType, _retval);
+  if (NS_FAILED(rv)) return rv;
 
+  // clear the 4.x pref to avoid confusion
+  rv = m_prefs->ClearUserPref(key);
+#ifdef DEBUG_seth
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
+  
   return rv;
 }
 
@@ -992,95 +1015,141 @@ nsMsgAccountManager::upgradePrefs()
 
     rv = getPrefService();
     if (NS_FAILED(rv)) return rv;
-    
-    rv = m_prefs->GetIntPref("mail.server_type", &oldMailType);
+
+    rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_ACCOUNTMANAGER
         printf("Tried to upgrade old prefs, but couldn't find server type!\n");
 #endif
         return rv;
     }
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SERVER_TYPE);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
 
     nsCOMPtr<nsIMsgIdentity> identity;
     rv = createKeyedIdentity("identity1", getter_AddRefs(identity));
     if (NS_FAILED(rv)) return rv;
-    
+
     // identity stuff
-    rv = m_prefs->CopyCharPref("mail.identity.useremail", &oldstr);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USEREMAIL, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
       	identity->SetEmail(oldstr);
       }
       else {
-	identity->SetEmail("");
+        identity->SetEmail("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USEREMAIL);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
-    rv = m_prefs->CopyCharPref("mail.identity.username", &oldstr);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_USERNAME, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
       	identity->SetFullName(oldstr);
       }
       else {
-	identity->SetFullName("");
+        identity->SetFullName("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USERNAME);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-    
-    rv = m_prefs->CopyCharPref("mail.identity.reply_to", &oldstr);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_REPLY_TO, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
       	identity->SetReplyTo(oldstr);
       }
       else {
-	identity->SetReplyTo("");
+        identity->SetReplyTo("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_REPLY_TO);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-    
-    rv = m_prefs->CopyCharPref("mail.identity.organization", &oldstr);
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
       	identity->SetOrganization(oldstr);
       }
       else {
-	identity->SetOrganization("");
+        identity->SetOrganization("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-    
-    rv = m_prefs->GetBoolPref("mail.compose_html", &oldbool);
+
+    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_COMPOSE_HTML, &oldbool);
     if (NS_SUCCEEDED(rv)) {
       identity->SetComposeHtml(oldbool);
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_COMPOSE_HTML);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-    
-    rv = m_prefs->CopyCharPref("network.hosts.smtp_server", &oldstr);
+
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
-	identity->SetSmtpHostname(oldstr);
+        identity->SetSmtpHostname(oldstr);
       }
       else {
-	identity->SetSmtpHostname("");
+        identity->SetSmtpHostname("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-    
-    rv = m_prefs->CopyCharPref("mail.smtp_name", &oldstr);
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_SMTP_NAME, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       if (oldstr) {
       	identity->SetSmtpUsername(oldstr);
       }
       else {
-	identity->SetSmtpUsername("");
+        identity->SetSmtpUsername("");
       }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SMTP_NAME);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
     if ( oldMailType == 0) {      // POP
@@ -1134,17 +1203,6 @@ nsMsgAccountManager::upgradePrefs()
     return NS_OK;
 }
 
-nsresult
-nsMsgAccountManager::SetPasswordForServer(nsIMsgIncomingServer * server)
-{
-  if (!server) return NS_ERROR_NULL_POINTER;
-  
-  // we do this because we can't handle 4.x passwords in 5.0 yet
-  server->SetPassword("enter your clear text password here");
-  
-  return NS_OK;
-}
-
 PRInt32
 nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 {
@@ -1182,40 +1240,78 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   popServer = do_QueryInterface(server, &rv);
   if (NS_SUCCEEDED(rv)) {
     server->SetType("pop3");
-	
-    rv = m_prefs->CopyCharPref("mail.pop_name", &oldstr);
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       server->SetUsername(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_POP_NAME);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
+    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_REMEMBER_PASSWORD, &oldbool);
+    if (NS_SUCCEEDED(rv)) {
+      server->SetRememberPassword(oldbool);
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_REMEMBER_PASSWORD);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
+    }
+      
 #ifdef CAN_UPGRADE_4x_PASSWORDS
-    rv = m_prefs->CopyCharPref("mail.pop_password", &oldstr);
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_PASSWORD, &oldstr);
     if (NS_SUCCEEDED(rv)) {
       server->SetPassword(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_POP_PASSWORD);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
-#else
-    rv = SetPasswordForServer(server);
-    if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
     char *hostname=nsnull;
-    rv = m_prefs->CopyCharPref("network.hosts.pop_server", &hostname);
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &hostname);
     if (NS_SUCCEEDED(rv)) {
       server->SetHostName(hostname);
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_POP_SERVER);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
-    rv = m_prefs->GetBoolPref("mail.check_new_mail", &oldbool);
+    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_CHECK_NEW_MAIL, &oldbool);
     if (NS_SUCCEEDED(rv)) {
       server->SetDoBiff(oldbool);
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_CHECK_NEW_MAIL);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
-    rv = m_prefs->GetIntPref("mail.check_time", &oldint);
+    rv = m_prefs->GetIntPref(PREF_4X_MAIL_CHECK_TIME, &oldint);
     if (NS_SUCCEEDED(rv)) {
       server->SetBiffMinutes(oldint);
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_CHECK_TIME);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
     // create the directory structure for this pop account
@@ -1277,15 +1373,27 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     
     rv = createSpecialFile(dir,"Unsent Message");
     if (NS_FAILED(rv)) return 0;
-	
-    rv = m_prefs->GetBoolPref("mail.leave_on_server", &oldbool);
+
+    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_LEAVE_ON_SERVER, &oldbool);
     if (NS_SUCCEEDED(rv)) {
       popServer->SetLeaveMessagesOnServer(oldbool);
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_LEAVE_ON_SERVER);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
     
-    rv = m_prefs->GetBoolPref("mail.delete_mail_left_on_server", &oldbool);
+    rv = m_prefs->GetBoolPref(PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER, &oldbool);
     if (NS_SUCCEEDED(rv)) {
       popServer->SetDeleteMailLeftOnServer(oldbool);
+      
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
     }
   }
   
@@ -1301,10 +1409,16 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
   char *hostList=nsnull;
   rv = getPrefService();
   if (NS_FAILED(rv)) return 0;
-  
-  rv = m_prefs->CopyCharPref("network.hosts.imap_servers", &hostList);
-  if (NS_FAILED(rv)) return 0;
 
+  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &hostList);
+  if (NS_FAILED(rv)) return 0;
+  
+  // clear the 4.x pref to avoid confusion
+  rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER);
+#ifdef DEBUG_seth
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
+  
   if (!hostList || !*hostList) return 0;
   
   char *token = nsnull;
@@ -1482,20 +1596,42 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     server->SetUsername(oldstr);
     PR_FREEIF(oldstr);
     oldstr = nsnull;
+
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
   }
+
+  PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.remember_password",hostname);
+  rv = m_prefs->GetBoolPref(prefName, &oldbool);
+  if (NS_SUCCEEDED(rv)) {
+    server->SetRememberPassword(oldbool);
+
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
+  }
+  
 
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   // upgrade the password
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.password",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
-    server->SetPassword("enter your clear text password here");
+    server->SetPassword(oldStr);
     PR_FREEIF(oldstr);
     oldstr = nsnull;
+
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
   }
-#else
-  rv = SetPasswordForServer(server);
-  if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
   // upgrade the biff prefs
@@ -1503,12 +1639,24 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = m_prefs->GetBoolPref(prefName, &oldbool);
   if (NS_SUCCEEDED(rv)) {
     server->SetDoBiff(oldbool);
+
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
   }
 
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.check_time",hostname);
   rv = m_prefs->GetIntPref(prefName, &oldint);
   if (NS_SUCCEEDED(rv)) {
     server->SetBiffMinutes(oldint);
+
+    // clear the 4.x pref to avoid confusion
+    rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
   }
   
   // create the directory structure for this pop account
@@ -1702,11 +1850,17 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
     char *news_directory_value = nsnull;
 	nsFileSpec dirWithTheNewsrcFiles;
     
-	rv = m_prefs->CopyCharPref("news.directory", &news_directory_value);
+	rv = m_prefs->CopyCharPref(PREF_4X_NEWS_DIRECTORY, &news_directory_value);
 	if (NS_SUCCEEDED(rv)) {
       dirWithTheNewsrcFiles = news_directory_value;
       PR_FREEIF(news_directory_value);
       news_directory_value = nsnull;
+
+      // clear the 4.x pref to avoid confusion
+      rv = m_prefs->ClearUserPref(PREF_4X_NEWS_DIRECTORY);
+#ifdef DEBUG_seth
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
 	}
     else {
       // if that fails, use the home directory
@@ -1823,6 +1977,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	server->SetHostName((char *)hostname);
 
 #ifdef SUPPORT_SNEWS
+#error THIS_CODE_ISNT_DONE_YET
 	char *oldstr = nsnull;
 	
 	// we don't handle nntp servers that accept username / passwords yet
@@ -1833,6 +1988,12 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		server->SetUsername(oldstr);
 		PR_FREEIF(oldstr);
 		oldstr = nsnull;
+
+        // clear the 4.x pref to avoid confusion
+        rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
 	}
 
 #ifdef CAN_UPGRADE_4x_PASSWORDS
@@ -1840,13 +2001,16 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	PR_snprintf(prefName, BUF_STR_LEN, "???nntp.server.%s.password",hostname);
 	rv = m_prefs->CopyCharPref(prefName, &oldstr);
 	if (NS_SUCCEEDED(rv)) {
-		server->SetPassword("enter your clear text password here");
-		PR_FREEIF(oldstr);
+		server->SetPassword(oldStr);
+        PR_FREEIF(oldstr);
 		oldstr = nsnull;
+
+        // clear the 4.x pref to avoid confusion
+        rv = m_prefs->ClearUserPref(prefName);
+#ifdef DEBUG_seth
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
+#endif
 	}
-#else
-	rv = SetPasswordForServer(server);
-	if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 #endif /* SUPPORT_SNEWS */
 		

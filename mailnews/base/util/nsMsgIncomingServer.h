@@ -62,6 +62,7 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
   NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
   
+  /* attribute string password; */
   NS_IMETHOD GetPassword(char * *aPassword);
   NS_IMETHOD SetPassword(char * aPassword);
   
@@ -77,9 +78,11 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetDownloadOnBiff(PRBool *aDownloadOnBiff);
   NS_IMETHOD SetDownloadOnBiff(PRBool aDownloadOnBiff);
 
+  /* attribute string localPath; */
   NS_IMETHOD GetLocalPath(char * *aLocalPath);
   NS_IMETHOD SetLocalPath(char * aLocalPath);
 
+  /* attribute string rootFolder; */
   NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder);
   NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
 

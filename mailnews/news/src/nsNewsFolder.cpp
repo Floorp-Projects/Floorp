@@ -254,8 +254,8 @@ nsresult nsMsgNewsFolder::ParseFolder(nsFileSpec& path)
 NS_IMETHODIMP
 nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
 {
-  nsresult rv = NS_OK;
 #if 0
+  nsresult rv = NS_OK;
   // for now, news folders contain both messages and folders
   // server is a folder, and it contains folders
   // newsgroup is a folder, and it contains messages

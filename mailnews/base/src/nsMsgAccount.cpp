@@ -45,8 +45,10 @@ class nsMsgAccount : public nsIMsgAccount,
 public:
   nsMsgAccount();
   virtual ~nsMsgAccount();
-  
+   
   NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Init();
 
   NS_IMETHOD GetKey(char ** aKey);
   NS_IMETHOD SetKey(char * aKey);
@@ -128,6 +130,15 @@ nsMsgAccount::~nsMsgAccount()
   
   PR_FREEIF(m_accountKey);
   
+}
+
+NS_IMETHODIMP 
+nsMsgAccount::Init()
+{
+	NS_ASSERTION(!m_identities, "don't call Init twice!");
+	if (m_identities) return NS_ERROR_FAILURE;
+
+	return createIdentities();
 }
 
 nsresult
@@ -254,10 +265,8 @@ nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  nsresult rv = NS_OK;
-  if (!m_identities)
-    rv = createIdentities();
-  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(m_identities,"you never called Init()");
+  if (!m_identities) return NS_ERROR_FAILURE;
 
   *_retval = m_identities;
   NS_ADDREF(*_retval);
@@ -272,6 +281,8 @@ nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 nsresult
 nsMsgAccount::createIdentities()
 {
+  NS_ASSERTION(!m_identities, "only call createIdentities() once!");
+  if (m_identities) return NS_ERROR_FAILURE;
 
   NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
@@ -329,10 +340,8 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 NS_IMETHODIMP
 nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
 {
-  nsresult rv = NS_OK;
-  if (!m_identities)
-    rv = createIdentities();
-  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(m_identities,"you never called Init()");
+  if (!m_identities) return NS_ERROR_FAILURE;  
   
   NS_ASSERTION(m_identities->IndexOf(aDefaultIdentity) != -1, "Where did that identity come from?!");
   if (m_identities->IndexOf(aDefaultIdentity) == -1)
@@ -347,7 +356,7 @@ NS_IMETHODIMP
 nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
 {
   // hack hack - need to add this to the list of identities.
-  // for now just tread this as a Setxxx accessor
+  // for now just treat this as a Setxxx accessor
   // when this is actually implemented, don't refcount the default identity
   nsresult rv;
   
@@ -361,6 +370,9 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
     PR_smprintf_free(identitiesKeyPref);
   }
   
+  NS_ASSERTION(m_identities,"you never called Init()");
+  if (!m_identities) return NS_ERROR_FAILURE;  
+
   m_identities->AppendElement(identity);
   if (!m_defaultIdentity)
     SetDefaultIdentity(identity);
@@ -381,6 +393,7 @@ nsresult
 nsMsgAccount::SetKey(char *accountKey)
 {
   if (!accountKey) return NS_ERROR_NULL_POINTER;
+
   nsresult rv=NS_OK;
 
   // need the prefs service to do anything
@@ -389,7 +402,7 @@ nsMsgAccount::SetKey(char *accountKey)
 
   m_accountKey = PL_strdup(accountKey);
   
-  return NS_OK;
+  return Init();
 }
 
 /* called if the prefs service goes offline */
