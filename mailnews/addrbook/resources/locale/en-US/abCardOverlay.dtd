@@ -20,8 +20,21 @@ Rights Reserved.
 
 <!ENTITY Contact.tab "Contact"> 
 <!ENTITY Name.box "Name"> 
-<!ENTITY FirstName.label "First:"> 
-<!ENTITY LastName.label "Last:"> 
+<!-- LOCALIZATION NOTE: 
+ NameField1, NameField2,
+ those fields are either LN or FN depends on the target country.
+ "FirstName" and "LastName" can be swapped for id to change the order
+ but they should not be translated.
+ Make sure the translation of label corresponds to the order of id.
+-->
+
+<!-- LOCALIZATION NOTE (NameField1.id) : DONT_TRANSLATE -->
+<!ENTITY NameField1.id			"FirstName"> 
+<!-- LOCALIZATION NOTE (NameField2.id) : DONT_TRANSLATE -->
+<!ENTITY NameField2.id			"LastName"> 
+
+<!ENTITY NameField1.label		"First:"> 
+<!ENTITY NameField2.label		"Last:"> 
 <!ENTITY DisplayName.label "Display:"> 
 <!ENTITY NickName.label "Nickname:"> 
 <!ENTITY Internet.box "Internet"> 

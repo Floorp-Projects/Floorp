@@ -127,11 +127,15 @@ function OnLoadNewCard()
   // FIX ME - looks like we need to focus on both the text field and the tab widget
   // probably need to do the same in the addressing widget
 
-  // focus on first name
-  var firstName = document.getElementById('FirstName');
-  if ( firstName ) {
+  // focus on first or last name based on the pref
+  var focus;
+  if (editCard.displayLastNameFirst)
+    focus = document.getElementById('LastName');
+  else
+    focus = document.getElementById('FirstName');
+  if ( focus ) {
     // XXX Using the setTimeout hack until bug 103197 is fixed
-    setTimeout( function(firstTextBox) { firstTextBox.focus(); }, 0, firstName );
+    setTimeout( function(firstTextBox) { firstTextBox.focus(); }, 0, focus );
   }
   moveToAlertPosition();
 }
