@@ -24,6 +24,10 @@
 
 /* This is where functions related to the 3 pane window are kept */
 
+// from MailNewsTypes.h
+const nsMsgViewIndex_None = 0xFFFFFFFF;
+
+
 var gFolderOutliner; 
 var gMessagePane;
 var gMessagePaneFrame;

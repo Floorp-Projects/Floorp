@@ -217,7 +217,6 @@ protected:
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
-  nsresult DeleteMsgsOnPop3Server(nsISupportsArray *messages);
 };
 
 #endif // nsMsgLocalMailFolder_h__

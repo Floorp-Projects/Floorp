@@ -107,7 +107,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
-extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
+extern void net_pop3_mark_if_in_server(char *data, char *uidl, PRBool deleteChar, PRBool *changed);
 extern void KillPopData(char* data);
 
 //////////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,6 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
     mCheckForNewMessagesAfterParsing(PR_FALSE)
-
 {
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -1606,7 +1605,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       if(NS_SUCCEEDED(rv))
       {
           nsCOMPtr<nsISupports> msgSupport;
-          DeleteMsgsOnPop3Server(messages);
+          MarkMsgsOnPop3Server(messages, PR_TRUE);
 
           if (NS_FAILED(rv)) return rv;
           EnableNotifications(allMessageCountNotifications, PR_FALSE);
@@ -2878,7 +2877,8 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 // read the message headers and see if we have it, then mark the message for deletion from the server.
 // The next time we look at mail the message will be deleted from the server.
 
-nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages)
+NS_IMETHODIMP
+nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool deleteMsgs)
 {
   char		*uidl;
   char		*header = NULL;
@@ -2982,8 +2982,8 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
           *lastChar = '\0';
           lastChar --;
         }
-        
-        net_pop3_delete_if_in_server(popData, uidl, &changed);
+              
+        net_pop3_mark_if_in_server(popData, uidl, deleteMsgs, &changed);
       }
     }
   }

@@ -232,8 +232,6 @@ function CrossFolderNavigation(type, supportsFolderPane )
   return folder;
 }
 
-// from MailNewsTypes.h
-const nsMsgViewIndex_None = 0xFFFFFFFF;
 
 function ScrollToMessage(type, wrap, selectMessage)
 {

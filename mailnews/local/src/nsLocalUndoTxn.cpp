@@ -43,6 +43,7 @@
 #include "nsMsgImapCID.h"
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
+#include "nsIMsgLocalMailFolder.h"
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID, NS_IMAILBOXSERVICE_IID);
@@ -255,6 +256,9 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
         }
         else
         {
+            nsCOMPtr<nsISupportsArray> srcMessages;
+            NS_NewISupportsArray(getter_AddRefs(srcMessages));
+            nsCOMPtr <nsISupports> msgSupports;
             for (i=0; i<count; i++)
             {
                 rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i), 
@@ -268,9 +272,16 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
                     NS_ASSERTION(newHdr, 
                                  "fatal ... cannot create new msg header\n");
                     if (NS_SUCCEEDED(rv) && newHdr)
-                        srcDB->UndoDelete(newHdr);
+                    {
+                       srcDB->UndoDelete(newHdr);
+                       msgSupports =do_QueryInterface(newHdr);
+                       srcMessages->AppendElement(msgSupports);
+                    }
                 }
             }
+            nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder);
+            if (localFolder)
+              localFolder->MarkMsgsOnPop3Server(srcMessages, PR_FALSE /*deleteMsgs*/);
         }
         srcDB->SetSummaryValid(PR_TRUE);
         srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -305,7 +316,10 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
     PRUint32 i;
     nsCOMPtr<nsIMsgDBHdr> oldHdr;
     nsCOMPtr<nsIMsgDBHdr> newHdr;
-    
+
+    nsCOMPtr<nsISupportsArray> srcMessages;
+    NS_NewISupportsArray(getter_AddRefs(srcMessages));
+    nsCOMPtr <nsISupports> msgSupports;
     
     for (i=0; i<count; i++)
     {
@@ -315,6 +329,9 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
 
         if (NS_SUCCEEDED(rv) && oldHdr)
         {
+            msgSupports =do_QueryInterface(oldHdr);
+            srcMessages->AppendElement(msgSupports);
+            
             rv = dstDB->CopyHdrFromExistingHdr(m_dstKeyArray.GetAt(i),
                                                oldHdr, PR_TRUE,
                                                getter_AddRefs(newHdr));
@@ -340,6 +357,10 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
         }
         else
         {
+            nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(srcFolder);
+            if (localFolder)
+              localFolder->MarkMsgsOnPop3Server(srcMessages, PR_TRUE /*deleteMsgs*/);
+
             rv = srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
             srcDB->SetSummaryValid(PR_TRUE);
             srcDB->Commit(nsMsgDBCommitType::kLargeCommit);

@@ -323,7 +323,7 @@ our state file, mark any messages we have for deletion and then re-save the stat
 */
 extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* maildirectory);
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
-extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
+extern void net_pop3_mark_if_in_server(char *data, char *uidl, PRBool deleteChar, PRBool *changed);
 extern void KillPopData(char* data);
 static void net_pop3_free_state(Pop3UidlHost* host);
 
@@ -356,7 +356,7 @@ message is not found, then the message was downloaded completly and already dele
 from the server. So this only applies to messages kept on the server or too big
 for download. */
 
-void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed)
+void net_pop3_mark_if_in_server(char *data, char *uidl, PRBool deleteChar, PRBool *changed)
 {
 	Pop3UidlHost *host = (Pop3UidlHost*) data;
 	
@@ -364,7 +364,7 @@ void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed)
 		return;
 	if (PL_HashTableLookup (host->hash, (const void*) uidl))
 	{
-		PL_HashTableAdd(host->hash, uidl, (void*) DELETE_CHAR);
+    PL_HashTableAdd(host->hash, uidl, deleteChar ? (void*) DELETE_CHAR : (void*) KEEP);
 		*changed = PR_TRUE;
 	}
 }
