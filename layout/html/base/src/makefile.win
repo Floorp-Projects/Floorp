@@ -34,7 +34,7 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsFrameReflowState.cpp		\
+	nsHTMLReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
@@ -71,7 +71,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsBulletFrame.obj		\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
 	.\$(OBJDIR)\nsFrame.obj			\
-	.\$(OBJDIR)\nsFrameReflowState.obj	\
+	.\$(OBJDIR)\nsHTMLReflowState.obj	\
 	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
 	.\$(OBJDIR)\nsHTMLAtoms.obj		\
