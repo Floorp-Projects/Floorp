@@ -38,12 +38,10 @@
 #ifndef __nsWindowCreator_h_
 #define __nsWindowCreator_h_
 
-#include "nsIWindowCreator2.h"
-
-class nsIURI;
+#include "nsIWindowCreator.h"
 
 class nsWindowCreator :
-      public nsIWindowCreator2
+      public nsIWindowCreator
 {
 public:
   nsWindowCreator();
@@ -51,11 +49,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWCREATOR
-  NS_DECL_NSIWINDOWCREATOR2
-
-private:
-  PRUint32 AllowWindowCreation(nsIURI *aURI);
-  void     GetParentURI(nsIWebBrowserChrome *aParent, nsIURI **aURI);
 };
 
 #endif

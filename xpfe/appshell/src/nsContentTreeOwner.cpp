@@ -38,7 +38,6 @@
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
-#include "nsIWindowCreator2.h"
 #include "nsIWindowMediator.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsPIDOMWindow.h"
@@ -653,11 +652,6 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
      in navigator.css that trigger visibility based on
      the 'chromehidden' attribute of the <window> tag. */
   nsAutoString newvalue;
-
-  PRUint32 contextFlags;
-  mXULWindow->GetContextFlags(&contextFlags);
-  if (! (contextFlags & nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT))
-    newvalue.Append(NS_LITERAL_STRING("popupcontrol "));
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR))
     newvalue.Append(NS_LITERAL_STRING("menubar "));
