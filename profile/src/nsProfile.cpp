@@ -561,6 +561,10 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     nsXPIDLCString cmdResult;
     nsCOMPtr<nsILocalFile> currProfileDir;
 
+	// keep track of if the user passed us any profile related command line args
+	// if they did, we won't force migration
+	PRBool foundProfileCommandArg = PR_FALSE;
+
 #ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : Begin\n");
 #endif
@@ -575,6 +579,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
+			foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; currProfileName.AssignWithConversion(cmdResult);
 
 #ifdef DEBUG_profile
@@ -631,6 +636,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
+			foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
@@ -675,6 +681,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
+			foundProfileCommandArg = PR_TRUE;
             profileURLStr = PROFILE_MANAGER_URL;
         }
     }
@@ -684,6 +691,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
+			foundProfileCommandArg = PR_TRUE;
             profileURLStr = PROFILE_SELECTION_URL;
         }
     }
@@ -694,15 +702,22 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {        
         if (cmdResult) {
+			foundProfileCommandArg = PR_TRUE;
             profileURLStr = PROFILE_WIZARD_URL;
         }
     }
 
+	PRBool forceMigration = PR_FALSE;
+	if (!foundProfileCommandArg) {
+		rv = gProfileDataAccess->DetermineForceMigration(&forceMigration);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to determine if we should force migration");
+	}
+
     // Start Migaration activity
     rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, getter_Copies(cmdResult));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) || forceMigration)
     {        
-        if (cmdResult) {
+        if (cmdResult || forceMigration) {
             rv = MigrateProfileInfo();
             if (NS_FAILED(rv)) return rv;
 

@@ -122,6 +122,7 @@ public:
     nsresult GetMozRegDataMovedFlag(PRBool *regDataMoved);
     nsresult SetMozRegDataMovedFlag(nsIFile* regName);
     nsresult ResetProfileMembers();
+    nsresult DetermineForceMigration(PRBool *forceMigration);
 };
 
 #endif // __nsProfileAccess_h___
