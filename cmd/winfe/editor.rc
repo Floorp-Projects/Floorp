@@ -121,7 +121,7 @@ IDB_FILE_PICT_TOOLBAR   BITMAP  DISCARDABLE     "res\\editbar.bmp"
 
 IDR_COMPOSEFRAME ACCELERATORS DISCARDABLE 
 BEGIN
-    27,             ID_FORMAT_DECREASE_FONTSIZE, ASCII, NOINVERT
+//    27,             ID_FORMAT_DECREASE_FONTSIZE, ASCII, NOINVERT
     29,             ID_FORMAT_INCREASE_FONTSIZE, ASCII, NOINVERT
     "1",            ID_TOOLS_WEB,           VIRTKEY, CONTROL, NOINVERT
     "1",            ID_TOOLS_MAIL,          VIRTKEY, SHIFT, CONTROL, 
@@ -176,6 +176,7 @@ BEGIN
     VK_APPS,        ID_LOCAL_POPUP,         VIRTKEY, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
     VK_F10,         ID_LOCAL_POPUP,         VIRTKEY, SHIFT, NOINVERT
+    VK_F1,          ID_COMMAND_HELPINDEX,   VIRTKEY, NOINVERT
     VK_F2,          ID_LOCATION_FOCUS,      VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FINDAGAIN,      VIRTKEY, NOINVERT
     VK_F6,          ID_NEXT_WINDOW,         VIRTKEY, NOINVERT
@@ -196,7 +197,7 @@ END
 
 IDR_EDITFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
-    27,             ID_FORMAT_DECREASE_FONTSIZE, ASCII, NOINVERT
+//    27,             ID_FORMAT_DECREASE_FONTSIZE, ASCII, NOINVERT
     29,             ID_FORMAT_INCREASE_FONTSIZE, ASCII, NOINVERT
     "1",            ID_TOOLS_WEB,           VIRTKEY, CONTROL, NOINVERT
     "1",            ID_TOOLS_MAIL,          VIRTKEY, SHIFT, CONTROL, 
@@ -248,6 +249,7 @@ BEGIN
     "U",            ID_FORMAT_CHAR_UNDERLINE, VIRTKEY, CONTROL, NOINVERT
     VK_APPS,        ID_LOCAL_POPUP,         VIRTKEY, NOINVERT
     VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_F1,          ID_COMMAND_HELPINDEX,   VIRTKEY, NOINVERT
     VK_F10,         ID_LOCAL_POPUP,         VIRTKEY, SHIFT, NOINVERT
     VK_F2,          ID_LOCATION_FOCUS,      VIRTKEY, NOINVERT
     VK_F3,          ID_EDIT_FINDAGAIN,      VIRTKEY, NOINVERT
@@ -849,12 +851,21 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DEFAULT_BKGRND_COLOR "Browser preference color"
-    IDS_CUSTOM_COLORS_LABEL "Quick Palette:"
-    IDS_LAST_USED_COLOR     "Last-picked color"
-    IDS_OTHER               "Other..."
-    IDS_OTHER_BUTTON        "&Other..."
-    IDS_DEFAULT_BUTTON      "&Browser default"
+    IDS_DEFAULT_BKGRND_COLOR    "Browser preference color"
+    IDS_CUSTOM_COLORS_LABEL     "Quick Palette:"
+    IDS_TEXT_COLOR              "Text Color"
+    IDS_PAGE_BACKGROUND         "Page Background Color"
+    IDS_TABLE_BACKGROUND        "Table Background Color"
+    IDS_CELL_BACKGROUND         "Cell Background Color"
+    IDS_LAST_USED_COLOR         "Last-picked color"
+    IDS_OTHER                   "Other..."
+    IDS_OTHER_BUTTON            "&Other..."
+    IDS_DEFAULT_BUTTON          "&Browser default"
+    IDS_INCREASE_FONTSIZE       "&Increase\tCtrl+]"
+    IDS_DECREASE_FONTSIZE       "&Decrease\tCtrl+["
+    ID_FORMAT_INCREASE_FONTSIZE "Increase font size 1 unit\nIncrease font size"
+    ID_FORMAT_DECREASE_FONTSIZE "Decrease font size 1 unit\nDecrease font size"
+    IDS_8_PTS                   "8 pts"
 END
 
 #endif    // English (U.S.) resources

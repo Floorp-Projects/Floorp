@@ -55,6 +55,7 @@
 #define IDD_LOCATION_DLG                104
 #define IDS_COMPOSE_PRIORITY            104
 #define IDD_PAGE_TITLE                  105
+#define IDD_PASTE_SPECIAL               112
 #define IDS_WARN_REMOVE_SERVER          105
 #define IDD_ALERTBOX                    106
 #define IDS_USERNAME                    106
@@ -1696,6 +1697,7 @@
 #define IDB_COMBOBOX                    2019
 #define IDD_HREF_BOOKMARK               2021
 #define IDD_HINT_DLG                    2022
+#define IDD_GET_TABLE_COLUMNS           2023
 #define IDC_HREF_FILE                   2023
 #define IDD_PROPS_HRULE                 2024
 #define IDB_IMAGE_PREVIEW               2025
@@ -1978,6 +1980,8 @@
 #define IDC_COMBO_AND_OR5               2303
 #define IDC_PROFILENAME_TEXT            2400
 #define IDC_HEADER_HELP                 2500
+#define IDC_PASTE_TEXT                  2401
+#define IDC_PASTE_IMAGE                 2402
 #define FIRST_HISTORY_MENU_ID           16384
 #define LAST_HISTORY_MENU_ID            16600
 #define FIRST_HT_MENU_ID                16601
@@ -2513,8 +2517,9 @@
 #define ID_OPT_CHARBAR_TOGGLE           42005
 #define IDM_OPT_MESSAGEBAR_TOGGLE       42006
 #define ID_MAKE_LINK                    42008
-#define ID_FORMAT_CHAR_BOLD             42010
-#define ID_FORMAT_CHAR_ITALIC           42011
+#define ID_FORMAT_CHAR_BOLD             42009
+#define ID_FORMAT_CHAR_ITALIC           42010
+#define ID_FORMAT_CHAR_UNDERLINE        42011
 #define ID_FORMAT_CHAR_NOBREAKS         42012
 #define ID_FORMAT_CHAR_SUPER            42013
 #define ID_FORMAT_CHAR_SUB              42014
@@ -2807,7 +2812,6 @@
 #define IDS_PERCENT_TABLE               42359
 #define IDS_APPLY_CELL_MSG              42360
 #define IDS_SMALL_ROMAN                 42363
-#define ID_FORMAT_CHAR_UNDERLINE        42364
 #define ID_NAVIGATE_CONTINUE            42365
 #define ID_DISPLAY_TABLES               42366
 #define IDS_PARAGRAPH_STYLE             42367
@@ -3013,10 +3017,19 @@
 #define IDS_CURRENT_BKGRND_COLOR        42751
 #define IDS_DEFAULT_BKGRND_COLOR        42752
 #define IDS_CUSTOM_COLORS_LABEL         42753
-#define IDS_LAST_USED_COLOR             42754
-#define IDS_OTHER                       42755
-#define IDS_OTHER_BUTTON                42756
-#define IDS_DEFAULT_BUTTON              42757
+#define IDS_TEXT_COLOR                  42754
+#define IDS_PAGE_BACKGROUND             42755
+#define IDS_TABLE_BACKGROUND            42756
+#define IDS_CELL_BACKGROUND             42757
+#define IDS_LAST_USED_COLOR             42758
+#define IDS_OTHER                       42759
+#define IDS_OTHER_BUTTON                42760
+#define IDS_DEFAULT_BUTTON              42761
+#define IDS_INCREASE_FONTSIZE           42762
+#define IDS_DECREASE_FONTSIZE           42763
+#define ID_FORMAT_INCREASE_FONTSIZE     42764
+#define ID_FORMAT_DECREASE_FONTSIZE     42765
+#define IDS_8_PTS                       42766
 #define ID_HISTORY_LOPCONTAINS          43000
 #define ID_HISTORY_LOPNOTCONTAINS       43001
 #define ID_HISTORY_LOPIS                43002
@@ -3043,8 +3056,6 @@
 #define IDS_TRANSFER_STATUS             59142
 #define IDS_SECURITY_STATUS             59143
 #define IDS_SIGNED_STATUS               59144
-#define ID_FORMAT_INCREASE_FONTSIZE     59395
-#define ID_FORMAT_DECREASE_FONTSIZE     59396
 #define ID_ALIGN_POPUP                  59397
 #define ID_INSERT_POPUP                 59398
 #define IDS_SHOW_EDITBAR                59400

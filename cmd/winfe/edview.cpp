@@ -241,16 +241,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_PROPS_DOCUMENT, HaveEditContext)
     ON_COMMAND(ID_FORMAT_CHAR_NO_TEXT_STYLES, OnCharacterNoTextStyles)
     ON_COMMAND(ID_FORMAT_CHAR_NONE, OnCharacterNone)
-    ON_COMMAND(ID_FORMAT_CHAR_NONE, OnCharacterNoTextStyles)
-    ON_COMMAND(ID_FORMAT_CHAR_BOLD, OnCharacterBold)
-    ON_COMMAND(IDC_FONT_FIXED_WIDTH, OnCharacterFixedWidth)
-    ON_COMMAND(ID_FORMAT_CHAR_ITALIC, OnCharacterItalic)
-    ON_COMMAND(ID_FORMAT_CHAR_NOBREAKS, OnCharacterNoBreaks)
-    ON_COMMAND(ID_FORMAT_CHAR_UNDERLINE, OnCharacterUnderline)
-    ON_COMMAND(ID_FORMAT_CHAR_SUPER, OnCharacterSuper)
-    ON_COMMAND(ID_FORMAT_CHAR_SUB, OnCharacterSub)
-    ON_COMMAND(ID_FORMAT_CHAR_STRIKEOUT, OnCharacterStrikeout)
-    ON_COMMAND(ID_FORMAT_CHAR_BLINK, OnCharacterBlink)
     ON_COMMAND(ID_FORMAT_INDENT, OnFormatIndent)
     ON_COMMAND(ID_FORMAT_OUTDENT, OnFormatOutdent)
     ON_COMMAND(ID_ALIGN_POPUP, OnAlignPopup)
@@ -350,14 +340,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_PROPS_CHARACTER, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_PROPS_DOC_COLOR, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_NONE, OnCanInteract)     
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_BOLD, OnUpdateCharacterBold)          
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_ITALIC, OnUpdateCharacterItalic)      
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_NOBREAKS, OnUpdateCharacterNoBreaks)   
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_UNDERLINE, OnUpdateCharacterUnderline)
-	ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_SUPER, OnUpdateCharacterSuper)        
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_SUB, OnUpdateCharacterSub)            
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_STRIKEOUT, OnUpdateCharacterStrikeout)
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_BLINK, OnUpdateCharacterBlink)        
     ON_UPDATE_COMMAND_UI(ID_FORMAT_INDENT, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_FORMAT_OUTDENT, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_ALIGN_POPUP, HaveEditContext)
@@ -452,43 +434,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     #endif //WIN32
 #endif //_IME_COMPOSITION
     ON_MESSAGE(NSBUTTONMENUOPEN, OnButtonMenuOpen)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE),   OnFontSize_2)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+1), OnFontSize_1)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+2), OnFontSize0)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+3), OnFontSize1)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+4), OnFontSize2)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+5), OnFontSize3)
-    ON_COMMAND((ID_FORMAT_FONTSIZE_BASE+6), OnFontSize4)
-    ON_COMMAND(ID_FORMAT_POINTSIZE_BASE, OnPointSize8)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+1), OnPointSize9)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+2), OnPointSize10)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+3), OnPointSize11)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+4), OnPointSize12)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+5), OnPointSize14)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+6), OnPointSize16)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+7), OnPointSize18)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+8), OnPointSize20)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+9), OnPointSize22)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+10), OnPointSize24)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+11), OnPointSize28)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+12), OnPointSize36)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+13), OnPointSize48)
-    ON_COMMAND((ID_FORMAT_POINTSIZE_BASE+14), OnPointSize72)
-	ON_UPDATE_COMMAND_UI(ID_FORMAT_POINTSIZE_BASE, HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+1), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+2), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+3), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+4), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+5), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+6), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+7), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+8), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+9), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+10), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+11), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+12), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+13), HaveEditContext)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_POINTSIZE_BASE+14), HaveEditContext)
 	ON_COMMAND(ID_CHECK_SPELLING, OnCheckSpelling)
 	ON_UPDATE_COMMAND_UI(ID_CHECK_SPELLING, OnCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_INSERT_NONBREAK_SPACE, OnCanInteract)
@@ -1064,10 +1009,22 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             OnFormatParagraph(nID);
             return TRUE;
         }
+        else if( nID >= ID_FORMAT_CHAR_BOLD && nID <= ID_FORMAT_CHAR_BLINK )
+        {
+            OnCharacterStyle(nID);
+            return TRUE;
+        }
+        else if( nID >= ID_FORMAT_FONTSIZE_BASE && nID <= ID_FORMAT_FONTSIZE_BASE+6)
+        {
+            OnFontSize(nID);
+            return TRUE;
+        }
+        else if( nID >= ID_FORMAT_POINTSIZE_BASE && nID <= ID_FORMAT_POINTSIZE_BASE+14)
+        {
+            OnPointSize(nID);
+            return TRUE;
+        }
         break;
-    // TODO: Do this for these ranges as well:
-    //ON_COMMAND_RANGE(ID_FORMAT_FONTSIZE_BASE, ID_FORMAT_FONTSIZE_BASE+MAX_FONT_SIZE, OnFontSize)
-    //ON_COMMAND_RANGE(ID_FORMAT_FONTCOLOR_BASE, ID_FORMAT_FONTCOLOR_BASE+MAX_FONT_COLOR, OnFontColorMenu)
 
     case CN_UPDATE_COMMAND_UI:
         if (!pExtra)
@@ -1109,17 +1066,23 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             pCmdUI->Enable(CAN_INTERACT);
             return TRUE;
         }
-        else if( nID > ID_FORMAT_PARAGRAPH_BASE ){
+        else if( nID > ID_FORMAT_PARAGRAPH_BASE && nID <= ID_FORMAT_PARAGRAPH_END )
+        {
             TagType t = TagType(nID - ID_FORMAT_PARAGRAPH_BASE);
 	        if( t == P_BLOCKQUOTE ||
                 t == P_DIRECTORY ||
                 t == P_MENU ||
-                t == P_DESC_LIST){
+                t == P_DESC_LIST)
+            {
                 UpdateListMenuItem(pCmdUI, t);
                 return TRUE;
             }
         }
-
+        else if( nID >= ID_FORMAT_CHAR_BOLD && nID <= ID_FORMAT_CHAR_BLINK )
+        {
+            OnUpdateCharacterStyle(nID, pCmdUI);
+            return TRUE;
+        }
         break;
     }
 
@@ -1130,10 +1093,9 @@ BOOL CNetscapeEditView::PreTranslateMessage(MSG * pMsg)
 {
     if(	pMsg->message == WM_KEYDOWN )
     {
-        // Process Ctrl+equals keydown -- for some bizarre reason,
-        //  we don't get an OnKeyDown call for this message
         if( pMsg->wParam == VK_CONTROL )
         {
+            // Allow pressing control to change cursor
             UpdateCursor();
         }
         else if( pMsg->wParam == 187 && (GetKeyState(VK_CONTROL) & 0x8000) )
@@ -1303,7 +1265,10 @@ void CNetscapeEditView::OnChar(UINT nChar, UINT nRepCnt, UINT nflags)
 
     MWContext * pMWContext = GET_MWCONTEXT;
 
-    EDT_ClearTableAndCellSelection(pMWContext);
+    // Any kepress except Ctrl+[ (for decrease font size)
+    //   should clear a table selection
+    if( !(nChar == 27 && bControl) )
+        EDT_ClearTableAndCellSelection(pMWContext);
 
     // Ignore keys if we can't interact
     INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pMWContext);
@@ -1314,6 +1279,16 @@ void CNetscapeEditView::OnChar(UINT nChar, UINT nRepCnt, UINT nflags)
         // Since any key can replace a selection,
         //   we need to test for this for any key!
     switch (nChar) {
+        case 27:
+            // Test for Ctrl+[ keypress (27 = ESC key code)
+            // We can't make an accelerator for this else 
+            //   ESC key reduces font size as well!
+            if(bControl)
+            {
+                OnDecreaseFontSize();
+                return;
+            }
+            break;
         case 22: // Ctrl+V
             OnEditPaste();
             return;
@@ -2147,6 +2122,37 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 
         EDT_BeginBatchChanges(pMWContext);
 
+        BOOL bHaveText = pDataObject->IsDataAvailable(CF_TEXT);
+        BOOL bHaveUnicode = FALSE;
+        BOOL bHaveImage = FALSE;
+
+#ifdef XP_WIN32
+        bHaveUnicode = pDataObject->IsDataAvailable(CF_UNICODETEXT) && 
+					(CS_USER_DEFINED_ENCODING != INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)));
+#endif        
+#ifdef EDITOR
+#ifdef _IMAGE_CONVERT
+        bHaveImage = pDataObject->IsDataAvailable(CF_DIB);
+        if( bHaveImage && (bHaveText || bHaveUnicode) )
+        {
+            //TODO: POPUP DIALOG TO 
+            CPasteSpecialDlg dlg(this);
+            if( IDOK == dlg.DoModal() || dlg.m_iResult > 0)
+            {
+                if( dlg.m_iResult == ED_PASTE_IMAGE )
+                {
+                    bHaveText = bHaveUnicode = FALSE;                
+                } else if( dlg.m_iResult == ED_PASTE_TEXT )
+                {
+                    bHaveImage = FALSE;
+                } 
+            } else {
+                goto NO_PASTE;                
+            }
+        }
+#endif
+#endif
+
         if( bDeleteSource ){
             // This deletes current selection and sets
             //  cursor at point where moved data will be inserted.
@@ -2213,9 +2219,9 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
         } 
 #ifdef EDITOR
         else if(pDataObject->IsDataAvailable(m_cfImageFormat) ) {
-            h = pDataObject->GetGlobalData(m_cfImageFormat);
-            WFE_DragDropImage(h, pMWContext);
-        } 
+                h = pDataObject->GetGlobalData(m_cfImageFormat);
+                WFE_DragDropImage(h, pMWContext);
+            } 
 #endif // EDITOR
 #ifdef XP_WIN32
         else if( pDataObject->IsDataAvailable(CF_HDROP) ){
@@ -2228,10 +2234,8 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
             }
         // **** Test for other formats here
         } 
-        else if ( pDataObject->IsDataAvailable(CF_UNICODETEXT) && 
-					(CS_USER_DEFINED_ENCODING != INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)))
-				  )	{	// Let's try CF_UNICODETEXT before CF_TEXT
-			
+        else if ( bHaveUnicode )
+        {
 			int datacsid = 
 				INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)) & ~CS_AUTO;
 			HGLOBAL hUnicodeStr = NULL;
@@ -2264,7 +2268,7 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 			}
         }
 #endif //XP_WIN32
-        else if ( pDataObject->IsDataAvailable(CF_TEXT) ) {
+        else if ( bHaveText ) {
             if( pString ) {
                 // *** TODO: Analyze string:
                 // Check if its a valid local filename (use XP_STAT). If yes, pop-up menu:
@@ -2280,7 +2284,7 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
         }
 #ifdef EDITOR
 #ifdef _IMAGE_CONVERT
-        else if( pDataObject->IsDataAvailable(CF_DIB) ) {
+        else if( bHaveImage ) {
             CONVERT_IMGCONTEXT imageContext;
             CONVERT_IMG_INFO imageInfo;
             memset(&imageContext,0,sizeof(CONVERT_IMGCONTEXT));
@@ -2317,6 +2321,7 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
         XP_FREE(szURL);
     }
 
+NO_PASTE:
     if ( hString ) {
         GlobalUnlock(hString);
     }
@@ -2527,21 +2532,29 @@ void CNetscapeEditView::DropFiles( HDROP hDropInfo, BOOL bGetDropPoint)
     ::DragFinish( hDropInfo );
 }
 
+void CNetscapeEditView::OnUpdateEditSource(CCmdUI* pCmdUI)
+{
+    MWContext * pMWContext = GET_MWCONTEXT;
+    if( pMWContext && pCmdUI->m_pMenu )
+    {
+        History_entry * hist_entry = SHIST_GetCurrent(&(pMWContext->hist));
+        if(hist_entry && hist_entry->address)
+            pCmdUI->Enable(CAN_INTERACT && NET_IsLocalFileURL(hist_entry->address) );
+        else
+            pCmdUI->Enable(CAN_INTERACT);
+    }
+}
+
 void CNetscapeEditView::OnEditBarToggle()
 {
     GetFrame()->GetChrome()->ShowToolbar(IDS_EDIT_TOOLBAR_CAPTION,
                                          !GetFrame()->GetChrome()->GetToolbarVisible(IDS_EDIT_TOOLBAR_CAPTION));
 }
 
-void CNetscapeEditView::OnCharacterBarToggle()
-{
-    GetFrame()->GetChrome()->ShowToolbar(IDS_CHAR_TOOLBAR_CAPTION,
-                                         !GetFrame()->GetChrome()->GetToolbarVisible(IDS_CHAR_TOOLBAR_CAPTION));
-}
-
 void CNetscapeEditView::OnUpdateEditBarToggle(CCmdUI* pCmdUI)
 {
-    if( pCmdUI->m_pMenu ){
+    if( pCmdUI->m_pMenu )
+    {
         pCmdUI->m_pMenu->ModifyMenu(ID_OPT_EDITBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_EDITBAR_TOGGLE,
                                     szLoadString(CASTUINT(GetFrame()->GetChrome()->GetToolbarVisible(IDS_EDIT_TOOLBAR_CAPTION) ?
                                                  IDS_HIDE_EDITBAR : IDS_SHOW_EDITBAR)) );
@@ -2549,13 +2562,57 @@ void CNetscapeEditView::OnUpdateEditBarToggle(CCmdUI* pCmdUI)
     }
 }
 
+void CNetscapeEditView::OnCharacterBarToggle()
+{
+    CFrameGlue *pFrame = GetFrame();
+    if( pFrame && pFrame->IsEditFrame() )
+    {
+        pFrame->GetChrome()->ShowToolbar(IDS_CHAR_TOOLBAR_CAPTION,
+                                         !pFrame->GetChrome()->GetToolbarVisible(IDS_CHAR_TOOLBAR_CAPTION));
+    } 
+    else 
+    {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
+	    CEditToolBarController * pController = 
+		    (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+	    if( pController )
+        {
+            CComboToolBar * pToolBar = pController->GetCharacterBar();
+            if( pToolBar)
+            {
+                pController->ShowToolBar( !pToolBar->IsVisible(), pToolBar );
+            }
+        }
+    }
+}
+
 void CNetscapeEditView::OnUpdateCharacterBarToggle(CCmdUI* pCmdUI)
 {
-    if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(ID_OPT_CHARBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_CHARBAR_TOGGLE,
-                                    szLoadString(CASTUINT(GetFrame()->GetChrome()->GetToolbarVisible(IDS_CHAR_TOOLBAR_CAPTION) ?
-                                                 IDS_HIDE_FORMATBAR : IDS_SHOW_FORMATBAR)) );
-        pCmdUI->Enable(CAN_INTERACT);
+    if( pCmdUI->m_pMenu )
+    {
+        CFrameGlue *pFrame = GetFrame();
+        if( pFrame && pFrame->IsEditFrame() )
+        {
+            pCmdUI->m_pMenu->ModifyMenu(ID_OPT_CHARBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_CHARBAR_TOGGLE,
+                                        szLoadString(CASTUINT(GetFrame()->GetChrome()->GetToolbarVisible(IDS_CHAR_TOOLBAR_CAPTION) ?
+                                                     IDS_HIDE_FORMATBAR : IDS_SHOW_FORMATBAR)) );
+            pCmdUI->Enable(CAN_INTERACT);
+        } 
+        else 
+        {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
+	        CEditToolBarController * pController = 
+		        (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+	        if( pController && pController->GetCharacterBar() )
+            {
+                pCmdUI->m_pMenu->ModifyMenu(ID_OPT_CHARBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_CHARBAR_TOGGLE,
+                                            szLoadString(CASTUINT(pController->GetCharacterBar()->IsVisible() ?
+                                                         IDS_HIDE_FORMATBAR : IDS_SHOW_FORMATBAR)) );
+                pCmdUI->Enable(CAN_INTERACT);
+            } 
+            else 
+            {
+                pCmdUI->Enable(FALSE);
+            }
+        }
     }
 }
 
@@ -2793,6 +2850,10 @@ BOOL CNetscapeEditView::SaveDocumentAs(BOOL bKeepImagesWithDoc,
 #endif
                         } else 
                             bRetVal = FALSE;  // Error at end of save
+
+                        // EXPERIMENTAL: Prefs are lost to easily - save now!
+                        PREF_SavePrefFile();
+
                     } else
                         bRetVal = FALSE;      // Error during start of save
                 }
@@ -2878,6 +2939,9 @@ BOOL CNetscapeEditView::SaveDocument()
     #endif
                         } else 
                             bRetVal = FALSE;  // Error at end of save
+
+                        // EXPERIMENTAL: Prefs are lost to easily - save now!
+                        PREF_SavePrefFile();
                     } else
                         bRetVal = FALSE;      // Error during start of save
 
@@ -3072,7 +3136,7 @@ BOOL CNetscapeEditView::SaveRemote()
                     if ( m_FileSaveStatus == ED_ERROR_NONE )
                     {
                         bRetVal = TRUE;
-    #ifdef XP_WIN32
+#ifdef XP_WIN32
                         if( bSiteMgrIsActive )
                         {
                             // Tell SiteManager we saved a file
@@ -3084,7 +3148,7 @@ BOOL CNetscapeEditView::SaveRemote()
                             // Add file to Win95 Shell's Documents menu
                             SHAddToRecentDocs( SHARD_PATH, hist_entry->address );
                         }*/
-    #endif
+#endif
                     }
                 }
 
@@ -3140,7 +3204,8 @@ void CNetscapeEditView::OnPublish()
     XP_FREE(pSrcURL);
 }
 
-// USE BROWSER'S SAVE MECHANISM FOR TEXT FILES
+// Use Browser's save mechanism for text files
+// TODO: Change text file UI to "Import/Export" (i.e., add new menu items)?
 void EdtSaveToTempCallback( char *pFileURL, void *hook )
 {
     MWContext *pMWContext = (MWContext*)hook;

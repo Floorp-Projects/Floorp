@@ -25,6 +25,7 @@
 #define IDD_FECONVERTIMAGE              103
 #define IDD_LOCATION_DLG                104
 #define IDD_PAGE_TITLE                  105
+#define IDD_PASTE_SPECIAL               112
 #define IDD_TABLE_INSERT                136
 #define IDC_FONTFACE_COMBO              213
 #define IDC_AUTO_SAVE_MINUTES           214
@@ -176,9 +177,11 @@
 #define IDD_NO_SPELL_CHECKER            1474
 #define IDD_CUSTOM_DICTIONARY           1476
 #define IDD_SPELLING_LANGUAGE           1500
+#define IDC_TABLE_COLUMNS               2007
 #define IDD_PREF_EDITOR                 2008
 #define IDD_HINT_DLG                    2022
 #define IDC_HREF_FILE                   2023
+#define IDD_GET_TABLE_COLUMNS           2023
 #define IDD_PROPS_HRULE                 2024
 #define IDC_ANCHOR_EDIT                 2026
 #define IDC_HREF_UNLINK                 2036
@@ -353,6 +356,8 @@
 #define IDD_PAGE_TABLE_CELL             2269
 #define IDD_FEJPEGOPTIONS               2270
 #define IDC_APPLY                       2272
+#define IDC_PASTE_TEXT                  2401
+#define IDC_PASTE_IMAGE                 2402
 #define IDS_HREF_OTHER_ATTRIBS          42271
 #define IDS_HREF_OTHER_ATTRIBS_CAPTION  42272
 #define IDS_ERROR_HTML_CAPTION          42296

@@ -1506,3 +1506,15 @@ extern "C" void FE_RunNetcaster(MWContext *context) {
 extern "C" MWContext *FE_IsNetcasterRunning(void) {
 	return theApp.m_pNetcasterWindow;
 }
+
+#ifdef SHACK
+void CFE_DisplayBuiltin(MWContext *context, int iLocation, LO_BuiltinStruct *builtin_struct)
+{
+    return;
+}
+
+void CFE_FreeBuiltinElement(MWContext *context, LO_BuiltinStruct *builtin_struct)
+{
+    return;
+}
+#endif //SHACK

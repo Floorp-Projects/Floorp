@@ -55,6 +55,8 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 // Font shared by all comboboxes in dialogs and toolbars
 // Should be 1-pixel, 8pt MS Sans Serif or default GUI or font on foreign systems
 CFont * wfe_pFont = 0;
+// BOLD version of above font
+CFont * wfe_pBoldFont = 0;
 int     wfe_iFontHeight = 15; // Full Height of the this font
 
 // Modification of wfe_iFontHeight for list boxes;
@@ -79,7 +81,9 @@ int32 wfe_iFontSizeMode = ED_FONTSIZE_POINTS;
 
 // Array of colors to show in common color dialog
 COLORREF wfe_CustomPalette[16];
+// Colors saved in prefs - the last-picked text and background
 COLORREF wfe_crLastColorPicked;
+COLORREF wfe_crLastBkgrndColorPicked;
 
 int wfe_iTrueTypeFontBase = 0;
 int wfe_iTrueTypeFontCount = 0;
@@ -261,7 +265,9 @@ int wfe_FillFontSizeCombo(MWContext *pMWContext, CNSComboBox * pCombo, BOOL bFix
         if( wfe_iFontSizeMode == ED_FONTSIZE_ADVANCED ){
             // "_" will signal combobox to draw a separator under this
             pCombo->AddString("_+4");
-            pCombo->AddString("8");
+            // This is "8 pts" so we must allow translating string
+            // (others assume all languages can use ascii numbers)
+            pCombo->AddString(szLoadString(IDS_8_PTS)); 
             pCombo->AddString("9");
             pCombo->AddString("10");
             pCombo->AddString("11");
@@ -314,7 +320,7 @@ char * wfe_GetFontSizeString(MWContext * pMWContext, int iSize, BOOL bFixedWidth
 
         wsprintf(wfe_pFontSizeList[iSize-1], LPCSTR(csFormat), abs(iRelative));
     } else {
-        // Contstruct strings for Point sizes
+        // Construct strings for Point sizes
         CDCCX *pDC = VOID2CX(pMWContext->fe.cx, CDCCX);
 
 	    EncodingInfo *pEncoding = theApp.m_pIntlFont->GetEncodingInfo(pMWContext);
@@ -583,17 +589,21 @@ int CNSComboBox::FindSelectedOrSetText(char * pText, int iStartAt)
                 break;
             }
         }
-        if( iSel == -1 ){
-            // Text is not in the list
-            XP_FREEIF(m_pNotInListText);
-            m_pNotInListText = XP_STRDUP(pText);
-        }
-        SetCurSel(iSel);
-        // SetCurSel doesn't display text!
-        SetWindowText(pText);
-    } else {
-        SetWindowText("");
     }
+    if( iSel == -1 ){
+        // Text is not in the list
+        XP_FREEIF(m_pNotInListText);
+        m_pNotInListText = XP_STRDUP(pText ? pText : " ");
+        SetWindowText(m_pNotInListText);
+    }
+    else {
+        SetWindowText(pText);
+    }
+    // This must be AFTER the SetWindowText()
+    //  so our setting it to -1 triggers display
+    //  of m_pNotInListText in the closed combobox
+    SetCurSel(iSel);
+
     return iSel;
 }
 
@@ -975,13 +985,17 @@ int CColorComboBox::SetColor(COLORREF cr)
 
 #define COLOR_ROWS 7
 #define COLOR_COLS 10
+// NOTE: This is same as the wfe_iFontHeight found for
+//       our 8-pt Sans Serif font (wfe_pFont)
+//       This might be a problem for some Asian fonts if they are taller?
 #define COLOR_SWATCH_HEIGHT 16
 #define COLOR_SWATCH_WIDTH  18
 #define COLOR_SWATCH_SPACING 0
-#define COLOR_SWATCH_TOP         (COLOR_SWATCH_HEIGHT + 4)
-#define COLOR_PICKER_HEIGHT      (((COLOR_ROWS + 6)*COLOR_SWATCH_HEIGHT) + 26)
-#define COLOR_PICKER_WIDTH       (COLOR_COLS*COLOR_SWATCH_WIDTH + 7)
-#define BUTTON_WIDTH        (4*COLOR_SWATCH_WIDTH - 4)
+#define MAIN_COLORS_TOP      (2*COLOR_SWATCH_HEIGHT + 4)
+#define LAST_COLOR_TOP       (COLOR_SWATCH_HEIGHT + 4)
+#define COLOR_PICKER_HEIGHT  (((COLOR_ROWS + 7)*COLOR_SWATCH_HEIGHT) + 26)
+#define COLOR_PICKER_WIDTH   (COLOR_COLS*COLOR_SWATCH_WIDTH + 7)
+#define BUTTON_WIDTH         (4*COLOR_SWATCH_WIDTH - 4)
 
 // Index to the first USER custom color, which follows the Netscape colors
 //   (first custom color, the "last-used" is actually 0 in color array)
@@ -1015,6 +1029,10 @@ CColorPicker::CColorPicker(CWnd      * pParent,
       m_bMouseDown(FALSE),
       m_crDragColor(0)
 {
+    // Caption choices are: "Text Color",
+    //  or "[Page | Table | Cell] Background"
+    m_bBackground = (nIDCaption != IDS_TEXT_COLOR);
+
     POINT ptOrigin;
 
     if( pCallerRect )
@@ -1039,7 +1057,6 @@ CColorPicker::CColorPicker(CWnd      * pParent,
             m_crCurrentColor = bCust ? tmpColor : defColor;
         } else if( crDefColor == BACKGROUND_COLORREF )
         {
-
             // Get current page's background color
             //   as "default" for table backgrounds
             CDCCX *pDC = VOID2CX(pMWContext->fe.cx, CDCCX);
@@ -1116,8 +1133,14 @@ CColorPicker::CColorPicker(CWnd      * pParent,
 
         if( i > 0 && i <= MAX_NS_COLORS ) // in main color grid
         {
+            // Reset to first column
+            if( i == 1 )
+            {
+                iCol = 0;
+            }
+
             // Set top to be used for all colors in main region
-            iTop = COLOR_SWATCH_TOP;
+            iTop = MAIN_COLORS_TOP;
             EDT_GetNSColor(i-1, &LoColor);
             m_crColors[i] = RGB(LoColor.red, LoColor.green, LoColor.blue);
         } 
@@ -1125,16 +1148,23 @@ CColorPicker::CColorPicker(CWnd      * pParent,
         {
             if( i == 0 )
             {                
-                // The very first Custom color is actually the "last-used" color
-                m_crColors[i] = wfe_crLastColorPicked;
+                // The first swatch is the "last-picked" color
+                if( m_bBackground )
+                    m_crColors[i] = wfe_crLastBkgrndColorPicked;
+                else
+                    m_crColors[i] = wfe_crLastColorPicked;
 
+                // "Last-picked color" at left margin, below caption area
                 pLabel = szLoadString(IDS_LAST_USED_COLOR);
-                rectLabel.top = iTop + 1;
+                rectLabel.top = LAST_COLOR_TOP+2;
                 rectLabel.left = COLOR_SWATCH_WIDTH + 2;
                 rectLabel.right = COLOR_PICKER_WIDTH;
                 rectLabel. bottom = rectLabel.top + COLOR_SWATCH_HEIGHT;
                 if( !m_LastUsedLabel.Create(pLabel, WS_VISIBLE | WS_CHILD, rectLabel, this) )
                     return;
+                
+                // Set the top of the color swatch
+                iTop = LAST_COLOR_TOP;
             }
             else if( i == MAX_NS_COLORS+1 ) // Should = FIRST_CUSTOM_COLOR_INDEX-1
             {
@@ -1144,7 +1174,7 @@ CColorPicker::CColorPicker(CWnd      * pParent,
                 // Set text label next to this color swatch
                 pLabel = szLoadString(IDS_CURRENT_COLOR);
 
-                iTop = COLOR_SWATCH_TOP + (COLOR_ROWS * COLOR_SWATCH_HEIGHT) + 2;
+                iTop = MAIN_COLORS_TOP + (COLOR_ROWS * COLOR_SWATCH_HEIGHT) + 2;
                 rectLabel.top = iTop + 1;
                 rectLabel.left = COLOR_SWATCH_WIDTH + 2;
                 rectLabel.right = COLOR_PICKER_WIDTH - 6 - BUTTON_WIDTH;
@@ -1282,13 +1312,10 @@ CColorPicker::CColorPicker(CWnd      * pParent,
     m_HelpButton.Create(szLoadString(IDS_HELP_BUTTON), BS_PUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_GROUP|WS_TABSTOP,
                          rect, this, IDC_COLOR_HELP); 
     
-
-    // Set this so color doesn't change if no interaction?
-    m_crColor = WFE_GetCurrentFontColor(m_pMWContext);
-
     // Set our font for all static strings used
     if( wfe_pFont )
     {
+
         // Set the font to our usual 8-pt font
         m_OtherButton.SetFont(wfe_pFont);
         m_HelpButton.SetFont(wfe_pFont);
@@ -1314,8 +1341,49 @@ CColorPicker::CColorPicker(CWnd      * pParent,
 
     // Capture mouse so we can detect clicking off the dialog
     SetCapture();
-    // Restore active caption highlighting to parent frame
-    GetParentFrame()->SetActiveWindow();
+
+    // Snap focus to the first button
+    // Needed to allow Esc key to work 
+    //   after click down/up on the control that launched us
+    m_pColorButtons[0]->SetFocus();
+    m_crColor = m_crColors[0];
+
+    // Initialize the array of flags for Quick Palette
+    for ( i = 0; i < MAX_CUSTOM_COLORS; i++ )
+        m_bColorChanged[i] = FALSE;
+}
+
+void CColorPicker::OnPaint() 
+{
+	CPaintDC dc(this);
+
+    // Draw the caption text
+    int iRight = COLOR_PICKER_WIDTH-8;
+    CRect cRect(2,2,iRight-1, COLOR_SWATCH_HEIGHT);
+    dc.SetBkMode(TRANSPARENT);
+    dc.SetTextColor(sysInfo.m_clrBtnText);
+    CFont *pOldFont = dc.SelectObject(wfe_pFont);
+    CString cString(szLoadString(m_nIDCaption));
+    dc.DrawText(cString, cRect, DT_CENTER);
+    dc.SelectObject(pOldFont);
+
+    // Draw a depressed rect around caption
+
+//  This doesn't draw very well - it uses right-1 and bottom-1,
+//    and the lower-left corner doesn't look good    
+//    WFE_DrawHighlight( dc.m_hDC, LPRECT(cRect), sysInfo.m_clrBtnShadow, sysInfo.m_clrBtnHilite );
+
+    CPen cPenShadow(PS_SOLID, 1, sysInfo.m_clrBtnShadow);
+    CPen cPenHilite(PS_SOLID, 1, sysInfo.m_clrBtnHilite);
+    CPen *pPenOld = (CPen*)dc.SelectObject(&cPenShadow);
+    int iBottom = COLOR_SWATCH_HEIGHT+ (wfe_iFontHeight > 16 ? 2: 1);
+    dc.MoveTo(1,iBottom);
+    dc.LineTo(1,1);
+    dc.LineTo(iRight,1);
+    dc.SelectObject(&cPenHilite);
+    dc.LineTo(iRight,iBottom);
+    dc.LineTo(1,iBottom);
+    dc.SelectObject(pPenOld);
 }
 
 COLORREF crReturnColor;
@@ -1367,9 +1435,15 @@ void CColorPicker::PostNcDestroy()
     char pPref[32];
     char pColorString[32];
 
-    // Save the last-picked color
-    wsprintf(pColorString, "%d,%d,%d", GetRValue(wfe_crLastColorPicked), GetGValue(wfe_crLastColorPicked), GetBValue(wfe_crLastColorPicked));
-    PREF_SetCharPref("editor.last_color_picked", pColorString);
+    // Save the last-picked color to appropriate pref
+    if( m_bBackground )
+    {
+        wsprintf(pColorString, "%d,%d,%d", GetRValue(wfe_crLastBkgrndColorPicked), GetGValue(wfe_crLastBkgrndColorPicked), GetBValue(wfe_crLastBkgrndColorPicked));
+        PREF_SetCharPref("editor.last_background_color_picked", pColorString);
+    } else {
+        wsprintf(pColorString, "%d,%d,%d", GetRValue(wfe_crLastColorPicked), GetGValue(wfe_crLastColorPicked), GetBValue(wfe_crLastColorPicked));
+        PREF_SetCharPref("editor.last_color_picked", pColorString);
+    }
 
     // Save custom colors back to prefs
     for ( int i = 0; i < MAX_CUSTOM_COLORS; i++ )
@@ -1396,6 +1470,7 @@ BEGIN_MESSAGE_MAP(CColorPicker, CWnd)
 	ON_WM_LBUTTONUP()
   	ON_WM_LBUTTONDOWN()
     ON_WM_MOUSEMOVE()
+	ON_WM_PAINT()
 	//}}AFX_MSG_MAP
 #ifdef XP_WIN32
     ON_NOTIFY_EX( TTN_NEEDTEXT, 0, OnToolTipNotify )
@@ -1414,6 +1489,10 @@ BOOL CColorPicker::PreTranslateMessage(MSG* pMsg)
         {
             CancelAndExit();
         } 
+        else if( pMsg->wParam == VK_RETURN )
+        {
+            SetColorAndExit();
+        }
         else if( pMsg->wParam == VK_F1 )
         {
             OnColorHelp();
@@ -1508,8 +1587,9 @@ void CColorPicker::OnLButtonDown(UINT nFlags, CPoint cPoint)
 
 void CColorPicker::OnLButtonUp(UINT nFlags, CPoint cPoint)
 {
-    // We get this when user "dragged" over combobox to trigger
-    //  dialog, then move away and let mouse up. Quit just like combo-list would
+    // Simulate how a combobox widget works,
+    //   quit if mouse up is off the window, except if it comes up
+    //   over the control that launched us
     if( !IsMouseOverDlg(cPoint) )
     {
         // But check if over the caller rect
@@ -1520,6 +1600,9 @@ void CColorPicker::OnLButtonUp(UINT nFlags, CPoint cPoint)
             CancelAndExit();
             return;
         }
+        // Mouse came up over the caller control,
+        //  so default to last color used
+        m_crColor = m_crColors[0];
     } else {
         // Detect mouse up on a color swatch select it
         //  or drop copied color
@@ -1551,7 +1634,11 @@ void CColorPicker::OnLButtonUp(UINT nFlags, CPoint cPoint)
                 //  because mouse was already down when picker started
                 m_crColor = m_crColors[i];
                 // Always save selected color as the "last color picked"
-                wfe_crLastColorPicked = m_crColor;
+                if( m_bBackground )
+                    wfe_crLastBkgrndColorPicked = m_crColor;
+                else
+                    wfe_crLastColorPicked = m_crColor;
+
                 SetColorAndExit();
                 return;
             }
@@ -1707,10 +1794,20 @@ void CColorPicker::OnChooseColor()
     if( nResult == IDOK ){
         m_crColor = dlg.GetColor();
         // Save this color as last color picked
-        wfe_crLastColorPicked = m_crColor;
+        if( m_bBackground )
+            wfe_crLastBkgrndColorPicked = m_crColor;
+        else
+            wfe_crLastColorPicked = m_crColor;
+
+        // Set flags for colors that changed
+        for ( int i = 0; i < MAX_CUSTOM_COLORS; i++ )
+        {
+            if( wfe_CustomPalette[i] != crCustomColors[i] )
+                m_bColorChanged[i] = TRUE;
+        }
         // Copy custom colors back to global palette
         memcpy((void*)wfe_CustomPalette, (void*)crCustomColors, sizeof(crCustomColors));
-        m_bColorChanged[0] = TRUE;
+
         SetColorAndExit();
     } else {
         CancelAndExit();
@@ -3612,13 +3709,6 @@ void CDocColorPage::OnOK()
     EDT_SetPageData(m_pMWContext, m_pPageData);
 
     // This forces redraw of entire window
-    //  (to correct paint bug: missing redraw areas at top of window above cursor)
-    HWND hView = PANECX(m_pMWContext)->GetPane();
-    if( hView ){
-        ::InvalidateRect(hView, NULL, TRUE);
-    }
-
-    // This forces redraw of entire window
     //  (there is some missing redraw areas at top of window)
     ::InvalidateRect(PANECX(m_pMWContext)->GetPane(), NULL, TRUE);
 
@@ -3717,11 +3807,13 @@ void CDocColorPage::OnSelchangeSchemeList()
     UseCustomColors(TRUE, FALSE);
 }
 
-BOOL CDocColorPage::ChooseColor(COLORREF * pColor, CColorButton * pButton, COLORREF crDefault )
+BOOL CDocColorPage::ChooseColor(COLORREF * pColor, CColorButton * pButton, COLORREF crDefault, BOOL bBackground )
 {
    	RECT rect;
     pButton->GetWindowRect(&rect);
-    CColorPicker ColorPicker(this, m_pMWContext, m_bCustomColors ? *pColor : DEFAULT_COLORREF, crDefault, 0, &rect);
+    CColorPicker ColorPicker(this, m_pMWContext, m_bCustomColors ? *pColor : DEFAULT_COLORREF, crDefault, 
+                             bBackground ? IDS_PAGE_BACKGROUND : IDS_TEXT_COLOR, &rect);
+
     COLORREF crNew = ColorPicker.GetColor();
     if( crNew != CANCEL_COLORREF ){
         if( crNew == DEFAULT_COLORREF){
@@ -3761,7 +3853,7 @@ void CDocColorPage::OnChooseFollowedlinkColor()
 
 void CDocColorPage::OnChooseBkgrndColor() 
 {
-    if ( ChooseColor(&m_crCustomBackground, &m_BackgroundColorButton, m_crBrowserBackground) ) {
+    if ( ChooseColor(&m_crCustomBackground, &m_BackgroundColorButton, m_crBrowserBackground, TRUE) ) {
         // Change to custom colors if  we were Browser mode       
         UseCustomColors(!m_bWasCustomColors);
     }
@@ -4792,7 +4884,7 @@ void CCharacterPage::OnChooseColor()
     RECT rect;
     GetDlgItem(IDC_CHOOSE_COLOR)->GetWindowRect(&rect);
 
-    CColorPicker ColorPicker(this, m_pMWContext, m_crColor, DEFAULT_COLORREF, 0, &rect);
+    CColorPicker ColorPicker(this, m_pMWContext, m_crColor, DEFAULT_COLORREF, IDS_TEXT_COLOR, &rect);
     COLORREF crNew = ColorPicker.GetColor();
 
     if( crNew != CANCEL_COLORREF ){

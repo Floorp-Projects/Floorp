@@ -253,35 +253,6 @@ void CNetscapeEditView::OnFormatParagraph( UINT nID )
     }
 }
 
-void CNetscapeEditView::OnFontSize_2()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE);
-}
-void CNetscapeEditView::OnFontSize_1()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+1);
-}
-void CNetscapeEditView::OnFontSize0()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+2);
-}
-void CNetscapeEditView::OnFontSize1()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+3);
-}
-void CNetscapeEditView::OnFontSize2()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+4);
-}
-void CNetscapeEditView::OnFontSize3()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+5);
-}
-void CNetscapeEditView::OnFontSize4()
-{
-    OnFontSize(ID_FORMAT_FONTSIZE_BASE+6);
-}
-
 void CNetscapeEditView::SetPointSize(int iPointSize)
 {
 	// If Selected, we can't be sure of multible attributes, so set it
@@ -294,76 +265,59 @@ void CNetscapeEditView::SetPointSize(int iPointSize)
     }
 }
 
-void CNetscapeEditView::OnPointSize8()
+void CNetscapeEditView::OnPointSize(UINT nID)
 {
-    SetPointSize(8);
-}
-void CNetscapeEditView::OnPointSize9()
-{
-    SetPointSize(9);
-}
-void CNetscapeEditView::OnPointSize10()
-{
-    SetPointSize(10);
-}
-void CNetscapeEditView::OnPointSize11()
-{
-    SetPointSize(11);
-}
-
-void CNetscapeEditView::OnPointSize12()
-{
-    SetPointSize(12);
-}
-
-void CNetscapeEditView::OnPointSize14()
-{
-    SetPointSize(14);
-}
-
-void CNetscapeEditView::OnPointSize16()
-{
-    SetPointSize(16);
-}
-
-void CNetscapeEditView::OnPointSize18()
-{
-    SetPointSize(18);
-}
-
-void CNetscapeEditView::OnPointSize20()
-{
-    SetPointSize(20);
-}
-
-void CNetscapeEditView::OnPointSize22()
-{
-    SetPointSize(22);
-}
-
-void CNetscapeEditView::OnPointSize24()
-{
-    SetPointSize(24);
-}
-
-void CNetscapeEditView::OnPointSize28()
-{
-    SetPointSize(28);
-}
-
-void CNetscapeEditView::OnPointSize36()
-{
-    SetPointSize(36);
-}
-
-void CNetscapeEditView::OnPointSize48()
-{
-    SetPointSize(48);
-}
-
-void CNetscapeEditView::OnPointSize72()
-{
-    SetPointSize(72);
+    int iSize = 0;
+    switch( nID )
+    {
+        case ID_FORMAT_POINTSIZE_BASE: 
+            iSize = 8;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+1:
+            iSize = 9;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+2:
+            iSize = 10;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+3:
+            iSize = 11;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+4:
+            iSize = 12;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+5:
+            iSize = 14;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+6:
+            iSize = 16;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+7:
+            iSize = 8;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+8:
+            iSize = 20;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+9:
+            iSize = 22;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+10:
+            iSize = 24;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+11:
+            iSize = 28;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+12:
+            iSize = 36;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+13:
+            iSize = 48;
+            break;
+        case ID_FORMAT_POINTSIZE_BASE+14:
+            iSize = 72;
+            break;
+    }
+    if( iSize > 0 )
+        SetPointSize(iSize);
 }
 
 void CNetscapeEditView::OnCharacterNoTextStyles()
@@ -417,45 +371,6 @@ void CNetscapeEditView::OnCharacterFixedWidth()
     EDT_FormatCharacter(GET_MWCONTEXT, TF_FIXED);
 }
 
-void CNetscapeEditView::OnCharacterBold()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_BOLD);
-}
-
-void CNetscapeEditView::OnCharacterItalic()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_ITALIC);
-}
-
-void CNetscapeEditView::OnCharacterNoBreaks()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_NOBREAK);
-}
-
-void CNetscapeEditView::OnCharacterUnderline()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_UNDERLINE);
-}
-
-void CNetscapeEditView::OnCharacterSuper()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_SUPER);
-}
-
-void CNetscapeEditView::OnCharacterSub()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_SUB);
-}
-
-void CNetscapeEditView::OnCharacterStrikeout()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_STRIKEOUT);
-}
-
-void CNetscapeEditView::OnCharacterBlink()
-{
-    EDT_FormatCharacter(GET_MWCONTEXT, TF_BLINK);
-}
 
 // Local helper used to get character style state
 void SetCharacterCheck(MWContext * pMWContext, CCmdUI* pCmdUI, CComboToolBar* pToolbar, ED_TextFormat tf )
@@ -478,6 +393,41 @@ void SetCharacterCheck(MWContext * pMWContext, CCmdUI* pCmdUI, CComboToolBar* pT
         pCmdUI->SetCheck( iCheck );
     else if ( pToolbar && pToolbar->m_pInfo ) {
         pToolbar->SetCheck( pCmdUI->m_nID, iCheck );
+    }
+}
+
+void CNetscapeEditView::OnCharacterStyle(UINT nID)
+{
+    ED_TextFormat iStyle = -1;
+    switch( nID )
+    {
+        case ID_FORMAT_CHAR_BOLD:
+            iStyle = TF_BOLD;
+            break;
+        case ID_FORMAT_CHAR_ITALIC:
+            iStyle = TF_ITALIC;
+            break;
+        case ID_FORMAT_CHAR_NOBREAKS:
+            iStyle = TF_NOBREAK;
+            break;
+        case ID_FORMAT_CHAR_UNDERLINE:
+            iStyle = TF_UNDERLINE;
+            break;
+        case ID_FORMAT_CHAR_SUPER:
+            iStyle = TF_SUPER;
+            break;
+        case ID_FORMAT_CHAR_SUB:
+            iStyle = TF_SUB;
+            break;
+        case ID_FORMAT_CHAR_STRIKEOUT:
+            iStyle = TF_STRIKEOUT;
+            break;
+        case ID_FORMAT_CHAR_BLINK:
+            iStyle = TF_BLINK;
+            break;
+    }
+    if( iStyle != -1 ){
+        EDT_FormatCharacter(GET_MWCONTEXT, iStyle);
     }
 }
 
@@ -504,91 +454,44 @@ void SetCharacterCheck(MWContext * pMWContext, CCmdUI* pCmdUI, CNSToolbar2* pToo
     }
 }
 
-void CNetscapeEditView::OnUpdateCharacterBold(CCmdUI* pCmdUI)
+void CNetscapeEditView::OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI)
 {
 	CEditToolBarController * pController = 
 		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCNSToolbar(), TF_BOLD);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterItalic(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCNSToolbar(), TF_ITALIC);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterNoBreaks(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), TF_NOBREAK);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-void CNetscapeEditView::OnUpdateCharacterUnderline(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCNSToolbar(), TF_UNDERLINE);
-
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterSuper(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), TF_SUPER);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterSub(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), TF_SUB);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterStrikeout(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), TF_STRIKEOUT);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
-}
-
-
-void CNetscapeEditView::OnUpdateCharacterBlink(CCmdUI* pCmdUI)
-{
-	CEditToolBarController * pController = 
-		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
-		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), TF_BLINK);
-		pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-	}
+        ED_TextFormat iStyle = -1;
+        switch( nID )
+        {
+            case ID_FORMAT_CHAR_BOLD:
+                iStyle = TF_BOLD;
+                break;
+            case ID_FORMAT_CHAR_ITALIC:
+                iStyle = TF_ITALIC;
+                break;
+            case ID_FORMAT_CHAR_NOBREAKS:
+                iStyle = TF_NOBREAK;
+                break;
+            case ID_FORMAT_CHAR_UNDERLINE:
+                iStyle = TF_UNDERLINE;
+                break;
+            case ID_FORMAT_CHAR_SUPER:
+                iStyle = TF_SUPER;
+                break;
+            case ID_FORMAT_CHAR_SUB:
+                iStyle = TF_SUB;
+                break;
+            case ID_FORMAT_CHAR_STRIKEOUT:
+                iStyle = TF_STRIKEOUT;
+                break;
+            case ID_FORMAT_CHAR_BLINK:
+                iStyle = TF_BLINK;
+                break;
+        }
+        if( iStyle != -1 ){
+    		SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCNSToolbar(), iStyle);
+	    	pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -627,46 +530,79 @@ static BOOL bBusy = FALSE;
 void CNetscapeEditView::OnGetFontColor()
 {
     // Prevent recursion
-    if( bBusy ){
+    if( bBusy )
         return;
-    }
+
     bBusy = TRUE;
 
 	CEditToolBarController * pController = 
 		(CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pController) {
+	if (pController)
+    {
         pController->GetFontColorCombo()->SendMessage(WM_LBUTTONUP, 0,0);// ShowDropDown(FALSE);
         // NEW: Color Combo is only for showing color in toolbar,
         //   popup dialog to get color to set
     	MWContext *pMWContext = GET_MWCONTEXT;
         CComboBox * pCombo = pController->GetFontColorCombo();
-        if( !pMWContext || !pCombo ){
+        if( !pMWContext || !pCombo )
             return;
-        }
         
         // Get the combobox location so we popup new dialog just under it
         RECT rect = {0,0,0,0};
-        if( pCombo->IsWindowVisible() ){
+        if( pCombo->IsWindowVisible() )
             pCombo->GetWindowRect(&rect);
-        }
 
-        CColorPicker dlg(GET_DLG_PARENT(this), pMWContext, m_EditState.crFontColor, DEFAULT_COLORREF, 0, &rect); 
+        // "Hidden" feature: If Alt key is pressed, set the background color
+        // (Note: Shift+Ctrl+C launches color picker via keyboard,
+        //  so we can't use Shift or Control!)
+        XP_Bool bBackground = (GetAsyncKeyState(VK_MENU) < 0);
+        
+        LO_Color LoColor;
+        COLORREF crBackground;
+        UINT nIDCaption = IDS_TEXT_COLOR;
+        if( bBackground )
+        {
+            // Get color of current cell, table, or the page
+            ED_ElementType type = EDT_GetBackgroundColor(pMWContext, &LoColor);
+            crBackground = WFE_LO2COLORREF( &LoColor, LO_COLOR_BG );
+
+            // Set caption string according to type
+            if( type == ED_ELEMENT_TABLE )
+                nIDCaption = IDS_TABLE_BACKGROUND;
+            else if( type == ED_ELEMENT_CELL )
+                nIDCaption = IDS_CELL_BACKGROUND;
+            else
+                nIDCaption = IDS_PAGE_BACKGROUND;
+        }
+        CColorPicker dlg(GET_DLG_PARENT(this), pMWContext, 
+                         bBackground ? crBackground : m_EditState.crFontColor, 
+                         bBackground ? BACKGROUND_COLORREF : DEFAULT_COLORREF, 
+                         nIDCaption, &rect); 
 
         COLORREF crNew = dlg.GetColor();
-        if( crNew != CANCEL_COLORREF ){
-		    if ( crNew != m_EditState.crFontColor ||
-			     EDT_IsSelected(pMWContext) )
-		    {
-                if( crNew == DEFAULT_COLORREF ){
-                    // Set the "Default" color (actually = no color attribute written)
-                    EDT_SetFontColor(pMWContext, NULL);
-                } else {            
-                    LO_Color LoColor;
-                    WFE_SetLO_Color(crNew, &LoColor);
-                    EDT_SetFontColor(pMWContext, &LoColor);
+        if( crNew != CANCEL_COLORREF )
+        {
+            WFE_SetLO_Color(crNew, &LoColor);
+            if( bBackground )
+            {
+                if( crNew != crBackground )
+                {
+                    // Set the BACKGROUND color:
+                    // If "Default", no color attribute is written
+                    EDT_SetBackgroundColor(pMWContext, (crNew == DEFAULT_COLORREF) ? NULL : &LoColor);
                 }
-                // Trigger update of color in combo display
-                m_EditState.bFontColorMaybeChanged = TRUE;
+            }
+            else
+            {
+                // Set the FONT color
+		        if ( crNew != m_EditState.crFontColor ||
+			         EDT_IsSelected(pMWContext) )
+		        {
+                    EDT_SetFontColor(pMWContext, (crNew == DEFAULT_COLORREF) ? NULL : &LoColor);
+
+                    // Trigger update of color in combo display
+                    m_EditState.bFontColorMaybeChanged = TRUE;
+                }
             }
         }
         // Return focus to the view
@@ -878,10 +814,11 @@ void CNetscapeEditView::OnSelendokFontSizeCombo()
             char pSize[16] = "";
             char *pEnd;
             strcpy(pSize, (char*)pController->GetFontSizeCombo()->GetItemData(iSel));
-            int iSize = (int)strtol( pSize, &pEnd, 10 );
-            if( *pEnd == '\0' ){
-                iNewFontSize = iSize;
-            }
+            // We will trust that the strings in the combobox 
+            //   begin with a valid integer, so strings like "8 pts"
+            //   will yield "8" and we don't check for 
+            //   "bad" string
+            iNewFontSize = (int)strtol( pSize, &pEnd, 10 );
         }
 		// If Selected, we can't be sure of multible attributes, so set it
 		if ( iNewFontSize > 0  && iNewFontSize != m_EditState.iFontSize ||
@@ -926,39 +863,58 @@ void CNetscapeEditView::OnUpdateFontSizeComboBox(CCmdUI* pCmdUI)
     {
     	MWContext *pMWContext = GET_MWCONTEXT;
         int	iFontSize = 0;
-    	if( pMWContext ){
+    	if( pMWContext )
+        {
             EDT_CharacterData * pData = EDT_GetCharacterData(pMWContext);
-            if(pData){
-                iFontSize = pData->iPointSize ? pData->iPointSize : pData->iSize;
-                int iFontIndex = EDT_GetFontFaceIndex(pMWContext);
-                if( iFontSize != m_EditState.iFontSize ||
-                    iFontIndex != m_EditState.iFontIndex || 
-                    iFontIndex > 1 ){
-			        CEditToolBarController * pController = 
-				        (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-			        if (pController) {
-                        char * pSize = NULL;
-                        char pSizeNotInList[16];
-                        if( iFontSize > 0 && iFontSize <= MAX_FONT_SIZE ){
-                            pController->GetFontSizeCombo()->SetCurSel(iFontSize-1);
-                            pSize = wfe_GetFontSizeString(pMWContext, iFontSize, iFontIndex == 1);
-                        } else {
-                            wsprintf(pSizeNotInList, "%d", iFontSize);
-                            pSize = pSizeNotInList;
-                        }
-                        if(pSize){
-                            pController->GetFontSizeCombo()->FindSelectedOrSetText(pSize, MAX_FONT_SIZE);
+            if(pData)
+            {
+                if( (pData->mask & TF_FONT_SIZE) && (pData->mask & TF_FONT_POINT_SIZE) )
+                {
+                    iFontSize = pData->iPointSize ? pData->iPointSize : pData->iSize;
+                    int iFontIndex = EDT_GetFontFaceIndex(pMWContext);
+                    // Point sizes in lower range overlap with relative size numbers (1 through 7)
+                    //  and combobox item uses "8 pts" but we only want to display "8"
+                    //  when combobox is closed
+                    BOOL bSmallPointSize = (pData->iPointSize > 0 && pData->iPointSize <= 8 );
+
+                    if( iFontSize != m_EditState.iFontSize ||
+                        bSmallPointSize ||
+                        iFontIndex != m_EditState.iFontIndex || 
+                        iFontIndex > 1 )
+                    {
+			            CEditToolBarController * pController = 
+				            (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+			            if (pController)
+                        {
+                            char * pSize = NULL;
+                            char pSizeNotInList[16];
+                            if( !bSmallPointSize && iFontSize > 0 && iFontSize <= MAX_FONT_SIZE )
+                            {
+                                pController->GetFontSizeCombo()->SetCurSel(iFontSize-1);
+                                pSize = wfe_GetFontSizeString(pMWContext, iFontSize, iFontIndex == 1);
+                            } else {
+                                wsprintf(pSizeNotInList, "%d", iFontSize);
+                                pSize = pSizeNotInList;
+                            }
+                            if(pSize)
+                                pController->GetFontSizeCombo()->FindSelectedOrSetText(pSize, MAX_FONT_SIZE);
                         }
                     }
+                }
+                else
+                {
+			        CEditToolBarController * pController = 
+				        (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+			        if (pController)
+                        pController->GetFontSizeCombo()->FindSelectedOrSetText(NULL);
                 }
                 m_EditState.iFontSize = iFontSize;
                 EDT_FreeCharacterData(pData);
            }
            m_EditState.bFontSizeMaybeChanged = FALSE;
         }
-        if( pCmdUI ){
+        if( pCmdUI )
             pCmdUI->Enable( EDT_CanSetCharacterAttribute(pMWContext) );
-        }
     }
 }
 
@@ -978,25 +934,16 @@ void CNetscapeEditView::UpdateFontSizeCombo()
 
 void CNetscapeEditView::OnIncreaseFontSize()
 {
-	int	iFontSize = EDT_GetFontSize( GET_MWCONTEXT );
-	// TODO: MAKE THIS WORK WITH ABSOLUTE POINT SIZE?
-	if ( iFontSize < MAX_FONT_SIZE ) // 7
-	{
-		EDT_SetFontSize( GET_MWCONTEXT, iFontSize + 1 );
-        m_EditState.bFontSizeMaybeChanged = TRUE;
-    }
+    EDT_IncreaseFontSize(GET_MWCONTEXT);
+    // Force update of size controls on toolbar
+    m_EditState.bFontSizeMaybeChanged = TRUE;
 }
 
 void CNetscapeEditView::OnDecreaseFontSize()
 {
-	int	iFontSize = EDT_GetFontSize( GET_MWCONTEXT );
-	
-	// TODO: MAKE THIS WORK WITH ABSOLUTE POINT SIZE?
-	if ( iFontSize > 1 )
-	{
-		EDT_SetFontSize( GET_MWCONTEXT, iFontSize - 1 );
-        m_EditState.bFontSizeMaybeChanged = TRUE;
-    }
+    EDT_DecreaseFontSize(GET_MWCONTEXT);
+    // Force update of size controls on toolbar
+    m_EditState.bFontSizeMaybeChanged = TRUE;
 }
 
 void CNetscapeEditView::OnUpdateIncreaseFontSize(CCmdUI* pCmdUI)
@@ -1477,6 +1424,11 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 
     if( bInTable )
     {
+        // After using this for awhile, it seems hard to right click to 
+        //  get table properties, so lets always include both Table and Cell items
+        cmPopup.AppendMenu(uState, ID_PROPS_TABLE, szLoadString(IDS_POPUP_TABLE_PROPS));
+        cmPopup.AppendMenu(uState, ID_PROPS_TABLE_CELL, szLoadString(IDS_POPUP_TABLE_CELL_PROPS));
+#if 0
         // Default is "Table Properties" -- first table property page
         nID = ID_PROPS_TABLE;
         nIDS = IDS_POPUP_TABLE_PROPS;
@@ -1496,7 +1448,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 
         }
         cmPopup.AppendMenu(uState, nID, szLoadString(nIDS));
-        
+#endif        
         ED_MergeType MergeType = EDT_GetMergeTableCellsType(pMWContext);
         if( MergeType != ED_MERGE_NONE )
         {
@@ -2836,9 +2788,13 @@ void CNetscapeEditView::OnTableTextConvert()
     {
         EDT_ConvertTableToText(pMWContext);
     } else {
-        //TODO: ADD DIALOG TO GET NUMBER OF COLUMNS
-        // Convert selected text into a table
-        EDT_ConvertTextToTable(pMWContext, 3);
+        // Get number of columns from user
+        CGetColumnsDlg dlg(this);
+        if( dlg.DoModal() == IDOK )
+        {
+            // Convert selected text into a table
+            EDT_ConvertTextToTable(pMWContext, dlg.GetColumns());
+        }
     }
 }
 
@@ -2846,11 +2802,16 @@ void CNetscapeEditView::OnUpdateTableTextConvert(CCmdUI* pCmdUI)
 {
     // Insert point should ALWAYS be inside table if any cells are selected
     MWContext * pMWContext = GET_MWCONTEXT;
-    if( EDT_IsTableSelected(pMWContext) || EDT_IsInsertPointInTable(pMWContext) )
+    if( EDT_IsTableSelected(pMWContext) ||
+        (EDT_IsInsertPointInTable(pMWContext) &&
+         !EDT_IsSelected(pMWContext) && 
+         EDT_GetSelectedCellCount(pMWContext) == 0) )
     {
+        // Note that we allow converting of entire table to text
+        //  if caret is in a cell, but nothing is selected
         pCmdUI->Enable(CAN_INTERACT);
     } else {
-        pCmdUI->Enable(CAN_INTERACT && EDT_IsSelected(pMWContext) );
+        pCmdUI->Enable(CAN_INTERACT && EDT_CanConvertTextToTable(pMWContext));
     }
 }
 

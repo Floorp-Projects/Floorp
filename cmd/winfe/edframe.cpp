@@ -263,7 +263,9 @@ void WFE_InitComposer()
 	PREF_RegisterCallback("editor.author", ed_prefWatcher, (void*)3);
 
     wfe_pFont = new CFont();
-    if( wfe_pFont ){
+    wfe_pBoldFont = new CFont();
+
+    if( wfe_pFont && wfe_pBoldFont ){
         if( GetSystemMetrics(SM_DBCSENABLED) ){
             HFONT	hFont = NULL;
 
@@ -274,7 +276,7 @@ void WFE_InitComposer()
 	            hFont = (HFONT)GetStockObject(SYSTEM_FONT);
             }
             wfe_pFont->Attach(hFont);
-
+            wfe_pBoldFont->Attach(hFont);
         } else {
             //  Get a 1-pixel font
             LOGFONT logFont;
@@ -292,6 +294,12 @@ void WFE_InitComposer()
             if( !wfe_pFont->CreateFontIndirect(&logFont) ){
 	            delete wfe_pFont;
                 wfe_pFont = NULL;
+            }
+            
+            logFont.lfWeight = FW_BOLD;
+            if( !wfe_pBoldFont->CreateFontIndirect(&logFont) ){
+	            delete wfe_pBoldFont;
+                wfe_pBoldFont = NULL;
             }
         }
     }
@@ -328,6 +336,16 @@ void WFE_InitComposer()
         wfe_crLastColorPicked = 0;
     }
 	
+    PREF_CopyCharPref("editor.last_background_color_picked", &pCustomColor);    
+    if( pCustomColor )
+    {        
+        EDT_ParseColorString(&LoColor, pCustomColor);
+        wfe_crLastBkgrndColorPicked =  RGB(LoColor.red, LoColor.green, LoColor.blue);
+        XP_FREEIF(pCustomColor);
+    } else {
+        wfe_crLastBkgrndColorPicked = RGB(255, 255, 255);
+    }
+	
     //  Fill color table with 0s
     memset((void*)wfe_CustomPalette, 0, 16*sizeof(COLORREF));
     
@@ -350,6 +368,9 @@ void WFE_ExitComposer()
 {
     if( wfe_pFont ){
         delete wfe_pFont;
+    }
+    if( wfe_pBoldFont ){
+        delete wfe_pBoldFont;
     }
     XP_FREEIF(ed_pOther);
     XP_FREEIF(ed_pMixedFonts);
@@ -476,6 +497,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
     		    }
 	        }
 	    }
+        // String used to get width of FontSize combobox
         csTemp = "55";
         cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
         pDC->LPtoDP(&cSize);
@@ -561,7 +583,9 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
         m_wndCharacterBar.RecalcLayout();
 #endif
     }
-
+    
+    int nLastID = ID_EDIT_LAST_ID;
+    ASSERT(nLastID < 42000);
 	return TRUE;
 }
 
@@ -663,7 +687,6 @@ CEditFrame::CEditFrame()
     m_pToolBarController = new CEditToolBarController( this );
 	m_hPal = NULL;
     m_pTemplateContext = NULL;
-    m_bImportTextFile = FALSE;
 }
 
 CEditFrame::~CEditFrame()
@@ -1263,18 +1286,6 @@ void FE_EditorGetUrlExitRoutine(URL_Struct *pUrlStruct, int iStatus, MWContext *
                 FE_RevertToPreviousFrame(pAddress, pMWContext);
                 theApp.m_nChangeHomePage = iTemp;
 	        }
-        } else {
-            // Set flag that we are importing a text file so we treat it
-            //  like a template file
-             // (But Message composition should do the template stuff -- 
-             //  We end up here with a MWContextMessageComposition type 
-             //   when replying to a mail message.)
-            if( pUrlStruct && pUrlStruct->content_type &&
-                pMWContext->type == MWContextBrowser &&
-                0 == strcmpi(pUrlStruct->content_type, INTERNAL_PARSER) )
-            {
-                pFrame->m_bImportTextFile = TRUE;
-            }
         }
     }
 
@@ -1325,18 +1336,16 @@ void FE_EditorDocumentLoaded(MWContext* pMWContext)
         wfe_pLastFrame->PostMessage(WM_CLOSE);
     }
 
-    if( pFrame->m_bImportTextFile || pMWContext == pFrame->m_pTemplateContext )
+    if( pMWContext == pFrame->m_pTemplateContext )
     {
         // We loaded a URL (template or text file)
         //  that we want to convert to a new doc
 
-        // If it is a template file, save in history
-        if( pMWContext == pFrame->m_pTemplateContext )
-            pFrame->SaveTemplateLocation(hist_ent->address);
+        // Save in history
+        pFrame->SaveTemplateLocation(hist_ent->address);
 
         EDT_ConvertCurrentDocToNewDoc(pMWContext);
         pFrame->m_pTemplateContext = NULL;
-        pFrame->m_bImportTextFile = FALSE;
     }
 
     // This is really needed only for Win16 -- to set initial focus,
@@ -2167,11 +2176,15 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
                     if( bInTableMenu )
                         return;
                     bInTableMenu = TRUE;
+                    // Show "Convert table to text" when table is selected or
+                    //  caret is inside table with nothing selected
+                    BOOL bConvertToText = EDT_IsTableSelected(pMWContext) || 
+                                           (EDT_IsInsertPointInTable(pMWContext) &&
+                                            !EDT_IsSelected(pMWContext) &&
+                                            EDT_GetSelectedCellCount(pMWContext) == 0);
 
-                    //TODO: Enable/Disable items appropriate only when inside a table
-                    BOOL bInTable = EDT_IsInsertPointInTable(pMWContext);
                     ::ModifyMenu(hSubMenu, ID_TABLE_TEXT_CONVERT, MF_BYCOMMAND | MF_STRING, ID_TABLE_TEXT_CONVERT,
-                                 szLoadString(bInTable ? IDS_CONVERT_TABLE_TO_TEXT : IDS_CONVERT_TEXT_TO_TABLE) );
+                                 szLoadString(bConvertToText ? IDS_CONVERT_TABLE_TO_TEXT : IDS_CONVERT_TEXT_TO_TABLE) );
                     // We can return here ONLY if we don't need to look at menus after "Table"
                     break;
                 }
@@ -2275,12 +2288,24 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
             if( bInSizeMenu )
                 return;
             bInSizeMenu = TRUE;
-
-            // Delete any existing items
-            for( i = ::GetMenuItemCount(hSizeMenu) - 1; i >= 0; i--)
+            int iCount = ::GetMenuItemCount(hSizeMenu);
+            if( iCount == 1 )
+            {
+                // Initial menu has 1 placeholder - modify that
+                //   and append the rest
+                // First 2 menu items are relative size change
+                ::ModifyMenu( hSizeMenu, 0, MF_BYPOSITION | MF_STRING, ID_FORMAT_INCREASE_FONTSIZE,
+                              szLoadString(IDS_INCREASE_FONTSIZE) );
+                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_DECREASE_FONTSIZE,
+                              szLoadString(IDS_DECREASE_FONTSIZE) );
+                ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
+            }            
+            // Delete any existing items except for 1st three
+            for( i = iCount - 1; i > 2; i--)
             {
                 DeleteMenu(hSizeMenu, i, MF_BYPOSITION);
             }
+
             // Check if current base font is fixed width
             BOOL bFixedWidth = (EDT_GetFontFaceIndex(pMWContext) == 1);
             // Change font size strings based on current font base
@@ -2293,7 +2318,9 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
             {
                 // The "Advanced" absolute point size strings
                 ::AppendMenu( hSizeMenu, MF_SEPARATOR, 0, 0);
-                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE, "8");
+                // This string is "8 pts" so it must be translated
+                ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE, szLoadString(IDS_8_PTS));
+                // Others assume pure numbers don't have to be translated
                 ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+1, "9");
                 ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+2, "10");
                 ::AppendMenu( hSizeMenu, MF_STRING, ID_FORMAT_POINTSIZE_BASE+3, "11");

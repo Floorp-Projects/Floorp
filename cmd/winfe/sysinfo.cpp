@@ -251,8 +251,14 @@ void CSysInfo::UpdateInfo()	{
 	m_iScrollHeight = ::GetSystemMetrics(SM_CYHSCROLL);
 
     //  Determine screen dimensions
+#ifdef XP_WIN32
+    // This excludes the Windows shell area on the desktop
+    m_iScreenWidth = ::GetSystemMetrics(SM_CXFULLSCREEN);
+    m_iScreenHeight = ::GetSystemMetrics(SM_CYFULLSCREEN);
+#else
     m_iScreenWidth = ::GetSystemMetrics(SM_CXSCREEN);
     m_iScreenHeight = ::GetSystemMetrics(SM_CYSCREEN);
+#endif
 
 	//	Free off brushes if previously allocated.
 	if(m_hbrBtnFace != NULL)	{

@@ -480,4 +480,89 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
+// CPasteSpecialDlg::m_iResult values
+enum {
+    ED_PASTE_CANCEL,
+    ED_PASTE_TEXT,
+    ED_PASTE_IMAGE
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CPasteSpecialDlg dialog
+// Called for user feedback when saving remote images
+//
+class CPasteSpecialDlg : public CDialog
+{
+// Construction
+public:
+	CPasteSpecialDlg(CWnd* pParent);
+
+    // Put user's choice here
+    int m_iResult;
+
+// Dialog Data
+	//{{AFX_DATA(CSaveFileOverwriteDlg)
+	enum { IDD = IDD_PASTE_SPECIAL };
+	//}}AFX_DATA
+
+private:
+    // This will change resource hInstance to Editor dll (in constructor)
+    CEditorResourceSwitcher m_ResourceSwitcher;
+
+// Implementation
+protected:
+
+	// Generated message map functions
+	//{{AFX_MSG(CSaveFileOverwriteDlg)
+	afx_msg void OnPasteText();
+	afx_msg void OnPasteImage();
+	virtual BOOL OnInitDialog();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CGetColumnsDlg dialog
+
+class CGetColumnsDlg : public CDialog
+{
+// Construction
+public:
+	CGetColumnsDlg(CWnd* pParent = NULL);     // standard constructor
+
+// Dialog Data
+	//{{AFX_DATA(CGetColumnsDlg)
+	enum { IDD = IDD_GET_TABLE_COLUMNS };
+	int  m_iColumns;
+	//}}AFX_DATA
+
+    int GetColumns() { return m_iColumns; }
+
+private:
+
+    // This will change resource hInstance to Editor dll (in constructor)
+    // Be sure to call m_ResourceSwitcher.Reset() 
+    //   in InitDialog() or OnSetActive() if dialog accesses strings
+    //   in NETSCAPE.EXE
+    CEditorResourceSwitcher m_ResourceSwitcher;
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CGetColumnsDlg)
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//}}AFX_VIRTUAL
+
+// Implementation
+protected:
+
+	// Generated message map functions
+	//{{AFX_MSG(CGetColumnsDlg)
+	virtual void OnOK();
+	virtual BOOL OnInitDialog();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+    
+};
+
 #endif // EDDIALOG_H

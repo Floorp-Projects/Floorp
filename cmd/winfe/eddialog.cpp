@@ -1422,3 +1422,75 @@ void CPageTitleDlg::OnOK()
         *m_ppTitle = XP_STRDUP(LPCSTR(m_csTitle));
     }
 }
+
+CPasteSpecialDlg::CPasteSpecialDlg(CWnd* pParent)
+	: CDialog(CPasteSpecialDlg::IDD, pParent),
+    m_iResult(0)
+{
+}
+
+BEGIN_MESSAGE_MAP(CPasteSpecialDlg, CDialog)
+	//{{AFX_MSG_MAP(CPasteSpecialDlg)
+	ON_BN_CLICKED(IDC_PASTE_TEXT, OnPasteText)
+	ON_BN_CLICKED(IDC_PASTE_IMAGE, OnPasteImage)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+BOOL CPasteSpecialDlg::OnInitDialog()
+{
+    m_ResourceSwitcher.Reset();
+	CDialog::OnInitDialog();
+	return TRUE;
+}
+
+void CPasteSpecialDlg::OnPasteImage()
+{
+    m_iResult = ED_PASTE_IMAGE;
+	CDialog::OnOK();
+}
+
+void CPasteSpecialDlg::OnPasteText()
+{
+    m_iResult = ED_PASTE_TEXT;
+	CDialog::OnOK();
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// CGetColumnsDlg dialog
+
+CGetColumnsDlg::CGetColumnsDlg(CWnd* pParent)
+	: CDialog(CGetColumnsDlg::IDD, pParent)
+{
+	//{{AFX_DATA_INIT(CEditHintDlg)
+	m_iColumns = 1;
+	//}}AFX_DATA_INIT
+}
+
+BEGIN_MESSAGE_MAP(CGetColumnsDlg, CDialog)
+	//{{AFX_MSG_MAP(CGetColumnsDlg)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+BOOL CGetColumnsDlg::OnInitDialog() 
+{
+    m_ResourceSwitcher.Reset();
+  	CDialog::OnInitDialog();
+    return TRUE;
+}
+
+void CGetColumnsDlg::OnOK() 
+{
+	// TODO: Add extra validation here
+	
+	CDialog::OnOK();
+}
+
+void CGetColumnsDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CGetColumnsDlg)
+    DDX_Text(pDX, IDC_TABLE_COLUMNS, m_iColumns);
+	DDV_MinMaxInt(pDX, m_iColumns, 1, 100 /*MAX_TABLE_COLUMNS*/);
+	//}}AFX_DATA_MAP
+}
+

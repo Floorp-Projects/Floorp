@@ -648,8 +648,6 @@ END
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
     ID_GET_COLOR                 "Change the current text color\nText Color"    
-    ID_FORMAT_INCREASE_FONTSIZE  "Increase font size 1 unit\nIncrease font size"
-    ID_FORMAT_DECREASE_FONTSIZE  "Decrease font size 1 unit\nDecrease font size"
 END
 
 // Paragraph and Character Listboxes and submenu text

@@ -234,6 +234,9 @@ public:
     void DoProperties(int iStartPage = -1, UINT nIDFirstTab = 0);
     void ShowCaret() { if (m_pChild == NULL) ::ShowCaret(m_hWnd); }
 
+    // Called from OnCMD, converts nID to appropriate point size
+    //  for SetPointSize()
+    void OnPointSize(UINT nID);
     void SetPointSize(int iPoints);
 #ifdef _DEBUG
     virtual void AssertValid() const;
@@ -344,23 +347,7 @@ protected:
     afx_msg void OnDocColorProperties();
     afx_msg void OnCharacterNoTextStyles();
     afx_msg void OnCharacterNone();
-    afx_msg void OnCharacterBold();
-    afx_msg void OnCharacterItalic();
-    afx_msg void OnCharacterNoBreaks();
-    afx_msg void OnCharacterUnderline();
-    afx_msg void OnCharacterSuper();
-    afx_msg void OnCharacterSub();
-    afx_msg void OnCharacterStrikeout();
-    afx_msg void OnCharacterBlink();
     afx_msg void OnCharacterFixedWidth();
-    afx_msg void OnUpdateCharacterBold(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterItalic(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterNoBreaks(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterUnderline(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterSuper(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterSub(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterStrikeout(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateCharacterBlink(CCmdUI* pCmdUI);
     afx_msg void OnFormatIndent();
     afx_msg void OnFormatOutdent();
     afx_msg void OnAlignPopup();
@@ -490,7 +477,14 @@ protected:
     afx_msg void OnUpdateCharacterBarToggle(CCmdUI* pCmdUI);
     afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
     afx_msg void OnSelectNextNonTextObject();
+    afx_msg void OnUpdateEditSource(CCmdUI* pCmdUI);
 	//}}AFX_MSG
+
+    // These are called CNetscapeEditView::OnCmdMsg
+    //   to avoid too many individual message-map funtions 
+    void OnFontSize(UINT nID);
+    void OnCharacterStyle(UINT nID);
+    void OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI);
 
     // Keep these outside of AFX_MSG - they use calculated
     //   or use a range of IDs and are not understood by App/Class wizards
@@ -498,7 +492,6 @@ protected:
 	afx_msg void OnUpdateParagraphMenu(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateParagraphControls(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCharacterControls(CCmdUI* pCmdUI);
-    afx_msg void OnFontSize(UINT nID);
     afx_msg void OnFontColorMenu(UINT nID);
     //afx_msg void OnUpdateFontSize(CCmdUI* pCmdUI);
     afx_msg void OnUpdateInsertMenu(CCmdUI* pCmdUI);
@@ -515,30 +508,6 @@ protected:
         afx_msg LRESULT OnReportIme(WPARAM wparam,LPARAM lparam);
     #endif //XP_WIN32
 #endif //_IME_COMPOSITION
-    afx_msg void OnFontSize_2();
-    afx_msg void OnFontSize_1();
-    afx_msg void OnFontSize0();
-    afx_msg void OnFontSize1();
-    afx_msg void OnFontSize2();
-    afx_msg void OnFontSize3();
-    afx_msg void OnFontSize4();
-
-    afx_msg void OnPointSize8();
-    afx_msg void OnPointSize9();
-    afx_msg void OnPointSize10();
-    afx_msg void OnPointSize11();
-    afx_msg void OnPointSize12();
-    afx_msg void OnPointSize14();
-    afx_msg void OnPointSize16();
-    afx_msg void OnPointSize18();
-    afx_msg void OnPointSize20();
-    afx_msg void OnPointSize22();
-    afx_msg void OnPointSize24();
-    afx_msg void OnPointSize28();
-    afx_msg void OnPointSize36();
-    afx_msg void OnPointSize48();
-    afx_msg void OnPointSize72();
-
 	afx_msg void OnCheckSpelling();
 	afx_msg void OnSpellingLanguage();
     afx_msg void OnUpdateEditFindincurrent(CCmdUI* pCmdUI);

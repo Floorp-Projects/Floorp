@@ -751,7 +751,7 @@ void CTablePage::OnChooseColor()
     RECT rect;
     GetDlgItem(IDC_CHOOSE_COLOR)->GetWindowRect(&rect);
 
-    CColorPicker dlg(this, m_pMWContext, m_crColor, BACKGROUND_COLORREF, 0, &rect);
+    CColorPicker dlg(this, m_pMWContext, m_crColor, BACKGROUND_COLORREF, IDS_TABLE_BACKGROUND, &rect);
 
     COLORREF crNew = dlg.GetColor();
     if( crNew != CANCEL_COLORREF )
@@ -1515,7 +1515,7 @@ void CTableCellPage::OnChooseColor()
     RECT rect;
     GetDlgItem(IDC_CHOOSE_COLOR)->GetWindowRect(&rect);
 
-    CColorPicker dlg(this, m_pMWContext, m_crColor, BACKGROUND_COLORREF, 0, &rect);
+    CColorPicker dlg(this, m_pMWContext, m_crColor, BACKGROUND_COLORREF, IDS_CELL_BACKGROUND, &rect);
 
     COLORREF crNew = dlg.GetColor();
     if( crNew != CANCEL_COLORREF )

@@ -112,10 +112,6 @@ public:
     //   we want to convert to a new doc
     // Signals appropriate action in FE_EditorGetUrlExitRoutine()
     MWContext      * m_pTemplateContext;
-    // Set this to trigger importing a text file just like
-    //  we handle a template file - change it to an Untitled new doc
-    //  to prevent overwriting original file    
-    BOOL             m_bImportTextFile;
 
 private:
     // Save original state of browser toolbars

@@ -125,17 +125,41 @@ void CDialogURL::OnOK()
 #endif
 
 	// this was typed in so no referrer -> OK to do an OnNormalLoad
-	if(!url_string.IsEmpty()) {
+	if(!url_string.IsEmpty())
+    {
+        // Bug 36087: Convert relative URL strings to an absolute URL based on current location
+        char *pAbsoluteURL = (char *)LPCSTR(url_string);
+
+        int  iType = NET_URL_Type(pAbsoluteURL);
+
+        CString csTemp;
+        if( iType == 0 )
+        {
+            WFE_ConvertFile2Url( csTemp, pAbsoluteURL );
+            pAbsoluteURL = (char*)LPCSTR(csTemp);
+        }
+
+        BOOL bFreeString = FALSE;
+        BOOL bIsFile = NET_IsLocalFileURL(pAbsoluteURL);
+
+        History_entry * pEntry = SHIST_GetCurrent(&m_Context->hist);
+        if( pEntry && pEntry->address ) {
+            pAbsoluteURL = NET_MakeAbsoluteURL(pEntry->address, pAbsoluteURL );
+            bFreeString = TRUE;            
+        }
 
 #ifdef EDITOR
         BOOL bEdit = ((CButton *)GetDlgItem(IDC_OPEN_URL_EDITOR))->GetCheck() != 0;
 
         if (bEdit || EDT_IS_EDITOR(m_Context)) {
-            FE_LoadUrl((char*)LPCSTR(url_string), bEdit);
+            FE_LoadUrl(/*pAbsoluteURL*/(char *)LPCSTR(url_string), bEdit);
         } else
 #endif
             // Load the URL into the same window only if called from an existing browser
-    		ABSTRACTCX(m_Context)->NormalGetUrl(url_string);
+    		ABSTRACTCX(m_Context)->NormalGetUrl(/*pAbsoluteURL*/ url_string);
+
+        if( pAbsoluteURL && bFreeString )
+            XP_FREE(pAbsoluteURL);
 	}
 
 }

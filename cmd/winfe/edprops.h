@@ -42,6 +42,7 @@ void wfe_GetLayoutViewSize(MWContext * pMWContext, int32 * pWidth, int32 * pHeig
 // Font shared by all comboboxes in dialogs and toolbars
 // Should be 1-pixel, 8pt MS Sans Serif or default GUI or font on foreing systems
 extern CFont * wfe_pFont;
+extern CFont * wfe_pBoldFont;  // Bold version of same font
 
 extern int wfe_iFontHeight;
 
@@ -68,8 +69,8 @@ char * wfe_GetFontSizeString(MWContext * pMWContext, int iSize,  BOOL bFixedWidt
 // Number of colors in custom palette
 #define   MAX_CUSTOM_COLORS    10
 
-// Add 1 for Current, 1 for Last-Picked and 10 for custom color palette
-#define   MAX_COLORS         (MAX_NS_COLORS+MAX_CUSTOM_COLORS+2)
+// Add 1 for Current and 1 for Last-Picked and 10 for custom color palette
+#define   MAX_COLORS  (MAX_NS_COLORS+MAX_CUSTOM_COLORS+2)
 
 extern char **wfe_ppTrueTypeFonts; // The Sorted list of fonts in combobox or menu
 extern int wfe_iTrueTypeFontBase;
@@ -113,8 +114,9 @@ void wfe_SetLO_Color( COLORREF crColor, LO_Color *pLoColor );
 
 // Array of colors to show in common color dialog
 extern COLORREF wfe_CustomPalette[16];
-// Last-Picked color in color-picker: Saved in prefs
+// Last-Picked colors in color-picker: Saved in prefs
 extern COLORREF wfe_crLastColorPicked;
+extern COLORREF wfe_crLastBkgrndColorPicked;
 
 // Define makes more sense in some circumstances
 // We either don't want to show color because of mixed state in selection (in lists and comboboxes)
@@ -317,7 +319,7 @@ public:
               MWContext * pMWContext,
               COLORREF    crCurrentColor,
               COLORREF    crDefColor,           // Actual color or DEFAULT_COLORREF or BACKGROUND_COLORREF
-              UINT        nIDCaption = 0,       // Optional string ID for dialog caption
+              UINT        nIDCaption = IDS_TEXT_COLOR,  // Defines what color we are setting
               RECT      * pCallerRect = NULL);  // If null, normal centerred dialog,
                                                 //  else positions like a dropdown from caller's rect
 
@@ -331,17 +333,18 @@ public:
 private:    
     RECT            m_CallerRect;
     CWnd           *m_pParent;
-    UINT            m_nIDCaption;
     COLORREF        m_crColors[MAX_COLORS];
     CColorButton   *m_pColorButtons[MAX_COLORS];
     CButton         m_DefaultButton;
     CButton         m_OtherButton;
     CButton         m_HelpButton;
     CStatic         m_CurrentLabel;
-    CStatic         m_LastUsedLabel; //m_DefaultLabel;
+    CStatic         m_LastUsedLabel;
     CStatic         m_CustomColorsLabel;
     CStatic         m_SaveColorLabel;
     CStatic         m_CustomColorNumber[MAX_CUSTOM_COLORS];
+    BOOL            m_bBackground;
+    UINT            m_nIDCaption;
     BOOL            m_bColorChanged[MAX_CUSTOM_COLORS];
     BOOL            m_bMouseDown;
     int             m_iMouseDownColorIndex;
@@ -412,6 +415,7 @@ protected:
     afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
     afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnPaint();
 //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -786,7 +790,7 @@ protected:
     // Get a color using our CColorPicker color picker
     //  Use string from nIDCaption for the dialog caption
     //  Return TRUE if OK is pressed
-    BOOL ChooseColor(COLORREF * pColor, CColorButton * pButton, COLORREF crDefault);
+    BOOL ChooseColor(COLORREF * pColor, CColorButton * pButton, COLORREF crDefault, BOOL bBackground = FALSE);
 
     void UseBrowserColors(BOOL bRedraw = TRUE);
     void UseCustomColors(BOOL bRedraw = TRUE, BOOL bUnselectScheme = TRUE);

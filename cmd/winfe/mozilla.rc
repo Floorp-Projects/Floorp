@@ -1257,7 +1257,6 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ask Me"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,73,161,50,14
     LTEXT           "Startup Option",IDC_STATIC_TITLE,21,4,123,9
     LTEXT           "How would you like to work on startup?",IDC_STATIC,21,
                     18,145,10
@@ -1265,7 +1264,7 @@ BEGIN
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,21,34,85,15
     CONTROL         "Work O&ffline",IDC_RADIO_OFFLINE,"Button",
                     BS_AUTORADIOBUTTON,21,71,65,15
-    LTEXT           "Enables network connections",IDC_STATIC,33,49,120,15
+    LTEXT           "Enables network connections", WS_GROUP | IDC_STATIC,33,49,120,15
     LTEXT           "Disables network connections until you say so.",
                     IDC_STATIC,33,86,146,19
     CONTROL         "Set as &default",IDC_CHECK_ASKME_DEFAULT,"Button",
@@ -1273,6 +1272,7 @@ BEGIN
     LTEXT           "Changes the ""Ask Me"" preference to the above option so you won't be asked again.",
                     IDC_STATIC,33,129,141,20
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,10,109,177,1
+    DEFPUSHBUTTON   "OK",IDOK,73,161,50,14
 END
 
 IDD_PP_DOWNLOAD_DISCUS DIALOG DISCARDABLE  0, 0, 206, 158

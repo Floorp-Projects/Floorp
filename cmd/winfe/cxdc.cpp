@@ -1659,83 +1659,82 @@ CDCCX::DisplayTableBorder(LTRB& Rect, LO_TableStruct *pTable)
     }
     else
     {
+        if (pTable->border_style == BORDER_GROOVE || pTable->border_style == BORDER_RIDGE ||
+	        pTable->border_style == BORDER_INSET || pTable->border_style == BORDER_OUTSET) {
 
-	if (pTable->border_style == BORDER_GROOVE || pTable->border_style == BORDER_RIDGE ||
-		pTable->border_style == BORDER_INSET || pTable->border_style == BORDER_OUTSET) {
+	        // Compute the 3D colors to use. If the border color is the same as the background
+	        // color then just use the light/dark colors we've already computed
+	        if (rgbBorder == m_rgbBackgroundColor) {
+		        rgbLight = m_rgbLightColor;
+		        rgbDark = m_rgbDarkColor;
+	        
+	        } else {
+		        Compute3DColors(rgbBorder, rgbLight, rgbDark);
+	        }
+        }
 
-		// Compute the 3D colors to use. If the border color is the same as the background
-		// color then just use the light/dark colors we've already computed
-		if (rgbBorder == m_rgbBackgroundColor) {
-			rgbLight = m_rgbLightColor;
-			rgbDark = m_rgbDarkColor;
-		
-		} else {
-			Compute3DColors(rgbBorder, rgbLight, rgbDark);
-		}
-	}
+        hDC = GetContextDC();
+        switch (pTable->border_style) {
+            case BORDER_NONE:
+                break;
 
-	hDC = GetContextDC();
-    switch (pTable->border_style) {
-        case BORDER_NONE:
-            break;
+            case BORDER_DOTTED:
+            case BORDER_DASHED:
+	        case BORDER_SOLID:
+        //			hDC = GetContextDC();
+		        DisplaySolidBorder(hDC, r, rgbBorder, borderWidths);
+        //			ReleaseContextDC(hDC);
+                break;
 
-        case BORDER_DOTTED:
-        case BORDER_DASHED:
-		case BORDER_SOLID:
-//			hDC = GetContextDC();
-			DisplaySolidBorder(hDC, r, rgbBorder, borderWidths);
-//			ReleaseContextDC(hDC);
-            break;
+	        case BORDER_DOUBLE:
+        //			hDC = GetContextDC();
+		        DisplayDoubleBorder(hDC, r, rgbBorder, borderWidths);
+        //			ReleaseContextDC(hDC);
+                break;
 
-		case BORDER_DOUBLE:
-//			hDC = GetContextDC();
-			DisplayDoubleBorder(hDC, r, rgbBorder, borderWidths);
-//			ReleaseContextDC(hDC);
-            break;
+            case BORDER_GROOVE:
+                // This is done as a sunken outer border with a raised inner
+                // border. Windows group boxes have this appearance
+		        borderWidths.left /= 2;
+		        borderWidths.top /= 2;
+		        borderWidths.right /= 2;
+		        borderWidths.bottom /= 2;
+                Display3DBorder(Rect, rgbDark, rgbLight, borderWidths);
+                insetRect.left = Rect.left + borderWidths.left;
+                insetRect.top = Rect.top + borderWidths.top;
+                insetRect.right = Rect.right - borderWidths.right;
+                insetRect.bottom = Rect.bottom - borderWidths.bottom;
+                Display3DBorder(insetRect, rgbLight, rgbDark, borderWidths);
+                break;
 
-        case BORDER_GROOVE:
-            // This is done as a sunken outer border with a raised inner
-            // border. Windows group boxes have this appearance
-			borderWidths.left /= 2;
-			borderWidths.top /= 2;
-			borderWidths.right /= 2;
-			borderWidths.bottom /= 2;
-            Display3DBorder(Rect, rgbDark, rgbLight, borderWidths);
-            insetRect.left = Rect.left + borderWidths.left;
-            insetRect.top = Rect.top + borderWidths.top;
-            insetRect.right = Rect.right - borderWidths.right;
-            insetRect.bottom = Rect.bottom - borderWidths.bottom;
-            Display3DBorder(insetRect, rgbLight, rgbDark, borderWidths);
-            break;
+            case BORDER_RIDGE:
+                // This is done as a raised outer border with a sunken inner border
+		        borderWidths.left /= 2;
+		        borderWidths.top /= 2;
+		        borderWidths.right /= 2;
+		        borderWidths.bottom /= 2;
+                Display3DBorder(Rect, rgbLight, rgbDark, borderWidths);
+                insetRect.left = Rect.left + borderWidths.left;
+                insetRect.top = Rect.top + borderWidths.top;
+                insetRect.right = Rect.right - borderWidths.right;
+                insetRect.bottom = Rect.bottom - borderWidths.bottom;
+                Display3DBorder(insetRect, rgbDark, rgbLight, borderWidths);
+                break;
 
-        case BORDER_RIDGE:
-            // This is done as a raised outer border with a sunken inner border
-			borderWidths.left /= 2;
-			borderWidths.top /= 2;
-			borderWidths.right /= 2;
-			borderWidths.bottom /= 2;
-            Display3DBorder(Rect, rgbLight, rgbDark, borderWidths);
-            insetRect.left = Rect.left + borderWidths.left;
-            insetRect.top = Rect.top + borderWidths.top;
-            insetRect.right = Rect.right - borderWidths.right;
-            insetRect.bottom = Rect.bottom - borderWidths.bottom;
-            Display3DBorder(insetRect, rgbDark, rgbLight, borderWidths);
-            break;
+            case BORDER_INSET:
+                // This is what Windows refers to as a sunken border
+		        Display3DBorder(Rect, rgbDark, rgbLight, borderWidths);
+                break;
 
-        case BORDER_INSET:
-            // This is what Windows refers to as a sunken border
-			Display3DBorder(Rect, rgbDark, rgbLight, borderWidths);
-            break;
+            case BORDER_OUTSET:
+                // This is what Windows refers to as a raised border
+		        Display3DBorder(Rect, rgbLight, rgbDark, borderWidths);
+                break;
 
-        case BORDER_OUTSET:
-            // This is what Windows refers to as a raised border
-			Display3DBorder(Rect, rgbLight, rgbDark, borderWidths);
-            break;
-
-        default:
-            ASSERT(FALSE);
-            break;
-    }
+            default:
+                ASSERT(FALSE);
+                break;
+        }
     }
     return 0;
 }
@@ -1752,11 +1751,9 @@ void CDCCX::EditorDisplayZeroWidthBorder(LTRB& Rect, BOOL bSelected){
     // Use dotted line if not selected, or solid if selecting
 	HPEN pPen = ::CreatePen(bSelected ? PS_SOLID : PS_DOT, 1, rgbColor);
 	HPEN pOldPen = (HPEN)::SelectObject(hdc, pPen);
-	::MoveToEx(hdc, CASTINT(Rect.left), CASTINT(Rect.top), NULL);
-    ::LineTo(hdc, CASTINT(Rect.right), CASTINT(Rect.top));
-    ::LineTo(hdc, CASTINT(Rect.right), CASTINT(Rect.bottom));
-	::LineTo(hdc, CASTINT(Rect.left), CASTINT(Rect.bottom));
-	::LineTo(hdc, CASTINT(Rect.left), CASTINT(Rect.top));
+    
+    ::Rectangle(hdc, Rect.left, Rect.top, Rect.right, Rect.bottom);
+
 	::SelectObject(hdc, pOldPen);
 	ReleaseContextDC(hdc);
 	VERIFY(::DeleteObject(pPen));
@@ -3069,7 +3066,6 @@ void CDCCX::DisplaySubDoc(MWContext *pContext, int iLocation, LO_SubDocStruct *p
 
 void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell)	{
 	LTRB Rect;
-//	if(ResolveElement(Rect, pCell, iLocation) == TRUE)	{
 	if(ResolveElement(Rect, pCell->x, pCell->y, pCell->x_offset,
 						pCell->y_offset, pCell->width, pCell->height) == TRUE)	{
 		SafeSixteen(Rect);
@@ -3101,9 +3097,14 @@ void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell
 		// If we decide to allow nested table cells to have the
 		// background show through then we need this code
 #endif /* LAYERS */
+
 #ifdef EDITOR
         if( EDT_IS_EDITOR(pContext) )
         {
+            if( pCell->border_width == 0 || LO_IsEmptyCell(pCell) )
+            {
+                EraseToBackground(Rect);
+            }
             int32 iExtraSpace = 0;
             int32 iBorder = pCell->border_width;
             // Cell highlightin is thicker
@@ -3120,25 +3121,26 @@ void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell
 		        hDC = GetContextDC();
 			    RECT r;
 			    ::SetRect(&r, CASTINT(Rect.left), CASTINT(Rect.top), CASTINT(Rect.right), CASTINT(Rect.bottom));
+                if( iBorder > 0 )
+                {                
+                    // If there is inter-cell spacing, 
+                    // draw selection in that region as much as possible
+                    if( pCell->inter_cell_space > 0 && iBorder < iMaxWidth )
+                    {
+                        iExtraSpace = min(iMaxWidth - iBorder, pCell->inter_cell_space / 2);
+                        iBorder += iExtraSpace;
+                        ::InflateRect(&r, iExtraSpace, iExtraSpace);
+                    }
+	                LTRB borderWidths(iBorder, iBorder, iBorder, iBorder);
 
-                // If there is inter-cell spacing and 
-                // draw selection in that region as much as possible
-                if( pCell->inter_cell_space > 0 && iBorder < iMaxWidth )
-                {
-                    iExtraSpace = min(iMaxWidth - iBorder, pCell->inter_cell_space / 2);
-                    iBorder += iExtraSpace;
-                    ::InflateRect(&r, iExtraSpace, iExtraSpace);
-                }
-
-	            LTRB borderWidths(iBorder, iBorder, iBorder, iBorder);
-
-                if( bSelectedSpecial )
-                {
-	                // Show a solid DASHED border as the special selection feedback
-                    DisplaySpecialBorder(hDC, r, rgbBorder, iBorder, TRUE);
-                } else {
-	                // Show a solid border as the selection feedback
-                    DisplaySolidBorder(hDC, r, rgbBorder, borderWidths);
+                    if( bSelectedSpecial )
+                    {
+	                    // Show a solid DASHED border as the special selection feedback
+                        DisplaySpecialBorder(hDC, r, rgbBorder, iBorder, TRUE);
+                    } else {
+	                    // Show a solid border as the selection feedback
+                        DisplaySolidBorder(hDC, r, rgbBorder, borderWidths);
+                    }
                 }
             }
 
@@ -3148,7 +3150,7 @@ void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell
                 //   (Navigator will not display borders of empty cells)
                 // Don't bother testing (EDT_DISPLAY_TABLE_BORDERS)
                 //  since we don't support turning borders off now
-                EditorDisplayZeroWidthBorder(Rect, pCell->ele_attrmask & LO_ELE_SELECTED);
+                EditorDisplayZeroWidthBorder(Rect, bSelected | bSelectedSpecial );
 
 		    }
             else if( !bSelected )
@@ -3167,13 +3169,15 @@ void CDCCX::DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell
                 LTRB CellRect = Rect;
                 // Draw inside the border rect
                 CellRect.Inflate(-1);
+
                 if( bSelectedSpecial )
                 {
 			        RECT r;
 			        ::SetRect(&r, CASTINT(CellRect.left), CASTINT(CellRect.top), 
                               CASTINT(CellRect.right), CASTINT(CellRect.bottom));
-	                // Show an inverted DASHED border as the special selection feedback
-                    DisplaySpecialBorder(hDC, r, rgbBorder, iBorder, FALSE);
+	                
+                    // Show an inverted DASHED border as the special selection feedback
+                    DisplaySpecialBorder(hDC, r, rgbBorder, ED_SELECTION_BORDER, FALSE);
                 } else {
                     DisplaySelectionFeedback(LO_ELE_SELECTED, CellRect);
                 }

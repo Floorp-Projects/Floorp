@@ -793,8 +793,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Page Title"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Enter a title for the current page",IDC_STATIC,8,7,224,
-                    8
+    LTEXT           "Enter a title for the current page",IDC_STATIC,8,7,224,8
     EDITTEXT        IDC_DOC_TITLE,8,19,224,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,98,86,62,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,169,86,62,14
@@ -846,6 +845,30 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,84,133,50,14
 END
 
+
+IDD_PASTE_SPECIAL DIALOG DISCARDABLE  0, 0, 142, 81
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Paste Special"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Paste &Text",IDC_PASTE_TEXT,36,40,69,14
+    PUSHBUTTON      "Paste &Image",IDC_PASTE_IMAGE,36,60,69,14
+    LTEXT           "The clipboard contains both text and image versions of the same data.\nSelect which type to paste:",
+                    IDC_STATIC,7,7,127,29
+END
+
+IDD_GET_TABLE_COLUMNS DIALOG DISCARDABLE  0, 0, 153, 73
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Convert Text to Table"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Enter number of columns for new table:",IDC_STATIC,7,7,
+                    139,19
+    EDITTEXT        IDC_TABLE_COLUMNS, 50,25,25,14,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "columns",IDC_STATIC,81,27,65,8
+    DEFPUSHBUTTON   "OK",IDOK,16,52,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,87,52,50,14
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1013,6 +1036,14 @@ BEGIN
         RIGHTMARGIN, 149
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
+    END
+
+    IDD_GET_TABLE_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 146
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -420,7 +420,7 @@ void wfe_InitialUpdateFrame(CFrameWnd* pFrame,
         //  But only if these coordinates are not the same as those on 
         //    the command line.
         if( wp.rcNormalPosition.right > screenX &&
-	        rectLastFrame.Width() < screenX     &&
+	        rectLastFrame.Width() <= screenX     &&
 	        wp.rcNormalPosition.left != theApp.m_iCmdLnX ) {
 
 	        wp.rcNormalPosition.left = 0;
@@ -428,7 +428,7 @@ void wfe_InitialUpdateFrame(CFrameWnd* pFrame,
         }
 
         if( wp.rcNormalPosition.bottom > screenY &&
-	        rectLastFrame.Height() < screenY  &&
+	        rectLastFrame.Height() <= screenY  &&
 	        wp.rcNormalPosition.top != theApp.m_iCmdLnY ) {
 
 	        wp.rcNormalPosition.top = 0;
