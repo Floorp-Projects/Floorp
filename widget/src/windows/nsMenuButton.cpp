@@ -127,9 +127,8 @@ NS_METHOD nsMenuButton::AddMenuItem(const nsString& aMenuLabel, PRInt32 aCommand
 
   nsIMenuItem * menuItem = nsnull;
   nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
+  menuItem->Create(mPopUpMenu, aMenuLabel, aCommand);
   if (NS_OK == rv) {
-    menuItem->SetLabel(aMenuLabel);
-    menuItem->SetCommand(aCommand);
     mPopUpMenu->AddItem(menuItem);
     NS_RELEASE(menuItem);
   }

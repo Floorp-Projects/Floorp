@@ -32,10 +32,8 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-NS_IMPL_ADDREF(nsPopUpMenu)
-NS_IMPL_RELEASE(nsPopUpMenu)
+static NS_DEFINE_IID(kPopUpMenuIID, NS_IPOPUPMENU_IID);
+NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
 
 
 //-------------------------------------------------------------------------
@@ -43,10 +41,12 @@ NS_IMPL_RELEASE(nsPopUpMenu)
 // nsPopUpMenu constructor
 //
 //-------------------------------------------------------------------------
-nsPopUpMenu::nsPopUpMenu() : nsWindow() , nsIPopUpMenu()
+nsPopUpMenu::nsPopUpMenu() : nsIPopUpMenu()
 {
   NS_INIT_REFCNT();
   mNumMenuItems = 0;
+  mParent       = nsnull;
+  mMenu         = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -56,114 +56,28 @@ nsPopUpMenu::nsPopUpMenu() : nsWindow() , nsIPopUpMenu()
 //-------------------------------------------------------------------------
 nsPopUpMenu::~nsPopUpMenu()
 {
+  NS_IF_RELEASE(mParent);
 }
 
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsPopUpMenu::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
 
-    static NS_DEFINE_IID(kIPopUpMenuBar, NS_IPOPUPMENU_IID);
-    if (aIID.Equals(kIPopUpMenuBar)) {
-        *aInstancePtr = (void*) ((nsIPopUpMenu*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
 
 //-------------------------------------------------------------------------
 //
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent,
-                              const nsRect &aRect,
-                              EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
-                              nsIAppShell *aAppShell,
-                              nsIToolkit *aToolkit,
-                              nsWidgetInitData *aInitData)
+NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 {
 
-  mPopUpParent = aParent;
+  mParent = aParent;
+  NS_ADDREF(mParent);
 
-    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
-       aAppShell, aToolkit, aInitData);
-
-    //
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
-    nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (! toolkit->IsGuiThread()) {
-        DWORD args[5];
-        args[0] = (DWORD)aParent;
-        args[1] = (DWORD)&aRect;
-        args[2] = (DWORD)aHandleEventFunction;
-        args[3] = (DWORD)aContext;
-        args[4] = (DWORD)aToolkit;
-        args[5] = (DWORD)aInitData;
-        MethodInfo info(this, nsWindow::CREATE, 6, args);
-        toolkit->CallMethod(&info);
-        return NS_OK;
-    }
-
-
-    // See if the caller wants to explictly set clip children
-    DWORD style = WindowStyle();
-    if (nsnull != aInitData) {
-      if (aInitData->clipChildren) {
-        style |= WS_CLIPCHILDREN;
-      } else {
-        style &= ~WS_CLIPCHILDREN;
-      }
-    }
-
-    mMenu = CreatePopupMenu();
+  mMenu   = CreatePopupMenu();
     
-    if (aParent) {
-        aParent->AddChild(this);
-    }
-
-    //VERIFY(mWnd);
-
-    // call the event callback to notify about creation
-
-    DispatchStandardEvent(NS_CREATE);
-    //SubclassWindow(TRUE);
-    return NS_OK;
+  return NS_OK;
 
 }
 
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsPopUpMenu::Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell,
-                         nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
-{
-
-    NS_ASSERTION(PR_FALSE, "NOT IMPLEMENTED");
-    return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
@@ -283,12 +197,12 @@ NS_METHOD nsPopUpMenu::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 {
-  if (nsnull != mPopUpParent) {
-    HWND pWnd = (HWND)mPopUpParent->GetNativeData(NS_NATIVE_WIDGET);
+  if (nsnull != mParent) {
+    HWND pWnd = (HWND)mParent->GetNativeData(NS_NATIVE_WIDGET);
     if (nsnull != pWnd) {
       nsRect rect;
       POINT point;
-      mPopUpParent->GetBounds(rect);
+      mParent->GetBounds(rect);
       point.x = 0;
       point.y = 0;
       ClientToScreen (pWnd, &point) ;
@@ -310,27 +224,5 @@ NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
   aData = (void *)mMenu;
   return NS_OK;
 }
-
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsPopUpMenu::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsPopUpMenu::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsPopUpMenu::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 
 

@@ -23,6 +23,8 @@
 #include "nsString.h"
 #include "nsIMenu.h"
 
+class nsIWidget;
+
 // {BC658C81-4BEB-11d2-8DBB-00609703C14E}
 #define NS_IMENUBAR_IID      \
 { 0xbc658c81, 0x4beb, 0x11d2, \
@@ -35,6 +37,12 @@ class nsIMenuBar : public nsISupports {
 
   public:
  
+   /**
+    * Creates the MenuBar
+    *
+    */
+    NS_IMETHOD Create(nsIWidget * aParent) = 0;
+    
    /**
     * Adds the Menu 
     *

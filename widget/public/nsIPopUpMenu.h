@@ -24,6 +24,7 @@
 #include "nsIMenuItem.h"
 
 class nsIMenu;
+class nsIWidget;
 
 // {F6CD4F21-53AF-11d2-8DC4-00609703C14E}
 #define NS_IPOPUPMENU_IID      \
@@ -37,6 +38,12 @@ class nsIPopUpMenu : public nsISupports {
 
   public:
  
+   /**
+    * Creates the PopUpMenu
+    *
+    */
+    NS_IMETHOD Create(nsIWidget * aParent) = 0;
+    
    /**
     * Adds a PopUpMenu Item
     *

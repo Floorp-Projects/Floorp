@@ -32,20 +32,22 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
+NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 
-NS_IMPL_ADDREF(nsMenuBar)
-NS_IMPL_RELEASE(nsMenuBar)
 
 //-------------------------------------------------------------------------
 //
 // nsMenuBar constructor
 //
 //-------------------------------------------------------------------------
-nsMenuBar::nsMenuBar() : nsWindow() , nsIMenuBar()
+nsMenuBar::nsMenuBar() : nsIMenuBar()
 {
   NS_INIT_REFCNT();
   mNumMenus = 0;
+  mMenu     = nsnull;
+  mParent   = nsnull;
+  mIsMenuBarAdded = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -55,30 +57,7 @@ nsMenuBar::nsMenuBar() : nsWindow() , nsIMenuBar()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-}
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsMenuBar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIMenuBar, NS_IMENUBAR_IID);
-    if (aIID.Equals(kIMenuBar)) {
-        *aInstancePtr = (void*) ((nsIMenuBar*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
+  NS_IF_RELEASE(mParent);
 }
 
 //-------------------------------------------------------------------------
@@ -86,84 +65,19 @@ nsresult nsMenuBar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
-    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
-       aAppShell, aToolkit, aInitData);
-
-    //
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
-    nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (! toolkit->IsGuiThread()) {
-        DWORD args[5];
-        args[0] = (DWORD)aParent;
-        args[1] = (DWORD)&aRect;
-        args[2] = (DWORD)aHandleEventFunction;
-        args[3] = (DWORD)aContext;
-        args[4] = (DWORD)aToolkit;
-        args[5] = (DWORD)aInitData;
-        MethodInfo info(this, nsWindow::CREATE, 6, args);
-        toolkit->CallMethod(&info);
-        return NS_OK;
-    }
-
-
-    // See if the caller wants to explictly set clip children
-    DWORD style = WindowStyle();
-    if (nsnull != aInitData) {
-      if (aInitData->clipChildren) {
-        style |= WS_CLIPCHILDREN;
-      } else {
-        style &= ~WS_CLIPCHILDREN;
-      }
-    }
-
-    mMenu = (HMENU)CreateMenu();
-    
-    if (aParent) {
-        aParent->AddChild(this);
-    }
-
-    //VERIFY(mWnd);
-
-    // call the event callback to notify about creation
-
-    DispatchStandardEvent(NS_CREATE);
-    //SubclassWindow(TRUE);
-    return NS_OK;
-
-}
-
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuBar::Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell,
-                         nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
-{
-
-  NS_ASSERTION(PR_FALSE, "NOT IMPLEMENTED");
+  mMenu = CreateMenu();
+  mParent = aParent;
+  NS_ADDREF(mParent);
   return NS_OK;
+
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
+
   nsString name;
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
@@ -184,6 +98,11 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   BOOL status = InsertMenuItem(mMenu, mNumMenus++, TRUE, &menuInfo);
 
   delete[] nameStr;
+
+  if (!mIsMenuBarAdded) {
+    mParent->SetMenuBar(this);
+    mIsMenuBarAdded = PR_TRUE;
+  }
 
   return NS_OK;
 }
@@ -224,28 +143,4 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
   aData = (void *)mMenu;
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsMenuBar::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsMenuBar::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsMenuBar::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
-
 

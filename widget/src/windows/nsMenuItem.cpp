@@ -32,6 +32,7 @@
 #include "nsRect.h"
 #include "nsGfxCIID.h"
 #include "nsIMenu.h"
+#include "nsIPopUpMenu.h"
 
 static NS_DEFINE_IID(kMenuItemIID, NS_IMENUITEM_IID);
 NS_IMPL_ISUPPORTS(nsMenuItem, kMenuItemIID)
@@ -55,54 +56,24 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
+  NS_IF_RELEASE(mMenu);
 }
 
 //-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIWidget *aParent,
-                        const nsRect &aRect,
-                        EVENT_CALLBACK aHandleEventFunction,
-                        nsIDeviceContext *aContext,
-                        nsIAppShell *aAppShell,
-                        nsIToolkit *aToolkit,
-                        nsWidgetInitData *aInitData)
+NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
 {
-
-  // call the event callback to notify about creation
-  //DispatchStandardEvent(NS_CREATE);
-  //SubclassWindow(TRUE);
-  return NS_ERROR_FAILURE;   
-}
-
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsNativeWidget aParent,
-                         const nsRect &aRect,
-                         EVENT_CALLBACK aHandleEventFunction,
-                         nsIDeviceContext *aContext,
-                         nsIAppShell *aAppShell,
-                         nsIToolkit *aToolkit,
-                         nsWidgetInitData *aInitData)
-{
-  NS_INIT_REFCNT();
-
-  // call the event callback to notify about creation
-  //DispatchStandardEvent(NS_CREATE);
-  //SubclassWindow(TRUE);
-  return NS_ERROR_FAILURE;   
+  mCommand = aCommand;
+  mLabel   = aLabel;
+  aParent->AddItem(this);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetLabel(const nsString &aText)
+NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRUint32 aCommand)
 {
-  mLabel = aText;
+  mCommand = aCommand;
+  mLabel   = aLabel;
+  aParent->AddItem(this);
   return NS_OK;
 }
 
@@ -110,21 +81,6 @@ NS_METHOD nsMenuItem::SetLabel(const nsString &aText)
 NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 {
   aText = mLabel;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetMenu(nsIMenu * aMenu)
-{
-  mMenu = aMenu;
-  NS_ADDREF(mMenu);
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetCommand(PRUint32 aCommand)
-{
-  mCommand = aCommand;
   return NS_OK;
 }
 

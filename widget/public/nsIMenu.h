@@ -23,6 +23,9 @@
 #include "nsString.h"
 #include "nsIMenuItem.h"
 
+class nsIMenuBar;
+class nsIMenu;
+
 // {35A3DEC1-4992-11d2-8DBA-00609703C14E}
 #define NS_IMENU_IID      \
 { 0x35a3dec1, 0x4992, 0x11d2, \
@@ -36,12 +39,18 @@ class nsIMenu : public nsISupports {
 
   public:
  
-   /**
-    * Set the Menu label
+  /**
+    * Creates the Menu and adds it the MenuBar
     *
     */
-    NS_IMETHOD SetLabel(const nsString &aText) = 0;
+    NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel) = 0;
     
+  /**
+    * Creates the Menu and adds it another Menu
+    *
+    */
+    NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel) = 0;
+   
    /**
     * Get the Menu label
     *
