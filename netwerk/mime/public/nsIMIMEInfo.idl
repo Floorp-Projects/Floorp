@@ -50,7 +50,7 @@ interface nsIMIMEInfo : nsISupports {
      * @return Number of elements in the array.
      * @return Array of extensions.
      */
-	void GetFileExtensions(out PRInt32 elementCount,
+	void GetFileExtensions(out PRUint32 elementCount,
                            [array, size_is(elementCount)] out string extensions);
 
  		/* Set File Extensions. Input is a comma deliminated list of extensions

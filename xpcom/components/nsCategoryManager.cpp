@@ -464,7 +464,7 @@ NS_IMETHODIMP
 nsCategoryManager::GetCategoryContents( const char *category,
                                         char ***entries,
                                         char ***values,
-                                        PRInt32 *count )
+                                        PRUint32 *count )
   {
       // BULLSHIT ALERT: Wasn't implemented in JS either.
       //  Will people use this?  If not, let's get rid of it

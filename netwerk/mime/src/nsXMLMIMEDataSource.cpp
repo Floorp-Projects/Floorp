@@ -188,11 +188,11 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
 
     // Finally add an extension mapping.
     char** extensions;
-		PRInt32 count;
+		PRUint32 count;
 		rv = aMapper->GetFileExtensions(& count, &extensions );
 		if ( NS_FAILED ( rv ) )
 			return rv;
-		for ( PRInt32 i = 0; i<count; i++ )
+		for ( PRUint32 i = 0; i<count; i++ )
 		{
 		 	key = extensions[i];
 		  oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, aMapper);

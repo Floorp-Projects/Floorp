@@ -60,9 +60,9 @@ interface nsIGraphics : nsISupports
     void invertArc(in nscoord x, in nscoord y, in nscoord width, in nscoord height, in float startAngle, in float endAngle);
 
 	
-    void drawPolygon(in long count, [array, size_is(count)] in long points);
-    void fillPolygon(in long count, [array, size_is(count)] in long points);
-    void invertPolygon(in long count, [array, size_is(count)] in long points);
+    void drawPolygon(in unsigned long count, [array, size_is(count)] in long points);
+    void fillPolygon(in unsigned long count, [array, size_is(count)] in long points);
+    void invertPolygon(in unsigned long count, [array, size_is(count)] in long points);
 
 	void drawString(in wstring text, in nscoord x, in nscoord y);
 	

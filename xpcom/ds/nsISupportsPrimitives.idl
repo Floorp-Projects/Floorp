@@ -44,7 +44,8 @@ interface nsISupportsString : nsISupports
 
       // do not include space for null termination in |length|. It is handled
       // internally.
-    void setDataWithLength(in long length, [size_is(length)] in string data);
+    void setDataWithLength(in unsigned long length,
+                           [size_is(length)] in string data);
 };
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
@@ -55,7 +56,8 @@ interface nsISupportsWString : nsISupports
 
       // do not include space for null termination in |length|. It is handled
       // internally. |length| is in characters, not in bytes.
-    void setDataWithLength(in long length, [size_is(length)] in wstring data);
+    void setDataWithLength(in unsigned long length,
+                           [size_is(length)] in wstring data);
 };
 
 /**

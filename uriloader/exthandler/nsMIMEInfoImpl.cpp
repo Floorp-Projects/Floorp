@@ -41,7 +41,7 @@ nsMIMEInfoImpl::GetExtCount() {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::GetFileExtensions(PRInt32 *elementCount, char ***extensions) {
+nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
     *elementCount = mExtensions.Count();
     if (*elementCount < 1) return NS_OK;;
 

@@ -80,7 +80,7 @@ interface nsICategoryManager : nsISupports
     void getCategoryContents(in string category,
 			     [array, size_is(count)] out string entries,
 			     [array, size_is(count)] out string values,
-			     [retval] out long count);
+			     [retval] out unsigned long count);
 
     const long OVERRIDE   = 0;
     const long FALLBACK   = 1;

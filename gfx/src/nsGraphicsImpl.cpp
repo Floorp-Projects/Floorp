@@ -110,17 +110,17 @@ NS_IMETHODIMP nsGraphicsImpl::InvertArc(nscoord x, nscoord y, nscoord width, nsc
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsGraphicsImpl::DrawPolygon(PRInt32 count, PRInt32 *points)
+NS_IMETHODIMP nsGraphicsImpl::DrawPolygon(PRUint32 count, PRInt32 *points)
 {
 	return mRenderer->DrawPolygon((nsPoint*)points, count / 2);
 }
 
-NS_IMETHODIMP nsGraphicsImpl::FillPolygon(PRInt32 count, PRInt32 *points)
+NS_IMETHODIMP nsGraphicsImpl::FillPolygon(PRUint32 count, PRInt32 *points)
 {
 	return mRenderer->FillPolygon((nsPoint*)points, count / 2);
 }
 
-NS_IMETHODIMP nsGraphicsImpl::InvertPolygon(PRInt32 count, PRInt32 *points)
+NS_IMETHODIMP nsGraphicsImpl::InvertPolygon(PRUint32 count, PRInt32 *points)
 {
 	// return mRenderer->InvertPolygon(points);
 	return NS_ERROR_NOT_IMPLEMENTED;
