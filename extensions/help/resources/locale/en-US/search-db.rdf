@@ -1325,6 +1325,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="importing_intermediate_CA certificates"
+         nc:name="importing intermediate CA certificates"
+	 nc:link="chrome://help/locale/certs_help.html#importing_intermediate_CA certificatesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="indent"
          nc:name="indent"
 	 nc:link="chrome://help/locale/composer_help.html#indentSDX"/>
@@ -1405,9 +1415,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="JavaScript"
-         nc:name="JavaScript"
-	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
+       <rdf:Description ID="javascript"
+         nc:name="javascript"
+	 nc:link="chrome://help/locale/composer_help.html#javascriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1415,9 +1425,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="javascript"
-         nc:name="javascript"
-	 nc:link="chrome://help/locale/composer_help.html#javascriptSDX"/>
+       <rdf:Description ID="JavaScript"
+         nc:name="JavaScript"
+	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
