@@ -1262,7 +1262,11 @@ NS_IMETHODIMP nsAccessible::GetXULName(nsAString& _retval)
     // CASE #2 ------ label as a child
     nsCOMPtr<nsIDOMNodeList>labelChildren;
     NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-    if (NS_SUCCEEDED(rv = domElement->GetElementsByTagName(NS_LITERAL_STRING("label"), getter_AddRefs(labelChildren)))) {
+    nsAutoString nameSpaceURI;
+    domElement->GetNamespaceURI(nameSpaceURI);
+    if (NS_SUCCEEDED(rv = domElement->GetElementsByTagNameNS(nameSpaceURI,
+                                                             NS_LITERAL_STRING("label"),
+                                                             getter_AddRefs(labelChildren)))) {
       PRUint32 length = 0;
       if (NS_SUCCEEDED(rv = labelChildren->GetLength(&length)) && length > 0) {
         for (PRUint32 i = 0; i < length; ++i) {
