@@ -73,9 +73,13 @@ interface_cache = {}
 # Keyed by [iid][name], each item is an unbound method.
 interface_method_cache = {}
 
+# Keyed by clsid from nsIClassInfo - everything ever queried for the CID.
+contractid_info_cache = {}
+
 def _shutdown():
     interface_cache.clear()
     interface_method_cache.clear()
+    contractid_info_cache.clear()
 
 # Fully process the named method, generating method code etc.
 def BuildMethod(method_info, iid):
@@ -214,14 +218,27 @@ class Component(_XPCOMBase):
         except COMException:
             classinfo = None
         if classinfo is not None:
-#            print "YAY - have class info!!", classinfo
             real_cid = classinfo.contractID
-            if real_cid is not None:
+            if real_cid:
                 self.__dict__['_object_name_'] = real_cid
-            for nominated_iid in classinfo.getInterfaces():
-                # Interface may appear twice in the class info list, so check this here.
-                if not self.__dict__['_interface_infos_'].has_key(nominated_iid):
-                    self._remember_interface_info(nominated_iid)
+                contractid_info = contractid_info_cache.get(real_cid)
+            else:
+                contractid_info = None
+            if contractid_info is None:
+#               print "YAY - have class info!!", classinfo
+                for nominated_iid in classinfo.getInterfaces():
+                    # Interface may appear twice in the class info list, so check this here.
+                    if not self.__dict__['_interface_infos_'].has_key(nominated_iid):
+                        self._remember_interface_info(nominated_iid)
+                if real_cid is not None:
+                    contractid_info = {}
+                    contractid_info['_name_to_interface_name_'] = self.__dict__['_name_to_interface_name_']
+                    contractid_info['_interface_infos_'] = self.__dict__['_interface_infos_']
+                    contractid_info_cache[real_cid] = contractid_info
+            else:
+                for key, val in contractid_info.items():
+                    self.__dict__[key].update(val)
+
         self.__dict__['_com_classinfo_'] = classinfo
 
     def _remember_interface_info(self, iid):
@@ -307,7 +324,12 @@ class Component(_XPCOMBase):
             setattr(interface, attr, val)
             return
         raise AttributeError, "XPCOM component '%s' can not set attribute '%s'" % (self._object_name_, attr)
-
+    def __repr__(self):
+        # We can advantage from nsIClassInfo - use it.
+        if not self._tried_classinfo_:
+            self._build_all_supported_interfaces_()
+        return _XPCOMBase.__repr__(self)
+    
 class _Interface(_XPCOMBase):
     def __init__(self, comobj, iid, method_infos, getters, setters, constants):
         self.__dict__['_comobj_'] = comobj

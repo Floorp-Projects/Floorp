@@ -37,8 +37,11 @@ manager = xpcom.client.Component(_xpcom.NS_GetGlobalComponentManager(), _xpcom.I
 # The "interfaceInfoManager" object - JS doesnt have this.
 interfaceInfoManager = _xpcom.XPTI_GetInterfaceInfoManager()
 
+# The serviceManager - JS doesnt have this either!
+serviceManager = _xpcom.GetGlobalServiceManager()
+
 # The "Exception" object
-Exception = xpcom.Exception
+Exception = xpcom.COMException
 
 # Base class for our collections.
 # It appears that all objects supports "." and "[]" notation.
@@ -80,6 +83,7 @@ class _ComponentCollection:
             return self._dict_data[item]
         return self._get_one(item)
 
+_constants_by_iid_map = {}
 
 class _Interface:
     # An interface object.
@@ -88,7 +92,6 @@ class _Interface:
         d = self.__dict__
         d['_iidobj_'] = iid # Allows the C++ framework to treat this as a native IID.
         d['name'] = name
-        d['constants'] = None # Built first time an attribute is asked for.
     def __cmp__(self, other):
         this_iid = self._iidobj_
         other_iid = getattr(other, "_iidobj_", other)
@@ -105,13 +108,13 @@ class _Interface:
         raise AttributeError, "Can not set attributes on components.Interface objects"
     def __getattr__(self, attr):
         # Support constants as attributes.
-        c = self.constants
+        c = _constants_by_iid_map.get(self._iidobj_)
         if c is None:
             c = {}
             i = xpt.Interface(self._iidobj_)
             for c_ob in i.constants:
                 c[c_ob.name] = c_ob.value
-            self.__dict__['constants'] = c
+            _constants_by_iid_map[self._iidobj_] = c
         if c.has_key(attr):
             return c[attr]
         raise AttributeError, "'%s' interfaces do not define a constant '%s'" % (self.name, attr)
@@ -153,7 +156,7 @@ class _Class:
         import xpcom.client
         return xpcom.client.Component(self.contractid, _get_good_iid(iid))
     def getService(self, iid = None):
-        return _xpcom.GetGlobalServiceManager().getServiceByContractID(self.contractid, _get_good_iid(iid))
+        return serviceManager.getServiceByContractID(self.contractid, _get_good_iid(iid))
 
 class _Classes(_ComponentCollection):
     def __init__(self):
@@ -186,11 +189,10 @@ ID = _xpcom.IID
 class _ShutdownObserver:
     _com_interfaces_ = interfaces.nsIObserver
     def observe(self, service, topic, extra):
-        global manager
-        global interfaceInfoManager
-        global _shutdownObserver
-        manager = interfaceInfoManager = _shutdownObserver = None
+        global manager, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
+        manager = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
         xpcom.client._shutdown()
+        xpcom.server._shutdown()
 
 svc = _xpcom.GetGlobalServiceManager().getServiceByContractID("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
 # Observers will be QI'd for a weak-reference, so we must keep the

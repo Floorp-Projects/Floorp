@@ -361,6 +361,9 @@ public:
 	// This means that once we have created it (and while we
 	// are alive) it will never die.
 	nsCOMPtr<nsIWeakReference> m_pWeakRef;
+#ifdef NS_BUILD_REFCNT_LOGGING
+	char refcntLogRepr[64]; // sigh - I wish I knew how to use the Moz string classes :(  OK for debug only tho.
+#endif
 protected:
 	PyG_Base(PyObject *instance, const nsIID &iid);
 	virtual ~PyG_Base();
@@ -430,6 +433,9 @@ public:
 	NS_DECL_ISUPPORTS
     NS_DECL_NSIWEAKREFERENCE;
 	PyG_Base *m_pBase; // NO REF COUNT!!!
+#ifdef NS_BUILD_REFCNT_LOGGING
+	char refcntLogRepr[41];
+#endif
 };
 
 
@@ -655,7 +661,7 @@ PyXPCOM_TypeObject *ClassName::type = NULL;
 
 
 // And the classes
-PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManager, nsIComponentManagerObsolete, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
 PyXPCOM_INTERFACE_DECLARE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)

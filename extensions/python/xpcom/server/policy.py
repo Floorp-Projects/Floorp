@@ -68,15 +68,16 @@ def _GetNominatedInterfaces(obj):
 ## We cache class infos by class
 class_info_cache = {}
 
-def GetClassInfoForClass(klass):
-    # Note we do not store the wrapped object in the class - this would 
-    # present us with shutdown problems (ie, needing to clear the
-    # cache), and also messes with lifetime issues.
+def GetClassInfoForObject(ob):
+    if xpcom.server.tracer_unwrap is not None:
+        ob = xpcom.server.tracer_unwrap(ob)
+    klass = ob.__class__
     ci = class_info_cache.get(klass)
     if ci is None:
         ci = DefaultClassInfo(klass)
+        ci = xpcom.server.WrapObject(ci, _xpcom.IID_nsIClassInfo, bWrapClient = 0)
         class_info_cache[klass] = ci
-    return xpcom.server.WrapObject(ci, _xpcom.IID_nsIClassInfo, bWrapClient = 0)
+    return ci
 
 class DefaultClassInfo:
     _com_interfaces_ = _xpcom.IID_nsIClassInfo
@@ -88,7 +89,12 @@ class DefaultClassInfo:
         self.implementationLanguage = 3 # Python - avoid lookups just for this
         self.flags = 0 # what to do here??
         self.interfaces = None
-        
+
+    def get_classID(self):
+        if self.classID is None:
+            raise ServerException(nsError.NS_ERROR_NOT_IMPLEMENTED, "Class '%r' has no class ID" % (self.klass,))
+        return self.classID
+
     def getInterfaces(self):
         if self.interfaces is None:
             self.interfaces = _GetNominatedInterfaces(self.klass)
@@ -133,7 +139,7 @@ class DefaultPolicy:
 
         # Always support nsIClassInfo 
         if iid == _xpcom.IID_nsIClassInfo:
-            return GetClassInfoForClass(self._obj_.__class__)
+            return GetClassInfoForObject(self._obj_)
 
         # See if the instance has a QI
         # use lower-case "_query_interface_" as win32com does, and it doesnt really matter.
@@ -276,3 +282,6 @@ class SupportsPrimitive:
         raise ServerException(nsError.NS_ERROR_NOT_IMPLEMENTED)
     def toString(self):
         return str(self.get_data())
+
+def _shutdown():
+    class_info_cache.clear()
