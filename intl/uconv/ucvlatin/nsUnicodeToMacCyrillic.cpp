@@ -42,7 +42,7 @@ nsUnicodeToMacCyrillic::nsUnicodeToMacCyrillic()
 
 nsresult nsUnicodeToMacCyrillic::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMacCyrillic();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacCyrillic();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

@@ -42,7 +42,7 @@ nsUnicodeToISO885915::nsUnicodeToISO885915()
 
 nsresult nsUnicodeToISO885915::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToISO885915();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToISO885915();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

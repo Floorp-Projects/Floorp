@@ -42,7 +42,7 @@ nsUnicodeToMacTurkish::nsUnicodeToMacTurkish()
 
 nsresult nsUnicodeToMacTurkish::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMacTurkish();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacTurkish();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

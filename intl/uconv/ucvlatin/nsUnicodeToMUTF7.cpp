@@ -29,6 +29,6 @@ nsUnicodeToMUTF7::nsUnicodeToMUTF7()
 
 nsresult nsUnicodeToMUTF7::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMUTF7();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMUTF7();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }

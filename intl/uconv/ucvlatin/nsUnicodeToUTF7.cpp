@@ -36,6 +36,11 @@ nsBasicUTF7Encoder::nsBasicUTF7Encoder(char aLastChar, char aEscChar)
   Reset();
 }
 
+NS_IMETHODIMP nsBasicUTF7Encoder::FillInfo(PRUint32 *aInfo)
+{
+  memset(aInfo, 0xFF, (0x10000L >> 3));
+  return NS_OK;
+}
 nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
                                           char * aDest, 
                                           PRInt32 * aDestLength)
@@ -290,6 +295,6 @@ nsUnicodeToUTF7::nsUnicodeToUTF7()
 
 nsresult nsUnicodeToUTF7::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToUTF7();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUTF7();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }

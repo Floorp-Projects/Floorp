@@ -42,7 +42,7 @@ nsUnicodeToCP1252::nsUnicodeToCP1252()
 
 nsresult nsUnicodeToCP1252::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToCP1252();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToCP1252();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

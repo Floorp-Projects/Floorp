@@ -42,7 +42,7 @@ nsUnicodeToVISCII::nsUnicodeToVISCII()
 
 nsresult nsUnicodeToVISCII::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToVISCII();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToVISCII();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

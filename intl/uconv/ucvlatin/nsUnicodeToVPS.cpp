@@ -42,7 +42,7 @@ nsUnicodeToVPS::nsUnicodeToVPS()
 
 nsresult nsUnicodeToVPS::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToVPS();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToVPS();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

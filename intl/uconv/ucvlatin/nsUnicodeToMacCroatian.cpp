@@ -42,7 +42,7 @@ nsUnicodeToMacCroatian::nsUnicodeToMacCroatian()
 
 nsresult nsUnicodeToMacCroatian::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMacCroatian();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacCroatian();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

@@ -42,7 +42,7 @@ nsUnicodeToISO88591::nsUnicodeToISO88591()
 
 nsresult nsUnicodeToISO88591::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToISO88591();
+  *aResult = (nsIUnicodeEncoder *) new nsUnicodeToISO88591();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
@@ -56,3 +56,4 @@ NS_IMETHODIMP nsUnicodeToISO88591::GetMaxLength(const PRUnichar * aSrc,
   *aDestLength = aSrcLength;
   return NS_OK_UENC_EXACTLENGTH;
 }
+
