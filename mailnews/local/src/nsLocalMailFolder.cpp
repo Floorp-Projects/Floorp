@@ -1147,31 +1147,41 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   nsCOMPtr<nsIDocShell> docShell;
   if (!msgWindow) return NS_ERROR_NULL_POINTER;
   msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-  if (!mMsgStringService)
-    mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
-  if (!mMsgStringService) return NS_ERROR_FAILURE;
-  PRUnichar *alertString = nsnull;
-  mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
-  if (!alertString) return rv;
   if (docShell)
   {
-    nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
-    if (dialog)
+    PRBool okToDelete = PR_FALSE;
+    PRBool confirmDeletion = PR_TRUE;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
+       rv = prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
+    if (confirmDeletion)
     {
-      PRBool okToDelete = PR_FALSE;
-      dialog->Confirm(nsnull, alertString, &okToDelete);
-      if (okToDelete)
-      { 
-        nsCOMPtr<nsIMsgFolder> trashFolder;
-        rv = GetTrashFolder(getter_AddRefs(trashFolder));
-        if (NS_SUCCEEDED(rv))
-        {
-                      // we don't allow multiple folder selection so this is ok.
-          nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
-          nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
-          if (folder)
-             trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
-        }
+      if (!mMsgStringService)
+        mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
+      if (!mMsgStringService) return NS_ERROR_FAILURE;
+      PRUnichar *alertString = nsnull;
+      mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
+      if (!alertString) return rv;
+        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog)
+      {
+        PRBool okToDelete = PR_FALSE;
+        dialog->Confirm(nsnull, alertString, &okToDelete);
+      }
+    }
+    else
+      okToDelete = PR_TRUE;
+    if (okToDelete)
+    { 
+      nsCOMPtr<nsIMsgFolder> trashFolder;
+      rv = GetTrashFolder(getter_AddRefs(trashFolder));
+      if (NS_SUCCEEDED(rv))
+      {
+        // we don't allow multiple folder selection so this is ok.
+        nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
+        nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+        if (folder)
+           trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
       }
     }
   }

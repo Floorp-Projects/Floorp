@@ -114,7 +114,6 @@ static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define FOUR_K 4096
 #define MAILNEWS_CUSTOM_HEADERS "mailnews.customHeaders"
@@ -2106,13 +2105,23 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                 deleteNoTrash = PR_TRUE;
             }
 
-            nsXPIDLString confirmationStr;
-            IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),
-            getter_Copies(confirmationStr));
+            PRBool confirmDeletion = PR_TRUE;
+            nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+            if (NS_SUCCEEDED(rv))
+                prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
 
-            if (dialog && confirmationStr) {
+            if (confirmDeletion)
+            {
+              nsXPIDLString confirmationStr;
+              IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),
+              getter_Copies(confirmationStr));
+
+              if (dialog && confirmationStr)
                 dialog->Confirm(nsnull, confirmationStr, &confirmed);
             }
+            else
+              confirmed = PR_TRUE;
+
             if (confirmed)
             {
               for (i = 0; i < folderCount; i++)
