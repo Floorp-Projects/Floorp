@@ -110,7 +110,7 @@ CalendarEventSelection.prototype.setArrayToSelection = function calSel_setArrayT
 {
    this.selectedEvents = new Array();
 
-   for( i = 0; i < ArrayOfEvents.length; i++ )
+   for( var i = 0; i < ArrayOfEvents.length; i++ )
    {
       this.selectedEvents[ this.selectedEvents.length ] = ArrayOfEvents[i];
    }
@@ -121,7 +121,7 @@ CalendarEventSelection.prototype.setArrayToSelection = function calSel_setArrayT
 
 CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEvent( Event )
 {
-   for( i = 0; i < this.selectedEvents.length; i++ )
+   for( var i = 0; i < this.selectedEvents.length; i++ )
    {
       if( this.selectedEvents[i] == Event )
          return true;
@@ -137,11 +137,13 @@ CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEve
 
 CalendarEventSelection.prototype.onSelectionChanged = function calSel_onSelectionChanged( )
 {
+   var ArrayOfElements;
+   var i;
    if( this.selectedEvents.length > 0 )
    {
-      var ArrayOfElements = document.getElementsByAttribute( "disabledwhennoeventsselected", "true" );
+      ArrayOfElements = document.getElementsByAttribute( "disabledwhennoeventsselected", "true" );
 
-      for( var i = 0; i < ArrayOfElements.length; i++ )
+      for( i = 0; i < ArrayOfElements.length; i++ )
          ArrayOfElements[i].removeAttribute( "disabled" );
       
       if( this.selectedEvents.length != 1 )
@@ -154,9 +156,9 @@ CalendarEventSelection.prototype.onSelectionChanged = function calSel_onSelectio
    }
    else
    {
-      var ArrayOfElements = document.getElementsByAttribute( "disabledwhennoeventsselected", "true" );
+      ArrayOfElements = document.getElementsByAttribute( "disabledwhennoeventsselected", "true" );
 
-      for( var i = 0; i < ArrayOfElements.length; i++ )
+      for( i = 0; i < ArrayOfElements.length; i++ )
          ArrayOfElements[i].setAttribute( "disabled", "true" );
 
    }

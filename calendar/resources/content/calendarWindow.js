@@ -471,15 +471,16 @@ CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverIn
    {
       Html.removeChild( Html.firstChild ); 
    }
-   
-   if(event.currentTarget.calendarToDo) 
+
+   var HolderBox;
+   if("calendarToDo" in event.currentTarget) 
    {
-     var HolderBox = getPreviewTextForTask( event.currentTarget.calendarToDo );
+      HolderBox = getPreviewTextForTask( event.currentTarget.calendarToDo );
    }
    else
-      {
-   var HolderBox = getPreviewTextForRepeatingEvent( event.currentTarget.calendarEventDisplay );
-      }
+   {
+      HolderBox = getPreviewTextForRepeatingEvent( event.currentTarget.calendarEventDisplay );
+   }
    
    Html.appendChild( HolderBox );
 }
@@ -626,7 +627,7 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
 {
    this.refreshDisplay( ShowEvent )
    
-   if(this.calendarWindow.currentView.doResize)
+   if("doResize" in this.calendarWindow.currentView)
       this.calendarWindow.currentView.doResize();
    
    this.refreshEvents()

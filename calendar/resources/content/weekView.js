@@ -243,8 +243,8 @@ WeekView.prototype.refreshEvents = function( )
    //START FOR LOOP FOR DAYS---> 
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
    {
-     var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
-     var dayToGetDay = dayToGet.getDay() ;
+     dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+     dayToGetDay = dayToGet.getDay() ;
      if( gOnlyWorkdayChecked === "true" && ( dayToGetDay == 0 || dayToGetDay == 6 ))
      {
        /* its a weekend */
@@ -432,7 +432,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    top = top - ElementOfRef.parentNode.boxObject.y - 2;
    eventBox.setAttribute( "top", top );
 
-   var dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
+   dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
    
    var index = displayDateObject.getDay( ) - dayIndex.getDay( );
    if( index < 0 )
@@ -476,7 +476,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventDescriptionElement.setAttribute( "flex", "1" );
    var DescriptionText = document.createTextNode( " " );
    eventDescriptionElement.appendChild( DescriptionText );
-   eventDescriptionElement.setAttribute( "style", "height: "+Height+";" );
+   eventDescriptionElement.setAttribute( "height", Height );
    eventDescriptionElement.setAttribute( "crop", "end" );
    eventDescriptionElement.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
    eventDescriptionElement.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
@@ -561,11 +561,12 @@ WeekView.prototype.refreshDisplay = function( )
    var viewMonth = selectedDate.getMonth();
    var viewYear = selectedDate.getFullYear();
    
-   NewArrayOfDayNames = new Array();
+   var NewArrayOfDayNames = new Array();
    
    /* 
       Set the header information for the week view
    */
+   var i;
    for( i = 0; i < ArrayOfDayNames.length; i++ )
    {
       NewArrayOfDayNames[i] = ArrayOfDayNames[i];
@@ -701,7 +702,7 @@ WeekView.prototype.selectBoxForEvent = function( calendarEvent )
 {
    var EventBoxes = document.getElementsByAttribute( "name", "week-view-event-box-"+calendarEvent.id );
             
-   for ( j = 0; j < EventBoxes.length; j++ ) 
+   for ( var j = 0; j < EventBoxes.length; j++ ) 
    {
       EventBoxes[j].setAttribute( "eventselected", "true" );
    }
@@ -709,7 +710,7 @@ WeekView.prototype.selectBoxForEvent = function( calendarEvent )
 
 WeekView.prototype.getVisibleEvent = function( calendarEvent )
 {
-   eventBox = document.getElementById( "week-view-event-box-"+calendarEvent.id );
+   var eventBox = document.getElementById( "week-view-event-box-"+calendarEvent.id );
    if ( eventBox ) 
    {
       return eventBox;
@@ -773,7 +774,7 @@ WeekView.prototype.hiliteTodaysDate = function( )
 {
    //clear out the old today boxes.
    var OldTodayArray = document.getElementsByAttribute( "today", "true" );
-   for ( i = 0; i < OldTodayArray.length; i++ ) 
+   for ( var i = 0; i < OldTodayArray.length; i++ ) 
    {
       OldTodayArray[i].removeAttribute( "today" );
    }
@@ -820,7 +821,7 @@ WeekView.prototype.clearSelectedEvent = function( )
    //Event = gCalendarWindow.getSelectedEvent();
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
-   for( i = 0; i < ArrayOfBoxes.length; i++ )
+   for( var i = 0; i < ArrayOfBoxes.length; i++ )
    {
       ArrayOfBoxes[i].removeAttribute( "eventselected" );   
    }

@@ -135,13 +135,14 @@ function MultiweekView( calendarWindow )
             
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
+               var EventBoxes;
                if( EventSelectionArray[i].due ) 
 		 {
-		   var EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-todo-box-"+EventSelectionArray[i].id );		   
+		   EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-todo-box-"+EventSelectionArray[i].id );		   
 		 }
 	       else
 		 {
-		   var EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-event-box-"+EventSelectionArray[i].id );
+		   EventBoxes = document.getElementsByAttribute( "name", "multiweek-view-event-box-"+EventSelectionArray[i].id );
 		 }
                for ( j = 0; j < EventBoxes.length; j++ ) 
                {
@@ -575,11 +576,12 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
       document.getElementById( "multiweek-view-header-day-"+i ).value = NewArrayOfDayNames[ (i-1) ];
    }
    
-   for( var weekIndex = 1 ;  weekIndex <= this.WeeksInView ; ++weekIndex )
+   var weekIndex;
+   for( weekIndex = 1 ;  weekIndex <= this.WeeksInView ; ++weekIndex )
    {
      document.getElementById( "multiweek-week-" + weekIndex + "-row" ).removeAttribute( "collapsed" );
    }
-   for( var weekIndex = this.WeeksInView + 1 ; weekIndex <= 6 ; ++weekIndex )
+   for( weekIndex = this.WeeksInView + 1 ; weekIndex <= 6 ; ++weekIndex )
    {
      document.getElementById( "multiweek-week-" + weekIndex + "-row" ).setAttribute( "collapsed", "true" );
    }
@@ -634,7 +636,7 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    var mondayDate ;
    var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
 
-   for( var weekIndex = 0; weekIndex < this.WeeksInView; ++weekIndex )
+   for( weekIndex = 0; weekIndex < this.WeeksInView; ++weekIndex )
    {
      weekNumberItem = this.weekNumberItemArray[ weekIndex+1 ] ;
      mondayDate = new Date( this.firstDateOfView.getFullYear(), 
@@ -1034,7 +1036,7 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
 {
   var dayBoxItem = this.dayBoxItemArray[ 3 ];
   if( !dayBoxItem ) 
-     return false;
+     return;
   // Make a box item to hold the event
   var eventBox = document.createElement( "box" );
   eventBox.setAttribute( "id", "multiweek-view-event-box-fictitious" );

@@ -553,7 +553,7 @@ DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calend
 {
    var EventBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+calendarEvent.id );
    
-   for ( j = 0; j < EventBoxes.length; j++ ) 
+   for ( var j = 0; j < EventBoxes.length; j++ ) 
    {
       EventBoxes[j].setAttribute( "eventselected", "true" );
    }

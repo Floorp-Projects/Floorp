@@ -208,7 +208,7 @@ function calendarInit()
    }
    // CofC Calendar Coloring Change
 
-   if( window.arguments && window.arguments[0].channel )
+   if( ("arguments" in window.arguments) && ("channel" in window.arguments[0]) )
    {
       gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].channel );
    }
@@ -1219,7 +1219,7 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
      var nbmaxlines = 5 ;
      var nblines = lines.length ;
      if( nblines > nbmaxlines ) {
-       var nblines = nbmaxlines ;
+       nblines = nbmaxlines ;
        lines[ nblines - 1 ] = "..." ;
      }
   

@@ -325,7 +325,7 @@ var toDoTreeView =
    cycleCell : function(row,colId)
    {
     calendarToDo = gTaskArray[row];
-    if( !calendarToDo ) return false;
+    if( !calendarToDo ) return;
 
     if( colId == "unifinder-todo-tree-col-completed")
 	{

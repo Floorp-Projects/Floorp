@@ -144,7 +144,7 @@ function MonthView( calendarWindow )
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
                var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+EventSelectionArray[i].id );
-               for ( j = 0; j < EventBoxes.length; j++ ) 
+               for ( var j = 0; j < EventBoxes.length; j++ ) 
                {
                   EventBoxes[j].setAttribute( "eventselected", "true" );
                }
@@ -503,14 +503,14 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    
    var Checked = gOnlyWorkdayChecked ;
 
-   for( var i = - Offset; i <= 1 - Offset; i++ ){
+   for( i = - Offset; i <= 1 - Offset; i++ ){
      //ni = i - Offset ;
      var ni = (i >0)? i : i + 7;
      if( Checked === "true" )
          document.getElementById( "month-view-column-"+ni ).setAttribute( "collapsed", "true" );
      else 
        document.getElementById( "month-view-column-"+ ni).removeAttribute( "collapsed");	      
-	   }
+   }
        
    if( Checked === "true" && Offset <= 1 && firstDayOfWeek >= 6-Offset) {
 	      document.getElementById( "month-week-1-row" ).setAttribute( "collapsed", "true" );
@@ -973,7 +973,7 @@ MonthView.prototype.setFictitiousEvents = function monthView_setFictitiousEvents
 {
   var dayBoxItem = this.dayBoxItemArray[ 24 ];
   if( !dayBoxItem ) 
-     return false;
+     return;
   // Make a box item to hold the event
   var eventBox = document.createElement( "box" );
   eventBox.setAttribute( "id", "month-view-event-box-fictitious" );
