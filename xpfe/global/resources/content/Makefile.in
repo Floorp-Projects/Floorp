@@ -57,6 +57,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/charsetDetectorsOverlay.xul \
 		$(srcdir)/selectDialog.js \
 		$(srcdir)/selectDialog.xul \
+		$(srcdir)/nsWidgetStateManager.js \
 		$(srcdir)/widgetStateManager.js \
 		$(srcdir)/wizardHandlerSet.js \
 		$(srcdir)/wizardManager.js \

@@ -17,6 +17,14 @@
     <button class="dialog right" id="ok" default="true" value="&okButton.label;" oncommand="doOKButton();"/>
   </box>
 
+  <box id="okCancelButtonsRight" align="horizontal">
+    <spring flex="1"/>
+    <button class="dialog" id="Button3" value="&cancelButton.label;" style="display: none;" oncommand="doButton3();"/>
+    <button class="dialog" id="Button2" value="&cancelButton.label;" style="display: none;" oncommand="doButton2();"/>
+    <button class="dialog" id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
+    <button class="dialog right" id="ok" default="true" value="&okButton.label;" oncommand="doOKButton();"/>
+  </box>
+
   <keyset id="keyset">
     <key keycode="VK_ENTER" oncommand="doOKButton()"/>
     <key keycode="VK_RETURN" oncommand="doOKButton()"/>
