@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "prtime.h"
+#include "nsEscape.h"
 
 #include "nsICacheService.h"
 
@@ -251,7 +252,8 @@ nsAboutCache::VisitEntry(const char *deviceID,
     url += NS_LITERAL_CSTRING("&amp;sb=");
     url += streamBased ? "1" : "0";
     url += NS_LITERAL_CSTRING("&amp;key=");
-    url += key; // key
+    char* escapedKey = nsEscapeHTML(key);
+    url += escapedKey; // key
 
     // Entry start...
 
@@ -259,7 +261,8 @@ nsAboutCache::VisitEntry(const char *deviceID,
     mBuffer.Assign("<b>           Key: </b><a href=\"");
     mBuffer.Append(url);
     mBuffer.Append("\">");
-    mBuffer.Append(key);
+    mBuffer.Append(escapedKey);
+    nsMemory::Free(escapedKey);
     mBuffer.Append("</a>");
 
     // Content length

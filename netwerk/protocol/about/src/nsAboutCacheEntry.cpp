@@ -135,7 +135,7 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
 
     nsCOMPtr<nsIInputStreamIO> io;
     rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr,
-                             NS_LITERAL_CSTRING("text/html"),
+                             NS_LITERAL_CSTRING("application/xhtml+xml"),
                              NS_LITERAL_CSTRING(""),
                              size);
 
@@ -410,16 +410,18 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     // Test if the key is actually a URI
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), str);
+    char* escapedStr = nsEscapeHTML(str);
     if (NS_SUCCEEDED(rv)) {
         buffer.Append("<a href=\"");
-        buffer.Append(str);
+        buffer.Append(escapedStr);
         buffer.Append("\">");
-        buffer.Append(str);
+        buffer.Append(escapedStr);
         buffer.Append("</a>");
         uri = 0;
     }
     else
-        buffer.Append(str);
+        buffer.Append(escapedStr);
+    nsMemory::Free(escapedStr);
     buffer.Append("</td></tr>\n");
 
 
