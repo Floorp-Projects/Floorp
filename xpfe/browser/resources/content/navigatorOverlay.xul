@@ -109,6 +109,7 @@
   <commandset id="commands">
     <command id="cmd_newNavigator"/>
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
+    <command id="cmd_newTabWithTarget" oncommand="contentAreaClick(event);"/>
 
     <command id="cmd_newEditor"/>
     <!-- NOT IMPLEMENTED

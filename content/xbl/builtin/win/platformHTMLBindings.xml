@@ -95,7 +95,6 @@
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteWordForward"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
-      <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_scrollTop"/>
       <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_scrollBottom"/>
       <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious" />
