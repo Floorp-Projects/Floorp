@@ -334,6 +334,8 @@ pref("mail.server.default.offline_support_level", -1);
 pref("mail.server.default.leave_on_server", false);
 pref("mail.server.default.download_on_biff", false);
 pref("mail.server.default.check_time", 10);
+pref("mail.server.default.delete_by_age_from_server", false);
+pref("mail.server.default.num_days_to_leave_on_server", 7);
 // "mail.server.default.check_new_mail" now lives in the protocol info
 pref("mail.server.default.dot_fix", true);
 pref("mail.server.default.limit_offline_message_size", false);
