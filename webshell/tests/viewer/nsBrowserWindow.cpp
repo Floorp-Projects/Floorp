@@ -434,9 +434,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
-                  nsnull, nsnull,
-                  (nsWidgetInitData *)
-                    aAppShell->GetNativeData(NS_NATIVE_SHELL));
+                  nsnull, aAppShell);
   mWindow->GetBounds(r);
 
   // Create web shell
