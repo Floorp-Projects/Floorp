@@ -299,7 +299,11 @@ class Component(_XPCOMBase):
             self._build_all_supported_interfaces_()
             interface_name = self.__dict__['_name_to_interface_name_'].get(attr, None)
         if interface_name is not None:
-            interface = self._interface_names_[interface_name]
+            interface = self._interface_names_.get(interface_name, None)
+            if interface is None:
+                iid = XPTI_GetInterfaceInfoManager().GetInfoForName(interface_name).GetIID()
+                self.QueryInterface(iid)
+                interface = self.__dict__['_interface_names_'][interface_name]
             setattr(interface, attr, val)
             return
         raise AttributeError, "XPCOM component '%s' can not set attribute '%s'" % (self._object_name_, attr)
