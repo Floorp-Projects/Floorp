@@ -224,9 +224,12 @@ nsButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIS
     return rv;
   }
 
-  if (NS_COMFALSE != rv) {
-    mRenderer.ReResolveStyles(*aPresContext);
+  if (NS_COMFALSE != rv) {  // frame style changed
+    if (aLocalChange) {
+      aParentChange = *aLocalChange;  // tell children about or change
+    }
   }
+  mRenderer.ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
   
   return rv;
   

@@ -30,6 +30,8 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 
+class nsStyleChangeList;
+
 class nsButtonFrameRenderer {
 public:
 
@@ -76,7 +78,10 @@ public:
   virtual nsMargin GetFullButtonBorderAndPadding();
   virtual nsMargin GetAddedButtonBorderAndPadding();
 
-	virtual void ReResolveStyles(nsIPresContext& aPresContext);
+	virtual void ReResolveStyles(nsIPresContext& aPresContext,
+                               PRInt32 aParentChange,
+                               nsStyleChangeList* aChangeList,
+                               PRInt32* aLocalChange);
 
   virtual void Redraw();
 
