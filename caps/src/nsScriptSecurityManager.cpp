@@ -608,6 +608,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "data",            AllowProtocol },
         { "keyword",         DenyProtocol  },
         { "resource",        DenyProtocol  },
+        { "gopher",          AllowProtocol },
         { "datetime",        DenyProtocol  },
         { "finger",          AllowProtocol },
         { "res",             DenyProtocol  }
