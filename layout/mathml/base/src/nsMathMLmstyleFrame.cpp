@@ -244,7 +244,10 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
                      nsMathMLAtoms::displaystyle_, value)) {
       // when our displaystyle attribute is gone, we recover our inherited displaystyle
       mPresentationData.flags &= ~NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-      mPresentationData.flags |= mInheritedDisplayStyle & NS_MATHML_DISPLAYSTYLE;
+      if (NS_MATHML_DISPLAYSTYLE & mInheritedDisplayStyle)
+        mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+      else
+        mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }
     else {
       if (value.Equals(NS_LITERAL_STRING("true"))) {
@@ -260,26 +263,35 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
     // propagate to our children if something changed
     if (oldData.flags != mPresentationData.flags ||
         oldData.scriptLevel != mPresentationData.scriptLevel) {
-      PRUint32 newValues = 0, whichFlags = 0;
-      if (NS_MATHML_IS_DISPLAYSTYLE(oldData.flags) !=
-          NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
-        newValues = NS_MATHML_DISPLAYSTYLE & mPresentationData.flags;
-        whichFlags = NS_MATHML_DISPLAYSTYLE;
+      PRUint32 whichFlags = NS_MATHML_DISPLAYSTYLE;
+      PRUint32 newValues = NS_MATHML_DISPLAYSTYLE & mPresentationData.flags;
+      if (newValues == (oldData.flags & NS_MATHML_DISPLAYSTYLE)) {
+        newValues = 0;
+        whichFlags = 0;
       }
       // use the base method here because we really want to reflect any updates
       nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 
         mPresentationData.scriptLevel - oldData.scriptLevel, newValues, whichFlags);
       // now walk up to our immediate ancestor that implements the
       // nsIMathMLFrame interface and grab its scriptlevel
-      PRInt32 parentScriptLevel = oldData.scriptLevel;
+      PRInt32 parentScriptLevel = 0;
       nsIFrame* parent = mParent;
       while (parent) {
+        // if this frame is MathML frame, we are done
         nsIMathMLFrame* mathMLFrame;
         parent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
         if (mathMLFrame) {
-        	nsPresentationData parentData;
+          nsPresentationData parentData;
           mathMLFrame->GetPresentationData(parentData);
           parentScriptLevel = parentData.scriptLevel;
+          break;
+        }
+        // stop if we reach the root <math> tag
+        nsCOMPtr<nsIAtom> parentTag;
+        nsCOMPtr<nsIContent> parentContent;
+        parent->GetContent(getter_AddRefs(parentContent));
+        parentContent->GetTag(*getter_AddRefs(parentTag));
+        if (parentTag.get() == nsMathMLAtoms::math) {
           break;
         }
         parent->GetParent(&parent);
