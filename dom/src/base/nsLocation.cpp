@@ -356,7 +356,7 @@ LocationImpl::GetHash(nsAString& aHash)
       if (NS_FAILED(rv)) {
         // Oh, well.  No intl here!
         NS_UnescapeURL(ref);
-        CopyASCIItoUCS2(ref, unicodeRef);
+        CopyASCIItoUTF16(ref, unicodeRef);
         rv = NS_OK;
       }
     }
