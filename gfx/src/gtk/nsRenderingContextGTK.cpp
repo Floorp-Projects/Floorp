@@ -458,9 +458,17 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
+  nsRect trect = aRect;
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,
+                              &trect.width, &trect.height);
+  SetClipRectInPixels(trect, aCombine, aClipEmpty);
+  return NS_OK;
+}
 
-
-
+void nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
+                                                nsClipCombine aCombine,
+                                                PRBool &aClipEmpty)
+{
   PRUint32 cnt = mStateCache.Count();
   nsGraphicsState *state = nsnull;
 
@@ -480,29 +488,24 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 
   CreateClipRegion();
 
-  nsRect trect = aRect;
-
 #ifdef TRACE_SET_CLIP
   printf("nsRenderingContextGTK::SetClipRect(%s)\n",
          nsClipCombine_to_string(aCombine));
 #endif // TRACE_SET_CLIP
 
-  mTranMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
-
   switch(aCombine)
   {
     case nsClipCombine_kIntersect:
-      mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Intersect(aRect.x,aRect.y,aRect.width,aRect.height);
       break;
     case nsClipCombine_kUnion:
-      mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Union(aRect.x,aRect.y,aRect.width,aRect.height);
       break;
     case nsClipCombine_kSubtract:
-      mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Subtract(aRect.x,aRect.y,aRect.width,aRect.height);
       break;
     case nsClipCombine_kReplace:
-      mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->SetTo(aRect.x,aRect.y,aRect.width,aRect.height);
       break;
   }
 #if 0
@@ -512,8 +515,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   SetColor(color);
 #endif
   aClipEmpty = mClipRegion->IsEmpty();
-
-  return NS_OK;
 }
 
 void nsRenderingContextGTK::UpdateGC()

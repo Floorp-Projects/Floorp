@@ -1041,17 +1041,23 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
     }
 
     if (parentView->GetClipChildren()) {
-      aIsClipped = PR_TRUE;
       // Adjust for clip specified by ancestor
       nsRect clipRect;
       parentView->GetChildClip(clipRect);
       //Offset the cliprect by the amount the child offsets from the parent
       clipRect.x -= ancestorX;
       clipRect.y -= ancestorY;
+
+      nsRect oldClippedRect = aClippedRect;
       PRBool overlap = aClippedRect.IntersectRect(clipRect, aClippedRect);
       if (!overlap) {
+        aIsClipped = PR_TRUE;
         aEmpty = PR_TRUE; // Does not intersect so the rect is empty.
         return NS_OK;
+      }
+
+      if (oldClippedRect != aClippedRect) {
+        aIsClipped = PR_TRUE;
       }
     }
 
