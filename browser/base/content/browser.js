@@ -2586,6 +2586,10 @@ function BrowserToolbarChanged()
     homeButton.setAttribute("tooltiptext", homePage);
   }
   window.XULBrowserWindow.init();
+
+  var url = getWebNavigation().currentURI.spec;
+  gURLBar.value = url;
+  SetPageProxyState("valid", null); // XXX Build a URI and pass it in here.
 }
 
 function BrowserCustomizeToolbar()
