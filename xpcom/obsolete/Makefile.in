@@ -72,7 +72,7 @@ CPPSRCS         = \
 
 ifeq ($(OS_ARCH),WINNT)
 REQUIRES	+= libreg
-CPPSRCS		+= dlldeps.cpp
+CPPSRCS		+= dlldeps-obs.cpp
 endif
 
 EXPORTS		= \
