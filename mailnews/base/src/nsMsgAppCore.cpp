@@ -39,12 +39,11 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMailboxService.h"
+#include "nsINntpService.h"
 #include "nsFileSpec.h"
 
 #include "nsIMessage.h"
 #include "nsIPop3Service.h"
-
-#include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
 #include "nsIDOMXULTreeElement.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -58,18 +57,13 @@
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
+static NS_DEFINE_CID(kCNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 
-
-NS_BEGIN_EXTERN_C
-
-nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
-
-NS_END_EXTERN_C
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -468,12 +462,21 @@ nsMsgAppCore::OpenURL(const char * url)
 
 	if (url)
 	{
+		// turn off news for now...
 		if (PL_strncmp(url, "news:", 5) == 0) // is it a news url?
-			NS_MailNewsLoadUrl(url, mWebShell); 
-		else if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMessageRootURI, PL_strlen(kMessageRootURI)) == 0)
+		{
+			nsINntpService * nntpService = nsnull;
+			nsresult rv = nsServiceManager::GetService(kCNntpServiceCID, nsINntpService::GetIID(), (nsISupports **) &nntpService);
+			if (NS_SUCCEEDED(rv) && nntpService)
+			{
+				nntpService->RunNewsUrl(url, mWebShell, nsnull, nsnull);
+				nsServiceManager::ReleaseService(kCNntpServiceCID, nntpService);
+			}
+		}
+		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMessageRootURI, PL_strlen(kMessageRootURI)) == 0)
 		{
 			PRUint32 msgIndex;
-		  nsFileSpec folderPath; 
+			nsFileSpec folderPath; 
 			PRBool displayNumber;
 			if(isdigit(url[8]))
 			{
