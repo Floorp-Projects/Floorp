@@ -97,7 +97,8 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 
       nsresult DoSpecialUpdates(nsFileSpec profilePath);
       nsresult Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName);
-      nsresult RenameAndMoveFilterFiles(nsFileSpec profilePath);
+      nsresult RenameAndMove4xImapFilterFiles(nsFileSpec profilePath);
+      nsresult RenameAndMove4xPopFilterFile(nsFileSpec profilePath);
   
       nsresult SetPremigratedCharPref(const char *pref_name, char *value);
       nsresult SetPremigratedFilePref(const char *pref_name, nsFileSpec &filePath);
