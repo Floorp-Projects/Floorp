@@ -69,7 +69,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsIMsgOfflineImapOperation.h"
-
+#include "nsImapOfflineSync.h"
 #include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -508,6 +508,17 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   PRBool noSelect = PR_FALSE;
   GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
 
+  PRBool hasOfflineEvents = PR_FALSE;
+  GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
+
+  if (hasOfflineEvents && !WeAreOffline())
+  {
+    nsImapOfflineSync *goOnline = new nsImapOfflineSync(msgWindow, this);
+    if (goOnline)
+    {
+    	return goOnline->ProcessNextOperation();
+    }
+  }
   if (noSelect) 
     selectFolder = PR_FALSE;
   // don't run select if we're already running a url/select...
@@ -2673,6 +2684,7 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
       {
         nsCOMPtr <nsIMsgOfflineImapOperation> op;
         rv = mDatabase->GetOfflineOpForKey(keysToFlag[keyIndex], PR_TRUE, getter_AddRefs(op));
+        SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
         if (NS_SUCCEEDED(rv) && op)
         {
 #if 0
@@ -2690,7 +2702,6 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
                 if (undoAction)
                   undoManager->AddUndoAction(undoAction);
               }
-              op->unrefer();
               op = originalOp;
             }
           }
@@ -3029,14 +3040,42 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
 {
   nsCAutoString messageIds;
   nsMsgKeyArray srcKeyArray;
-
+#ifdef DEBUG_bienvenu
+  return DownloadAllForOffline(nsnull, nsnull);
+#endif
   nsresult rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
   if (NS_FAILED(rv)) return rv;
   NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
   if (NS_FAILED(rv)) return rv;
 
   SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
-  rv = imapService->DownloadMessagesForOffline(messageIds, this, nsnull);
+  rv = imapService->DownloadMessagesForOffline(messageIds, this, nsnull, nsnull);
+  return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIURI> runningURI;
+  PRBool noSelect;
+  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+
+  if (!noSelect)
+  {
+    nsCAutoString messageIdsToDownload;
+    nsMsgKeyArray msgsToDownload;
+
+    GetBodysToDownload(&msgsToDownload);
+    rv = AllocateUidStringFromKeyArray(msgsToDownload, messageIdsToDownload);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
+     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = imapService->DownloadMessagesForOffline(messageIdsToDownload, this, listener, msgWindow);
+    if (NS_SUCCEEDED(rv))
+      m_urlRunning = PR_TRUE;
+  }
   return rv;
 }
 
@@ -3497,6 +3536,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
   nsresult rv = NS_OK;
   m_urlRunning = PR_FALSE;
+  m_downloadingFolderForOfflineUse = PR_FALSE;
     NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
   if (aUrl)
   {
@@ -4287,75 +4327,89 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
 nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB)
 {
 	nsIMsgOfflineImapOperation *returnOp = nsnull;
-#ifdef DOING_OFFLINE_YET
-  NS_ASSERTION(op->GetOperationFlags() & nsIMsgOfflineImapOperation::kMoveResult);
+  nsOfflineImapOperationType opType;
+  op->GetOperation(&opType);
+  NS_ASSERTION(opType & nsIMsgOfflineImapOperation::kMoveResult, "not an offline move op");
 	
-	nsCAutoString originalBoxName;
-	nsMsgKey originalKey;
-	op->GetSourceInfo(originalBoxName, originalKey);
+	nsXPIDLCString sourceFolderURI;
+	op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
 	
-	nsIMsgFolder *sourceFolder = GetMaster()->FindImapMailFolder(originalBoxName);
-	if (!sourceFolder)
-		sourceFolder = GetMaster()->FindMailFolder(originalBoxName,PR_FALSE);
-	if (sourceFolder)
-	{
-		if (sourceFolder->GetFlags() & MSG_FOLDER_FLAG_IMAPBOX)
-		{
-			PRBool wasCreated = PR_FALSE;
-			ImapMailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB, GetMaster(), &wasCreated);
-		}
-		else
-			MailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB);
-		
-		if (*originalDB)
-		{
-      nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
-			if (NS_SUCCEEDED(rv) && returnOp)
-			{
-				nsCAutoString moveDestination;
-				returnOp->GetMoveDestination(moveDestination);
-				if (!XP_STRCMP(moveDestination, this->GetOnlineName()))
-					returnOp->ClearMoveOperation();
-			}
-		}
+  nsCOMPtr<nsIRDFResource> res;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv; 
+  rv = rdf->GetResource(sourceFolderURI, getter_AddRefs(res));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIMsgFolder> sourceFolder(do_QueryInterface(res, &rv));
+    if (NS_SUCCEEDED(rv) && sourceFolder)
+    {
+	    if (sourceFolder)
+	    {
+        nsCOMPtr <nsIDBFolderInfo> folderInfo;
+        sourceFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), originalDB);
+		    if (*originalDB)
+		    {
+          nsMsgKey originalKey;
+          op->GetMessageKey(&originalKey);
+          nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
+			    if (NS_SUCCEEDED(rv) && returnOp)
+			    {
+				    nsXPIDLCString moveDestination;
+            nsXPIDLCString thisFolderURI;
+
+            GetURI(getter_Copies(thisFolderURI));
+
+				    returnOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+            if (!nsCRT::strcmp(moveDestination, thisFolderURI))
+					    returnOp->ClearOperation(nsIMsgOfflineImapOperation::kMoveResult);
+			    }
+		    }
+      }
+    }
 	}
-#endif	
   NS_IF_ADDREF(returnOp);
   *originalOp = returnOp;
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsImapMailFolder::GetOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB)
 {
 	nsIMsgOfflineImapOperation *returnOp = nsnull;
 	
-#ifdef DOING_OFFLINE_YET
-	nsCAutoString originalBoxName;
-	nsMsgKey originalKey;
-	op->GetSourceInfo(originalBoxName, originalKey);
+	nsXPIDLCString sourceFolderURI;
+	op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
 	
-	nsIMsgFolder *sourceFolder = GetMaster()->FindImapMailFolder(originalBoxName);
-	if (!sourceFolder)
-		sourceFolder = GetMaster()->FindMailFolder(originalBoxName,PR_FALSE);
-	if (sourceFolder)
-	{
-		if (sourceFolder->GetFlags() & MSG_FOLDER_FLAG_IMAPBOX)
-		{
-			PRBool wasCreated=PR_FALSE;
-			ImapMailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB, GetMaster(), &wasCreated);
-		}
-		else
-			MailDB::Open(sourceFolder->GetPathname(), PR_TRUE, originalDB);
-		
-		if (*originalDB)
-		{
-			returnOp = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE);
-		}
+  nsCOMPtr<nsIRDFResource> res;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv; 
+  rv = rdf->GetResource(sourceFolderURI, getter_AddRefs(res));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIMsgFolder> sourceFolder(do_QueryInterface(res, &rv));
+    if (NS_SUCCEEDED(rv) && sourceFolder)
+    {
+	    if (sourceFolder)
+	    {
+        nsCOMPtr <nsIDBFolderInfo> folderInfo;
+        sourceFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), originalDB);
+		    if (*originalDB)
+		    {
+          nsMsgKey originalKey;
+          op->GetMessageKey(&originalKey);
+          nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
+		    }
+      }
+    }
 	}
-#endif
   NS_IF_ADDREF(returnOp);
   *originalOp = returnOp;
-  return NS_OK;
+  return rv;
 }
 
 // this imap folder is the destination of an offline move/copy.
@@ -4416,12 +4470,13 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 			fakeBase += highWaterMark;
 			
 			// put fake message in destination db, delete source if move
-			for (PRInt32 sourceKeyIndex=0; !stopit && (sourceKeyIndex < srcCount); sourceKeyIndex++)
+			for (PRUint32 sourceKeyIndex=0; !stopit && (sourceKeyIndex < srcCount); sourceKeyIndex++)
 			{
 				PRBool	messageReturningHome = PR_FALSE;
-        nsXPIDLCString destOnlineName;
-        GetOnlineName(getter_Copies(destOnlineName));
-        char *originalBoxName = nsCRT::strdup(destOnlineName);
+        nsXPIDLCString sourceFolderURI;
+        srcFolder->GetURI(getter_Copies(sourceFolderURI));
+        nsXPIDLCString originalSrcFolderURI;
+        originalSrcFolderURI = sourceFolderURI.get();
         nsCOMPtr<nsISupports> msgSupports;
         nsCOMPtr<nsIMessage> message;
 
@@ -4441,6 +4496,7 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
         rv = sourceMailDB->GetOfflineOpForKey(originalKey, PR_TRUE, getter_AddRefs(sourceOp));
 				if (NS_SUCCEEDED(rv) && sourceOp)
 				{
+          srcFolder->SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
 					nsCOMPtr <nsIMsgDatabase> originalDB;
           nsOfflineImapOperationType opType;
           sourceOp->GetOperation(&opType);
@@ -4460,14 +4516,13 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
               srcFolder->GetURI(getter_Copies(srcFolderURI));
 							sourceOp->GetSourceFolderURI(getter_Copies(originalString));
               sourceOp->GetMessageKey(&originalKey);
-							PR_FREEIF(originalBoxName);
-              originalBoxName = nsCRT::strdup(originalString);
+              originalSrcFolderURI = originalString.get();
 							
               if (isMove)
 	              sourceMailDB->RemoveOfflineOp(sourceOp);
 							
 							sourceOp = originalOp;
-              if (!nsCRT::strcmp(originalBoxName, srcFolderURI))
+              if (!nsCRT::strcmp(originalSrcFolderURI, srcFolderURI))
 							{
 								messageReturningHome = PR_TRUE;
                 originalDB->RemoveOfflineOp(originalOp);
@@ -4537,7 +4592,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 							}
 							else
 							{
-								destOp->SetSourceFolderURI(originalBoxName);
+                SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
+								destOp->SetSourceFolderURI(originalSrcFolderURI);
                 destOp->SetMessageKey(originalKey);
 #ifdef DOING_OFFLINEUNDO_YET
 								if (shouldUndoOffline && undoManager->GetState() == UndoIdle)
@@ -4584,7 +4640,6 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 					if (!successfulCopy)
 						highWaterDeleted = PR_FALSE;
 				}
-				PR_FREEIF(originalBoxName);
 			}
 			
       PRInt32 numVisibleMessages;
@@ -4612,6 +4667,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
       undoManager->EndBatch();
 #endif
   }
+  if (NS_SUCCEEDED(rv) && isMove)
+    srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
   return rv;
 }
 

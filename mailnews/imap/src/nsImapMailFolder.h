@@ -185,6 +185,7 @@ public:
 
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages);
 
+  NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 
