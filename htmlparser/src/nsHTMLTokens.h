@@ -83,13 +83,13 @@ enum eHTMLTags
   eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        
   
   eHTMLTag_text,  //used for plain text; this is not really a tag.   
+  eHTMLTag_textarea,
   
   eHTMLTag_tfoot,   
-  eHTMLTag_thead,       eHTMLTag_th,          eHTMLTag_tr,        eHTMLTag_textarea,    
-  eHTMLTag_title,       eHTMLTag_tt,          eHTMLTag_monofont,  eHTMLTag_u,
-  eHTMLTag_ul,          eHTMLTag_var,         eHTMLTag_wbr,       eHTMLTag_whitespace,
-  eHTMLTag_xmp,         
-  eHTMLTag_userdefined
+  eHTMLTag_th,          eHTMLTag_thead,       eHTMLTag_title,     eHTMLTag_tr,
+  eHTMLTag_tt,          eHTMLTag_monofont,    eHTMLTag_u,         eHTMLTag_ul,          
+  eHTMLTag_var,         eHTMLTag_wbr,         eHTMLTag_whitespace,
+  eHTMLTag_xmp,         eHTMLTag_userdefined
 };
 
 //*** This enum is used to define the known universe of HTML attributes.
@@ -113,6 +113,7 @@ PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner&
 PRInt32         FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
 eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 eHTMLTokenTypes DetermineTokenType(const nsString& aString);
+const char*     GetTagName(eHTMLTags aTag);
 
 
 /** -----------------------------------------------------
