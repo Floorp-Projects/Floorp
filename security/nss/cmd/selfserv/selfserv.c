@@ -198,7 +198,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3DNRTbmrvx] [-w password] [-t threads]\n"
+"Usage: %s -n rsa_nickname -p port [-3DNRSTbmrvx] [-w password] [-t threads]\n"
 #ifdef NSS_ENABLE_ECC
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-e ec_nickname] \n"
 "         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
@@ -206,6 +206,7 @@ Usage(const char *progName)
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "         [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
 #endif /* NSS_ENABLE_ECC */
+"-S means disable SSL v2\n"
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
 "-T means disable TLS\n"
@@ -633,6 +634,7 @@ logger(void *arg)
 **************************************************************************/
 
 PRBool useModelSocket  = PR_FALSE;
+PRBool disableSSL2     = PR_FALSE;
 PRBool disableSSL3     = PR_FALSE;
 PRBool disableTLS      = PR_FALSE;
 PRBool disableRollBack  = PR_FALSE;
@@ -1250,6 +1252,11 @@ server_main(
 	errExit("error enabling TLS ");
     }
 
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL2, !disableSSL2);
+    if (rv != SECSuccess) {
+	errExit("error enabling SSLv2 ");
+    }
+    
     rv = SSL_OptionSet(model_sock, SSL_ROLLBACK_DETECTION, !disableRollBack);
     if (rv != SECSuccess) {
 	errExit("error enabling RollBack detection ");
@@ -1492,7 +1499,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:NP:RTbc:d:e:f:hi:lmn:op:rt:vw:xy");
+    	"2:3DL:M:NP:RSTbc:d:e:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1521,6 +1528,8 @@ main(int argc, char **argv)
 	case 'N': NoReuse = PR_TRUE; break;
 
 	case 'R': disableRollBack = PR_TRUE; break;
+        
+        case 'S': disableSSL2 = PR_TRUE; break;
 
 	case 'T': disableTLS = PR_TRUE; break;
 
