@@ -60,6 +60,19 @@ public:
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uRange * aRangeArray, uShiftTable ** aShiftTable, 
       uMappingTable ** aMappingTable);
+
+  NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
+      uRange * aRangeArray, uShiftTable ** aShiftTable, 
+      uMappingTable ** aMappingTable);
+
+  NS_IMETHOD ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength, PRUnichar * aFastTable, 
+      PRInt32 aTableSize);
+
+  NS_IMETHOD CreateFastTable( uShiftTable * aShiftTable, 
+      uMappingTable * aMappingTable, PRUnichar * aFastTable, 
+      PRInt32 aTableSize);
 };
 
 //----------------------------------------------------------------------
@@ -81,12 +94,13 @@ nsUnicodeDecodeHelper::~nsUnicodeDecodeHelper()
 //----------------------------------------------------------------------
 // Interface nsIUnicodeDecodeHelper [implementation]
 
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(const char * aSrc, 
-                                                    PRInt32 * aSrcLength, 
-                                                    PRUnichar * aDest, 
-                                                    PRInt32 * aDestLength, 
-                                                    uShiftTable * aShiftTable, 
-                                                    uMappingTable  * aMappingTable)
+NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(
+                                     const char * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     PRUnichar * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     uShiftTable * aShiftTable, 
+                                     uMappingTable  * aMappingTable)
 {
   const char * src = aSrc;
   PRInt32 srcLen = *aSrcLength;
@@ -126,14 +140,30 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(const char * aSrc,
   return res;
 }
 
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc, 
-                                                     PRInt32 * aSrcLength, 
-                                                     PRUnichar * aDest, 
-                                                     PRInt32 * aDestLength, 
-                                                     PRInt32 aTableCount, 
-                                                     uRange * aRangeArray, 
-                                                     uShiftTable ** aShiftTable, 
-                                                     uMappingTable ** aMappingTable)
+NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(
+                                     const char * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     PRUnichar * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     PRInt32 aTableCount, 
+                                     uRange * aRangeArray, 
+                                     uShiftTable ** aShiftTable, 
+                                     uMappingTable ** aMappingTable)
+{
+  // XXX deprecated
+  return ConvertByMultiTable(aSrc, aSrcLength, aDest, aDestLength, 
+      aTableCount, aRangeArray, aShiftTable, aMappingTable);
+}
+
+NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
+                                     const char * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     PRUnichar * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     PRInt32 aTableCount, 
+                                     uRange * aRangeArray, 
+                                     uShiftTable ** aShiftTable, 
+                                     uMappingTable ** aMappingTable)
 {
   PRUint8 * src = (PRUint8 *)aSrc;
   PRInt32 srcLen = *aSrcLength;
@@ -180,6 +210,54 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(const char * aSrc,
 
   *aSrcLength = src - (PRUint8 *)aSrc;
   *aDestLength  = dest - aDest;
+  return res;
+}
+
+NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByFastTable(
+                                     const char * aSrc, 
+                                     PRInt32 * aSrcLength, 
+                                     PRUnichar * aDest, 
+                                     PRInt32 * aDestLength, 
+                                     PRUnichar * aFastTable, 
+                                     PRInt32 aTableSize)
+{
+  PRUint8 * src = (PRUint8 *)aSrc;
+  PRUint8 * srcEnd = src;
+  PRUnichar * dest = aDest;
+
+  nsresult res;
+  if (*aSrcLength > *aDestLength) {
+    srcEnd += (*aDestLength);
+    res = NS_PARTIAL_MORE_OUTPUT;
+  } else {
+    srcEnd += (*aSrcLength);
+    res = NS_OK;
+  }
+
+  for (; src<srcEnd;) *dest++ = aFastTable[*src++];
+
+  *aSrcLength = src - (PRUint8 *)aSrc;
+  *aDestLength  = dest - aDest;
+  return res;
+}
+
+NS_IMETHODIMP nsUnicodeDecodeHelper::CreateFastTable(
+                                     uShiftTable * aShiftTable, 
+                                     uMappingTable  * aMappingTable,
+                                     PRUnichar * aFastTable, 
+                                     PRInt32 aTableSize)
+{
+  PRInt32 tableSize = aTableSize;
+  PRInt32 buffSize = aTableSize;
+  char * buff = new char [buffSize];
+  if (buff == NULL) return NS_ERROR_OUT_OF_MEMORY;
+
+  char * p = buff;
+  for (PRInt32 i=0; i<aTableSize; i++) *(p++) = i;
+  nsresult res = ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
+      aShiftTable, aMappingTable);
+
+  delete [] buff;
   return res;
 }
 
