@@ -61,6 +61,8 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  webshell \
 		  imglib2 \
+		  intl \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -109,11 +111,13 @@ EXPORT_RESOURCE_CONTENT = \
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
 	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/svg.properties $(DIST)/bin/res
 	$(PERL) $(srcdir)/install-svg-css.pl $(DIST)/bin/res/ua.css
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.properties $(DESTDIR)$(mozappdir)/res
 
 
 DEFINES += -D_IMPL_NS_LAYOUT

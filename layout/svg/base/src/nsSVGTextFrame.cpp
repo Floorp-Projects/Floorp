@@ -459,7 +459,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
   // query the renderer metrics for the bounds of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  NS_ASSERTION(metrics, "null metrics");
+  if (!metrics) return NS_ERROR_FAILURE;
   nsresult rv = metrics->GetExtentOfChar(charnum-fragment->GetCharNumberOffset(),
                                          _retval);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -1027,7 +1027,8 @@ nsSVGTextFrame::UpdateGlyphPositioning()
     while (fragment) {
       nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
       fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-      NS_ASSERTION(metrics, "null metrics");
+      if (!metrics) continue;
+
       float advance;
       metrics->GetAdvance(&advance);
       chunkLength+=advance;
@@ -1080,7 +1081,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
   while (fragment) {
     nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
     fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-    NS_ASSERTION(metrics, "null metrics");
+    if (!metrics) continue;
 
     float baseline_offset;
     metrics->GetBaselineOffset(baseline, &baseline_offset);

@@ -361,6 +361,11 @@ bin/res/fonts/*
 bin/res/dtd/*
 bin/res/builtin/platformHTMLBindings.xml
 
+; svg
+bin/components/libgksvgcairo.so
+bin/res/svg.css
+bin/res/svg.properties
+bin/components/dom_svg.xpt
 
 [mail]
 bin/libmsgbaseutil.so

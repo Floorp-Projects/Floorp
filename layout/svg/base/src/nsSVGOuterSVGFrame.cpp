@@ -73,6 +73,11 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGRect.h"
 
+#include "nsIStringBundle.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDialogParamBlock.h"
+#include "nsIDOMWindow.h"
+
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
 // used in nsSVGOuterSVGFrame::InvalidateRegion
@@ -314,6 +319,64 @@ nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
   RemoveAsWidthHeightObserver();
 }
 
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+// alert the user if GDI+ is not installed.
+// it is non-modal (i.e., it doesn't wait for input from the user)
+// adapted from nsMathMLChar.cpp
+static void
+AlertMissingGDIPlus()
+{
+  // only display once per session
+  static PRBool alertShown = PR_FALSE;
+  if (alertShown)
+    return;
+
+  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!sbs)
+    return;
+
+  nsCOMPtr<nsIStringBundle> sb;
+  sbs->CreateBundle("resource://gre/res/svg.properties", getter_AddRefs(sb));
+  if (!sb)
+    return;
+
+  nsXPIDLString title, message;
+  sb->GetStringFromName(NS_LITERAL_STRING("gdiplus_missing_dialog_title").get(), getter_Copies(title));
+  sb->GetStringFromName(NS_LITERAL_STRING("gdiplus_missing_dialog_message").get(), getter_Copies(message));
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  if (!wwatch)
+    return;
+
+  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
+  if (!paramBlock)
+    return;
+
+  // copied from nsICommonDialogs.idl which curiously isn't part of the build
+  // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
+  enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
+        eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
+        eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
+  enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
+        eEditField1Password=4};
+
+  paramBlock->SetInt(eNumberButtons, 1);
+  paramBlock->SetString(eIconClass, NS_LITERAL_STRING("alert-icon").get());
+  paramBlock->SetString(eDialogTitle, title.get());
+  paramBlock->SetString(eMsg, message.get());
+
+  nsCOMPtr<nsIDOMWindow> parent;
+  wwatch->GetActiveWindow(getter_AddRefs(parent));
+
+  nsCOMPtr<nsIDOMWindow> dialog;
+  wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
+                     "dependent,centerscreen,chrome,titlebar", paramBlock,
+                     getter_AddRefs(dialog));
+
+  alertShown = PR_TRUE;
+}
+#endif
+
 nsresult nsSVGOuterSVGFrame::Init()
 {
 #if (defined(MOZ_SVG_RENDERER_GDIPLUS) + \
@@ -322,6 +385,8 @@ nsresult nsSVGOuterSVGFrame::Init()
 #error "Multiple SVG renderers. Please choose one manually."
 #elif defined(MOZ_SVG_RENDERER_GDIPLUS)  
   mRenderer = do_CreateInstance(NS_SVG_RENDERER_GDIPLUS_CONTRACTID);
+  if (!mRenderer)
+    AlertMissingGDIPlus();
 #elif defined(MOZ_SVG_RENDERER_LIBART)
   mRenderer = do_CreateInstance(NS_SVG_RENDERER_LIBART_CONTRACTID);
 #elif defined(MOZ_SVG_RENDERER_CAIRO)
@@ -708,7 +773,7 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
   
   PRBool inThisFrame = mRect.Contains(aPoint);
   
-  if (!inThisFrame) {
+  if (!inThisFrame || !mRenderer) {
     return NS_ERROR_FAILURE;
   }
 
@@ -808,6 +873,20 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
   NS_ASSERTION(x0>=0 && y0>=0, "unexpected negative coordinates");
   NS_ASSERTION(x1-x0>0 && y1-y0>0, "zero sized dirtyRect");
   nsRect dirtyRectPx(x0, y0, x1-x0, y1-y0);
+
+  // If we don't have a renderer due to the component failing
+  // to load (gdi+ or cairo not available), indicate to the user
+  // what's going on by drawing a red "X" at the appropriate spot.
+  if (!mRenderer) {
+    aRenderingContext.SetColor(NS_RGB(255,0,0));
+    aRenderingContext.DrawLine(mRect.x, mRect.y,
+                               mRect.x + mRect.width, mRect.y + mRect.height);
+    aRenderingContext.DrawLine(mRect.x + mRect.width, mRect.y,
+                               mRect.x, mRect.y + mRect.height);
+    aRenderingContext.PopState();
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISVGRendererCanvas> canvas;
   mRenderer->CreateCanvas(&aRenderingContext, aPresContext, dirtyRectPx,
                           getter_AddRefs(canvas));
@@ -917,6 +996,9 @@ nsSVGOuterSVGFrame::GetRenderer(nsISVGRenderer**renderer)
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::SuspendRedraw()
 {
+  if (!mRenderer)
+    return NS_OK;
+
 #ifdef DEBUG
   //printf("suspend redraw (count=%d)\n", mRedrawSuspendCount);
 #endif
@@ -943,6 +1025,9 @@ nsSVGOuterSVGFrame::SuspendRedraw()
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::UnsuspendRedraw()
 {
+  if (!mRenderer)
+    return NS_OK;
+
 #ifdef DEBUG
 //  printf("unsuspend redraw (count=%d)\n", mRedrawSuspendCount);
 #endif
@@ -976,6 +1061,9 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::NotifyViewportChange()
 {
+  if (!mRenderer)
+    return NS_OK;
+
   // no point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) return NS_OK;
 

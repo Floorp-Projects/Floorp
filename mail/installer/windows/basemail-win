@@ -339,3 +339,9 @@ bin\res\table-remove-column.gif
 bin\res\table-remove-row-active.gif
 bin\res\table-remove-row-hover.gif
 bin\res\table-remove-row.gif
+
+; svg
+bin\gksvggdiplus.dll
+bin\res\svg.css
+bin\res\svg.properties
+bin\components\dom_svg.xpt
