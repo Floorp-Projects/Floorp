@@ -344,7 +344,7 @@ pref("ldap_2.servers.switchboard.description",					"Switchboard Directory");
 pref("ldap_2.servers.switchboard.serverName",					"ldap.switchboard.com");
 
 pref("ldap_2.user_id",											0);
-pref("ldap_2.version",											1); /* Update kCurrentListVersion in include/dirprefs.h if you change this */
+pref("ldap_2.version",											3); /* Update kCurrentListVersion in include/dirprefs.h if you change this */
 
 pref("mailnews.confirm.moveFoldersToTrash", true);
 pref("mailnews.remember_selected_message", true);
