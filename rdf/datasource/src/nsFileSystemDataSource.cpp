@@ -226,24 +226,10 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv)) return(PR_FALSE);
 
-    nsCOMPtr<nsIURI> aIURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
-	    return(PR_FALSE);
-    if (!aIURI) return(PR_FALSE);
+    nsCOMPtr<nsILocalFile> aDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID); 
 
-    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
-    if (!fileURL)   return(PR_FALSE);
-
-    nsCOMPtr<nsIFile> aDir;
-    rv = fileURL->GetFile(getter_AddRefs(aDir));
-    if (NS_FAILED(rv))  return(PR_FALSE);
-
-    // ensure that we DO NOT resolve aliases
-    nsCOMPtr<nsILocalFile>  aDirLocal = do_QueryInterface(aDir);
-    if (aDirLocal)
-    {
-        aDirLocal->SetFollowLinks(PR_FALSE);
-    }
+    rv = aDir->SetURL(uri);
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
     PRBool isDirFlag = PR_FALSE;
 
