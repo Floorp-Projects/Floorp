@@ -560,7 +560,7 @@ $table{bugs} =
     version varchar(16) not null,
     component varchar(50) not null,
     resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
-    target_milestone varchar(20) not null,
+    target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
     votes mediumint not null,
@@ -753,7 +753,7 @@ $table{keyworddefs} =
 
 
 $table{milestones} =
-    'value varchar(190) not null,
+    'value varchar(20) not null,
      product varchar(64) not null,
      sortkey smallint not null,
      unique (product, value)';
@@ -1536,6 +1536,16 @@ if (!($sth->fetchrow_arrayref()->[0])) {
         }
     }
 }
+
+# 2000-03-22 Changed the default value for target_milestone to be "---"
+# (which is still not quite correct, but much better than what it was 
+# doing), and made the size of the value field in the milestones table match
+# the size of the target_milestone field in the bugs table.
+
+ChangeFieldType('bugs', 'target_milestone',
+                'varchar(20) not null default "---"');
+ChangeFieldType('milestones', 'value', 'varchar(20) not null');
+
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your
