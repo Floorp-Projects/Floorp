@@ -82,6 +82,13 @@ interface nsIRegistry : nsISupports
     void pack();
 };
 
+[scriptable, uuid(8cecf236-1dd2-11b2-893c-f9848956eaec)]
+interface nsIRegistryEnumerator : nsIEnumerator
+{
+    void currentItemInPlaceUTF8(out nsRegistryKey key,
+                                [shared, retval] out string item);
+};
+
 [scriptable, uuid(D1B54831-AC07-11d2-805E-00600811A9C3)]
 interface nsIRegistryNode : nsISupports
 {

@@ -771,32 +771,30 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     rv = mRegistry->EnumerateSubtrees( mCLSIDKey, getter_AddRefs(cidEnum));
     if (NS_FAILED(rv)) return rv;
 
-    rv = cidEnum->First();
-    for (; NS_SUCCEEDED(rv) && (cidEnum->IsDone() != NS_OK); (rv = cidEnum->Next()))
+    nsCOMPtr<nsIRegistryEnumerator> regEnum = do_QueryInterface(cidEnum, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = regEnum->First();
+    for (rv = regEnum->First();
+         NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
+         rv = regEnum->Next())
     {
-        nsCOMPtr<nsISupports> base;
-        rv = cidEnum->CurrentItem(getter_AddRefs(base));
-        if (NS_FAILED(rv))  continue;
-
-        // Get specific interface.
-        nsCOMPtr<nsIRegistryNode> node;
-        node = do_QueryInterface(base);
-        if (!node) continue;
-
-        // Get library name
-        nsXPIDLCString cidString;
-        rv = node->GetNameUTF8(getter_Copies(cidString));
-        if (NS_FAILED(rv)) continue;
-
-        // Get key associated with library
+        const char *cidString;
         nsRegistryKey cidKey;
-        rv = node->GetKey(&cidKey);
-        if (NS_FAILED(rv)) continue;
+        /*
+         * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
+         * cidString.  This is bad XPCOM practice.  It is evil, and requires
+         * great care with the relative lifetimes of cidString and regEnum.
+         *
+         * It is also faster, and less painful in the allocation department.
+         */
+        rv = regEnum->CurrentItemInPlaceUTF8(&cidKey, &cidString);
+        if (NS_FAILED(rv))  continue;
 
         // Create the CID entry
         nsXPIDLCString library;
         rv = mRegistry->GetStringUTF8(cidKey, inprocServerValueName,
-                                  getter_Copies(library));
+                                      getter_Copies(library));
         if (NS_FAILED(rv)) continue;
         nsCID aClass;
 
@@ -824,32 +822,29 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
     rv = mRegistry->EnumerateSubtrees( mClassesKey, getter_AddRefs(progidEnum));
     if (NS_FAILED(rv)) return rv;
 
-    rv = progidEnum->First();
-    for (; NS_SUCCEEDED(rv) && (progidEnum->IsDone() != NS_OK); (rv = progidEnum->Next()))
+    regEnum = do_QueryInterface(progidEnum, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = regEnum->First();
+    for (rv = regEnum->First();
+         NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
+         rv = regEnum->Next())
     {
-        nsCOMPtr<nsISupports> base;
-        rv = progidEnum->CurrentItem(getter_AddRefs(base));
-        if (NS_FAILED(rv))  continue;
-
-        // Get specific interface.
-        nsIID nodeIID = NS_IREGISTRYNODE_IID;
-        nsCOMPtr<nsIRegistryNode> node;
-        rv = base->QueryInterface(nodeIID, getter_AddRefs(node));
-        if (NS_FAILED(rv)) continue;
-
-        // Get the progid string
-        nsXPIDLCString progidString;
-        rv = node->GetNameUTF8(getter_Copies(progidString));
-        if (NS_FAILED(rv)) continue;
-
-        // Get cid string
+        const char *progidString;
         nsRegistryKey progidKey;
-        rv = node->GetKey(&progidKey);
+        /*
+         * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
+         * progidString.  This is bad XPCOM practice.  It is evil, and requires
+         * great care with the relative lifetimes of progidString and regEnum.
+         *
+         * It is also faster, and less painful in the allocation department.
+         */
+        rv = regEnum->CurrentItemInPlaceUTF8(&progidKey, &progidString);
         if (NS_FAILED(rv)) continue;
 
         nsXPIDLCString cidString;
         rv = mRegistry->GetStringUTF8(progidKey, classIDValueName,
-                                  getter_Copies(cidString));
+                                      getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
 
         nsCID *aClass = new nsCID();
@@ -1953,29 +1948,27 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = loaderEnum->First();
+    nsCOMPtr<nsIRegistryEnumerator> regEnum = 
+        do_QueryInterface(loaderEnum, &rv);
     if (NS_FAILED(rv))
         return rv;
-
-    for (; NS_SUCCEEDED(rv) && (loaderEnum->IsDone() != NS_OK);
-         (rv = loaderEnum->Next())) {
-        nsCOMPtr<nsISupports> base;
-        rv = loaderEnum->CurrentItem(getter_AddRefs(base));
-        if (NS_FAILED(rv))
-            return rv;
-
-        // Narrow
-        nsCOMPtr<nsIRegistryNode> node;
-        node = do_QueryInterface(base, &rv);
-        if (NS_FAILED(rv))
-            continue;
-
-        nsXPIDLCString type;
-        rv = node->GetNameUTF8(getter_Copies(type));
+    
+    for (rv = regEnum->First();
+         NS_SUCCEEDED(rv) && (regEnum->IsDone() != NS_OK);
+         rv = regEnum->Next()) {
+        const char * type;
+        nsRegistryKey throwAway;
+        /*
+         * CurrentItemInPlaceUTF8 will give us back a _shared_ pointer in 
+         * type.  This is bad XPCOM practice.  It is evil, and requires
+         * great care with the relative lifetimes of type and regEnum.
+         *
+         * It is also faster, and less painful in the allocation department.
+         */
+        rv = regEnum->CurrentItemInPlaceUTF8(&throwAway, &type);
         if (NS_FAILED(rv))
             continue;
         
-        nsStringKey typeKey(type);
         nsCOMPtr<nsIComponentLoader> loader;
         /* this will create it if we haven't already */
         GetLoaderForType(type, getter_AddRefs(loader));

@@ -103,12 +103,15 @@ struct nsRegistryFactory : public nsIFactory {
 | This class implements the nsIEnumerator interface and is used to implement   |
 | the nsRegistry EnumerateSubtrees and EnumerateAllSubtrees functions.         |
 ------------------------------------------------------------------------------*/
-struct nsRegSubtreeEnumerator : public nsIEnumerator {
+struct nsRegSubtreeEnumerator : public nsIRegistryEnumerator {
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIEnumerator interface functions.
     NS_DECL_NSIENUMERATOR
+
+    // And our magic behind-the-back fast-path thing.
+    NS_DECL_NSIREGISTRYENUMERATOR
 
     // ctor/dtor
     nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );
@@ -322,7 +325,8 @@ static void reginfo2Length( const REGINFO &in, PRUint32 &out ) {
 | for each class implemented in this file.                                     |
 ------------------------------------------------------------------------------*/
 NS_IMPL_ISUPPORTS1( nsRegistry,             nsIRegistry      )
-NS_IMPL_ISUPPORTS1( nsRegSubtreeEnumerator, nsIEnumerator    )
+NS_IMPL_ISUPPORTS2( nsRegSubtreeEnumerator, nsIEnumerator,
+                    nsIRegistryEnumerator)
 NS_IMPL_ISUPPORTS1( nsRegistryNode,         nsIRegistryNode  )
 NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 
@@ -1301,6 +1305,20 @@ nsRegSubtreeEnumerator::CurrentItem( nsISupports **result) {
         rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
+}
+
+/*--------------nsRegSubtreeEnumerator::CurrentItemInPlaceUTF8-----------------
+| An ugly name for an ugly function.  Hands back a shared pointer to the      |
+| name (encoded as UTF-8), and the subkey identifier.                         |
+-----------------------------------------------------------------------------*/
+NS_IMETHODIMP
+nsRegSubtreeEnumerator::CurrentItemInPlaceUTF8(  nsRegistryKey *childKey ,
+                                                 const char **name )
+{
+  *childKey = mNext;
+  /* [shared] */
+  *name = mName;
+  return NS_OK;
 }
 
 /*---------------------- nsRegSubtreeEnumerator::IsDone ------------------------
