@@ -125,7 +125,8 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
       case NS_ERROR_SENDING_FROM_COMMAND:
       case NS_ERROR_SENDING_RCPT_COMMAND:
       case NS_ERROR_SENDING_DATA_COMMAND:
-      case NS_ERROR_SENDING_MESSAGE:   
+      case NS_ERROR_SENDING_MESSAGE:
+      case NS_ERROR_SMTP_GREETING:
            smtpBundle->GetStringByID(code, getter_Copies(eMsg));
            msg = nsTextFormatter::vsmprintf(eMsg, args);
            break;
@@ -449,7 +450,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   
   line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
   
-  if(pauseForMoreData || !line)
+  if (pauseForMoreData || !line)
   {
     SetFlag(SMTP_PAUSE_FOR_READ); /* pause */
     PR_Free(line);
@@ -460,25 +461,30 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
   cont_char = ' '; /* default */
-  sscanf(line, "%d%c", &m_responseCode, &cont_char);
+  // sscanf() doesn't update m_responseCode if line doesn't start
+  // with a number. That can be dangerous. So be sure to set
+  // m_responseCode to 0 if no items read.
+  if (PR_sscanf(line, "%d%c", &m_responseCode, &cont_char) <= 0)
+    m_responseCode = 0;
   
-  if(m_continuationResponse == -1)
+  if (m_continuationResponse == -1)
   {
     if (cont_char == '-')  /* begin continuation */
       m_continuationResponse = m_responseCode;
-    
-    if(PL_strlen(line) > 3)
-      m_responseText = line+4;
+
+    // display the whole message if no valid response code or
+    // message shorter than 4 chars
+    m_responseText = (m_responseCode >= 100 && PL_strlen(line) > 3) ? line + 4 : line;
   }
   else
-  {    /* have to continue */
+  { /* have to continue */
     if (m_continuationResponse == m_responseCode && cont_char == ' ')
       m_continuationResponse = -1;    /* ended */
     
     if (m_responseText.CharAt(m_responseText.Length() - 1) != '\n')
       m_responseText += "\n";
-    if(PL_strlen(line) > 3)
-      m_responseText += line+4;
+
+    m_responseText += (PL_strlen(line) > 3) ? line + 4 : line;
   }
   
   if (m_responseCode == 220 && m_responseText.Length() && !m_tlsInitiated)
@@ -486,7 +492,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
     m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
   }
   
-  if(m_continuationResponse == -1)  /* all done with this response? */
+  if (m_continuationResponse == -1)  /* all done with this response? */
   {
     m_nextState = m_nextStateAfterResponse;
     ClearFlag(SMTP_PAUSE_FOR_READ); /* don't pause */
@@ -501,9 +507,17 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
   PRInt32 status = 0;
   nsCAutoString buffer("EHLO ");
   
-  if(m_responseCode != 220)
+  if (m_responseCode != 220)
   {
-    m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+#ifdef DEBUG
+    nsresult rv = 
+#endif
+    nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_GREETING,
+                          m_responseText.get());
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
     return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
   }
   
@@ -640,7 +654,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             if (m_prefTrySSL == PREF_SECURE_ALWAYS_STARTTLS)
             {
                 m_nextState = SMTP_ERROR_DONE;
-                m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+                m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER_WITH_STARTTLS1;
                 return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
             }
 
@@ -736,8 +750,11 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     if(TestFlag(SMTP_EHLO_SIZE_ENABLED) &&
        m_sizelimit > 0 && (PRInt32)m_totalMessageSize > m_sizelimit)
     {
-        nsresult rv = nsExplainErrorDetails(m_runningURL,
-                NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_1, m_sizelimit);
+#ifdef DEBUG
+        nsresult rv = 
+#endif
+        nsExplainErrorDetails(m_runningURL,
+                      NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_1, m_sizelimit);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
         m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -821,7 +838,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         else if (m_prefTrySSL == PREF_SECURE_ALWAYS_STARTTLS)
         {
             m_nextState = SMTP_ERROR_DONE;
-            m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+            m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER_WITH_STARTTLS2;
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
         }
     }

@@ -3650,7 +3650,10 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
 #endif
 
     nsXPIDLString eMsg; 
-    if (aExitCode == NS_ERROR_SMTP_SEND_FAILED || aExitCode == NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER)
+    if (aExitCode == NS_ERROR_SMTP_SEND_FAILED ||
+        aExitCode == NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER ||
+        aExitCode == NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER_WITH_STARTTLS1 ||
+        aExitCode == NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER_WITH_STARTTLS2)
       FormatStringWithSMTPHostNameByID(aExitCode, getter_Copies(eMsg));
     else
     mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
