@@ -968,8 +968,15 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
               ancestorPlace->AppendFrames(ancestor, overflowPlace->FirstChild());
             }
             else {
-              ancestorPlace = new nsFrameList(overflowPlace->FirstChild());
+              // ancestor doesn't have an overflow place holder list, so
+              // create one. Note that we use AppendFrames() to add the
+              // frames, instead of passing them into the constructor, so
+              // we can levarage the code in AppendFrames() which updates
+              // the parent for each frame in the list.
+
+              ancestorPlace = new nsFrameList();
               if (ancestorPlace) {
+                ancestorPlace->AppendFrames(ancestor, overflowPlace->FirstChild());
                 ((nsBlockFrame*)ancestor)->SetOverflowPlaceholders(aPresContext, ancestorPlace);
               }
               else 
