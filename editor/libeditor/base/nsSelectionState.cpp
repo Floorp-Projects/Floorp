@@ -471,7 +471,7 @@ nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
   if (!count) return NS_OK;
   nsRangeStore *item;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
-  if (!node) NS_ERROR_NULL_POINTER;
+  if (!node) return NS_ERROR_NULL_POINTER;
   
   for (i=0; i<count; i++)
   {
@@ -493,11 +493,11 @@ nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
 
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
-  PRInt32 len=0, i, count = mArray.Count();
+  PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
   nsRangeStore *item;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
-  if (!node) NS_ERROR_NULL_POINTER;
+  if (!node) return NS_ERROR_NULL_POINTER;
   
   for (i=0; i<count; i++)
   {
