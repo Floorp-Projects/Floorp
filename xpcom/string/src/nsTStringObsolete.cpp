@@ -378,18 +378,18 @@ nsTString_CharT::ReplaceSubstring( const char_type* aTarget, const char_type* aN
 void
 nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aNewValue )
   {
-    PRInt32 i = 0;
+    if (aTarget.Length() == 0)
+      return;
 
-    // XXX is this right?
-
-    while (PRUint32(i) < mLength)
+    PRUint32 i = 0;
+    while (i < mLength)
       {
         PRInt32 r = FindSubstring(mData + i, mLength - i, aTarget.Data(), aTarget.Length(), PR_FALSE);
         if (r == kNotFound)
           break;
 
         Replace(i + r, aTarget.Length(), aNewValue);
-        i += aNewValue.Length();
+        i += r + aNewValue.Length();
       }
   }
 
