@@ -78,11 +78,16 @@ endif
 endif
 
 LIBS = \
+	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifdef MOZ_JPROF
+LIBS += -ljprof
+endif
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
@@ -90,6 +95,10 @@ LIBS += $(XLDFLAGS) $(XLIBS)
 endif
 
 include $(topsrcdir)/config/config.mk
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS += tracemalloc
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
