@@ -201,9 +201,11 @@ writeFile(int cycles)
             PRIntervalTime i1, i2, i3;
             i1 = PR_IntervalNow();
 
-            fd = PR_OpenFile(filename.get(), PR_WRONLY|PR_TRUNCATE, 0644);
-            if (!fd)
+            fd = PR_OpenFile(filename.get(), PR_CREATE_FILE|PR_WRONLY|PR_TRUNCATE, 0644);
+            if (!fd) {
                 printf("bad filename?  %s\n", filename.get());
+                continue;
+            }
 
             i2 = PR_IntervalNow();
 
@@ -245,6 +247,11 @@ readFile(int cycles)
             filename.AppendInt( x );
             
             fd = PR_OpenFile(filename.get(), PR_RDONLY, 0);
+
+            if (!fd) {
+                printf("bad filename?  %s\n", filename.get());
+                continue;
+            }
             
             PRInt32 size = PR_Available(fd);
             
