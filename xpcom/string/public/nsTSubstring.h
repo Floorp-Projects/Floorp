@@ -293,6 +293,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
       friend class nsTAString_CharT;
       friend class nsTSubstringTuple_CharT;
 
+      // XXX GCC 3.4 needs this :-(
+      friend class nsTPromiseFlatString_CharT;
+
         // default initialization 
       nsTSubstring_CharT()
         : abstract_string_type(
