@@ -34,7 +34,12 @@ function RenameProfile(w)
 	}
 
 	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
-	profile.renameProfile(oldName, newName);
+	try {
+		profile.renameProfile(oldName, newName);
+        }
+	catch (ex) {
+		alert("Sorry, failed to rename profile.");
+	}
 	//this.location.replace(this.location);
 	this.location.href = "chrome://profile/content/profileManager.xul";
 }
@@ -51,7 +56,12 @@ function DeleteProfile(deleteFilesFlag)
 
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
-	profile.deleteProfile(name, deleteFilesFlag);
+	try {
+		profile.deleteProfile(name, deleteFilesFlag);
+	}
+	catch (ex) {
+		alert("Sorry, failed to delete profile.");
+	}
 	//this.location.replace(this.location);
 	//this.location.href = this.location;
 	this.location.href = "chrome://profile/content/profileManager.xul";
