@@ -544,16 +544,22 @@ nsSmtpService::loadSmtpServers()
         }
       }
 
-        char *newStr;
-        char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList),
-                                   ", ", &newStr);
-        while (pref) {
-            
-            rv = createKeyedServer(pref);
-            
-            pref = nsCRT::strtok(newStr, ", ", &newStr);
-        }
+      char *newStr;
+      char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList), ", ", &newStr);
 
+      while (pref) {
+        // fix for bug #96207
+        // code above makes sure that no duplicate entries in mail.smtpservers find
+        // their way to the mSmtpServers list.  But it doesn't check, if a server to be
+        // added already is in mSmtpServers.  That can happen in mail has been sent before 
+        // opening the settings (loading the list).
+        // use GetServerByKey to check if the key (pref) is already in
+        // in the list. If not it calls createKeyedServer directly.
+        nsCOMPtr<nsISmtpServer> server;
+        rv = GetServerByKey(pref, getter_AddRefs(server));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "GetServerByKey failed");
+        pref = nsCRT::strtok(newStr, ", ", &newStr);
+      }
     }
 
     saveKeyList();
@@ -761,6 +767,8 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
 nsresult
 nsSmtpService::GetServerByKey(const char* aKey, nsISmtpServer **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+
     findServerByKeyEntry entry;
     entry.key = aKey;
     entry.server = nsnull;
