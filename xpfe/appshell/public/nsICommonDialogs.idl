@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIDialogParamBlock.idl"
+#include "domstubs.idl"
+%{C++
+class nsIFactory;
+
+#define NS_CommonDialog_CID \
+{ 0xc01ad084, 0x4915, 0x11d3, { 0xb7, 0xa0, 0x85, 0xcf, 0x55, 0xc3, 0x52, 0x3c } }
+%}
+
+[scriptable, uuid(c01ad082-4915-11d3-b7a0-85cf55c3523c)]
+interface nsICommonDialogs : nsISupports
+{
+    /**
+     * Puts up an alert dialog with an OK button.
+     */
+    void Alert(in nsIDOMWindow inParent, in wstring inMsg);
+
+    /**
+     * Puts up a dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean Confirm(in nsIDOMWindow inParent, in wstring inMsg);
+
+    /**
+     * Puts up a dialog with OK and Cancel buttons, and
+     * a message with a single checkbox.
+     * @return true for OK, false for Cancel
+     */
+    boolean ConfirmCheck(in nsIDOMWindow inParent, in wstring inMsg,
+                         in wstring inCheckMsg,
+                         inout boolean outCheckValue);
+
+    /**
+     * Puts up a text input dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean Prompt(in nsIDOMWindow inParent, in wstring inMsg,
+                   in wstring inDefaultText, 
+                   out wstring result);
+
+    /**
+     * Puts up a username/password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean PromptUsernameAndPassword(in nsIDOMWindow inParent,
+    								  in wstring inMsg,
+                                      out wstring outUser, 
+                                      out wstring outPassword);
+
+    /**
+     * Puts up a password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean PromptPassword( in nsIDOMWindow inParent,
+    						in wstring inMsg, 
+                           out wstring outPassword);
+   /*
+   	Core Dialog function
+   */
+   void DoDialog(in nsIDOMWindow inParent, in nsIDialogParamBlock ioParamBlock, in string inChromeURL );
+};
+
+%{C++
+extern nsresult NS_NewCommonDialogsFactory(nsIFactory** aResult);
+%}
