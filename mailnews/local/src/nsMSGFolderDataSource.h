@@ -127,6 +127,8 @@ protected:
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
+  nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
+                            nsIRDFNode **target);
   nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);

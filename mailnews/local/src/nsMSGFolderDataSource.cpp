@@ -368,33 +368,18 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
   rv = source->QueryInterface(nsIMsgFolder::GetIID(),
                               (void **)&folder);
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_RDF_NO_VALUE;
-    
-    if (peq(kNC_Name, property))
-		rv = createFolderNameNode(folder, target);
-    else if (peq(kNC_SpecialFolder, property))
-		rv = createFolderSpecialNode(folder,target);
-	else if (peq(kNC_TotalMessages, property))
-		rv = createTotalMessagesNode(folder, target);
-	else if (peq(kNC_TotalUnreadMessages, property))
-		rv = createUnreadMessagesNode(folder, target);
-
-#if 1
-    else if (peq(kNC_Child, property))
-      rv = createFolderChildNode(folder,target);
-    else if (peq(kNC_MessageChild, property))
-      rv = createFolderMessageNode(folder,target);
-#endif
+    rv = createFolderNode(folder, property, target);
     NS_RELEASE(folder);
-    return rv;
-  }
+  } else {
 
-  nsIMessage *message;
-  rv = source->QueryInterface(nsIMessage::GetIID(),
-                              (void **)&message);
-  if (NS_SUCCEEDED(rv))
-    return createMessageNode(message, property,target);
-	
+    nsIMessage *message;
+    rv = source->QueryInterface(nsIMessage::GetIID(),
+                                (void **)&message);
+    if (NS_SUCCEEDED(rv)) {
+      rv = createMessageNode(message, property,target);
+      NS_RELEASE(message);
+    }
+  }
   return rv;
 }
 
@@ -872,6 +857,29 @@ nsresult nsMSGFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
 	return NS_OK;
 }
+
+nsresult nsMSGFolderDataSource::createFolderNode(nsIMsgFolder* folder,
+                                                 nsIRDFResource* property,
+                                                 nsIRDFNode** target)
+{
+  nsresult rv = NS_RDF_NO_VALUE;
+  
+  if (peq(kNC_Name, property))
+		rv = createFolderNameNode(folder, target);
+  else if (peq(kNC_SpecialFolder, property))
+		rv = createFolderSpecialNode(folder,target);
+	else if (peq(kNC_TotalMessages, property))
+		rv = createTotalMessagesNode(folder, target);
+	else if (peq(kNC_TotalUnreadMessages, property))
+		rv = createUnreadMessagesNode(folder, target);
+  else if (peq(kNC_Child, property))
+    rv = createFolderChildNode(folder,target);
+  else if (peq(kNC_MessageChild, property))
+      rv = createFolderMessageNode(folder,target);
+  
+  return rv;
+}
+
 
 nsresult nsMSGFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
                                                      nsIRDFNode **target)
