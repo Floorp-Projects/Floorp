@@ -200,7 +200,7 @@ sub Checkout()
 		#//$session->checkout("mozilla/lib/xlate")				|| die "checkout failure";
 	} elsif ($main::pull{runtime}) {
 		$session->checkout("mozilla/build")							|| die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe/projects/interfaceLib")	|| die "checkout failure";
+		$session->checkout("mozilla/lib/mac/InterfaceLib")	|| die "checkout failure";
 		$session->checkout("mozilla/config")						|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSStdLib")				|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSRuntime")				|| die "checkout failure";
@@ -774,15 +774,15 @@ sub BuildRuntimeProjects()
 	if ( $main::CARBON )
 	{
 		if ( $main::CARBONLITE ) {
-			_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces (Lite)");
+			_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"Carbon Interfaces (Lite)");
 		}
 		else {
-			_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");		
+			_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"Carbon Interfaces");		
 		}
 	}
 	else
 	{
-		_BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
+		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces");
 	}
 	
 	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
