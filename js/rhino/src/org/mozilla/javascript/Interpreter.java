@@ -116,6 +116,13 @@ public class Interpreter {
                                                       Scriptable scope,
                                                       FunctionNode theFunction)
     {
+        // check if function has own source, which is the case
+        // with Function(...)
+        String savedSource = debugSource;
+        debugSource = (String)theFunction.getProp(Node.DEBUGSOURCE_PROP);
+        if (debugSource == null) {
+            debugSource = savedSource;
+        }
         generateNestedFunctions(cx, scope, theFunction);
 
         generateRegExpLiterals(cx, scope, theFunction);
@@ -136,6 +143,7 @@ public class Interpreter {
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, result, debugSource);
         }
+        debugSource = savedSource;
         return result;
     }
 
