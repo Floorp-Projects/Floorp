@@ -97,12 +97,9 @@ extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
 nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)
 {
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 #if 0
   char* cs = aClass.ToString();
@@ -120,45 +117,7 @@ nsLayoutFactory::~nsLayoutFactory()
 #endif
 }
 
-nsresult
-nsLayoutFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  AddRef(); // Increase reference count for caller
-  return NS_OK;
-}
-
-nsrefcnt
-nsLayoutFactory::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsLayoutFactory::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
+NS_IMPL_ISUPPORTS(nsLayoutFactory, NS_GET_IID(nsIFactory))
 
 #ifdef DEBUG
 #define LOG_NEW_FAILURE(_msg,_ec)                                           \
@@ -174,13 +133,16 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
                                 void **aResult)
 {
   nsresult res;
-  PRBool refCounted = PR_TRUE; // XXX What is it with this? It is always PR_TRUE???
 
   if (aResult == NULL) {
     return NS_ERROR_NULL_POINTER;
   }
 
   *aResult = NULL;
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
 
   nsISupports *inst = nsnull;
 
@@ -191,7 +153,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLDocument", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kXMLDocumentCID)) {
     res = NS_NewXMLDocument((nsIDocument **)&inst);
@@ -199,7 +160,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewXMLDocument", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kImageDocumentCID)) {
     res = NS_NewImageDocument((nsIDocument **)&inst);
@@ -207,7 +167,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewImageDocument", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
 #if 1
 // XXX replace these with nsIHTMLElementFactory calls
@@ -217,7 +176,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLImageElement", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLOptionElementCID)) {
     res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsHTMLAtoms::option);
@@ -225,7 +183,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLOptionElement", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
 // XXX why the heck is this exported???? bad bad bad bad
   else if (mClassID.Equals(kPresShellCID)) {
@@ -234,7 +191,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewPresShell", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
 #endif
   else if (mClassID.Equals(kFrameSelectionCID)) {
@@ -243,7 +199,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewRangeList", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kRangeCID)) {
     res = NS_NewRange((nsIDOMRange **)&inst);
@@ -251,7 +206,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewRange", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kContentIteratorCID)) {
     res = NS_NewContentIterator((nsIContentIterator **)&inst);
@@ -259,7 +213,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewContentIterator", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kSubtreeIteratorCID)) {
     res = NS_NewContentSubtreeIterator((nsIContentIterator **)&inst);
@@ -267,7 +220,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewContentSubtreeIterator", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCSSParserCID)) {
     res = NS_NewCSSParser((nsICSSParser**)&inst);
@@ -275,7 +227,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewCSSParser", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLStyleSheetCID)) {
     res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst);
@@ -283,7 +234,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLStyleSheet", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLCSSStyleSheetCID)) {
     res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst);
@@ -291,7 +241,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLCSSStyleSheet", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kCSSLoaderCID)) {
     res = NS_NewCSSLoader((nsICSSLoader**)&inst);
@@ -299,7 +248,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewCSSLoader", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kTextNodeCID)) {
     res = NS_NewTextNode((nsIContent**) &inst);
@@ -307,7 +255,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewTextNode", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kNameSpaceManagerCID)) {
     res = NS_NewNameSpaceManager((nsINameSpaceManager**)&inst);
@@ -315,7 +262,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewNameSpaceManager", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kFrameUtilCID)) {
     res = NS_NewFrameUtil((nsIFrameUtil**) &inst);
@@ -323,7 +269,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewFrameUtil", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kEventListenerManagerCID)) {
     res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst);
@@ -331,7 +276,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewEventListenerManager", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kPrintPreviewContextCID)) {
     res = NS_NewPrintPreviewContext((nsIPresContext**) &inst);
@@ -339,7 +283,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewPrintPreviewContext", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kLayoutDocumentLoaderFactoryCID)) {
     res = NS_NewLayoutDocumentLoaderFactory((nsIDocumentLoaderFactory**)&inst);
@@ -347,7 +290,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewLayoutDocumentLoaderFactory", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kLayoutDebuggerCID)) {
     res = NS_NewLayoutDebugger((nsILayoutDebugger**) &inst);
@@ -355,7 +297,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewLayoutDebugger", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLElementFactoryCID)) {
     res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
@@ -363,7 +304,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kXMLElementFactoryCID)) {
     res = NS_NewXMLElementFactory((nsIXMLElementFactory**) &inst);
@@ -371,7 +311,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewXMLElementFactory", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kTextEncoderCID)) {
     res = NS_NewTextEncoder((nsIDocumentEncoder**) &inst);
@@ -379,24 +318,18 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       LOG_NEW_FAILURE("NS_NewTextEncoder", res);
       return res;
     }
-    refCounted = PR_TRUE;
   }
   else {
     return NS_NOINTERFACE;
   }
 
-  if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (!refCounted) {
-    NS_ADDREF(inst);
-  }
+  if (NS_FAILED(res)) return res;
 
   res = inst->QueryInterface(aIID, aResult);
 
   NS_RELEASE(inst);
-  if (res != NS_OK) {
+
+  if (NS_FAILED(res)) {
     // We didn't get the right interface, so clean up
     LOG_NEW_FAILURE("final QueryInterface", res);
   }
