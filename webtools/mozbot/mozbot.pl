@@ -2504,12 +2504,6 @@ sub Schedule {
     $self->SUPER::Schedule($event);
 }
 
-sub InChannel {
-    my $self = shift;
-    my ($event) = @_;
-    return $self->{'allowChannelAdmin'};
-}
-
 sub Help {
     my $self = shift;
     my ($event) = @_;
@@ -2542,6 +2536,7 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
+    return unless $self->{allowChannelAdmin} or $event->{channel} eq '';
     if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)(\s+quiet)?\s*$/osi) {
         if (not $event->{'channel'}) {
             if (defined($users{$1})) {
