@@ -259,7 +259,6 @@ PRUint8   *srcbits;
   }
 
   return(PR_FALSE);
-
 }
 
 
@@ -280,6 +279,7 @@ PRUint16                red,green,blue,*cur16;
 
   mBitsForCreate = mImageBits;
 
+#if 0
   if((unixdrawing->depth==24) &&  (mOriginalDepth==8))
     {
     // convert this nsImage to a 24 bit image
@@ -357,7 +357,7 @@ PRUint16                red,green,blue,*cur16;
       }
 #endif
     }
-
+#endif
 }
 
 nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)

@@ -34,6 +34,8 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 #define NS_TO_X(a) (NS_TO_X_RED(a) | NS_TO_X_GREEN(a) | NS_TO_X_BLUE(a))
 
+#define COLOR_CUBE_SIZE 216
+
 
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
@@ -52,6 +54,10 @@ nsDeviceContextUnix :: nsDeviceContextUnix()
   mBlueOffset = 0;
   mDepth = 0 ;
   mColormap = 0 ;
+  mPaletteInfo.isPaletteDevice = PR_FALSE;
+  mPaletteInfo.sizePalette = 0;
+  mPaletteInfo.numReserved = 0;
+  mPaletteInfo.palette = NULL;
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
@@ -292,8 +298,15 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
   // Check to see if the colormap is writable
   mVisual = wa.visual;
 
+  if (mVisual->c_class != TrueColor)
+    mPaletteInfo.isPaletteDevice = PR_TRUE;
+  else
+    mPaletteInfo.isPaletteDevice = PR_FALSE;
+
   if (mVisual->c_class == GrayScale || mVisual->c_class == PseudoColor || mVisual->c_class == DirectColor)
+  {
     mWriteable = PR_TRUE;
+  }
   else // We have StaticGray, StaticColor or TrueColor
     mWriteable = PR_FALSE;
 
@@ -421,18 +434,41 @@ NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   InstallColormap();
 
   if (nsnull == mColorSpace) {
-   if (16 == mDepth) {
-    IL_RGBBits colorRGBBits;
-    // Default is to create a 16-bit color space
 
-    colorRGBBits.red_shift = mRedOffset;  
-    colorRGBBits.red_bits = mRedBits;
-    colorRGBBits.green_shift = mGreenOffset;
-    colorRGBBits.green_bits = mGreenBits; 
-    colorRGBBits.blue_shift = mBlueOffset; 
-    colorRGBBits.blue_bits = mBlueBits;  
+    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
+      //
+      // 8-BIT Visual
+      //
+      // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
+      // than DIB_RGB_COLORS, so make sure the indexes match that of the
+      // GDI physical palette
+      //
+      // Note: the image library doesn't use the reserved colors, so it doesn't
+      // matter what they're set to...
+      IL_RGB  reserved[10];
+      memset(reserved, 0, sizeof(reserved));
+      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+      if (nsnull == colorMap) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+  
+      // Create a pseudo color space
+      mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+  
+    } else if (16 == mDepth) {
+      // 
+      // 16-BIT Visual
+      //
+      IL_RGBBits colorRGBBits;
+      // Default is to create a 16-bit color space
+      colorRGBBits.red_shift = mRedOffset;  
+      colorRGBBits.red_bits = mRedBits;
+      colorRGBBits.green_shift = mGreenOffset;
+      colorRGBBits.green_bits = mGreenBits; 
+      colorRGBBits.blue_shift = mBlueOffset; 
+      colorRGBBits.blue_bits = mBlueBits;  
 
-    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
+      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
     } 
     else if (24 == mDepth) {
       DeviceContextImpl::GetILColorSpace(aColorSpace);
