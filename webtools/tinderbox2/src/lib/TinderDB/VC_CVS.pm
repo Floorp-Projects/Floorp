@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.17 $ )[1];
+$VERSION = ( qw $Revision: 1.18 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -448,6 +448,9 @@ sub apply_db_updates {
 
     } # foreach $line
   } # any updates
+
+  ($num_updates) ||
+      return 0;
 
   $METADATA{$tree}{'updates_since_trim'} += $num_updates;
 
