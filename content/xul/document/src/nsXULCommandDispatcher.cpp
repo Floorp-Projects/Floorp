@@ -507,7 +507,7 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
     if (aList.Equals(NS_LITERAL_STRING("*")))
         return PR_TRUE; // match _everything_!
 
-    PRInt32 indx = aList.Find(nsPromiseFlatString(aElement));
+    PRInt32 indx = aList.Find((const PRUnichar *)nsPromiseFlatString(aElement));
     if (indx == -1)
         return PR_FALSE; // not in the list at all
 
