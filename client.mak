@@ -56,8 +56,18 @@ CVS_FLAGS=$(MOZ_CVS_FLAGS)
 
 # let's be explicit about CVSROOT... some windows cvs clients
 # are too stupid to correctly work without the -d option 
+#
+#  if they are too stupid, they should fail.  I am
+#  commenting this out because this does not work
+#  under 4nt.  (%'s are evaluted differently)
+#
+#  If it breaks you, mail dougt@netscape.com
+#  and leaf@mozilla.org
+#
+!if 0
 !if defined(CVSROOT)
-CVS_FLAGS=$(CVS_FLAGS) -d $(CVSROOT)
+CVS_FLAGS=$(CVS_FLAGS) -d "$(CVSROOT)"
+!endif
 !endif
 
 CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
