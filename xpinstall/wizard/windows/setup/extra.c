@@ -316,7 +316,11 @@ void SetInstallFilesVar(LPSTR szProdDir)
 {
   char szProgramPath[MAX_BUF];
 
-  wsprintf(szProgramPath, "%s%s", szProdDir, sgProduct.szProgramName);
+  if(szProdDir[lstrlen(szProdDir) - 1] == '\\')
+    wsprintf(szProgramPath, "%s%s", szProdDir, sgProduct.szProgramName);
+  else
+    wsprintf(szProgramPath, "%s\\%s", szProdDir, sgProduct.szProgramName);
+
   if((!gbForceInstall) && FileExists(szProgramPath))
     sgProduct.bInstallFiles = FALSE;
 }
@@ -2318,6 +2322,7 @@ void LaunchExistingGreInstaller(greInfo *aGre)
   }
 
   DecryptString(szParameterBuf, siCObject->szParameter);
+  UpdateGreInstallerCmdLine(szParameterBuf, sizeof(szParameterBuf));
   LogISLaunchAppsComponent(siCObject->szDescriptionShort);
   WinSpawn(aGre->installerAppPath, szParameterBuf, szTempDir, SW_SHOWNORMAL, WS_WAIT);
   if(*szMessageString != '\0')
@@ -6392,11 +6397,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     {
       lstrcpy(sgProduct.szPath, szPreviousPath);
     }
-
-    // Since we found the path in the registry, lets check to see if files need to be
-    //    installed for share installations while we're here
-    if(sgProduct.bSharedInst == TRUE)
-      SetInstallFilesVar(szPreviousPath);
   }
   RemoveBackSlash(sgProduct.szPath);
 
@@ -6438,6 +6438,10 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   iRv = ParseCommandLine(szMsgInitSetup, lpszCmdLine);
   if(iRv)
     return(iRv);
+
+  // check to see if files need to be installed for share installations
+  if(sgProduct.bSharedInst == TRUE)
+    SetInstallFilesVar(sgProduct.szPath);
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
