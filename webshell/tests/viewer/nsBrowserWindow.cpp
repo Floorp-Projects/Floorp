@@ -1634,7 +1634,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   }
   if (NS_OK == mForward->QueryInterface(kIWidgetIID,(void**)&widget))
   {
-    widget->Create(mWindow, r, HandleForwardEvent, NULL);
+    widget->Create(mWindow.get(), r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
     nsAutoString forward; forward.AssignWithConversion("Forward");
