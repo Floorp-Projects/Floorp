@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIRequest;
+
+/**
+ * nsIRequestObserver
+ *
+ * @status UNDER_REVIEW
+ */
+[scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
+interface nsIRequestObserver : nsISupports
+{
+    /**
+     * Called to signify the beginning of an asynchronous request.
+     *
+     * @param request - request being observed
+     * @param ctxt - user defined context
+     *
+     * A failure code returned from onStartRequest has the side-effect of
+     * causing the request to be canceled.
+     */
+    void onStartRequest(in nsIRequest request,
+                        in nsISupports ctxt);
+
+    /**
+     * Called to signify the end of an asynchronous request.  This
+     * call is always preceded by a call to onStartRequest.
+     *
+     * @param request - request being observed
+     * @param ctxt - user defined context
+     * @param statusCode - reason for stopping (NS_OK if completed successfully)
+     *
+     * A failure code returned from onStopRequest is generally ignored.
+     */
+    void onStopRequest(in nsIRequest request,
+                       in nsISupports ctxt,
+                       in nsresult statusCode);
+};
+
+%{C++
+// Generic status codes for OnStopRequest:
+#define NS_BINDING_SUCCEEDED NS_OK
+#define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
+#define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
+
+// The binding has been moved to another request in the same load group:
+#define NS_BINDING_REDIRECTED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
+
+// The binding has been moved to another request in a different load group:
+#define NS_BINDING_RETARGETED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 4)
+%}
