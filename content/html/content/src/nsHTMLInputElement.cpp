@@ -1356,13 +1356,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
 
       nsCOMPtr<nsIDOMEventTarget> originalTarget;
-
-      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(*aDOMEvent));
-
-      if (nsevent) {
-        nsevent->GetOriginalTarget(getter_AddRefs(originalTarget));
-      }
-
+      privateEvent->GetOriginalTargetTrusted(getter_AddRefs(originalTarget));
+      
       if (!originalTarget) {
         privateEvent->SetOriginalTarget(oldTarget);
       }
