@@ -78,10 +78,10 @@ AIX_NSPR_LINK		= -L$(DIST)/bin -lnspr_shr -blibpath:/usr/local/lib/netscape:/usr
 AIX_NSPR_DIST_LINK	= -L$(DIST)/bin -lnspr_shr -blibpath:.:../dist/$(OBJDIR)/bin:../../dist/$(OBJDIR)/bin:../../../dist/$(OBJDIR)/bin:/usr/lib:/lib
 endif
 ifneq (,$(filter 4.2 4.3,$(OS_RELEASE)))
-PORT_FLAGS		+= -DHW_THREADS -DUSE_PTHREADS -DPOSIX7
+PORT_FLAGS		+= -DSW_THREADS
 OS_LIBS			+= -ldl 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
-DSO_LDOPTS		= -brtl -bM:SRE -bnoentry -bexpall
+DSO_LDOPTS		= -brtl -bM:SRE -bnoentry -bexpall -berok
 endif
 
 ######################################################################
@@ -89,7 +89,7 @@ endif
 ######################################################################
 
 CC			= cc
-CCC			= xlC -+
+CCC			= xlC
 BSDECHO			= $(DIST)/bin/bsdecho
 RANLIB			= /usr/ccs/bin/ranlib
 WHOAMI			= /bin/whoami
