@@ -23,6 +23,7 @@ NR_RegSetUsername
 NR_RegGetUsername
 NR_RegGetUniqueName
 VR_SetRegDirectory
+NR_RegSetBufferSize
 VR_CreateRegistry
 VR_PackRegistry
 VR_Close
