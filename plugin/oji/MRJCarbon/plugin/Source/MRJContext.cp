@@ -576,270 +576,11 @@ static MRJFrame* getFrame(JMFrameRef ref)
     return frame;
 }
 
-#if TARGET_CARBON
-
 Boolean MRJContext::createContext()
 {
     return true;
 }
 
-#else /* !TARGET_CARBON */
-
-static void frameSetSize(JMFrameRef ref, const Rect* newSize)
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->setSize(newSize);
-}
-
-static void frameInvalRect(JMFrameRef ref, const Rect* invalidRect)
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->invalRect(invalidRect);
-}
-
-static void frameShowHide(JMFrameRef ref, Boolean visible)
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->showHide(visible);
-}
-
-static void frameSetTitle(JMFrameRef ref, JMTextRef titleRef)
-{
-    Str255 title;
-    JMTextToStr255(titleRef, title);
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->setTitle(title);
-}
-
-static void frameCheckUpdate(JMFrameRef ref)
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->checkUpdate();
-}
-
-static void frameReorderFrame(JMFrameRef ref, ReorderRequest request)
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->reorder(request);
-}
-
-static void frameSetResizeable(JMFrameRef ref, Boolean resizeable) 
-{
-    MRJFrame* frame = getFrame(ref);
-    if (frame != NULL)
-        frame->setResizeable(resizeable);
-}
-
-static void frameGetFrameInsets(JMFrameRef frame, Rect *insets)
-{
-    // MRJFrame* frame = getFrame(ref);
-    // if (frame != NULL)
-    //  frame->getFrameInsets(insets);
-    insets->top = insets->left = insets->bottom = insets->right = 0;
-}
-
-static void frameNextFocus(JMFrameRef frame, Boolean forward)
-{
-    // MRJFrame* frame = getFrame(ref);
-    // if (frame != NULL)
-    //  frame->nextFocus(insets);
-}
-
-static void frameRequestFocus(JMFrameRef frame)
-{
-    // MRJFrame* frame = getFrame(ref);
-    // if (frame != NULL)
-    //  frame->requestFocus(insets);
-}
-
-class AppletViewerFrame : public MRJFrame {
-public:
-    AppletViewerFrame(JMFrameRef frameRef, MRJContext* context) : MRJFrame(frameRef), mContext(context) {}
-    
-    virtual void invalRect(const Rect* invalidRect);
-    
-    virtual void idle(SInt16 modifiers);
-    virtual void update();
-    virtual void click(const EventRecord* event);
-
-protected:
-    virtual GrafPtr getPort();
-
-private:
-    MRJContext* mContext;
-};
-
-void AppletViewerFrame::invalRect(const Rect* invalidRect)
-{
-    ::InvalRect(invalidRect);
-}
-
-void AppletViewerFrame::idle(SInt16 modifiers)
-{
-    mContext->idle(modifiers);
-}
-
-void AppletViewerFrame::update()
-{
-    mContext->drawApplet();
-}
-
-void AppletViewerFrame::click(const EventRecord* event)
-{
-    mContext->click(event, this);
-}
-
-GrafPtr AppletViewerFrame::getPort()
-{
-    return mContext->getPort(); 
-}
-
-JMFrameCallbacks theFrameCallbacks = {
-    kJMVersion,                     /* should be set to kJMVersion */
-    &frameSetSize,
-    &frameInvalRect,
-    &frameShowHide,
-    &frameSetTitle,
-    &frameCheckUpdate,
-    &frameReorderFrame,
-    &frameSetResizeable,
-    &frameGetFrameInsets,
-    &frameNextFocus,
-    &frameRequestFocus,
-};
-
-OSStatus MRJContext::requestFrame(JMAWTContextRef contextRef, JMFrameRef frameRef, JMFrameKind kind,
-                                    const Rect* initialBounds, Boolean resizeable, JMFrameCallbacks* cb)
-{
-    // set up the viewer frame's callbacks.
-    BlockMoveData(&theFrameCallbacks, cb, sizeof(theFrameCallbacks));
-    // *cb = callbacks;
-
-    MRJContext* thisContext = NULL;
-    OSStatus status = ::JMGetAWTContextData(contextRef, (JMClientData*)&thisContext);
-    return thisContext->createFrame(frameRef, kind, initialBounds, resizeable);
-}
-
-OSStatus MRJContext::releaseFrame(JMAWTContextRef contextRef, JMFrameRef frameRef)
-{
-    MRJContext* thisContext = NULL;
-    OSStatus status = ::JMGetAWTContextData(contextRef, (JMClientData*)&thisContext);
-    MRJFrame* thisFrame = NULL;
-    status = ::JMGetFrameData(frameRef, (JMClientData*)&thisFrame);
-    if (thisFrame != NULL) {
-        status = ::JMSetFrameData(frameRef, NULL);
-        if (thisContext->mViewerFrame == frameRef) {
-            thisContext->mViewerFrame = NULL;
-        }
-        delete thisFrame;
-    }
-    return status;
-}
-
-SInt16 MRJContext::getUniqueMenuID(JMAWTContextRef contextRef, Boolean isSubmenu)
-{
-    MRJContext* thisContext = NULL;
-    OSStatus status = ::JMGetAWTContextData(contextRef, (JMClientData*)&thisContext);
-    return thisContext->allocateMenuID(isSubmenu);
-}
-
-static Boolean appearanceManagerExists()
-{
-    long response = 0;
-    return (Gestalt(gestaltAppearanceAttr, &response) == noErr && (response & (1 << gestaltAppearanceExists)));
-}
-
-static OSStatus JMTextToStr255(JMTextRef textRef, Str255 str)
-{
-    UInt32 length = 0;
-    OSStatus status = JMGetTextBytes(textRef, kTextEncodingMacRoman, &str[1], sizeof(Str255) - 1, &length);
-    if (status == noErr)
-        str[0] = (unsigned char)(status == noErr ? length : 0);
-    return status;
-}
-
-static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding)
-{
-    UInt32 length = 0;
-    OSStatus status = ::JMGetTextLengthInBytes(textRef, encoding, &length);
-    if (status != noErr)
-        return NULL;
-    char* text = new char[length + 1];
-    if (text != NULL) {
-        UInt32 actualLength;
-        status = ::JMGetTextBytes(textRef, encoding, text, length, &actualLength);
-        if (status != noErr) {
-            delete text;
-            return NULL;
-        }
-        text[length] = '\0';
-    }
-    return text;
-}
-
-void MRJContext::exceptionOccurred(JMAWTContextRef context, JMTextRef exceptionName, JMTextRef exceptionMsg, JMTextRef stackTrace)
-{
-    // why not display this using the Appearance Manager's wizzy new alert?
-    if (appearanceManagerExists()) {
-        OSStatus status;
-        Str255 error, explanation;
-        status = ::JMTextToStr255(exceptionName, error);
-        status = ::JMTextToStr255(exceptionMsg, explanation);
-
-#if 0
-        TextEncoding utf8 = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicodeUTF8Format);
-        char* where = ::JMTextToEncoding(stackTrace, utf8);
-        if (where != NULL)
-            delete[] where;
-#endif
-        
-        SInt16 itemHit = 0;
-        OSErr result = ::StandardAlert(kAlertPlainAlert, error, explanation, NULL, &itemHit);
-    }
-}
-
-Boolean MRJContext::createContext()
-{
-    JMAWTContextCallbacks callbacks = {
-        kJMVersion,                     /* should be set to kJMVersion */
-        &requestFrame,                  /* a new frame is being created. */
-        &releaseFrame,                  /* an existing frame is being destroyed. */
-        &getUniqueMenuID,               /* a new menu will be created with this id. */
-        &exceptionOccurred,             /* just some notification that some recent operation caused an exception.  You can't do anything really from here. */
-    };
-    if (mPage != NULL)
-        return mPage->createContext(&mContext, &callbacks, this);
-    else
-        return (::JMNewAWTContext(&mContext, mSessionRef, &callbacks, this) == noErr);
-}
-
-void MRJContext::showDocument(JMAppletViewerRef viewer, JMTextRef urlString, JMTextRef windowName)
-{
-    MRJContext* thisContext;
-    OSStatus status = ::JMGetAppletViewerData(viewer, (JMClientData*)&thisContext);
-    if (status == noErr) {
-        Handle urlHandle = ::JMTextToMacOSCStringHandle(urlString);
-        Handle windowHandle = ::JMTextToMacOSCStringHandle(windowName);
-        if (urlHandle != NULL && windowHandle != NULL) {
-            ::HLock(urlHandle); ::HLock(windowHandle);
-            const char* url = *urlHandle;
-            const char* target = *windowHandle;
-            thisContext->showURL(url, target);
-        }
-        if (urlHandle != NULL)
-            ::DisposeHandle(urlHandle);
-        if (windowHandle != NULL)
-            ::DisposeHandle(windowHandle);
-    }
-}
-
-#endif /* !TARGET_CARBON */
 
 
 /*
@@ -1039,21 +780,21 @@ static char* getCString(CFStringRef stringRef)
 }
 
 class SetStatusMessage : public TimedMessage {
-    nsIPluginInstancePeer* mPeer;
+    nsIPluginInstance* mPluginInstance;
     CFStringRef mStatus;
 
 public:
-    SetStatusMessage(nsIPluginInstancePeer* peer, CFStringRef statusString)
-        : mPeer(peer), mStatus(statusString)
+    SetStatusMessage(nsIPluginInstance* pluginInstance, CFStringRef statusString)
+        : mPluginInstance(pluginInstance), mStatus(statusString)
     {
-        NS_ADDREF(mPeer);
+        NS_ADDREF(mPluginInstance);
         ::CFRetain(mStatus);
     }
     
     ~SetStatusMessage()
     {
         ::CFRelease(mStatus);
-        NS_RELEASE(mPeer);
+        NS_RELEASE(mPluginInstance);
     }
     
     virtual void execute();
@@ -1063,7 +804,12 @@ void SetStatusMessage::execute()
 {
     char* status = getCString(mStatus);
     if (status) {
-        mPeer->ShowStatus(status);
+        nsIPluginInstancePeer* peer;
+        mPluginInstance->GetPeer(&peer);
+        if (peer) {
+            peer->ShowStatus(status);
+            NS_RELEASE(peer);
+        }
         delete[] status;
     }
 }
@@ -1072,7 +818,7 @@ static void setStatusCallback(jobject applet, CFStringRef statusMessage, void *i
 {
     // use a timer on the main event loop to handle this?
     MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
-    SetStatusMessage* message = new SetStatusMessage(context->getPeer(), statusMessage);
+    SetStatusMessage* message = new SetStatusMessage(context->getInstance(), statusMessage);
     if (message) {
         OSStatus status = message->send();
         if (status != noErr) delete message;
@@ -1080,12 +826,12 @@ static void setStatusCallback(jobject applet, CFStringRef statusMessage, void *i
 }
 
 class ShowDocumentMessage : public TimedMessage {
-    nsIPluginInstance* mPluginInstance;
+    MRJPluginInstance* mPluginInstance;
     CFURLRef mURL;
     CFStringRef mWindowName;
 
 public:
-    ShowDocumentMessage(nsIPluginInstance* pluginInstance, CFURLRef url, CFStringRef windowName)
+    ShowDocumentMessage(MRJPluginInstance* pluginInstance, CFURLRef url, CFStringRef windowName)
         :   mPluginInstance(pluginInstance), mURL(url), mWindowName(windowName)
     {
         NS_ADDREF(mPluginInstance);
@@ -1200,9 +946,14 @@ static OSErr FSpGetFullPath(const FSSpec *spec, short *fullPathLength, Handle *f
 
 void ShowDocumentMessage::execute()
 {
+    // guard against the plugin instance already having been destroyed.
+    if (mPluginInstance->getContext() == NULL) {
+        return;
+    }
+    
     char* url = NULL;
     char* target = NULL;
-    
+
     CFStringRef urlRef = ::CFURLGetString(mURL);
     if (urlRef) {
         if (::CFStringHasPrefix(urlRef, CFSTR("file:"))) {
@@ -1251,7 +1002,7 @@ void ShowDocumentMessage::execute()
     target = getCString(mWindowName);
     
     if (url && target)
-        thePluginManager->GetURL(mPluginInstance, url, target);
+        thePluginManager->GetURL((nsIPluginInstance*)mPluginInstance, url, target);
 
     delete[] url;
     delete[] target;
@@ -1263,7 +1014,7 @@ static void showDocumentCallback(jobject applet, CFURLRef url, CFStringRef windo
     if (url) {
         // use a timer on the main event loop to handle this?
         MRJContext* context = reinterpret_cast<MRJContext*>(inUserData);
-        ShowDocumentMessage* message = new ShowDocumentMessage(context->getInstance(), url, windowName);
+        ShowDocumentMessage* message = new ShowDocumentMessage((MRJPluginInstance*)context->getInstance(), url, windowName);
         if (message) {
             OSStatus status = message->send();
             if (status != noErr) delete message;

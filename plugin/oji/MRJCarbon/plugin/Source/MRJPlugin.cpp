@@ -714,7 +714,7 @@ NS_METHOD MRJPluginInstance::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, ns
 
 NS_METHOD MRJPluginInstance::GetPeer(nsIPluginInstancePeer* *result)
 {
-    mPeer->AddRef();
+    NS_IF_ADDREF(mPeer);
     *result = mPeer;
     return NS_OK;
 }

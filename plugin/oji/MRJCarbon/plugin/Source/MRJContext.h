@@ -128,7 +128,6 @@ public:
     MRJSecurityContext* getSecurityContext();
 
 	void showURL(const char* url, const char* target);
-	void showStatus(const char* message);
 	
 private:
 	void localToFrame(Point* pt);
