@@ -386,9 +386,11 @@
         <setter><![CDATA[
           this.mSearchValue = val;
           var kids = this.childNodes;
+          var searchForStrBundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
           for (var i = 0; i < kids.length; ++i) {
             var name = kids[i].getAttribute("name");
-            kids[i].setAttribute("label", "Search " + name + " for \"" + val + "\"");
+            var searchForStr = searchForStrBundle.formatStringFromName("searchFor",  [name, val], 2);
+            kids[i].setAttribute("label", searchForStr);
           }
         ]]></setter>
       </property>
