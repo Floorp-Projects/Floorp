@@ -59,9 +59,12 @@ public:
   NS_IMETHOD SetLastContext  (GtkWidget          *aWidget,
                               GdkDragContext     *aContext,
                               guint               aTime);
-  NS_IMETHOD UpdateDragStatus(GtkWidget          *aWidget,
-                              GdkDragContext     *aContext,
-                              guint               aTime);
+  NS_IMETHOD StartDragMotion (GtkWidget      *aWidget,
+                              GdkDragContext *aContext,
+                              guint           aTime);
+  NS_IMETHOD EndDragMotion   (GtkWidget      *aWidget,
+                              GdkDragContext *aContext,
+                              guint           aTime);
   NS_IMETHOD SetDataReceived (GtkWidget          *aWidget,
                               GdkDragContext     *context,
                               gint                x,

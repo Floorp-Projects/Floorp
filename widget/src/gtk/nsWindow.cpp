@@ -1357,6 +1357,9 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
     innerMostWidget->OnDragEnterSignal(aDragContext, x, y, aTime);
   }
 
+  // notify the drag service that we are starting a drag motion.
+  StartDragMotion(aWidget, aDragContext, aTime);
+
   nsMouseEvent event;
 
   event.message = NS_DRAGDROP_OVER;
@@ -1373,8 +1376,8 @@ nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
 
   innerMostWidget->Release();
 
-  // now that we've dispatched the signal, update the drag context
-  UpdateDragStatus(aWidget, aDragContext, aTime);
+  // we're done with the drag motion event.  notify the drag service.
+  EndDragMotion(aWidget, aDragContext, aTime);
 }
 
 void
