@@ -57,6 +57,6 @@ ifndef NECKO
 PUBLIC=$(DEPTH)/netwerk/dist/include
 endif
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lxp
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
