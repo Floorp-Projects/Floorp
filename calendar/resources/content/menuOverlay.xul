@@ -264,9 +264,9 @@
       </menupopup>
    </menu>
    
-    <menu id="tasksMenu"
-         label="&taskMenu.label;"
-         accesskey="&taskMenu.accesskey;" >                                                                                       
+    <menu id="toolsMenu"
+         label="&toolsMenu.label;"
+         accesskey="&toolsMenu.accesskey;" >                                                                                       
       <menupopup id="taskPopup">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
