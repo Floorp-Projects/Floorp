@@ -43,15 +43,6 @@
 #include "nsCRT.h"
 #include "nsString.h"
 
-/* Get port from string */ 
-//PRInt32 ExtractPortFrom(const nsACString &src);
-
-/* Extract string out of another */
-nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
-
-/* Duplicate string */
-nsresult DupString(char* *o_Dest, const char* i_Src);
-
 /* handle .. in dirs while resolving relative URLs */
 void CoalesceDirsRel(char* io_Path);
 
