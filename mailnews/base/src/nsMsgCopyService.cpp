@@ -57,16 +57,15 @@ public:
     nsresult Init(nsCopyRequestType type, nsISupports* aSupport,
                   nsIMsgFolder* dstFolder,
                   PRBool bVal, nsIMsgCopyServiceListener* listener,
-                  nsISupports* data, nsITransactionManager* txnMgr);
+                  nsITransactionManager* txnMgr);
     nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
 
     nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
     nsCOMPtr<nsIMsgFolder> m_dstFolder;
     nsCOMPtr<nsITransactionManager> m_txnMgr;
     nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
-    nsCOMPtr<nsISupports> m_listenerData;
     nsCopyRequestType m_requestType;
-    PRBool m_isMoveOrDraft;
+    PRBool m_isMoveOrDraftOrTemplate;
     PRBool m_processed;
     nsVoidArray m_copySourceArray; // array of nsCopySource
 };
@@ -85,15 +84,13 @@ public:
 							nsIMsgFolder* dstFolder,
 							PRBool isMove,
                             nsIMsgCopyServiceListener* listener,
-                            nsISupports* listenerData,
 							nsITransactionManager* txnMgr);
 
 	NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
                                nsIMsgFolder* dstFolder,
                                nsIMessage* msgToReplace,
-                               PRBool isDraft,
+                               PRBool isDraftOrTemplate,
                                nsIMsgCopyServiceListener* listener,
-                               nsISupports* listenerData,
                                nsITransactionManager* txnMgr);
 
 	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
@@ -142,7 +139,7 @@ void nsCopySource::AddMessage(nsIMessage* aMsg)
 // 
 nsCopyRequest::nsCopyRequest() :
     m_requestType(nsCopyMessagesType),
-    m_isMoveOrDraft(PR_FALSE),
+    m_isMoveOrDraftOrTemplate(PR_FALSE),
     m_processed(PR_FALSE)
 {
 }
@@ -165,7 +162,7 @@ nsresult
 nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
                     nsIMsgFolder* dstFolder,
                     PRBool bVal, nsIMsgCopyServiceListener* listener,
-                    nsISupports* data, nsITransactionManager* txnMgr)
+                    nsITransactionManager* txnMgr)
 {
     nsresult rv = NS_OK;
     m_requestType = type;
@@ -173,11 +170,9 @@ nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
     if (NS_FAILED(rv)) return rv;
     m_dstFolder = do_QueryInterface(dstFolder, &rv);
     if (NS_FAILED(rv)) return rv;
-    m_isMoveOrDraft = bVal;
+    m_isMoveOrDraftOrTemplate = bVal;
     if (listener)
         m_listener = do_QueryInterface(listener, &rv);
-    if (data)
-        m_listenerData = do_QueryInterface(data, &rv);
     if (txnMgr)
         m_txnMgr = do_QueryInterface(txnMgr, &rv);
     return rv;
@@ -229,7 +224,7 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
             
         m_copyRequests.RemoveElement(aRequest);
         if (aRequest->m_listener)
-            aRequest->m_listener->OnStopCopy(rv, aRequest->m_listenerData);
+            aRequest->m_listener->OnStopCopy(rv);
         delete aRequest;
     }
     
@@ -288,14 +283,15 @@ nsMsgCopyService::DoNextCopy()
         if (copyRequest && !copyRequest->m_processed)
         {
             if (copyRequest->m_listener)
-                copyRequest->m_listener->OnStartCopy(copyRequest->m_listenerData);
+                copyRequest->m_listener->OnStartCopy();
             if (copyRequest->m_requestType == nsCopyMessagesType &&
                 copySource)
             {
                 copySource->m_processed = PR_TRUE;
                 rv = copyRequest->m_dstFolder->CopyMessages
                     (copySource->m_msgFolder, copySource->m_messageArray,
-                     copyRequest->m_isMoveOrDraft, copyRequest->m_txnMgr);
+                     copyRequest->m_isMoveOrDraftOrTemplate,
+                     copyRequest->m_txnMgr, copyRequest->m_listener);
                                                                 
             }
             else if (copyRequest->m_requestType == nsCopyFileMessageType)
@@ -318,8 +314,10 @@ nsMsgCopyService::DoNextCopy()
                     }
                     copyRequest->m_processed = PR_TRUE;
                     rv = copyRequest->m_dstFolder->CopyFileMessage
-                        (aSpec, aMessage, copyRequest->m_isMoveOrDraft,
-                         copyRequest->m_listenerData, copyRequest->m_txnMgr);
+                        (aSpec, aMessage,
+                         copyRequest->m_isMoveOrDraftOrTemplate,
+                         copyRequest->m_txnMgr,
+                         copyRequest->m_listener);
                 }
             }
         }
@@ -363,7 +361,6 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
                                nsIMsgFolder* dstFolder,
                                PRBool isMove,
                                nsIMsgCopyServiceListener* listener,
-                               nsISupports* listenerData,
                                nsITransactionManager* txnMgr)
 {
     nsCopyRequest* copyRequest;
@@ -382,7 +379,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
     aSupport = do_QueryInterface(srcFolder, &rv);
 
     rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
-                           isMove, listener, listenerData, txnMgr);
+                           isMove, listener, txnMgr);
     if (NS_FAILED(rv)) goto done;
 
     rv = NS_NewISupportsArray(getter_AddRefs(msgArray));
@@ -457,7 +454,6 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMessage* msgToReplace,
                                   PRBool isDraft,
                                   nsIMsgCopyServiceListener* listener,
-                                  nsISupports* listenerData,
                                   nsITransactionManager* txnMgr)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
@@ -472,7 +468,7 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
     if (NS_FAILED(rv)) goto done;
 
     rv = copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
-                           isDraft, listener, listenerData, txnMgr);
+                           isDraft, listener, txnMgr);
     if (NS_FAILED(rv)) goto done;
 
     if (msgToReplace)

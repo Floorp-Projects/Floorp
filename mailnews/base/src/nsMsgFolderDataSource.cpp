@@ -909,7 +909,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 	if(NS_SUCCEEDED(rv))
 	{
 		copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
-                              nsnull, nsnull, txnMgr);
+                              nsnull, txnMgr);
 
 	}
 	return NS_OK;
