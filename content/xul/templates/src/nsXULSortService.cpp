@@ -510,7 +510,7 @@ XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
 			nsITextContent	*text = nsnull;
 			if (NS_SUCCEEDED(rv = child->QueryInterface(kITextContentIID, (void **)&text)))
 			{
-				nsTextFragment	*textFrags;
+				const nsTextFragment	*textFrags;
 				PRInt32		numTextFrags;
 				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
 				{
@@ -905,7 +905,7 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 				for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
 				printf("(kITextContentIID)  ");
 
-				nsTextFragment	*textFrags;
+				const nsTextFragment	*textFrags;
 				PRInt32		numTextFrags;
 				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
 				{
