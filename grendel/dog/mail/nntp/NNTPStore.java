@@ -425,9 +425,20 @@ public class NNTPStore extends Store implements StatusSource {
 	// Attempts to discover which newsgroups exist and which articles have been read.
 	void readNewsrc() {
 		try {
-			File newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
-			if (!newsrc.exists())
-				newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc");
+			String osname = System.getProperties().getProperty("os.name");
+			File newsrc;
+			if (osname.startsWith("Windows") ||
+			    osname.startsWith("Win32") ||
+			    osname.startsWith("Win16") ||
+			    osname.startsWith("16-bit Windows")) {
+				newsrc = new File(System.getProperty("user.home")+File.separator+"news-"+getHostName()+".rc");
+				if (!newsrc.exists())
+					newsrc = new File(System.getProperty("user.home")+File.separator+"news.rc");
+			} else {
+				newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
+				if (!newsrc.exists())
+					newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc");
+			}
 
 			BufferedReader reader = new BufferedReader(new FileReader(newsrc));
 			String line;
