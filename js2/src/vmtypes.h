@@ -37,10 +37,13 @@
 #include <vector>
 #include "world.h"
 #include "numerics.h" /* needed for formatter << double */
+#include "jstypes.h"
 
 namespace JavaScript {
 namespace VM {
-    
+
+    using JSTypes::JSValues;
+
     enum ICodeOp {
         ADD, /* dest, source1, source2 */
         BRANCH, /* target label */
@@ -130,16 +133,26 @@ namespace VM {
     {
     public:
         Instruction(ICodeOp aOpcode) : mOpcode(aOpcode) { }
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f)
+        {
             f << opcodeNames[mOpcode] << "\t<unk>";
             return f;
-        }                
+        }
         
-        ICodeOp getBranchOp() \
-        { return ((mOpcode >= COMPARE_EQ) && (mOpcode <= COMPARE_NE)) ? \
-              (ICodeOp)(BRANCH_EQ + (mOpcode - COMPARE_EQ)) : NOP;  }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
+        {
+            return f;
+        }
+        
+        ICodeOp getBranchOp()
+        {
+            return ((mOpcode >= COMPARE_EQ) && (mOpcode <= COMPARE_NE)) ?
+              (ICodeOp)(BRANCH_EQ + (mOpcode - COMPARE_EQ)) : NOP;
+        }
         
         ICodeOp op() { return mOpcode; }
+        
+        virtual int32 count() { return 0; }
         
     protected:
         ICodeOp mOpcode;
@@ -189,6 +202,8 @@ namespace VM {
         Instruction_1(ICodeOp aOpcode, Operand1 aOp1) : 
             Instruction(aOpcode), mOp1(aOp1) { }            
         Operand1& o1() { return mOp1; }
+
+        virtual int32 count() { return 1; }
         
     protected:
         Operand1 mOp1;
@@ -201,6 +216,8 @@ namespace VM {
             Instruction(aOpcode), mOp1(aOp1), mOp2(aOp2) {}
         Operand1& o1() { return mOp1; }
         Operand2& o2() { return mOp2; }
+
+        virtual int32 count() { return 2; }
         
     protected:
         Operand1 mOp1;
@@ -216,6 +233,8 @@ namespace VM {
         Operand1& o1() { return mOp1; }
         Operand2& o2() { return mOp2; }
         Operand3& o3() { return mOp3; }
+
+        virtual int32 count() { return 3; }
         
     protected:
         Operand1 mOp1;
@@ -233,9 +252,15 @@ namespace VM {
                     Register aSrc2) :
             Instruction_3<Register, Register, Register>(aOpcode, aDest, aSrc1,
                                                         aSrc2) {}
-        virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2 <<
-                ", R" << mOp3;
+        virtual Formatter& print(Formatter& f)
+        {
+            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2 << ", R" << mOp3;
+            return f;
+        }
+        
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
+        {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
             return f;
         }
     };
@@ -246,6 +271,12 @@ namespace VM {
             Instruction_2<Register, Register>(aOpcode, aDest, aSrc) {}
         virtual Formatter& print (Formatter& f) {
             f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2;
+            return f;
+        }
+
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
+        {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
             return f;
         }
     };
@@ -264,6 +295,13 @@ namespace VM {
             }
             return f;
         }
+
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
+        {
+            f << "R" << mOp2 << " = " << registers[mOp2];
+            return f;
+        }
+
         void resolveTo (uint32 aOffset) { mOp1->mOffset = aOffset; }
         uint32 getOffset() { return mOp1->mOffset; }
     };
@@ -278,7 +316,7 @@ namespace VM {
         Add (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
             (ADD, aOp1, aOp2, aOp3) {};
-        /* print() inherited from Arithmetic */
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class Branch : public GenericBranch {
@@ -287,8 +325,11 @@ namespace VM {
         Branch (Label* aOp1) :
             GenericBranch
             (BRANCH, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[BRANCH] << "\t" << "Offset " << mOp1->mOffset;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -299,7 +340,7 @@ namespace VM {
         BranchEQ (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_EQ, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchGE : public GenericBranch {
@@ -308,7 +349,7 @@ namespace VM {
         BranchGE (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_GE, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchGT : public GenericBranch {
@@ -317,7 +358,7 @@ namespace VM {
         BranchGT (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_GT, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchLE : public GenericBranch {
@@ -326,7 +367,7 @@ namespace VM {
         BranchLE (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_LE, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchLT : public GenericBranch {
@@ -335,7 +376,7 @@ namespace VM {
         BranchLT (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_LT, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class BranchNE : public GenericBranch {
@@ -344,7 +385,7 @@ namespace VM {
         BranchNE (Label* aOp1, Register aOp2) :
             GenericBranch
             (BRANCH_NE, aOp1, aOp2) {};
-        /* print() inherited from GenericBranch */
+        /* print() and printOperands() inherited from GenericBranch */
     };
 
     class Call : public Instruction_3<Register, Register, RegisterList> {
@@ -353,8 +394,12 @@ namespace VM {
         Call (Register aOp1, Register aOp2, RegisterList aOp3) :
             Instruction_3<Register, Register, RegisterList>
             (CALL, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[CALL] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "RL" << mOp3;
             return f;
         }
     };
@@ -365,7 +410,7 @@ namespace VM {
         CompareEQ (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_EQ, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class CompareGE : public Compare {
@@ -374,7 +419,7 @@ namespace VM {
         CompareGE (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_GE, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class CompareGT : public Compare {
@@ -383,7 +428,7 @@ namespace VM {
         CompareGT (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_GT, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class CompareLE : public Compare {
@@ -392,7 +437,7 @@ namespace VM {
         CompareLE (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_LE, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class CompareLT : public Compare {
@@ -401,7 +446,7 @@ namespace VM {
         CompareLT (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_LT, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class CompareNE : public Compare {
@@ -410,7 +455,7 @@ namespace VM {
         CompareNE (Register aOp1, Register aOp2) :
             Compare
             (COMPARE_NE, aOp1, aOp2) {};
-        /* print() inherited from Compare */
+        /* print() and printOperands() inherited from Compare */
     };
 
     class Divide : public Arithmetic {
@@ -419,7 +464,7 @@ namespace VM {
         Divide (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
             (DIVIDE, aOp1, aOp2, aOp3) {};
-        /* print() inherited from Arithmetic */
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class Endtry : public Instruction {
@@ -428,8 +473,11 @@ namespace VM {
         Endtry () :
             Instruction
             (ENDTRY) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[ENDTRY];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -440,8 +488,12 @@ namespace VM {
         GetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
             (GET_ELEMENT, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
             return f;
         }
     };
@@ -452,8 +504,12 @@ namespace VM {
         GetProp (Register aOp1, Register aOp2, StringAtom* aOp3) :
             Instruction_3<Register, Register, StringAtom*>
             (GET_PROP, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
             return f;
         }
     };
@@ -464,8 +520,11 @@ namespace VM {
         Jsr (Label* aOp1) :
             GenericBranch
             (JSR, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[JSR] << "\t" << "Offset " << mOp1->mOffset;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -476,8 +535,12 @@ namespace VM {
         LoadImmediate (Register aOp1, double aOp2) :
             Instruction_2<Register, double>
             (LOAD_IMMEDIATE, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << mOp1 << ", " << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -488,8 +551,12 @@ namespace VM {
         LoadName (Register aOp1, StringAtom* aOp2) :
             Instruction_2<Register, StringAtom*>
             (LOAD_NAME, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -500,8 +567,12 @@ namespace VM {
         Move (Register aOp1, Register aOp2) :
             Instruction_2<Register, Register>
             (MOVE, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[MOVE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
             return f;
         }
     };
@@ -512,7 +583,7 @@ namespace VM {
         Multiply (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
             (MULTIPLY, aOp1, aOp2, aOp3) {};
-        /* print() inherited from Arithmetic */
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class NewArray : public Instruction_1<Register> {
@@ -521,8 +592,12 @@ namespace VM {
         NewArray (Register aOp1) :
             Instruction_1<Register>
             (NEW_ARRAY, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -533,8 +608,12 @@ namespace VM {
         NewObject (Register aOp1) :
             Instruction_1<Register>
             (NEW_OBJECT, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_OBJECT] << "\t" << "R" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -545,8 +624,11 @@ namespace VM {
         Nop () :
             Instruction
             (NOP) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NOP];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -557,8 +639,12 @@ namespace VM {
         Not (Register aOp1, Register aOp2) :
             Instruction_2<Register, Register>
             (NOT, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NOT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2];
             return f;
         }
     };
@@ -569,8 +655,12 @@ namespace VM {
         Return (Register aOp1) :
             Instruction_1<Register>
             (RETURN, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[RETURN] << "\t" << "R" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -581,8 +671,11 @@ namespace VM {
         ReturnVoid () :
             Instruction
             (RETURN_VOID) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[RETURN_VOID];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -593,8 +686,11 @@ namespace VM {
         Rts () :
             Instruction
             (RTS) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[RTS];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
@@ -605,8 +701,12 @@ namespace VM {
         SaveName (StringAtom* aOp1, Register aOp2) :
             Instruction_2<StringAtom*, Register>
             (SAVE_NAME, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp2 << " = " << registers[mOp2];
             return f;
         }
     };
@@ -617,8 +717,12 @@ namespace VM {
         SetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
             (SET_ELEMENT, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "R" << mOp3 << " = " << registers[mOp3];
             return f;
         }
     };
@@ -629,8 +733,12 @@ namespace VM {
         SetProp (Register aOp1, StringAtom* aOp2, Register aOp3) :
             Instruction_3<Register, StringAtom*, Register>
             (SET_PROP, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp3 << " = " << registers[mOp3];
             return f;
         }
     };
@@ -641,7 +749,7 @@ namespace VM {
         Subtract (Register aOp1, Register aOp2, Register aOp3) :
             Arithmetic
             (SUBTRACT, aOp1, aOp2, aOp3) {};
-        /* print() inherited from Arithmetic */
+        /* print() and printOperands() inherited from Arithmetic */
     };
 
     class Throw : public Instruction_1<Register> {
@@ -650,8 +758,12 @@ namespace VM {
         Throw (Register aOp1) :
             Instruction_1<Register>
             (THROW, aOp1) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[THROW] << "\t" << "R" << mOp1;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << " = " << registers[mOp1];
             return f;
         }
     };
@@ -662,8 +774,11 @@ namespace VM {
         Try (Label* aOp1, Label* aOp2) :
             Instruction_2<Label*, Label*>
             (TRY, aOp1, aOp2) {};
-        virtual Formatter& print (Formatter& f) {
+        virtual Formatter& print(Formatter& f) {
             f << opcodeNames[TRY] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             return f;
         }
     };
