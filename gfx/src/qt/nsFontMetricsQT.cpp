@@ -348,3 +348,15 @@ printf("JCG: nsFontEnumeratorQT::EnumerateFonts not implemented!\n");
 
  return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsFontEnumeratorQT::HaveFontFor(const char* aLangGroup, PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+
+  *aResult = PR_TRUE; // always return true for now.
+  // Finish me - ftang
+  return NS_OK;
+}
