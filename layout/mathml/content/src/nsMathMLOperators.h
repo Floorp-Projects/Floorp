@@ -81,6 +81,18 @@ public:
                  float*                aLeftSpace,
                  float*                aRightSpace);
 
+   // LookupOperators:
+   // Helper to return all the forms under which an operator is listed in the
+   // Operator Dictionary. The caller must pass arrays of size 4, and use 
+   // aFlags[NS_MATHML_OPERATOR_FORM_{INFIX|POSTFIX|PREFIX}], aLeftSpace[], etc,
+   // to access the attributes of the operator under a particular form. If the
+   // operator wasn't found under a form, its entry aFlags[form] is set to zero.
+   static void
+   LookupOperators(const nsString&       aOperator,
+                   nsOperatorFlags*      aFlags,
+                   float*                aLeftSpace,
+                   float*                aRightSpace);
+
   // IsMutableOperator:
   // Return true if the operator exists and is stretchy or largeop
   static PRBool
