@@ -34,7 +34,6 @@ EXPORTS =                         \
         nsIGenericFactory.h       \
         nsIRegistryUtils.h        \
         nsIServiceManager.h       \
-        nsRepository.h            \
         nsXPComFactory.h          \
 	nsNativeComponentLoader.h \
         nsStaticComponent.h       \
@@ -77,8 +76,6 @@ CPP_OBJS =                                 \
         .\$(OBJDIR)\nsNativeComponentLoader.obj \
 		.\$(OBJDIR)\nsStaticComponentLoader.obj \
         .\$(OBJDIR)\nsRegistry.obj         \
-        .\$(OBJDIR)\nsRepository.obj       \
-        .\$(OBJDIR)\nsServiceManager.obj   \
         .\$(OBJDIR)\nsCategoryManager.obj  \
         .\$(OBJDIR)\xcDll.obj              \
         $(NULL)

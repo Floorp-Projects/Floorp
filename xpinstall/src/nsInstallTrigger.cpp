@@ -34,7 +34,7 @@
 
 #include "nsIPref.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 #include "nsIDirectoryService.h"

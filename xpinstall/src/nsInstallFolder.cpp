@@ -28,7 +28,7 @@
 
 #include "nscore.h"
 #include "prtypes.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsString.h"
 #include "nsXPIDLString.h"

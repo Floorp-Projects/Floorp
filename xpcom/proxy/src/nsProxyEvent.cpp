@@ -40,7 +40,7 @@
 #include "prmem.h"
 #include "xptcall.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsIEventQueueService.h"
@@ -403,20 +403,41 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (methodInfo->IsNotXPCOM())
         return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
     
-        
-    PLEvent *event = PR_NEW(PLEvent);
-    
-    if (event == nsnull) 
-        return NS_ERROR_OUT_OF_MEMORY;   
-
     nsXPTCVariant *fullParam;
     uint8 paramCount; 
     rv = convertMiniVariantToVariant(methodInfo, params, &fullParam, &paramCount);
     
     if (NS_FAILED(rv))
-    {
-        PR_DELETE(event);
         return rv;
+
+    PRBool callDirectly;
+
+    // see if we should call into the method directly. Either it is a QI function call
+    // (methodIndex == 0), or it is a sync proxy and this code is running on the same thread
+    // as the destination event queue. 
+    if ( (methodIndex == 0) ||
+         (mProxyType & PROXY_SYNC && 
+          NS_SUCCEEDED(mDestQueue->IsQueueOnCurrentThread(&callDirectly)) &&
+          callDirectly))
+    {
+
+        // invoke the magic of xptc...
+        nsresult rv = XPTC_InvokeByIndex( mRealObject, 
+                                          methodIndex,
+                                          paramCount, 
+                                          fullParam);
+        
+        if (fullParam) 
+            free(fullParam);
+        return rv;
+    }
+
+    PLEvent *event = PR_NEW(PLEvent);
+    
+    if (event == nsnull) {
+        if (fullParam) 
+            free(fullParam);
+        return NS_ERROR_OUT_OF_MEMORY;   
     }
 
     nsProxyObjectCallInfo *proxyInfo = new nsProxyObjectCallInfo(this, 
@@ -426,11 +447,10 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
                                                                  paramCount, 
                                                                  event);      // will be deleted by ~()
     
-    if (proxyInfo == nsnull)
-    {
+    if (proxyInfo == nsnull) {
         PR_DELETE(event);
         if (fullParam)
-            free(fullParam);  // allocated with malloc
+            free(fullParam);
         return NS_ERROR_OUT_OF_MEMORY;  
     }
 
@@ -441,25 +461,10 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
    
     if (mProxyType & PROXY_SYNC)
     {
-        PRBool callDirectly;
-        mDestQueue->IsQueueOnCurrentThread(&callDirectly);
-
-        if (callDirectly)
-        {
-            EventHandler(event);
-            PL_DestroyEvent(event);
-            // there is no need to call the DestroyHandler() because
-            // there is no need to wake up the nested event loop.
-        }
-        else
-        {
-            rv = PostAndWait(proxyInfo);
-            
-            if (NS_FAILED(rv))
-                return rv;
-        }
+        rv = PostAndWait(proxyInfo);
         
-        rv = proxyInfo->GetResult();
+        if (NS_SUCCEEDED(rv))
+            rv = proxyInfo->GetResult();
         delete proxyInfo;
         return rv;
     }

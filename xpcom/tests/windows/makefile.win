@@ -25,10 +25,10 @@ DEPTH=..\..\..
 MAKE_OBJ_TYPE	= EXE
 
 PROG1 = .\$(OBJDIR)\TestCOM.exe
-PROG2 = .\$(OBJDIR)\TestHelloXPLoop.exe
+#PROG2 = .\$(OBJDIR)\TestHelloXPLoop.exe
 #PROG3 = .\$(OBJDIR)\nsStringTest.exe
 #PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
-PROGRAMS = $(PROG1) $(PROG2)
+PROGRAMS = $(PROG1)
 
 LINCS=-I$(PUBLIC)\xpcom
 
@@ -47,6 +47,6 @@ clobber::
         -for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) TestCOM.cpp
-$(PROG2): $(OBJDIR) TestHelloXPLoop.cpp
+#$(PROG2): $(OBJDIR) TestHelloXPLoop.cpp
 #$(PROG3): $(OBJDIR) nsStringTest.cpp
 

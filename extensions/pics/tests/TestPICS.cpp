@@ -1,6 +1,6 @@
 #define NS_IMPL_IDS
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIPICS.h"
 #include "nsIPref.h"

@@ -26,6 +26,7 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsRegistry.h"
 #include "nsIInterfaceRequestor.h"
@@ -52,18 +53,55 @@ extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 // Predefined loader types. Do not change the numbers.
 // NATIVE should be 0 as it is being used as the first array index.
 #define NS_COMPONENT_TYPE_NATIVE 0
+#define NS_COMPONENT_TYPE_FACTORY_ONLY -1
+// this define means that the factory entry only has a ContractID 
+// to service mapping and has no cid mapping.
+#define NS_COMPONENT_TYPE_SERVICE_ONLY -2
 
 extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsComponentManagerImpl
-    : public nsIComponentManager, public nsSupportsWeakReference,
+    : public nsIComponentManager,
+      public nsIServiceManager,
+      public nsSupportsWeakReference,
       public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICOMPONENTMANAGER
     NS_DECL_NSIINTERFACEREQUESTOR
+
+    // Service Manager
+    NS_IMETHOD
+    RegisterService(const nsCID& aClass, nsISupports* aService);
+
+    NS_IMETHOD
+    UnregisterService(const nsCID& aClass);
+
+    NS_IMETHOD
+    GetService(const nsCID& aClass, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    RegisterService(const char* aContractID, nsISupports* aService);
+
+    NS_IMETHOD
+    UnregisterService(const char* aContractID);
+
+    NS_IMETHOD
+    GetService(const char* aContractID, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    ReleaseService(const char* aContractID, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -75,6 +113,7 @@ public:
     nsresult Shutdown(void);
 
     friend class nsFactoryEntry;
+    friend class nsServiceManager;
 protected:
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
@@ -103,7 +142,8 @@ protected:
     nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
     nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
-
+    
+    nsresult FreeServices();
     // The following functions are the only ones that operate on the persistent
     // registry
     nsresult PlatformInit(void);
@@ -159,6 +199,7 @@ protected:
     int mMaxNLoaderData;
 };
 
+
 #define NS_MAX_FILENAME_LEN	1024
 
 #define NS_ERROR_IS_DIR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM, 24)
@@ -206,6 +247,21 @@ protected:
  * alpha0.93 : changed component names to native strings instead of UTF8
  */
 #define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.93"
+
+class nsServiceEntry {
+public:
+    nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry);
+    ~nsServiceEntry();
+
+    nsresult AddListener(nsIShutdownListener* listener);
+    nsresult RemoveListener(nsIShutdownListener* listener);
+    nsresult NotifyListeners(void);
+
+    nsISupports* mObject;
+    nsVoidArray* mListeners;
+    PRBool mShuttingDown;
+    nsFactoryEntry* mFactoryEntry; // non-owning back pointer
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -257,6 +313,7 @@ public:
     nsCID cid;
     nsCString location;
     nsCOMPtr<nsIFactory> factory;
+    nsServiceEntry *mServiceEntry;
     // This is an index into the mLoaderData array that holds the type string and the loader
     int typeIndex;
 };

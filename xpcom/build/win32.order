@@ -1397,7 +1397,6 @@ NS_NewUnicodeLocalFile ; 2
 ??_EnsAppFileLocationProvider@@MAEPAXI@Z ; 1
 ??_EnsVoidArray@@UAEPAXI@Z ; 1
 ??RnsGetServiceFromCategory@@UBEIABUnsID@@PAPAX@Z ; 1
-?NS_NewServiceManager@@YAIPAPAVnsIServiceManager@@@Z ; 1
 ??0nsIOFileStream@@QAE@ABVnsFileSpec@@HH@Z ; 1
 ?NS_PurgeAtomTable@@YAXXZ ; 1
 ??0nsProxyObjectManager@@QAE@XZ ; 1

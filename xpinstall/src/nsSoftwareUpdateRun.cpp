@@ -29,7 +29,7 @@
 
 #include "nsInstall.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 #include "nsSpecialSystemDirectory.h"

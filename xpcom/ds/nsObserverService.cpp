@@ -26,7 +26,7 @@
 #include "prlock.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIObserverService.h"
 #include "nsObserverService.h"
 #include "nsIObserverList.h"

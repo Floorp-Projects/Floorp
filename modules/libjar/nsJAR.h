@@ -37,7 +37,6 @@
 #include "prtypes.h"
 #include "prinrval.h"
 
-#include "nsRepository.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"

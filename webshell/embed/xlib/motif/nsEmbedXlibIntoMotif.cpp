@@ -10,7 +10,7 @@
 #include "nsIXlibWindowService.h"
 #include "nsIUnixToolkitService.h"
 #include "nsIWebShell.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
 

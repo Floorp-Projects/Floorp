@@ -282,50 +282,31 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     StartupSpecialSystemDirectory();
 
-    // 1. Create the Global Service Manager
-    nsIServiceManager* servMgr = NULL;
-    if (gServiceManager == NULL)
-    {
-        rv = NS_NewServiceManager(&servMgr);
-        if (NS_FAILED(rv)) return rv;
-        gServiceManager = servMgr;
-        if (result)
-    {
-          NS_ADDREF(servMgr);
-      *result = servMgr;
-    }
-    }
-
-    // 2. Create the Component Manager and register with global service manager
-    //    It is understood that the component manager can use the global service manager.
-    nsComponentManagerImpl *compMgr = NULL;
+    // Start the directory service so that the component manager init can use it.
+    rv = nsDirectoryService::Create(nsnull, 
+                                    NS_GET_IID(nsIProperties), 
+                                    (void**)&gDirectoryService);
+    if (NS_FAILED(rv))
+        return rv;
+   
+    nsCOMPtr<nsIDirectoryService> dirService = do_QueryInterface(gDirectoryService, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+    rv = dirService->Init();
+    if (NS_FAILED(rv))
+        return rv;
     
+    // Create the Component/Service Manager
+    nsComponentManagerImpl *compMgr = NULL;
+   
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         compMgr = new nsComponentManagerImpl();
         if (compMgr == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(compMgr);
-
-        rv = nsDirectoryService::Create(nsnull, 
-                                        NS_GET_IID(nsIProperties), 
-                                        (void**)&gDirectoryService);
         
-        if (NS_FAILED(rv))
-            return rv;
-        
-        nsCOMPtr<nsIDirectoryService> dirService = do_QueryInterface(gDirectoryService);
-        
-        if (!dirService)
-            return NS_ERROR_NO_INTERFACE;
-
-        rv = dirService->Init();
-        
-        if (NS_FAILED(rv))
-            return rv;
-
         PRBool value;
-                        
         if (binDirectory)
         {
             rv = binDirectory->IsDirectory(&value);
@@ -358,14 +339,15 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             return rv;
         }
         
+        gServiceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
         nsComponentManagerImpl::gComponentManager = compMgr;
     }
 
     nsCOMPtr<nsIMemory> memory = getter_AddRefs(nsMemory::GetGlobalMemoryService());
-    rv = servMgr->RegisterService(kMemoryCID, memory);
+    rv = gServiceManager->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
     
-    rv = servMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
+    rv = gServiceManager->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
     
 #ifdef GC_LEAK_DETECTOR
@@ -373,7 +355,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     if (NS_FAILED(rv)) return rv;
 #endif
 
-    // 3. Register the global services with the component manager so that
+    // 2. Register the global services with the component manager so that
     //    clients can create new objects.
 
     // Registry

@@ -39,7 +39,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsString.h"

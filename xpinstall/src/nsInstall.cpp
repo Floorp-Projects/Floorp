@@ -30,7 +30,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 #include "nsHashtable.h"

@@ -379,12 +379,6 @@ CallGetService( const char *aContractID,
                nsnull);
   }
 
-////////////////////////////////////////////////////////////////////////////////
-// NS_NewServiceManager: For when you want to create a service manager
-// in a given context.
-
-extern NS_COM nsresult
-NS_NewServiceManager(nsIServiceManager* *result);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Initialization of XPCOM. Creates the global ComponentManager, ServiceManager
