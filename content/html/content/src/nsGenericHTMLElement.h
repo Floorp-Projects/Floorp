@@ -783,7 +783,7 @@ protected:
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
     {                                                                         \
-      return NS_NOINTERFACE;                                                  \
+      return PostQueryInterface(aIID, aInstancePtr);                          \
     }                                                                         \
                                                                               \
     NS_ADDREF(foundInterface);                                                \
