@@ -244,7 +244,7 @@ namespace JSTypes {
     /**
      * Provides a set of nested scopes. 
      */
-    class JSScope : private JSObject {
+    class JSScope : public JSObject {
     protected:
         JSScope* mParent;
     public:
