@@ -124,13 +124,10 @@ NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
   
-  // update the content model
+  // update the content model. This will also handle unchecking our siblings
+  // if we are a radiomenu
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   domElement->SetAttribute(NS_LITERAL_STRING("checked"), mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"));
-
-  // uncheck others if we're a radiomenu
-  if ( mMenuType == eRadio && aIsEnabled )
-    UncheckRadioSiblings (domElement);
 
   return NS_OK;
 }
@@ -347,6 +344,8 @@ nsMenuItem :: UncheckRadioSiblings(nsIDOMElement* inCheckedElement)
 
   nsAutoString myGroupName;
   inCheckedElement->GetAttribute(NS_LITERAL_STRING("name"), myGroupName);
+  if ( ! myGroupName.Length() )        // no groupname, nothing to do
+    return;
   
   nsCOMPtr<nsIDOMNode> parent;
   checkedNode->GetParentNode(getter_AddRefs(parent));
@@ -395,12 +394,16 @@ nsMenuItem :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, n
   
   if (aAttribute == checkedAtom.get())
   {
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-    nsAutoString checked;
-    domElement->GetAttribute(NS_LITERAL_STRING("checked"), checked);
-    if (checked == NS_LITERAL_STRING("true")) 
-      UncheckRadioSiblings(domElement);
-     
+    // if we're a radio menu, uncheck our sibling radio items. No need to
+    // do any of this if we're just a normal check menu.
+    if ( mMenuType == eRadio ) {
+      nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+      nsAutoString checked;
+      domElement->GetAttribute(NS_LITERAL_STRING("checked"), checked);
+      if (checked == NS_LITERAL_STRING("true") ) 
+        UncheckRadioSiblings(domElement);
+    }
+    
     nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
     listener->SetRebuild(PR_TRUE);
     
