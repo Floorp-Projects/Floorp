@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.4 2000/03/07 20:39:38 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.5 2000/03/15 22:29:45 seth%cs.brandeis.edu Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -73,6 +73,7 @@ use MIME::Parser;
 push @INC, "../."; # this script now lives in contrib
 
 require "globals.pl";
+require "BugzillaEmail.pm";
 
 my @mailerrors = ();       # Buffer for Errors in the mail
 my @mailwarnings = ();     # Buffer for Warnings found in the mail
@@ -90,56 +91,9 @@ my $restricted = 0;
 my $SenderShort;
 my $Message_ID;
 
-my $EMAIL_TRANSFORM_NONE = "email_transform_none";
-my $EMAIL_TRANSFORM_BASE_DOMAIN = "email_transform_base_domain";
-my $EMAIL_TRANSFORM_NAME_ONLY = "email_transform_name_only";
-
-# change to do incoming email address fuzzy matching
-my $email_transform = $EMAIL_TRANSFORM_NONE;
-
 # change to use default product / component functionality
-my $DEFAULT_PRODUCT = "";
-my $DEFAULT_COMPONENT = "";
-
-###############################################################
-# findUser
-#
-# this sub will find a user from the profiles table which is reasonably
-# the same as the passed in email address, depending on the $email_transform
-# parameter
-sub findUser($) {
-  my ($address) = @_;
-  # if $email_transform is $EMAIL_TRANSFORM_NONE, return the address, otherwise, return undef
-  if ($email_transform eq $EMAIL_TRANSFORM_NONE) {
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name = \'$address\';";
-    SendSQL($stmt);
-    my $found_address = FetchOneColumn();
-    return $found_address;
-  } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
-    my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
-    SendSQL($stmt);
-
-    my $domain;
-    my $found = undef;
-    my $found_address;
-    my $new_address = undef;
-    while ((!$found) && ($found_address = FetchOneColumn())) {
-      ($domain) = ($found_address =~ /.+@(.+)/);
-      if ($address =~ /$domain/) {
-        $found = 1;
-        $new_address = $found_address;
-      }
-    }
-    return $new_address;
-  } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
-    my ($username) = ($address =~ /(.+)@/);
-    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
-    SendSQL($stmt);
-    my $found_address = FetchOneColumn();
-    return $found_address;
-  }
-}
+my $DEFAULT_PRODUCT = "PENDING";
+my $DEFAULT_COMPONENT = "PENDING";
 
 ###############################################################
 # storeAttachments
