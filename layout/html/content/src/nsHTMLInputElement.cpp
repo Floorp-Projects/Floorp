@@ -449,8 +449,38 @@ nsHTMLInputElement::Select()
 NS_IMETHODIMP
 nsHTMLInputElement::Click()
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 type;
+  GetType(&type);
+  switch(type) {
+  case NS_FORM_INPUT_CHECKBOX:
+    {
+      PRBool checked;
+      GetChecked(&checked);
+      SetChecked(!checked);
+    }
+    break;
+
+  case NS_FORM_INPUT_RADIO:
+    SetChecked(PR_TRUE);
+    break;
+
+#if 0
+  case NS_FORM_INPUT_BUTTON:
+  case NS_FORM_INPUT_RESET:
+  case NS_FORM_INPUT_SUBMIT:
+    {
+      nsIFormControlFrame* formControlFrame = nsnull;
+      if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+        if (formControlFrame) {
+          formControlFrame->MouseClicked(XXXpresContextXXX);
+        }
+      }
+    }
+    break;
+#endif
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -460,9 +490,50 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+  // Try script event handlers first
+  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
+    switch (aEvent->message) {
+      case NS_KEY_PRESS:
+      {
+        nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+        if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == 0x20) {
+          PRInt32 type;
+          GetType(&type);
+          switch(type) {
+          case NS_FORM_INPUT_CHECKBOX:
+          case NS_FORM_INPUT_RADIO:
+            ret = Click();
+            break;
+          case NS_FORM_INPUT_BUTTON:
+          case NS_FORM_INPUT_RESET:
+          case NS_FORM_INPUT_SUBMIT:
+            {
+              //Checkboxes and radio trigger off return or space but buttons
+              //just trigger of of space, go figure.
+              if (keyEvent->charCode == 0x20) {
+                //XXX We should just be able to call Click() here but then
+                //Click wouldn't have a PresContext.
+                nsIFormControlFrame* formControlFrame = nsnull;
+                if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+                  if (formControlFrame) {
+                    formControlFrame->MouseClicked(&aPresContext);
+                  }
+                }
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return ret;
 }
+
 
 // nsIHTMLContent
 

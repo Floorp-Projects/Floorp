@@ -1677,6 +1677,18 @@ nsBrowserWindow::GetStatus(const PRUnichar** aResult)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::SetDefaultStatus(const PRUnichar* aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::GetDefaultStatus(const PRUnichar** aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 {
   return NS_OK;

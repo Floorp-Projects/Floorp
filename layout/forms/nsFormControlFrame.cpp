@@ -388,12 +388,23 @@ nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWid
 {
 }
 
-// native widgets don't unset focus explicitly and don't need to repaint
+// native widgets don't need to repaint
 void 
 nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  if (mWidget && aOn) {
-    mWidget->SetFocus();
+  if (mWidget) {
+    if (aOn) {
+      mWidget->SetFocus();
+    }
+    else {
+      //Unsetting of focus on native widget is accomplised
+      //by pushing focus up to its parent
+      nsIWidget *parentWidget = mWidget->GetParent();
+      if (parentWidget) {
+        parentWidget->SetFocus();
+        NS_RELEASE(parentWidget);
+      }
+    }
   }
 }
 

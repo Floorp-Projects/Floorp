@@ -2218,38 +2218,50 @@ PresShell::HandleEvent(nsIView         *aView,
       mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       //we are a listener now.
     }
-    frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
-    NS_IF_RELEASE(mCurrentEventContent);
-    if (nsnull != GetCurrentEventFrame()) {
+    nsIEventStateManager *manager;
+    nsIContent* focusContent = nsnull;
+    if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+      if (NS_IS_KEY_EVENT(aEvent)) {
+        //Key events go to the focused frame, not point based.
+        manager->GetFocusedContent(&focusContent);  
+      }
+      frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+      NS_IF_RELEASE(mCurrentEventContent);
+      if (GetCurrentEventFrame() || focusContent) {
       //Once we have the targetFrame, handle the event in this order
-      nsIEventStateManager *manager;
-      if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
         //1. Give event to event manager for pre event state changes and generation of synthetic events.
         rv = manager->PreHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
 
         //2. Give event to the DOM for third party and JS use.
-        if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
-          nsIContent* targetContent;
-          if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
-            rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+        if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {
+          if (focusContent) {
+            rv = focusContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
                                                NS_EVENT_FLAG_INIT, aEventStatus);
-            NS_RELEASE(targetContent);
+          }
+          else {
+            nsIContent* targetContent;
+            if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
+              rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+                                                 NS_EVENT_FLAG_INIT, aEventStatus);
+              NS_RELEASE(targetContent);
+            }
           }
 
           //3. Give event to the Frames for browser default processing.
           // XXX The event isn't translated into the local coordinate space
           // of the frame...
-          if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
+          if (GetCurrentEventFrame() && NS_OK == rv) {
             rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+          }
 
-            //4. Give event to event manager for post event state changes and generation of synthetic events.
-            if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
-              rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
-            }
+          //4. Give event to event manager for post event state changes and generation of synthetic events.
+          if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {
+            rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
           }
         }
-        NS_RELEASE(manager);
       }
+      NS_RELEASE(manager);
+      NS_IF_RELEASE(focusContent);
     }
     NS_IF_RELEASE(webShell);
   }

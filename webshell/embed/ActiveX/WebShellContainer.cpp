@@ -224,6 +224,21 @@ CWebShellContainer::GetStatus(const PRUnichar** aResult)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+CWebShellContainer::SetDefaultStatus(const PRUnichar* aStatus)
+{
+	NG_TRACE_METHOD(CWebShellContainer::SetDefaultStatus);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetDefaultStatus(const PRUnichar** aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetDefaultStatus);
+	*aResult = nsnull;
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 CWebShellContainer::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)

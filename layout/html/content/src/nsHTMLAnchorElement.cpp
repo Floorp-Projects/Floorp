@@ -307,19 +307,30 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         break;
 
       case NS_MOUSE_LEFT_CLICK:
+      case NS_KEY_PRESS:
       {
         if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-          nsAutoString target;
-          nsIURI* baseURL = nsnull;
-          GetBaseURL(baseURL);
-          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-          if (target.Length() == 0) {
-            GetBaseTarget(target);
+
+          nsKeyEvent * keyEvent;
+          if (aEvent->eventStructType == NS_KEY_EVENT) {
+            //Handle key commands from keys with char representation here, not on KeyDown
+            keyEvent = (nsKeyEvent *)aEvent;
           }
-          mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                             baseURL, href, target, PR_TRUE);
-          NS_IF_RELEASE(baseURL);
-          aEventStatus = nsEventStatus_eConsumeDoDefault; 
+
+          //Click or return key
+          if (aEvent->message == NS_MOUSE_LEFT_CLICK || keyEvent->keyCode == NS_VK_RETURN) {
+            nsAutoString target;
+            nsIURI* baseURL = nsnull;
+            GetBaseURL(baseURL);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+            if (target.Length() == 0) {
+              GetBaseTarget(target);
+            }
+            mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                               baseURL, href, target, PR_TRUE);
+            NS_IF_RELEASE(baseURL);
+            aEventStatus = nsEventStatus_eConsumeDoDefault;
+          }
         }
       }
       break;
