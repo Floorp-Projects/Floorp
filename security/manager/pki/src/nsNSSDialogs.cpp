@@ -22,10 +22,12 @@
 */
 
 /*
- * Dialog services for PIP.  THIS FILE SHOULD MOVE TO pippki.
+ * Dialog services for PIP.
  */
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
+#include "nsIPrompt.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIComponentManager.h"
@@ -35,8 +37,22 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "jsapi.h"
+#include "nsIStringBundle.h"
+#include "nsIPref.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsNSSDialogs.h"
+
+/* #define STRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties" */
+#define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+
+#define ENTER_SITE_PREF      "security.warn_entering_secure"
+#define LEAVE_SITE_PREF      "security.warn_leaving_secure"
+#define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
+#define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
+
+static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /**
  * Common class that provides a standard dialog display function, 
@@ -49,7 +65,6 @@ public:
   static nsresult openDialog(
                   nsIDOMWindowInternal *window,
                   const char *url,
-                  PRBool modal,
                   nsIDialogParamBlock *params);
 };
 
@@ -59,7 +74,6 @@ nsresult
 nsNSSDialogHelper::openDialog(
     nsIDOMWindowInternal *window,
     const char *url,
-    PRBool modal,
     nsIDialogParamBlock *params)
 {
   nsresult rv;
@@ -118,9 +132,25 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsNSSDialogs, nsINSSDialogs, 
-                                 nsITokenPasswordDialogs,
-                                 nsIBadCertListener)
+NS_IMPL_ISUPPORTS2(nsNSSDialogs, nsINSSDialogs, nsISecurityWarningDialogs)
+
+nsresult
+nsNSSDialogs::Init()
+{
+  nsresult rv;
+
+  mPref = do_GetService(kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIStringBundleService> service = do_GetService(kCStringBundleServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = service->CreateBundle(STRING_BUNDLE_URL, nsnull,
+                             getter_AddRefs(mStringBundle));
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
+}
 
 nsresult
 nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
@@ -130,14 +160,19 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
 
   *_canceled = PR_FALSE;
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
   if (!block) return NS_ERROR_FAILURE;
 
+  // void ChangePassword(in wstring tokenName, out int status);
   rv = block->SetString(1, tokenName);
-  rv = nsNSSDialogHelper::openDialog(nsnull, 
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsNSSDialogHelper::openDialog(parent, 
                                 "chrome://pippki/content/changepassword.xul",
-                                PR_TRUE, block);
+                                block);
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 status;
@@ -150,29 +185,165 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-/* boolean unknownIssuer (in nsIChannelSecurityInfo socketInfo, 
+/* boolean unknownIssuer (in nsIChannelSecurityInfo socketInfo,
                           in nsIX509Cert cert); */
-NS_IMETHODIMP 
-nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo, 
+NS_IMETHODIMP
+nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
                             nsIX509Cert *cert, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo, 
-                           in nsIX509Cert cert); */
-NS_IMETHODIMP 
-nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo, 
+/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo,
+                            in nsIX509Cert cert); */
+NS_IMETHODIMP
+nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo,
                              nsIX509Cert *cert, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean certExpired (in nsIChannelSecurityInfo socketInfo, 
-                        in nsIX509Cert cert); */
-NS_IMETHODIMP 
-nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo, 
+/* boolean certExpired (in nsIChannelSecurityInfo socketInfo,
+                         in nsIX509Cert cert); */
+NS_IMETHODIMP
+nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo,
                           nsIX509Cert *cert, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
+{
+  nsresult rv;
+
+  rv = AlertDialog(ctx, ENTER_SITE_PREF, NS_LITERAL_STRING("EnterSiteMessage"));
+
+  return rv;
+}
+
+
+nsresult
+nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
+{
+  nsresult rv;
+
+  rv = AlertDialog(ctx, LEAVE_SITE_PREF, NS_LITERAL_STRING("LeaveSiteMessage"));
+
+  return rv;
+}
+
+
+nsresult
+nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
+{
+  nsresult rv;
+
+  rv = AlertDialog(ctx, MIXEDCONTENT_PREF, NS_LITERAL_STRING("MixedContentMessage"));
+
+  return rv;
+}
+
+
+nsresult
+nsNSSDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
+                          const PRUnichar *dialogMessageName)
+{
+  nsresult rv;
+
+  // Get user's preference for this alert
+  PRBool prefValue;
+  rv = mPref->GetBoolPref(prefName, &prefValue);
+  if (NS_FAILED(rv)) prefValue = PR_TRUE;
+
+  // Stop if alert is not requested
+  if (!prefValue) return NS_OK;
+
+  // Get Prompt to use
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
+  if (!prompt) return NS_ERROR_FAILURE;
+
+  // Get messages strings from localization file
+  nsXPIDLString windowTitle, message, dontShowAgain;
+
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title"),
+                                   getter_Copies(windowTitle));
+  mStringBundle->GetStringFromName(dialogMessageName,
+                                   getter_Copies(message));
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain"),
+                                   getter_Copies(dontShowAgain));
+  if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
+      
+  rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
+  if (NS_FAILED(rv)) return rv;
+      
+  if (!prefValue) {
+    mPref->SetBoolPref(prefName, PR_FALSE);
+  }
+
+  return rv;
+}
+
+nsresult
+nsNSSDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+{
+  nsresult rv;
+
+  rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
+                     NS_LITERAL_STRING("PostToInsecureFromInsecure"), _result);
+
+  return rv;
+}
+
+nsresult
+nsNSSDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+{
+  nsresult rv;
+
+  rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
+                     NS_LITERAL_STRING("PostToInsecure"), _result);
+
+  return rv;
+}
+
+nsresult
+nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
+                            const PRUnichar *messageName, PRBool* _result)
+{
+  nsresult rv;
+
+  // Get user's preference for this alert
+  PRBool prefValue;
+  rv = mPref->GetBoolPref(prefName, &prefValue);
+  if (NS_FAILED(rv)) prefValue = PR_TRUE;
+
+  // Stop if confirm is not requested
+  if (!prefValue) {
+    *_result = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Get Prompt to use
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
+  if (!prompt) return NS_ERROR_FAILURE;
+
+  // Get messages strings from localization file
+  nsXPIDLString windowTitle, message, dontShowAgain;
+
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title"),
+                                   getter_Copies(windowTitle));
+  mStringBundle->GetStringFromName(messageName,
+                                   getter_Copies(message));
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain"),
+                                   getter_Copies(dontShowAgain));
+  if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
+      
+  rv = prompt->ConfirmCheck(windowTitle, message, dontShowAgain, &prefValue, _result);
+  if (NS_FAILED(rv)) return rv;
+      
+  if (!prefValue) {
+    mPref->SetBoolPref(prefName, PR_FALSE);
+  }
+
+  return rv;
 }
