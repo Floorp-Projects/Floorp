@@ -182,7 +182,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   mPluginContent->SetDocument(this, PR_FALSE, PR_TRUE);
 
   // make it a named element
-  nsHTMLValue name(NS_ConvertUTF8toUCS2("plugin"));
+  nsHTMLValue name(NS_LITERAL_STRING("plugin"));
   mPluginContent->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
 
   // fill viewport and auto-reize

@@ -118,7 +118,7 @@ HistoryImpl::GetCurrent(nsAString& aCurrent)
   curEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
   uri->GetSpec(curURL);
-  aCurrent.Assign(NS_ConvertUTF8toUCS2(curURL));
+  CopyUTF8toUTF16(curURL, aCurrent);
 
   return NS_OK;
 }
@@ -147,7 +147,7 @@ HistoryImpl::GetPrevious(nsAString& aPrevious)
   prevEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
   uri->GetSpec(prevURL);
-  aPrevious.Assign(NS_ConvertUTF8toUCS2(prevURL));
+  CopyUTF8toUTF16(prevURL, aPrevious);
 
   return NS_OK;
 }
@@ -176,7 +176,7 @@ HistoryImpl::GetNext(nsAString& aNext)
   nextEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
   uri->GetSpec(nextURL); 
-  aNext.Assign(NS_ConvertUTF8toUCS2(nextURL));
+  CopyUTF8toUTF16(nextURL, aNext);
 
   return NS_OK;
 }
@@ -302,7 +302,7 @@ HistoryImpl::Item(PRUint32 aIndex, nsAString& aReturn)
     nsCAutoString urlCString;
     rv = uri->GetSpec(urlCString);
 
-    aReturn.Assign(NS_ConvertUTF8toUCS2(urlCString));
+    CopyUTF8toUTF16(urlCString, aReturn);
   }
 
   return rv;

@@ -232,8 +232,8 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
       nsCAutoString eventsC, targetsC, aeventsC, atargetsC; 
       eventsC.AssignWithConversion(updater->mEvents);
       targetsC.AssignWithConversion(updater->mTargets);
-      aeventsC.Assign(NS_ConvertUCS2toUTF8(aEvents));
-      atargetsC.Assign(NS_ConvertUCS2toUTF8(aTargets));
+      CopyUTF16toUTF8(aEvents, aeventsC);
+      CopyUTF16toUTF8(aTargets, atargetsC);
       PR_LOG(gLog, PR_LOG_ALWAYS,
              ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
               this, aElement,
@@ -256,8 +256,8 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
   }
 #ifdef NS_DEBUG
   nsCAutoString aeventsC, atargetsC; 
-  aeventsC.Assign(NS_ConvertUCS2toUTF8(aEvents));
-  atargetsC.Assign(NS_ConvertUCS2toUTF8(aTargets));
+  CopyUTF16toUTF8(aEvents, aeventsC);
+  CopyUTF16toUTF8(aTargets, atargetsC);
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
          ("xulcmd[%p] add     %p(events=%s targets=%s)",
@@ -357,7 +357,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 
 #ifdef NS_DEBUG
     nsCAutoString aeventnameC; 
-    aeventnameC.Assign(NS_ConvertUCS2toUTF8(aEventName));
+    CopyUTF16toUTF8(aEventName, aeventnameC);
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("xulcmd[%p] update %p event=%s",
             this, updater->mElement,

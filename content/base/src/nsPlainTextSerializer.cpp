@@ -839,7 +839,6 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     if (mHeaderStrategy == 2) {  // numbered
       mIndent += kIndentSizeHeaders;
       // Caching
-      nsCAutoString leadup;
       PRInt32 level = HeaderLevel(type);
       // Increase counter for current level
       mHeaderCounter[level]++;
@@ -851,12 +850,13 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
       }
 
       // Construct numbers
+      nsAutoString leadup;
       for (i = 1; i <= level; i++) {
         leadup.AppendInt(mHeaderCounter[i]);
-        leadup += ".";
+        leadup.Append(PRUnichar('.'));
       }
-      leadup += " ";
-      Write(NS_ConvertASCIItoUCS2(leadup.get()));
+      leadup.Append(PRUnichar(' '));
+      Write(leadup);
     }
     else if (mHeaderStrategy == 1) { // indent increasingly
       mIndent += kIndentSizeHeaders;

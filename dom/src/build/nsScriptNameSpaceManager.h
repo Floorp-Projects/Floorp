@@ -131,7 +131,7 @@ protected:
   // that aKey will be mapped to. If mType in the returned
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
-  nsGlobalNameStruct *AddToHash(const nsAString& aKey);
+  nsGlobalNameStruct *AddToHash(const char *aKey);
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory,

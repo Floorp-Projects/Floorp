@@ -515,7 +515,7 @@ nsHTMLValue::ToString(nsAString& aResult) const
       char buf[10];
       PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                   NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
-      aResult.Assign(NS_ConvertASCIItoUCS2(buf));
+      AppendASCIItoUTF16(buf, aResult);
       return PR_TRUE;
     }
     case eHTMLUnit_ColorName:

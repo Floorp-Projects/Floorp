@@ -314,7 +314,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
         const char* p;
         rv = resource->GetValueConst(&p);
         if (NS_FAILED(rv)) return rv;
-        aResult.Assign(NS_ConvertASCIItoUCS2(p));
+        CopyASCIItoUTF16(p, aResult);
         return NS_OK;
     }
 

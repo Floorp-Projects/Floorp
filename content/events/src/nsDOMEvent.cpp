@@ -305,10 +305,10 @@ NS_INTERFACE_MAP_END
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 {
-  const char* mName = GetEventName(mEvent->message);
+  const char* name = GetEventName(mEvent->message);
 
-  if (mName) {
-    aType.Assign(NS_ConvertASCIItoUCS2(mName));
+  if (name) {
+    CopyASCIItoUTF16(name, aType);
     return NS_OK;
   }
   else {

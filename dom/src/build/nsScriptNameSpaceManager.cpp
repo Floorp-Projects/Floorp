@@ -153,11 +153,12 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 }
 
 nsGlobalNameStruct *
-nsScriptNameSpaceManager::AddToHash(const nsAString& aKey)
+nsScriptNameSpaceManager::AddToHash(const char *aKey)
 {
+  NS_ConvertASCIItoUTF16 key(aKey);
   GlobalNameMapEntry *entry =
     NS_STATIC_CAST(GlobalNameMapEntry *,
-                   PL_DHashTableOperate(&mGlobalNames, &aKey, PL_DHASH_ADD));
+                   PL_DHashTableOperate(&mGlobalNames, &key, PL_DHASH_ADD));
 
   if (!entry) {
     return nsnull;
@@ -231,22 +232,22 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                               categoryEntry.get(),
                                               getter_Copies(constructorProto));
       if (NS_SUCCEEDED(rv)) {
-        NS_ConvertASCIItoUCS2 name(categoryEntry);
-        nsGlobalNameStruct *s = AddToHash(name);
+        nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
         NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
         if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
           s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
           if (!s->mAlias) {
             // Free entry
+            NS_ConvertASCIItoUCS2 key(categoryEntry);
             PL_DHashTableOperate(&mGlobalNames,
-                                 &name,
+                                 &key,
                                  PL_DHASH_REMOVE);
             return NS_ERROR_OUT_OF_MEMORY;
           }
           s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
           s->mAlias->mCID = cid;
-          s->mAlias->mProtoName.AssignWithConversion(constructorProto);
+          AppendASCIItoUTF16(constructorProto, s->mAlias->mProtoName);
           s->mAlias->mProto = nsnull;
         } else {
           NS_WARNING("Global script name not overwritten!");
@@ -256,7 +257,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       }
     }
 
-    nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(categoryEntry));
+    nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
     NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
     if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
@@ -430,7 +431,7 @@ nsScriptNameSpaceManager::RegisterInterface(const char* aIfName,
 {
   *aFoundOld = PR_FALSE;
 
-  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aIfName));
+  nsGlobalNameStruct *s = AddToHash(aIfName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
@@ -554,7 +555,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
     NS_ERROR("Trying to register a non-ASCII class name");
     return NS_OK;
   }
-  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  nsGlobalNameStruct *s = AddToHash(aClassName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
@@ -587,7 +588,7 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
 
   *aFoundOld = PR_FALSE;
 
-  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  nsGlobalNameStruct *s = AddToHash(aClassName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
@@ -607,7 +608,7 @@ nsresult
 nsScriptNameSpaceManager::RegisterExternalClassName(const char *aClassName,
                                                     nsCID& aCID)
 {
-  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  nsGlobalNameStruct *s = AddToHash(aClassName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   // If an external constructor is already defined with aClassName we
@@ -636,7 +637,7 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
                                             PRBool aHasClassInterface,
                                             const nsCID *aConstructorCID)
 {
-  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aName));
+  nsGlobalNameStruct *s = AddToHash(aName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   // If an external constructor is already defined with aClassName we
