@@ -1450,8 +1450,6 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
 				{
-					attribName = vCard_SACat (&attribName, value);
-					PR_FREEIF (value);
 					if (attribName)
 					{
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
@@ -1459,9 +1457,16 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 							PR_FREEIF (attribName);
 							return status;
 						}
+						// write a label without charset conversion
 						status = WriteLineToStream (obj, attribName, PR_FALSE);
 						if (status < 0) {
 							PR_FREEIF (attribName);
+							return status;
+						}
+						// write value with charset conversion
+						status = WriteLineToStream (obj, value, PR_TRUE);
+						if (status < 0) {
+							PR_FREEIF (value);
 							return status;
 						}
 						status = OutputFont(obj, PR_TRUE, NULL, NULL);
@@ -1472,6 +1477,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 					}
 					PR_FREEIF (attribName);
 				}
+				PR_FREEIF (value);
 			}
 		}
 	}
