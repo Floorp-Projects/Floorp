@@ -38,7 +38,7 @@ class nsFontCache
 {
 public:
   nsFontCache();
-  ~nsFontCache();
+  virtual ~nsFontCache();
 
   NS_IMETHOD Init(nsIDeviceContext* aContext);
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext) const;
