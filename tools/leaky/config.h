@@ -12,7 +12,7 @@
 #ifndef config_h___
 #define config_h___
 
-#define MAX_STACK_CRAWL 30
+#define MAX_STACK_CRAWL 100
 
 #include <malloc.h>
 

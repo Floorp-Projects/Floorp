@@ -16,26 +16,28 @@
 #include <sys/types.h>
 #include "libmalloc.h"
 
-// key is u_long value is malloc_log_entry*
+// key is u_long
+// value is malloc_log_entry*
 struct MallocDict {
-    MallocDict(int buckets);
+  MallocDict(int buckets);
 
-    void rewind(void);
-    malloc_log_entry* next(void);
+  void rewind(void);
+  malloc_log_entry* next(void);
 
-    malloc_log_entry** find(u_long addr);
-    void add(u_long addr, malloc_log_entry *log);
-    void remove(u_long addr);
+  malloc_log_entry** find(u_long addr);
+  void add(u_long addr, malloc_log_entry *log);
+  void remove(u_long addr);
 
-    struct MallocDictEntry {
-	u_long addr;
-	malloc_log_entry* logEntry;
-	MallocDictEntry* next;
-    } **buckets;
-    int numBuckets;
+  struct MallocDictEntry {
+    u_long addr;
+    malloc_log_entry* logEntry;
+    MallocDictEntry* next;
+  } **buckets;
 
-    int iterNextBucket;
-    MallocDictEntry* iterNextEntry;
+  int numBuckets;
+
+  int iterNextBucket;
+  MallocDictEntry* iterNextEntry;
 };
 
 #endif /* __dict_h_ */
