@@ -107,3 +107,33 @@ ALL_TRASH += $(MAPFILE)
 MKSHLIB += -Wl,--version-script,$(MAPFILE)
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+MAPFILE = $(OBJDIR)/jssmap.sun
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -M $(MAPFILE)
+#ifndef USE_64
+#ifeq ($(CPU_ARCH),sparc)
+# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
+# dependencies (libfreebl_*.so) in the same directory where it resides.
+#MKSHLIB += -R '$$ORIGIN'
+#endif
+#endif
+endif
+
+ifeq ($(OS_ARCH),AIX)
+MAPFILE = $(OBJDIR)/jssmap.aix
+ALL_TRASH += $(MAPFILE)
+EXPORT_RULES = -bexport:$(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+MAPFILE = $(OBJDIR)/jssmap.hp
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -c $(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH), OSF1)
+MAPFILE = $(OBJDIR)/jssmap.osf
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
