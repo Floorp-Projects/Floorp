@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=messenger
+DIRS=messenger compose
 
 include <$(DEPTH)\layout\config\rules.mak>
