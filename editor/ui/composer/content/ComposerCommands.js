@@ -374,7 +374,15 @@ var nsSaveAsCharsetCommand =
     FinishHTMLSource();
     window.ok = false;
     window.exportToText = false;
-    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes")
+    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes");
+
+    if (window.newTitle != null) {
+      try {
+        editorShell.SetDocumentTitle(window.newTitle);
+      } 
+      catch (ex) {}
+    }    
+
     if (window.ok)
     {
       if (window.exportToText)
@@ -386,6 +394,7 @@ var nsSaveAsCharsetCommand =
         window.ok = window.editorShell.saveDocument(true, false, editorShell.contentsMIMEType);
       }
     }
+
     window._content.focus();
     return window.ok;
   }

@@ -24,7 +24,6 @@
 
 var charsetList = new Array();
 var charsetDict = new Array();
-var title="";
 var charset="";
 var titleWasEdited = false;
 var charsetWasChanged = false;
@@ -88,15 +87,8 @@ function InitDialog() {
 
 function onOK()
 {
- if(ValidateData())
- {
-   editorShell.BeginBatchChanges();
 
-   if(titleWasEdited) {
-      try {
-      editorShell.SetDocumentTitle(title);
-      } catch (ex) {}
-   }
+  editorShell.BeginBatchChanges();
 
    if(charsetWasChanged) 
    {
@@ -106,13 +98,15 @@ function onOK()
 
    editorShell.EndBatchChanges();
 
+  if(titleWasEdited) {
+    window.opener.newTitle = dialog.TitleInput.value.trimString();
+  }
+
    window.opener.ok = true;
    window.opener.exportToText = dialog.exportToText.checked;
    SaveWindowLocation();
    return true;
  }
- return false; 
-}
 
 function LoadAvailableCharSets()
 {
@@ -217,12 +211,6 @@ function SelectCharset()
       dump("failed to get selected data" + ex + "\n");
     }
   }
-}
-
-function ValidateData()
-{
-  title=dialog.TitleInput.value.trimString();
-  return true;
 }
 
 function TitleChanged()
