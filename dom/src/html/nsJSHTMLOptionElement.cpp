@@ -68,7 +68,7 @@ enum HTMLOptionElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOptionElement *a = (nsIDOMHTMLOptionElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOptionElement *a = (nsIDOMHTMLOptionElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -231,7 +231,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOptionElement *a = (nsIDOMHTMLOptionElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOptionElement *a = (nsIDOMHTMLOptionElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

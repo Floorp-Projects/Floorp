@@ -53,7 +53,7 @@ enum StyleSheet_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMStyleSheet *a = (nsIDOMStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMStyleSheet *a = (nsIDOMStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMStyleSheet *a = (nsIDOMStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMStyleSheet *a = (nsIDOMStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

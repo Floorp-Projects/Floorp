@@ -57,7 +57,7 @@ enum MimeType_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMMimeType *a = (nsIDOMMimeType*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeType *a = (nsIDOMMimeType*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -156,7 +156,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMMimeType *a = (nsIDOMMimeType*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeType *a = (nsIDOMMimeType*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

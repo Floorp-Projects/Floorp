@@ -53,7 +53,7 @@ enum Attr_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAttr *a = (nsIDOMAttr*)JS_GetPrivate(cx, obj);
+  nsIDOMAttr *a = (nsIDOMAttr*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAttr *a = (nsIDOMAttr*)JS_GetPrivate(cx, obj);
+  nsIDOMAttr *a = (nsIDOMAttr*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

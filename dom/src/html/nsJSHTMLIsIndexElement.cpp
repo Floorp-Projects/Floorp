@@ -55,7 +55,7 @@ enum HTMLIsIndexElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLIsIndexElement *a = (nsIDOMHTMLIsIndexElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLIsIndexElement *a = (nsIDOMHTMLIsIndexElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -122,7 +122,7 @@ GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLIsIndexElement *a = (nsIDOMHTMLIsIndexElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLIsIndexElement *a = (nsIDOMHTMLIsIndexElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

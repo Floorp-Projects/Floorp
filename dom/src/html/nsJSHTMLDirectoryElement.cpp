@@ -51,7 +51,7 @@ enum HTMLDirectoryElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDirectoryElement *a = (nsIDOMHTMLDirectoryElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDirectoryElement *a = (nsIDOMHTMLDirectoryElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLDirectoryElement *a = (nsIDOMHTMLDirectoryElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLDirectoryElement *a = (nsIDOMHTMLDirectoryElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -54,7 +54,7 @@ enum HTMLCollection_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLCollection *a = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLCollection *a = (nsIDOMHTMLCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -140,7 +140,7 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLCollection *a = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLCollection *a = (nsIDOMHTMLCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -207,7 +207,7 @@ ResolveHTMLCollection(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLCollection *nativeThis = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLCollection *nativeThis = (nsIDOMHTMLCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRUint32 b0;
@@ -262,7 +262,7 @@ HTMLCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 HTMLCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLCollection *nativeThis = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLCollection *nativeThis = (nsIDOMHTMLCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsAutoString b0;

@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMCDATASection);
 PR_STATIC_CALLBACK(JSBool)
 GetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMDocumentFragment);
 PR_STATIC_CALLBACK(JSBool)
 GetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentFragment *a = (nsIDOMDocumentFragment*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentFragment *a = (nsIDOMDocumentFragment*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentFragment *a = (nsIDOMDocumentFragment*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentFragment *a = (nsIDOMDocumentFragment*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -54,7 +54,7 @@ enum NodeList_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -112,7 +112,7 @@ GetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -177,7 +177,7 @@ ResolveNodeList(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NodeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeList *nativeThis = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *nativeThis = (nsIDOMNodeList*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRUint32 b0;

@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMComment);
 PR_STATIC_CALLBACK(JSBool)
 GetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMComment *a = (nsIDOMComment*)JS_GetPrivate(cx, obj);
+  nsIDOMComment *a = (nsIDOMComment*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMComment *a = (nsIDOMComment*)JS_GetPrivate(cx, obj);
+  nsIDOMComment *a = (nsIDOMComment*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

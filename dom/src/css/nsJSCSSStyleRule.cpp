@@ -55,7 +55,7 @@ enum CSSStyleRule_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRule *a = (nsIDOMCSSStyleRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRule *a = (nsIDOMCSSStyleRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -122,7 +122,7 @@ GetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRule *a = (nsIDOMCSSStyleRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRule *a = (nsIDOMCSSStyleRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

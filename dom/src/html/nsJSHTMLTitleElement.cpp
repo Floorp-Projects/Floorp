@@ -51,7 +51,7 @@ enum HTMLTitleElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTitleElement *a = (nsIDOMHTMLTitleElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTitleElement *a = (nsIDOMHTMLTitleElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTitleElement *a = (nsIDOMHTMLTitleElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTitleElement *a = (nsIDOMHTMLTitleElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

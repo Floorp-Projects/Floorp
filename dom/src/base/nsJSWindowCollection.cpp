@@ -54,7 +54,7 @@ enum WindowCollection_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -140,7 +140,7 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMWindowCollection *a = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -207,7 +207,7 @@ ResolveWindowCollection(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
   PRUint32 b0;
@@ -262,7 +262,7 @@ WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)JS_GetPrivate(cx, obj);
+  nsIDOMWindowCollection *nativeThis = (nsIDOMWindowCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindow* nativeRet;
   nsAutoString b0;

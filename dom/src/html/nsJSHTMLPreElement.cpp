@@ -51,7 +51,7 @@ enum HTMLPreElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLPreElement *a = (nsIDOMHTMLPreElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLPreElement *a = (nsIDOMHTMLPreElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLPreElement *a = (nsIDOMHTMLPreElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLPreElement *a = (nsIDOMHTMLPreElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -68,7 +68,7 @@ enum HTMLFormElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFormElement *a = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFormElement *a = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -293,7 +293,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFormElement *a = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFormElement *a = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -443,7 +443,7 @@ ResolveHTMLFormElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -491,7 +491,7 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFormElement *nativeThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -539,7 +539,7 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLFormElement *privateThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLFormElement *privateThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLFormElement *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLFormElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLFormElement");

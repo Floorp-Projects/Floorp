@@ -64,7 +64,7 @@ enum HTMLTextAreaElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -275,7 +275,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -490,7 +490,7 @@ ResolveHTMLTextAreaElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -538,7 +538,7 @@ HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -586,7 +586,7 @@ HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;

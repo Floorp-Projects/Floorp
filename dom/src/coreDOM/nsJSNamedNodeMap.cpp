@@ -54,7 +54,7 @@ enum NamedNodeMap_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -112,7 +112,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *a = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -177,7 +177,7 @@ ResolveNamedNodeMap(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsAutoString b0;
@@ -229,7 +229,7 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
@@ -287,7 +287,7 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsAutoString b0;
@@ -339,7 +339,7 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)JS_GetPrivate(cx, obj);
+  nsIDOMNamedNodeMap *nativeThis = (nsIDOMNamedNodeMap*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRUint32 b0;

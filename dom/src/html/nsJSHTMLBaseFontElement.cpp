@@ -53,7 +53,7 @@ enum HTMLBaseFontElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBaseFontElement *a = (nsIDOMHTMLBaseFontElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

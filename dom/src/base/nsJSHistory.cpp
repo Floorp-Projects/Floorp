@@ -54,7 +54,7 @@ enum History_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHistory *a = (nsIDOMHistory*)JS_GetPrivate(cx, obj);
+  nsIDOMHistory *a = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -152,7 +152,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHistory *a = (nsIDOMHistory*)JS_GetPrivate(cx, obj);
+  nsIDOMHistory *a = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -217,7 +217,7 @@ ResolveHistory(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)JS_GetPrivate(cx, obj);
+  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -265,7 +265,7 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)JS_GetPrivate(cx, obj);
+  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -313,7 +313,7 @@ HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 PR_STATIC_CALLBACK(JSBool)
 HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)JS_GetPrivate(cx, obj);
+  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 b0;
 

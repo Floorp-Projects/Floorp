@@ -51,7 +51,7 @@ enum BarProp_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBarProp *a = (nsIDOMBarProp*)JS_GetPrivate(cx, obj);
+  nsIDOMBarProp *a = (nsIDOMBarProp*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBarProp *a = (nsIDOMBarProp*)JS_GetPrivate(cx, obj);
+  nsIDOMBarProp *a = (nsIDOMBarProp*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

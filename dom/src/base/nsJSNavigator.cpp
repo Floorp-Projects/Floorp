@@ -65,7 +65,7 @@ enum Navigator_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNavigator *a = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
+  nsIDOMNavigator *a = (nsIDOMNavigator*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -245,7 +245,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNavigator *a = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
+  nsIDOMNavigator *a = (nsIDOMNavigator*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -310,7 +310,7 @@ ResolveNavigator(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNavigator *nativeThis = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
+  nsIDOMNavigator *nativeThis = (nsIDOMNavigator*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 

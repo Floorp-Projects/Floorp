@@ -61,7 +61,7 @@ enum HTMLAppletElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAppletElement *a = (nsIDOMHTMLAppletElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAppletElement *a = (nsIDOMHTMLAppletElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -271,7 +271,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLAppletElement *a = (nsIDOMHTMLAppletElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLAppletElement *a = (nsIDOMHTMLAppletElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

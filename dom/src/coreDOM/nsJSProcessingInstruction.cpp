@@ -52,7 +52,7 @@ enum ProcessingInstruction_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
 PR_STATIC_CALLBACK(JSBool)
 SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -54,7 +54,7 @@ enum HTMLParamElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLParamElement *a = (nsIDOMHTMLParamElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLParamElement *a = (nsIDOMHTMLParamElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -152,7 +152,7 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLParamElement *a = (nsIDOMHTMLParamElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLParamElement *a = (nsIDOMHTMLParamElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

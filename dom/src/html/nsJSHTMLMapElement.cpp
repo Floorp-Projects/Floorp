@@ -55,7 +55,7 @@ enum HTMLMapElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLMapElement *a = (nsIDOMHTMLMapElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLMapElement *a = (nsIDOMHTMLMapElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -122,7 +122,7 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLMapElement *a = (nsIDOMHTMLMapElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLMapElement *a = (nsIDOMHTMLMapElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

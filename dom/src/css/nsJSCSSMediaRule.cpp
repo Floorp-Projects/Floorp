@@ -55,7 +55,7 @@ enum CSSMediaRule_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSMediaRule *a = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSMediaRule *a = (nsIDOMCSSMediaRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -122,7 +122,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSMediaRule *a = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSMediaRule *a = (nsIDOMCSSMediaRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -200,7 +200,7 @@ ResolveCSSMediaRule(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 CSSMediaRuleInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 nativeRet;
   nsAutoString b0;
@@ -258,7 +258,7 @@ CSSMediaRuleInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 CSSMediaRuleDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSMediaRule *nativeThis = (nsIDOMCSSMediaRule*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 b0;
 

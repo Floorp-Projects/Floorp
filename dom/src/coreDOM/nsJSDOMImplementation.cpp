@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMDOMImplementation);
 PR_STATIC_CALLBACK(JSBool)
 GetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)JS_GetPrivate(cx, obj);
+  nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)JS_GetPrivate(cx, obj);
+  nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -145,7 +145,7 @@ ResolveDOMImplementation(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)JS_GetPrivate(cx, obj);
+  nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRBool nativeRet;
   nsAutoString b0;

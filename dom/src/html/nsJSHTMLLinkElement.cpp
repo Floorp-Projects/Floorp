@@ -59,7 +59,7 @@ enum HTMLLinkElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLinkElement *a = (nsIDOMHTMLLinkElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLinkElement *a = (nsIDOMHTMLLinkElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -237,7 +237,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLinkElement *a = (nsIDOMHTMLLinkElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLinkElement *a = (nsIDOMHTMLLinkElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

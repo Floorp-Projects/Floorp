@@ -76,7 +76,7 @@ enum Node_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNode *a = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -294,7 +294,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNode *a = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -372,7 +372,7 @@ ResolveNode(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
@@ -439,7 +439,7 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
@@ -506,7 +506,7 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
@@ -564,7 +564,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
@@ -622,7 +622,7 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 PR_STATIC_CALLBACK(JSBool)
 NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 
@@ -671,7 +671,7 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
   PRBool b0;
@@ -725,7 +725,7 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 PR_STATIC_CALLBACK(JSBool)
 EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *privateThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *privateThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventTarget *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventTarget");
@@ -800,7 +800,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNode *privateThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  nsIDOMNode *privateThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventTarget *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventTarget");

@@ -52,7 +52,7 @@ enum HTMLBaseElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBaseElement *a = (nsIDOMHTMLBaseElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBaseElement *a = (nsIDOMHTMLBaseElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBaseElement *a = (nsIDOMHTMLBaseElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBaseElement *a = (nsIDOMHTMLBaseElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -57,7 +57,7 @@ enum Plugin_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPlugin *a = (nsIDOMPlugin*)JS_GetPrivate(cx, obj);
+  nsIDOMPlugin *a = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -191,7 +191,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPlugin *a = (nsIDOMPlugin*)JS_GetPrivate(cx, obj);
+  nsIDOMPlugin *a = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -258,7 +258,7 @@ ResolvePlugin(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)JS_GetPrivate(cx, obj);
+  nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   PRUint32 b0;
@@ -313,7 +313,7 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)JS_GetPrivate(cx, obj);
+  nsIDOMPlugin *nativeThis = (nsIDOMPlugin*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   nsAutoString b0;

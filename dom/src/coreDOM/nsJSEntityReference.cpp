@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMEntityReference);
 PR_STATIC_CALLBACK(JSBool)
 GetEntityReferenceProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEntityReference *a = (nsIDOMEntityReference*)JS_GetPrivate(cx, obj);
+  nsIDOMEntityReference *a = (nsIDOMEntityReference*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetEntityReferenceProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetEntityReferenceProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEntityReference *a = (nsIDOMEntityReference*)JS_GetPrivate(cx, obj);
+  nsIDOMEntityReference *a = (nsIDOMEntityReference*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -52,7 +52,7 @@ enum HTMLOptGroupElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLOptGroupElement *a = (nsIDOMHTMLOptGroupElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

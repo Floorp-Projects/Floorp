@@ -65,7 +65,7 @@ enum CSSStyleSheet_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleSheet *a = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleSheet *a = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -198,7 +198,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleSheet *a = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleSheet *a = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -263,7 +263,7 @@ ResolveCSSStyleSheet(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 nativeRet;
   nsAutoString b0;
@@ -321,7 +321,7 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleSheet *nativeThis = (nsIDOMCSSStyleSheet*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRUint32 b0;
 

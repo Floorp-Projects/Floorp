@@ -54,7 +54,7 @@ enum CSSFontFaceRule_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -105,7 +105,7 @@ GetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetCSSFontFaceRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSFontFaceRule *a = (nsIDOMCSSFontFaceRule*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -51,7 +51,7 @@ enum HTMLBlockquoteElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLBlockquoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBlockquoteElement *a = (nsIDOMHTMLBlockquoteElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBlockquoteElement *a = (nsIDOMHTMLBlockquoteElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLBlockquoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLBlockquoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBlockquoteElement *a = (nsIDOMHTMLBlockquoteElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBlockquoteElement *a = (nsIDOMHTMLBlockquoteElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

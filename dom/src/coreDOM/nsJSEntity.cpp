@@ -53,7 +53,7 @@ enum Entity_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEntity *a = (nsIDOMEntity*)JS_GetPrivate(cx, obj);
+  nsIDOMEntity *a = (nsIDOMEntity*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -135,7 +135,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMEntity *a = (nsIDOMEntity*)JS_GetPrivate(cx, obj);
+  nsIDOMEntity *a = (nsIDOMEntity*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

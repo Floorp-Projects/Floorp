@@ -51,7 +51,7 @@ enum HTMLBRElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBRElement *a = (nsIDOMHTMLBRElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBRElement *a = (nsIDOMHTMLBRElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -101,7 +101,7 @@ GetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLBRElement *a = (nsIDOMHTMLBRElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLBRElement *a = (nsIDOMHTMLBRElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

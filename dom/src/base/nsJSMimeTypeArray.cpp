@@ -54,7 +54,7 @@ enum MimeTypeArray_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMMimeTypeArray *a = (nsIDOMMimeTypeArray*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeTypeArray *a = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -140,7 +140,7 @@ GetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMMimeTypeArray *a = (nsIDOMMimeTypeArray*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeTypeArray *a = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -207,7 +207,7 @@ ResolveMimeTypeArray(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 MimeTypeArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   PRUint32 b0;
@@ -262,7 +262,7 @@ MimeTypeArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 MimeTypeArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)JS_GetPrivate(cx, obj);
+  nsIDOMMimeTypeArray *nativeThis = (nsIDOMMimeTypeArray*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMMimeType* nativeRet;
   nsAutoString b0;

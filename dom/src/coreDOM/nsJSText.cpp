@@ -45,7 +45,7 @@ NS_DEF_PTR(nsIDOMText);
 PR_STATIC_CALLBACK(JSBool)
 GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMText *a = (nsIDOMText*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -80,7 +80,7 @@ GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMText *a = (nsIDOMText*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -145,7 +145,7 @@ ResolveText(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMText *nativeThis = (nsIDOMText*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMText* nativeRet;
   PRUint32 b0;

@@ -64,7 +64,7 @@ enum HTMLTableRowElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableRowElement *a = (nsIDOMHTMLTableRowElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableRowElement *a = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -227,7 +227,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLTableRowElement *a = (nsIDOMHTMLTableRowElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableRowElement *a = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -421,7 +421,7 @@ ResolveHTMLTableRowElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableRowElementInsertCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMHTMLElement* nativeRet;
   PRInt32 b0;
@@ -476,7 +476,7 @@ HTMLTableRowElementInsertCell(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 HTMLTableRowElementDeleteCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLTableRowElement *nativeThis = (nsIDOMHTMLTableRowElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 b0;
 

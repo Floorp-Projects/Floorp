@@ -57,7 +57,7 @@ enum HTMLScriptElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLScriptElement *a = (nsIDOMHTMLScriptElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLScriptElement *a = (nsIDOMHTMLScriptElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -203,7 +203,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLScriptElement *a = (nsIDOMHTMLScriptElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLScriptElement *a = (nsIDOMHTMLScriptElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {

@@ -99,7 +99,7 @@ enum Document_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocument *a = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -210,7 +210,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocument *a = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -275,7 +275,7 @@ ResolveDocument(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
@@ -327,7 +327,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMDocumentFragment* nativeRet;
 
@@ -376,7 +376,7 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMText* nativeRet;
   nsAutoString b0;
@@ -428,7 +428,7 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMComment* nativeRet;
   nsAutoString b0;
@@ -480,7 +480,7 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMCDATASection* nativeRet;
   nsAutoString b0;
@@ -532,7 +532,7 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMProcessingInstruction* nativeRet;
   nsAutoString b0;
@@ -587,7 +587,7 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMAttr* nativeRet;
   nsAutoString b0;
@@ -639,7 +639,7 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMEntityReference* nativeRet;
   nsAutoString b0;
@@ -691,7 +691,7 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 PR_STATIC_CALLBACK(JSBool)
 DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *nativeThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
@@ -743,7 +743,7 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 PR_STATIC_CALLBACK(JSBool)
 NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSDocument");
@@ -804,7 +804,7 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
 PR_STATIC_CALLBACK(JSBool)
 NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSDocument *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSDocument");
@@ -859,7 +859,7 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
@@ -916,7 +916,7 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 PR_STATIC_CALLBACK(JSBool)
 EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");

@@ -61,7 +61,7 @@ enum HTMLLayerElement_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLayerElement *a = (nsIDOMHTMLLayerElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLayerElement *a = (nsIDOMHTMLLayerElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -224,7 +224,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLLayerElement *a = (nsIDOMHTMLLayerElement*)JS_GetPrivate(cx, obj);
+  nsIDOMHTMLLayerElement *a = (nsIDOMHTMLLayerElement*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
