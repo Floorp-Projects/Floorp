@@ -57,9 +57,36 @@ static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 
 /*******************************************************************************
+ * nsHTMLFramesetBorderFrame
+ ******************************************************************************/
+class nsHTMLFramesetBorderFrame : public nsLeafFrame {
+
+public:
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
+
+protected:
+  nsHTMLFramesetBorderFrame(nsIContent* aContent, nsIFrame* aParentFrame, PRBool aVertical);
+  virtual ~nsHTMLFramesetBorderFrame();
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
+                              nsReflowMetrics& aDesiredSize);
+  PRBool mVertical;
+  friend class nsHTMLFramesetFrame;
+};
+
+/*******************************************************************************
  * nsHTMLFramesetFrame
  ******************************************************************************/
-PRInt32 nsHTMLFramesetFrame::gMaxNumRowColSpecs = 100;
+PRInt32 nsHTMLFramesetFrame::gMaxNumRowColSpecs = 25;
 
 nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsHTMLContainerFrame(aContent, aParent)
@@ -230,6 +257,12 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
   }
 }
 
+PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
+{
+  float p2t = aPresContext->GetPixelsToTwips();
+  return NS_TO_INT_ROUND(p2t * 6);
+}
+
 PRIntn
 nsHTMLFramesetFrame::GetSkipSides() const
 {
@@ -275,6 +308,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   return parent;
 }
 
+// only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize, nsPoint& aCellIndex)
 {
   PRInt32 row = aIndexInParent / mNumCols;
@@ -289,7 +323,7 @@ void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize
   }
 }
 
-
+// only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild, 
                                          nsSize& aSize)
 {
@@ -300,6 +334,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
     if (aChild == child) {
       nsPoint ignore;
       GetSizeOfChildAt(i, aSize, ignore);
+      return;
     }
     i++;
   }
@@ -307,6 +342,12 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   aSize.height = 0;
 }  
 
+NS_IMETHODIMP nsHTMLFramesetFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X \n", this);
+  return nsHTMLContainerFrame::List(out, aIndent);
+}
 
   
 NS_IMETHODIMP
@@ -314,7 +355,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
-//printf("frameset paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //printf("frameset paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
@@ -411,6 +452,29 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
   return count;
 }
 
+
+void 
+nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*            aChild,
+                                      nsIPresContext&      aPresContext,
+                                      const nsReflowState& aReflowState,
+                                      nsPoint&             aOffset,
+                                      nsSize&              aSize)
+{
+  nsReflowState reflowState(aChild, aReflowState, aSize);
+  aChild->WillReflow(aPresContext);
+  nsReflowMetrics metrics(nsnull);
+  metrics.width = aSize.width;
+  metrics.height= aSize.height;
+  nsReflowStatus status = ReflowChild(aChild, &aPresContext, metrics, reflowState);
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+  
+  // Place and size the child
+  nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
+  aChild->SetRect(rect);
+  aChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+}
+
+
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
                             nsReflowMetrics&     aDesiredSize,
@@ -435,18 +499,24 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
     ? aDesiredSize.width : aReflowState.maxSize.width;
   nscoord height = (aDesiredSize.height <= aReflowState.maxSize.height)
     ? aDesiredSize.height : aReflowState.maxSize.height;
+  // subtract out the width of all of the potential borders. There are
+  // only borders between <frame>s. There are none on the edges (e.g the
+  // leftmost <frame> has no left border).
+  PRInt32 borderWidth = GetBorderWidth(&aPresContext);
+  width  -= (mNumCols - 1) * borderWidth;
+  height -= (mNumRows - 1) * borderWidth;
 
   CalculateRowCol(&aPresContext, width, mNumCols, mColSpecs, mColSizes);
   CalculateRowCol(&aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
 
-  // create the children frames; skip those which aren't frameset or frame
+  // create the children frames; skip content which isn't <frameset> or <frame>
+  nsIFrame* lastChild = nsnull;
   if (firstTime) {
     mChildCount = 0;
-    nsIFrame* lastFrame = nsnull;
     nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
     PRInt32 numChildren = content->ChildCount();
-    for (int i = 0; i < numChildren; i++) {
-      nsHTMLTagContent* child = (nsHTMLTagContent*)(content->ChildAt(i));
+    for (int childX = 0; childX < numChildren; childX++) {
+      nsHTMLTagContent* child = (nsHTMLTagContent*)(content->ChildAt(childX));
       if (nsnull == child) {
         continue;
       }
@@ -458,47 +528,70 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
         if (NS_OK != result) {
           return result;
         }
-        if (nsnull == lastFrame) {
+        if (nsnull == lastChild) {
           mFirstChild = frame;
         } else {
-          lastFrame->SetNextSibling(frame);
+          lastChild->SetNextSibling(frame);
         }
-        lastFrame = frame;
+        lastChild = frame;
         mChildCount++;
       }
     }
+    mNonBorderChildCount = mChildCount;
   }
 
   // reflow the children
   PRInt32 lastRow = 0;
-  PRInt32 i       = 0;
+  PRInt32 borderX = mNonBorderChildCount; // index of border children
+  nsIFrame* borderFrame = nsnull;
   nsPoint offset(0,0);
-  for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
-    nsSize size;
-    nsPoint cellIndex;
-    GetSizeOfChildAt(i, size, cellIndex);
-    nsReflowState reflowState(child, aReflowState, size);
 
-    child->WillReflow(aPresContext);
-    nsReflowMetrics metrics(nsnull);
-    metrics.width = size.width;
-    metrics.height= size.height;
-    aStatus = ReflowChild(child, &aPresContext, metrics, reflowState);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  
-    // Place and size the child
-    nsRect rect(offset.x, offset.y, size.width, size.height);
-    child->SetRect(rect);
-    child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  nsSize size, lastSize;
+  nsIFrame* child = mFirstChild;
+  for (PRInt32 childX = 0; childX < mNonBorderChildCount; childX++) {
+    nsPoint cellIndex;
+    GetSizeOfChildAt(childX, size, cellIndex);
 
     if (lastRow != cellIndex.y) {  // changed to next row
+      if (firstTime) { // create horizontal border
+        borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, PR_FALSE);
+        mChildCount++;
+        lastChild->SetNextSibling(borderFrame);
+        lastChild = borderFrame;
+      } else {
+        ChildAt(borderX, borderFrame);
+        borderX++;
+      }
       offset.x = 0;
-      offset.y += metrics.height;
-    } else {                       // in same row
-      offset.x += metrics.width;
+      offset.y += lastSize.height;
+      nsSize borderSize(size.width, borderWidth);
+      ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+      offset.y += borderWidth;
+    } else {
+      if (cellIndex.x > 0) {  // moved to next col 
+        if (0 == cellIndex.y) { // in 1st row
+          if (firstTime) { // create vertical border
+            borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, PR_TRUE);
+            mChildCount++;
+            lastChild->SetNextSibling(borderFrame);
+            lastChild = borderFrame;
+          } else {         
+            ChildAt(borderX, borderFrame);
+            borderX++;
+          }
+          nsSize borderSize(borderWidth, size.height);
+          ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+        }
+        offset.x += borderWidth;
+      }
     }
-    lastRow = cellIndex.y;
-    i++;
+
+    ReflowPlaceChild(child, aPresContext, aReflowState, offset, size);
+
+    lastRow  = cellIndex.y;
+    lastSize = size;
+    offset.x += size.width;
+    child->GetNextSibling(child);
   }
 
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -521,6 +614,13 @@ nsHTMLFrameset::nsHTMLFrameset(nsIAtom* aTag, nsIWebShell* aParentWebShell)
 nsHTMLFrameset::~nsHTMLFrameset()
 {
   mParentWebShell = nsnull;
+}
+
+void nsHTMLFrameset::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X \n", this);
+  nsHTMLContainer::List(out, aIndent);
 }
 
 void nsHTMLFrameset::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
@@ -572,5 +672,71 @@ NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+/*******************************************************************************
+ * nsHTMLFramesetBorderFrame
+ ******************************************************************************/
+nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsIContent* aContent, nsIFrame* aParent, PRBool aVertical)
+  : nsLeafFrame(aContent, aParent), mVertical(aVertical)
+{
+}
 
+nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
+{
+}
+
+void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                          const nsReflowState& aReflowState,
+                                          nsReflowMetrics& aDesiredSize)
+{
+  aDesiredSize.width   = aReflowState.maxSize.width;
+  aDesiredSize.height  = aReflowState.maxSize.height;
+  aDesiredSize.ascent  = aDesiredSize.width;
+  aDesiredSize.descent = 0;
+}
+
+NS_IMETHODIMP
+nsHTMLFramesetBorderFrame::Reflow(nsIPresContext&      aPresContext,
+                                  nsReflowMetrics&     aDesiredSize,
+                                  const nsReflowState& aReflowState,
+                                  nsReflowStatus&      aStatus)
+{
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+NS_METHOD
+nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect&        aDirtyRect)
+{
+  static PRInt32 colors[6] = {160, 255, 160, 160, 75, 0}; 
+
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord x0 = 0;
+  nscoord y0 = 0;
+  nscoord x1 = (mVertical) ? x0 : mRect.width;
+  nscoord y1 = (mVertical) ? mRect.height : x0;
+
+  for (int i = 0; i < 6; i++) {
+    nscolor color = NS_RGB(colors[i], colors[i], colors[i]);
+    aRenderingContext.SetColor (color);
+    aRenderingContext.DrawLine (x0, y0, x1, y1);
+    if (mVertical) {
+      x0 += nscoord(p2t + 0.5);
+      x1 =  x0;
+    } else {
+      y0 += nscoord(p2t + 0.5);
+      y1 =  y0;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLFramesetBorderFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
+  fprintf(out, "%X BORDER \n", this);
+  return nsLeafFrame::List(out, aIndent);
+}
 
