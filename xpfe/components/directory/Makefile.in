@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= directory_s
-SHORT_LIBNAME	= directry
 XPIDL_MODULE=directory
 XPIDLSRCS	= nsIHTTPIndex.idl
 
