@@ -882,7 +882,15 @@ function playSound( ThisURL )
    
    sample = sample.QueryInterface(Components.interfaces.nsISound);
 
-   sample.play( url );
+   try
+   {
+      sample.play( url );
+   }
+   catch ( ex )
+   {
+      sample.beep();
+      //alert( ex );
+   }
 }
 
 var gSelectAll = false;
