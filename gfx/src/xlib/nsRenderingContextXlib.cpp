@@ -779,10 +779,18 @@ nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     
   mTMatrix->TransformCoord(&x,&y,&w,&h);
     
-  ::XDrawRectangle(mDisplay,
-                   mRenderingSurface->GetDrawable(),
-                   mRenderingSurface->GetGC(),
-                   x,y,w,h);
+  // Don't draw empty rectangles; also, w/h are adjusted down by one
+  // so that the right number of pixels are drawn.
+  if (w && h) 
+  {
+    ::XDrawRectangle(mDisplay,
+                     mRenderingSurface->GetDrawable(),
+                     mRenderingSurface->GetGC(),
+                     x,
+                     y,
+                     w - 1,
+                     h - 1);
+  }
 
   return NS_OK;
 }
