@@ -305,8 +305,8 @@ js_ValueToXMLListObject(JSContext *cx, jsval v);
 extern JSObject *
 js_CloneXMLObject(JSContext *cx, JSObject *obj);
 
-extern JSObject *
+extern JSBool
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
-                       JSString *value);
+                       JSString *value, JSObject **objp);
 
 #endif /* jsxml_h___ */
