@@ -1668,7 +1668,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = messageArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, msgWindow, reallyDelete, PR_FALSE);
+		rv = folder->DeleteMessages(messageArray, msgWindow, reallyDelete, PR_FALSE, nsnull);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

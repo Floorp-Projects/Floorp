@@ -132,7 +132,8 @@ public:
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
                             nsIMsgWindow *msgWindow, PRBool
-                            deleteStorage, PRBool isMove);
+                            deleteStorage, PRBool isMove,
+                            nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener, PRBool isFolder );

@@ -1484,7 +1484,8 @@ nsMsgLocalMailFolder::GetTrashFolder(nsIMsgFolder** result)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                                      nsIMsgWindow *msgWindow, 
-                                     PRBool deleteStorage, PRBool isMove)
+                                     PRBool deleteStorage, PRBool isMove,
+                                     nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_ERROR_FAILURE;
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
@@ -1499,7 +1500,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           if (NS_SUCCEEDED(rv))
           {
             return copyService->CopyMessages(this, messages, trashFolder,
-                                      PR_TRUE, nsnull, msgWindow);
+                                      PR_TRUE, listener, msgWindow);
           }
       }
       return rv;
@@ -2401,7 +2402,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 			if(srcFolder)
 			{
         // lets delete these all at once - much faster that way
-    		result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE);
+    		result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull);
         srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 			}

@@ -32,7 +32,7 @@ Rights Reserved.
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="searchOnLoad();"
+    onload="searchOnLoad(); SetDatasources()"
     onunload="searchOnUnload();"
     onclose="onSearchStop();"
     title="&searchDialogTitle.label;"
@@ -47,12 +47,15 @@ Rights Reserved.
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/threadPane.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/SearchDialog.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script src="chrome://messenger/content/mailWindow.js"/>
+  <script src="chrome://messenger/content/threadPane.js"/>
+  <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://messenger/content/mailCommands.js"/>
+  <script src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script src="chrome://messenger/content/commandglue.js"/>
+  <script src="chrome://messenger/content/SearchDialog.js"/>
 
   <commands id="commands">
     <commandset id="mailSearchItems"
@@ -60,6 +63,8 @@ Rights Reserved.
                 events="mail-search"
                 oncommandupdate="goUpdateSearchItems(this)">
       <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
+      <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" disabled="true"/>
+      <command id="file_message_button"/>
     </commandset>
   </commands>
 
@@ -98,9 +103,73 @@ Rights Reserved.
             <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
        </box>
     </titledbox>
-    
+
+    <box align="left">
+		<menubutton class="menubutton-dual-dropmarker-box" id="fileMessageButton" observes="file_message_button" oncommand="MoveMessageInSearch(event.target)" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" label="&fileButton.label;">
+			<menupopup/>
+			<template> 
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+				<menupopup>
+					<menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+						<menupopup>
+							<menuitem uri="..." label="&fileHereMenu.label;"/>
+							<menuseparator/>
+						</menupopup>
+					</menu>
+				</menupopup>
+			</rule> 
+			<rule nc:NoSelect="true">
+				<menupopup>
+					<menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+				</menupopup>
+			</rule>
+				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup>
+								<menuitem uri="..." label="&fileHereMenu.label;"
+								 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+								 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+								 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+								 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule>
+	            <rule nc:CanFileMessages="false" nc:ServerType="nntp"/>
+				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+				<!-- note, there is no "file here" -->
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+							<menupopup/>
+						</menu>
+					</menupopup>
+				</rule>
+				<rule nc:CanFileMessages="true">
+					<menupopup>
+						<menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+					</menupopup>
+				</rule>
+			</template>
+		</menubutton>
+    </box>
+        
     <box autostretch="never" align="right">
       <button label="&openButton.label;" id="openButton" observes="cmd_open"/>
+      <button label="Delete" id="deleteButton" observes="cmd_delete"/>
       <button label="&closeButton.label;" oncommand="window.close();"/>
     </box>
   

@@ -1760,7 +1760,8 @@ nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBo
 
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgWindow *msgWindow,
-                                               PRBool deleteStorage, PRBool isMove)
+                                               PRBool deleteStorage, PRBool isMove,
+                                               nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_ERROR_FAILURE;
   // *** jt - assuming delete is move to the trash folder for now
@@ -1860,7 +1861,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 
       rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
 					  getter_AddRefs(srcFolder));
-      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull,PR_FALSE);
+      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, listener,PR_FALSE);
 	  }
   }
   return rv;
@@ -3845,6 +3846,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
       rv = mailUrl->UnRegisterListener(this);
   }
   SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
+  if (mCopyListener)
+	  mCopyListener->OnStopCopy(aExitCode);
   return rv;
 }
 
@@ -4348,7 +4351,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
             srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
-                                      PR_TRUE, PR_TRUE);
+                                      PR_TRUE, PR_TRUE, nsnull);
 		    nsCOMPtr<nsIMsgLocalMailFolder> popFolder = do_QueryInterface(srcFolder); 
 		    if (popFolder)   //needed if move pop->imap to notify FE
 		        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
@@ -4837,6 +4840,8 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   nsCOMPtr<nsIUrlListener> urlListener;
   nsCOMPtr<nsISupports> srcSupport;
   nsCOMPtr<nsISupports> copySupport;
+
+  mCopyListener = listener;
 
   if (msgWindow)
   {

@@ -11,5 +11,8 @@
 <!ENTITY conditionDesc.label         "Search for messages which:">
 <!ENTITY conditions.label            "Criteria">
 <!ENTITY results.label               "Results">
+<!ENTITY fileHereMenu.label          "File Here">
+<!ENTITY fileButton.label            "File">
+
 
 

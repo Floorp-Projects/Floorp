@@ -1561,7 +1561,7 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       messageArray->AppendElement(msgHdr);
 
   }
-  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE);
+  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull);
   return rv;
 }
 
@@ -1761,6 +1761,9 @@ nsresult nsMsgDBView::ReverseThreads()
 nsresult nsMsgDBView::ReverseSort()
 {
     PRUint32 num = GetSize();
+	
+    nsCOMPtr <nsISupportsArray> folders;
+    GetFolders(getter_AddRefs(folders));
 
     // go up half the array swapping values
     for (PRUint32 i = 0; i < (num / 2); i++) {
@@ -1775,6 +1778,15 @@ nsresult nsMsgDBView::ReverseSort()
         m_keys.SetAt(i, m_keys.GetAt(end));
         m_keys.SetAt(end, tempKey);
 
+        if (folders)
+        {
+            // swap folders -- 
+            // needed when search is done across multiple folders
+            nsCOMPtr <nsISupports> tmpSupports 
+                = getter_AddRefs(folders->ElementAt(i));
+            folders->SetElementAt(i, folders->ElementAt(end));
+            folders->SetElementAt(end, tmpSupports);
+        }
         // no need to swap elements in m_levels, 
         // since we won't call ReverseSort() if we
         // are in threaded mode, so m_levels are all the same.
@@ -1787,7 +1799,8 @@ typedef struct entryInfo {
     nsMsgKey    id;
     PRUint32    bits;
     PRUint32    len;
-    PRUint32    pad;
+    //PRUint32    pad;
+    nsIMsgFolder* folder;
 } EntryInfo;
 
 typedef struct tagIdKey {
@@ -2114,6 +2127,10 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 
     nsVoidArray ptrs;
     PRUint32 arraySize = GetSize();
+
+    nsCOMPtr <nsISupportsArray> folders;
+    GetFolders(getter_AddRefs(folders));
+
     // use IdPRTime, it is the biggest
     IdPRTime** pPtrBase = (IdPRTime**)PR_Malloc(arraySize * sizeof(IdPRTime*));
     NS_ASSERTION(pPtrBase, "out of memory, can't sort");
@@ -2218,6 +2235,17 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
       info->len = actualFieldLen;
       //info->pad = 0;
 
+    if (folders)
+    {
+        nsCOMPtr <nsISupports> tmpSupports 
+            = getter_AddRefs(folders->ElementAt(numSoFar));
+        nsCOMPtr<nsIMsgFolder> curFolder;
+        if(tmpSupports) {
+            curFolder = do_QueryInterface(tmpSupports);
+            info->folder = curFolder;
+        }
+    }
+
       pTemp += sizeof(EntryInfo);
 
       PRInt32 bytesLeft = allocSize - (PRInt32)(pTemp - pBase);
@@ -2265,6 +2293,13 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
     for (PRUint32 i = 0; i < numSoFar; i++) {
         m_keys.SetAt(i, pPtrBase[i]->info.id);
         m_flags.SetAt(i, pPtrBase[i]->info.bits);
+
+        if (folders)
+        {
+            nsCOMPtr <nsISupports> tmpSupports 
+                = do_QueryInterface(pPtrBase[i]->info.folder);
+            folders->SetElementAt(i, tmpSupports);
+        }
     }
 
     m_sortType = sortType;
@@ -4125,3 +4160,12 @@ nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)
   }
   return NS_OK;
 }
+
+nsresult nsMsgDBView::GetFolders(nsISupportsArray **aFolders)
+{
+    NS_ENSURE_ARG_POINTER(aFolders);
+    *aFolders = nsnull;
+	
+    return NS_OK;
+}
+

@@ -32,7 +32,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgSearchNotify.h"
 
-NS_IMPL_ISUPPORTS2(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener)
+NS_IMPL_ISUPPORTS3(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener)
 
 nsMsgSearchSession::nsMsgSearchSession()
 {
@@ -706,5 +706,115 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
     *aDone = PR_TRUE;
 		return NS_OK;
 	}
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::AddFolderListener(nsIFolderListener *listener)
+{
+    nsresult rv = NS_OK;
+    if (!m_folderListenerList)
+        rv = NS_NewISupportsArray(getter_AddRefs(m_folderListenerList));
+
+    if (NS_SUCCEEDED(rv) && m_folderListenerList)
+        m_folderListenerList->AppendElement(listener);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::RemoveFolderListener(nsIFolderListener *listener)
+{
+    if (m_folderListenerList)
+        m_folderListenerList->RemoveElement(listener);
+
+    return NS_OK;
+}
+
+// nsIFolderListener methods.
+NS_IMETHODIMP 
+nsMsgSearchSession::OnItemEvent(nsIFolder *aFolder,
+                                nsIAtom *aEvent)
+{
+	nsresult rv;
+	PRUint32 count;
+
+	NS_ASSERTION(m_folderListenerList, "no listeners");
+	if (!m_folderListenerList) return NS_ERROR_FAILURE;
+
+	rv = m_folderListenerList->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)m_folderListenerList->ElementAt(i));
+		if(listener)
+			listener->OnItemEvent(aFolder, aEvent);
+	}
+	
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgSearchSession::OnItemAdded(nsISupports *parentItem, 
+                                nsISupports *item, 
+                                const char* viewString)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgSearchSession::OnItemRemoved(nsISupports *parentItem, 
+                                nsISupports *item, 
+                                const char* viewString)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::OnItemPropertyChanged(nsISupports *item,
+                                        nsIAtom *property,
+                                        const char* oldValue,
+                                        const char* newValue)
+{
+    return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::OnItemIntPropertyChanged(nsISupports *item,
+                                            nsIAtom *property,
+                                            PRInt32 oldValue,
+                                            PRInt32 newValue)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::OnItemBoolPropertyChanged(nsISupports *item,
+                                            nsIAtom *property,
+                                            PRBool oldValue,
+                                            PRBool newValue)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::OnItemUnicharPropertyChanged(nsISupports *item,
+                                                nsIAtom *property,
+                                                const PRUnichar* oldValue,
+                                                const PRUnichar* newValue)
+{
+    return NS_OK;
+
+}
+
+
+NS_IMETHODIMP
+nsMsgSearchSession::OnItemPropertyFlagChanged(nsISupports *item,
+                                            nsIAtom *property,
+                                            PRUint32 oldValue,
+                                            PRUint32 newValue)
+{
+    return NS_OK;
 }
 

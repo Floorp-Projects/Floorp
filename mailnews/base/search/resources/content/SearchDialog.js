@@ -39,14 +39,16 @@ var gStatusFeedback = new nsMsgStatusFeedback;
 var gNumOfSearchHits = 0;
 var RDF;
 var gSearchBundle;
+var gNextMessageViewIndexAfterDelete = -1;
 
 // Datasource search listener -- made global as it has to be registered
 // and unregistered in different functions.
 var gDataSourceSearchListener;
 var gViewSearchListener;
-var gIsSearchHit = false;
 
 var gButton;
+var gSearchSessionFolderListener;
+var gMailSession;
 
 // Controller object for search results thread pane
 var nsSearchResultsController =
@@ -55,6 +57,8 @@ var nsSearchResultsController =
     {
         switch(command) {
         case "cmd_open":
+        case "cmd_delete":
+        case "file_message_button":
             return true;
         default:
             return false;
@@ -78,6 +82,10 @@ var nsSearchResultsController =
         switch(command) {
         case "cmd_open":
             MsgOpenSelectedMessages(gSearchView);
+            return true;
+
+        case "cmd_delete":
+            MsgDeleteSelectedMessages();
             return true;
 
         default:
@@ -105,13 +113,17 @@ var gSearchNotificationListener =
 
         var statusMsg;
         // if there are no hits, it means no matches were found in the search.
-        if (!gIsSearchHit) {
-            gStatusFeedback.showStatusString(gSearchBundle.getString("searchFailureMessage"));
+        if (gNumOfSearchHits == 0) {
+            statusMsg = gSearchBundle.getString("searchFailureMessage");
         }
-        else
+        else 
         {
-            gStatusFeedback.showStatusString(gSearchBundle.getString("searchSuccessMessage"));
-            gIsSearchHit = false;
+            if (gNumOfSearchHits == 1) 
+                statusMsg = gSearchBundle.getString("searchSuccessMessage");
+            else
+                statusMsg = gSearchBundle.getFormattedString("searchSuccessMessages", [gNumOfSearchHits]);
+
+            gNumOfSearchHits = 0;
         }
 
         gStatusFeedback.showProgress(100);
@@ -129,6 +141,34 @@ var gSearchNotificationListener =
       gStatusFeedback.showProgress(0);
       gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
       gStatusBar.setAttribute("mode","undetermined");
+    }
+}
+
+// the folderListener object
+var gFolderListener = {
+    OnItemAdded: function(parentItem, item, view) {},
+
+    OnItemRemoved: function(parentItem, item, view){},
+
+    OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemIntPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
+
+    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
+    OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+
+    OnItemEvent: function(folder, event) {
+        var eventType = event.GetUnicode();
+
+        if (eventType == "DeleteOrMoveMsgCompleted") {
+            HandleDeleteOrMoveMessageCompleted(folder);
+        }     
+        else if (eventType == "DeleteOrMoveMsgFailed") {
+            HandleDeleteOrMoveMessageFailed(folder);
+        }
+
     }
 }
 
@@ -155,6 +195,12 @@ function searchOnUnload()
     // unregister listeners
     gSearchSession.unregisterListener(gViewSearchListener);
     gSearchSession.unregisterListener(gSearchNotificationListener);
+
+    gMailSession.RemoveFolderListener(gSearchSessionFolderListener);
+	gSearchSession.removeFolderListener(gFolderListener);
+
+	gSearchView.close();
+	gSearchView = null;
 
     // release this early because msgWindow holds a weak reference
     msgWindow.rootDocShell = null;
@@ -362,10 +408,14 @@ function setupDatasource() {
     // attributes about each message)
     gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
 
+    gSearchSessionFolderListener = gSearchSession.QueryInterface(Components.interfaces.nsIFolderListener);
+    gMailSession = Components.classes[mailSessionContractID].getService(Components.interfaces.nsIMsgMailSession);
+    gMailSession.AddFolderListener(gSearchSessionFolderListener);
 
     // the datasource is a listener on the search results
     gViewSearchListener = gSearchView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
     gSearchSession.registerListener(gViewSearchListener);
+    gSearchSession.addFolderListener(gFolderListener);
 }
 
 
@@ -449,4 +499,106 @@ function GetNumSelectedMessages()
 function GetDBView()
 {
     return gSearchView;
+}
+
+function MsgDeleteSelectedMessages()
+{
+    // we don't delete news messages, we just return in that case
+    if (isNewsURI(gSearchView.getURIForViewIndex(0))) 
+        return;
+
+    // if mail messages delete
+    SetNextMessageAfterDelete();
+    gSearchView.doCommand(nsMsgViewCommandType.deleteMsg);
+}
+
+function SetNextMessageAfterDelete()
+{
+    dump("setting next msg view index after delete to " + gSearchView.firstSelected + "\n");
+    gNextMessageViewIndexAfterDelete = gSearchView.firstSelected;
+}
+
+function HandleDeleteOrMoveMessageFailed(folder)
+{
+    gNextMessageViewIndexAfterDelete = -1;
+}
+
+
+function HandleDeleteOrMoveMessageCompleted(folder)
+{
+    if(gNextMessageViewIndexAfterDelete != -1)
+    {
+        var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
+        var outlinerSelection = outlinerView.selection;
+        viewSize = outlinerView.rowCount;
+
+        if (gNextMessageViewIndexAfterDelete >= viewSize)
+        {
+            if (viewSize > 0)
+                gNextMessageViewIndexAfterDelete = viewSize - 1;
+            else
+                gNextMessageViewIndexAfterDelete = -1;
+        }
+
+        // if we are about to set the selection with a new element then DON'T clear
+        // the selection then add the next message to select. This just generates
+        // an extra round of command updating notifications that we are trying to
+        // optimize away.
+        if (gNextMessageViewIndexAfterDelete != -1) {
+            outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+            // since gNextMessageViewIndexAfterDelete probably has the same value
+            // as the last index we had selected, the outliner isn't generating a new
+            // selectionChanged notification for the outliner view. So we aren't loading the 
+            // next message. to fix this, force the selection changed update.
+            var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
+            if (outlinerView)
+                outlinerView.selectionChanged();
+
+            EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
+        }
+        else
+            outlinerSelection.clearSelection(); /* clear selection in either case  */
+
+        gNextMessageViewIndexAfterDelete = -1;
+    }
+}
+
+function SetDatasources()
+{
+    dump("XXX SetDatasources\n");
+
+    var button = document.getElementById("fileMessageButton");
+    var datasourceContractIDPrefix = "@mozilla.org/rdf/datasource;1?name=";
+    var accountManagerDSContractID = datasourceContractIDPrefix + "msgaccountmanager";
+    var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
+    var accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
+    var folderDataSource         = Components.classes[folderDSContractID].createInstance();
+    accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    button.database.AddDataSource(accountManagerDataSource);
+    button.database.AddDataSource(folderDataSource);
+    button.setAttribute('ref', 'msgaccounts:/');
+}
+
+function MoveMessageInSearch(destFolder)
+{
+    try {
+        // get the msg folder we're moving messages into
+        destUri = destFolder.getAttribute('id');
+        destResource = RDF.GetResource(destUri);
+
+        destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+        // we don't move news messages, we copy them
+        if (isNewsURI(gSearchView.getURIForViewIndex(0))) {
+          gSearchView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
+        }
+        else {
+            SetNextMessageAfterDelete();
+            gSearchView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, destMsgFolder);
+        } 
+    }
+    catch (ex) {
+        dump("MsgMoveMessage failed: " + ex + "\n");
+    }   
 }

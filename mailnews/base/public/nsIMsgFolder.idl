@@ -279,7 +279,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
 	void deleteMessages(in nsISupportsArray message,
                       in nsIMsgWindow msgWindow,
-                      in boolean deleteStorage, in boolean isMove);
+                      in boolean deleteStorage, in boolean isMove,
+                      in nsIMsgCopyServiceListener listener);
 
   void copyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
                     in boolean isMove, in nsIMsgWindow msgWindow,

@@ -27,6 +27,7 @@
 #include "nsMsgSearchCore.h"
 #include "nsIMsgSearchSession.h"
 #include "nsIUrlListener.h"
+#include "nsIFolderListener.h"
 #include "nsIMsgWindow.h"
 #include "nsITimer.h"
 #include "nsMsgSearchArray.h"
@@ -34,12 +35,13 @@
 
 class nsMsgSearchAdapter;
 
-class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener
+class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener, public nsIFolderListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSEARCHSESSION
   NS_DECL_NSIURLLISTENER
+  NS_DECL_NSIFOLDERLISTENER
 
   nsMsgSearchSession();
   virtual ~nsMsgSearchSession();
@@ -62,7 +64,8 @@ protected:
 
 	nsMsgSearchScopeTermArray m_scopeList;
 	nsCOMPtr <nsISupportsArray> m_termList;
-  nsCOMPtr <nsISupportsArray> m_listenerList;
+    nsCOMPtr <nsISupportsArray> m_listenerList;
+    nsCOMPtr <nsISupportsArray> m_folderListenerList;
 
 	nsMsgResultArray m_resultList;
 

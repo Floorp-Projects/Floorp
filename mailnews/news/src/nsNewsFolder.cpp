@@ -932,7 +932,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP 
 nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow, 
-                                PRBool deleteStorage, PRBool isMove)
+                                PRBool deleteStorage, PRBool isMove,
+								nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_OK;
  

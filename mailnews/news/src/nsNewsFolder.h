@@ -84,7 +84,8 @@ public:
   NS_IMETHOD GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove);
+                            nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove,
+                            nsIMsgCopyServiceListener* listener);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD GetCanSubscribe(PRBool *aResult);
