@@ -3480,7 +3480,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         if (NS_FAILED(result) || !context)
           return result;
 
-        if (firstFrame)
+        while (firstFrame)
         {
           nsPoint offsetPoint; //used for offset of result frame
           nsIView * view; //used for call of get offset from view
@@ -3493,7 +3493,11 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                                            aPos->mContentOffset,
                                            endoffset,
                                            aPos->mPreferLeft);
-          return result;
+          if (NS_SUCCEEDED(result))
+            break;
+          result = it->GetNextSiblingOnLine(firstFrame,thisLine);
+          if (NS_FAILED(result))
+            break;
         }
       }
       else  // eSelectEndLine
