@@ -1542,6 +1542,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 						msgMoved = TRUE;	// this will prevent us from adding the header to the db.
 
 				}
+				*applyMore = PR_FALSE;
 #endif // DOING_DELETE
 			}
 			case nsMsgFilterActionMoveToFolder:
@@ -1596,7 +1597,10 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 					}
 					nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, (char *) value, filter);
 					if (NS_SUCCEEDED(err))
+					{
 						m_msgMovedByFilter = PR_TRUE;
+						*applyMore = PR_FALSE;
+					}
 
 				}
 				delete [] folderName;
