@@ -248,8 +248,6 @@ sub ProcessOneBug($) {
 
     my $deptext = "";
 
-    my $resid = 
-
     SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
             "       removed, added " .
             "FROM bugs_activity, bugs, dependencies, fielddefs ".
