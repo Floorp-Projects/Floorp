@@ -242,11 +242,11 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
     // convert run to nbsp.
     WSPoint thePoint;
     res = GetCharAfter(*aInOutParent, *aInOutOffset, &thePoint);
-    if ( (NS_SUCCEEDED(res)) && (nsCRT::IsAsciiSpace(thePoint.mChar)) )
+    if ( (NS_SUCCEEDED(res)) && thePoint.mTextNode && (nsCRT::IsAsciiSpace(thePoint.mChar)) )
     {
       WSPoint prevPoint;
       res = GetCharBefore(thePoint, &prevPoint);
-      if ( (NS_FAILED(res)) || (!nsCRT::IsAsciiSpace(prevPoint.mChar)) )
+      if ( (NS_FAILED(res)) || (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar)) )
       {
         // we are at start of non-nbsps.  convert to a single nbsp.
         res = ConvertToNBSP(thePoint);
@@ -372,7 +372,7 @@ nsWSRunObject::InsertText(const nsAReadableString& aStringToInsert,
       {
         WSPoint wspoint;
         res = GetCharBefore(*aInOutParent, *aInOutOffset, &wspoint);
-        if (NS_SUCCEEDED(res) && nsCRT::IsAsciiSpace(wspoint.mChar))
+        if (NS_SUCCEEDED(res) && wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar))
         {
           theString.SetCharAt(nbsp, 0);
         }
@@ -403,7 +403,7 @@ nsWSRunObject::InsertText(const nsAReadableString& aStringToInsert,
       {
         WSPoint wspoint;
         res = GetCharAfter(*aInOutParent, *aInOutOffset, &wspoint);
-        if (NS_SUCCEEDED(res) && nsCRT::IsAsciiSpace(wspoint.mChar))
+        if (NS_SUCCEEDED(res) && wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar))
         {
           theString.SetCharAt(nbsp, lastCharIndex);
         }
@@ -455,6 +455,7 @@ nsWSRunObject::DeleteWSBackward()
   WSPoint point;
   res = GetCharBefore(mNode, mOffset, &point);  
   NS_ENSURE_SUCCESS(res, res);
+  if (!point.mTextNode) return NS_OK;  // nothing to delete
   
   // callers job to insure that previous char is really ws.
   // If it is normal ws, we need to delete the whole run
@@ -498,6 +499,7 @@ nsWSRunObject::DeleteWSForward()
   WSPoint point;
   res = GetCharAfter(mNode, mOffset, &point);  
   NS_ENSURE_SUCCESS(res, res);
+  if (!point.mTextNode) return NS_OK;  // nothing to delete
   
   // callers job to insure that next char is really ws.
   // If it is normal ws, we need to delete the whole run
@@ -555,8 +557,7 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
     if (run->mType == eNormalWS)
     {
       WSPoint point;
-      res = GetCharBefore(aNode, aOffset, &point);
-      NS_ENSURE_SUCCESS(res, res);
+      GetCharBefore(aNode, aOffset, &point);
       if (point.mTextNode)
       {
         *outVisNode = do_QueryInterface(point.mTextNode);
@@ -597,7 +598,7 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
                                 PRInt32 *outVisOffset,
                                 PRInt16 *outType)
 {
-  // Find first visible thing before the point.  position outVisNode/outVisOffset
+  // Find first visible thing after the point.  position outVisNode/outVisOffset
   // just _before_ that thing.  If we don't find anything return end of ws.
   if (!aNode || !outVisNode || !outVisOffset || !outType)
     return NS_ERROR_NULL_POINTER;
@@ -611,8 +612,7 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
     if (run->mType == eNormalWS)
     {
       WSPoint point;
-      res = GetCharAfter(aNode, aOffset, &point);
-      NS_ENSURE_SUCCESS(res, res);
+      GetCharAfter(aNode, aOffset, &point);
       if (point.mTextNode)
       {
         *outVisNode = do_QueryInterface(point.mTextNode);
@@ -1458,7 +1458,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
       // make sure leading char of following ws is an nbsp, so that it will show up
       WSPoint point;
       aEndObject->GetCharAfter(aEndObject->mNode, aEndObject->mOffset, &point);
-      if (nsCRT::IsAsciiSpace(point.mChar))
+      if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
         res = ConvertToNBSP(point);
         NS_ENSURE_SUCCESS(res, res);
@@ -1480,7 +1480,7 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
       // make sure trailing char of starting ws is an nbsp, so that it will show up
       WSPoint point;
       GetCharBefore(mNode, mOffset, &point);
-      if (nsCRT::IsAsciiSpace(point.mChar))
+      if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
       {
         nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
         PRInt32 wsStartOffset, wsEndOffset;
@@ -1518,7 +1518,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
     // make sure leading char of following ws is an nbsp, so that it will show up
     WSPoint point;
     GetCharAfter(mNode, mOffset, &point);
-    if (nsCRT::IsAsciiSpace(point.mChar))
+    if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
     {
       res = ConvertToNBSP(point);
       NS_ENSURE_SUCCESS(res, res);
@@ -1531,7 +1531,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
     // make sure trailing char of starting ws is an nbsp, so that it will show up
     WSPoint point;
     GetCharBefore(mNode, mOffset, &point);
-    if (nsCRT::IsAsciiSpace(point.mChar))
+    if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar))
     {
       nsCOMPtr<nsIDOMNode> wsStartNode, wsEndNode;
       PRInt32 wsStartOffset, wsEndOffset;
@@ -1696,7 +1696,7 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   
   nsCOMPtr<nsISupports> isupps(do_QueryInterface(aPoint.mTextNode));
   PRInt32 idx = mNodeArray->IndexOf(isupps);
-  if (idx == -1) return NS_ERROR_FAILURE;
+  if (idx == -1) return NS_OK;  // can't find point, but it's not an error
   PRUint32 numNodes;
   mNodeArray->Count(&numNodes);
   
@@ -1718,7 +1718,6 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
     outPoint->mOffset = 0;
     outPoint->mChar = GetCharAt(outPoint->mTextNode, 0);
   }
-  else return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
@@ -1735,7 +1734,7 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
   nsresult res = NS_OK;
   nsCOMPtr<nsISupports> isupps(do_QueryInterface(aPoint.mTextNode));
   PRInt32 idx = mNodeArray->IndexOf(isupps);
-  if (idx == -1) return NS_ERROR_FAILURE;
+  if (idx == -1) return NS_OK;  // can't find point, but it's not an error
   
   if (aPoint.mOffset != 0)
   {
@@ -1757,8 +1756,7 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
       outPoint->mChar = GetCharAt(outPoint->mTextNode, len-1);
     }
   }
-  else return NS_ERROR_FAILURE;
-  return res;
+  return NS_OK;
 }
 
 nsresult 
@@ -1829,7 +1827,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
         endOffset = point.mOffset;
         tmp = point;
         res = GetCharAfter(tmp, &point);
-        if (NS_FAILED(res)) break;
+        if (NS_FAILED(res) || !point.mTextNode) break;
       }
     }
   }
@@ -1855,7 +1853,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
         startOffset = point.mOffset;
         tmp = point;
         res = GetCharBefore(tmp, &point);
-        if (NS_FAILED(res)) break;
+        if (NS_FAILED(res) || !point.mTextNode) break;
       }
     }
   }  
@@ -2091,12 +2089,12 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
   
   // first check for trailing nbsp
   nsresult res = GetCharBefore(aRun->mEndNode, aRun->mEndOffset, &thePoint);
-  if (NS_SUCCEEDED(res) && thePoint.mChar == nbsp)
+  if (NS_SUCCEEDED(res) && thePoint.mTextNode && thePoint.mChar == nbsp)
   {
     // now check that what is to the left of it is compatible with replacing nbsp with space
     WSPoint prevPoint;
     res = GetCharBefore(thePoint, &prevPoint);
-    if (NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res) && prevPoint.mTextNode)
     {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) leftCheck = PR_TRUE;
     }
@@ -2141,11 +2139,11 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aO
   WSPoint thePoint;
   PRBool canConvert = PR_FALSE;
   nsresult res = GetCharBefore(aNode, aOffset, &thePoint);
-  if (NS_SUCCEEDED(res) && thePoint.mChar == nbsp)
+  if (NS_SUCCEEDED(res) && thePoint.mTextNode && thePoint.mChar == nbsp)
   {
     WSPoint prevPoint;
     res = GetCharBefore(thePoint, &prevPoint);
-    if (NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res) && prevPoint.mTextNode)
     {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) canConvert = PR_TRUE;
     }
@@ -2186,7 +2184,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, PRInt32 aOf
     WSPoint nextPoint, tmp=thePoint;
     tmp.mOffset++; // we want to be after thePoint
     res = GetCharAfter(tmp, &nextPoint);
-    if (NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res) && nextPoint.mTextNode)
     {
       if (!nsCRT::IsAsciiSpace(nextPoint.mChar)) canConvert = PR_TRUE;
     }

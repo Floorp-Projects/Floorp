@@ -171,6 +171,10 @@ protected:
                                 PRBool aDontTouchContent=PR_FALSE);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetNodesFromSelection(nsISelection *selection,
+                                       PRInt32 operation,
+                                       nsCOMPtr<nsISupportsArray> *arrayOfNodes,
+                                       PRBool aDontTouchContent=PR_FALSE);
   nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aEntireList, PRBool aDontTouchContent=PR_FALSE);
   nsresult GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD);
   nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);

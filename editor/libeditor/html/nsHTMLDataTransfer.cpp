@@ -176,6 +176,69 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 }
 
 
+NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAReadableString & aInString)
+{
+  nsAutoString charset;
+  return LoadHTMLWithCharset(aInString, charset);
+}
+
+NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAReadableString & aInputString, const nsAReadableString & aCharset)
+{
+  nsresult res = NS_OK;
+  if (!mRules) return NS_ERROR_NOT_INITIALIZED;
+
+  // force IME commit; set up rules sniffing and batching
+  ForceCompositionEnd();
+  nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpHTMLLoad, nsIEditor::eNext);
+  
+  // Get selection
+  nsCOMPtr<nsISelection>selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  
+  // Delete Selection
+  res = DeleteSelection(eNone);
+  if (NS_FAILED(res)) return res;
+  
+  // Get the first range in the selection, for context:
+  nsCOMPtr<nsIDOMRange> range, clone;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  NS_ENSURE_SUCCESS(res, res);
+  if (!range)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+  if (!nsrange)
+    return NS_ERROR_NO_INTERFACE;
+
+  // create fragment for pasted html
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  {
+    res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
+    NS_ENSURE_SUCCESS(res, res);
+  }
+  // put the fragment into the document
+  nsCOMPtr<nsIDOMNode> parent, junk;
+  res = range->GetStartContainer(getter_AddRefs(parent));
+  NS_ENSURE_SUCCESS(res, res);
+  if (!parent)
+    return NS_ERROR_NULL_POINTER;
+  PRInt32 childOffset;
+  res = range->GetStartOffset(&childOffset);
+  NS_ENSURE_SUCCESS(res, res);
+  
+  nsCOMPtr<nsIDOMNode> nodeToInsert;
+  docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+  while (nodeToInsert)
+  {
+    res = InsertNode(nodeToInsert, parent, childOffset++);
+    NS_ENSURE_SUCCESS(res, res);
+    docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
+  }
+  return res;
+}
+
+
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAReadableString & aInString)
 {
   nsAutoString charset;
@@ -761,6 +824,44 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     if (NS_FAILED(rv)) return rv;
     if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
 
+    // get additional html copy hints, if present
+    nsAutoString contextStr, infoStr;
+    nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
+    PRUint32 contextLen, infoLen;
+    nsCOMPtr<nsISupportsWString> textDataObj;
+    
+    nsCOMPtr<nsITransferable> contextTrans = do_CreateInstance(kCTransferableCID);
+    NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
+    contextTrans->AddDataFlavor(kHTMLContext);
+    dragSession->GetData(contextTrans, i);
+    contextTrans->GetTransferData(kHTMLContext, getter_AddRefs(contextDataObj), &contextLen);
+
+    nsCOMPtr<nsITransferable> infoTrans = do_CreateInstance(kCTransferableCID);
+    NS_ENSURE_TRUE(infoTrans, NS_ERROR_NULL_POINTER);
+    infoTrans->AddDataFlavor(kHTMLInfo);
+    dragSession->GetData(infoTrans, i);
+    infoTrans->GetTransferData(kHTMLInfo, getter_AddRefs(infoDataObj), &infoLen);
+    
+    if (contextDataObj)
+    {
+      PRUnichar* text = nsnull;
+      textDataObj = do_QueryInterface(contextDataObj);
+      textDataObj->ToString ( &text );
+      contextStr.Assign ( text, contextLen / 2 );
+      if (text)
+        nsMemory::Free(text);
+    }
+    
+    if (infoDataObj)
+    {
+      PRUnichar* text = nsnull;
+      textDataObj = do_QueryInterface(infoDataObj);
+      textDataObj->ToString ( &text );
+      infoStr.Assign ( text, infoLen / 2 );
+      if (text)
+        nsMemory::Free(text);
+    }
+
     if ( doPlaceCaret )
     {
       // check if the user pressed the key to force a copy rather than a move
@@ -898,7 +999,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       doPlaceCaret = PR_FALSE;
     }
     
-    rv = InsertFromTransferable(trans, nsAutoString(), nsAutoString());
+    rv = InsertFromTransferable(trans, contextStr, infoStr);
   }
 
   return rv;
@@ -1022,16 +1123,28 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
     if (NS_FAILED(rv)) return rv;
 
     // grab a string
-    nsAutoString buffer;
-    rv = docEncoder->EncodeToString(buffer);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoString buffer, parents, info;
+
+    if (!bIsPlainTextControl)
+    {
+      // encode the selection as html with contextual info
+      rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
+      if (NS_FAILED(rv)) return rv;
+    }
+    else
+    {
+      // encode the selection
+      rv = docEncoder->EncodeToString(buffer);
+      if (NS_FAILED(rv)) return rv;
+    }
 
     // if we have an empty string, we're done; otherwise continue
     if ( !buffer.IsEmpty() )
     {
-      nsCOMPtr<nsISupportsWString> dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
+      nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
 
+      dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
       rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
       if (NS_FAILED(rv)) return rv;
 
@@ -1040,9 +1153,23 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
          // Add the unicode flavor to the transferable
         rv = trans->AddDataFlavor(kUnicodeMime);
         if (NS_FAILED(rv)) return rv;
+
+        // QI the data object an |nsISupports| so that when the transferable holds
+        // onto it, it will addref the correct interface.
+        nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
+        rv = trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length() * 2);
+        if (NS_FAILED(rv)) return rv;
       }
       else
       {
+        contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
+        infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
+
+        contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.get()) );
+        infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.get()) );
+
         rv = trans->AddDataFlavor(kHTMLMime);
         if (NS_FAILED(rv)) return rv;
 
@@ -1051,14 +1178,26 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
 
         rv = trans->SetConverter(htmlConverter);
         if (NS_FAILED(rv)) return rv;
-      }
 
-      // QI the data object an |nsISupports| so that when the transferable holds
-      // onto it, it will addref the correct interface.
-      nsCOMPtr<nsISupports> nsisupportsDataWrapper ( do_QueryInterface(dataWrapper) );
-      rv = trans->SetTransferData(bIsPlainTextControl ? kUnicodeMime : kHTMLMime,  
-                                  nsisupportsDataWrapper, buffer.Length() * 2);
-      if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
+        rv = trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length() * 2);
+        if (NS_FAILED(rv)) return rv;
+
+        if (parents.Length())
+        {
+          // Add the htmlcontext DataFlavor to the transferable
+          trans->AddDataFlavor(kHTMLContext);
+          genericDataObj = do_QueryInterface(contextWrapper);
+          trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
+        }
+        if (info.Length())
+        {
+          // Add the htmlinfo DataFlavor to the transferable
+          trans->AddDataFlavor(kHTMLInfo);
+          genericDataObj = do_QueryInterface(infoWrapper);
+          trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
+        }
+      }
 
       /* add the transferable to the array */
       rv = transferableArray->AppendElement(trans);
@@ -1067,7 +1206,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
       /* invoke drag */
       unsigned int flags;
       // in some cases we'll want to cut rather than copy... hmmmmm...
-        flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
+      flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
       
       rv = dragService->InvokeDragSession( domnode, transferableArray, nsnull, flags);
       if (NS_FAILED(rv)) return rv;
@@ -1481,7 +1620,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAReadableString & aQuotedText,
       }
 
       if (aInsertHTML)
-        res = InsertHTMLWithCharset(aQuotedText, aCharset);
+        res = LoadHTMLWithCharset(aQuotedText, aCharset);
 
       else
         res = InsertText(aQuotedText);  // XXX ignore charset

@@ -336,6 +336,28 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
     if (NS_FAILED(res)) return res;
   }
   
+  // look for siblings that are correct type of node
+  nsCOMPtr<nsIDOMNode> sibling;
+  GetPriorHTMLSibling(node, address_of(sibling));
+  if (sibling && NodeIsType(sibling, aProperty) &&         
+      HasAttrVal(sibling, aAttribute, aValue) &&
+      IsOnlyAttribute(sibling, aAttribute) )
+  {
+    // previous sib is already right kind of inline node; slide this over into it
+    res = MoveNode(node, sibling, -1);
+    return res;
+  }
+  sibling = nsnull;
+  GetNextHTMLSibling(node, address_of(sibling));
+  if (sibling && NodeIsType(sibling, aProperty) &&         
+      HasAttrVal(sibling, aAttribute, aValue) &&
+      IsOnlyAttribute(sibling, aAttribute) )
+  {
+    // following sib is already right kind of inline node; slide this over into it
+    res = MoveNode(node, sibling, 0);
+    return res;
+  }
+  
   // reparent the node inside inline node with appropriate {attribute,value}
   res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
   return res;
@@ -558,9 +580,9 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
 
   // then process the node itself
   if ( !aChildrenOnly && 
-       ((aProperty && NodeIsType(aNode, aProperty)) || // node is prop we asked for
+        (aProperty && NodeIsType(aNode, aProperty) || // node is prop we asked for
         (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(aNode))) || // but check for link (<a href=...)
-       (!aProperty && NodeIsProperty(aNode)) )        // or node is any prop and we asked for that
+        (!aProperty && NodeIsProperty(aNode)))  // or node is any prop and we asked for that
   {
     // if we weren't passed an attribute, then we want to 
     // remove any matching inlinestyles entirely
@@ -587,6 +609,13 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         }
       }
     }
+  }
+  
+  if ( aProperty == nsIEditProperty::font &&    // or node is big or small and we are setting font size
+       (NodeIsType(aNode, nsIEditProperty::big) || NodeIsType(aNode, nsIEditProperty::small)) &&
+       !Compare(*aAttribute,NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
+  {
+    res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
   return res;
 }
@@ -1405,7 +1434,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
-  
+
   // do we need to split the text node?
   PRUint32 textLen;
   aTextNode->GetLength(&textLen);
@@ -1427,8 +1456,94 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
     if (NS_FAILED(res)) return res;
   }
   
-  // reparent the node inside font node with appropriate relative size
+  // look for siblings that are correct type of node
+  nsCOMPtr<nsIDOMNode> sibling;
+  GetPriorHTMLSibling(node, address_of(sibling));
+  if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+  {
+    // previous sib is already right kind of inline node; slide this over into it
+    res = MoveNode(node, sibling, -1);
+    return res;
+  }
+  sibling = nsnull;
+  GetNextHTMLSibling(node, address_of(sibling));
+  if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+  {
+    // following sib is already right kind of inline node; slide this over into it
+    res = MoveNode(node, sibling, 0);
+    return res;
+  }
+  
+  // else reparent the node inside font node with appropriate relative size
   res = InsertContainerAbove(node, address_of(tmp), NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small"));
+  return res;
+}
+
+
+nsresult
+nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange, 
+                                        nsIDOMNode *aNode)
+{
+  /*  This routine looks for all the font nodes in the tree rooted by aNode,
+      including aNode itself, looking for font nodes that have the size attr
+      set.  Any such nodes need to have big or small put inside them, since
+      they override any big/small that are above them.
+  */
+  
+  // Can only change font size by + or - 1
+  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
+    return NS_ERROR_ILLEGAL_VALUE;
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_OK;
+  nsAutoString tag;
+  if (aSizeChange == 1) tag.AssignWithConversion("big");
+  else tag.AssignWithConversion("small");
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  PRInt32 j;
+  PRUint32 childCount;
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsAutoString attr;
+  attr.AssignWithConversion("size");
+  
+  // if this is a font node with size, put big/small inside it
+  if (NodeIsType(aNode, nsIEditProperty::font) && HasAttr(aNode, &attr))
+  {
+    // cycle through children and adjust relative font size
+    res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+    if (NS_FAILED(res)) return res;
+    if (childNodes)
+    {
+      childNodes->GetLength(&childCount);
+      for (j=childCount-1; j>=0; j--)
+      {
+        res = childNodes->Item(j, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(res)) && (childNode))
+        {
+          res = RelativeFontChangeOnNode(aSizeChange, childNode);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+    }
+  }
+
+  childNodes = nsnull;
+  // now cycle through the children.
+  res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(res)) return res;
+  if (childNodes)
+  {
+    childNodes->GetLength(&childCount);
+    for (j=childCount-1; j>=0; j--)
+    {
+      res = childNodes->Item(j, getter_AddRefs(childNode));
+      if ((NS_SUCCEEDED(res)) && (childNode))
+      {
+        res = RelativeFontChangeHelper(aSizeChange, childNode);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
   return res;
 }
 
@@ -1448,16 +1563,13 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   if (aSizeChange == 1) tag.Assign(NS_LITERAL_STRING("big"));
   else tag.Assign(NS_LITERAL_STRING("small"));
   
-  // is this node a text node?
-  if (IsTextNode(aNode))
-  {
-    res = InsertContainerAbove(aNode, address_of(tmp), tag);
-    return res;
-  }
   // is it the opposite of what we want?  
   if ( ((aSizeChange == 1) && nsHTMLEditUtils::IsSmall(aNode)) || 
        ((aSizeChange == -1) &&  nsHTMLEditUtils::IsBig(aNode)) )
   {
+    // first populate any nested font tags that have the size attr set
+    res = RelativeFontChangeHelper(aSizeChange, aNode);
+    if (NS_FAILED(res)) return res;
     // in that case, just remove this node and pull up the children
     res = RemoveContainer(aNode);
     return res;
@@ -1465,7 +1577,29 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   // can it be put inside a "big" or "small"?
   if (TagCanContain(tag, aNode))
   {
+    // first populate any nested font tags that have the size attr set
+    res = RelativeFontChangeHelper(aSizeChange, aNode);
+    if (NS_FAILED(res)) return res;
     // ok, chuck it in.
+    // first look at siblings of aNode for matching bigs or smalls.
+    // if we find one, move aNode into it.
+    nsCOMPtr<nsIDOMNode> sibling;
+    GetPriorHTMLSibling(aNode, address_of(sibling));
+    if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+    {
+      // previous sib is already right kind of inline node; slide this over into it
+      res = MoveNode(aNode, sibling, -1);
+      return res;
+    }
+    sibling = nsnull;
+    GetNextHTMLSibling(aNode, address_of(sibling));
+    if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+    {
+      // following sib is already right kind of inline node; slide this over into it
+      res = MoveNode(aNode, sibling, 0);
+      return res;
+    }
+    // else insert it above aNode
     res = InsertContainerAbove(aNode, address_of(tmp), tag);
     return res;
   }
@@ -1481,7 +1615,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     PRInt32 j;
     PRUint32 childCount;
     childNodes->GetLength(&childCount);
-    for (j=0 ; j < (PRInt32)childCount; j++)
+    for (j=childCount-1; j>=0; j--)
     {
       nsCOMPtr<nsIDOMNode> childNode;
       res = childNodes->Item(j, getter_AddRefs(childNode));

@@ -95,7 +95,8 @@ public:
     kOpInsertQuotation     = 3009,
     kOpSetTextProperty     = 3010,
     kOpRemoveTextProperty  = 3011,
-    kOpHTMLPaste           = 3012
+    kOpHTMLPaste           = 3012,
+    kOpHTMLLoad            = 3013
   };
 
 
@@ -139,6 +140,9 @@ public:
 
   NS_IMETHOD InsertHTML(const nsAReadableString &aInputString);
   NS_IMETHOD InsertHTMLWithCharset(const nsAReadableString& aInputString,
+                                   const nsAReadableString& aCharset);
+  NS_IMETHOD LoadHTML(const nsAReadableString &aInputString);
+  NS_IMETHOD LoadHTMLWithCharset(const nsAReadableString& aInputString,
                                    const nsAReadableString& aCharset);
   NS_IMETHOD RebuildDocumentFromSource(const nsAReadableString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
@@ -620,6 +624,8 @@ protected:
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset);
   nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
+                                     nsIDOMNode *aNode);
+  nsresult RelativeFontChangeHelper( PRInt32 aSizeChange, 
                                      nsIDOMNode *aNode);
 
   /* helper routines for inline style */
