@@ -66,15 +66,12 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
       mContent(aContent),
       mScriptObject(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_nsXULAttribute);
-
     NS_INIT_REFCNT();
     NS_IF_ADDREF(aName);
 }
 
 nsXULAttribute::~nsXULAttribute()
 {
-    MOZ_COUNT_DTOR(RDF_nsXULAttribute);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: nsXULAttribute\n", gInstanceCount);
