@@ -39,6 +39,7 @@
 #include "nsIInputStream.h"
 #include "nsIWebShell.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsISupportsArray.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -67,8 +68,9 @@ public:
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
-	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy);
-	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl);
+	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy, PRBool &isInboxConnection);
+	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl,
+                            PRBool & hasToWait);
 	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(nsIEventQueue **aEventQueue);
     // Notify FE Event has been completed
