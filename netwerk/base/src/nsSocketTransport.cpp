@@ -1648,7 +1648,7 @@ nsSocketTransport::OnFull(nsIOutputStream* out)
     // transport from the select list until the consumer can 
     // make room... 
     // 
-    if (out == mReadPipeOut) 
+    if (out == mReadPipeOut.get()) 
     {
         // Enter the socket transport lock...
         nsAutoMonitor mon(mMonitor);
@@ -1681,7 +1681,7 @@ nsSocketTransport::OnWrite(nsIOutputStream* out, PRUint32 aCount)
   // was waiting to write some data to the network, then add it to the 
   // select list... 
   // 
-  if (out == mWritePipeOut) {
+  if (out == mWritePipeOut.get()) {
     // Enter the socket transport lock...
     nsAutoMonitor mon(mMonitor);
 
@@ -1713,7 +1713,7 @@ nsSocketTransport::OnEmpty(nsIInputStream* in)
   // The consumer has emptied the pipe...  If the transport was waiting 
   // for room in the pipe, then put it back on the select list... 
   // 
-  if (in == mReadPipeIn) {
+  if (in == mReadPipeIn.get()) {
     // Enter the socket transport lock... 
     nsAutoMonitor mon(mMonitor); 
   
