@@ -248,7 +248,7 @@ nsresult nsCharsetConverterManager::CreateMapping()
   // XXX take these KONSTANTS out of here
   // XXX check return values, free stuff
   // XXX bit hacky, clean me up
-  while (!components -> IsDone()) {
+  while (NS_OK != components -> IsDone()) {
     nsISupports * base;
     res = components -> CurrentItem(&base);
     if (NS_SUCCEEDED(res)) {

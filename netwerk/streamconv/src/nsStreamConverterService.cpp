@@ -116,7 +116,7 @@ nsStreamConverterService::BuildGraph() {
 
     // go ahead and enumerate through.
     rv = components->First();
-    while (NS_SUCCEEDED(rv) && !components->IsDone()) {
+    while (NS_SUCCEEDED(rv) && (NS_OK != components->IsDone())) {
         nsISupports *base = nsnull;
 
         rv = components->CurrentItem(&base);

@@ -327,7 +327,7 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
          &&
          NS_SUCCEEDED( ( rv = components->First() ) ) ) {
         // Enumerate all subtrees
-        while ( NS_SUCCEEDED( rv ) && !components->IsDone() ) {
+        while ( NS_SUCCEEDED( rv ) && (NS_OK != components->IsDone()) ) {
             nsISupports *base;
             
             rv = components->CurrentItem( &base );

@@ -213,7 +213,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (NS_FAILED(rv)) return rv;
 
     rv = dllEnum->First();
-    for (; NS_SUCCEEDED(rv) && !dllEnum->IsDone(); (rv = dllEnum->Next()))
+    for (; NS_SUCCEEDED(rv) && (dllEnum->IsDone() != NS_OK); (rv = dllEnum->Next()))
     {
         nsCOMPtr<nsISupports> base;
         rv = dllEnum->CurrentItem(getter_AddRefs(base));
