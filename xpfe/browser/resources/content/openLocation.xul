@@ -1,7 +1,29 @@
 <?xml version="1.0"?> 
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): ______________________________________. -->
+
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
  
-<!DOCTYPE window> 
+
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/openLocation.dtd" >
             
  
 <window
@@ -26,21 +48,21 @@
 		
 			<box align="vertical" style="margin-bottom: 1em;">	
 				<html:div flex="100%">
-					Enter the World Wide Web location (URL) you would like to open or
+					&enter.label;
 				</html:div>
 				<html:div style="width: 100%; margin-bottom: 0.5em;">
-					use the Choose File... button to select a local file:
+					&choose.label;
 				</html:div>
 			</box>
 			
 			<box align="horizontal"  flex="100%">
 				<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
-            <titledbutton onclick="choose()" value="Choose File..."/>
+            <titledbutton onclick="choose()" value="&chooseFile.label;"/>
 			</box>
 			
 			<box align="horizontal"  flex="100%" style="margin-bottom: 1em; width: 100%;">
 				<html:input type="checkbox" id="dialog.newWindow"/>
-            	<html:label for="dialog.newWindow">Open in new window</html:label>
+            	<html:label for="dialog.newWindow">&openWin.label;</html:label>
            		<spring flex="100%"/> 
 			</box>
 			
@@ -50,8 +72,8 @@
 				
 				<spring flex="100%"/>
 				
-				<titledbutton id="dialog.ok" value="OK" onclick="open()"/>
-            	<titledbutton id="dialog.cancel" value="Cancel" onclick="cancel()"/>
+				<titledbutton id="dialog.ok" value="&ok.label;" onclick="open()"/>
+            	<titledbutton id="dialog.cancel" value="&cancel.label;" onclick="cancel()"/>
 				
 				<spring flex="100%"/>
 				
