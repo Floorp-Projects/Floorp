@@ -350,6 +350,8 @@ CK_OBJECT_HANDLE * PK11_FindObjectsFromNickname(char *nickname,
 								void *wincx);
 PK11SlotInfo *PK11_KeyForCertExists(CERTCertificate *cert,
 					CK_OBJECT_HANDLE *keyPtr, void *wincx);
+PK11SlotInfo *PK11_KeyForDERCertExists(SECItem *derCert,
+					CK_OBJECT_HANDLE *keyPtr, void *wincx);
 CK_OBJECT_HANDLE PK11_MatchItem(PK11SlotInfo *slot,CK_OBJECT_HANDLE peer,
 						CK_OBJECT_CLASS o_class); 
 CERTCertificate * PK11_FindCertByIssuerAndSN(PK11SlotInfo **slot,
