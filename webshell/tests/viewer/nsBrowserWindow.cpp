@@ -1973,19 +1973,19 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
 
   for (i = 0; i < n; i++) {
     nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
-    nsCOMPtr<nsIWebShell> ws;
+    nsCOMPtr<nsIWebShell> webShell;
     
-    if (NS_OK == bw->GetWebShell(*getter_AddRefs(ws))) {
+    if (NS_OK == bw->GetWebShell(*getter_AddRefs(webShell))) {
       const PRUnichar *name;
-      if (NS_OK == ws->GetName(&name)) {
+      if (NS_OK == webShell->GetName(&name)) {
         if (aNameStr.Equals(name)) {
-          aResult = ws;
+          aResult = webShell;
           NS_ADDREF(aResult);
           return NS_OK;
         }
       }      
 
-      if (NS_OK == ws->FindChildWithName(aName, aResult)) {
+      if (NS_OK == webShell->FindChildWithName(aName, aResult)) {
         if (nsnull != aResult) {
           return NS_OK;
         }
@@ -2785,6 +2785,115 @@ nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
 //----------------------------------------------------------------------
 
 #include "nsISizeOfHandler.h"
+#include "nsQuickSort.h"
+
+struct SizeReportEntry {
+  nsIAtom* mKey;
+  PRUint32 mCount;
+  PRUint32 mTotalSize;
+  PRUint32 mMinSize;
+  PRUint32 mMaxSize;
+};
+
+static void
+GatherSizeReportData(nsISizeOfHandler* aHandler,
+                     nsIAtom* aKey,
+                     PRUint32 aCount,
+                     PRUint32 aTotalSize,
+                     PRUint32 aMinSize,
+                     PRUint32 aMaxSize,
+                     void* arg)
+{
+  if (aKey) {
+    nsVoidArray* array = (nsVoidArray*) arg;
+    SizeReportEntry* entry = new SizeReportEntry();
+    entry->mKey = aKey;
+    entry->mCount = aCount;
+    entry->mTotalSize = aTotalSize;
+    entry->mMinSize = aMinSize;
+    entry->mMaxSize = aMaxSize;
+    array->AppendElement((void*) entry);
+  }
+}
+
+static int CompareEntries(const void* ve1, const void* ve2, void* closure)
+{
+  SizeReportEntry* e1 = (SizeReportEntry*) ve1;
+  SizeReportEntry* e2 = (SizeReportEntry*) ve2;
+  if (e1->mKey == e2->mKey) {
+    return 0;
+  }
+  nsAutoString k1, k2;
+  e1->mKey->ToString(k1);
+  e2->mKey->ToString(k2);
+  if (k1 < k2) {
+    return -1;
+  }
+  return 1;
+}
+
+static SizeReportEntry*
+SortFrameSizeList(nsVoidArray& sizeReportData)
+{
+  // Convert data in void array into a real array, freeing the old data
+  PRInt32 i, count = sizeReportData.Count();
+  SizeReportEntry* all = new SizeReportEntry[count];
+  SizeReportEntry* to = all;
+  for (i = 0; i < count; i++) {
+    SizeReportEntry* e = (SizeReportEntry*) sizeReportData[i];
+    *to = *e;
+    to++;
+    sizeReportData.ReplaceElementAt(nsnull, i);
+    delete e;
+  }
+
+  // Now sort the array
+  NS_QuickSort(all, count, sizeof(SizeReportEntry), CompareEntries, nsnull);
+
+  return all;
+}
+
+static void ShowReport(FILE* out, nsISizeOfHandler* aHandler)
+{
+  nsVoidArray sizeReportData;
+  aHandler->Report(GatherSizeReportData, (void*) &sizeReportData);
+
+  if (sizeReportData.Count()) {
+    PRInt32 count = sizeReportData.Count();
+    SizeReportEntry* entries = SortFrameSizeList(sizeReportData);
+
+    // Display headers
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "Frame Type", "Count", "TotalSize",
+            "MinSize", "MaxSize", "AvgSize");
+    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
+            "----------", "-----", "---------",
+            "-------", "-------", "-------");
+
+    SizeReportEntry* entry = entries;
+    SizeReportEntry* end = entries + count;
+    for (; entry < end; entry++) {
+      nsAutoString type;
+      entry->mKey->ToString(type);
+      char cbuf[20];
+      type.ToCString(cbuf, sizeof(cbuf));
+
+      fprintf(out, "%-20s %5d %9d %7d %7d %7d\n",
+              cbuf, entry->mCount, entry->mTotalSize,
+              entry->mMinSize, entry->mMaxSize,
+              entry->mCount ? entry->mTotalSize / entry->mCount : 0);
+    }
+    delete entries;
+
+    // Display totals and trailer
+    PRUint32 totalCount, totalSize;
+    aHandler->GetTotals(&totalCount, &totalSize);
+    fprintf(out, "%-20s %5d %9d\n",
+            "*** Total ***", totalCount, totalSize);
+  }
+}
+
+//----------------------------------------
 
 static void
 GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
@@ -2841,28 +2950,6 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
   }
 }
 
-static void
-DumpSizeData(nsISizeOfHandler* aHandler,
-             nsIAtom* aKey,
-             PRUint32 aCount,
-             PRUint32 aTotalSize,
-             PRUint32 aMinSize,
-             PRUint32 aMaxSize,
-             void* arg)
-{
-  if (aKey) {
-    FILE* out = (FILE*) arg;
-    nsAutoString type;
-    aKey->ToString(type);
-    char cbuf[20];
-    type.ToCString(cbuf, sizeof(cbuf));
-
-    fprintf(out, "%-20s %5d %9d %7d %7d %7d\n",
-            cbuf, aCount, aTotalSize, aMinSize, aMaxSize,
-            aCount ? aTotalSize / aCount : 0);
-  }
-}
-
 void
 nsBrowserWindow::ShowFrameSize(FILE* out)
 {
@@ -2870,17 +2957,7 @@ nsBrowserWindow::ShowFrameSize(FILE* out)
   nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && handler) {
     GatherFrameDataSizes(handler, mWebShell);
-    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
-            "Frame Type", "Count", "TotalSize",
-            "MinSize", "MaxSize", "AvgSize");
-    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
-            "----------", "-----", "---------",
-            "-------", "-------", "-------");
-    handler->Report(DumpSizeData, (void*) out);
-    PRUint32 totalCount, totalSize;
-    handler->GetTotals(&totalCount, &totalSize);
-    fprintf(out, "%-20s %5d %9d\n",
-            "*** Total ***", totalCount, totalSize);
+    ShowReport(out, handler);
   }
 }
 
@@ -3084,17 +3161,7 @@ nsBrowserWindow::ShowContentSize(FILE* out)
   nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && handler) {
     GatherContentDataSizes(handler, mWebShell);
-    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
-            "Content Type", "Count", "TotalSize",
-            "MinSize", "MaxSize", "AvgSize");
-    fprintf(out, "%-20s %-5s %-9s %-7s %-7s %-7s\n",
-            "----------", "-----", "---------",
-            "-------", "-------", "-------");
-    handler->Report(DumpSizeData, (void*) out);
-    PRUint32 totalCount, totalSize;
-    handler->GetTotals(&totalCount, &totalSize);
-    fprintf(out, "%-20s %5d %9d\n",
-            "*** Total ***", totalCount, totalSize);
+    ShowReport(out, handler);
   }
 }
 
