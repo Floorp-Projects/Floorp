@@ -376,9 +376,9 @@ wallet_Dump(nsVoidArray * list) {
     ptr->item2->ToCString(item2, 100);
     fprintf(stdout, "%s %s \n", item1, item2);
     wallet_Sublist * ptr1;
-    PRInt32 count = LIST_COUNT(ptr->itemList);
-    for (PRInt32 i=0; i<count; i++) {
-      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
+    PRInt32 count2 = LIST_COUNT(ptr->itemList);
+    for (PRInt32 i2=0; i2<count2; i2++) {
+      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
       ptr1->item->ToCString(item, 100);
       fprintf(stdout, "     %s \n", item);
     }
@@ -933,9 +933,9 @@ wallet_Clear(nsVoidArray ** list) {
     delete ptr->item1;
     delete ptr->item2;
     wallet_Sublist * ptr1;
-    PRInt32 count = LIST_COUNT(ptr->itemList);
-    for (PRInt32 i=0; i<count; i++) {
-      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
+    PRInt32 count2 = LIST_COUNT(ptr->itemList);
+    for (PRInt32 i2=0; i2<count2; i2++) {
+      ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
       delete ptr1->item;
     }
     delete ptr->itemList;
@@ -1122,10 +1122,10 @@ wallet_KeySize() {
   if (!strm.is_open()) {
     return -1;
   } else {
-    char c = strm.get();
-    PRInt32 rv = (strm.eof() ? 0 : 1);
+    strm.get();
+    PRInt32 ret = (strm.eof() ? 0 : 1);
     strm.close();
-    return rv;
+    return ret;
   }
 }
 
@@ -1365,9 +1365,9 @@ wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
       }
     } else {
       wallet_Sublist * ptr1;
-      PRInt32 count = LIST_COUNT(ptr->itemList);
-      for (PRInt32 i=0; i<count; i++) {
-        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
+      PRInt32 count2 = LIST_COUNT(ptr->itemList);
+      for (PRInt32 j=0; j<count2; j++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(j));
         if (NS_FAILED(wallet_PutLine(strm, *ptr->item1, obscure))) {
           break;
         }
@@ -1517,12 +1517,12 @@ wallet_ReadFromURLFieldToSchemaFile
     }
 
     nsVoidArray * itemList = new nsVoidArray();
-    nsAutoString * dummy = new nsAutoString("");
-    if (!dummy) {
+    nsAutoString * dummyString = new nsAutoString("");
+    if (!dummyString) {
       strm.close();
       return;
     }
-    wallet_WriteToList(*aItem, *dummy, itemList, list, placement);
+    wallet_WriteToList(*aItem, *dummyString, itemList, list, placement);
 
     for (;;) {
       nsAutoString * aItem1;
@@ -1545,8 +1545,8 @@ wallet_ReadFromURLFieldToSchemaFile
         return;
       }
 
-      nsVoidArray* dummy = NULL;
-      wallet_WriteToList(*aItem1, *aItem2, dummy, itemList, placement);
+      nsVoidArray* dummyList = NULL;
+      wallet_WriteToList(*aItem1, *aItem2, dummyList, itemList, placement);
 
       nsAutoString * aItem3;
       if (NS_FAILED(wallet_GetLine(strm, aItem3, PR_FALSE))) {
@@ -1978,7 +1978,7 @@ PUBLIC void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 {
   char *buffer = (char*)PR_Malloc(BUFLEN3);
-  int g = 0, prefillNum = 0;
+  int g = 0;
   wallet_PrefillElement * ptr;
   buffer[0] = '\0';
   char * schema;
@@ -2351,10 +2351,11 @@ WLLT_PreEdit(nsAutoString& walletList) {
       walletList += *(ptr->item2) + BREAK;
     } else {
       wallet_Sublist * ptr1;
-      PRInt32 count = LIST_COUNT(ptr->itemList);
-      for (PRInt32 i=0; i<count; i++) {
-        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i));
+      PRInt32 count2 = LIST_COUNT(ptr->itemList);
+      for (PRInt32 i2=0; i2<count2; i2++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
         walletList += *(ptr1->item) + BREAK;
+
       }
     }
     walletList += BREAK;
@@ -2761,9 +2762,9 @@ WLLT_OnSubmit(nsIContent* formNode) {
       if (wallet_GetFormsCapturingPref() && (count>=3) && wallet_OKToCapture(URLName)) {
 
         /* conditions all met, now save it */
-        for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+        for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
           nsIDOMNode* elementNode = nsnull;
-          elements->Item(elementX, &elementNode);
+          elements->Item(elementY, &elementNode);
           if (nsnull != elementNode) {
             nsIDOMHTMLInputElement* inputElement;  
             result =

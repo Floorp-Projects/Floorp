@@ -647,14 +647,14 @@ si_StripLF(char* buffer) {
 /* If user-entered password is "********", then generate a random password */
 PRIVATE void
 si_Randomize(char * password) {
-  PRIntervalTime random;
+  PRIntervalTime randomNumber;
   int i;
   const char * hexDigits = "0123456789AbCdEf";
   if (PL_strcmp(password, "********") == 0) {
-    random = PR_IntervalNow();
+    randomNumber = PR_IntervalNow();
     for (i=0; i<8; i++) {
-      password[i] = hexDigits[random%16];
-      random = random/16;
+      password[i] = hexDigits[randomNumber%16];
+      randomNumber = randomNumber/16;
     }
   }
 }
@@ -752,8 +752,8 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
     for (PRInt32 i=0; i<userCount; i++) {
       user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      for (PRInt32 ii=0; ii<dataCount; ii++) {
+        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(ii));
         if (PL_strcmp(data->value, userName)==0) {
           goto foundUser;
         }
@@ -766,8 +766,8 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
 
   /* free the items in the data list */
   PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-  for (PRInt32 i=0; i<dataCount; i++) {
-    data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+  for (PRInt32 j=0; j<dataCount; j++) {
+    data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(j));
     PR_Free(data->name);
     PR_Free(data->value);
   }
@@ -821,8 +821,8 @@ si_CheckForUser(char *URLName, char *userName) {
   for (PRInt32 i=0; i<userCount; i++) {
     user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+    for (PRInt32 ii=0; ii<dataCount; ii++) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(ii));
       if (PL_strcmp(data->value, userName)==0) {
         si_unlock_signon_list();
         return PR_TRUE;
@@ -994,8 +994,8 @@ si_GetURLAndUserForChangeForm(char* password)
   for (PRInt32 i=0; i<urlCount; i++) {
     url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
     PRInt32 userCount = LIST_COUNT(url->signonUser_list);
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+    for (PRInt32 ii=0; ii<userCount; ii++) {
+      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(ii));
       user_count++;
     }
   }
@@ -1212,12 +1212,10 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
-  int j;
   PRBool mismatch;
-  int i;
 
   /* discard this if the password is empty */
-  for (i=0; i<submit->value_cnt; i++) {
+  for (PRInt32 i=0; i<submit->value_cnt; i++) {
     if ((((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD) &&
         (!((char **)(submit->value_array))[i] ||
         !PL_strlen( ((char **)(submit->value_array)) [i])) ) {
@@ -1283,11 +1281,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     /* add it to the list in alphabetical order */
     si_SignonURLStruct * tmp_URL;
     PRInt32 urlCount = LIST_COUNT(si_signon_list);
-    for (PRInt32 i = 0; i<urlCount; ++i) {
-      tmp_URL = NS_STATIC_CAST(si_SignonURLStruct *, si_signon_list->ElementAt(i));
+    for (PRInt32 ii = 0; ii<urlCount; ++ii) {
+      tmp_URL = NS_STATIC_CAST(si_SignonURLStruct *, si_signon_list->ElementAt(ii));
       if (tmp_URL) {
         if (PL_strcasecmp(url->URLName, tmp_URL->URLName)<0) {
-          si_signon_list->InsertElementAt(url, i);
+          si_signon_list->InsertElementAt(url, ii);
           added_to_list = PR_TRUE;
           break;
         }
@@ -1312,7 +1310,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   PRInt32 userCount = LIST_COUNT(url->signonUser_list);
   for (PRInt32 i2=0; i2<userCount; i2++) {
     user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
-    j = 0;
+    PRInt32 j = 0;
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
     for (PRInt32 i=0; i<dataCount; i++) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
@@ -1425,11 +1423,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
   }
 
   /* create and fill in data nodes for new user node */
-  for (j=0; j<submit->value_cnt; j++) {
+  for (PRInt32 k=0; k<submit->value_cnt; k++) {
 
     /* skip non text/password fields */
-    if((((uint8*)submit->type_array)[j]!=FORM_TYPE_TEXT) &&
-        (((uint8*)submit->type_array)[j]!=FORM_TYPE_PASSWORD)) {
+    if((((uint8*)submit->type_array)[k]!=FORM_TYPE_TEXT) &&
+        (((uint8*)submit->type_array)[k]!=FORM_TYPE_PASSWORD)) {
       continue;
     }
 
@@ -1439,13 +1437,13 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
       delete user->signonData_list;
       PR_Free(user);
     }
-    data->isPassword = (((uint8 *)submit->type_array)[j] == FORM_TYPE_PASSWORD);
+    data->isPassword = (((uint8 *)submit->type_array)[k] == FORM_TYPE_PASSWORD);
     name = 0; /* so that StrAllocCopy doesn't free previous name */
-    StrAllocCopy(name, ((char **)submit->name_array)[j]);
+    StrAllocCopy(name, ((char **)submit->name_array)[k]);
     data->name = name;
     value = 0; /* so that StrAllocCopy doesn't free previous name */
-    if (submit->value_array[j]) {
-      StrAllocCopy(value, ((char **)submit->value_array)[j]);
+    if (submit->value_array[k]) {
+      StrAllocCopy(value, ((char **)submit->value_array)[k]);
     } else {
       StrAllocCopy(value, ""); /* insures that value is not null */
     }
@@ -1631,21 +1629,21 @@ SI_LoadSignonData(PRBool fullLoad) {
       /* line just read is the name part */
 
       /* save the name part and determine if it is a password */
-      PRBool rv;
+      PRBool ret;
       si_StripLF(buffer);
       name_array[submit.value_cnt] = NULL;
       if (buffer[0] == '*') {
         type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
         StrAllocCopy(name_array[submit.value_cnt], buffer+1);
-        rv = si_ReadLine(strm, strmx, buffer, fullLoad);
+        ret = si_ReadLine(strm, strmx, buffer, fullLoad);
       } else {
         type_array[submit.value_cnt] = FORM_TYPE_TEXT;
         StrAllocCopy(name_array[submit.value_cnt], buffer);
-        rv = si_ReadLine(strm, strmx, buffer, FALSE);
+        ret = si_ReadLine(strm, strmx, buffer, FALSE);
       }
 
       /* read in and save the value part */
-      if(NS_FAILED(rv)) {
+      if(!ret) {
         /* error in input file so give up */
         badInput = PR_TRUE;
         break;
@@ -1801,19 +1799,19 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   /* write out each URL node */
   if((si_signon_list)) {
     PRInt32 urlCount = LIST_COUNT(si_signon_list);
-    for (PRInt32 i=0; i<urlCount; i++) {
-      url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
+    for (PRInt32 i2=0; i2<urlCount; i2++) {
+      url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i2));
 
       /* write out each user node of the URL node */
       PRInt32 userCount = LIST_COUNT(url->signonUser_list);
-      for (PRInt32 i=0; i<userCount; i++) {
-        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+      for (PRInt32 i3=0; i3<userCount; i3++) {
+        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
         si_WriteLine(strm, strmx, url->URLName, FALSE);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-        for (PRInt32 i=0; i<dataCount; i++) {
-          data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+        for (PRInt32 i4=0; i4<dataCount; i4++) {
+          data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
           if (data->isPassword) {
             si_WriteChar(strm, '*');
             si_WriteLine(strm, strmx, data->name, FALSE);
@@ -1868,7 +1866,6 @@ SI_SaveSignonData() {
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
 si_OkToSave(char *URLName, char *userName) {
-  PRBool remember_checked = PR_TRUE;
   char *strippedURLName = 0;
 
   /* if url/user already exists, then it is safe to save it again */
@@ -1919,7 +1916,6 @@ PUBLIC void
 SINGSIGN_RememberSignonData
        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
-  int i, j;
   int passwordCount = 0;
   int pswd[3];
 
@@ -1935,7 +1931,7 @@ SINGSIGN_RememberSignonData
   }
 
   /* determine how many passwords are in the form and where they are */
-  for (i=0; i<submit.value_cnt; i++) {
+  for (PRInt32 i=0; i<submit.value_cnt; i++) {
     if (((uint8 *)submit.type_array)[i] == FORM_TYPE_PASSWORD) {
       if (passwordCount < 3 ) {
         pswd[passwordCount] = i;
@@ -1949,6 +1945,7 @@ SINGSIGN_RememberSignonData
     /* one-password form is a log-in so remember it */
 
     /* obtain the index of the first input field (that is the username) */
+    PRInt32 j;
     for (j=0; j<submit.value_cnt; j++) {
       if (((uint8 *)submit.type_array)[j] == FORM_TYPE_TEXT) {
         break;
@@ -1995,8 +1992,8 @@ SINGSIGN_RememberSignonData
       return;
     }
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+    for (PRInt32 k=0; k<dataCount; k++) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(k));
       if (data->isPassword) {
         break;
       }
@@ -2510,8 +2507,8 @@ SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
   for (PRInt32 i=0; i<urlCount; i++) {
     url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
     PRInt32 userCount = LIST_COUNT(url->signonUser_list);
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+    for (PRInt32 j=0; j<userCount; j++) {
+      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(j));
 
       /* first data item for user is the username */
       data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
