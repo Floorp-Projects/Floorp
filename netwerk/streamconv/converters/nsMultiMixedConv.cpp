@@ -353,8 +353,8 @@ nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
 
     *aReturn = mMultipartChannel;
     NS_IF_ADDREF(*aReturn);
+    return NS_OK;
 }
-
 
 
 // nsISupports implementation
