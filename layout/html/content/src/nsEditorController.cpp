@@ -46,9 +46,9 @@ nsEditorController::nsEditorController()
   mCutString    = "cmd_cut";
   mCopyString   = "cmd_copy";
   mPasteString  = "cmd_paste";
+
   mDeleteString = "cmd_delete";
   mSelectAllString = "cmd_selectAll";
-
   mBeginLineString = "cmd_beginLine";
   mEndLineString   = "cmd_endLine";
   mSelectBeginLineString = "cmd_selectBeginLine";
@@ -85,6 +85,12 @@ nsEditorController::nsEditorController()
   mMovePageDown  = "cmd_scrollPageDown";
   mSelectMovePageUp     = "cmd_selectPageUp";
   mSelectMovePageDown   = "cmd_selectPageDown";
+
+  mDeleteCharBackward = "cmd_deleteCharBackward";
+  mDeleteCharForward = "cmd_deleteCharForward";
+  mDeleteWordBackward = "cmd_deleteWordBackward";
+  mDeleteWordForward = "cmd_deleteWordForward";
+  mDeleteToEndOfLine = "cmd_deleteToEndOfLine";
 }
 
 nsEditorController::~nsEditorController()
@@ -193,6 +199,11 @@ NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRB
       (PR_TRUE==mCopyString.Equals(aCommand)) ||
       (PR_TRUE==mPasteString.Equals(aCommand)) ||
       (PR_TRUE==mDeleteString.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteCharForward.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteCharBackward.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteWordForward.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteWordBackward.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteToEndOfLine.Equals(aCommand)) ||
       (PR_TRUE==mSelectAllString.Equals(aCommand)) ||
       (PR_TRUE==mBeginLineString.Equals(aCommand)) ||
       (PR_TRUE==mEndLineString.Equals(aCommand)) ||
@@ -270,6 +281,33 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   { 
     NS_ENSURE_SUCCESS(editor->SelectAll(), NS_ERROR_FAILURE);
   }
+
+  else if (PR_TRUE==mDeleteCharForward.Equals(aCommand))
+  {
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNext),
+                      NS_ERROR_FAILURE);
+  }
+  else if (PR_TRUE==mDeleteCharBackward.Equals(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::ePrevious),
+                      NS_ERROR_FAILURE);
+  }
+  else if (PR_TRUE==mDeleteWordForward.Equals(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNextWord),
+                      NS_ERROR_FAILURE);
+  }
+  else if (PR_TRUE==mDeleteWordBackward.Equals(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::ePreviousWord),
+                      NS_ERROR_FAILURE);
+  }
+  else if (PR_TRUE==mDeleteToEndOfLine.Equals(aCommand))
+  { 
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eToEndOfLine),
+                      NS_ERROR_FAILURE);
+  }
+
   else if (PR_TRUE==mScrollTopString.Equals(aCommand))    //ScrollTOP
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);

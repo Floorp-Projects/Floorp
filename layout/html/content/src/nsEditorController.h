@@ -105,6 +105,12 @@ protected:
   nsString mSelectMovePageUp;
   nsString mSelectMovePageDown;
 
+  nsString mDeleteCharBackward;
+  nsString mDeleteCharForward;
+  nsString mDeleteWordBackward;
+  nsString mDeleteWordForward;
+  nsString mDeleteToEndOfLine;
+
 protected:
    nsIHTMLContent* mContent;    // weak reference, the content object owns this object
 };
