@@ -79,6 +79,8 @@ static gboolean key_release_event_cb      (GtkWidget *widget,
 static gboolean scroll_event_cb           (GtkWidget *widget,
 					   GdkEventScroll *event);
 
+static PRBool gJustGotActivate = PR_FALSE;
+
 nsWindow::nsWindow()
 {
   mFocusChild          = nsnull;
@@ -283,10 +285,21 @@ nsWindow::SetFocus(PRBool aRaise)
     return NS_ERROR_FAILURE;
 
   if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
+
+    LOG(("grabbing focus for the toplevel\n"));
     owningWindow->mContainerBlockFocus = PR_TRUE;
     gtk_widget_grab_focus(owningWidget);
     owningWindow->mContainerBlockFocus = PR_FALSE;
+
     DispatchGotFocusEvent();
+
+    // unset the activate flag
+    if (gJustGotActivate) {
+      gJustGotActivate = PR_FALSE;
+      DispatchActivateEvent();
+    }
+
+    return NS_OK;
   }
 
   // Raise the window if someone passed in PR_TRUE and the prefs are
@@ -310,8 +323,15 @@ nsWindow::SetFocus(PRBool aRaise)
   // focus flag and dispatch a GOTFOCUS event.
   owningWindow->mFocusChild = this;
   mHasFocus = PR_TRUE;
+
   DispatchGotFocusEvent();
 
+  // make sure to unset the activate flag and send an activate event
+  if (gJustGotActivate) {
+    gJustGotActivate = PR_FALSE;
+    DispatchActivateEvent();
+  }
+  
   return NS_OK;
 }
 
@@ -889,11 +909,11 @@ nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
   if (mContainerBlockFocus)
     return;
 
+  if (mIsTopLevel)
+    gJustGotActivate = PR_TRUE;
+
   // dispatch a got focus event
   DispatchGotFocusEvent();
-
-  // dispatch an ACTIVATE event
-  DispatchActivateEvent();
 }
 
 void
