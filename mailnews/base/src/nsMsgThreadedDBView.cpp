@@ -61,9 +61,6 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
   nsresult rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, aTreatRecipientAsAuthor, pCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (viewFlags & nsMsgViewFlagsType::kDeferPopulatingView)
-    return NS_OK;
-
   // Preset msg hdr cache size for performance reason.
   if (m_db)
   {
@@ -99,60 +96,6 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
 NS_IMETHODIMP nsMsgThreadedDBView::Close()
 {
   return nsMsgDBView::Close();
-}
-
-NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
-{
-  mIsSearchView = PR_FALSE;
-  m_viewFlags &= ~nsMsgViewFlagsType::kDeferPopulatingView; //clearing out this flag, only used to load folder w/ quick search view
-  m_searchSession = nsnull;
-  m_sortValid = PR_FALSE;  //force a sort
-  nsresult rv = NS_OK;
-  nsMsgKeyArray preservedSelection;
-  SaveAndClearSelection(&preservedSelection);  
-
-  // restore saved id array and flags array
-  // first, remove all the search hits
-  PRInt32 oldSize = GetSize();
-  m_keys.RemoveAll();
-  m_flags.RemoveAll();
-  m_levels.RemoveAll();
-
-  // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(0, -oldSize);
-
-  if (m_preSearchKeys.GetSize())
-  {
-    m_keys.InsertAt(0, &m_preSearchKeys);
-    m_flags.InsertAt(0, &m_preSearchFlags);
-    m_levels.InsertAt(0, &m_preSearchLevels);
-    ClearPreSearchInfo();
-    ClearPrevIdArray();  // previous cached info about non threaded display is not useful
-    Sort(m_sortType, m_sortOrder);
-  }
-  else
-  {
-    rv = InitThreadedView(nsnull);
-  }
-
-  // now, account for adding all the pre search items back.
-  // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(0, GetSize());
-
-  RestoreSelection(&preservedSelection);
-
-  if (preservedSelection.GetSize() == 0)
-  {
-    nsMsgViewIndex resultIndex;
-    nsMsgKey resultKey;
-    nsMsgViewIndex threadIndex;
-    ViewNavigate(nsMsgNavigationType::firstNew, &resultKey, &resultIndex, &threadIndex, PR_TRUE);
-    if (mTree && resultKey != nsMsgKey_None && resultIndex != nsMsgViewIndex_None)
-        mTree->EnsureRowIsVisible(resultIndex);
-  }
-  return rv;
 }
 
 nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
@@ -460,7 +403,6 @@ void	nsMsgThreadedDBView::OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extr
 {
   if (IsValidIndex(index))
   {
-    UpdatePreSearchFlagInfo(index, extraFlag);
     if (m_havePrevView)
     {
       nsMsgKey keyChanged = m_keys[index];
@@ -469,7 +411,18 @@ void	nsMsgThreadedDBView::OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extr
       {
         PRUint32 prevFlag = m_prevFlags.GetAt(prevViewIndex);
         // don't want to change the elided bit, or has children or is thread
-        UpdateCachedFlag(prevFlag, &extraFlag);
+        if (prevFlag & MSG_FLAG_ELIDED)
+          extraFlag |= MSG_FLAG_ELIDED;
+        else
+          extraFlag &= ~MSG_FLAG_ELIDED;
+        if (prevFlag & MSG_VIEW_FLAG_ISTHREAD)
+          extraFlag |= MSG_VIEW_FLAG_ISTHREAD;
+        else
+          extraFlag &= ~MSG_VIEW_FLAG_ISTHREAD;
+        if (prevFlag & MSG_VIEW_FLAG_HASCHILDREN)
+          extraFlag |= MSG_VIEW_FLAG_HASCHILDREN;
+        else
+          extraFlag &= ~MSG_VIEW_FLAG_HASCHILDREN;
         m_prevFlags.SetAt(prevViewIndex, extraFlag);	// will this be right?
       }
     }
@@ -481,45 +434,9 @@ void	nsMsgThreadedDBView::OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extr
     m_sortValid = PR_FALSE;
 }
 
-void nsMsgThreadedDBView::UpdatePreSearchFlagInfo(nsMsgViewIndex index, PRUint32 extraFlag)
-{
-  if (mIsSearchView)
-  { 
-    nsMsgKey keyChanged = m_keys[index];
-    nsMsgViewIndex preSearchViewIndex = m_preSearchKeys.FindIndex(keyChanged);
-    if (preSearchViewIndex != nsMsgViewIndex_None)
-    {
-      PRUint32 preSearchFlag = m_preSearchFlags.GetAt(preSearchViewIndex);
-      UpdateCachedFlag(preSearchFlag, &extraFlag);
-      // don't want to change the elided bit, or has children or is thread
-      m_preSearchFlags.SetAt(preSearchViewIndex, extraFlag);
-    }
-  }
-}
-
-void nsMsgThreadedDBView::UpdateCachedFlag(PRUint32 aFlag, PRUint32 *extraFlag)
-{
-  NS_ASSERTION(extraFlag,"extraFlag is null");
-  if(!extraFlag)
-    return;
-  if (aFlag & MSG_FLAG_ELIDED)
-    *extraFlag |= MSG_FLAG_ELIDED;
-  else
-    *extraFlag &= ~MSG_FLAG_ELIDED;
-  if (aFlag & MSG_VIEW_FLAG_ISTHREAD)
-    *extraFlag |= MSG_VIEW_FLAG_ISTHREAD;
-  else
-    *extraFlag &= ~MSG_VIEW_FLAG_ISTHREAD;
-  if (aFlag & MSG_VIEW_FLAG_HASCHILDREN)
-    *extraFlag |= MSG_VIEW_FLAG_HASCHILDREN;
-  else
-    *extraFlag &= ~MSG_VIEW_FLAG_HASCHILDREN;
-}
-
 void nsMsgThreadedDBView::OnHeaderAddedOrDeleted()
 {
 	ClearPrevIdArray();
-  ClearPreSearchInfo();
 }
 
 void nsMsgThreadedDBView::ClearPrevIdArray()
@@ -564,16 +481,6 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
   rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
   if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
   {
-    if (mIsSearchView)
-    {
-      PRBool match=PR_FALSE;
-      OnHeaderAddedOrDeleted();  //db has changed, so clear the cached info..
-      nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
-      if (searchSession)
-        searchSession->MatchHdr(msgHdr, m_db, &match);
-      if (!match)
-        return NS_OK; // do not add a new message if there isn't a match.
-    }
     PRUint32 msgFlags;
     msgHdr->GetFlags(&msgFlags);
     if ((m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) && !ensureListed && (msgFlags & MSG_FLAG_READ))
@@ -583,7 +490,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
     // a bit harder in the unreadOnly view. But we'll catch it below.
 
     // for search view we don't support threaded display so just add it to the view.   
-    if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || mIsSearchView)// || msgHdr->GetMessageKey() == m_messageDB->GetKeyOfFirstMsgInThread(msgHdr->GetMessageKey()))
+    if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)) // || msgHdr->GetMessageKey() == m_messageDB->GetKeyOfFirstMsgInThread(msgHdr->GetMessageKey()))
       rv = AddHdr(msgHdr);
     else	// need to find the thread we added this to so we can change the hasnew flag
       // added message to existing thread, but not to view
@@ -707,8 +614,7 @@ nsresult nsMsgThreadedDBView::RemoveByIndex(nsMsgViewIndex index)
   
   flags = m_flags[index];
   
-  //we don't support threaded view in quick search
-  if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || mIsSearchView) 
+  if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)) 
     return nsMsgDBView::RemoveByIndex(index);
   
   nsCOMPtr <nsIMsgThread> threadHdr; 
@@ -820,76 +726,6 @@ NS_IMETHODIMP nsMsgThreadedDBView::GetViewType(nsMsgViewTypeValue *aViewType)
 }
 
 NS_IMETHODIMP
-nsMsgThreadedDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
-{
-  NS_ENSURE_ARG(aMsgHdr);
-  NS_ENSURE_ARG(folder);
-  nsMsgKey msgKey;
-  PRUint32 msgFlags;
-  aMsgHdr->GetMessageKey(&msgKey);
-  aMsgHdr->GetFlags(&msgFlags);
-  m_keys.Add(msgKey);
-  m_levels.Add(0);
-  m_flags.Add(msgFlags);
-
-  // this needs to happen after we add the key, as RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(GetSize() - 1, 1);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgThreadedDBView::OnSearchDone(nsresult status)
-{
-  if (m_sortType != nsMsgViewSortType::byThread)//we do not find levels for the results.
-  {
-    m_sortValid = PR_FALSE;       //sort the results 
-    Sort(m_sortType, m_sortOrder);
-  }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsMsgThreadedDBView::OnNewSearch()
-{
-  if (!mIsSearchView)
-    SavePreSearchInfo();  //save the folder view to reload it later. 
-  
-  PRInt32 oldSize = GetSize();
-
-  m_keys.RemoveAll();
-  m_levels.RemoveAll();
-  m_flags.RemoveAll();
-  m_currentlyDisplayedMsgKey = nsMsgKey_None;   // need to clear this, so we won't restore it.
-
-  // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(0, -oldSize);
-
-  ClearPrevIdArray(); // previous cached info about non threaded display is not useful
-  mIsSearchView = PR_TRUE;  
-
-  return NS_OK;
-}
-
-void nsMsgThreadedDBView::SavePreSearchInfo()
-{
-  ClearPreSearchInfo();
-  m_preSearchKeys.InsertAt(0, &m_keys);
-  m_preSearchLevels.InsertAt(0, &m_levels);
-  m_preSearchFlags.InsertAt(0, &m_flags);
-}
-
-void nsMsgThreadedDBView::ClearPreSearchInfo()
-{
-  m_preSearchKeys.RemoveAll();
-  m_preSearchLevels.RemoveAll();
-  m_preSearchFlags.RemoveAll();
-}
-
-NS_IMETHODIMP
 nsMsgThreadedDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
 {
   nsMsgThreadedDBView* newMsgDBView;
@@ -902,5 +738,13 @@ nsMsgThreadedDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow 
   NS_ENSURE_SUCCESS(rv,rv);
 
   NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgThreadedDBView::GetSupportsThreading(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_TRUE;
   return NS_OK;
 }

@@ -395,8 +395,9 @@ var DefaultController =
         if (GetNumSelectedMessages() <= 0) return false;
       case "cmd_expandAllThreads":
       case "cmd_collapseAllThreads":
-        if (!gDBView) return false;
-          return (gDBView.sortType == nsMsgViewSortType.byThread);
+        if (!gDBView || !gDBView.supportsThreading) 
+          return false;
+        return (gDBView.sortType == nsMsgViewSortType.byThread);
         break;
       case "cmd_nextFlaggedMsg":
       case "cmd_previousFlaggedMsg":
@@ -1016,7 +1017,7 @@ function SearchBarToggled()
     if (attribValue == "true")
     {
       /*come out of quick search view */
-      if (gDBView && gDBView.isSearchView)
+      if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
         onClearSearch();
     }
     else

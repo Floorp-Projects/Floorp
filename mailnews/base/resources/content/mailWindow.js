@@ -77,13 +77,17 @@ function OnMailWindowUnload()
 
   var searchSession = GetSearchSession();
   if (searchSession)
+  {
     removeGlobalListeners();
-
+    if (gPreQuickSearchView)     //close the cached pre quick search view
+      gPreQuickSearchView.close();
+  }
+  
   var dbview = GetDBView();
   if (dbview) {
     dbview.close(); 
   }
-    
+
   var mailSession = Components.classes[mailSessionContractID].getService();
   if(mailSession)
   {

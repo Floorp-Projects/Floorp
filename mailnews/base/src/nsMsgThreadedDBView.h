@@ -55,8 +55,7 @@ public:
   virtual nsresult AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd);
   NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
-  NS_IMETHOD ReloadFolderAfterQuickSearch();
-  NS_DECL_NSIMSGSEARCHNOTIFY
+  NS_IMETHOD GetSupportsThreading(PRBool *aResult);
 
 protected:
   virtual const char * GetViewName(void) {return "ThreadedDBView"; }
@@ -70,10 +69,6 @@ protected:
   virtual void	    OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual void OnHeaderAddedOrDeleted();
 	void			ClearPrevIdArray();
-  void      SavePreSearchInfo();
-  void      ClearPreSearchInfo();
-  void      UpdateCachedFlag(PRUint32 aFlag, PRUint32 *extraFlag);
-  void      UpdatePreSearchFlagInfo(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   nsMsgViewIndex GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel);
 
@@ -83,9 +78,6 @@ protected:
 	nsMsgKeyArray		m_prevKeys;   //this is used for caching non-threaded view.
 	nsUInt32Array m_prevFlags;
 	nsUint8Array m_prevLevels;
-  nsMsgKeyArray m_preSearchKeys;  //this is used for caching view before issuing search.
-  nsUInt32Array m_preSearchFlags;
-  nsUint8Array m_preSearchLevels; 
   nsCOMPtr <nsISimpleEnumerator> m_threadEnumerator;
 };
 

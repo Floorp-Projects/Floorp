@@ -105,10 +105,8 @@ function HandleColumnClick(columnID)
   }
 
   var dbview = GetDBView();
-  if (sortType == nsMsgViewSortType.byThread)  
-  {  //do not allow sorting by thread in search view.
-    if (dbview && dbview.isSearchView) return;
-  } 
+  if (sortType == nsMsgViewSortType.byThread && !dbview.supportsThreading)
+      return;
   if (dbview.sortType == sortType) {
     MsgReverseSortThreadPane();
   }
@@ -216,7 +214,7 @@ function MsgSortByTotal()
 function MsgSortByThread()
 {
   var dbview = GetDBView();
-  if(dbview && dbview.isSearchView)  //do not allow sorting by thread in search view.
+  if(dbview && !dbview.supportsThreading)
     return;
   MsgSortThreadPane(nsMsgViewSortType.byThread);
 }
@@ -311,6 +309,16 @@ function EnsureRowInThreadTreeIsVisible(index)
 
   var tree = GetThreadTree();
   tree.treeBoxObject.ensureRowIsVisible(index); 
+}
+
+function RerootThreadPane()
+{
+  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+  if (treeView)
+  {
+    var tree = GetThreadTree();
+    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
+  }
 }
 
 function ThreadPaneOnLoad()

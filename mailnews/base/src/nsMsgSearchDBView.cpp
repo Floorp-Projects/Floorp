@@ -61,7 +61,7 @@ nsMsgSearchDBView::~nsMsgSearchDBView()
  /* destructor code */
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsMsgSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgCopyServiceListener)
+NS_IMPL_ISUPPORTS_INHERITED3(nsMsgSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgCopyServiceListener, nsIMsgSearchNotify)
 
 NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount)
 {

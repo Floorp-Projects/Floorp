@@ -40,8 +40,9 @@
 
 #include "nsMsgDBView.h"
 #include "nsIMsgCopyServiceListener.h"
+#include "nsIMsgSearchNotify.h"
 
-class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgCopyServiceListener
+class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgCopyServiceListener, public nsIMsgSearchNotify
 {
 public:
   nsMsgSearchDBView();

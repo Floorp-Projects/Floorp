@@ -64,6 +64,7 @@ interface nsMsgViewType {
     const nsMsgViewTypeValue eShowAllThreads = 0;
     const nsMsgViewTypeValue eShowThreadsWithUnread = 2;
     const nsMsgViewTypeValue eShowWatchedThreadsWithUnread = 3;
+    const nsMsgViewTypeValue eShowQuickSearchResults = 4;
 };
 
 [scriptable, uuid(64852276-1dd2-11b2-8103-afe12002c053)]
@@ -76,7 +77,6 @@ interface nsMsgViewFlagsType
     const nsMsgViewFlagsTypeValue kThreadedDisplay = 0x1;
     const nsMsgViewFlagsTypeValue kShowIgnored = 0x8;
     const nsMsgViewFlagsTypeValue kUnreadOnly = 0x10;
-    const nsMsgViewFlagsTypeValue kDeferPopulatingView = 0x20;
 };
 
 [scriptable, uuid(b2f31bca-fd18-11d4-a5be-0060b0fc04b7)]
@@ -280,7 +280,6 @@ interface nsIMsgDBView : nsISupports
     void loadMessageByMsgKey (in nsMsgKey aMsgKey);
     void reloadMessage();
     void reloadMessageWithAllParts();
-	void reloadFolderAfterQuickSearch();
 
     readonly attribute unsigned long numSelected;
     readonly attribute nsMsgViewIndex msgToSelectAfterDelete; 
@@ -295,13 +294,12 @@ interface nsIMsgDBView : nsISupports
 	// we'll suppress command updating during folder loading
 	attribute boolean suppressCommandUpdating;
 
-	//to tell us if we are in the search view
-	attribute boolean isSearchView;
-
 	//to notify tree that rows are going away
     void onDeleteCompleted(in boolean succeeded);
 
     readonly attribute nsIMsgDatabase db;
+
+    readonly attribute boolean supportsThreading;
 
     attribute nsIMsgSearchSession searchSession;
 };

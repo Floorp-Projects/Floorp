@@ -97,6 +97,7 @@
 #include "nsMsgThreadedDBView.h"
 #include "nsMsgSpecialViews.h"
 #include "nsMsgSearchDBView.h"
+#include "nsMsgQuickSearchDBView.h"
 
 #include "nsMsgOfflineManager.h"
 
@@ -144,6 +145,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadedDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadsWithUnreadDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress);
 #ifdef XP_WIN
@@ -311,6 +313,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "search db view", NS_MSGSEARCHDBVIEW_CID,
       NS_MSGSEARCHDBVIEW_CONTRACTID,
       nsMsgSearchDBViewConstructor,
+    },
+    { "quick search db view", NS_MSGQUICKSEARCHDBVIEW_CID,
+      NS_MSGQUICKSEARCHDBVIEW_CONTRACTID,
+      nsMsgQuickSearchDBViewConstructor,
     },
     { "Messenger Offline Manager", NS_MSGOFFLINEMANAGER_CID,
       NS_MSGOFFLINEMANAGER_CONTRACTID,

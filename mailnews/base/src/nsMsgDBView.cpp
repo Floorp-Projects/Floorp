@@ -111,7 +111,6 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsITreeView)
-   NS_INTERFACE_MAP_ENTRY(nsIMsgSearchNotify)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
@@ -136,9 +135,7 @@ nsMsgDBView::nsMsgDBView()
   
   mCommandsNeedDisablingBecauseOffline = PR_FALSE;  
   mRemovingRow = PR_FALSE;
-  mIsSearchView = PR_FALSE;
   m_saveRestoreSelectionDepth = 0;
-  m_searchSession = nsnull;
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
   {
@@ -1592,7 +1589,6 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
     m_db->AddListener(this);
     m_folder = folder;
-    mIsSearchView = PR_FALSE;
     // save off sort type and order, view type and flags
     folderInfo->SetSortType(sortType);
     folderInfo->SetSortOrder(sortOrder);
@@ -1621,11 +1617,6 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     GetImapDeleteModel(nsnull);
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBView::ReloadFolderAfterQuickSearch()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgDBView::Close()
@@ -1704,18 +1695,6 @@ NS_IMETHODIMP nsMsgDBView::GetSuppressMsgDisplay(PRBool * aSuppressDisplay)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetIsSearchView(PRBool * aResult)
-{
-  NS_ENSURE_ARG(aResult);
-  *aResult = mIsSearchView;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBView::SetIsSearchView(PRBool aResult)
-{
-  mIsSearchView = aResult;
-  return NS_OK;
-}
 nsresult nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1902,22 +1881,16 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     rv = ToggleWatched(indices,	numIndices);
     break;
   case nsMsgViewCommandType::expandAll:
-    if (!mIsSearchView)  //ignore for search view
-    {
-      rv = ExpandAll();
-      NS_ASSERTION(mTree, "no tree, see bug #114956");
-      if(mTree)
-        mTree->Invalidate();
-    }
+    rv = ExpandAll();
+    NS_ASSERTION(mTree, "no tree, see bug #114956");
+    if(mTree)
+      mTree->Invalidate();
     break;
   case nsMsgViewCommandType::collapseAll:
-    if (!mIsSearchView)  //ignore for search view
-    {
-      rv = CollapseAll();
-      NS_ASSERTION(mTree, "no tree, see bug #114956");
-      if(mTree)
-        mTree->Invalidate();
-    }
+    rv = CollapseAll();
+    NS_ASSERTION(mTree, "no tree, see bug #114956");
+    if(mTree)
+      mTree->Invalidate();
     break;
   default:
     NS_ASSERTION(PR_FALSE, "invalid command type");
@@ -5192,40 +5165,6 @@ NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
 }
 
 NS_IMETHODIMP
-nsMsgDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgDBView::OnSearchDone(nsresult status)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsMsgDBView::OnNewSearch()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgDBView::GetSearchSession(nsIMsgSearchSession* *aSession)
-{
-  NS_ASSERTION(0, "GetSearchSession method is not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsMsgDBView::SetSearchSession(nsIMsgSearchSession *aSession)
-{
-  m_searchSession = getter_AddRefs(NS_GetWeakReference(aSession));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMsgDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
 {
   nsMsgDBView* newMsgDBView;
@@ -5263,5 +5202,27 @@ nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMess
   aNewMsgDBView->m_levels.CopyArray(m_levels);
   aNewMsgDBView->m_keys.CopyArray(m_keys);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::GetSearchSession(nsIMsgSearchSession* *aSession)
+{
+  NS_ASSERTION(PR_FALSE, "should be overriden by child class");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::SetSearchSession(nsIMsgSearchSession *aSession)
+{
+  NS_ASSERTION(PR_FALSE, "should be overriden by child class");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::GetSupportsThreading(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
   return NS_OK;
 }

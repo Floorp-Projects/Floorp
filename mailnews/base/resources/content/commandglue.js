@@ -323,12 +323,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
         oldFolder.setMsgDatabase(null);
   }
   // that should have initialized gDBView, now re-root the thread pane
-  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-  if (treeView)
-  {
-    var tree = GetThreadTree();
-    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
-  }
+  RerootThreadPane();
 
   SetUpToolbarButtons(uri);
 
@@ -568,6 +563,9 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
   viewType = viewType - 0;
 
   switch (viewType) {
+      case nsMsgViewType.eShowQuickSearchResults:
+          dbviewContractId += "quicksearch";
+          break;
       case nsMsgViewType.eShowThreadsWithUnread:
           dbviewContractId += "threadswithunread";
           break;
@@ -744,18 +742,22 @@ function FolderPaneSelectionChange()
                 dump("failed to get view & sort values.  ex = " + ex +"\n");
               }
             }
-            if (gDBView && gDBView.isSearchView)
+            if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
             {
-              gDBView.isSearchView = false;  //reset the search input on folder switch
-              var searchInput = document.getElementById("searchInput");
+              if (gPreQuickSearchView) //close cached view before quick search
+              {
+                gPreQuickSearchView.close();
+                gPreQuickSearchView = null;  
+              }
+              var searchInput = document.getElementById("searchInput");  //reset the search input on folder switch
               if (searchInput) 
                 searchInput.value = "";
             }
             ClearMessagePane();
             if (gSearchEmailAddress)
-              viewFlags |= nsMsgViewFlagsType.kDeferPopulatingView;
-            else
-              viewFlags &= ~nsMsgViewFlagsType.kDeferPopulatingView; 
+              viewType = nsMsgViewType.eShowQuickSearchResults;
+            else if (viewType == nsMsgViewType.eShowQuickSearchResults)
+              viewType = nsMsgViewType.eShowAllThreads;  //override viewType - we don't want to start w/ quick search
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }
     }

@@ -1055,7 +1055,7 @@ function FolderPaneOnClick(event)
     else if (event.detail == 2) {
       FolderPaneDoubleClick(row.value, event);
     }
-    else if (gDBView && gDBView.isSearchView)
+    else if (gDBView && gDBView.viewType == nsMsgViewType.eShowQuickSearchResults)
     {
       onClearSearch();
     }

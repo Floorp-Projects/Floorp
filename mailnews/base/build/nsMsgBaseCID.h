@@ -398,6 +398,10 @@
 #define NS_MSGSEARCHDBVIEW_CONTRACTID \
   NS_MSGDBVIEW_CONTRACTID_PREFIX "search"
 
+#define NS_MSGQUICKSEARCHDBVIEW_CONTRACTID \
+  NS_MSGDBVIEW_CONTRACTID_PREFIX "quicksearch"
+
+
 /* 52f860e0-1dd2-11b2-aa72-bb751981bd00 */
 #define NS_MSGTHREADEDDBVIEW_CID \
   {0x52f860e0, 0x1dd2, 0x11b2, \
@@ -417,6 +421,11 @@
 #define NS_MSGSEARCHDBVIEW_CID \
   {0xaeac118c, 0x0823, 0x11d5, \
     {0xa5, 0xbf, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7}}
+
+/* 2dd9d0fe-b609-11d6-bacc-00108335748d */
+#define NS_MSGQUICKSEARCHDBVIEW_CID \
+  {0x2dd9d0fe, 0xb609, 0x11d6, \
+    {0xba, 0xcc, 0x00, 0x10, 0x83, 0x35, 0x74, 0x8d}}
 
 //
 // nsMsgAccountManager
