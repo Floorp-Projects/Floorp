@@ -1349,11 +1349,15 @@ AddKeyUsage (void *extHandle)
 	fprintf(stdout, "%-25s 5 - Cert signning key\n", "");   
 	fprintf(stdout, "%-25s 6 - CRL signning key\n", "");
 	fprintf(stdout, "%-25s Other to finish\n", "");
-	gets (buffer);
-	value = atoi (buffer);
-	if (value < 0 || value > 6)
+	if (gets (buffer)) {
+	    value = atoi (buffer);
+	    if (value < 0 || value > 6)
+	        break;
+	    keyUsage |= (0x80 >> value);
+	}
+	else {		/* gets() returns NULL on EOF or error */
 	    break;
-	keyUsage |= (0x80 >> value);
+	}
     }
 
     bitStringValue.data = &keyUsage;
