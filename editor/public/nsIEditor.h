@@ -19,7 +19,7 @@
 #ifndef nsIEditor_h__
 #define nsIEditor_h__
 #include "nsISupports.h"
-#include "nsIDOMDocument.h"
+
 /*
 Editor interface to outside world
 */
@@ -35,6 +35,9 @@ Editor interface to outside world
 { 0x8f, 0x38, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
 
 enum PROPERTIES{NONE = 0,BOLD = 1,NUMPROPERTIES};
+
+class nsIDOMDocument;
+class nsString;
 
 /**
  * An editor specific interface. 

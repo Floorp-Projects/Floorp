@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsIEditGuiManager_h__
-#define nsIEditGuiManager_h__
+#ifndef nsIGuiManagerFactory_h__
+#define nsIGuiManagerFactory_h__
 #include "nsISupports.h"
 
 /*
@@ -38,5 +38,5 @@ public:
 
 };
 
-#endif // nsIEditGuiManager_h__
+#endif // nsIGuiManagerFactory_h__
 

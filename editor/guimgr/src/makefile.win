@@ -27,6 +27,7 @@ CPPSRCS =                    \
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditGuiManager.obj	\
+	.\$(OBJDIR)\nsGuiManagerFactory.obj	\
 	$(NULL)
 
 MODULE=editguimgr 

@@ -18,7 +18,7 @@
 #include "editorInterfaces.h"
 #include "nsString.h"
 #include "editor.h"
-
+#include "nsIDOMDocument.h"
  
 /*
  * nsEditorKeyListener implementation

@@ -16,15 +16,15 @@
  * Reserved.
  */
 
+#include "nsIGuiManagerFactory.h"
+#include "nsEditGuiManager.h"
 #include "nsGuiManagerFactory.h"
 #include "nsIEditor.h"
-#include "editor.h"
 #include "nsRepository.h"
-
+#include "COM_auto_ptr.h"
 
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEditGuiManagerIID,    NS_IEDITGUIMANAGER_IID);
 static NS_DEFINE_IID(kIGuiManagerFactoryIID, NS_IGUIMANAGERFACTORY_IID);
 
 
@@ -33,7 +33,7 @@ nsresult
 getGuiManagerFactory(nsIFactory **aFactory)
 {
   static COM_auto_ptr<nsIFactory>  g_pNSIFactory;
-  PR_EnterMonitor(getEditorMonitor());
+
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)
   {
@@ -45,7 +45,7 @@ getGuiManagerFactory(nsIFactory **aFactory)
   }
   else
     result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
-  PR_ExitMonitor(getEditorMonitor());
+
   return result;
 }
 
