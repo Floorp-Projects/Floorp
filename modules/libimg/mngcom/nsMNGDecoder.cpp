@@ -132,9 +132,10 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
 
 #ifndef NO_ALPHA
   if (mng_get_simplicity(handle) & MNG_SIMPLICITY_TRANSPARENCY) {
-    dprintf((stderr, "--- MNG ALPHA\n"));
+    dprintf((stderr, "--- MNG ALPHA 8-BIT\n"));
     ic->image->header.alpha_bits = 8;
   } else {
+    dprintf((stderr, "--- MNG ALPHA THRESHHOLD\n"));
     ic->image->header.alpha_bits = 1;
   }
   ic->image->header.alpha_shift = 0;
@@ -171,7 +172,7 @@ il_mng_refresh(mng_handle handle,
 
   EXTRACT_STRUCTS;
 
-  for (int y=top; y<=bottom; y++) {
+  for (int y=top; y<bottom; y++) {
     memcpy(imng_p->rowbuf, 
            imng_p->image+y*CHANNELS*imng_p->width,
            CHANNELS*imng_p->width);
