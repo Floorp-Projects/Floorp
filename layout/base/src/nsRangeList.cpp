@@ -122,6 +122,8 @@ public:
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 
   NS_IMETHOD    ToString(nsString& aReturn);
+  NS_IMETHOD    SetHint(PRBool aHintRight);
+  NS_IMETHOD    GetHint(PRBool *aHintRight);
 /*END nsIDOMSelection interface implementations*/
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/
@@ -277,6 +279,8 @@ private:
   nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
   nsresult     NotifySelectionListeners(nsIDOMNode *aNode, PRUint32 aCellOffset);
 
+  NS_IMETHOD    SetHint(PRBool aHintRight);
+  NS_IMETHOD    GetHint(PRBool *aHintRight);
 
   nsDOMSelection *mDomSelections[NUM_SELECTIONTYPES];
 
@@ -1186,11 +1190,18 @@ nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 
   offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
-
   nsIFrame *frame;
   result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
-  if (NS_FAILED(result))
-    return result;
+
+  if (NS_FAILED(result) || !frame)
+    return result?result:NS_ERROR_FAILURE;
+  nsCOMPtr<nsIContent> content;
+  result = frame->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
+  if (node != content) //we are not pointing to same node! offset is meaningless
+    offsetused = 0;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
+                   //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
+  
   nsPeekOffsetStruct pos;
   pos.SetData(mTracker, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
   switch (aKeycode){
@@ -1349,6 +1360,19 @@ nsDOMSelection::ToString(nsString& aReturn)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMSelection::SetHint(PRBool aHintRight)
+{
+  return mRangeList->SetHint(aHintRight);
+}
+
+NS_IMETHODIMP
+nsDOMSelection::GetHint(PRBool *aHintRight)
+{
+  return mRangeList->GetHint(aHintRight);
+}
+
+
 
 NS_IMETHODIMP
 nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
@@ -1362,7 +1386,8 @@ nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
     nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNewFocus);
     return NotifySelectionListeners(domNode, aContentOffset);
   }
-  return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+  nsresult result = TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1823,7 +1848,31 @@ nsRangeList::NotifySelectionListeners(nsIDOMNode *aNode, PRUint32 aCellOffset)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRangeList::SetHint(PRBool aHintRight)
+{
+  if (aHintRight)
+    mHint = HINTRIGHT;
+  else
+    mHint = HINTLEFT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRangeList::GetHint(PRBool *aHintRight)
+{
+  if (!aHintRight)
+    return NS_ERROR_NULL_POINTER;
+  if (HINTRIGHT == mHint)
+    *aHintRight = PR_TRUE;
+  else
+    *aHintRight = PR_FALSE;
+  return NS_OK; 
+}
+
+
 //END nsIFrameSelection methods
+
 
 #ifdef XP_MAC
 #pragma mark -
@@ -2832,7 +2881,6 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 // make sure latest bits are available before we scroll them.
                 viewManager->Composite();
                 result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
-
                 if (mAutoScrollTimer)
                   result = mAutoScrollTimer->Start(aPresContext, aFrame, aPoint);
               }
