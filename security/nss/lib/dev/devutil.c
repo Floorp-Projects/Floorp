@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.20 $ $Date: 2003/05/10 14:19:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.21 $ $Date: 2003/07/01 00:32:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -44,8 +44,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.20 $ $Da
 #endif /* CKHELPER_H */
 
 NSS_IMPLEMENT nssCryptokiObject *
-nssCryptokiObject_Create
-(
+nssCryptokiObject_Create (
   NSSToken *t, 
   nssSession *session,
   CK_OBJECT_HANDLE h
@@ -81,8 +80,7 @@ nssCryptokiObject_Create
 }
 
 NSS_IMPLEMENT void
-nssCryptokiObject_Destroy
-(
+nssCryptokiObject_Destroy (
   nssCryptokiObject *object
 )
 {
@@ -94,8 +92,7 @@ nssCryptokiObject_Destroy
 }
 
 NSS_IMPLEMENT nssCryptokiObject *
-nssCryptokiObject_Clone
-(
+nssCryptokiObject_Clone (
   nssCryptokiObject *object
 )
 {
@@ -113,8 +110,7 @@ nssCryptokiObject_Clone
 }
 
 NSS_EXTERN PRBool
-nssCryptokiObject_Equal
-(
+nssCryptokiObject_Equal (
   nssCryptokiObject *o1,
   nssCryptokiObject *o2
 )
@@ -138,8 +134,7 @@ nssPKCS11String_Length(CK_CHAR *pkcs11Str, PRUint32 bufLen)
  */
 
 NSS_IMPLEMENT NSSSlot **
-nssSlotArray_Clone
-(
+nssSlotArray_Clone (
   NSSSlot **slots
 )
 {
@@ -162,8 +157,7 @@ nssSlotArray_Clone
 
 #ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT void
-nssModuleArray_Destroy
-(
+nssModuleArray_Destroy (
   NSSModule **modules
 )
 {
@@ -178,8 +172,7 @@ nssModuleArray_Destroy
 #endif
 
 NSS_IMPLEMENT void
-nssSlotArray_Destroy
-(
+nssSlotArray_Destroy (
   NSSSlot **slots
 )
 {
@@ -193,8 +186,7 @@ nssSlotArray_Destroy
 }
 
 NSS_IMPLEMENT void
-NSSSlotArray_Destroy
-(
+NSSSlotArray_Destroy (
   NSSSlot **slots
 )
 {
@@ -202,8 +194,7 @@ NSSSlotArray_Destroy
 }
 
 NSS_IMPLEMENT void
-nssTokenArray_Destroy
-(
+nssTokenArray_Destroy (
   NSSToken **tokens
 )
 {
@@ -217,8 +208,7 @@ nssTokenArray_Destroy
 }
 
 NSS_IMPLEMENT void
-NSSTokenArray_Destroy
-(
+NSSTokenArray_Destroy (
   NSSToken **tokens
 )
 {
@@ -226,8 +216,7 @@ NSSTokenArray_Destroy
 }
 
 NSS_IMPLEMENT void
-nssCryptokiObjectArray_Destroy
-(
+nssCryptokiObjectArray_Destroy (
   nssCryptokiObject **objects
 )
 {
@@ -263,8 +252,7 @@ struct nssSlotListStr
 };
 
 NSS_IMPLEMENT nssSlotList *
-nssSlotList_Create
-(
+nssSlotList_Create (
   NSSArena *arenaOpt
 )
 {
@@ -306,8 +294,7 @@ loser:
 }
 
 NSS_IMPLEMENT void
-nssSlotList_Destroy
-(
+nssSlotList_Destroy (
   nssSlotList *slotList
 )
 {
@@ -328,8 +315,7 @@ nssSlotList_Destroy
 
 /* XXX should do allocs outside of lock */
 NSS_IMPLEMENT PRStatus
-nssSlotList_Add
-(
+nssSlotList_Add (
   nssSlotList *slotList,
   NSSSlot *slot,
   PRUint32 order
@@ -360,8 +346,7 @@ nssSlotList_Add
 }
 
 NSS_IMPLEMENT PRStatus
-nssSlotList_AddModuleSlots
-(
+nssSlotList_AddModuleSlots (
   nssSlotList *slotList,
   NSSModule *module,
   PRUint32 order
@@ -415,8 +400,7 @@ loser:
 }
 
 NSS_IMPLEMENT NSSSlot **
-nssSlotList_GetSlots
-(
+nssSlotList_GetSlots (
   nssSlotList *slotList
 )
 {
@@ -444,8 +428,7 @@ nssSlotList_GetSlots
 
 #if 0
 NSS_IMPLEMENT NSSSlot *
-nssSlotList_GetBestSlotForAlgorithmAndParameters
-(
+nssSlotList_GetBestSlotForAlgorithmAndParameters (
   nssSlotList *slotList,
   NSSAlgorithmAndParameters *ap
 )
@@ -468,8 +451,7 @@ nssSlotList_GetBestSlotForAlgorithmAndParameters
 #endif
 
 NSS_IMPLEMENT NSSSlot *
-nssSlotList_GetBestSlot
-(
+nssSlotList_GetBestSlot (
   nssSlotList *slotList
 )
 {
@@ -489,8 +471,7 @@ nssSlotList_GetBestSlot
 }
 
 NSS_IMPLEMENT NSSSlot *
-nssSlotList_FindSlotByName
-(
+nssSlotList_FindSlotByName (
   nssSlotList *slotList,
   NSSUTF8 *slotName
 )
@@ -515,8 +496,7 @@ nssSlotList_FindSlotByName
 }
 
 NSS_IMPLEMENT NSSToken *
-nssSlotList_FindTokenByName
-(
+nssSlotList_FindTokenByName (
   nssSlotList *slotList,
   NSSUTF8 *tokenName
 )
@@ -569,8 +549,7 @@ struct nssTokenObjectCacheStr
 };
 
 NSS_IMPLEMENT nssTokenObjectCache *
-nssTokenObjectCache_Create
-(
+nssTokenObjectCache_Create (
   NSSToken *token,
   PRBool cacheCerts,
   PRBool cacheTrust,
@@ -596,8 +575,7 @@ loser:
 }
 
 static void
-clear_cache
-(
+clear_cache (
   nssTokenObjectCache *cache
 )
 {
@@ -620,8 +598,7 @@ clear_cache
 }
 
 NSS_IMPLEMENT void
-nssTokenObjectCache_Clear
-(
+nssTokenObjectCache_Clear (
   nssTokenObjectCache *cache
 )
 {
@@ -633,8 +610,7 @@ nssTokenObjectCache_Clear
 }
 
 NSS_IMPLEMENT void
-nssTokenObjectCache_Destroy
-(
+nssTokenObjectCache_Destroy (
   nssTokenObjectCache *cache
 )
 {
@@ -646,8 +622,7 @@ nssTokenObjectCache_Destroy
 }
 
 NSS_IMPLEMENT PRBool
-nssTokenObjectCache_HaveObjectClass
-(
+nssTokenObjectCache_HaveObjectClass (
   nssTokenObjectCache *cache,
   CK_OBJECT_CLASS objclass
 )
@@ -665,8 +640,7 @@ nssTokenObjectCache_HaveObjectClass
 }
 
 static nssCryptokiObjectAndAttributes **
-create_object_array
-(
+create_object_array (
   nssCryptokiObject **objects,
   PRBool *doObjects,
   PRUint32 *numObjects,
@@ -699,8 +673,7 @@ create_object_array
 }
 
 static nssCryptokiObjectAndAttributes *
-create_object
-(
+create_object (
   nssCryptokiObject *object,
   CK_ATTRIBUTE_TYPE *types,
   PRUint32 numTypes,
@@ -783,8 +756,7 @@ loser:
  *
  */
 static PRBool
-search_for_objects
-(
+search_for_objects (
   nssTokenObjectCache *cache
 )
 {
@@ -818,8 +790,7 @@ search_for_objects
 }
 
 static nssCryptokiObjectAndAttributes *
-create_cert
-(
+create_cert (
   nssCryptokiObject *object,
   PRStatus *status
 )
@@ -841,8 +812,7 @@ create_cert
 }
 
 static PRStatus
-get_token_certs_for_cache
-(
+get_token_certs_for_cache (
   nssTokenObjectCache *cache
 )
 {
@@ -896,8 +866,7 @@ get_token_certs_for_cache
 }
 
 static nssCryptokiObjectAndAttributes *
-create_trust
-(
+create_trust (
   nssCryptokiObject *object,
   PRStatus *status
 )
@@ -920,8 +889,7 @@ create_trust
 }
 
 static PRStatus
-get_token_trust_for_cache
-(
+get_token_trust_for_cache (
   nssTokenObjectCache *cache
 )
 {
@@ -975,8 +943,7 @@ get_token_trust_for_cache
 }
 
 static nssCryptokiObjectAndAttributes *
-create_crl
-(
+create_crl (
   nssCryptokiObject *object,
   PRStatus *status
 )
@@ -995,8 +962,7 @@ create_crl
 }
 
 static PRStatus
-get_token_crls_for_cache
-(
+get_token_crls_for_cache (
   nssTokenObjectCache *cache
 )
 {
@@ -1050,8 +1016,7 @@ get_token_crls_for_cache
 }
 
 static CK_ATTRIBUTE_PTR
-find_attribute_in_object
-(
+find_attribute_in_object (
   nssCryptokiObjectAndAttributes *obj,
   CK_ATTRIBUTE_TYPE attrType
 )
@@ -1067,8 +1032,7 @@ find_attribute_in_object
 
 /* Find all objects in the array that match the supplied template */
 static nssCryptokiObject **
-find_objects_in_array
-(
+find_objects_in_array (
   nssCryptokiObjectAndAttributes **objArray,
   CK_ATTRIBUTE_PTR ot,
   CK_ULONG otlen,
@@ -1158,8 +1122,7 @@ loser:
 }
 
 NSS_IMPLEMENT nssCryptokiObject **
-nssTokenObjectCache_FindObjectsByTemplate
-(
+nssTokenObjectCache_FindObjectsByTemplate (
   nssTokenObjectCache *cache,
   CK_OBJECT_CLASS objclass,
   CK_ATTRIBUTE_PTR otemplate,
@@ -1213,8 +1176,7 @@ finish:
 }
 
 static PRBool
-cache_available_for_object_type
-(
+cache_available_for_object_type (
   nssTokenObjectCache *cache,
   PRUint32 objectType
 )
@@ -1235,8 +1197,7 @@ cache_available_for_object_type
 }
 
 NSS_IMPLEMENT PRStatus
-nssTokenObjectCache_GetObjectAttributes
-(
+nssTokenObjectCache_GetObjectAttributes (
   nssTokenObjectCache *cache,
   NSSArena *arenaOpt,
   nssCryptokiObject *object,
@@ -1323,8 +1284,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus
-nssTokenObjectCache_ImportObject
-(
+nssTokenObjectCache_ImportObject (
   nssTokenObjectCache *cache,
   nssCryptokiObject *object,
   CK_OBJECT_CLASS objclass,
@@ -1394,8 +1354,7 @@ nssTokenObjectCache_ImportObject
 }
 
 NSS_IMPLEMENT void
-nssTokenObjectCache_RemoveObject
-(
+nssTokenObjectCache_RemoveObject (
   nssTokenObjectCache *cache,
   nssCryptokiObject *object
 )
@@ -1440,8 +1399,7 @@ nssTokenObjectCache_RemoveObject
 */
 /* XXX of course this doesn't belong here */
 NSS_IMPLEMENT NSSAlgorithmAndParameters *
-NSSAlgorithmAndParameters_CreateSHA1Digest
-(
+NSSAlgorithmAndParameters_CreateSHA1Digest (
   NSSArena *arenaOpt
 )
 {
@@ -1456,8 +1414,7 @@ NSSAlgorithmAndParameters_CreateSHA1Digest
 }
 
 NSS_IMPLEMENT NSSAlgorithmAndParameters *
-NSSAlgorithmAndParameters_CreateMD5Digest
-(
+NSSAlgorithmAndParameters_CreateMD5Digest (
   NSSArena *arenaOpt
 )
 {
