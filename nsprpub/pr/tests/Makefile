@@ -465,7 +465,7 @@ else
 ifeq ($(OS_TARGET),OS2)
 	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	link $(LDOPTS) $< $(LIBPLC) $(LIBPR) wsock32.lib -out:$@
+	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) wsock32.lib -out:$@
 endif
 endif
 else
