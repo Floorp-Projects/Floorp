@@ -117,7 +117,8 @@ typedef unsigned long HMTX;
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
 
-#include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface
+#include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
@@ -1047,7 +1048,10 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
    
               if(httpChannel) {
                 httpChannel->GetReferrer(getter_AddRefs(referrer));
-                httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+                nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+                if (uploadChannel) {
+                  httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+                }
               }
             }
             nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));

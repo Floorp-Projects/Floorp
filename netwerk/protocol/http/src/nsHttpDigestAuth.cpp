@@ -161,7 +161,9 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
     if (http_channel != nsnull)
     {
       nsIInputStream * upload;
-      http_channel->GetUploadStream(&upload);
+      nsCOMPtr<nsIUploadChannel> uc = do_QueryInterface(http_channel);
+      NS_ENSURE_TRUE(uc, NS_ERROR_UNEXPECTED);
+      uc->GetUploadStream(&upload);
       if (upload) {
         char * upload_buffer;
         int upload_buffer_length = 0;

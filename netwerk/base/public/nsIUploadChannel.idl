@@ -40,6 +40,10 @@ interface nsIInputStream;
 interface nsIChannel;
 interface nsIFile;
 
+// Notes:
+//   Do we want to have expose contentType and contentLength?
+//   What about a getter for the nsIFile?
+
 [scriptable, uuid(ddf633d8-e9a4-439d-ad88-de636fd9bb75)]
 interface nsIUploadChannel : nsISupports
 {
@@ -77,6 +81,13 @@ interface nsIUploadChannel : nsISupports
    *          Use of -1 assumes that the data length is returned by nsIFile::fileSize 
    */
   void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
+
+  /**
+   * Get the stream (to be) uploaded by this channel.  This may return null if 
+   * setUploadFile was called.  
+   */
+  readonly attribute nsIInputStream uploadStream;
+
 };
 
 

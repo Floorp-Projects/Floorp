@@ -742,6 +742,15 @@ nsFTPChannel::SetUploadFile(nsIFile *file, const char *contentType, PRInt32 cont
 }
 
 NS_IMETHODIMP
+nsFTPChannel::GetUploadStream(nsIInputStream **stream)
+{
+    NS_ENSURE_ARG_POINTER(stream);
+    *stream = mUploadStream;
+    NS_IF_ADDREF(*stream);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFTPChannel::SetListFormat(PRUint32 format) {
     if (format != FORMAT_PREF &&
         format != FORMAT_RAW &&
