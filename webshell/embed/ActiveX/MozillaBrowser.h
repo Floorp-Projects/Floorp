@@ -143,6 +143,10 @@ END_MSG_MAP()
 
 // Protected members
 protected:
+	// Flag to prevent multiple object registrations
+	static BOOL m_bRegistryInitialized;
+
+	// Pointer to web shell manager
 	CWebShellContainer	*	m_pWebShellContainer;
 
 	// Mozilla interfaces
