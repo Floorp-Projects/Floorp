@@ -19,7 +19,7 @@ DEPTH=../../../..
 
 TARGET = $(LIBRARY)
 
-LIBRARY_NAME=cachelib
+LIBRARY_NAME=cache
 
 MISCDEP = 		    \
     $(LIBNSPR)  	    \

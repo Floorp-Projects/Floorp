@@ -18,15 +18,24 @@
 DEPTH=../../../..
 
 EXPORTS =               \
-	nsMonitorable.h		\
-	nsMemModule.h 		\
-	nsCacheManager.h 	\
-    nsDiskModule.h 		\
+    CacheStubs.h 		\
+	nsBkgThread.h       \
+	nsCacheBkgThd.h 	\
+	nsCacheIterator.h 	\
+	nsCacheManager.h	\
 	nsCacheModule.h 	\
+	nsCacheObject.h 	\
+    nsCachePref.h 		\
+    nsDiskModule.h 		\
+	nsEnumeration.h     \
+	nsFileStream.h      \
+	nsIterator.h        \
 	nsMemCacheObject.h  \
-	nsCacheObject.h	    \
-	nsCachePref.h		\
-        $(NULL)
+	nsMemModule.h 		\
+    nsMemStream.h 		\
+    nsMonitorable.h 	\
+	nsStream.h 			\
+	$(NULL)
 
 MODULE = cache
 
