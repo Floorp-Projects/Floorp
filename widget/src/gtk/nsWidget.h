@@ -95,8 +95,6 @@ public:
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(void);
 
-  NS_IMETHOD GetBounds(nsRect &aRect);
-
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
@@ -126,9 +124,9 @@ public:
 
   // the following are nsWindow specific, and just stubbed here
 
-  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-  NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
-  NS_IMETHOD ShowMenuBar(PRBool aShow);
+  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) { return NS_ERROR_FAILURE; }
+  NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar) { return NS_ERROR_FAILURE; }
+  NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
 
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
