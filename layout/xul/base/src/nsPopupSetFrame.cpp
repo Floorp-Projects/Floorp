@@ -279,7 +279,7 @@ nsPopupSetFrame::LayoutFinished(nsBoxLayoutState& aState)
 {
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
-  if (activeChild) {
+  if (activeChild && mElementFrame) {
 
     nsCOMPtr<nsIContent> menuPopupContent;
     activeChild->GetContent(getter_AddRefs(menuPopupContent));
@@ -426,7 +426,12 @@ nsPopupSetFrame::DestroyPopup()
     OpenPopup(PR_FALSE);
     mPopupType.SetLength(0);
   }
+
+  // clear things out for next time
   mCreateHandlerSucceeded = PR_FALSE;
+  mElementFrame = nsnull;
+  mXPos = mYPos = 0;
+
   return NS_OK;
 }
 

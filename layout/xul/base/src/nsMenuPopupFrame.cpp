@@ -471,6 +471,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
                                     PRInt32 aXPos, PRInt32 aYPos)
 {
   NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG(aFrame);
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
 
@@ -1297,6 +1298,7 @@ nsMenuPopupFrame::Notify(nsITimer* aTimer)
     mTimerMenu->MenuIsOpen(menuOpen);
     if (menuOpen) {
       if (mCurrentMenu != mTimerMenu) {
+#if 1
         // See if our child has a current menu.
         // If so, then we need to be selected.
         nsIFrame* child;
@@ -1317,6 +1319,10 @@ nsMenuPopupFrame::Notify(nsITimer* aTimer)
           // Close up.
           mTimerMenu->OpenMenu(PR_FALSE);
         }
+#else
+        // this isn't current anymore -- close up.
+        mTimerMenu->OpenMenu(PR_FALSE);
+#endif
       }
     }
     mCloseTimer->Cancel();
