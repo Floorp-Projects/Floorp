@@ -78,12 +78,14 @@ static eHTMLTags gStyleTags[]={
 
 static eHTMLTags gNonContainers[]={
   eHTMLTag_area,    eHTMLTag_base,    eHTMLTag_basefont,
-  eHTMLTag_br,      eHTMLTag_col,     eHTMLTag_embed,
-  eHTMLTag_frame,   eHTMLTag_hr,      eHTMLTag_whitespace,
-  eHTMLTag_input,   eHTMLTag_link,    eHTMLTag_isindex,
+  eHTMLTag_bgsound, eHTMLTag_br,      eHTMLTag_col,     
+  eHTMLTag_embed,   eHTMLTag_frame,   eHTMLTag_img, 
+  eHTMLTag_keygen,  eHTMLTag_hr,      eHTMLTag_input,   
+  eHTMLTag_link,    eHTMLTag_isindex,
   eHTMLTag_meta,    eHTMLTag_param,   eHTMLTag_plaintext,
-  eHTMLTag_style,   eHTMLTag_spacer,  eHTMLTag_wbr,   
-  eHTMLTag_newline, eHTMLTag_text,    eHTMLTag_img,   
+  eHTMLTag_sound,   eHTMLTag_style,   eHTMLTag_spacer,  
+  eHTMLTag_wbr,   
+  eHTMLTag_newline, eHTMLTag_text,    eHTMLTag_whitespace,
   eHTMLTag_unknown, eHTMLTag_xmp};
 
 static eHTMLTags gTableTags[]={ 
@@ -93,6 +95,178 @@ static eHTMLTags gTableTags[]={
 static eHTMLTags gWhitespaceTags[]={
   eHTMLTag_newline, eHTMLTag_whitespace};
 
+
+static eHTMLTags gBlockParentTags []={ 
+  eHTMLTag_applet,    eHTMLTag_basefont,    eHTMLTag_blockquote,
+  eHTMLTag_body,      eHTMLTag_center,      eHTMLTag_dd,    
+  eHTMLTag_div,       eHTMLTag_embed,       eHTMLTag_fieldset,
+  eHTMLTag_form,      eHTMLTag_iframe,      eHTMLTag_layer,
+  eHTMLTag_li,        eHTMLTag_listing,     eHTMLTag_multicol,
+  eHTMLTag_noembed,   eHTMLTag_noframes,    eHTMLTag_nolayer,
+  eHTMLTag_noscript,  eHTMLTag_object,      eHTMLTag_plaintext,
+  eHTMLTag_pre,       eHTMLTag_td,          eHTMLTag_th,
+  eHTMLTag_ul,
+  eHTMLTag_xmp,
+};
+
+static eHTMLTags gBlockChildTags []={ 
+  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_address,     eHTMLTag_applet,
+  eHTMLTag_b,         eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_bgsound,     eHTMLTag_big,
+  eHTMLTag_blink,     eHTMLTag_blockquote,  eHTMLTag_br,        eHTMLTag_button,
+  eHTMLTag_center,    eHTMLTag_cite,        eHTMLTag_code,      
+  eHTMLTag_del,       eHTMLTag_dfn,         eHTMLTag_dir,       eHTMLTag_div,       eHTMLTag_dl,
+  eHTMLTag_em,        eHTMLTag_embed,
+  eHTMLTag_fieldset,  eHTMLTag_font,        eHTMLTag_form,
+  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,
+  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,
+  eHTMLTag_hr,      
+
+  eHTMLTag_i,         eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,         
+  eHTMLTag_ins,       eHTMLTag_isindex,     eHTMLTag_input,
+
+  eHTMLTag_kbd,     
+
+  eHTMLTag_label,     eHTMLTag_layer,       eHTMLTag_listing,
+
+  eHTMLTag_map,       /*eHTMLTag_marque,*/  eHTMLTag_menu,      eHTMLTag_multicol,
+  eHTMLTag_nobr,      eHTMLTag_noembed,     eHTMLTag_noframes,  eHTMLTag_nolayer,   eHTMLTag_noscript,
+
+  eHTMLTag_object,    eHTMLTag_ol,
+  eHTMLTag_p,         eHTMLTag_plaintext,   eHTMLTag_pre,         
+  eHTMLTag_q,
+  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+  eHTMLTag_sound,     eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,
+
+  eHTMLTag_table,     eHTMLTag_textarea,    eHTMLTag_tt,
+  eHTMLTag_u,         eHTMLTag_ul,          eHTMLTag_userdefined,
+  eHTMLTag_var,       eHTMLTag_wbr,         eHTMLTag_xmp,
+  
+    //a few special cases...
+  eHTMLTag_newline,
+  eHTMLTag_whitespace,
+
+
+};  
+
+static eHTMLTags gInlineParentTags []={ 
+  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_address,
+  eHTMLTag_b,         eHTMLTag_bdo,         eHTMLTag_big,
+  eHTMLTag_blink,     eHTMLTag_button,      eHTMLTag_caption,
+  eHTMLTag_cite,      eHTMLTag_code,        eHTMLTag_dfn,
+  eHTMLTag_dt,        eHTMLTag_em,          eHTMLTag_font,
+  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,      
+  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,      
+  eHTMLTag_i,         eHTMLTag_ilayer,      eHTMLTag_kbd,
+  eHTMLTag_label,     eHTMLTag_legend,      /*eHTMLTag_marquee,*/
+  eHTMLTag_nobr,      eHTMLTag_ol,          eHTMLTag_p,           
+  eHTMLTag_q,
+  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_small,
+  eHTMLTag_span,      eHTMLTag_strike,      eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,         
+  eHTMLTag_td,        eHTMLTag_th,          eHTMLTag_tt,
+  eHTMLTag_u,         eHTMLTag_ul,          eHTMLTag_var
+};
+
+static eHTMLTags gInlineChildTags []={ 
+  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_applet,
+  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   eHTMLTag_big,       eHTMLTag_blink,
+  eHTMLTag_br,      eHTMLTag_button,
+
+  eHTMLTag_cite,    eHTMLTag_code,
+  eHTMLTag_dfn,
+  eHTMLTag_em,      eHTMLTag_embed,
+  eHTMLTag_font,
+  eHTMLTag_i,       eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,       eHTMLTag_input,
+  eHTMLTag_kbd,     
+  eHTMLTag_label,   eHTMLTag_li,
+  eHTMLTag_map,
+  eHTMLTag_nobr,
+  eHTMLTag_object,
+  eHTMLTag_p,
+  eHTMLTag_pre,
+  eHTMLTag_q,
+  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,     eHTMLTag_sup,
+  eHTMLTag_textarea,eHTMLTag_tt,
+  eHTMLTag_u,
+  eHTMLTag_var,
+  eHTMLTag_wbr,
+  eHTMLTag_text,
+  eHTMLTag_newline,
+  eHTMLTag_whitespace,
+};
+
+//This is a convenience set, which combines block AND inline child lists...
+static eHTMLTags gBlockAndInlineChildTags []={ 
+  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_address,     eHTMLTag_applet,
+  eHTMLTag_b,         eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_bgsound,     eHTMLTag_big,
+  eHTMLTag_blink,     eHTMLTag_blockquote,  eHTMLTag_br,        eHTMLTag_button,
+  eHTMLTag_center,    eHTMLTag_cite,        eHTMLTag_code,      
+  eHTMLTag_dfn,       eHTMLTag_del,         eHTMLTag_dir,         eHTMLTag_div,       eHTMLTag_dl,
+  eHTMLTag_em,        eHTMLTag_embed,
+  eHTMLTag_fieldset,  eHTMLTag_font,        eHTMLTag_form,
+  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,
+  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,
+  eHTMLTag_hr,      
+
+  eHTMLTag_i,         eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,         
+  eHTMLTag_ins,       eHTMLTag_isindex,   eHTMLTag_input,
+
+  eHTMLTag_kbd,     
+
+  eHTMLTag_label,     eHTMLTag_layer,       eHTMLTag_li,        eHTMLTag_listing,
+
+  eHTMLTag_map,       /*eHTMLTag_marque,*/  eHTMLTag_menu,      eHTMLTag_multicol,
+  eHTMLTag_nobr,      eHTMLTag_noembed,     eHTMLTag_noframes,  eHTMLTag_nolayer,   eHTMLTag_noscript,
+
+  eHTMLTag_object,    eHTMLTag_ol,
+  eHTMLTag_p,         eHTMLTag_plaintext,   eHTMLTag_pre,         
+  eHTMLTag_q,
+  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+  eHTMLTag_sound,     eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,
+
+  eHTMLTag_table,     eHTMLTag_textarea,    
+  eHTMLTag_tt,        eHTMLTag_u,           eHTMLTag_ul,        eHTMLTag_userdefined,
+  eHTMLTag_var,       eHTMLTag_wbr,         eHTMLTag_xmp,
+  
+    //a few special cases...
+  eHTMLTag_text,
+  eHTMLTag_newline,
+  eHTMLTag_whitespace,
+};  
+
+
+static eHTMLTags gPREChildTags []={ 
+  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   
+  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   
+  eHTMLTag_br,      eHTMLTag_button,
+  eHTMLTag_cite,    eHTMLTag_code,        eHTMLTag_dfn,
+  eHTMLTag_em,      eHTMLTag_embed,
+  eHTMLTag_i,       eHTMLTag_ilayer,      eHTMLTag_input,
+  eHTMLTag_kbd,     eHTMLTag_label,       eHTMLTag_li,
+  eHTMLTag_map,     eHTMLTag_q,
+  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    
+  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,  
+  eHTMLTag_textarea,eHTMLTag_tt,
+  eHTMLTag_u,       eHTMLTag_var,         eHTMLTag_wbr,
+  eHTMLTag_text,    eHTMLTag_newline,     eHTMLTag_whitespace,
+};
+
+
+static eHTMLTags gHeadChildTags []={ 
+  eHTMLTag_base,    eHTMLTag_bgsound,     eHTMLTag_isindex,
+  eHTMLTag_link,    eHTMLTag_meta,        /*eHTMLTag_nextid,*/
+  eHTMLTag_script,  eHTMLTag_sound,       eHTMLTag_style,
+  eHTMLTag_title
+};
+
+static eHTMLTags gFormChildTags []={ 
+  eHTMLTag_button,  eHTMLTag_input,   eHTMLTag_keygen,
+  eHTMLTag_label,   eHTMLTag_select,  eHTMLTag_textarea     
+};
 
 static CTokenRecycler gTokenRecycler;
 
@@ -1196,7 +1370,9 @@ static eHTMLTags gTagSet3[]={
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
-  PRBool result=!IsContainer(aParent);
+  PRBool result=PR_FALSE;
+  if(!IsContainer(aParent))
+    return result;
 
  
     /***************************************************************************
@@ -1232,18 +1408,24 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       result=PR_FALSE;
     }
     else
-      result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+      result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
   }
   else {
     switch((eHTMLTags)aParent) {
 
+      case eHTMLTag_abbr:
+        if(aParent!=aChild)
+          result=FindTagInSet(aChild,gInlineChildTags,sizeof(gInlineChildTags)/sizeof(eHTMLTag_unknown));
+        break;
+
       case eHTMLTag_blockquote:
       case eHTMLTag_body:
+      case eHTMLTag_ilayer:
       case eHTMLTag_layer:
         if(eHTMLTag_userdefined==aChild)
           result=PR_TRUE;
         else
-          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
       break;
 
       case eHTMLTag_button:
@@ -1257,11 +1439,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_menu:       case eHTMLTag_noscript:
       case eHTMLTag_ol:         case eHTMLTag_ul:
       case eHTMLTag_embed:      case eHTMLTag_noembed:
-        result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+        result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_dd:
-        result=(eHTMLTag_dt==aChild) ? PR_FALSE: FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+        result=(eHTMLTag_dt==aChild) ? PR_FALSE: FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_colgroup:
@@ -1272,7 +1454,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         {
           if(eHTMLTag_dt==aChild)
             result=PR_TRUE;
-          else result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          else result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1288,7 +1470,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         if(eHTMLTag_legend==aChild)
           result=PR_TRUE;
         else
-          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_frameset:
@@ -1305,7 +1487,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         {
           if(FindTagInSet(aChild,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown)))
             result=PR_FALSE;
-          else result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          else result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1329,7 +1511,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         if(eHTMLTag_frame==aChild)
           result=PR_FALSE;
         else
-          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_li:
@@ -1346,16 +1528,33 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         }
         break;
 
+      case eHTMLTag_multicol:
+        if(aParent!=aChild) {
+          result=FindTagInSet(aChild,gInlineChildTags,sizeof(gInlineChildTags)/sizeof(eHTMLTag_unknown));
+          if(PR_FALSE==result)
+            result=FindTagInSet(aChild,gBlockChildTags,sizeof(gBlockChildTags)/sizeof(eHTMLTag_unknown));
+        }
+        break;
+
+      case eHTMLTag_nolayer:
+        result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
+        break;
+
       case eHTMLTag_noframes:
         if(eHTMLTag_body==aChild)
           result=PR_TRUE;
         else
-          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+          result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_option:
         //for now, allow an option to contain anything but another option...
         result=PRBool(eHTMLTag_option!=aChild);
+        break;
+
+      case eHTMLTag_optgroup:
+        //for now, allow an optgroup to hold itself and options...
+        result=PRBool((eHTMLTag_option==aChild) || (aParent==aChild));
         break;
 
       case eHTMLTag_p:
@@ -1392,6 +1591,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         break;
 
+      case eHTMLTag_script:
+        //for now, allow an optgroup to hold itself and options...
+        result=PRBool((eHTMLTag_text==aChild) || (eHTMLTag_comment==aChild));
+        break;
+
       case eHTMLTag_table:
         {
           static eHTMLTags okTags[]={ 
@@ -1412,13 +1616,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         }
         break;
 
+      case eHTMLTag_title:
+      case eHTMLTag_textarea:
+        {
+          static eHTMLTags okTags[]={eHTMLTag_text,eHTMLTag_whitespace,eHTMLTag_newline};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
+        }
+        break;
+
       case eHTMLTag_th:
       case eHTMLTag_td:
         {
           static eHTMLTags okTags[]={eHTMLTag_newline,eHTMLTag_map};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
           if(PR_FALSE==result)
-            result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
+            result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1454,138 +1666,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   return result;
 }
-
-
-static eHTMLTags gBlockParentTags []={ 
-  eHTMLTag_applet,    eHTMLTag_basefont,    eHTMLTag_blockquote,
-  eHTMLTag_body,      eHTMLTag_center,      eHTMLTag_dd,    
-  eHTMLTag_div,       eHTMLTag_embed,       eHTMLTag_fieldset,
-  eHTMLTag_form,      eHTMLTag_iframe,      eHTMLTag_layer,
-  eHTMLTag_li,        eHTMLTag_listing,     eHTMLTag_multicol,
-  eHTMLTag_noembed,   eHTMLTag_noframes,    eHTMLTag_nolayer,
-  eHTMLTag_noscript,  eHTMLTag_object,      eHTMLTag_plaintext,
-  eHTMLTag_pre,       eHTMLTag_td,          eHTMLTag_th,
-  eHTMLTag_ul,
-  eHTMLTag_xmp,
-};
-
-static eHTMLTags gBlockChildTags []={ 
-  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_address,     eHTMLTag_applet,
-  eHTMLTag_b,         eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_bgsound,     eHTMLTag_big,
-  eHTMLTag_blink,     eHTMLTag_blockquote,  eHTMLTag_br,        eHTMLTag_button,
-  eHTMLTag_center,    eHTMLTag_cite,        eHTMLTag_code,      
-  eHTMLTag_dfn,       eHTMLTag_dir,         eHTMLTag_div,       eHTMLTag_dl,
-  eHTMLTag_em,        eHTMLTag_embed,
-  eHTMLTag_fieldset,  eHTMLTag_font,        eHTMLTag_form,
-  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,
-  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,
-  eHTMLTag_hr,      
-
-  eHTMLTag_i,         eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,         
-  eHTMLTag_isindex,   eHTMLTag_input,
-
-  eHTMLTag_kbd,     
-
-  eHTMLTag_label,     eHTMLTag_layer,       eHTMLTag_listing,
-
-  eHTMLTag_map,       /*eHTMLTag_marque,*/  eHTMLTag_menu,      eHTMLTag_multicol,
-  eHTMLTag_nobr,      eHTMLTag_noembed,     eHTMLTag_noframes,  eHTMLTag_nolayer,   eHTMLTag_noscript,
-
-  eHTMLTag_object,    eHTMLTag_ol,
-  eHTMLTag_p,         eHTMLTag_plaintext,   eHTMLTag_pre,         
-  eHTMLTag_q,
-  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
-  eHTMLTag_sound,     eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
-  eHTMLTag_sub,       eHTMLTag_sup,
-
-  eHTMLTag_table,     eHTMLTag_textarea,    eHTMLTag_tt,
-  eHTMLTag_u,         eHTMLTag_ul,
-  eHTMLTag_var,       eHTMLTag_wbr,         eHTMLTag_xmp,
-  
-    //a few special cases...
-  eHTMLTag_newline,
-  eHTMLTag_whitespace,
-
-
-};  
-
-static eHTMLTags gInlineParentTags []={ 
-  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_address,
-  eHTMLTag_b,         eHTMLTag_bdo,         eHTMLTag_big,
-  eHTMLTag_blink,     eHTMLTag_button,      eHTMLTag_caption,
-  eHTMLTag_cite,      eHTMLTag_code,        eHTMLTag_dfn,
-  eHTMLTag_dt,        eHTMLTag_em,          eHTMLTag_font,
-  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,      
-  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,      
-  eHTMLTag_i,         eHTMLTag_ilayer,      eHTMLTag_kbd,
-  eHTMLTag_label,     eHTMLTag_legend,      /*eHTMLTag_marquee,*/
-  eHTMLTag_nobr,      eHTMLTag_ol,          eHTMLTag_p,           
-  eHTMLTag_q,
-  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_small,
-  eHTMLTag_span,      eHTMLTag_strike,      eHTMLTag_strong,
-  eHTMLTag_sub,       eHTMLTag_sup,         
-  eHTMLTag_td,        eHTMLTag_th,          eHTMLTag_tt,
-  eHTMLTag_u,         eHTMLTag_ul,          eHTMLTag_var
-};
-
-static eHTMLTags gInlineChildTags []={ 
-  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_applet,
-  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   eHTMLTag_big,       eHTMLTag_blink,
-  eHTMLTag_br,      eHTMLTag_button,
-
-  eHTMLTag_cite,    eHTMLTag_code,
-  eHTMLTag_dfn,
-  eHTMLTag_em,      eHTMLTag_embed,
-  eHTMLTag_font,
-  eHTMLTag_i,       eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,       eHTMLTag_input,
-  eHTMLTag_kbd,     
-  eHTMLTag_label,   eHTMLTag_li,
-  eHTMLTag_map,
-  eHTMLTag_nobr,
-  eHTMLTag_object,
-  eHTMLTag_p,
-  eHTMLTag_pre,
-  eHTMLTag_q,
-  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
-  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
-  eHTMLTag_sub,     eHTMLTag_sup,
-  eHTMLTag_textarea,eHTMLTag_tt,
-  eHTMLTag_u,
-  eHTMLTag_var,
-  eHTMLTag_wbr,
-  eHTMLTag_text,
-  eHTMLTag_newline,
-  eHTMLTag_whitespace,
-};
-
-static eHTMLTags gPREChildTags []={ 
-  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   
-  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   
-  eHTMLTag_br,      eHTMLTag_button,
-  eHTMLTag_cite,    eHTMLTag_code,        eHTMLTag_dfn,
-  eHTMLTag_em,      eHTMLTag_embed,
-  eHTMLTag_i,       eHTMLTag_ilayer,      eHTMLTag_input,
-  eHTMLTag_kbd,     eHTMLTag_label,       eHTMLTag_li,
-  eHTMLTag_map,     eHTMLTag_q,
-  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    
-  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,  
-  eHTMLTag_textarea,eHTMLTag_tt,
-  eHTMLTag_u,       eHTMLTag_var,         eHTMLTag_wbr,
-  eHTMLTag_text,    eHTMLTag_newline,     eHTMLTag_whitespace,
-};
-
-
-static eHTMLTags gHeadChildTags []={ 
-  eHTMLTag_base,    eHTMLTag_bgsound,     eHTMLTag_isindex,
-  eHTMLTag_link,    eHTMLTag_meta,        /*eHTMLTag_nextid,*/
-  eHTMLTag_script,  eHTMLTag_sound,       eHTMLTag_style,
-  eHTMLTag_title
-};
-
-static eHTMLTags gFormChildTags []={ 
-  eHTMLTag_button,  eHTMLTag_input,   eHTMLTag_keygen,
-  eHTMLTag_label,   eHTMLTag_select,  eHTMLTag_textarea     
-};
 
 /**
  *  This method is called to determine whether or not a tag
@@ -1856,7 +1936,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   //begin with some simple (and obvious) cases...
   switch(aParent) {
     case eHTMLTag_table:
-      if(eHTMLTag_form==aChild)
+      if((eHTMLTag_form==aChild) || (eHTMLTag_table==aChild))
         result=PR_FALSE;
       else if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown)))
         result=!HasOpenContainer(eHTMLTag_form);
