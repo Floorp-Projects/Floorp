@@ -4064,9 +4064,13 @@ done:
       }
     } else {
       nsCOMPtr<nsICertificateDialogs> certDialogs;
-      rv = ::getNSSDialogs(getter_AddRefs(certDialogs), NS_GET_IID(nsICertificateDialogs));
-      nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-      certDialogs->CrlImportStatusDialog(cxt, crlEntry);
+      // Not being able to display the success dialog should not
+      // be a fatal error, so don't return a failure code.
+      if (NS_SUCCEEDED(::getNSSDialogs(getter_AddRefs(certDialogs),
+				       NS_GET_IID(nsICertificateDialogs)))) {
+	nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+	certDialogs->CrlImportStatusDialog(cxt, crlEntry);
+      }
     }
   } else {
     if(crlKey == nsnull){
