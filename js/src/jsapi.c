@@ -1098,9 +1098,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitMathClass(cx, obj) &&
            js_InitNumberClass(cx, obj) &&
            js_InitStringClass(cx, obj) &&
-#if JS_HAS_ARGS_OBJECT
-           js_InitArgumentsClass(cx, obj) &&
-#endif
 #if JS_HAS_CALL_OBJECT
            js_InitCallClass(cx, obj) &&
 #endif
@@ -1143,9 +1140,6 @@ static struct {
     {js_InitMathClass,              ATOM_OFFSET(Math)},
     {js_InitNumberClass,            ATOM_OFFSET(Number)},
     {js_InitStringClass,            ATOM_OFFSET(String)},
-#if JS_HAS_ARGS_OBJECT
-    {js_InitArgumentsClass,         ATOM_OFFSET(Arguments)},
-#endif
 #if JS_HAS_CALL_OBJECT
     {js_InitCallClass,              ATOM_OFFSET(Call)},
 #endif

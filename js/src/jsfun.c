@@ -38,6 +38,7 @@
 #include "jsstddef.h"
 #include <string.h>
 #include "jstypes.h"
+#include "jsbit.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsarray.h"
@@ -94,6 +95,68 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
     return JS_TRUE;
 }
 
+static JSBool
+MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
+{
+    JSObject *argsobj;
+    jsval bmapval, bmapint;
+    size_t nbits, nbytes;
+    jsbitmap *bitmap;
+
+    argsobj = fp->argsobj;
+    (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
+    nbits = fp->argc;
+    JS_ASSERT(slot < nbits);
+    if (JSVAL_IS_VOID(bmapval)) {
+        if (nbits <= JSVAL_INT_BITS) {
+            bmapint = 0;
+            bitmap = (jsbitmap *) &bmapint;
+        } else {
+            nbytes = JS_HOWMANY(nbits, JS_BITS_PER_WORD) * sizeof(jsbitmap);
+            bitmap = (jsbitmap *) JS_malloc(cx, nbytes);
+            if (!bitmap)
+                return JS_FALSE;
+            memset(bitmap, 0, nbytes);
+            bmapval = PRIVATE_TO_JSVAL(bitmap);
+            JS_SetReservedSlot(cx, argsobj, 0, bmapval);
+        }
+    } else {
+        if (nbits <= JSVAL_INT_BITS) {
+            bmapint = JSVAL_TO_INT(bmapval);
+            bitmap = (jsbitmap *) &bmapint;
+        } else {
+            bitmap = (jsbitmap *) JSVAL_TO_PRIVATE(bmapval);
+        }
+    }
+    JS_SET_BIT(bitmap, slot);
+    if (bitmap == (jsbitmap *) &bmapint) {
+        bmapval = INT_TO_JSVAL(bmapint);
+        JS_SetReservedSlot(cx, argsobj, 0, bmapval);
+    }
+    return JS_TRUE;
+}
+
+/* NB: Infallible predicate, false does not mean error/exception. */
+static JSBool
+ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
+{
+    JSObject *argsobj;
+    jsval bmapval, bmapint;
+    jsbitmap *bitmap;
+
+    argsobj = fp->argsobj;
+    (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
+    if (JSVAL_IS_VOID(bmapval))
+        return JS_FALSE;
+    if (fp->argc <= JSVAL_INT_BITS) {
+        bmapint = JSVAL_TO_INT(bmapval);
+        bitmap = (jsbitmap *) &bmapint;
+    } else {
+        bitmap = (jsbitmap *) JSVAL_TO_PRIVATE(bmapval);
+    }
+    return JS_TEST_BIT(bitmap, slot) != 0;
+}
+
 JSBool
 js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
                    JSObject **objp, jsval *vp)
@@ -124,11 +187,17 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
     *vp = JSVAL_VOID;
     if (JSVAL_IS_INT(id)) {
         slot = (uintN) JSVAL_TO_INT(id);
-        if (slot < fp->argc)
+        if (slot < fp->argc) {
+            if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
+                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = fp->argv[slot];
+        }
     } else {
-        if (id == (jsid) cx->runtime->atomState.lengthAtom)
+        if (id == (jsid) cx->runtime->atomState.lengthAtom) {
+            if (fp->argsobj && TEST_BIT(ARGS_LENGTH, fp->overrides))
+                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = INT_TO_JSVAL((jsint) fp->argc);
+        }
     }
     return JS_TRUE;
 }
@@ -161,16 +230,28 @@ JSBool
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *argsobj;
+    jsval bmapval, rval;
     JSBool ok;
     JSRuntime *rt;
-    jsval rval;
 
     /*
      * Reuse args_enumerate here to reflect fp's actual arguments as indexed
-     * elements of argsobj.
+     * elements of argsobj.  Do this first, before clearing and freeing the
+     * deleted argument slot bitmap, because args_enumerate depends on that.
      */
     argsobj = fp->argsobj;
     ok = args_enumerate(cx, argsobj);
+
+    /*
+     * Now clear the deleted argument number bitmap slot and free the bitmap,
+     * if one was actually created due to 'delete arguments[0]' or similar.
+     */
+    (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
+    if (!JSVAL_IS_VOID(bmapval)) {
+        JS_SetReservedSlot(cx, argsobj, 0, JSVAL_VOID);
+        if (fp->argc > JSVAL_INT_BITS)
+            JS_free(cx, JSVAL_TO_PRIVATE(bmapval));
+    }
 
     /*
      * Now get the prototype properties so we snapshot fp->fun and fp->argc
@@ -193,31 +274,33 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 }
 
 static JSBool
-Arguments(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+args_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    if (JS_HAS_STRICT_OPTION(cx) &&
-        !JS_ReportErrorFlagsAndNumber(cx,
-                                      JSREPORT_WARNING | JSREPORT_STRICT,
-                                      js_GetErrorMessage, NULL,
-                                      JSMSG_DEPRECATED_USAGE,
-                                      js_ArgumentsClass.name)) {
-        return JS_FALSE;
-    }
+    jsint slot;
+    JSStackFrame *fp;
 
-    if (!cx->fp->constructing) {
-        obj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
-        if (!obj)
+    if (!JSVAL_IS_INT(id))
+        return JS_TRUE;
+    fp = (JSStackFrame *)
+         JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
+    if (!fp)
+        return JS_TRUE;
+    JS_ASSERT(fp->argsobj);
+
+    slot = JSVAL_TO_INT(id);
+    switch (slot) {
+      case ARGS_CALLEE:
+      case ARGS_LENGTH:
+        SET_BIT(slot, fp->overrides);
+        break;
+
+      default:
+        if ((uintN)slot < fp->argc && !MarkArgDeleted(cx, fp, slot))
             return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
+        break;
     }
     return JS_TRUE;
 }
-
-static JSPropertySpec args_props[] = {
-    {js_length_str,     ARGS_LENGTH,    0,0,0},
-    {js_callee_str,     ARGS_CALLEE,    0,0,0},
-    {0,0,0,0,0}
-};
 
 static JSBool
 args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
@@ -227,25 +310,26 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
     fp = (JSStackFrame *)
          JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
     if (!fp)
         return JS_TRUE;
+    JS_ASSERT(fp->argsobj);
 
+    slot = JSVAL_TO_INT(id);
     switch (slot) {
       case ARGS_CALLEE:
-        if (fp && !TEST_BIT(slot, fp->overrides))
+        if (!TEST_BIT(slot, fp->overrides))
             *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
       case ARGS_LENGTH:
-        if (fp && !TEST_BIT(slot, fp->overrides))
+        if (!TEST_BIT(slot, fp->overrides))
             *vp = INT_TO_JSVAL((jsint)fp->argc);
         break;
 
       default:
-        if (fp && (uintN)slot < fp->argc)
+        if ((uintN)slot < fp->argc && !ArgWasDeleted(cx, fp, slot))
             *vp = fp->argv[slot];
         break;
     }
@@ -258,34 +342,48 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsint slot;
     JSStackFrame *fp;
     jsdouble argc;
+    jsval bmapval;
+    jsbitmap *bitmap;
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
     fp = (JSStackFrame *)
          JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
     if (!fp)
         return JS_TRUE;
+    JS_ASSERT(fp->argsobj);
 
+    slot = JSVAL_TO_INT(id);
     switch (slot) {
       case ARGS_CALLEE:
-        if (fp)
-            SET_BIT(slot, fp->overrides);
+        SET_BIT(slot, fp->overrides);
         break;
 
       case ARGS_LENGTH:
-        if (fp) {
-            if (!js_ValueToNumber(cx, *vp, &argc))
-                return JS_FALSE;
-            argc = js_DoubleToInteger(argc);
-            if (0 <= argc && argc < fp->argc)
-                fp->argc = (uintN)argc;
-            SET_BIT(slot, fp->overrides);
+        if (!js_ValueToNumber(cx, *vp, &argc))
+            return JS_FALSE;
+        argc = js_DoubleToInteger(argc);
+        if (0 <= argc && argc < fp->argc) {
+            /* Check whether we need to free the deleted args bitmap. */
+            if (fp->argc > JSVAL_INT_BITS &&
+                (uintN)argc <= JSVAL_INT_BITS) {
+                (void) JS_GetReservedSlot(cx, obj, 0, &bmapval);
+                if (!JSVAL_IS_VOID(bmapval)) {
+                    bitmap = (jsbitmap *) JSVAL_TO_PRIVATE(bmapval);
+                    bmapval = INT_TO_JSVAL(bitmap[0]);
+                    JS_free(cx, bitmap);
+                    JS_SetReservedSlot(cx, obj, 0, bmapval);
+                }
+            }
+
+            /* Reduce fp's actual argument count accordingly. */
+            fp->argc = (uintN)argc;
         }
+        SET_BIT(slot, fp->overrides);
         break;
 
       default:
-        if (fp && (uintN)slot < fp->argc)
+        if ((uintN)slot < fp->argc && !ArgWasDeleted(cx, fp, slot))
             fp->argv[slot] = *vp;
         break;
     }
@@ -293,35 +391,136 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 static JSBool
+args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+             JSObject **objp)
+{
+    JSStackFrame *fp;
+    uintN slot;
+    JSString *str;
+    JSAtom *atom;
+    JSScopeProperty *sprop;
+    intN tinyid;
+    jsval value;
+
+    *objp = NULL;
+    fp = (JSStackFrame *)
+         JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
+    if (!fp)
+        return JS_TRUE;
+
+    if (JSVAL_IS_INT(id)) {
+        slot = JSVAL_TO_INT(id);
+        if (slot < fp->argc && !ArgWasDeleted(cx, fp, slot)) {
+            /* XXX ECMA specs DontEnum, contrary to other array-like objects */
+            if (!js_DefineProperty(cx, obj, (jsid) id, fp->argv[slot],
+                                   args_getProperty, args_setProperty,
+                                   JSVERSION_IS_ECMA(cx->version)
+                                   ? 0
+                                   : JSPROP_ENUMERATE,
+                                   NULL)) {
+                return JS_FALSE;
+            }
+            *objp = obj;
+        }
+    } else {
+        str = JSVAL_TO_STRING(id);
+        atom = cx->runtime->atomState.lengthAtom;
+        if (str == ATOM_TO_STRING(atom)) {
+            tinyid = ARGS_LENGTH;
+            value = INT_TO_JSVAL(fp->argc);
+        } else {
+            atom = cx->runtime->atomState.calleeAtom;
+            if (str == ATOM_TO_STRING(atom)) {
+                tinyid = ARGS_CALLEE;
+                value = fp->argv ? fp->argv[-2]
+                                 : OBJECT_TO_JSVAL(fp->fun->object);
+            } else {
+                atom = NULL;
+            }
+        }
+
+        if (atom && !TEST_BIT(tinyid, fp->overrides)) {
+            if (!js_DefineProperty(cx, obj, (jsid) atom, value,
+                                   args_getProperty, args_setProperty, 0,
+                                   (JSProperty **) &sprop)) {
+                return JS_FALSE;
+            }
+#ifdef JS_DOUBLE_HASHING
+            sprop->attrs |= JSPROP_INDEX;
+            sprop->tinyid = tinyid;
+#else
+            sprop->id = INT_TO_JSVAL(tinyid);
+#endif
+            OBJ_DROP_PROPERTY(cx, obj, (JSProperty *) sprop);
+            *objp = obj;
+        }
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
 args_enumerate(JSContext *cx, JSObject *obj)
 {
     JSStackFrame *fp;
-    uintN attrs, slot;
+    JSObject *pobj;
+    JSProperty *prop;
+    uintN slot;
 
     fp = (JSStackFrame *)
          JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
     if (!fp)
         return JS_TRUE;
 
-    /* XXX ECMA specs DontEnum, contrary to all other array-like objects */
-    attrs = JSVERSION_IS_ECMA(cx->version) ? 0 : JSPROP_ENUMERATE;
+    /*
+     * Trigger reflection with value snapshot in args_resolve using a series
+     * of js_LookupProperty calls.  We handle length, callee, and the indexed
+     * argument properties.  We know that args_resolve covers all these cases
+     * and creates direct properties of obj, but that it may fail to resolve
+     * length or callee if overridden.
+     */
+    if (!js_LookupProperty(cx, obj, (jsid) cx->runtime->atomState.lengthAtom,
+                           &pobj, &prop)) {
+        return JS_FALSE;
+    }
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+    if (!js_LookupProperty(cx, obj, (jsid) cx->runtime->atomState.calleeAtom,
+                           &pobj, &prop)) {
+        return JS_FALSE;
+    }
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
 
     for (slot = 0; slot < fp->argc; slot++) {
-        if (!js_DefineProperty(cx, obj, (jsid) INT_TO_JSVAL((jsint)slot),
-                               fp->argv[slot], NULL, NULL, attrs,
-                               NULL)) {
+        if (!js_LookupProperty(cx, obj, (jsid) INT_TO_JSVAL((jsint)slot),
+                               &pobj, &prop)) {
             return JS_FALSE;
         }
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
     return JS_TRUE;
 }
 
+/*
+ * The Arguments class is not initialized via JS_InitClass, and must not be,
+ * because its name is "Object".  Per ECMA, that causes instances of it to
+ * delegate to the object named by Object.prototype.  It also ensures that
+ * arguments.toString() returns "[object Object]".
+ *
+ * The JSClass functions below collaborate to lazily reflect and synchronize
+ * actual argument values, argument count, and callee function object stored
+ * in a JSStackFrame with their corresponding property values in the frame's
+ * arguments object.
+ */
 JSClass js_ArgumentsClass = {
-    js_Arguments_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  JS_PropertyStub,
+    js_Object_str,
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1),
+    JS_PropertyStub,  args_delProperty,
     args_getProperty, args_setProperty,
-    args_enumerate,   JS_ResolveStub,
+    args_enumerate,   (JSResolveOp) args_resolve,
     JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
@@ -436,14 +635,16 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
+    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    if (!fp)
+        return JS_TRUE;
 
+    slot = JSVAL_TO_INT(id);
     switch (slot) {
       case CALL_ARGUMENTS:
-        if (fp && !TEST_BIT(slot, fp->overrides)) {
+        if (!TEST_BIT(slot, fp->overrides)) {
             JSObject *argsobj = js_GetArgsObject(cx, fp);
             if (!argsobj)
                 return JS_FALSE;
@@ -452,17 +653,17 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case CALL_CALLEE:
-        if (fp && !TEST_BIT(slot, fp->overrides))
+        if (!TEST_BIT(slot, fp->overrides))
             *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
       case FUN_CALL:
-        if (fp && !TEST_BIT(slot, fp->overrides))
+        if (!TEST_BIT(slot, fp->overrides))
             *vp = OBJECT_TO_JSVAL(obj);
         break;
 
       default:
-        if (fp && (uintN)slot < fp->argc)
+        if ((uintN)slot < fp->argc)
             *vp = fp->argv[slot];
         break;
     }
@@ -475,21 +676,22 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSStackFrame *fp;
     jsint slot;
 
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    slot = JSVAL_TO_INT(id);
+    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    if (!fp)
+        return JS_TRUE;
 
+    slot = JSVAL_TO_INT(id);
     switch (slot) {
       case CALL_ARGUMENTS:
       case CALL_CALLEE:
       case FUN_CALL:
-        if (fp)
-            SET_BIT(slot, fp->overrides);
+        SET_BIT(slot, fp->overrides);
         break;
 
       default:
-        if (fp && (uintN)slot < fp->argc)
+        if ((uintN)slot < fp->argc)
             fp->argv[slot] = *vp;
         break;
     }
@@ -1654,15 +1856,6 @@ bad:
     cx->newborn[GCX_OBJECT] = NULL;
     return NULL;
 }
-
-#if JS_HAS_ARGS_OBJECT
-JSObject *
-js_InitArgumentsClass(JSContext *cx, JSObject *obj)
-{
-    return JS_InitClass(cx, obj, NULL, &js_ArgumentsClass, Arguments, 0,
-                        args_props, NULL, NULL, NULL);
-}
-#endif
 
 #if JS_HAS_CALL_OBJECT
 JSObject *

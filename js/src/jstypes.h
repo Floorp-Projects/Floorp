@@ -217,13 +217,15 @@
 #define JS_BITMASK(n)   (JS_BIT(n) - 1)
 
 /***********************************************************************
-** MACROS:      JS_ROUNDUP
+** MACROS:      JS_HOWMANY
+**              JS_ROUNDUP
 **              JS_MIN
-**                              JS_MAX
+**              JS_MAX
 ** DESCRIPTION:
 **      Commonly used macros for operations on compatible types.
 ***********************************************************************/
-#define JS_ROUNDUP(x,y) ((((x)+((y)-1))/(y))*(y))
+#define JS_HOWMANY(x,y) (((x)+(y)-1)/(y))
+#define JS_ROUNDUP(x,y) (JS_HOWMANY(x,y)*(y))
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
