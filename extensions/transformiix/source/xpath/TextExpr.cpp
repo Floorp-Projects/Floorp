@@ -51,8 +51,6 @@ ExprResult* TextExpr::evaluate(Node* context, ContextState* cs) {
 /**
  * Returns the default priority of this Pattern based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
 double TextExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
     return -0.5;

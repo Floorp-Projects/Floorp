@@ -42,14 +42,9 @@ ExprResult* RootExpr::evaluate(Node* context, ContextState* cs) {
 /**
  * Returns the default priority of this Pattern based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
 double RootExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-    if ( matches(node, context, cs) ) {
-        return 0.5;
-    }
-    else return Double::NEGATIVE_INFINITY;
+    return 0.5;
 } //-- getDefaultPriority
 
 /**
@@ -64,12 +59,12 @@ MBool RootExpr::matches(Node* node, Node* context, ContextState* cs) {
 } //-- matches
 
 /**
- * Returns the String representation of this PatternExpr.
+ * Returns the String representation of this Expr.
  * @param dest the String to use when creating the String
  * representation. The String representation will be appended to
  * any data in the destination String, to allow cascading calls to
  * other #toString() methods for Expressions.
- * @return the String representation of this PatternExpr.
+ * @return the String representation of this Expr.
 **/
 void RootExpr::toString(String& dest) {
     dest.append('/');
