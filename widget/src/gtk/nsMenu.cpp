@@ -66,7 +66,7 @@ GtkWidget *nsMenu::GetNativeParent()
   } else {
     return NULL;
   }
-  return voidData;
+  return static_cast<GtkWidget*>(voidData);
 }
 
 
