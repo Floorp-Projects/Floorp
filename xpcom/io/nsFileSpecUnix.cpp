@@ -28,7 +28,7 @@
 #include <limits.h>
 #include "nsError.h"
 
-#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
+#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX) || defined(NTO)
 #include <sys/statvfs.h> /* for statvfs() */
 #define STATFS statvfs
 #elif defined(SCO_SV)
