@@ -265,6 +265,7 @@ protected:
   virtual void AdjustPointsInSameContent(nsIPresContext& aPresContext,
                                  nsGUIEvent    * aEvent);
 
+  PRBool DisplaySelection(nsIPresContext& aPresContext);
 
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);

@@ -75,7 +75,7 @@ public:
   }
 
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
 
@@ -108,7 +108,7 @@ void SimpleContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
 }
 
-void SimpleContent::DoConvertToXIF(nsXIFConverter& aConverter) const
+void SimpleContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
 }
 

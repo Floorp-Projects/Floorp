@@ -243,6 +243,15 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
 
+
+  virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
+  virtual PRBool IsInSelection(const nsIContent *aContent) const;
+  virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
+  virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
+  virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
+  virtual void SetDisplaySelection(PRBool aToggle);
+  virtual PRBool GetDisplaySelection() const;
+
   // nsIJSScriptObject interface
   virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
   virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -253,15 +262,10 @@ public:
   virtual PRBool    Convert(JSContext *aContext, jsval aID);
   virtual void      Finalize(JSContext *aContext);
 
-  virtual PRBool IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const;
-  virtual PRBool IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const;
-  virtual nsIContent* GetPrevContent(nsIContent *aContent) const;
-  virtual nsIContent* GetNextContent(nsIContent *aContent) const;
-
 protected:
-  nsIContent* FindContent( nsIContent* aStartNode,
-                          nsIContent* aTest1, 
-                          nsIContent* aTest2) const;
+  nsIContent* FindContent(const nsIContent* aStartNode,
+                          const nsIContent* aTest1, 
+                          const nsIContent* aTest2) const;
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
@@ -287,6 +291,7 @@ protected:
   void* mScriptObject;
   nsIScriptContextOwner *mScriptContextOwner;
   nsIEventListenerManager* mListenerManager;
+  PRBool mDisplaySelection;
   PRBool mInDestructor;
 };
 

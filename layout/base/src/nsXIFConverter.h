@@ -52,6 +52,7 @@ private:
   nsString mEndComment;
   nsString mQuote;
   nsString mEqual;
+  PRBool   mSetUseSelection;
 
 public:
 
@@ -113,6 +114,13 @@ public:
 
   // Output routines
   void Write();
+
+  void    SetUseSelection(PRBool aUseSelection) {
+    mSetUseSelection = aUseSelection;
+  }
+  PRBool  GetUseSelection() {
+    return mSetUseSelection;
+  }
    
 };
 

@@ -152,8 +152,8 @@ nsDocument::nsDocument()
   mScriptObject = nsnull;
   mScriptContextOwner = nsnull;
   mListenerManager = nsnull;
+  mDisplaySelection = PR_FALSE;
   mInDestructor = PR_FALSE;
-
   if (NS_OK != NS_NewSelection(&mSelection)) {
     printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
   }
@@ -1161,7 +1161,7 @@ void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode
     if (PR_FALSE == isSynthetic)
     {
       content->BeginConvertToXIF(aConverter);
-      content->DoConvertToXIF(aConverter);
+      content->ConvertContentToXIF(aConverter);
     }
     NS_RELEASE(content);
   }
@@ -1177,7 +1177,7 @@ void nsDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aN
   while ((result == NS_OK) && (child != nsnull))
   { 
     nsIDOMNode* temp = child;
-    ToXIF(aConverter,child);
+    ToXIF(aConverter,child);    
     result = child->GetNextSibling(&child);
     NS_RELEASE(temp);
   }
@@ -1201,9 +1201,34 @@ void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNod
 
 void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  BeginConvertToXIF(aConverter,aNode);
-  ConvertChildrenToXIF(aConverter,aNode);
-  FinishConvertToXIF(aConverter,aNode);
+  if (aConverter.GetUseSelection() == PR_TRUE)
+  {
+    nsIContent* content = nsnull;
+    nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+
+    if (isContent != nsnull)
+    {
+      PRBool  isInSelection = IsInSelection(content);
+      
+      if (isInSelection == PR_TRUE)
+      {
+        BeginConvertToXIF(aConverter,aNode);
+        ConvertChildrenToXIF(aConverter,aNode);
+        FinishConvertToXIF(aConverter,aNode);
+      }
+      else
+      {
+        ConvertChildrenToXIF(aConverter,aNode);
+      }
+      NS_RELEASE(content);
+    }
+  }
+  else
+  {
+    BeginConvertToXIF(aConverter,aNode);
+    ConvertChildrenToXIF(aConverter,aNode);
+    FinishConvertToXIF(aConverter,aNode);
+  }
 }
 
 void nsDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
@@ -1211,6 +1236,8 @@ void nsDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
   
   nsXIFConverter  converter(aBuffer);
   // call the function
+
+  converter.SetUseSelection(aUseSelection);
 
   converter.AddStartTag("section");
   
@@ -1234,9 +1261,9 @@ void nsDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
 }
 
 
-nsIContent* nsDocument::FindContent( nsIContent* aStartNode,
-                                    nsIContent* aTest1, 
-                                    nsIContent* aTest2) const
+nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
+                                    const nsIContent* aTest1, 
+                                    const nsIContent* aTest2) const
 {
   PRInt32       count = aStartNode->ChildCount();
   PRInt32       index;
@@ -1253,7 +1280,7 @@ nsIContent* nsDocument::FindContent( nsIContent* aStartNode,
   return nsnull;
 }
 
-PRBool nsDocument::IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const
+PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const
 {
   PRBool  result;
 
@@ -1276,7 +1303,29 @@ PRBool nsDocument::IsInRange(nsIContent *aStartContent, nsIContent* aEndContent,
 }
 
 
-PRBool nsDocument::IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const
+PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
+{
+  PRBool  result = PR_FALSE;
+
+  if (mSelection != nsnull)
+  {
+    nsSelectionRange* range = mSelection->GetRange();
+    if (range != nsnull)
+    {
+      nsSelectionPoint* startPoint = range->GetStartPoint();
+      nsSelectionPoint* endPoint = range->GetEndPoint();
+
+      nsIContent* startContent = startPoint->GetContent();
+      nsIContent* endContent = endPoint->GetContent();
+      result = IsInRange(startContent, endContent, aContent);
+    }
+  }
+  return result;
+
+}
+
+
+PRBool nsDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const
 {
 
   PRBool result = PR_FALSE;
@@ -1290,7 +1339,7 @@ PRBool nsDocument::IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent
   return result;
 }
 
-nsIContent* nsDocument::GetPrevContent(nsIContent *aContent) const
+nsIContent* nsDocument::GetPrevContent(const nsIContent *aContent) const
 {
   nsIContent* result = nsnull;
  
@@ -1301,7 +1350,7 @@ nsIContent* nsDocument::GetPrevContent(nsIContent *aContent) const
     nsIContent* parent = aContent->GetParent();
     if (parent != nsnull && parent != mRootContent)
     {
-      PRInt32     index = parent->IndexOf(aContent);
+      PRInt32  index = parent->IndexOf((nsIContent*)aContent);
       if (index > 0)
         result = parent->ChildAt(index-1);
       else
@@ -1311,7 +1360,7 @@ nsIContent* nsDocument::GetPrevContent(nsIContent *aContent) const
   return result;
 }
 
-nsIContent* nsDocument::GetNextContent(nsIContent *aContent) const
+nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
 {
   nsIContent* result = nsnull;
    
@@ -1321,7 +1370,7 @@ nsIContent* nsDocument::GetNextContent(nsIContent *aContent) const
     nsIContent* parent = aContent->GetParent();
     if (parent != nsnull && parent != mRootContent)
     {
-      PRInt32     index = parent->IndexOf(aContent);
+      PRInt32     index = parent->IndexOf((nsIContent*)aContent);
       PRInt32     count = parent->ChildCount();
       if (index+1 < count) {
         result = parent->ChildAt(index+1);
@@ -1335,4 +1384,14 @@ nsIContent* nsDocument::GetNextContent(nsIContent *aContent) const
     }
   }
   return result;
+}
+
+void nsDocument::SetDisplaySelection(PRBool aToggle)
+{
+  mDisplaySelection = aToggle;
+}
+
+PRBool nsDocument::GetDisplaySelection() const
+{
+  return mDisplaySelection;
 }
