@@ -92,7 +92,7 @@ function onLoad() {
                                        gWizardMap );
     wizardManager.URL_PagePrefix = "chrome://messenger/content/aw-";
     wizardManager.URL_PagePostfix = ".xul"; 
-    wizardManager.SetHandlers(null, null, onFinish, null, null, null);
+    wizardManager.SetHandlers(null, null, onFinish, onCancel, null, null);
 
     // load up the SMTP service for later
     if (!smtpService) {
@@ -115,10 +115,46 @@ function onLoad() {
 }
 
     
+function onCancel() 
+{
+	var firstInvalidAccount = getFirstInvalidAccount();
+
+	// if the user cancels the the wizard when it pops up because of 
+	// an invalid account (example, a webmail account that activation started)
+	// we just force create it by setting some values and calling the FinishAccount()
+	// see bug #47521 for the full discussion
+	if (firstInvalidAccount) {
+    	var pageData = GetPageData();
+
+		// set the fullName if it doesn't exist
+		if (!pageData.identity.fullName || !pageData.identity.fullName.value) {
+    		setPageData(pageData, "identity", "fullName", "");
+		}
+
+		// set the email if it doesn't exist
+		if (!pageData.identity.email || !pageData.identity.email.value) {
+    		setPageData(pageData, "identity", "email", "nospam@nospam");
+		}
+	
+		// call FinishAccount() and not onFinish(), since the "finish"
+		// button may be disabled
+		FinishAccount();
+	}
+	else {
+		// since this is not an invalid account
+		// really cancel if the user hits the "cancel" button
+    	window.close();
+	}
+}
 
 function onFinish() {
     if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
         return;
+
+	FinishAccount();
+}
+	
+function FinishAccount() {
     var pageData = GetPageData();
 
     dump(parent.wizardManager.WSM);
@@ -507,17 +543,21 @@ function AccountExists(userName,hostName,serverType)
   return accountExists;
 }
 
-function checkForInvalidAccounts()
+function getFirstInvalidAccount()
 {
     am = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
     var invalidAccounts = getInvalidAccounts(am.accounts);
-    var firstInvalidAccount; 
   
     if (invalidAccounts.length > 0)
-        firstInvalidAccount = invalidAccounts[0];
+        return invalidAccounts[0];
     else
         return null;
+}
+
+function checkForInvalidAccounts()
+{
+	var firstInvalidAccount = getFirstInvalidAccount();
 
     if (firstInvalidAccount) {
         var pageData = GetPageData();
