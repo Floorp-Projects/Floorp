@@ -82,7 +82,7 @@ static struct idn_nameprep {
 	  compose_sym2(nameprep_unassigned_, id), \
 	  compose_sym2(nameprep_biditype_, id), }
 	MAKE_NAMEPREP_HANDLE("nameprep-11", id11),
-	{ NULL, NULL, NULL },
+	{ NULL, NULL, NULL, NULL, NULL },
 };
 
 static idn_result_t	idn_nameprep_check(nameprep_checkproc proc,
