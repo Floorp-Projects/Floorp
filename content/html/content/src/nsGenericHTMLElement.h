@@ -78,6 +78,8 @@ public:
     return nsGenericElement::SetAttribute(aName, aValue);
   }
   nsresult GetTagName(nsAWritableString& aTagName);
+  nsresult GetElementsByTagName(const nsAReadableString& aTagname,
+                                nsIDOMNodeList** aReturn);
 
   // Implementation for nsIDOMHTMLElement
   nsresult    GetId(nsAWritableString& aId);

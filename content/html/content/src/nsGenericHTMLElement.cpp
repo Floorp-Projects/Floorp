@@ -474,6 +474,20 @@ nsGenericHTMLElement::GetLocalName(nsAWritableString& aLocalName)
   return NS_OK;
 }
 
+nsresult
+nsGenericHTMLElement::GetElementsByTagName(const nsAReadableString& aTagname,
+                                           nsIDOMNodeList** aReturn)
+{
+  nsAutoString tagName(aTagname);
+
+  // Only lowercase the name if this element has no namespace (i.e.
+  // it's a HTML element, not an XHTML element).
+  if (mNodeInfo && mNodeInfo->NamespaceEquals(kNameSpaceID_None))
+    tagName.ToLowerCase();
+
+  return nsGenericElement::GetElementsByTagName(tagName, aReturn);
+}
+
 // Implementation for nsIDOMHTMLElement
 nsresult
 nsGenericHTMLElement::GetId(nsAWritableString& aId)
