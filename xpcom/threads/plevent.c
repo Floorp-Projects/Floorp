@@ -257,10 +257,14 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
     PRMonitor* mon;
 
     if (self == NULL)
-    return PR_FAILURE;
+        return PR_FAILURE;
 
     mon = self->monitor;
     PR_EnterMonitor(mon);
+
+#ifdef PL_POST_TIMINGS
+    event->postTime = PR_IntervalNow();
+#endif
 
     /* insert event into thread's event queue: */
     if (event != NULL) {
@@ -290,6 +294,10 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 
     PR_ASSERT(event != NULL);
     PR_CEnterMonitor(event);
+
+#ifdef PL_POST_TIMINGS
+    event->postTime = PR_IntervalNow();
+#endif
 
     if (PR_CurrentThread() == self->handlerThread) {
 	/* Handle the case where the thread requesting the event handling
@@ -564,13 +572,17 @@ PL_GetEventOwner(PLEvent* self)
 PR_IMPLEMENT(void)
 PL_HandleEvent(PLEvent* self)
 {
+    
     void* result;
-
     if (self == NULL)
         return;
 
     /* This event better not be on an event queue anymore. */
     PR_ASSERT(PR_CLIST_IS_EMPTY(&self->link));
+
+#ifdef PL_POST_TIMINGS
+    printf("$$$ last (%d) \n", PR_IntervalToMilliseconds(PR_IntervalNow() - self->postTime));
+#endif
 
     result = (*self->handler)(self);
     if (NULL != self->synchronousResult) {
@@ -1025,11 +1037,10 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (_pr_PostEventMsgId == uMsg )
     {
 		PREventQueue *queue = (PREventQueue *)lParam;
-    
 #if defined(_WIN32) || defined(WIN16)
         queue->removeMsg = PR_FALSE;
 #endif
-    	PL_ProcessPendingEvents(queue);
+        PL_ProcessPendingEvents(queue);
 #if defined(_WIN32) || defined(WIN16)
         queue->removeMsg = PR_TRUE;
 #endif
