@@ -7457,12 +7457,14 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         nsStyleChangeList changeList2;
         PRInt32 frameChange1 = NS_STYLE_HINT_NONE;
         PRInt32 frameChange2 = NS_STYLE_HINT_NONE;
-        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame1, changeList1,
-                                            NS_STYLE_HINT_NONE, frameChange1);
+        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame1, 
+                                            kNameSpaceID_Unknown, nsnull,
+                                            changeList1, NS_STYLE_HINT_NONE, frameChange1);
 
         if ((frameChange1 != NS_STYLE_HINT_RECONSTRUCT_ALL) && (primaryFrame2)) {
-          frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, changeList2,
-                                              NS_STYLE_HINT_NONE, frameChange2);
+          frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, 
+                                              kNameSpaceID_Unknown, nsnull,
+                                              changeList2, NS_STYLE_HINT_NONE, frameChange2);
         }
 
         if ((frameChange1 == NS_STYLE_HINT_RECONSTRUCT_ALL) || 
@@ -7504,8 +7506,9 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
       else if (primaryFrame2) {
         nsStyleChangeList changeList;
         PRInt32 frameChange = NS_STYLE_HINT_NONE;
-        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, changeList,
-                                            NS_STYLE_HINT_NONE, frameChange);
+        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, 
+                                            kNameSpaceID_Unknown, nsnull,
+                                            changeList, NS_STYLE_HINT_NONE, frameChange);
 
         switch (frameChange) {  // max change needed for top level frames
           case NS_STYLE_HINT_RECONSTRUCT_ALL:
@@ -7540,11 +7543,10 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
   return result;
 }
 
-
-    
 NS_IMETHODIMP
 nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aContent,
+                                        PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aHint)
 {
@@ -7612,8 +7614,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       changeList.AppendChange(primaryFrame, aContent, maxHint);
       nsCOMPtr<nsIFrameManager> frameManager;
       shell->GetFrameManager(getter_AddRefs(frameManager));
-      frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame, changeList,
-                                          aHint, maxHint);
+      frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame, 
+                                          aNameSpaceID, aAttribute,
+                                          changeList, aHint, maxHint);
 
       switch (maxHint) {  // maxHint is hint for primary only
         case NS_STYLE_HINT_RECONSTRUCT_ALL:
@@ -7628,7 +7631,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         case NS_STYLE_HINT_VISUAL:
         case NS_STYLE_HINT_CONTENT:
           // let the frame deal with it, since we don't know how to
-          result = primaryFrame->AttributeChanged(aPresContext, aContent, aAttribute, maxHint);
+          result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, maxHint);
         default:
           break;
       }
