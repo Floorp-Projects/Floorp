@@ -73,7 +73,7 @@ public class NativeObject extends ScriptableObject {
     }
 
     public String toString() {
-        Context cx = Context.getContext();
+        Context cx = Context.getCurrentContext();
         if (cx != null)
             return jsFunction_toString(cx, this, null, null);
         else
