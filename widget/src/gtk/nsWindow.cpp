@@ -2552,8 +2552,10 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
       oldrect.y = aY;
       mParent->WidgetToScreen(oldrect, newrect);
       gtk_widget_set_uposition(mShell, newrect.x, newrect.y);
+      InvalidateWindowPos();
     } else {
       gtk_widget_set_uposition(mShell, aX, aY);
+      InvalidateWindowPos();
     }
   }
   else if (mSuperWin) {
