@@ -134,11 +134,4 @@ statusbarpanel {
 
 .statusbarpanel-iconic {
   padding: 0px;
-}    
-
-/* ::::: miscellaneous ::::: */
-
-.toolbar-focustarget {
-  -moz-user-focus: ignore !important;
 }
-
