@@ -1065,6 +1065,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
       rv = NS_ERROR_OUT_OF_MEMORY; goto done;
     }
 
+    NotifyStoreClosedAllHeaders();
+
     rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
     if (NS_FAILED(rv)) goto done;
 
@@ -1134,6 +1136,32 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
   return rv;
 }
 
+
+nsresult nsMsgLocalMailFolder::NotifyStoreClosedAllHeaders()
+{
+  nsCOMPtr <nsISimpleEnumerator> enumerator;
+
+  GetMessages(nsnull, getter_AddRefs(enumerator));
+	nsCOMPtr<nsISupports> folderSupports;
+	nsresult rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+  if (enumerator)
+  {
+		PRBool hasMoreElements;
+		while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) && hasMoreElements)
+		{
+			nsCOMPtr<nsISupports> childSupports;
+			rv = enumerator->GetNext(getter_AddRefs(childSupports));
+			if(NS_FAILED(rv))
+				return rv;
+
+      // clear out db hdr, because it won't be valid when we get rid of the .msf file
+		  nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(childSupports, &rv));
+		  if(NS_SUCCEEDED(rv) && dbMessage)
+			  dbMessage->SetMsgDBHdr(nsnull);
+    }
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                                                nsIUrlListener *aListener)
