@@ -68,6 +68,8 @@
 	#include "CBevelButton.h"
 	#include "CPatternButtonPopup.h"
 	#include "CPatternProgressBar.h"
+	#include "CPatternPane.h"
+	#include "CGABorderPane.h"
 		
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
@@ -80,8 +82,6 @@
 	#include "CNavigationButtonPopup.h"
 	#include "CCloseAllAttachment.h"
 	#include "CColorEraseAttachment.h"
-	#include "CGABorderPane.h"
-	#include "CPatternPane.h"
 				
 	#include "CIncludeView.h"
 	#include "CPlaceHolderView.h"
@@ -185,8 +185,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CProxyCaption);
 	RegisterClass_(CCloseAllAttachment);
 	RegisterClass_(CColorEraseAttachment);
-	RegisterClass_(CGABorderPane);
-	RegisterClass_(CPatternPane);
 	
 	RegisterClass_(LSubOverlapView);
 
@@ -266,6 +264,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CPatternButtonPopup);
 	RegisterClass_(CPatternProgressBar);
 	RegisterClass_(CPatternProgressCaption);
+	RegisterClass_(CPatternPane);
+	RegisterClass_(CGABorderPane);
 
 	// еее General Purpose UI Classes
 	RegisterClass_(CToolbarBevelButton);	
