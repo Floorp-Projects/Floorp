@@ -136,7 +136,7 @@ BookmarksExport::WriteChildren(nsIDOMElement* inElement, PRInt32 inDepth)
   for (PRInt32 i = 0; i < numChildren; i ++)
   {
     nsCOMPtr<nsIContent> curChild;
-    curContent->ChildAt(i, *getter_AddRefs(curChild));
+    curContent->ChildAt(i, getter_AddRefs(curChild));
     
     nsCOMPtr<nsIDOMElement> curElt = do_QueryInterface(curChild);
     if (!WriteItem(curElt, inDepth))
