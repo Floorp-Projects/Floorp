@@ -4485,7 +4485,7 @@ EOF
     fi
     PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
-    DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
+    DSO_LDOPTS='-G -h $(notdir $@) -z combreloc'
     RESOLVE_LINK_SYMBOLS=1
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
