@@ -540,6 +540,71 @@ void CUnknownTag::ListenToMessage( MessageT inMessage, void* ioParam )
 
 
 /**********************************************************/
+#pragma mark CPageTitle
+
+
+CPageTitle::CPageTitle( LStream* inStream ) : CEditDialog( inStream )
+{
+	ErrorManager::PrepareToInteract();
+	UDesktop::Deactivate();
+}
+
+void CPageTitle::FinishCreateSelf()
+{
+	fPageName = (CLargeEditField *)FindPaneByID( 'pgtl' );
+	XP_ASSERT( fPageName );
+	CEditDialog::FinishCreateSelf();
+}	
+
+
+CPageTitle::~CPageTitle()
+{
+	UDesktop::Activate();
+}
+
+
+void CPageTitle::InitializeDialogControls()
+{
+	// fPageName cannot be null because we've already asserted it in FinishCreateSelf()
+	SetTextTraitsIDByCsid(fPageName, GetWinCSID());
+	EDT_PageData *pagedata = EDT_GetPageData( fContext );
+	
+	if ( pagedata )
+	{
+		fPageName->SetDescriptor( CtoPstr( pagedata->pTitle ) );
+		EDT_FreePageData( pagedata );
+	}
+	
+	this->SetLatentSub( fPageName );
+	fPageName->SelectAll();
+}
+
+
+Boolean CPageTitle::CommitChanges( Boolean /* isAllPanes */ )
+{
+	EDT_PageData *pagedata = EDT_GetPageData( fContext );
+	if ( pagedata )
+	{
+		pagedata->pTitle = fPageName->GetLongDescriptor();
+		if ( pagedata->pTitle && pagedata->pTitle[0] == 0 )
+		{
+			XP_FREE( pagedata->pTitle );
+			pagedata->pTitle = NULL;
+		}
+		if ( pagedata->pTitle == NULL )
+			pagedata->pTitle = strdup( " " );
+		
+		EDT_SetPageData( fContext, pagedata );
+		
+		EDT_FreePageData( pagedata );
+		return true;
+	}
+	return false;
+}
+
+
+
+/**********************************************************/
 #pragma mark -
 // Does PowerPlant now have a better class?  Can we replace this homebrew class?
 // This is a single column LListBox which allows multiple things to be selected.
@@ -1433,6 +1498,7 @@ void CTabbedDialog::RegisterViewTypes()
 	RegisterClass_( CEDDocPropAdvancedContain);
 	RegisterClass_( LToggleButton);
 	RegisterClass_( CUnknownTag);
+	RegisterClass_( CPageTitle);
 	RegisterClass_( CPublish);
 	RegisterClass_( CTableInsertDialog);
 	RegisterClass_( CEditTabSwitcher);
