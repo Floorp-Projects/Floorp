@@ -136,6 +136,17 @@ public class VariableTable {
         if (i != null) {
             itsVariables.removeElementAt(i.intValue());
             itsVariableNames.remove(name);
+            Hashtable ht = new Hashtable(11);
+            Enumeration e = itsVariableNames.keys();
+            while (e.hasMoreElements()) {
+                Object k = e.nextElement();
+                Integer v = (Integer) itsVariableNames.get(k);
+                int v2 = v.intValue();
+                if (v2 > i.intValue())
+                    v = new Integer(v2 - 1);
+                ht.put(k, v);
+            }
+            itsVariableNames = ht;
         }
     }
     
