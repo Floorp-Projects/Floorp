@@ -586,6 +586,41 @@ nsScriptLoader::ProcessPendingReqests()
   }
 }
 
+
+// This function is copied from nsParser.cpp. It was simplified though, unnecessary part is removed.
+static PRBool 
+DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset) 
+{
+  if (aLen < 2)
+    return false;
+
+  switch(aBytes[0]) {
+  case 0xEF:  
+    if( aLen >= 3 && (0xBB==aBytes[1]) && (0xBF==aBytes[2])) {
+        // EF BB BF
+        // Win2K UTF-8 BOM
+        oCharset.AssignWithConversion("UTF-8"); 
+    }
+    break;
+  case 0xFE:
+    if(0xFF==aBytes[1]) {
+      // FE FF
+      // UTF-16, big-endian 
+      oCharset.AssignWithConversion("UTF-16BE"); 
+    }
+    break;
+  case 0xFF:
+    if(0xFE==aBytes[1]) {
+      // FF FE
+      // UTF-16, little-endian 
+      oCharset.AssignWithConversion("UTF-16LE"); 
+    }
+    break;
+  }  // switch
+  return oCharset.Length() > 0;
+}
+
+
 NS_IMETHODIMP
 nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext,
@@ -679,6 +714,10 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
 
     if (NS_FAILED(rv) || characterSet.IsEmpty()) {
+      DetectByteOrderMark((const unsigned char*)string, stringLen, characterSet);
+    }
+
+    if (characterSet.IsEmpty()) {
       // charset from document default
       rv = mDocument->GetDocumentCharacterSet(characterSet);
     }
