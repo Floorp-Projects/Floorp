@@ -1548,7 +1548,6 @@ char * NextChar_UTF8(char *str)
 void comi18n_destructor()
 {
   NS_IF_RELEASE(MimeCharsetConverterClass::mDetector);
-  printf("comi18n_destructor\n");
 }
 
 } /* end of extern "C" */
