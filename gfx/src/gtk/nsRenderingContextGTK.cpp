@@ -81,6 +81,7 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mStateCache = new nsVoidArray();
   mRegion = new nsRegionGTK();
   mRegion->Init();
+  mDrawStringBuf = nsnull;
 
   PushState();
 }
@@ -869,7 +870,7 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       mDrawStringSize = aLength;
     }
     else {
-      if (mDrawStringSize < PRInt32(aLength)) {
+      if (mDrawStringSize < aLength) {
         delete [] mDrawStringBuf;
         mDrawStringBuf = new GdkWChar[aLength];
         mDrawStringSize = aLength;
@@ -913,11 +914,26 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
       y += aY;
     }
 
-    mTMatrix->TransformCoord(&x, &y);
-
-    ::gdk_draw_text (mRenderingSurface->drawable, mCurrentFont,
-                     mRenderingSurface->gc,
-                     x, y, aString, aLength);
+    if (nsnull != aSpacing) {
+      // Render the string, one character at a time...
+      const char* end = aString + aLength;
+      while (aString < end) {
+        char ch = *aString++;
+        nscoord xx = x;
+        nscoord yy = y;
+        mTMatrix->TransformCoord(&xx, &yy);
+        ::gdk_draw_text(mRenderingSurface->drawable, mCurrentFont,
+                        mRenderingSurface->gc,
+                        xx, yy, &ch, 1);
+        x += *aSpacing++;
+      }
+    }
+    else {
+      mTMatrix->TransformCoord(&x, &y);
+      ::gdk_draw_text (mRenderingSurface->drawable, mCurrentFont,
+                       mRenderingSurface->gc,
+                       x, y, aString, aLength);
+    }
   }
 
 #if 0
@@ -979,31 +995,46 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       y += aY;
     }
 
-    mTMatrix->TransformCoord(&x, &y);
-
-    // Make the temporary buffer larger if needed.
-    if (nsnull == mDrawStringBuf) {
-      mDrawStringBuf = new GdkWChar[aLength];
-      mDrawStringSize = aLength;
+    if (nsnull != aSpacing) {
+      // Render the string, one character at a time...
+      const PRUnichar* end = aString + aLength;
+      while (aString < end) {
+        GdkWChar ch = (GdkWChar) *aString++;
+        nscoord xx = x;
+        nscoord yy = y;
+        mTMatrix->TransformCoord(&xx, &yy);
+        ::gdk_draw_text_wc(mRenderingSurface->drawable, mCurrentFont,
+                           mRenderingSurface->gc,
+                           xx, yy, &ch, 1);
+        x += *aSpacing++;
+      }
     }
     else {
-      if (mDrawStringSize < PRInt32(aLength)) {
-        delete [] mDrawStringBuf;
+      // Make the temporary buffer larger if needed.
+      if (nsnull == mDrawStringBuf) {
         mDrawStringBuf = new GdkWChar[aLength];
         mDrawStringSize = aLength;
       }
-    }
+      else {
+        if (mDrawStringSize < aLength) {
+          delete [] mDrawStringBuf;
+          mDrawStringBuf = new GdkWChar[aLength];
+          mDrawStringSize = aLength;
+        }
+      }
 
-    // Translate the unicode data into GdkWChar's
-    GdkWChar* xc = mDrawStringBuf;
-    GdkWChar* end = xc + aLength;
-    while (xc < end) {
-      *xc++ = (GdkWChar) *aString++;
-    }
+      // Translate the unicode data into GdkWChar's
+      GdkWChar* xc = mDrawStringBuf;
+      GdkWChar* end = xc + aLength;
+      while (xc < end) {
+        *xc++ = (GdkWChar) *aString++;
+      }
 
-    ::gdk_draw_text_wc (mRenderingSurface->drawable, mCurrentFont,
-                        mRenderingSurface->gc,
-                        x, y, mDrawStringBuf, aLength);
+      mTMatrix->TransformCoord(&x, &y);
+      ::gdk_draw_text_wc (mRenderingSurface->drawable, mCurrentFont,
+                          mRenderingSurface->gc,
+                          x, y, mDrawStringBuf, aLength);
+    }
   }
   return NS_OK;
 }
