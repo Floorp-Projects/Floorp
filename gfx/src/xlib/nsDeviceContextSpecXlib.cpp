@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Ken Herron <kherron+mozilla@fmailbox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -62,6 +63,7 @@
 #endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
+#include "nsPSPrinters.h"
 #include "nsPaperPS.h"  /* Paper size list */
 #endif /* USE_POSTSCRIPT */
 
@@ -89,7 +91,8 @@ public:
   nsresult  InitializeGlobalPrinters();
 
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
-  PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
+  PRInt32   GetNumPrinters()
+    { return mGlobalPrinterList ? mGlobalPrinterList->Count() : 0; }
   nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
   void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
 
@@ -98,7 +101,6 @@ protected:
 
   static GlobalPrinters mGlobalPrinters;
   static nsStringArray* mGlobalPrinterList;
-  static int            mGlobalNumPrinters;
 };
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
@@ -269,7 +271,6 @@ void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( PRBool aCa
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
 nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
-int            GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
 nsDeviceContextSpecXlib::nsDeviceContextSpecXlib()
@@ -523,10 +524,8 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(PrintMethod &aMethod)
 nsresult nsDeviceContextSpecXlib::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {
 #if defined(USE_POSTSCRIPT) && defined(USE_XPRINT)
-  /* printer names for the PostScript module alwas start with 
-   * the NS_POSTSCRIPT_DRIVER_NAME string */
-  if (strncmp(aPrinter, NS_POSTSCRIPT_DRIVER_NAME, 
-              NS_POSTSCRIPT_DRIVER_NAME_LEN) != 0)
+  if (nsPSPrinterList::kTypeUnknown ==
+      nsPSPrinterList::GetPrinterType(nsDependentCString(aPrinter)))
     aMethod = pmXprint;
   else
     aMethod = pmPostScript;
@@ -710,9 +709,11 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
 #ifdef USE_POSTSCRIPT
   /* "Demangle" postscript printer name */
   if (type == pmPostScript) {
-    /* Strip the leading NS_POSTSCRIPT_DRIVER_NAME from |printerName|,
+    /* Strip the printing method name from the printer,
      * e.g. turn "PostScript/foobar" to "foobar" */
-    printerName.Cut(0, NS_POSTSCRIPT_DRIVER_NAME_LEN);
+    PRInt32 slash = printerName.FindChar('/');
+    if (kNotFound != slash)
+      printerName.Cut(0, slash + 1);
   }
 #endif /* USE_POSTSCRIPT */
 
@@ -930,7 +931,6 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
     printerFeatures.SetSupportsPaperSizeChange(PR_TRUE);
     printerFeatures.SetSupportsOrientationChange(PR_TRUE);
     printerFeatures.SetSupportsPlexChange(PR_FALSE);
-    printerFeatures.SetSupportsSpoolerCommandChange(PR_TRUE);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */ 
       
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
@@ -1003,14 +1003,21 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     }
 
+    PRBool hasSpoolerCmd = (nsPSPrinterList::kTypePS == 
+        nsPSPrinterList::GetPrinterType(fullPrinterName));
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
-    printerFeatures.SetCanChangeSpoolerCommand(PR_TRUE);
+    printerFeatures.SetSupportsSpoolerCommandChange(hasSpoolerCmd);
+    printerFeatures.SetCanChangeSpoolerCommand(hasSpoolerCmd);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
-    nsXPIDLCString command;
-    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
-      DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
-      aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
+    if (hasSpoolerCmd) {
+      nsXPIDLCString command;
+      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript",
+            printerName, "print_command", getter_Copies(command)))) {
+        DO_PR_DEBUG_LOG(("setting default print command to '%s'\n",
+            command.get()));
+        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
+      }
     }
     
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
@@ -1029,6 +1036,18 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::DisplayPropertiesDlg(const PRUnichar *aPr
   return NS_OK;
 }
 
+
+//----------------------------------------------------------------------
+//String array enumeration callback to append a printer to the global
+//printer list.
+static PRBool
+GlobalPrinterEnumFunc(nsCString& aName, void *aData)
+{
+  nsStringArray *a = (nsStringArray *)aData;
+  a->AppendString(NS_ConvertUTF8toUTF16(aName));
+  return PR_TRUE;
+}
+
 //----------------------------------------------------------------------
 nsresult GlobalPrinters::InitializeGlobalPrinters ()
 {
@@ -1036,7 +1055,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     return NS_OK;
   }
 
-  mGlobalNumPrinters = 0;
   mGlobalPrinterList = new nsStringArray();
   if (!mGlobalPrinterList) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1047,12 +1065,13 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     return rv;
       
 #ifdef USE_XPRINT   
-  XPPrinterList plist = XpuGetPrinterList(nsnull, &mGlobalNumPrinters);
+  int printerCount;
+  XPPrinterList plist = XpuGetPrinterList(nsnull, &printerCount);
   
-  if (plist && (mGlobalNumPrinters > 0))
+  if (plist)
   {  
     int i;
-    for( i = 0 ; i < mGlobalNumPrinters ; i++ )
+    for( i = 0 ; i < printerCount ; i++ )
     {
       /* Add name to our list of printers... */
       mGlobalPrinterList->AppendString(nsString(NS_ConvertUTF8toUCS2(plist[i].name)));
@@ -1066,71 +1085,17 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 #endif /* USE_XPRINT */
 
 #ifdef USE_POSTSCRIPT
-  PRBool psPrintModuleEnabled = PR_TRUE;
-
-  const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
-  if (val) {
-    if (val[0] == '0' || !strcasecmp(val, "false"))
-      psPrintModuleEnabled = PR_FALSE;
-  }
-  else
-  {
-    if (NS_FAILED(pPrefs->GetBoolPref("print.postscript.enabled", &psPrintModuleEnabled))) {
-      psPrintModuleEnabled = PR_TRUE;
-    }
-  }
-
-  if (psPrintModuleEnabled) {
+  nsPSPrinterList psMgr;
+  if (NS_SUCCEEDED(psMgr.Init()) && psMgr.Enabled()) {
     /* Get the list of PostScript-module printers */
-    char   *printerList           = nsnull;
-    PRBool  added_default_printer = PR_FALSE; /* Did we already add the default printer ? */
-
-    /* The env var MOZILLA_POSTSCRIPT_PRINTER_LIST can "override" the prefs */
-    printerList = PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST");
-
-    if (!printerList) {
-      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
-    }  
-
-    if (printerList) {
-      char       *tok_lasts;
-      const char *name;
-
-      /* PL_strtok_r() will modify the string - copy it! */
-      printerList = strdup(printerList);
-      if (!printerList)
-        return NS_ERROR_OUT_OF_MEMORY;    
-
-      for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
-           name != nsnull ; 
-           name = PL_strtok_r(nsnull, " ", &tok_lasts) )
-      {
-        /* Is this the "default" printer ? */
-        if (!strcmp(name, "default"))
-          added_default_printer = PR_TRUE;
-
-        mGlobalPrinterList->AppendString(
-          nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
-          nsString(NS_ConvertASCIItoUCS2(name)));
-        mGlobalNumPrinters++;      
-      }
-
-      free(printerList);
-    }
-
-    /* Add an entry for the default printer (see nsPostScriptObj.cpp) if we
-     * did not add it already... */
-    if (!added_default_printer)
-    {
-      mGlobalPrinterList->AppendString(
-        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
-      mGlobalNumPrinters++;
-    }
+    nsCStringArray printerList;
+    psMgr.GetPrinterList(printerList);
+    printerList.EnumerateForwards(GlobalPrinterEnumFunc, mGlobalPrinterList);
   }
 #endif /* USE_POSTSCRIPT */  
       
   /* If there are no printers available after all checks, return an error */
-  if (mGlobalNumPrinters == 0)
+  if (!mGlobalPrinterList->Count())
   {
     /* Make sure we do not cache an empty printer list */
     FreeGlobalPrinters();
@@ -1154,7 +1119,6 @@ void GlobalPrinters::FreeGlobalPrinters()
   if (mGlobalPrinterList) {
     delete mGlobalPrinterList;
     mGlobalPrinterList = nsnull;
-    mGlobalNumPrinters = 0;
   }  
 }
 

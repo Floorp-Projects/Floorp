@@ -67,7 +67,7 @@ DIRS        += freetype
 endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
-DIRS        += ps
+DIRS        += psshared ps
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
@@ -152,13 +152,6 @@ EXPORTS += \
         $(NULL)
 endif
 
-ifdef MOZ_ENABLE_POSTSCRIPT
-PS_LCPPSRCS = nsPaperPS.cpp
-CPPSRCS += \
-        $(PS_LCPPSRCS) \
-        $(NULL)
-endif
-
 EXTRA_DSO_LDOPTS = \
         $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
@@ -177,10 +170,3 @@ FORCE_USE_PIC = 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES     += -D_IMPL_NS_GFX
-
-ifdef MOZ_ENABLE_POSTSCRIPT
-GARBAGE     += $(PS_LCPPSRCS)
-
-export:: $(addprefix $(srcdir)/ps/,$(PS_LCPPSRCS))
-	$(INSTALL) $^ .
-endif

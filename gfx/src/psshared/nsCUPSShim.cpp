@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ex: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -13,10 +13,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Mozilla PostScript driver printer list component.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@fastmail.us>.
+ * Kenneth Herron <kherron+mozilla@fmailbox.com>
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,61 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsDebug.h"
-#include "nsPrintJobFactoryPS.h"
-#include "nsIDeviceContextSpecPS.h"
-#include "nsPrintJobPS.h"
-#include "nsPSPrinters.h"
+#include "nsCUPSShim.h"
+#include "prlink.h"
 
-/**
- * Construct a print job object for the given device context spec.
- *
- * @param aSpec     An nsIDeviceContextSpecPS object for the print
- *                  job in question.
- * @param aPrintJob A pointer to a print job object which will
- *                  handle the print job.
- * @return NS_OK if all is well, or a suitable error value.
- */
 
-nsresult
-nsPrintJobFactoryPS::CreatePrintJob(nsIDeviceContextSpecPS *aSpec,
-        nsIPrintJobPS* &aPrintJob)
+// List of symbols to find in libcups. Must match symAddr[] defined in Init().
+// Making this an array of arrays instead of pointers allows storing the
+// whole thing in read-only memory.
+static const char gSymName[][sizeof("cupsPrintFile")] = {
+    { "cupsGetDests" },
+    { "cupsFreeDests" },
+    { "cupsPrintFile" },
+    { "cupsTempFd" },
+};
+static const int gSymNameCt = sizeof(gSymName) / sizeof(gSymName[0]);
+
+
+PRBool
+nsCUPSShim::Init()
 {
-    NS_PRECONDITION(nsnull != aSpec, "aSpec is NULL");
+    mCupsLib = PR_LoadLibrary("libcups.so.2");
+    if (!mCupsLib)
+        return PR_FALSE;
 
-    nsIPrintJobPS *newPJ;
+    // List of symbol pointers. Must match gSymName[] defined above.
+    void **symAddr[] = {
+        (void **)&mCupsGetDests,
+        (void **)&mCupsFreeDests,
+        (void **)&mCupsPrintFile,
+        (void **)&mCupsTempFd,
+    };
 
-    PRBool setting;
-    aSpec->GetIsPrintPreview(setting);
-    if (setting)
-        newPJ = new nsPrintJobPreviewPS();
-    else {
-        aSpec->GetToPrinter(setting);
-        if (!setting)
-            newPJ = new nsPrintJobFilePS();
-        else
-#ifdef VMS
-            newPJ = new nsPrintJobVMSCmdPS();
-#else
-        {
-            const char *printerName;
-            aSpec->GetPrinterName(&printerName);
-            if (nsPSPrinterList::kTypeCUPS == nsPSPrinterList::GetPrinterType(
-                        nsDependentCString(printerName)))
-                newPJ = new nsPrintJobCUPS();
-            else
-                newPJ = new nsPrintJobPipePS();
+    for (int i = gSymNameCt; i--; ) {
+        *(symAddr[i]) = PR_FindSymbol(mCupsLib, gSymName[i]);
+        if (! *(symAddr[i])) {
+            PR_UnloadLibrary(mCupsLib);
+            mCupsLib = nsnull;
+            return PR_FALSE;
         }
-#endif
     }
-    if (!newPJ)
-        return NS_ERROR_OUT_OF_MEMORY;
+    return PR_TRUE;
+}
 
-    nsresult rv = newPJ->Init(aSpec);
-    if (NS_FAILED(rv))
-        delete newPJ;
-    else
-        aPrintJob = newPJ;
-    return rv;
+nsCUPSShim::~nsCUPSShim()
+{
+    if (mCupsLib)
+        PR_UnloadLibrary(mCupsLib);
 }

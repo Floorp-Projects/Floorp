@@ -42,6 +42,7 @@
 #include "nsIDeviceContextPS.h" // NS_POSTSCRIPT_DRIVER_NAME_LEN
 #include "nsIDeviceContextSpecPS.h"
 #include "nsPrintJobPS.h"
+#include "nsPSPrinters.h"
 #include "nsReadableUtils.h"
 
 #include "prenv.h"
@@ -51,6 +52,7 @@
 
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 
 /* Routines to set environment variables. These are defined toward
@@ -174,7 +176,9 @@ nsPrintJobVMSCmdPS::Init(nsIDeviceContextSpecPS *aSpec)
     const char *printerName;
     aSpec->GetPrinterName(&printerName);
     if (printerName) {
-        printerName += NS_POSTSCRIPT_DRIVER_NAME_LEN;
+        const char *slash = strchr(printerName, '/');
+        if (slash)
+            printerName = slash + 1;
         if (0 != strcmp(printerName, "default"))
             mPrinterName = printerName;
     }
@@ -285,7 +289,9 @@ nsPrintJobPipePS::Init(nsIDeviceContextSpecPS *aSpec)
     const char *printerName;
     aSpec->GetPrinterName(&printerName);
     if (printerName) {
-        printerName += NS_POSTSCRIPT_DRIVER_NAME_LEN;
+        const char *slash = strchr(printerName, '/');
+        if (slash)
+            printerName = slash + 1;
         if (0 != strcmp(printerName, "default"))
             mPrinterName = printerName;
     }
@@ -329,6 +335,79 @@ nsPrintJobPipePS::FinishSubmission()
     if (!WIFEXITED(presult) || (EXIT_SUCCESS != WEXITSTATUS(presult)))
         return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
     return NS_OK;
+}
+
+
+/**** Print via CUPS ****/
+
+/**
+ * Initialize a print-to-CUPS object.
+ * See nsIPrintJobPS.h and nsPrintJobPS.h for details.
+ */
+nsresult
+nsPrintJobCUPS::Init(nsIDeviceContextSpecPS *aSpec)
+{
+    NS_PRECONDITION(aSpec, "argument must not be NULL");
+#ifdef DEBUG
+    PRBool toPrinter;
+    aSpec->GetToPrinter(toPrinter);
+    NS_PRECONDITION(toPrinter, "Wrong class for this print job");
+#endif
+
+    NS_ENSURE_TRUE(mCups.Init(), NS_ERROR_NOT_INITIALIZED);
+
+    /* Printer name */
+    const char *printerName = nsnull;
+    aSpec->GetPrinterName(&printerName);
+    NS_ENSURE_TRUE(printerName, NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND);
+
+    const char *slash = strchr(printerName, '/');
+    mPrinterName = slash ? slash + 1 : printerName;
+    return NS_OK;
+}
+
+nsresult
+nsPrintJobCUPS::StartSubmission(FILE **aHandle)
+{
+    NS_ENSURE_TRUE(mCups.IsInitialized(), NS_ERROR_NOT_INITIALIZED);
+
+    int fd;
+    char buf[FILENAME_MAX];
+
+    fd = (mCups.mCupsTempFd)(buf, sizeof buf);
+    // The CUPS manual doesn't describe what cupsTempFd() returns to
+    // indicate failure. -1 is a likely value.
+    NS_ENSURE_TRUE(fd > 0, NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE);
+
+    SetDestHandle(fdopen(fd, "r+"));
+    if (!GetDestHandle()) {
+        close(fd);
+        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+    }
+    SetDestination(buf);
+    *aHandle = GetDestHandle();
+    return NS_OK;
+}
+
+
+nsresult
+nsPrintJobCUPS::FinishSubmission()
+{
+    NS_ENSURE_TRUE(mCups.IsInitialized(), NS_ERROR_NOT_INITIALIZED);
+    NS_PRECONDITION(GetDestHandle(), "No destination file handle");
+    NS_PRECONDITION(!GetDestination().IsEmpty(), "No destination");
+
+    fclose(GetDestHandle());
+    SetDestHandle(nsnull);
+
+    int result = (mCups.mCupsPrintFile)(mPrinterName.get(),
+            GetDestination().get(), "Mozilla print job", 0, nsnull);
+    unlink(GetDestination().get());
+
+    // cupsPrintFile() result codes below 0x0300 indicate success.
+    // Individual success codes are defined in the cups headers, but
+    // we're not including those.
+    return (result < 0x0300) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
 }
 
 

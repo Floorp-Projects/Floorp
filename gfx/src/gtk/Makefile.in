@@ -223,6 +223,7 @@ endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES         += -DUSE_POSTSCRIPT
+EXTRA_DSO_LDOPTS += -lgfxpsshar
 endif
 
 ifdef MOZ_ENABLE_XPRINT

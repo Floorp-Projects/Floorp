@@ -151,6 +151,7 @@ gfx/src/Makefile
 gfx/src/beos/Makefile
 gfx/src/gtk/Makefile
 gfx/src/ps/Makefile
+gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
 gfx/src/xlib/Makefile
