@@ -111,6 +111,20 @@ JSD_GetContextPrivate(JSDContext *jsdc)
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetContextPrivate (jsdc);
 }
+
+JSD_PUBLIC_API(void)
+JSD_SetContextFlags(JSDContext *jsdc, uint32 flags)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsdc->flags = flags;
+}
+
+JSD_PUBLIC_API(uint32)
+JSD_GetContextFlags(JSDContext *jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsdc->flags;
+}
     
 JSD_PUBLIC_API(JSDContext*)
 JSD_JSDContextForJSContext(JSContext* context)
@@ -621,6 +635,42 @@ JSD_GetThisForStackFrame(JSDContext* jsdc,
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetThisForStackFrame(jsdc, jsdthreadstate, jsdframe);
+}
+
+JSD_PUBLIC_API(const char*)
+JSD_GetNameForStackFrame(JSDContext* jsdc,
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetNameForStackFrame(jsdc, jsdthreadstate, jsdframe);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameNative(JSDContext* jsdc,
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_IsStackFrameNative(jsdc, jsdthreadstate, jsdframe);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameDebugger(JSDContext* jsdc,
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_IsStackFrameDebugger(jsdc, jsdthreadstate, jsdframe);
+}
+
+JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameConstructing(JSDContext* jsdc,
+                             JSDThreadState* jsdthreadstate,
+                             JSDStackFrameInfo* jsdframe)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_IsStackFrameConstructing(jsdc, jsdthreadstate, jsdframe);
 }
 
 JSD_PUBLIC_API(JSBool)

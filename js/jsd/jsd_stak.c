@@ -63,14 +63,17 @@ _addNewFrame(JSDContext*        jsdc,
              JSStackFrame*      fp)
 {
     JSDStackFrameInfo* jsdframe;
-    JSDScript*         jsdscript;
+    JSDScript*         jsdscript = NULL;
 
-    JSD_LOCK_SCRIPTS(jsdc);
-    jsdscript = jsd_FindJSDScript(jsdc, script);
-    JSD_UNLOCK_SCRIPTS(jsdc);
-    if( ! jsdscript )
-        return NULL;
-
+    if (!JS_IsNativeFrame(jsdthreadstate->context, fp))
+    {
+        JSD_LOCK_SCRIPTS(jsdc);
+        jsdscript = jsd_FindJSDScript(jsdc, script);
+        JSD_UNLOCK_SCRIPTS(jsdc);
+        if( ! jsdscript )
+            return NULL;
+    }
+    
     jsdframe = (JSDStackFrameInfo*) calloc(1, sizeof(JSDStackFrameInfo));
     if( ! jsdframe )
         return NULL;
@@ -116,10 +119,17 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
         JSScript* script = JS_GetFrameScript(cx, fp);
         jsuword  pc = (jsuword) JS_GetFramePC(cx, fp);
 
-        if( ! script || ! pc || JS_IsNativeFrame(cx, fp) )
-            continue;
-
-        _addNewFrame( jsdc, jsdthreadstate, script, pc, fp );
+        /*
+         * don't construct a JSDStackFrame for dummy frames (those without a
+         * |this| object, or native frames, if JSD_INCLUDE_NATIVE_FRAMES
+         * isn't set.
+         */
+        if (JS_GetFrameThis(cx, fp) &&
+            ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
+             !JS_IsNativeFrame(cx, fp)))
+        {
+            _addNewFrame( jsdc, jsdthreadstate, script, pc, fp );
+        }
     }
     
     /* if there is no stack, then this threadstate can not be constructed */
@@ -303,7 +313,6 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 {
     JSObject* obj;
     JSDValue* jsdval = NULL;
-
     JSD_LOCK_THREADSTATES(jsdc);
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
@@ -314,8 +323,80 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
     }
 
     JSD_UNLOCK_THREADSTATES(jsdc);
-
     return jsdval;
+}
+
+const char*
+jsd_GetNameForStackFrame(JSDContext* jsdc, 
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe)
+{
+    const char *rv = NULL;
+    
+    JSD_LOCK_THREADSTATES(jsdc);
+    
+    if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
+    {
+        JSFunction *fun = JS_GetFrameFunction (jsdthreadstate->context,
+                                               jsdframe->fp);
+        if (fun)
+            rv = JS_GetFunctionName (fun);
+    }
+    
+    JSD_UNLOCK_THREADSTATES(jsdc);
+    return rv;
+}
+
+JSBool
+jsd_IsStackFrameNative(JSDContext* jsdc, 
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe)
+{
+    JSBool rv;
+    
+    JSD_LOCK_THREADSTATES(jsdc);
+
+    if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
+    {
+        rv = JS_IsNativeFrame(jsdthreadstate->context, jsdframe->fp);
+    }
+
+    JSD_UNLOCK_THREADSTATES(jsdc);
+    return rv;
+}
+
+JSBool
+jsd_IsStackFrameDebugger(JSDContext* jsdc, 
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe)
+{
+    JSBool rv = JS_TRUE;
+    JSD_LOCK_THREADSTATES(jsdc);
+
+    if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
+    {
+        rv = JS_IsDebuggerFrame(jsdthreadstate->context, jsdframe->fp);
+    }
+
+    JSD_UNLOCK_THREADSTATES(jsdc);
+    return rv;
+}
+
+JSBool
+jsd_IsStackFrameConstructing(JSDContext* jsdc, 
+                             JSDThreadState* jsdthreadstate,
+                             JSDStackFrameInfo* jsdframe)
+{
+    JSBool rv = JS_TRUE;
+    JSD_LOCK_THREADSTATES(jsdc);
+
+    if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
+    {
+        rv = JS_IsConstructorFrame(jsdthreadstate->context, jsdframe->fp);
+    }
+
+    JSD_UNLOCK_THREADSTATES(jsdc);
+    return rv;
 }
 
 JSBool

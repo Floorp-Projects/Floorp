@@ -180,6 +180,17 @@ extern JSD_PUBLIC_API(void *)
 JSD_GetContextPrivate(JSDContext *jsdc);
 
 /*
+* Context flags.
+*/
+#define JSD_INCLUDE_NATIVE_FRAMES 0x1
+
+extern JSD_PUBLIC_API(void)
+JSD_SetContextFlags (JSDContext* jsdc, uint32 flags);
+
+extern JSD_PUBLIC_API(uint32)
+JSD_GetContextFlags (JSDContext* jsdc);     
+
+/*
 * Notify JSD that this JSContext is 'in use'. This allows JSD to hook the
 * ErrorReporter. For the most part this is done automatically whenever
 * events like script loading happen. But, it is a good idea to call this
@@ -792,6 +803,40 @@ extern JSD_PUBLIC_API(JSDValue*)
 JSD_GetThisForStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
+
+/*
+* Get the name of the function executing in this stack frame.  Especially useful
+* for native frames (without script objects.)
+*/
+extern JSD_PUBLIC_API(const char*)
+JSD_GetNameForStackFrame(JSDContext* jsdc,
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe);
+
+/*
+* True if stack frame represents a native frame.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameNative(JSDContext* jsdc,
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe);
+
+/*
+* True if stack frame represents a frame created as a result of a debugger
+* evaluation.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameDebugger(JSDContext* jsdc,
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe);
+
+/*
+* True if stack frame is constructing a new object.
+*/
+extern JSD_PUBLIC_API(JSBool)
+JSD_IsStackFrameConstructing(JSDContext* jsdc,
+                             JSDThreadState* jsdthreadstate,
+                             JSDStackFrameInfo* jsdframe);
 
 /*
 * Evaluate the given unicode source code in the context of the given stack frame.

@@ -130,6 +130,7 @@ struct JSDContext
     JSCList                 links;      /* we are part of a JSCList */
     JSBool                  inited;
     void*                   data;
+    uint32                  flags;
     JSD_ScriptHookProc      scriptHook;
     void*                   scriptHookData;
     JSD_ExecutionHookProc   interruptHook;
@@ -620,8 +621,28 @@ jsd_GetScopeChainForStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe);
 
+extern JSBool
+jsd_IsStackFrameNative(JSDContext* jsdc, 
+                       JSDThreadState* jsdthreadstate,
+                       JSDStackFrameInfo* jsdframe);
+
+extern JSBool
+jsd_IsStackFrameDebugger(JSDContext* jsdc, 
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe);
+
+extern JSBool
+jsd_IsStackFrameConstructing(JSDContext* jsdc, 
+                             JSDThreadState* jsdthreadstate,
+                             JSDStackFrameInfo* jsdframe);
+
 extern JSDValue*
 jsd_GetThisForStackFrame(JSDContext* jsdc,
+                         JSDThreadState* jsdthreadstate,
+                         JSDStackFrameInfo* jsdframe);
+
+extern const char*
+jsd_GetNameForStackFrame(JSDContext* jsdc, 
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
 

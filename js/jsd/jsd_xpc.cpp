@@ -358,29 +358,24 @@ jsds_FindFilter (jsdIFilter *filter)
 PRBool
 jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 {
-    if (!gFilters)
-        return PR_TRUE;
-    
     JSContext *cx = JSD_GetJSContext (jsdc, state);
     void *glob = NS_STATIC_CAST(void *, JS_GetGlobalObject (cx));
 
     if (!glob) {
         NS_WARNING("No global in threadstate");
-        return PR_TRUE;
+        return PR_FALSE;
     }
     
     JSDStackFrameInfo *frame = JSD_GetStackFrame (jsdc, state);
 
     if (!frame) {
         NS_WARNING("No frame in threadstate");
-        return PR_TRUE;
+        return PR_FALSE;
     }
 
     JSDScript *script = JSD_GetScriptForStackFrame (jsdc, state, frame);
-    if (!script) {
-        NS_WARNING("No script in threadstate");
+    if (!script)
         return PR_TRUE;
-    }
 
     jsuint pc = JSD_GetPCForStackFrame (jsdc, state, frame);
     if (!pc) {
@@ -388,13 +383,16 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
         return PR_TRUE;
     }
 
-    PRUint32 currentLine = JSD_GetClosestLine (jsdc, script, pc);
-    if (!currentLine) {
-        NS_WARNING("Can't convert pc to line");
-        return PR_TRUE;
+    const char *url = JSD_GetScriptFilename (jsdc, script);
+    if (!url) {
+        NS_WARNING ("Script with no filename");
+        return PR_FALSE;
     }
 
-    const char *url = nsnull;
+    if (!gFilters)
+        return PR_TRUE;    
+
+    PRUint32 currentLine = JSD_GetClosestLine (jsdc, script, pc);
     PRUint32 len = 0;
     FilterRecord *currentFilter = gFilters;
     do {
@@ -415,12 +413,9 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
                 /* then we're going to have to compare the url. */
                 if (currentFilter->patternType == ptIgnore)
                     return flags & jsdIFilter::FLAG_PASS;
-            
-                if (!url) {
-                    url = JSD_GetScriptFilename (jsdc, script);
-                    NS_ASSERTION (url, "Script with no filename");
+
+                if (!len)
                     len = PL_strlen(url);
-                }
                 
                 if (len >= currentFilter->patternLength) {
                     switch (currentFilter->patternType) {
@@ -1524,6 +1519,48 @@ jsdStackFrame::GetExecutionContext(jsdIContext **_rval)
 }
 
 NS_IMETHODIMP
+jsdStackFrame::GetFunctionName(char **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    const char *name = JSD_GetNameForStackFrame(mCx, mThreadState,
+                                                mStackFrameInfo);
+    if (!name)
+    {
+        /* top level scripts have no function name */
+        *_rval = nsnull;
+        return NS_OK;
+    }
+    *_rval = ToNewCString(nsDependentCString(name));
+    if (!*_rval)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetIsNative(PRBool *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_IsStackFrameNative (mCx, mThreadState, mStackFrameInfo);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetIsDebugger(PRBool *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_IsStackFrameDebugger (mCx, mThreadState, mStackFrameInfo);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetIsConstructing(PRBool *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_IsStackFrameConstructing (mCx, mThreadState, mStackFrameInfo);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdStackFrame::GetScript(jsdIScript **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
@@ -1539,9 +1576,9 @@ jsdStackFrame::GetPc(PRUint32 *_rval)
     ASSERT_VALID_EPHEMERAL;
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
-    jsuword pcbase = JSD_GetClosestPC(mCx, script, 0);
     if (!script)
         return NS_ERROR_FAILURE;
+    jsuword pcbase = JSD_GetClosestPC(mCx, script, 0);
     
     jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
     *_rval = pc - pcbase;
@@ -1554,8 +1591,14 @@ jsdStackFrame::GetLine(PRUint32 *_rval)
     ASSERT_VALID_EPHEMERAL;
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
-    jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
-    *_rval = JSD_GetClosestLine (mCx, script, pc);
+    if (script) {
+        jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+        *_rval = JSD_GetClosestLine (mCx, script, pc);
+    } else {
+        if (!JSD_IsStackFrameNative(mCx, mThreadState, mStackFrameInfo))
+            return NS_ERROR_FAILURE;
+        *_rval = 1;
+    }
     return NS_OK;
 }
 
@@ -1815,8 +1858,15 @@ NS_IMETHODIMP
 jsdValue::GetJsFunctionName(char **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    *_rval =
-        ToNewCString(nsDependentCString(JSD_GetValueFunctionName(mCx, mValue)));
+    const char *name = JSD_GetValueFunctionName(mCx, mValue);
+    if (!name)
+    {
+        /* top level scripts have no function name */
+        *_rval = nsnull;
+        return NS_OK;
+    }
+
+    *_rval = ToNewCString(nsDependentCString(*_rval));
     if (!*_rval)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -2082,6 +2132,19 @@ jsdService::SetInitAtStartup (PRBool state)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+jsdService::GetFlags (PRUint32 *_rval)
+{
+    *_rval = JSD_GetContextFlags (mCx);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::SetFlags (PRUint32 flags)
+{
+    JSD_SetContextFlags (mCx, flags);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 jsdService::GetIsOn (PRBool *_rval)
@@ -2253,7 +2316,10 @@ jsdService::UnPause(PRUint32 *_rval)
     if (mPauseLevel == 0)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (--mPauseLevel == 0) {
+    /* check mOn before we muck with this stuff, it's possible the debugger
+     * was turned off while we were paused.
+     */
+    if (--mPauseLevel == 0 && mOn) {
         if (mErrorHook)
             JSD_SetErrorReporter (mCx, jsds_ErrorHookProc, NULL);
         if (mThrowHook)
