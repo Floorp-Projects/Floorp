@@ -34,7 +34,7 @@ sub RegisterConfig {
         ['bad-adjectives', 1, 1, ['orthodox', 'malignant', 'malevolent', 'dangerous', 'fascist', 'foolish', 'closed-minded', 'annoying', 'unjust', 'long-winded', 'lacking in support', 'shameful', ]],
         ['bad-nouns', 1, 1, ['oppression', 'tyranny', 'stupidity', 'ignorance', 'discrimination', 'indifference', 'propaganda', 'prejudice', ]],
         ['tactics-agree', 1, 1, ['apply principles of', 'embrace', 'think along the same lines as', 'commune with the spirit of', 'would prefer', 'argue strenuously for', 'try to posit', 'show the validity in', ]],
-        ['tactics-object', 1, 1, ['object to', 'reject anything involved with', 'refuse to accept', 'do not agree with', 'argue strenuously against', 'completely disagree with', 'rebut', ]],
+        ['tactics-object', 1, 1, ['object to', 'reject anything involved with', 'refuse to accept', 'argue strenuously against', 'completely disagree with', 'rebut', 'take issue with']],
         ['productions', 1, 1, [
             # OK, so here's the key:
             #  \0 = good_adjective
