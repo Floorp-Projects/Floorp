@@ -94,6 +94,7 @@ PERL		:= perl
 endif
 ifeq ($(OS_ARCH),QNX)
 OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
+LD		:= $(CC)
 endif
 ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
