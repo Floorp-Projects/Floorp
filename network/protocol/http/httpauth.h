@@ -25,7 +25,7 @@
 
 /* removes all authorization structs from the auth list */
 extern void
-NET_RemoveAllAuthorizations();
+NET_RemoveAllAuthorizations(void);
 
 /*
  * Figure out better of two {WWW,Proxy}-Authenticate headers;
