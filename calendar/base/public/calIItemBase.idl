@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,12 +38,21 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIMutableArray;
+
+interface nsIPropertyBag;
 interface nsIWritablePropertyBag;
 
 interface calICalendar;
-interface calIDateTime;
 interface calIItemOccurrence;
+interface calIMutableItemBase;
+
+interface calIDateTime;
+interface calIMutableDateTime;
+
+interface calIRecurrenceInfo;
+interface calIMutableRecurrenceInfo;
 
 //
 // calIItemBase
@@ -54,10 +63,16 @@ interface calIItemOccurrence;
 [scriptable, uuid(096b8cc5-113c-40fb-bc52-d64e3992980c)]
 interface calIItemBase : nsISupports
 {
-  // clone interface; returns this item, but with
-  // NULL id
-  // XXX nsICloneable?
-  calIItemBase clone();
+  //
+  // Return a mutable version of this item
+  //
+  calIMutableItemBase getMutable();
+
+  //
+  // the generation number of this item; 0 means
+  // that it's never been stored in a store
+  //
+  readonly attribute long generation;
 
   // methods
   const long CAL_METHOD_NONE = 0;
@@ -69,7 +84,85 @@ interface calIItemBase : nsISupports
   const long CAL_ITEM_STATUS_CANCELLED = 1;
 
   // the time when this item was created
-  attribute calIDateTime creationDate;
+  readonly attribute calIDateTime creationDate;
+
+  // last time any attribute was modified on this item, in UTC
+  readonly attribute PRTime lastModifiedTime;
+
+  // the calICalendar to which this event belongs
+  readonly attribute calICalendar parent;
+
+  // the ID of this event
+  readonly attribute AUTF8String id;
+
+  // event title
+  readonly attribute AUTF8String title;
+
+  // event priority
+  readonly attribute short priority;
+  readonly attribute boolean isPrivate;
+
+  // event/status of the event (see consts above)
+  readonly attribute long method;
+  readonly attribute long status;
+
+  // ical interop; writing this means parsing
+  // the ical string into this event
+  readonly attribute AUTF8String icalString;
+
+  //
+  // alarms
+  //
+  readonly attribute boolean hasAlarm;
+  readonly attribute calIDateTime alarmTime;
+
+  //
+  // recurrence
+  //
+  readonly attribute calIRecurrenceInfo recurrenceInfo;
+
+  // attachments
+  // array of nsIMsgAttachment
+  readonly attribute nsIArray attachments;
+
+  // contacts
+  // array of nsIAbCard
+  readonly attribute nsIArray contacts;
+
+  //
+  // other properties come in through a property bag
+  //
+
+  // 'description' - description (string)
+  // 'location' - location (string)
+  // 'categories' - categories (string)
+  // 'syncId' - sync id (string)
+  // 'inviteEmailAddress' - string
+  // alarmLength/alarmUnits/alarmEmailAddress/lastAlarmAck
+  // recurInterval/recurCount/recurWeekdays/recurWeeknumber
+
+  // Ideally, /all/ of the properties on the event should
+  // be available via the property bag.  (And maybe the
+  // nsIItemBase impl should be QI'able to
+  // nsIWritablePropertyBag also)
+
+  readonly attribute nsIPropertyBag properties;
+};
+
+//
+// calIMutableItemBase
+//
+// Mutable version of the above
+//
+[scriptable, uuid(56ca7d46-2412-466f-9dea-fb141ae95de0)]
+interface calIMutableItemBase : nsISupports
+{
+  // the base item that this is a mutable item of
+  readonly attribute calIItemBase baseItem;
+  readonly attribute long generation;
+
+  // the time when this item was created
+  attribute calIMutableDateTime creationDate;
 
   // last time any attribute was modified on this item, in UTC
   readonly attribute PRTime lastModifiedTime;
@@ -99,38 +192,12 @@ interface calIItemBase : nsISupports
   // alarms
   //
   attribute boolean hasAlarm;
-  attribute calIDateTime alarmTime;
-  // rest of alarm properties (?)
-  void snoozeAlarm (in calIDateTime aSnoozeFor);
+  attribute calIMutableDateTime alarmTime;
 
   //
   // recurrence
   //
-  const long CAL_ITEM_RECUR_TYPE_NONE = 0;
-  const long CAL_ITEM_RECUR_TYPE_MINUTELY = 1;
-  const long CAL_ITEM_RECUR_TYPE_HOURLY = 2;
-  const long CAL_ITEM_RECUR_TYPE_DAILY = 3;
-  const long CAL_ITEM_RECUR_TYPE_MONTHLY = 4;
-  const long CAL_ITEM_RECUR_TYPE_YEARLY = 5;
-
-  attribute long recurType;
-  attribute calIDateTime recurEnd; // if null, then forever
-  // array of calIDateTime
-  readonly attribute nsIMutableArray recurrenceExceptions;
-  // rest of recurrence in properties (?)
-
-  // return the next display item for this event,
-  // where the start time is >= aStartTime
-  calIItemOccurrence getNextOccurrence (in calIDateTime aStartTime);
-
-  // return the previous display item for this event,
-  // where the start time is < aStartTime
-  calIItemOccurrence getPreviousOccurrence (in calIDateTime aStartTime);
-
-  // return array of calIDisplayItems, representing all
-  // occurances of this event between start and end.
-  nsIMutableArray getAllOccurrences (in calIDateTime aStartTime,
-				      in calIDateTime aEndTime);
+  readonly attribute calIMutableRecurrenceInfo recurrenceInfo;
 
   // attachments
   // array of nsIMsgAttachment

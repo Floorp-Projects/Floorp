@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -58,6 +58,19 @@ interface calIEvent : calIItemBase
   readonly attribute calIDateTime stampDate; // ??
 
   // all day event?
-  attribute boolean isAllDay;
+  readonly attribute boolean isAllDay;
 };
 
+//
+// calIMutableEvent
+//
+
+[scriptable, uuid(383973d2-88c5-4bf1-a5ff-2d879a1b8675)]
+interface calIMutableEvent : calIItemBase
+{
+  readonly attribute calIMutableDateTime startDate;
+  readonly attribute calIMutableDateTime endDate;
+  readonly attribute calIMutableDateTime stampDate;
+
+  attribute boolean isAllDay;
+};

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +40,85 @@
 
 [scriptable, uuid(5678d4a3-2543-4ece-afbb-079292f2866e)]
 interface calIDateTime : nsISupports
+{
+  // this thing's base PRTime value, in UTC
+  readonly attribute PRTime utcTime;
+
+  //
+  // These are all in the currently-specified
+  // timezone
+  //
+
+  // Year, fully exploded (e.g. "1989", "2004")
+  readonly attribute short year;
+
+  // Month, 0-11
+  readonly attribute short month;
+
+  // Day, 1 through whatever
+  readonly attribute short day;
+
+  // Hour, 0-23
+  readonly attribute short hour;
+
+  // Minute, 0-59
+  readonly attribute short minute;
+
+  // Second, 0-59
+  readonly attribute short second;
+
+  // Microsecond, 0-99999
+  readonly attribute long microsecond;
+
+  // Day of the week, 0-6, Sunday = 0
+  readonly attribute short weekday;
+
+  // Day of the year, 0-365/366
+  readonly attribute short yearday;
+
+  // timezone; if null, it is GMT/UTC
+  // setting this changes the value of the year/month/day/etc. fields
+  // to be the new value of utcTime in that timezone
+  readonly attribute string timezone;
+
+  // this thing's PRTime value in the local timezone
+  readonly attribute PRTime localTime;
+
+  // true if this thing is set/valid
+  readonly attribute boolean valid;
+
+  //
+  // Methods
+  //
+
+  // return a string representation of this date/time
+  // in the current locale
+  AUTF8String toString();
+
+  //
+  // Some helper getters for calculating useful ranges
+  //
+
+  // the start/end of the current object's week
+  readonly attribute calIDateTime startOfWeek;
+  readonly attribute calIDateTime endOfWeek;
+
+  // the start/end of the current object's month
+  readonly attribute calIDateTime startOfMonth;
+  readonly attribute calIDateTime endOfMonth;
+
+  // the start/end of the current object's year
+  readonly attribute calIDateTime startOfYear;
+  readonly attribute calIDateTime endOfYear;
+};
+
+
+//
+// mutable version of the above
+//
+
+[scriptable, uuid(188729d7-77a3-43c9-b878-e268c786a3c4)]
+interface calIMutableDateTime : nsISupports
 {
   // this thing's base PRTime value, in UTC
   attribute PRTime utcTime;

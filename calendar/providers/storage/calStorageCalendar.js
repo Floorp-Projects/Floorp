@@ -1,3 +1,40 @@
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 //
 // calStorageCalendar.js
@@ -9,26 +46,41 @@ const kStorageServiceIID = Components.interfaces.mozIStorageService;
 const kCalEventContractID = "@mozilla.org/calendar/item;1&type=event";
 const kCalEventIID = Components.interfaces.calIEvent;
 
+const kCalTodoContractID = "@mozilla.org/calendar/item;1&type=todo";
+const kCalTodoIID = Components.interfaces.calITodo;
+
 const kCalDateTimeContractID = "@mozilla.org/calendar/datetime;1";
 const kCalDateTimeIID = Components.interfaces.calIDateTime;
 
+// column ids in the base columns
+var ITEM_COLUMN_COUNTER = 0;
+const ITEM_HASHID = ITEM_COLUMN_COUNTER++;
+const ITEM_TIME_CREATED = ITEM_COLUMN_COUNTER++;
+const ITEM_LAST_MODIFIED = ITEM_COLUMN_COUNTER++;
+const ITEM_TITLE = ITEM_COLUMN_COUNTER++;
+const ITEM_PRIORITY = ITEM_COLUMN_COUNTER++;
+const ITEM_FLAGS = ITEM_COLUMN_COUNTER++;
+const ITEM_LOCATION = ITEM_COLUMN_COUNTER++;
+const ITEM_CATEGORIES = ITEM_COLUMN_COUNTER++;
+const ITEM_ALARM_DATA = ITEM_COLUMN_COUNTER++;
+const ITEM_ALARM_TIME = ITEM_COLUMN_COUNTER++;
+const ITEM_RECUR_TYPE = ITEM_COLUMN_COUNTER++;
+const ITEM_RECUR_INTERVAL = ITEM_COLUMN_COUNTER++;
+const ITEM_RECUR_DATA = ITEM_COLUMN_COUNTER++;
+const ITEM_RECUR_END = ITEM_COLUMN_COUNTER++;
+const ITEM_RECUR_FLAGS = ITEM_COLUMN_COUNTER++;
+
 // column ids in cal_events
-const EV_HASHID = 0;
-const EV_TITLE = 1;
-const EV_DESCRIPTION = 2;
-const EV_LOCATION = 3;
-const EV_CATEGORIES = 4;
-const EV_TIME_START = 5;
-const EV_TIME_END = 6;
-const EV_FLAGS = 7;
-const EV_LAST_MODIFIED = 8;
-const EV_ALARM_DATA = 9;
-const EV_ALARM_TIME = 10;
-const EV_RECUR_TYPE = 11;
-const EV_RECUR_INTERVAL = 12;
-const EV_RECUR_DATA = 13;
-const EV_RECUR_END = 14;
-const EV_RECUR_FLAGS = 15;
+var EV_COLUMN_COUNTER = ITEM_COLUMN_COUNTER;
+const EV_TIME_START = EV_COLUMN_COUNTER++;
+const EV_TIME_END = EV_COLUMN_COUNTER++;
+
+// column ids in cal_todos
+var TODO_COLUMN_COUNTER = ITEM_COLUMN_COUNTER;
+const TODO_TIME_ENTRY = TODO_COLUMN_COUNTER++;
+const TODO_TIME_DUE = TODO_COLUMN_COUNTER++;
+const TODO_TIME_COMPLETED = TODO_COLUMN_COUNTER++;
+const TODO_PERCENT_COMPLETE = TODO_COLUMN_COUNTER++;
 
 // helpers
 function newDateTime(aPRTime) {
@@ -39,6 +91,7 @@ function newDateTime(aPRTime) {
 }
 
 function calStorageCalendar() {
+    this.wrappedJSObject = this;
 }
 
 calStorageCalendar.prototype = {
@@ -50,12 +103,22 @@ calStorageCalendar.prototype = {
     mItemCache: Array(),
 
     // database statements
+
+    // events
     mSelectEventByHash: null,
     mSelectEventByOid: null,
     mSelectEventsByRange: null,
     mSelectEventsByRangeWithLimit: null,
     mDeleteEventByHash: null,
     mInsertEvent: null,
+
+    // todos
+    mSelectTodoByHash: null,
+    mSelectTodoByOid: null,
+    mSelectTodosByRange: null,
+    mSelectTodosByRangeWithLimit: null,
+    mDeleteTodoByHash: null,
+    mInsertTodo: null,
 
     //
     // nsISupports interface
@@ -247,7 +310,7 @@ calStorageCalendar.prototype = {
             return;
 
         // XXX what do we load from? this thing is horribly underspecified
-        var item = getEventByHash (aId);
+        var item = getItemByHash (aId);
         if (item) {
             aListener.onOperationComplete (Components.results.NS_OK,
                                            aId,
@@ -342,80 +405,140 @@ calStorageCalendar.prototype = {
     // database initialization
     // assumes mDB is valid
     initDB: function () {
+        // these are columns that appear in all concrete items; SQLite could use
+        // an "extends" thing like postgresql has
+        const item_base_columns =
+            "hashid, time_created, last_modified, " +
+            "title, priority, flags, location, categories, " +
+            "alarm_data, alarm_time, " +
+            "recur_type, recur_interval, recur_data, recur_end, recur_flags";
         try {
             mDB.createTable ("cal_events",
-                             "hashid, title, description, location, categories, " +
-                             "time_start, time_end, flags, last_modified, " +
-                             "alarm_data, alarm_time, " +
-                             "recur_type, recur_interval, recur_data, recur_end, recur_flags");
-            mDB.createTable ("cal_event_recur_exceptions",
-                             "event_id, skip_date");
+                             item_base_columns + ", " +
+                             "time_start, time_end");
+        } catch (e) { }
+        try {
+            mDB.createTable ("cal_todos",
+                             item_base_columns + ", " +
+                             "time_entry, time_due, time_completed, percent_complete");
+        } catch (e) { }
+        try {
+            mDB.createTable ("cal_recur_exceptions",
+                             "item_id, skip_date");
+        } catch (e) { }
+        try {
             mDB.createTable ("cal_event_attendees",
                              "event_id, attendee, attendee_status");
-            mDB.createTable ("cal_evnent_attachments",
+        } catch (e) { }
+        try {
+            mDB.createTable ("cal_event_attachments",
                              "event_id, attachment_type, attachment_data");
 
+        } catch (e) { }
+        try {
             mDB.executeSimpleSQL ("CREATE INDEX cal_events_hash_idx ON cal_events.hashid");
-        } catch (e) {
-            // ...
-        }
+        } catch (e) { }
+
+        var qs;
+
+        // event statements
 
         mSelectEventByHash = mDB.createStatement ("SELECT * FROM cal_events WHERE hashid = ? LIMIT 1");
         mSelectEventByOid = mDB.createStatement ("SELECT * FROM cal_events WHERE oid = ? LIMIT 1");
         // this needs to have the range bound like this: start, end, start, start, end, end
         mSelectEventsByRange = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_start >= ? AND time_end <= ?) OR (time_start <= ? AND time_end > ?) OR (time_start <= ? AND time_end <= ?)");
         mSelectEventsByRangeAndLimit = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_start >= ? AND time_end <= ?) OR (time_start <= ? AND time_end > ?) OR (time_start <= ? AND time_end <= ?) LIMIT ?");
-
         mDeleteEventByHash = mDB.createStatement ("DELETE FROM cal_events WHERE hashid = ?");
+        qs = "?"; for (var i = 1; i < EV_COLUMN_COUNTER; i++) qs += ",?";
+        mInsertEvent = mDB.createStatement ("INSERT INTO cal_events VALUES (" + qs + ")");
 
-        // XXX create a function helper for this, too easy to screw up with all the ?'s
-        mInsertEvent = mDB.createStatement ("INSERT INTO cal_events VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?)");
+        // todo statements
+        mSelectTodoByHash = mDB.createStatement ("SELECT * FROM cal_todos WHERE hashid = ? LIMIT 1");
+        mSelectTodoByOid = mDB.createStatement ("SELECT * from cal_todos WHERE oid = ? LIMIT 1");
+        mSelectTodosByRange = mDB.createStatement ("SELECT * FROM cal_todos WHERE (time_entry >= ? AND time_entry <= time_end)");
+        mSelectTodosByRangeAndLimit = mDB.createStatement ("SELECT * FROM cal_todos WHERE (time_entry >= ? AND time_entry <= time_end) LIMIT ?");
+        mDeleteTodoByHash = mDB.createStatement ("DELETE FROM cal_todos WHERE hashid = ?");
+        qs = "?"; for (var i = 1; i < TODO_COLUMN_COUNTER; i++) qs += ",?";
+        mInsertTodo = mDB.createStatement ("INSERT INTO cal_todos VALUES (" + qs + ")");
     },
 
     // database helper functions
+
+    // read in the common ItemBase attributes from aDBRow, and stick
+    // them on aItemBase
+    getItemBaseFromRow: function (aDBRow, aItemBase) {
+        aItemBase.title = aDBRow.getAsString(ITEM_TITLE);
+        aItemBase.description = aDBRow.getAsString(ITEM_DESCRIPTION);
+        aItemBase.location = aDBRow.getAsString(ITEM_LOCATION);
+        aItemBase.categories = aDBRow.getAsString(ITEM_CATEGORIES);
+
+        aItemBase.id = aDBRow.getAsString(ITEM_HASHID);
+        aItemBase.parent = this;
+    },
+
+    // create a new event and read in its attributes from aDBRow
     getEventFromRow: function (aDBRow) {
         // create a new generic event
         var e = Components.classes[kCalEventContractID]
         .createInstance(kCalEventIID);
 
-        // read the data from the statement row
+        getItemBaseFromRow (aDBRow, e);
+
         // XXX do I need getAsPRTime?
         e.startDate = newDateTime (aDBRow.getAsInt64(EV_TIME_START));
         e.endDate = newDateTime (aDBRow.getAsInt64(EV_TIME_END));
-        e.title = aDBRow.getAsString(EV_TITLE);
-        e.description = aDBRow.getAsString(EV_DESCRIPTION);
-        e.location = aDBRow.getAsString(EV_LOCATION);
-        e.categories = aDBRow.getAsString(EV_CATEGORIES);
-
-        e.id = aID;
-        e.parent = this;
 
         return e;
     },
 
-    // get an event from the db or cache with the given ID
-    getEventByHash: function (aID) {
-        // cached?
-        if (mEventHash[aID] != null)
-            return mEventHash[aID];
+    // create a new todo and read in its attributes from aDBRow
+    getTodoFromRow: function (aDBRow) {
+        // create a new generic todo
+        var todo = Components.classes[kCalTodoContractID]
+        .createInstance(kCalTodoIID);
 
-        var retval;
+        getItemBaseFromRow (aDBRow, todo);
+
+        todo.entryTime = newDateTime (aDBRow.getAsInt64(TODO_TIME_ENTRY));
+        todo.dueDate = newDateTime (aDBRow.getAsInt64(TODO_TIME_DUE));
+        todo.completedDate = newDateTime (aDBRow.getAsInt64(TODO_TIME_COMPLETED));
+        todo.percent_complete = aDBRow.getAsInt32(TODO_PERCENT_COMPLETE);
+
+        return todo;
+    },
+
+    //
+    // get an todo from the db or cache with the given ID
+    //
+    getItemByHash: function (aID) {
+        // cached?
+        if (mItemHash[aID] != null)
+            return mItemHash[aID];
+
+        var retval = null;
 
         // not cached; need to read from the db
+
+        // try event first
         mSelectEventByHash.bindCStringParameter (0, aID);
         if (mSelectEventByHash.executeStep()) {
             var e = getEventFromRow (mSelectEventByHash);
             retval = e;
-            // stick into cache
-            mEventHash[aID] = e;
-        } else {
-            // not found
-            // throw? return null?
-            retval = null;
+        }
+
+        if (retval == null) {
+            // not found; try a todo
+            mSelectTodoByHash.bindCStringParameter (0, aID);
+            if (mSelectTodoByHash.executeStep()) {
+                var e = getTodoFromRow (mSelectTodoByHash);
+                retval = e;
+            }
         }
 
         mSelectEventByHash.reset();
 
+        if (retval)
+            mItemHash[aID] = retval;
         return retval;
     },
 
@@ -438,7 +561,7 @@ calStorageCalendar.prototype = {
         while (stmt.executeStep()) {
             var e = getEventFromRow(stmt);
             events.push (e);
-            mEventHash[e.id] = e;
+            mItemHash[e.id] = e;
         }
 
         return events;
@@ -449,15 +572,15 @@ calStorageCalendar.prototype = {
         // set up statements before executing the transaction
         mDeleteEventByHash.bindCStringParameter (0, aEvent.id);
 
-        mInsertEvent.bindCStringParameter (EV_HASHID, aEvent.id);
+        mInsertEvent.bindCStringParameter (ITEM_HASHID, aEvent.id);
 
         mInsertEvent.bindInt64Parameter (EV_TIME_START, aEvent.start.utcTime);
         mInsertEvent.bindInt64Parameter (EV_TIME_END, aEvent.end.utcTime);
 
-        mInsertEvent.bindStringParameter (EV_TITLE, aEvent.title);
-        mInsertEvent.bindStringParameter (EV_DESCRIPTION, aEvent.description);
-        mInsertEvent.bindStringParameter (EV_LOCATION, aEvent.location);
-        mInsertEvent.bindStringParameter (EV_CATEGORIES, aEvent.categories);
+        mInsertEvent.bindStringParameter (ITEM_TITLE, aEvent.title);
+        mInsertEvent.bindStringParameter (ITEM_DESCRIPTION, aEvent.description);
+        mInsertEvent.bindStringParameter (ITEM_LOCATION, aEvent.location);
+        mInsertEvent.bindStringParameter (ITEM_CATEGORIES, aEvent.categories);
 
         mDB.beginTransaction();
         mDeleteEventByHash.execute();
@@ -467,7 +590,7 @@ calStorageCalendar.prototype = {
         mDeleteEventByHash.reset();
         mInsertEvent.reset();
 
-        mEventHash[aEvent.id] = aEvent;
+        mItemHash[aEvent.id] = aEvent;
     },
 
     // delete the event with the given uid
@@ -476,7 +599,7 @@ calStorageCalendar.prototype = {
         mDeleteEventByHash.execute ();
         mDeleteEventByHash.reset ();
 
-        delete mEventHash[aID];
+        delete mItemHash[aID];
     },
 }
 
@@ -521,3 +644,7 @@ var calStorageCalendarModule = {
         return true;
     }
 };
+
+function NSGetModule(compMgr, fileSpec) {
+    return calStorageCalendarModule;
+}
