@@ -4612,10 +4612,7 @@ void nsImapProtocol::OnListFolder(const char * aSourceMailbox, PRBool aBool)
 // If we don't know about it, returns PR_FALSE.
 PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 {
-	FolderQueryInfo *value = (FolderQueryInfo *)PR_MALLOC(sizeof(FolderQueryInfo));
 	PRBool rv = PR_FALSE;
-
-	if (!value) return PR_FALSE;
 
 	nsIMAPNamespace *nsForMailbox = nsnull;
     m_hostSessionList->GetNamespaceForMailboxForHost(GetImapHostName(),
@@ -4624,40 +4621,27 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 	// NS_ASSERTION (nsForMailbox, "Oops .. null nsForMailbox\n");
 
 	char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
+	char *name;
+
 	if (nonUTF7ConvertedName)
 		mailboxName = nonUTF7ConvertedName;
 
 	if (nsForMailbox)
 		m_runningUrl->AllocateCanonicalPath(mailboxName,
                                             nsForMailbox->GetDelimiter(),
-                                            &value->name);
+                                            &name);
 	else
 		m_runningUrl->AllocateCanonicalPath(mailboxName,
                                             kOnlineHierarchySeparatorUnknown, 
-                                            &value->name);
+                                            &name);
 	PR_FREEIF(nonUTF7ConvertedName);
 
-	if (!value->name)
-	{
-		PR_Free(value);
+	if (!name)
 		return PR_FALSE;
-	}
 
-	value->hostName = PL_strdup(GetImapHostName());
-	if (!value->hostName)
-	{
-		PL_strfree(value->name);
-		PR_Free(value);
-		return PR_FALSE;
-	}
+    m_imapServerSink->FolderIsNoSelect(name, &rv);
 
-    m_imapMailFolderSink->FolderIsNoSelect(this, value);
-    WaitForFEEventCompletion();
-
-	rv = value->rv;
-	PL_strfree(value->hostName);
-	PL_strfree(value->name);
-	PR_Free(value);
+	PL_strfree(name);
 	return rv;
 }
 

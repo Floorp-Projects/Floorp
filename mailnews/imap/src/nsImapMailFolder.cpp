@@ -1406,26 +1406,10 @@ NS_IMETHODIMP nsImapMailFolder::ChildDiscoverySucceeded(
 	return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::SubscribeUpgradeFinished(
-	nsIImapProtocol* aProtocol, EIMAPSubscriptionUpgradeState* aState)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
-}
-
 NS_IMETHODIMP nsImapMailFolder::PromptUserForSubscribeUpdatePath(
 	nsIImapProtocol* aProtocol,	PRBool* aBool)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::FolderIsNoSelect(nsIImapProtocol* aProtocol,
-												 FolderQueryInfo* aInfo)
-{
-	nsresult rv = NS_OK;
-    if (aInfo)
-        aInfo->rv = PR_FALSE; // ** jt -- temporary hack
 	return rv;
 }
 

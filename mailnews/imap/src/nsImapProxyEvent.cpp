@@ -272,33 +272,6 @@ nsImapMailFolderSinkProxy::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
 }
 
 NS_IMETHODIMP
-nsImapMailFolderSinkProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                                     EIMAPSubscriptionUpgradeState* aState)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aState, "Oops... null aState");
-    if(!aState)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        SubscribeUpgradeFinishedProxyEvent *ev =
-            new SubscribeUpgradeFinishedProxyEvent(this, aState);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMailFolderSink->SubscribeUpgradeFinished(aProtocol,
-                                                             aState);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
 nsImapMailFolderSinkProxy::PromptUserForSubscribeUpdatePath(
     nsIImapProtocol* aProtocol, PRBool* aBool)
 {
@@ -321,35 +294,6 @@ nsImapMailFolderSinkProxy::PromptUserForSubscribeUpdatePath(
     {
         res = m_realImapMailFolderSink->PromptUserForSubscribeUpdatePath
                                                          (aProtocol, aBool);
-    }
-    return res;
-}
-
-NS_IMETHODIMP
-nsImapMailFolderSinkProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
-                                        FolderQueryInfo* aInfo)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (aInfo, "Oops... null aInfo");
-    if(!aInfo)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        FolderIsNoSelectProxyEvent *ev =
-            new FolderIsNoSelectProxyEvent(this, aInfo);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-        {
-            ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-        }
-    }
-    else
-    {
-        res = m_realImapMailFolderSink->FolderIsNoSelect(aProtocol, aInfo);
     }
     return res;
 }
@@ -1641,31 +1585,6 @@ ChildDiscoverySucceededProxyEvent::HandleEvent()
     return res;
 }
 
-SubscribeUpgradeFinishedProxyEvent::SubscribeUpgradeFinishedProxyEvent(
-    nsImapMailFolderSinkProxy* aProxy, EIMAPSubscriptionUpgradeState* aState) :
-    nsImapMailFolderSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aState, "Oops... null aState");
-    if (aState)
-        m_state = *aState;
-    else
-        m_state = kEverythingDone;
-}
-
-SubscribeUpgradeFinishedProxyEvent::~SubscribeUpgradeFinishedProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-SubscribeUpgradeFinishedProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMailFolderSink->SubscribeUpgradeFinished(
-        m_proxy->m_protocol, &m_state);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 PromptUserForSubscribeUpdatePathProxyEvent::PromptUserForSubscribeUpdatePathProxyEvent(
     nsImapMailFolderSinkProxy* aProxy, PRBool* aBool) :
     nsImapMailFolderSinkProxyEvent(aProxy)
@@ -1691,29 +1610,6 @@ PromptUserForSubscribeUpdatePathProxyEvent::HandleEvent()
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
-
-FolderIsNoSelectProxyEvent::FolderIsNoSelectProxyEvent(
-    nsImapMailFolderSinkProxy* aProxy, FolderQueryInfo* aInfo) :
-    nsImapMailFolderSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (aInfo, "Ooops... null folder query info");
-    m_folderQueryInfo = aInfo;
-}
-
-FolderIsNoSelectProxyEvent::~FolderIsNoSelectProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-FolderIsNoSelectProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMailFolderSink->FolderIsNoSelect(
-        m_proxy->m_protocol, m_folderQueryInfo);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 
 ///
 

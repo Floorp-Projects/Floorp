@@ -78,12 +78,8 @@ public:
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec);
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-    NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                        EIMAPSubscriptionUpgradeState* aState);
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool);
-    NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
-                                FolderQueryInfo* aInfo);
 
     NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo);
@@ -293,15 +289,6 @@ struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderSinkProxyEvent
     NS_IMETHOD HandleEvent();
 };
 
-struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    SubscribeUpgradeFinishedProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                       EIMAPSubscriptionUpgradeState* aState);
-    virtual ~SubscribeUpgradeFinishedProxyEvent();
-    NS_IMETHOD HandleEvent();
-    EIMAPSubscriptionUpgradeState m_state;
-};
-
 struct PromptUserForSubscribeUpdatePathProxyEvent : 
     public nsImapMailFolderSinkProxyEvent 
 {
@@ -310,15 +297,6 @@ struct PromptUserForSubscribeUpdatePathProxyEvent :
     virtual ~PromptUserForSubscribeUpdatePathProxyEvent();
     NS_IMETHOD HandleEvent();
     PRBool m_bool;
-};
-
-struct FolderIsNoSelectProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    FolderIsNoSelectProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                               FolderQueryInfo* aInfo);
-    virtual ~FolderIsNoSelectProxyEvent();
-    NS_IMETHOD HandleEvent();
-    FolderQueryInfo* m_folderQueryInfo;
 };
 
 struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent

@@ -170,13 +170,8 @@ public:
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec);
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-	NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                        EIMAPSubscriptionUpgradeState* aState);
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool);
-    NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
-                                FolderQueryInfo* aInfo);
-
     NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo);
 

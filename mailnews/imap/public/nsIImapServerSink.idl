@@ -27,6 +27,10 @@ interface nsIImapServerSink : nsISupports {
 	void OnlineFolderDelete(in string aFolderName);
 	void OnlineFolderCreateFailed(in string aFolderName);
 	void OnlineFolderRename(in string oldName, in string newName);
+	void FolderIsNoSelect(in string aFolderName, out boolean aResult);
+
+	void SubscribeUpgradeFinished(in boolean bringUpSubscribeUI);
+
 	void SetCapability(in unsigned long capability);
 
 	void FEAlert(in wstring aString);

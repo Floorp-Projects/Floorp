@@ -694,6 +694,19 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
 	return rv;
 }
 
+NS_IMETHODIMP  nsImapIncomingServer::FolderIsNoSelect(const char *aFolderName, PRBool *result) 
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = PR_FALSE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP  nsImapIncomingServer::SubscribeUpgradeFinished(PRBool bringUpSubscribeUI) 
+{
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 {
