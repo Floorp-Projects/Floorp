@@ -45,7 +45,6 @@ static PRStatus PR_CALLBACK
 nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
 {
     nsSSLIOLayerSecretData *secret;
-    int i=1;
     nsresult                result;
     PRStatus                rv = PR_SUCCESS;
     CMTStatus               status;
@@ -118,7 +117,11 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
         goto fail;
     }
 
-   
+    if (addr->raw.family == PR_AF_INET6 && PR_IsNetAddrType(addr, PR_IpAddrV4Mapped)) {
+      /* Chop off the leading "::ffff:" */
+      strcpy(ipBuffer, ipBuffer + 7);
+    }
+
     if (fd->secret)  // how do we know that this is a necko nsSocketTransportFDPrivate??
     {
         hostName = (const char*)fd->secret;
@@ -175,7 +178,7 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   {
     CMInt32 errorCode = PR_FAILURE;
 
-    if (CMT_GetSSLDataErrorCode(secret->control, secret->cmsock, &errorCode) == PR_SUCCESS)
+    if (((PRStatus) CMT_GetSSLDataErrorCode(secret->control, secret->cmsock, &errorCode)) == PR_SUCCESS)
     {
         CMT_DestroyDataConnection(secret->control, secret->cmsock);
 
