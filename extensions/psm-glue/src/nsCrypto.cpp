@@ -1153,7 +1153,7 @@ nsCrypto::Logout()
 NS_IMETHODIMP
 nsCrypto::DisableRightClick()
 {
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsCRMFObject::nsCRMFObject()
