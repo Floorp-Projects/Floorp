@@ -5,6 +5,7 @@
   .button-toolbar-3 > .menubutton-icon-internal-box
     {
       border                : 1px outset #99CCCC;
+      
     }
 
   .button-toolbar-3[open="true"] > .menubutton-icon-internal-box,
@@ -16,6 +17,7 @@
   menupopup.button-toolbar-3 
     {
       border                : 1px solid #000000;
+      background			: #B2CAC9;
     }
   
   menuitem.button-toolbar-3 
@@ -59,8 +61,8 @@
 .menubutton-dual.toolbar
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
-    border                  : 0px;
-    margin      	        : 4px 6px 8px 1px;
+    border                  : 0px solid red;
+    margin      	        : 3px 3px 9px 3px;
     padding					: 0px;
   }
 
@@ -68,12 +70,13 @@
 .menubutton-dual.toolbar[disabled="true"]:hover,
 .menubutton-dual.toolbar[disabled="true"]:hover:active
   {
-    margin                  : 0px 6px 4px 1px;
+    margin      	        : 3px 3px 9px 3px;
 	padding					: 0px;
   }
 
 .button-toolbar-1.menubutton-dual-button,
 .button-toolbar-1.menubutton-dual-button[disabled="true"],
+.button-toolbar-1.menubutton-dual-button[disabled="true"]:hover,
 .button-toolbar-1.menubutton-dual-button[disabled="true"]:hover:active
   {
     list-style-image        : inherit;
@@ -120,7 +123,7 @@
 .menubutton-dual-dropmarker-box
   {
     margin-left             : 23px;
-    margin-top				: 25px;
+    margin-top				: 26px;
   }
   
 .button-toolbar-2 + .menubutton-dual-dropmarker-box  

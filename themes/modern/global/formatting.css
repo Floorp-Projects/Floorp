@@ -72,15 +72,17 @@
   separator.groove,
   separator.groove[orient="horizontal"] 
     {
-      border-top: 2px groove #CCCCCC;
-      height: 0px;
-      margin-top: 0.4em;
-      margin-bottom: 0.4em;
+      border-top: 1px solid #172254;
+      border-bottom: 1px solid #5A518A;
+      max-height: 2px;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
   
   separator.groove[orient="vertical"] 
     {
-      border-left: 2px groove #CCCCCC;
+      border-left: 1px solid #172254;
+      border-right: 1px solid #5A518A;
       margin-left: 0.4em;
       margin-right: 0.4em;
     }

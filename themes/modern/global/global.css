@@ -127,7 +127,7 @@
   #status-bar 
     {
       border-top          : 1px solid #11151F;
-      background-color    : #647B9F;
+      background-color    : #6D88AA;
       user-focus          : ignore;
       overflow            : hidden;
       margin			  : 0px;
@@ -197,25 +197,25 @@
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : #6699cc;
+	  background-color    : #6699cc;
       border-right        : 1px outset #6699cc;
     }
   
   .progress-remainder 
     {
-	    background-color    : #999999;
+	  background-color    : #999999;
     }
 
   .progressmeter-statusbar 
     {
       border              : 1px solid #999999;
-      margin              : 1px 4px 1px 4px;
+      margin              : 0px 4px 0px 4px;
     }
 
   .progressmeter-statusbar > .progressmeter-internal-box
     {
-      border              : none;
-      padding             : 1px;
+      border              : 0px;
+      padding             : 0px;
     }
     
   .progressmeter-progressbar[statusbar="true"] > .progress-bar
@@ -227,6 +227,8 @@
   .progressmeter-progressbar[statusbar="true"] > .progress-remainder
     {
       background-color    : #CCCCCC;
+      //background	  		: url(chrome://global/skin/progressmeter.png) no-repeat center;  ///////****************///////
+      //width					: 120px;
     }
     
 /** XUL <scrollbar> element **/

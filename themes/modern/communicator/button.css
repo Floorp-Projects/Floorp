@@ -75,9 +75,7 @@
   .button-toolbar-1
     {
       color               : #CCFFFF;
-      width               : 34px;
-      height              : 34px;
-      margin              : 4px 6px 8px 1px;
+      margin              : 3px 3px 9px 3px;
       font-size           : smaller;
       border              : 0px;
       padding			  : 0px;
@@ -100,7 +98,7 @@
   .button-toolbar-1[disabled="true"]:hover,
   .button-toolbar-1[disabled="true"]:hover:active
     {
-      margin              : 0px 6px 4px 1px;
+      margin              : 3px 3px 9px 3px;
       border              : none;
     }
     
@@ -195,17 +193,17 @@
 /** "Green" buttons, e.g. "Search"
  *  class="button-toolbar-3"
  **/  
-  .button-toolbar-3 
+  button.button-toolbar-3 
     {
 	  behavior			    : url("chrome://global/skin/globalBindings.xml#three-slice-button");
       font-weight           : bold;
       background-color      : transparent;
       border				: 0px;
-      margin				: 2px 7px 3px 0px;
+      margin				: 3px 7px 3px 0px;
       color					: #2F405D;
     }
 
-  .button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
+  button.button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
     {
       border				: 0px;
     }
@@ -229,7 +227,7 @@
 
   .three-slice-button-image-right {
 	background			: url(chrome://global/skin/button-3slice-normal-right.png) no-repeat;
-	width				: 5px;
+	width				: 4px;
 	height				: 20px;
   }
 
@@ -238,22 +236,22 @@
   }
 
   .three-slice-button-bottom-spring {
-	height				: 2px;
+	height				: 3px;
   }
   
-  .button-toolbar-3:hover:active {
+  button.button-toolbar-3:hover:active {
   	color				: #B2CAC9;
   }
   
-  .button-toolbar-3:hover:active > .three-slice-button-image-left {
+  button.button-toolbar-3:hover:active > .three-slice-button-image-left {
 	background			: url(chrome://global/skin/button-3slice-active-left.png) no-repeat;
   }
 
-  .button-toolbar-3:hover:active > .three-slice-button-image-middle {
+  button.button-toolbar-3:hover:active > .three-slice-button-image-middle {
 	background			: url(chrome://global/skin/button-3slice-active-middle.png) repeat-x;
   }
 
-  .button-toolbar-3:hover:active > .three-slice-button-image-right {
+  button.button-toolbar-3:hover:active > .three-slice-button-image-right {
 	background			: url(chrome://global/skin/button-3slice-active-right.png) no-repeat;
   }
   
@@ -305,7 +303,7 @@
     font                  : inherit;
     border                : none;
     padding               : 1px;
-    margin                : 0px 8px;
+    margin                : 0px;
   }
 
 .button-toolbar-4:hover 

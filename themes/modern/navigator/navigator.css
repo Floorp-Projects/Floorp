@@ -140,7 +140,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
     list-style-image      : url("chrome://global/skin/print.png");
-    margin-left			  : 4px;
+	margin				  : 7px 6px 10px 6px;
   }
 
 #print-button[disabled="true"],
@@ -161,6 +161,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
     list-style-image      : url("chrome://global/skin/print-clicked.png");
+  }
+
+#print-button > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
+  {
+    margin-left             : 18px;
+    margin-top				: 21px;
   }
 
 
@@ -184,21 +190,21 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 .navbar-inner-border-outer
   {
-  	border-top			  : 1px solid #8191AA;
-  	border-bottom		  : 1px solid #66799B;
+  	border-top			  : 1px solid #A0B3C6;
+  	border-bottom		  : 1px solid #7C92AF;
   	height				  : 31px;
   }
 
 .navbar-inner-border-middle
   {
-  	border-top			  : 1px solid #9CACC7;
-  	border-bottom		  : 1px solid #4E5F7A;
+  	border-top			  : 1px solid #7D91AA;
+  	border-bottom		  : 1px solid #4E6179;
   }
  
 .navbar-inner-border-inner
   {
-  	border-top			  : 1px solid #AEBED6;
-  	border-bottom		  : 1px solid #415171;
+  	border-top			  : 1px solid #BBCCE2;
+  	border-bottom		  : 1px solid #556D8B;
   }
 	
 .navbar-inner-groove-image-right
@@ -217,24 +223,24 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 .urlbar-image-left
   {
   	background			  : url("chrome://navigator/skin/urlbar-left.png") no-repeat;
-  	width				  : 4px;
+  	width				  : 3px;
   	height				  : 18px;
   }
 
 .urlbar-border-outer
   {
-  	border-top			  : 1px solid #424242;
+  	border-top			  : 1px solid #65696D;
   }
 
 .urlbar-border-inner
   {
-  	border-top			  : 1px solid #CACAC9;
+  	border-top			  : 1px solid #A3A3A3;
   }
   
 .urlbar-image-right
   {
   	background			  : url("chrome://navigator/skin/urlbar-right.png") no-repeat;
-  	width				  : 3px;
+  	width				  : 4px;
   	height				  : 18px;
   }
 
@@ -260,7 +266,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist-keyword-popup
   {
-    margin                : 0px 4px 0px 0px;
+    margin                : 3px 4px 8px 3px;
     width                 : 10px; 
     list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.png");
     background-color	  : transparent;
@@ -274,7 +280,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #ubhist-keyword-popup:hover:active
   {
-    margin                : 0px 4px 0px 0px;
+    margin                : 3px 4px 8px 3px;
     width                 : 10px; 
     list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.png"); 
   } 
@@ -315,7 +321,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #statusbar-display
   {
-    list-style-image      : url("chrome://communicator/skin/document.gif"):
+    list-style-image      : url("chrome://communicator/skin/document.gif");
+    font-size			  : 9px;
+    color				  : #D0E7E7;
   }
   
 #statusbar-display[error="true"]
