@@ -3545,12 +3545,14 @@ nsContextMenu.prototype = {
             if ( !link.protocol ) {
                 // We must resort to testing the URL string :-(.
                 var protocol;
-                if ( link.href ) {
-                    protocol = link.href.substr( 0, linktype.length );
+                var wrapper = new XPCNativeWrapper(link, "href",
+                                                   "getAttributeNS()");
+                if (wrapper.href) {
+                    protocol = wrapper.href.substr(0, linktype.length);
                 } else {
-                    protocol = link.getAttributeNS("http://www.w3.org/1999/xlink","href");
-                    if ( protocol ) {
-                        protocol = protocol.substr( 0, linktype.length );
+                    protocol = wrapper.getAttributeNS("http://www.w3.org/1999/xlink","href");
+                    if (protocol) {
+                        protocol = protocol.substr(0, linktype.length);
                     }
                 }
                 return protocol.toLowerCase() === linktype;        
@@ -3795,14 +3797,17 @@ nsContextMenu.prototype = {
     },
     // Generate fully-qualified URL for clicked-on link.
     linkURL : function () {
-        if (this.link.href) {
-          return this.link.href;
+        var wrapper = new XPCNativeWrapper(this.link, "href", "baseURI",
+                                           "getAttributeNS()");
+        if (wrapper.href) {
+          return wrapper.href;
         }
-        var href = this.link.getAttributeNS("http://www.w3.org/1999/xlink","href");
+        var href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink",
+                                          "href");
         if (!href || !href.match(/\S/)) {
           throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
         }
-        href = makeURLAbsolute(this.link.baseURI,href);
+        href = makeURLAbsolute(wrapper.baseURI, href);
         return href;
     },
     // Get text of link.
@@ -3813,12 +3818,16 @@ nsContextMenu.prototype = {
           if (!text || !text.match(/\S/)) {
             text = this.link.getAttribute("alt");
             if (!text || !text.match(/\S/)) {
-              if (this.link.href) {                
-                text = this.link.href;
+              var wrapper = new XPCNativeWrapper(this.link, "href", "baseURI",
+                                                 "getAttributeNS()");
+
+              if (wrapper.href) {
+                text = wrapper.href;
               } else {
-                text = getAttributeNS("http://www.w3.org/1999/xlink", "href");
+                text = wrapper.getAttributeNS("http://www.w3.org/1999/xlink",
+                                              "href");
                 if (text && text.match(/\S/)) {
-                  text = makeURLAbsolute(this.link.baseURI, text);
+                  text = makeURLAbsolute(wrapper.baseURI, text);
                 }
               }
             }
@@ -4033,6 +4042,7 @@ function asyncOpenWebPanel(event)
        break;
    }
    if (linkNode) {
+     var wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()");
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4045,13 +4055,13 @@ function asyncOpenWebPanel(event)
            (!target || target == "_content" || target  == "_main")) 
          // IE uses _main, SeaMonkey uses _content, we support both
        {
-         if (!linkNode.href) return true;
+         if (!wrapper.href) return true;
          if (linkNode.getAttribute("onclick")) return true;
          var postData = { };
-         var url = getShortcutOrURI(linkNode.href, postData);
+         var url = getShortcutOrURI(wrapper.href, postData);
          if (!url)
            return true;
-         markLinkVisited(linkNode.href, linkNode);
+         markLinkVisited(wrapper.href, linkNode);
          loadURI(url, null, postData.value);
          event.preventDefault();
          return false;
@@ -4062,21 +4072,23 @@ function asyncOpenWebPanel(event)
          // title attribute contains the title that should be used for the sidebar panel.
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                     "centerscreen,chrome,dialog,resizable,dependent",
-                    linkNode.getAttribute("title"), 
-                    linkNode.href, null, null, null, null, true);
+                    wrapper.getAttribute("title"), 
+                    wrapper.href, null, null, null, null, true);
          event.preventDefault();
          return false;
        }
        else if (target == "_search") {
          // Used in WinIE as a way of transiently loading pages in a sidebar.  We
          // mimic that WinIE functionality here and also load the page transiently.
-         openWebPanel(gNavigatorBundle.getString("webPanels"), linkNode.href);
+         openWebPanel(gNavigatorBundle.getString("webPanels"), wrapper.href);
          event.preventDefault();
          return false;
        }
      }
-     else
-       handleLinkClick(event, linkNode.href, linkNode);
+     else {
+       handleLinkClick(event, wrapper.href, linkNode);
+     }
+
      return true;
    } else {
      // Try simple XLink
@@ -4084,13 +4096,16 @@ function asyncOpenWebPanel(event)
      linkNode = target;
      while (linkNode) {
        if (linkNode.nodeType == Node.ELEMENT_NODE) {
-         href = linkNode.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+         var wrapper = new XPCNativeWrapper(linkNode, "getAttributeNS()");
+
+         href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
          break;
        }
        linkNode = linkNode.parentNode;
      }
      if (href && href != "") {
-       href = makeURLAbsolute(target.baseURI,href);
+       var baseURI = new XPCNativeWrapper(linkNode, "baseURI").baseURI;
+       href = makeURLAbsolute(baseURI, href);
        handleLinkClick(event, href, null);
        return true;
      }
@@ -4994,9 +5009,11 @@ function livemarkOnLinkAdded(event)
       livemarkLinks = browserForLink.livemarkLinks;
     }
 
-    livemarkLinks.push({ href: event.target.href,
-                         type: event.target.type,
-                        title: event.target.title});
+    var wrapper = new XPCNativeWrapper(event.target, "href", "type", "title");
+
+    livemarkLinks.push({ href: wrapper.href,
+                         type: wrapper.type,
+                        title: wrapper.title});
 
     browserForLink.livemarkLinks = livemarkLinks;
     if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
