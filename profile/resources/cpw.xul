@@ -10,7 +10,7 @@
 <!ENTITY dialup.title	             "Dialup">
 <!ENTITY mailnews.title              "Mail News">
 <!ENTITY addrbook.title              "Address Book">
-<!ENTITY back.label               "Back">
+<!ENTITY back.label                   "Back">
 <!ENTITY next.label                   "Next">
 <!ENTITY cancel.label                 "Cancel">
 <!ENTITY finish.label                 "Finish">
@@ -29,9 +29,6 @@
 	<tabcontrol align="vertical"> 
 		<tabbox align="horizontal"> 
 			<tab onclick="loadPage('test-content1_1.xul');">&newprofile.title;</tab> 
-			<tab onclick="loadPage('test-tab2.xul');">&dialup.title;</tab> 
-			<tab onclick="loadPage('test-tab3.xul');">&mailnews.title;</tab> 
-			<tab onclick="loadPage('test-tab4.xul');">&addrbook.title;</tab> 
 		</tabbox> 
                     
 		<tabpanel />
