@@ -29,7 +29,6 @@
 #include "nsGUIEvent.h"
 #include "nsIEnumerator.h"
 #include "nsIRenderingContext.h"
-#include "nsIPresContext.h"
 #include "nsFont.h"
 #include "nsUnitConversion.h"
 #include "nsColor.h"
