@@ -476,7 +476,7 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
 
 {
   // the mail window knows nothing about the default content types
-  // it's docshell can handle...ask the content area if it can handle
+  // its docshell can handle...ask the content area if it can handle
   // the content type...
   
   nsCOMPtr<nsIDocShell> messageWindowDocShell; 

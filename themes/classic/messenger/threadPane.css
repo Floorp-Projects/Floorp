@@ -219,6 +219,73 @@ outlinerchildren:-moz-outliner-image(subjectCol, news, offl) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-offl.gif");
 }
 
+/* ..... new thread icons for watch and ignore ..... */
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, watch) {
+  list-style-image: url("chrome://messenger/skin/thread-closed-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, ignore) {
+  list-style-image: url("chrome://messenger/skin/thread-closed-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, watch, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-closed-offl-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, ignore, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-closed-offl-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, watch) {
+  list-style-image: url("chrome://messenger/skin/thread-new-closed-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, ignore) {
+  list-style-image: url("chrome://messenger/skin/thread-new-closed-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, watch, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-new-closed-offl-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, ignore, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-new-closed-offl-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, watch, open) {
+  list-style-image: url("chrome://messenger/skin/thread-new-open-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, ignore, open) {
+  list-style-image: url("chrome://messenger/skin/thread-new-open-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, watch, open, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-new-open-offl-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, hasUnread, ignore, open, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-new-open-offl-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, watch, open) {
+  list-style-image: url("chrome://messenger/skin/thread-open-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, ignore, open) {
+  list-style-image: url("chrome://messenger/skin/thread-open-kill.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, watch, open, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-open-offl-eye.gif");
+}
+
+outlinerchildren:-moz-outliner-image(news, threadCol, container, ignore, open, offline) {
+  list-style-image: url("chrome://messenger/skin/thread-open-offl-kill.gif");
+}
+
+
 #sizeCol,
 #unreadCol,
 #totalCol {

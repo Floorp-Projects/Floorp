@@ -113,6 +113,8 @@ protected:
   static nsIAtom* kImapDeletedMsgAtom;
   static nsIAtom* kAttachMsgAtom;
   static nsIAtom* kHasUnreadAtom;
+  static nsIAtom* kWatchThreadAtom;
+  static nsIAtom* kIgnoreThreadAtom;
 
 #ifdef SUPPORT_PRIORITY_COLORS
   static nsIAtom* kHighestPriorityAtom;

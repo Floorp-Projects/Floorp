@@ -83,6 +83,8 @@ nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kImapDeletedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kAttachMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kHasUnreadAtom = nsnull;
+nsIAtom * nsMsgDBView::kWatchThreadAtom = nsnull;
+nsIAtom * nsMsgDBView::kIgnoreThreadAtom = nsnull;
 
 nsIAtom * nsMsgDBView::mLabelPrefColorAtoms[PREF_LABELS_MAX] = {nsnull, nsnull, nsnull, nsnull, nsnull};
 
@@ -153,6 +155,8 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kImapDeletedMsgAtom = NS_NewAtom("imapdeleted");
   kAttachMsgAtom = NS_NewAtom("attach");
   kHasUnreadAtom = NS_NewAtom("hasUnread");
+  kWatchThreadAtom = NS_NewAtom("watch");
+  kIgnoreThreadAtom = NS_NewAtom("ignore");
 
 #ifdef SUPPORT_PRIORITY_COLORS
   kHighestPriorityAtom = NS_NewAtom("priority-highest");
@@ -194,6 +198,8 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kImapDeletedMsgAtom);
     NS_IF_RELEASE(kAttachMsgAtom);
     NS_IF_RELEASE(kHasUnreadAtom);
+    NS_IF_RELEASE(kWatchThreadAtom);
+    NS_IF_RELEASE(kIgnoreThreadAtom);
 
 #ifdef SUPPORT_PRIORITY_COLORS
     NS_IF_RELEASE(kHighestPriorityAtom);
@@ -1063,6 +1069,12 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   
   if (flags & MSG_FLAG_ATTACHMENT) 
     properties->AppendElement(kAttachMsgAtom);
+
+  if (flags & MSG_FLAG_WATCHED) 
+    properties->AppendElement(kWatchThreadAtom);
+
+  if (flags & MSG_FLAG_IGNORED) 
+    properties->AppendElement(kIgnoreThreadAtom);
 
   if ((mDeleteModel == nsMsgImapDeleteModels::IMAPDelete) && (flags & MSG_FLAG_IMAP_DELETED)) 
     properties->AppendElement(kImapDeletedMsgAtom);
