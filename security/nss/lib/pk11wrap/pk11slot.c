@@ -4456,21 +4456,21 @@ SECStatus
 PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id, 
 						const char *nickname) 
 {
-    int len = PORT_Strlen(nickname)-1;
+    int len = PORT_Strlen(nickname);
     CK_ATTRIBUTE setTemplate;
     CK_RV crv;
+    CK_SESSION_HANDLE rwsession;
 
     if (len < 0) {
 	return SECFailure;
     }
 
     PK11_SETATTRS(&setTemplate, CKA_LABEL, (CK_CHAR *) nickname, len);
-    PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_SetAttributeValue(slot->session, id,
+    rwsession = PK11_GetRWSession(slot);
+    crv = PK11_GETTAB(slot)->C_SetAttributeValue(rwsession, id,
 			&setTemplate, 1);
-    PK11_ExitSlotMonitor(slot);
+    PK11_RestoreROSession(slot, rwsession);
     if (crv != CKR_OK) {
-	PK11_ExitSlotMonitor(slot);
 	PORT_SetError(PK11_MapError(crv));
 	return SECFailure;
     }
