@@ -38,7 +38,7 @@ NotYetImplemented__7nsDebugFPCcPCci		# nsDebug::NotYetImplemented(const char*,co
 Assertion__7nsDebugFPCcPCcPCci		# nsDebug::Assertion(const char*,const char*,const char*,int)
 PostCondition__7nsDebugFPCcPCcPCci		# nsDebug::PostCondition(const char*,const char*,const char*,int)
 PreCondition__7nsDebugFPCcPCcPCci		# nsDebug::PreCondition(const char*,const char*,const char*,int)
-Create__8nsMallocFP11nsISupportsRC4nsIDPPv		# nsMalloc::Create(nsISupports*,const nsID&,void**)
+#Create__8nsMallocFP11nsISupportsRC4nsIDPPv		# nsMalloc::Create(nsISupports*,const nsID&,void**)
 #Break__7nsDebugFPCci		# nsDebug::Break(const char*,int)
 Abort__7nsDebugFPCci		# nsDebug::Abort(const char*,int)
 #__vt__17SupportsArrayImpl		# SupportsArrayImpl::__vt
