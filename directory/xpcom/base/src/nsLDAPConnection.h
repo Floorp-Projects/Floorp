@@ -52,7 +52,8 @@
 #include "nspr.h"
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
-#include "nsIDNSService.h"
+#include "nsIDNSListener.h"
+#include "nsICancelable.h"
 #include "nsIRequest.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
@@ -131,7 +132,7 @@ class nsLDAPConnection : public nsILDAPConnection,
 
     nsCString mResolvedIP;              // Preresolved list of host IPs
     nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback
-    nsCOMPtr<nsIDNSRequest> mDNSRequest;   // The "active" DNS request
+    nsCOMPtr<nsICancelable> mDNSRequest;   // The "active" DNS request
     nsCString               mDNSHost;   // The hostname being resolved
     nsCOMPtr<nsISupports> mClosure;     // private parameter (anything caller desires)
 };

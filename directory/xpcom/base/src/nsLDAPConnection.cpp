@@ -52,6 +52,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIConsoleService.h"
 #include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
 #include "nsIRequestObserver.h"
 #include "nsIProxyObjectManager.h"
 #include "nsEventQueueUtils.h"
@@ -277,7 +278,7 @@ nsLDAPConnection::Close()
   // Init listener (if still there).
   //
   if (mDNSRequest) {
-      mDNSRequest->Cancel();
+      mDNSRequest->Cancel(NS_ERROR_ABORT);
       mDNSRequest = 0;
   }
   mInitListener = 0;
@@ -861,7 +862,7 @@ nsLDAPConnectionLoop::Run(void)
 }
 
 NS_IMETHODIMP
-nsLDAPConnection::OnLookupComplete(nsIDNSRequest *aRequest,
+nsLDAPConnection::OnLookupComplete(nsICancelable *aRequest,
                                    nsIDNSRecord  *aRecord,
                                    nsresult       aStatus)
 {    
