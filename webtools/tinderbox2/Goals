@@ -34,6 +34,11 @@ with no builds display).
 clear programatic interfaces and better separation of functionality
 into separate modules.
 
+Modules should not have circular dependences.  Care should be taken on
+adding 'use' statement.  I worry very much about which modules depend
+on which other modules.  It is important to consider which modules
+need to work in isolation and which modules need to share data.
+
 It should be possible to add hooks so that users get beeped when the
 next good build goes through or that trouble tickets are automatically
 opened when the builds fail.
@@ -41,11 +46,6 @@ opened when the builds fail.
 Greater flexibility in setting status of builds.  We may need more
 gradations of failure then just 'busted' or 'test-failed' to
 distinguish the types of tests which have failed.
-
-It should be possible to watch projects milestone progress via
-tinderbox.  Each milestone could be recorded as a column which tests
-for the features in the milestone.  When milestones are hit the column
-turns green.  The project is over when all columns turn green.
 
 generated html must be readable and help isolate programming errors.
 
@@ -56,15 +56,16 @@ make better use of the perl data structures to mirror the way we wish
 to use the data.  This will allow easier maintainabilty and allow for
 more expansion of features.
 
+display should work on many different browsers.
+
 popup windows should not be netscape specific.
 
 Permanent data should be stored via datadumper so that the data and
 datastrucutres are easy to read and debug. Currently this is a
 performance bottle neck with a large percentage of our cpu time during
-testing being spent in Data::Dumper::Dump.  I expect this to improve
-when we install the newest version of perl.  The perl module Storable
-is rumored to be much faster.  I wish to not add additional module
-requirements at this time this will be configurable.
+testing being spent in Data::Dumper::Dump.  The perl module Storable
+is much faster.  I wish to not add additional module requirements at
+this time, this will be configurable.
 
 # dprofpp says that:
 #	%64.8 of elapsed real time which is 66.25 seconds 
@@ -83,9 +84,9 @@ states should be explicitly checked for.
 Databases should update atomically, no information should be lost due
 to race conditions.
 
-All modules (processmail, build, VC, Notices) should be able to be run
-individually.  Modules should accept well defined text files as input
-and produce text files as output.  This will greatly inhance the
+All column modules (processmail, build, VC, Notices) should be able to
+be run individually.  Modules should accept well defined text files as
+input and produce text files as output.  This will greatly inhance the
 ability to test each module in isolation and to quickly port modules
 to new architectures.
 
@@ -106,5 +107,4 @@ control clear and simple.
 Allow for use of any text browser which can display tables
 currently this is true for the browser links:
 	http://artax.karlin.mff.cuni.cz/~mikulas/links/.
-
 but not the browser lynx.
