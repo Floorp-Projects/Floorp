@@ -40,7 +40,7 @@ var s = 'xyz';
 
 status = 'anchor()';
 actual = s.anchor();
-expect =actual.toLowerCase();
+expect = actual.toLowerCase();
 addThis();
 
 status = 'big()';
