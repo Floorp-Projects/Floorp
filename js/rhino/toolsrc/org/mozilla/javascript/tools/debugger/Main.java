@@ -1719,7 +1719,9 @@ class UpdateContext implements Runnable {
             toolTips.addElement(location);
         }
         db.context.enableUpdate();
-        ctx.setSelectedIndex(0);
+        if (frameCount != 0) {
+            ctx.setSelectedIndex(0);
+        }
         ctx.setMinimumSize(new Dimension(50, ctx.getMinimumSize().height));
     }
 };
