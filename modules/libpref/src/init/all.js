@@ -344,12 +344,6 @@ pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
 pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
 pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
 pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
-
-////////////////////////////////////////////////////////////
-pref("capability.principal.codebase.foo.id", "http://www.netscape.com");
-pref("capability.principal.codebase.foo.granted", "UniversalFoo");
-//////////////////////////////////////////////////////////
-
 pref("dom.disable_open_during_load", false);
 
 pref("javascript.enabled",                  true);
