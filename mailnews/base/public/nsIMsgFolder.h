@@ -26,6 +26,7 @@ class nsIMsgFolder : public nsIFolder {
     return iid;
   }
 
+
   // XXX should these 2 go on nsIFolder or nsICollection?
   NS_IMETHOD AddUnique(nsISupports* element) = 0;
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement) = 0;
@@ -126,6 +127,8 @@ class nsIMsgFolder : public nsIFolder {
   /*  <IDL>  */
   NS_IMETHOD DisplayRecipients(PRBool *_retval) = 0;
 
+  NS_IMETHOD ReadDBFolderInfo(PRBool force) = 0;
+
   /*  <IDL>  */
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName) = 0;
 
@@ -142,7 +145,7 @@ class nsIMsgFolder : public nsIFolder {
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetUserName(char **_retval) = 0;
+  NS_IMETHOD GetUsersName(char **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetHostName(char **_retval) = 0;

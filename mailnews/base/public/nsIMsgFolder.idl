@@ -47,7 +47,7 @@ interface nsIMsgFolder : nsISupports {
 	boolean HasMessages();
 	unsigned long GetNumMessages() ;
 	unsigned long GetNumMessagesToDisplay();
-	nsIMsgFolder GetMessage(in unsigned long which) ;
+	nsIMsgFolder GetAMessage(in unsigned long which) ;
 	nsISupportsArray  GetMessages();
 	void AddMessage(in nsIMsg msg);
 	void RemoveMessage(in nsIMsg msg);
@@ -93,13 +93,15 @@ interface nsIMsgFolder : nsISupports {
 
 	boolean DisplayRecipients();
 
+	void ReadDBFolderInfo(in boolean force);
+
 	readonly attribute string relativePathName;
 	readonly attribute unsigned long sizeOnDisk;
 
 	void RememberPassword(in string password);
 	string GetRememberedPassword();
 	boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
-	string GetUserName();
+	string GetUsersName();
 	string GetHostName();
 
 	void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);

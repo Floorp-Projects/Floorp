@@ -22,11 +22,10 @@
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
 #include "nsMsgKeyArray.h"
+#include "nsMsgDataBase.h"
+#include "nsDBFolderInfo.h"
 #include "nsISupportsArray.h"
 
-#ifdef HAVE_DB
-#include "nsMsgDatabase.h"
-#endif
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
@@ -50,14 +49,12 @@ nsMsgFolder::nsMsgFolder(const char* uri)
 
 #ifdef HAVE_DB
 	mLastMessageLoaded	= nsMsgKey_None;
+#endif
 	mNumPendingUnreadMessages = 0;
 	mNumPendingTotalMessages  = 0;
-#endif
 	NS_NewISupportsArray(&mSubFolders);
 
-#ifdef HAVE_CACHE
 	mIsCachable = TRUE;
-#endif
 }
 
 nsMsgFolder::~nsMsgFolder()
@@ -388,6 +385,7 @@ NS_IMETHODIMP nsMsgFolder::RemoveElement(nsISupports *aElement)
 {
   return mSubFolders->RemoveElement(aElement);
 }
+
 
 NS_IMETHODIMP nsMsgFolder::Enumerate(nsIEnumerator* *result)
 {
@@ -1154,6 +1152,46 @@ NS_IMETHODIMP nsMsgFolder::DisplayRecipients(PRBool *displayRecipients)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
+{
+	// Since it turns out to be pretty expensive to open and close
+	// the DBs all the time, if we have to open it once, get everything
+	// we might need while we're here
+
+	nsresult result= NS_OK;
+	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
+    {
+        nsDBFolderInfo   *folderInfo;
+        nsMsgDatabase       *db;
+        if(result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db)))
+        {
+			mIsCachable = TRUE;
+            if (folderInfo)
+            {
+
+	            folderInfo->GetFlags(&mPrefFlags);
+                mPrefFlags |= MSG_FOLDER_PREF_CACHED;
+                folderInfo->SetFlags(mPrefFlags);
+
+				folderInfo->GetNumMessages(&mNumTotalMessages);
+				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
+				
+				mNumPendingTotalMessages = folderInfo->GetImapTotalPendingMessages();
+				mNumPendingUnreadMessages = folderInfo->GetImapUnreadPendingMessages();
+
+				mCsid = folderInfo->GetCSID();
+				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
+					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
+            }
+            if (db)
+                db->Close(FALSE);
+        }
+    }
+
+	return result;
+	
+}
+
 #ifdef HAVE_SEMAPHORE
 NS_IMETHODIMP nsMsgFolder::AcquireSemaphore(void *semHolder)
 {
@@ -1274,7 +1312,7 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetUserName(char **userName)
+NS_IMETHODIMP nsMsgFolder::GetUsersName(char **userName)
 {
 	if(!userName)
 		return NS_ERROR_NULL_POINTER;
@@ -1293,3 +1331,4 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+

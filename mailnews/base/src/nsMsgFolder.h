@@ -29,6 +29,8 @@
 #include "nsIMsgFolder.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
 #include "nsIRDFResourceFactory.h"
+#include "nsDBFolderInfo.h"
+#include "nsMsgDataBase.h"
 
  /* 
   * MsgFolder
@@ -117,6 +119,7 @@ public:
 #endif
 
   NS_IMETHOD BuildFolderURL(char ** url);
+
 
   NS_IMETHOD GetPrettiestName(nsString& name);
 
@@ -224,6 +227,9 @@ public:
 
   NS_IMETHOD DisplayRecipients(PRBool *displayRecipients);
 
+   NS_IMETHOD ReadDBFolderInfo(PRBool force);
+
+
 #ifdef HAVE_SEMAPHORE
   nsresult AcquireSemaphore(void *semHolder);
   void ReleaseSemaphore(void *semHolder);
@@ -263,16 +269,18 @@ public:
   NS_IMETHOD RememberPassword(const char *password);
   NS_IMETHOD GetRememberedPassword(char ** password);
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *needsAuthenticate);
-  NS_IMETHOD GetUserName(char **userName);
+  NS_IMETHOD GetUsersName(char **userName);
   NS_IMETHOD GetHostName(char **hostName);
+
+ virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db) = 0;
 
 protected:
   nsString mName;
   PRUint32 mFlags;
-  PRUint32 mNumUnreadMessages;        /* count of unread messages (-1 means
+  PRInt32 mNumUnreadMessages;        /* count of unread messages (-1 means
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
-  PRUint32 mNumTotalMessages;         /* count of existing messages. */
+  PRInt32 mNumTotalMessages;         /* count of existing messages. */
   nsISupportsArray *mSubFolders;
 #ifdef HAVE_MASTER
   MSG_Master  *mMaster;
@@ -280,23 +288,21 @@ protected:
 
   PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
   PRUint8 mDepth;
-  PRUint32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
+  PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
 #ifdef HAVE_SEMAPHORE
   void *mSemaphoreHolder; // set when the folder is being written to
 #endif
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;
+#endif
   // These values are used for tricking the front end into thinking that we have more 
   // messages than are really in the DB.  This is usually after and IMAP message copy where
   // we don't want to do an expensive select until the user actually opens that folder
   PRUint32 mNumPendingUnreadMessages;
   PRUint32 mNumPendingTotalMessages;
-#endif
 
-#ifdef HAVE_CACHE
 	PRBool mIsCachable;
-#endif
 
 };
 
