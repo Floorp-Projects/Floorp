@@ -42,11 +42,16 @@
 
 #include "secutil.h"
 
+#if defined(XP_UNIX)
+#include <unistd.h>
+#endif
+
 #if defined(_WINDOWS)
 #include <process.h>	/* for getpid() */
 #endif
+
 #ifdef XP_OS2_VACPP
-#include <Process.h>    /* for getpid() */
+#include <Process.h>	/* for getpid() */
 #endif
 
 #include <stdlib.h>
