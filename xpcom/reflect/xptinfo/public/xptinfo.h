@@ -110,13 +110,13 @@ public:
         {return flags;}
 
     PRBool IsPointer() const
-        {return (PRBool) (XPT_TDP_IS_POINTER(flags));}
+        {return 0 != (XPT_TDP_IS_POINTER(flags));}
 
     PRBool IsUniquePointer() const
-        {return (PRBool) (XPT_TDP_IS_UNIQUE_POINTER(flags));}
+        {return 0 != (XPT_TDP_IS_UNIQUE_POINTER(flags));}
 
     PRBool IsReference() const
-        {return (PRBool) (XPT_TDP_IS_REFERENCE(flags));}
+        {return 0 != (XPT_TDP_IS_REFERENCE(flags));}
 
     PRBool IsArithmetic() const     // terminology from Harbison/Steele
         {return flags <= T_WCHAR;}

@@ -41,6 +41,7 @@
 #include "nsISupports.idl"
 #include "nsIInterfaceInfo.idl"
 #include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
 
 /* this is NOT intended to be scriptable */
 [uuid(8B161900-BE2B-11d2-9831-006008962422)]
@@ -57,6 +58,16 @@ interface nsIInterfaceInfoManager : nsISupports
     void autoRegisterInterfaces();
 
     nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
+};
+
+[uuid(0ee22850-bc6a-11d5-9134-0010a4e73d9a)]
+interface nsIInterfaceInfoSuperManager : nsIInterfaceInfoManager
+{
+    void addAdditionalManager(in nsIInterfaceInfoManager manager);        
+    void removeAdditionalManager(in nsIInterfaceInfoManager manager);        
+
+    PRBool hasAdditionalManagers();
+    nsISimpleEnumerator enumerateAdditionalManagers();
 };
 
 %{C++
