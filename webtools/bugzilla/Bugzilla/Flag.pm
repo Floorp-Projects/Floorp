@@ -33,8 +33,11 @@ use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Util;
+use Bugzilla::Error;
 
 use Attachment;
+
+use constant TABLES_ALREADY_LOCKED => 1;
 
 # Note that this line doesn't actually import these variables for some reason,
 # so I have to use them as $::template and $::vars in the package code.
@@ -135,8 +138,8 @@ sub count {
 
 sub validate {
     # Validates fields containing flag modifications.
-    
-    my ($data) = @_;
+
+    my ($data, $bug_id) = @_;
   
     # Get a list of flags to validate.  Uses the "map" function
     # to extract flag IDs from form field names by matching fields
@@ -152,13 +155,62 @@ sub validate {
         my $flag = get($id);
         $flag || &::ThrowCodeError("flag_nonexistent", { id => $id });
 
-        # Don't bother validating flags the user didn't change.
-        next if $status eq $flag->{'status'};
-
         # Make sure the user chose a valid status.
         grep($status eq $_, qw(X + - ?))
           || &::ThrowCodeError("flag_status_invalid", 
                                { id => $id , status => $status });
+                
+        # Make sure the user didn't request the flag unless it's requestable.
+        if ($status eq '?' && !$flag->{type}->{is_requestable}) {
+            ThrowCodeError("flag_status_invalid", 
+                              { id => $id , status => $status });
+        }
+        
+        # Make sure the requestee is authorized to access the bug.
+        # (and attachment, if this installation is using the "insider group"
+        # feature and the attachment is marked private).
+        if ($status eq '?'
+            && $flag->{type}->{is_requesteeble}
+            && trim($data->{"requestee-$id"}))
+        {
+            my $requestee_email = trim($data->{"requestee-$id"});
+            if ($requestee_email ne $flag->{'requestee'}->{'email'}) {
+                # We know the requestee exists because we ran
+                # Bugzilla::User::match_field before getting here.
+                # ConfirmGroup makes sure their group settings
+                # are up-to-date or calls DeriveGroups to update them.
+                my $requestee_id = &::DBname_to_id($requestee_email);
+                &::ConfirmGroup($requestee_id);
+
+                # Throw an error if the user can't see the bug.
+                if (!&::CanSeeBug($bug_id, $requestee_id))
+                {
+                    ThrowUserError("flag_requestee_unauthorized",
+                                   { flag_type => $flag->{'type'},
+                                     requestee =>
+                                       new Bugzilla::User($requestee_id),
+                                     bug_id => $bug_id,
+                                     attach_id =>
+                                       $flag->{target}->{attachment}->{id} });
+                }
+
+                # Throw an error if the target is a private attachment and
+                # the requestee isn't in the group of insiders who can see it.
+                if ($flag->{target}->{attachment}->{exists}
+                    && $data->{'isprivate'}
+                    && &::Param("insidergroup")
+                    && !&::UserInGroup(&::Param("insidergroup"), $requestee_id))
+                {
+                    ThrowUserError("flag_requestee_unauthorized_attachment",
+                                   { flag_type => $flag->{'type'},
+                                     requestee =>
+                                       new Bugzilla::User($requestee_id),
+                                     bug_id    => $bug_id,
+                                     attach_id =>
+                                      $flag->{target}->{attachment}->{id} });
+                }
+            }
+        }
     }
 }
 
@@ -457,14 +509,17 @@ sub GetBug {
     # Save the currently running query (if any) so we do not overwrite it.
     &::PushGlobalSQLState();
 
-    &::SendSQL("SELECT  1, short_desc, product_id, component_id
-                  FROM  bugs
-                 WHERE  bug_id = $id");
+    &::SendSQL("SELECT    1, short_desc, product_id, component_id,
+                          COUNT(bug_group_map.group_id)
+                FROM      bugs LEFT JOIN bug_group_map
+                            ON (bugs.bug_id = bug_group_map.bug_id)
+                WHERE     bugs.bug_id = $id
+                GROUP BY  bugs.bug_id");
 
     my $bug = { 'id' => $id };
     
     ($bug->{'exists'}, $bug->{'summary'}, $bug->{'product_id'}, 
-     $bug->{'component_id'}) = &::FetchSQLData();
+     $bug->{'component_id'}, $bug->{'restricted'}) = &::FetchSQLData();
 
     # Restore the previously running query (if any).
     &::PopGlobalSQLState();
@@ -504,6 +559,28 @@ sub notify {
     
     my ($flag, $template_file) = @_;
     
+    # If the target bug is restricted to one or more groups, then we need
+    # to make sure we don't send email about it to unauthorized users
+    # on the request type's CC: list, so we have to trawl the list for users
+    # not in those groups or email addresses that don't have an account.
+    if ($flag->{'target'}->{'bug'}->{'restricted'}
+        || $flag->{'target'}->{'attachment'}->{'isprivate'})
+    {
+        my @new_cc_list;
+        foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
+            my $user_id = &::DBname_to_id($cc) || next;
+            # re-derive permissions if necessary
+            &::ConfirmGroup($user_id, TABLES_ALREADY_LOCKED);
+            next if $flag->{'target'}->{'bug'}->{'restricted'}
+              && !&::CanSeeBug($flag->{'target'}->{'bug'}->{'id'}, $user_id);
+            next if $flag->{'target'}->{'attachment'}->{'isprivate'}
+              && Param("insidergroup")
+              && !&::UserInGroup(Param("insidergroup"), $user_id);
+            push(@new_cc_list, $cc);
+        }
+        $flag->{'type'}->{'cc_list'} = join(", ", @new_cc_list);
+    }
+
     $::vars->{'flag'} = $flag;
     
     my $message;

@@ -91,12 +91,21 @@ scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
 # do a match on the fields if applicable
 
+# The order of these function calls is important, as both Flag::validate
+# and FlagType::validate assume User::match_field has ensured that the values
+# in the requestee fields are legitimate user email addresses.
 &Bugzilla::User::match_field({
     'qa_contact'                => { 'type' => 'single' },
     'newcc'                     => { 'type' => 'multi'  },
     'assigned_to'               => { 'type' => 'single' },
     '^requestee(_type)?-(\d+)$' => { 'type' => 'single' },
 });
+# Validate flags, but only if the user is changing a single bug,
+# since the multi-change form doesn't include flag changes.
+if (defined $::FORM{'id'}) {
+    Bugzilla::Flag::validate(\%::FORM, $::FORM{'id'});
+    Bugzilla::FlagType::validate(\%::FORM, $::FORM{'id'});
+}
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.
@@ -1080,7 +1089,11 @@ foreach my $id (@idlist) {
             "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
             "bug_group_map $write, flags $write, duplicates $write," .
-            "user_group_map READ, flagtypes READ, " . 
+            # user_group_map would be a READ lock except that Flag::process
+            # may call Flag::notify, which calls ConfirmGroup, which might
+            # call DeriveGroup, which wants a WRITE lock on that table.
+            # group_group_map is in here at all because DeriveGroups needs it.
+            "user_group_map $write, group_group_map READ, flagtypes READ, " . 
             "flaginclusions AS i READ, flagexclusions AS e READ, " .
             "keyworddefs READ, groups READ, attachments READ, " .
             "group_control_map AS oldcontrolmap READ, " .

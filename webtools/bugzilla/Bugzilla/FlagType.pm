@@ -32,6 +32,9 @@ package Bugzilla::FlagType;
 # Use Bugzilla's User module which contains utilities for handling users.
 use Bugzilla::User;
 
+use Bugzilla::Error;
+use Bugzilla::Util;
+
 # Note!  This module requires that its caller have said "require CGI.pl" 
 # to import relevant functions from that script and its companion globals.pl.
 
@@ -177,9 +180,9 @@ sub count {
 }
 
 sub validate {
-    my ($data) = @_;
+    my ($data, $bug_id, $attach_id) = @_;
   
-    # Get a list of flags types to validate.  Uses the "map" function
+    # Get a list of flag types to validate.  Uses the "map" function
     # to extract flag type IDs from form field names by matching columns
     # whose name looks like "flag_type-nnn", where "nnn" is the ID,
     # and returning just the ID portion of matching field names.
@@ -192,14 +195,62 @@ sub validate {
         # Don't bother validating types the user didn't touch.
         next if $status eq "X";
 
-        # Make sure the flag exists.
-        get($id) 
+        # Make sure the flag type exists.
+        my $flag_type = get($id);
+        $flag_type 
           || &::ThrowCodeError("flag_type_nonexistent", { id => $id });
 
         # Make sure the value of the field is a valid status.
         grep($status eq $_, qw(X + - ?))
           || &::ThrowCodeError("flag_status_invalid", 
                                { id => $id , status => $status });
+                
+        # Make sure the user didn't request the flag unless it's requestable.
+        if ($status eq '?' && !$flag_type->{is_requestable}) {
+            ThrowCodeError("flag_status_invalid", 
+                           { id => $id , status => $status });
+        }
+        
+        # Make sure the requestee is authorized to access the bug
+        # (and attachment, if this installation is using the "insider group"
+        # feature and the attachment is marked private).
+        if ($status eq '?'
+            && $flag_type->{is_requesteeble}
+            && trim($data->{"requestee_type-$id"}))
+        {
+            my $requestee_email = trim($data->{"requestee_type-$id"});
+            my $requestee_id = &::DBname_to_id($requestee_email);
+
+            # We know the requestee exists because we ran
+            # Bugzilla::User::match_field before getting here.
+            # ConfirmGroup makes sure their group settings
+            # are up-to-date or calls DeriveGroups to update them.
+            &::ConfirmGroup($requestee_id);
+
+            # Throw an error if the user can't see the bug.
+            if (!&::CanSeeBug($bug_id, $requestee_id))
+            {
+                ThrowUserError("flag_requestee_unauthorized",
+                               { flag_type => $flag_type,
+                                 requestee => new Bugzilla::User($requestee_id),
+                                 bug_id    => $bug_id,
+                                 attach_id => $attach_id });
+            }
+            
+            # Throw an error if the target is a private attachment and
+            # the requestee isn't in the group of insiders who can see it.
+            if ($attach_id
+                && &::Param("insidergroup")
+                && $data->{'isprivate'}
+                && !&::UserInGroup(&::Param("insidergroup"), $requestee_id))
+            {
+                ThrowUserError("flag_requestee_unauthorized_attachment",
+                               { flag_type => $flag_type,
+                                 requestee => new Bugzilla::User($requestee_id),
+                                 bug_id    => $bug_id,
+                                 attach_id => $attach_id });
+            }
+        }
     }
 }
 

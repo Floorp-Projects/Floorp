@@ -48,10 +48,12 @@ sub new {
     bless($self, $class);
     
     &::PushGlobalSQLState();
-    &::SendSQL("SELECT 1, description, bug_id FROM attachments " . 
+    &::SendSQL("SELECT 1, description, bug_id, isprivate FROM attachments " . 
                "WHERE attach_id = $id");
-    ($self->{'exists'}, $self->{'summary'}, $self->{'bug_id'}) = 
-      &::FetchSQLData();
+    ($self->{'exists'},
+     $self->{'summary'},
+     $self->{'bug_id'},
+     $self->{'isprivate'}) = &::FetchSQLData();
     &::PopGlobalSQLState();
 
     return $self;

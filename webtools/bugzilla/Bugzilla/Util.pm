@@ -129,8 +129,10 @@ sub min {
 
 sub trim {
     my ($str) = @_;
-    $str =~ s/^\s+//g;
-    $str =~ s/\s+$//g;
+    if ($str) {
+      $str =~ s/^\s+//g;
+      $str =~ s/\s+$//g;
+    }
     return $str;
 }
 

@@ -52,6 +52,17 @@ ConnectToDatabase();
 # Check whether or not the user is logged in and, if so, set the $::userid 
 quietly_check_login();
 
+# The ID of the bug to which the attachment is attached.  Gets set
+# by validateID() (which validates the attachment ID, not the bug ID, but has
+# to check if the user is authorized to access this attachment) and is used 
+# by Flag:: and FlagType::validate() to ensure the requestee (if any) for a 
+# requested flag is authorized to see the bug in question.  Note: This should 
+# really be defined just above validateID() itself, but it's used in the main 
+# body of the script before that function is defined, so we define it up here 
+# instead.  We should move the validation into each function and then move this
+# to just above validateID().
+my $bugid;
+
 ################################################################################
 # Main Body Execution
 ################################################################################
@@ -113,10 +124,15 @@ elsif ($action eq "update")
   validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
   validatePrivate();
+  
+  # The order of these function calls is important, as both Flag::validate
+  # and FlagType::validate assume User::match_field has ensured that the values
+  # in the requestee fields are legitimate user email addresses.
   Bugzilla::User::match_field({ '^requestee(_type)?-(\d+)$' => 
                                     { 'type' => 'single' } });
-  Bugzilla::Flag::validate(\%::FORM);
-  Bugzilla::FlagType::validate(\%::FORM);
+  Bugzilla::Flag::validate(\%::FORM, $bugid);
+  Bugzilla::FlagType::validate(\%::FORM, $bugid, $::FORM{'id'});
+  
   update();
 }
 else 
@@ -146,7 +162,7 @@ sub validateID
       || ThrowUserError("invalid_attach_id");
 
     # Make sure the user is authorized to access this attachment's bug.
-    my ($bugid, $isprivate) = FetchSQLData();
+    ($bugid, my $isprivate) = FetchSQLData();
     ValidateBugID($bugid);
     if (($isprivate > 0 ) && Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
         ThrowUserError("attachment_access_denied");
@@ -677,7 +693,16 @@ sub update
   SendSQL("LOCK TABLES attachments WRITE , flags WRITE , " . 
           "flagtypes READ , fielddefs READ , bugs_activity WRITE, " . 
           "flaginclusions AS i READ, flagexclusions AS e READ, " . 
-          "bugs READ, profiles READ");
+          # cc, bug_group_map, user_group_map, and groups are in here so we
+          # can check the permissions of flag requestees and email addresses
+          # on the flag type cc: lists via the ConfirmGroup and CanSeeBug
+          # function calls in Flag::notify.  group_group_map is in here in case
+          # ConfirmGroup needs to call DeriveGroup.  profiles and user_group_map
+          # would be READ locks instead of WRITE locks if it weren't for
+          # DeriveGroup, which needs to write to those tables.
+          "bugs READ, profiles WRITE, " . 
+          "cc READ, bug_group_map READ, user_group_map WRITE, " . 
+          "group_group_map READ, groups READ");
   
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.

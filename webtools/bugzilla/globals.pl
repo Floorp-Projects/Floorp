@@ -549,9 +549,15 @@ sub CanEnterProduct {
 
 #
 # This function returns an alphabetical list of product names to which
-# the user can enter bugs.
+# the user can enter bugs.  If the $by_id parameter is true, also retrieves IDs
+# and pushes them onto the list as id, name [, id, name...] for easy slurping
+# into a hash by the calling code.
 sub GetSelectableProducts {
-    my $query = "SELECT name " .
+    my ($by_id) = @_;
+
+    my $extra_sql = $by_id ? "id, " : "";
+
+    my $query = "SELECT $extra_sql name " .
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id ";
@@ -570,9 +576,7 @@ sub GetSelectableProducts {
     PushGlobalSQLState();
     SendSQL($query);
     my @products = ();
-    while (MoreSQLData()) {
-        push @products,FetchOneColumn();
-    }
+    push(@products, FetchSQLData()) while MoreSQLData();
     PopGlobalSQLState();
     return (@products);
 }
@@ -580,50 +584,50 @@ sub GetSelectableProducts {
 # GetSelectableProductHash
 # returns a hash containing 
 # legal_products => an enterable product list
-# legal_components => the list of components of enterable products
-# components => a hash of component lists for each enterable product
+# legal_(components|versions|milestones) =>
+#   the list of components, versions, and milestones of enterable products
+# (components|versions|milestones)_by_product
+#    => a hash of component lists for each enterable product
+# Milestones only get returned if the usetargetmilestones parameter is set.
 sub GetSelectableProductHash {
-    my $query = "SELECT products.name, components.name " .
-                "FROM products " .
-                "LEFT JOIN components " .
-                "ON components.product_id = products.id " .
-                "LEFT JOIN group_control_map " .
-                "ON group_control_map.product_id = products.id ";
-    if (Param('useentrygroupdefault')) {
-        $query .= "AND group_control_map.entry != 0 ";
-    } else {
-        $query .= "AND group_control_map.membercontrol = " .
-                  CONTROLMAPMANDATORY . " ";
-    }
-    if ((defined @{$::vars->{user}{groupids}}) 
-        && (@{$::vars->{user}{groupids}} > 0)) {
-        $query .= "AND group_id NOT IN(" . 
-                   join(',', @{$::vars->{user}{groupids}}) . ") ";
-    }
-    $query .= "WHERE group_id IS NULL " .
-              "ORDER BY products.name, components.name";
+    # The hash of selectable products and their attributes that gets returned
+    # at the end of this function.
+    my $selectables = {};
+
+    my %products = GetSelectableProducts(1);
+
+    $selectables->{legal_products} = [sort values %products];
+
+    # Run queries that retrieve the list of components, versions,
+    # and target milestones (if used) for the selectable products.
+    my @tables = qw(components versions);
+    push(@tables, 'milestones') if Param('usetargetmilestone');
+
     PushGlobalSQLState();
-    SendSQL($query);
-    my @products = ();
-    my %components = ();
-    my %components_by_product = ();
-    while (MoreSQLData()) {
-        my ($product, $component) = FetchSQLData();
-        if (!grep($_ eq $product, @products)) {
-            push @products, $product;
+    foreach my $table (@tables) {
+        # Why oh why can't we standardize on these names?!?
+        my $fld = ($table eq "components" ? "name" : "value");
+
+        my $query = "SELECT $fld, product_id FROM $table WHERE product_id IN " .
+                    "(" . join(",", keys %products) . ") ORDER BY $fld";
+        SendSQL($query);
+
+        my %values;
+        my %values_by_product;
+
+        while (MoreSQLData()) {
+            my ($name, $product_id) = FetchSQLData();
+            next unless $name;
+            $values{$name} = 1;
+            push @{$values_by_product{$products{$product_id}}}, $name;
         }
-        if ($component) {
-            $components{$component} = 1;
-            push @{$components_by_product{$product}}, $component;
-        }
+
+        $selectables->{"legal_$table"} = [sort keys %values];
+        $selectables->{"${table}_by_product"} = \%values_by_product;
     }
     PopGlobalSQLState();
-    my @componentlist = (sort keys %components);
-    return {
-        legal_products => \@products,
-        legal_components => \@componentlist,
-        components => \%components_by_product,
-    };
+
+    return $selectables;
 }
 
 
@@ -724,24 +728,28 @@ sub Crypt {
 # Permissions must be rederived if ANY groups have a last_changed newer
 # than the profiles.refreshed_when value.
 sub ConfirmGroup {
-    my ($user) = (@_);
+    my ($user, $locked) = (@_);
     PushGlobalSQLState();
     SendSQL("SELECT userid FROM profiles, groups WHERE userid = $user " .
             "AND profiles.refreshed_when <= groups.last_changed ");
     my $ret = FetchSQLData();
     PopGlobalSQLState();
     if ($ret) {
-        DeriveGroup($user);
+        DeriveGroup($user, $locked);
     }
 }
 
 # DeriveGroup removes and rederives all derived group permissions for
-# the specified user.
+# the specified user.  If $locked is true, Bugzilla has already locked
+# the necessary tables as part of a larger transaction, so this function
+# shouldn't lock them again (since then tables not part of this function's
+# lock will get unlocked).
 sub DeriveGroup {
-    my ($user) = (@_);
+    my ($user, $locked) = (@_);
     PushGlobalSQLState();
 
-    SendSQL("LOCK TABLES profiles WRITE, user_group_map WRITE, group_group_map READ, groups READ");
+    SendSQL("LOCK TABLES profiles WRITE, user_group_map WRITE, group_group_map READ, groups READ")
+      unless $locked;
 
     # avoid races,  we are only as up to date as the BEGINNING of this process
     SendSQL("SELECT login_name, NOW() FROM profiles WHERE userid = $user");
