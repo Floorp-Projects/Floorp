@@ -106,6 +106,9 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
+  static nscoord RoundToPixel(nscoord aValue,
+                              float   aPixelToTwips);
+
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
   static nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,

@@ -56,7 +56,8 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aP
 PRBool 
 FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
                                                         nscoord                  aComputedWidth,
-                                                        const nsHTMLReflowState& aReflowState)
+                                                        const nsHTMLReflowState& aReflowState,
+                                                        float                    aPixelToTwips)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   const nsStylePosition* tablePosition;
@@ -105,7 +106,7 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
              (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
       // Only apply percentages if we're constrained.
       float percent = colPosition->mWidth.GetPercentValue();
-      colWidths[colX] = NSToCoordRound(percent * (float)availWidth); 
+      colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth), aPixelToTwips); 
     }
     else if (eStyleUnit_Proportional == colPosition->mWidth.GetUnit() &&
       colPosition->mWidth.GetIntValue() > 0) {
@@ -128,7 +129,7 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
         else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
                  (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
           float percent = cellPosition->mWidth.GetPercentValue();
-          colWidths[colX] = NSToCoordRound(percent * (float)availWidth / (float)colSpan); 
+          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)availWidth / (float)colSpan), aPixelToTwips); 
         }
       }
     }
@@ -151,7 +152,7 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
         if (propInfo[colX] > 0) {
           // We're proportional
           float percent = ((float)propInfo[colX])/((float)propTotal);
-          colWidths[colX] = NSToCoordRound(percent * (float)remainingWidth);
+          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)remainingWidth), aPixelToTwips);
           totalColWidth += colWidths[colX];
           lastColAllocated = colX;
         }
@@ -160,7 +161,7 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
     else if (tableIsFixedWidth) {
       if (numCols > specifiedCols) {
         // allocate the extra space to the columns which have no width specified
-        nscoord colAlloc = NSToCoordRound( ((float)remainingWidth) / (((float)numCols) - ((float)specifiedCols)));
+        nscoord colAlloc = nsTableFrame::RoundToPixel( NSToCoordRound(((float)remainingWidth) / (((float)numCols) - ((float)specifiedCols))), aPixelToTwips);
         for (colX = 0; colX < numCols; colX++) {
           if (-1 == colWidths[colX]) {
             colWidths[colX] = colAlloc;
@@ -173,7 +174,7 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
         float divisor = (float)totalColWidth;
         for (colX = 0; colX < numCols; colX++) {
           if (colWidths[colX] > 0) {
-            nscoord colAlloc = NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
+            nscoord colAlloc = nsTableFrame::RoundToPixel(NSToCoordRound(remainingWidth * colWidths[colX] / divisor), aPixelToTwips);
             colWidths[colX] += colAlloc;
             totalColWidth += colAlloc; 
             lastColAllocated = colX;
