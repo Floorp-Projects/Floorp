@@ -99,7 +99,7 @@ function ChangeName()
 
 function AnchorNameExists(name)
 {
-  anchorList = editorShell.editorDocument.anchors;
+  var anchorList = editorShell.editorDocument.anchors;
   if (anchorList) {
     for (var i = 0; i < anchorList.length; i++) {
       if (anchorList[i].name == name)

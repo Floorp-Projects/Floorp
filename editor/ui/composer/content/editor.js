@@ -350,7 +350,7 @@ function editorSendPage()
 
 function DocumentHasBeenSaved()
 {
-  fileurl = "";
+  var fileurl = "";
   try {
     fileurl = window._content.location;
   } catch (e) {
@@ -1232,7 +1232,7 @@ function AppendRecentMenuitem(accessKey, menupopup, title, url)
 {
   if (menupopup)
   {
-    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
       // Build the menuitem using the title (or url) and accesskey

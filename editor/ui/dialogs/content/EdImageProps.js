@@ -31,6 +31,8 @@ var imageElement;
 var imageMap = 0;
 var canRemoveImageMap = false;
 var imageMapDisabled = false;
+var dialog;
+var globalMap;
 
 // dialog initialization code
 
@@ -144,7 +146,7 @@ function InitDialog()
 {
   // Set the controls to the image's attributes
 
-  str = globalElement.getAttribute("src");
+  var str = globalElement.getAttribute("src");
   if (str)
     dialog.srcInput.value = str;
   

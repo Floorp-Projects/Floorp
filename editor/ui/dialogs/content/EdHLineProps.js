@@ -26,6 +26,7 @@ var width;
 var height;
 var align;
 var shading;
+var dialog;
 
 // dialog initialization code
 function Startup()

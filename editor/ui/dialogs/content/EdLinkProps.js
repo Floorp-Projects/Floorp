@@ -156,14 +156,14 @@ function Startup()
     {
       // We get here if selection is exactly around a link node
       // Check if selection has some text - use that first
-      selectedText = GetSelectionAsText();
+      var selectedText = GetSelectionAsText();
       if (selectedText.length == 0) 
       {
         // No text, look for first image in the selection
         var children = anchorElement.childNodes;
         if (children)
         {
-          for(i=0; i < children.length; i++) 
+          for(var i=0; i < children.length; i++) 
           {
             var nodeName = children.item(i).nodeName.toLowerCase();
             if (nodeName == "img")
@@ -233,7 +233,7 @@ function InitDialog()
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  fileName = GetLocalFileURL("html");
+  var fileName = GetLocalFileURL("html");
   if (fileName) {
     dialog.hrefInput.value = fileName;
     // Call this to do OK button enabling

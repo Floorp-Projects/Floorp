@@ -30,6 +30,7 @@ var maxColumns = 10000;
 var maxPixels = 10000;
 var rows;
 var columns;
+var dialog;
 
 // dialog initialization code
 function Startup()

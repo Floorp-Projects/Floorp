@@ -549,6 +549,7 @@ var nsSpellingCommand =
     var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
     if (spellChecker)
     {
+      var firstMisspelledWord;
       // Start the spell checker module. Return is first misspelled word
       try {
         spellChecker.InitSpellChecker();
@@ -620,8 +621,8 @@ var nsHLineCommand =
     //  unless we are editing an existing line's attributes
     //  We get the last-used attributes from the prefs and insert immediately
 
-    tagName = "hr";
-    hLine = window.editorShell.GetSelectedElement(tagName);
+    var tagName = "hr";
+    var hLine = window.editorShell.GetSelectedElement(tagName);
 
     if (hLine) {
       // We only open the dialog for an existing HRule

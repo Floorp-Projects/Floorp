@@ -46,7 +46,6 @@ var gOutputEncodeEntities = 256;
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
 var gPercent = 1;
-var gLocation;
 
 var maxPixels  = 10000;
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
@@ -201,7 +200,7 @@ function PrepareStringForURL(string)
 // or disabled (setAttribute) as specified in the "doEnable" parameter
 function SetElementEnabledById( elementID, doEnable )
 {
-  element = document.getElementById(elementID);
+  var element = document.getElementById(elementID);
   if ( element )
   {
     if ( doEnable )
@@ -279,13 +278,14 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
 
   ClearMenulist(menulist);
   pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
-  if (!pixelItem)
-    return;
+
+  if (!pixelItem) return 0;
+
   percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
   if (size && size.length > 0)
   {
     // Search for a "%" character
-    percentIndex = size.search(/%/);
+    var percentIndex = size.search(/%/);
     if (percentIndex > 0)
     {
       // Strip out the %
@@ -324,7 +324,7 @@ function AppendStringToMenulist(menulist, string)
         return null;
       }
     }
-    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("value", string);
@@ -670,7 +670,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 // Test for valid image by sniffing out the extension
 function IsValidImage(imageName)
 {
-  image = imageName.trimString();
+  var image = imageName.trimString();
   if ( !image )
     return false;
   
@@ -688,16 +688,16 @@ function IsValidImage(imageName)
     type = type.toLowerCase();
   
   // TODO: Will we convert .BMPs to a web format?
-  switch( type )  {
+  switch( type )
+  {
     case "gif":
     case "jpg":
     case "jpeg":
     case "png":
       return true;
       break;
-    default :
-     return false;
   }
+  return false;
 }
 
 function InitMoreFewer()
@@ -922,13 +922,10 @@ function SetWindowLocation()
   gLocation = document.getElementById("location");
   if (gLocation)
   {
-    offsetX = Number(gLocation.getAttribute("offsetX"));
-    offsetY = Number(gLocation.getAttribute("offsetY"));
-dump(" *** Dialog offsets: x="+offsetY+", y="+offsetY+"\n");
-    var newX = Math.min(window.opener.screenX + offsetX, screen.availWidth - window.outerWidth);
-    var newY = Math.min(window.opener.screenY + offsetY, screen.availHeight - window.outerHeight)
-    window.screenX = Math.max(0, newX);
-    window.screenY = Math.max(0, newY);
+    window.screenX = Math.max(0, Math.min(window.opener.screenX + Number(gLocation.getAttribute("offsetX")), 
+                                          screen.availWidth - window.outerWidth));
+    window.screenY = Math.max(0, Math.min(window.opener.screenY + Number(gLocation.getAttribute("offsetY")), 
+                                          screen.availHeight - window.outerHeight));
   }
 }
 
