@@ -28,9 +28,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= $(MOZ_EXTENSIONS)
 
-# temporary hack to remove since it's not currently built
-# and failing to remove it causes unresolved symbols
-install::
-	rm -f $(DIST)/bin/components/libpsmglue.so
-
 include $(topsrcdir)/config/rules.mk
