@@ -14,6 +14,7 @@
         persist="screenX screenY width height"
         onload="onLoad(event);">
 
+<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script src="chrome://messenger/content/AccountManager.js"/>
 

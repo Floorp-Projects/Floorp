@@ -145,7 +145,7 @@ function onSave() {
 }
 
 function onNewAccount() {
-  window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome,modal");
+  MsgAccountWizard();
 }
 
 function onDuplicateAccount() {
