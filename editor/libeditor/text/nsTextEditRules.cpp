@@ -17,7 +17,7 @@
  */
 
 #include "nsTextEditRules.h"
-#include "nsTextEditor.h"
+#include "nsEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
 #include "nsCOMPtr.h"
@@ -35,7 +35,11 @@ const static char* kMOZEditorBogusNodeValue="TRUE";
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
-static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
+/*-------------------------------------------------------------------*
+ *  Helper Functions 
+ *-------------------------------------------------------------------*/
+
+PRBool nsTextEditRules::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 {
   nsCOMPtr<nsIDOMElement>element;
   element = do_QueryInterface(aNode);
@@ -51,7 +55,7 @@ static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   return PR_FALSE;
 }
 
-PRBool IsEditable(nsIDOMNode *aNode)
+PRBool nsTextEditRules::IsEditable(nsIDOMNode *aNode)
 {
   if (!aNode) return PR_FALSE;
   nsCOMPtr<nsIDOMElement>element;
@@ -91,6 +95,11 @@ PRBool IsEditable(nsIDOMNode *aNode)
 }
 
 
+/*-------------------------------------------------------------------*
+ *  Constructor/Destructor 
+ *-------------------------------------------------------------------*/
+
+
 nsTextEditRules::nsTextEditRules()
 {
   mEditor = nsnull;
@@ -101,8 +110,15 @@ nsTextEditRules::~nsTextEditRules()
    // do NOT delete mEditor here.  We do not hold a ref count to mEditor.  mEditor owns our lifespan.
 }
 
+
+
+/*-------------------------------------------------------------------*
+ *  Public methods 
+ *-------------------------------------------------------------------*/
+
+
 NS_IMETHODIMP
-nsTextEditRules::Init(nsTextEditor *aEditor)
+nsTextEditRules::Init(nsEditor *aEditor)
 {
   // null aNextRule is ok
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
@@ -110,6 +126,17 @@ nsTextEditRules::Init(nsTextEditor *aEditor)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
@@ -167,126 +194,6 @@ nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection,
 {
   return DidInsert(aSelection, aResult);
 }
-
-NS_IMETHODIMP
-nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
-{
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
-  // initialize out param
-  *aCancel = PR_FALSE;
-  return WillInsert(aSelection, aCancel);
-}
-
-// XXX: this code is all experimental, and has no effect on the content model yet
-//      the point here is to collapse adjacent BR's into P's
-NS_IMETHODIMP
-nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
-{
-  nsresult result = aResult;  // if aResult is an error, we return it.
-  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  PRBool isCollapsed;
-  aSelection->IsCollapsed(&isCollapsed);
-  NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after insert break.");
-  // if the insert break resulted in consecutive BR tags, 
-  // collapse the two BR tags into a single P
-  if (NS_SUCCEEDED(result)) 
-  {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = do_QueryInterface(aSelection,&result);
-    if (enumerator)
-    {
-      enumerator->First(); 
-      nsISupports *currentItem;
-      result = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(result)) && currentItem)
-      {
-        result = NS_ERROR_UNEXPECTED; 
-        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        if (range)
-        {
-          nsIAtom *brTag = NS_NewAtom("BR");
-          nsCOMPtr<nsIDOMNode> startNode;
-          result = range->GetStartParent(getter_AddRefs(startNode));
-          if ((NS_SUCCEEDED(result)) && startNode)
-          {
-            PRInt32 offset;
-            range->GetStartOffset(&offset);
-            nsCOMPtr<nsIDOMNodeList>startNodeChildren;
-            result = startNode->GetChildNodes(getter_AddRefs(startNodeChildren));
-            if ((NS_SUCCEEDED(result)) && startNodeChildren)
-            {              
-              nsCOMPtr<nsIDOMNode> selectedNode;
-              result = startNodeChildren->Item(offset, getter_AddRefs(selectedNode));
-              if ((NS_SUCCEEDED(result)) && selectedNode)
-              {
-                nsCOMPtr<nsIDOMNode> prevNode;
-                result = selectedNode->GetPreviousSibling(getter_AddRefs(prevNode));
-                if ((NS_SUCCEEDED(result)) && prevNode)
-                {
-                  if (PR_TRUE==NodeIsType(prevNode, brTag))
-                  { // the previous node is a BR, check it's siblings
-                    nsCOMPtr<nsIDOMNode> leftNode;
-                    result = prevNode->GetPreviousSibling(getter_AddRefs(leftNode));
-                    if ((NS_SUCCEEDED(result)) && leftNode)
-                    {
-                      if (PR_TRUE==NodeIsType(leftNode, brTag))
-                      { // left sibling is also a BR, collapse
-                        printf("1\n");
-                      }
-                      else
-                      {
-                        if (PR_TRUE==NodeIsType(selectedNode, brTag))
-                        { // right sibling is also a BR, collapse
-                          printf("2\n");
-                        }
-                      }
-                    }
-                  }
-                }
-                // now check the next node from selectedNode
-                nsCOMPtr<nsIDOMNode> nextNode;
-                result = selectedNode->GetNextSibling(getter_AddRefs(nextNode));
-                if ((NS_SUCCEEDED(result)) && nextNode)
-                {
-                  if (PR_TRUE==NodeIsType(nextNode, brTag))
-                  { // the previous node is a BR, check it's siblings
-                    nsCOMPtr<nsIDOMNode> rightNode;
-                    result = nextNode->GetNextSibling(getter_AddRefs(rightNode));
-                    if ((NS_SUCCEEDED(result)) && rightNode)
-                    {
-                      if (PR_TRUE==NodeIsType(rightNode, brTag))
-                      { // right sibling is also a BR, collapse
-                        printf("3\n");
-                      }
-                      else
-                      {
-                        if (PR_TRUE==NodeIsType(selectedNode, brTag))
-                        { // left sibling is also a BR, collapse
-                          printf("4\n");
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-          NS_RELEASE(brTag);
-        }
-      }
-    }
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsTextEditRules::GetInsertBreakTag(nsIAtom **aTag)
-{
-  if (!aTag) { return NS_ERROR_NULL_POINTER; }
-  *aTag = NS_NewAtom("BR");
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel)

@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 
-class nsTextEditor;
+class nsEditor;
 class PlaceholderTxn;
 
 /** Object that encapsulates HTML text-specific editing rules.
@@ -44,11 +44,10 @@ public:
   nsTextEditRules();
   virtual ~nsTextEditRules();
 
-  NS_IMETHOD Init(nsTextEditor *aEditor);
+  NS_IMETHOD Init(nsEditor *aEditor);
 
   NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
-  NS_IMETHOD GetInsertBreakTag(nsIAtom **aTag);
 
   NS_IMETHOD WillInsertText(nsIDOMSelection *aSelection, 
                             const nsString& aInputString, 
@@ -71,7 +70,11 @@ public:
 
 protected:
 
-  nsTextEditor *mEditor;  // note that we do not refcount the editor
+  // helper functions
+  static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
+  static PRBool IsEditable(nsIDOMNode *aNode);
+  
+  nsEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
 };
 
