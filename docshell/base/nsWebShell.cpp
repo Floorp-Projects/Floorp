@@ -199,18 +199,11 @@ nsWebShell::~nsWebShell()
    Destroy();
 
   // Stop any pending document loads and destroy the loader...
-  if (nsnull != mDocLoader) {
+  if (mDocLoader) {
     mDocLoader->Stop();
     mDocLoader->SetContainer(nsnull);
     mDocLoader->Destroy();
-// turn on to track docloader leaks
-#if 0
-    nsrefcnt refcnt;
-    NS_RELEASE2(mDocLoader, refcnt);
-    NS_ASSERTION(refcnt == 0, "Still have a docloader? who owns it?!");
-#else
-    NS_RELEASE(mDocLoader);
-#endif
+    mDocLoader = nsnull;
   }
   // Cancel any timers that were set for this loader.
   CancelRefreshURITimers();
@@ -361,8 +354,10 @@ NS_IMETHODIMP
 nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 {
   aResult = mDocLoader;
-  NS_IF_ADDREF(mDocLoader);
-  return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
+  if (!mDocLoader)
+    return NS_ERROR_FAILURE;
+  NS_ADDREF(aResult);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1263,7 +1258,8 @@ NS_IMETHODIMP nsWebShell::Create()
   // doc loader and store it...as more of the docshell lands, we'll be able to get rid
   // of this hack...
   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID);
-  uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST( nsISupports*, (nsIWebShell *) this), &mDocLoader);
+  uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIWebShell*, this),
+                                         getter_AddRefs(mDocLoader));
 
   nsCOMPtr<nsIContentViewerContainer> shellAsContainer = do_QueryInterface(NS_STATIC_CAST(nsIWebShell*, this));
   // Set the webshell as the default IContentViewerContainer for the loader...
