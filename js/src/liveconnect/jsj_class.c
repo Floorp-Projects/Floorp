@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -369,9 +369,13 @@ enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
 void
 jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
 {
-    JSJ_HashTableEnumerateEntries(java_class_reflections,
-                                  enumerate_remove_java_class,
-                                  (void*)jEnv);
+    if (java_class_reflections) {
+        JSJ_HashTableEnumerateEntries(java_class_reflections,
+                                      enumerate_remove_java_class,
+                                      (void*)jEnv);
+        JSJ_HashTableDestroy(java_class_reflections);
+        java_class_reflections = NULL;
+    }
 }
 
 extern JavaClassDescriptor *
