@@ -32,7 +32,7 @@ class nsScreenGtk : public nsIScreen
 public:
   //nsScreenGtk ( GDHandle inScreen );
   nsScreenGtk ( );
-  ~nsScreenGtk();
+  virtual ~nsScreenGtk();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREEN
