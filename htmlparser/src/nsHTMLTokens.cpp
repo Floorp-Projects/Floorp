@@ -595,7 +595,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     PRBool found = PR_FALSE;
     nsReadingIterator<PRUnichar> gtOffset,ltOffset = theCurrOffset;
     while (FindCharInReadable(PRUnichar(kLessThan), ltOffset, endPos) &&
-           Distance(ltOffset, endPos) >= termStrLen) {
+           ((PRUint32)ltOffset.size_forward() >= termStrLen ||
+            Distance(ltOffset, endPos) >= termStrLen)) {
       // Make a copy of the (presumed) end tag and
       // do a case-insensitive comparison
 
