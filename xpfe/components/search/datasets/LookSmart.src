@@ -1,0 +1,18 @@
+<search 
+	name="LookSmart" 
+	method=Get
+	action="http://www.looksmart.com/r" 
+	>
+
+<input name="key" user>
+<input name="search" value="0">
+<input name="isp" value="zq">
+<input name="comefrom" value="izq-search">
+
+<interpret
+	skiplocal = true
+	bannerStart = "<td width=470>"
+	bannerEnd = "</table>"
+	resultListStart = "</table><br>"
+	resultListEnd = "<table width=635"
+	>

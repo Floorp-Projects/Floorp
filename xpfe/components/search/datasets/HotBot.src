@@ -1,0 +1,25 @@
+<search
+	name = "Hotbot"
+	method = get
+	action = "http://www.hotbot.com/text/results.asp"
+	>
+	
+<INPUT NAME="MT" user>
+<INPUT NAME="DC" VALUE="10">
+<INPUT NAME="DE" VALUE="2">
+<INPUT NAME="OPs" VALUE="MDRTP">
+<INPUT NAME="DV" VALUE="O">
+<INPUT NAME="LG" VALUE="any">
+<INPUT NAME="RG" VALUE="all">
+<INPUT NAME="_v" VALUE="2">
+
+<interpret
+	resultListStart="<!-- BRES -->"
+	resultListEnd = "<!-- ERES -->"
+	resultItemStart = "</B>"
+	resultItemEnd = "<p>"
+	relevanceStart="<br>"
+	relevanceEnd="%&nbsp;&nbsp;">    
+	bannerStart = "<!-- ADS  -->"
+	bannerEnd = "<!-- END ADS -->"
+	>
