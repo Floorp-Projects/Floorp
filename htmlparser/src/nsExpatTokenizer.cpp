@@ -246,13 +246,11 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength){
   nsresult result=NS_OK;
   if (mExpatParser) {    
-    if (!mSeenError) {
-      if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
-        PushXMLErrorToken(aBuffer, aLength);
-        mSeenError = PR_TRUE;
-      }
-	    mBytesParsed += aLength;
+    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
+      PushXMLErrorToken(aBuffer, aLength);
+      result=NS_ERROR_HTMLPARSER_STOPPARSING;
     }
+	  mBytesParsed += aLength;
   }
   else {
     result = NS_ERROR_FAILURE;
