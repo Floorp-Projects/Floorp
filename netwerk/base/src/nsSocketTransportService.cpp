@@ -18,11 +18,10 @@
  */
 
 #include "nsILoadGroup.h"
+#include "netCore.h"
 #include "nsSocketTransportService.h"
 #include "nsSocketTransport.h"
 #include "nsAutoLock.h"
-
-#define MAX_OPEN_CONNECTIONS 50
 
 
 nsSocketTransportService::nsSocketTransportService()
@@ -43,6 +42,8 @@ nsSocketTransportService::nsSocketTransportService()
   mActiveTransportList = nsnull;
 
   mThreadRunning = PR_FALSE;
+
+  SetSocketTimeoutInterval(PR_MillisecondsToInterval(DEFAULT_SOCKET_TIMEOUT_IN_MS));
 }
 
 
@@ -332,6 +333,23 @@ nsresult nsSocketTransportService::RemoveFromSelectList(nsSocketTransport* aTran
 }
 
 
+nsresult 
+nsSocketTransportService::GetSocketTimeoutInterval(PRIntervalTime* aResult)
+{
+  *aResult = mSocketTimeoutInterval;
+  return NS_OK;
+}
+
+nsresult
+nsSocketTransportService::SetSocketTimeoutInterval(PRIntervalTime aTime)
+{
+  mSocketTimeoutInterval = aTime;
+
+  // Update the timeout value in the socket transport...
+  nsSocketTransport::SetSocketTimeout(aTime);
+
+  return NS_OK;
+}
 
 //
 // --------------------------------------------------------------------------
@@ -370,8 +388,7 @@ nsSocketTransportService::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 NS_IMETHODIMP
 nsSocketTransportService::Run(void)
 {
-  PRIntervalTime pollTimeout
-    ;
+  PRIntervalTime pollTimeout;
 #ifdef USE_POLLABLE_EVENT
   //
   // Initialize the FDSET used by PR_Poll(...).  The first item in the FDSet
@@ -380,7 +397,7 @@ nsSocketTransportService::Run(void)
   mSelectFDSet[0].fd       = mThreadEvent;
   mSelectFDSet[0].in_flags = PR_POLL_READ;
   mSelectFDSetCount = 1;
-  pollTimeout = PR_INTERVAL_NO_TIMEOUT;
+  pollTimeout = mSocketTimeoutInterval;
 #else
   //
   // For now, rather than breaking out of the call to PR_Poll(...) just set
@@ -396,73 +413,95 @@ nsSocketTransportService::Run(void)
   while (mThreadRunning) {
     nsresult rv;
     PRInt32 count;
+    PRIntervalTime intervalNow;
     nsSocketTransport* transport;
+    int i;
 
-    // XXX: PR_Poll(...) needs a timeout value...
     count = PR_Poll(mSelectFDSet, mSelectFDSetCount, pollTimeout);
+    if (-1 == count) {
+      // XXX: PR_Poll failed...  What should happen?
+    }
 
-    /* One or more sockets has data... */
-    if (count > 0) {
-      int i;
+    intervalNow = PR_IntervalNow();
+    //
+    // See if any sockets have data...
+    //
+    // Walk the list of active transports backwards to avoid missing
+    // elements when a transport is removed...
+    //
+    for (i=mSelectFDSetCount-1; i>=0; i--) {
+      PRPollDesc* pfd;
+      PRInt16 out_flags;
 
+      transport = mActiveTransportList[i];
+      pfd = &mSelectFDSet[i];
+  
       /* Process any sockets with data first... */
-      for (i=mSelectFDSetCount-1; i>=0; i--) {
-        PRPollDesc* pfd;
-        PRInt16 out_flags;
+      //
+      // XXX: PR_Poll(...) has the unpleasent behavior of ONLY setting the
+      //      out_flags if one or more FDs are ready.  So, DO NOT look at
+      //      the out_flags unless count > 0.
+      //
+      if ((count > 0) && pfd->out_flags) {
+        // Clear the out_flags for next time...
+        out_flags = pfd->out_flags;
+        pfd->out_flags = 0;
 
-        pfd = &mSelectFDSet[i];
-        if (pfd->out_flags) {
-          // Clear the out_flags for next time...
-          out_flags = pfd->out_flags;
-          pfd->out_flags = 0;
-
-          transport = mActiveTransportList[i];
-          if (transport) {
-            rv = transport->Process(out_flags);
-            if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
-              // Update the select flags...
-              pfd->in_flags = transport->GetSelectFlags();
-            }
-            //
-            // If the operation completed, then remove the entry from the
-            // select list...
-            //
-            else {
-              rv = RemoveFromSelectList(transport);
-            }
+        if (transport) {
+          rv = transport->Process(out_flags);
+          if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+            // Update the select flags...
+            pfd->in_flags = transport->GetSelectFlags();
           }
+          //
+          // If the operation completed, then remove the entry from the
+          // select list...
+          //
           else {
+            rv = RemoveFromSelectList(transport);
+          }
+        }
+        else {
 #ifdef USE_POLLABLE_EVENT
-            /* Process any pending operations on the mWorkQ... */
-            NS_ASSERTION(0 == i, "Null transport in active list...");
-            if (0 == i) {
-              //
-              // Clear the pollable event... This call should *never* block since 
-              // PR_Poll(...) said that it had been fired...
-              //
-              NS_ASSERTION(!(mSelectFDSet[0].out_flags & PR_POLL_EXCEPT), 
-                           "Exception on Pollable event.");
-              PR_WaitForPollableEvent(mThreadEvent);
+          /* Process any pending operations on the mWorkQ... */
+          NS_ASSERTION(0 == i, "Null transport in active list...");
+          if (0 == i) {
+            //
+            // Clear the pollable event...  This call should *never* block since 
+            // PR_Poll(...) said that it had been fired...
+            //
+            NS_ASSERTION(!(mSelectFDSet[0].out_flags & PR_POLL_EXCEPT), 
+                         "Exception on Pollable event.");
+            PR_WaitForPollableEvent(mThreadEvent);
 
-              rv = ProcessWorkQ();
-            }
+            rv = ProcessWorkQ();
+          }
 #else
-            //
-            // The pollable event should be the *only* null transport
-            // in the active transport list.
-            //
-            NS_ASSERTION(transport, "Null transport in active list...");
+          //
+          // The pollable event should be the *only* null transport
+          // in the active transport list.
+          //
+          NS_ASSERTION(transport, "Null transport in active list...");
 #endif /* USE_POLLABLE_EVENT */
+        }
+      //
+      // Check to see if the transport has timed out...
+      //
+      } else {
+        if (transport) {
+          rv = transport->CheckForTimeout(intervalNow);
+          if (NS_ERROR_NET_TIMEOUT == rv) {
+            // Process the timeout...
+            rv = transport->Process(0);
+            //
+            // The operation has completed.  Remove the entry from the
+            // select list///
+            //
+            rv = RemoveFromSelectList(transport);
           }
         }
       }
-    } 
-    /* PR_Poll(...) timeout... */
-    else if (count == 0) {
-    }
-    /* PR_Poll(...) error.. */
-    else {
-    }
+    } // end-for
 
 #ifndef USE_POLLABLE_EVENT
     /* Process any pending operations on the mWorkQ... */

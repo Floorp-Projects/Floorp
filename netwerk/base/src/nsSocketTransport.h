@@ -22,6 +22,7 @@
 #include "prclist.h"
 #include "prio.h"
 #include "prnetdb.h"
+#include "prinrval.h"
 
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
@@ -132,6 +133,8 @@ public:
 
   nsresult Process(PRInt16 aSelectFlags);
 
+  nsresult CheckForTimeout(PRIntervalTime aCurrentTime);
+
   // Close this socket either right away or once done with the transaction. 
   nsresult CloseConnection(PRBool bNow=PR_TRUE);
 
@@ -142,8 +145,11 @@ public:
 
   static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
 
+  static void SetSocketTimeout(PRIntervalTime aTimeoutInterval);
+
   PRBool CanBeReused(void) { return 
     (mCurrentState != eSocketState_Error) && !mCloseConnectionOnceDone;}
+
 protected:
   nsresult doConnection(PRInt16 aSelectFlags);
   nsresult doResolveHost(void);
@@ -189,6 +195,7 @@ protected:
   nsCOMPtr<nsIRequest>              mDNSRequest;
   nsCOMPtr<nsIProgressEventSink>    mEventSink;
   char*                             mHostName;
+  PRIntervalTime                    mLastActiveTime;
   PRCList                           mListLink;
   PRUint32                          mLoadAttributes;
   PRLock*                           mLock;

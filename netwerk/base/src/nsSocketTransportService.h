@@ -34,6 +34,19 @@
 #define USE_POLLABLE_EVENT
 #endif
 
+//
+// This is the default timeout value (in milliseconds) for sockets which have
+// no activity...
+//
+#define DEFAULT_SOCKET_TIMEOUT_IN_MS  35*1000
+
+//
+// This is the Maximum number of Socket Transport instances that can be active
+// at once...
+//
+#define MAX_OPEN_CONNECTIONS 50
+
+
 // Forward declarations...
 class nsSocketTransport;
 
@@ -56,6 +69,10 @@ public:
 
   nsresult AddToWorkQ(nsSocketTransport* aTransport);
 
+  // XXX: Should these use intervals or Milliseconds?
+  nsresult GetSocketTimeoutInterval(PRIntervalTime* aResult);
+  nsresult SetSocketTimeoutInterval(PRIntervalTime  aTime);
+
   // The following methods are called by the transport thread...
   nsresult ProcessWorkQ(void);
 
@@ -63,18 +80,20 @@ public:
   nsresult RemoveFromSelectList(nsSocketTransport* aTransport);
 
 protected:
-  nsIThread*  mThread;
+  nsIThread*            mThread;
 #ifdef USE_POLLABLE_EVENT
-  PRFileDesc* mThreadEvent;
+  PRFileDesc*           mThreadEvent;
 #endif /* USE_POLLABLE_EVENT */
-  PRLock*     mThreadLock;
-  PRBool      mThreadRunning;
+  PRLock*               mThreadLock;
+  PRBool                mThreadRunning;
 
-  PRCList     mWorkQ;
+  PRIntervalTime        mSocketTimeoutInterval;
 
-  PRInt32       mSelectFDSetCount;
-  PRPollDesc*   mSelectFDSet;
-  nsSocketTransport** mActiveTransportList;
+  PRCList               mWorkQ;
+
+  PRInt32               mSelectFDSetCount;
+  PRPollDesc*           mSelectFDSet;
+  nsSocketTransport**   mActiveTransportList;
 };
 
 
