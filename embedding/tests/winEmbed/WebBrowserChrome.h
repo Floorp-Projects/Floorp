@@ -83,9 +83,14 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISHISTORYLISTENER
 
+    nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY,
+                           nsIWebBrowser **aBrowser);
+   
 protected:
    nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1=0, PRUint32 info2=0);
+
    nativeWindow mNativeWindow;
+   PRUint32     mChromeFlags;
    
    WebBrowserChromeUI *mUI;
    nsCOMPtr<nsIWebBrowser> mWebBrowser;
