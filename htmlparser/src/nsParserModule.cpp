@@ -35,7 +35,6 @@
 #include "COtherDTD.h"
 #include "nsViewSourceHTML.h"
 #include "nsHTMLContentSinkStream.h"
-#include "nsHTMLToTXTSinkStream.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
@@ -144,7 +143,6 @@ static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID, NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
 static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
-static NS_DEFINE_CID(kHTMLToTXTSinkStreamCID, NS_HTMLTOTXTSINKSTREAM_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 struct Components {
@@ -162,7 +160,6 @@ static Components gComponents[] = {
   { "Transitional DTD", &kCTransitionalDTDCID },
   { "ViewSource DTD", &kViewSourceDTDCID },
   { "HTML Content Sink Stream", &kHTMLContentSinkStreamCID },
-  { "HTML To Text Sink Stream", &kHTMLToTXTSinkStreamCID },
   { "ParserService", &kParserServiceCID },
 };
 
@@ -177,7 +174,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLToTXTSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 //----------------------------------------------------------------------
@@ -206,7 +202,6 @@ protected:
   nsCOMPtr<nsIGenericFactory> mTransitionalHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mViewSourceHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mHTMLContentSinkStreamFactory;
-  nsCOMPtr<nsIGenericFactory> mHTMLToTXTSinkStreamFactory;
   nsCOMPtr<nsIGenericFactory> mParserServiceFactory;
 };
 
@@ -332,13 +327,6 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
                                 &nsHTMLContentSinkStreamConstructor);
     }
     fact = mHTMLContentSinkStreamFactory;
-  }
-  else if (aClass.Equals(kHTMLToTXTSinkStreamCID)) {
-    if (!mHTMLToTXTSinkStreamFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mHTMLToTXTSinkStreamFactory), 
-                                &nsHTMLToTXTSinkStreamConstructor);
-    }
-    fact = mHTMLToTXTSinkStreamFactory;
   }
   else if (aClass.Equals(kParserServiceCID)) {
     if (!mParserServiceFactory) {
