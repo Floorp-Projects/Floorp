@@ -80,7 +80,7 @@ sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {
         my $name = $db_name;
-        if ($useshadow) {
+        if ($useshadow && Param("shadowdb")) {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
