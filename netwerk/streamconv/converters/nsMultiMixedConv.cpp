@@ -130,6 +130,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
         mBufferedData.Append(buffer);
         nsAllocator::Free(buffer);
         buffer = mBufferedData.ToNewCString();
+        mBufferedData.Truncate(0);
     }
     char *cursor = buffer;
     PRBool done = PR_FALSE;
@@ -173,8 +174,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     if (boundary) *boundary = '\0';
                 }
 
-                if ( (*cursor == '\r') || (*cursor == '\n') ) {
-                    if (cursor[1] == '\n')
+                if ( (*cursor == CR) || (*cursor == LF) ) {
+                    if (cursor[1] == LF)
                         cursor++; // if it's a CRLF, move two places.
                     cursor++;
                 }
@@ -191,9 +192,9 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
             // check for a newline char, then figure out if
             // we're dealing w/ CRLFs as line delimiters.
             // unfortunately we can see both :(
-            char *newLine = PL_strchr(cursor, '\n');
+            char *newLine = PL_strchr(cursor, LF);
             if (newLine) {
-                if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
+                if ( (newLine > cursor) && (newLine[-1] == CR) ) {
                      // CRLF
                      mLineFeedIncrement = 2;
                      newLine--;
@@ -231,8 +232,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                         // setting headers on the HTTP channel
                         // causes HTTP to notify, again if necessary,
                         // it's header observers.
-                        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
-                        if (NS_SUCCEEDED(rv)) {
+                        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+                        if (httpChannel) {
                             rv = httpChannel->SetResponseHeader(header, headerVal);
                             if (NS_FAILED(rv)) {
                                 nsAllocator::Free(buffer);
@@ -241,8 +242,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                         }
                     }
                 }
-                if (    (newLine[mLineFeedIncrement] == '\n')
-                     || (newLine[mLineFeedIncrement] == '\r')
+                if (    (newLine[mLineFeedIncrement] == LF)
+                     || (newLine[mLineFeedIncrement] == CR)
                      || (newLine == cursor) ) {
                     nsCOMPtr<nsILoadGroup> loadGroup;
 
@@ -292,10 +293,10 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     break;
                 }
                 headerStart = newLine + mLineFeedIncrement;
-                newLine = PL_strchr(headerStart, '\n');
+                newLine = PL_strchr(headerStart, LF);
                 if (newLine) {
                     // we're catching LF, LFLF, and CRLF
-                    if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
+                    if ( (newLine > cursor) && (newLine[-1] == CR) ) {
                          mLineFeedIncrement = 2;
                          newLine--;
                     }
@@ -304,7 +305,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 
             if (mNewPart) {
                 // we broke out because we have incomplete headers
-                // buffer the data and fall out.
+                // buffer the data (if there is any) and fall out.
                 if (*headerStart)
                     mBufferedData = headerStart;
                 break;
@@ -325,7 +326,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
         // after processing headers, it's possible that cursor points to
         // a null byte. If it does don't send it off because it's meaningless.
         if (!*cursor)
-            break; // XXX more to do here.
+            break;
 
         // Check for a completed part
         if (!done) {
@@ -360,8 +361,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
             } else {
                 cursor = boundary + mBoundaryStrLen;
             }
-            if ( (*cursor == '\r') || (*cursor == '\n') ){
-                if (cursor[1] == '\n')
+            if ( (*cursor == CR) || (*cursor == LF) ){
+                if (cursor[1] == LF)
                     cursor++; // if it's a CRLF move two places.
                 cursor++;
             }
