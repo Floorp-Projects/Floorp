@@ -131,6 +131,13 @@ nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_OK;
     }
 
+	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
+	{
+		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+
 #if defined(NS_DEBUG)
     /*
      * Check for the debug-only interface indicating thread-safety
