@@ -77,6 +77,7 @@ protected:
     // Toolbar component creation methods
     Widget    createXfeCascade        (Widget parent, HT_Resource entry);
     Widget    createXfeButton         (Widget parent, HT_Resource entry);
+    Widget    createUrlBar	         (Widget parent, HT_Resource entry);
 
     // Override RDFMenuToolbarBase methods
 	virtual void	prepareToUpdateRoot		();

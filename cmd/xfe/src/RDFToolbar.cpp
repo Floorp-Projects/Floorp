@@ -31,6 +31,8 @@
 #include <Xfe/ToolBar.h>
 #include <Xfe/ToolTip.h>
 
+#include "ToolbarUrlBar.h"
+
 #if DEBUG_radha
 #define D(x) x
 #else
@@ -254,6 +256,11 @@ XFE_RDFToolbar::addItem(HT_Resource node)
     else if (HT_IsSeparator(node))
     {
         item = createSeparator(_toolbar);
+    }
+    // UrlBar
+    else if (HT_IsURLBar(node))
+    {
+		item = createUrlBar(_toolbar,node);
     }
     // Normal items
     else
@@ -534,6 +541,19 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     trackSubmenuMapping(submenu);
 
     return cascade;
+}
+//////////////////////////////////////////////////////////////////////////
+Widget 
+XFE_RDFToolbar::createUrlBar(Widget parent,HT_Resource entry)
+{
+    XP_ASSERT( XfeIsAlive(parent) );
+
+	XFE_ToolbarUrlBar * urlbar = new XFE_ToolbarUrlBar(_frame,
+													   parent,
+													   "urlBar");
+	urlbar->initialize();
+
+	return urlbar->getBaseWidget();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
