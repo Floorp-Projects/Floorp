@@ -611,6 +611,8 @@ input[type="submit"] {
   color:black; 
 
   padding: 1px;
+  font-family: sans-serif;
+  font-size: small;
 }
 
 input[type="submit"]:hover {
@@ -689,6 +691,8 @@ input[type="reset"] {
   color:black; 
 
   padding: 1px;
+  font-family: sans-serif;
+  font-size: small;
 }
 
 input[type="reset"]:hover {
@@ -764,6 +768,8 @@ input[type="button"] {
   background-color: rgb(206, 207, 206);
   color:black; 
   padding: 1px;
+  font-family: sans-serif;
+  font-size: small;
 }
 
 input[type="button"]:hover {
@@ -846,6 +852,7 @@ button {
   display: inline;
   vertical-align: bottom;
   cursor: default;
+  box-sizing: border-box;
 
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
@@ -1498,6 +1505,7 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 
 :-moz-singleline-textcontrol-frame {
   overflow:hidden;
+  font-family:-moz-fixed;
 	white-space:nowrap;
 }
 
