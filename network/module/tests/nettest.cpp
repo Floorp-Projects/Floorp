@@ -31,6 +31,9 @@
 #include "nsIURL.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsString.h"
 
 
@@ -43,16 +46,22 @@ PRBool bLoadAsync;
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
+#define XPCOM_DLL  "xpcom32.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
+#define XPCOM_DLL  "libxpcom.so"
 #endif
 #endif
 
+// Define CIDs...
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+// Define IIDs...
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
 #ifdef XP_UNIX
@@ -129,7 +138,7 @@ NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStatus: ");
-        nsString str(aMsg);
+        nsAutoString str(aMsg);
         char* c = str.ToNewCString();
         fputs(c, stdout);
         free(c);
@@ -180,6 +189,12 @@ NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const P
         printf("\n+++ TestConsumer::OnStopBinding... URL: %p status: %d\n", aURL, status);
     }
 
+    if (NS_FAILED(status)) {
+      const char* url;
+      aURL->GetSpec(&url);
+
+      printf("Unable to load URL %s\n", url);
+    }
     /* The document has been loaded, so drop out of the message pump... */
     urlLoaded = 1;
     return 0;
@@ -210,12 +225,10 @@ nsresult ReadStreamSynchronously(nsIInputStream* aIn)
 
 int main(int argc, char **argv)
 {
-#ifdef XP_PC
-    MSG msg;
-#endif
-    nsString url_address;
+    nsAutoString url_address;
     char buf[256];
     nsIStreamListener *pConsumer;
+    nsIEventQueueService* pEventQService;
     nsIURL *pURL;
     nsresult result;
     int i;
@@ -225,8 +238,18 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    PL_InitializeEventsLib("");
+    nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+
+    // Create the Event Queue for this thread...
+    pEventQService = nsnull;
+    result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          kIEventQueueServiceIID,
+                                          (nsISupports **)&pEventQService);
+    if (NS_SUCCEEDED(result)) {
+      // XXX: What if this fails?
+      result = pEventQService->CreateThreadEventQueue();
+    }
 
     bTraceEnabled = PR_FALSE;
     bLoadAsync    = PR_TRUE;
@@ -280,6 +303,10 @@ int main(int argc, char **argv)
 
             /* If the open failed, then do not drop into the message loop... */
             if (NS_OK != result) {
+                const char* url;
+                pURL->GetSpec(&url);
+
+                printf("Unable to load URL %s\n", url);
                 urlLoaded = 1;
             }
         } 
@@ -297,6 +324,8 @@ int main(int argc, char **argv)
         // Enter the message pump to allow the URL load to proceed.
         while ( !urlLoaded ) {
 #ifdef XP_PC
+            MSG msg;
+
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
@@ -307,5 +336,9 @@ int main(int argc, char **argv)
         pURL->Release();
     }
     
+    if (nsnull != pEventQService) {
+        pEventQService->DestroyThreadEventQueue();
+        nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
+    }
     return 0;
 }
