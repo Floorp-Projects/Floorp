@@ -61,7 +61,9 @@ public:
 #endif /* NU_CACHE */
 
   virtual int GetURL (ilIURL * aUrl, ImgCachePolicy aLoadMethod,
-		      ilINetReader *aReader)=0;
+		      ilINetReader *aReader, PRBool IsAnimationLoop)=0;
+
+  virtual int GetContentLength (ilIURL * aUrl)=0;
 };
 
 #endif
