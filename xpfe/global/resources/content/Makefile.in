@@ -48,6 +48,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/about.html \
 		$(srcdir)/about.xul \
 		$(srcdir)/credits.html \
+		$(srcdir)/mozilla.html \
 		$(srcdir)/charsetDetectorsOverlay.js \
 		$(srcdir)/charsetDetectorsOverlay.xul \
 		$(srcdir)/selectDialog.js \
