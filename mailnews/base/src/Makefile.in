@@ -59,6 +59,9 @@ CPPSRCS = \
 	nsMsgMessageDataSource.cpp \
 	nsMessageViewDataSource.cpp \
 	nsMsgAccountManagerDS.cpp	\
+	nsMsgAccountDataSource.cpp	\
+	nsMsgIdentityDataSource.cpp	\
+	nsMsgServerDataSource.cpp	\
 	nsMsgRDFUtils.cpp \
 	$(NULL)
 
