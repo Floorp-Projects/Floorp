@@ -33,6 +33,7 @@
 #include "nsIChannel.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMimeConverter.h"
+#include "nsIDateTimeFormat.h"
 
 class nsMimeHtmlDisplayEmitter : public nsMimeBaseEmitter {
 public: 
@@ -69,6 +70,9 @@ protected:
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
     PRBool BroadCastHeadersAndAttachments();
     nsresult StartAttachmentInBody(const char *name, const char *contentType, const char *url);
+
+    nsCOMPtr<nsIDateTimeFormat> mDateFormater;
+    nsresult GenerateDateString(const char * dateString, PRUnichar ** formattedDate);
 };
 
 

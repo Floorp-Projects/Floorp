@@ -38,8 +38,10 @@
 
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
+#include "nsDateTimeFormatCID.h"
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
 /*
  * nsMimeHtmlEmitter definitions....
@@ -198,6 +200,10 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
       if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
       {
+        nsXPIDLString formattedDate;
+        nsresult rv = GenerateDateString(headerInfo->value, getter_Copies(formattedDate));
+        if (NS_SUCCEEDED(rv))
+          headerSink->HandleHeader(headerInfo->name, formattedDate, bFromNewsgroups);
         // let's try some fancy date formatting...
         PRExplodedTime explode;
         PRTime dateTime;
@@ -207,17 +213,79 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
         PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
         headerValue = buffer;
       }
-       // Convert UTF-8 to UCS2
-       *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerValue).GetUnicode());
+      else
+      {
+        // Convert UTF-8 to UCS2
+        *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerValue).GetUnicode());
 
-       if (NS_SUCCEEDED(rv))
-         headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
+        if (NS_SUCCEEDED(rv))
+          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
+      }
     }
   }
 
   if (headerSink)
     headerSink->OnEndHeaders();
   return NS_OK;
+}
+
+nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, PRUnichar ** aDateString)
+{
+  nsAutoString formattedDateString;
+  nsresult rv = NS_OK;
+
+  if (!mDateFormater)
+    mDateFormater = do_CreateInstance(kDateTimeFormatCID);
+
+  PRTime messageTime;
+  PR_ParseTimeString(dateString, PR_FALSE, &messageTime);
+
+  PRTime currentTime = PR_Now();
+	PRExplodedTime explodedCurrentTime;
+  PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
+  PRExplodedTime explodedMsgTime;
+  PR_ExplodeTime(messageTime, PR_LocalTimeParameters, &explodedMsgTime);
+
+  // if the message is from today, don't show the date, only the time. (i.e. 3:15 pm)
+  // if the message is from the last week, show the day of the week.   (i.e. Mon 3:15 pm)
+  // in all other cases, show the full date (03/19/01 3:15 pm)
+  nsDateFormatSelector dateFormat = kDateFormatShort;
+  if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
+      explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
+      explodedCurrentTime.tm_mday == explodedMsgTime.tm_mday)
+  {
+    // same day...
+    dateFormat = kDateFormatNone;
+  } 
+  // the following chunk of code causes us to show a day instead of a number if the message was received
+  // within the last 7 days. i.e. Mon 5:10pm. We need to add a preference so folks to can enable this behavior
+  // if they want it. 
+/*
+  else if (LL_CMP(currentTime, >, dateOfMsg))
+  {
+    PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDays;
+	  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+    LL_UI2L(secondsInDays, 60 * 60 * 24 * 7); // how many seconds in 7 days.....
+	  LL_MUL(microSecondsInDays, secondsInDays, microSecondsPerSecond); // turn that into microseconds
+
+    PRInt64 diff;
+    LL_SUB(diff, currentTime, dateOfMsg);
+    if (LL_CMP(diff, <=, microSecondsInDays)) // within the same week 
+      dateFormat = kDateFormatWeekday;
+  }
+*/
+
+  if (NS_SUCCEEDED(rv)) 
+    rv = mDateFormater->FormatPRTime(nsnull /* nsILocale* locale */,
+                                      dateFormat,
+                                      kTimeFormatNoSeconds,
+                                      messageTime,
+                                      formattedDateString);
+
+  if (NS_SUCCEEDED(rv))
+    *aDateString = formattedDateString.ToNewUnicode();
+
+  return rv;
 }
 
 nsresult
