@@ -34,7 +34,8 @@ CPP_OBJS=                            \
 
 LLIBS=                                \
         $(DIST)\lib\netwerkbase_s.lib \
-        $(DIST)\lib\xpcom.lib       \
+        $(DIST)\lib\netwerkdns_s.lib  \
+        $(DIST)\lib\xpcom.lib         \
         $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
 
@@ -43,6 +44,7 @@ MISCDEP=$(LLIBS)
 INCS = $(INCS)                      \
         -I$(DEPTH)\dist\include     \
         -I$(DEPTH)\netwerk\base\src \
+        -I$(DEPTH)\netwerk\dns\src  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

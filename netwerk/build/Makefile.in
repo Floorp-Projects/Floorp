@@ -34,10 +34,12 @@ CPPSRCS =                              \
 
 SHARED_LIBRARY_LIBS =                       \
         $(DIST)/lib/libnetwerkbase_s.a \
+        $(DIST)/lib/libnetwerkdns_s.a \
         $(NULL)
 
 LOCAL_INCLUDES  += \
                 -I$(srcdir)/../base/src \
+                -I$(srcdir)/../dns/src \
                 $(NULL)
 
 include $(topsrcdir)/config/config.mk
