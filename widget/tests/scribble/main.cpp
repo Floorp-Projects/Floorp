@@ -59,7 +59,7 @@ extern "C" char *fe_GetConfigDir(void)
 }
 
 /* dist/public/xp/xp_linebuf.h */
-int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
+extern "C" int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
                  uint32 desired_buffer_size,
                  char **bufferP, uint32 *buffer_sizeP,
                  uint32 *buffer_fpP,
@@ -72,7 +72,7 @@ int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
   return(0); 
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int argC = argc;
   return(CreateApplication(&argC, argv));
