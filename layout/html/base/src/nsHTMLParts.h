@@ -186,4 +186,16 @@ extern nsresult
 NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
                   nsIFrame* aParentFrame);
 
+extern nsresult
+NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag, nsIWebShell* aWebShell);
+
+extern nsresult
+NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
+                nsIAtom* aTag, nsIWebShell* aWebShell);
+
+extern nsresult
+NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
+                   nsIAtom* aTag, nsIWebShell* aWebShell);
+
 #endif /* nsHTMLParts_h___ */
