@@ -133,8 +133,8 @@ public:
 protected:
   void StartLayout();
 
-  nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
-                     PRBool* aDidFlush=nsnull);
+  virtual nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
+                             PRBool* aDidFlush=nsnull);
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent,
                          PRBool aIsHTML);

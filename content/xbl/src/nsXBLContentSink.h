@@ -84,6 +84,8 @@ public:
 protected:
   // nsXMLContentSink overrides
   PRBool OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName);
+  nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
+                     PRBool* aDidFlush=nsnull);
 
   // Our own helpers for constructing XBL prototype objects.
   void ConstructBinding();
