@@ -21,8 +21,9 @@
  */
 
 #if defined(DEBUG_ftang)
-#define KE_DEBUG
-#define DEBUG_IME
+//#define KE_DEBUG
+//#define DEBUG_IME
+//#define DEBUG_KBSTATE
 #endif
 
 #include "nsWindow.h"
@@ -122,6 +123,8 @@ static PRBool NS_IsDBCSLeadByte(UINT aCP, BYTE aByte)
 }
 #endif // IME_FROM_ON_CHAR
 
+#define IS_IME_CODEPAGE(cp) ((932==(cp))||(936==(cp))||(949==(cp))||(950==(cp)))
+
 static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
 {
 	int localeid=MAKELCID(aLangID,SORT_DEFAULT);
@@ -145,6 +148,28 @@ static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
         }
 }
 
+//-------------------------------------------------------------------------
+//
+// nsISupport stuff
+//
+//-------------------------------------------------------------------------
+NS_IMPL_ADDREF(nsWindow)
+NS_IMPL_RELEASE(nsWindow)
+NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if (aIID.Equals(nsIKBStateControl::GetIID())) {
+        *aInstancePtr = (void*) ((nsIKBStateControl*)this);
+    	NS_ADDREF((nsBaseWidget*)this);
+        // NS_ADDREF_THIS();
+        return NS_OK;
+    }
+
+    return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
+}
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -581,7 +606,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     // is not really an interface.
     nsCOMPtr<nsISupports> kungFuDeathGrip;
     if (!someWindow->mIsDestroying) // not if we're in the destructor!
-      kungFuDeathGrip = do_QueryInterface(someWindow);
+      kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
 
     // Re-direct a tab change message destined for its parent window to the
     // the actual window which generated the event.
@@ -2707,6 +2732,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_LBUTTONDOWN:
             //SetFocus(); // this is bad
             //RelayMouseEvent(msg,wParam, lParam); 
+            if(mIMEIsComposing) {
+            	nsresult res = ResetInputState();
+            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
+            }
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             break;
 
@@ -2720,6 +2749,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MBUTTONDOWN:
+            if(mIMEIsComposing) {
+            	nsresult res = ResetInputState();
+            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
+            }
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
             break;
 
@@ -2732,6 +2765,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_RBUTTONDOWN:
+            if(mIMEIsComposing) {
+            	nsresult res = ResetInputState();
+            	NS_ASSERTION(NS_SUCCEEDED(res) , "ResetInputState failed");
+            }
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             break;
 
@@ -4198,7 +4235,48 @@ BOOL nsWindow::OnIMEEndComposition()
 BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)	
 {
 #ifdef DEBUG_IME
-	printf("OnIMENotify\n");
+	printf("OnIMENotify ");
+	switch(aIMN) {
+		case IMN_CHANGECANDIDATE:
+			printf("IMN_CHANGECANDIDATE %x\n", aData);
+		break;
+		case IMN_CLOSECANDIDATE:
+			printf("IMN_CLOSECANDIDATE %x\n", aData);
+		break;
+		case IMN_CLOSESTATUSWINDOW:
+			printf("IMN_CLOSESTATUSWINDOW\n");
+		break;
+		case IMN_GUIDELINE:
+			printf("IMN_GUIDELINE\n");
+		break;
+		case IMN_OPENCANDIDATE:
+			printf("IMN_OPENCANDIDATE %x\n", aData);
+		break;
+		case IMN_OPENSTATUSWINDOW:
+			printf("IMN_OPENSTATUSWINDOW\n");
+		break;
+		case IMN_SETCANDIDATEPOS:
+			printf("IMN_SETCANDIDATEPOS %x\n", aData);
+		break;
+		case IMN_SETCOMPOSITIONFONT:
+			printf("IMN_SETCOMPOSITIONFONT\n");
+		break;
+		case IMN_SETCOMPOSITIONWINDOW:
+			printf("IMN_SETCOMPOSITIONWINDOW\n");
+		break;
+		case IMN_SETCONVERSIONMODE:
+			printf("IMN_SETCONVERSIONMODE\n");
+		break;
+		case IMN_SETOPENSTATUS:
+			printf("IMN_SETOPENSTATUS\n");
+		break;
+		case IMN_SETSENTENCEMODE:
+			printf("IMN_SETSENTENCEMODE\n");
+		break;
+		case IMN_SETSTATUSWINDOWPOS:
+			printf("IMN_SETSTATUSWINDOWPOS\n");
+		break;
+	};
 #endif
 
 	// not implement yet
@@ -4225,13 +4303,26 @@ BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)
 	return PR_FALSE;
 }
 //==========================================================================
-BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM aISC)			
+BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)			
 {
 #ifdef DEBUG_IME
-	printf("OnIMESetContext\n");
+	printf("OnIMESetContext %x %s %s %s Candidate[%s%s%s%s]\n", this, 
+		(aActive ? "Active" : "Deactiv"),
+		((aISC & ISC_SHOWUICOMPOSITIONWINDOW) ? "[Comp]" : ""),
+		((aISC & ISC_SHOWUIGUIDELINE) ? "[GUID]" : ""),
+		((aISC & ISC_SHOWUICANDIDATEWINDOW) ? "0" : ""),
+		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<1)) ? "1" : ""),
+		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<2)) ? "2" : ""),
+		((aISC & (ISC_SHOWUICANDIDATEWINDOW<<3)) ? "3" : "")
+	);
 #endif
+	if(! aActive)
+		ResetInputState();
 
-	// not implement yet
+	aISC &= ~ ISC_SHOWUICOMPOSITIONWINDOW;
+	// We still return false here because we need to pass the 
+	// aISC w/ ISC_SHOWUICOMPOSITIONWINDOW clear to the default
+	// window proc so it will draw the candidcate window for us...
 	return PR_FALSE;
 }
 //==========================================================================
@@ -4254,3 +4345,74 @@ BOOL nsWindow::OnIMEStartComposition()
 	::ImmReleaseContext(mWnd,hIMEContext);
 	return PR_TRUE;
 }
+
+//==========================================================================
+NS_IMETHODIMP nsWindow::ResetInputState()
+{
+#ifdef DEBUG_KBSTATE
+	printf("ResetInputState\n");
+#endif 
+	if(mIMEIsComposing) {
+		HIMC hIMC = ::ImmGetContext(mWnd);
+		if(hIMC) {
+			BOOL ret = ::ImmNotifyIME(hIMC,NI_COMPOSITIONSTR,CPS_COMPLETE,NULL);
+			NS_ASSERTION(ret, "ImmNotify failed");
+			::ImmReleaseContext(mWnd,hIMC);
+		}
+	}
+	return NS_OK;
+}
+NS_IMETHODIMP nsWindow::PasswordFieldInit()
+{
+#ifdef DEBUG_KBSTATE
+	printf("PasswordFieldInit\n");
+#endif 
+	return NS_OK;
+}
+NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
+{
+#ifdef DEBUG_KBSTATE
+	printf("PasswordFieldEnter\n");
+#endif 
+	if(IS_IME_CODEPAGE(mCurrentKeyboardCP))
+	{
+		HIMC hIMC = ::ImmGetContext(mWnd);
+		if(hIMC) {
+			DWORD st1,st2;
+     
+			BOOL ret = ::ImmGetConversionStatus(hIMC, &st1, &st2);
+			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
+			if(ret) {
+				oState = st1;
+				ret = ::ImmSetConversionStatus(hIMC, IME_CMODE_NOCONVERSION, st2);
+				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
+			}
+			::ImmReleaseContext(mWnd,hIMC);
+		}
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
+{
+#ifdef DEBUG_KBSTATE
+	printf("PasswordFieldExit\n");
+#endif 
+	if(IS_IME_CODEPAGE(mCurrentKeyboardCP))
+	{
+		HIMC hIMC = ::ImmGetContext(mWnd);
+		if(hIMC) {
+			DWORD st1,st2;
+	     
+			BOOL ret = ::ImmGetConversionStatus(hIMC, &st1, &st2);
+			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
+			if(ret) {
+				ret = ::ImmSetConversionStatus(hIMC, (DWORD)aState, st2);
+				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
+			}
+			::ImmReleaseContext(mWnd,hIMC);
+		}
+	}
+	return NS_OK;
+}
+

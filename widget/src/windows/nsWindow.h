@@ -28,6 +28,7 @@
 #include "nsToolkit.h"
 
 #include "nsIWidget.h"
+#include "nsIKBStateControl.h"
 
 #include "nsIMenuBar.h"
 
@@ -50,12 +51,18 @@ class nsIRollupListener;
  */
 
 class nsWindow : public nsSwitchToUIThread,
-                 public nsBaseWidget
+                 public nsBaseWidget,
+                 public nsIKBStateControl
 {
 
 public:
     nsWindow();
     virtual ~nsWindow();
+
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
     // nsIWidget interface
     NS_IMETHOD            Create(nsIWidget *aParent,
@@ -135,6 +142,11 @@ public:
 
     NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
+    // nsIKBStateControl interface 
+
+    NS_IMETHOD ResetInputState();
+    NS_IMETHOD PasswordFieldInit();
+
     HWND                    mBorderlessParent;
 
     // nsSwitchToUIThread interface
@@ -191,7 +203,7 @@ protected:
     BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);			
     BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult);			
     BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);			
-    BOOL                    OnIMESetContext(BOOL aActive, LPARAM aISC);			
+    BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);			
     BOOL                    OnIMEStartComposition();			
 
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
@@ -218,6 +230,9 @@ protected:
 	void HandleStartComposition(HIMC hIMEContext);
 	void HandleEndComposition(void);
 	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
+
+    NS_IMETHOD PasswordFieldEnter(PRUint32& oSavedState);
+    NS_IMETHOD PasswordFieldExit(PRUint32 aRestoredState);
 
 private:
 
