@@ -39,9 +39,6 @@
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
-// Default timeout in seconds, if the server doesn't give us one (eg http/1.1)
-#define HTTP_DEFAULT_TIMEOUT 10
-
 //-----------------------------------------------------------------------------
 // nsHttpConnection <public>
 //-----------------------------------------------------------------------------
@@ -189,7 +186,7 @@ nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
         if (cp)
             mIdleTimeout = (PRUint32) atoi(cp + 8);
         else
-            mIdleTimeout = HTTP_DEFAULT_TIMEOUT;
+            mIdleTimeout = nsHttpHandler::get()->IdleTimeout();
         
         LOG(("Connection can be reused [this=%x max-reuse=%u "
              "keep-alive-timeout=%u\n", this, mMaxReuseCount, mIdleTimeout));
