@@ -19,4 +19,4 @@ DEPTH=..\..\..
 
 DIRS=src public 
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

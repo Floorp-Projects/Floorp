@@ -31,7 +31,7 @@ LLIBS=				\
  $(LIBNSPR)			\
  $(DIST)\lib\libplc21.lib
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin

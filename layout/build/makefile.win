@@ -92,7 +92,7 @@ LLIBS=					\
 !endif
  $(LIBNSPR)
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

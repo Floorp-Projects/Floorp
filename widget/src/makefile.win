@@ -18,4 +18,4 @@ DEPTH=..\..
 
 DIRS=xpwidgets windows build
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
