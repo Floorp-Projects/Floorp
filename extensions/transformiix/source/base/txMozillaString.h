@@ -208,16 +208,6 @@ inline void String::toUpperCase()
   ToUpperCase(mString);
 }
 
-inline String::operator nsAFlatString&()
-{
-  return mString;
-}
-
-inline String::operator const nsAFlatString&() const
-{
-  return mString;
-}
-
 inline String::operator nsAString&()
 {
   return mString;
