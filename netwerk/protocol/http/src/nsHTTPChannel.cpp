@@ -107,7 +107,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mOpenInputStreamHasEventQueue (PR_TRUE)
 {
     NS_INIT_REFCNT();
-			NS_NewISupportsArray ( getter_AddRefs (mStreamAsFileObserverArray ) );
+    NS_NewISupportsArray(getter_AddRefs(mStreamAsFileObserverArray));
 #if defined(PR_LOGGING)
     nsXPIDLCString urlCString; 
     mURI->GetSpec(getter_Copies(urlCString));
@@ -1984,26 +1984,41 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 
     nsCAutoString authType;
     nsXPIDLCString authString;
+    nsCAutoString authLine;
+    nsCOMPtr<nsIAuthenticator> auth;
 
-    const char *space = strchr(iChallenge, ' ');
-    if (space) {
-      authType.Assign(iChallenge, space - iChallenge);
-    } else {
-      authType.Assign(iChallenge);
-    }
+    // multiple www-auth headers case
+    // go thru each to see if we support that. 
+    for (const char *eol = iChallenge-1; eol != 0;) 
+    {
+        const char* bol = eol+1;
+        eol = PL_strchr(bol, LF);
+        if (eol)
+            authLine.Assign(bol, eol-bol);
+        else
+            authLine.Assign(bol);
 
-#ifdef DEBUG_shaver
-    fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
+        PRInt32 space = authLine.FindChar(' ');
+        if (space == -1) 
+            authType = authLine;
+        else
+            authLine.Left(authType, space);
+
+#if defined(DEBUG_shaver) || defined(DEBUG_gagan)
+        fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
 #endif
-    // normalize to lowercase
-    char *authLower = nsCRT::strdup(authType.GetBuffer());
-    for (int i = 0; authLower[i]; i++)
-        authLower[i] = tolower(authLower[i]);
-    
-    nsCOMPtr<nsIAuthenticator> auth =
-      do_GetServiceFromCategory("http-auth", authLower, &rv);
+        // normalize to lowercase
+        char *authLower = nsCRT::strdup(authType.GetBuffer());
+        for (int i = 0; authLower[i]; i++)
+            authLower[i] = tolower(authLower[i]);
 
-    nsMemory::Free(authLower); // free before checking rv
+        auth = do_GetServiceFromCategory("http-auth", authLower, &rv);
+
+        nsMemory::Free(authLower); // free before checking rv
+
+        // do we support this auth type
+        if (NS_SUCCEEDED(rv)) break;
+    }
     
     if (NS_FAILED(rv))
       // XXX report "Authentication-type not supported: %s"
@@ -2034,22 +2049,59 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         //TODO localize it!
         nsAutoString message; message.AssignWithConversion("Enter username for "); 
         // later on change to only show realm and then host's info. 
-        message.AppendWithConversion(iChallenge);
-        
+        // find the realm 
+        PRBool foundRealm = PR_FALSE;
+        const char* realm = authLine.GetBuffer() + authType.Length();
+        while (realm && nsCRT::IsAsciiSpace(*realm)) realm++;
+
+        if (nsCRT::strncasecmp(realm, "realm", 5) == 0)
+        {
+            realm += 5;
+            while (realm && (nsCRT::IsAsciiSpace(*realm) || *realm == '='))
+                realm++;
+
+            const char * end = realm;
+            if (*realm == '"') {
+                realm++; end++;
+                while (end && *end != '"') end++;
+            } else {
+                while (end && !nsCRT::IsAsciiSpace(*end) && *end != ',') end++;
+            }
+
+            if (realm != end) {
+                message.AppendWithConversion(realm, end - realm);
+                foundRealm = PR_TRUE;
+            }
+        }
+
+        // if we couldn't find the realm, just append the whole auth line
+        if (!foundRealm)
+            message.AppendWithConversion(authLine.GetBuffer());
+
+        // get the hostname
+        nsXPIDLCString hostname;
+        if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(hostname))))
+        {
+            // TODO localize
+            message.AppendWithConversion(" at ");
+            message.AppendWithConversion(hostname);
+        }
+
         // Get url
         nsXPIDLCString urlCString; 
         mURI->GetPrePath(getter_Copies(urlCString));
             
         nsAutoString prePath; // XXX i18n
-        CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, urlCString)), prePath);
+        CopyASCIItoUCS2(nsLiteralCString(
+                    NS_STATIC_CAST(const char*, urlCString)), prePath);
         rv = mPrompter->PromptUsernameAndPassword(nsnull,
-                                                  message.GetUnicode(),
-                                                  prePath.GetUnicode(),
-                                                  nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                                  getter_Copies(userBuf),
-                                                  getter_Copies(passwdBuf),
-                                                  &retval);
-        if (NS_FAILED(rv))
+                message.GetUnicode(),
+                prePath.GetUnicode(),
+                nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
+                getter_Copies(userBuf),
+                getter_Copies(passwdBuf),
+                &retval);
+        if (NS_FAILED(rv) || !retval) // let it go on if we cancelled auth...
             return rv;
     }
 
@@ -2057,14 +2109,14 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         /* can't proceed without at least a username, can we? */
         return NS_ERROR_FAILURE;
     }
-            
+
     if (NS_FAILED(rv) ||
-        NS_FAILED(rv = auth->Authenticate(mURI, "http", iChallenge,
+        NS_FAILED(rv = auth->Authenticate(mURI, "http", authLine.GetBuffer(),
                                           userBuf, passwdBuf, mPrompter,
                                           getter_Copies(authString))))
         return rv;
 
-#ifdef DEBUG_shaver
+#if defined(DEBUG_shaver) || defined(DEBUG_gagan)
     fprintf(stderr, "Auth string: %s\n", (const char *)authString);
 #endif
 
