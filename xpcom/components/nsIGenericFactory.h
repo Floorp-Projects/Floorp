@@ -85,20 +85,26 @@ struct nsModuleComponentInfo {
     nsIGenericFactory::ConstructorProcPtr       mConstructor;
 };
 
+typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
+
 extern NS_COM nsresult
 NS_NewGenericModule(const char* moduleName,
                     PRUint32 componentCount,
                     nsModuleComponentInfo* components,
+                    nsModuleDestructorProc dtor,
                     nsIModule* *result);
 
 #define NS_IMPL_NSGETMODULE(_name, _components)                              \
+    NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, nsnull)
+
+#define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)             \
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,      \
                                           nsIFileSpec* location,             \
                                           nsIModule** result)                \
 {                                                                            \
     return NS_NewGenericModule((_name),                                      \
                                sizeof(_components) / sizeof(_components[0]), \
-                               (_components), result);                       \
+                               (_components), _dtor, result);                \
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +168,38 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
     if(NS_SUCCEEDED(rv)) {                                                      \
         rv = inst->QueryInterface(aIID, aResult);                               \
     }                                                                           \
+    NS_RELEASE(inst);                                                           \
+                                                                                \
+    return rv;                                                                  \
+}                                                                               \
+
+// 'Constructor' that uses an existing getter function that gets a singleton.
+// NOTE: assumes that getter does an AddRef - so additional AddRef is not done.
+#define NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(_InstanceClass, _GetterProc)   \
+static NS_IMETHODIMP                                                            \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
+{                                                                               \
+    nsresult rv;                                                                \
+                                                                                \
+    _InstanceClass * inst;                                                      \
+                                                                                \
+    if (NULL == aResult) {                                                      \
+        rv = NS_ERROR_NULL_POINTER;                                             \
+        return rv;                                                              \
+    }                                                                           \
+    *aResult = NULL;                                                            \
+    if (NULL != aOuter) {                                                       \
+        rv = NS_ERROR_NO_AGGREGATION;                                           \
+        return rv;                                                              \
+    }                                                                           \
+                                                                                \
+    inst = _GetterProc();                                                       \
+    if (NULL == inst) {                                                         \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            \
+        return rv;                                                              \
+    }                                                                           \
+    /* NS_ADDREF(inst); */                                                      \
+    rv = inst->QueryInterface(aIID, aResult);                                   \
     NS_RELEASE(inst);                                                           \
                                                                                 \
     return rv;                                                                  \
