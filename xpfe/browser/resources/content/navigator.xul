@@ -213,9 +213,9 @@ Contributor(s): ______________________________________. -->
   <menubar id="main-menubar"/>
 
   <toolbar id="nav-bar" class="main-bar" chromeclass="toolbar" persist="collapsed">
-    <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />  
+    <titledbutton id="back-button" crop="right" flex="1" align="top" value="&backButton.label;" observes="canGoBack" />  
 
-    <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />
+    <titledbutton id="forward-button" crop="right" flex="1" align="top" value="&forwardButton.label;" observes="canGoForward" />
     
 
     <!-- Right now only regular reload is supported.  When the
@@ -223,27 +223,27 @@ Contributor(s): ______________________________________. -->
     and pass on appropriate reload type. (The shift functionality
     is available.  There's a shiftDown field in the event object.)
     -->
-    <titledbutton id="reload-button" align="top"
+    <titledbutton id="reload-button" crop="right" flex="1" align="top"
       value="&reloadButton.label;" observes="canReload"/>
    
 
-    <titledbutton id="stop-button" align="top"
+    <titledbutton id="stop-button" crop="right" flex="1" align="top"
       value="&stopButton.label;" onclick="BrowserStop()">
       <observes element="canStop" attribute="disabled"
         onbroadcast="BrowserCanStop()"/>
     </titledbutton>
 
-    <box align="vertical" flex="100%">
-      <spring flex="100%"/>
+    <box align="vertical" flex="9999999">
+      <spring flex="1"/>
       <html:input id="urlbar" type="text" chromeclass="location"
         onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
-      <spring flex="100%"/>
+      <spring flex="1"/>
     </box>
 
-    <titledbutton id="search-button" align="top"
+    <titledbutton id="search-button" crop="right" flex="1" align="top"
       value="&searchButton.label;" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
 
-    <titledbutton id="print-button" align="top" 
+    <titledbutton id="print-button" crop="right" flex="1" align="top" 
       value="&printButton.label;" onclick="BrowserPrint()">
       <observes element="canPrint" attribute="disabled"/>
     </titledbutton>
@@ -279,7 +279,7 @@ Contributor(s): ______________________________________. -->
       <!-- Recursive rules for nested folders -->
       <rule iscontainer="true">
         <menupopup>
-          <menu uri="..." align="left"
+          <menu uri="..." crop="right" flex="1" align="left"
             value="rdf:http://home.netscape.com/NC-rdf#Name" >
             <menupopup />
           </menu>
@@ -293,14 +293,14 @@ Contributor(s): ______________________________________. -->
       </rule>
     </template>
 
-    <titledbutton id="home-button" align="left"
+    <titledbutton id="home-button" align="left" flex="1"
       value="&homeButton.label;" 
       defaultURL="&defaultHomepage.url;"
       onclick="BrowserHome(); event.preventBubble();"/>
-    <titledbutton id="netscape-button" align="left"
+    <titledbutton id="netscape-button" crop="right" flex="1" align="left"
       value="&netscapeButton.label;" 
       onclick="window.content.location.href='&myNetscape.url;'; event.preventBubble();"/>
-    <spring flex="100%"/>
+    <spring flex="9999999"/>
   </toolbar>
 </toolbox>
 
