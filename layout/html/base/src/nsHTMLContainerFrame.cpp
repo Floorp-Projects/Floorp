@@ -157,13 +157,19 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
   // Does aFrame have a view?
   aFrame->GetView(aPresContext, &view);
   if (view) {
-#ifdef NS_DEBUG
     // Verify that the current parent view is what we think it is
     nsIView*  parentView;
 
+    // you have to check all the time to see if this 
+    // view has been reparented.. if you try to insert for
+    // a view that has been reparented.. bad things can happen.
+    // I took out the debug check and check all the time now..
+    // this case happens when you print.
     view->GetParent(parentView);
-    NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
-#endif
+    if(parentView != aOldParentView)
+      return NS_OK;
+
+    //NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
 
     // Change the parent view.
     PRInt32 zIndex;
