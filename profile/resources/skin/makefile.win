@@ -29,6 +29,7 @@ FILES=\
     profileicon-large.gif           \
     migrate.gif                     \
 	newProfile1_2.css		\
+	profileManager.css		\
 	$(NULL)
 
 install::
