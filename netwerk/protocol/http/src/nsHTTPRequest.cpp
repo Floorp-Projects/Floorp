@@ -66,6 +66,10 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
         mURI->GetHost(getter_Copies(host));
         SetHeader(nsHTTPAtoms::Host, host);
     }
+
+    // Send */*. We're no longer chopping MIME-types for acceptance.
+    // MIME based content negotiation has died.
+    SetHeader(nsHTTPAtoms::Accept, "*/*");    
 }
 
 nsHTTPRequest::~nsHTTPRequest()
