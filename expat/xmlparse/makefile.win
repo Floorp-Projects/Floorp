@@ -22,9 +22,9 @@
 #
 
 DEPTH= ..\..
-MODULE = expat
+MODULE = raptor
 EXPORTS = xmlparse.h
-
+LIBRARY_NAME=expat
 
 CPPSRCS=					\
 	xmlparse.c				\
@@ -34,6 +34,8 @@ CPPSRCS=					\
 CPP_OBJS=                                   	\
 	.\$(OBJDIR)\xmlparse.obj      		\
 	.\$(OBJDIR)\hashtable.obj     		\
+	..\xmltok\$(OBJDIR)\xmltok.obj          \
+	..\xmltok\$(OBJDIR)\xmlrole.obj         \
 	$(NULL)
 
 LINCS=-I..\xmltok
@@ -41,3 +43,8 @@ LINCS=-I..\xmltok
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(OBJDIR) $(OBJS)
+
+install:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+install:: $(LIBRARY)
