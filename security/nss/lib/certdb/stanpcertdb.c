@@ -866,7 +866,9 @@ CERT_FindSMimeProfile(CERTCertificate *cert)
     }
     rvItem =
 	PK11_FindSMimeProfile(&slot, cert->emailAddr, &cert->derSubject, NULL);
-    PK11_FreeSlot(slot);
+    if (slot) {
+    	PK11_FreeSlot(slot);
+    }
     return rvItem;
 }
 
