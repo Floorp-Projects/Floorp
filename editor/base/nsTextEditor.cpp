@@ -1762,6 +1762,10 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
   IsTextPropertySetByContent(aNode, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
   if (PR_FALSE==textPropertySet)
   {
+    if (aValue)
+    {
+      result = RemoveTextPropertiesForNode(aNode, aParent, aStartOffset, aEndOffset, aPropName, aAttribute);
+    }
     nsAutoString tag;
     aPropName->ToString(tag);
     if (NS_SUCCEEDED(result)) 
@@ -1946,6 +1950,12 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
   IsTextPropertySetByContent(aStartNode, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
   if (PR_FALSE==textPropertySet)
   {
+    if (aValue)
+    {
+      result = RemoveTextPropertiesForNodesWithSameParent(aStartNode, aStartOffset,
+                                                          aEndNode,   aEndOffset,
+                                                          aParent, aPropName, aAttribute);
+    }
     nsAutoString tag;
     aPropName->ToString(tag);
     // create the new style node, which will be the new parent for the selected nodes
@@ -2144,6 +2154,19 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   // create a style node for the text in the start parent
   nsCOMPtr<nsIDOMNode>parent;
 
+  result = RemoveTextPropertiesForNodeWithDifferentParents(aStartNode,aStartOffset, 
+                                                           aEndNode,  aEndOffset, 
+                                                           aParent,   aPropName, aAttribute);
+  if (NS_FAILED(result)) { return result; }
+
+  // RemoveTextProperties... might have changed selection endpoints, get new ones
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(result)) { return result; }
+  if (!selection) { return NS_ERROR_NULL_POINTER; } 
+  selection->GetAnchorOffset(&aStartOffset);
+  selection->GetFocusOffset(&aEndOffset);
+
   // create new parent nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
@@ -2291,13 +2314,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
         }
         if (NS_SUCCEEDED(result))
         {
-          nsCOMPtr<nsIDOMSelection>selection;
-          result = nsEditor::GetSelection(getter_AddRefs(selection));
-          if (NS_SUCCEEDED(result)) 
-          {
-            selection->Collapse(startNode, startOffset);
-            selection->Extend(endNode, aEndOffset);
-          }
+          selection->Collapse(startNode, startOffset);
+          selection->Extend(endNode, aEndOffset);
         }
       }
     }
@@ -2604,6 +2622,7 @@ nsTextEditor::RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   return result;
 }
 
+// XXX: this only works for endpoints being text nodes for now
 NS_IMETHODIMP
 nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStartNode,
                                                               PRInt32      aStartOffset,
@@ -2621,6 +2640,10 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
   PRInt32 rangeStartOffset = aStartOffset;  // used to construct a range for the nodes between
   PRInt32 rangeEndOffset = aEndOffset;      // aStartNode and aEndNode after we've processed those endpoints
 
+  // temporary state variables
+  PRBool textPropertySet;
+  nsCOMPtr<nsIDOMNode>resultNode;
+
   // delete the style node for the text in the start parent
   PRBool skippedStartNode = PR_FALSE;
   nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
@@ -2631,12 +2654,22 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     return result;
   }
   nodeAsChar = do_QueryInterface(aStartNode);
-  if (!nodeAsChar) { return NS_ERROR_FAILURE; }
+  if (!nodeAsChar) { return NS_ERROR_NOT_IMPLEMENTED; }
   nodeAsChar->GetLength(&count);
-  if ((PRUint32)aStartOffset!=count) {  // only do this if at least one child is selected
-    result = RemoveTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute);
-    if (0!=aStartOffset) {
-      rangeStartOffset = 0; // we split aStartNode at aStartOffset and it is the right node now
+  if ((PRUint32)aStartOffset!=count) 
+  {  // only do this if at least one child is selected
+    IsTextPropertySetByContent(aStartNode, aPropName, aAttribute, nsnull, textPropertySet, getter_AddRefs(resultNode));
+    if (PR_TRUE==textPropertySet)
+    {
+      result = RemoveTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute);
+      if (0!=aStartOffset) {
+        rangeStartOffset = 0; // we split aStartNode at aStartOffset and it is the right node now
+      }
+    }
+    else 
+    {
+      skippedStartNode = PR_TRUE;
+      if (gNoisy) { printf("skipping start node because property not set\n"); }
     }
   }
   else 
@@ -2652,13 +2685,19 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     if (NS_SUCCEEDED(result)) 
     {
       nodeAsChar = do_QueryInterface(aEndNode);
-      if (!nodeAsChar) { return NS_ERROR_FAILURE; }
+      if (!nodeAsChar) { return NS_ERROR_NOT_IMPLEMENTED; }
       nodeAsChar->GetLength(&count);
-      if (aEndOffset!=0) {  // only do this if at least one child is selected
-        result = RemoveTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute);
-        if (0!=aEndOffset) {
-          rangeEndOffset = 0; // we split aEndNode at aEndOffset and it is the right node now
+      if (aEndOffset!=0) 
+      {  // only do this if at least one child is selected
+        IsTextPropertySetByContent(aEndNode, aPropName, aAttribute, nsnull, textPropertySet, getter_AddRefs(resultNode));
+        if (PR_TRUE==textPropertySet)
+        {
+          result = RemoveTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute);
+          if (0!=aEndOffset) {
+            rangeEndOffset = 0; // we split aEndNode at aEndOffset and it is the right node now
+          }
         }
+        else { if (gNoisy) { printf("skipping end node because aProperty not set.\n"); } }
       }
       else { if (gNoisy) { printf("skipping end node because aEndOffset==0\n"); } }
     }
@@ -2784,6 +2823,14 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
         nodeList.RemoveElementAt(0);
         contentPtr = (nsIContent*)(nodeList.ElementAt(0));
       }
+    }
+    nsCOMPtr<nsIDOMSelection>selection;
+    result = nsEditor::GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result)) 
+    {
+      selection->Collapse(aStartNode, rangeStartOffset);
+      selection->Extend(aEndNode, rangeEndOffset);
+      if (gNoisy) { printf("RTPFNWDP set selection.\n"); }
     }
   }
 
