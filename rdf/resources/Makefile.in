@@ -51,6 +51,7 @@ FILES = \
 	folder-closed.gif		\
 	folder-open.gif			\
 	iefavorite.gif			\
+	loading.gif			\
 	online.gif			\
 	personal-folder-closed.gif	\
 	personal-folder-open.gif	\
