@@ -30,7 +30,7 @@
 
 static nsString* ConvertCharacterSetName(const char* aName)
 {
-  return new nsString(aName);
+  return new nsString(NS_ConvertASCIItoUCS2(aName));
 }
 
 int main(int argc, char** argv)
