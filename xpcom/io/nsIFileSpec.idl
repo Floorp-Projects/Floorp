@@ -23,16 +23,7 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "nscore.h" // for NS_BASE
-
-// Start commenting out the C++ versions of the below in the output header
-#if 0
-%}
-[ref]   native nsStringRef(nsString);
-native StandardFilterMask(nsIFileSpec::StandardFilterMask);
-%{C++
-// End commenting out the C++ versions of the above in the output header
-#endif
+#include "nscore.h" // for NS_COM
 %}
 
 interface nsIFileURL;
@@ -47,55 +38,11 @@ interface nsIFilePath;
 #define NS_FILESPEC_PROGID "component://netscape/filespec"
 #define NS_FILESPEC_CLASSNAME "File Spec"
 %}
+
 [scriptable, uuid(d8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFileSpec : nsISupports
 {
 	void fromFileSpec([const] in nsIFileSpec original);
-%{C++
-// File Widget stuff depends on widget/public/nsIWidget.h
-// Until the following is moved out of xpcom/ ifdeffing it
-// out.
-%}
-%{C++
-	//
-	// The "choose" functions present the file picker UI in order to set the
-	// value of the file spec.
-%}
-	void chooseOutputFile(in string windowTitle, in string suggestedLeafName);
-
-%{C++
-	// The mask for standard filters is given as follows:
-	enum StandardFilterMask
-	{
-		eAllReadable		= (1<<0)
-	,	eHTMLFiles			= (1<<1)
-	,	eXMLFiles			= (1<<2)
-	,	eImageFiles			= (1<<3)
-	,	eAllFiles			= (1<<4)
-	
-	// Mask containing all the above default filters
-	,	eAllStandardFilters = (
-							  eAllReadable
-							| eHTMLFiles
-							| eXMLFiles
-							| eImageFiles
-							| eAllFiles)
-	
-	// The "extra filter" bit should be set if the "extra filter"
-	// is passed in to chooseInputFile.
-	,   eExtraFilter        = (1<<31)
-	};
-	enum { kNumStandardFilters = 5 };
-%}
-	void chooseInputFile(
-		in string title
-	,	in StandardFilterMask standardFilterMask
-	,	in string extraFilterTitle
-	,	in string extraFilter
-		);
-	void chooseDirectory(in string title);
-%{C++
-%}
 
 	attribute string URLString;
 	attribute string UnixStyleFilePath;
