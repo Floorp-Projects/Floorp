@@ -743,6 +743,9 @@ XPCJSRuntime::~XPCJSRuntime()
         delete mDetachedWrappedNativeProtoMap;
     }
 
+    // unwire the readable/JSString sharing magic
+    XPCStringConvert::ShutdownDOMStringFinalizer();
+
     XPCConvert::RemoveXPCOMUCStringFinalizer();
 
     gOldJSGCCallback = NULL;
