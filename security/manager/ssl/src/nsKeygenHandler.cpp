@@ -56,7 +56,6 @@ extern "C" {
 static SECKeySizeChoiceInfo SECKeySizeChoiceList[] = {
     { nsnull, 2048 },
     { nsnull, 1024 },
-    { nsnull, 512  },
     { nsnull, 0 }, 
 };
 
@@ -212,9 +211,6 @@ nsKeygenFormProcessor::Init()
 
   nssComponent->GetPIPNSSBundleString("MediumGrade", str);
   SECKeySizeChoiceList[1].name = ToNewUnicode(str);
-
-  nssComponent->GetPIPNSSBundleString("LowGrade", str);
-  SECKeySizeChoiceList[2].name = ToNewUnicode(str);
 
   return NS_OK;
 }
