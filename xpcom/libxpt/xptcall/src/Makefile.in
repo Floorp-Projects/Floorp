@@ -28,7 +28,7 @@ DIRS = md
 
 CFLAGS	+= -DEXPORT_XPTC_API
 
-CSRCS		= xptcall.c 	\
+CPPSRCS		= xptcall.cpp 	\
 		  $(NULL)
 
 REQUIRES	= $(MODULE)
