@@ -92,7 +92,26 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_radio_button_set_group(GTK_RADIO_BUTTON(mRadioButton), nsnull);
 
+  gtk_signal_connect(GTK_OBJECT(mRadioButton),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
+
   return NS_OK;
+}
+
+void
+nsRadioButton::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mLabel) {
+    mLabel = nsnull;
+  }
+  else if (aGtkWidget == mRadioButton) {
+    mRadioButton = nsnull;
+  }
+  else {
+    nsWidget::OnDestroySignal(aGtkWidget);
+  }
 }
 
 void nsRadioButton::InitCallbacks(char * aName)
@@ -120,12 +139,11 @@ void nsRadioButton::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
-	GtkToggleButton * item = GTK_TOGGLE_BUTTON(mRadioButton);
-
-  item->active = (gboolean) aState;
-
-  gtk_widget_queue_draw(GTK_WIDGET(item));
-
+  if (mWidget) {
+    GtkToggleButton * item = GTK_TOGGLE_BUTTON(mRadioButton);
+    item->active = (gboolean) aState;
+    gtk_widget_queue_draw(GTK_WIDGET(item));
+  }
   return NS_OK;
 }
 
@@ -135,8 +153,12 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  aState = (PRBool) GTK_TOGGLE_BUTTON(mRadioButton)->active;
-
+  if (mWidget) {
+    aState = (PRBool) GTK_TOGGLE_BUTTON(mRadioButton)->active;
+  }
+  else {
+    aState = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -147,17 +169,23 @@ NS_METHOD nsRadioButton::GetState(PRBool& aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
-  NS_ALLOC_STR_BUF(label, aText, 256);
-  g_print("nsRadioButton::SetLabel(%s)\n",label);
-  if (mLabel) {
-    gtk_label_set(GTK_LABEL(mLabel), label);
-  } else {
-    mLabel = gtk_label_new(label);
-    gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(mRadioButton), mLabel);
-    gtk_widget_show(mLabel); /* XXX */
+  if (mWidget) {
+    NS_ALLOC_STR_BUF(label, aText, 256);
+    g_print("nsRadioButton::SetLabel(%s)\n",label);
+    if (mLabel) {
+      gtk_label_set(GTK_LABEL(mLabel), label);
+    } else {
+      mLabel = gtk_label_new(label);
+      gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
+      gtk_container_add(GTK_CONTAINER(mRadioButton), mLabel);
+      gtk_widget_show(mLabel); /* XXX */
+      gtk_signal_connect(GTK_OBJECT(mLabel),
+                         "destroy",
+                         GTK_SIGNAL_FUNC(DestroySignal),
+                         this);
+    }
+    NS_FREE_STR_BUF(label);
   }
-  NS_FREE_STR_BUF(label);
   return NS_OK;
 }
 
@@ -169,11 +197,13 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
-  char * text;
-  if (mLabel) {
-    gtk_label_get(GTK_LABEL(mLabel), &text);
-    aBuffer.SetLength(0);
-    aBuffer.Append(text);
+  aBuffer.Truncate();
+  if (mWidget) {
+    if (mLabel) {
+      char* text;
+      gtk_label_get(GTK_LABEL(mLabel), &text);
+      aBuffer.Append(text);
+    }
   }
   return NS_OK;
 }

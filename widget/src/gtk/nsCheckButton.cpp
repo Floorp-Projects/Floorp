@@ -46,6 +46,20 @@ nsCheckButton::~nsCheckButton()
 {
 }
 
+void
+nsCheckButton::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mCheckButton) {
+    mCheckButton = nsnull;
+  }
+  else if (aGtkWidget == mLabel) {
+    mLabel = nsnull;
+  }
+  else {
+    nsWidget::OnDestroySignal(aGtkWidget);
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 // Create the native CheckButton widget
@@ -81,8 +95,13 @@ void nsCheckButton::InitCallbacks(char * aName)
                  GDK_KEY_RELEASE_MASK |
                  GDK_LEAVE_NOTIFY_MASK |
                  GDK_POINTER_MOTION_MASK);
-}
 
+  // Add in destroy callback
+  gtk_signal_connect(GTK_OBJECT(mCheckButton),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
+}
 
 /**
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
@@ -114,12 +133,13 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-	GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
+  if (mWidget) {
+    GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
 
-  item->active = (gboolean) aState;
+    item->active = (gboolean) aState;
 
-  gtk_widget_queue_draw(GTK_WIDGET(item));
-  
+    gtk_widget_queue_draw(GTK_WIDGET(item));
+  }
   return NS_OK;
 }
 
@@ -130,12 +150,14 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-  aState = (PRBool) GTK_TOGGLE_BUTTON(mCheckButton)->active;
+  aState = PR_TRUE;
+  if (mWidget) {
+    aState = (PRBool) GTK_TOGGLE_BUTTON(mCheckButton)->active;
 
-  // The check button will have been toggled twice (cough) -
-  // once by GTK and once by gecko.  This is obviously messed up.
-  aState = !aState;
-
+    // The check button will have been toggled twice (cough) -
+    // once by GTK and once by gecko.  This is obviously messed up.
+    aState = !aState;
+  }
   return NS_OK;
 }
 
@@ -146,16 +168,22 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
-  NS_ALLOC_STR_BUF(label, aText, 256);
-  if (mLabel) {
-    gtk_label_set(GTK_LABEL(mLabel), label);
-  } else {
-    mLabel = gtk_label_new(label);
-    gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(mCheckButton), mLabel);
-    gtk_widget_show(mLabel);
+  if (mWidget) {
+    NS_ALLOC_STR_BUF(label, aText, 256);
+    if (mLabel) {
+      gtk_label_set(GTK_LABEL(mLabel), label);
+    } else {
+      mLabel = gtk_label_new(label);
+      gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
+      gtk_container_add(GTK_CONTAINER(mCheckButton), mLabel);
+      gtk_widget_show(mLabel);
+      gtk_signal_connect(GTK_OBJECT(mLabel),
+                         "destroy",
+                         GTK_SIGNAL_FUNC(DestroySignal),
+                         this);
+    }
+    NS_FREE_STR_BUF(label);
   }
-  NS_FREE_STR_BUF(label);
   return NS_OK;
 }
 
@@ -167,11 +195,13 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
-  char * text;
-  if (mLabel) {
-    gtk_label_get(GTK_LABEL(mLabel), &text);
-    aBuffer.SetLength(0);
-    aBuffer.Append(text);
+  aBuffer.SetLength(0);
+  if (mWidget) {
+    char * text;
+    if (mLabel) {
+      gtk_label_get(GTK_LABEL(mLabel), &text);
+      aBuffer.Append(text);
+    }
   }
   return NS_OK;
 }

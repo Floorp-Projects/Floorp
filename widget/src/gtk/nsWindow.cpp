@@ -94,6 +94,10 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
+  printf("nsWindow::~nsWindow:%p\n", this);
+#endif
   mIsDestroyingWindow = PR_TRUE;
   if (nsnull != mShell) {
     Destroy();
@@ -146,6 +150,11 @@ NS_METHOD nsWindow::RemoveTooltips()
 
 NS_METHOD nsWindow::Destroy()
 {
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
+  printf("nsWindow::Destroy:%p: isDestroyingWindow=%s widget=%p shell=%p parent=%p\n",
+         this, mIsDestroyingWindow ? "yes" : "no", mWidget, mShell, mParent);
+#endif
   NS_IF_RELEASE(m_nsIMenuBar);
 
   // Call base class first... we need to ensure that upper management
@@ -164,6 +173,15 @@ NS_METHOD nsWindow::Destroy()
   }
 
   return NS_OK;
+}
+
+void
+nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  nsWidget::OnDestroySignal(aGtkWidget);
+  if (aGtkWidget == mShell) {
+    mShell = nsnull;
+  }
 }
 
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
@@ -648,6 +666,14 @@ ChildWindow::ChildWindow()
 {
 }
 
+ChildWindow::~ChildWindow()
+{
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
+  printf("ChildWindow::~ChildWindow:%p\n", this);
+#endif
+}
+
 PRBool ChildWindow::IsChild() const
 {
   return PR_TRUE;
@@ -655,6 +681,10 @@ PRBool ChildWindow::IsChild() const
 
 NS_METHOD ChildWindow::Destroy()
 {
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
+  printf("ChildWindow::Destroy:%p  \n", this);
+#endif
   // Skip over baseclass Destroy method which doesn't do what we want;
   // instead make sure widget destroy method gets invoked.
   return nsWidget::Destroy();

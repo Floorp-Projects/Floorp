@@ -63,6 +63,7 @@ public:
 
 protected:
     NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+    virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
     GtkWidget *mCList;
     PRBool  mMultiSelect;

@@ -54,6 +54,7 @@ public:
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
   GtkJustification GetNativeAlignment();
+
   nsLabelAlignment mAlignment;
 
 };

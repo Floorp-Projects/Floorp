@@ -61,23 +61,38 @@ NS_METHOD nsScrollbar::CreateNative (GtkWidget * parentWindow)
   mAdjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0, 0, 100, 1, 25, 25));
 
   switch (mOrientation)
-    {
+  {
     case GTK_ORIENTATION_HORIZONTAL:
       mWidget = gtk_hscrollbar_new (mAdjustment);
       break;
     case GTK_ORIENTATION_VERTICAL:
       mWidget = gtk_vscrollbar_new (mAdjustment);
       break;
-    }
+  }
 
   gtk_widget_set_name (mWidget, "nsScrollbar");
 
   gtk_signal_connect (GTK_OBJECT (mAdjustment),
-		      "value_changed",
-		      GTK_SIGNAL_FUNC (handle_scrollbar_value_changed),
-		      this);
+                      "value_changed",
+                      GTK_SIGNAL_FUNC (handle_scrollbar_value_changed),
+                      this);
+  gtk_signal_connect (GTK_OBJECT (mAdjustment),
+                      "destroy",
+                      GTK_SIGNAL_FUNC (DestroySignal),
+                      this);
 
   return NS_OK;
+}
+
+void
+nsScrollbar::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if ((void*)aGtkWidget == (void*)mAdjustment) {
+    mAdjustment = nsnull;
+  }
+  else {
+    nsWidget::OnDestroySignal(aGtkWidget);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -276,15 +291,6 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 //-------------------------------------------------------------------------
 int nsScrollbar::AdjustScrollBarPosition (int aPosition)
 {
-  int maxRange;
-  int sliderSize;
-#if 0
-  XtVaGetValues (mWidget, XmNmaximum, &maxRange,
-		 XmNsliderSize, &sliderSize,
-		 nsnull);
-  int cap = maxRange - sliderSize;
-  return aPosition > cap ? cap : aPosition;
-#endif
   return 0;			/* XXX */
 }
 

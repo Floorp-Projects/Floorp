@@ -32,35 +32,35 @@
 
 class nsFileWidget : public nsIFileWidget 
 {
-  public:
-    nsFileWidget(); 
-    virtual ~nsFileWidget();
+public:
+  nsFileWidget(); 
+  virtual ~nsFileWidget();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    PRBool		OnPaint();
+  PRBool		OnPaint();
 
-    // nsIWidget interface
+  // nsIWidget interface
   
-    NS_IMETHOD		Create(nsIWidget *aParent,
-                               nsString& aTitle,
-			       nsFileDlgMode aMode,
-			       nsIDeviceContext *aContext = nsnull,
-			       nsIAppShell *aAppShell = nsnull,
-			       nsIToolkit *aToolkit = nsnull,
-			       void *aInitData = nsnull);
+  NS_IMETHOD		Create(nsIWidget *aParent,
+                       nsString& aTitle,
+                       nsFileDlgMode aMode,
+                       nsIDeviceContext *aContext = nsnull,
+                       nsIAppShell *aAppShell = nsnull,
+                       nsIToolkit *aToolkit = nsnull,
+                       void *aInitData = nsnull);
 
-    // nsIFileWidget part
-    virtual PRBool	Show();
-    NS_IMETHOD GetFile(nsString& aFile);
-    NS_IMETHOD GetFile(nsFileSpec& aFile);
-    NS_IMETHOD SetDefaultString(nsString& aFile);
-    NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,
-                             const nsString aTitles[],
-                             const nsString aFilters[]);
+  // nsIFileWidget part
+  virtual PRBool	Show();
+  NS_IMETHOD GetFile(nsString& aFile);
+  NS_IMETHOD GetFile(nsFileSpec& aFile);
+  NS_IMETHOD SetDefaultString(nsString& aFile);
+  NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,
+                           const nsString aTitles[],
+                           const nsString aFilters[]);
 
-    NS_IMETHOD GetDisplayDirectory(nsString& aDirectory);
-    NS_IMETHOD SetDisplayDirectory(nsString& aDirectory);
+  NS_IMETHOD GetDisplayDirectory(nsString& aDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsString& aDirectory);
   
   virtual nsFileDlgResults GetFile(nsIWidget *aParent,
                                    nsString &promptString,
@@ -74,15 +74,20 @@ class nsFileWidget : public nsIFileWidget
                                    nsString &promptString,
                                    nsFileSpec &theFileSpec);
 
-  protected:
-    GtkWidget		*mWidget;
-    nsString		mTitle;
-    nsFileDlgMode   mMode;
-    PRUint32		    mNumberOfFilters;  
-    const nsString*	mTitles;
-    const nsString*	mFilters;
-    nsString		mDefault;
-    nsString    mDisplayDirectory;
+protected:
+  static gint DestroySignal(GtkWidget *  aGtkWidget,
+                            nsFileWidget* aWidget);
+
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
+
+  GtkWidget		*mWidget;
+  nsString		mTitle;
+  nsFileDlgMode   mMode;
+  PRUint32		    mNumberOfFilters;  
+  const nsString*	mTitles;
+  const nsString*	mFilters;
+  nsString		mDefault;
+  nsString    mDisplayDirectory;
 };
 
 #endif // nsFileWidget_h__

@@ -57,6 +57,7 @@ public:
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
 private:
   int             mOrientation;
@@ -65,4 +66,4 @@ private:
   int AdjustScrollBarPosition(int aPosition);
 };
 
-#endif // nsScrollbar_
+#endif /* nsScrollbar_h__ */

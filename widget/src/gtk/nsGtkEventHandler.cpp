@@ -431,8 +431,8 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     mevent.mMenuItem = menuItem;
     mevent.time = PR_IntervalNow();
 
-    nsEventStatus status;
     // FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
+//    nsEventStatus status;
 //    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
 
     menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
@@ -458,16 +458,14 @@ void menu_map_handler(GtkWidget *w, gpointer p)
 
     mevent.time = PR_IntervalNow();
 
-    nsEventStatus status;
-      
     menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
 
     if(menuListener) {
       menuListener->MenuConstruct(
         mevent,
       	nsnull,   //parent window
-	nsnull,   //menuNode
-	nsnull ); // webshell
+        nsnull,   //menuNode
+        nsnull ); // webshell
       NS_IF_RELEASE(menuListener);
     }
   }
@@ -487,8 +485,6 @@ void menu_unmap_handler(GtkWidget *w, gpointer p)
     mevent.widget = nsnull;
 
     mevent.time = PR_IntervalNow();
-
-    nsEventStatus status;
 
     menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
     if(menuListener) {
