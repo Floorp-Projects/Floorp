@@ -52,7 +52,7 @@ public:
 
 protected:
 
-	nsresult nsAbRDFResource::GetAbDatabase();
+	nsresult GetAbDatabase();
 
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
  

@@ -37,11 +37,8 @@ CPP_OBJS=								\
 
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\msgbaseutil.lib		\
-	$(DIST)\lib\msgmork_s.lib		\
 	$(DIST)\lib\addrbook_s.lib		\
     $(LIBNSPR)						\
-    $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(NULL)
 

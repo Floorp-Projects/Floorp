@@ -7,9 +7,6 @@
 	<!ENTITY nameColumn.label "Name">
 	<!ENTITY emailColumn.label "Email">
 	<!ENTITY phoneColumn.label "Phone#">
-	<!ENTITY orgColumn.label "Organization">
-	<!ENTITY nicknameColumn.label "Nickname">
-	<!ENTITY cityColumn.label "City">
 ]>   
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -28,22 +25,13 @@
 			  		<treerow >
 						<treecell>
 							<treeindentation />
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#PersonName" align="right" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DisplayName" align="right" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Email" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail" align="right" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#WorkPhone" align="right" style="list-style-image: none;" />
-						</treecell>
-						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Organization" align="right" style="list-style-image: none;" />
-						</treecell>
-						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Nickname" align="right" style="list-style-image: none;" />
-						</treecell>
-						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#City" align="right" style="list-style-image: none;" />
 						</treecell>
 			  		</treerow>
 				</treeitem>
@@ -51,21 +39,15 @@
 		</template>
 
 
-		<treecol style="width:13%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
-		<treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
-		<treecol style="width:13%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
-		<treecol style="width:20%" id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Organization"/>
-		<treecol style="width:13%" id="NicknameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Nickname"/>
-		<treecol style="width:20%" id="CityColumn" rdf:resource="http://home.netscape.com/NC-rdf#City"/>
+		<treecol style="width:20%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#DisplayName"/>
+		<treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+		<treecol style="width:20%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
 		
 		<treehead>
 			<treerow>
 				<treecell>&nameColumn.label;</treecell>
 				<treecell>&emailColumn.label;</treecell>
 				<treecell>&phoneColumn.label;</treecell>
-				<treecell>&orgColumn.label;</treecell>
-				<treecell>&nicknameColumn.label;</treecell>
-				<treecell>&cityColumn.label;</treecell>
 			</treerow>
 		</treehead>
 

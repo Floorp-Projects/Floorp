@@ -27,19 +27,62 @@
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
+#include "rdf.h"
+
+#include "nsAddrDatabase.h"
+
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+/* The definition is nsAddrDatabase.cpp */
+extern const char *kFirstNameColumn;
+extern const char *kLastNameColumn;
+extern const char *kDisplayNameColumn;
+extern const char *kNicknameColumn;
+extern const char *kPriEmailColumn;
+extern const char *k2ndEmailColumn;
+extern const char *kPlainTextColumn;
+extern const char *kWorkPhoneColumn;
+extern const char *kHomePhoneColumn;
+extern const char *kFaxColumn;
+extern const char *kPagerColumn;
+extern const char *kCellularColumn;
+extern const char *kHomeAddressColumn;
+extern const char *kHomeAddress2Column;
+extern const char *kHomeCityColumn;
+extern const char *kHomeStateColumn;
+extern const char *kHomeZipCodeColumn;
+extern const char *kHomeCountryColumn;
+extern const char *kWorkAddressColumn;
+extern const char *kWorkAddress2Column;
+extern const char *kWorkCityColumn;
+extern const char *kWorkStateColumn;
+extern const char *kWorkZipCodeColumn;
+extern const char *kWorkCountryColumn;
+extern const char *kJobTitleColumn;
+extern const char *kDepartmentColumn;
+extern const char *kCompanyColumn;
+extern const char *kWebPage1Column;
+extern const char *kWebPage2Column;
+extern const char *kBirthYearColumn;
+extern const char *kBirthMonthColumn;
+extern const char *kBirthDayColumn;
+extern const char *kCustom1Column;
+extern const char *kCustom2Column;
+extern const char *kCustom3Column;
+extern const char *kCustom4Column;
+extern const char *kNotesColumn;
+/* end */
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
 	NS_INIT_REFCNT();
-
-	m_pListName = nsnull;
-	m_pWorkCity = nsnull;
-	m_pOrganization = nsnull;
 
 	m_pFirstName = nsnull;
 	m_pLastName = nsnull;
@@ -53,18 +96,42 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_pPagerNumber = nsnull;
 	m_pCellularNumber = nsnull;
 
-	m_dbTableID = -1;
-	m_dbRowID = -1;
+	m_pHomeAddress = nsnull;
+	m_pHomeAddress2 = nsnull;
+	m_pHomeCity = nsnull;
+	m_pHomeState = nsnull;
+	m_pHomeZipCode = nsnull;
+	m_pHomeCountry = nsnull;
+	m_pWorkAddress = nsnull;
+	m_pWorkAddress2 = nsnull;
+	m_pWorkCity = nsnull;
+	m_pWorkState = nsnull;
+	m_pWorkZipCode = nsnull;
+	m_pWorkCountry = nsnull;
+	m_pJobTitle = nsnull;
+	m_pDepartment = nsnull;
+	m_pCompany = nsnull;
+	m_pWebPage1 = nsnull;
+	m_pWebPage2 = nsnull;
+	m_pBirthYear = nsnull;
+	m_pBirthMonth = nsnull;
+	m_pBirthDay = nsnull;
+	m_pCustom1 = nsnull;
+	m_pCustom2 = nsnull;
+	m_pCustom3 = nsnull;
+	m_pCustom4 = nsnull;
+	m_pNote = nsnull;
+
+	m_bSendPlainText = PR_FALSE;
+
+	m_dbTableID = 0;
+	m_dbRowID = 0;
 }
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
 	if(mDatabase)
 		mDatabase->RemoveListener(this);
-
-	PR_FREEIF(m_pListName);
-	PR_FREEIF(m_pWorkCity);
-	PR_FREEIF(m_pOrganization);
 
 	PR_FREEIF(m_pFirstName);
 	PR_FREEIF(m_pLastName);
@@ -77,6 +144,32 @@ nsAbCardProperty::~nsAbCardProperty(void)
 	PR_FREEIF(m_pFaxNumber);
 	PR_FREEIF(m_pPagerNumber);
 	PR_FREEIF(m_pCellularNumber);
+	PR_FREEIF(m_pHomeAddress);
+	PR_FREEIF(m_pHomeAddress2);
+	PR_FREEIF(m_pHomeCity);
+	PR_FREEIF(m_pHomeState);
+	PR_FREEIF(m_pHomeZipCode);
+	PR_FREEIF(m_pHomeCountry);
+	PR_FREEIF(m_pWorkAddress);
+	PR_FREEIF(m_pWorkAddress2);
+	PR_FREEIF(m_pWorkCity);
+	PR_FREEIF(m_pWorkState);
+	PR_FREEIF(m_pWorkZipCode);
+	PR_FREEIF(m_pWorkCountry);
+	PR_FREEIF(m_pJobTitle);
+	PR_FREEIF(m_pDepartment);
+	PR_FREEIF(m_pCompany);
+	PR_FREEIF(m_pWebPage1);
+	PR_FREEIF(m_pWebPage2);
+	PR_FREEIF(m_pBirthYear);
+	PR_FREEIF(m_pBirthMonth);
+	PR_FREEIF(m_pBirthDay);
+	PR_FREEIF(m_pCustom1);
+	PR_FREEIF(m_pCustom2);
+	PR_FREEIF(m_pCustom3);
+	PR_FREEIF(m_pCustom4);
+	PR_FREEIF(m_pNote);
+
 }
 
 NS_IMPL_ADDREF(nsAbCardProperty)
@@ -115,244 +208,41 @@ NS_IMETHODIMP nsAbCardProperty::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instiga
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::GetListName(char **listname)
+nsresult nsAbCardProperty::GetAttributeName(char **aName, char* pValue)
 {
-	SetListName("List1");
-	if (listname && m_pListName)
-		*listname = PL_strdup(m_pListName);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetWorkCity(char **city)
-{
-	SetWorkCity("Mountain View");
-	if (city && m_pWorkCity)
-		*city = PL_strdup(m_pWorkCity);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetFirstName(char * *aFirstName)
-{
-	if (aFirstName && m_pFirstName)
-		*aFirstName = PL_strdup(m_pFirstName);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetLastName(char * *aLastName)
-{
-	if (aLastName && m_pLastName)
-		*aLastName = PL_strdup(m_pLastName);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetDisplayName(char * *aDisplayName)
-{
-	if (aDisplayName && m_pDisplayName)
-		*aDisplayName = PL_strdup(m_pDisplayName);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetPrimaryEmail(char * *aPrimaryEmail)
-{
-	if (aPrimaryEmail && m_pPrimaryEmail)
-		*aPrimaryEmail = PL_strdup(m_pPrimaryEmail);
-	return NS_OK;
-}
-NS_IMETHODIMP nsAbCardProperty::GetSecondEmail(char * *aSecondEmail)
-{
-	if (aSecondEmail && m_pSecondEmail)
-		*aSecondEmail = PL_strdup(m_pSecondEmail);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetWorkPhone(char * *aWorkPhone)
-{
-	if (aWorkPhone && m_pWorkPhone)
-		*aWorkPhone = PL_strdup(m_pWorkPhone);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetHomePhone(char * *aHomePhone)
-{
-	if (aHomePhone && m_pHomePhone)
-		*aHomePhone = PL_strdup(m_pHomePhone);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetFaxNumber(char * *aFaxNumber)
-{
-	if (aFaxNumber && m_pFaxNumber)
-		*aFaxNumber = PL_strdup(m_pFaxNumber);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetPagerNumber(char * *aPagerNumber)
-{
-	if (aPagerNumber && m_pPagerNumber)
-		*aPagerNumber = PL_strdup(m_pPagerNumber);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetCellularNumber(char * *aCellularNumber)
-{
-	if (aCellularNumber && m_pCellularNumber)
-		*aCellularNumber = PL_strdup(m_pCellularNumber);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetOrganization(char * *aOrganization)
-{
-	SetOrganization("Mail");
-	if (aOrganization && m_pOrganization)
-		*aOrganization = PL_strdup(m_pOrganization);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::GetNickName(char * *aNickName)
-{
-	if (aNickName && m_pNickName)
-		*aNickName = PL_strdup(m_pNickName);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP nsAbCardProperty::SetListName(char * aListName)
-{
-	if (aListName)
+	if (aName)
 	{
-		PR_FREEIF(m_pListName);
-		m_pListName = PL_strdup(aListName);
+		if (pValue)
+			*aName = PL_strdup(pValue);
+		else
+			*aName = PL_strdup("");
+		return NS_OK;
+	}
+	else
+		return NS_RDF_NO_VALUE;
+
+}
+
+nsresult nsAbCardProperty::SetAttributeName(char *aName, char **arrtibute)
+{
+	if (aName)
+	{
+		char *pValue = *arrtibute;
+		PR_FREEIF(pValue);
+		*arrtibute = PL_strdup(aName);
 	}
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetFirstName(char * aFirstName)
+NS_IMETHODIMP nsAbCardProperty::GetSendPlainText(PRBool *aSendPlainText)
 {
-	if (aFirstName)
-	{
-		PR_FREEIF(m_pFirstName);
-		m_pFirstName = PL_strdup(aFirstName);
-	}
+	*aSendPlainText = m_bSendPlainText;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsAbCardProperty::SetLastName(char * aLastName)
+NS_IMETHODIMP nsAbCardProperty::SetSendPlainText(PRBool aSendPlainText)
 {
-	if (aLastName)
-	{
-		PR_FREEIF(m_pLastName);
-		m_pLastName = PL_strdup(aLastName);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetDisplayName(char * aDisplayName)
-{
-	if (aDisplayName)
-	{
-		PR_FREEIF(m_pDisplayName);
-		m_pDisplayName = PL_strdup(aDisplayName);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetPrimaryEmail(char * aPrimaryEmail)
-{
-	if (aPrimaryEmail)
-	{
-		PR_FREEIF(m_pPrimaryEmail);
-		m_pPrimaryEmail = PL_strdup(aPrimaryEmail);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetSecondEmail(char * aSecondEmail)
-{
-	if (aSecondEmail)
-	{
-		PR_FREEIF(m_pSecondEmail);
-		m_pSecondEmail = PL_strdup(aSecondEmail);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetWorkPhone(char * aWorkPhone)
-{
-	if (aWorkPhone)
-	{
-		PR_FREEIF(m_pWorkPhone);
-		m_pWorkPhone = PL_strdup(aWorkPhone);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetHomePhone(char * aHomePhone)
-{
-	if (aHomePhone)
-	{
-		PR_FREEIF(m_pHomePhone);
-		m_pHomePhone = PL_strdup(aHomePhone);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetFaxNumber(char * aFaxNumber)
-{
-	if (aFaxNumber)
-	{
-		PR_FREEIF(m_pFaxNumber);
-		m_pFaxNumber = PL_strdup(aFaxNumber);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetPagerNumber(char * aPagerNumber)
-{
-	if (aPagerNumber)
-	{
-		PR_FREEIF(m_pPagerNumber);
-		m_pPagerNumber = PL_strdup(aPagerNumber);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetCellularNumber(char * aCellularNumber)
-{
-	if (aCellularNumber)
-	{
-		PR_FREEIF(m_pCellularNumber);
-		m_pCellularNumber = PL_strdup(aCellularNumber);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetWorkCity(char * aWorkCity)
-{
-	if (aWorkCity)
-	{
-		PR_FREEIF(m_pWorkCity);
-		m_pWorkCity = PL_strdup(aWorkCity);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetOrganization(char * aOrganization)
-{
-	if (aOrganization)
-	{
-		PR_FREEIF(m_pOrganization);
-		m_pOrganization = PL_strdup(aOrganization);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::SetNickName(char * aNickName)
-{
-	if (aNickName)
-	{
-		PR_FREEIF(m_pNickName);
-		m_pNickName = PL_strdup(aNickName);
-	}
+	m_bSendPlainText = aSendPlainText;
 	return NS_OK;
 }
 
@@ -382,28 +272,73 @@ NS_IMETHODIMP nsAbCardProperty::SetDbRowID(PRUint32 aDbRowID)
 
 NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, char **value)
 {
-    if (!PL_strcmp(attrname, "firstname"))
+    if (!PL_strcmp(attrname, kFirstNameColumn))
 		GetFirstName(value);
-    else if (!PL_strcmp(attrname, "lastname"))
+    else if (!PL_strcmp(attrname, kLastNameColumn))
 		GetLastName(value);
-    else if (!PL_strcmp(attrname, "displayname"))
+    else if (!PL_strcmp(attrname, kDisplayNameColumn))
 		GetDisplayName(value);
-    else if (!PL_strcmp(attrname, "nickname"))
+    else if (!PL_strcmp(attrname, kNicknameColumn))
 		GetNickName(value);
-    else if (!PL_strcmp(attrname, "primaryemail"))
+    else if (!PL_strcmp(attrname, kPriEmailColumn))
 		GetPrimaryEmail(value);
-    else if (!PL_strcmp(attrname, "secondemail"))
+    else if (!PL_strcmp(attrname, k2ndEmailColumn))
 		GetSecondEmail(value);
-    else if (!PL_strcmp(attrname, "workphone"))
+    else if (!PL_strcmp(attrname, kWorkPhoneColumn))
 		GetWorkPhone(value);
-    else if (!PL_strcmp(attrname, "homephone"))
+    else if (!PL_strcmp(attrname, kHomePhoneColumn))
 		GetHomePhone(value);
-    else if (!PL_strcmp(attrname, "faxnumber"))
+    else if (!PL_strcmp(attrname, kFaxColumn))
 		GetFaxNumber(value);
-    else if (!PL_strcmp(attrname, "pagernumber"))
+    else if (!PL_strcmp(attrname, kPagerColumn))
 		GetPagerNumber(value);
-    else if (!PL_strcmp(attrname, "cellularnumber"))
+    else if (!PL_strcmp(attrname, kCellularColumn))
 		GetCellularNumber(value);
+    else if (!PL_strcmp(attrname, kHomeAddressColumn))
+		GetHomeAddress(value);
+    else if (!PL_strcmp(attrname, kHomeAddress2Column))
+		GetHomeAddress2(value);
+    else if (!PL_strcmp(attrname, kHomeCityColumn))
+		GetHomeCity(value);
+    else if (!PL_strcmp(attrname, kHomeStateColumn))
+		GetHomeState(value);
+    else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
+		GetHomeZipCode(value);
+    else if (!PL_strcmp(attrname, kHomeCountryColumn))
+		GetHomeCountry(value);
+    else if (!PL_strcmp(attrname, kWorkAddressColumn))
+		GetWorkAddress(value);
+    else if (!PL_strcmp(attrname, kWorkAddress2Column))
+		GetWorkAddress2(value);
+    else if (!PL_strcmp(attrname, kWorkCityColumn))
+		GetWorkCity(value);
+    else if (!PL_strcmp(attrname, kWorkStateColumn))
+		GetWorkState(value);
+    else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
+		GetWorkZipCode(value);
+    else if (!PL_strcmp(attrname, kWorkCountryColumn))
+		GetWorkCountry(value);
+    else if (!PL_strcmp(attrname, kWebPage1Column))
+		GetWebPage1(value);
+    else if (!PL_strcmp(attrname, kWebPage2Column))
+		GetWebPage2(value);
+    else if (!PL_strcmp(attrname, kBirthYearColumn))
+		GetBirthYear(value);
+    else if (!PL_strcmp(attrname, kBirthMonthColumn))
+		GetBirthMonth(value);
+    else if (!PL_strcmp(attrname, kBirthDayColumn))
+		GetBirthDay(value);
+    else if (!PL_strcmp(attrname, kCustom1Column))
+		GetCustom1(value);
+    else if (!PL_strcmp(attrname, kCustom2Column))
+		GetCustom2(value);
+    else if (!PL_strcmp(attrname, kCustom3Column))
+		GetCustom3(value);
+    else if (!PL_strcmp(attrname, kCustom4Column))
+		GetCustom4(value);
+    else if (!PL_strcmp(attrname, kNotesColumn))
+		GetNotes(value);
+	/* else handle pass down attribute */
 
 	return NS_OK;
 }
@@ -412,28 +347,74 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const char *v
 {
 	nsAutoString cardValue(value);
 	char* valueStr = cardValue.ToNewCString();
-    if (!PL_strcmp(attrname, "firstname"))
+
+    if (!PL_strcmp(attrname, kFirstNameColumn))
 		SetFirstName(valueStr);
-    else if (!PL_strcmp(attrname, "lastname"))
+    else if (!PL_strcmp(attrname, kLastNameColumn))
 		SetLastName(valueStr);
-    else if (!PL_strcmp(attrname, "displayname"))
+    else if (!PL_strcmp(attrname, kDisplayNameColumn))
 		SetDisplayName(valueStr);
-    else if (!PL_strcmp(attrname, "nickname"))
+    else if (!PL_strcmp(attrname, kNicknameColumn))
 		SetNickName(valueStr);
-    else if (!PL_strcmp(attrname, "primaryemail"))
+    else if (!PL_strcmp(attrname, kPriEmailColumn))
 		SetPrimaryEmail(valueStr);
-    else if (!PL_strcmp(attrname, "secondemail"))
+    else if (!PL_strcmp(attrname, k2ndEmailColumn))
 		SetSecondEmail(valueStr);
-    else if (!PL_strcmp(attrname, "workphone"))
+    else if (!PL_strcmp(attrname, kWorkPhoneColumn))
 		SetWorkPhone(valueStr);
-    else if (!PL_strcmp(attrname, "homephone"))
+    else if (!PL_strcmp(attrname, kHomePhoneColumn))
 		SetHomePhone(valueStr);
-    else if (!PL_strcmp(attrname, "faxnumber"))
+    else if (!PL_strcmp(attrname, kFaxColumn))
 		SetFaxNumber(valueStr);
-    else if (!PL_strcmp(attrname, "pagernumber"))
+    else if (!PL_strcmp(attrname, kPagerColumn))
 		SetPagerNumber(valueStr);
-    else if (!PL_strcmp(attrname, "cellularnumber"))
+    else if (!PL_strcmp(attrname, kCellularColumn))
 		SetCellularNumber(valueStr);
+    else if (!PL_strcmp(attrname, kHomeAddressColumn))
+		SetHomeAddress(valueStr);
+    else if (!PL_strcmp(attrname, kHomeAddress2Column))
+		SetHomeAddress2(valueStr);
+    else if (!PL_strcmp(attrname, kHomeCityColumn))
+		SetHomeCity(valueStr);
+    else if (!PL_strcmp(attrname, kHomeStateColumn))
+		SetHomeState(valueStr);
+    else if (!PL_strcmp(attrname, kHomeZipCodeColumn))
+		SetHomeZipCode(valueStr);
+    else if (!PL_strcmp(attrname, kHomeCountryColumn))
+		SetHomeCountry(valueStr);
+    else if (!PL_strcmp(attrname, kWorkAddressColumn))
+		SetWorkAddress(valueStr);
+    else if (!PL_strcmp(attrname, kWorkAddress2Column))
+		SetWorkAddress2(valueStr);
+    else if (!PL_strcmp(attrname, kWorkCityColumn))
+		SetWorkCity(valueStr);
+    else if (!PL_strcmp(attrname, kWorkStateColumn))
+		SetWorkState(valueStr);
+    else if (!PL_strcmp(attrname, kWorkZipCodeColumn))
+		SetWorkZipCode(valueStr);
+    else if (!PL_strcmp(attrname, kWorkCountryColumn))
+		SetWorkCountry(valueStr);
+    else if (!PL_strcmp(attrname, kWebPage1Column))
+		SetWebPage1(valueStr);
+    else if (!PL_strcmp(attrname, kWebPage2Column))
+		SetWebPage2(valueStr);
+    else if (!PL_strcmp(attrname, kBirthYearColumn))
+		SetBirthYear(valueStr);
+    else if (!PL_strcmp(attrname, kBirthMonthColumn))
+		SetBirthMonth(valueStr);
+    else if (!PL_strcmp(attrname, kBirthDayColumn))
+		SetBirthDay(valueStr);
+    else if (!PL_strcmp(attrname, kCustom1Column))
+		SetCustom1(valueStr);
+    else if (!PL_strcmp(attrname, kCustom2Column))
+		SetCustom2(valueStr);
+    else if (!PL_strcmp(attrname, kCustom3Column))
+		SetCustom3(valueStr);
+    else if (!PL_strcmp(attrname, kCustom4Column))
+		SetCustom4(valueStr);
+    else if (!PL_strcmp(attrname, kNotesColumn))
+		SetNotes(valueStr);
+	/* else handle pass down attribute */
 
 	delete[] valueStr;
 

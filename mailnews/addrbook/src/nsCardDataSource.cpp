@@ -52,12 +52,10 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
 
-nsIRDFResource* nsABCardDataSource::kNC_PersonName;
-nsIRDFResource* nsABCardDataSource::kNC_ListName;
-nsIRDFResource* nsABCardDataSource::kNC_Email;
-nsIRDFResource* nsABCardDataSource::kNC_City;
-nsIRDFResource* nsABCardDataSource::kNC_Organization;
+nsIRDFResource* nsABCardDataSource::kNC_DisplayName;
+nsIRDFResource* nsABCardDataSource::kNC_PrimaryEmail;
 nsIRDFResource* nsABCardDataSource::kNC_WorkPhone;
+nsIRDFResource* nsABCardDataSource::kNC_City;
 nsIRDFResource* nsABCardDataSource::kNC_Nickname;
 
 // commands
@@ -66,12 +64,10 @@ nsIRDFResource* nsABCardDataSource::kNC_NewCard;
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonName);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, ListName);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Email);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, City);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Organization);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, DisplayName);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PrimaryEmail);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, WorkPhone);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, City);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Nickname);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
@@ -164,11 +160,9 @@ nsABCardDataSource::~nsABCardDataSource (void)
 
   nsrefcnt refcnt;
 
-  NS_RELEASE2(kNC_PersonName, refcnt);
-  NS_RELEASE2(kNC_ListName, refcnt);
-  NS_RELEASE2(kNC_Email, refcnt);
+  NS_RELEASE2(kNC_DisplayName, refcnt);
+  NS_RELEASE2(kNC_PrimaryEmail, refcnt);
   NS_RELEASE2(kNC_City, refcnt);
-  NS_RELEASE2(kNC_Organization, refcnt);
   NS_RELEASE2(kNC_WorkPhone, refcnt);
   NS_RELEASE2(kNC_Nickname, refcnt);
 
@@ -191,13 +185,11 @@ nsresult nsABCardDataSource::Init()
 
   mRDFService->RegisterDataSource(this, PR_FALSE);
 
-  if (! kNC_PersonName) {
+  if (! kNC_DisplayName) {
    
-    mRDFService->GetResource(kURINC_PersonName,	&kNC_PersonName);
-    mRDFService->GetResource(kURINC_ListName,	&kNC_ListName);
-    mRDFService->GetResource(kURINC_Email,		&kNC_Email);
+    mRDFService->GetResource(kURINC_DisplayName, &kNC_DisplayName);
+    mRDFService->GetResource(kURINC_PrimaryEmail, &kNC_PrimaryEmail);
     mRDFService->GetResource(kURINC_City,		&kNC_City);
-    mRDFService->GetResource(kURINC_Organization, &kNC_Organization);
     mRDFService->GetResource(kURINC_WorkPhone,	&kNC_WorkPhone);
     mRDFService->GetResource(kURINC_Nickname,	&kNC_Nickname);
 
@@ -294,9 +286,8 @@ NS_IMETHODIMP nsABCardDataSource::GetTargets(nsIRDFResource* source,
   nsCOMPtr<nsIAbCard> card(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && card)
   { 
-	if((kNC_PersonName == property) || (kNC_ListName == property) || 
-		    (kNC_Email == property) || (kNC_City == property) || 
-		    (kNC_Organization == property) || (kNC_WorkPhone == property) || 
+	if((kNC_DisplayName == property) || (kNC_PrimaryEmail == property) || 
+			(kNC_City == property) || (kNC_WorkPhone == property) || 
 		    (kNC_Nickname == property)) 
     { 
       nsSingletonEnumerator* cursor =
@@ -466,11 +457,9 @@ nsABCardDataSource::getCardArcLabelsOut(nsIAbCard *card,
 	if(NS_FAILED(rv))
 		return rv;
 
-	(*arcs)->AppendElement(kNC_PersonName);
-	(*arcs)->AppendElement(kNC_ListName);
-	(*arcs)->AppendElement(kNC_Email);
+	(*arcs)->AppendElement(kNC_DisplayName);
+	(*arcs)->AppendElement(kNC_PrimaryEmail);
 	(*arcs)->AppendElement(kNC_City);
-	(*arcs)->AppendElement(kNC_Organization);
 	(*arcs)->AppendElement(kNC_WorkPhone);
 	(*arcs)->AppendElement(kNC_Nickname);
 	return NS_OK;
@@ -620,7 +609,7 @@ NS_IMETHODIMP nsABCardDataSource::OnItemPropertyChanged(nsISupports *item, const
 
 	if(NS_SUCCEEDED(rv))
 	{
-		if(PL_strcmp("PersonName", property) == 0)
+		if(PL_strcmp("DisplayName", property) == 0)
 		{
 			NotifyPropertyChanged(resource, kNC_DirName, oldValue, newValue);
 		}
@@ -649,27 +638,26 @@ nsresult nsABCardDataSource::createCardNode(nsIAbCard* card,
                                           nsIRDFResource* property,
                                           nsIRDFNode** target)
 {
-  char *name;
+  char *name = nsnull;
   nsresult rv = NS_RDF_NO_VALUE;
   
-  if ((kNC_PersonName == property))
-	rv = card->GetPersonName(&name);
-  else if ((kNC_ListName == property))
-    rv = card->GetListName(&name);
-  else if ((kNC_Email == property))
-    rv = card->GetEmail(&name);
+  if ((kNC_DisplayName == property))
+	rv = card->GetDisplayName(&name);
+  else if ((kNC_PrimaryEmail == property))
+    rv = card->GetPrimaryEmail(&name);
   else if ((kNC_City == property))
-    rv = card->GetCity(&name);
-  else if ((kNC_Organization == property))
-    rv = card->GetOrganization(&name);
+    rv = card->GetWorkCity(&name);
   else if ((kNC_WorkPhone == property))
     rv = card->GetWorkPhone(&name);
   else if ((kNC_Nickname == property))
     rv = card->GetNickName(&name);
   if (NS_FAILED(rv)) return rv;
-  nsString nameString(name);
-  createNode(nameString, target);
-  delete[] name;
+  if (name)
+  {
+	  nsString nameString(name);
+	  createNode(nameString, target);
+	  delete[] name;
+  }
   return NS_OK;
 }
 

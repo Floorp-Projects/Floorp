@@ -62,7 +62,7 @@
 				<html:div class="CardViewHeading" id="cvhWork">Work</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" id="cvJobTitle">*</html:div>
-				<html:div class="CardViewText" id="cvOrganization">*</html:div>
+				<html:div class="CardViewText" id="cvComapny">*</html:div>
 				<html:div class="CardViewText" id="cvWorkAddress">*</html:div>
 				<html:div class="CardViewText" id="cvWorkCityStZip">*</html:div>
 			</box>

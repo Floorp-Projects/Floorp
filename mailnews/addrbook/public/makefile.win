@@ -26,6 +26,7 @@ XPIDLSRCS =						 \
 			.\nsIAddrDBAnnouncer.idl	\
 			.\nsIAddrDBListener.idl		\
 			.\nsIAddrDatabase.idl		\
+			.\nsIAddressBook.idl		\
 			$(NULL)
 
 

@@ -152,12 +152,10 @@ protected:
 	static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 
-	static nsIRDFResource* kNC_PersonName;
-	static nsIRDFResource* kNC_ListName;
-	static nsIRDFResource* kNC_Email;
-	static nsIRDFResource* kNC_City;
-	static nsIRDFResource* kNC_Organization;
+	static nsIRDFResource* kNC_DisplayName;
+	static nsIRDFResource* kNC_PrimaryEmail;
 	static nsIRDFResource* kNC_WorkPhone;
+	static nsIRDFResource* kNC_City;
 	static nsIRDFResource* kNC_Nickname;
 
 	// commands

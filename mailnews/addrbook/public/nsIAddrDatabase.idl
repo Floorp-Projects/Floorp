@@ -18,8 +18,9 @@
 
 #include "nsIAddrDBAnnouncer.idl"
 #include "nsIAbCard.idl"
+#include "nsIAbDirectory.idl"
 
-[ref] native nsFileSpec(nsFileSpec);
+[ptr] native nsFileSpec(nsFileSpec);
 [ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
 [ptr] native nsIMdbEnv(nsIMdbEnv);
 
@@ -32,15 +33,17 @@
 [scriptable, uuid(A4186D8B-1DD0-11d3-A303-001083003D0C)] 
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
+	attribute nsFileSpec dbPath;
+
 	void Open(in nsFileSpec folderName, in boolean create, 
 			  out nsIAddrDatabase pMessageDB, in boolean upgrading);
 	void Close(in boolean forceCommit);
-	void OpenMDB(in string dbName, in boolean create);
+	void OpenMDB(in nsFileSpec dbName, in boolean create);
 	void CloseMDB(in boolean commit);
 
 	void Commit(in unsigned long commitType);
 	void ForceClosed();
 
 	void CreateNewCardAndAddToDB(in nsIAbCard newCard, in boolean benotify);
-	void EnumerateCards(out nsIEnumerator result);
+	void EnumerateCards(in nsIAbDirectory directory, out nsIEnumerator result);
 };

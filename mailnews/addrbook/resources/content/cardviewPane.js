@@ -40,7 +40,7 @@ function OnLoadAddressBook()
 	// Work section
 	cvData.cvhWork			= doc.getElementById("cvhWork");
 	cvData.cvJobTitle		= doc.getElementById("cvJobTitle");
-	cvData.cvOrganization	= doc.getElementById("cvOrganization");
+	cvData.cvCompany		= doc.getElementById("cvCompany");
 	cvData.cvWorkAddress	= doc.getElementById("cvWorkAddress");
 	cvData.cvWorkCityStZip	= doc.getElementById("cvWorkCityStZip");
 }
@@ -51,7 +51,7 @@ function DisplayCardViewPane(abNode)
 	var cardResource = parent.parent.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
-	var name = card.personName;// FIX ME - this should be displayName
+	var name = card.DisplayName;// FIX ME - this should be displayName
 	
 	var data = parent.parent.cvData;
 	var visible;
@@ -66,9 +66,9 @@ function DisplayCardViewPane(abNode)
 	
 	/* Name section */
 	cvSetNode(data.cvhName, name);
-	cvSetNode(data.cvNickname, "\"" + card.nickName + "\"");
-	cvSetNode(data.cvEmail1, card.primaryEmail);
-	cvSetNode(data.cvEmail2, card.secondEmail);
+	cvSetNode(data.cvNickname, "\"" + card.NickName + "\"");
+	cvSetNode(data.cvEmail1, card.PrimaryEmail);
+	cvSetNode(data.cvEmail2, card.SecondEmail);
 	/* Home section */
 	visible = cvSetNode(data.cvHomeAddress, "not yet supported");
 	visible = cvSetNode(data.cvHomeCityStZip, "not yet supported") || visible;
@@ -77,15 +77,15 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetNode(data.cvNotes, "not yet supported");
 	cvSetVisible(data.cvhOther, visible);
 	/* Phone section */
-	visible = cvSetPhone(data.cvPhWork, "Work: ", card.workPhone);
-	visible = cvSetPhone(data.cvPhHome, "Home: ", card.homePhone) || visible;
-	visible = cvSetPhone(data.cvPhFax, "Fax: ", card.faxNumber) || visible;
-	visible = cvSetPhone(data.cvPhCellular, "Cellular: ", card.cellularNumber) || visible;
-	visible = cvSetPhone(data.cvPhPager, "Pager: ", card.pagerNumber) || visible;
+	visible = cvSetPhone(data.cvPhWork, "Work: ", card.WorkPhone);
+	visible = cvSetPhone(data.cvPhHome, "Home: ", card.HomePhone) || visible;
+	visible = cvSetPhone(data.cvPhFax, "Fax: ", card.FaxNumber) || visible;
+	visible = cvSetPhone(data.cvPhCellular, "Cellular: ", card.CellularNumber) || visible;
+	visible = cvSetPhone(data.cvPhPager, "Pager: ", card.PagerNumber) || visible;
 	cvSetVisible(data.cvhPhone, visible);
 	/* Work section */
 	visible = cvSetNode(data.cvJobTitle, "not yet supported");
-	visible = cvSetNode(data.cvOrganization, card.organization) || visible;
+	visible = cvSetNode(data.cvCompany, card.Company) || visible;
 	visible = cvSetNode(data.cvWorkAddress, "not yet supported") || visible;
 	visible = cvSetNode(data.cvWorkCityStZip, "not yet supported") || visible;
 	cvSetVisible(data.cvhWork, visible);
@@ -122,7 +122,7 @@ function ClearCardViewPane()
 	// Work section
 	cvSetVisible(data.cvhWork, false);
 	cvSetVisible(data.cvJobTitle, false);
-	cvSetVisible(data.cvOrganization, false);
+	cvSetVisible(data.cvCompany, false);
 	cvSetVisible(data.cvWorkAddress, false);
 	cvSetVisible(data.cvWorkCityStZip, false);
 }

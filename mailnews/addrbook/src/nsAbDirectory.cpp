@@ -165,8 +165,8 @@ nsABDirectory::GetChildNodes(nsIEnumerator* *result)
     if (!PL_strcmp(mURI, "abdirectory:/") && GetDirList())
 	{
 		PRInt32 count = GetDirList()->Count();
-		/* check :set count = 1 for personal addressbook only for now*/
-		/* count = 1; */
+		/* check: set count = 1 for personal addressbook only for now*/
+		count = 1;
 		PRInt32 i;
 		for (i = 0; i < count; i++)
 		{
@@ -213,7 +213,7 @@ nsresult nsABDirectory::AddSubDirectory(nsAutoString name, nsIAbDirectory **chil
 
 	mSubDirectories->AppendElement(directory);
 	*childDir = directory;
-	NS_ADDREF(*childDir);
+	NS_IF_ADDREF(*childDir);
 	 
     (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
@@ -238,17 +238,15 @@ nsresult nsABDirectory::GetAbDatabase()
 		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
 		if (NS_FAILED(rv))
 			return rv;
-		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 		
 		nsFileSpec dbPath;
 		userdir->GetFileSpec(&dbPath);
 		dbPath += "abook.mab";
 
-		nsCOMPtr<nsIAddrDatabase> addrDBFactory;
-		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsCOMTypeInfo<nsIAddrDatabase>::GetIID(), 
-												(void **) getter_AddRefs(addrDBFactory));
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDB, &rv);
+
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			openAddrDB = addrDBFactory->Open(&dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
 //		if (mDatabase)
 //			mDatabase->AddListener(this);
@@ -258,45 +256,16 @@ nsresult nsABDirectory::GetAbDatabase()
 
 NS_IMETHODIMP nsABDirectory::GetChildCards(nsIEnumerator* *result)
 {
-	if (!mCardInitialized) 
-	{
-		if (!PL_strcmp(mURI, "abdirectory://Pab1") ||
-			!PL_strcmp(mURI, "abdirectory://Pab2") ||
-			!PL_strcmp(mURI, "abdirectory://Pab3"))
-		{
-			PRInt32 j;
-			for (j = 0; j < 2; j++)
-			{   
-				nsAutoString currentCardStr;
-				if (!PL_strcmp(mURI, "abdirectory://Pab1"))
-                    currentCardStr.Append("abcard://Pab1/Card");	
-				if (!PL_strcmp(mURI, "abdirectory://Pab2"))
-                    currentCardStr.Append("abcard://Pab2/Card");	
-				if (!PL_strcmp(mURI, "abdirectory://Pab3"))
-                    currentCardStr.Append("abcard://Pab3/Card");	
-				nsCOMPtr<nsIAbCard> childCard;
-				if (j == 0) currentCardStr.Append('1');
-				if (j == 1) currentCardStr.Append('2');
-				AddChildCards(currentCardStr, getter_AddRefs(childCard));
-			}
-		}
-		mCardInitialized = PR_TRUE;
-	}
-//	return mSubCards->Enumerate(result);
-	return mSubDirectories->Enumerate(result);
-
-#ifdef HOOK_UP_DB
 	nsresult rv = GetAbDatabase();
 
 	if (NS_SUCCEEDED(rv) && mDatabase)
 	{
-		rv = mDatabase->EnumerateCards(result);
+		rv = mDatabase->EnumerateCards(this, result);
 	}
 	return rv;
-#endif
 }
 
-nsresult nsABDirectory::AddChildCards(nsAutoString name, nsIAbCard **childCard)
+NS_IMETHODIMP nsABDirectory::AddChildCards(const char *uriName, nsIAbCard **childCard)
 {
 	if(!childCard)
 		return NS_ERROR_NULL_POINTER;
@@ -307,7 +276,7 @@ nsresult nsABDirectory::AddChildCards(nsAutoString name, nsIAbCard **childCard)
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString uri(name);
+	nsAutoString uri(uriName);
 	char* uriStr = uri.ToNewCString();
 	if (uriStr == nsnull) 
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -390,8 +359,8 @@ NS_IMETHODIMP nsABDirectory::GetName(char **name)
 	{
 		PRInt32 count = GetDirList()->Count();
 		PRInt32 i;
-		/* check :set count = 1 for personal addressbook only for now*/
-		/* count = 1; */
+		/* check: set count = 1 for personal addressbook only for now*/
+		count = 1;
 		for (i = 0; i < count; i++)
 		{
 			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);

@@ -25,19 +25,24 @@
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsAbCard.h"
-#include "prmem.h"
 
+#include "prmem.h"
+#include "prprf.h"
+
+#include "nsIServiceManager.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
 #include "nsICollation.h"
 
 #include "nsCollationCID.h"
+#include "nsMorkCID.h"
 #include "nsIPref.h"
+#include "nsIMdbFactoryFactory.h"
 
-extern "C" nsIMdbFactory* MakeMdbFactory(); 
+static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
-const int kAddressBookDBVersion = 1;
+const PRInt32 kAddressBookDBVersion = 1;
 
 enum nsAddrDBCommitType {
   kSmallCommit,
@@ -72,20 +77,46 @@ const char *kCategoryTableKind = "ns:addrbk:db:table:kind:category";
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
 
-const char *kFirstNameColumnToken = "firstname";
-const char *kLastNameColumnToken = "lastname";
-const char *kDisplayNameColumnToken = "displayname";
-const char *kPriEmailColumnToken = "primaryemail";
-const char *k2ndEmailColumnToken = "secondemail";
-const char *kWorkPhoneColumnToken = "workphone";
-const char *kHomePhoneColumnToken = "homephone";
-const char *kFaxColumnToken = "faxnumber";
-const char *kPagerColumnToken = "pagernumber";
-const char *kCellularColumnToken = "cellularnumber";
-const char *kWorkCityColumnToken = "workcity";
-const char *kOrganizationColumnToken = "organization";
-const char *kNicknameColumnToken = "nickname";
-const char *kAddressCharSetColumnToken = "addrCharSet";
+const char *kFirstNameColumn = "FirstName";
+const char *kLastNameColumn = "LastName";
+const char *kDisplayNameColumn = "DisplayName";
+const char *kNicknameColumn = "NickName";
+const char *kPriEmailColumn = "PrimaryEmail";
+const char *k2ndEmailColumn = "SecondEmail";
+const char *kPlainTextColumn = "SendPlainText";
+const char *kWorkPhoneColumn = "WorkPhone";
+const char *kHomePhoneColumn = "HomePhone";
+const char *kFaxColumn = "FaxNumber";
+const char *kPagerColumn = "PagerNumber";
+const char *kCellularColumn = "CellularNumber";
+const char *kHomeAddressColumn = "HomeAddress";
+const char *kHomeAddress2Column = "HomeAddress2";
+const char *kHomeCityColumn = "HomeCity";
+const char *kHomeStateColumn = "HomeState";
+const char *kHomeZipCodeColumn = "HomeZipCode";
+const char *kHomeCountryColumn = "HomeCountry";
+const char *kWorkAddressColumn = "WorkAddress";
+const char *kWorkAddress2Column = "WorkAddress2";
+const char *kWorkCityColumn = "WorkCity";
+const char *kWorkStateColumn = "WorkState";
+const char *kWorkZipCodeColumn = "WorkZipCode";
+const char *kWorkCountryColumn = "WorkCountry";
+const char *kJobTitleColumn = "JobTitle";
+const char *kDepartmentColumn = "Department";
+const char *kCompanyColumn = "Company";
+const char *kWebPage1Column = "WebPage1";
+const char *kWebPage2Column = "WebPage2";
+const char *kBirthYearColumn = "BirthYear";
+const char *kBirthMonthColumn = "BirthMonth";
+const char *kBirthDayColumn = "BirthDay";
+const char *kCustom1Column = "Custom1";
+const char *kCustom2Column = "Custom2";
+const char *kCustom3Column = "Custom3";
+const char *kCustom4Column = "Custom4";
+const char *kNotesColumn = "Notes";
+
+const char *kAddressCharSetColumn = "AddrCharSet";
+
 
 struct mdbOid gAddressBookTableOID;
 struct mdbOid gMailListTableOID;
@@ -102,20 +133,42 @@ nsAddrDatabase::nsAddrDatabase()
       m_historyTableKind(0),
       m_mailListTableKind(0),
       m_categoryTableKind(0),
-      m_firstNameColumnToken(0),
-      m_lastNameColumnToken(0),
-      m_displayNameColumnToken(0),
-      m_priEmailColumnToken(0),
+      m_FirstNameColumnToken(0),
+      m_LastNameColumnToken(0),
+      m_DisplayNameColumnToken(0),
+      m_NickNameColumnToken(0),
+      m_PriEmailColumnToken(0),
       m_2ndEmailColumnToken(0),
-      m_workPhoneColumnToken(0),
-      m_homePhoneColumnToken(0),
-      m_faxColumnToken(0),
-      m_pagerColumnToken(0),
-      m_cellularColumnToken(0),
-      m_workCityColumnToken(0),
-      m_organizationColumnToken(0),
-      m_nicknameColumnToken(0),
-      m_addressCharSetColumnToken(0)
+      m_WorkPhoneColumnToken(0),
+      m_HomePhoneColumnToken(0),
+      m_FaxColumnToken(0),
+      m_PagerColumnToken(0),
+      m_CellularColumnToken(0),
+      m_HomeAddressColumnToken(0),
+      m_HomeAddress2ColumnToken(0),
+      m_HomeCityColumnToken(0),
+      m_HomeStateColumnToken(0),
+      m_HomeZipCodeColumnToken(0),
+      m_HomeCountryColumnToken(0),
+      m_WorkAddressColumnToken(0),
+      m_WorkAddress2ColumnToken(0),
+      m_WorkCityColumnToken(0),
+      m_WorkStateColumnToken(0),
+      m_WorkZipCodeColumnToken(0),
+      m_WorkCountryColumnToken(0),
+      m_WebPage1ColumnToken(0),
+      m_WebPage2ColumnToken(0),
+      m_BirthYearColumnToken(0),
+      m_BirthMonthColumnToken(0),
+      m_BirthDayColumnToken(0),
+      m_Custom1ColumnToken(0),
+      m_Custom2ColumnToken(0),
+      m_Custom3ColumnToken(0),
+      m_Custom4ColumnToken(0),
+      m_NotesColumnToken(0),
+      m_PlainTextColumnToken(0),
+      m_AddressCharSetColumnToken(0),
+	  m_dbDirectory(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -129,6 +182,8 @@ nsAddrDatabase::~nsAddrDatabase()
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
         delete m_ChangeListeners;
     }
+
+	CleanupCache();
 }
 
 NS_IMPL_ADDREF(nsAddrDatabase)
@@ -267,7 +322,7 @@ nsAddrDatabase::CleanupCache()
 //----------------------------------------------------------------------
 // FindInCache - this addrefs the db it finds.
 //----------------------------------------------------------------------
-nsAddrDatabase* nsAddrDatabase::FindInCache(nsFileSpec &dbName)
+nsAddrDatabase* nsAddrDatabase::FindInCache(nsFileSpec *dbName)
 {
 	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
 	{
@@ -296,9 +351,9 @@ PRInt32 nsAddrDatabase::FindInCache(nsAddrDatabase* pAddrDB)
 	return(-1);
 }
 
-PRBool nsAddrDatabase::MatchDbName(nsFileSpec &dbName)	// returns PR_TRUE if they match
+PRBool nsAddrDatabase::MatchDbName(nsFileSpec* dbName)	// returns PR_TRUE if they match
 {
-	return (m_dbName == dbName); 
+	return (m_dbName == (*dbName)); 
 }
 
 //----------------------------------------------------------------------
@@ -315,10 +370,11 @@ void nsAddrDatabase::RemoveFromCache(nsAddrDatabase* pAddrDB)
 
 nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
 {
-	static nsIMdbFactory *gMDBFactory = NULL;
+	static nsIMdbFactory *gMDBFactory = nsnull;
 	if (!gMDBFactory)
 	{
-//		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
+		nsresult rv;
+        rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
 	}
 	return gMDBFactory;
 }
@@ -428,8 +484,21 @@ void nsAddrDatabase::NativeToUnix(char*& ioPath)
 }
 #endif /* XP_MAC */
 
+NS_IMETHODIMP nsAddrDatabase::GetDbPath(nsFileSpec * *aDbPath)
+{
+	nsFileSpec  *filePath = new nsFileSpec();
+	*aDbPath = filePath;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
+{
+	m_dbName = (*aDbPath);
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsAddrDatabase::Open
-(nsFileSpec &pabName, PRBool create, nsIAddrDatabase** pAddrDB, PRBool upgrading)
+(nsFileSpec* pabName, PRBool create, nsIAddrDatabase** pAddrDB, PRBool upgrading)
 {
 	nsAddrDatabase	        *pAddressBookDB;
 	nsresult                err = NS_OK;
@@ -449,15 +518,16 @@ NS_IMETHODIMP nsAddrDatabase::Open
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-//	pAddressBookDB->m_dbName = new nsFileSpec(pabName);
 	pAddressBookDB->AddRef();
 
-	err = pAddressBookDB->OpenMDB((const char *) pabName, create);
+	err = pAddressBookDB->OpenMDB(pabName, create);
 	if (NS_SUCCEEDED(err)) 
 	{
+		pAddressBookDB->SetDbPath(pabName);
 		*pAddrDB = pAddressBookDB;
 		if (pAddressBookDB)  
 			GetDBCache()->AppendElement(pAddressBookDB);
+		NS_IF_ADDREF(*pAddrDB);
 	}
 	else 
 	{
@@ -473,7 +543,7 @@ NS_IMETHODIMP nsAddrDatabase::Open
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
-NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
+NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 {
 	nsresult ret = NS_OK;
 	nsIMdbFactory *myMDBFactory = GetMDBFactory();
@@ -483,19 +553,19 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 		if (NS_SUCCEEDED(ret))
 		{
 			nsIMdbThumb *thumb;
-			nsFileSpec dbPath(dbName);
-			char	*nativeFileName = nsCRT::strdup(dbName);
+			const char *pFilename = dbName->GetCString(); /* do not free */
+			char	*nativeFileName = PL_strdup(pFilename);
 
 			if (!nativeFileName)
 				return NS_ERROR_OUT_OF_MEMORY;
 
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
-			m_dbName = nsCRT::strdup(dbName);
+
 #if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
-			if (!dbPath.Exists()) 
+			if (!dbName->Exists()) 
 				ret = NS_ERROR_FAILURE;  // check: use the right error code later
 			else
 			{
@@ -511,11 +581,15 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 				first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 
 				{
-					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
-					PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
-					first512Bytes.mYarn_Fill = bytesRead;
-					dbStream->close();
-					delete dbStream;
+					nsFileSpec ioStream(dbName->GetCString());
+					nsIOFileStream *dbStream = new nsIOFileStream(ioStream);
+					if (dbStream)
+					{
+						PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
+						first512Bytes.mYarn_Fill = bytesRead;
+						dbStream->close();
+						delete dbStream;
+					}
 				}
 				ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, nativeFileName, // the file to investigate
 					&first512Bytes,	&canOpen, &outFormatVersion);
@@ -532,6 +606,9 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 				else
 					ret = NS_ERROR_FAILURE;  //check: use the right error code
 			}
+
+			PR_FREEIF(nativeFileName);
+
 			if (NS_SUCCEEDED(ret) && thumb)
 			{
 				mdb_count outTotal;    // total somethings to do in operation
@@ -567,11 +644,10 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 				inOpenPolicy.mOpenPolicy_MinMemory = 0;
 				inOpenPolicy.mOpenPolicy_MaxLazy = 0;
 
-				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, &inOpenPolicy, &m_mdbStore);
+				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName->GetCString(), &inOpenPolicy, &m_mdbStore);
 				if (ret == NS_OK)
 					ret = InitNewDB();
 			}
-			nsCRT::free(nativeFileName);
 		}
 	}
 	return ret;
@@ -738,20 +814,44 @@ nsresult nsAddrDatabase::InitMDBInfo()
 		err	= GetStore()->StringToToken(GetEnv(), kCardRowScope, &m_cardRowScopeToken); 
 		if (NS_SUCCEEDED(err))
 		{
-			GetStore()->StringToToken(GetEnv(),  kFirstNameColumnToken, &m_firstNameColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kLastNameColumnToken, &m_lastNameColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kDisplayNameColumnToken, &m_displayNameColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kPriEmailColumnToken, &m_priEmailColumnToken);
-			GetStore()->StringToToken(GetEnv(),  k2ndEmailColumnToken, &m_2ndEmailColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kWorkPhoneColumnToken, &m_workPhoneColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kHomePhoneColumnToken, &m_homePhoneColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kFaxColumnToken, &m_faxColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kPagerColumnToken, &m_pagerColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kCellularColumnToken, &m_cellularColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kWorkCityColumnToken, &m_workCityColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kOrganizationColumnToken, &m_organizationColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kNicknameColumnToken, &m_nicknameColumnToken);
-			GetStore()->StringToToken(GetEnv(),  kAddressCharSetColumnToken, &m_addressCharSetColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kFirstNameColumn, &m_FirstNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kLastNameColumn, &m_LastNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kDisplayNameColumn, &m_DisplayNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kNicknameColumn, &m_NickNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kPriEmailColumn, &m_PriEmailColumnToken);
+			GetStore()->StringToToken(GetEnv(),  k2ndEmailColumn, &m_2ndEmailColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkPhoneColumn, &m_WorkPhoneColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomePhoneColumn, &m_HomePhoneColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kFaxColumn, &m_FaxColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kPagerColumn, &m_PagerColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCellularColumn, &m_CellularColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeAddressColumn, &m_HomeAddressColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeAddress2Column, &m_HomeAddress2ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeCityColumn, &m_HomeCityColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeStateColumn, &m_HomeStateColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeZipCodeColumn, &m_HomeZipCodeColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kHomeCountryColumn, &m_HomeCountryColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkAddressColumn, &m_WorkAddressColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkAddress2Column, &m_WorkAddress2ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkCityColumn, &m_WorkCityColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkStateColumn, &m_WorkStateColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkZipCodeColumn, &m_WorkZipCodeColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWorkCountryColumn, &m_WorkCountryColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kJobTitleColumn, &m_JobTitleColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kDepartmentColumn, &m_DepartmentColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCompanyColumn, &m_CompanyColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWebPage1Column, &m_WebPage1ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kWebPage2Column, &m_WebPage2ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kBirthYearColumn, &m_BirthYearColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kBirthMonthColumn, &m_BirthMonthColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kBirthDayColumn, &m_BirthDayColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCustom1Column, &m_Custom1ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCustom2Column, &m_Custom2ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCustom3Column, &m_Custom3ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kCustom4Column, &m_Custom4ColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kNotesColumn, &m_NotesColumnToken);
+
+			GetStore()->StringToToken(GetEnv(),  kAddressCharSetColumn, &m_AddressCharSetColumnToken);
 			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_pabTableKind); 
 			if (NS_SUCCEEDED(err))
 			{
@@ -795,19 +895,23 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 		char* pStr = nsnull;
 		newCard->GetFirstName(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_firstNameColumnToken, pStr);
+			AddCardColumn(cardRow, m_FirstNameColumnToken, pStr);
 
 		newCard->GetLastName(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_lastNameColumnToken, pStr);
+			AddCardColumn(cardRow, m_LastNameColumnToken, pStr);
 
 		newCard->GetDisplayName(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_displayNameColumnToken, pStr);
+			AddCardColumn(cardRow, m_DisplayNameColumnToken, pStr);
+
+		newCard->GetNickName(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_NickNameColumnToken, pStr);
 
 		newCard->GetPrimaryEmail(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_priEmailColumnToken, pStr);
+			AddCardColumn(cardRow, m_PriEmailColumnToken, pStr);
 
 		newCard->GetSecondEmail(&pStr);
 		if (pStr)
@@ -815,23 +919,124 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 
 		newCard->GetWorkPhone(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_workPhoneColumnToken, pStr);
+			AddCardColumn(cardRow, m_WorkPhoneColumnToken, pStr);
 
 		newCard->GetHomePhone(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_homePhoneColumnToken, pStr);
+			AddCardColumn(cardRow, m_HomePhoneColumnToken, pStr);
 
 		newCard->GetFaxNumber(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_faxColumnToken, pStr);
+			AddCardColumn(cardRow, m_FaxColumnToken, pStr);
 
 		newCard->GetPagerNumber(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_pagerColumnToken, pStr);
+			AddCardColumn(cardRow, m_PagerColumnToken, pStr);
 
 		newCard->GetCellularNumber(&pStr);
 		if (pStr)
-			AddCardColumn(cardRow, m_cellularColumnToken, pStr);
+			AddCardColumn(cardRow, m_CellularColumnToken, pStr);
+
+		newCard->GetHomeAddress(&pStr);
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeAddressColumnToken, pStr);
+
+		newCard->GetHomeAddress2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeAddress2ColumnToken, pStr);
+
+		newCard->GetHomeCity(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeCityColumnToken, pStr);
+
+		newCard->GetHomeState(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeStateColumnToken, pStr);
+
+		newCard->GetHomeZipCode(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeZipCodeColumnToken, pStr);
+
+		newCard->GetHomeCountry(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_HomeCountryColumnToken, pStr);
+
+		newCard->GetWorkAddress(&pStr);  
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkAddressColumnToken, pStr);
+
+		newCard->GetWorkAddress2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkAddress2ColumnToken, pStr);
+
+		newCard->GetWorkCity(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkCityColumnToken, pStr);
+
+		newCard->GetWorkState(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkStateColumnToken, pStr);
+
+		newCard->GetWorkZipCode(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkZipCodeColumnToken, pStr);
+
+		newCard->GetWorkCountry(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WorkCountryColumnToken, pStr);
+
+		newCard->GetJobTitle(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_JobTitleColumnToken, pStr);
+
+		newCard->GetDepartment(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_DepartmentColumnToken, pStr);
+
+		newCard->GetCompany(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_CompanyColumnToken, pStr);
+
+		newCard->GetWebPage1(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WebPage1ColumnToken, pStr);
+
+		newCard->GetWebPage2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_WebPage2ColumnToken, pStr);
+
+		newCard->GetBirthYear(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthYearColumnToken, pStr);
+
+		newCard->GetBirthMonth(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthMonthColumnToken, pStr);
+
+		newCard->GetBirthDay(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_BirthDayColumnToken, pStr);
+
+		newCard->GetCustom1(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom1ColumnToken, pStr);
+
+		newCard->GetCustom2(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom2ColumnToken, pStr);
+
+		newCard->GetCustom3(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom3ColumnToken, pStr);
+
+		newCard->GetCustom4(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_Custom4ColumnToken, pStr);
+
+		newCard->GetNotes(&pStr); 
+		if (pStr)
+			AddCardColumn(cardRow, m_NotesColumnToken, pStr);
+
 
 		err = m_mdbPabTable->AddRow(GetEnv(), cardRow);
 	}
@@ -860,6 +1065,324 @@ mdb_err nsAddrDatabase::AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, c
 	return err;
 }
 
+nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString &str)
+{
+	nsresult	err = NS_OK;
+	nsIMdbCell	*cardCell;
+
+	if (cardRow)	
+	{
+		err = cardRow->GetCell(GetEnv(), outToken, &cardCell);
+		if (err == NS_OK && cardCell)
+		{
+			struct mdbYarn yarn;
+			cardCell->AliasYarn(GetEnv(), &yarn);
+			str.SetString((const char *) yarn.mYarn_Buf, yarn.mYarn_Fill);
+			cardCell->CutStrongRef(GetEnv()); // always release ref
+		}
+	}
+	return err;
+}
+
+nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
+{
+	nsresult	err = NS_OK;
+	if (!newCard || !cardRow)
+		return NS_ERROR_NULL_POINTER;
+
+    nsAutoString tempString;
+	char *tempCString = nsnull;
+
+	GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetFirstName(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetLastName(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetDisplayName(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetNickName(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetPrimaryEmail(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetSecondEmail(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkPhone(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomePhone(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_FaxColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetFaxNumber(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_PagerColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetPagerNumber(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_CellularColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCellularNumber(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeAddress(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeAddress2(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeCity(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeState(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeZipCode(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetHomeCountry(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkAddress(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkAddress2(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkCity(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkState(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkZipCode(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWorkCountry(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetJobTitle(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetDepartment(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCompany(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWebPage1(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetWebPage2(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetBirthYear(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetBirthMonth(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetBirthDay(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCustom1(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCustom2(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCustom3(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetCustom4(tempCString);
+		delete [] tempCString;
+	}
+
+	GetStringColumn(cardRow, m_NotesColumnToken, tempString);
+	if (tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		newCard->SetNotes(tempCString);
+		delete [] tempCString;
+	}
+
+	return err;
+}
 
 class nsAddrDBEnumerator : public nsIEnumerator {
 public:
@@ -932,10 +1455,10 @@ NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
 {
     if (mCurrentRow) 
 	{
-		nsCOMPtr<nsIAbCard> temp = mResultCard;
         nsresult rv;
         rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
         *aItem = mResultCard;
+		NS_IF_ADDREF(*aItem);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -948,9 +1471,10 @@ NS_IMETHODIMP nsAddrDBEnumerator::IsDone(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIEnumerator **result)
+NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
 {
     nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this, nsnull);
+	m_dbDirectory = directory;
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -970,7 +1494,7 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
     nsCOMPtr<nsIRDFResource> resource;
 
 	mdbOid outOid;
-	mdb_id rowID=-1;
+	mdb_id rowID=0;
 	mdb_id tableID = 1; /* check: temperarily set to 1 for now */
 	if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
         rowID = outOid.mOid_Id;
@@ -978,23 +1502,20 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 	if(NS_SUCCEEDED(rv))
 	{
 		cardURI = PR_smprintf("abcard://Pab%d/Card%d", tableID, rowID);
+		nsCOMPtr<nsIAbCard> personCard;
+		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
+		if (personCard)
+		{
+			GetCardFromDB(personCard, cardRow);
+			personCard->SetDbTableID(tableID);
+			personCard->SetDbRowID(rowID);
+		}
+		*result = personCard;
+		NS_IF_ADDREF(*result);
 	}
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = rdfService->GetResource(cardURI, getter_AddRefs(resource));
-    }
 	if(cardURI)
 		PR_smprintf_free(cardURI);
 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIAbCard> personCard(do_QueryInterface(resource, &rv));
-		if(NS_SUCCEEDED(rv))
-		{
-			*result = personCard;
-			NS_IF_ADDREF(*result);
-		}
-	}
 	return rv;
 }
 

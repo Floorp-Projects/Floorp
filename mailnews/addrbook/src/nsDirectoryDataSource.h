@@ -24,6 +24,7 @@
 #include "nsIAbCard.h"
 #include "nsDirPrefs.h"
 #include "nsIAbListener.h"
+#include "nsIAddrDatabase.h"
 #include "nsISupportsArray.h"
 
 static const char kAddrBookRootURI[] = "abdirectory:/";

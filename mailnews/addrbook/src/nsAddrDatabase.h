@@ -44,15 +44,17 @@ public:
 	//////////////////////////////////////////////////////////////////////////////
 	// nsIAddrDatabase methods:
 
-	NS_IMETHOD Open(nsFileSpec & folderName, PRBool create, nsIAddrDatabase **pAddrDB, PRBool upgrading);
+	NS_IMETHOD GetDbPath(nsFileSpec * *aDbPath);
+	NS_IMETHOD SetDbPath(nsFileSpec * aDbPath);
+	NS_IMETHOD Open(nsFileSpec * folderName, PRBool create, nsIAddrDatabase **pMessageDB, PRBool upgrading);
 	NS_IMETHOD Close(PRBool forceCommit);
-	NS_IMETHOD OpenMDB(const char *dbName, PRBool create);
+	NS_IMETHOD OpenMDB(nsFileSpec *dbName, PRBool create);
 	NS_IMETHOD CloseMDB(PRBool commit);
 	NS_IMETHOD Commit(PRUint32 commitType);
 	NS_IMETHOD ForceClosed();
 
 	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool benotify);
-	NS_IMETHOD EnumerateCards(nsIEnumerator **result);
+	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -67,7 +69,7 @@ public:
 	nsIMdbTableRowCursor *GetTableRowCursor();
 	nsIMdbTable		*GetPabTable() {return m_mdbPabTable;}
 
-	static nsAddrDatabase*	FindInCache(nsFileSpec &dbName);
+	static nsAddrDatabase*	FindInCache(nsFileSpec *dbName);
 
 	//helper function to fill in nsStrings from hdr row cell contents.
 	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
@@ -93,7 +95,7 @@ protected:
 						{GetDBCache()->AppendElement(pAddrDB);}
 	static void		RemoveFromCache(nsAddrDatabase* pAddrDB);
 	static PRInt32	FindInCache(nsAddrDatabase* pAddrDB);
-	PRBool			MatchDbName(nsFileSpec &dbName);	// returns TRUE if they match
+	PRBool			MatchDbName(nsFileSpec *dbName);	// returns TRUE if they match
 
 #if defined(XP_PC) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
 	static void		UnixToNative(char*& ioPath);
@@ -104,6 +106,8 @@ protected:
 
 
 	mdb_err AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
+	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString &str);
+	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
 
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
@@ -127,22 +131,50 @@ protected:
 	mdb_kind			m_historyTableKind;
 	mdb_kind			m_mailListTableKind;
 	mdb_kind			m_categoryTableKind;
-
 	mdb_scope			m_cardRowScopeToken;
-	mdb_token			m_firstNameColumnToken;
-	mdb_token			m_lastNameColumnToken;
-	mdb_token			m_displayNameColumnToken;
-	mdb_token			m_priEmailColumnToken;
+
+	mdb_token			m_FirstNameColumnToken;
+	mdb_token			m_LastNameColumnToken;
+	mdb_token			m_DisplayNameColumnToken;
+	mdb_token			m_NickNameColumnToken;
+	mdb_token			m_PriEmailColumnToken;
 	mdb_token			m_2ndEmailColumnToken;
-	mdb_token			m_workPhoneColumnToken;
-	mdb_token			m_homePhoneColumnToken;
-	mdb_token			m_faxColumnToken;
-	mdb_token			m_pagerColumnToken;
-	mdb_token			m_cellularColumnToken;
-	mdb_token			m_workCityColumnToken;
-	mdb_token			m_organizationColumnToken;
-	mdb_token			m_nicknameColumnToken;
-	mdb_token			m_addressCharSetColumnToken;
+	mdb_token			m_WorkPhoneColumnToken;
+	mdb_token			m_HomePhoneColumnToken;
+	mdb_token			m_FaxColumnToken;
+	mdb_token			m_PagerColumnToken;
+	mdb_token			m_CellularColumnToken;
+	mdb_token			m_HomeAddressColumnToken;
+	mdb_token			m_HomeAddress2ColumnToken;
+	mdb_token			m_HomeCityColumnToken;
+	mdb_token			m_HomeStateColumnToken;
+	mdb_token			m_HomeZipCodeColumnToken;
+	mdb_token			m_HomeCountryColumnToken;
+	mdb_token			m_WorkAddressColumnToken;
+	mdb_token			m_WorkAddress2ColumnToken;
+	mdb_token			m_WorkCityColumnToken;
+	mdb_token			m_WorkStateColumnToken;
+	mdb_token			m_WorkZipCodeColumnToken;
+	mdb_token			m_WorkCountryColumnToken;
+	mdb_token			m_JobTitleColumnToken;
+	mdb_token			m_DepartmentColumnToken;
+	mdb_token			m_CompanyColumnToken;
+	mdb_token			m_WebPage1ColumnToken;
+	mdb_token			m_WebPage2ColumnToken;
+	mdb_token			m_BirthYearColumnToken;
+	mdb_token			m_BirthMonthColumnToken;
+	mdb_token			m_BirthDayColumnToken;
+	mdb_token			m_Custom1ColumnToken;
+	mdb_token			m_Custom2ColumnToken;
+	mdb_token			m_Custom3ColumnToken;
+	mdb_token			m_Custom4ColumnToken;
+	mdb_token			m_NotesColumnToken;
+
+	mdb_token			m_PlainTextColumnToken;
+
+	mdb_token			m_AddressCharSetColumnToken;
+
+	nsIAbDirectory*		m_dbDirectory;
 };
 
 #endif

@@ -37,7 +37,7 @@ EXPORTS= \
 
 SHARED_LIBRARY_LIBS =	\
 	$(DIST)/lib/libaddrbook_s.a	\
-	$(DIST)/lib/libmsgmork_s.a		\
+	$(DIST)/lib/librdfutil_s.a	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\
@@ -47,7 +47,6 @@ EXTRA_DSO_LDOPTS = 	\
 	$(NSPR_LIBS)			\
 	-L$(DIST)/bin			\
 	-lxpcom				\
-	-lmsgbaseutil			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

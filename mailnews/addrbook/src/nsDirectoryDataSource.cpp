@@ -739,3 +739,4 @@ nsresult nsABDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 	}
 	return rv;
 }
+

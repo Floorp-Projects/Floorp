@@ -25,4 +25,6 @@ interface nsIAbDirectory : nsIAbBase {
     nsIEnumerator GetChildCards();
 
 	nsIAbCard CreateCardFromDirectory();
+
+	void AddChildCards(in string uriName, out nsIAbCard childCard);
 };

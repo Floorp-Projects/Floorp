@@ -2,25 +2,25 @@ function EditCardOKButton()
 {
 	dump("OK Hit\n");
 
-	var card = Components.classes["component://netscape/rdf/resource-factory?name=abcard"].createInstance();
-	card = card.QueryInterface(Components.interfaces.nsIAbCard);
-	dump("card = " + card + "\n");
+	var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+	cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+	dump("cardproperty = " + cardproperty + "\n");
 
-	if (card)
+	if (cardproperty)
 	{
-		card.SetCardValue('firstname', document.getElementById('firstname').value);
-		card.SetCardValue('lastname', document.getElementById('lastname').value);
-		card.SetCardValue('displayname', document.getElementById('displayname').value);
-		card.SetCardValue('nickname', document.getElementById('nickname').value);
-		card.SetCardValue('primaryemail', document.getElementById('primaryemail').value);
-		card.SetCardValue('secondemail', document.getElementById('secondemail').value);
-		card.SetCardValue('workphone', document.getElementById('workphone').value);
-		card.SetCardValue('homephone', document.getElementById('homephone').value);
-		card.SetCardValue('faxnumber', document.getElementById('faxnumber').value);
-		card.SetCardValue('pagernumber', document.getElementById('pagernumber').value);
-		card.SetCardValue('cellularnumber', document.getElementById('cellularnumber').value);
+		cardproperty.SetCardValue('FirstName', document.getElementById('FirstName').value);
+		cardproperty.SetCardValue('LastName', document.getElementById('LastName').value);
+		cardproperty.SetCardValue('DisplayName', document.getElementById('DisplayName').value);
+		cardproperty.SetCardValue('NickName', document.getElementById('NickName').value);
+		cardproperty.SetCardValue('PrimaryEmail', document.getElementById('PrimaryEmail').value);
+		cardproperty.SetCardValue('SecondEmail', document.getElementById('SecondEmail').value);
+		cardproperty.SetCardValue('WorkPhone', document.getElementById('WorkPhone').value);
+		cardproperty.SetCardValue('HomePhone', document.getElementById('HomePhone').value);
+		cardproperty.SetCardValue('FaxNumber', document.getElementById('FaxNumber').value);
+		cardproperty.SetCardValue('PagerNumber', document.getElementById('PagerNumber').value);
+		cardproperty.SetCardValue('CellularNumber', document.getElementById('CellularNumber').value);
 
-		card.AddCardToDatabase();
+		cardproperty.AddCardToDatabase();
 	}
 	top.window.close();
 }

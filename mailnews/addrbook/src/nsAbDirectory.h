@@ -25,7 +25,7 @@
 #ifndef nsABDirectory_h__
 #define nsABDirectory_h__
 
-#include "msgCore.h"
+//#include "msgCore.h"
 #include "nsIAbDirectory.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
 #include "nsIAbCard.h"
@@ -69,7 +69,7 @@ public:
     return mSubDirectories->Clear();
   }
 
-  // nsIABBase methods:
+  // nsIAbBase methods:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }
   NS_IMETHOD GetName(char **name);
   NS_IMETHOD SetName(char *name);
@@ -80,12 +80,12 @@ public:
   NS_IMETHOD AddAddrBookListener(nsIAbListener * listener);
   NS_IMETHOD RemoveAddrBookListener(nsIAbListener * listener);
 
-
   // nsIAbDirectory methods:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetChildCards(nsIEnumerator* *result);
   NS_IMETHOD CreateCardFromDirectory(nsIAbCard* *result);
+  NS_IMETHOD AddChildCards(const char *uriName, nsIAbCard **childCard);
 //  NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
 
 //  NS_IMETHOD GetPrettyName(char ** name);

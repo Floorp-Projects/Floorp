@@ -23,34 +23,46 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define NS_ABDIRECTORYDATASOURCE_CID					\
+#define NS_ADDRESSBOOK_CID							\
+{ /* {D60B84F2-2A8C-11d3-9E07-00A0C92B5F0D} */		\
+  0xd60b84f2, 0x2a8c, 0x11d3,						\
+	{ 0x9e, 0x7, 0x0, 0xa0, 0xc9, 0x2b, 0x5f, 0xd }	\
+};
+
+#define NS_ABDIRECTORYDATASOURCE_CID				\
 { /* 0A79186D-F754-11d2-A2DA-001083003D0C */		\
     0xa79186d, 0xf754, 0x11d2,						\
     {0xa2, 0xda, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
-#define NS_ABDIRECTORYRESOURCE_CID                    \
+#define NS_ABDIRECTORYRESOURCE_CID                  \
 { /* {6C21831D-FCC2-11d2-A2E2-001083003D0C}*/		\
 	0x6c21831d, 0xfcc2, 0x11d2,						\
 	{0xa2, 0xe2, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
-#define NS_ABCARDDATASOURCE_CID					\
+#define NS_ABCARDDATASOURCE_CID						\
 { /* 1920E486-0709-11d3-A2EC-001083003D0C */		\
     0x1920e486, 0x709, 0x11d3,						\
     {0xa2, 0xec, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
-#define NS_ABCARDRESOURCE_CID                    \
+#define NS_ABCARDRESOURCE_CID						\
 { /* {1920E487-0709-11d3-A2EC-001083003D0C}*/		\
 	0x1920e487, 0x709, 0x11d3,						\
 	{0xa2, 0xec, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
 }
 
-#define NS_ADDRESSBOOKDB_CID					\
+#define NS_ADDRESSBOOKDB_CID						\
 { /* 63187917-1D19-11d3-A302-001083003D0C */		\
     0x63187917, 0x1d19, 0x11d3,						\
     {0xa3, 0x2, 0x0, 0x10, 0x83, 0x0, 0x3d, 0xc}	\
+}
+
+#define NS_ABCARDPROPERTY_CID						\
+{ /* 2B722171-2CEA-11d3-9E0B-00A0C92B5F0D */		\
+    0x2b722171, 0x2cea, 0x11d3,						\
+    {0x9e, 0xb, 0x0, 0xa0, 0xc9, 0x2b, 0x5f, 0xd}	\
 }
 
 #endif // nsAbBaseCID_h__

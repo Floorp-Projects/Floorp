@@ -21,25 +21,48 @@
 [scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
 interface nsIAbCard : nsIAbBase {
 
-	attribute string personName;
-	attribute string listName;
-	attribute string email;
-	attribute string city;
+	attribute string FirstName;
+	attribute string LastName;
+	attribute string DisplayName;
+	attribute string NickName;
+	attribute string PrimaryEmail;
+	attribute string SecondEmail;
+	attribute string WorkPhone;
+	attribute string HomePhone;
+	attribute string FaxNumber;
+	attribute string PagerNumber;
+	attribute string CellularNumber;
+	attribute string HomeAddress;
+	attribute string HomeAddress2;
+	attribute string HomeCity;
+	attribute string HomeState;
+	attribute string HomeZipCode;
+	attribute string HomeCountry;
+	attribute string WorkAddress;
+	attribute string WorkAddress2;
+	attribute string WorkCity;
+	attribute string WorkState;
+	attribute string WorkZipCode;
+	attribute string WorkCountry;
+	attribute string JobTitle;
+	attribute string Department;
+	attribute string Company;
+	attribute string WebPage1;
+	attribute string WebPage2;
+	attribute string BirthYear;
+	attribute string BirthMonth;
+	attribute string BirthDay;
+	attribute string Custom1;
+	attribute string Custom2;
+	attribute string Custom3;
+	attribute string Custom4;
+	attribute string Notes;
 
-	attribute string firstName;
-	attribute string lastName;
-	attribute string displayName;
-	attribute string primaryEmail;
-	attribute string secondEmail;
-	attribute string workPhone;
-	attribute string homePhone;
-	attribute string faxNumber;
-	attribute string pagerNumber;
-	attribute string cellularNumber;
-	attribute string workCity;
-	attribute string organization;
-	attribute string nickName;
-    attribute unsigned long dbRowID;
+	attribute boolean SendPlainText;
+
+  
+    attribute unsigned long DbTableID;
+    attribute unsigned long DbRowID;
 
 	void GetCardValue(in string attrname, out string value);
 	void SetCardValue(in string attrname, in string value);
