@@ -32,7 +32,6 @@
 
 class nsIContent;
 class nsIRDFCompositeDataSource;
-class nsIRDFContent; // XXX get rid of these...
 class nsIRDFDocument;
 class nsIRDFNode;
 class nsIRDFResource;

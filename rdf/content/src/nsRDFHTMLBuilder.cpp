@@ -25,9 +25,10 @@
 
  */
 
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDocument.h"
@@ -55,6 +56,12 @@ private:
     nsIRDFDocument*            mDocument;
     nsIRDFCompositeDataSource* mDB;
 
+    // pseudo constants
+    PRInt32 kNameSpaceID_RDF; // note that this is a bona fide member
+
+    static nsrefcnt gRefCnt;
+    static nsIAtom* kIdAtom;
+
 public:
     RDFHTMLBuilderImpl();
     virtual ~RDFHTMLBuilderImpl();
@@ -69,24 +76,30 @@ public:
     NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
     NS_IMETHOD SetRootContent(nsIContent* aElement);
     NS_IMETHOD CreateContents(nsIContent* aElement);
-    NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
-    NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
+    NS_IMETHOD OnAssert(nsIContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
+    NS_IMETHOD OnUnassert(nsIContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
     // Implementation methods
-    nsresult AddTreeChild(nsIRDFContent* aParent,
+    nsresult AddTreeChild(nsIContent* aParent,
                           nsIRDFResource* property,
                           nsIRDFResource* value);
 
-    nsresult AddLeafChild(nsIRDFContent* parent,
+    nsresult AddLeafChild(nsIContent* parent,
                           nsIRDFResource* property,
                           nsIRDFLiteral* value);
 
     PRBool IsTreeProperty(nsIRDFResource* aProperty);
+
+    nsresult CreateResourceElement(PRInt32 aNameSpaceID,
+                                   nsIAtom* aTag,
+                                   nsIRDFResource* aResource,
+                                   nsIContent** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
 
-static nsIAtom* kIdAtom;
+nsrefcnt RDFHTMLBuilderImpl::gRefCnt;
+nsIAtom* RDFHTMLBuilderImpl::kIdAtom;
 
 RDFHTMLBuilderImpl::RDFHTMLBuilderImpl(void)
     : mDocument(nsnull),
@@ -94,21 +107,19 @@ RDFHTMLBuilderImpl::RDFHTMLBuilderImpl(void)
 {
 	NS_INIT_REFCNT();
 
-    if (nsnull == kIdAtom) {
-        kIdAtom = NS_NewAtom("id");
-    }
-    else {
-        NS_ADDREF(kIdAtom);
+    if (gRefCnt++ == 0) {
+        kIdAtom = NS_NewAtom("ID");
     }
 }
 
 RDFHTMLBuilderImpl::~RDFHTMLBuilderImpl(void)
 {
-    nsrefcnt refcnt;
-    NS_RELEASE2(kIdAtom, refcnt);
-
     NS_IF_RELEASE(mDB);
     // NS_IF_RELEASE(mDocument) not refcounted
+
+    if (--gRefCnt == 0) {
+        NS_RELEASE(kIdAtom);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -118,7 +129,7 @@ NS_IMPL_ISUPPORTS(RDFHTMLBuilderImpl, kIRDFContentModelBuilderIID);
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-RDFHTMLBuilderImpl::AddTreeChild(nsIRDFContent* parent,
+RDFHTMLBuilderImpl::AddTreeChild(nsIContent* parent,
                                  nsIRDFResource* property,
                                  nsIRDFResource* value)
 {
@@ -136,13 +147,13 @@ RDFHTMLBuilderImpl::AddTreeChild(nsIRDFContent* parent,
     nsresult rv;
     PRInt32 nameSpaceID;
     nsIAtom* tag = nsnull;
-    nsIRDFContent* child = nsnull;
+    nsIContent* child = nsnull;
     const char* p;
 
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, value, nameSpaceID, tag /* , PR_TRUE */)))
+    if (NS_FAILED(rv = CreateResourceElement(nameSpaceID, tag, value, &child)))
         goto done;
 
     if (NS_FAILED(rv = value->GetValue(&p)))
@@ -161,7 +172,7 @@ done:
 
 
 nsresult
-RDFHTMLBuilderImpl::AddLeafChild(nsIRDFContent* parent,
+RDFHTMLBuilderImpl::AddLeafChild(nsIContent* parent,
                                  nsIRDFResource* property,
                                  nsIRDFLiteral* value)
 {
@@ -177,12 +188,12 @@ RDFHTMLBuilderImpl::AddLeafChild(nsIRDFContent* parent,
     nsresult rv;
     PRInt32 nameSpaceID;
     nsIAtom* tag = nsnull;
-    nsIRDFContent* child = nsnull;
+    nsIContent* child = nsnull;
 
     if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, &tag)))
         goto done;
 
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&child, property, nameSpaceID, tag /* , PR_FALSE */)))
+    if (NS_FAILED(rv = CreateResourceElement(nameSpaceID, tag, property, &child)))
         goto done;
 
     if (NS_FAILED(rv = parent->AppendChildTo(child, PR_TRUE)))
@@ -209,6 +220,16 @@ RDFHTMLBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
         return NS_ERROR_ALREADY_INITIALIZED;
 
     mDocument = aDocument; // not refcounted
+
+    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+    if (doc) {
+        nsCOMPtr<nsINameSpaceManager> mgr;
+        doc->GetNameSpaceManager( *getter_AddRefs(mgr) );
+        if (mgr) {
+static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+            mgr->GetNameSpaceID(kRDFNameSpaceURI, kNameSpaceID_RDF);
+        }
+    }
     return NS_OK;
 }
 
@@ -255,7 +276,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     nsIAtom* tag        = nsnull;
     nsIDocument* doc    = nsnull;
     nsIContent* root    = nsnull;
-    nsIRDFContent* body = nsnull;
+    nsIContent* body = nsnull;
 
     if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, (void**) &doc)))
         goto done;
@@ -264,7 +285,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     if ((tag = NS_NewAtom("document")) == nsnull)
         goto done;
 
-    if (NS_FAILED(rv = NS_NewRDFGenericElement(&root, kNameSpaceID_None, tag)))
+    if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_None, tag, &root)))
         goto done;
 
     doc->SetRootContent(NS_STATIC_CAST(nsIContent*, root));
@@ -276,7 +297,7 @@ RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
         goto done;
 
     // PR_TRUE indicates that children should be recursively generated on demand
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(&body, aResource, kNameSpaceID_None, tag /* , PR_TRUE */)))
+    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_None, tag, aResource, &body)))
         goto done;
 
     if (NS_FAILED(rv = root->AppendChildTo(body, PR_FALSE)))
@@ -307,7 +328,7 @@ RDFHTMLBuilderImpl::CreateContents(nsIContent* aElement)
 
 
 NS_IMETHODIMP
-RDFHTMLBuilderImpl::OnAssert(nsIRDFContent* parent,
+RDFHTMLBuilderImpl::OnAssert(nsIContent* parent,
                              nsIRDFResource* property,
                              nsIRDFNode* value)
 {
@@ -344,7 +365,7 @@ RDFHTMLBuilderImpl::OnAssert(nsIRDFContent* parent,
 
 
 NS_IMETHODIMP
-RDFHTMLBuilderImpl::OnUnassert(nsIRDFContent* parent,
+RDFHTMLBuilderImpl::OnUnassert(nsIContent* parent,
                                nsIRDFResource* property,
                                nsIRDFNode* value)
 {
@@ -375,6 +396,32 @@ RDFHTMLBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
         return PR_TRUE;
     }
     return PR_FALSE;
+}
+
+
+
+nsresult
+RDFHTMLBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
+                                          nsIAtom* aTag,
+                                          nsIRDFResource* aResource,
+                                          nsIContent** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
+        return rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+        return rv;
+
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_RDF, kIdAtom, uri, PR_FALSE)))
+        return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
 
 

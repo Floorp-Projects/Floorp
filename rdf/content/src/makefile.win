@@ -27,12 +27,14 @@ LCFLAGS = \
         $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsJSXULNode.obj               \
+        .\$(OBJDIR)\nsJSElementObserver.obj       \
+        .\$(OBJDIR)\nsJSNodeObserver.obj          \
+        .\$(OBJDIR)\nsJSXULDocument.obj           \
+        .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
-        .\$(OBJDIR)\nsRDFGenericElement.obj       \
         .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
-        .\$(OBJDIR)\nsRDFResourceElement.obj      \
+        .\$(OBJDIR)\nsRDFElement.obj              \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
         .\$(OBJDIR)\nsXULDocument.obj             \

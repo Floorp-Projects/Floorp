@@ -28,6 +28,7 @@
 
 #include "nsError.h"
 
+class nsIAtom;
 class nsIContent;
 class nsIDOMNodeList;
 class nsIRDFNode;
@@ -40,8 +41,12 @@ public:
 
     static nsresult
     AttachTextNode(nsIContent* parent, nsIRDFNode* value);
-
 };
+
+
+// in nsRDFElement.cpp
+extern nsresult
+NS_NewRDFElement(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
 
 #endif // nsRDFContentUtils_h__
 

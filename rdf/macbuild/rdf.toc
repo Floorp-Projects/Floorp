@@ -8,11 +8,14 @@ mozilla/rdf/base/src/nsRDFService.cpp
 mozilla/rdf/base/src/nsRDFXMLDataSource.cpp
 mozilla/rdf/base/src/rdfutil.cpp
 mozilla/rdf/build/nsRDFFactory.cpp
+mozilla/rdf/content/src/nsJSElementObserver.cpp
+mozilla/rdf/content/src/nsJSNodeObserver.cpp
+mozilla/rdf/content/src/nsJSXULDocument.cpp
+mozilla/rdf/content/src/nsJSXULElement.cpp
 mozilla/rdf/content/src/nsRDFContentUtils.cpp
 mozilla/rdf/content/src/nsRDFDocument.cpp
-mozilla/rdf/content/src/nsRDFGenericElement.cpp
+mozilla/rdf/content/src/nsRDFElement.cpp
 mozilla/rdf/content/src/nsRDFHTMLBuilder.cpp
-mozilla/rdf/content/src/nsRDFResourceElement.cpp
 mozilla/rdf/content/src/nsRDFTreeBuilder.cpp
 mozilla/rdf/content/src/nsRDFXULBuilder.cpp
 mozilla/rdf/datasource/src/nsBookmarkDataSource.cpp

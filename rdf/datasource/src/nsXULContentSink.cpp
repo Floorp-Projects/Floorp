@@ -982,7 +982,9 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
-            nsRDFParserUtils::FullyQualifyURI(mDocumentURL, uri);
+            const char* documentURL;
+            mDocumentURL->GetSpec(&documentURL);
+            rdf_PossiblyMakeAbsolute(documentURL, uri);
 
             return gRDFService->GetUnicodeResource(uri, aResource);
         }

@@ -55,6 +55,7 @@
 #include "nsIURL.h"
 #include "nsIXMLContentSink.h"
 #include "nsRDFCID.h"
+#include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -122,188 +123,8 @@ rdf_EntityToUnicode(const char* buf)
     return PRUnichar('?');
 }
 
-// XXX Code copied from nsHTMLContentSink. It should be shared.
-static void
-rdf_StripAndConvert(nsString& aResult)
-{
-    // Strip quotes if present
-    PRUnichar first = aResult.First();
-    if ((first == '"') || (first == '\'')) {
-        if (aResult.Last() == first) {
-            aResult.Cut(0, 1);
-            PRInt32 pos = aResult.Length() - 1;
-            if (pos >= 0) {
-                aResult.Cut(pos, 1);
-            }
-        } else {
-            // Mismatched quotes - leave them in
-        }
-    }
 
-    // Reduce any entities
-    // XXX Note: as coded today, this will only convert well formed
-    // entities.  This may not be compatible enough.
-    // XXX there is a table in navigator that translates some numeric entities
-    // should we be doing that? If so then it needs to live in two places (bad)
-    // so we should add a translate numeric entity method from the parser...
-    char cbuf[100];
-    PRInt32 index = 0;
-    while (index < aResult.Length()) {
-        // If we have the start of an entity (and it's not at the end of
-        // our string) then translate the entity into it's unicode value.
-        if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-            PRInt32 start = index - 1;
-            PRUnichar e = aResult.CharAt(index);
-            if (e == '#') {
-                // Convert a numeric character reference
-                index++;
-                char* cp = cbuf;
-                char* limit = cp + sizeof(cbuf) - 1;
-                PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
-                        ok = PR_TRUE;
-                        break;
-                    }
-                    if ((e >= '0') && (e <= '9')) {
-                        *cp++ = char(e);
-                        index++;
-                        continue;
-                    }
-                    break;
-                }
-                if (!ok || (cp == cbuf)) {
-                    continue;
-                }
-                *cp = '\0';
-                if (cp - cbuf > 5) {
-                    continue;
-                }
-                PRInt32 ch = PRInt32( ::atoi(cbuf) );
-                if (ch > 65535) {
-                    continue;
-                }
-
-                // Remove entity from string and replace it with the integer
-                // value.
-                aResult.Cut(start, index - start);
-                aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
-            }
-            else if (((e >= 'A') && (e <= 'Z')) ||
-                     ((e >= 'a') && (e <= 'z'))) {
-                // Convert a named entity
-                index++;
-                char* cp = cbuf;
-                char* limit = cp + sizeof(cbuf) - 1;
-                *cp++ = char(e);
-                PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
-                        ok = PR_TRUE;
-                        break;
-                    }
-                    if (((e >= '0') && (e <= '9')) ||
-                        ((e >= 'A') && (e <= 'Z')) ||
-                        ((e >= 'a') && (e <= 'z'))) {
-                        *cp++ = char(e);
-                        index++;
-                        continue;
-                    }
-                    break;
-                }
-                if (!ok || (cp == cbuf)) {
-                    continue;
-                }
-                *cp = '\0';
-                PRInt32 ch;
-
-                // XXX Um, here's where we should be converting a
-                // named entity. I removed this to avoid a link-time
-                // dependency on core raptor.
-                ch = rdf_EntityToUnicode(cbuf);
-
-                if (ch < 0) {
-                    continue;
-                }
-
-                // Remove entity from string and replace it with the integer
-                // value.
-                aResult.Cut(start, index - start);
-                aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
-            }
-            else if (e == '{') {
-                // Convert a script entity
-                // XXX write me!
-                NS_NOTYETIMPLEMENTED("convert a script entity");
-            }
-        }
-    }
-}
-
-nsresult
-rdf_GetQuotedAttributeValue(const nsString& aSource, 
-                            const nsString& aAttribute,
-                            nsString& aValue)
-{
-static const char kQuote = '\"';
-static const char kApostrophe = '\'';
-
-    PRInt32 offset;
-    PRInt32 endOffset = -1;
-    nsresult result = NS_OK;
-
-    offset = aSource.Find(aAttribute);
-    if (-1 != offset) {
-        offset = aSource.Find('=', offset);
-
-        PRUnichar next = aSource.CharAt(++offset);
-        if (kQuote == next) {
-            endOffset = aSource.Find(kQuote, ++offset);
-        }
-        else if (kApostrophe == next) {
-            endOffset = aSource.Find(kApostrophe, ++offset);	  
-        }
-  
-        if (-1 != endOffset) {
-            aSource.Mid(aValue, offset, endOffset-offset);
-        }
-        else {
-            // Mismatched quotes - return an error
-            result = NS_ERROR_FAILURE;
-        }
-    }
-    else {
-        aValue.Truncate();
-    }
-
-    return result;
-}
-
-
-static void
-rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
-{
-    // This is a fairly heavy-handed way to do this, but...I don't
-    // like typing.
-    nsIURL* url;
-    if (NS_SUCCEEDED(NS_NewURL(&url, spec, base))) {
-        PRUnichar* str;
-        url->ToString(&str);
-        spec = str;
-        delete str;
-        url->Release();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
 typedef enum {
     eRDFContentSinkState_InProlog,
@@ -672,7 +493,7 @@ static const char kContentModelBuilderPI[] = "<?rdf-builder";
     // If it's a stylesheet PI...
     if (0 == text.Find(kStyleSheetPI)) {
         nsAutoString href;
-        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "href", href)))
+        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href)))
             return rv;
 
         // If there was an error or there's no href, we can't do
@@ -681,7 +502,7 @@ static const char kContentModelBuilderPI[] = "<?rdf-builder";
             return NS_OK;
     
         nsAutoString type;
-        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "type", type)))
+        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "type", type)))
             return rv;
     
         if (! type.Equals(kCSSType))
@@ -702,7 +523,7 @@ static const char kContentModelBuilderPI[] = "<?rdf-builder";
     }
     else if (0 == text.Find(kDataSourcePI)) {
         nsAutoString href;
-        rv = rdf_GetQuotedAttributeValue(text, "href", href);
+        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href);
         if (NS_FAILED(rv) || (0 == href.Length()))
             return rv;
 
@@ -957,7 +778,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
         if (attr.Equals(kTagRDF_about)) {
             nsAutoString uri = aNode.GetValueAt(i);
-            rdf_StripAndConvert(uri);
+            nsRDFParserUtils::StripAndConvert(uri);
 
             return mRDFService->GetUnicodeResource(uri, aResource);
         }
@@ -971,7 +792,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
             nsAutoString uri(docURI);
             nsAutoString tag = aNode.GetValueAt(i);
-            rdf_StripAndConvert(tag);
+            nsRDFParserUtils::StripAndConvert(tag);
 
             if (uri.Last() != '#' && tag.First() != '#')
                 uri.Append('#');
@@ -1016,12 +837,14 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
 
         if (attr.Equals(kTagRDF_resource)) {
             nsAutoString uri = aNode.GetValueAt(i);
-            rdf_StripAndConvert(uri);
+            nsRDFParserUtils::StripAndConvert(uri);
 
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
-            rdf_FullyQualifyURI(mDocumentURL, uri);
+            const char* documentURL;
+            mDocumentURL->GetSpec(&documentURL);
+            rdf_PossiblyMakeAbsolute(documentURL, uri);
 
             return mRDFService->GetUnicodeResource(uri, aResource);
         }
@@ -1054,7 +877,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
             continue;
 
         v = aNode.GetValueAt(i);
-        rdf_StripAndConvert(v);
+        nsRDFParserUtils::StripAndConvert(v);
 
         GetNameSpaceURI(nameSpaceID, k);
         k.Append(attr);
@@ -1407,7 +1230,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 
                 // Get the attribute value (the URI for the namespace)
                 uri = aNode.GetValueAt(i);
-                rdf_StripAndConvert(uri);
+                nsRDFParserUtils::StripAndConvert(uri);
 
                 // Open a local namespace
                 nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);

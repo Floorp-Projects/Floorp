@@ -44,8 +44,8 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -80,7 +80,6 @@ static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 static NS_DEFINE_IID(kIRDFObserverIID,            NS_IRDFOBSERVER_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
@@ -103,6 +102,7 @@ private:
     static nsrefcnt gRefCnt;
     static nsIRDFService* gRDFService;
 
+    static nsIAtom* kContainerAtom;
     static nsIAtom* kContentsGeneratedAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kOpenAtom;
@@ -182,7 +182,7 @@ public:
     nsresult
     FindTreeCellForProperty(nsIContent* aTreeRowElement,
                             nsIRDFResource* aProperty,
-                            nsIRDFContent** aTreeCell);
+                            nsIContent** aTreeCell);
 
     nsresult
     GetColumnForProperty(nsIContent* aTreeElement,
@@ -202,12 +202,19 @@ public:
 
     PRBool
     IsTreeProperty(nsIRDFResource* aProperty);
+
+    nsresult
+    CreateResourceElement(PRInt32 aNameSpaceID,
+                          nsIAtom* aTag,
+                          nsIRDFResource* aResource,
+                          nsIContent** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
 
+nsIAtom* RDFTreeBuilderImpl::kContainerAtom;
 nsIAtom* RDFTreeBuilderImpl::kContentsGeneratedAtom;
 nsIAtom* RDFTreeBuilderImpl::kIdAtom;
 nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
@@ -259,9 +266,10 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
     NS_INIT_REFCNT();
 
     if (gRefCnt == 0) {
+        kContainerAtom         = NS_NewAtom("container");
         kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
 
-        kIdAtom              = NS_NewAtom("id");
+        kIdAtom              = NS_NewAtom("ID");
         kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
 
@@ -341,6 +349,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
 
     --gRefCnt;
     if (gRefCnt == 0) {
+        NS_RELEASE(kContainerAtom);
         NS_RELEASE(kContentsGeneratedAtom);
 
         NS_RELEASE(kIdAtom);
@@ -469,9 +478,9 @@ RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIContent> root;
-    if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(root),
-                                               kNameSpaceID_HTML, /* XXX */
-                                               tag)))
+    if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_HTML, /* XXX */
+                                        tag,
+                                        getter_AddRefs(root))))
         return rv;
 
     doc->SetRootContent(NS_STATIC_CAST(nsIContent*, root));
@@ -481,9 +490,9 @@ RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     if ((tag = dont_AddRef(NS_NewAtom("body"))) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(body),
-                                               kNameSpaceID_HTML, /* XXX */
-                                               tag)))
+    if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_HTML, /* XXX */
+                                        tag,
+                                        getter_AddRefs(body))))
         return rv;
 
 
@@ -493,14 +502,14 @@ RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 
     // Create the xul:tree element, and indicate that children should
     // be recursively generated on demand
-    nsCOMPtr<nsIRDFContent> tree;
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(getter_AddRefs(tree),
-                                                aResource,
-                                                kNameSpaceID_XUL,
-                                                kTreeAtom)))
+    nsCOMPtr<nsIContent> tree;
+    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
+                                             kTreeAtom,
+                                             aResource,
+                                             getter_AddRefs(tree))))
         return rv;
 
-    if (NS_FAILED(rv = tree->SetContainer(PR_TRUE)))
+    if (NS_FAILED(rv = tree->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
         return rv;
 
     // Attach the TREE to the BODY
@@ -835,7 +844,7 @@ RDFTreeBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
     // if we get here, we need to construct a new child element.
     nsCOMPtr<nsIContent> element;
 
-    if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(element), nameSpaceID, tag)))
+    if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
         return rv;
 
     if (NS_FAILED(rv = parent->AppendChildTo(element, PR_FALSE)))
@@ -906,11 +915,11 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
     }
 
     // Create the <xul:treeitem> element
-    nsCOMPtr<nsIRDFContent> treeItem;
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(getter_AddRefs(treeItem),
-                                                aValue,
-                                                kNameSpaceID_XUL,
-                                                kTreeItemAtom)))
+    nsCOMPtr<nsIContent> treeItem;
+    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
+                                             kTreeItemAtom,
+                                             aValue,
+                                             getter_AddRefs(treeItem))))
         return rv;
 
     // Add the <xul:treeitem> to the <xul:treechildren> element.
@@ -920,7 +929,7 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
     if (NS_FAILED(rv = CreateTreeItemCells(treeItem)))
         return rv;
 
-    if (NS_FAILED(rv = treeItem->SetContainer(PR_TRUE)))
+    if (NS_FAILED(rv = treeItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
         return rv;
 
 #define ALL_NODES_OPEN_HACK
@@ -1039,9 +1048,9 @@ RDFTreeBuilderImpl::EnsureCell(nsIContent* aTreeItemElement,
 
     nsCOMPtr<nsIContent> cellElement;
     while (aIndex-- >= 0) {
-        if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(cellElement),
-                                                   kNameSpaceID_XUL,
-                                                   kTreeCellAtom))) {
+        if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_XUL,
+                                            kTreeCellAtom,
+                                            getter_AddRefs(cellElement)))) {
             NS_ERROR("unable to create new xul:treecell");
             return rv;
         }
@@ -1147,9 +1156,9 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
         // out a better way to specify this.
         if (cellIndex == 0) {
             nsCOMPtr<nsIContent> indentationElement;
-            if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(indentationElement),
-                                                       kNameSpaceID_XUL,
-                                                       kTreeIndentationAtom))) {
+            if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_XUL,
+                                                kTreeIndentationAtom,
+                                                getter_AddRefs(indentationElement)))) {
                 NS_ERROR("unable to create indentation node");
                 return rv;
             }
@@ -1384,4 +1393,29 @@ RDFTreeBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
     else {
         return PR_FALSE;
     }
+}
+
+
+nsresult
+RDFTreeBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
+                                          nsIAtom* aTag,
+                                          nsIRDFResource* aResource,
+                                          nsIContent** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
+        return rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+        return rv;
+
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_RDF, kIdAtom, uri, PR_FALSE)))
+        return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }

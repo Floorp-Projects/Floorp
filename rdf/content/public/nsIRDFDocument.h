@@ -64,13 +64,13 @@ public:
 
   NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag) = 0;
 
-  NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIRDFContent* aElement) = 0;
+  NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
 
-  NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIRDFContent* aElement) = 0;
+  NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIContent* aElement) = 0;
 
   NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements) = 0;
 
-  NS_IMETHOD CreateContents(nsIRDFContent* aElement) = 0;
+  NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 };

@@ -28,6 +28,7 @@
 #define nsRDFParserUtils_h__
 
 #include "nscore.h"
+#include "nsError.h"
 class nsIURL;
 class nsString;
 
@@ -44,9 +45,6 @@ public:
                             const nsString& aAttribute,
                             nsString& aValue);
 
-
-    static void
-    FullyQualifyURI(const nsIURL* base, nsString& spec);
 
     static PRBool
     IsJavaScriptLanguage(const nsString& aName);

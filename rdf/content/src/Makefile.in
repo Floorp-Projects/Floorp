@@ -27,15 +27,17 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfcontent_s
 
 CPPSRCS =				\
+	nsJSElementObserver.cpp		\
+	nsJSNodeObserver.cpp		\
+	nsJSXULDocument.cpp		\
+	nsJSXULElement.cpp		\
 	nsRDFContentUtils.cpp           \
 	nsRDFDOMNodeList.cpp		\
-	nsRDFGenericElement.cpp         \
+	nsRDFElement.cpp		\
 	nsRDFHTMLBuilder.cpp		\
-	nsRDFResourceElement.cpp	\
 	nsRDFTreeBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
 	nsXULDocument.cpp               \
-	nsJSXULNode.cpp	\
 	$(NULL)
 
 EXPORTS = \

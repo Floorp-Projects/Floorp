@@ -134,7 +134,8 @@ class RDFDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
                         public nsIRDFObserver,
                         public nsIRDFXMLDataSourceObserver,
-                        public nsIHTMLContentContainer
+                        public nsIHTMLContentContainer,
+                        public nsIDOMRDFDocument
 {
 public:
     RDFDocumentImpl();

@@ -63,7 +63,7 @@ public:
   NS_IMETHOD    OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild) { return _to##OnAppendChild(aParent, aNewChild); }  \
 
 
-extern nsresult NS_InitNodeObserverClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitNodeObserverClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptNodeObserver(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

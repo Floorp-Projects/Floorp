@@ -31,10 +31,13 @@
 
 #include "prtypes.h"
 
+class nsIRDFArcsInCursor;
+class nsIRDFArcsOutCursor;
+class nsIRDFAssertionCursor;
 class nsIRDFCursor;
-class nsIRDFDataBase;
 class nsIRDFDataSource;
 class nsIRDFNode;
+class nsIRDFResource;
 class nsString;
 
 /**
@@ -142,6 +145,13 @@ rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource);
  */
 PR_EXTERN(nsresult)
 rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI);
+
+
+/**
+ * Try to convert the possibly-relative URL into an absolute URL.
+ */
+PR_EXTERN(nsresult)
+rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI);
 
 /**
  * Create a bag resource.
