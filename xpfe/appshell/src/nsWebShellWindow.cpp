@@ -2705,20 +2705,32 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
   nsCOMPtr<nsIDOMElement> webshellElement;
   nsString windowTitleModifier;
-  nsString windowSeparator;
+  nsString titleSeparator;
+  nsString titlePreface;
   if (webshellNode)
     webshellElement = do_QueryInterface(webshellNode);
   if (webshellElement )
   {
   	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-  	webshellElement->GetAttribute("titlemenuseparator", windowSeparator );
+  	webshellElement->GetAttribute("titlemenuseparator", titleSeparator );
+  	webshellElement->GetAttribute("titlepreface", titlePreface );
   }
-   nsString title( aTitle );
+   nsString title;
+   nsString docTitle( aTitle );
    
-   if( title.Length() > 0 )
-  	 title += windowSeparator+windowTitleModifier;
-   else
-   	title = windowTitleModifier;  
+   if( docTitle.Length() > 0 ) {
+        if ( titlePreface.Length() > 0 ) {
+            // Title will be: Preface: Doc Title - Mozilla
+            title = titlePreface + docTitle;
+        } else {
+            // Title will be: Doc Title - Mozilla
+            title = docTitle;
+        }
+  	    title += titleSeparator + windowTitleModifier;
+   } else {
+        // Title will be just plain: Mozilla
+   	    title = windowTitleModifier;  
+   }
    if (windowWidget)
      windowWidget->SetTitle(title);
 
