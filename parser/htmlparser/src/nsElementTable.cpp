@@ -504,7 +504,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gDLRootTags,&gRootTags,	//fix bug 57634
       /*autoclose starttags and endtags*/ 0,0,0,&gDTKids,           // DT should not contain DL - bug 100466
       /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
-      /*special props, prop-range*/       kOmitWS, kNoPropRange,
+      /*special props, prop-range*/       0, kNoPropRange,
       /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -549,7 +549,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
-      /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
+      /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gFieldsetKids,eHTMLTag_unknown);
 
     Initialize( 
