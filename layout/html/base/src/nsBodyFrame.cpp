@@ -224,6 +224,9 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
         DeleteChildsNextInFlow(mFirstChild);
       }
     }
+    else {
+      printf("XXX: incomplete body frame\n");
+    }
 
     mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
   
@@ -231,17 +234,6 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     desiredRect.x += borderPadding.left;
     desiredRect.y += borderPadding.top;
     mFirstChild->SetRect(desiredRect);
-//    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-  
-#if XXX
-    // the block knows to PropagateContentOffsets so this isn't necessary
-
-    // Set our last content offset and whether the last content is complete
-    // based on the state of the pseudo frame
-    nsCSSBlockFrame* blockPseudoFrame = (nsCSSBlockFrame*)mFirstChild;
-    mLastContentOffset = blockPseudoFrame->GetLastContentOffset();
-    mLastContentIsComplete = blockPseudoFrame->GetLastContentIsComplete();
-#endif
   
     // Reflow any absolutely positioned frames that need reflowing
     ReflowAbsoluteItems(&aPresContext, *rsp);
@@ -250,8 +242,9 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     ComputeDesiredSize(desiredRect, rsp->maxSize, borderPadding, aDesiredSize);
 
     // Decide how much to repaint based on the reflow type.
-    // Note: we don't have to handle the initial reflow case and the resize reflow
-    // case, because they're handled by the root content frame
+    // Note: we don't have to handle the initial reflow case and the
+    // resize reflow case, because they're handled by the root content
+    // frame
     if (eReflowReason_Incremental == rsp->reason) {
       // For append reflow commands that target the body just repaint the newly
       // added part of the frame.
@@ -263,10 +256,10 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
         damageArea.height = aDesiredSize.height - kidOldRect.height;
   
       } else {
-        // Ideally the frame that is the target of the reflow command (or its parent
-        // frame) would generate a damage rect, but since none of the frame classes
-        // know how to do this then for the time being just repaint the entire
-        // frame
+        // Ideally the frame that is the target of the reflow command
+        // (or its parent frame) would generate a damage rect, but
+        // since none of the frame classes know how to do this then
+        // for the time being just repaint the entire frame
         damageArea.width = aDesiredSize.width;
         damageArea.height = aDesiredSize.height;
       }
@@ -475,6 +468,71 @@ nsBodyFrame::PropagateContentOffsets(nsIFrame* aChild,
                                     mLastContentOffset,
                                     mLastContentIsComplete);
   }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Event handling
+
+NS_IMETHODIMP
+nsBodyFrame::HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eIgnore;
+
+  // Pass event down to our children. Give it to the children after
+  // our first-child first (children after the first-child are either
+  // absolute positioned frames or are floating frames, both of which
+  // are on top (in the z order) of the first-child).
+  PRInt32 n = mChildCount;
+  nsIFrame* kid = mFirstChild;
+  kid->GetNextSibling(kid);
+  while (--n >= 0) {
+    if (nsnull == kid) {
+      kid = mFirstChild;
+    }
+    nsRect kidRect;
+    kid->GetRect(kidRect);
+    if (kidRect.Contains(aEvent->point)) {
+      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
+      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
+      aEvent->point.MoveBy(kidRect.x, kidRect.y);
+      break;
+    }
+    kid->GetNextSibling(kid);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBodyFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
+                                   const nsPoint&  aPoint,
+                                   nsIFrame**      aFrame,
+                                   nsIContent**    aContent,
+                                   PRInt32&        aCursor)
+{
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+  *aContent = mContent;
+
+  nsPoint tmp;
+  PRInt32 n = mChildCount;
+  nsIFrame* kid = mFirstChild;
+  kid->GetNextSibling(kid);
+  while (--n >= 0) {
+    if (nsnull == kid) {
+      kid = mFirstChild;
+    }
+    nsRect kidRect;
+    kid->GetRect(kidRect);
+    if (kidRect.Contains(aPoint)) {
+      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+      kid->GetCursorAndContentAt(aPresContext, tmp, aFrame, aContent, aCursor);
+      break;
+    }
+    kid->GetNextSibling(kid);
+  }
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
