@@ -64,7 +64,7 @@
 			<html:div>&diskCacheFolder;</html:div>
 			<html:input name="disk" type="text" size="20" id="pref:string:browser.cache.directory" />
 			<html:div>
-				<titledbutton value="Choose File..." align="left"/>
+				<titledbutton value="Choose File..." align="left" onclick="PrefCacheSelectFolder()"/>
 			</html:div>
 		</box>
 

@@ -73,3 +73,34 @@ function StartUp(windowName)
 		dump(" No browser window. Should be disabling this button \n");
 	}
  }
+
+function createInstance( progid, iidName ) {
+  var iid = eval( "Components.interfaces." + iidName );
+  return Components.classes[ progid ].createInstance( iid );
+}
+
+function PrefNavSelectFile() {
+    // Get filespecwithui component.            
+    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
+    try {
+        var url = fileSpec.chooseFile( "" );
+        var field = document.getElementById( "pref:string:browser.startup.homepage" );
+        field.setAttribute( "value", url );
+    }
+    catch( exception ) {
+        // Just a cancel, probably.
+    }
+}
+
+function PrefCacheSelectFolder() {
+    // Get filespecwithui component.            
+    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
+    try {
+        var url = fileSpec.chooseDirectory( "" );
+        var field = document.getElementById( "pref:string:browser.cache.directory" );
+        field.setAttribute( "value", url );
+    }
+    catch( exception ) {
+        // Just a cancel, probably.
+    }
+}
