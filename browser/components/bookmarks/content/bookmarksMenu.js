@@ -366,7 +366,7 @@ var BookmarksMenu = {
       return;
     var rSource   = RDF.GetResource(aTarget.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+    var browserTarget = whereToOpenLink(aEvent);
     BookmarksCommand.openBookmark(selection, browserTarget, aDS);
     aEvent.preventBubble();
   },

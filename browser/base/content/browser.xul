@@ -60,8 +60,16 @@
 #endif
 
   <popupset id="mainPopupSet">
-    <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="backMenu" 
+           position="after_start" 
+           onpopupshowing="return BrowserBackMenu(event);"
+           oncommand="gotoHistoryIndex(event);"
+           onclick="checkForMiddleClick(this, event);"/>
+    <popup id="forwardMenu"
+           position="after_start"
+           onpopupshowing="return BrowserForwardMenu(event);"
+           oncommand="gotoHistoryIndex(event);"
+           onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <popup id="SearchBarPopup" position="after_start"
@@ -136,21 +144,29 @@
 
     <toolbarpalette id="BrowserToolbarPalette">
       <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
-                      label="&backCmd.label;"
-					command="Browser:Back"
-                      context="backMenu"
-                      tooltiptext="&backButton.tooltip;">
-        <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
-                    oncommand="gotoHistoryIndex(event); event.preventBubble();"/>
+                     label="&backCmd.label;"
+                     oncommand="BrowserBack(event)"
+                     onclick="checkForMiddleClick(this, event);"
+                     context="backMenu"
+                     tooltiptext="&backButton.tooltip;">
+        <observes element="Browser:Back" attribute="disabled"/>
+        <menupopup context=""
+                   onpopupshowing="BrowserBackMenu(event);"
+                   oncommand="gotoHistoryIndex(event); event.preventBubble();"
+                   onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
       <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
-                      label="&forwardCmd.label;"
-                      command="Browser:Forward"
-                      context="forwardMenu"
-                      tooltiptext="&forwardButton.tooltip;">
-        <menupopup context="" oncommand="gotoHistoryIndex(event); event.preventBubble()"
-                    onpopupshowing="BrowserForwardMenu(event);"/>
+                     label="&forwardCmd.label;"
+                     oncommand="BrowserForward(event)"
+                     onclick="checkForMiddleClick(this, event);"
+                     context="forwardMenu"
+                     tooltiptext="&forwardButton.tooltip;">
+        <observes element="Browser:Forward" attribute="disabled"/>
+        <menupopup context=""
+                   onpopupshowing="BrowserForwardMenu(event);"
+                   oncommand="gotoHistoryIndex(event); event.preventBubble()"
+                   onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
       <toolbarbutton id="reload-button" class="toolbarbutton-1"
@@ -233,7 +249,9 @@
                      tooltiptext="&printButton.tooltip;"/>
 
       <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
-        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+        <button id="navigator-throbber" 
+                oncommand="goClickThrobber('browser.throbber.url', event)"
+                onclick="checkForMiddleClick(this, event);"
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       

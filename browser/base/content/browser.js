@@ -714,22 +714,69 @@ function gotoHistoryIndex(aEvent)
   var index = aEvent.target.getAttribute("index");
   if (!index)
     return false;
-  try {
-    getWebNavigation().gotoIndex(index);
-  }
-  catch(ex) {
-    return false;
-  }
-  return true;
 
+  var where = whereToOpenLink(aEvent);
+
+  if (where == "current") {
+    // Normal click.  Go there in the current tab and update session history.
+
+    try {
+      getWebNavigation().gotoIndex(index);
+    }
+    catch(ex) {
+      return false;
+    }
+    return true;
+  }
+  else {
+    // Modified click.  Go there in a new tab/window.
+    // This code doesn't copy history or work well with framed pages.
+    
+    var sessionHistory = getWebNavigation().sessionHistory;
+    var entry = sessionHistory.getEntryAtIndex(index, false);
+    var url = entry.URI.spec;
+    openUILinkIn(url, where);
+    return true;
+  }
 }
 
-function BrowserBack()
+function BrowserForward(aEvent, aIgnoreAlt)
 {
-  try {
-    getWebNavigation().goBack();
+  var where = whereToOpenLink(aEvent, false, aIgnoreAlt);
+
+  if (where == "current") {
+    try {
+      getWebNavigation().goForward();
+    }
+    catch(ex) {
+    }
   }
-  catch(ex) {
+  else {
+    var sessionHistory = getWebNavigation().sessionHistory;
+    var currentIndex = sessionHistory.index;
+    var entry = sessionHistory.getEntryAtIndex(currentIndex + 1, false);
+    var url = entry.URI.spec;
+    openUILinkIn(url, where);
+  }
+}
+
+function BrowserBack(aEvent, aIgnoreAlt)
+{
+  var where = whereToOpenLink(aEvent, false, aIgnoreAlt);
+
+  if (where == "current") {
+    try {
+      getWebNavigation().goBack();
+    }
+    catch(ex) {
+    }
+  }
+  else {
+    var sessionHistory = getWebNavigation().sessionHistory;
+    var currentIndex = sessionHistory.index;
+    var entry = sessionHistory.getEntryAtIndex(currentIndex - 1, false);
+    var url = entry.URI.spec;
+    openUILinkIn(url, where);
   }
 }
 
@@ -755,15 +802,6 @@ function BrowserHandleBackspace()
   }
 }
 #endif
-
-function BrowserForward()
-{
-  try {
-    getWebNavigation().goForward();
-  }
-  catch(ex) {
-  }
-}
 
 function BrowserBackMenu(event)
 {
@@ -1175,7 +1213,12 @@ function readFromClipboard()
                           .createInstance(Components.interfaces.nsITransferable);
 
     trans.addDataFlavor("text/unicode");
-    clipboard.getData(trans, clipboard.kSelectionClipboard);
+
+    // If available, use selection clipboard, otherwise global one
+    if (clipboard.supportsSelectionClipboard())
+      clipboard.getData(trans, clipboard.kSelectionClipboard);
+    else
+      clipboard.getData(trans, clipboard.kGlobalClipboard);
 
     var data = {};
     var dataLen = {};
@@ -3312,12 +3355,12 @@ nsContextMenu.prototype = {
       BrowserPageInfo(this.target.ownerDocument);
     },
     // Change current window to the URL of the image.
-    viewImage : function () {
-        openTopWin( this.imageURL );
+    viewImage : function (e) {
+        openUILink( this.imageURL, e );
     },
     // Change current window to the URL of the background image.
-    viewBGImage : function () {
-        openTopWin( this.bgImageURL );
+    viewBGImage : function (e) {
+        openUILink( this.bgImageURL, e );
     },
     setWallpaper: function() {
       // Confirm since it's annoying if you hit this accidentally.
@@ -3783,9 +3826,7 @@ function asyncOpenWebPanel(event)
    if (event.button == 1 &&
        !findParentNode(event.originalTarget, "scrollbar") &&
        gPrefService.getBoolPref("middlemouse.contentLoadURL")) {
-     if (middleMousePaste(event)) {
-       event.preventBubble();
-     }
+     middleMousePaste(event);
    }
    return true;
  }
@@ -3795,7 +3836,7 @@ function handleLinkClick(event, href, linkNode)
   switch (event.button) {                                   
     case 0:
 #ifdef XP_MACOSX
-      if (event.metaKey) {
+      if (event.metaKey) { // Cmd
 #else
       if (event.ctrlKey) {
 #endif
@@ -3838,36 +3879,17 @@ function middleMousePaste(event)
 {
   var url = readFromClipboard();
   if (!url)
-    return false;
+    return;
   var postData = { };
   url = getShortcutOrURI(url, postData);
   if (!url)
-    return false;
+    return;
 
-  // On ctrl-middleclick, open in new tab.
-  var openNewTab;
-#ifdef XP_MACOSX
-  openNewTab = event.metaKey;
-#else
-  openNewTab = event.ctrlKey;
-#endif
-
-  if (!openNewTab) {
-    // If ctrl wasn't down, then just load the url in the current win/tab.
-    loadURI(url, null, postData.value);
-  } else {
-    const nsIURIFixup = Components.interfaces.nsIURIFixup;
-    if (!gURIFixup)
-      gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                            .getService(nsIURIFixup);
-
-    url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
-
-    openNewTabWith(url, null, event, true, postData.value);
-  }
+  openUILink(url,
+             event,
+             true /* ignore the fact this is a middle click */);
 
   event.preventBubble();
-  return true;
 }
 
 function makeURLAbsolute( base, url ) 
