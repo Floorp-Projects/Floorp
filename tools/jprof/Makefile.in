@@ -56,7 +56,7 @@ EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 OTHER_LIBRARIES = $(LIBMALLOC)
 HELPER_SCRIPTS = jprofsig
 HELPER_SCRIPTS  := $(addprefix $(srcdir)/, $(HELPER_SCRIPTS))
-TARGETS := $(PROGRAM) $(OTHER_LIBRARIES) $(HELPER_SCRIPTS)
+TARGETS := $(PROGRAM) $(OTHER_LIBRARIES)
 
 include $(topsrcdir)/config/rules.mk
 
