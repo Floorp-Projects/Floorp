@@ -277,6 +277,8 @@ function Startup()
   RegisterTabOpenObserver();
 #endif
 #endif
+
+  var sidebarSplitter;
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     if (!openerSidebarBox.hidden) {
@@ -289,7 +291,7 @@ function Startup()
       sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
       gMustLoadSidebar = true;
       sidebarBox.hidden = false;
-      var sidebarSplitter = document.getElementById("sidebar-splitter");
+      sidebarSplitter = document.getElementById("sidebar-splitter");
       sidebarSplitter.hidden = false;
       document.getElementById(sidebarCmd).setAttribute("checked", "true");
     }
@@ -301,7 +303,7 @@ function Startup()
       if (cmd != "") {
         gMustLoadSidebar = true;
         box.hidden = false;
-        var sidebarSplitter = document.getElementById("sidebar-splitter");
+        sidebarSplitter = document.getElementById("sidebar-splitter");
         sidebarSplitter.hidden = false;
         document.getElementById(cmd).setAttribute("checked", "true");
       }
