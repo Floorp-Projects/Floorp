@@ -138,7 +138,7 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
     }
 
     if (flen > 0) {
-       	PRUint32 howmany = PR_Read(in, whole, flen);
+       	PRInt32 howmany = PR_Read(in, whole, flen);
        	if (howmany < 0) {
            	NS_ERROR("FAILED: reading typelib file");
            	goto out;
