@@ -372,7 +372,7 @@ static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
     if (NS_SUCCEEDED(rv)) {
         nsFileSpec tmpdir; 
         tmpdir = cwd;
-        tmpdir += (const PRUnichar*) lc_name;
+        tmpdir += nsAutoString(NS_STATIC_CAST(const PRUnichar*, lc_name));
 
         if (tmpdir.Exists())
             cwd = tmpdir;

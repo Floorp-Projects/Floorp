@@ -915,7 +915,7 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   }
 
   if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
+    shellInfo = new nsContentShellInfo(nsAutoString(aID), aPrimary, aContentShell);
     mContentShells.AppendElement((void*)shellInfo);
   }
     
