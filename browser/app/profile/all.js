@@ -151,6 +151,7 @@ pref("view_source.wrap_long_lines", false);
 // gfx widgets
 pref("nglayout.widget.mode", 2);
 pref("nglayout.widget.gfxscrollbars", true);
+pref("nglayout.initialpaint.delay", 250);
 
 // css2 hover pref
 pref("nglayout.events.showHierarchicalHover", false);
