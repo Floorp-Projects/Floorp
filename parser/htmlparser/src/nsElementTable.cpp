@@ -214,7 +214,7 @@ CTagList  gHeadingTags(sizeof(gHxList)/sizeof(eHTMLTag_unknown),gHxList);
 
 CTagList  gTRCloseTags(3,0,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th);
 CTagList  gTDCloseTags(2,0,eHTMLTag_td,eHTMLTag_th);
-CTagList  gDTCloseTags(2,0,eHTMLTag_dt,eHTMLTag_dd);
+CTagList  gDTCloseTags(3,0,eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p);
 CTagList  gULCloseTags(1,0,eHTMLTag_li);
 
 
@@ -475,7 +475,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kSpecial|kFontStyle), kNone,	
+    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
     /*special props, prop-range*/       kOmitWS, kNoPropRange,
     /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
 
@@ -484,7 +484,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
     /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,
     /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
     /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_em,

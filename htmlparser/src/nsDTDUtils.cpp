@@ -491,7 +491,7 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
       case eToken_start:      result=new CStartToken(aTag); break;
       case eToken_end:        result=new CEndToken(aTag); break;
       case eToken_comment:    result=new CCommentToken(); break;
-      case eToken_entity:     result=new CEntityToken(); break;
+      case eToken_entity:     result=new CEntityToken(aString); break;
       case eToken_whitespace: result=new CWhitespaceToken(); break;
       case eToken_newline:    result=new CNewlineToken(); break;
       case eToken_text:       result=new CTextToken(aString); break;

@@ -32,6 +32,8 @@
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
 #include "nsIHTMLContentSink.h"
+#include "nsDTDUtils.h"
+#include "nsParserNode.h"
 
 #define NS_VIEWSOURCE_HTML_IID      \
   {0xb6003010, 0x7932, 0x11d2, \
@@ -42,6 +44,7 @@ class nsIDTDDebug;
 class nsIParserNode;
 class nsParser;
 class nsITokenizer;
+class nsCParserNode;
 
 
 class CViewSourceHTML: public nsIDTD {
@@ -222,7 +225,7 @@ class CViewSourceHTML: public nsIDTD {
     virtual PRBool IsContainer(PRInt32 aTag) const;
 
 
-    static nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText);
+    static nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText,PRBool aPlainText);
 
     /** These methods are used while setting setting title
      *  in the view source window. Same code fragment as in
@@ -245,6 +248,7 @@ protected:
     PRInt32             mHasOpenHead;
     PRBool              mIsPlaintext;
 
+    PRBool              mNeedsFontSpec;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

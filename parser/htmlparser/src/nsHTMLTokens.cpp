@@ -465,7 +465,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  static    nsAutoString terminals("&<\r");
+  static    nsAutoString terminals("&<\r\n");
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
