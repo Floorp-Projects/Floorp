@@ -28,8 +28,7 @@
 
 #include "xp_core.h"
 #include "prtypes.h"
-#include "jscompat.h"
-#include "jspubtd.h"
+#include "jsapi.h"
 
 #ifdef XP_WIN
 #include "plhash.h"
