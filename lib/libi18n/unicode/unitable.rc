@@ -155,5 +155,13 @@ BEGIN
 #include "utotbl\\gb2312.ut"
 END
 
+armscii.uf RCDATA
+BEGIN
+#include "ufrmtbl\\armscii.uf"
+END
+armscii.ut RCDATA
+BEGIN
+#include "utotbl\\armscii.ut"
+END
 
 	// #endif // ALL_UNICODE_TABLE

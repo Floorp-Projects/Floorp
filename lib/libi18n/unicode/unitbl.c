@@ -91,6 +91,7 @@ utablename utablenametbl[] =
 	{CS_GB_8BIT,	{"GB2312.UF",	0,	NULL},		{"GB2312.UT",	0,	NULL}},
 	{CS_KSC_8BIT,	{"U20KSC.UF",	0,	NULL},		{"U20KSC.UT",	0,	NULL}},
 	{CS_CP_1251,	{"CP1251.UF",	0,	NULL},		{"CP1251.UT",	0,	NULL}},
+	{CS_ARMSCII8, {"ARMSCII.UF", 0, NULL}, {"ARMSCII.UT", 0, NULL}},
 	{CS_CP_1250,		{"CP1250.UF",	0,	NULL},		{"CP1250.UT",	0,	NULL}},
 	{CS_CP_1253,		{"CP1253.UF",	0,	NULL},		{"CP1253.UT",	0,	NULL}},
 	{CS_8859_9,		{"CP1254.UF",	0,	NULL},		{"CP1254.UT",	0,	NULL}},
