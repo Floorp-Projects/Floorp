@@ -1076,7 +1076,7 @@
                type="checkbox"
                label="&showMessengerToolbarCmd.label;"
                accesskey="&showMessengerToolbarCmd.accesskey;"
-               oncommand="onViewToolbarCommand('mail-bar', event);"
+               oncommand="onViewToolbarCommand('mail-bar', 'menu_showMessengerToolbar');"
                checked="true"/>
               <menuitem id="menu_showSearchToolbar"
                type="checkbox"

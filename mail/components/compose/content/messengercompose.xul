@@ -287,7 +287,7 @@
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
                         label="&showComposeToolbarCmd.label;"
-                        oncommand="onViewToolbarCommand('composeToolbar', event);"
+                        oncommand="onViewToolbarCommand('composeToolbar', 'menu_showComposeToolbar');"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"

@@ -52,13 +52,23 @@ function MailToolboxCustomizeDone(aToolboxChanged)
     UpdateMailToolbar(focus); 
 }
 
-function onViewToolbarCommand(id, aEvent)
+function onViewToolbarCommand(aToolbarId, aMenuItemId)
 {
-  var toolbar = document.getElementById(id);
-  if (!toolbar) return;
+  var toolbar = document.getElementById(aToolbarId);
+  var menuItem = document.getElementById(aMenuItemId);
+
+  if (!toolbar || !menuItem) return;
+
+  var toolbarCollapsed = toolbar.collapsed;
   
-  toolbar.collapsed = aEvent.originalTarget.getAttribute("checked") != "true";
-  document.persist(id, "collapsed");
+  // toggle the checkbox
+  menuItem.setAttribute('checked', toolbarCollapsed);
+  
+  // toggle visibility of the toolbar
+  toolbar.collapsed = !toolbarCollapsed;   
+
+  document.persist(aToolbarId, 'collapsed');
+  document.persist(aMenuItemId, 'checked');
 }
 
 function toJavaScriptConsole()
