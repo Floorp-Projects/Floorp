@@ -113,7 +113,7 @@ endif
 			! -name "*.tbl" \
 			! -name "*.src" \
 			! -name "*.reg" \
-			-exec strip $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
+			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
 endif
