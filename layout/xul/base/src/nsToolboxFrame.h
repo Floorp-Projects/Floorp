@@ -61,6 +61,13 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+  
+
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext,
                                       PRInt32 aParentChange,
@@ -94,6 +101,8 @@ protected:
   virtual ~nsToolboxFrame();
 
   PRIntn GetSkipSides() const;
+
+  virtual void UpdateStyles(nsIPresContext* aPresContext);
 
   void RefreshStyleContext(nsIPresContext* aPresContext,
                             nsIAtom *         aNewContentPseudo,

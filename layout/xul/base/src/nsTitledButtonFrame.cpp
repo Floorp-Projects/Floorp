@@ -712,6 +712,9 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
+  aDesiredSize.width = 0;
+  aDesiredSize.height = 0;
+
 	if (mHasImage) {
 	  // get the size of the image and set the desired size
 	  if (mSizeFrozen) {

@@ -47,7 +47,6 @@ NS_NewBoxFrame ( nsIFrame*& aNewFrame )
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // it->SetFlags(aFlags);
   aNewFrame = it;
   return NS_OK;
   
@@ -209,108 +208,6 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
       return NS_OK;
 }
 
-/*
- * This method flows the given child at the given size.
- * Its a little complex because it more or less has to trick the 
- * reflow system to flowing it at the size we want.
- * this is achieved by creating a new reflow state and mucking 
- * with the parent computed size so that when the child figures
- * its computed size it ends up with the one we want. 
- *
-NS_IMETHODIMP
-nsBoxFrame::FlowChildAt(nsIFrame* childFrame, 
-                     nsIPresContext& aPresContext,
-                     nsHTMLReflowMetrics&     desiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     const nsSize& size)
-{
-  
-      // create a parent state that will hold the size we will set
-      nsHTMLReflowState parentState(aPresContext, aReflowState, this,
-                                    size);
-
-      // set the computed size to what we want
-      parentState.computedWidth = size.width;
-      parentState.computedHeight = size.height;
-
-      // subtract out the childs margin and border 
-      const nsStyleSpacing* spacing;
-      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                     (const nsStyleStruct*&) spacing);
-
-      nsMargin margin;
-      spacing->GetMargin(margin);
-      nsMargin border;
-      spacing->GetBorderPadding(border);
-      nsMargin total = margin + border;
-
-
-      const nsStylePosition* position;
-      rv = childFrame->GetStyleData(eStyleStruct_Position,
-                     (const nsStyleStruct*&) position);
-
-      
-      // adjust it by the percent so when the child scales itself it 
-      // will come out the right size.
-      nsStyleUnit wunit;
-      nsStyleUnit hunit;
-
-      // only subrtact margin and border if the size is not intrinsic
-      if (NS_INTRINSICSIZE != parentState.computedWidth) 
-      {
-        parentState.computedWidth -= (total.left + total.right);
-        
-        wunit = position->mWidth.GetUnit();
-        if (wunit == eStyleUnit_Percent) {
-          float percent = position->mWidth.GetPercentValue();
-          parentState.computedWidth = nscoord(float(parentState.computedWidth)/percent);
-        }
-      }
-
-
-      if (NS_INTRINSICSIZE != parentState.computedHeight) 
-      {
-        parentState.computedHeight -= (total.top + total.bottom);
-
-        
-        hunit =  position->mHeight.GetUnit();
-        if (hunit == eStyleUnit_Percent) {
-          float percent = position->mHeight.GetPercentValue();
-          parentState.computedHeight = nscoord(float(parentState.computedHeight)/percent);
-        }
-        
-      }
-      
-
-      // start off with an empty size
-      desiredSize.width = 0; 
-      desiredSize.height = 0;
-
-      nsHTMLReflowState   reflowState(aPresContext, parentState, childFrame, size);
-
-
-
-      nsIHTMLReflow*      htmlReflow;
-
-      rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-      NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
-
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-
-      // set the rect
-      childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
-
-      // add the margin back in. The child should add its border automatically
-      desiredSize.height += (margin.top + margin.bottom);
-      desiredSize.width += (margin.left + margin.right); 
-      
-      return NS_OK;
-}
-*/
-
 /**
  * Ok what we want to do here is get all the children, figure out
  * their flexibility, preferred, min, max sizes and then stretch or
@@ -356,9 +253,13 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   // ------ first pass build springs -------
   
   nsBoxDataSpring springs[100];
-  
+
   // go though each child
   nsHTMLReflowMetrics desiredSize = aDesiredSize;
+  nsSize totalMinSize = availableSize;  
+  nsSize minSize(0,0);
+  nsSize maxSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
+  nsSize maxDesiredSize(0,0);
   
   nscoord count = 0;
   nsIFrame* childFrame = mFrames.FirstChild(); 
@@ -379,10 +280,60 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     nsStyleUnit hunit = position->mHeight.GetUnit();
 
     // if we don't know the exact width or height then
-    // get the instrinsic size for our preferred.
-    if (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)
-       FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, nsSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE));
+    // get the instrinsic size for our preferred.    
+          // get the min and max size
+    const nsStyleCoord* minWidth;
+    const nsStyleCoord* minHeight;
+    const nsStyleCoord* maxWidth;
+    const nsStyleCoord* maxHeight;
 
+    minWidth = &position->mMinWidth;
+    minHeight = &position->mMinHeight;
+    maxWidth = &position->mMaxWidth;
+    maxHeight = &position->mMaxHeight;
+
+    if (minWidth->GetUnit() == eStyleUnit_Coord) 
+      minSize.width = minWidth->GetCoordValue();
+
+    if (minHeight->GetUnit() == eStyleUnit_Coord) 
+      minSize.height = minHeight->GetCoordValue();
+
+    if (maxWidth->GetUnit() == eStyleUnit_Coord) 
+      maxSize.width = maxWidth->GetCoordValue();
+
+    if (maxHeight->GetUnit() == eStyleUnit_Coord) 
+      maxSize.height = maxHeight->GetCoordValue();
+
+    if (mHorizontal) {
+       springs[count].minSize = minSize.width;
+       springs[count].maxSize = maxSize.width;
+    } else {
+       springs[count].minSize = minSize.height;
+       springs[count].maxSize = maxSize.height;
+    }
+
+    // get the greatest min size
+    if (minSize.height > totalMinSize.height) 
+      totalMinSize.height = minSize.height;
+    
+    if (minSize.width > totalMinSize.width) 
+      totalMinSize.width = minSize.width;
+
+    nsSize flexSize(totalMinSize);
+    if (mHorizontal)
+       flexSize.width = NS_INTRINSICSIZE;
+    else
+       flexSize.height = NS_INTRINSICSIZE;
+
+    if (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)
+       FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize);
+
+    if (desiredSize.height > maxDesiredSize.height) 
+      maxDesiredSize.height = desiredSize.height;
+    
+    if (desiredSize.width > maxDesiredSize.width) 
+      maxDesiredSize.width = desiredSize.width;
+    
     if (wunit == eStyleUnit_Coord) 
         desiredSize.width = position->mWidth.GetCoordValue();
 
@@ -400,52 +351,13 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     else
         springs[count].preferredSize = desiredSize.height;
 
-
-    const nsStyleCoord* min;
-    const nsStyleCoord* max;
-
-    if (mHorizontal)
-    {
-       min = &position->mMinWidth;
-       max = &position->mMaxWidth;
-    } else {
-       min = &position->mMinHeight;
-       max = &position->mMaxHeight;
-    }
-
-    if (min->GetUnit() == eStyleUnit_Coord) 
-      springs[count].minSize = min->GetCoordValue();
-
-    if (max->GetUnit() == eStyleUnit_Coord) 
-      springs[count].maxSize = max->GetCoordValue();
-
-
+  
     // get the content
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
 
     PRInt32 error;
     nsString value;
-
-    /*
-     float p2t;
-     aPresContext.GetScaledPixelsToTwips(&p2t);
-     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-    // get min size
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::min, value))
-    {
-       PRInt32 min = value.ToInteger(&error);
-       springs[count].minSize = min*onePixel;
-    }
-
-    // get max size
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::max, value))
-    {
-       PRInt32 max = value.ToInteger(&error);
-       springs[count].maxSize = max*onePixel;
-    }
-    */
     
     // get the spring constant
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
@@ -461,22 +373,24 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     } else {
       if (hunit == eStyleUnit_Percent)  
           springs[count].springConstant = position->mHeight.GetPercentValue();
-    }
-
-    // if its height greater than the max. Set the max to this height and set a flag
-    // saying we will need to do another pass. But keep going there
-    // may be another child that is bigger
-    if (availableSize.height == NS_INTRINSICSIZE || desiredSize.height > availableSize.height) {
-        availableSize.height = desiredSize.height;
-    } 
-    if (availableSize.width == NS_INTRINSICSIZE || desiredSize.width > availableSize.width) {
-        availableSize.width = desiredSize.width;
-    }       
+    }   
   
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
+
+  availableSize = totalMinSize;
+
+  // if we are bieng flowed at our intrinsic width our height then set our width
+  // to the biggest child.
+  if (availableSize.height == NS_INTRINSICSIZE ) {
+      availableSize.height = maxDesiredSize.height;
+  } 
+
+  if (availableSize.width == NS_INTRINSICSIZE) {
+      availableSize.width = maxDesiredSize.width;
+  }  
 
   // total number of children
   nscoord totalCount = count;
@@ -700,7 +614,6 @@ nsBoxFrame::Stretch(nsBoxDataSpring* springs, PRInt32 nSprings, nscoord& size)
                   if (newSize<=spring.minSize) {
                       spring.calculatedSize = spring.minSize;
                       springConstantsRemaining -= spring.springConstant;
-                      //sizeRemaining -= spring.minSize-spring.preferredSize;
                       sizeRemaining += spring.preferredSize;
                       sizeRemaining -= spring.calculatedSize;
  
@@ -710,7 +623,6 @@ nsBoxFrame::Stretch(nsBoxDataSpring* springs, PRInt32 nSprings, nscoord& size)
                   else if (newSize>=spring.maxSize) {
                       spring.calculatedSize = spring.maxSize;
                       springConstantsRemaining -= spring.springConstant;
-                      //sizeRemaining -= spring.minSize-spring.preferredSize;
                       sizeRemaining += spring.preferredSize;
                       sizeRemaining -= spring.calculatedSize;
                       spring.sizeValid = PR_TRUE;
