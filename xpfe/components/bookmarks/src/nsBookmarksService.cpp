@@ -83,7 +83,9 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 
 #include "nsIParser.h"          // for kCharsetFromBookmarks
 
@@ -164,7 +166,6 @@ static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kIOServiceCID,               NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
@@ -1741,30 +1742,25 @@ nsBookmarksService::Init()
         }
     }
 
-    nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
-    if (NS_SUCCEEDED(rv) && (prefServ))
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
     {
         // get browser icon prefs
         PRInt32 toolbarIcons = 0;
-        prefServ->GetIntPref("browser.chrome.load_toolbar_icons", &toolbarIcons);
+        prefBranch->GetIntPref("browser.chrome.load_toolbar_icons", &toolbarIcons);
         if (toolbarIcons > 0) {
-              prefServ->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
+              prefBranch->GetBoolPref("browser.chrome.site_icons", &mBrowserIcons);
               mAlwaysLoadIcons = (toolbarIcons > 1);
         } else
               mAlwaysLoadIcons = mBrowserIcons = PR_FALSE;
         
         // determine what the name of the Personal Toolbar Folder is...
         // first from user preference, then string bundle, then hard-coded default
-        char    *prefVal = nsnull;
-        if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("custtoolbar.personal_toolbar_folder",
-            &prefVal)) && (prefVal))
+        nsXPIDLCString prefValue;
+        if (NS_SUCCEEDED(rv = prefBranch->GetCharPref("custtoolbar.personal_toolbar_folder", getter_Copies(prefValue))
+            && !prefValue.IsEmpty()))
         {
-            if (*prefVal)
-            {
-                mPersonalToolbarName = NS_ConvertUTF8toUCS2(prefVal);
-            }
-            nsCRT::free(prefVal);
-            prefVal = nsnull;
+            CopyUTF8toUTF16(prefValue, mPersonalToolbarName);
         }
 
         if (mPersonalToolbarName.IsEmpty())
@@ -2577,7 +2573,7 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
         // The profile has already changed.
         rv = LoadBookmarks();
     }
-    else if (!nsCRT::strcmp(aTopic, "nsPref:changed"))
+    else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
     {
         rv = Flush();
         if (NS_SUCCEEDED(rv))
@@ -5060,12 +5056,12 @@ nsBookmarksService::EnsureBookmarksFile()
 
     // First we see if the user has set a pref for the location of the 
     // bookmarks file.
-    nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
         nsXPIDLCString prefVal;
-        rv = prefServ->CopyCharPref("browser.bookmarks.file",
-                                    getter_Copies(prefVal));      
+        rv = prefBranch->GetCharPref("browser.bookmarks.file",
+                                     getter_Copies(prefVal));      
         if (NS_SUCCEEDED(rv))
         {
             rv = NS_NewNativeLocalFile(prefVal, PR_TRUE, getter_AddRefs(mBookmarksFile));
@@ -5158,9 +5154,9 @@ nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
         LoadBookmarks();
         if (mBookmarksFile) {
             *didLoadBookmarks = PR_TRUE;
-            nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID));
-            if (prefServ)
-                prefServ->AddObserver("browser.bookmarks.file", this, true);
+            nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_GetService(NS_PREFSERVICE_CONTRACTID));
+            if (prefBranchInt)
+                prefBranchInt->AddObserver("browser.bookmarks.file", this, true);
         }
     }
     return NS_OK;
@@ -5220,7 +5216,7 @@ nsBookmarksService::LoadBookmarks()
 
     PRBool foundIERoot = PR_FALSE;
 
-    nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
     nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
     if (prefSvc)
         prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
