@@ -35,7 +35,6 @@
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
 
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 
@@ -431,13 +430,16 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
       case eSocketState_WaitConnect:
         mStatus = doConnection(aSelectFlags);
+        if (NS_SUCCEEDED(mStatus) && mOpenObserver) {
+          mOpenObserver->OnStartRequest(this, mOpenContext);
+        }
         break;
 
       case eSocketState_WaitReadWrite:
         // Process the read request...
         if (GetReadType() != eSocketRead_None) {
           mStatus = doRead(aSelectFlags);
-          if (NS_OK == mStatus) {
+          if (NS_SUCCEEDED(mStatus)) {
             SetFlag(eSocketRead_Done);
             break;
           }
@@ -446,7 +448,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         if ((NS_SUCCEEDED(mStatus) || mStatus == NS_BASE_STREAM_WOULD_BLOCK)
             && (GetWriteType() != eSocketWrite_None)) {
           mStatus = doWrite(aSelectFlags);
-          if (NS_OK == mStatus) {
+          if (NS_SUCCEEDED(mStatus)) {
             SetFlag(eSocketWrite_Done);
             break;
           }
@@ -467,7 +469,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     // If the current state has successfully completed, then move to the
     // next state for the current operation...
     //
-    if (NS_OK == mStatus) {
+    if (NS_SUCCEEDED(mStatus)) {
       mCurrentState = gStateTable[mOperation][mCurrentState];
     } 
     else if (NS_BASE_STREAM_WOULD_BLOCK == mStatus) {
@@ -1016,7 +1018,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   nsresult rv = NS_OK;
 
   *aCount = 0;
-  while (NS_OK == rv) {
+  while (NS_SUCCEEDED(rv)) {
     // Determine the amount of data to read from the input stream...
     if ((mWriteCount > 0) && (mWriteCount < MAX_IO_TRANSFER_SIZE)) {
       maxBytesToRead = mWriteCount;
@@ -1083,7 +1085,14 @@ nsresult nsSocketTransport::CloseConnection(void)
   if (NS_SUCCEEDED(rv)) {
     mCurrentState = eSocketState_Closed;
   }
-  
+  if (mOpenObserver) {
+    nsresult rv2 = mOpenObserver->OnStopRequest(this, mOpenContext,
+                                                rv, nsnull);    // XXX need error message
+    if (NS_SUCCEEDED(rv))
+      rv = rv2;
+    mOpenObserver = null_nsCOMPtr();
+    mOpenContext = null_nsCOMPtr();
+  }
   return rv;
 }
 
@@ -1399,11 +1408,51 @@ nsSocketTransport::GetURI(nsIURI * *aURL)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+  nsresult rv = NS_OK;
+  
+  // Enter the socket transport lock...
+  nsAutoLock aLock(mLock);
+
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("+++ Entering nsSocketTransport::AsyncOpen() [this=%x]\n", this));
+
+  // If a read is already in progress then fail...
+  if (GetReadType() != eSocketRead_None) {
+    rv = NS_ERROR_IN_PROGRESS;
+  }
+
+  // Create a marshalling open observer to receive notifications...
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
+                                   nsnull, observer);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    // Store the context used for this read...
+    mOpenContext = ctxt;
+
+    mOperation = eSocketOperation_Connect;
+    SetReadType(eSocketRead_None);
+
+    rv = mService->AddToWorkQ(this);
+  }
+
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("--- Leaving nsSocketTransport::AsyncOpen() [this=%x]. rv = %x.\n",
+          this, rv));
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                              nsISupports* aContext,
                              nsIStreamListener* aListener)
 {
   // XXX deal with startPosition and readCount parameters
+  NS_ASSERTION(startPosition == 0, "can't deal with offsets in socket transport");
   nsresult rv = NS_OK;
   
   // Enter the socket transport lock...
@@ -1437,18 +1486,8 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
   // Create a marshalling stream listener to receive notifications...
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIEventQueue> eventQ;
-
-    // Get the event queue of the current thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
-                                              getter_AddRefs(eventQ));
-    }
-    if (NS_SUCCEEDED(rv)) {
-      rv = NS_NewAsyncStreamListener(getter_AddRefs(mReadListener), 
-                                     eventQ, aListener);
-    }
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(mReadListener),
+                                   nsnull, aListener);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1497,18 +1536,8 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
     // Create a marshalling stream observer to receive notifications...
     if (aObserver) {
-      nsCOMPtr<nsIEventQueue> eventQ;
-
-      // Get the event queue of the current thread...
-      NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
-                                                getter_AddRefs(eventQ));
-      }
-      if (NS_SUCCEEDED(rv)) {
-        rv = NS_NewAsyncStreamObserver(getter_AddRefs(mWriteObserver), 
-                                       eventQ, aObserver);
-      }
+      rv = NS_NewAsyncStreamObserver(getter_AddRefs(mWriteObserver), 
+                                     nsnull, aObserver);
     }
 
     mWriteCount = writeCount;

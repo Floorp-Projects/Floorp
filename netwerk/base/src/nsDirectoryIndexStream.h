@@ -39,7 +39,7 @@ protected:
 
 public:
     static nsresult
-    Create(const nsFileSpec& aDir, nsISupports** aStreamResult);
+    Create(const nsFileSpec& aDir, nsIInputStream** aStreamResult);
 
     // nsISupportsInterface
     NS_DECL_ISUPPORTS

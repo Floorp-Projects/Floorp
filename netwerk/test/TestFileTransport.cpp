@@ -49,7 +49,8 @@ public:
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
                              nsresult status, const PRUnichar *errorMsg) {
         printf("ending status=%0x total=%d\n", status, mTotal);
-        gDone = PR_TRUE;
+        if (--mStopCount == 0)
+            gDone = PR_TRUE;
         return NS_OK;
     }
 
@@ -75,7 +76,7 @@ public:
         return NS_OK;
     }
     
-    MyListener() : mTotal(0) {
+    MyListener(PRUint32 stopCount = 1) : mTotal(0), mStopCount(stopCount) {
         NS_INIT_REFCNT();
     }
     
@@ -104,9 +105,10 @@ public:
 protected:
     nsCOMPtr<nsIOutputStream> mOut;
     PRUint32 mTotal;
+    PRUint32 mStopCount;
 };
 
-NS_IMPL_ISUPPORTS(MyListener, nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS2(MyListener, nsIStreamListener, nsIStreamObserver);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,15 +116,6 @@ nsresult
 TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 {
     nsresult rv;
-
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
-    if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -162,15 +155,6 @@ nsresult
 TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 {
     nsresult rv;
-
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
-    if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -214,6 +198,91 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MyOpenObserver : public nsIStreamObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
+        nsresult rv;
+        char* contentType;
+        rv = channel->GetContentType(&contentType);
+        if (NS_FAILED(rv)) return rv;
+        PRInt32 length;
+        rv = channel->GetContentLength(&length);
+        if (NS_FAILED(rv)) return rv;
+        printf("stream opened: content type = %s, length = %d\n",
+               contentType, length);
+        nsCRT::free(contentType);
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+                             nsresult status, const PRUnichar *errorMsg) {
+        printf("stream closed: status %x\n", status);
+        return NS_OK;
+    }
+
+    MyOpenObserver() { NS_INIT_REFCNT(); }
+    virtual ~MyOpenObserver() {}
+};
+
+NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIStreamObserver);
+
+nsresult
+TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec fs(fileName);
+    nsIChannel* fileTrans;
+    rv = fts->CreateTransport(fs, "load", nsnull, &fileTrans);
+    if (NS_FAILED(rv)) return rv;
+
+    MyListener* listener = new MyListener(1);
+    if (listener == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(listener);
+    rv = listener->Init(fs);
+    if (NS_FAILED(rv)) return rv;
+
+    MyOpenObserver* openObserver = new MyOpenObserver();
+    if (openObserver == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(openObserver);
+
+    gDone = PR_FALSE;
+    rv = fileTrans->AsyncOpen(openObserver, nsnull);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileTrans->AsyncRead(offset + 10, length, nsnull, listener);
+    if (NS_FAILED(rv)) return rv;
+#if 0
+    rv = fileTrans->AsyncRead(offset, length, nsnull, listener);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileTrans->AsyncRead(offset + 100, length, nsnull, listener);
+    if (NS_FAILED(rv)) return rv;
+#endif
+    while (!gDone) {
+        PLEvent* event;
+        rv = gEventQ->GetEvent(&event);
+        if (NS_FAILED(rv)) return rv;
+        rv = gEventQ->HandleEvent(event);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    NS_RELEASE(openObserver);
+    NS_RELEASE(listener);
+    NS_RELEASE(fileTrans);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 nsresult
 NS_AutoregisterComponents()
 {
@@ -235,6 +304,15 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    if (NS_FAILED(rv)) return rv;
+
     rv = TestAsyncRead(fileName, 0, -1);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
 
@@ -244,5 +322,9 @@ main(int argc, char* argv[])
     rv = TestAsyncRead(fileName, 10, 100);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
 
+    rv = TestAsyncOpen(fileName, 10, 100);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncOpen failed");
+
+    NS_RELEASE(gEventQ);
     return NS_OK;
 }

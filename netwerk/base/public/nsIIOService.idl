@@ -111,6 +111,8 @@ interface nsIIOService : nsISupports
     /**
      * Returns a new stream observer that marshals data from another
      * stream observer over to the thread specified by an event queue.
+     * If the event queue is null, the current thread's event queue is
+     * used.
      */
     nsIStreamObserver NewAsyncStreamObserver(in nsIStreamObserver receiver,
                                              in nsIEventQueue eventQueue);
@@ -154,6 +156,7 @@ interface nsIIOService : nsISupports
      */
     nsIChannel NewInputStreamChannel(in nsIURI uri,
                                      in string contentType, 
+                                     in long contentLength,
                                      in nsIInputStream inStr,
                                      in nsILoadGroup group);
 };

@@ -226,6 +226,12 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *aContext,
                          nsIStreamListener *listener)

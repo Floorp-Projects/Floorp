@@ -22,6 +22,7 @@
 #include "nsIServiceManager.h"
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
+#include "netCore.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -31,7 +32,7 @@ static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mContentType(nsnull)
+    : mContentType(nsnull), mContentLength(-1)
 {
     NS_INIT_REFCNT(); 
 }
@@ -56,10 +57,12 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
 
 nsresult
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
+                           PRInt32 contentLength,
                            nsIInputStream* in, nsILoadGroup* group)
 {
     mURI = uri;
     mLoadGroup = group;
+    mContentLength = contentLength;
     nsCAutoString cType(contentType);
     cType.ToLowerCase();
     mContentType = cType.ToNewCString();
@@ -123,6 +126,24 @@ nsInputStreamChannel::GetURI(nsIURI * *aURI)
 }
 
 NS_IMETHODIMP
+nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    if (mFileTransport)
+        return NS_ERROR_IN_PROGRESS;
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
+                                        "load", nsnull,
+                                        getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    return mFileTransport->AsyncOpen(observer, ctxt);
+}
+
+NS_IMETHODIMP
 nsInputStreamChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                                       nsIInputStream **result)
 {
@@ -144,32 +165,6 @@ NS_IMETHODIMP
 nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                                 nsISupports *ctxt, nsIStreamListener *listener)
 {
-#if 0
-    // currently this happens before AsyncRead returns -- hope that's ok
-    nsresult rv;
-
-    // Do an extra AddRef so that this method's synchronous operation doesn't end up destroying
-    // the listener prematurely.
-    nsCOMPtr<nsIStreamListener> l(listener);
-
-    rv = listener->OnStartRequest(this, ctxt);
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 amt;
-    while (PR_TRUE) {
-        rv = mInputStream->Available(&amt);
-        if (NS_FAILED(rv)) break;
-        if (amt == 0) 
-            break;
-        if (readCount != -1)
-            amt = PR_MIN((PRUint32)readCount, amt);
-        rv = listener->OnDataAvailable(this, ctxt, mInputStream, 0, amt);
-        if (NS_FAILED(rv)) break;
-    }
-
-    rv = listener->OnStopRequest(this, ctxt, rv, nsnull);       // XXX error message 
-    return rv;
-#else
     nsresult rv;
 
     mRealListener = listener;
@@ -193,15 +188,17 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
     }
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (mFileTransport == nsnull) {
+        NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransportFromStream(mInputStream, "load", nsnull,
-                                        getter_AddRefs(mFileTransport));
-    if (NS_FAILED(rv)) return rv;
+        rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
+                                            "load", nsnull,
+                                            getter_AddRefs(mFileTransport));
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return mFileTransport->AsyncRead(startPosition, readCount, ctxt, this);
-#endif
 }
 
 NS_IMETHODIMP
@@ -227,55 +224,20 @@ nsInputStreamChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
     return NS_OK;
 }
 
-#define DUMMY_TYPE "text/html"
-
 NS_IMETHODIMP
 nsInputStreamChannel::GetContentType(char * *aContentType)
 {
-    nsresult rv = NS_OK;
-
-    // Parameter validation...
-    if (!aContentType) {
-        return NS_ERROR_NULL_POINTER;
+    *aContentType = nsCRT::strdup(mContentType);
+    if (*aContentType == nsnull) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
-    *aContentType = nsnull;
-
-    // If we already have a content type, use it.
-    if (mContentType) {
-        *aContentType = nsCRT::strdup(mContentType);
-        if (!*aContentType) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-        return rv;
-    }
-
-    //
-    // No response yet...  Try to determine the content-type based
-    // on the file extension of the URI...
-    //
-    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = MIMEService->GetTypeFromURI(mURI, aContentType);
-        if (NS_SUCCEEDED(rv)) return rv;
-    }
-
-    // if all else fails treat it as text/html?
-    if (!*aContentType) 
-        *aContentType = nsCRT::strdup(DUMMY_TYPE);
-    if (!*aContentType) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        rv = NS_OK;
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
 {
-    // The content length is unknown...
-    *aContentLength = -1;
+    *aContentLength = mContentLength;
     return NS_OK;
 }
 

@@ -64,7 +64,7 @@ nsDirectoryIndexStream::~nsDirectoryIndexStream()
 
 
 nsresult
-nsDirectoryIndexStream::Create(const nsFileSpec& aDir, nsISupports** aResult)
+nsDirectoryIndexStream::Create(const nsFileSpec& aDir, nsIInputStream** aResult)
 {
     nsDirectoryIndexStream* result = new nsDirectoryIndexStream();
     if (! result)

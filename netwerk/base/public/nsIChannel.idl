@@ -48,7 +48,7 @@ interface nsIChannel : nsIRequest
      *   up to the end of the data is read. If greater than the end of 
      *   the data, the amount available is returned in the stream.
      */
-    nsIInputStream OpenInputStream(in unsigned long startPosition,
+    nsIInputStream openInputStream(in unsigned long startPosition,
                                    in long readCount);
 
     /**
@@ -56,7 +56,16 @@ interface nsIChannel : nsIRequest
      * @param startPosition - The offset from the start of the data
      *   from which to begin writing.
      */
-    nsIOutputStream OpenOutputStream(in unsigned long startPosition);
+    nsIOutputStream openOutputStream(in unsigned long startPosition);
+
+    /**
+     * Opens the channel asynchronously. The nsIStreamObserver's OnStartRequest
+     * method is called back when the channel actually becomes open, providing 
+     * the content type. Its OnStopRequest method is called when the channel
+     * becomes closed.
+     */
+    void asyncOpen(in nsIStreamObserver observer, 
+                   in nsISupports ctxt);
 
     /**
      * Reads asynchronously from the URL's specified source. Notifications
@@ -67,7 +76,7 @@ interface nsIChannel : nsIRequest
      * If the readCount == -1 then all the available data is delivered to
      * the stream listener.
      */
-    void AsyncRead(in unsigned long startPosition,
+    void asyncRead(in unsigned long startPosition,
                    in long readCount,
                    in nsISupports ctxt,
                    in nsIStreamListener listener);
@@ -81,7 +90,7 @@ interface nsIChannel : nsIRequest
      * If the writeCount == -1, then all the available data in the input
      * stream is written.
      */
-    void AsyncWrite(in nsIInputStream fromStream,
+    void asyncWrite(in nsIInputStream fromStream,
                     in unsigned long startPosition,
                     in long writeCount,
                     in nsISupports ctxt,
@@ -107,7 +116,7 @@ interface nsIChannel : nsIRequest
      * and to not contribute to keeping any nsILoadGroup it may be contained
      * in from firing its OnLoadComplete notification.
      */
-    attribute nsLoadFlags LoadAttributes;
+    attribute nsLoadFlags loadAttributes;
 
     /**
      * Returns the content MIME type of the channel if available. Note that the 
@@ -115,25 +124,25 @@ interface nsIChannel : nsIRequest
      * MIME type, wrong document type stored on a server, etc.) and the caller
      * most likely wants to verify with the actual data. 
      */
-    readonly attribute string ContentType;
+    readonly attribute string contentType;
 
     /**
      * Returns the length of the data assiciated with the channel if available.
      * If the length is unknown then -1 is returned.
      */
-    readonly attribute long ContentLength;
+    readonly attribute long contentLength;
 
     /**
      * Accesses the owner corresponding to the entity that is 
      * responsible for this channel. Used by security code to grant
      * or diminish privileges to mobile code loaded from this channel. 
      */
-    attribute nsISupports Owner;
+    attribute nsISupports owner;
 
     /**
      * Returns the load group in which the channel is a currently a member.
      */
-    readonly attribute nsILoadGroup LoadGroup;
+    readonly attribute nsILoadGroup loadGroup;
 
 };
 

@@ -279,6 +279,12 @@ nsDataChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 }
 
 NS_IMETHODIMP
+nsDataChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                         nsISupports *ctxt,
                         nsIStreamListener *aListener)
@@ -292,13 +298,7 @@ nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     // we'll just fire everything off at once because we've already got all
     // the data.
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = serv->NewAsyncStreamListener(aListener, eventQ, &listener);
+    rv = serv->NewAsyncStreamListener(aListener, nsnull, &listener);
     NS_RELEASE(eventQ);
     if (NS_FAILED(rv)) return rv;
 

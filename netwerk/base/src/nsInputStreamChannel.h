@@ -44,11 +44,13 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init(nsIURI* uri, const char* contentType, 
+                  PRInt32 contentLength,
                   nsIInputStream* in, nsILoadGroup* group);
 
 protected:
     nsCOMPtr<nsIURI>            mURI;
     char*                       mContentType;
+    PRInt32                     mContentLength;
     nsCOMPtr<nsIInputStream>    mInputStream;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsISupports>       mOwner;

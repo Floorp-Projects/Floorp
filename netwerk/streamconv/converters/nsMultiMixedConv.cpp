@@ -147,6 +147,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                 // channel and call through to our listener.
                 mBoundaryStart = PR_TRUE;
                 nsCString contentTypeStr;
+                PRInt32 contentLength = -1;
 
                 NS_IF_RELEASE(mPartChannel);
 
@@ -177,12 +178,14 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                             if (headerStr.Equals("content-type")) {
                                 contentTypeStr = headerVal;
-                                NS_RELEASE(header);
+                            }
+                            else if (headerStr.Equals("content-length")) {
+                                contentLength = atoi(headerVal);
                             } else {
                                 // XXX we need a way to set other header's such as cookies :/
                                 // XXX maybe we just handle cookies directly here.
-                                NS_RELEASE(header);
                             }
+                            NS_RELEASE(header);
                         }
                         
                         *headerCStr = '\n';
@@ -197,7 +200,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                 if (contentTypeStr.Length() < 1)
                     contentTypeStr = "text/html"; // default to text/html, that's all we'll ever see anyway
-                rv = serv->NewInputStreamChannel(partURI, contentTypeStr.GetBuffer(),
+                rv = serv->NewInputStreamChannel(partURI, contentTypeStr.GetBuffer(), contentLength,
                                                  nsnull, nsnull, &mPartChannel);
                 NS_RELEASE(partURI);
                 if (NS_FAILED(rv)) return rv;
