@@ -444,7 +444,7 @@ protected:
 
     virtual void            OnDestroy();
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool          OnPaint();
+    virtual PRBool          OnPaint(HDC aDC = nsnull);
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
     BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
