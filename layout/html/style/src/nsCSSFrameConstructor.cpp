@@ -3863,9 +3863,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       newScrollableFrame->GetView(aPresContext, &view);
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIScrollableView>
-        scrollableView(do_QueryInterface(view));
-      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
+      nsIScrollableView* scrollableView = nsnull;
+      NS_ENSURE_SUCCESS(CallQueryInterface(view, &scrollableView), NS_ERROR_FAILURE);
 
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
@@ -3910,9 +3909,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       scrollFrame->GetView(aPresContext, &view);
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIScrollableView>
-        scrollableView(do_QueryInterface(view));
-      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
+      nsIScrollableView* scrollableView = nsnull;
+      NS_ENSURE_SUCCESS(CallQueryInterface(view, &scrollableView), NS_ERROR_FAILURE);
 
       viewManager->SetRootScrollableView(scrollableView);
 
