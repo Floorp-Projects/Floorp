@@ -62,7 +62,7 @@ nsIIDNService *nsStandardURL::gIDNService = nsnull;
 nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
 PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
-PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_FALSE;
+PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_TRUE;
 
 #if defined(PR_LOGGING)
 //
@@ -180,7 +180,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
         // null or the empty string then the origin charset is UTF-8 and there
         // is nothing to do.
         nsCAutoString encBuf;
-        if (!nsCRT::IsAscii(str + pos, len) && mCharset && *mCharset) {
+        if (mCharset && *mCharset && !nsCRT::IsAscii(str + pos, len)) {
             // we have to encode this segment
             if (mEncoder || InitUnicodeEncoder()) {
                 NS_ConvertUTF8toUCS2 ucsBuf(Substring(str + pos, str + pos + len));
@@ -249,7 +249,7 @@ nsSegmentEncoder::InitUnicodeEncoder()
 }
 
 #define GET_SEGMENT_ENCODER(name) \
-    nsSegmentEncoder name(mOriginCharset.get())
+    nsSegmentEncoder name(gAlwaysEncodeInUTF8 ? nsnull : mOriginCharset.get())
 
 //----------------------------------------------------------------------------
 // nsStandardURL <public>
@@ -2413,25 +2413,23 @@ nsStandardURL::Init(PRUint32 urlType,
 
     mOriginCharset.Truncate();
 
-    if (!gAlwaysEncodeInUTF8) {
-        if (charset == nsnull || *charset == '\0') {
-            // check if baseURI provides an origin charset and use that.
-            if (baseURI)
-                baseURI->GetOriginCharset(mOriginCharset);
+    if (charset == nsnull || *charset == '\0') {
+        // check if baseURI provides an origin charset and use that.
+        if (baseURI)
+            baseURI->GetOriginCharset(mOriginCharset);
 
-            // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32,
-            // UTF-32-LE, UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if
-            // it starts with "utf" (since an empty mOriginCharset implies
-            // UTF-8, this is safe even if mOriginCharset is UTF-8).
+        // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32,
+        // UTF-32-LE, UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if
+        // it starts with "utf" (since an empty mOriginCharset implies
+        // UTF-8, this is safe even if mOriginCharset is UTF-8).
 
-            if (mOriginCharset.Length() > 3 &&
-                IsUTFCharset(mOriginCharset.get())) {
-                mOriginCharset.Truncate();
-            }
+        if (mOriginCharset.Length() > 3 &&
+            IsUTFCharset(mOriginCharset.get())) {
+            mOriginCharset.Truncate();
         }
-        else if (!IsUTFCharset(charset)) {
-            mOriginCharset = charset;
-        }
+    }
+    else if (!IsUTFCharset(charset)) {
+        mOriginCharset = charset;
     }
 
     if (baseURI) {

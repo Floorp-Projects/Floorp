@@ -568,7 +568,7 @@ pref("network.standard-url.escape-utf8", true);
 
 // This preference controls whether or not URLs are always encoded and sent as
 // UTF-8.
-pref("network.standard-url.encode-utf8", false);
+pref("network.standard-url.encode-utf8", true);
 
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
@@ -601,10 +601,10 @@ pref("network.negotiate-auth.allow-proxies", true);
 
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
-// Window's domain logon.  By default, this is enabled for proxy servers.
-// The trusted-uris pref follows the format of the trusted-uris pref for
-// negotiate authentication.
-pref("network.automatic-ntlm-auth.allow-proxies", true);
+// Window's domain logon.  By default, this is disabled for proxy servers due
+// to bug 256949.  The trusted-uris pref follows the format of the trusted-uris
+// pref for negotiate authentication.
+pref("network.automatic-ntlm-auth.allow-proxies", false);
 pref("network.automatic-ntlm-auth.trusted-uris", "");
 
 
