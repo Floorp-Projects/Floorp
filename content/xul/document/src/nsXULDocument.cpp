@@ -126,6 +126,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMProcessingInstruction.h"
 #include "nsIXBLService.h"
 #include "nsReadableUtils.h"
 #include "nsCExternalHandlerService.h"
@@ -517,8 +518,8 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kTemplateAtom);
         NS_IF_RELEASE(kTooltipAtom);
 
-	NS_IF_RELEASE(kCoalesceAtom);
-	NS_IF_RELEASE(kAllowNegativesAtom);
+        NS_IF_RELEASE(kCoalesceAtom);
+        NS_IF_RELEASE(kAllowNegativesAtom);
 
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -2377,8 +2378,18 @@ nsXULDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
                                            const nsAReadableString& aData,
                                            nsIDOMProcessingInstruction** aReturn)
 {
-    NS_NOTREACHED("nsXULDocument::CreateProcessingInstruction");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+
+    nsCOMPtr<nsIContent> content;
+    nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content),
+                                                 aTarget, aData);
+
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    return CallQueryInterface(content, aReturn);
 }
 
 
