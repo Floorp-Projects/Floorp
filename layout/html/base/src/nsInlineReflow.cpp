@@ -388,6 +388,17 @@ nsInlineReflow::ApplyTopLeftMargins()
     break;
 
   case NS_STYLE_FLOAT_NONE:
+    if (!mTreatFrameAsBlock) {
+      // Only apply left-margin on the first-in flow for inline frames
+      nsIFrame* prevInFlow;
+      pfd->mFrame->GetPrevInFlow(prevInFlow);
+      if (nsnull != prevInFlow) {
+        // Zero this out so that when we compute the max-element-size
+        // of the frame we will properly avoid adding in the left
+        // margin.
+        pfd->mMargin.left = 0;
+      }
+    }
     pfd->mBounds.x += pfd->mMargin.left;
     break;
   }
@@ -572,6 +583,15 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
       break;
 
     case NS_STYLE_FLOAT_NONE:
+      if (!mTreatFrameAsBlock) {
+        // Only apply right margin for the last-in-flow
+        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+          // Zero this out so that when we compute the
+          // max-element-size of the frame we will properly avoid
+          // adding in the right margin.
+          pfd->mMargin.right = 0;
+        }
+      }
       mRightMargin = pfd->mMargin.right;
       break;
     }
@@ -675,10 +695,16 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
 
     // Update max-element-size
     if (mComputeMaxElementSize) {
-      nscoord mw = aMetrics.maxElementSize->width;
+      // The max-element width is the sum of the interior max-element
+      // width plus the left and right margins that are applied to the
+      // frame.
+      nscoord mw = aMetrics.maxElementSize->width +
+        pfd->mMargin.left + pfd->mMargin.right;
       if (mw > mMaxElementSize.width) {
         mMaxElementSize.width = mw;
       }
+
+      // XXX take into account top/bottom margins
       nscoord mh = aMetrics.maxElementSize->height;
       if (mh > mMaxElementSize.height) {
         mMaxElementSize.height = mh;
