@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.113 $ ';
+$::UtilsVersion = '$Revision: 1.114 $ ';
 
 package TinderUtils;
 
@@ -914,7 +914,7 @@ sub run_all_tests {
 	#   $Settings::CleanProfile = 0
 	#
 	# Manual steps for this test:
-	# 1) Create pop account qatest03/Ne!s-pe
+	# 1) Create pop account qatest03/Ne!sc-pe
 	# 2) Login to this mail account, type in password, and select
 	#    "remember password with password manager".
 	# 3) Add first recipient of new Inbox to AB, select "receives plaintext"
