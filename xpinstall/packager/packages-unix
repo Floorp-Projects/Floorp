@@ -247,7 +247,7 @@ bin/components/typeaheadfind.xpt
 bin/components/libtypeaheadfind.so
 bin/components/nsCloseAllWindows.js
 
-; Kerberos NegotiateAuth
+; NegotiateAuth
 bin/components/libnegotiateauth.so
 
 ; GnomeVFS support

@@ -155,6 +155,9 @@ bin\components\typeaheadfind.dll
 bin\components\nsAxSecurityPolicy.js
 bin\components\nsCloseAllWindows.js
 
+; NegotiateAuth
+bin/components/libnegotiateauth.so
+
 ; webservices
 bin\components\websrvcs.dll
 bin\components\websrvcs.xpt
