@@ -93,7 +93,6 @@ sub WriteDefaultPrefsFile($)
 %   Any lines which do not match either of the above are assumed
 %   to set variables on $main::. Examples:
 %   
-%    CARBON              1
 %    MOZILLA_OFFICIAL    1
 %
 EOS
