@@ -56,12 +56,13 @@ FeedParser.prototype =
       aFeed.onParseError(aFeed);   
       return new Array();
     }
-    else if (aSource.search(/=(['"])http:\/\/purl\.org\/rss\/1\.0\/\1/) != -1) 
+    else if((aDOM.documentElement.namespaceURI == "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+            && (aDOM.documentElement.getElementsByTagNameNS("http://purl.org/rss/1.0/", "channel")[0]))
     {
       debug(aFeed.url + " is an RSS 1.x (RDF-based) feed");
       return this.parseAsRSS1(aFeed, aSource, aBaseURI);
     } 
-    else if (aSource.search(/=(['"])http:\/\/purl.org\/atom\/ns#\1/) != -1) 
+    else if (aDOM.documentElement.namespaceURI == "http://purl.org/atom/ns#")
     {
       debug(aFeed.url + " is an Atom feed");
       return this.parseAsAtom(aFeed, aDOM);
