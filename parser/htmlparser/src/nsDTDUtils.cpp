@@ -486,19 +486,22 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
     mTotals[aType-1]++;
 #endif
     switch(aType){
-      case eToken_start:      result=new CStartToken(aTag); break;
-      case eToken_end:        result=new CEndToken(aTag); break;
-      case eToken_comment:    result=new CCommentToken(); break;
-      case eToken_entity:     result=new CEntityToken(aString); break;
-      case eToken_whitespace: result=new CWhitespaceToken(); break;
-      case eToken_newline:    result=new CNewlineToken(); break;
-      case eToken_text:       result=new CTextToken(aString); break;
-      case eToken_attribute:  result=new CAttributeToken(); break;
-      case eToken_script:     result=new CScriptToken(); break;
-      case eToken_style:      result=new CStyleToken(); break;
-      case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
-      case eToken_instruction:result=new CInstructionToken(); break;
-      case eToken_cdatasection:result=new CCDATASectionToken(); break;
+      case eToken_start:            result=new CStartToken(aTag); break;
+      case eToken_end:              result=new CEndToken(aTag); break;
+      case eToken_comment:          result=new CCommentToken(); break;
+      case eToken_entity:           result=new CEntityToken(aString); break;
+      case eToken_whitespace:       result=new CWhitespaceToken(); break;
+      case eToken_newline:          result=new CNewlineToken(); break;
+      case eToken_text:             result=new CTextToken(aString); break;
+      case eToken_attribute:        result=new CAttributeToken(); break;
+      case eToken_script:           result=new CScriptToken(); break;
+      case eToken_style:            result=new CStyleToken(); break;
+      case eToken_skippedcontent:   result=new CSkippedContentToken(aString); break;
+      case eToken_instruction:      result=new CInstructionToken(); break;
+      case eToken_cdatasection:     result=new CCDATASectionToken(); break;
+      case eToken_error:            result=new CErrorToken(); break;
+      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
+      case eToken_xmlDecl:          result=new CXMLDeclToken(); break;
         default:
           break;
     }
@@ -539,6 +542,8 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
       case eToken_instruction:      result=new CInstructionToken(); break;
       case eToken_cdatasection:     result=new CCDATASectionToken(); break;
       case eToken_error:            result=new CErrorToken(); break;
+      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
+      case eToken_xmlDecl:          result=new CXMLDeclToken(); break;
         default:
           break;
     }
