@@ -87,6 +87,7 @@ bin/components/accessibility.xpt
 bin/components/appshell.xpt
 bin/components/appshell.dll
 bin/components/appcomps.dll
+bin/components/appstartup.xpt
 bin/components/autocomplete.xpt
 bin/components/bookmarks.xpt
 bin/components/chrome.xpt

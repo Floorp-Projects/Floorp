@@ -111,6 +111,7 @@ bin\components\layout_xul_tree.xpt
 bin\components\mork.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
+bin\components\appstartup.xpt
 bin\components\mozfind.dll
 bin\components\mozfind.xpt
 bin\components\mozucth.dll
