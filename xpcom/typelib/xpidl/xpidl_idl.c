@@ -223,7 +223,7 @@ new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 static int
 NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
 {
-    char *end, *start;
+    char *end, *start, *data_end = data->buf + data->len;
 
 #ifdef DEBUG_shaver_input
     fputs("[R]", stderr);
@@ -236,11 +236,11 @@ NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
         
     start = *startp = data->point;
     
-    while ((end = strstr(start, "%}"))) {
+    while (end < data_end && (end = strstr(start, "%}"))) {
         if (end[-1] == '\r' ||
             end[-1] == '\n')
             break;
-        start = end;
+        start = end + 1;
     }
     
     if (end) {
