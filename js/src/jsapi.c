@@ -1231,11 +1231,8 @@ static JSStdName standard_class_names[] = {
     {js_InitNumberClass,        LAZILY_PINNED_ATOM(parseInt)},
 
     /* String global functions. */
-#ifndef MOZILLA_CLIENT
-    /* These two are predefined in a backward-compatible way by the DOM. */
     {js_InitStringClass,        LAZILY_PINNED_ATOM(escape)},
     {js_InitStringClass,        LAZILY_PINNED_ATOM(unescape)},
-#endif
     {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURI)},
     {js_InitStringClass,        LAZILY_PINNED_ATOM(encodeURI)},
     {js_InitStringClass,        LAZILY_PINNED_ATOM(decodeURIComponent)},

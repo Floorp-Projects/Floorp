@@ -167,9 +167,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(in DOMString action);
 
-  DOMString                 escape(in DOMString str);
-  DOMString                 unescape(in DOMString str);
-
   /* See nsIDOMJSWindow for the scriptable version of find()
    * @param str: the search pattern
    * @param caseSensitive: is the search caseSensitive
