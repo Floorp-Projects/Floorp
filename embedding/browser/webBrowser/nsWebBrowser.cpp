@@ -570,15 +570,6 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::SizeToContent()
-{
-   //XXX First Check
-	/**
-	* Tell the window to shrink-to-fit its contents
-	*/
-   return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsWebBrowser::Repaint(PRBool fForce)
 {
    //XXX First Check
@@ -688,15 +679,6 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowser::RemoveFocus()
-{
-   //XXX First Check
-	/**
-	* Remove focus from the window
-	*/
-   return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsWebBrowser::GetTitle(PRUnichar** title)
 {
    NS_ENSURE_ARG_POINTER(title);
@@ -760,6 +742,18 @@ NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(PRInt32 scrollOrientation,
    return scroll->SetCurScrollPos(scrollOrientation, curPos);
 }
 
+NS_IMETHODIMP nsWebBrowser::SetCurScrollPosEx(PRInt32 curHorizontalPos, 
+   PRInt32 curVerticalPos)
+{
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetCurScrollPosEx(curHorizontalPos, curVerticalPos);
+}
+
 NS_IMETHODIMP nsWebBrowser::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
@@ -783,6 +777,19 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRange(PRInt32 scrollOrientation,
    NS_ENSURE(scroll, NS_ERROR_FAILURE);
 
    return scroll->SetScrollRange(scrollOrientation, minPos, maxPos);
+}
+
+NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(PRInt32 minHorizontalPos,
+   PRInt32 maxHorizontalPos, PRInt32 minVerticalPos, PRInt32 maxVerticalPos)
+{
+   NS_ENSURE_STATE(m_DocShell);
+
+   nsCOMPtr<nsIScrollable> scroll(do_QueryInterface(m_DocShell));
+
+   NS_ENSURE(scroll, NS_ERROR_FAILURE);
+
+   return scroll->SetScrollRangeEx(minHorizontalPos, maxHorizontalPos, 
+      minVerticalPos, maxVerticalPos);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollbarPreferences(PRInt32 scrollOrientation,
