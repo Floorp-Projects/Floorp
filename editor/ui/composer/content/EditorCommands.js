@@ -91,6 +91,8 @@ function EditorStartup(editorType, editorElement)
 {
   dump("Doing Editor Startup...\n");
   contentWindow = window.content;
+  
+  dump("Trying to make an Editor Shell through the component manager...\n");
 
   // store the editor shell in the window, so that child windows can get to it.
   var editorShell = window.editorShell = editorElement.editorShell;
