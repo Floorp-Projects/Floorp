@@ -5366,6 +5366,12 @@ nsTypedSelection::SetCanCacheFrameOffset(PRBool aCanCacheFrameOffset)
 
   mCachedOffsetForFrame->mCanCacheFrameOffset = aCanCacheFrameOffset;
 
+  // clean up cached frame when turn off cache
+  // fix bug 207936
+  if (!aCanCacheFrameOffset) {
+    mCachedOffsetForFrame->mLastCaretFrame = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -5376,7 +5382,8 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
     mCachedOffsetForFrame = new CachedOffsetForFrame;
   }
 
-  if (mCachedOffsetForFrame->mCanCacheFrameOffset && 
+  if (mCachedOffsetForFrame->mCanCacheFrameOffset &&
+      mCachedOffsetForFrame->mLastCaretFrame &&
       (aFrame == mCachedOffsetForFrame->mLastCaretFrame) &&
       (inOffset == mCachedOffsetForFrame->mLastContentOffset))
   {
