@@ -18,6 +18,11 @@ and a
 This is being maintained by <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a>.
 Feel free to email me with questions or to volunteer to contribute xptcall code for any platform.
 
+<p>
+
+<a href="mailto:shaver@mozilla.org">Mike Shaver &lt;shaver@mozilla.org&gt;</a> 
+is the best contact regarding 'nix (Unix, Linux, Finux, etc.) ports of xptcall.
+
 <h3>Status</h3>
 
 <table BORDER="1">
@@ -32,16 +37,22 @@ Feel free to email me with questions or to volunteer to contribute xptcall code 
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Win32 x86</TD>
 <TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
-<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
-<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/win32">win32</a></TD>
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a>
+</TD>
+<TD>
+<a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/win32">win32</a></TD>
 </TR>
 
 <TR>
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Linux x86</TD>
 <TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
-<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
-<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/unix">unix</a> (could be better without inline asm overhead)</TD>
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a><br>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:drepper@cygnus.com">Ulrich Drepper &lt;drepper@cygnus.com&gt;</a>
+</TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/reflect/xptcall/src/md/unix">unix</a>
+</TD>
 </TR>
 
 <TR>
@@ -172,17 +183,26 @@ Anton contributed patches to Roger's Sparc code. Anton says it works and passes 
 </TR>
 
 <TR>
-<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Linux PPC</TD>
-<TD> <font color="red"><b>?</b></font> 
+<TD> 
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:beard@netscape.com">Patrick Beard &lt;beard@netscape.com&gt;</a><BR>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:waterson@netscape.com">Chris Waterson &lt;waterson@netscape.com&gt;</a><BR>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:Franz.Sirl-kernel@lauterbach.com">Franz Sirl &lt;Franz.Sirl-kernel@lauterbach.com&gt;</a><BR>
+<font color="red"><b>?</b></font> 
 <a href="mailto:jsproul@condor.fddi.wesleyan.edu">Jason Y. Sproul &lt;jsproul@condor.fddi.wesleyan.edu&gt;</a><BR>
  <font color="red"><b>?</b></font> 
  <a href="mailto:darkmane@w-link.net">Sean Chitwood &lt;darkmane@w-link.net&gt;</a></TD>
-<TD>Mac PPC code ought to be a <b>very</b> good starting point</TD>
+<TD>
+waterson said: <b>Mozilla runs on Linux/PPC</b>
+</TD>
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Working</b></font></TD>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Linux Alpha</TD>
 <TD>
 <img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
@@ -212,11 +232,19 @@ a port.
 </TR>
 
 <TR>
-<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Working</b></font></TD>
 <TD>SunOS x86</TD>
-<TD> <font color="red"><b>?</b></font> 
-<a href="mailto:ppokorny@mindspring.com">Philip Pokorny &lt;ppokorny@mindspring.com&gt;</a></TD>
-<TD align="center">-</TD>
+<TD> 
+<img alt="Contributed code" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:aljones@lbl.gov">Arthur Jones &lt;aljones@lbl.gov&gt;</a><BR>
+<font color="red"><b>?</b></font> 
+<a href="mailto:ppokorny@mindspring.com">Philip Pokorny &lt;ppokorny@mindspring.com&gt;</a><BR>
+</TD>
+<TD>
+This is currently using the generic Unixish x86 code. There are claims that it works fine. 
+Some doubt remains.<br>
+see: bug #<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=16114">16114</a>
+</TD>
 </TR>
 
 <TR>
@@ -228,7 +256,10 @@ a port.
 <img alt="Contributed code" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:mgleeson1@netscape.com">Mike Gleeson &lt;mgleeson1@netscape.com&gt;</a>
 </TD>
-<TD>I hear that this code is checked in and working!</TD>
+<TD>I hear that this code is checked in and working. Though, there is some 
+doubt - see bug 
+#<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=17997">17997</a>
+</TD>
 </TR>
 
 <TR>
@@ -253,7 +284,13 @@ but eventually I will verify.
 <TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
 <a href="mailto:jasonh@m7.engr.sgi.com">Jason Heirtzler &lt;jasonh@m7.engr.sgi.com&gt;</a><BR>
 </TD>
-<TD>Jason has declared this done!</TD>
+<TD>Jason has declared this done. Jason is no longer working at SGI and will 
+not be maintaining this code. There is some doubt as to whether or not this is 
+working for everyone - see bug 
+#<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=10061">10061</a>. 
+<a href="mailto:shaver@mozilla.org">Mike&nbsp;Shaver&nbsp;&lt;shaver@mozilla.org&gt;</a> 
+is the interim maintainer until someone more suitable can be found.
+</TD>
 </TR>
 
 <TR>
