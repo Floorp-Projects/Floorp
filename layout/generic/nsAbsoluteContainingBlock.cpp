@@ -492,9 +492,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
-  nsIView*  kidView;
-  aKidFrame->GetView(aPresContext, &kidView);
-  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
+  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
+                                             aKidFrame->GetView(aPresContext),
                                              &kidDesiredSize.mOverflowArea);
   aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 

@@ -130,10 +130,8 @@ NS_IMETHODIMP
 nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Prevent event dispatch during destruction
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull != view) {
-    view->SetClientData(nsnull);
+  if (HasView()) {
+    GetView(aPresContext)->SetClientData(nsnull);
   }
 
   // Delete the primary child list
@@ -229,10 +227,7 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
                              PRUint32             aFlags)
 {
   NS_ASSERTION(aFrame, "no frame to paint!");
-  if (!aFrame) return;
-  nsIView *pView;
-  aFrame->GetView(aPresContext, &pView);
-  if (!pView) {
+  if (!aFrame->HasView()) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
     nsFrameState state;
@@ -439,9 +434,8 @@ void
 nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
                                     nsIFrame*       aKidFrame)
 {
-  nsIView* view;
-  aKidFrame->GetView(aPresContext, &view);
-  if (view) {
+  if (aKidFrame->HasView()) {
+    nsIView* view = aKidFrame->GetView(aPresContext);
     // Position view relative to its parent, not relative to aKidFrame's
     // frame which may not have a view
     nsIView*        parentView;
@@ -1061,9 +1055,8 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
   aKidFrame->GetOrigin(curOrigin);
   aKidFrame->SetRect(aPresContext, bounds);
 
-  nsIView*  view;
-  aKidFrame->GetView(aPresContext, &view);
-  if (view) {
+  if (aKidFrame->HasView()) {
+    nsIView* view = aKidFrame->GetView(aPresContext);
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
     SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
@@ -1308,10 +1301,8 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
+  if (HasView()) {
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView(aPresContext)));
   }
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));

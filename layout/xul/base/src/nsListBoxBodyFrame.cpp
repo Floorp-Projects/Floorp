@@ -555,30 +555,15 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
   // we have to do a sync update for mac because if we scroll too quickly
   // w/out going back to the main event loop we can easily scroll the wrong
   // bits and it looks like garbage (bug 63465).
-  nsIFrame* frame = nsnull;
-  if (NS_FAILED(QueryInterface(NS_GET_IID(nsIFrame), (void **)&frame)))
-    return NS_ERROR_FAILURE;
     
-  nsIView* view = nsnull;
-  frame->GetView(mPresContext, &view);
-  if (!view) {
-    nsIFrame* frameWithView;
-    frame->GetParentWithView(mPresContext, &frameWithView);
-    if (frameWithView)
-      frameWithView->GetView(mPresContext, &view);
-    else
-      return NS_ERROR_FAILURE;
-  }
-  if (view) {
-    nsCOMPtr<nsIViewManager> vm;
-    if (view->GetViewManager(*getter_AddRefs(vm)) && nsnull != vm) {
-      // I'd use Composite here, but it doesn't always work.
-      // vm->Composite();
-      vm->ForceUpdate();
-  
-    }      
-  }
-     
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIViewManager> vm;
+  shell->GetViewManager(getter_AddRefs(vm));
+  // I'd use Composite here, but it doesn't always work.
+  // vm->Composite();
+  vm->ForceUpdate();
+
   return NS_OK;
 }
 

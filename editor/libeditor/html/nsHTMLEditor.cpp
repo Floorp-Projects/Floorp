@@ -6133,9 +6133,8 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   nsresult rv;
   while (frame) {
     // Look for a widget so we can get screen coordinates
-    nsIView* view = nsnull;
-    rv = frame->GetView(pcontext, &view);
-    if (NS_SUCCEEDED(rv) && view) {
+    nsIView* view = frame->GetViewExternal(pcontext);
+    if (view) {
       rv = view->GetWidget(*getter_AddRefs(widget));
       if (widget)
         break;

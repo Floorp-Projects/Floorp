@@ -657,8 +657,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
   if (aActivateFlag) {
       nsRect rect;
       menuPopup->GetRect(rect);
-      nsIView* view = nsnull;
-      menuPopup->GetView(mPresContext, &view);
+      nsIView* view = menuPopup->GetView(mPresContext);
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       rect.x = rect.y = 0;
@@ -679,8 +678,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
 
   } else {
-    nsIView* view = nsnull;
-    menuPopup->GetView(mPresContext, &view);
+    nsIView* view = menuPopup->GetView(mPresContext);
     NS_ASSERTION(view, "View is gone, looks like someone forgot to rollup the popup!");
     if (view) {
       nsCOMPtr<nsIViewManager> viewManager;
@@ -840,8 +838,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       menuPopup->SetBounds(state, nsRect(0,0,mLastPref.width, mLastPref.height));
 
-      nsIView* view = nsnull;
-      menuPopup->GetView(mPresContext, &view);
+      nsIView* view = menuPopup->GetView(mPresContext);
       nsCOMPtr<nsIViewManager> vm;
       view->GetViewManager(*getter_AddRefs(vm));
       if (vm) {
@@ -1075,8 +1072,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
     // Only size the popups view if open.
     if (mMenuOpen) {
-      nsIView* view = nsnull;
-      popupChild->GetView(aState.GetPresContext(), &view);
+      nsIView* view = popupChild->GetView(aState.GetPresContext());
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       nsRect r(0, 0, bounds.width, bounds.height);

@@ -568,8 +568,7 @@ nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 void
 nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 {
-  nsIView* view = nsnull;
-  mDropdownFrame->GetView(mPresContext, &view);
+  nsIView* view = mDropdownFrame->GetView(mPresContext);
   nsCOMPtr<nsIViewManager> viewManager;
   view->GetViewManager(*getter_AddRefs(viewManager));
 
@@ -617,8 +616,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
   // Get parent view
   nsIFrame * listFrame;
   if (NS_OK == mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&listFrame)) {
-    nsIView * view = nsnull;
-    listFrame->GetView(aPresContext, &view);
+    nsIView* view = listFrame->GetView(aPresContext);
     NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
     if (view) {
     	view->GetWidget(*getter_AddRefs(widget));
@@ -677,8 +675,7 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
 
   // ensure we start off hidden
   if (aReflowState.reason == eReflowReason_Initial) {
-    nsIView* view = nsnull;
-    mDropdownFrame->GetView(mPresContext, &view);
+    nsIView* view = mDropdownFrame->GetView(mPresContext);
     nsCOMPtr<nsIViewManager> viewManager;
     view->GetViewManager(*getter_AddRefs(viewManager));
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -1810,8 +1807,7 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
 
   if (!mDroppedDown && aDoDropDown) {
     // XXX Temporary for Bug 19416
-    nsIView * lstView;
-    mDropdownFrame->GetView(mPresContext, &lstView);
+    nsIView* lstView = mDropdownFrame->GetView(mPresContext);
     if (lstView) {
       lstView->IgnoreSetPosition(PR_FALSE);
     }
@@ -2359,8 +2355,7 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
     // Get parent view
     nsIFrame * listFrame;
     if (NS_OK == mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&listFrame)) {
-      nsIView * view = nsnull;
-      listFrame->GetView(aPresContext, &view);
+      nsIView* view = listFrame->GetView(aPresContext);
       NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
       if (view) {
     	  view->GetWidget(*getter_AddRefs(widget));

@@ -991,14 +991,21 @@ public:
 
   /**
    * Accessor functions to get/set the associated view object
+   *
+   * GetView returns non-null if and only if |HasView| returns true.
    */
-  NS_IMETHOD  GetView(nsIPresContext* aPresContext,
-                      nsIView**       aView) const = 0;  // may be null
-  NS_IMETHOD  SetView(nsIPresContext* aPresContext,
-                      nsIView*        aView) = 0;
+  PRBool HasView() const { return mState & NS_FRAME_HAS_VIEW; }
+  nsIView* GetView(nsIPresContext* aPresContext) const;
+  virtual nsIView* GetViewExternal(nsIPresContext* aPresContext) const;
+  nsresult SetView(nsIPresContext* aPresContext, nsIView* aView);
 
   /**
-   * Find the first geometric parent that has a view
+   * Find the closest view (on |this| or an ancestor).
+   */
+  nsIView* GetClosestView(nsIPresContext* aPresContext) const;
+
+  /**
+   * Find the closest ancestor (excluding |this| !) that has a view
    */
   NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext,
                                 nsIFrame**      aParent) const = 0;
@@ -1022,6 +1029,12 @@ public:
   NS_IMETHOD  GetOriginToViewOffset(nsIPresContext* aPresContext,
                                     nsPoint&        aOffset,
                                     nsIView**       aView) const = 0;
+
+  /**
+   * Returns true if and only if all views, from |GetClosestView| up to
+   * the top of the view hierarchy are visible.
+   */
+  virtual PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext);
 
   /**
    * Returns the window that contains this frame. If this frame has a

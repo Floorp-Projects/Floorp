@@ -1666,7 +1666,7 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
 {
   nsIView* view = nsnull;
   if (IsInDropDownMode()) {
-    GetView(aPresContext, &view);
+    view = GetView(aPresContext);
   } else {
     nsIFrame* scrolledFrame = nsnull;
     GetScrolledFrame(aPresContext, scrolledFrame);
@@ -1678,7 +1678,7 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
     NS_ASSERTION(scrollport, "No scrollport found");
     NS_ENSURE_TRUE(scrollport, NS_ERROR_FAILURE);
 
-    scrollport->GetView(aPresContext, &view);
+    view = scrollport->GetView(aPresContext);
   }
 
   NS_ASSERTION(view, "no view???");

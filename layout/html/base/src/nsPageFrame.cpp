@@ -125,8 +125,7 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-  nsIView * view;
-  aChildList->GetView(aPresContext, &view);
+  nsIView* view = aChildList->GetView(aPresContext);
   if (view != nsnull && mDoCreateWidget) {
     nscoord dx, dy;
     nsCOMPtr<nsIWidget> widget;
@@ -228,8 +227,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.height = aReflowState.availableHeight;
       }
 
-      nsIView * view;
-      frame->GetView(aPresContext, &view);
+      nsIView* view = frame->GetView(aPresContext);
       if (view) {
         nsCOMPtr<nsIViewManager> vm;
         view->GetViewManager(*getter_AddRefs(vm));

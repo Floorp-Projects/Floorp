@@ -199,9 +199,8 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
         
         while (frame) {
           // Look for a widget so we can get screen coordinates
-          nsIView* view = nsnull;
-          rv = frame->GetView(presContext, &view);
-          if (NS_SUCCEEDED(rv) && view) {
+          nsIView* view = frame->GetViewExternal(presContext);
+          if (view) {
             rv = view->GetWidget(*getter_AddRefs(widget));
             if (widget)
               break;

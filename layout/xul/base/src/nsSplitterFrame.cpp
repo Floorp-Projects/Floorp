@@ -368,8 +368,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   mPresContext = aPresContext; 
 
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,nsnull,PR_TRUE);
-  nsIView* view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
 
   nsCOMPtr<nsIViewManager> viewManager;
   view->GetViewManager(*getter_AddRefs(viewManager));
@@ -551,11 +550,10 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
            {
               // if we hit a scrollable view make sure we take into account
               // how much we are scrolled.
-              nsIScrollableView* scrollingView;
-              nsIView*           view;
-              parent->GetView(aPresContext, &view);
+              nsIView* view = parent->GetView(aPresContext);
               if (view) {
-                nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+                nsIScrollableView* scrollingView;
+                nsresult result = CallQueryInterface(view, &scrollingView);
                 if (NS_SUCCEEDED(result)) {
                     nscoord xoff = 0;
                     nscoord yoff = 0;
@@ -698,8 +696,7 @@ nsresult
 nsSplitterFrameInner :: CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
-  nsIView* view = nsnull;
-  mOuter->GetView(aPresContext, &view);
+  nsIView* view = mOuter->GetView(aPresContext);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
   //nsCOMPtr<nsIWidget> widget;
@@ -728,8 +725,7 @@ PRBool
 nsSplitterFrameInner :: IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
-  nsIView* view = nsnull;
-  mOuter->GetView(aPresContext, &view);
+  nsIView* view = mOuter->GetView(aPresContext);
   nsCOMPtr<nsIViewManager> viewMan;
   
   if (view) {
@@ -924,8 +920,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
      mChildInfosAfterCount = 0;
 
   nsRect vr(0,0,0,0);
-  nsIView *v;
-  mOuter->GetView(mOuter->mPresContext, &v);
+  nsIView *v = mOuter->GetView(mOuter->mPresContext);
   v->GetBounds(vr);
 
   PRInt32 c = 0;
@@ -1081,8 +1076,7 @@ if (realTimeDrag) {
     mParentBox->GetFrame(&frame);
 
     nsCOMPtr<nsIViewManager> viewManager;
-    nsIView* view = nsnull;
-    frame->GetView(aPresContext, &view);
+    nsIView* view = frame->GetView(aPresContext);
 
     if (!view) {
         nsPoint   offset;
@@ -1266,8 +1260,7 @@ nsSplitterFrameInner::MoveSplitterBy(nsIPresContext* aPresContext, nscoord aDiff
   const nsRect& r = mOuter->mRect;
   nsRect vr;
   nsCOMPtr<nsIViewManager> vm;
-  nsIView *v;
-  mOuter->GetView(aPresContext, &v);
+  nsIView *v = mOuter->GetView(aPresContext);
   v->GetViewManager(*getter_AddRefs(vm));
   v->GetBounds(vr);
   nsRect invalid;

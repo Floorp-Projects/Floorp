@@ -349,9 +349,8 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   presShell->GetViewManager(getter_AddRefs(viewMan));
 
   nsIFrame* parWithView;
-  nsIView *parView;
   GetParentWithView(aPresContext, &parWithView);
-  parWithView->GetView(aPresContext, &parView);
+  nsIView *parView = parWithView->GetView(aPresContext);
   nsRect boundBox(0, 0, 0, 0); 
   result = view->Init(viewMan, boundBox, parView);
   // XXX Put it last in document order until we can do better
@@ -1457,8 +1456,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext*            aPresContext,
   IndexOf(aBorder, index);
   NS_ASSERTION((nsnull != aBorder) && (index >= 0), "invalid dragger");
 #endif
-  nsIView* view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   if (view) {
     nsCOMPtr<nsIViewManager> viewMan;
     view->GetViewManager(*getter_AddRefs(viewMan));
@@ -1572,8 +1570,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
 void
 nsHTMLFramesetFrame::EndMouseDrag(nsIPresContext* aPresContext)
 {
-  nsIView* view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   if (view) {
     nsCOMPtr<nsIViewManager> viewMan;
     view->GetViewManager(*getter_AddRefs(viewMan));

@@ -406,8 +406,7 @@ nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
   mPresContext = aPresContext;
   nsresult rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   nsBoxFrame::CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
-  nsIView* ourView;
-  nsLeafBoxFrame::GetView(aPresContext, &ourView);
+  nsIView* ourView = nsLeafBoxFrame::GetView(aPresContext);
 
   static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
@@ -1133,8 +1132,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   // Take into account the parent's scroll offset, since clientX and clientY
   // are relative to the viewport.
 
-  nsIView* parentView;
-  nsLeafBoxFrame::GetView(mPresContext, &parentView);
+  nsIView* parentView = nsLeafBoxFrame::GetView(mPresContext);
   parentView->GetParent(parentView);
   parentView->GetParent(parentView);
 

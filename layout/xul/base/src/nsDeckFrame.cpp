@@ -142,8 +142,7 @@ nsDeckFrame::HideBox(nsIPresContext* aPresContext, nsIBox* aBox)
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
 
-  nsIView* view = nsnull;
-  frame->GetView(aPresContext, &view);
+  nsIView* view = frame->GetView(aPresContext);
 
   if (view) {
     nsCOMPtr<nsIViewManager> viewManager;
@@ -162,8 +161,7 @@ nsDeckFrame::ShowBox(nsIPresContext* aPresContext, nsIBox* aBox)
 
   nsRect rect;
   frame->GetRect(rect);
-  nsIView* view = nsnull;
-  frame->GetView(aPresContext, &view);
+  nsIView* view = frame->GetView(aPresContext);
   if (view) {
     nsCOMPtr<nsIViewManager> viewManager;
     view->GetViewManager(*getter_AddRefs(viewManager));

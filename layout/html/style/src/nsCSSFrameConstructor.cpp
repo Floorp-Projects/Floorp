@@ -3750,16 +3750,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     }
   }
 
-  if (aPresContext) {
-    PRBool isPaginated = PR_FALSE;
-    if (NS_SUCCEEDED(aPresContext->IsPaginated(&isPaginated))) {
-      if (isPaginated) {
-        if (printPreviewContext) { // print preview
-          aPresContext->GetPaginatedScrolling(&isScrollable);
-        } else {
-          isScrollable = PR_FALSE; // we are printing
-        }
-      }
+  if (isPaginated) {
+    if (printPreviewContext) { // print preview
+      aPresContext->GetPaginatedScrolling(&isScrollable);
+    } else {
+      isScrollable = PR_FALSE; // we are printing
     }
   }
 
@@ -3869,8 +3864,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                                   newScrollableFrame);
 
       // Inform the view manager about the root scrollable view
-      nsIView* view = nsnull;
-      newScrollableFrame->GetView(aPresContext, &view);
+      nsIView* view = newScrollableFrame->GetView(aPresContext);
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
       nsIScrollableView* scrollableView = nsnull;
@@ -3910,8 +3904,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                                                    scrollPseudoStyle);
 
       // Inform the view manager about the root scrollable view
-      nsIView* view = nsnull;
-      scrollFrame->GetView(aPresContext, &view);
+      nsIView* view = scrollFrame->GetView(aPresContext);
       NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
       nsIScrollableView* scrollableView = nsnull;
@@ -4221,8 +4214,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       newFrame = listFrame;
       // XXX Temporary for Bug 19416
       {
-        nsIView * lstView;
-        scrolledFrame->GetView(aPresContext, &lstView);
+        nsIView* lstView = scrolledFrame->GetView(aPresContext);
         if (lstView) {
           lstView->IgnoreSetPosition(PR_TRUE);
         }
@@ -4231,8 +4223,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // Set flag so the events go to the listFrame not child frames.
         // XXX: We should replace this with a real widget manager similar
         // to how the nsFormControlFrame works. Re-directing events is a temporary Kludge.
-      nsIView *listView; 
-      listFrame->GetView(aPresContext, &listView);
+      nsIView *listView = listFrame->GetView(aPresContext);
       NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
       nsIWidget * viewWidget;
       listView->GetWidget(viewWidget);
@@ -4335,8 +4326,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
                                            aStyleContext, aParentFrame, aBuildCombobox);
   if (aBuildCombobox) {
     // Give the drop-down list a popup widget
-    nsIView * view;
-    scrollFrame->GetView(aPresContext, &view);
+    nsIView* view = scrollFrame->GetView(aPresContext);
     NS_ASSERTION(view, "We asked for a view but didn't get one");
     if (view) {
       nsCOMPtr<nsIViewManager> vm;
@@ -4460,9 +4450,6 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   // positioned
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
                                            aStyleContext, aParentFrame, PR_FALSE);
-
-    // cache our display type
-  const nsStyleDisplay* styleDisplay = newFrame->GetStyleDisplay();
 
   nsIFrame* areaFrame;
   NS_NewAreaFrame(shell, &areaFrame, NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP);
@@ -9840,9 +9827,7 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
-  nsIView* view;
-  aFrame->GetView(aPresContext, &view);
-
+  nsIView* view = aFrame->GetView(aPresContext);
   if (view) {
     if (aChange & nsChangeHint_RepaintFrame) {
       aViewManager->UpdateView(view, NS_VMREFRESH_NO_SYNC);
@@ -9916,8 +9901,7 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
-    nsIView* view = nsnull;
-    aFrame->GetView(aPresContext, &view);
+    nsIView* view = aFrame->GetView(aPresContext);
     nsIView* parentView;
     if (! view) { // XXX can view have children outside it?
       aFrame->GetOffsetFromView(aPresContext, viewOffset, &parentView);
@@ -9977,14 +9961,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIViewManager> viewManager(aViewManager);
   if (!viewManager) {
-    nsIView* view = nsnull;
-    aFrame->GetView(aPresContext, &view);
-    if (! view) {
-      nsPoint offset;
-      aFrame->GetOffsetFromView(aPresContext, offset, &view);
-    }
-    NS_ASSERTION(view, "no view");
-    view->GetViewManager(*getter_AddRefs(viewManager));
+    shell->GetViewManager(getter_AddRefs(viewManager));
   }
 
   // Trigger rendering updates by damaging this frame and any
@@ -11020,8 +10997,9 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
         nsStyleContext*       captionStyle = childFrame->GetStyleContext();
         nsIContent*           caption;
         childFrame->GetContent(&caption);
-        const nsStyleDisplay* display = captionStyle->GetStyleDisplay();
-        NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay, "expected caption");
+        NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION ==
+                       captionStyle->GetStyleDisplay()->mDisplay,
+                     "expected caption");
 
         // Replicate the caption frame
         // XXX We have to do it this way instead of calling ConstructFrameByDisplayType(),
@@ -13378,16 +13356,14 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       aParentFrame, blockSC, nsnull, blockFrame);  
 
-  nsIView* originalInlineFrameView;
-  aNewFrame->GetView(aPresContext, &originalInlineFrameView);
+  nsIView* originalInlineFrameView = aNewFrame->GetView(aPresContext);
 
   // Any inline frame could have a view (e.g., opacity)
   // XXXbz should we be passing in a non-null aContentParentFrame?
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
                                            aStyleContext, nsnull, PR_FALSE);
 
-  nsIView* view;
-  blockFrame->GetView(aPresContext, &view);
+  nsIView* view = blockFrame->GetView(aPresContext);
   if (view || originalInlineFrameView) {
     // Move list2's frames into the new view
     nsIFrame* oldParent;
@@ -13422,8 +13398,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
                                              aStyleContext, nsnull, PR_FALSE);
 
-    nsIView* inlineView;
-    inlineFrame->GetView(aPresContext, &inlineView);
+    nsIView* inlineView = inlineFrame->GetView(aPresContext);
     if (inlineView || originalInlineFrameView) {
       // Move list3's frames into the new view
       nsIFrame* oldParent;

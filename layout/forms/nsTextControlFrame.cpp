@@ -3108,13 +3108,11 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
   while(first)
   {
-    nsIScrollableView *scrollView;
-    nsIView *view;
-    first->GetView(aPresContext,&view);
+    nsIView *view = first->GetView(aPresContext);
     if (view)
     {
-      view->QueryInterface(NS_GET_IID(nsIScrollableView),(void **)&scrollView);
-      if (scrollView)
+      nsIScrollableView *scrollView;
+      if (NS_SUCCEEDED(CallQueryInterface(view, &scrollView)))
       {
         mScrollableView = scrollView; // Note: views are not addref'd
         mTextSelImpl->SetScrollableView(scrollView);

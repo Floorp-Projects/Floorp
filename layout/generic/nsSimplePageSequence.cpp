@@ -674,8 +674,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
   {
-    nsIView * seqView;
-    GetView(aPresContext, &seqView);
+    nsIView* seqView = GetView(aPresContext);
     nsRect rect;
     GetRect(rect);
     PR_PL(("Seq Frame: %p - [%5d,%5d,%5d,%5d] ", this, rect.x, rect.y, rect.width, rect.height));
@@ -691,8 +690,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
   {
     PRInt32 pageNum = 1;
     for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
-      nsIView*  view;
-      page->GetView(aPresContext, &view);
+      nsIView* view = page->GetView(aPresContext);
       NS_ASSERTION(nsnull != view, "no page view");
       nsRect rect;
       page->GetRect(rect);
@@ -720,8 +718,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
     nscoord y = 0;//mMargin.top;
 
     for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
-      nsIView*  view = nsnull;
-      page->GetView(aPresContext, &view);
+      nsIView* view = page->GetView(aPresContext);
       NS_ASSERTION(nsnull != view, "no page view");
 
       nsCOMPtr<nsIViewManager> vm;
@@ -889,7 +886,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
       nsIFrame* childFrame = mFrames.FirstChild();
       nsIFrame* conFrame;
       childFrame->FirstChild(aPresContext, nsnull, &conFrame);
-      conFrame->GetView(aPresContext, &containerView);
+      containerView = conFrame->GetView(aPresContext);
       NS_ASSERTION(containerView != nsnull, "Container view can't be null!");
       containerView->GetBounds(containerRect);
       containerRect.y -= mYSelOffset;
@@ -922,8 +919,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
       }
 
       // Print the page
-      nsIView*  view;
-      mCurrentPageFrame->GetView(aPresContext, &view);
+      nsIView* view = mCurrentPageFrame->GetView(aPresContext);
 
       NS_ASSERTION(nsnull != view, "no page view");
 

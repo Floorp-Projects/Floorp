@@ -448,11 +448,10 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
             nscoord width, height;
             scrollableFrame->GetClipSize(aPresContext, &width, &height);
           }
-          nsIView* parentView;
-          parentFrame->GetView(aPresContext, &parentView);
+          nsIView* parentView = parentFrame->GetView(aPresContext);
 
           nsIScrollableView* scrollableView;
-          if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView))) {
+          if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
             nscoord width, height;
             scrollableView->GetContainerSize(&width, &height);
             const nsIView* clippedView;

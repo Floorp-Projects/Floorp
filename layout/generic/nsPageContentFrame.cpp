@@ -136,8 +136,7 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
       nsRect r;
       frame->GetRect(r);
       printf("PCF: Area Frame %p Bounds: %5d,%5d,%5d,%5d\n", frame, r.x, r.y, r.width, r.height);
-      nsIView* view;
-      frame->GetView(aPresContext, &view);
+      nsIView* view = frame->GetView(aPresContext);
       if (view) {
         view->GetBounds(r);
         printf("PCF: Area Frame View Bounds: %5d,%5d,%5d,%5d\n", r.x, r.y, r.width, r.height);

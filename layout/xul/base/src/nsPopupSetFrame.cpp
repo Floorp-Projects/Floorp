@@ -271,8 +271,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 
       // only size popup if open
       if (currEntry->mCreateHandlerSucceeded) {
-        nsIView* view = nsnull;
-        popupChild->GetView(aState.GetPresContext(), &view);
+        nsIView* view = popupChild->GetView(aState.GetPresContext());
         nsCOMPtr<nsIViewManager> viewManager;
         view->GetViewManager(*getter_AddRefs(viewManager));
         nsRect r(0, 0, bounds.width, bounds.height);
@@ -568,9 +567,8 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // since we could be cleaning up after someone that didn't correctly 
       // destroy the popup.
       nsIFrame* activeChild = aEntry->mPopupFrame;
-      nsIView* view = nsnull;
       if (activeChild) {
-        activeChild->GetView(mPresContext, &view);
+        nsIView* view = activeChild->GetView(mPresContext);
         NS_ASSERTION(view, "View is gone, looks like someone forgot to roll up the popup!");
         if (view) {
           nsCOMPtr<nsIViewManager> viewManager;

@@ -309,10 +309,8 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
         
         while (frame) {
           // Look for a widget so we can get screen coordinates
-          nsIView* view;
-          rv = frame->GetView(presContext, &view);
-          if (view) {
-            rv = view->GetWidget(*getter_AddRefs(widget));
+          if (frame->HasView()) {
+            frame->GetView(presContext)->GetWidget(*getter_AddRefs(widget));
             if (widget)
               break;
           }

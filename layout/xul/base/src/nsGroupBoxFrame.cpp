@@ -219,9 +219,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
 
 #ifdef DEBUG
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
-    nsIView* view;
-    GetView(aPresContext, &view);
-    if (nsnull != view) {
+    if (HasView()) {
       aRenderingContext.SetColor(NS_RGB(0,0,255));
     }
     else {

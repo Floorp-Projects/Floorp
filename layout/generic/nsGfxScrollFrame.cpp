@@ -615,20 +615,14 @@ nsGfxScrollFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
   nsIFrame* frame = nsnull;
   mInner->mScrollAreaBox->GetFrame(&frame);
-  nsIView *view;
   nsPoint point(aPoint);
   nsPoint currentPoint;
   //we need to translate the coordinates to the inner
-  nsresult result = GetClosestViewForFrame(aCX, this, &view);
-  if (NS_FAILED(result))
-    return result;
+  nsIView *view = GetClosestView(aCX);
   if (!view)
     return NS_ERROR_FAILURE;
 
-  nsIView *innerView;
-  result = GetClosestViewForFrame(aCX, frame, &innerView);
-  if (NS_FAILED(result))
-    return result;
+  nsIView *innerView = GetClosestView(aCX);
   while (view != innerView && innerView)
   {
     innerView->GetPosition(&currentPoint.x, &currentPoint.y);
@@ -1079,14 +1073,13 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
 nsIScrollableView*
 nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 {
-  nsIView*           view;
   nsIFrame* frame = nsnull;
   mScrollAreaBox->GetFrame(&frame);
-  frame->GetView(aPresContext, &view);
+  nsIView* view = frame->GetView(aPresContext);
   if (!view) return nsnull;
 
   nsIScrollableView* scrollingView;
-  nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+  nsresult result = CallQueryInterface(view, &scrollingView);
   NS_ASSERTION(NS_SUCCEEDED(result), "assertion gfx scrollframe does not contain a scrollframe");          
   return scrollingView;
 }
@@ -1660,8 +1653,7 @@ nsGfxScrollFrameInner::GetScrolledSize(nsIPresContext* aPresContext,
   mScrollAreaBox->GetChildBox(&child);
   nsIFrame* frame;
   child->GetFrame(&frame);
-  nsIView* view;
-  frame->GetView(aPresContext, &view);
+  nsIView* view = frame->GetView(aPresContext);
   NS_ASSERTION(view,"Scrolled frame must have a view!!!");
   
   nsRect rect(0,0,0,0);

@@ -1175,7 +1175,6 @@ nsSelection::GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFram
 
   nsresult result;
   nsIFrame *frame = aFrame;
-  nsIView  *view;
 
   while (frame)
   {
@@ -1185,12 +1184,7 @@ nsSelection::GetGlobalViewOffsetsFromFrame(nsIPresContext *aPresContext, nsIFram
       return result;
 
     if (frame) {
-      view   = 0;
-
-      result = frame->GetView(aPresContext, &view);
-
-      if (NS_FAILED(result))
-        return result;
+      nsIView *view = frame->GetView(aPresContext);
 
       if (view)
       {
@@ -5890,53 +5884,14 @@ nsTypedSelection::DoAutoScrollView(nsIPresContext *aPresContext, nsIView *aView,
 nsresult
 nsTypedSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint)
 {
-  nsresult result;
-
   if (!aPresContext || !aFrame)
     return NS_ERROR_NULL_POINTER;
 
-  //
   // Find the closest view to the frame!
-  //
 
-  nsIView *closestView = 0;
-
-  result = aFrame->GetView(aPresContext, &closestView);
-
-  if (NS_FAILED(result))
-    return result;
-
+  nsIView *closestView = aFrame->GetClosestView(aPresContext);
   if (!closestView)
-  {
-    //
-    // aFrame doesn't contain a view, so walk aFrame's parent hierarchy
-    // till you find a parent with a view.
-    //
-
-    nsIFrame *parentFrame = aFrame;
-
-    result = aFrame->GetParent(&parentFrame);
-
-    if (NS_FAILED(result))
-      return result;
-
-    if (!parentFrame)
-      return NS_ERROR_FAILURE;
-
-    while (!closestView && parentFrame)
-    {
-      result = parentFrame->GetView(aPresContext, &closestView);
-
-      if (NS_FAILED(result))
-        return result;
-
-      if (!closestView)
-        result = parentFrame->GetParent(&parentFrame);
-    }
-
-    if (!closestView)
-      return NS_ERROR_FAILURE;
-  }
+    return NS_ERROR_FAILURE;
 
   return DoAutoScrollView(aPresContext, closestView, aPoint, PR_TRUE);
 }
@@ -7331,13 +7286,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
   if (!parentWithView)
     return NS_ERROR_FAILURE;
 
-  result = parentWithView->GetView(presContext, &view);
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!view)
-    return NS_ERROR_FAILURE;
+  view = parentWithView->GetView(presContext);
 
   result = GetClosestScrollableView(view, aScrollableView);
 

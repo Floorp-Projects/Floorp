@@ -4626,19 +4626,13 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
       shell->GetPresContext(getter_AddRefs(presContext));
 
       if (frame && presContext) {
-        nsIView* view = nsnull;
-        frame->GetView(presContext, &view);
-
-        if (!view) {
-          frame->GetParentWithView(presContext, &frame);
-          if (frame)
-            frame->GetView(presContext, &view);
-        }
+        nsIView* view = frame->GetClosestView(presContext);
 
         if (view) {
           nsCOMPtr<nsIWidget> widget;
           view->GetWidget(*getter_AddRefs(widget));
 
+          // XXXldb Um, not all views have widgets...
           widget->HideWindowChrome(aShouldHide);
         }
       }

@@ -2990,29 +2990,28 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
     nsCOMPtr<nsIPresContext>  presContext;
 
     aShell->GetPresContext(getter_AddRefs(presContext));
-    rv = frame->GetView(presContext, &view);
-    if (NS_SUCCEEDED(rv)) {
-      // If we have a view check if it's scrollable. If not,
-      // just use the view size itself
-      if (view) {
-        nsIScrollableView* scrollableView = nsnull;
-        CallQueryInterface(view, &scrollableView);
+    view = frame->GetView(presContext);
 
-        if (scrollableView) {
-          scrollableView->GetScrolledView(view);
-        }
+    // If we have a view check if it's scrollable. If not,
+    // just use the view size itself
+    if (view) {
+      nsIScrollableView* scrollableView = nsnull;
+      CallQueryInterface(view, &scrollableView);
 
-        nsRect r;
-        rv = view->GetBounds(r);
-        if (NS_SUCCEEDED(rv)) {
-          size.height = r.height;
-          size.width = r.width;
-        }
+      if (scrollableView) {
+        scrollableView->GetScrolledView(view);
       }
-      // If we don't have a view, use the frame size
-      else {
-        rv = frame->GetSize(size);
+
+      nsRect r;
+      rv = view->GetBounds(r);
+      if (NS_SUCCEEDED(rv)) {
+        size.height = r.height;
+        size.width = r.width;
       }
+    }
+    // If we don't have a view, use the frame size
+    else {
+      rv = frame->GetSize(size);
     }
 
     // Convert from twips to pixels

@@ -980,7 +980,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   presShell->FlushPendingNotifications(PR_FALSE);
     
   nsIFrame* frame;
-  nsresult rv = presShell->GetPrimaryFrameFor(this, &frame);
+  presShell->GetPrimaryFrameFor(this, &frame);
 
   float t2p;
   context->GetTwipsToPixels(&t2p);
@@ -990,8 +990,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
         
   while (frame) {
     // Look for a widget so we can get screen coordinates
-    nsIView* view;
-    rv = frame->GetView(context, &view);
+    nsIView* view = frame->GetView(context);
     if (view) {
       // handle scrolled views along the way:
       nsIScrollableView* scrollableView = nsnull;
@@ -1004,7 +1003,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
       }
 
       // if this is a widget we break and get screen coords from it:
-      rv = view->GetWidget(*getter_AddRefs(widget));
+      view->GetWidget(*getter_AddRefs(widget));
       if (widget)
         break;
     }

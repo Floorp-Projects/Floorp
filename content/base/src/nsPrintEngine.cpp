@@ -2718,8 +2718,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       }
 
       if (frame) {
-        nsIView* view = nsnull;
-        frame->GetView(aPO->mParent->mPresContext, &view);
+        nsIView* view = frame->GetView(aPO->mParent->mPresContext);
         if (view) {
           nsCOMPtr<nsIWidget> w2;
           view->GetWidget(*getter_AddRefs(w2));
@@ -2871,8 +2870,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
         fprintf(fd, "---------------------------------------\n\n");
         fprintf(fd, "--------------- Views From Root Frame----------------\n");
-        nsIView * v;
-        theRootFrame->GetView(aPO->mPresContext, &v);
+        nsIView* v = theRootFrame->GetView(aPO->mPresContext);
         if (v) {
           v->List(fd);
         } else {
@@ -4799,8 +4797,7 @@ static void DumpFrames(FILE*                 out,
       nsRect rect;
       child->GetRect(rect);
       fprintf(out, "[%d,%d,%d,%d] ", rect.x, rect.y, rect.width, rect.height);
-      nsIView * view;
-      child->GetView(aPresContext, &view);
+      nsIView* view = child->GetView(aPresContext);
       fprintf(out, "v: %p ", view);
       fprintf(out, "\n");
       DumpFrames(out, aPresContext, aRendContext, child, aLevel+1);
@@ -4895,8 +4892,7 @@ void DumpLayoutData(char*              aTitleStr,
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
     fprintf(fd, "---------------------------------------\n\n");
     fprintf(fd, "--------------- Views From Root Frame----------------\n");
-    nsIView * v;
-    aRootFrame->GetView(aPresContext, &v);
+    nsIView* v = aRootFrame->GetView(aPresContext);
     if (v) {
       v->List(fd);
     } else {

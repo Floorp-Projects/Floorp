@@ -2879,8 +2879,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   // attachment (root or BODY) or the stylesheet specifying that
   // attachment, set the BitBlt flag here as well.
   if (canvasColor.mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
-    nsIView *view;
-    aForFrame->GetView(aPresContext, &view);
+    nsIView *view = aForFrame->GetView(aPresContext);
     if (view)
       vm->SetViewBitBltEnabled(view, PR_FALSE);
   }
@@ -3112,7 +3111,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
     if (scrolledFrame) {
       scrolledFrame->GetRect(viewportArea);
-      scrolledFrame->GetView(aPresContext, &viewportView);
+      viewportView = scrolledFrame->GetView(aPresContext);
     }
     else {
       // The viewport isn't scrollable, so use the root frame's view
@@ -3132,7 +3131,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
         rootFrame = page;
       }
 
-      rootFrame->GetView(aPresContext, &viewportView);
+      viewportView = rootFrame->GetView(aPresContext);
       NS_ASSERTION(viewportView, "no viewport view");
       viewportView->GetBounds(viewportArea);
       viewportArea.x = 0;
@@ -3168,8 +3167,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
     // Convert the anchor point to aForFrame's coordinate space
-    nsIView*  view;
-    aForFrame->GetView(aPresContext, &view);
+    nsIView* view = aForFrame->GetView(aPresContext);
     if (!view) {
       nsPoint offset;
       aForFrame->GetOffsetFromView(aPresContext, offset, &view);

@@ -1228,9 +1228,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Size the frame and size its view (if it has one)
   aFrame->SizeTo(mPresContext, metrics.width, metrics.height);
-  nsIView*  view;
-  aFrame->GetView(mPresContext, &view);
-  if (view) {
+  if (aFrame->HasView()) {
+    nsIView* view = aFrame->GetView(mPresContext);
     nsIViewManager  *vm;
     view->GetViewManager(vm);
 

@@ -239,8 +239,6 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetView(nsIPresContext* aPresContext, nsIView** aView) const;
-  NS_IMETHOD  SetView(nsIPresContext* aPresContext, nsIView* aView);
   NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const;
   NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsIPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
@@ -353,10 +351,6 @@ public:
   // returned.
   PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics);
-
-  virtual nsresult GetClosestViewForFrame(nsIPresContext* aPresContext,
-                                          nsIFrame *aFrame,
-                                          nsIView **aView);
 
   static nsresult CreateAndPostReflowCommand(nsIPresShell*                   aPresShell,
                                              nsIFrame*                       aTargetFrame,

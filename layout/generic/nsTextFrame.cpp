@@ -6009,10 +6009,8 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", mParent);
 #endif
-  nsIView* view;
-  GetView(aPresContext, &view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
+  if (HasView()) {
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView(aPresContext)));
   }
 
   PRInt32 totalContentLength;

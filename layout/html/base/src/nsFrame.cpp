@@ -618,8 +618,7 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
-  nsIView*  view;
-  GetView(aPresContext, &view);
+  nsIView* view = GetView(aPresContext);
   
   // XXX Rather than always doing this it would be better if it was part of
   // a frame observer mechanism and the pres shell could register as an
@@ -1999,14 +1998,10 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   // Traverse through children and look for the best one to give this
   // to if it fails the getposition call, make it yourself also only
   // look at primary list
-  nsIView  *view         = nsnull;
   nsIFrame *kid          = nsnull;
   nsIFrame *closestFrame = nsnull;
 
-  result = GetClosestViewForFrame(aCX, this, &view);
-
-  if (NS_FAILED(result))
-    return result;
+  nsIView *view = GetClosestView(aCX);
 
   result = FirstChild(aCX, nsnull, &kid);
 
@@ -2135,12 +2130,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
       // them to be relative to the closest view.
 
       nsPoint newPoint     = aPoint;
-      nsIView *closestView = nsnull;
-
-      result = GetClosestViewForFrame(aCX, closestFrame, &closestView);
-
-      if (NS_FAILED(result))
-        return result;
+      nsIView *closestView = closestFrame->GetClosestView(aCX);
 
       if (closestView && view != closestView)
       {
@@ -2395,37 +2385,38 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
 }
 
 // Associated view object
-NS_IMETHODIMP nsFrame::GetView(nsIPresContext* aPresContext, nsIView** aView) const
+nsIView*
+nsIFrame::GetView(nsIPresContext* aPresContext) const
 {
-  NS_ENSURE_ARG_POINTER(aView);
-
-  // Initialize OUT parameter
-  *aView = nsnull;
-
   // Check the frame state bit and see if the frame has a view
-  if (mState & NS_FRAME_HAS_VIEW) {
-    // Check for a property on the frame
-    nsCOMPtr<nsIPresShell>     presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-  
-    if (presShell) {
-      nsCOMPtr<nsIFrameManager>  frameManager;
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
-    
-      if (frameManager) {
-        void* value;
-        if (NS_SUCCEEDED(frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value))) {
-          *aView = (nsIView*)value;
-          NS_ASSERTION(value != 0, "frame state bit was set but frame has no view");
-        }
-      }
-    }
-  }
+  if (!(mState & NS_FRAME_HAS_VIEW))
+    return nsnull;
 
-  return NS_OK;
+  // Check for a property on the frame
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  nsCOMPtr<nsIFrameManager>  frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+  void* value;
+  nsresult rv =
+    frameManager->GetFrameProperty(NS_CONST_CAST(nsIFrame*, this),
+                                   nsLayoutAtoms::viewProperty,
+                                   0, &value);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ASSERTION(value, "frame state bit was set but frame has no view");
+  return NS_STATIC_CAST(nsIView*, value);
 }
 
-NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
+/* virtual */ nsIView*
+nsIFrame::GetViewExternal(nsIPresContext* aPresContext) const
+{
+  return GetView(aPresContext);
+}
+
+nsresult
+nsIFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
 {
   if (aView) {
     aView->SetClientData(this);
@@ -2434,15 +2425,13 @@ NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
     nsCOMPtr<nsIPresShell>  presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     
-    if (presShell) {
-      nsCOMPtr<nsIFrameManager>  frameManager;
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
-    
-      if (frameManager) {
-        frameManager->SetFrameProperty(this, nsLayoutAtoms::viewProperty,
-                                       aView, nsnull);
-      }
-    }
+    nsCOMPtr<nsIFrameManager> frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    nsresult rv =
+      frameManager->SetFrameProperty(this, nsLayoutAtoms::viewProperty,
+                                     aView, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the frame state bit that says the frame has a view
     mState |= NS_FRAME_HAS_VIEW;
@@ -2479,10 +2468,7 @@ NS_IMETHODIMP nsFrame::GetParentWithView(nsIPresContext* aPresContext,
 
   nsIFrame* parent;
   for (parent = mParent; nsnull != parent; parent->GetParent(&parent)) {
-    nsIView* parView;
-     
-    parent->GetView(aPresContext, &parView);
-    if (nsnull != parView) {
+    if (parent->HasView()) {
       break;
     }
   }
@@ -2508,10 +2494,9 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
     frame->GetOrigin(origin);
     aOffset += origin;
     frame->GetParent(&frame);
-    if (nsnull != frame) {
-      frame->GetView(aPresContext, aView);
-    }
-  } while ((nsnull != frame) && (nsnull == *aView));
+  } while (frame && !frame->HasView());
+  if (frame)
+    *aView = frame->GetView(aPresContext);
   return NS_OK;
 }
 
@@ -2541,16 +2526,15 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
                                              nsIView**       aView) const
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
+  nsresult rv = NS_OK;
 
   aOffset.MoveTo(0,0);
 
   if (aView)
     *aView = nsnull;
 
-  nsIView *view = nsnull;
-  nsresult rv = GetView(aPresContext, &view);
-
-  if (NS_SUCCEEDED(rv) && view) {
+  if (HasView()) {
+    nsIView *view = GetView(aPresContext);
     nsIView *parentView = nsnull;
     nsPoint offsetToParentView;
     rv = GetOffsetFromView(aPresContext, offsetToParentView, &parentView);
@@ -2625,6 +2609,19 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsIPresContext* aPresContext,
   return rv;
 }
 
+/* virtual */ PRBool
+nsIFrame::AreAncestorViewsVisible(nsIPresContext* aPresContext)
+{
+  for (nsIView* view = GetClosestView(aPresContext);
+       view; view->GetParent(view)) {
+    nsViewVisibility vis;
+    view->GetVisibility(vis);
+    if (vis == nsViewVisibility_kHide) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
 
 NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
                                  nsIWidget**     aWindow) const
@@ -2634,11 +2631,8 @@ NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
   nsIFrame*  frame;
   nsIWidget* window = nsnull;
   for (frame = (nsIFrame*)this; nsnull != frame; frame->GetParentWithView(aPresContext, &frame)) {
-    nsIView* view;
-     
-    frame->GetView(aPresContext, &view);
-    if (nsnull != view) {
-      view->GetWidget(window);
+    if (frame->HasView()) {
+      frame->GetView(aPresContext)->GetWidget(window);
       if (nsnull != window) {
         break;
       }
@@ -2647,22 +2641,12 @@ NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
 
   if (nsnull == window) {
     // Ask the view manager for the widget
-
-    // First we have to get to a frame with a view
-    nsIView* view;
-    GetView(aPresContext, &view);
-    if (nsnull == view) {
-      GetParentWithView(aPresContext, &frame);
-      if (nsnull != frame) {
-        GetView(aPresContext, &view);
-      }
-    }
-     // From the view get the view manager
-    if (nsnull != view) {
-      nsCOMPtr<nsIViewManager> vm;
-      view->GetViewManager(*getter_AddRefs(vm));
-      vm->GetWidget(&window);
-    }    
+    NS_NOTREACHED("this shouldn't happen, should it?");
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
+    vm->GetWidget(&window);
   }
 
   NS_POSTCONDITION(nsnull != window, "no window in frame tree");
@@ -2723,17 +2707,15 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
 #endif
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-  nsIView* view;
-
-  GetView(aPresContext, &view);
-  if (view) {
+  if (HasView()) {
+    nsIView* view = GetView(aPresContext);
     view->GetViewManager(viewManager);
     viewManager->UpdateView(view, damageRect, flags);
-    
   } else {
     nsRect    rect(damageRect);
     nsPoint   offset;
   
+    nsIView *view;
     GetOffsetFromView(aPresContext, offset, &view);
     NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
@@ -2843,10 +2825,8 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 #ifdef DEBUG_waterson
   fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
-  nsIView*  view;
-  GetView(aPresContext, &view);
-  if (view) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
+  if (HasView()) {
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView(aPresContext)));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
@@ -3081,11 +3061,9 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
     fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(mNextSibling));
   }
 
-  nsIView*  view;
-  GetView(aPresContext, &view);
-  if (view) {
+  if (HasView()) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(view));
+    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(GetView(aPresContext)));
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;
@@ -3490,7 +3468,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
           }
         }
 
-        if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
+        if (!resultFrame->HasView())
         {
           resultFrame->GetRect(rect);
           if (!rect.width || !rect.height)
@@ -4432,36 +4410,13 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   return NS_OK;
 }
 
-nsresult nsFrame::GetClosestViewForFrame(nsIPresContext* aPresContext,
-                                         nsIFrame *aFrame,
-                                         nsIView **aView)
+nsIView* nsIFrame::GetClosestView(nsIPresContext* aPresContext) const
 {
-  if (!aView)
-    return NS_ERROR_NULL_POINTER;
+  for (const nsIFrame *f = this; f; f->GetParent(NS_CONST_CAST(nsIFrame**, &f)))
+    if (f->HasView())
+      return f->GetView(aPresContext);
 
-  nsresult result = NS_OK;
-
-  *aView = 0;
-
-  nsIFrame *parent = aFrame;
-
-  while (parent && !*aView)
-  {
-    result = parent->GetView(aPresContext, aView);
-
-    if (NS_FAILED(result))
-      return result;
-
-    if (!*aView)
-    {
-      result = parent->GetParent(&parent);
-
-      if (NS_FAILED(result))
-        return result;
-    }
-  }
-
-  return result;
+  return nsnull;
 }
 
 
@@ -4811,23 +4766,12 @@ NS_IMETHODIMP
 nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
-  nsIView* view = nsnull;
-  nsIFrame *parent;//might be THIS frame thats ok
-  GetView(aPresContext, & view);
-  if (!view)
-  {
-    nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (NS_FAILED(rv))
-      return rv;
-    if (!parent)
-      return NS_ERROR_FAILURE;
-    parent->GetView(aPresContext, &view);
-  }
+  nsIView* view = GetClosestView(aPresContext);
 
-  nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
   if (view) {
+    nsCOMPtr<nsIViewManager> viewMan;
     view->GetViewManager(*getter_AddRefs(viewMan));
     if (viewMan) {
       if (aGrabMouseEvents) {
@@ -4845,22 +4789,10 @@ PRBool
 nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
-  if (!view)
-  {
-    nsIFrame *parent;//might be THIS frame thats ok
-    nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (NS_FAILED(rv))
-      return rv;
-    if (!parent)
-      return NS_ERROR_FAILURE;
-
-    parent->GetView(aPresContext, &view);
-  }
-  nsCOMPtr<nsIViewManager> viewMan;
+  nsIView* view = GetClosestView(aPresContext);
   
   if (view) {
+    nsCOMPtr<nsIViewManager> viewMan;
     view->GetViewManager(*getter_AddRefs(viewMan));
 
     if (viewMan) {

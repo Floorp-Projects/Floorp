@@ -368,9 +368,7 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
   // (e.g., the canvas) when it really needs to have the OuterFrame's
   // view as its parent. So, create the OuterFrame's view right away
   // if we need it, and the InnerFrame's view will get it as the parent.
-  nsIView* view = nsnull;
-  GetView(aPresContext, &view);
-  if (!view) {
+  if (!HasView()) {
     // To properly initialize the view we need to know the frame for the content
     // that is the parent of content for this frame. This might not be our actual
     // frame parent if we are out of flow (e.g., positioned) so our parent frame
@@ -399,8 +397,8 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     }
   
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,contentParent,PR_TRUE); 
-    GetView(aPresContext, &view);
   }
+  nsIView* view = GetView(aPresContext);
 
   if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK) {
     nsCOMPtr<nsIWidget> widget;
@@ -1027,8 +1025,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext*           aPresContext,
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView* view = nsnull;
-    GetView(aPresContext, &view);
+    nsIView* view = GetView(aPresContext);
     if (view) {
       nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
                                   ? nsViewVisibility_kShow

@@ -1194,20 +1194,18 @@ nsImageMap::Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& a
   nsIView* view;
   nsRect damageRect(aRect);
 
-  aFrame->GetView(aPresContext, &view);
-  if (view) {
-    view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->UpdateView(view, damageRect, flags);   
+  if (aFrame->HasView()) {
+    view = aFrame->GetView(aPresContext);
   }
   else {
-    nsPoint   offset;
-
+    nsPoint offset;
     aFrame->GetOffsetFromView(aPresContext, offset, &view);
     NS_ASSERTION(nsnull != view, "no view");
     damageRect += offset;
-    view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->UpdateView(view, damageRect, flags);
   }
+  view->GetViewManager(*getter_AddRefs(viewManager));
+  viewManager->UpdateView(view, damageRect, flags);
+
   return NS_OK;
 
 }
