@@ -455,11 +455,9 @@ void nsMsgThreadedDBView::UpdatePreSearchFlagInfo(nsMsgViewIndex index, PRUint32
 
 void nsMsgThreadedDBView::UpdateCachedFlag(PRUint32 aFlag, PRUint32 *extraFlag)
 {
-  if(!aFlag || !extraFlag)
-  {
-    NS_ASSERTION(PR_FALSE,"aFlag or extraFlag is null");
+  NS_ASSERTION(extraFlag,"extraFlag is null");
+  if(!extraFlag)
     return;
-  }
   if (aFlag & MSG_FLAG_ELIDED)
     *extraFlag |= MSG_FLAG_ELIDED;
   else
