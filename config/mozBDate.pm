@@ -26,14 +26,16 @@ use IO::File;
 
 BEGIN {
     use Exporter ();
-    use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+    use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $milestone);
 
     $VERSION = 1.00;
     @ISA = qw(Exporter);
-    @EXPORT = qw(&UpdateBuildNumber &SubstituteBuildNumber);
+    @EXPORT = qw(&UpdateBuildNumber &SubstituteBuildNumber &SetMilestone);
     %EXPORT_TAGS = ( );
     @EXPORT_OK = qw();
 }
+
+local $mozBDate::milestone = "0.0";
 
 sub write_number($) {
     my ($file, $num) = @_;
@@ -95,7 +97,7 @@ sub SubstituteBuildNumber($$$) {
     my ($outfile, $build_num, $infile) = @_;
     my $INFILE = new IO::File;
     my $OUTFILE = new IO::File;
-    
+
     open $INFILE, "<$build_num";
     my $build = <$INFILE>;
     close $INFILE;
@@ -122,6 +124,15 @@ sub SubstituteBuildNumber($$$) {
         $id =~ s/NS_BUILD_ID\s\d+/$temp/;
         print $OUTFILE $id;
     }
+    elsif ($id =~ "GRE_BUILD_ID") {
+	if (defined($ENV{'MOZ_MILESTONE_RELEASE'})) {
+	    $temp = "GRE_BUILD_ID " . $milestone;
+	} else {
+	    $temp = "GRE_BUILD_ID " . "${milestone}_${build}";
+	}
+        $id =~ s/GRE_BUILD_ID\s\d+/$temp/;
+        print $OUTFILE $id;
+    }
     else {
         print $OUTFILE $_;
     }
@@ -132,6 +143,11 @@ sub SubstituteBuildNumber($$$) {
 
     unlink $outfile;
     rename "${outfile}.old", "$outfile";
+}
+
+sub SetMilestone($) {
+    my ($mstone) = (@_);
+    $milestone = $mstone if ($mstone ne "");
 }
 
 END {};
