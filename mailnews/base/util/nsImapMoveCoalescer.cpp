@@ -45,6 +45,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMsgFolderFlags.h"
+#include "nsQuickSort.h"
 
 
 NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)
@@ -105,6 +106,62 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
   
 }
 
+
+static int PR_CALLBACK CompareKey (const void *v1, const void *v2, void *)
+{
+	// QuickSort callback to compare array values
+	nsMsgKey i1 = *(nsMsgKey *)v1;
+	nsMsgKey i2 = *(nsMsgKey *)v2;
+	return i1 - i2;
+}
+
+static nsresult
+AllocateUidStringFromKeys(nsMsgKey *keys, PRUint32 numKeys, nsCString &msgIds)
+{
+  if (!numKeys)
+    return NS_ERROR_INVALID_ARG;
+  nsresult rv = NS_OK;
+  PRUint32 startSequence;
+  startSequence = keys[0];
+  PRUint32 curSequenceEnd = startSequence;
+  PRUint32 total = numKeys;
+  // sort keys and then generate ranges instead of singletons!
+  NS_QuickSort(keys, numKeys, sizeof(nsMsgKey), CompareKey, nsnull);
+  for (PRUint32 keyIndex = 0; keyIndex < total; keyIndex++)
+  {
+    PRUint32 curKey = keys[keyIndex];
+    PRUint32 nextKey = (keyIndex + 1 < total) ? keys[keyIndex + 1] : 0xFFFFFFFF;
+    PRBool lastKey = (nextKey == 0xFFFFFFFF);
+
+    if (lastKey)
+      curSequenceEnd = curKey;
+    if (nextKey == (PRUint32) curSequenceEnd + 1 && !lastKey)
+    {
+      curSequenceEnd = nextKey;
+      continue;
+    }
+    else if (curSequenceEnd > startSequence)
+    {
+      msgIds.AppendInt(startSequence);
+      msgIds += ':';
+      msgIds.AppendInt(curSequenceEnd);
+      if (!lastKey)
+        msgIds += ',';
+      startSequence = nextKey;
+      curSequenceEnd = startSequence;
+    }
+    else
+    {
+      startSequence = nextKey;
+      curSequenceEnd = startSequence;
+      msgIds.AppendInt(keys[keyIndex]);
+      if (!lastKey)
+        msgIds += ',';
+    }
+  }
+  return rv;
+}
+
 nsresult nsImapMoveCoalescer::PlaybackMoves()
 {
   PRUint32 numFolders;
@@ -131,7 +188,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         PRInt32 numNewMessages = 0;
         nsCAutoString messageIds;
         
-        nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
+        AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
         PRInt32 numKeysToAdd = keysToAdd->GetSize();
         if (numKeysToAdd == 0)
           continue;
