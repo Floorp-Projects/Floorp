@@ -31,13 +31,7 @@ public:
   nsCmdLineService(void);
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Initialize(PRInt32  aArgc, char** aArgv);
-  NS_IMETHOD GetCmdLineValue(const char* aArg, char **aValue);
-  NS_IMETHOD GetURLToLoad(char ** aResult);
-  NS_IMETHOD GetProgramName(char ** aResult);
-  NS_IMETHOD GetArgc(PRInt32  *  aResult);
-  NS_IMETHOD GetArgv(char *** aResult);
+  NS_DECL_NSICMDLINESERVICE
 
 protected:
   virtual ~nsCmdLineService();
