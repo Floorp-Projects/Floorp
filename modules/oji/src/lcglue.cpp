@@ -86,7 +86,7 @@ static void PR_CALLBACK detach_JVMContext(void* storage)
 JVMContext* GetJVMContext()
 {
 	/* Use NSPR thread private data to manage the per-thread JNIEnv* association. */
-	static ThreadLocalStorage<JVMContext*> localContext(&detach_JVMContext);
+	static ThreadLocalStorage<JVMContext*> localContext((PRThreadPrivateDTOR)&detach_JVMContext);
 	JVMContext* context = localContext.get();
 	if (context == NULL) {
 		context = new JVMContext;
