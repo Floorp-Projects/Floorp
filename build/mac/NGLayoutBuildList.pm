@@ -2567,6 +2567,10 @@ sub BuildMozilla()
     _copy( $cmd_file_path . "Mozilla_JavaScript_Console", $dist_dir . $cmd_file );
     MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
+    $cmd_file = "Mozilla Bloat URLs";
+    _copy( $cmd_file_path . "Mozilla_Bloat_URLs", $dist_dir . $cmd_file );
+    MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
+    _copy( ":mozilla:build:bloaturls.txt", $dist_dir . "bloaturls.txt" );
 }
 
 
