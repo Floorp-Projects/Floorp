@@ -767,23 +767,6 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 }
 
 /********************************************************
-* Refreshes this frame and all child frames that are frames for aContent
-*********************************************************/
-static void RefreshAllContentFrames(nsIFrame* aFrame, nsIContent* aContent)
-{
-  if (aFrame->GetContent() == aContent) {
-    // XXX is this necessary?
-    aFrame->Invalidate(aFrame->GetOutlineRect(), PR_FALSE);
-  }
-
-  aFrame = aFrame->GetFirstChild(nsnull);
-  while (aFrame) {
-    RefreshAllContentFrames(aFrame, aContent);
-    aFrame = aFrame->GetNextSibling();
-  }
-}
-
-/********************************************************
 * Refreshes each content's frame
 *********************************************************/
 
@@ -1704,9 +1687,6 @@ static nsIView* GetNearestCapturingView(nsIFrame* aFrame) {
     return nsnull;
   }
 
-#ifdef DEBUG_roc
-  printf("*** Setting capture to frame %p, view %p\n", (void*)aFrame, (void*)view);
-#endif
   return view;
 }
 
@@ -2503,17 +2483,12 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
   }
 }
 
-nsRect
-nsIFrame::GetOutlineRect(PRBool* aAnyOutline, nsSize *aUseSize) const
-{
-  const nsStyleOutline* outline = GetStyleOutline();
+static nsRect ComputeOutlineRect(const nsIFrame* aFrame, PRBool* aAnyOutline,
+                                 const nsRect& aOverflowRect) {
+  const nsStyleOutline* outline = aFrame->GetStyleOutline();
   PRUint8 outlineStyle = outline->GetOutlineStyle();
-  nsRect r(0, 0, mRect.width, mRect.height);
-  if (aUseSize) {
-    r.width = aUseSize->width;
-    r.height = aUseSize->height;
-  }
-  PRBool anyOutline = PR_FALSE;
+  nsRect r = aOverflowRect;
+  *aAnyOutline = PR_FALSE;
   if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
     nscoord width;
 #ifdef DEBUG
@@ -2523,15 +2498,29 @@ nsIFrame::GetOutlineRect(PRBool* aAnyOutline, nsSize *aUseSize) const
     NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
     if (width > 0) {
       r.Inflate(width, width);
-      anyOutline = PR_TRUE;
+      *aAnyOutline = PR_TRUE;
     }
-  }
-  if (aAnyOutline) {
-    *aAnyOutline = anyOutline;
   }
   return r;
 }
 
+nsRect
+nsIFrame::GetOverflowRect() const
+{
+  // Note that in some cases the overflow area might not have been
+  // updated (yet) to reflect any outline set on the frame or the area
+  // of child frames. That's OK because any reflow that updates these
+  // areas will invalidate the appropriate area, so any (mis)uses of
+  // this method will be fixed up.
+  nsRect* storedOA = NS_CONST_CAST(nsIFrame*, this)
+    ->GetOverflowAreaProperty(PR_FALSE);
+  if (storedOA) {
+    return *storedOA;
+  } else {
+    return nsRect(nsPoint(0, 0), GetSize());
+  }
+}
+  
 void
 nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
@@ -2553,7 +2542,8 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
 
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutline;
-  nsRect r = GetOutlineRect(&anyOutline);
+  nsRect r = ComputeOutlineRect(this, &anyOutline,
+                                aDesiredSize.mOverflowArea);
   if (anyOutline) {
     Invalidate(r);
     return;
@@ -2683,6 +2673,12 @@ nsFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
     fprintf(out, " [state=%08x]", mState);
   }
   fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
+  nsFrame* f = NS_CONST_CAST(nsFrame*, this);
+  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
+  if (overflowArea) {
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
+            overflowArea->width, overflowArea->height);
+  }
   fputs("\n", out);
   return NS_OK;
 }
@@ -3019,14 +3015,8 @@ nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aS
   else
     RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
 
-  // repaint this frame's outline area.
-  // In CSS3 selection can change the outline style! and border and content too
-  Invalidate(GetOutlineRect(), PR_FALSE);
-
-  if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
-  {
-    RefreshAllContentFrames(this, mContent);
-  }
+  // Repaint this frame subtree's entire area
+  Invalidate(GetOverflowRect(), PR_FALSE);
 
 #ifdef IBMBIDI
   PRInt32 start, end;
@@ -4250,7 +4240,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   // we should think about starting a new method like GetAdditionalOverflow()
 
   PRBool hasOutline;
-  nsRect outlineRect(GetOutlineRect(&hasOutline, &aNewSize));
+  nsRect outlineRect(ComputeOutlineRect(this, &hasOutline, *aOverflowArea));
 
   if (hasOutline ||
       (aOverflowArea->x < 0) ||
@@ -4260,8 +4250,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");
-    aOverflowArea->UnionRect(outlineRect, *aOverflowArea);
-    *overflowArea = *aOverflowArea;
+    *aOverflowArea = *overflowArea = outlineRect;
   } 
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {

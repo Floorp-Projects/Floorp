@@ -1320,6 +1320,12 @@ nsContainerFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) 
     fprintf(out, " [state=%08x]", mState);
   }
   fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
+  nsContainerFrame* f = NS_CONST_CAST(nsContainerFrame*, this);
+  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
+  if (overflowArea) {
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
+            overflowArea->width, overflowArea->height);
+  }
   fprintf(out, " [sc=%p]", NS_STATIC_CAST(void*, mStyleContext));
 
   // Output the children

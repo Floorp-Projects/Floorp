@@ -1119,7 +1119,7 @@ nsBox::Redraw(nsBoxLayoutState& aState,
   if (aDamageRect)
     damageRect = *aDamageRect;
   else
-    damageRect = frame->GetOutlineRect();
+    damageRect = frame->GetOverflowRect();
 
   frame->Invalidate(damageRect, aImmediate);
 

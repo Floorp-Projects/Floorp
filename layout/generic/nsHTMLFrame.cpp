@@ -348,7 +348,7 @@ CanvasFrame::RemoveFrame(nsPresContext* aPresContext,
     // Damage the area occupied by the deleted frame
     // The child of the canvas probably can't have an outline, but why bother
     // thinking about that?
-    Invalidate(aOldFrame->GetOutlineRect() + aOldFrame->GetPosition(), PR_FALSE);
+    Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition(), PR_FALSE);
 
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -566,7 +566,7 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
     // If the child frame was just inserted, then we're responsible for making sure
     // it repaints
     if (isDirtyChildReflow) {
-      Invalidate(kidFrame->GetOutlineRect() + kidFrame->GetPosition(), PR_FALSE);
+      Invalidate(kidFrame->GetOverflowRect() + kidFrame->GetPosition(), PR_FALSE);
     }
 
     // Return our desired size

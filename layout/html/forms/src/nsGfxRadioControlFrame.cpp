@@ -238,7 +238,7 @@ NS_IMETHODIMP
 nsGfxRadioControlFrame::OnChecked(nsPresContext* aPresContext,
                                   PRBool aChecked)
 {
-  Invalidate(GetOutlineRect(), PR_FALSE);
+  Invalidate(GetOverflowRect(), PR_FALSE);
   return NS_OK;
 }
 

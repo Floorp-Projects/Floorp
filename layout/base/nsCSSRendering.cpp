@@ -2087,12 +2087,15 @@ nscoord width;
     }
   }
 
-  nsRect inside(aBorderArea);
-  nsRect outside(inside);
-  outside.Inflate(width, width);
+  nsRect* overflowArea = aForFrame->GetOverflowAreaProperty(PR_FALSE);
+  if (!overflowArea) {
+    NS_WARNING("Hmm, outline painting should always find an overflow area here");
+    return;
+  }
 
-  nsRect clipRect(aBorderArea);
-  clipRect.Inflate(width, width); // make clip extra big for now
+  nsRect outside(*overflowArea);
+  nsRect inside(outside);
+  inside.Deflate(width, width);
 
   // rounded version of the border
   for(i=0;i<4;i++){

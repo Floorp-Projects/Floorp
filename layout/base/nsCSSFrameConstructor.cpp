@@ -9780,7 +9780,7 @@ UpdateViewsForTree(nsPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
-  nsRect bounds = aFrame->GetOutlineRect();
+  nsRect bounds = aFrame->GetOverflowRect();
 
   // now do children of frame
   PRInt32 listIndex = 0;
@@ -10103,7 +10103,7 @@ nsCSSFrameConstructor::RestyleElement(nsPresContext *aPresContext,
     RecreateFramesForContent(aPresContext, aContent);
   } else if (aPrimaryFrame) {
     nsStyleChangeList changeList;
-    if (aMinHint != NS_STYLE_HINT_NONE) {
+    if (aMinHint) {
       changeList.AppendChange(aPrimaryFrame, aContent, aMinHint);
     }
     nsChangeHint frameChange = aPresContext->GetPresShell()->FrameManager()->
@@ -13525,7 +13525,7 @@ ProcessRestyle(nsISupports* aContent,
   if (aData.mRestyleHint & eReStyle_Self) {
     shell->FrameConstructor()->RestyleElement(context, content, primaryFrame,
                                               aData.mChangeHint);
-  } else if (aData.mChangeHint != NS_STYLE_HINT_NONE &&
+  } else if (aData.mChangeHint &&
              (primaryFrame ||
               (aData.mChangeHint & nsChangeHint_ReconstructFrame))) {
     // Don't need to recompute style; just apply the hint
@@ -13557,7 +13557,7 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
                                         nsReStyleHint aRestyleHint,
                                         nsChangeHint aMinChangeHint)
 {
-  if (aRestyleHint == 0 && aMinChangeHint == NS_STYLE_HINT_NONE) {
+  if (aRestyleHint == 0 && !aMinChangeHint) {
     // Nothing to do here
     return;
   }
