@@ -538,10 +538,17 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 					// This is to browse to a file
 					CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
 					int retVal = fileDlg.DoModal();
-				
-					CString fullFileName = fileDlg.GetPathName();
+					CString fullFileName="";
+
+
 					WIDGET* editWidget = CurrentNode->pageWidgets[i-1];
-					((CEdit*)editWidget->control)->SetWindowText(fullFileName);
+//Checking to see if the open file dialog did get a value or was merely cancelled.
+//If it was cancelled then the value of the edit box is not changed.
+					if (fileDlg.GetPathName() != "")
+					{	
+						fullFileName = fileDlg.GetPathName();
+						((CEdit*)editWidget->control)->SetWindowText(fullFileName);
+					}
 				}
 				else if (curWidget->action.function == "BrowseDir") {
 					// The following code is used to browse to a dir
