@@ -36,8 +36,6 @@
 #define emTextType			'TEXT'
 #define emBookmarkFile		'URL '	// Bookmark file
 #define emPluginFile 		'NSPL'
-#define MAIL_MESSAGE_FLAVOR	'MSTB'
-#define NEWS_ARTICLE_FLAVOR	'NSTB'
 #define TEXT_FLAVOR			'TEXT'
 #define emHelpType			'HELP'
 #define emRegistry			'REGS'
@@ -56,18 +54,6 @@
 #define emGlobalHistory		'DBMG'	// Global history file
 #define emCacheFat			'DBMC'	// CacheFAT
 #define emExtCache			'DBME'	// External cache
-// Address Book (neo database file)
-#define emAddressBookDB		'NAB '
-// Mail files
-#define emMailFilterRules	'MRUL'
-#define emMailFilterLog		'TEXT'
-#define emMailFolderSummary	'MSUM'
-#define emMailSubdirectory	'MSBD'
-// News
-#define emNewsrcFile		'NEWS'	// Newsrc file, just like Newswatcher's
-#define emNewsrcDatabase	'DBNW'	// News database
-#define emNewsXoverCache	'DBNX'	// News xover cache
-#define emNewsHostDatabase	'DBNW'	// News host database
 
 // •• Drag/clip flavors
 #define emBookmarkFileDrag	'urlF'		// FSSpec for promiseHFS drags
@@ -86,8 +72,6 @@
 #define STOP_ANIMATIONS_INDEX		2
 
 // •• menu commands/messages.  SEE ALSO MailNewsGroupWindow_Defines.h
-//#define cmd_EditGeneral				1000	// Edit General Prefs
-//#define cmd_EditMailNews			1001	// Edit Mail and News Prefs
 #define cmd_Preferences				1001
 #define cmd_EditNetwork				1002	// Edit Network Prefs
 #define cmd_EditSecurity			1003	// Edit Security Prefs
@@ -99,14 +83,11 @@
 //#define cmd_Home					1009	// Go home
 #define cmd_DelayImages				1010	// Delay image loading
 #define cmd_LoadImages				1011	// Load all images
-#define cmd_AddToBookmarks			1012	// Add to hotlist
 #define cmd_ReloadImage				1013	// Reload images
 #define cmd_Find					1014	// Find
 #define cmd_FindAgain				1015	// Find again
-#define cmd_MailNewsSearch			8100	// Mail/News Search Dialog command
 #define cmd_Stop					1016
 #define cmd_ToggleToolbar			1017
-#define cmd_ToggleURLField			1018	// the Akbar terminology
 #define cmd_ToggleLocationBar		1018	// The 4.0 and later terminology
 #define cmd_TogglePersonalToolbar	1199
 #define cmd_ToggleStatusArea		1019
@@ -124,19 +105,9 @@
 #define cmd_CoBrandLogo				1026
 #define cmd_DocumentEncoding		1027
 
-/* THESE ARE DUPLICATES */
-#define cmd_SortArticles			1028
-#define cmd_MoveArticles			1029
-#define	cmd_CopyArticles			1030
-#define cmd_MessageHeaders			1031
-/* END DUPLICATES */
-
-#define cmd_MailNewsFolderWindow	1028	// Show mail window
-#define cmd_Inbox					1029	// Show inbox
 #define cmd_BookmarksWindow 		1030	// Show the bm pane of NavCenter in new window
 #define cmd_HistoryWindow			1031	// Show history pane of NavCenter in new window
 //#define cmd_OpenURL					1032
-#define cmd_AddressBookWindow		1033
 #define cmd_Redo					1034
 
 #define cmd_ViewFrameSource			1035
@@ -144,51 +115,7 @@
 
 #define cmd_ToggleTaskBar			1037
 
-#define cmd_NewFolder				1048	// Also mail folder, not just for bookmarks!
-
-#if 0
-/* bookmarks menus */
-#define cmd_OpenBookmarks			1039
-#define cmd_SetAddHeader			1040
-#define cmd_ImportBookmarks			1041
-#define	cmd_WhatsNew				1042
-#define cmd_SelectAllBookmarks		1043
-#define cmd_BookmarkProps			1044
-#define cmd_GotoBookmark			1045
-#define cmd_SortBookmarks			1046
-#define	cmd_InsertBookmark			1047
-#define cmd_InsertHeader			1048
-#define cmd_InsertSeparator			1049
-#define cmd_MakeAlias				1050
-#define cmd_ViewInNetscape			1051
-#define cmd_SetMenuHeader			1052
-#define cmd_MoveBookmark			1053
-#define cmd_NewWorkspace			1054
-#endif
-
-/* address book menus */
-#define cmd_ImportAddressBook		1060
-#define cmd_LaunchImportModule		1063
-
-/* mail composition */
-#define cmd_Send					1054
-#define cmd_Queue					1055
-#define cmd_PasteQuote				1056
-#define cmd_Scramble				1057
-#define cmd_ShowAllHeaders			1058
-#define cmd_QueueOption				1059
-#define cmd_ImmediateDelivery		1061
-#define cmd_DeferredDelivery		1062
-
-/* 	these need to be in the same order as
- 	the panes in the view */
-#define	cmd_ShowMailTo				1070
-#define	cmd_ShowNewsgroupTo			1071
-#define cmd_ShowReplyTo				1072
-#define cmd_ShowMailCC				1073
-#define cmd_ShowMailBCC				1074
-#define	cmd_ShowFileCC				1075
-#define	cmd_ShowFollowUpTo			1076
+#define cmd_NewFolder				1048
 
 #define cmd_NetSearch				1080
 
@@ -199,100 +126,6 @@
 #define	cmd_FortezzaInfo			1098
 #define	cmd_FortezzaLogout			1099
 #endif
-
-
-/* mail reading */
-#define	MAIL_MENU_BASE				1100
-//#define cmd_OpenFolder				1100
-//#define cmd_NewFolder				1101
-//#define cmd_DeleteFolder			1102
-#define cmd_OpenNewsHost			1103
-#define cmd_SaveMessagesAs			1104
-#define cmd_CopyMessagesInto		1105
-#define cmd_MoveMessagesInto		1106
-#define cmd_GetInfo					1107
-#define cmd_ShowAllNewsgroups		1108
-#define cmd_CheckNewNewsgroups		1109
-#define cmd_Rot13Message			1110
-#define cmd_GetNewMail				1111
-#define cmd_DeliverQueuedMessages	1112
-
-#define cmd_MailUndo				1115
-#define cmd_MailRedo				1116
-#define cmd_PostReply				1119
-#define cmd_PostAndMailReply		1120
-#define cmd_PostNew					1121
-#define cmd_MailNew					1122
-//#define cmd_ForwardMessage			1123
-#define cmd_MarkMessage				1124
-#define cmd_UnmarkAllMessages		1125
-#define cmd_DeleteMessage			1126
-#define cmd_CancelMessage			1127
-#define cmd_SelectAllMessages		1128
-#define cmd_UnselectAllMessages		1129
-#define cmd_SelectThread			1130
-#define cmd_SelectMarkedMessages	1131
-#define cmd_MarkSelectedMessages	1132
-//#define cmd_EmptyTrash				1133
-#define cmd_CompressFolder			1134
-#define cmd_CompressAllFolders		1135
-#define cmd_MarkSelectedRead		1136
-#define cmd_MarkSelectedUnread		1137
-#define cmd_MarkThreadRead			1138
-#define cmd_MarkAllRead				1139
-#define cmd_ShowAllMessages			1140
-#define cmd_SelectSelection			1141 /* No-op.  Handy for context menus */
-//#define cmd_PreviousMessage			1142
-#define cmd_FirstMessage			1143
-#define cmd_LastMessage				1144
-//#define cmd_NextUnreadMessage		1145
-#define cmd_PreviousUnreadMessage	1146
-#define cmd_FirstUnreadMessage		1147
-#define cmd_LastUnreadMessage		1148
-#define cmd_NextMarkedMessage		1149
-#define cmd_PreviousMarkedMessage	1150
-#define cmd_FirstMarkedMessage		1151
-#define cmd_LastMarkedMessage		1152
-#define cmd_ThreadMessages			1153
-#define cmd_SortByMessageNumber		1155
-#define cmd_Resort					1159
-#define cmd_ShowAllMessageHeaders	1160
-#define cmd_OpenSelectionNewWindow	1161
-#define cmd_SendFormattedText		1162
-#define cmd_QueueForLaterDelivery	1163
-#define cmd_AttachAsText			1164
-#define cmd_UnmarkSelectedMessages	1165
-//	Renamed the unused "cmd_OpenSelectedFolder" command.  DDM 28-JAN-97
-#define cmd_OpenSelection			1166
-#define cmd_ShowOnlyUnreadMessages	1167
-#define cmd_ShowSubscribedNewsgroups	1168
-#define cmd_ShowActiveNewsgroups	1169
-#define cmd_SaveMessagesAsAndDelete	1170
-#define cmd_ForwardQuoted			1171
-#define cmd_RemoveNewshost			1172
-#define cmd_AddToAddressBook		1173
-#define cmd_AddNewsgroup			1174
-#define cmd_AddFromNewest			1175
-#define cmd_AddFromOldest			1176
-#define cmd_GetMoreMessages			1177
-#define	cmd_GetAllMessages			1178
-#define cmd_AttachInline			1179
-#define cmd_AttachLinks				1180
-#define	cmd_ShowSomeMessageHeaders	1181
-#define cmd_ShowMicroMessageHeaders	1182
-#define cmd_WrapLongLines			1183
-#define cmd_SubscribeNewsgroups		1184
-#define MAIL_MENU_LAST				cmd_SubscribeNewsgroups
-#define cmd_UpdateMessageCount		1185
-#define cmd_MailDocument			1190
-#define cmd_AboutPlugins			1191
-#define cmd_ReloadFrame				1192
-#define cmd_FTPUpload				1193
-#define cmd_SecurityInfo			1194
-#define cmd_EditMessage				1195
-#define cmd_ManageMailAccount		1196
-#define cmd_NewNewsgroup			1197
-#define cmd_ModerateNewsgroup		1198
 
 /* Editor Window Menu */
 #define cmd_BrowserWindow			1206
@@ -461,9 +294,6 @@
 #define msg_Apply		3001
 #define msg_Defaults	3002
 
-#define cmd_AttachToMessage			2006
-#define cmd_IncludeOriginalText		2010
-
 #define	HISTORY_MENU_BASE			2000
 #define HISTORY_LIMIT				32
 #define HISTORY_MENU_LAST			HISTORY_MENU_BASE + HISTORY_LIMIT
@@ -485,27 +315,12 @@
 
 #define cmd_EditorPluginStop		2991
 
-#define BOOKMARKS_MENU_BASE			3050	// Reserved for up to 4000 for hotlist menus
-#define BOOKMARKS_MENU_BASE_LAST	3999
-
-#define cmd_LaunchCalendar			6600
-#define cmd_Launch3270				6601
-#define cmd_LaunchNetcaster			6602
 #define cmd_LaunchAOLInstantMessenger 6603
-
-#define cmd_LaunchConference		6610
 
 #define cmd_ShowJavaConsole			7866
 
 #define cmd_WINDOW_MENU_BASE 		9001	// 9001 through 9050 reserved for windows
 #define cmd_WINDOW_MENU_BASE_LAST	9050
-
-
-//#define cmd_Directory				1300
-
-#define DIR_BUTTON_BASE				4000
-#define DIR_MENU_BASE				4020
-#define DIR_BUTTON_LAST				4050
 
 #define CONTEXT_MENU_BASE			4070
 #define	cmd_NEW_WINDOW_WITH_FRAME 	 4 + CONTEXT_MENU_BASE
@@ -536,9 +351,6 @@
 #define Wind_Prompt			1006	// Prompt for FE_Prompt
 #define Wind_Pass			1007	// Prompt for a password
 
-#define		IBM3270_FOLDER			"3270"
-#define		IBM3270_FILE			"HE3270EN.HTM"
-
 // •• Preferences built-in types
 #define PREF_SOURCE								"Netscape/DocumentSource"
 #define	TELNET_APPLICATION_MIME_TYPE			"Netscape/Telnet"
@@ -551,13 +363,8 @@
 // Preference resources
 
 #define STARTUP_BROWSER		1
-#define STARTUP_NEWS		2
-#define STARTUP_MAIL		3
 #define STARTUP_VISIBLE		4
 #define BROWSER_STARTUP_ID	1
-#define MAIL_STARTUP_ID		2
-#define NEWS_STARTUP_ID		4
-#define ADDRESS_STARTUP_ID	8
 #define NAVCENTER_STARTUP_ID 16
 
 #define res_Strings1 2001
@@ -615,15 +422,6 @@
 #define GENERIC_FONT_NAMES_RESID	3000
 
 #define	BYTES_PER_MEG	1048576L
-
-#define MAIL_SORT_BY_DATE			1
-#define MAIL_SORT_BY_MESSAGE_NUMBER	2
-#define MAIL_SORT_BY_SUBJECT			3
-#define MAIL_SORT_BY_SENDER			4
-
-#define SHOW_ALL_HEADERS			1
-#define SHOW_SOME_HEADERS			2
-#define SHOW_MICRO_HEADERS			3
 
 #define NORMAL_PANE_CONFIG			0
 #define STACKED_PANE_CONFIG			1
@@ -830,8 +628,6 @@
 
 // Resources
 #define HYPER_WINDOW_ID		1000
-#define NEWS_WINDOW_ID		2000
-#define MAIL_WINDOW_ID		3000
 #define MAIL_SEND_WINDOW_ID 8001
 
 //#ifdef EDITOR
@@ -920,71 +716,7 @@
 #define pref8AppMenuLabel		14
 #define pref8PluginMenu			15
 
-
-/*-----------------------------------------------------------------------------
-	Mailto window
------------------------------------------------------------------------------*/
-#define mailBaseWindowID	8000	// Mailto window ID
-#define mailCaptionTo		'toto'	// To: field
-#define mailEditSubject		'subj'	// Subject:
-#define mailTextMainText	'main'	// Text of the message
-
-#define msg_DefaultDir				300
-#define msg_TemporaryDir			301
-#define msg_Telnet					302
-#define msg_Source					303
-#define msg_tn3270					304 
-#define msg_CacheDir				305
-#define msg_NewsRC					306
-#define msg_PopupChanged			5000	// Main popup has changes
-#define msg_Default					5001	// Set default choices
-#define msg_WindowStyle				301
-#define msg_FontStyle				302
-
-#define msg_PFontChange				500
-#define msg_BFontChange				501
-#define msg_PSizeChange				502
-#define msg_BSizeChange				503
-#define msg_CharSetChange			504
-#define msg_DefaultCharSetChange	505
-
-#define msg_ChangeFontSize			-15381	//	This is the command number the
-
-#define msg_Help					'help'	// HELP! 1751477360
-#define msg_ExpireAfter				401
-#define msg_HomePage				402
-#define msg_CustomLinkColors		404
-#define msg_CustomVisitedColors		405
-#define msg_CustomTextColors		406
-#define msg_DefaultBackColors		408
-#define	msg_CustomBackColors		409
-#define msg_GIFBack					410
-
 #define msg_LinkColorChange			420
-#define msg_VisitedColorChange		421
-#define msg_TextColorChange			422
-#define msg_BackColorChange			423
-
-#define msg_SigFile					430
-#define msg_Browse					1200
-/* #define	mBrowseTitle				"\pBrowse…" */
-#define msg_FolderChanged			1201
-#define msg_ClearDiskCache			1202
-
-#define msg_ConfigureSSLv2			510
-#define msg_ConfigureSSLv3			511
-
-#define msg_ExpireNow				421
-#define msg_ArrowsHit				700
-
-#define msg_ResetButton				2000	// Reset button was hit, 'this' is ioParam
-#define msg_SubmitButton			2001	// Submit button was hit, 'this' is ioParam
-#define msg_SubmitText				2002	// Return hit in edit field, 'this' is ioParam
-#define msg_URLText					2003
-#define	msg_URLKeystroke			2004
-#define msg_LoadedNewTabPane		2005
-#define msg_CertSelect				2021
-#define msg_CertChoose				2022
 
 #define msg_NewUserStateForZoom		4000	// nil ioParam
 

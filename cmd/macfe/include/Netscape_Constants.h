@@ -27,15 +27,12 @@
 // MenuBar MBAR ResIDT's
 const ResIDT cBrowserMenubar =		MBAR_Initial;
 const ResIDT cEditorMenubar =		129;
-const ResIDT cMailNewsMenubar =		130;
-const ResIDT cAddressBookMenubar =	131;
 const ResIDT cComposeMenubar =		132;
 const ResIDT cBookmarksMenubar =	133;
-const ResIDT cHistoryMenubar =		134;
 const ResIDT cMinimalMenubar = 		135;
 
 // Menu ResIDT's
-const ResIDT cDirectoryMenuID =		10;
+//const ResIDT cDirectoryMenuID =		10;
 
 //	WARNING: All other hierarchical menu IDs must be below 75
 //	or bad things will happen!
@@ -49,6 +46,10 @@ const ResIDT cEditorPluginsLastHierMenuID =		84;
 const ResIDT cBookmarksFirstHierMenuID =		85;
 const ResIDT cBookmarksLastHierMenuID =			235;
 
+// Reserve this range for bookmark menus
+const CommandT BOOKMARKS_MENU_BASE = 			3050;
+const CommandT BOOKMARKS_MENU_BASE_LAST =		3999;
+
 const ResIDT cHistoryMenuID =		303;
 const ResIDT cBookmarksMenuID =		304;
 const ResIDT cWindowMenuID =		305;
@@ -59,20 +60,10 @@ const ResIDT cFontMenuID =			13;
 typedef enum {
 	WindowType_Browser			=	'Brwz',
 	WindowType_Download			=	'Down',
-	WindowType_MailNews			=	'MaNw',
-	WindowType_MailThread		=	'MaTh',
-	WindowType_Message			=	'Mesg',
-	WindowType_Newsgroup		=	'News',
 	WindowType_NavCenter		=	'NavW',
-	WindowType_Address			=	'Addr',
 	WindowType_Editor			=	'Edit',
-	WindowType_SearchMailNews	=	'Srch',
 	WindowType_Compose			=	'Comp',
-	WindowType_MailFilters		=	'Filt',
 	WindowType_Progress			=	'Prog',
-	WindowType_AddressPerson 	= 	'Adpr',
-	WindowType_AddressList 		= 	'Adls',
-	WindowType_SubscribeNews	=	'Subs',
 	WindowType_NameCompletion	= 	'NmPk',
 	WindowType_OfflinePicker	=	'OfPk'
 } NetscapeWindowT;
@@ -131,6 +122,31 @@ const CommandT cmd_NCDeletePane			= 5027;
 const CommandT cmd_NCFind				= 5050;		// find in workspace
 
 const CommandT cmd_NavCenterCap			= 5099;
+
+const CommandT cmd_AddToBookmarks		= 'AddB';
+const CommandT cmd_SortBookmarks		= 'SrtB';
+
+const CommandT cmd_AboutPlugins = 1191;
+const CommandT cmd_LaunchImportModule = 1063;
+const CommandT cmd_MailDocument = 1190;				// Send Page/Frame
+const CommandT cmd_ReloadFrame = 1192;
+const CommandT cmd_FTPUpload = 1193;
+const CommandT cmd_SecurityInfo = 1194;
+const CommandT cmd_GetInfo = 'Info';
+const CommandT cmd_OpenSelectionNewWindow = 1161;	// probably not needed
+const CommandT cmd_OpenSelection = 1166 ;			// probably not needed
+
+const MessageT msg_SigFile = 430;
+const MessageT msg_Browse = 1200;
+const MessageT msg_FolderChanged = 1201;
+const MessageT msg_ClearDiskCache = 1202;
+
+const MessageT msg_Help = 'help';			// help button clicked
+const MessageT msg_SubmitText = 'subT';		// Return hit in edit field, 'this' is ioParam
+const MessageT msg_SubmitButton = 'subB';	// Submit button pressed
+const MessageT msg_ResetButton = 'Rset';		// Form reset button pressed
+
+const MessageT msg_ChangeFontSize = -15381;
 
 
 // Clicks
