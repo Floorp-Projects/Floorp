@@ -558,7 +558,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
   int i,j=0;
   int written;
   for(i=1;i<eHTMLTag_text;i++){
-    const char* tag=NS_EnumToTag((eHTMLTags)i);
+    const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << endl << endl << "Tag: <" << tag << ">" << endl;
     out << prefix;
     written=0;
@@ -569,7 +569,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
           written=0;
         }
         if(theDTD.CanContain(i,j)){
-          tag=NS_EnumToTag((eHTMLTags)j);
+          tag=nsHTMLTags::GetStringValue((eHTMLTags)j);
           if(tag) {
             out<< tag << ", ";
             written++;
@@ -667,7 +667,7 @@ public:
 void CObserverDictionary::UnregisterObservers() {
   int theIndex=0;
   nsObserverReleaser theReleaser;
-  for(theIndex=0;theIndex<NS_HTML_TAG_MAX;theIndex++){
+  for(theIndex=0;theIndex<=NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
       nsIElementObserver* theElementObserver=0;
       mObservers[theIndex]->ForEach(theReleaser);
@@ -700,8 +700,9 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
             // XXX - HACK - Hardcoding PI for simplification.  PI handling should not
             // happen along with ** tags **. For now the specific PI, ?xml, is treated
             // as an unknown tag in the dictionary!!!!
-            eHTMLTags theTag = (nsCRT::strcasecmp(theTagStr,"?xml") == 0)? eHTMLTag_unknown:NS_TagToEnum(theTagStr);
-            if(eHTMLTag_userdefined!=theTag && theTag < NS_HTML_TAG_MAX){
+            eHTMLTags theTag = (nsCRT::strcmp(theTagStr,"?xml") == 0) ? eHTMLTag_unknown :
+                                  nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
+            if((eHTMLTag_userdefined!=theTag) && (theTag <= NS_HTML_TAG_MAX)){
               if(mObservers[theTag] == nsnull) {
                  mObservers[theTag] = new nsDeque(0);
               }
@@ -718,7 +719,7 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
 }
 
 nsDeque* CObserverDictionary::GetObserversForTag(eHTMLTags aTag) {
-  if(aTag < NS_HTML_TAG_MAX)
+  if(aTag <= NS_HTML_TAG_MAX)
       return mObservers[aTag];
   return nsnull;
 }

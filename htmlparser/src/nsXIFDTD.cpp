@@ -1194,17 +1194,7 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
  */
 eHTMLTags nsXIFDTD::GetHTMLTag(const nsString& aName)
 {
-  eHTMLTags  tag = eHTMLTag_unknown;
-  
-  if (aName.EqualsIgnoreCase("style"))
-    tag = eHTMLTag_style;
-  else
-  {
-    char buffer[256];
-
-    aName.ToCString(buffer,255);
-    tag = NS_TagToEnum(buffer);
-  }
+  eHTMLTags  tag = nsHTMLTags::LookupTag(aName);
   return tag;
 }
 
@@ -1745,14 +1735,12 @@ void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
       mMaxCSSSelectorWidth = temp;
   }
   
-  //const char* name = NS_EnumToTag(eHTMLTag_html);
+  //const char* name = nsHTMLTags::GetStringValue(eHTMLTag_html);
 }
 
 void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
-  const char* name = NS_EnumToTag(eHTMLTag_style);
-
-  nsString tagName(name);
+  nsString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
 
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();

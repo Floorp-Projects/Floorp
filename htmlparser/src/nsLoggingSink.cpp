@@ -243,7 +243,7 @@ nsLoggingSink::CloseContainer(const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = NS_EnumToTag(nodeType);
+    const char* tag = nsHTMLTags::GetStringValue(nodeType);
 		return CloseNode(tag);
 	}
 	return CloseNode("???");
@@ -395,7 +395,7 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = NS_EnumToTag(nodeType);
+    const char* tag = nsHTMLTags::GetStringValue(nodeType);
 		(*mOutput) << "\"" << tag << "\"";
   }
   else {
@@ -490,7 +490,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = NS_EnumToTag(nodeType);
+    const char* tag = nsHTMLTags::GetStringValue(nodeType);
 
 		if(tag)
 			(*mOutput) << "<leaf tag=\"" << tag << "\"";

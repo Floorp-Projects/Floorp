@@ -18,7 +18,17 @@
  */
 #ifndef nsHTMLEntites_h___
 #define nsHTMLEntities_h___
+
 #include "nshtmlpars.h"
+
+struct nsStr;
+class nsCString;
+
+class NS_HTMLPARS nsHTMLEntities {
+public:
+
+  static void AddRefTable(void);
+  static void ReleaseTable(void);
 
 /**
  * Translate an entity string into it's unicode value. This call
@@ -26,15 +36,16 @@
  * passed in must NOT have the leading "&" nor the trailing ";"
  * in it.
  */
-extern NS_HTMLPARS PRInt32 NS_EntityToUnicode(const char* aEntity);
+  static PRInt32 EntityToUnicode(const nsStr& aEntity);
 
 /**
  * Translate an entity string into it's unicode value. This call
- * returns nsnull if the entity cannot be mapped. Note that the string
- * returned DOES NOT have the leading "&" nor the trailing ";"
- * in it.
+ * returns an empty string if the entity cannot be mapped. 
+ * Note that the string returned DOES NOT have the leading "&" nor 
+ * the trailing ";" in it.
  */
-extern NS_HTMLPARS const char* NS_UnicodeToEntity(PRInt32 aCode);
+  static const nsCString& UnicodeToEntity(PRInt32 aUnicode);
+};
 
 
-#endif /* nsHTMLTags_h___ */
+#endif /* nsHTMLEntities_h___ */

@@ -252,7 +252,7 @@ public:
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
 
 protected:
-  nsDeque*  mObservers[NS_HTML_TAG_MAX];
+  nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
 };
 
 /************************************************************** 
