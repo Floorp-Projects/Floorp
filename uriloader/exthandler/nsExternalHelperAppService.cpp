@@ -1949,7 +1949,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
 
       mOutStream->Close();
 
-      rv = mTempFile->MoveTo(dir, name);
+      rv = mTempFile->MoveToNative(dir, name);
       if (NS_SUCCEEDED(rv)) // if it failed, we just continue with $TEMP
         mTempFile = movedFile;
       rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
