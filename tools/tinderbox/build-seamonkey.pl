@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.68 $ ';
+$::Version = '$Revision: 1.69 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -80,7 +80,7 @@ sub PrintExampleConfig {
 sub ParseArgs {
     PrintUsage() if $#ARGV == -1;
 
-    $args = {};
+    my $args = {};
     while (my $arg = shift @ARGV) {
         $Settings::BuildDepend = 0, next if $arg eq '--clobber';
         $Settings::BuildDepend = 1, next if $arg eq '--depend';
