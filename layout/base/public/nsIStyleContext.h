@@ -42,11 +42,12 @@ class nsISupportsArray;
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleFont : public nsStyleStruct {
-  nsFont  mFont;    // [inherited]
-  PRUint8 mThreeD;  // [inherited] XXX fold this into nsFont or nuke it
+  nsFont  mFont;        // [inherited]
+  nsFont  mFixedFont;   // [inherited]
+  PRUint8 mThreeD;      // [inherited] XXX fold this into nsFont or nuke it
 
 protected:
-  nsStyleFont(const nsFont& aFont);
+  nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
   ~nsStyleFont(void);
 };
 
@@ -179,6 +180,7 @@ public:
   virtual nsISupportsArray* GetStyleRules(void) const = 0;
   virtual PRInt32 GetStyleRuleCount(void) const = 0;
 
+  virtual nsIStyleContext* FindChildWithContent(nsIContent* aRules) = 0;
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
 
   // get a style data struct by ID, may return null 
@@ -202,6 +204,7 @@ extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsIStyleContext* aParentContext,
                      nsISupportsArray* aRules,
+                     nsIContent* aContent,
                      nsIPresContext* aPresContext);
 
 #endif /* nsIStyleContext_h___ */
