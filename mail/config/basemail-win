@@ -305,7 +305,7 @@ res\quirk.css
 res\forms.css
 res\platform-forms.css
 res\builtin\*
-res\entityTables\htmlEntityVersions.properties
+res\entityTables\*
 
 
 
