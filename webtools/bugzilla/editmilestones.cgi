@@ -519,6 +519,12 @@ if ($action eq 'update') {
                          products WRITE");
 
     if ($sortkey != $sortkeyold) {
+        if (!detaint_natural($sortkey)) {
+            print "The sortkey for a milestone must be a number. Please press\n";
+            print "<b>Back</b> and try again.\n";
+            PutTrailer($localtrailer);
+            exit;
+        }
         SendSQL("UPDATE milestones SET sortkey=$sortkey
                  WHERE product_id=" . $product_id . "
                    AND value=" . SqlQuote($milestoneold));
