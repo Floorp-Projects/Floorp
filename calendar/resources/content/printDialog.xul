@@ -79,8 +79,6 @@
    
 <!-- Javascript includes -->
 <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 
 <script type="application/x-javascript" >
 var ArrayOfDayNames = new Array();
