@@ -70,8 +70,10 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
+  width: 9px;
+  height: 9px;
+  margin-left: 3.5px;
+  margin-right: 3.5px;
   list-style-image: inherit;
 }
 
