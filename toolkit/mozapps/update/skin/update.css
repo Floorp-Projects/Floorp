@@ -78,3 +78,15 @@ updateitem {
   background-color: #FF0000;
 }
 
+.infoPopup {
+  border: 1px solid ThreeDDarkShadow;
+  background-color: InfoBackground;
+  width: 200px;
+  height: 85px;  
+  padding: 5px;
+}
+
+.infoPopupTitle {
+  font-weight: bold;
+}
+

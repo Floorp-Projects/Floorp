@@ -12,21 +12,22 @@
       <stylesheet src="chrome://mozapps/skin/update/update.css"/>
     </resources>
     <content>
-      <xul:hbox flex="1" class="updateIndicator" xbl:inherits="updateCount">
+      <xul:hbox flex="1" class="updateIndicator" xbl:inherits="updateCount"
+                anonid="infoPanel">
         <xul:image xbl:inherits="severity" class="updateIcon"/>
         <xul:label xbl:inherits="value=updateCount" flex="1" crop="right"/>
       </xul:hbox>
       <xul:popupset>
-        <xul:popup anonid="infoPopup">
+        <xul:popup anonid="infoPopup" class="infoPopup">
           <xul:hbox>
-            <xul:label flex="1" crop="right">&updatesAvailable.title</xul:label>
+            <xul:label flex="1" crop="right" class="infoPopupTitle">&updatesAvailable.title;</xul:label>
             <xul:button class="popupCloseBox"/>
           </xul:hbox>
           <xul:description anonid="infoPopupDetails"/>
         </xul:popup>
       </xul:popupset>
     </content>
-    <implementation implements="nsIObserver">
+    <implementation implements="nsIObserver, nsIAlertListener">
       <constructor>
       <![CDATA[
         var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -54,7 +55,59 @@
                                     .getService(Components.interfaces.nsIBackgroundUpdateService);
             this.severity     = updates.updateSeverity;
             this.updateCount  = updates.updateCount;
+            
+#ifdef XP_WIN
+            this._showUpdateInfo();
+#endif
           }
+        ]]>
+        </body>
+      </method>
+
+#ifdef XP_WIN
+      <method name="_showUpdateInfo">
+        <body>
+        <![CDATA[
+          var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                              .getService(Components.interfaces.nsIStringBundleService);
+          var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
+
+          var alertTitle = bundle.GetStringFromName("updatesAvailableTitle");
+          var alertText = bundle.GetStringFromName("updatesAvailableText");
+          
+          var alerts = Components.classes["@mozilla.org/alerts-service;1"]
+                                 .getService(Components.interfaces.nsIAlertsService);
+          alerts.showAlertNotification("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png",
+                                       alertTitle, alertText, true, "", this);
+        ]]>
+        </body>
+      </method>
+
+      <!-- nsIAlertListener -->
+      <method name="onAlertFinished">
+        <parameter name="aCookie"/>
+        <body>
+        <![CDATA[
+        ]]>
+        </body>      
+      </method>
+      
+      <method name="onAlertClickCallback">
+        <parameter name="aCookie"/>
+        <body>
+        <![CDATA[
+          this.showUpdates();
+        ]]>
+        </body>      
+      </method>
+#endif
+      
+      <method name="showUpdates">
+        <body>
+        <![CDATA[
+          var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                            .getService(Components.interfaces.nsIExtensionManager);
+          em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
         ]]>
         </body>
       </method>
@@ -67,9 +120,7 @@
     <handlers>
       <handler event="dblclick">
       <![CDATA[
-        var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                           .getService(Components.interfaces.nsIExtensionManager);
-        em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
+        this.showUpdates();
       ]]>
       </handler>
     </handlers>
