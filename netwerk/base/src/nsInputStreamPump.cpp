@@ -1,0 +1,425 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsInputStreamPump.h"
+#include "nsIServiceManager.h"
+#include "nsIStreamTransportService.h"
+#include "nsIEventQueueService.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsITransport.h"
+#include "nsNetUtil.h"
+#include "nsCOMPtr.h"
+#include "prlog.h"
+
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+#if defined(PR_LOGGING)
+//
+// NSPR_LOG_MODULES=nsStreamPump:5
+//
+static PRLogModuleInfo *gStreamPumpLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gStreamPumpLog, PR_LOG_DEBUG, args)
+
+//-----------------------------------------------------------------------------
+// nsInputStreamPump methods
+//-----------------------------------------------------------------------------
+
+nsInputStreamPump::nsInputStreamPump()
+    : mState(STATE_IDLE)
+    , mStreamOffset(0)
+    , mStreamLength(~0U)
+    , mStatus(NS_OK)
+    , mSuspendCount(0)
+    , mLoadFlags(LOAD_NORMAL)
+    , mWaiting(PR_FALSE)
+    , mCloseWhenDone(PR_FALSE)
+{
+#if defined(PR_LOGGING)
+    if (!gStreamPumpLog)
+        gStreamPumpLog = PR_NewLogModule("nsStreamPump");
+#endif
+}
+
+nsInputStreamPump::~nsInputStreamPump()
+{
+}
+
+nsresult
+nsInputStreamPump::EnsureWaiting()
+{
+    if (!mWaiting) {
+        nsresult rv = mAsyncStream->AsyncWait(this, 0, mEventQ);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("AsyncWait failed");
+            return rv;
+        }
+        mWaiting = PR_TRUE;
+    }
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsInputStreamPump::nsISupports
+//-----------------------------------------------------------------------------
+
+// although this class can only be accessed from one thread at a time, we do
+// allow its ownership to move from thread to thread, assuming the consumer
+// understands the limitations of this.
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsInputStreamPump,
+                              nsIRequest,
+                              nsIInputStreamNotify,
+                              nsIInputStreamPump)
+
+//-----------------------------------------------------------------------------
+// nsInputStreamPump::nsIRequest
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsInputStreamPump::GetName(nsACString &result)
+{
+    result.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::IsPending(PRBool *result)
+{
+    *result = (mState != STATE_IDLE);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::Cancel(nsresult status)
+{
+    LOG(("nsInputStreamPump::Cancel [this=%x status=%x]\n",
+        this, status));
+
+    if (NS_FAILED(mStatus)) {
+        LOG(("  already canceled\n"));
+        return NS_OK;
+    }
+
+    NS_ASSERTION(NS_FAILED(status), "cancel with non-failure status code");
+    mStatus = status;
+
+    // close input stream
+    if (mAsyncStream) {
+        mAsyncStream->CloseEx(status);
+        mSuspendCount = 0; // un-suspend
+        EnsureWaiting();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::Suspend()
+{
+    LOG(("nsInputStreamPump::Suspend [this=%x]\n", this));
+    NS_ENSURE_TRUE(mState != STATE_IDLE, NS_ERROR_UNEXPECTED);
+    ++mSuspendCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::Resume()
+{
+    LOG(("nsInputStreamPump::Resume [this=%x]\n", this));
+    NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(mState != STATE_IDLE, NS_ERROR_UNEXPECTED);
+
+    if (--mSuspendCount == 0)
+        EnsureWaiting();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    *aLoadFlags = mLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    mLoadFlags = aLoadFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+    NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsInputStreamPump::nsIInputStreamPump implementation
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsInputStreamPump::Init(nsIInputStream *stream,
+                        PRInt32 streamPos, PRInt32 streamLen,
+                        PRUint32 segsize, PRUint32 segcount,
+                        PRBool closeWhenDone)
+{
+    NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
+
+    mStreamOffset = (PRUint32) streamPos;
+    mStreamLength = (PRUint32) streamLen;
+    mStream = stream;
+    mSegSize = segsize;
+    mSegCount = segcount;
+    mCloseWhenDone = closeWhenDone;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
+{
+    NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
+
+    nsresult rv;
+
+    //
+    // OK, we need to use the stream transport service if
+    //
+    // (1) the stream is blocking
+    // (2) the stream does not support nsIAsyncInputStream
+    //
+
+    PRBool nonBlocking;
+    rv = mStream->IsNonBlocking(&nonBlocking);
+    if (NS_FAILED(rv)) return rv;
+
+    if (nonBlocking)
+        mAsyncStream = do_QueryInterface(mStream);
+
+    if (!mAsyncStream) {
+        // ok, let's use the stream transport service to read this stream.
+        nsCOMPtr<nsIStreamTransportService> sts =
+            do_GetService(kStreamTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsITransport> transport;
+        rv = sts->CreateInputTransport(mStream, mStreamOffset, mStreamLength,
+                                       mCloseWhenDone, getter_AddRefs(transport));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIInputStream> wrapper;
+        rv = transport->OpenInputStream(0, mSegSize, mSegCount, getter_AddRefs(wrapper));
+        if (NS_FAILED(rv)) return rv;
+
+        mAsyncStream = do_QueryInterface(wrapper, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // mStreamOffset now holds the number of bytes currently read.  we use this
+    // to enforce the mStreamLength restriction.
+    mStreamOffset = 0;
+
+    // grab event queue (we must do this here by contract, since all notifications
+    // must go to the thread which called AsyncRead)
+    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = EnsureWaiting();
+    if (NS_FAILED(rv)) return rv;
+
+    if (mLoadGroup)
+        mLoadGroup->AddRequest(this, nsnull);
+
+    mState = STATE_START;
+    mListener = listener;
+    mListenerContext = ctxt;
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsInputStreamPump::nsIInputStreamNotify implementation
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
+{
+    LOG(("nsInputStreamPump::OnInputStreamReady [this=%x]\n", this));
+
+    // this function has been called from a PLEvent, so we can safely call
+    // any listener or progress sink methods directly from here.
+
+    for (;;) {
+        if (mSuspendCount || mState == STATE_IDLE) {
+            mWaiting = PR_FALSE;
+            break;
+        }
+
+        PRUint32 nextState;
+        switch (mState) {
+        case STATE_START:
+            nextState = OnStateStart();
+            break;
+        case STATE_TRANSFER:
+            nextState = OnStateTransfer();
+            break;
+        case STATE_STOP:
+            nextState = OnStateStop();
+            break;
+        }
+
+        if (mState == nextState && !mSuspendCount) {
+            NS_ASSERTION(mState == STATE_TRANSFER, "unexpected state");
+            NS_ASSERTION(NS_SUCCEEDED(mStatus), "unexpected status");
+
+            mWaiting = PR_FALSE;
+            mStatus = EnsureWaiting();
+            if (NS_SUCCEEDED(mStatus))
+                break;
+            
+            nextState = STATE_STOP;
+        }
+
+        mState = nextState;
+    }
+    return NS_OK;
+}
+
+PRUint32
+nsInputStreamPump::OnStateStart()
+{
+    LOG(("  OnStateStart [this=%x]\n", this));
+
+    nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+
+    // an error returned from OnStartRequest should cause us to abort; however,
+    // we must not stomp on mStatus if already canceled.
+    if (NS_FAILED(rv) && NS_SUCCEEDED(mStatus))
+        mStatus = rv;
+
+    return NS_SUCCEEDED(mStatus) ? STATE_TRANSFER : STATE_STOP;
+}
+
+PRUint32
+nsInputStreamPump::OnStateTransfer()
+{
+    LOG(("  OnStateTransfer [this=%x]\n", this));
+
+    // if canceled, go directly to STATE_STOP...
+    if (NS_FAILED(mStatus))
+        return STATE_STOP;
+
+    nsresult rv;
+
+    PRUint32 avail;
+    rv = mAsyncStream->Available(&avail);
+    LOG(("  Available returned [stream=%x rv=%x avail=%u]\n", mAsyncStream.get(), rv, avail));
+
+    if (rv == NS_BASE_STREAM_CLOSED) {
+        rv = NS_OK;
+        avail = 0;
+    }
+    else if (NS_SUCCEEDED(rv) && avail) {
+        // figure out how much data to report (XXX detect overflow??)
+        if (avail + mStreamOffset > mStreamLength) {
+            avail = mStreamLength - mStreamOffset;
+            if (avail > mSegSize)
+                avail = mSegSize;
+        }
+
+        if (avail) {
+            LOG(("  calling OnDataAvailable [offset=%u count=%u]\n", mStreamOffset, avail));
+
+            rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream, mStreamOffset, avail);
+
+            if (NS_SUCCEEDED(rv))
+                mStreamOffset += avail;
+        }
+    }
+
+    // an error returned from Available or OnDataAvailable should cause us to
+    // abort; however, we must not stomp on mStatus if already canceled.
+
+    if (NS_SUCCEEDED(mStatus)) {
+        if (NS_FAILED(rv))
+            mStatus = rv;
+        else if (avail)
+            return STATE_TRANSFER;
+    }
+    return STATE_STOP;
+}
+
+PRUint32
+nsInputStreamPump::OnStateStop()
+{
+    LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
+
+    if (mCloseWhenDone)
+        mStream->Close();
+    mStream = 0;
+    mAsyncStream = 0;
+
+    mEventQ = 0;
+    mIsPending = PR_FALSE;
+
+    mListener->OnStopRequest(this, mListenerContext, mStatus);
+    mListener = 0;
+    mListenerContext = 0;
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+
+    return STATE_IDLE;
+}
