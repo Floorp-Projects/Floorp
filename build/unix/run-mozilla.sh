@@ -172,9 +172,9 @@ moz_run_program()
 	moz_test_binary /bin/type
 	if [ $? -eq 1 ]
 	then
-		crc_prog=`type md5sum | awk '{print $3;}'`
+		crc_prog=`type md5sum | awk '{print $3;}' 2>/dev/null`
 	else
-		crc_prog=`which md5sum`
+		crc_prog=`which md5sum 2>/dev/null`
 	fi
 	if [ -x "$crc_prog" ]
 	then
