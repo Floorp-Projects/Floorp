@@ -994,7 +994,32 @@ NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **li
 		return NS_ERROR_NULL_POINTER;
 }
 
+struct EnumerateData {
+    const char *parent;
+    PrefEnumerationFunc callback;
+    void *arg;
+};
 
+PR_STATIC_CALLBACK(PRIntn)
+pref_enumChild(PLHashEntry *he, int i, void *arg)
+{
+    EnumerateData *d = (EnumerateData *) arg;
+    if (PL_strncmp((char*)he->key, d->parent, strlen(d->parent)) == 0) {
+        (*d->callback)((char*)he->key, d->arg);
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+NS_IMETHODIMP
+nsPref::EnumerateChildren(const char *parent, PrefEnumerationFunc callback, void *arg) 
+{   
+    EnumerateData ed;
+    ed.parent = parent;
+    ed.callback = callback;
+    ed.arg = arg;
+    PL_HashTableEnumerateEntries(gHashTable, pref_enumChild, &ed);
+    return NS_OK;
+}
 
 //========================================================================================
 // C++ implementations of old C routines
