@@ -82,10 +82,6 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 
-ifdef XP_NEW_SELECTION
-DEFINES		+= -DXP_NEW_SELECTION
-endif
-
 INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../base/src \

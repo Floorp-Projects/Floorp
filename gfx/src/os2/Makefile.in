@@ -80,8 +80,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_GFXONXP
-
 INCLUDES	+= -I$(topsrcdir)/gfx/src
 
 OS_LIBS		+= $(NSPR_LIBS)
