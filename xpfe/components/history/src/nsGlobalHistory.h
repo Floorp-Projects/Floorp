@@ -29,10 +29,12 @@
 #include "nsMdbPtr.h"
 #include "mdb.h"
 #include "nsIGlobalHistory.h"
+#include "nsIObserver.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsISupportsArray.h"
+#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
 //----------------------------------------------------------------------
@@ -79,7 +81,9 @@ protected:
 //   nsIGlobalHistory interface.
 //
 
-class nsGlobalHistory : public nsIGlobalHistory,
+class nsGlobalHistory : nsSupportsWeakReference,
+                        public nsIGlobalHistory,
+                        public nsIObserver,
                         public nsIRDFDataSource,
                         public nsIRDFRemoteDataSource
 {
@@ -89,6 +93,9 @@ public:
 
   // nsIGlobalHistory
   NS_DECL_NSIGLOBALHISTORY
+
+  // nsIObserver - for observing prefs changes
+  NS_DECL_NSIOBSERVER
 
   // nsIRDFDataSource
   NS_DECL_NSIRDFDATASOURCE
@@ -103,10 +110,21 @@ public:
 protected:
 
 
+  enum eCommitType 
+  {
+    kLargeCommit = 0,
+    kSessionCommit = 1,
+    kCompressCommit = 2
+  };
+
   // Implementation Methods
   nsresult OpenDB();
+  nsresult OpenExistingFile(nsIMdbFactory *factory, const char *filePath);
+  nsresult OpenNewFile(nsIMdbFactory *factory, const char *filePath);
   nsresult CreateTokens();
   nsresult CloseDB();
+  nsresult Commit(eCommitType commitType);
+  nsresult ExpireEntries(PRBool notify);
 
   PRBool IsURLInHistory(nsIRDFResource* aResource);
 
@@ -121,14 +139,37 @@ protected:
   nsresult NotifyUnassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
 
+  nsresult AddPageToDatabase(const char *aURL,
+                             const char *aReferrerURL,
+                             PRInt64 aDate);
+  nsresult AddExistingPageToDatabase(nsIMdbRow *row,
+                                     PRInt64 aDate,
+                                     PRInt64 *aOldDate,
+                                     PRInt32 *aOldCount);
+  
+  nsresult AddNewPageToDatabase(const char *aURL,
+                                const char *aReferrerURL,
+                                PRInt64 aDate);
+
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64 aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
+  
   nsCOMPtr<nsISupportsArray> mObservers;
 
   mdb_scope  kToken_HistoryRowScope;
   mdb_kind   kToken_HistoryKind;
+  
   mdb_column kToken_URLColumn;
   mdb_column kToken_ReferrerColumn;
   mdb_column kToken_LastVisitDateColumn;
+  mdb_column kToken_FirstVisitDateColumn;
+  mdb_column kToken_VisitCountColumn;
   mdb_column kToken_NameColumn;
+
+  PRInt32   mExpireDays;
+  PRInt64   mFileSizeOnDisk;
 
   // pseudo-constants. although the global history really is a
   // singleton, we'll use this metaphor to be consistent.
@@ -136,6 +177,7 @@ protected:
   static nsIRDFService* gRDFService;
   static nsIRDFResource* kNC_Page; // XXX do we need?
   static nsIRDFResource* kNC_Date;
+  static nsIRDFResource* kNC_FirstVisitDate;
   static nsIRDFResource* kNC_VisitCount;
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Referrer;

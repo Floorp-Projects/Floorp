@@ -63,6 +63,7 @@ PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
 nsIRDFResource* nsGlobalHistory::kNC_Page;
 nsIRDFResource* nsGlobalHistory::kNC_Date;
+nsIRDFResource* nsGlobalHistory::kNC_FirstVisitDate;
 nsIRDFResource* nsGlobalHistory::kNC_VisitCount;
 nsIRDFResource* nsGlobalHistory::kNC_Name;
 nsIRDFResource* nsGlobalHistory::kNC_Referrer;
@@ -76,8 +77,8 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 #define DEBUG_LAST_PAGE_VISITED 1
 #endif /* DEBUG_sspitzer */
 
-#define BROWSER_HISTORY_LAST_PAGE_VISITED_PREF "browser.history.last_page_visited"
-
+#define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -255,9 +256,11 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 nsGlobalHistory::nsGlobalHistory()
   : mEnv(nsnull),
     mStore(nsnull),
-    mTable(nsnull)
+    mTable(nsnull),
+    mExpireDays(9) // make default be nine days
 {
   NS_INIT_REFCNT();
+  LL_I2L(mFileSizeOnDisk, 0);
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -275,6 +278,7 @@ nsGlobalHistory::~nsGlobalHistory()
 
     NS_IF_RELEASE(kNC_Page);
     NS_IF_RELEASE(kNC_Date);
+    NS_IF_RELEASE(kNC_FirstVisitDate);
     NS_IF_RELEASE(kNC_VisitCount);
     NS_IF_RELEASE(kNC_Name);
     NS_IF_RELEASE(kNC_Referrer);
@@ -294,7 +298,12 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRemoteDataSource)
+NS_IMPL_ISUPPORTS5(nsGlobalHistory,
+                   nsIGlobalHistory,
+                   nsIObserver,
+                   nsISupportsWeakReference,
+                   nsIRDFDataSource,
+                   nsIRDFRemoteDataSource)
 
 //----------------------------------------------------------------------
 //
@@ -307,133 +316,22 @@ NS_IMPL_ISUPPORTS3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRe
 NS_IMETHODIMP
 nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDate)
 {
-  NS_PRECONDITION(aURL != nsnull, "null ptr");
-  if (! aURL)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(mEnv != nsnull, "not initialized");
-  if (! mEnv)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  NS_PRECONDITION(mStore != nsnull, "not initialized");
-  if (! mStore)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  NS_PRECONDITION(mTable != nsnull, "not initialized");
-  if (! mTable)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ENSURE_ARG_POINTER(mEnv);
+  NS_ENSURE_ARG_POINTER(mStore);
 
   nsresult rv;
-  mdb_err err;
-
-  // Sanity check the URL
-  PRInt32 len = PL_strlen(aURL);
-  NS_ASSERTION(len != 0, "no URL");
-  if (! len)
-    return NS_ERROR_INVALID_ARG;
 
   rv = SaveLastPageVisited(aURL);
   if (NS_FAILED(rv)) return rv;
 
-  // Okay, it's good. See if we've already got it in the database.
-  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
-
-  mdbOid rowId;
-  nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn,
-                        &rowId, getter_Acquires(row));
-
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  // For notifying observers, later...
-  nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIRDFDate> date;
-  rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
-  if (NS_FAILED(rv)) return rv;
-
-  if (row) {
-    // Update last visit date. First get the old date so we can update observers...
-    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    PRInt64 oldvalue;
-    rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &oldvalue);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRDFDate> olddate;
-    rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(olddate));
-    if (NS_FAILED(rv)) return rv;
-
-    // ...now set the new date.
-    char buf[64];
-    PRInt64ToChars(aDate, buf, sizeof(buf));
-
-    yarn.mYarn_Buf = (void*) buf;
-    yarn.mYarn_Fill = yarn.mYarn_Size = PL_strlen(buf);
-
-    err = row->AddColumn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    // Notify observers
-    rv = NotifyChange(url, kNC_Date, olddate, date);
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    // Create a new row
-    rowId.mOid_Scope = kToken_HistoryRowScope;
-    rowId.mOid_Id    = mdb_id(-1);
-
-    err = mTable->NewRow(mEnv, &rowId, getter_Acquires(row));
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    // Set the URL. 'yarn' is already set up to go.
-    err = row->AddColumn(mEnv, kToken_URLColumn, &yarn);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    // Set the referrer, if one is provided
-    if (aReferrerURL) {
-      len = PL_strlen(aReferrerURL);
-      yarn.mYarn_Buf  = (void*) aReferrerURL;
-      yarn.mYarn_Fill = yarn.mYarn_Size = len;
-
-      err = row->AddColumn(mEnv, kToken_ReferrerColumn, &yarn);
-      if (err != 0) return NS_ERROR_FAILURE;
-
-      // Notify observers
-      nsCOMPtr<nsIRDFResource> referrer;
-      rv = gRDFService->GetResource(aReferrerURL, getter_AddRefs(referrer));
-      if (NS_FAILED(rv)) return rv;
-
-      rv = NotifyAssert(url, kNC_Referrer, referrer);
-      if (NS_FAILED(rv)) return rv;
-    }
-
-    // Set the date.
-    char buf[64];
-    PRInt64ToChars(aDate, buf, sizeof(buf));
-
-    yarn.mYarn_Buf = (void*) buf;
-    yarn.mYarn_Fill = yarn.mYarn_Size = PL_strlen(buf);
-
-    err = row->AddColumn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    // Notify observers
-    rv = NotifyAssert(url, kNC_Date, date);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NotifyAssert(kNC_HistoryRoot, kNC_child, url);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  if (err != 0) return NS_ERROR_FAILURE;
+  rv = AddPageToDatabase(aURL, aReferrerURL, aDate);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We'd like to do a "small commit" here, but, unfortunately, we're
   // leaking the _entire_ history service :-(. So just do a "large"
   // commit for now.
+  mdb_err err;
   err = mStore->SmallCommit(mEnv);
   if (err != 0) return NS_ERROR_FAILURE;
 
@@ -459,6 +357,212 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::AddPageToDatabase(const char *aURL,
+                                   const char *aReferrerURL,
+                                   PRInt64 aDate)
+{
+  mdb_err err;
+  nsresult rv;
+  
+  // Sanity check the URL
+  PRInt32 len = PL_strlen(aURL);
+  NS_ASSERTION(len != 0, "no URL");
+  if (! len)
+    return NS_ERROR_INVALID_ARG;
+  
+  // For notifying observers, later...
+  nsCOMPtr<nsIRDFResource> url;
+  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFDate> date;
+  rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
+  if (NS_FAILED(rv)) return rv;
+
+  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
+  mdbOid rowId;
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn,
+                        &yarn, &rowId, getter_Acquires(row));
+
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  if (row) {
+
+    // update the database, and get the old info back
+    PRInt64 oldDate;
+    PRInt32 oldCount;
+    AddExistingPageToDatabase(row, aDate, &oldDate, &oldCount);
+    
+    // Notify observers
+    
+    // visit date
+    nsCOMPtr<nsIRDFDate> oldDateLiteral;
+    rv = gRDFService->GetDateLiteral(oldDate, getter_AddRefs(oldDateLiteral));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NotifyChange(url, kNC_Date, oldDateLiteral, date);
+    if (NS_FAILED(rv)) return rv;
+
+    // ...now set the new date.
+    char buf[64];
+    PRInt64ToChars(aDate, buf, sizeof(buf));
+
+    // visit count
+    nsCOMPtr<nsIRDFInt> oldCountLiteral;
+    rv = gRDFService->GetIntLiteral(oldCount, getter_AddRefs(oldCountLiteral));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFInt> newCountLiteral;
+    rv = gRDFService->GetIntLiteral(oldCount+1,
+                                    getter_AddRefs(newCountLiteral));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NotifyChange(url, kNC_VisitCount, oldCountLiteral, newCountLiteral);
+    if (NS_FAILED(rv)) return rv;
+    
+  }
+  else {
+    AddNewPageToDatabase(aURL, aReferrerURL, aDate);
+    
+    // Notify observers
+    rv = NotifyAssert(url, kNC_Date, date);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NotifyAssert(kNC_HistoryRoot, kNC_child, url);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
+                                           PRInt64 aDate,
+                                           PRInt64 *aOldDate,
+                                           PRInt32 *aOldCount)
+{
+
+  mdb_err err;
+  nsresult rv;
+  // Update last visit date.
+  // First get the old date so we can update observers...
+  mdbYarn yarn;
+  err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+  
+  rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, aOldDate);
+  if (NS_FAILED(rv)) return rv;
+
+  // get the old count, so we can update it
+  err = row->AliasCellYarn(mEnv, kToken_VisitCountColumn, &yarn);
+  if (err == 0 && yarn.mYarn_Buf)
+    *aOldCount = atoi((char *)yarn.mYarn_Buf);
+  else
+    *aOldCount = 1;             // assume we've visited at least once
+
+  // ...now set the new date.
+  SetRowValue(row, kToken_LastVisitDateColumn, aDate);
+  SetRowValue(row, kToken_VisitCountColumn, (*aOldCount) + 1);
+
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
+                                      const char *aReferrerURL,
+                                      PRInt64 aDate)
+{
+  mdb_err err;
+  
+  // Create a new row
+  mdbOid rowId;
+  rowId.mOid_Scope = kToken_HistoryRowScope;
+  rowId.mOid_Id    = mdb_id(-1);
+  
+  NS_PRECONDITION(mTable != nsnull, "not initialized");
+  if (! mTable)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+  err = mTable->NewRow(mEnv, &rowId, getter_Acquires(row));
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // Set the URL
+  SetRowValue(row, kToken_URLColumn, aURL);
+  
+  // Set the referrer, if one is provided
+  if (aReferrerURL)
+    SetRowValue(row, kToken_ReferrerColumn, aReferrerURL);
+  
+  // Set the date.
+  SetRowValue(row, kToken_LastVisitDateColumn, aDate);
+  SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
+
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64 aValue)
+{
+  mdb_err err;
+  char buf[64];
+  PRInt64ToChars(aValue, buf, sizeof(buf));
+
+  PRInt32 len = PL_strlen(buf);
+  mdbYarn yarn = { (void *)buf, len, len, 0, 0, nsnull };
+  
+  err = aRow->AddColumn(mEnv, aCol, &yarn);
+
+  if ( err != 0 ) return NS_ERROR_FAILURE;
+  
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             const PRUnichar* aValue)
+{
+  mdb_err err;
+
+  PRInt32 len = (nsCRT::strlen(aValue) * sizeof(PRUnichar));
+  mdbYarn yarn = { (void *)aValue, len, len, 0, 0, nsnull };
+  
+  err = aRow->AddColumn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             const char* aValue)
+{
+  mdb_err err;
+  PRInt32 len = PL_strlen(aValue);
+  mdbYarn yarn = { (void*) aValue, len, len, 0, 0, nsnull };
+  err = aRow->AddColumn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue)
+{
+  mdb_err err;
+  
+  nsCAutoString buf; buf.AppendInt(aValue);
+  mdbYarn yarn = { (void *)buf.GetBuffer(), buf.Length(), buf.Length(), 0, 0, nsnull };
+
+  err = aRow->AddColumn(mEnv, aCol, &yarn);
+  
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
@@ -501,12 +605,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
     if (NS_FAILED(rv)) return rv;
   }
 
-  // Now poke in the new title
-  yarn.mYarn_Buf = (void*) aTitle;
-  yarn.mYarn_Fill = yarn.mYarn_Size = (nsCRT::strlen(aTitle) * sizeof(PRUnichar));
-
-  err = row->AddColumn(mEnv, kToken_NameColumn, &yarn);
-  if (err != 0) return NS_ERROR_FAILURE;
+  SetRowValue(row, kToken_NameColumn, aTitle);
 
   // ...and update observers
   nsCOMPtr<nsIRDFResource> url;
@@ -607,24 +706,7 @@ nsGlobalHistory::RemoveAllPages()
   NS_ASSERTION(err == 0, "error ending batch");
 
   // Do a "large commit" to flush the (almost empty) table to disk.
-  {
-    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    mdb_count total;
-    mdb_count current;
-    mdb_bool done;
-    mdb_bool broken;
-
-    do {
-      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-    } while ((err == 0) && !broken && !done);
-
-    if ((err != 0) || !done) return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return Commit(kCompressCommit);
 }
 
 
@@ -680,7 +762,7 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, aURL);
+  rv = prefs->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
 
 #ifdef DEBUG_LAST_PAGE_VISITED
   printf("XXX saving last page visited as: %s\n", aURL);
@@ -700,7 +782,7 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString lastPageVisited;
-  rv = prefs->CopyCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, getter_Copies(lastPageVisited));
+  rv = prefs->CopyCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, getter_Copies(lastPageVisited));
   if (NS_FAILED(rv)) return rv;
 
   *_retval = nsCRT::strdup((const char *)lastPageVisited);
@@ -780,6 +862,7 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
     }
   }
   else if ((aProperty == kNC_Date) ||
+           (aProperty == kNC_FirstVisitDate) ||
            (aProperty == kNC_VisitCount) ||
            (aProperty == kNC_Name) ||
            (aProperty == kNC_Referrer)) {
@@ -838,7 +921,8 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
     void* value = nsnull;
     PRInt32 len = 0;
 
-    if (aProperty == kNC_Date) {
+    if (aProperty == kNC_Date ||
+        aProperty == kNC_FirstVisitDate) {
       nsCOMPtr<nsIRDFDate> date = do_QueryInterface(aTarget);
       if (date) {
         PRInt64 n;
@@ -856,11 +940,25 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
           return NS_ERROR_OUT_OF_MEMORY;
 
         PL_strcpy(buf, NS_STATIC_CAST(char*, value));
-        col = kToken_LastVisitDateColumn;
+        if (aProperty == kNC_Date)
+          col = kToken_LastVisitDateColumn;
+        else
+          col = kToken_FirstVisitDateColumn;
       }
     }
     else if (aProperty == kNC_VisitCount) {
-      NS_NOTYETIMPLEMENTED("sorry");
+      nsCOMPtr<nsIRDFInt> countLiteral = do_QueryInterface(aTarget);
+      if (countLiteral) {
+        PRInt32 intValue;
+        rv = countLiteral->GetValue(&intValue);
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString valueStr; valueStr.AppendInt(intValue);
+        value = valueStr.ToNewUnicode();
+        len = nsCRT::strlen((PRUnichar*)value);
+        col = kToken_VisitCountColumn;
+      }
+      
     }
     else if (aProperty == kNC_Name) {
       nsCOMPtr<nsIRDFLiteral> name = do_QueryInterface(aTarget);
@@ -951,6 +1049,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     return CallQueryInterface(isupports, aTarget);
   }
   else if ((aProperty == kNC_Date) ||
+           (aProperty == kNC_FirstVisitDate) ||
            (aProperty == kNC_VisitCount) ||
            (aProperty == kNC_Name) ||
            (aProperty == kNC_Referrer) ||
@@ -974,9 +1073,14 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
     // ...and then depending on the property they want, we'll pull the
     // cell they want out of it.
-    if (aProperty == kNC_Date) {
+    if (aProperty == kNC_Date  ||
+        aProperty == kNC_FirstVisitDate) {
       // Last visit date
-      err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
+
+      if (aProperty == kNC_Date)
+        err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
+      else
+        err = row->AliasCellYarn(mEnv, kToken_FirstVisitDateColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
 
       PRInt64 i;
@@ -990,9 +1094,21 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       return CallQueryInterface(date, aTarget);
     }
     else if (aProperty == kNC_VisitCount) {
-      // Visit count
-      NS_NOTYETIMPLEMENTED("sorry");
-      rv = NS_ERROR_NOT_IMPLEMENTED;
+      err = row->AliasCellYarn(mEnv, kToken_VisitCountColumn, &yarn);
+      if (err != 0) return NS_ERROR_FAILURE;
+
+      PRInt32 visitCount;
+      if (yarn.mYarn_Buf)
+        visitCount = atoi((char *)yarn.mYarn_Buf);
+      else
+        visitCount = 1;         // assume we've visited at least once
+
+      nsCOMPtr<nsIRDFInt> visitCountLiteral;
+      rv = gRDFService->GetIntLiteral(visitCount,
+                                      getter_AddRefs(visitCountLiteral));
+      if (NS_FAILED(rv)) return rv;
+
+      return CallQueryInterface(visitCountLiteral, aTarget);
     }
     else if (aProperty == kNC_Name) {
       // Site name (i.e., page title)
@@ -1053,7 +1169,8 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
     return NS_ERROR_NULL_POINTER;
 
   if (aTruthValue) {
-    if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child) && (aTruthValue)) {
+    if ((aSource == kNC_HistoryRoot) &&
+        (aProperty == kNC_child) && (aTruthValue)) {
       URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
       if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1067,6 +1184,7 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
       return NS_OK;
     }
     else if ((aProperty == kNC_Date) ||
+             (aProperty == kNC_FirstVisitDate) ||
              (aProperty == kNC_VisitCount) ||
              (aProperty == kNC_Name) ||
              (aProperty == kNC_Referrer)) {
@@ -1240,6 +1358,7 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
     // If the URL is in the history, then it'll have all the
     // appropriate attributes.
     *result = (aArc == kNC_Date ||
+               aArc == kNC_FirstVisitDate ||
                aArc == kNC_VisitCount ||
                aArc == kNC_Name ||
                aArc == kNC_Referrer);
@@ -1290,6 +1409,7 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     if (NS_FAILED(rv)) return rv;
 
     array->AppendElement(kNC_Date);
+    array->AppendElement(kNC_FirstVisitDate);
     array->AppendElement(kNC_VisitCount);
     array->AppendElement(kNC_Name);
     array->AppendElement(kNC_Referrer);
@@ -1382,25 +1502,7 @@ nsGlobalHistory::Refresh(PRBool aBlocking)
 NS_IMETHODIMP
 nsGlobalHistory::Flush()
 {
-	nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-	mdb_err err;
-
-	err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
-	if (err != 0) return NS_ERROR_FAILURE;
-
-	mdb_count total;
-	mdb_count current;
-	mdb_bool done;
-	mdb_bool broken;
-
-	do
-	{
-		err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-	} while ((err == 0) && !broken && !done);
-
-	if ((err != 0) || !done) return NS_ERROR_FAILURE;
-
-	return NS_OK;
+  return Commit(kLargeCommit);
 }
 
 
@@ -1417,6 +1519,13 @@ nsGlobalHistory::Init()
 {
   nsresult rv;
 
+  // we'd like to get this pref when we need it, but at that point,
+  // we can't get the pref service. This means if the user changes
+  // this pref, we won't notice until the next time we run.
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService(kRDFServiceCID,
                                       NS_GET_IID(nsIRDFService),
@@ -1427,6 +1536,8 @@ nsGlobalHistory::Init()
 
     gRDFService->GetResource(NC_NAMESPACE_URI "Page",        &kNC_Page);
     gRDFService->GetResource(NC_NAMESPACE_URI "Date",        &kNC_Date);
+    gRDFService->GetResource(NC_NAMESPACE_URI "FirstVisitDate",
+                             &kNC_FirstVisitDate);
     gRDFService->GetResource(NC_NAMESPACE_URI "VisitCount",  &kNC_VisitCount);
     gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
     gRDFService->GetResource(NC_NAMESPACE_URI "Referrer",    &kNC_Referrer);
@@ -1439,11 +1550,10 @@ nsGlobalHistory::Init()
 
   // register this as a named data source with the RDF service
   rv = gRDFService->RegisterDataSource(this, PR_FALSE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "somebody already created & registered the history data source");
-  if (NS_FAILED(rv)) return rv;
-
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   rv = OpenDB();
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1456,7 +1566,7 @@ nsGlobalHistory::OpenDB()
 
   nsCOMPtr <nsIFile> historyFile;
   rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
   nsCOMPtr<nsIMdbFactoryFactory> factoryfactory;
@@ -1464,122 +1574,146 @@ nsGlobalHistory::OpenDB()
                                           nsnull,
                                           NS_GET_IID(nsIMdbFactoryFactory),
                                           getter_AddRefs(factoryfactory));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Leaving XPCOM, entering MDB. They may look like XPCOM interfaces,
   // but they're not. The 'factory' is an interface; however, it isn't
   // reference counted. So no, this isn't a leak.
   nsIMdbFactory* factory;
   rv = factoryfactory->GetMdbFactory(&factory);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create mork factory factory");
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mdb_err err;
 
   err = factory->MakeEnv(nsnull, &mEnv);
+  mEnv->SetAutoClear(PR_TRUE);
   NS_ASSERTION((err == 0), "unable to create mdb env");
   if (err != 0) return NS_ERROR_FAILURE;
 
-  nsIMdbHeap* dbHeap = 0;
-  mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
-  PRBool exists;
-
   nsXPIDLCString filePath;
   rv = historyFile->GetPath(getter_Copies(filePath));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  PRBool exists = PR_TRUE;
+
+  historyFile->Exists(&exists);
     
-  rv = historyFile->Exists(&exists);
-  if (NS_FAILED(rv)) return rv;
+  if (!exists || NS_FAILED(rv = OpenExistingFile(factory, filePath))) {
+
+    // we couldn't open the file, so it's either corrupt or doesn't exist.
+    // attempt to delete the file, but ignore the error
+    historyFile->Delete(PR_FALSE);
+    rv = OpenNewFile(factory, filePath);
+  }
+
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  if (exists) {
-    mdb_bool canopen = 0;
-    mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
+  return NS_OK;
+}
 
-    nsMdbPtr<nsIMdbFile> oldFile(mEnv); // ensures file is released
-    err = factory->OpenOldFile(mEnv, dbHeap, filePath,
-                               dbFrozen, getter_Acquires(oldFile));
+nsresult
+nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
+{
 
-    if ((err != 0) || !oldFile) return NS_ERROR_FAILURE;
+  mdb_err err;
+  nsresult rv;
+  mdb_bool canopen = 0;
+  mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
 
-    err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
-                                   &canopen, &outfmt);
+  nsIMdbHeap* dbHeap = 0;
+  mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
+  nsMdbPtr<nsIMdbFile> oldFile(mEnv); // ensures file is released
+  err = factory->OpenOldFile(mEnv, dbHeap, filePath,
+                             dbFrozen, getter_Acquires(oldFile));
 
-    // XXX possible that format out of date, in which case we should
-    // just re-write the file.
-    if ((err != 0) || !canopen) return NS_ERROR_FAILURE;
+  // don't assert, the file might just not be there
+  if ((err !=0) || !oldFile) return NS_ERROR_FAILURE;
 
-    nsIMdbThumb* thumb = nsnull;
-    mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
+  err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
+                                 &canopen, &outfmt);
 
-		err = factory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, &thumb); 
-    if ((err != 0) || !thumb) return NS_ERROR_FAILURE;
+  // XXX possible that format out of date, in which case we should
+  // just re-write the file.
+  if ((err !=0) || !canopen) return NS_ERROR_FAILURE;
 
-    mdb_count total;
-    mdb_count current;
-    mdb_bool done;
-    mdb_bool broken;
+  nsIMdbThumb* thumb = nsnull;
+  mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
 
-    do {
-      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-    } while ((err == 0) && !broken && !done);
+  err = factory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, &thumb);
+  if ((err !=0) || !thumb) return NS_ERROR_FAILURE;
 
-    if ((err == 0) && done) {
-      err = factory->ThumbToOpenStore(mEnv, thumb, &mStore);
-    }
+  mdb_count total;
+  mdb_count current;
+  mdb_bool done;
+  mdb_bool broken;
 
-    thumb->CutStrongRef(mEnv);
-    thumb = nsnull;
+  do {
+    err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+  } while ((err == 0) && !broken && !done);
 
-    if ((err != 0) || !done) return NS_ERROR_FAILURE;
-
-    rv = CreateTokens();
-    if (NS_FAILED(rv)) return rv;
-
-    mdbOid oid = { kToken_HistoryRowScope, 1 };
-    err = mStore->GetTable(mEnv, &oid, &mTable);
-    if (err != 0) return NS_ERROR_FAILURE;
+  if ((err == 0) && done) {
+    err = factory->ThumbToOpenStore(mEnv, thumb, &mStore);
   }
-  else {
 
-    nsMdbPtr<nsIMdbFile> newFile(mEnv); // ensures file is released
-    err = factory->CreateNewFile(mEnv, dbHeap, filePath,
-                                 getter_Acquires(newFile));
+  thumb->CutStrongRef(mEnv);
+  thumb = nsnull;
 
-    if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
+  if (err != 0) return NS_ERROR_FAILURE;
 
-    mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
-    err = factory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
-    if (err != 0) return NS_ERROR_FAILURE;
+  rv = CreateTokens();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CreateTokens();
-    if (NS_FAILED(rv)) return rv;
-
-    // Create the one and only table in the history db
-    err = mStore->NewTable(mEnv, kToken_HistoryRowScope, kToken_HistoryKind, PR_TRUE, nsnull, &mTable);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    // Force a commit now to get it written out.
-    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    mdb_count total;
-    mdb_count current;
-    mdb_bool done;
-    mdb_bool broken;
-
-    do {
-      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-    } while ((err == 0) && !broken && !done);
-
-    if ((err != 0) || !done) return NS_ERROR_FAILURE;
-
-
-  }
+  mdbOid oid = { kToken_HistoryRowScope, 1 };
+  err = mStore->GetTable(mEnv, &oid, &mTable);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
+{
+  nsresult rv;
+  mdb_err err;
+  
+  nsIMdbHeap* dbHeap = 0;
+  nsMdbPtr<nsIMdbFile> newFile(mEnv); // ensures file is released
+  err = factory->CreateNewFile(mEnv, dbHeap, filePath,
+                               getter_Acquires(newFile));
+
+  if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
+  
+  mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
+  err = factory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
+  
+  if (err != 0) return NS_ERROR_FAILURE;
+  
+  rv = CreateTokens();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the one and only table in the history db
+  err = mStore->NewTable(mEnv, kToken_HistoryRowScope, kToken_HistoryKind, PR_TRUE, nsnull, &mTable);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // Force a commit now to get it written out.
+  nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+  err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  mdb_count total;
+  mdb_count current;
+  mdb_bool done;
+  mdb_bool broken;
+
+  do {
+    err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+  } while ((err == 0) && !broken && !done);
+
+  if ((err != 0) || !done) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
 
 nsresult
 nsGlobalHistory::CreateTokens()
@@ -1605,38 +1739,203 @@ nsGlobalHistory::CreateTokens()
   err = mStore->StringToToken(mEnv, "LastVisitDate", &kToken_LastVisitDateColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
+  err = mStore->StringToToken(mEnv, "FirstVisitDate", &kToken_FirstVisitDateColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  err = mStore->StringToToken(mEnv, "VisitCount", &kToken_VisitCountColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
   err = mStore->StringToToken(mEnv, "Name", &kToken_NameColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
 
+nsresult nsGlobalHistory::Commit(eCommitType commitType)
+{
+  nsresult	err = NS_OK;
+  nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+
+  if (!mStore)
+    return NS_ERROR_NULL_POINTER;
+
+  if (commitType == kLargeCommit || commitType == kSessionCommit)
+  {
+    mdb_percent outActualWaste = 0;
+    mdb_bool outShould;
+    if (mStore) 
+    {
+      // check how much space would be saved by doing a compress commit.
+      // If it's more than 30%, go for it.
+      // N.B. - I'm not sure this calls works in Mork for all cases.
+      err = mStore->ShouldCompress(mEnv, 30, &outActualWaste, &outShould);
+      if (NS_SUCCEEDED(err) && outShould)
+      {
+          commitType = kCompressCommit;
+      }
+      else
+      {
+        mdb_count count;
+        err = mTable->GetCount(mEnv, &count);
+        // Since Mork's shouldCompress doesn't work, we need to look at the file
+        // size and the number of rows, and make a stab at guessing if we've got
+        // a lot of deleted rows. The file size is the size when we opened the db,
+        // and we really want it to be the size after we've written out the file,
+        // but I think this is a good enough approximation.
+        PRInt64 numRows;
+        PRInt64 bytesPerRow;
+        PRInt64 desiredAvgRowSize;
+
+        LL_UI2L(numRows, count);
+        LL_DIV(bytesPerRow, mFileSizeOnDisk, numRows);
+        LL_I2L(desiredAvgRowSize, 400);
+        if (LL_CMP(bytesPerRow, >, desiredAvgRowSize))
+          commitType = kCompressCommit;
+      }
+    }
+  }
+  switch (commitType)
+  {
+  case kLargeCommit:
+    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+    break;
+  case kSessionCommit:
+    err = mStore->SessionCommit(mEnv, getter_Acquires(thumb));
+    break;
+  case kCompressCommit:
+    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
+    break;
+  }
+  if (err == 0) {
+    mdb_count total;
+    mdb_count current;
+    mdb_bool done;
+    mdb_bool broken;
+
+    do {
+      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+    } while ((err == 0) && !broken && !done);
+  }
+  if (err != 0) // mork doesn't return NS error codes. Yet.
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+
+}
+// if notify is true, we'll notify rdf of deleted rows.
+// If we're shutting down history, then (maybe?) we don't
+// need or want to notify rdf.
+nsresult nsGlobalHistory::ExpireEntries(PRBool notify)
+{
+  nsresult rv;
+  if (!mTable) return NS_OK;
+  // we'd like to get the expire_days pref here, "browser.history_expire_days",
+  // but by the time we're called, we can't get the pref service because we're
+  // shutting down!
+
+  // Iterate through all the rows in the table, notifying observers
+  // that they're going away and cutting each out of the database.
+  // Start with a cursor across the entire table.
+  mdb_err err;
+  mdb_count count;
+  err = mTable->GetCount(mEnv, &count);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // Begin the batch.
+  int marker;
+  err = mTable->StartBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "unable to start batch");
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIRDFResource> resource;
+
+  PRTime expirationDate;
+	PRTime now = PR_Now();
+	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_UI2L(secondsInDays, 60 * 60 * 24 * mExpireDays);
+	LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
+  LL_SUB(expirationDate, now, microSecondsInExpireDays);
+
+  // XXX from here until end batch, no early returns!
+  for (mdb_pos pos = count - 1; pos >= 0; --pos) {
+    nsMdbPtr<nsIMdbRow> row(mEnv);
+    err = mTable->PosToRow(mEnv, pos, getter_Acquires(row));
+    NS_ASSERTION(err == 0, "unable to get row");
+    if (err != 0)
+      break;
+
+    NS_ASSERTION(row != nsnull, "no row");
+    if (! row)
+      continue;
+
+    mdbYarn yarn;
+    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
+    if (err != 0) 
+      continue;
+
+    PRInt64 lastVisitedTime;
+    rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &lastVisitedTime);
+    if (NS_FAILED(rv)) 
+      continue;
+
+	  PRBool expireEntry = LL_CMP(lastVisitedTime, <, expirationDate);
+    if (expireEntry)
+    {
+      if (notify)
+      {
+        // What's the URL? We need to know to properly notify our RDF
+        // observers.
+        err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
+        if (err != 0)
+          continue;
+
+        nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+
+        rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv))
+          continue;
+      }
+      // Officially cut the row *now*, before notifying any observers:
+      // that way, any re-entrant calls won't find the row.
+      err = mTable->CutRow(mEnv, row);
+      NS_ASSERTION(err == 0, "couldn't cut row");
+      if (err != 0)
+        continue;
+
+      // XXX possibly avoid leakage
+      err = row->CutAllColumns(mEnv);
+      NS_ASSERTION(err == 0, "couldn't cut all columns");
+      // XXX we'll notify regardless of whether we could successfully
+      // CutAllColumns or not.
+
+      // Notify observers that the row is, er, history.
+      if (notify)
+        NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
+    }
+  }
+
+  // Finish the batch.
+  err = mTable->EndBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "error ending batch");
+  return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
+}
 
 nsresult
 nsGlobalHistory::CloseDB()
 {
   mdb_err err;
 
+  ExpireEntries(PR_FALSE /* don't notify */);
+  err = Commit(kSessionCommit);
+
   if (mTable)
     mTable->CutStrongRef(mEnv);
 
-  if (mStore) {
-    // Commit all changes here.
-    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-    err = mStore->SessionCommit(mEnv, getter_Acquires(thumb));
-    if (err == 0) {
-      mdb_count total;
-      mdb_count current;
-      mdb_bool done;
-      mdb_bool broken;
-
-      do {
-        err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-      } while ((err == 0) && !broken && !done);
-    }
-
+  if (mStore)
     mStore->CutStrongRef(mEnv);
-  }
 
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
@@ -1754,6 +2053,30 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+                         const PRUnichar *aSomeData)
+{
+  nsresult rv;
+
+  
+  // topics we observe
+  NS_NAMED_LITERAL_STRING(prefChangedTopic, "nsPref:changed");
+
+  // pref changing - update member vars
+  if (prefChangedTopic.Equals(aTopic)) {
+
+    // expiration date
+    nsCAutoString pref; pref.AssignWithConversion(aSomeData);
+    if (pref.Equals(PREF_BROWSER_HISTORY_EXPIRE_DAYS)) {
+      nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+      if (NS_SUCCEEDED(rv))
+        prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+    }
+
+  }
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 //
