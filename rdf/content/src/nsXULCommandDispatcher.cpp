@@ -30,6 +30,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsRDFCID.h"
 
+#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptContextOwner.h"
@@ -46,6 +47,8 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
+
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
@@ -59,7 +62,8 @@ static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 //
 class XULCommandDispatcherImpl : public nsIDOMXULCommandDispatcher,
                                  public nsIXULCommandDispatcher,
-                                 public nsIDOMFocusListener
+                                 public nsIDOMFocusListener,
+                                 public nsIScriptObjectOwner
 {
 public:
     XULCommandDispatcherImpl(void);
@@ -79,7 +83,13 @@ public:
     // nsIDOMEventListener
     virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
 
+    // nsIScriptObjectOwner interface
+    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+    NS_IMETHOD SetScriptObject(void *aScriptObject);
+
 private:
+    void*                      mScriptObject;       // ????
+
     nsIDOMElement* mCurrentElement; // Weak. The focus must obviously be lost if the node goes away.
     nsVoidArray* mFocusListeners; // Holds weak references to listener elements.
 };
@@ -87,6 +97,7 @@ private:
 ////////////////////////////////////////////////////////////////////////
 
 XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
+:mScriptObject(nsnull)
 {
 	NS_INIT_REFCNT();
   mCurrentElement = nsnull;
@@ -108,8 +119,12 @@ XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULCommandDispatcher::GetIID()) ||
-        iid.Equals(kISupportsIID)) {
+    if (iid.Equals(kISupportsIID)) {
+        *result = (nsISupports*)(nsIXULCommandDispatcher*)this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    else if (iid.Equals(nsIXULCommandDispatcher::GetIID())) {
         *result = NS_STATIC_CAST(nsIXULCommandDispatcher*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -126,6 +141,11 @@ XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIDomEventListenerIID)) {
         *result = (nsIDOMEventListener*)(nsIDOMFocusListener*)this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    else if (iid.Equals(kIScriptObjectOwnerIID)) {
+        *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -283,6 +303,32 @@ XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
 
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////
+// nsIScriptObjectOwner interface
+NS_IMETHODIMP
+XULCommandDispatcherImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+    nsresult res = NS_OK;
+    nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+    if (nsnull == mScriptObject) {
+        res = NS_NewScriptXULCommandDispatcher(aContext, (nsISupports *)(nsIDOMXULCommandDispatcher*)this, global, (void**)&mScriptObject);
+    }
+    *aScriptObject = mScriptObject;
+
+    NS_RELEASE(global);
+    return res;
+}
+
+
+NS_IMETHODIMP
+XULCommandDispatcherImpl::SetScriptObject(void *aScriptObject)
+{
+    mScriptObject = aScriptObject;
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////
 nsresult
