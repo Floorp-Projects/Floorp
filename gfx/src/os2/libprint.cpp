@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include "libprint.h"
-#include "libprres.h"
+#include "resID.h"
 
 
 static HMODULE hmodRes;
@@ -353,8 +353,8 @@ MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       case WM_INITDLG:
          pPrintDlg = (PRINTDLG*)mp2;  // Get pointer to class. We passed it as parameter to WinDlgBox
          pPrintDlg->mHwndListbox = ::WinWindowFromID (hwnd, IDLB_QUEUES);
-         pPrintDlg->mHPointer = ::WinLoadPointer (HWND_DESKTOP, hmodRes, IDICO_PRINTER);
-         ::WinSetWindowPtr (hwnd, 0, pPrintDlg);
+//         pPrintDlg->mHPointer = ::WinLoadPointer (HWND_DESKTOP, hmodRes, IDICO_PRINTER);
+//         ::WinSetWindowPtr (hwnd, 0, pPrintDlg);
    
          /* set up the dialog */
 //         ::WinSetPresParam (hwnd, PP_FONTNAMESIZE, 7, "8.Helv");
