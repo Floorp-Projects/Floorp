@@ -32,7 +32,7 @@ class nsObjectFrame : public nsObjectFrameSuper {
 public:
   nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -170,13 +170,13 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Reflow(nsIPresContext*      aPresContext,
+nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 		      nsReflowMetrics&     aDesiredSize,
 		      const nsReflowState& aReflowState,
 		      nsReflowStatus&      aStatus)
 {
   // Get our desired size
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
 
   // XXX deal with border and padding the usual way...wrap it up!
 
@@ -184,7 +184,7 @@ nsObjectFrame::Reflow(nsIPresContext*      aPresContext,
   nsIView* view;
   GetView(view);
   if (nsnull == view) {
-    nsresult rv = CreateWidget(aPresContext, aDesiredSize.width,
+    nsresult rv = CreateWidget(&aPresContext, aDesiredSize.width,
 			       aDesiredSize.height);
     if (NS_OK != rv) {
       return rv;

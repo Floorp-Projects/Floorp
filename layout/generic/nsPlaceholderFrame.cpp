@@ -52,7 +52,7 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
+nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
                            nsReflowMetrics&     aDesiredSize,
                            const nsReflowState& aReflowState,
                            nsReflowStatus&      aStatus)
@@ -100,11 +100,11 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
       nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mAnchoredItem->SetStyleContext(aPresContext, mStyleContext);
+      mAnchoredItem->SetStyleContext(&aPresContext, mStyleContext);
     } else {
       // Create the anchored item
-      nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
-      nsresult rv = delegate->CreateFrame(aPresContext, mContent,
+      nsIContentDelegate* delegate = mContent->GetDelegate(&aPresContext);
+      nsresult rv = delegate->CreateFrame(&aPresContext, mContent,
                                           mGeometricParent, mStyleContext,
                                           mAnchoredItem);
       NS_RELEASE(delegate);
@@ -114,7 +114,7 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     }
 
     // Notify our containing block that there's a new floater
-    container->AddFloater(aPresContext, aReflowState, mAnchoredItem, this);
+    container->AddFloater(&aPresContext, aReflowState, mAnchoredItem, this);
 
   } else {
     // XXX This causes anchored-items sizes to get fixed up; this is
@@ -124,12 +124,12 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     nsReflowMetrics desiredSize(nsnull);
     nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
                                 eReflowReason_Resize);
-    mAnchoredItem->WillReflow(*aPresContext);
+    mAnchoredItem->WillReflow(aPresContext);
     mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
 
 //XXXdeprecated    container->PlaceFloater(aPresContext, mAnchoredItem, this);
-    mAnchoredItem->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    mAnchoredItem->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);

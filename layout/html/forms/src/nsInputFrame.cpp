@@ -223,7 +223,7 @@ nsInputFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-nsInputFrame::Reflow(nsIPresContext*      aPresContext,
+nsInputFrame::Reflow(nsIPresContext&      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus)
@@ -236,7 +236,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 
     // make sure the style context is set
     if (nsnull == mStyleContext) {
-      GetStyleContext(aPresContext, mStyleContext);
+      GetStyleContext(&aPresContext, mStyleContext);
     }
     nsresult result = 
 	    NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
@@ -246,10 +246,10 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
       aStatus = NS_FRAME_NOT_COMPLETE;
       return result;
 	  }
-	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
+	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
     //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
@@ -261,7 +261,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  parWithView->GetView(parView);
 
 	  const nsIID& id = GetCID();
-    nsWidgetInitData* initData = GetWidgetInitData(*aPresContext); // needs to be deleted
+    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
                         nsnull, 0, nsnull,
@@ -296,7 +296,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  NS_IF_RELEASE(presShell); 
   }
   else {
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have

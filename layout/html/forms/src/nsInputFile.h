@@ -31,7 +31,7 @@ class nsString;
 class nsInputFileFrame : public nsCSSInlineFrame {
 public:
   nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+  NS_IMETHOD Reflow(nsIPresContext&      aCX,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);

@@ -249,7 +249,7 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
       (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID,
                                           (void**)&runAround))) {
     nsRect r;
-    runAround->Reflow(mLineLayout.mPresContext, mLineLayout.mSpaceManager,
+    runAround->Reflow(*mLineLayout.mPresContext, mLineLayout.mSpaceManager,
                       aMetrics, aReflowState, r, rv);
     aMetrics.width = r.width;
     aMetrics.height = r.height;
@@ -263,7 +263,7 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
     aInlineAware = PR_TRUE;
   }
   else {
-    aKidFrame->Reflow(mLineLayout.mPresContext, aMetrics, aReflowState, rv);
+    aKidFrame->Reflow(*mLineLayout.mPresContext, aMetrics, aReflowState, rv);
     aInlineAware = PR_FALSE;
   }
 

@@ -64,7 +64,7 @@ public:
    *
    * @see nsISpaceManager#Translate()
    */
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsISpaceManager*     aSpaceManager,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,

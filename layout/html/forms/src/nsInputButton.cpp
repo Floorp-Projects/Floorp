@@ -107,7 +107,7 @@ public:
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -458,7 +458,7 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 NS_METHOD
-nsInputButtonFrame::Reflow(nsIPresContext*      aPresContext,
+nsInputButtonFrame::Reflow(nsIPresContext&      aPresContext,
                            nsReflowMetrics&     aDesiredSize,
                            const nsReflowState& aReflowState,
                            nsReflowStatus&      aStatus)
@@ -466,8 +466,8 @@ nsInputButtonFrame::Reflow(nsIPresContext*      aPresContext,
   if ((kButtonTag_Input == GetButtonTagType()) &&
       (kButton_Image == GetButtonType())) {
     nsSize ignore;
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
-    AddBordersAndPadding(aPresContext, aDesiredSize);
+    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
+    AddBordersAndPadding(&aPresContext, aDesiredSize);
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.maxElementSize->width = aDesiredSize.width;
       aDesiredSize.maxElementSize->height = aDesiredSize.height;

@@ -462,7 +462,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsReflowStatus  status;
     nsReflowState   reflowState(mRootFrame, reflowReason, maxSize);
 
-    mRootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
+    mRootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {

@@ -50,7 +50,7 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsLeafFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
                               nsReflowMetrics&     aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
@@ -61,8 +61,8 @@ NS_METHOD nsLeafFrame::Reflow(nsIPresContext*      aPresContext,
   // and if set use them instead of calling GetDesiredSize.
 
 
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-  AddBordersAndPadding(aPresContext, aDesiredSize);
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+  AddBordersAndPadding(&aPresContext, aDesiredSize);
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;

@@ -108,7 +108,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -140,7 +140,7 @@ public:
   /**
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+  NS_IMETHOD Reflow(nsIPresContext&      aCX,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -284,34 +284,34 @@ nsHTMLIFrameOuterFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLIFrameOuterFrame::Reflow(nsIPresContext*      aPresContext,
+nsHTMLIFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
                                nsReflowMetrics&     aDesiredSize,
                                const nsReflowState& aReflowState,
                                nsReflowStatus&      aStatus)
 {
   // Always get the size so that the caller knows how big we are
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsHTMLIFrameInnerFrame(mContent, this);
     mChildCount = 1;
   }
   
-  nscoord borderWidth  = GetBorderWidth(*aPresContext);
+  nscoord borderWidth  = GetBorderWidth(aPresContext);
   nscoord borderWidth2 = 2 * borderWidth;
   nsSize innerSize(aDesiredSize.width - borderWidth2, aDesiredSize.height - borderWidth2);
 
   // Reflow the child and get its desired size
   nsReflowState kidReflowState(mFirstChild, aReflowState, innerSize);
-  mFirstChild->WillReflow(*aPresContext);
+  mFirstChild->WillReflow(aPresContext);
   nsReflowMetrics ignore(nsnull);
-  aStatus = ReflowChild(mFirstChild, aPresContext, ignore, kidReflowState);
+  aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, kidReflowState);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
   // Place and size the child
   nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
   mFirstChild->SetRect(rect);
-  mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+  mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
   // iframe's normally shrink wrap around their content when they
@@ -547,7 +547,7 @@ nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer,
 }
 
 NS_IMETHODIMP
-nsHTMLIFrameInnerFrame::Reflow(nsIPresContext*      aPresContext,
+nsHTMLIFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
                                nsReflowMetrics&     aDesiredSize,
                                const nsReflowState& aReflowState,
                                nsReflowStatus&      aStatus)

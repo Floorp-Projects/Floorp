@@ -38,7 +38,7 @@ public:
   nsIFrame*   GetAbsoluteFrame() const {return mFrame;}
 
   // nsIFrame overrides
-  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);

@@ -52,12 +52,11 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
 }
 
 // TODO:  content changed notifications
-NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
                                        nsReflowMetrics&     aDesiredSize,
                                        const nsReflowState& aReflowState,
                                        nsReflowStatus&      aStatus)
 {
-  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   NS_ASSERTION(nsnull!=mContent, "bad state -- null content for frame");
 
   if (nsnull == mFirstChild) 
@@ -76,22 +75,22 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
 
       // Resolve style
       nsIStyleContextPtr kidSC =
-        aPresContext->ResolveStyleContextFor(kid, this, PR_TRUE);
+        aPresContext.ResolveStyleContextFor(kid, this, PR_TRUE);
       const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
         kidSC->GetStyleData(eStyleStruct_Spacing);
 
       // Create a child frame
       nsIContentDelegate* kidDel = nsnull;
-      kidDel = kid->GetDelegate(aPresContext);
-      nsresult rv = kidDel->CreateFrame(aPresContext, kid, this, kidSC,
+      kidDel = kid->GetDelegate(&aPresContext);
+      nsresult rv = kidDel->CreateFrame(&aPresContext, kid, this, kidSC,
                                         kidFrame);
       NS_RELEASE(kidDel);
 
       // give the child frame a chance to reflow, even though we know it'll have 0 size
       nsReflowMetrics kidSize(nsnull);
       nsReflowState   kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
-      kidFrame->WillReflow(*aPresContext);
-      nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
+      kidFrame->WillReflow(aPresContext);
+      nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
                                           kidReflowState);
       // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
       kidFrame->SetRect(nsRect(0,0,0,0));
@@ -111,7 +110,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
       kidIndex++;
     }
     // now that I have all my COL children, adjust their style
-    SetStyleContextForFirstPass(aPresContext);
+    SetStyleContextForFirstPass(&aPresContext);
   }
   aDesiredSize.width=0;
   aDesiredSize.height=0;

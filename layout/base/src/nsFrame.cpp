@@ -1058,7 +1058,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState,
                           nsReflowStatus&      aStatus)

@@ -141,7 +141,7 @@ public:
   // XXX implement regular reflow method too!
 
   // nsIRunaround
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsISpaceManager*     aSpaceManager,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
@@ -1197,7 +1197,7 @@ nsCSSBlockFrame::GetLastContentOffset() const
 #endif
 
 NS_IMETHODIMP
-nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
+nsCSSBlockFrame::Reflow(nsIPresContext&      aPresContext,
                         nsISpaceManager*     aSpaceManager,
                         nsReflowMetrics&     aMetrics,
                         const nsReflowState& aReflowState,
@@ -1223,7 +1223,7 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
 
   // Replace parent provided reflow state with our own significantly
   // more extensive version.
-  nsCSSBlockReflowState state(aPresContext, aSpaceManager,
+  nsCSSBlockReflowState state(&aPresContext, aSpaceManager,
                               this, mStyleContext,
                               aReflowState, aMetrics,
                               PRBool(nsnull != aMetrics.maxElementSize));
@@ -2203,7 +2203,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     reflowState.reason = reason;
     nsRect r;
     aState.mSpaceManager->Translate(x, y);
-    rv = runAround->Reflow(aState.mPresContext, aState.mSpaceManager,
+    rv = runAround->Reflow(*aState.mPresContext, aState.mSpaceManager,
                            metrics, reflowState, r, reflowStatus);
     aState.mSpaceManager->Translate(-x, -y);
     metrics.width = r.width;
@@ -2214,7 +2214,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   else {
     nsReflowState reflowState(aFrame, aState, availSize);
     reflowState.reason = reason;
-    rv = aFrame->Reflow(aState.mPresContext, metrics, reflowState,
+    rv = aFrame->Reflow(*aState.mPresContext, metrics, reflowState,
                         reflowStatus);
   }
   if (NS_IS_REFLOW_ERROR(rv)) {
@@ -3392,7 +3392,7 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
   nsReflowStatus  status;
 
   aFloaterFrame->WillReflow(*aPresContext);
-  aFloaterFrame->Reflow(aPresContext, desiredSize, reflowState, status);
+  aFloaterFrame->Reflow(*aPresContext, desiredSize, reflowState, status);
   aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
 
 //XXX  aFloaterFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);

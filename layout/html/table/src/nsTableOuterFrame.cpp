@@ -282,7 +282,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
     kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_INCREMENTAL);
-  kidFrame->Reflow(aPresContext, kidSize, kidReflowState, aStatus);
+  kidFrame->Reflow(*aPresContext, kidSize, kidReflowState, aStatus);
 
   // Place the child frame after taking into account its margin
   nsRect kidRect (kidMargin.left, aState.y, kidSize.width, kidSize.height);
@@ -370,7 +370,7 @@ nscoord nsTableOuterFrame::GetTableWidth(const nsReflowState& aReflowState)
   * inner table no longer fits and has to be reflowed again this time with s
   * smaller available height
   */
-NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
+NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
                                     nsReflowMetrics& aDesiredSize,
                                     const nsReflowState& aReflowState,
                                     nsReflowStatus& aStatus)
@@ -392,10 +392,10 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // Initialize our local reflow state
-  OuterTableReflowState state(aPresContext, aReflowState);
+  OuterTableReflowState state(&aPresContext, aReflowState);
 
   if (eReflowReason_Incremental == aReflowState.reason) {
-    IncrementalReflow(aPresContext, state, aDesiredSize, aReflowState, aStatus);
+    IncrementalReflow(&aPresContext, state, aDesiredSize, aReflowState, aStatus);
 
     // Return our desired rect
     aDesiredSize.width  = state.innerTableMaxSize.width;
@@ -406,7 +406,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       // or there are none so we'll create them now
       MoveOverflowToChildList();
       if (nsnull == mFirstChild) {
-        nsresult  result = CreateChildFrames(aPresContext);
+        nsresult  result = CreateChildFrames(&aPresContext);
         if (NS_OK != result) {
           return result;
         }
@@ -419,7 +419,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
         nsReflowState   captionReflowState(mCaptionFrame, aReflowState,
                                            nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
                                            eReflowReason_Initial);
-        mCaptionFrame->WillReflow(*aPresContext);
+        mCaptionFrame->WillReflow(aPresContext);
         mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
         mMinCaptionWidth = maxElementSize.width;
       }
@@ -444,8 +444,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     nsReflowState   innerReflowState(mInnerTableFrame, aReflowState,
                                      nsSize(tableWidth, aReflowState.maxSize.height));
     nsReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    mInnerTableFrame->WillReflow(*aPresContext);
-    aStatus = ReflowChild(mInnerTableFrame, aPresContext, innerSize,
+    mInnerTableFrame->WillReflow(aPresContext);
+    aStatus = ReflowChild(mInnerTableFrame, &aPresContext, innerSize,
                           innerReflowState);
 
     // Table's max element size is the MAX of the caption's max element size
@@ -480,7 +480,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       nsReflowMetrics captionSize(nsnull);
 
       nsReflowStatus  captionStatus;
-      mCaptionFrame->WillReflow(*aPresContext);
+      mCaptionFrame->WillReflow(aPresContext);
       mCaptionFrame->MoveTo(captionMargin.left, captionY);
       mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState,
                             captionStatus);
