@@ -76,9 +76,41 @@ void nsRadioButton::Create(nsIWidget *aParent,
                          XmNheight, aRect.height,
                          XmNx, aRect.x,
                          XmNy, aRect.y,
-                         nsnull);
+                         XmNrecomputeSize, False,
+                         XmNresizeHeight, False,
+                         XmNresizeWidth, False,
+                         XmNradioAlwaysOne, False,
+                         XmNmarginHeight, 0,
+                         XmNmarginWidth, 0,
+                         XmNadjustMargin, False,
+                         XmNspacing, 0,
+//                         XmNentryAlignment, XmALIGNMENT_CENTER,
+//                         XmNentryVerticalAlignment, XmALIGNMENT_CENTER,
+                         XmNisAligned, False,
+                         XmNentryBorder, 0,
+                         XmNorientation, XmVERTICAL,
+                         XmNborderWidth, 0,
+                         0);
 
   mRadioBtn = ::XmCreateToggleButton(mWidget, "", nsnull, 0);
+
+  XtVaSetValues(mRadioBtn, 
+                         XmNwidth, aRect.width,
+                         XmNheight, aRect.height,
+                         XmNx, 0,
+                         XmNy, 0,
+                         XmNrecomputeSize, False,
+                         XmNresizeHeight, False,
+                         XmNresizeWidth, False,
+                         XmNmarginHeight, 0,
+                         XmNmarginWidth, 0,
+                         XmNadjustMargin, False,
+                         XmNspacing, 0,
+                         XmNisAligned, False,
+                         XmNentryBorder, 0,
+                         XmNborderWidth, 0,
+                         0);
+
   XtManageChild(mRadioBtn);
 
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
@@ -90,13 +122,18 @@ void nsRadioButton::Create(nsIWidget *aParent,
 
   XtAddCallback(mRadioBtn,
                 XmNarmCallback,
-                nsXtWidget_Toggle_ArmCallback,
+                nsXtWidget_RadioButton_ArmCallback,
                 this);
 
   XtAddCallback(mRadioBtn,
                 XmNdisarmCallback,
-                nsXtWidget_Toggle_DisArmCallback,
+                nsXtWidget_RadioButton_DisArmCallback,
                 this);
+
+  /*XtAddCallback(mRadioBtn,
+                XmNvalueChangedCallback,
+                nsXtWidget_Toggle_ValueChangedCallback,
+                this);*/
 
 
 

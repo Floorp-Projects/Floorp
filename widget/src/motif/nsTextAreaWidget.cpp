@@ -111,8 +111,14 @@ void nsTextAreaWidget::Create(nsNativeWindow aParent,
 nsresult nsTextAreaWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+  static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 
   if (aIID.Equals(kITextWidgetIID)) {
+    AddRef();
+    *aInstancePtr = (void**) &mAggWidget;
+    return NS_OK;
+  }
+  if (aIID.Equals(kITextAreaWidgetIID)) {
     AddRef();
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;

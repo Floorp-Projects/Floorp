@@ -126,6 +126,8 @@ public:
     virtual void            SetIgnoreResize(PRBool aIgnore);
     virtual PRBool          IgnoreResize();
 
+    virtual PRUint32        GetYCoord(PRUint32 aNewY);
+
      // Resize event management
     void SetResizeRect(nsRect& aRect);
     void SetResized(PRBool aResized);
@@ -141,6 +143,9 @@ protected:
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
+
+  virtual void            UpdateVisibilityFlag();
+  virtual void            UpdateDisplay();
 
   Widget mWidget;
   EVENT_CALLBACK mEventCallback;
@@ -158,10 +163,14 @@ protected:
   nsRect      mBounds;
 
   PRBool      mIgnoreResize;
+  PRBool      mShown;
+  PRBool      mVisible;
+  PRBool      mDisplayed;
 
   // Resize event management
   nsRect mResizeRect;
   int mResized;
+  PRBool mLowerLeft;
 
   nsISupports* mOuter;
 
