@@ -26,6 +26,8 @@
 #include "nsIMsgCompose.idl"
 #include "nsIMsgIdentity.idl"
 
+interface nsIURI;
+
 %{ C++
 #include "nsIDOMWindow.h"
 %}
@@ -35,7 +37,14 @@ interface nsIMsgComposeService : nsISupports {
 
 	/* ... */
 	void OpenComposeWindow(in wstring msgComposeWindowURL, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
-				   in nsIMsgIdentity identity); 
+						   in nsIMsgIdentity identity); /*object is temporary*/
+
+    /* use this method to invoke a compose window given a mailto url.
+	   aMsgComposeWindowURL --> can be null in most cases. If you have your own chrome
+	   url you want to use in brining up a compose window, pass it in here. 
+	   aURI --> the mailto url you want to use as the foundation for the data inside
+	   the compose window  */
+	void OpenComposeWindowWithURI(in wstring msgComposeWindowURL, in nsIURI aURI);
 
 	/* ... */
 	void OpenComposeWindowWithValues(in wstring msgComposeWindowURL, in MSG_ComposeFormat format,
