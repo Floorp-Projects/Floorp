@@ -63,7 +63,8 @@ public class JavaScriptException extends Exception
      */
     public JavaScriptException(Object value, String sourceName, int lineNumber)
     {
-        super(ScriptRuntime.toString(value));
+        super(EvaluatorException.generateErrorMessage(
+                  ScriptRuntime.toString(value), sourceName, lineNumber));
         this.lineNumber = lineNumber;
         this.sourceName = sourceName;
         this.value = value;

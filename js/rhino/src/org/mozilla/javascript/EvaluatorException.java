@@ -120,9 +120,9 @@ public class EvaluatorException extends RuntimeException
         return lineSource;
     }
 
-    private static String generateErrorMessage(String message,
-                                               String sourceName,
-                                               int line)
+    static String generateErrorMessage(String message,
+                                       String sourceName,
+                                       int line)
     {
         if (sourceName == null || line <= 0) {
             return message;
@@ -131,10 +131,9 @@ public class EvaluatorException extends RuntimeException
         buf.append(" (");
         if (sourceName != null) {
             buf.append(sourceName);
-            buf.append("; ");
         }
         if (line > 0) {
-            buf.append("line ");
+            buf.append('#');
             buf.append(line);
         }
         buf.append(')');
