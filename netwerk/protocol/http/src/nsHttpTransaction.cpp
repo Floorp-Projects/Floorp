@@ -34,7 +34,30 @@
 #include "plevent.h"
 
 //-----------------------------------------------------------------------------
-// nsHttpTransaction
+// helpers
+//-----------------------------------------------------------------------------
+
+static char *
+LocateHttpStart(char *buf, PRUint32 len)
+{
+    // if we have received less than 4 bytes of data, then we'll have to
+    // just accept a partial match, which may not be correct.
+    if (len < 4)
+        return (PL_strncasecmp(buf, "HTTP", len) == 0) ? buf : 0;
+
+    // PL_strncasestr would be perfect for this, but unfortunately bug 96571
+    // prevents its use here.
+    while (len >= 4) {
+        if (PL_strncasecmp(buf, "HTTP", 4) == 0)
+            return buf;
+        buf++;
+        len--;
+    }
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpTransaction <public>
 //-----------------------------------------------------------------------------
 
 nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
@@ -250,6 +273,10 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// nsHttpTransaction <private>
+//-----------------------------------------------------------------------------
+
 void
 nsHttpTransaction::ParseLine(char *line)
 {
@@ -326,14 +353,21 @@ nsHttpTransaction::ParseHead(char *buf,
 
     // if we don't have a status line and the line buf is empty, then
     // this must be the first time we've been called.
-    if (!mHaveStatusLine && mLineBuf.IsEmpty() &&
-            PL_strncasecmp(buf, "HTTP", PR_MIN(count, 4)) != 0) {
-        // XXX this check may fail for certain 0.9 content if we haven't
-        // received at least 4 bytes of data.
-        mResponseHead->ParseStatusLine("");
-        mHaveStatusLine = PR_TRUE;
-        mHaveAllHeaders = PR_TRUE;
-        return NS_OK;
+    if (!mHaveStatusLine && mLineBuf.IsEmpty()) {
+        // tolerate some junk before the status line
+        char *p = LocateHttpStart(buf, PR_MIN(count, 32));
+        if (!p) {
+            mResponseHead->ParseStatusLine("");
+            mHaveStatusLine = PR_TRUE;
+            mHaveAllHeaders = PR_TRUE;
+            return NS_OK;
+        }
+        if (p > buf) {
+            // skip over the junk
+            *countRead = p - buf;
+            count -= *countRead;
+            buf = p;
+        }
     }
     // otherwise we can assume that we don't have a HTTP/0.9 response.
 
@@ -735,7 +769,7 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
         LOG(("nsHttpTransaction: mSource->Read() returned [rv=%x]\n", rv));
         return rv;
     }
-    if (NS_SUCCEEDED(rv) && (*bytesWritten == 0)) {
+    if (*bytesWritten == 0) {
         LOG(("nsHttpTransaction: reached EOF\n"));
         if (!mHaveStatusLine) {
             // we've read nothing from the socket...
