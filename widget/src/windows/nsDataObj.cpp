@@ -407,7 +407,15 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
   if ( fileGroupDescHand ) {
     LPFILEGROUPDESCRIPTOR fileGroupDesc = NS_REINTERPRET_CAST(LPFILEGROUPDESCRIPTOR, ::GlobalLock(fileGroupDescHand));
 
-    char* url = "http://www.dvdresource.com";     // TEMP!
+#if 0
+    nsAutoString url;
+    if ( NS_FAILED(ExtractURL(url)) )
+      return E_OUTOFMEMORY;
+    char* urlStr = url.ToNewCString();        // XXX what about unicode urls?!?!
+    if ( !urlStr )
+      return E_OUTOFMEMORY;
+#endif
+    char* urlStr = strdup("TEMP URL FILENAME");
 
     // one file in the file descriptor block
     fileGroupDesc->cItems = 1;
@@ -416,12 +424,15 @@ nsDataObj :: GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG
     // create the filename string -- |.URL| extensions imply an internet shortcut file. Make
     // sure the filename isn't too long as to blow out the array, and still have enough room
     // for the |.URL| suffix.
-    int urlLength = strlen(url) > MAX_PATH - 5 ? MAX_PATH - 5 : strlen(url);
-    url[urlLength] = nsnull;
-    sprintf(fileGroupDesc->fgd[0].cFileName, "%s.URL", url);
+    int urlLength = strlen(urlStr);
+    int trimmedLen = urlLength > MAX_PATH - 5 ? MAX_PATH - 5 : urlLength;
+    urlStr[trimmedLen] = nsnull;
+    sprintf(fileGroupDesc->fgd[0].cFileName, "%s.URL", urlStr);
 
+    nsMemory::Free(urlStr);
     ::GlobalUnlock ( fileGroupDescHand );
     aSTG.hGlobal = fileGroupDescHand;
+    aSTG.tymed = TYMED_HGLOBAL;
   }
   else
     result = E_OUTOFMEMORY;
@@ -442,20 +453,27 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
   HRESULT result = S_OK;
   
-  char* url = "foopy";    // TEMP!
-  
+  nsAutoString url;
+  if ( NS_FAILED(ExtractURL(url)) )
+    return E_OUTOFMEMORY;
+  char* urlStr = url.ToNewCString();        // XXX what about unicode urls?!?!
+  if ( !urlStr )
+    return E_OUTOFMEMORY;
+    
   // setup format structure
   FORMATETC fmetc = { 0, NULL, DVASPECT_CONTENT, 0, TYMED_HGLOBAL };
   fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILECONTENTS );
 
   // create a global memory area and build up the file contents w/in it
   static const char* shortcutPrefix = "[InternetShortcut]\nURL=";
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, strlen(shortcutPrefix) + strlen(url) + 1);
+  static int prefixLen = strlen(shortcutPrefix);
+  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, prefixLen + strlen(urlStr) + 1);
   if ( hGlobalMemory ) {
     char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
-    sprintf( contents, "%s%s", shortcutPrefix, url );
+    sprintf( contents, "%s%s", shortcutPrefix, urlStr );
     ::GlobalUnlock(hGlobalMemory);
     aSTG.hGlobal = hGlobalMemory;
+    aSTG.tymed = TYMED_HGLOBAL;
   }
   else
     result = E_OUTOFMEMORY;
@@ -663,3 +681,31 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
   return;
 }
 
+
+//
+// ExtractURL
+//
+// Roots around in the transferable for the appropriate flavor that indicates
+// a url and pulls it out. Used mostly for creating internet shortcuts on the desktop.
+//
+nsresult
+nsDataObj :: ExtractURL ( nsString & outURL )
+{
+  NS_ASSERTION ( mTransferable, "We'd don't have a good transferable" );
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  PRUint32 len = 0;
+  nsCOMPtr<nsISupports> genericURL;
+  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
+    nsCOMPtr<nsISupportsWString> urlObject ( do_QueryInterface(genericURL) );
+    if ( urlObject ) {
+      nsXPIDLString url;
+      urlObject->GetData ( getter_Copies(url) );
+      outURL = url;
+      rv = NS_OK;
+    }
+  } // if found flavor
+  
+  return rv;
+
+} // ExtractURL

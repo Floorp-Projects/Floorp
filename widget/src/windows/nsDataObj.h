@@ -138,6 +138,8 @@ class nsDataObj : public IDataObject
     virtual HRESULT GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
 
+    nsresult ExtractURL ( nsString & outURL ) ;
+
     nsString mStringData;
 
     BOOL FormatsMatch(const FORMATETC& source, const FORMATETC& target) const;

@@ -65,33 +65,47 @@ nsDragService::~nsDragService()
 NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
   nsresult rv;
-  PRUint32 cnt;
-  rv = anArrayTransferables->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (cnt == 0) {
+  PRUint32 numItemsToDrag = 0;
+  rv = anArrayTransferables->Count(&numItemsToDrag);
+  if ( !numItemsToDrag )
     return NS_ERROR_FAILURE;
-  }
 
   // The clipboard class contains some static utility methods
   // that we can use to create an IDataObject from the transferable
 
-  nsDataObjCollection * dataObjCollection = new nsDataObjCollection();
-  IDataObject * dataObj = nsnull;
-  PRUint32 i;
-  for (i=0;i<cnt;i++) {
+  // if we're dragging more than one item, we need to create a "collection" object to fake out
+  // the OS. This collection contains one |IDataObject| for each transerable. If there is just
+  // the one (most cases), only pass around the native |IDataObject|.
+  IDataObject* itemToDrag = nsnull;
+  if ( numItemsToDrag > 1 ) {
+    nsDataObjCollection * dataObjCollection = new nsDataObjCollection();
+    IDataObject* dataObj = nsnull;
+    for ( PRUint32 i=0; i<numItemsToDrag; ++i ) {
+      nsCOMPtr<nsISupports> supports;
+      anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
+      nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
+      if ( trans ) {
+        if ( NS_SUCCEEDED(nsClipboard::CreateNativeDataObject(trans, &dataObj)) ) {
+          dataObjCollection->AddDataObject(dataObj);
+          NS_IF_RELEASE(dataObj);
+        }
+        else
+          return NS_ERROR_FAILURE;
+      }
+    }
+    itemToDrag = NS_STATIC_CAST ( IDataObject*, dataObjCollection );
+  } // if dragging multiple items
+  else {
     nsCOMPtr<nsISupports> supports;
-    anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
+    anArrayTransferables->GetElementAt(0, getter_AddRefs(supports));
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     if ( trans ) {
-      nsClipboard::CreateNativeDataObject(trans, &dataObj);
-      dataObjCollection->AddDataObject(dataObj);
-      NS_IF_RELEASE(dataObj);
+      if ( NS_FAILED(nsClipboard::CreateNativeDataObject(trans, &itemToDrag)) )
+        return NS_ERROR_FAILURE;
     }
-  }
-
-  StartInvokingDragSession((IDataObject *)dataObjCollection, aActionType);
-
-  return NS_OK;
+  } // else dragging a single object
+  
+  return StartInvokingDragSession ( itemToDrag, aActionType );
 }
 
 //-------------------------------------------------------------------------
@@ -101,9 +115,10 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
   // implements the IDataObject interface (for OLE)
   NS_IF_RELEASE(mNativeDragSrc);
   mNativeDragSrc = (IDropSource *)new nsNativeDragSource();
-  if (nsnull != mNativeDragSrc) {
-    mNativeDragSrc->AddRef();
-  }
+  if ( !mNativeDragSrc )
+    return NS_ERROR_OUT_OF_MEMORY;
+    
+  mNativeDragSrc->AddRef();
 
   // Now figure out what the native drag effect should be
   DWORD dropRes;
@@ -118,7 +133,7 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
     effects |= DROPEFFECT_LINK;
   }
 
-  mDragAction = aActionType;
+  mDragAction = aActionType;      //XXX not sure why we bother to cache this, it can change during the drag
   mDoingDrag  = PR_TRUE;
 
   // Call the native D&D method
@@ -132,12 +147,7 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 {
-  // First check to see if the mDataObject is is Collection of IDataObjects
-  UINT format = nsClipboard::GetFormat(MULTI_MIME);
-  FORMATETC fe;
-  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-  if ( mDataObject->QueryGetData(&fe) == S_OK ) {
-    // If it is the get the number of items in the collection
+  if ( IsCollectionObject(mDataObject) ) {
     nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
     if ( dataObjCol )
       *aNumItems = dataObjCol->GetNumDataObjects();
@@ -170,34 +180,25 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
   // This typcially happens on a drop, the target would be asking
   // for it's transferable to be filled in
   // Use a static clipboard utility method for this
-  if ( nsnull == mDataObject ) {
+  if ( !mDataObject )
     return NS_ERROR_FAILURE;
-  }
 
-  // First check to see if the mDataObject is is Collection of IDataObjects
-  UINT format = nsClipboard::GetFormat(MULTI_MIME);
-  FORMATETC fe;
-  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-
-  // if it is a single object then get the data for it
-  if (S_OK != mDataObject->QueryGetData(&fe)) {
-    // Since there is only one object, they better be asking for item "0"
-    if (anItem == 0) {
-      return nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
-  if ( dataObjCol ) {
+  if ( IsCollectionObject(mDataObject) ) {
+    // multiple items, use |anItem| as an index into our collection
+    nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
     PRUint32 cnt = dataObjCol->GetNumDataObjects();   
     if (anItem >= 0 && anItem < cnt) {
       IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
       return nsClipboard::GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
     }
   }
-  
+  else {
+    // Since there is only one object, they better be asking for item "0"
+    if (anItem == 0) 
+      return nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
+    else
+      return NS_ERROR_FAILURE;
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -226,13 +227,10 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
 
   *_retval = PR_FALSE;
 
-  // Check to see if the mDataObject is a collection of IDataObjects or just a 
-  // single (which would be the case if something came from an external app).
   FORMATETC fe;
-  UINT format = nsClipboard::GetFormat(MULTI_MIME);
-  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-
-  if ( mDataObject->QueryGetData(&fe) == S_OK ) {
+  UINT format = 0;
+  
+  if ( IsCollectionObject(mDataObject) ) {
     // We know we have one of our special collection objects.
     format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
@@ -278,3 +276,32 @@ NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession ** aSession)
   NS_ADDREF(*aSession);
   return NS_OK;
 }
+
+
+//
+// IsCollectionObject
+//
+// Determine if this is a single |IDataObject| or one of our private collection
+// objects. We know the difference because our collection object will respond to supporting
+// the private |MULTI_MIME| format.
+//
+PRBool
+nsDragService :: IsCollectionObject ( IDataObject* inDataObj )
+{
+  PRBool isCollection = PR_FALSE;
+  
+  // setup the format object to ask for the MULTI_MIME format. We only need to do this once
+  static UINT sFormat = 0;
+  static FORMATETC sFE;
+  if ( !sFormat ) {
+    sFormat = nsClipboard::GetFormat(MULTI_MIME);
+    SET_FORMATETC(sFE, sFormat, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+  }
+  
+  // ask the object if it supports it. If yes, we have a collection object
+  if ( inDataObj->QueryGetData(&sFE) == S_OK )
+    isCollection = PR_TRUE; 
+
+  return isCollection;
+
+} // IsCollectionObject
