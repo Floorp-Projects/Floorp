@@ -1226,7 +1226,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
 #endif
 
 nsresult
-nsWebShell :: GetControllerForCommand ( nsAReadableString & inCommand, nsIController** outController )
+nsWebShell :: GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController )
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -1244,7 +1244,7 @@ nsWebShell :: GetControllerForCommand ( nsAReadableString & inCommand, nsIContro
 
 
 nsresult
-nsWebShell :: IsCommandEnabled ( nsAReadableString & inCommand, PRBool* outEnabled )
+nsWebShell :: IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled )
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -1258,7 +1258,7 @@ nsWebShell :: IsCommandEnabled ( nsAReadableString & inCommand, PRBool* outEnabl
 
 
 nsresult
-nsWebShell :: DoCommand ( nsAReadableString & inCommand )
+nsWebShell :: DoCommand ( const nsAReadableString & inCommand )
 {
   nsresult rv = NS_ERROR_FAILURE;
   
