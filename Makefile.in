@@ -220,9 +220,7 @@ tier_9_dirs	+= tools/trace-malloc
 endif
 
 ifdef MOZ_MAPINFO
-ifeq ($(OS_ARCH),WINNT)
 tier_9_dirs	+= tools/codesighs
-endif
 endif
 
 tier_9_dirs	+= l10n

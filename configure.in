@@ -3763,6 +3763,17 @@ MOZ_ARG_ENABLE_BOOL(perf-metrics,
     AC_DEFINE(MOZ_PERF_METRICS))
 
 dnl ========================================================
+dnl Enable code size metrics.
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(codesighs,
+[  --enable-codesighs      Enable code size analysis tools],
+[ if test -d ./tools/codesighs; then 
+    MOZ_MAPINFO=1
+else
+    AC_MSG_ERROR([Codesighs directory ./tools/codesighs required.])
+fi])
+
+dnl ========================================================
 dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
