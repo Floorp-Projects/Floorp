@@ -35,12 +35,14 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.5 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.6 $ $Date: 2002/02/27 22:41:56 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
+
+#include "base.h"
 
 #include "cert.h"
 
@@ -75,8 +77,18 @@ STAN_DestroyNSSToken(NSSToken *token);
 NSS_EXTERN PRBool
 nssToken_SearchCerts
 (
-  NSSToken *token
+  NSSToken *token,
+  PRBool *notPresentOpt
 );
+
+NSS_EXTERN void
+nssToken_DestroyCertList(NSSToken *token);
+
+NSS_EXTERN void
+nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token);
+
+NSS_EXTERN void
+nssCertificateList_RemoveTokenCerts(nssList *certList, NSSToken *token);
 
 NSS_EXTERN SECStatus
 STAN_AddModuleToDefaultTrustDomain
