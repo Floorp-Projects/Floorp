@@ -27,13 +27,6 @@
 #include "xpassert.h"
 #include "fe_proto.h"
 
-extern PRLibrary* pref_LoadAutoAdminLib(void);
-extern PRLibrary* m_AutoAdminLib;
-
-#include "icondata.h"
-
-static struct fe_icon_type* splash_screen = NULL;
-
 
 /*
  * pref_InitInitialObjects
@@ -70,27 +63,6 @@ pref_InitInitialObjects(void)
     return status;
 }
 
-
-/*
- * PREF_AlterSplashIcon
- */
-void
-PREF_AlterSplashIcon(struct fe_icon_data* icon)
-{
-    assert(icon);
-
-    if ( PREF_IsAutoAdminEnabled() && 
-         icon && 
-         (splash_screen = (struct fe_icon_type*)
-#ifndef NSPR20
-          PR_FindSymbol("_POLARIS_SplashPro", m_AutoAdminLib)) != NULL ) {
-#else
-          PR_FindSymbol(m_AutoAdminLib, "_POLARIS_SplashPro")) != NULL ) {
-#endif
-
-        memcpy(icon, splash_screen, sizeof(*icon));
-    }
-}
 
 /*
  * PREF_GetLabelAndMnemonic
