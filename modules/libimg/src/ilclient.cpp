@@ -20,7 +20,6 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.16 1999/10/29 18:53:03 pnunn%netscape.com Exp $
  */
 
 
@@ -30,6 +29,7 @@
 #include "ilISystemServices.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
+#include "xpcompat.h" //temporary, for timers
 
 static uint32 image_cache_size;
 
@@ -38,11 +38,11 @@ ilISystemServices *il_ss = NULL;
 
 /* simple list, in use order */
 struct il_cache_struct {
-	il_container *head;
-	il_container *tail;
-	int32 bytes;
+    il_container *head;
+    il_container *tail;
+    int32 bytes;
     int32 max_bytes;
-	int items;
+    int items;
 };
 
 struct il_cache_struct il_cache;
@@ -92,7 +92,7 @@ il_add_container_to_context(IL_GroupContext *img_cx, il_container *ic)
     il_container_list *ic_list;
     
     ic_list = PR_NEWZAP(il_container_list);
-	if (!ic_list)
+    if (!ic_list)
         return PR_FALSE;
 
     ic_list->ic = ic;
@@ -105,27 +105,27 @@ il_add_container_to_context(IL_GroupContext *img_cx, il_container *ic)
 static PRBool
 il_remove_container_from_context(IL_GroupContext *img_cx, il_container *ic)
 {
-	il_container_list *current, *next;
+    il_container_list *current, *next;
 
     current = img_cx->container_list;
     if (!current)
         return PR_FALSE;
     
-	if (current->ic == ic) {
-		img_cx->container_list = current->next;
+    if (current->ic == ic) {
+        img_cx->container_list = current->next;
         PR_FREEIF(current);
         return PR_TRUE;
     }
-	else {
-		for (; current; current = next) {
+    else {
+        for (; current; current = next) {
             next = current->next;
-			if (next && (next->ic == ic)) {
-				current->next = next->next;
+            if (next && (next->ic == ic)) {
+                current->next = next->next;
                 PR_FREEIF(next);
                 return PR_TRUE;
-			}
+            }
         }
-	}
+    }
     return PR_FALSE;
 }
 
@@ -296,10 +296,10 @@ il_image_match(il_container *ic,          /* Candidate for match. */
         ))
         return PR_FALSE;
 
-	/* We allow any depth image through as the FE may have asked us to
-	   decode to a colorspace other than the display colorspace. */
+    /* We allow any depth image through as the FE may have asked us to
+       decode to a colorspace other than the display colorspace. */
 
-	/* Now check the background color.  This only applies to transparent
+    /* Now check the background color.  This only applies to transparent
        images, so skip this test if the candidate for the match is known
        to be opaque. */
     if (!ic_sized || img_trans_pixel) {
@@ -379,21 +379,21 @@ il_find_in_cache(IL_DisplayType display_type,
                  int req_width,
                  int req_height)
 {
-	il_container *ic=0;
-	PR_ASSERT(hash);
-	for (ic=il_cache.head; ic; ic=ic->next)
-	{
-		if (ic->hash != hash)
+    il_container *ic=0;
+    PR_ASSERT(hash);
+    for (ic=il_cache.head; ic; ic=ic->next)
+    {
+        if (ic->hash != hash)
             continue;
         if (il_image_match(ic, display_type, image_url, background_color, req_depth,
                            req_width, req_height))
-			break;
-	}
-	if (ic)
-	{
-		ILTRACE(2,("il:  found ic=0x%08x in cache\n", ic));
+            break;
+    }
+    if (ic)
+    {
+        ILTRACE(2,("il:  found ic=0x%08x in cache\n", ic));
         return ic;
-	}
+    }
   return NULL;
 }
 
@@ -432,18 +432,18 @@ il_get_container(IL_GroupContext *img_cx,
         if ((ic->state == IC_ABORT_PENDING))
             ic = NULL;
 
-		/* Check if we have to reload or if there's an expiration date   */
-		/* and we've expired or if this is a JavaScript generated image. */
-		/* We don't want to cache JavaScript generated images because:   */
-		/* 1) The assumption is that they are generated and might change */
-		/*    if the page is reloaded.                                   */
-		/* 2) Their namespace crosses document boundaries, so caching    */
-		/*    could result in incorrect behavior.                        */
+        /* Check if we have to reload or if there's an expiration date   */
+        /* and we've expired or if this is a JavaScript generated image. */
+        /* We don't want to cache JavaScript generated images because:   */
+        /* 1) The assumption is that they are generated and might change */
+        /*    if the page is reloaded.                                   */
+        /* 2) Their namespace crosses document boundaries, so caching    */
+        /*    could result in incorrect behavior.                        */
 
         else if((cache_reload_policy == NET_SUPER_RELOAD) ||
-		((cache_reload_policy == NET_NORMAL_RELOAD) && (!ic->forced)) ||
-				 (cache_reload_policy != NET_CACHE_ONLY_RELOAD &&
-				  ic->expires && (time(NULL) > ic->expires))
+        ((cache_reload_policy == NET_NORMAL_RELOAD) && (!ic->forced)) ||
+                 (cache_reload_policy != NET_CACHE_ONLY_RELOAD &&
+                  ic->expires && (time(NULL) > ic->expires))
         ) {
             /* Get rid of the old copy of the image that we're replacing. */
             if (!ic->is_in_use) 
@@ -462,12 +462,12 @@ il_get_container(IL_GroupContext *img_cx,
 
     /* There's no existing matching container.  Make a new one. */
     if (!ic) {
-		ic = PR_NEWZAP(il_container);
+        ic = PR_NEWZAP(il_container);
         if (!ic)
             return NULL;
 
         /* Allocate the source image header. */
-		if (!(ic->src_header = PR_NEWZAP(NI_PixmapHeader))) {
+        if (!(ic->src_header = PR_NEWZAP(NI_PixmapHeader))) {
             PR_FREEIF(ic);
             return NULL;
         }
@@ -484,7 +484,7 @@ il_get_container(IL_GroupContext *img_cx,
         /* Allocate the destination image structure.  A destination mask
            structure will be allocated later if the image is determined to
            be transparent and no background_color has been provided. */
-	if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
+    if (!(ic->image = PR_NEWZAP(IL_Pixmap))) {
             IL_ReleaseColorSpace(ic->src_header->color_space);
             PR_FREEIF(ic->src_header);
             PR_FREEIF(ic);
@@ -496,6 +496,9 @@ il_get_container(IL_GroupContext *img_cx,
            colorspace. */
         ic->image->header.color_space = ic->src_header->color_space;
         IL_AddRefToColorSpace(ic->image->header.color_space);
+
+        /* Clear the flag to indicate that this is not a mask */
+        ic->image->header.is_mask = PR_FALSE;
 
         /* Save the requested background color in the container. */
         if (background_color) {
@@ -518,7 +521,7 @@ il_get_container(IL_GroupContext *img_cx,
         ic->hash = hash;
         ic->urlhash = urlhash;
         ic->url_address = nsCRT::strdup(image_url);
-		ic->is_url_loading = PR_FALSE;
+        ic->is_url_loading = PR_FALSE;
         ic->dest_width  = req_width;
         ic->dest_height = req_height;
 
@@ -571,20 +574,20 @@ il_get_container(IL_GroupContext *img_cx,
 void
 il_scour_container(il_container *ic)
 {
-	/* scour quantize, ds, scalerow etc */
-	if (ic->image->header.color_space->type == NI_PseudoColor)
-		il_free_quantize(ic);
+    /* scour quantize, ds, scalerow etc */
+    if (ic->image->header.color_space->type == NI_PseudoColor)
+        il_free_quantize(ic);
     FREE_IF_NOT_NULL(ic->scalerow);
 
-	/* reset a bunch of stuff */
-	ic->url    = NULL;
+    /* reset a bunch of stuff */
+    ic->url    = NULL;
     if (ic->net_cx)
         NS_RELEASE(ic->net_cx);
-	ic->net_cx     = NULL;
+    ic->net_cx     = NULL;
 
-	ic->forced                  = PR_FALSE;
+    ic->forced                  = PR_FALSE;
 
-	ic->is_alone                = PR_FALSE;
+    ic->is_alone                = PR_FALSE;
 }
 
 /*
@@ -603,7 +606,7 @@ il_delete_container(il_container *ic)
          * of the container until then.
          */
         if (ic->is_url_loading) {
-#if 0
+#ifdef DEBUG_kipp
             printf("il_delete_container: bad: can't delete ic=%p '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
@@ -612,7 +615,7 @@ il_delete_container(il_container *ic)
         }
         
         PR_ASSERT(ic->clients == NULL);
-	    il_scour_container(ic);
+        il_scour_container(ic);
 
 
         PR_FREEIF(ic->background_color);
@@ -623,7 +626,7 @@ il_delete_container(il_container *ic)
     
         /* delete the image */
         if (!(ic->image || ic->mask)) {
-#if 0
+#ifdef DEBUG_kipp
             printf("il_delete_container: bad: ic=%p '%s' image=%p mask=%p\n",
                    ic, ic->url_address ? ic->url_address : "(null)",
                    ic->image, ic->mask);
@@ -647,9 +650,9 @@ il_delete_container(il_container *ic)
         FREE_IF_NOT_NULL(ic->comment);
         nsCRT::free(ic->url_address);
         FREE_IF_NOT_NULL(ic->fetch_url);
-		
+        
         PR_FREEIF(ic);
-	}
+    }
 }
 
 
@@ -678,14 +681,14 @@ il_removefromcache(il_container *ic)
     int32 image_bytes;
     NI_PixmapHeader *img_header = &ic->image->header;
 
-	PR_ASSERT(ic); 
-	if (ic)
-	{
-		ILTRACE(2,("il: remove ic=0x%08x from cache\n", ic));
+    PR_ASSERT(ic); 
+    if (ic)
+    {
+        ILTRACE(2,("il: remove ic=0x%08x from cache\n", ic));
         PR_ASSERT(ic->next || ic->prev || (il_cache.head == il_cache.tail));
 
         /* Remove entry from doubly-linked list. */
-		if (il_cache.head == ic)
+        if (il_cache.head == ic)
             il_cache.head = ic->next;
 
         if (il_cache.tail == ic)
@@ -707,10 +710,10 @@ il_removefromcache(il_container *ic)
             il_cache.bytes = 0;
         else        
             il_cache.bytes -= image_bytes;
-		il_cache.items--;
+        il_cache.items--;
         PR_ASSERT(il_cache.items >= 0);
-	}
-	return ic;
+    }
+    return ic;
 }
 
 void
@@ -723,7 +726,7 @@ il_adjust_cache_fullness(int32 bytes)
     if (il_cache.bytes < 0)
         il_cache.bytes = 0;
 
-	/* We get all of the memory cache.  (Only images are cached in memory.) */
+    /* We get all of the memory cache.  (Only images are cached in memory.) */
     il_reduce_image_cache_size_to(image_cache_size);
 
     /* Collect some debugging info. */
@@ -736,14 +739,14 @@ il_addtocache(il_container *ic)
 {
     NI_PixmapHeader *img_header = &ic->image->header;
 
-	ILTRACE(2,("il:    add ic=0x%08x to cache\n", ic));
+    ILTRACE(2,("il:    add ic=0x%08x to cache\n", ic));
     PR_ASSERT(!ic->prev && !ic->next);
 
     /* Thread onto doubly-linked list, kept in LRU order */
     ic->prev = NULL;
     ic->next = il_cache.head;
-	if (il_cache.head)
-		il_cache.head->prev = ic;
+    if (il_cache.head)
+        il_cache.head->prev = ic;
     else {
         PR_ASSERT(il_cache.tail == NULL);
         il_cache.tail = ic;
@@ -753,7 +756,7 @@ il_addtocache(il_container *ic)
     /* Image storage is added in when image is sized */
     if (ic->sized)
         il_cache.bytes += (uint32)img_header->widthBytes * img_header->height;
-	il_cache.items++;
+    il_cache.items++;
 }
 
 
@@ -762,7 +765,7 @@ il_addtocache(il_container *ic)
 IL_IMPLEMENT(void)
 IL_SetCacheSize(uint32 new_size)
 {
-	image_cache_size = new_size;
+    image_cache_size = new_size;
     il_reduce_image_cache_size_to(new_size);
 }
 
@@ -772,7 +775,7 @@ il_reduce_image_cache_size_to(uint32 new_size)
 {
     int32 last_size = 0;
     
-	while ((il_cache.bytes > (int32)new_size) && (il_cache.bytes != last_size)) {
+    while ((il_cache.bytes > (int32)new_size) && (il_cache.bytes != last_size)) {
         last_size = il_cache.bytes;
         IL_ShrinkCache();
     }
@@ -781,11 +784,11 @@ il_reduce_image_cache_size_to(uint32 new_size)
 IL_IMPLEMENT(uint32)
 IL_ShrinkCache(void)
 {
-	il_container *ic;
-	ILTRACE(3,("shrink"));
+    il_container *ic;
+    ILTRACE(3,("shrink"));
 
     for (ic = il_cache.tail; ic; ic = ic->prev)
-	{
+    {
         if (ic->is_in_use) {
             continue;
         }
@@ -801,13 +804,13 @@ IL_ShrinkCache(void)
 IL_IMPLEMENT(void)
 IL_FlushCache(void)
 {
-	ILTRACE(3,("flush"));
+    ILTRACE(3,("flush"));
 
-	il_container *ic = il_cache.head;
+    il_container *ic = il_cache.head;
     while (ic)
-	{
+    {
         if (ic->is_in_use) {
-#if 0
+#ifdef DEBUG_kipp
             printf("IL_FlushCache: il_container %p in use '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
 #endif
@@ -823,8 +826,8 @@ IL_FlushCache(void)
 
 IL_IMPLEMENT(uint32)
 IL_GetCacheSize()
-{	
-	return il_cache.bytes;
+{   
+    return il_cache.bytes;
 }
 
 
@@ -835,22 +838,22 @@ IL_GetCacheSize()
 IL_IMPLEMENT(void)
 IL_UnCache(IL_Pixmap *pixmap)
 {
-	il_container *ic;
-	if (pixmap)
-	{
-		for (ic=il_cache.head; ic; ic=ic->next)
-		{
+    il_container *ic;
+    if (pixmap)
+    {
+        for (ic=il_cache.head; ic; ic=ic->next)
+        {
             /* Check the pixmap argument against both the image and mask
                pixmaps of the container. */
-			if (((ic->image == pixmap) || (ic->mask == pixmap)) &&
+            if (((ic->image == pixmap) || (ic->mask == pixmap)) &&
                 !ic->is_in_use)
-			{
-				il_removefromcache(ic);
-				il_delete_container(ic);
-				return;
-			}
-		}
-	}
+            {
+                il_removefromcache(ic);
+                il_delete_container(ic);
+                return;
+            }
+        }
+    }
 }
 
 
@@ -873,12 +876,12 @@ il_add_client(IL_GroupContext *img_cx, il_container *ic,
 
     image_req->is_view_image = is_view_image;
 
-	/* Add the client to the end of the container's client list. */
-	if (!ic->lclient)
-		ic->clients = image_req;
-	else
-		ic->lclient->next = image_req;
-	ic->lclient = image_req;
+    /* Add the client to the end of the container's client list. */
+    if (!ic->lclient) //this is the first
+        ic->clients = image_req;
+    else
+        ic->lclient->next = image_req;
+    ic->lclient = image_req;
 
     /* Now add the client context to the container's client context list,
        (if necessary,) and also add the container to the context's list of
@@ -925,6 +928,7 @@ il_delete_client(il_container *ic, IL_ImageReq *image_req)
     
     img_cx = current_req->img_cx;
     net_cx = current_req->net_cx;   /* This is destroyed below. */
+
     PR_FREEIF(current_req);           /* Delete the image request. */
 
     /* Decrement the number of unique images for the given image request's
@@ -953,7 +957,7 @@ il_delete_client(il_container *ic, IL_ImageReq *image_req)
                  ic->img_cx = ic->clients->img_cx;
             /* The container's net context may be about to become invalid, so
                give the container a different one which is known to be valid. */
-             if (ic->net_cx == net_cx)
+             if ((ic->net_cx )&&(ic->net_cx == net_cx)) //ptn test
              {
                  NS_RELEASE(ic->net_cx);
                  ic->net_cx = ic->clients->net_cx->Clone();
@@ -961,8 +965,8 @@ il_delete_client(il_container *ic, IL_ImageReq *image_req)
         } 
     }
 
-	/* Destroy the net context for the client we just destroyed. */
-    NS_RELEASE(net_cx);
+    /* Destroy the net context for the client we just destroyed. */
+    NS_IF_RELEASE(net_cx);
 
     ILTRACE(3, ("il: delete_client ic=0x%08x, image_req =0x%08x\n", ic,
                 image_req));
@@ -1013,7 +1017,7 @@ IL_Shutdown()
 {
     il_container *ic, *ic_next;
     for (ic = il_cache.head; ic; ic = ic_next)
-	{
+    {
         ic_next = ic->next;
         il_delete_all_clients(ic);
         il_removefromcache(ic);
@@ -1056,10 +1060,10 @@ IL_DestroyImage(IL_ImageReq *image_req)
        XXXM12N This will not be necessary once icons are completely separated
        from the Image Library. */
     if (!ic){
-	/* editing icons don't have ic's but need to be freed */	
-	if( image_req->net_cx )
-		NS_RELEASE( image_req->net_cx );
-	PR_FREEIF( image_req );
+    /* editing icons don't have ic's but need to be freed */    
+    if( image_req->net_cx )
+        NS_RELEASE( image_req->net_cx );
+    PR_FREEIF( image_req );
         return;
     }
 
@@ -1127,21 +1131,24 @@ IL_DestroyImageGroup(IL_GroupContext *img_cx)
     
     if (img_cx == NULL)
         return;
-	
+    
     if (img_cx->num_containers > 0) {
         PR_ASSERT(img_cx->container_list);
 
-		for (ic_list = img_cx->container_list; ic_list;
+        for (ic_list = img_cx->container_list; ic_list;
              ic_list = ic_list_next) {
             ic_list_next = ic_list->next;
             ic = ic_list->ic;            
             ic->forced = 0;
 
+
             for (image_req = ic->clients; image_req; image_req = next_req) {
                 next_req = image_req->next;
-                if (image_req->img_cx == img_cx)
+                if (image_req->img_cx == img_cx){
                     IL_DestroyImage(image_req);
             }
+        }
+            
         }
         PR_ASSERT(img_cx->num_containers == 0);
         PR_ASSERT(img_cx->container_list == NULL);

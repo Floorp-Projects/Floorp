@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.4 1999/10/22 21:04:28 pnunn%netscape.com Exp $
+ *   $Id: il_util.cpp,v 3.5 1999/11/04 23:11:08 sfraser%netscape.com Exp $
  */
 
 
@@ -143,53 +143,53 @@ select_ncolors(int Ncolors[],
                int out_color_components,
                int desired_number_of_colors)
 {
-	int nc = out_color_components; /* number of color components */
-	int max_colors = desired_number_of_colors;
-	int total_colors, iroot, i, j;
-	long temp;
+    int nc = out_color_components; /* number of color components */
+    int max_colors = desired_number_of_colors;
+    int total_colors, iroot, i, j;
+    long temp;
 
         /* XXX - fur .  Is this right ? */
         static const int RGB_order[3] = { 2, 1, 0 };
 
-	/* We can allocate at least the nc'th root of max_colors per component. */
-	/* Compute floor(nc'th root of max_colors). */
-	iroot = 1;
-	do {
-		iroot++;
-		temp = iroot;		/* set temp = iroot ** nc */
-		for (i = 1; i < nc; i++)
-			temp *= iroot;
-	} while (temp <= (long) max_colors); /* repeat till iroot exceeds root */
-	iroot--;			/* now iroot = floor(root) */
+    /* We can allocate at least the nc'th root of max_colors per component. */
+    /* Compute floor(nc'th root of max_colors). */
+    iroot = 1;
+    do {
+        iroot++;
+        temp = iroot;       /* set temp = iroot ** nc */
+        for (i = 1; i < nc; i++)
+            temp *= iroot;
+    } while (temp <= (long) max_colors); /* repeat till iroot exceeds root */
+    iroot--;            /* now iroot = floor(root) */
 
-	/* Must have at least 2 color values per component */
-	if (iroot < 2)
-		return -1;
+    /* Must have at least 2 color values per component */
+    if (iroot < 2)
+        return -1;
 
-	/* Initialize to iroot color values for each component */
-	total_colors = 1;
-	for (i = 0; i < nc; i++)
+    /* Initialize to iroot color values for each component */
+    total_colors = 1;
+    for (i = 0; i < nc; i++)
     {
-		Ncolors[i] = iroot;
-		total_colors *= iroot;
-	}
+        Ncolors[i] = iroot;
+        total_colors *= iroot;
+    }
 
-	/* We may be able to increment the count for one or more components without
-	 * exceeding max_colors, though we know not all can be incremented.
-	 * In RGB colorspace, try to increment G first, then R, then B.
-	 */
-	for (i = 0; i < nc; i++)
+    /* We may be able to increment the count for one or more components without
+     * exceeding max_colors, though we know not all can be incremented.
+     * In RGB colorspace, try to increment G first, then R, then B.
+     */
+    for (i = 0; i < nc; i++)
     {
-		j = RGB_order[i];
-		/* calculate new total_colors if Ncolors[j] is incremented */
-		temp = total_colors / Ncolors[j];
-		temp *= Ncolors[j]+1;	/* done in long arith to avoid oflo */
-		if (temp > (long) max_colors)
-			break;			/* won't fit, done */
-		Ncolors[j]++;		/* OK, apply the increment */
-		total_colors = (int) temp;
-	}
-	return total_colors;
+        j = RGB_order[i];
+        /* calculate new total_colors if Ncolors[j] is incremented */
+        temp = total_colors / Ncolors[j];
+        temp *= Ncolors[j]+1;   /* done in long arith to avoid oflo */
+        if (temp > (long) max_colors)
+            break;          /* won't fit, done */
+        Ncolors[j]++;       /* OK, apply the increment */
+        total_colors = (int) temp;
+    }
+    return total_colors;
 }
 
 /* Create a new color map consisting of a given set of reserved colors, and
@@ -218,6 +218,8 @@ IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
     /* Create the color cube.  */
     cmap = il_NewColorCube(Ncolors[0], Ncolors[1], Ncolors[2],
                            num_reserved_colors);
+    if(!cmap)
+        return NULL;
 
     /* Fill in the reserved colors. */
     map = cmap->map;
@@ -404,14 +406,16 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    set the reference count to 1.  The pixmap_depth is the index_depth plus
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
-IL_IMPLEMENT(IL_ColorSpace *)
-IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth)
+PRBool
+IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth, IL_ColorSpace **color_space_ptr)
 {
     IL_ColorSpace *color_space;
 
-    color_space = PR_NEWZAP(IL_ColorSpace);
-    if (!color_space)
-        return NULL;
+    *color_space_ptr = PR_NEWZAP(IL_ColorSpace);
+    if (!*color_space_ptr)
+        return PR_FALSE;
+
+    color_space = *color_space_ptr;
 
     color_space->type = NI_GreyScale;
     color_space->bit_alloc.index_depth = index_depth;
@@ -421,12 +425,12 @@ IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth)
     /* Create the private part of the color_space */
     color_space->private_data = (void *)PR_NEWZAP(il_ColorSpaceData);
     if (!color_space->private_data) {
-        PR_FREEIF(color_space);
-        return NULL;
+        PR_FREEIF(*color_space_ptr);
+        return PR_FALSE;
     }
 
     color_space->ref_count = 1;
-    return color_space;
+    return PR_TRUE;
 }
 
 /* Decrements the reference count for an IL_ColorSpace.  If the reference

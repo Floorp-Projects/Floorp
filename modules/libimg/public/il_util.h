@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.h Colormap and colorspace utilities.
  *             
- *   $Id: il_util.h,v 3.2 1998/07/27 16:09:08 hardts%netscape.com Exp $
+ *   $Id: il_util.h,v 3.3 1999/11/04 23:10:59 sfraser%netscape.com Exp $
  */
 
 
@@ -116,8 +116,8 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    set the reference count to 1.  The pixmap_depth is the index_depth plus
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
-IL_EXTERN(IL_ColorSpace *)
-IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth);
+IL_EXTERN(PRBool)
+IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth, IL_ColorSpace **color_space);
 
 /* Decrements the reference count for an IL_ColorSpace.  If the reference
    count reaches zero, all memory associated with the colorspace (including

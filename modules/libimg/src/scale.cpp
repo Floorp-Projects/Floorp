@@ -167,7 +167,7 @@ il_flush_image_data(il_container *ic)
 
     /* If we never called il_size(), we have no data for the FE.  There
        may also be no new data if a previous flush has occurred. */
-    if (!image->bits || !ic->new_data_for_fe)
+    if (!image->haveBits || !ic->new_data_for_fe)
         return;
 
     start_row = ic->update_start_row;
@@ -456,7 +456,7 @@ il_generate_scaled_transparency_mask(
     uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f;
 
-    PR_ASSERT(mask_len);
+    PR_ASSERT(maskp);
 
     /* Handle case in which we have a mask for a non-transparent
        image.  This can happen when we have a LOSRC that is a transparent
@@ -782,9 +782,9 @@ static uint8 il_tmpbuf[MAX_IMAGE_WIDTH];
  *  generation, if necessary.  If sufficient data is accumulated, the screen
  *  image is updated, as well.
  *  
- * PN note: Function too long. Needs to be split.
+ * PN note: Function too long. Needs to be split. Return true on success.
  *---------------------------------------------------------------------------*/
-void
+PRBool
 il_emit_row(
     il_container *ic,   /* The image container */
     uint8 *cbuf,        /* Color index data source, or NULL if source
@@ -804,7 +804,7 @@ il_emit_row(
     IL_Pixmap *mask = ic->mask;
     NI_PixmapHeader *src_header = ic->src_header;
     NI_PixmapHeader *img_header = &image->header;
-    NI_PixmapHeader *mask_header = 0;
+    NI_PixmapHeader *mask_header = NULL;
     NI_ColorSpace *src_color_space = src_header->color_space;
     NI_ColorSpace *img_color_space = img_header->color_space;
 	  uint8 XP_HUGE *out;
@@ -820,10 +820,11 @@ il_emit_row(
     int dcolumn_start, dcolumn_end, column_count, offset, src_len, dest_len;
    
 	PR_ASSERT(row >= 0);
+	PR_ASSERT(image->haveBits);		/* we'd better have some bits... */
 
 	if(row >= (int) src_header->height) {
 		ILTRACE(2,("il: ignoring extra row (%d)", row));
-		return;
+		return PR_TRUE;
 	}
 
 	/* Set first and last destination row in the image.  Assume no scaling. */
@@ -848,7 +849,7 @@ il_emit_row(
              * overwritten by a subsequent line.
              */
             if (d != (int) (src_header->height - 1))
-                return;
+                return PR_TRUE;
             else
                 drow_end = drow_start;
         } else {
@@ -875,7 +876,7 @@ il_emit_row(
              * overwritten by a subsequent column.
              */
             if (d != (int)(src_header->width - 1))
-                return;
+                return PR_TRUE;
             else
                 dcolumn_end = dcolumn_start;
         } else {
@@ -883,6 +884,19 @@ il_emit_row(
             if (dcolumn_end >= (int)img_header->width)
                 dcolumn_end = img_header->width - 1;
         }
+    }
+    /* Before we do anything else, lock down the pixels of the image, and
+       mask (if we have one). We need to be carefull not to return
+       between here and the end
+    */
+    nsresult  rv;
+    rv = img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image, IL_LOCK_BITS);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (mask)
+    {
+        rv = img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask, IL_LOCK_BITS);
+        if (NS_FAILED(rv)) return PR_FALSE;
     }
 
     /* Number of pixel rows and columns to emit into framebuffer */
@@ -892,8 +906,8 @@ il_emit_row(
     /* If an alphamask (8 or 1 bit) exists......*/
     if(img_header->alpha_bits) {  
        mask_header = &mask->header;
-       img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
-                                          IL_LOCK_BITS);
+      // img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+      //                                    IL_LOCK_BITS);
 
 #ifdef _USD
         alphabitstart = maskp = (uint8 XP_HUGE *)mask->bits + 
@@ -938,29 +952,29 @@ il_emit_row(
             
             alphabits = alphabitstart;
             if(len != column_count ){
-                if (!(scalemask= (unsigned char *)PR_MALLOC(column_count)))
+                if ((scalemask= (unsigned char *)PR_MALLOC(column_count)) != NULL)
                 {
-                          ILTRACE(0,("il: MEM scaledmask"));
-                           return ;
+                    il_scale_alpha8( alphabitstart, len, scalemask, column_count);
+                    nsCRT::memcpy(alphabitstart, scalemask, column_count);
+                    PR_DELETE(scalemask);
                 }
-                il_scale_alpha8( alphabitstart, len, scalemask, column_count);
-                nsCRT::memcpy(alphabitstart, scalemask, column_count);
-                PR_Free(scalemask);
             }
             
        } /* else */
-       img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
-                                          IL_UNLOCK_BITS);
+   //    img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+   //                                       IL_UNLOCK_BITS);
     } else if(mask){/* If a mask not attributed to an alpha channel exists..ie:
                        a transparent image appears over a background image ... */
+
+        PR_ASSERT(mask->haveBits);		/* we'd better have some bits... */
         mask_header = &mask->header;
 
         /* Bug, we retain the mask from a transparent
            LOSRC GIF when the SRC is a JPEG. */
         /* PR_ASSERT(cbuf); */
         
-        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
-                                          IL_LOCK_BITS);
+       // img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+       //                                   IL_LOCK_BITS);
 #ifdef _USD
 		maskp = (uint8 XP_HUGE *)mask->bits + 
             (mask_header->height - drow_start - 1) * mask_header->widthBytes;
@@ -969,6 +983,7 @@ il_emit_row(
             drow_start * mask_header->widthBytes;
 #endif
 
+        PR_ASSERT(maskp);
          /* We know this mask is prescaled: */     
         if (nsCRT::strncasecmp(ic->type, "image/art",9)==0){
               /* No scaling needed*/
@@ -992,8 +1007,8 @@ il_emit_row(
                                              draw_mode);  
 
                }
-        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
-                                          IL_UNLOCK_BITS);
+       // img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+       //                                   IL_UNLOCK_BITS);
    }
     
 	if (!ic->converter) {
@@ -1004,6 +1019,8 @@ il_emit_row(
         uint8 XP_HUGE * dest;
         uint8 *indirect_map = src_color_space->cmap.index;
 
+        PR_ASSERT(image->haveBits);
+
 		if (indirect_map == NULL) {
 		    indirect_map = il_identity_index_map;
 		}
@@ -1013,8 +1030,8 @@ il_emit_row(
         else
             src_trans_pixel_index = src_header->transparent_pixel->index;
 
-        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
-                                          IL_LOCK_BITS);
+      //  img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+      //                                    IL_LOCK_BITS);
 
 		/* No converter, image is already rendered in pseudocolor. */
 #ifdef _USD
@@ -1038,8 +1055,8 @@ il_emit_row(
                 if (cbuf[i] != src_trans_pixel_index)
                     dest[i] = indirect_map[cbuf[i]];
         }
-        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
-                                          IL_UNLOCK_BITS);
+     //   img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+     //                                     IL_UNLOCK_BITS);
 #endif /* M12N */
 
 	} else {
@@ -1063,8 +1080,8 @@ il_emit_row(
 				/*
                  * There are two kinds of transparency, depending on whether
                  * the image is overlaying:
-                 *   1) a solid color background, or
-                 *   2) another image
+                 *   1. a solid color background, or
+                 *   2. another image
                  *
                  * The first case is easy.  We just substitute the background
                  * color for all the transparent pixels in the image.  No mask
@@ -1148,8 +1165,8 @@ il_emit_row(
 		(*ic->converter)(ic, byte_mask, srcbuf, dcolumn_start,
                          column_count, out);
 
-        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
-                                          IL_UNLOCK_BITS);
+     //   img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+     //                                     IL_UNLOCK_BITS);
 
         /*
          * Have to reset transparent pixels to background color
@@ -1234,10 +1251,17 @@ il_emit_row(
                nsCRT::memcpy(mp, maskp, mask_header->widthBytes);
         }
     }
+    /* Now we can unlock the bits */
+    img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image, IL_UNLOCK_BITS);
+    
+    if (mask)
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask, IL_UNLOCK_BITS);
 
 
     /* If enough rows accumulated, send to the front-end for display. */
     il_partial(ic, drow_start, row_count, pass);
+    
+    return PR_TRUE;
 }
 
 
