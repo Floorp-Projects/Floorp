@@ -77,6 +77,29 @@ if ($verbose) {
         . "\n";
 }
 
+my $win32 = ($^O =~ /((MS)?win32)|cygwin|os2/i) ? 1 : 0;
+my $macos = ($^O =~ /MacOS|darwin/i) ? 1 : 0;
+my $unix  = !($win32 || $macos) ? 1 : 0;
+
+sub foreignPlatformFile
+{
+   my ($jarfile) = @_;
+   
+   if (!$win32 && index($jarfile, "-win") != -1) {
+     return 1;
+   }
+   
+   if (!$unix && index($jarfile, "-unix") != -1) {
+     return 1; 
+   }
+
+   if (!$macos && index($jarfile, "-mac") != -1) {
+     return 1;
+   }
+
+   return 0;
+}
+
 sub zipErrorCheck($$)
 {
     my ($err,$lockfile) = @_;
@@ -319,7 +342,7 @@ while (<STDIN>) {
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
                 $args = "$args$dest ";
-		if ($autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		if (!foreignPlatformFile($jarfile)  && $autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
 		    my $chrome_type = $1;
 		    my $pkg_name = $2;
@@ -330,7 +353,7 @@ while (<STDIN>) {
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
                 EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
                 $overrides = "$overrides$dest ";
-		if ($autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		if (!foreignPlatformFile($jarfile)  && $autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
 		    my $chrome_type = $1;
 		    my $pkg_name = $2;
