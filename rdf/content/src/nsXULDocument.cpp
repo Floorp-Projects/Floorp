@@ -1830,7 +1830,7 @@ XULDocumentImpl::EndLoad()
     // if we are a bona-fide top-level XUL document; (mParentContentSink !=
     // nsnull) implies we are a XUL overlay.
     if (mParentContentSink == nsnull) {
-        NS_PRECONDITION(mRootResource != nsnull, "no root resource");
+        //NS_PRECONDITION(mRootResource != nsnull, "no root resource");
         if (! mRootResource)
             return NS_ERROR_UNEXPECTED;
 
