@@ -229,6 +229,9 @@ const nsIButtonElement   = Components.interfaces.nsIDOMHTMLButtonElement
 const nsISelectElement   = Components.interfaces.nsIDOMHTMLSelectElement
 const nsITextareaElement = Components.interfaces.nsIDOMHTMLTextAreaElement
 
+// Interface for image loading content
+const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+
 // namespaces, don't need all of these yet...
 const XLinkNS  = "http://www.w3.org/1999/xlink";
 const XULNS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -862,30 +865,22 @@ function makePreview(row)
     }
   }
 
-  // find out the mime type, file size and expiration date
-  var mimeType = gStrings.unknown, httpType;
+  // find out the file size and expiration date
   if (cacheEntryDescriptor)
   {
-    var headers, match;
-
     pageSize = cacheEntryDescriptor.dataSize;
     kbSize = pageSize / 1024;
     sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
     expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
-
-    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
-
-    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
-    if (match)
-      httpType = match[1];
   }
 
-  if (!(item instanceof nsIInputElement))
-    mimeType = ("type" in item && item.type) ||
-               ("codeType" in item && item.codeType) ||
-               ("contentType" in item && item.contentType) ||
-               httpType || gStrings.unknown;
+  var mimeType = ("type" in item && item.type) ||
+                 ("codeType" in item && item.codeType) ||
+                 ("contentType" in item && item.contentType) ||
+                 getContentTypeFromImgRequest(item) ||
+                 getContentTypeFromHeaders(cacheEntryDescrptor) ||
+                 gStrings.unknown;
 
   document.getElementById("imagetypetext").value = mimeType;
   document.getElementById("imagesourcetext").value = sourceText;
@@ -941,6 +936,36 @@ function makePreview(row)
   imageContainer.appendChild(newImage);
 }
 
+function getContentTypeFromHeaders(cacheEntryDescriptor)
+{
+  var headers, match;
+
+  if (cacheEntryDescriptor)
+  {  
+    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
+    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
+    return match[1];
+  }
+}
+
+function getContentTypeFromImgRequest(item)
+{
+  var httpRequest;
+
+  try
+  {
+    var imageItem = item.QueryInterface(nsIImageLoadingContent);
+    var imageRequest = imageItem.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    if (imageRequest) 
+      httpRequest = imageRequest.mimeType;
+  }
+  catch (ex)
+  {
+    // This never happened.  ;)
+  }
+
+  return httpRequest;
+}
 
 //******** Other Misc Stuff
 // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
