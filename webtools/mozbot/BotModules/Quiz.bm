@@ -293,7 +293,7 @@ sub quizQuestion { # called from quizStart or delayed from quizAnswer
             $self->{'remainingQuestions'}->{$event->{'channel'}}--;
             my $category = $self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'category'};
             my $try = 0;
-            my $$questionCount = scalar keys %{$self->{'questions'}};
+            my $questionCount = scalar keys %{$self->{'questions'}};
             while ($self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'category'} eq $category
                    and $try++ < $questionCount) {
                 $self->{'currentQuestion'}->{$event->{'channel'}} = $self->pickQuestion();
