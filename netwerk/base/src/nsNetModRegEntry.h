@@ -22,7 +22,7 @@
 #include "nsINetModRegEntry.h"
 #include "nsIEventQueue.h"
 
-class nsNetModRegEntry : nsINetModRegEntry {
+class nsNetModRegEntry : public nsINetModRegEntry {
 public:
     // nsISupports
     NS_DECL_ISUPPORTS
