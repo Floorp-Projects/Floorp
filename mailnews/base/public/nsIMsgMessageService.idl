@@ -38,8 +38,6 @@ interface nsIMsgFolder;
 
 [scriptable, uuid(F11009C1-F697-11d2-807F-006008128C4E)]
 interface nsIMsgMessageService : nsISupports {
-
-%{ C++
      
      /////////////////////////////////////////////////////////////////
      // If you want a handle on the running task, pass in a valid nsIURI 
@@ -58,16 +56,12 @@ interface nsIMsgMessageService : nsISupports {
      // PR_FALSE leaves it as just a copy.
      ///////////////////////////////////////////////////////////////
   
-%}
-
 	void CopyMessage(in string aSrcURI, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
 						   in nsIUrlListener aUrlListener, out nsIURI aURL);
 
     /* copy multiple messages at a time */
 	[noscript] void CopyMessages(in nsMsgKeyArrayPtr keys, in nsIMsgFolder srcFolder, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
 						   in nsIUrlListener aUrlListener, out nsIURI aURL);
-
-%{ C++
 
      /////////////////////////////////////////////////////////////////////
      //  DisplayMessage: When you want a message displayed....
@@ -77,13 +71,11 @@ interface nsIMsgMessageService : nsISupports {
      // It would be nice if we can figure this out for ourselves in the 
      // protocol but we can't do that right now. 
      ///////////////////////////////////////////////////////////////////
-%}
+
 	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
 						in nsIMsgWindow aMsgWindow,
 						in nsIUrlListener aUrlListener, 
 						out nsIURI aURL);
-
-%{ C++
 
      /////////////////////////////////////////////////////////////////////
      // SaveMessageToDisk: When you want to spool a message out to a file
@@ -94,7 +86,7 @@ interface nsIMsgMessageService : nsISupports {
 	 // aGenerateDummyEnvelope --> usually FALSE. Set to TRUE if you want the msg
 	 //					  appended at the end of the file. 
      ///////////////////////////////////////////////////////////////////
-%}
+
 	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile,
                            in boolean aGenerateDummyEnvelope, 
 						   in nsIUrlListener aUrlListener, out nsIURI aURL,
@@ -104,6 +96,7 @@ interface nsIMsgMessageService : nsISupports {
 	// GetUrlForUri: when you have a uri and you would like to convert that
 	// to a url which can be run through necko, you can use this method.
 	// the Uri MUST refer to a message and not a folder! 
-
+    /////////////////////////////////////////////////////////////////////
+    
 	void GetUrlForUri(in string aMessageURI, out nsIURI aURL);
 };
