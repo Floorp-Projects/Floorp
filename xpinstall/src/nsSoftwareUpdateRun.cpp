@@ -428,7 +428,7 @@ extern "C" void RunInstallOnThread(void *data)
 
                 if(!ok)
                 {
-                    // problem compiling or running script
+                    // problem compiling or running script -- a true SCRIPT_ERROR
                     if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
                        JSVAL_TO_BOOLEAN(installedFiles))
                     {
@@ -440,21 +440,24 @@ extern "C" void RunInstallOnThread(void *data)
                 }
                 else
                 {
-                    // check to make sure the script sent back a status
+                    // check to make sure the script sent back a status -- if
+                    // not the install may have been syntactically correct but
+                    // left the init/(perform|cancel) transaction open
+
                     jsval sent;
 
                     if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
                        JSVAL_TO_BOOLEAN(installedFiles))
                     {
                       nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                      a->InternalAbort(nsInstall::SCRIPT_ERROR);
+                      a->InternalAbort(nsInstall::MALFORMED_INSTALL);
                     }
 
                     if ( JS_GetProperty( cx, glob, "_statusSent", &sent ) &&
                          JSVAL_TO_BOOLEAN(sent) )
                         sendStatus = PR_FALSE;
                     else
-                        finalStatus = nsInstall::SCRIPT_ERROR;
+                        finalStatus = nsInstall::MALFORMED_INSTALL;
                 }
 
                 JS_DestroyContextMaybeGC(cx);
