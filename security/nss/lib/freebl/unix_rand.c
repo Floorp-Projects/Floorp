@@ -78,7 +78,7 @@ static size_t CopyLowBits(void *dst, size_t dstlen, void *src, size_t srclen)
 }
 
 #if defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(FREEBSD) \
-    || defined(NETBSD) || defined(NTO)
+    || defined(NETBSD) || defined(NTO) || defined(DARWIN)
 #include <sys/times.h>
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)
@@ -718,6 +718,11 @@ safe_pclose(FILE *fp)
 
 
 #if !defined(VMS)
+
+#ifdef DARWIN
+#include <crt_externs.h>
+#endif
+
 void RNG_SystemInfoForRNG(void)
 {
     FILE *fp;
@@ -725,7 +730,11 @@ void RNG_SystemInfoForRNG(void)
     size_t bytes;
     const char * const *cp;
     char *randfile;
+#ifdef DARWIN
+    char **environ = *_NSGetEnviron();
+#else
     extern char **environ;
+#endif
     static const char * const files[] = {
 	"/etc/passwd",
 	"/etc/utmp",
