@@ -627,8 +627,7 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
     }
 #endif
 
-	if (rv != -1)
-    	thred->priority = newPri;
+    thred->priority = newPri;
 }  /* PR_SetThreadPriority */
 
 #if 0
