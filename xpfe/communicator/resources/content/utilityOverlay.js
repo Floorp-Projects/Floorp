@@ -255,7 +255,7 @@ function openTopWin( url )
     if ( topWindowOfType )
     {
         topWindowOfType.focus();
-        topWindowOfType._content.location.href = url;
+        topWindowOfType.loadURI(url);
         return topWindowOfType;
     }
     else
