@@ -27,7 +27,7 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: FunctionLib.h,v 1.7 2000/06/11 11:43:12 Peter.VanderBeken%pandora.be Exp $
+ * $Id: FunctionLib.h,v 1.8 2000/08/26 04:45:32 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "TxString.h"
@@ -38,6 +38,7 @@
 #include "ExprResult.h"
 #include "baseutils.h"
 #include "Expr.h"
+#include "XMLDOMUtils.h"
 #include "Names.h"
 #include "XMLUtils.h"
 #include <math.h>
