@@ -98,7 +98,7 @@ public:
   NS_IMETHOD OnConnectionsComplete();
 
 protected:
-  void nsWebShellWindow::ExecuteJavaScriptString(nsString& aJavaScript);
+  void ExecuteJavaScriptString(nsString& aJavaScript);
 
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
