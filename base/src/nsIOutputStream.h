@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,6 +21,8 @@
 
 #include "nsIBaseStream.h"
 
+class nsIInputStream;
+
 /* 7f13b870-e95f-11d1-beae-00805f8a66dc */
 #define NS_IOUTPUTSTREAM_IID   \
 { 0x7f13b870, 0xe95f, 0x11d1, \
@@ -42,6 +44,29 @@ public:
      */   
     NS_IMETHOD
     Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) = 0; 
+
+    /**
+     * Writes data into the stream from an input stream.
+     * Implementer's note: This method is defined by this interface in order
+     * to allow the output stream to efficiently copy the data from the input
+     * stream into its internal buffer (if any). If this method was provide
+     * as an external facility, a separate char* buffer would need to be used
+     * in order to call the output stream's other Write method.
+     * @param fromStream the stream from which the data is read
+     * @param aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     *  @return error status
+     */
+    NS_IMETHOD
+    Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) = 0;
+
+    /**
+     * Flushes the stream.
+     */
+    NS_IMETHOD
+    Flush(void) = 0;
+
 };
 
 

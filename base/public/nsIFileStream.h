@@ -101,8 +101,6 @@ class nsIFileOutputStream
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }
-    NS_IMETHOD                         Flush() = 0;
-                                           // Forces a write to disk.
 }; // class nsIFileOutputStream
 
 //----------------------------------------------------------------------------------------

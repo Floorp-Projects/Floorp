@@ -158,6 +158,14 @@ public:
 	NS_IMETHOD
 	Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
 
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush() {
+        return NS_OK;
+    }
+
 	// nsIBaseStream interface
 
     NS_IMETHOD

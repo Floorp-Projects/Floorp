@@ -19,6 +19,7 @@
 #include "nsIThread.h"
 #include "nsIByteBufferInputStream.h"
 #include "prprf.h"
+#include "prinrval.h"
 #include "plstr.h"
 #include <stdio.h>
 
@@ -34,22 +35,26 @@ public:
         nsresult rv;
         char buf[101];
         PRUint32 count;
+        PRIntervalTime start = PR_IntervalNow();
         while (PR_TRUE) {
             rv = mIn->Read(buf, 100, &count);
             if (rv == NS_BASE_STREAM_EOF) {
-                printf("EOF count = %d\n", mCount);
-                return NS_OK;
+//                printf("EOF count = %d\n", mCount);
+                rv = NS_OK;
+                break;
             }
             if (NS_FAILED(rv)) {
                 printf("read failed\n");
-                return rv;
+                break;
             }
 
             buf[count] = '\0';
-            printf(buf);
+//            printf(buf);
 
             mCount += count;
         }
+        PRIntervalTime end = PR_IntervalNow();
+        printf("read time = %dms\n", PR_IntervalToMilliseconds(end - start));
         return rv;
     }
 
@@ -83,6 +88,7 @@ main()
     rv = NS_NewThread(&receiver, new nsReceiver(in));
     NS_RELEASE(in);
 
+    PRIntervalTime start = PR_IntervalNow();
     for (PRUint32 i = 0; i < ITERATIONS; i++) {
         PRUint32 writeCount;
         char* buf = PR_smprintf("%d %s", i, kTestPattern);
@@ -92,9 +98,11 @@ main()
     }
     rv = out->Close();
     NS_ASSERTION(NS_SUCCEEDED(rv), "close failed");
+    PRIntervalTime end = PR_IntervalNow();
 
     receiver->Join();
     NS_RELEASE(receiver);
 
+    printf("write time = %dms\n", PR_IntervalToMilliseconds(end - start));
     return 0;
 }
