@@ -670,15 +670,16 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   switch ( aWidgetType ) {
   
     case NS_THEME_DIALOG:
-    printf("!!! draw dialog bg\n");
       ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
       ::EraseRect(&macRect);
+      ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
       
     case NS_THEME_MENU:
     printf("!!! draw menu bg\n");
       ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
       ::EraseRect(&macRect);
+      ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
 
     case NS_THEME_TOOLTIP:
@@ -750,6 +751,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW:
+      ::SetThemeBackground(kThemeBrushWhite, 24, true);
       ::EraseRect ( &macRect );
       break;
     case NS_THEME_TREEVIEW_HEADER:
@@ -1027,6 +1029,8 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB_PANEL:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_DIALOG:
+    case NS_THEME_MENU:
       *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
