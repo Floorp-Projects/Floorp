@@ -25,7 +25,7 @@ PASSWORD=
 if test x$PASSWORD = x ; then
   MYSQL="mysql -u $USER"
 else
-  MYSQL="mysql -u $USER -p $PASSWORD"
+  MYSQL="mysql -u $USER -p$PASSWORD"
 fi
 
 echo
