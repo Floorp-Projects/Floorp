@@ -11,7 +11,5 @@ nsIRequest.idl
 nsISocketTransportService.idl
 nsIFileTransportService.idl
 nsIFileSystem.idl
-nsIContentHandler.idl
-nsIURIDispatcher.idl
-nsIURIContentListener.idl
+
 
