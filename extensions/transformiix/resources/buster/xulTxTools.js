@@ -23,8 +23,8 @@
 var pop_last=0, pop_chunk=25;
 var isinited=false;
 var xalan_base, xalan_xml, xalan_elems, xalan_length, content_row, target;
-var matchRE, matchNameTag, matchFieldTag;
-var tests_run, tests_passed, tests_failed;
+var matchRE, matchNameTag, matchFieldTag, startFieldTag, endFieldTag;
+var tests_run, tests_passed, tests_failed, tests_selected;
 var view = ({
 // nsIOutlinerView
   rowCount : 0,
@@ -83,6 +83,7 @@ var view = ({
       this.selection.toggleSelect(index);
   },
   swallow : function(initial) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var startt = new Date();
     this.rowCount = initial.length;
     this.success = new Array(this.rowCount);
@@ -102,7 +103,6 @@ var view = ({
       }
       cur = cur.nextSibling;
     }
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     this.outliner.rowCountChanged(0,this.rowCount);
     //dump((new Date()-startt)/1000+" secs in swallow for "+k+" items\n");
   },
@@ -119,8 +119,8 @@ var view = ({
   getNames : function(first,last){
     last = Math.min(this.rowCount,last); 
     first = Math.max(0,first);
-    list = new Array(last-first+1);
-    for (k=first;k<=last;k++)
+    var list = new Array(last-first+1);
+    for (var k=first;k<=last;k++)
       list[k-first] = this.names[k];
     return list;
   }
@@ -138,9 +138,12 @@ function loaderstuff(eve) {
   view.sad = atomservice.getAtom("fail");
   matchNameTag = document.getElementById("search-name");
   matchFieldTag = document.getElementById("search-field");
+  startFieldTag = document.getElementById("start-field");
+  endFieldTag = document.getElementById("end-field");
   tests_run = document.getElementById("tests_run");
   tests_passed = document.getElementById("tests_passed");
   tests_failed = document.getElementById("tests_failed");
+  tests_selected = document.getElementById("tests_selected");
   xalan_base = document.getElementById("xalan_base");
   setView(document.getElementById('out'), view)
   xalan_xml = document.implementation.createDocument("","",null);
@@ -173,7 +176,7 @@ function dump_checked(){
   for (k=0;k<sels.getRangeCount();k++){
     sels.getRangeAt(k,a,b);
     todo = todo.concat(view.getNames(a.value,b.value));
-    for (l=a.value;l<=b.value;l++) nums.push(l);
+    for (var l=a.value;l<=b.value;l++) nums.push(l);
   }
   do_transforms(todo,nums);
 }
@@ -217,7 +220,7 @@ function select(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var searchField = matchFieldTag.getAttribute("value");
   var matchRE = new RegExp(matchNameTag.value);
-  for (k=0;k<view.rowCount;k++){
+  for (var k=0;k<view.rowCount;k++){
     switch (searchField) {
       case "1":
         if (view.names[k] && view.names[k].match(matchRE))
@@ -236,10 +239,26 @@ function select(){
   }
 }
 
+function selectRange(){
+  var start = startFieldTag.value-1;
+  var end = endFieldTag.value-1;
+  if (start > end) {
+    // hihihi
+    var tempStart = start;
+    start = end;
+    end = startTemp;
+  }
+  start = Math.max(0, start);
+  end = Math.min(end, view.rowCount-1);
+  view.selection.rangedSelect(start,end,true);
+}
+
 function check(yes){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  if (yes) view.selection.selectAll();
-  else view.selection.clearSelection();
+  if (yes)
+    view.selection.selectAll();
+  else
+    view.selection.clearSelection();
 }
 
 function invert_check(){
@@ -275,4 +294,9 @@ function reset_stats(){
   tests_run.setAttribute("value", "0");
   tests_passed.setAttribute("value", "0");
   tests_failed.setAttribute("value", "0");
+}
+
+function sel_change() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  tests_selected.setAttribute("value", view.selection.count);
 }

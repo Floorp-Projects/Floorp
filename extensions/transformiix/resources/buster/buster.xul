@@ -58,11 +58,18 @@
     </menupopup>
   </menulist>
 </groupbox>
+<groupbox orient="horizontal"><caption label="select" />
+  <button label="Select from " oncommand="selectRange()"/>
+  <textbox style="width: 10em;" id="start-field" persist="value" />
+  <text value=" to " />
+  <textbox style="width: 10em;" id="end-field" persist="value" />
+</groupbox>
 <spacer flex="1" /></hbox>
 <hbox><groupbox orient="horizontal"><caption label="stats" />
   <text value="tests run: "/><text id="tests_run" value="0" />
   <text value="  tests passed: "/><text id="tests_passed" value="0"/>
   <text value="  tests failed: "/><text id="tests_failed" value="0"/>
+  <text value="  tests selected: "/><text id="tests_selected" value="0"/>
 </groupbox>  
 <spacer flex="1" /></hbox>
 
@@ -70,7 +77,7 @@
   <outlinercol id="name" label="Name" flex="1"/>
   <outlinercol id="purp" label="Purpose" flex="2"/>
   <outlinercol id="comm" label="Comment" flex="1"/>
-  <outlinerbody flex="1" onselect="dump('selection changed!\n')"/>
+  <outlinerbody flex="1" onselect="sel_change()"/>
 </outliner>
 
 </window>
