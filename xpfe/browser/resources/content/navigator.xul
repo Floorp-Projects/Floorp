@@ -522,7 +522,7 @@ Contributor(s): ______________________________________. -->
             <titledbutton id="home-button" align="left" value="&homeButton.label;" 
             onclick="BrowserHome()"/>
         <titledbutton id="netscape-button" align="left" value="&netscapeButton.label;" 
-            onclick="window.content.location.href='http://home.netscape.com'"/>
+            onclick="window.content.location.href='http://my.netscape.com'"/>
         <spring flex="100%"/>
     </toolbar>
   </toolbox>
