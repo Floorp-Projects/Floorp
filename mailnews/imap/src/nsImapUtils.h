@@ -33,9 +33,6 @@ extern nsresult
 nsPath2ImapURI(const char* rootURI, const nsFileSpec& path, char* *uri);
 
 extern nsresult
-nsImapURI2Name(const char* rootURI, const char* uriStr, nsString& name);
-
-extern nsresult
 nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
                    nsString& name);
 
