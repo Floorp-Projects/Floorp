@@ -196,8 +196,8 @@ function GetRootFoldersInFolderPaneOrder()
 function CrossFolderNavigation(type)
 {
   if (type != nsMsgNavigationType.nextUnreadMessage) {
-    // only do cross folder navigation for "next unread message"
-    return null;
+    // currently, only do cross folder navigation for "next unread message"
+    return;
   }
 
   var nextMode = pref.getIntPref("mailnews.nav_crosses_folders");
@@ -206,7 +206,8 @@ function CrossFolderNavigation(type)
   // 2: "next" does nothing when there are no unread messages
 
   // not crossing folders, don't find next
-  if (nextMode == 2) return null;
+  if (nextMode == 2)
+    return;
 
   var folder = FindNextFolder();
   if (folder && (gDBView.msgFolder.URI != folder.URI)) {
@@ -227,7 +228,7 @@ function CrossFolderNavigation(type)
     }
   }
 
-  return folder;
+  return;
 }
 
 

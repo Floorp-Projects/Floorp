@@ -30,6 +30,9 @@ var gCurrentFolderUri;
 var gThreadPaneCommandUpdater = null;
 var gCurrentMessageIsDeleted = false;
 var gNextMessageViewIndexAfterDelete = -2;
+var gCurrentFolderToRerootForStandAlone;
+var gRerootOnFolderLoadForStandAlone = false;
+var gNextMessageAfterLoad = null;
 
 // the folderListener object
 var folderListener = {
@@ -37,11 +40,11 @@ var folderListener = {
 
   OnItemRemoved: function(parentItem, item, view) {
     var parentFolderResource = parentItem.QueryInterface(Components.interfaces.nsIRDFResource);
-    if(!parentFolderResource)
+    if (!parentFolderResource)
       return;
 
     var parentURI = parentFolderResource.Value;
-    if(parentURI != gCurrentFolderUri)
+    if (parentURI != gCurrentFolderUri)
       return;
 
     var deletedMessageHdr = item.QueryInterface(Components.interfaces.nsIMsgDBHdr);
@@ -56,14 +59,14 @@ var folderListener = {
     var currentURI = currentLoadedFolder.URI;
 
     //if we don't have a folder loaded, don't bother.
-    if(currentURI) {
-      if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages") {
+    if (currentURI) {
+      if (property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages") {
         var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if(folder) {
+        if (folder) {
           var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource); 
-          if(folderResource) {
+          if (folderResource) {
             var folderURI = folderResource.Value;
-            if(currentURI == folderURI) {
+            if (currentURI == folderURI) {
               UpdateStandAloneMessageCounts();
             }
           }
@@ -76,13 +79,31 @@ var folderListener = {
   OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
   OnItemEvent: function(folder, event) {
-    if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+    var eventType = event.GetUnicode();
+
+    if (eventType == "DeleteOrMoveMsgCompleted")
       HandleDeleteOrMoveMsgCompleted(folder);
-    }     
-    else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+    else if (eventType == "DeleteOrMoveMsgFailed")
       HandleDeleteOrMoveMsgFailed(folder);
+    else if (eventType == "FolderLoaded") {
+      if (folder) {
+        var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+        if (resource) {
+          var uri = resource.Value;
+          if (uri == gCurrentFolderToRerootForStandAlone) {
+            gCurrentFolderToRerootForStandAlone = null;
+            var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+            if (msgFolder) {
+              msgFolder.endFolderLoading();
+              if (gRerootOnFolderLoadForStandAlone) {
+                RerootFolderForStandAlone(uri);
+              }
+            }   
+          }
+        }
+      }
     }
-  }
+  }   
 }
 
 var messagepaneObserver = {
@@ -94,9 +115,7 @@ var messagepaneObserver = {
     var sourceUri = aData.data; 
     if (sourceUri != gCurrentMessageUri)
     {
-      var msgHdr = GetMsgHdrFromUri(sourceUri);
-      var folderUri = msgHdr.folder.URI;
-      SelectFolder(folderUri);
+      SelectFolder(GetMsgHdrFromUri(sourceUri).folder.URI);
       SelectMessage(sourceUri);
     }
   },
@@ -172,11 +191,11 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 {
 	dump("In HandleDeleteOrMoveMsgCompleted\n");
 	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-	if(!folderResource)
+	if (!folderResource)
 		return;
 
 	var folderUri = folderResource.Value;
-	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+	if ((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
     gDBView.onDeleteCompleted(true);
     gCurrentMessageIsDeleted = false;
@@ -201,15 +220,13 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 function HandleDeleteOrMoveMsgFailed(folder)
 {
   var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-  if(!folderResource)
+  if (!folderResource)
      return;
 
   var folderUri = folderResource.Value;
   gDBView.onDeleteCompleted(false);
-  if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
-  {
+  if ((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
     gCurrentMessageIsDeleted = false;
-  }	
 }
 
 function OnLoadMessageWindow()
@@ -239,25 +256,17 @@ function OnLoadMessageWindow()
 
   var originalView = null;
 
-	if(window.arguments)
+	if (window.arguments)
 	{
-		if(window.arguments[0])
-		{
+		if (window.arguments[0])
 			gCurrentMessageUri = window.arguments[0];
-		}
 		else
-		{
 			gCurrentMessageUri = null;
-		}
 
-		if(window.arguments[1])
-		{
+		if (window.arguments[1])
 			gCurrentFolderUri = window.arguments[1];
-		}
 		else
-		{
 			gCurrentFolderUri = null;
-		}
 
     if (window.arguments[2])
       originalView = window.arguments[2];      
@@ -269,13 +278,12 @@ function OnLoadMessageWindow()
   
   SetupCommandUpdateHandlers();
   var messagePaneFrame = top.frames['messagepane'];
-  if(messagePaneFrame)
-	messagePaneFrame.focus();
+  if (messagePaneFrame)
+	  messagePaneFrame.focus();
 }
 
 function CreateView(originalView)
 {
-  
   var msgFolder = GetLoadedMsgFolder();
 
   // extract the sort type, the sort order, 
@@ -341,57 +349,56 @@ function extractMsgKeyFromURI()
 function HideMenus()
 {
 	var message_menuitem=document.getElementById('menu_showMessage');
-	if(message_menuitem)
+	if (message_menuitem)
 		message_menuitem.setAttribute("hidden", "true");
 
 	var showSearchToolbar = document.getElementById('menu_showSearchToolbar');
-	if(showSearchToolbar)
+	if (showSearchToolbar)
 		showSearchToolbar.setAttribute("hidden", "true");
 
 	var showSearch_showMessage_Separator = document.getElementById('menu_showSearch_showMessage_Separator');
-	if(showSearch_showMessage_Separator)
+	if (showSearch_showMessage_Separator)
 		showSearch_showMessage_Separator.setAttribute("hidden", "true");
 
 	var expandOrCollapseMenu = document.getElementById('menu_expandOrCollapse');
-	if(expandOrCollapseMenu)
+	if (expandOrCollapseMenu)
 		expandOrCollapseMenu.setAttribute("hidden", "true");
 
 	var renameFolderMenu = document.getElementById('menu_renameFolder');
-	if(renameFolderMenu)
+	if (renameFolderMenu)
 		renameFolderMenu.setAttribute("hidden", "true");
 
 	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
-	if(viewMessagesMenu)
+	if (viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
 
 	var openMessageMenu = document.getElementById('openMessageWindowMenuitem');
-	if(openMessageMenu)
+	if (openMessageMenu)
 		openMessageMenu.setAttribute("hidden", "true");
 
 	var viewSortMenu = document.getElementById('viewSortMenu');
-	if(viewSortMenu)
+	if (viewSortMenu)
 		viewSortMenu.setAttribute("hidden", "true");
 
 	var viewThreadedMenu = document.getElementById('menu_showThreads');
-	if(viewThreadedMenu)
+	if (viewThreadedMenu)
 		viewThreadedMenu.setAttribute("hidden", "true");
 
 	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
-	if(emptryTrashMenu)
+	if (emptryTrashMenu)
 		emptryTrashMenu.setAttribute("hidden", "true");
 
 	var menuProperties = document.getElementById('menu_properties');
-	if(menuProperties)
+	if (menuProperties)
 		menuProperties.setAttribute("hidden", "true");
 
 	var compactFolderMenu = document.getElementById('menu_compactFolder');
-	if(compactFolderMenu)
+	if (compactFolderMenu)
 		compactFolderMenu.setAttribute("hidden", "true");
 
 	var trashSeparator = document.getElementById('trashMenuSeparator');
-	if(trashSeparator)
+	if (trashSeparator)
 		trashSeparator.setAttribute("hidden", "true");
-
 }
 
 function OnUnloadMessageWindow()
@@ -421,10 +428,9 @@ function GetSelectedMsgFolders()
 {
 	var folderArray = new Array(1);
 	var msgFolder = GetLoadedMsgFolder();
-	if(msgFolder)
-	{
+	if (msgFolder)
 		folderArray[0] = msgFolder;	
-	}
+
 	return folderArray;
 }
 
@@ -435,7 +441,7 @@ function GetFirstSelectedMessage()
 
 function GetNumSelectedMessages()
 {
-	if(gCurrentMessageUri)
+	if (gCurrentMessageUri)
 		return 1;
 	else
 		return 0;
@@ -445,9 +451,9 @@ function GetSelectedMessages()
 {
 	var messageArray = new Array(1);
 	var message = GetLoadedMessage();
-	if(message) {
+	if (message)
 		messageArray[0] = message;	
-	}
+
 	return messageArray;
 }
 
@@ -467,16 +473,10 @@ function GetSelectedIndices(dbView)
 
 function GetLoadedMsgFolder()
 {
-	if(gCurrentFolderUri)
-	{
-		var folderResource = RDF.GetResource(gCurrentFolderUri);
-		if(folderResource)
-		{
-			var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-			return msgFolder;
-		}
-	}
-	return null;
+	if (gCurrentFolderUri)
+		return RDF.GetResource(gCurrentFolderUri).QueryInterface(Components.interfaces.nsIMsgFolder);
+	else
+    return null;
 }
 
 function GetLoadedMessage()
@@ -507,14 +507,55 @@ function SelectFolder(folderUri)
   if (folderUri == gCurrentFolderUri)
     return;
 
-  var dbview = GetDBView();  // close old folder view
-  if (dbview) {
+  var msgfolder = RDF.GetResource(folderUri).QueryInterface(Components.interfaces.nsIMsgFolder);
+  if (!msgfolder || msgfolder.isServer)
+    return;
+
+  // close old folder view
+  var dbview = GetDBView();  
+  if (dbview)
     dbview.close(); 
+
+  gCurrentFolderToRerootForStandAlone = folderUri;
+
+  if (msgfolder.manyHeadersToDownload)
+  {
+    gRerootOnFolderLoadForStandAlone = true;
+    try
+    {
+      msgfolder.startFolderLoading();
+      msgfolder.updateFolder(msgWindow);
+    }
+    catch(ex)
+    {
+      dump("Error loading with many headers to download: " + ex + "\n");
+    }
   }
+  else
+  {
+    RerootFolderForStandAlone(folderUri);
+    gRerootOnFolderLoadForStandAlone = false;
+    msgfolder.startFolderLoading();
 
-  gCurrentFolderUri = folderUri;
+    //Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
+    //notification before folder has actually changed.
+    msgfolder.updateFolder(msgWindow);
+  }    
+}
 
-  CreateView(null);   //create new folder view
+function RerootFolderForStandAlone(uri)
+{
+  gCurrentFolderUri = uri;
+
+  // create new folder view
+  CreateView(null);
+  
+  // now do the work to load the appropriate message
+  if (gNextMessageAfterLoad) {
+    var type = gNextMessageAfterLoad;
+    gNextMessageAfterLoad = null;
+    LoadMessageByNavigationType(type);
+  }   
 } 
 
 function GetMsgHdrFromUri(messageUri)
@@ -929,17 +970,7 @@ function performNavigation(type)
   if (LoadMessageByNavigationType(type))
     return;
    
-  // we need to span another folder 
-  var folder = CrossFolderNavigation(type);
-  if (!folder)
-    return;
-
-  // Try again to load a message by nagivation by type if
-  // the folder has been changed.  If the folder was not changed,
-  // then the first call to LoadMessageByNavigationType() would
-  // have loaded the message.
-  if (folder.Value == gCurrentFolderUri)
-    LoadMessageByNavigationType(type);
+  CrossFolderNavigation(type);
 }
 
 function SetupCommandUpdateHandlers()
@@ -952,3 +983,4 @@ function GetDBView()
   return gDBView;
 }
 
+  
