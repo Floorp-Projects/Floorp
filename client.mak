@@ -17,6 +17,6 @@
 #
 # Contributor(s): 
 
-all export libs build alldep build_all_dep::
+all export libs build alldep build_all_dep checkout pull_all::
 	@echo See http://www.mozilla.org/build/win32.html for the updated build instructions.
 
