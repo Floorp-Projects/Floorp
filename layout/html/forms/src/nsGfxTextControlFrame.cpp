@@ -41,7 +41,6 @@
 #include "nsIFormControl.h"
 #include "nsFormFrame.h"
 #include "nsIFrameManager.h"
-#include "nsIContent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIScrollbar.h"
@@ -53,6 +52,7 @@
 #include "nsIComponentManager.h"
 
 #include "nsIWebShell.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPref.h"
@@ -92,7 +92,6 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
@@ -106,7 +105,7 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 #define EMPTY_DOCUMENT "about:blank"
 #define PASSWORD_REPLACEMENT_CHAR '*'
 
-//#define NEW_WEBSHELL_INTERFACES
+#define NEW_WEBSHELL_INTERFACES
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
@@ -131,6 +130,21 @@ NS_NewGfxTextControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  } else  if (aIID.Equals(NS_GET_IID(nsIGfxTextControlFrame))) {
+    *aInstancePtr = (void*)(nsIGfxTextControlFrame*) this;
+    return NS_OK;                                                        
+  }
+  
+  return nsTextControlFrame::QueryInterface(aIID, aInstancePtr);
+}
+
 NS_IMETHODIMP
 nsGfxTextControlFrame::Init(nsIPresContext&  aPresContext,
                             nsIContent*      aContent,
@@ -140,6 +154,17 @@ nsGfxTextControlFrame::Init(nsIPresContext&  aPresContext,
 {
   mFramePresContext = &aPresContext;
   return (nsTextControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow));
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  *aEditor = mEditor;
+  NS_IF_ADDREF(*aEditor);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1087,17 +1112,19 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
 {
   nsresult rv;
 
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
-                                    (void**)&mWebShell);
-  if (NS_OK != rv) {
+  NS_ENSURE_SUCCESS(
+    nsComponentManager::CreateInstance(kWebShellCID, nsnull, nsIWebShell::GetIID(),
+                                       (void**)&mWebShell),
+    NS_ERROR_FAILURE);
+  if (!mWebShell) {
     NS_ASSERTION(0, "could not create web widget");
-    return rv;
+    return NS_ERROR_NULL_POINTER;
   }
-  
-  // pass along marginwidth, marginheight, scrolling so sub document can use it
+
+  // pass along marginwidth and marginheight so sub document can use it
   mWebShell->SetMarginWidth(0);
   mWebShell->SetMarginHeight(0);
- 
+  
   /* our parent must be a webshell.  we need to get our prefs from our parent */
   nsCOMPtr<nsISupports> container;
   aPresContext.GetContainer(getter_AddRefs(container));
@@ -2132,18 +2159,19 @@ nsGfxTextControlFrame::InstallEditor()
       
     // initialize the editor
     result = mEditor->Init(mDoc, presShell, editorFlags);
+    if (NS_FAILED(result)) { return result; }
+
     // set data from the text control into the editor
-    if (NS_SUCCEEDED(result)) {
-      result = InitializeTextControl(presShell, mDoc);
-    }
+    result = InitializeTextControl(presShell, mDoc);
+    if (NS_FAILED(result)) { return result; }
+
     // install our own event handlers before the editor's event handlers
-    if (NS_SUCCEEDED(result)) {
-      result = InstallEventListeners();
-    }
+    result = InstallEventListeners();
+    if (NS_FAILED(result)) { return result; }
+
     // finish editor initialization, including event handler installation
-		if (NS_SUCCEEDED(result)) {
-			mEditor->PostCreate();
-		}
+    result = mEditor->PostCreate();
+		if (NS_FAILED(result)) { return result; }
 
     // check to see if mContent has focus, and if so tell the webshell.
     nsIEventStateManager *manager;
