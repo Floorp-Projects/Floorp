@@ -38,10 +38,13 @@
 	var count = 0;
 	var testcases = new Array();
 
-    // var re = new RegExp(); re.toString()
+    /*
+     * var re = new RegExp(); re.toString()  For what to expect,
+     * see http://bugzilla.mozilla.org/show_bug.cgi?id=225343#c7
+     */
 	var re = new RegExp();
 	testcases[count++] = new TestCase ( SECTION, "var re = new RegExp(); re.toString()",
-	                                    '//', re.toString());
+	                                    '/(?:)/', re.toString());
 
     // re = /.+/; re.toString();
     re = /.+/;
