@@ -134,17 +134,18 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
 
 typedef	struct	_sortStruct	{
-	nsIRDFService			*rdfService;
-	nsIRDFCompositeDataSource	*db;
-	nsIRDFResource			*sortProperty;
-	PRInt32				colIndex;
-	nsIAtom				*kNaturalOrderPosAtom;
-	nsIAtom				*kTreeCellAtom;
-	PRInt32				kNameSpaceID_XUL;
-	PRBool				descendingSort;
-	PRBool				naturalOrderSort;
-	nsCOMPtr<nsISupportsArray>	resCache;
-	nsCOMPtr<nsIRDFDataSource>	mInner;
+	nsCOMPtr<nsIRDFResource>		sortProperty;
+	nsCOMPtr<nsIRDFResource>		sortProperty2;
+	nsCOMPtr<nsIRDFCompositeDataSource>	db;
+	nsCOMPtr<nsIRDFService>			rdfService;
+	nsCOMPtr<nsIRDFDataSource>		mInner;
+	nsCOMPtr<nsISupportsArray>		resCache;
+	nsCOMPtr<nsIAtom>			kNaturalOrderPosAtom;
+	nsCOMPtr<nsIAtom>			kTreeCellAtom;
+	PRInt32					colIndex;
+	PRInt32					kNameSpaceID_XUL;
+	PRBool					descendingSort;
+	PRBool					naturalOrderSort;
 } sortStruct, *sortPtr;
 
 
@@ -178,6 +179,7 @@ private:
 	static nsIAtom		*kTreeColAtom;
 	static nsIAtom		*kTreeItemAtom;
 	static nsIAtom		*kResourceAtom;
+	static nsIAtom		*kResource2Atom;
 	static nsIAtom		*kNameAtom;
 	static nsIAtom		*kSortAtom;
 	static nsIAtom		*kSortDirectionAtom;
@@ -200,7 +202,7 @@ private:
 nsresult	FindTreeElement(nsIContent* aElement,nsIContent** aTreeElement);
 nsresult	FindTreeChildrenElement(nsIContent *tree, nsIContent **treeBody);
 nsresult	GetSortColumnIndex(nsIContent *tree, const nsString&sortResource, const nsString& sortDirection, PRInt32 *colIndex);
-nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection);
+nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
 nsresult	RemoveAllChildren(nsIContent *node);
@@ -243,6 +245,7 @@ nsIAtom* XULSortServiceImpl::kTreeChildrenAtom;
 nsIAtom* XULSortServiceImpl::kTreeColAtom;
 nsIAtom* XULSortServiceImpl::kTreeItemAtom;
 nsIAtom* XULSortServiceImpl::kResourceAtom;
+nsIAtom* XULSortServiceImpl::kResource2Atom;
 nsIAtom* XULSortServiceImpl::kNameAtom;
 nsIAtom* XULSortServiceImpl::kSortAtom;
 nsIAtom* XULSortServiceImpl::kSortDirectionAtom;
@@ -273,6 +276,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kTreeColAtom         		= NS_NewAtom("treecol");
 		kTreeItemAtom        		= NS_NewAtom("treeitem");
 		kResourceAtom        		= NS_NewAtom("resource");
+		kResource2Atom        		= NS_NewAtom("resource2");
 		kNameAtom			= NS_NewAtom("Name");
 		kSortAtom			= NS_NewAtom("sortActive");
 		kSortDirectionAtom		= NS_NewAtom("sortDirection");
@@ -377,6 +381,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_IF_RELEASE(kTreeColAtom);
 	        NS_IF_RELEASE(kTreeItemAtom);
 	        NS_IF_RELEASE(kResourceAtom);
+	        NS_IF_RELEASE(kResource2Atom);
 	        NS_IF_RELEASE(kNameAtom);
 	        NS_IF_RELEASE(kSortAtom);
 	        NS_IF_RELEASE(kSortDirectionAtom);
@@ -534,7 +539,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 
 
 nsresult
-XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection)
+XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2)
 {
         nsCOMPtr<nsIContent>	child;
 	PRBool			found = PR_FALSE;
@@ -566,6 +571,11 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 							if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
 								sortDirection)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 							{
+								if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_None, kResource2Atom,
+									sortResource2)) || (rv != NS_CONTENT_ATTR_HAS_VALUE))
+								{
+									sortResource2.Truncate();
+								}
 								found = PR_TRUE;
 							}
 						}
@@ -598,7 +608,7 @@ XULSortServiceImpl::GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cell
 		{
 			nsCOMPtr<nsIAtom> tag;
 			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
-			if (tag.get() == sortInfo->kTreeCellAtom)
+			if (tag.get() == sortInfo->kTreeCellAtom.get())
 			{
 				if (cellIndex == 0)
 				{
@@ -779,6 +789,22 @@ XULSortServiceImpl::OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortI
 
 	rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, sortOrder);
 
+	if (sortOrder == 0)
+	{
+		// nodes appear to be equivalent, check for secondary sort criteria
+		if (sortInfo->sortProperty2 != nsnull)
+		{
+			nsCOMPtr<nsIRDFResource>	temp = sortInfo->sortProperty;
+			sortInfo->sortProperty = sortInfo->sortProperty2;
+			sortInfo->sortProperty2 = nsnull;
+
+			rv = OpenSort(node1, node2, sortInfo, sortOrder);
+
+			sortInfo->sortProperty2 = sortInfo->sortProperty;
+			sortInfo->sortProperty = temp;
+		}
+	}
+
 	if (sortInfo->descendingSort == PR_TRUE)
 	{
 		// descending sort is being imposed, so reverse the sort order
@@ -896,23 +922,18 @@ XULSortServiceImpl::GetCachedResource(sortPtr sortInfo, nsIRDFResource *sortProp
 
 		if (!(*res))
 		{
-			char	*resNameCstr = resName.ToNewCString();
-			if (resNameCstr)
+			nsCOMPtr<nsIRDFResource>	sortRes;
+			if (NS_SUCCEEDED(rv = sortInfo->rdfService->GetResource(nsCAutoString(resName), 
+				getter_AddRefs(sortRes))) && (sortRes))
 			{
-				nsCOMPtr<nsIRDFResource>	sortRes;
-				if (NS_SUCCEEDED(rv = sortInfo->rdfService->GetResource(resNameCstr, 
-					getter_AddRefs(sortRes))) && (sortRes))
+				*res = sortRes;
+				NS_ADDREF(*res);
+				
+				// and add it into the cache array
+				if (sortInfo->resCache)
 				{
-					*res = sortRes;
-					NS_ADDREF(*res);
-					
-					// and add it into the cache array
-					if (sortInfo->resCache)
-					{
-						sortInfo->resCache->AppendElement(sortRes);
-					}
+					sortInfo->resCache->AppendElement(sortRes);
 				}
-				nsCRT::free(resNameCstr);
 			}
 		}
 	}
@@ -1010,9 +1031,10 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 				if (NS_SUCCEEDED(rv = GetTreeCellValue(sortInfo, cell1, cellVal1)) &&
 					(rv != NS_RDF_NO_VALUE))
 				{
-					nsIRDFLiteral	*nodeLiteral;
-					gRDFService->GetLiteral(cellVal1.GetUnicode(), &nodeLiteral);
+					nsCOMPtr<nsIRDFLiteral>	nodeLiteral;
+					gRDFService->GetLiteral(cellVal1.GetUnicode(), getter_AddRefs(nodeLiteral));
 					*theNode = nodeLiteral;
+					NS_IF_ADDREF(*theNode);
 					isCollationKey = PR_FALSE;
 				}
 			}
@@ -1069,9 +1091,10 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 		}
 		if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
 		{
-			nsIRDFLiteral	*nodePosLiteral;
-			gRDFService->GetLiteral(cellPosVal1.GetUnicode(), &nodePosLiteral);
+			nsCOMPtr<nsIRDFLiteral>	nodePosLiteral;
+			gRDFService->GetLiteral(cellPosVal1.GetUnicode(), getter_AddRefs(nodePosLiteral));
 			*theNode = nodePosLiteral;
+			NS_IF_ADDREF(*theNode);
 			isCollationKey = PR_FALSE;
 		}
 	}
@@ -1092,18 +1115,29 @@ XULSortServiceImpl::InplaceSort(nsIContent *node1, nsIContent *node2, sortPtr so
 	nsCOMPtr<nsIRDFNode>	cellNode1, cellNode2;
 	GetNodeValue(node1, sortInfo->sortProperty, sortInfo, getter_AddRefs(cellNode1), isCollationKey1);
 	GetNodeValue(node2, sortInfo->sortProperty, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
-	if ((!cellNode1) && (!cellNode2))
+	if ((!cellNode1) && (!cellNode2) && (sortInfo->sortProperty2 == nsnull))
 	{
-		nsCOMPtr<nsIRDFResource>	nameRes;
-		sortInfo->rdfService->GetResource(kURINC_Name, getter_AddRefs(nameRes));
-		if (nameRes)
-		{
-			rv = GetNodeValue(node1, nameRes, sortInfo, getter_AddRefs(cellNode1), isCollationKey1);
-			rv = GetNodeValue(node2, nameRes, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
-		}
+		rv = GetNodeValue(node1, kNC_Name, sortInfo, getter_AddRefs(cellNode1), isCollationKey1);
+		rv = GetNodeValue(node2, kNC_Name, sortInfo, getter_AddRefs(cellNode2), isCollationKey2);
 	}
 
 	rv = CompareNodes(cellNode1, isCollationKey1, cellNode2, isCollationKey2, sortOrder);
+
+	if (sortOrder == 0)
+	{
+		// nodes appear to be equivalent, check for secondary sort criteria
+		if (sortInfo->sortProperty2 != nsnull)
+		{
+			nsCOMPtr<nsIRDFResource>	temp = sortInfo->sortProperty;
+			sortInfo->sortProperty = sortInfo->sortProperty2;
+			sortInfo->sortProperty2 = nsnull;
+
+			rv = InplaceSort(node1, node2, sortInfo, sortOrder);
+
+			sortInfo->sortProperty2 = sortInfo->sortProperty;
+			sortInfo->sortProperty = temp;
+		}
+	}
 
 	if (sortInfo->descendingSort == PR_TRUE)
 	{
@@ -1301,13 +1335,14 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			nsIRDFResource **flatArray, PRInt32 numElements, PRInt32 elementSize)
 {
 	nsresult	rv;
-	nsAutoString	sortResource, sortDirection;
+	nsAutoString	sortResource, sortDirection, sortResource2;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
 
 	nsCOMPtr<nsIContent>	treeNode;
-	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))	return(rv);
+	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))
+		return(rv);
 
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
@@ -1317,12 +1352,16 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
-	if (NS_FAILED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))	return(rv);
-	char *uri = sortResource.ToNewCString();
-	if (uri)
+	if (NS_FAILED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection, sortResource2)))
+		return(rv);
+
+	rv = gRDFService->GetResource(nsCAutoString(sortResource), getter_AddRefs(sortInfo.sortProperty));
+	if (NS_FAILED(rv))	return(rv);
+	
+	sortInfo.sortProperty2 = nsnull;
+	if (sortResource2.Length() > 0)
 	{
-		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
-		nsCRT::free(uri);
+		rv = gRDFService->GetResource(nsCAutoString(sortResource2), getter_AddRefs(sortInfo.sortProperty2));
 		if (NS_FAILED(rv))	return(rv);
 	}
 
@@ -1350,7 +1389,7 @@ NS_IMETHODIMP
 XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
-	nsAutoString	sortResource, sortDirection;
+	nsAutoString	sortResource, sortDirection, sortResource2;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
@@ -1365,13 +1404,10 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 	sortInfo.resCache = nsnull;
 	sortInfo.mInner = nsnull;
 
-	// Maintain an nsCOMPtr to _here_ to the composite datasource so
-	// that we're sure that we'll hold a reference to it (and actually
-	// release that reference when the stack frame goes away).
-	nsCOMPtr<nsIRDFCompositeDataSource> cds;
 	rv = treeNode->QueryInterface(kIDomXulElementIID, getter_AddRefs(domXulTree));
 	if (NS_SUCCEEDED(rv))
 	{
+		nsCOMPtr<nsIRDFCompositeDataSource>	cds;
 		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 		{
 			sortInfo.db = cds;
@@ -1383,10 +1419,16 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
 	sortInfo.sortProperty = nsnull;
-	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))
+	sortInfo.sortProperty2 = nsnull;
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection, sortResource2)))
 	{
-		rv = gRDFService->GetResource(nsCAutoString(sortResource), &sortInfo.sortProperty);
+		rv = gRDFService->GetResource(nsCAutoString(sortResource), getter_AddRefs(sortInfo.sortProperty));
 		if (NS_FAILED(rv))	return(rv);
+		if (sortResource2.Length() > 0)
+		{
+			rv = gRDFService->GetResource(nsCAutoString(sortResource2), getter_AddRefs(sortInfo.sortProperty2));
+			if (NS_FAILED(rv))	return(rv);
+		}
 	}
 
 	// set up sort order info
@@ -1571,7 +1613,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 	nsCOMPtr<nsIDOMXULElement>	domXulTree = do_QueryInterface(treeNode);
 	if (!domXulTree)	return(NS_ERROR_FAILURE);
-	nsCOMPtr<nsIRDFCompositeDataSource> cds;
+	nsCOMPtr<nsIRDFCompositeDataSource>	cds;
 	if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 	{
 		sortInfo.db = cds;
@@ -1581,8 +1623,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
-	nsCAutoString	uri(sortResource);
-	if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))
+	if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(sortResource), getter_AddRefs(sortInfo.sortProperty))))
 		return(rv);
 	
 	// determine new sort resource and direction to use
