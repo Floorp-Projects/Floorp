@@ -38,6 +38,7 @@
     { 0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
 class nsIURL;
+class nsIImapHostSessionList;
 
 class nsIImapProtocol : public nsIStreamListener
 {
@@ -58,9 +59,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	// Right now, initialize requires the event queue of the UI thread, 
 	// or more importantly the event queue of the consumer of the imap
-	// protocol data.
+	// protocol data. The protocol also needs a host session list.
 	/////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue) = 0;
+	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue) = 0;
 
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
     
