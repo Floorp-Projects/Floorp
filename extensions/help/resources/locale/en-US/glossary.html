@@ -5,8 +5,9 @@
 
 </HEAD>
 <body>
+<div class="boilerplate">This glossary is provided for your information only, and is not meant to be relied upon as a complete or authoritative description of the terms defined below or of the privacy and/or security ramifications of the technologies described.</div>
 
-<h1><A NAME="glossary"></A><A NAME="996904">
+<hr><h1><A NAME="glossary"></A><A NAME="996904">
 Glossary 
 </A></h1><p>
 <A NAME="authentication"></A><A NAME="998782">
@@ -30,8 +31,7 @@ A certificate that identifies a certificate authority. See also <a href="glossar
 </A>
 
 <p><a name="cache"></a>
-<b>cache.</b>&nbsp;A collection of web page copies stored on your computer's hard disk. The browser accumulates these copies as you browse the Web. When you click a link or type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> to fetch a particular web page for which the cache already contains a copy, the browser compares the cached copy to the original. If there have been no changes, the browser uses the cached copy rather than refetching the original, saving processing and download time. <p>
-
+<b>cache.</b>&nbsp;A collection of web page copies stored on your computer's hard disk or in its random-access memory (RAM). The browser accumulates these copies as you browse the Web. When you click a link or type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> to fetch a particular web page for which the cache already contains a copy, the browser compares the cached copy to the original. If there have been no changes, the browser uses the cached copy rather than refetching the original, saving processing and download time. <p>
 
 
 <A NAME="certificate"></A><A NAME="1018895">
@@ -66,8 +66,7 @@ A hierarchical series of certificates signed by successive certificate authoriti
 
 <A NAME="certificate_fingerprint"></A><A NAME="1020297">
 <B>certificate fingerprint.</B>&nbsp;
-</A><A NAME="1020326">
-A unique number associated with a certificate. The number is not part of the certificate itself but is produced by applying a mathematical function to the contents of the certificate. If the contents of the certificate change, even by a single character, the function produces a different number. Certificate fingerprints can therefore be used to verify that certificates have not been tampered with.<P>
+</A>A unique number associated with a certificate. The number is not part of the certificate itself but is produced by applying a mathematical function to the contents of the certificate. If the contents of the certificate change, even by a single character, the function produces a different number. Certificate fingerprints can therefore be used to verify that certificates have not been tampered with.<P>
 </A>
 
 <A NAME="Certificate_Manager"></A>
@@ -123,6 +122,9 @@ A certificate that a <a href="glossary.html#1029510">client</a> (such as browser
 
 <p><a name="cookie"></a>
 <b>cookie.</b>&nbsp;A small bit of information stored on your computer by some web sites. When you visit such a site, the site asks your browser to place one or more cookies on your hard disk. Later, when you return to the site, your browser sends the site the cookies that belong to it. Cookies help web sites keep track of information about you, such as the contents of your shopping cart. You can set your cookie preferences to control how cookies are used and how much information you are willing to let web sites store on them. See also <a href="#foreign_cookie">foreign_cookie</a>.<p>
+
+<p><a name="Cookie_Manager"></a>
+<b>Cookie Manager.</b>&nbsp;The part of the browser that you can use to control <a href="#cookie">cookies</a>. For details, see <a href="using_priv_help.html">Using the Cookie Manager</a>. <p>
 
 
 <A NAME="cryptographic_algorithm"></A><A NAME="1019976">
@@ -207,7 +209,11 @@ Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US 
 </A>
 
 <p><a name="foreign_cookie"></a>
-<b>foreign cookie.</b>&nbsp;A cookie from one site that gets stored on your computer when you visit a different site. For example you might visit <tt>www.example.com</tt>, which displays an image from a different site called <tt>www.example.net</tt>. So when you visit <tt>www.example.com</tt> your browser makes a side-trip to <tt>www.example.net</tt> to get the image, and <tt>www.example.net</tt> stores the cookie at that time. <p>
+<b>foreign cookie.</b>&nbsp;A cookie from one site that gets stored on your computer when you visit a different site. Sometimes a web site displays content that is hosted on another web site. That content can be anything from an image to text or an advertisement. The second web site that hosts such elements also has the ability to store a cookie in your browser, even though you don't visit it directly. Also known as &quot;third-party cookie.&quot; <p>
+
+<p><a name="Form_Manager"></a>
+<b>Form Manager.</b>&nbsp;The part of the browser that can help you save the personal data you enter into online forms, such as your name, address, phone, and so on. Then, when a web site presents you with a form, Form Manager can fill it in automatically. For details, see <a href="using_priv_help.html#using_forms">Using the Form Manager</a>. <p>
+
 
 <p><a name="helper_application"></a>
 <b>helper application.</b>&nbsp;Any application that is used to open or view a file downloaded by the browser. A <a href="#plug-in">plug-in</a> is a special kind of helper application that installs itself into the Plugins directory of the main browser installation directory and can typically be opened within the browser itself (internally). Microsoft Word, Adobe Photoshop, and other external applications are considered helper applications but not plug-ins, since they don't install themselves into the browser directory, but can be opened from the download dialog box.
@@ -218,7 +224,7 @@ Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US 
 <p><a name="Hypertext_Markup_Language_(HTML)"></a>
 <b>Hypertext Markup Language (HTML).</b>&nbsp; The document format used for Web pages. The HTML standard defines tags, or codes, used to define the text layout, fonts, style, images, and other elements that make up a web page. <p>
 
-<p><a name="implicit_consent"></a><b>implicit consent.</b>&nbsp; Used to describe privacy settings that may allow web sites to gather information about you (for example by means of <a href="#cookie">cookies</a> and online forms) unless you explicitly choose to withhold your consent by selecting an option on a page that the web site provides for that purpose. Your consent may not be requested when the information is actually gathered.<p>
+<p><a name="implicit_consent"></a><b>implicit consent.</b>&nbsp; Also known as implied or &quot;opt-out&quot; consent. Used to describe privacy settings that may allow web sites to gather information about you (for example by means of <a href="#cookie">cookies</a> and online forms) unless you explicitly choose to withhold your consent by selecting an option on a page that the web site provides for that purpose. Your consent may not be requested when the information is actually gathered.<p>
 
 <p><a NAME="IMAP_glossary"></a>
 <b>Internet Message Access Protocol (IMAP).</b>&nbsp;A standard mail server protocol that allows you to store all your messages and any changes to them on the server rather than on your computer's hard disk. Using IMAP rather than <a href="#POP_glossary">POP</a> saves disk space and allows you to access your entire mailbox, including sent mail, drafts, and custom folders, from any location. Using an IMAP server over a modem is generally faster than using a POP mail server, since you initially download message headers only. Not all ISPs support IMAP. <p>
@@ -251,8 +257,8 @@ A standard protocol for accessing directory services, such as corporate address 
 <P>
 </A>
 
-<A NAME="location_bar"></A>
-<B>location bar.</B>&nbsp; The field (and associated buttons) near the top of a Navigator window where you can type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> or search terms. For details, see <a href="nav_help.html#nav_move">Moving to Another Page</a>.<P>
+<A NAME="Location_Bar"></A>
+<B>Location Bar.</B>&nbsp; The field (and associated buttons) near the top of a Navigator window where you can type a <a href="#Uniform_Resource_Locator_(URL)">URL</a> or search terms. For details, see <a href="nav_help.html#nav_move">Moving to Another Page</a>.<P>
 
 <A NAME="master_key"></A><A NAME="1032598">
 <B>master key.</B>&nbsp;
@@ -272,6 +278,23 @@ A password used by Certificate Manager to protect the master key and/or private 
 </A><A NAME="1014058">
 Presentation of an entity as a person or organization that it is not. For example, a web site might pretend to be a furniture store when it is really just a site that takes credit card payments but never sends any goods. See also <a href="glossary.html#1014366">spoofing</a>.<P>
 </A>
+
+<A NAME="navigation_toolbar"></A>
+<B>Navigation Toolbar.</B>&nbsp; The toolbar near the top of the browser window that includes the Back and Forward buttons.<P>
+
+<p><a name="Netscape_CalendarIDX"></a>
+<p><a name="calendarIDX"></a>
+<p><a name="scheduling_meetingsSDX"></a>
+<p><a name="scheduling_appointmentsSDX"></a>
+<p><a name="Netscape_Calendar"></a>
+<b>Netscape Calendar.</b>&nbsp;An application for tracking your schedule and related tasks. If you are using Netscape at work, this application may be available from the Window menu within Netscape. If you are using Netscape at home, or if your workplace doesn't have Netscape Calendar available, you can use the web-based calendar available at www.netscape.com. <tt><a href="http://www.netscape.com" target="_blank">www.netscape.com</a></tt>.<p>
+
+
+<A NAME="talkbackSDX"></A>
+<A NAME="talkbackIDX"></A>
+<A NAME="netscape_talkback"></A>
+<B>Netscape Quality Feedback Agent.</B>&nbsp; A small piece of software embedded in Netscape 7.0 that gathers technical information when the program quits unexpectedly. After asking your permission, the agent sends this information to Netscape. If you choose to participate, you can add comments about what was happening when the crash occurred. Netscape uses the feedback to fix bugs and improve performance. The agent and related services are sometimes called &quot;talkbalk.&quot; For more information, see the online document <a href="http://help.netscape.com/netscape7/qfs3.html" target="_blank">Netscape Quality Feedback System for Netscape</a>.<P>
+
 
 <A NAME="nonrepudiation"></A><A NAME="999248">
 <B>nonrepudiation.</B>&nbsp;
@@ -303,8 +326,11 @@ A set of rules that Certificate Manager follows to perform an online check of a 
 Confident identification by means of a name and password. See also <a href="glossary.html#998782">authentication</a>.<P>
 </A>
 
+<p><a name="Password_Manager"></a>
+<b>Password Manager.</b>&nbsp;The part of the browser that can help you remember some or all of your names and passwords by storing them on your computer's hard disk, and entering them for you automatically when you visit such sites. For details, see <a href="using_priv_help.html#using_password">Using the Password Manager</a>. <p>
+
 <A NAME="personal_toolbar"></A>
-<B>personal toolbar.</B>&nbsp; The cutomizable toolbar that appears just below the location bar by default in Navigator . It contains standard buttons such as Home, Search, Bookmarks, and so on that you can add or remove. You can also add buttons for your favorite bookmarks, or folders containing groups of bookmarks. For details, see <a href="customize_help.html#cust_personal">Personal Toolbar</a>.<P>
+<B>Personal Toolbar.</B>&nbsp; The cutomizable toolbar that appears just below the location bar by default in Navigator . It contains standard buttons such as Home, Search, Bookmarks, and so on that you can add or remove. You can also add buttons for your favorite bookmarks, or folders containing groups of bookmarks. For details, see <a href="customize_help.html#cust_personal">Personal Toolbar</a>.<P>
 
 
 <A NAME="PKCS_#11"></A><A NAME="1025194">
@@ -479,6 +505,11 @@ A <a href="glossary.html#1020903">certificate authority (CA)</a> whose certifica
 An encryption method that uses a single cryptographic key to both encrypt and decrypt a given message.<P>
 </A>
 
+<A NAME="talkback"></A>
+<B>talkback.</B>&nbsp; See <a href="#netscape_talkback">Netscape Quality Feedback Agent</a>.<P>
+
+
+
 <A NAME="tamper_detection"></A><A NAME="999618">
 <B>tamper detection.</B>&nbsp;
 </A><A NAME="999631">
@@ -489,6 +520,9 @@ A mechanism ensuring that data received in electronic form has not been tampered
 </A><A NAME="TCP_IP)">
 See <a href="#Transmission_Control_Protocol_Internet_Protocol_(TCP_IP)">Transmission Control Protocol/Internet Protocol (TCP/IP)</a>.<P>
 </A>
+
+<p><a name="third-party_cookie"></a>
+<b>third-party cookie.</b>&nbsp;See <a href="#foreign_cookie">foreign cookie</a>.<p>
 
 <A NAME="TLS"></A><A NAME="1027427">
 <B>TLS.</B>&nbsp;
@@ -517,7 +551,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 
 
 <p><a name="Uniform_Resource_Locator_(URL)"></a>
-<b>Uniform Resource Locator (URL).</b>&nbsp;The standardized address that tells your browser how to locate a file or other resource on the Web. For example: <tt>http://www.netscape.com.</tt> You can type URLs into the browser's location bar to access web pages. URLs are also used in the links on web pages that you can click to go to other web pages. Also known as an Internet address or Web address.<p>
+<b>Uniform Resource Locator (URL).</b>&nbsp;The standardized address that tells your browser how to locate a file or other resource on the Web. For example: <tt>http://www.netscape.com.</tt> You can type URLs into the browser's Location Bar to access web pages. URLs are also used in the links on web pages that you can click to go to other web pages. Also known as an Internet address or Web address.<p>
 
 <p><a name="web_page"></a>
 <b>web page.</b>&nbsp;A single document on the World Wide Web that is specified by a unique address or URL and that may contain text, hyperlinks, and graphics.<p>
@@ -536,7 +570,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 </p>
 
 <hr>
-<p><i>6 June 2002</i></p>
+<p><i>13 June 2002</i></p>
 <p>Copyright &copy; 1998-2002 Netscape Communications Corporation</p>
 
 <BR>
