@@ -29,8 +29,19 @@
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical"
     persist="hidden width collapsed">
-    <splitter id="title-box" class="sidebar-main-header" collapse="after"
-      persist="state" onmouseup="PersistHeight();">
+    <!-- Make sure title-box and title-spitter stay in sync. -->
+    <box id="title-box" class="sidebar-main-header" hidden="true">
+      <html:div class="panel-bar">
+        &sidebar.panels.label;
+      </html:div>
+      <spring flex="100%"/>
+      <titledbutton class="toolbar-flat"
+        value="&sidebar.customize.label;" 
+        oncommand="SidebarCustomize();"/>
+    </box>
+    <splitter id="title-splitter" class="sidebar-main-header" collapse="after"
+      persist="state" onmouseup="PersistHeight();"
+      hidden="true">
       <html:div class="panel-bar">
         &sidebar.panels.label;
       </html:div>

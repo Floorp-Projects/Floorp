@@ -94,7 +94,7 @@ iframe.panel-frame {
 /*
  *  Sidebar and Panel title buttons
  */
-splitter.sidebar-main-header {
+.sidebar-main-header {
   color: #CCFFFF;
   background-color: #003366;
   padding: 0px;
@@ -102,16 +102,16 @@ splitter.sidebar-main-header {
   padding-right: 5px;
 }
 
-splitter.sidebar-main-header div {
+.sidebar-main-header > div {
   font-weight: bold;
   margin: 2px;
 }
 
-splitter.sidebar-main-header titledbutton {
+.sidebar-main-header > titledbutton {
   padding: 0px;
 }
 
-splitter.sidebar-main-header titledbutton:hover {
+.sidebar-main-header > titledbutton:hover {
   color: white;
 }
 
