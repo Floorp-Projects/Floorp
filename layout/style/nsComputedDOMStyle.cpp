@@ -845,7 +845,31 @@ nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font, aFrame);
 
   if(font) {
-    val->SetString(font->mFont.name);
+    nsCOMPtr<nsIPresShell> presShell=do_QueryReferent(mPresShellWeak);
+    NS_ASSERTION(presShell, "pres shell is required");
+    nsCOMPtr<nsIPresContext> presContext;
+    presShell->GetPresContext(getter_AddRefs(presContext));
+    NS_ASSERTION(presContext, "pres context is required");
+
+    if (font->mFlags & NS_STYLE_FONT_USE_FIXED) {
+      const nsString& fontName = font->mFixedFont.name;
+      const nsFont& defaultFont = presContext->GetDefaultFixedFontDeprecated();
+      PRInt32 lendiff = fontName.Length() - defaultFont.name.Length();
+      if (lendiff > 0) {
+        val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
+      } else {
+        val->SetString(fontName);
+      }
+    } else {
+      const nsString& fontName = font->mFont.name;
+      const nsFont& defaultFont = presContext->GetDefaultFontDeprecated();
+      PRInt32 lendiff = fontName.Length() - defaultFont.name.Length();
+      if (lendiff > 0) {
+        val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
+      } else {
+        val->SetString(fontName);
+      }
+    }
   }
   else {
     val->SetString("");
