@@ -369,7 +369,7 @@ MOZ_COMPONENT_XPCOM_LIBS += -lboehm
 XPCOM_LIBS += -lboehm
 endif
 
-ifneq (,$(filter xpcom,$(BUILD_MODULES)))
+ifneq (all,$(BUILD_MODULES))
 DEFINES += -DXPCOM_STANDALONE
 endif
 
