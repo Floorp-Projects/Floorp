@@ -19,7 +19,6 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
@@ -39,12 +38,12 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
 {
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nsStyleBorder* myBorder =
-    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+  nsStyleSpacing* mySpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myBorder, 0);
+                              aDirtyRect, mRect, *mySpacing, 0);
   return NS_OK;
 }
 
@@ -93,8 +92,10 @@ void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
 {
   nsStyleSpacing* space =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  aDesiredSize.width += space->mBorderPadding.left + space->mBorderPadding.right;
-  aDesiredSize.height += space->mBorderPadding.top + space->mBorderPadding.bottom;
+  nsMargin  borderPadding;
+  space->CalcBorderPaddingFor(this, borderPadding);
+  aDesiredSize.width += borderPadding.left + borderPadding.right;
+  aDesiredSize.height += borderPadding.top + borderPadding.bottom;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 }
@@ -104,12 +105,14 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
 {
   nsStyleSpacing* space =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  aInnerArea.x = space->mBorderPadding.left;
-  aInnerArea.y = space->mBorderPadding.top;
+  nsMargin  borderPadding;
+  space->CalcBorderPaddingFor(this, borderPadding);
+  aInnerArea.x = borderPadding.left;
+  aInnerArea.y = borderPadding.top;
   aInnerArea.width = mRect.width -
-    (space->mBorderPadding.left + space->mBorderPadding.right);
+    (borderPadding.left + borderPadding.right);
   aInnerArea.height = mRect.height -
-    (space->mBorderPadding.top + space->mBorderPadding.bottom);
+    (borderPadding.top + borderPadding.bottom);
 }
 
 NS_METHOD nsLeafFrame::CreateContinuingFrame(nsIPresContext* aPresContext,

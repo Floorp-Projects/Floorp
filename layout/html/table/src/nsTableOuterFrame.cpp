@@ -343,12 +343,12 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableOuterFrame::GetTopMarginFor(nsIPresContext*        aCX,
                                            OuterTableReflowState& aState,
-                                           nsStyleSpacing* aKidSpacing)
+                                           const nsMargin& aKidMargin)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidSpacing->mMargin.top) < 0) {
+  if ((margin = aKidMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -463,8 +463,10 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleSpacing* kidSpacing =
       (nsStyleSpacing*)kidSC->GetData(kStyleSpacingSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-    nscoord bottomMargin = kidSpacing->mMargin.bottom;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(kidFrame, kidMargin);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+    nscoord bottomMargin = kidMargin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -473,7 +475,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      aState.availSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+      aState.availSize.width -= kidMargin.left + kidMargin.right;
     }
 
     // Only skip the reflow if this is not our first child and we are
@@ -503,7 +505,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     // Place the child after taking into account it's margin
     aState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.x += kidSpacing->mMargin.left;
+    kidRect.x += kidMargin.left;
     kidRect.y += aState.y;
     PlaceChild(aState, kidFrame, kidRect, aMaxElementSize, kidMaxElementSize);
     if (bottomMargin < 0) {

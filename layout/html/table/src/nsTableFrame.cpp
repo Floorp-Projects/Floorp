@@ -60,7 +60,6 @@ static const PRBool gsDebugMBP = PR_FALSE;
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
@@ -104,7 +103,7 @@ struct InnerTableReflowState {
 
   InnerTableReflowState(nsIPresContext*  aPresContext,
                         const nsSize&    aMaxSize,
-                        nsStyleSpacing* aStyleSpacing)
+                        const nsMargin&  aBorderPadding)
   {
     prevMaxPosBottomMargin = 0;
     prevMaxNegBottomMargin = 0;
@@ -113,18 +112,16 @@ struct InnerTableReflowState {
     unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
     availSize.width = aMaxSize.width;
     if (!unconstrainedWidth) {
-      availSize.width -= aStyleSpacing->mBorderPadding.left +
-        aStyleSpacing->mBorderPadding.right;
+      availSize.width -= aBorderPadding.left + aBorderPadding.right;
     }
-    leftInset = aStyleSpacing->mBorderPadding.left;
+    leftInset = aBorderPadding.left;
 
     unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
     availSize.height = aMaxSize.height;
     if (!unconstrainedHeight) {
-      availSize.height -= aStyleSpacing->mBorderPadding.top +
-        aStyleSpacing->mBorderPadding.bottom;
+      availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
-    topInset = aStyleSpacing->mBorderPadding.top;
+    topInset = aBorderPadding.top;
 
     firstRowGroup = PR_TRUE;
     footerHeight = 0;
@@ -432,16 +429,16 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
   // table paint code is concerned primarily with borders and bg color
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nsStyleBorder* myBorder =
-    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+  nsStyleSpacing* mySpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   NS_ASSERTION(nsnull != myColor, "null style color");
-  NS_ASSERTION(nsnull != myBorder, "null style border");
-  if (nsnull!=myBorder)
+  NS_ASSERTION(nsnull != mySpacing, "null style spacing");
+  if (nsnull!=mySpacing)
   {
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *myColor);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *myBorder, 0);
+                                aDirtyRect, mRect, *mySpacing, 0);
   }
 
   // for debug...
@@ -594,10 +591,12 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  nscoord topInset = spacing->mBorderPadding.top;
-  nscoord rightInset = spacing->mBorderPadding.right;
-  nscoord bottomInset =spacing->mBorderPadding.bottom;
-  nscoord leftInset = spacing->mBorderPadding.left;
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nscoord topInset = borderPadding.top;
+  nscoord rightInset = borderPadding.right;
+  nscoord bottomInset = borderPadding.bottom;
+  nscoord leftInset = borderPadding.left;
 
   /* assumes that Table's children are in the following order:
    *  Captions
@@ -756,7 +755,10 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
 
   nsStyleSpacing* mySpacing = (nsStyleSpacing*)
     mStyleContext->GetData(kStyleSpacingSID);
-  InnerTableReflowState state(aPresContext, aMaxSize, mySpacing);
+  nsMargin myBorderPadding;
+  mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
+
+  InnerTableReflowState state(aPresContext, aMaxSize, myBorderPadding);
 
   // Reflow the existing frames
   if (nsnull != mFirstChild) {
@@ -835,12 +837,12 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableFrame::GetTopMarginFor(nsIPresContext*      aCX,
                                       InnerTableReflowState& aState,
-                                      nsStyleSpacing* aKidSpacing)
+                                      const nsMargin& aKidMargin)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidSpacing->mMargin.top) < 0) {
+  if ((margin = aKidMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -993,8 +995,11 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
       nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
         kidSC->GetData(kStyleSpacingSID);
-      nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-      nscoord bottomMargin = kidSpacing->mMargin.bottom;
+      nsMargin kidMargin;
+      kidSpacing->CalcMarginFor(kidFrame, kidMargin);
+
+      nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+      nscoord bottomMargin = kidMargin.bottom;
 
       // Figure out the amount of available size for the child (subtract
       // off the top margin we are going to apply to it)
@@ -1003,8 +1008,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       }
       // Subtract off for left and right margin
       if (PR_FALSE == aState.unconstrainedWidth) {
-        kidAvailSize.width -= kidSpacing->mMargin.left +
-          kidSpacing->mMargin.right;
+        kidAvailSize.width -= kidMargin.left + kidMargin.right;
       }
 
       // Reflow the child into the available space
@@ -1030,7 +1034,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       // Place the child after taking into account it's margin
       aState.y += topMargin;
       nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
-      kidRect.x += aState.leftInset + kidSpacing->mMargin.left;
+      kidRect.x += aState.leftInset + kidMargin.left;
       kidRect.y += aState.topInset + aState.y ;
       PlaceChild(aPresContext, aState, kidFrame, kidRect,
                  aMaxElementSize, kidMaxElementSize);
@@ -1521,6 +1525,8 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
 
   // need to figure out the overall table width constraint
   // default case, get 100% of available space
@@ -1546,7 +1552,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   // and padding
   if (NS_UNCONSTRAINEDSIZE!=maxWidth)
   {
-    maxWidth -= spacing->mBorderPadding.left + spacing->mBorderPadding.right;
+    maxWidth -= borderPadding.left + borderPadding.right;
     if (0>maxWidth)  // nonsense style specification
       maxWidth = 0;
   }
@@ -1586,8 +1592,11 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  nscoord rightInset = spacing->mBorderPadding.right;
-  nscoord leftInset = spacing->mBorderPadding.left;
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  nscoord rightInset = borderPadding.right;
+  nscoord leftInset = borderPadding.left;
   tableWidth += (leftInset + rightInset);
   nsRect tableSize = mRect;
   tableSize.width = tableWidth;
@@ -1616,8 +1625,10 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 
   nsStyleSpacing* spacing = (nsStyleSpacing*)
     mStyleContext->GetData(kStyleSpacingSID);
-  tableHeight +=
-    spacing->mBorderPadding.top + spacing->mBorderPadding.bottom;
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  tableHeight += borderPadding.top + borderPadding.bottom;
 
   PRInt32 childCount = mChildCount;
   nsIFrame * kidFrame;

@@ -23,7 +23,6 @@
 
 struct nsBodyReflowState;
 class SpaceManager;
-struct nsStyleSpacing;
 
 class nsBodyFrame : public nsHTMLContainerFrame, public nsIAnchoredItems {
 public:
@@ -76,7 +75,7 @@ protected:
 
   void ComputeDesiredSize(const nsRect& aDesiredRect,
                           const nsSize& aMaxSize,
-                          nsStyleSpacing* aSpacing,
+                          const nsMargin& aBorderPadding,
                           PRBool aIsPseudoFrame,
                           nsReflowMetrics& aDesiredSize);
 
@@ -87,7 +86,7 @@ private:
 
   void CreateColumnFrame(nsIPresContext* aPresContext);
   nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
-                             nsStyleSpacing* aSpacing,
+                             const nsMargin& aBorderPadding,
                              const nsSize&   aMaxSize);
 };
 

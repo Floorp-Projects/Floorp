@@ -22,6 +22,8 @@
 #include "nsContainerFrame.h"
 #include "nsTableCell.h"
 
+struct nsStyleSpacing;
+
 /**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
@@ -89,7 +91,7 @@ protected:
   NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void      MapTextAttributes(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
-  void      MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
+  void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToIntValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
 

@@ -31,7 +31,6 @@ NS_DEF_PTR(nsTableCol);
 NS_DEF_PTR(nsTableCell);
 NS_DEF_PTR(nsIStyleContext);
 
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
