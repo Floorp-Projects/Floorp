@@ -24,89 +24,103 @@
  */
 
 #include "nsReadableUtils.h"
-
-template <class CharT>
-inline
-CharT*
-CopyStringToNewZeroTerminatedBuffer( const basic_nsAReadableString<CharT>& aSourceString )
-  {
-    // no conversion needed, just allocate a buffer of the correct length and copy into it
-
-    CharT* result = NS_STATIC_CAST(CharT*, nsMemory::Alloc( (aSourceString.Length()+1) * sizeof(CharT) ));
-    *copy_string(aSourceString.BeginReading(), aSourceString.EndReading(), result) = CharT(0);
-    return result;
-  }
-
-char*
-ToNewCString( const nsAReadableCString& aSourceCString )
-  {
-    return CopyStringToNewZeroTerminatedBuffer(aSourceCString);
-  }
-
-PRUnichar*
-ToNewUnicode( const nsAReadableString& aSourceString )
-  {
-    return CopyStringToNewZeroTerminatedBuffer(aSourceString);
-  }
+#include "nsMemory.h"
 
 
-template <class FromT, class ToT>
-class LossyConversionSink
+
+template <class FromCharT, class ToCharT>
+class LossyConvertEncoding
   {
     public:
-      typedef FromT input_type;
-      typedef ToT   output_type;
+      typedef FromCharT value_type;
+ 
+      typedef FromCharT input_type;
+      typedef ToCharT   output_type;
 
     public:
-      LossyConversionSink( output_type* aDestination ) : mDestination(aDestination) { }
+      LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
 
       PRUint32
       write( const input_type* aSource, PRUint32 aSourceLength )
         {
           const input_type* done_writing = aSource + aSourceLength;
           while ( aSource < done_writing )
-            *mDestination++ = NS_STATIC_CAST(output_type, *aSource++);
+            *mDestination++ = (output_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
+          return aSourceLength;
+        }
+
+      void
+      write_terminator()
+        {
+          *mDestination = output_type(0);
         }
 
     private:
-      OutputCharT* mDestination;
+      output_type* mDestination;
   };
 
+template <class FromCharT, class ToCharT>
+inline
+ToCharT*
+AllocateStringCopy( const basic_nsAReadableString<FromCharT>& aSource, ToCharT* )
+  {
+    return NS_STATIC_CAST(ToCharT*, nsMemory::Alloc((aSource.Length()+1) * sizeof(ToCharT)));
+  }
 
 
 char*
-ToNewCString( const nsAReadableString& aSourceString )
+ToNewCString( const nsAReadableString& aSource )
   {
-    char* result = NS_STATIC_CAST(char*, nsMemory::Alloc(aSourceString.Length()+1));
-    *copy_string(aSourceString.BeginReading(), aSourceString.EndReading(), LossyConversionSink<PRUnichar, char>(result)) = char(0);
+    char* result = AllocateStringCopy(aSource, (char*)0);
+    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<PRUnichar, char>(result)).write_terminator();
+    return result;
+  }
+
+char*
+ToNewCString( const nsAReadableCString& aSource )
+  {
+    // no conversion needed, just allocate a buffer of the correct length and copy into it
+
+    char* result = AllocateStringCopy(aSource, (char*)0);
+    *copy_string(aSource.BeginReading(), aSource.EndReading(), result) = char(0);
     return result;
   }
 
 PRUnichar*
-ToNewUnicode( const nsAReadableCString& aSourceCString )
+ToNewUnicode( const nsAReadableString& aSource )
   {
-    PRUnichar* result = NS_STATIC_CAST(char*, nsMemory::Alloc( (aSourceString.Length()+1) * sizeof(PRUnichar) ));
-    *copy_string(aSourceCString.BeginReading(), aSourceCString.EndReading(), LossyConversionSink<char, PRUnichar>(result)) = PRUnichar(0);
+    // no conversion needed, just allocate a buffer of the correct length and copy into it
+
+    PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
+    *copy_string(aSource.BeginReading(), aSource.EndReading(), result) = PRUnichar(0);
     return result;
   }
 
-
+PRUnichar*
+ToNewUnicode( const nsAReadableCString& aSource )
+  {
+    PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
+    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<char, PRUnichar>(result)).write_terminator();
+    return result;
+  }
 
 PRBool
-IsASCII( const nsAReadableString& aSourceString )
+IsASCII( const nsAReadableString& aString )
   {
-    const PRUnichar NOT_ASCII = ~0x007F;
+
+    const PRUnichar NOT_ASCII = PRUnichar(~0x007F);
 
 
     // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
 
-    nsAReadableString::const_iterator iter = aSourceString.BeginReading();
-    nsAReadableString::const_iterator done_reading = aSourceString.EndReading();
+    typedef nsAReadableString::const_iterator iterator;
+    iterator iter = aString.BeginReading();
+    iterator done_reading = aString.EndReading();
 
-      // for each chunk of |aSourceString|...
+      // for each chunk of |aString|...
     while ( iter != done_reading )
       {
-        PRUint32 chunk_size = iter.size_forward();
+        iterator::difference_type chunk_size = iter.size_forward();
         const PRUnichar* c = iter.get();
         const PRUnichar* chunk_end = c + chunk_size;
 
