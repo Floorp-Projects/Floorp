@@ -331,6 +331,10 @@
 ;;; A general-grammar-symbol is either a terminal or a general-nonterminal.
 (deftype general-grammar-symbol () '(or terminal general-nonterminal))
 
+; Return true if x is a general-grammar-symbol.  x can be any object.
+(defun general-grammar-symbol? (x)
+  (or (terminal? x) (general-nonterminal? x)))
+
 
 ; Return true if the two grammar symbols are the same symbol.
 (declaim (inline grammar-symbol-=))
