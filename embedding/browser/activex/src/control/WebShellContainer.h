@@ -26,7 +26,7 @@
 // interfaces into the web shell and so forth.
 
 class CWebShellContainer :
-		public nsIBrowserWindow,
+//		public nsIBrowserWindow,
 		public nsIWebShellContainer,
 		public nsIStreamObserver,
 		public nsIDocumentLoaderObserver
@@ -50,7 +50,8 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIBrowserWindow
-	NS_IMETHOD Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins = PR_TRUE);
+
+	NS_IMETHOD Init(nsIAppShell* aAppShell, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins = PR_TRUE);
 	NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
 	NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
 	NS_IMETHOD GetContentBounds(nsRect& aResult);
@@ -99,13 +100,9 @@ public:
     NS_IMETHOD OnStartRequest(nsIChannel* aChannel, nsISupports* aContext);
     NS_IMETHOD OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
 
-	// nsIDocumentLoaderObserver 
-	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
-	NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
+	// nsIDocumentLoaderObserver
+   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 };
 
 #endif
+

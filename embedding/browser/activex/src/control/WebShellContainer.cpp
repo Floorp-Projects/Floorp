@@ -58,7 +58,7 @@ NS_IMPL_QUERY_TAIL(nsIStreamObserver)
 // nsIBrowserWindow implementation
 
 NS_IMETHODIMP
-CWebShellContainer::Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
+CWebShellContainer::Init(nsIAppShell* aAppShell, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins)
 {
 	return NS_OK;
 }
@@ -296,16 +296,22 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::BeginLoadURL(..., \"%s\")\n"), W2T(aURL));
 
+	// Setup the post data
+	CComVariant vPostDataRef;
+	CComVariant vPostData;
+	vPostDataRef.vt = VT_BYREF | VT_VARIANT;
+	vPostDataRef.pvarVal = &vPostData;
+	// TODO get the post data passed in via the original call to Navigate()
+
 	// Fire a BeforeNavigate event
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
 	BSTR bstrTargetFrameName = NULL;
 	BSTR bstrHeaders = NULL;
-	VARIANT *pvPostData = NULL;
 	VARIANT_BOOL bCancel = VARIANT_FALSE;
 	long lFlags = 0;
 
-	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
+	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, &vPostDataRef, bstrHeaders, &bCancel);
 
 	// Fire a BeforeNavigate2 event
 	CComVariant vURL(bstrURL);
@@ -313,7 +319,7 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	CComVariant vTargetFrameName(bstrTargetFrameName);
 	CComVariant vHeaders(bstrHeaders);
 
-	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURL, &vFlags, &vTargetFrameName, pvPostData, &vHeaders, &bCancel);
+	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURL, &vFlags, &vTargetFrameName, &vPostDataRef, &vHeaders, &bCancel);
 
 	SysFreeString(bstrURL);
 	SysFreeString(bstrTargetFrameName);
@@ -597,4 +603,5 @@ CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
 	//NOTE: This appears to get fired once for each individual item on a page.
 
 	return NS_OK; 
-}
+} 
+
