@@ -3766,14 +3766,14 @@ FindNextSibling(nsIPresShell* aPresShell,
     aPresShell->GetPrimaryFrameFor(nextContent, &nextSibling);
 
     if (nsnull != nextSibling) {
-      // The frame may have a next-in-flow. Get the last-in-flow
-      nsIFrame* nextInFlow;
+      // The frame may have a next-in-flow. Get the first-in-flow
+      nsIFrame* prevInFlow;
       do {
-        nextSibling->GetNextInFlow(&nextInFlow);
-        if (nsnull != nextInFlow) {
-          nextSibling = nextInFlow;
+        nextSibling->GetPrevInFlow(&prevInFlow);
+        if (nsnull != prevInFlow) {
+          nextSibling = prevInFlow;
         }
-      } while (nsnull != nextInFlow);
+      } while (nsnull != prevInFlow);
 
       // Did we really get the *right* frame?
       const nsStyleDisplay* display;
