@@ -118,57 +118,26 @@ static char *nsMailboxGetURI(char *nativepath)
 // helper function for parsing the search field of a url
 char * extractAttributeValue(const char * searchString, const char * attributeName);
 
-nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
+nsMailboxUrl::nsMailboxUrl()
 {
-    NS_INIT_REFCNT();
-
-	// nsIMailboxUrl specific code...
-	m_errorMessage = nsnull;
-
-    // nsINetLibUrl specific state
-    m_URL_s = nsnull;
-
-	// nsIURL specific state
-    m_protocol = nsnull;
-    m_host = nsnull;
-    m_file = nsnull;
-    m_ref = nsnull;
-    m_spec = nsnull;
-    m_search = nsnull;
-
 	m_mailboxAction = nsMailboxActionParseMailbox;
 	m_filePath = nsnull;
 	m_messageID = nsnull;
 	m_messageKey = 0;
 	m_messageSize = 0;
 	m_messageFileSpec = nsnull;
-
-	m_runningUrl = PR_FALSE;
-
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) getter_AddRefs(m_urlListeners));
-    m_container = aContainer;
-    NS_IF_ADDREF(m_container);
 }
  
 nsMailboxUrl::~nsMailboxUrl()
 {
-    NS_IF_RELEASE(m_container);
-	PR_FREEIF(m_errorMessage);
-
 	delete m_filePath;
 
 	PR_FREEIF(m_messageID);
-    PR_FREEIF(m_spec);
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_file);
-    PR_FREEIF(m_ref);
-    PR_FREEIF(m_search);
 }
-  
-NS_IMPL_THREADSAFE_ADDREF(nsMailboxUrl);
-NS_IMPL_THREADSAFE_RELEASE(nsMailboxUrl);
 
+NS_IMPL_ADDREF_INHERITED(nsMailboxUrl, nsMsgMailNewsUrl)
+NS_IMPL_RELEASE_INHERITED(nsMailboxUrl, nsMsgMailNewsUrl)
+  
 nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) 
@@ -182,24 +151,6 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIURL::GetIID())) 
-	{
-        *aInstancePtr = (void*) ((nsIURL*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsINetlibURL::GetIID())) 
-	{
-        *aInstancePtr = (void*) ((nsINetlibURL*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
-	{
-		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl *) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
 	if (aIID.Equals(nsIMsgUriUrl::GetIID()))
 	{
 		*aInstancePtr = (void *) ((nsIMsgUriUrl *) this);
@@ -217,7 +168,7 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     }
 #endif
  
-    return NS_NOINTERFACE;
+    return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -297,73 +248,6 @@ nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
 	return NS_OK;
 }
 
-nsresult nsMailboxUrl::SetErrorMessage (char * errorMessage)
-{
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
-	{
-		PR_FREEIF(m_errorMessage);
-		m_errorMessage = errorMessage;
-	}
-	NS_UNLOCK_INSTANCE();
-	return NS_OK;
-}
-
-// caller must free using PR_FREE
-nsresult nsMailboxUrl::GetErrorMessage (char ** errorMessage) const
-{
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
-	{
-		if (m_errorMessage)
-			*errorMessage = nsCRT::strdup(m_errorMessage);
-		else
-			*errorMessage = nsnull;
-	}
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-// url listener registration details...
-	
-nsresult nsMailboxUrl::RegisterListener (nsIUrlListener * aUrlListener)
-{
-	nsresult rv = NS_OK;
-	if (m_urlListeners)
-		rv = m_urlListeners->RegisterListener(aUrlListener);
-	return rv;
-}
-	
-nsresult nsMailboxUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
-{
-	nsresult rv = NS_OK;
-	if (m_urlListeners)
-		rv = m_urlListeners->UnRegisterListener(aUrlListener);
-	return rv;
-}
-
-nsresult nsMailboxUrl::GetUrlState(PRBool * aRunningUrl)
-{
-	if (aRunningUrl)
-		*aRunningUrl = m_runningUrl;
-
-	return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
-{
-	m_runningUrl = aRunningUrl;
-	if (m_urlListeners)
-	{
-		if (m_runningUrl)
-			m_urlListeners->OnStartRunningUrl(this);
-		else
-			m_urlListeners->OnStopRunningUrl(this, aExitCode);
-	}
-
-	return NS_OK;
-}
-
 // from nsIMsgUriUrl
 NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 {
@@ -429,20 +313,9 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 	return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// End nsIMailboxUrl specific support
-////////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////
-// Begin nsINetlibURL support
-////////////////////////////////////////////////////////////////////////////////////
-
-NS_METHOD nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
+NS_IMETHODIMP nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 {
-    nsresult result = NS_OK;
-  
-    /* Hook us up with the world. */
-    m_URL_s = URL_s;
+	nsresult rv = nsMsgMailNewsUrl::SetURLInfo(URL_s);
 	if (m_mailboxAction == nsMailboxActionDisplayMessage || m_mailboxAction == nsMailboxActionCopyMessage
 		|| m_mailboxAction == nsMailboxActionMoveMessage || m_mailboxAction == 	nsMailboxActionSaveMessageToDisk 
 		|| m_mailboxAction == nsMailboxActionAppendMessageToDisk)
@@ -452,26 +325,11 @@ NS_METHOD nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 		m_URL_s->range_header = byteRange;
 	}
 
-    return result;
-}
-  
-NS_METHOD nsMailboxUrl::GetURLInfo(URL_Struct_** aResult) const
-{
-  nsresult rv;
-
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    /* XXX: Should the URL be reference counted here?? */
-    *aResult = m_URL_s;
-    rv = NS_OK;
-  }
-
-  return rv;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// End nsINetlibURL support
+// End nsIMailboxUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,33 +354,12 @@ nsresult nsMailboxUrl::ParseSearchPart()
 	return NS_OK;
 }
 
-// XXX recode to use nsString api's
-// XXX don't bother with port numbers
-// XXX don't bother with ref's
-// XXX null pointer checks are incomplete
-
 // warning: don't assume when parsing the url that the protocol part is "news"...
 
-nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
+nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
 {
     // XXX hack!
     char* cSpec = aSpec.ToNewCString();
-
-    const char* uProtocol = nsnull;
-    const char* uHost = nsnull;
-    const char* uFile = nsnull;
-    PRUint32 uPort;
-    if (nsnull != aURL) 
-	{
-        nsresult rslt = aURL->GetProtocol(&uProtocol);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetHost(&uHost);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetFile(&uFile);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetHostPort(&uPort);
-        if (rslt != NS_OK) return rslt;
-    }
 
     NS_LOCK_INSTANCE();
 
@@ -531,21 +368,6 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-
-    if (nsnull == cSpec) 
-	{
-        if (nsnull == aURL) 
-		{
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
-        }
-        m_protocol = (nsnull != uProtocol) ? PL_strdup(uProtocol) : nsnull;
-        m_host = (nsnull != uHost) ? PL_strdup(uHost) : nsnull;
-        m_file = (nsnull != uFile) ? PL_strdup(uFile) : nsnull;
-
-        NS_UNLOCK_INSTANCE();
-        return NS_OK;
-    }
 
     // The URL is considered absolute if and only if it begins with a
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
@@ -675,253 +497,6 @@ void nsMailboxUrl::ReconstructSpec(void)
 	else
 		m_spec = PR_smprintf("%s://%s", m_protocol, m_file);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-PRBool nsMailboxUrl::Equals(const nsIURL* aURL) const 
-{
-    PRBool bIsEqual;
-    nsMailboxUrl* other;
-    NS_LOCK_INSTANCE();
-	// are they both mailbox urls?? if yes...for now just compare the pointers until 
-	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(nsIMailboxUrl::GetIID(), (void**)&other) == NS_OK) {
-        bIsEqual = other == this; // compare the pointers...
-    }
-    else
-        bIsEqual = PR_FALSE;
-    NS_UNLOCK_INSTANCE();
-    return bIsEqual;
-}
-
-nsresult nsMailboxUrl::GetProtocol(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_protocol;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetProtocol(const char *aNewProtocol)
-{
-    NS_LOCK_INSTANCE();
-    m_protocol = nsCRT::strdup(aNewProtocol);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetHost(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_host;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetHost(const char *aNewHost)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_host = nsCRT::strdup(aNewHost);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetFile(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_file;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetFile(const char *aNewFile)
-{
-    nsresult rv = NS_OK;
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_file = nsCRT::strdup(aNewFile);
-    ReconstructSpec();
-	if (m_filePath) {
-		delete m_filePath;
-        m_filePath = nsnull;
-    }
-	m_filePath = new nsFileSpec(m_file);
-    if (m_filePath == nsnull) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_UNLOCK_INSTANCE();
-    return rv;
-}
-
-nsresult nsMailboxUrl::GetSpec(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_spec;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetSpec(const char *aNewSpec)
-{
-    // XXX is this right, or should we call ParseURL?
-    nsresult rv = NS_OK;
-//    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    rv = ParseURL(aNewSpec);
-#if 0
-    PR_FREEIF(m_spec);
-    m_spec = nsCRT::strdup(aNewSpec);
-#endif
-    NS_UNLOCK_INSTANCE();
-    return rv;
-}
-
-nsresult nsMailboxUrl::GetRef(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_ref;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetRef(const char *aNewRef)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_ref = nsCRT::strdup(aNewRef);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetHostPort(PRUint32 *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = 0xFFFFFFFF;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetHostPort(PRUint32 aNewPort)
-{
-	NS_ASSERTION(0, "hmmm mailbox urls don't have a port....");
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetSearch(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_search;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetSearch(const char *aNewSearch)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_search = nsCRT::strdup(aNewSearch);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetContainer(nsISupports* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsMailboxUrl::SetContainer(nsISupports* container)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(m_container);
-    m_container = container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetContentLength(PRInt32 *len)
-{
-    NS_LOCK_INSTANCE();
-    *len = m_URL_s->content_length;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of nsIURL support
-////////////////////////////////////////////////////////////////////////////////////
- 
-////////////////////////////////////////////////////////////////////////////////////
-// The following set of functions should become obsolete once we take them out of
-// nsIURL.....
-////////////////////////////////////////////////////////////////////////////////////
-nsresult nsMailboxUrl::GetLoadAttribs(nsILoadAttribs* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = NULL;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsMailboxUrl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetPostHeader(const char* name, const char* value)
-{
-    NS_LOCK_INSTANCE();
-    // XXX
-    PR_ASSERT(0);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::SetPostData(nsIInputStream* input)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult nsMailboxUrl::GetURLGroup(nsIURLGroup* *result) const
-{
-    return NS_OK;
-}
-  
-nsresult nsMailboxUrl::SetURLGroup(nsIURLGroup* group)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::GetServerStatus(PRInt32 *status)
-{
-    NS_LOCK_INSTANCE();
-    *status = m_URL_s->server_status;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMailboxUrl::ToString(PRUnichar* *aString) const
-{ 
-	if (aString)
-		*aString = nsnull; 
-	return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURL
-////////////////////////////////////////////////////////////////////////////////////
 
 // takes a string like ?messageID=fooo&number=MsgKey and returns a new string 
 // containing just the attribute value. i.e you could pass in this string with
