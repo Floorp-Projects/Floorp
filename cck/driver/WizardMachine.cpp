@@ -1130,6 +1130,7 @@ void CWizardMachineApp::CreateNewCache()
 	{
 		if (GlobalWidgetArray[i].type != "RadioButton" 
 			&& GlobalWidgetArray[i].type != "Text" 
+			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 
 			&& GlobalWidgetArray[i].type != "GroupBox" )
 		{

@@ -851,7 +851,7 @@ void CWizardUI::CreateControls()
 
 		CRect tmpRect = CRect(s_x, s_y, (s_x + s_width), (s_y + s_height));
 
-		if (widgetType == "Text") {
+		if (widgetType == "Text" || widgetType == "BoldText") {
 			curWidget->control = new CStatic;
 			((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 		}
@@ -1064,8 +1064,12 @@ void CWizardUI::CreateControls()
 
 
 		// Set the font of the widget and increment the dynamically assigned ID value
+		/*
 		if ((curWidget->description == "Navigation Status") 
 			|| (curWidget->description == "Current Page")) {
+		*/
+		if (curWidget->type == "BoldText")
+		{
 			curWidget->control->SetFont(m_pNavFont);
 		}
 		else if (curWidget->control)
