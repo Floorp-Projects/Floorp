@@ -111,23 +111,46 @@ public:
   NS_DECL_NSIDOWNLOAD
   NS_DECL_ISUPPORTS
 
-  nsDownload();
-  virtual ~nsDownload();
+  nsDownload(nsDownloadManager* aManager, nsILocalFile* aTarget, nsIURI* aSource);
+  ~nsDownload();
 
-protected:
-  nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
-  nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
-  nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
-  nsresult SetDialog(nsIProgressDialog* aDialog);
-  nsresult GetDialog(nsIProgressDialog** aDialog);
-  nsresult SetPersist(nsIWebBrowserPersist* aPersist);
-  nsresult SetTarget(nsILocalFile* aTarget);
-  nsresult SetSource(nsIURI* aSource);
-  nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
-  nsresult GetDownloadState(DownloadState* aState);
-  nsresult SetDownloadState(DownloadState aState);
-  nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
-  nsresult SetStartTime(PRInt64 aStartTime);
+  void SetDialogListener(nsIWebProgressListener* aInternalListener) {
+    mDialogListener = aInternalListener;
+  }
+  void SetDialog(nsIProgressDialog* aDialog) {
+    mDialog = aDialog;
+  }
+  // May return null
+  nsIProgressDialog* GetDialog() {
+    return mDialog;
+  }
+  void SetPersist(nsIWebBrowserPersist* aPersist) {
+    mPersist = aPersist;
+  }
+
+  struct TransferInformation {
+    PRInt32 mCurrBytes, mMaxBytes;
+    TransferInformation(PRInt32 aCurr, PRInt32 aMax) :
+      mCurrBytes(aCurr),
+      mMaxBytes(aMax)
+      {}
+  };
+
+  TransferInformation GetTransferInformation() {
+    return TransferInformation(mCurrBytes, mMaxBytes);
+  }
+  DownloadState GetDownloadState() {
+    return mDownloadState;
+  }
+  void SetDownloadState(DownloadState aState) {
+    mDownloadState = aState;
+  }
+  void SetMIMEInfo(nsIMIMEInfo* aMIMEInfo) {
+    mMIMEInfo = aMIMEInfo;
+  }
+  void SetStartTime(PRInt64 aStartTime) {
+    mStartTime = aStartTime;
+  }
 private:
   nsDownloadManager* mDownloadManager;
 
@@ -149,8 +172,6 @@ private:
   PRInt32 mMaxBytes;
   PRTime mStartTime;
   PRTime mLastUpdate;
-
-  friend class nsDownloadManager;
 };
 
 #endif
