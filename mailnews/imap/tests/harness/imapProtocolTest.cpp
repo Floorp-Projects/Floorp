@@ -43,6 +43,10 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"
 #include "nsIImapLog.h"
+#include "nsIImapMailfolder.h"
+#include "nsIImapMessage.h"
+#include "nsIImapExtension.h"
+#include "nsIImapMiscellaneous.h"
 
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -83,7 +87,12 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define DEFAULT_PORT		IMAP_PORT
 #define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
 
-class nsIMAP4TestDriver  : public nsIUrlListener, public nsIImapLog
+class nsIMAP4TestDriver  : public nsIUrlListener, 
+                           public nsIImapLog,
+                           public nsIImapMailfolder,
+                           public nsIImapMessage,
+                           public nsIImapExtension, 
+                           public nsIImapMiscellaneous
 {
 public:
 	NS_DECL_ISUPPORTS;
@@ -94,6 +103,115 @@ public:
 
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
+
+    // nsIImapMailfolder support
+    NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
+                                   mailbox_spec* aSpec);
+    NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
+    // Tell mail master about the newly selected mailbox
+    NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
+                                     mailbox_spec* aSpec);
+    NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
+                                       mailbox_spec* aSpec);
+    NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
+    NS_IMETHOD OnlineFolderDelete(nsIImapProtocol* aProtocol,
+                                  const char* folderName);
+    NS_IMETHOD OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
+                                        const char* folderName);
+    NS_IMETHOD OnlineFolderRename(nsIImapProtocol* aProtocol,
+                                  folder_rename_struct* aStruct);
+    NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
+                              EIMAPSubscriptionUpgradeState* aState);
+    NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
+                                                PRBool* aBool);
+    NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
+                                FolderQueryInfo* aInfo);
+    
+    // nsIImapMessage support
+    NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo);
+    
+    NS_IMETHOD ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo);
+    
+    NS_IMETHOD NormalEndMsgWriteStream(nsIImapProtocol* aProtocol);
+    
+    NS_IMETHOD AbortMsgWriteStream(nsIImapProtocol* aProtocol);
+    
+    // message move/copy related methods
+    NS_IMETHOD OnlineCopyReport(nsIImapProtocol* aProtocol,
+                                ImapOnlineCopyState* aCopyState);
+    NS_IMETHOD BeginMessageUpload(nsIImapProtocol* aProtocol);
+    NS_IMETHOD UploadMessageFile(nsIImapProtocol* aProtocol,
+                                 UploadMessageInfo* aMsgInfo);
+
+    // message flags operation
+    NS_IMETHOD NotifyMessageFlags(nsIImapProtocol* aProtocol,
+                                  FlagsKeyStruct* aKeyStruct);
+
+    NS_IMETHOD NotifyMessageDeleted(nsIImapProtocol* aProtocol,
+                                    delete_message_struct* aStruct);
+    NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
+                                    MessageSizeInfo* sizeInfo);
+
+    // nsIImapExtension support
+  
+    NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
+								  PRBool aBool);
+    NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
+                                 const char* hostName);
+    NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
+                                 const char* hostName);
+    NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
+                                 TIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
+                               TIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
+                                   TIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
+                                         TIMAPACLRightsInfo* aclRights);
+    NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
+                                 FolderQueryInfo* aInfo);
+    
+    // nsIImapMiscellaneous support
+	
+	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
+                               const char* searchHitLine);
+	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo);
+	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                                 GenericInfo* aInfo);
+	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
+	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
+	// ****
+	NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol);
+	NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo);
+	NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
+                                  const char* userName);
+	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
+                                     nsMsgBiffState biffState);
+	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
+                                    uid_validity_info* aInfo);
+	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
+                                     PRUint32 uidValidity);
+	NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
+                       const char* aString);
+	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
+                                 const char* aString);
+	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
+                              const char* statusMsg);
+	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
+                               ProgressInfo* aInfo);
+	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
+	NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
+                                const char* hostName);
+	NS_IMETHOD CommitCapabilityForHost(nsIImapProtocol* aProtocol,
+                                       const char* hostName);
+	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
+                               msg_line_info* aInfo);
+	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
+                             TunnelInfo *aInfo);
 
 	nsIMAP4TestDriver(PLEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
@@ -176,6 +294,22 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     {
         *aInstancePtr = (void*)(nsIImapLog*)this;
     }
+    else if (aIID.Equals(nsIImapMailfolder::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIImapMailfolder*)this;
+    }
+    else if (aIID.Equals(nsIImapMessage::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIImapMessage*)this;
+    }
+    else if (aIID.Equals(nsIImapExtension::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIImapExtension*)this;
+    }
+    else if (aIID.Equals(nsIImapMiscellaneous::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIImapMiscellaneous*)this;
+    }
     else if (aIID.Equals(kISupportsIID))
     {
         *aInstancePtr = (void*)(nsISupports*)(nsIUrlListener*)this;
@@ -186,6 +320,409 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
 }
+
+    // nsIImapMailfolder support
+NS_IMETHODIMP
+nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
+                                       mailbox_spec* aSpec)
+{
+    printf("nsIMAP4TestDriver::PossibleImapMailbox\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::MailboxDiscoveryDone\r\n");
+    return NS_OK;
+}
+
+    // Tell mail master about the newly selected mailbox
+NS_IMETHODIMP
+nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
+                                     mailbox_spec* aSpec)
+{
+    printf("nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
+                                       mailbox_spec* aSpec)
+{
+    printf("nsIMAP4TestDriver::UpdateImapMailboxStatus\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::ChildDiscoverySucceeded\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::OnlineFolderDelete(nsIImapProtocol* aProtocol,
+                                  const char* folderName)
+{
+    printf("nsIMAP4TestDriver::OnlineFolderDelete\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
+                                        const char* folderName)
+{
+    printf("nsIMAP4TestDriver::OnlineFolderCreateFailed\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::OnlineFolderRename(nsIImapProtocol* aProtocol,
+                                  folder_rename_struct* aStruct)
+{
+    printf("nsIMAP4TestDriver::OnlineFolderRename\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
+                              EIMAPSubscriptionUpgradeState* aState)
+{
+    printf("nsIMAP4TestDriver::SubscribeUpgradeFinished\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
+                                                PRBool* aBool)
+{
+    printf("nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::FolderIsNoSelect(nsIImapProtocol* aProtocol,
+                                FolderQueryInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::FolderIsNoSelect\r\n");
+    return NS_OK;
+}
+
+    
+    // nsIImapMessage support
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo)
+{
+    printf("nsIMAP4TestDriver::SetupMsgWriteStream\r\n");
+    return NS_OK;
+}
+
+    
+NS_IMETHODIMP
+nsIMAP4TestDriver::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo)
+{
+    printf("nsIMAP4TestDriver::ParseAdoptedMsgLine\r\n");
+    return NS_OK;
+}
+
+    
+NS_IMETHODIMP
+nsIMAP4TestDriver::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::NormalEndMsgWriteStream\r\n");
+    return NS_OK;
+}
+
+    
+NS_IMETHODIMP
+nsIMAP4TestDriver::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::AbortMsgWriteStream\r\n");
+    return NS_OK;
+}
+
+    
+    // message move/copy related methods
+NS_IMETHODIMP
+nsIMAP4TestDriver::OnlineCopyReport(nsIImapProtocol* aProtocol,
+                                ImapOnlineCopyState* aCopyState)
+{
+    printf("nsIMAP4TestDriver::OnlineCopyReport\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::BeginMessageUpload(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::BeginMessageUpload\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::UploadMessageFile(nsIImapProtocol* aProtocol,
+                                 UploadMessageInfo* aMsgInfo)
+{
+    printf("nsIMAP4TestDriver::UploadMessageFile\r\n");
+    return NS_OK;
+}
+
+
+    // message flags operation
+NS_IMETHODIMP
+nsIMAP4TestDriver::NotifyMessageFlags(nsIImapProtocol* aProtocol,
+                                  FlagsKeyStruct* aKeyStruct)
+{
+    printf("nsIMAP4TestDriver::NotifyMessageFlags\r\n");
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
+                                    delete_message_struct* aStruct)
+{
+    printf("nsIMAP4TestDriver::NotifyMessageDeleted\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
+                                    MessageSizeInfo* sizeInfo)
+{
+    printf("nsIMAP4TestDriver::GetMessageSizeFromDB\r\n");
+    return NS_OK;
+}
+
+
+    // nsIImapExtension support
+  
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetUserAuthenticated(nsIImapProtocol* aProtocol,
+								  PRBool aBool)
+{
+    printf("nsIMAP4TestDriver::SetUserAuthenticated\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetMailServerUrls(nsIImapProtocol* aProtocol,
+                                 const char* hostName)
+{
+    printf("nsIMAP4TestDriver::SetMailServerUrls\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetMailAccountUrl(nsIImapProtocol* aProtocol,
+                                 const char* hostName)
+{
+    printf("nsIMAP4TestDriver::SetMailAccountUrl\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::ClearFolderRights(nsIImapProtocol* aProtocol,
+                                 TIMAPACLRightsInfo* aclRights)
+{
+    printf("nsIMAP4TestDriver::ClearFolderRights\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::AddFolderRights(nsIImapProtocol* aProtocol,
+                               TIMAPACLRightsInfo* aclRights)
+{
+    printf("nsIMAP4TestDriver::AddFolderRights\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::RefreshFolderRights(nsIImapProtocol* aProtocol,
+                                   TIMAPACLRightsInfo* aclRights)
+{
+    printf("nsIMAP4TestDriver::RefreshFolderRights\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
+                                         TIMAPACLRightsInfo* aclRights)
+{
+    printf("nsIMAP4TestDriver::FolderNeedsACLInitialized\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetFolderAdminURL(nsIImapProtocol* aProtocol,
+                                 FolderQueryInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::SetFolderAdminURL\r\n");
+    return NS_OK;
+}
+
+    
+    // nsIImapMiscellaneous support
+	
+NS_IMETHODIMP
+nsIMAP4TestDriver::AddSearchResult(nsIImapProtocol* aProtocol, 
+                               const char* searchHitLine)
+{
+    printf("nsIMAP4TestDriver::AddSearchResult\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::GetArbitraryHeaders\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
+                                                 GenericInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::HeaderFetchCompleted\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::UpdateSecurityStatus\r\n");
+    return NS_OK;
+}
+
+	// ****
+NS_IMETHODIMP
+nsIMAP4TestDriver::FinishImapConnection(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::FinishImapConnection\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetImapHostPassword(nsIImapProtocol* aProtocol,
+                                   GenericInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::SetImapHostPassword\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetPasswordForUser(nsIImapProtocol* aProtocol,
+                                  const char* userName)
+{
+    printf("nsIMAP4TestDriver::GetPasswordForUser\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
+                                     nsMsgBiffState biffState)
+{
+    printf("nsIMAP4TestDriver::SetBiffStateAndUpdate\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
+                                    uid_validity_info* aInfo)
+{
+    printf("nsIMAP4TestDriver::GetStoredUIDValidity\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
+                                     PRUint32 uidValidity)
+{
+    printf("nsIMAP4TestDriver::LiteSelectUIDValidity\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::FEAlert(nsIImapProtocol* aProtocol,
+                       const char* aString)
+{
+    printf("nsIMAP4TestDriver::FEAlert\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::FEAlertFromServer(nsIImapProtocol* aProtocol,
+                                 const char* aString)
+{
+    printf("nsIMAP4TestDriver::FEAlertFromServer\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::ProgressStatus(nsIImapProtocol* aProtocol,
+                              const char* statusMsg)
+{
+    printf("nsIMAP4TestDriver::ProgressStatus\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::PercentProgress(nsIImapProtocol* aProtocol,
+                               ProgressInfo* aInfo)
+{
+    printf("nsIMAP4TestDriver::PercentProgress\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::PastPasswordCheck(nsIImapProtocol* aProtocol)
+{
+    printf("nsIMAP4TestDriver::PastPasswordCheck\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::CommitNamespaces(nsIImapProtocol* aProtocol,
+                                const char* hostName)
+{
+    printf("nsIMAP4TestDriver::CommitNamespaces\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::CommitCapabilityForHost(nsIImapProtocol* aProtocol,
+                                       const char* hostName)
+{
+    printf("nsIMAP4TestDriver::CommitCapabilityForHost\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::TunnelOutStream(nsIImapProtocol* aProtocol,
+                               msg_line_info* aInfo)
+{
+    printf("nsIMAP4TestDriver::TunnelOutStream\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIMAP4TestDriver::ProcessTunnel(nsIImapProtocol* aProtocol,
+                             TunnelInfo *aInfo)
+{
+    printf("nsIMAP4TestDriver::ProcessTunnel\r\n");
+    return NS_OK;
+}
+
 
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
@@ -408,6 +945,11 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
+        m_url->SetImapMailfolder(this);
+        m_url->SetImapMessage(this);
+        m_url->SetImapExtension(this);
+        m_url->SetImapMiscellaneous(this);
+
 		rv = m_url->SetSpec(m_urlString); // reset spec
 		m_url->RegisterListener(this);
     }
