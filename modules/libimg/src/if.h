@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.3 1998/09/22 16:59:42 wtc%netscape.com Exp $
+ * $Id: if.h,v 3.4 1998/11/10 00:07:58 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -65,8 +65,8 @@ typedef struct il_container_struct il_container;
 #include "ilIImageRenderer.h"
 #endif /* STANDALONE_IMAGE_LIB */
 
-/*****************************XXXM12N Get rid of this. ***********************/
-
+/***************************** also in xpcompat.h ***********************/
+#ifndef STANDALONE_IMAGE_LIB
 PR_BEGIN_EXTERN_C
 typedef void
 (*TimeoutCallbackFunction) (void * closure);
@@ -76,8 +76,8 @@ FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 extern void
 FE_ClearTimeout(void *timer_id);
 PR_END_EXTERN_C
-
-/*********************************XXXM12N*************************************/
+#endif
+/********************************* in xpcompat.h *************************************/
 
 #include "il.h"
 
