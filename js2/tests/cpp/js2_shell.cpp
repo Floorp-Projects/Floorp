@@ -107,10 +107,7 @@ static void genCode(World &world, Context &cx, StmtNode *p)
         ret = icg.genStmt(p);
         p = p->next;
     }
-    if (ret != NotARegister)
-        icg.addInstruction(new Return(ret));
-    else
-        icg.addInstruction(new ReturnVoid());
+    icg.returnStmt(ret);
     stdOut << '\n';
     stdOut << icg;
     JSValue result = cx.interpret(icg.complete(), JSValues());
@@ -218,7 +215,7 @@ static float64 testFactorial(World &world, float64 n)
     Context cx(world, &glob);
     // generate code for factorial, and interpret it.
     uint32 pos = 0;
-    ICodeGenerator icg;
+    ICodeGenerator icg(&world);
         
     // fact(n) {
     // var result = 1;
@@ -226,7 +223,7 @@ static float64 testFactorial(World &world, float64 n)
     StringAtom &n_name = world.identifiers[widenCString("n")];
     StringAtom &result_name = world.identifiers[widenCString("result")];
 
-    Register r_n = icg.allocateVariable(n_name);
+    Register r_n = icg.allocateParameter(n_name);
     Register r_result = icg.allocateVariable(result_name);
 
     Arena a;
@@ -264,7 +261,7 @@ static float64 testFactorial(World &world, float64 n)
     }
         
     // return result;
-    icg.addInstruction(new Return(r_result));
+    icg.returnStmt(r_result);
     ICodeModule *icm = icg.complete();
     stdOut << icg;
         
@@ -274,10 +271,10 @@ static float64 testFactorial(World &world, float64 n)
         
     // now a script : 
     // return fact(n);
-    ICodeGenerator script;
+    ICodeGenerator script(&world);
     RegisterList args(1);
     args[0] = script.loadImmediate(n);
-    script.addInstruction(new Return(script.call(script.loadName(fact), args)));
+    script.returnStmt(script.call(script.loadName(fact), args));
     stdOut << script;
     
     // install a listener so we can trace execution of factorial.
