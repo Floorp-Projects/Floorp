@@ -22,16 +22,16 @@ include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
-      nsInsertHTMLTxn.cpp			     \
+      nsInsertHTMLTxn.cpp    \
       nsEditor.cpp			     \
-      nsTextEditor.cpp       \
+      nsEditorUtils.cpp      \
+      nsEditorRegistration.cpp \
       nsTextEditRules.cpp    \
       nsHTMLEditRules.cpp    \
       TextEditorTest.cpp     \
       nsEditorEventListeners.cpp   \
-      nsEditProperty.cpp      \
-      nsEditFactory.cpp      \
-      nsTextEditFactory.cpp  \
+      nsEditProperty.cpp     \
+      nsEditorFactory.cpp    \
       EditTxn.cpp            \
       EditAggregateTxn.cpp   \
       ChangeAttributeTxn.cpp \
@@ -46,31 +46,31 @@ CPPSRCS =				\
       JoinElementTxn.cpp     \
       nsStyleSheetTxns.cpp   \
       TransactionFactory.cpp \
+      TypeInState.cpp        \
       nsHTMLEditor.cpp       \
-      nsHTMLEditFactory.cpp  \
       EditTable.cpp          \
-      nsInternetCiter.cpp     \
-      nsAOLCiter.cpp          \
-      nsInterfaceState.cpp    \
-      nsEditorShell.cpp				\
+      nsInternetCiter.cpp    \
+      nsAOLCiter.cpp         \
+      nsInterfaceState.cpp   \
+      nsEditorShell.cpp      \
       nsEditorShellFactory.cpp	\
-      nsJSEditorLog.cpp       \
-      nsJSTxnLog.cpp          \
-	  IMETextTxn.cpp			\
-	  IMECommitTxn.cpp			\
+      nsJSEditorLog.cpp      \
+      nsJSTxnLog.cpp         \
+	   IMETextTxn.cpp			     \
+	   IMECommitTxn.cpp			   \
 	$(NULL)
 
 CPP_OBJS =					\
-	.\$(OBJDIR)\nsInsertHTMLTxn.obj		        \
+	.\$(OBJDIR)\nsInsertHTMLTxn.obj	    \
 	.\$(OBJDIR)\nsEditor.obj		        \
-  .\$(OBJDIR)\nsTextEditor.obj        \
+	.\$(OBJDIR)\nsEditorUtils.obj		    \
+	.\$(OBJDIR)\nsEditorRegistration.obj    \
   .\$(OBJDIR)\nsTextEditRules.obj     \
   .\$(OBJDIR)\TextEditorTest.obj      \
   .\$(OBJDIR)\nsHTMLEditRules.obj     \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
 	.\$(OBJDIR)\nsEditProperty.obj	    \
-  .\$(OBJDIR)\nsEditFactory.obj		    \
-  .\$(OBJDIR)\nsTextEditFactory.obj		\
+  .\$(OBJDIR)\nsEditorFactory.obj		    \
   .\$(OBJDIR)\EditTxn.obj             \
   .\$(OBJDIR)\EditAggregateTxn.obj    \
   .\$(OBJDIR)\ChangeAttributeTxn.obj  \
@@ -85,17 +85,17 @@ CPP_OBJS =					\
   .\$(OBJDIR)\JoinElementTxn.obj      \
   .\$(OBJDIR)\nsStyleSheetTxns.obj    \
   .\$(OBJDIR)\TransactionFactory.obj  \
+  .\$(OBJDIR)\TypeInState.obj         \
   .\$(OBJDIR)\nsHTMLEditor.obj        \
-  .\$(OBJDIR)\nsHTMLEditFactory.obj   \
   .\$(OBJDIR)\EditTable.obj           \
-  .\$(OBJDIR)\nsInternetCiter.obj      \
-  .\$(OBJDIR)\nsAOLCiter.obj           \
-  .\$(OBJDIR)\nsInterfaceState.obj     \
-  .\$(OBJDIR)\nsEditorShell.obj        \
+  .\$(OBJDIR)\nsInternetCiter.obj     \
+  .\$(OBJDIR)\nsAOLCiter.obj          \
+  .\$(OBJDIR)\nsInterfaceState.obj    \
+  .\$(OBJDIR)\nsEditorShell.obj       \
   .\$(OBJDIR)\nsEditorShellFactory.obj \
   .\$(OBJDIR)\nsJSEditorLog.obj       \
   .\$(OBJDIR)\nsJSTxnLog.obj          \
-  .\$(OBJDIR)\IMETextTxn.obj        \
+  .\$(OBJDIR)\IMETextTxn.obj          \
   .\$(OBJDIR)\IMECommitTxn.obj        \
 	$(NULL)
 

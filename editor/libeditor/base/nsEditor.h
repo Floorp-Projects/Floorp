@@ -19,15 +19,20 @@
 #ifndef __editor_h__
 #define __editor_h__
 
+#include "nsCOMPtr.h"
 #include "prmon.h"
+
 #include "nsIEditor.h"
+#include "nsIEditorIMESupport.h"
+#include "nsIEditorLogging.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
 #include "nsIPrivateTextRange.h"
-#include "nsCOMPtr.h"
+
 #include "nsIStringBundle.h"
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
@@ -78,43 +83,10 @@ PRMonitor *GetEditorMonitor();
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
-class nsEditor : public nsIEditor
+class nsEditor : public nsIEditor,
+                 public nsIEditorIMESupport,
+                 public nsIEditorLogging
 {
-private:
-  nsIPresShell   *mPresShell;
-  nsIViewManager *mViewManager;
-  PRUint32        mUpdateCount;
-  nsCOMPtr<nsITransactionManager> mTxnMgr;
-  nsCOMPtr<nsIEditProperty>  mEditProperty;
-  nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
-
-  //
-  // data necessary to build IME transactions
-  //
-  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;
-  PRUint32						mIMETextOffset;
-  PRUint32						mIMEBufferLength;
-
-  friend PRBool NSCanUnload(nsISupports* serviceMgr);
-  static PRInt32 gInstanceCount;
-
-  nsVoidArray*                  mActionListeners;
-  nsCOMPtr<nsISupportsArray>    mDocStateListeners;
-  nsCOMPtr<nsIStringBundle>     mStringBundle;
-
-  PRInt8                        mDocDirtyState;		// -1 = not initialized
-
-protected:
-  nsIDOMDocument * mDoc;
-  nsCOMPtr<nsIDTD> mDTD;
-  // Services are not nsCOMPtr friendly
-  nsIPref* mPrefs;
-
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsJSEditorLog *mJSEditorLog;
-  nsJSTxnLog *mJSTxnLog;
-#endif // ENABLE_JS_EDITOR_LOG
-
 public:
 
   enum IterDirection
@@ -134,76 +106,66 @@ public:
    *  for someone to derive from the nsEditor later? I dont believe so.
    */
   virtual ~nsEditor();
-
-/*BEGIN nsIEditor for more details*/
   
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
-
+  /* ------------ nsIEditor methods -------------- */
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags);
   NS_IMETHOD PostCreate();
-
+  NS_IMETHOD GetFlags(PRUint32 *aFlags) = 0;
+  NS_IMETHOD SetFlags(PRUint32 aFlags) = 0;
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
-
-  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
-
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
-
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
+  
+  NS_IMETHOD EnableUndo(PRBool aEnable);
+  NS_IMETHOD Do(nsITransaction *aTxn);
+  NS_IMETHOD Undo(PRUint32 aCount);
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
+  NS_IMETHOD Redo(PRUint32 aCount);
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
 
-  NS_IMETHOD SetProperties(nsVoidArray *aPropList);
+  NS_IMETHOD BeginTransaction();
+  NS_IMETHOD EndTransaction();
 
-  NS_IMETHOD GetProperties(nsVoidArray *aPropList);
+  // file handling
+  NS_IMETHOD Save();
+  NS_IMETHOD SaveAs(PRBool aSavingCopy);
+  NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
 
+  // these are pure virtual in this base class
+  NS_IMETHOD Cut() = 0;
+  NS_IMETHOD Copy() = 0;
+  NS_IMETHOD Paste() = 0;
+
+  NS_IMETHOD SelectAll();
+
+  NS_IMETHOD BeginningOfDocument();
+  NS_IMETHOD EndOfDocument();
+
+
+  /* Node and element manipulation */
   NS_IMETHOD SetAttribute(nsIDOMElement * aElement, 
                           const nsString& aAttribute, 
                           const nsString& aValue);
-
+                          
   NS_IMETHOD GetAttributeValue(nsIDOMElement * aElement, 
                                const nsString& aAttribute, 
                                nsString&       aResultValue, 
                                PRBool&         aResultIsSet);
-
+                               
   NS_IMETHOD RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
-
-  //NOTE: Most callers are dealing with Nodes,
-  //  but these objects must supports nsIDOMElement
-  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
 
   NS_IMETHOD CreateNode(const nsString& aTag,
                         nsIDOMNode *    aParent,
                         PRInt32         aPosition,
                         nsIDOMNode **   aNewNode);
-
+                        
   NS_IMETHOD InsertNode(nsIDOMNode * aNode,
                         nsIDOMNode * aParent,
                         PRInt32      aPosition);
-
-  NS_IMETHOD InsertText(const nsString& aStringToInsert);
-
-  NS_IMETHOD BeginComposition(void);
-
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList, nsTextEventReply *aReply);
-
-  NS_IMETHOD EndComposition(void);
-  
-  NS_IMETHOD OutputToString(nsString& aOutputString,
-                            const nsString& aFormatType,
-                            PRUint32 aFlags);
-  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsString& aFormatType,
-                            const nsString* aCharsetOverride,
-                            PRUint32 aFlags);
-  NS_IMETHOD DumpContentTree();
-
-  NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
-
-  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);
-
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
-
 
   NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
                        PRInt32      aOffset,
@@ -213,69 +175,63 @@ public:
                        nsIDOMNode * aRightNode,
                        nsIDOMNode * aParent);
 
-  NS_IMETHOD InsertBreak();
+  NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
-  NS_IMETHOD EnableUndo(PRBool aEnable);
 
-  NS_IMETHOD Do(nsITransaction *aTxn);
+  /* output */
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags);
+                            
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags);
 
-  NS_IMETHOD Undo(PRUint32 aCount);
-
-  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
-
-  NS_IMETHOD Redo(PRUint32 aCount);
-
-  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
-
-  NS_IMETHOD BeginTransaction();
-
-  NS_IMETHOD EndTransaction();
-
-  NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject);
-
-  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
-
-  NS_IMETHOD SelectAll();
-
-  NS_IMETHOD BeginningOfDocument();
-
-  NS_IMETHOD EndOfDocument();
-
-  NS_IMETHOD Cut();
-  
-  NS_IMETHOD Copy();
-  
-  NS_IMETHOD Paste();
-
-  NS_IMETHOD PasteAsQuotation();
-
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText);
-
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
-  NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
-  NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
-
+  /* Listeners */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
-
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
   NS_IMETHOD AddDocumentStateListener(nsIDocumentStateListener *aListener);
   NS_IMETHOD RemoveDocumentStateListener(nsIDocumentStateListener *aListener);
-  NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
 
+
+  NS_IMETHOD DumpContentTree();
+  NS_IMETHOD DebugDumpContent() const;
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
+
+  /* ------------ nsIEditorIMESupport methods -------------- */
+  
+  NS_IMETHOD BeginComposition(void);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD EndComposition(void);
+
+  /* ------------ nsIEditorLogging methods -------------- */
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
   NS_IMETHOD StopLogging();
 
-/*END nsIEditor interfaces*/
+public:
 
-  /* StyleSheet load callback */
-  static void ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData);
   
+  NS_IMETHOD InsertTextImpl(const nsString& aStringToInsert);
+  NS_IMETHOD DeleteSelectionImpl(ESelectionCollapseDirection aAction);
 
-/*BEGIN private methods used by the implementations of the above functions*/
+
 protected:
+
+
+  // why not use the one in nsHTMLDocument?
+  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
+
+  //NOTE: Most callers are dealing with Nodes,
+  //  but these objects must supports nsIDOMElement
+  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
+  /*
+  NS_IMETHOD SetProperties(nsVoidArray *aPropList);
+  NS_IMETHOD GetProperties(nsVoidArray *aPropList);
+  */
+  
   /** create a transaction for setting aAttribute to aValue on aElement
     */
   NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
@@ -308,6 +264,26 @@ protected:
   NS_IMETHOD CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                        DeleteElementTxn ** aTxn);
 
+
+  /** Create an aggregate transaction for deleting current selection
+   *  Used by all methods that need to delete current selection,
+   *    then insert something new to replace it
+   *  @param nsString& aTxnName is the name of the aggregated transaction
+   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
+   *    with the DeleteSelectionTxn as the first child ONLY
+   *    if there was a selection to delete.
+   */
+  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
+
+
+  NS_IMETHOD CreateTxnForDeleteSelection(ESelectionCollapseDirection aAction,
+                                              EditAggregateTxn  ** aTxn);
+
+  NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
+                                              ESelectionCollapseDirection aAction, 
+                                              EditAggregateTxn    *aTxn);
+
+
   /** create a transaction for inserting aStringToInsert into aTextNode
     * if aTextNode is null, the string is inserted at the current selection.
     */
@@ -326,15 +302,12 @@ protected:
   /** create a transaction for removing a style sheet
     */
   NS_IMETHOD CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn);
-
-  /* remove the old style sheet, and apply the supplied one */
-  NS_IMETHOD ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet);
   
   /** insert aStringToInsert as the first text in the document
     */
   NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
 
-  NS_IMETHOD DoInitialInputMethodInsert(const nsString& aStringToInsert,nsIPrivateTextRangeList* aTextRangeList);
+  NS_IMETHOD DoInitialInputMethodInsert(const nsString & aStringToInsert, nsIPrivateTextRangeList* aTextRangeList);
 
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
@@ -345,14 +318,7 @@ protected:
                                     PRUint32             aOffset,
                                     PRUint32             aLength,
                                     DeleteTextTxn      **aTxn);
-
-  NS_IMETHOD CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelectionAction aAction,
-                                         EditAggregateTxn  ** aTxn);
-
-  NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                              nsIEditor::ECollapsedSelectionAction aAction, 
-                                              EditAggregateTxn    *aTxn);
-
+	
   NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
                                    PRUint32    aOffset,
                                    SplitElementTxn **aTxn);
@@ -361,19 +327,8 @@ protected:
                                   nsIDOMNode  *aRightNode,
                                   JoinElementTxn **aTxn);
 
-  /** Create an aggregate transaction for deleting current selection
-   *  Used by all methods that need to delete current selection,
-   *    then insert something new to replace it
-   *  @param nsString& aTxnName is the name of the aggregated transaction
-   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
-   *    with the DeleteSelectionTxn as the first child ONLY
-   *    if there was a selection to delete.
-   */
-  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
 
-  NS_IMETHOD DebugDumpContent() const;
-
-  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList* aTextRangeList);
+  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList *aTextRangeList);
 
   // called each time we modify the document. Increments the mod
   // count of the doc.
@@ -415,9 +370,16 @@ protected:
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
 
-  NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
+// file handling utils
+
+  NS_IMETHOD SaveDocument(PRBool saveAs, PRBool saveCopy);
+
+  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 public:
+
+  static nsString& GetTextNodeTag();
+
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
    * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
@@ -626,39 +588,45 @@ public:
 
   nsresult BeginUpdateViewBatch(void);
   nsresult EndUpdateViewBatch(void);
-};
 
 
-class nsAutoEditBatch
-{
-  private:
-    nsCOMPtr<nsIEditor> mEd;
-  public:
-    nsAutoEditBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)) 
-                   { if (mEd) mEd->BeginTransaction(); }
-    ~nsAutoEditBatch() { if (mEd) mEd->EndTransaction(); }
-};
+protected:
 
-class nsAutoSelectionReset
-{
-  private:
-    /** ref-counted reference to the selection that we are supposed to restore */
-    nsCOMPtr<nsIDOMSelection> mSel;
+  PRUint32        mFlags;		// behavior flags. See nsIHTMLEditor.h for the flags we use.
+  
+  nsIPresShell   *mPresShell;
+  nsIViewManager *mViewManager;
+  PRUint32        mUpdateCount;
+  nsCOMPtr<nsITransactionManager> mTxnMgr;
+  nsCOMPtr<nsIEditProperty>  mEditProperty;
+  nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
 
-    /** PR_TRUE if this instance initialized itself correctly */
-    PRBool mInitialized;
+  //
+  // data necessary to build IME transactions
+  //
+  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;
+  PRUint32						mIMETextOffset;
+  PRUint32						mIMEBufferLength;
 
-    nsCOMPtr<nsIDOMNode> mStartNode;
-    nsCOMPtr<nsIDOMNode> mEndNode;
-    PRInt32 mStartOffset;
-    PRInt32 mEndOffset;
+  nsVoidArray*                  mActionListeners;
+  nsCOMPtr<nsISupportsArray>    mDocStateListeners;
+  nsCOMPtr<nsIStringBundle>     mStringBundle;
 
-  public:
-    /** constructor responsible for remembering all state needed to restore aSel */
-    nsAutoSelectionReset(nsIDOMSelection *aSel);
-    
-    /** destructor restores mSel to its former state */
-    ~nsAutoSelectionReset();
+  PRInt8                        mDocDirtyState;		// -1 = not initialized
+
+  nsIDOMDocument * mDoc;
+  nsCOMPtr<nsIDTD> mDTD;
+  // Services are not nsCOMPtr friendly
+  nsIPref* mPrefs;
+
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsJSEditorLog *mJSEditorLog;
+  nsJSTxnLog *mJSTxnLog;
+#endif // ENABLE_JS_EDITOR_LOG
+
+  static PRInt32 gInstanceCount;
+
+  friend PRBool NSCanUnload(nsISupports* serviceMgr);
 };
 
 

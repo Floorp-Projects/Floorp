@@ -30,7 +30,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
 
-#include "nsITextEditor.h"
+#include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 
 #include "nsInterfaceState.h"
@@ -88,7 +88,7 @@ nsInterfaceState::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsInterfaceState::Init(nsISupports* aEditor, nsIWebShell *aChromeWebShell)
+nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIWebShell *aChromeWebShell)
 {
   if (!aEditor)
     return NS_ERROR_INVALID_ARG;
@@ -153,9 +153,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
 {
   nsStringArray tagList;
   
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-    htmlEditor->GetParagraphStyle(&tagList);
+  mEditor->GetParagraphStyle(&tagList);
 
   PRInt32 numTags = tagList.Count();
   if (numTags > 0)
@@ -184,18 +182,14 @@ nsInterfaceState::UpdateListState(const char* observerName, const char* tagName)
     editor->GetSelection(getter_AddRefs(domSelection));
   }
 
-  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    nsAutoString  tagStr(tagName);
-    
-    nsCOMPtr<nsIDOMNode>       domNode;
-    if (domSelection)
-      domSelection->GetAnchorNode(getter_AddRefs(domNode));
-    
-    nsCOMPtr<nsIDOMElement> parentElement;
-    rv = htmlEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
-  }
+  nsAutoString  tagStr(tagName);
+  
+  nsCOMPtr<nsIDOMNode>       domNode;
+  if (domSelection)
+    domSelection->GetAnchorNode(getter_AddRefs(domNode));
+  
+  nsCOMPtr<nsIDOMElement> parentElement;
+  rv = mEditor->GetElementOrParentByTagName(tagStr, domNode, getter_AddRefs(parentElement));
 
   return rv;
 }
@@ -212,18 +206,7 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom("font"));
   nsAutoString faceStr("face");
   
-  nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-  if (textEditor)
-  {
-    rv = textEditor->GetTextProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-  }
-  else
-  {
-    nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-    if (htmlEditor)
-      rv = htmlEditor->GetTextProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-  }
- 
+  rv = mEditor->GetInlineProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
   
   return rv;
 }
@@ -240,17 +223,7 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
   
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(tagName));
 
-  nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
-  if (textEditor)
-  {
-    rv = textEditor->GetTextProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-  }
-  else
-  {
-    nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-    if (htmlEditor)
-      rv = htmlEditor->GetTextProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-  }
+  rv = mEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
  
   PRBool    &behaviour = allOfSelectionHasProp;			// change this to alter the behaviour
   if (behaviour != ioState)
@@ -309,7 +282,7 @@ nsInterfaceState::SetNodeAttribute(const char* nodeID, const char* attributeName
 }
 
 
-nsresult NS_NewInterfaceState(nsISupports* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult)
+nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult)
 {
   nsInterfaceState* newThang = new nsInterfaceState;
   if (!newThang)

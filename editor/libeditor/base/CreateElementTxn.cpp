@@ -79,7 +79,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     result = mEditor->GetDocument(getter_AddRefs(doc));
     if ((NS_SUCCEEDED(result)) && (doc))
     {
-      if (nsIEditor::GetTextNodeTag() == mTag) 
+      if (nsEditor::GetTextNodeTag() == mTag) 
       {
         const nsString stringData;
         nsCOMPtr<nsIDOMText>newTextNode;

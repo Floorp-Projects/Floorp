@@ -22,14 +22,14 @@
 #ifdef NS_DEBUG
 
 #include "nsCOMPtr.h"
-#include "nsITextEditor.h"
 #include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 class TextEditorTest
 {
 public:
 
-  void Run(nsITextEditor *aEditor, PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
+  void Run(nsIEditor *aEditor, PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
   TextEditorTest();
   ~TextEditorTest();
 
@@ -44,7 +44,7 @@ protected:
 
   nsresult TestTextProperties();
 
-  nsCOMPtr<nsITextEditor> mTextEditor;
+  nsCOMPtr<nsIHTMLEditor> mTextEditor;
   nsCOMPtr<nsIEditor> mEditor;
 };
 

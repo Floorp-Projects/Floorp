@@ -19,10 +19,12 @@
 #ifndef nsTextEditRules_h__
 #define nsTextEditRules_h__
 
-#include "nsIEditor.h"
-#include "nsEditRules.h"
 #include "nsCOMPtr.h"
+
+#include "nsHTMLEditor.h"
 #include "nsIDOMNode.h"
+
+#include "nsEditRules.h"
 #include "TypeInState.h"
 
 class PlaceholderTxn;
@@ -43,11 +45,11 @@ class nsTextEditRules : public nsEditRules
 {
 public:
 
-  nsTextEditRules();
-  virtual ~nsTextEditRules();
+              nsTextEditRules(PRUint32 aFlags);
+  virtual     ~nsTextEditRules();
 
   // nsEditRules methods
-  NS_IMETHOD Init(nsIEditor *aEditor);
+  NS_IMETHOD Init(nsHTMLEditor *aEditor);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
@@ -96,10 +98,10 @@ protected:
   nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
 
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, 
-                               nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                               nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
                                PRBool *aCancel);
   nsresult DidDeleteSelection(nsIDOMSelection *aSelection, 
-                              nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                              nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
                               nsresult aResult);
 
   nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
@@ -154,7 +156,7 @@ protected:
   nsresult PinSelectionInPRE(nsIDOMSelection *aSelection);
   
   // data
-  nsTextEditor *mEditor;  // note that we do not refcount the editor
+  nsHTMLEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
@@ -173,7 +175,7 @@ class nsTextRulesInfo : public nsRulesInfo
     outString(0),
     typeInState(),
     maxLength(-1),
-    collapsedAction(nsIEditor::eDeleteRight) 
+    collapsedAction(nsIEditor::eDeleteNext) 
     {};
 
   virtual ~nsTextRulesInfo() {};
@@ -186,7 +188,7 @@ class nsTextRulesInfo : public nsRulesInfo
   PRInt32 maxLength;
   
   // kDeleteSelection
-  nsIEditor::ECollapsedSelectionAction collapsedAction;
+  nsIEditor::ESelectionCollapseDirection collapsedAction;
   
   // kMakeList
   PRBool bOrdered;

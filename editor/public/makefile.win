@@ -18,14 +18,17 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-EXPORTS =		        \
-    nsIEditActionListener.h	    \
-    nsIEditor.h	    \
-    nsITextEditor.h	\
-    nsIHTMLEditor.h	\
-    nsIEditRules.h  \
-    nsEditorCID.h	  \
-    nsICiter.h	\
+EXPORTS =		                         \
+    nsIEditActionListener.h	         \
+    nsIEditor.h	                     \
+    nsEditorCID.h	                   \
+    nsICiter.h	                     \
+    nsIEditorIMESupport.h            \
+    nsIEditorLogging.h               \
+    nsIEditorMailSupport.h           \
+    nsIEditorStyleSheets.h           \
+    nsIHTMLEditor.h                  \
+    nsITableEditor.h                 \
     $(NULL)
 
 MODULE = editor 

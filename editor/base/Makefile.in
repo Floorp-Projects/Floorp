@@ -27,16 +27,15 @@ IS_COMPONENT =  1
 
 CPPSRCS =                       \
     nsEditor.cpp                \
-    nsTextEditor.cpp            \
+    nsEditorUtils.cpp           \
+    nsEditorRegistration.cpp    \
     nsTextEditRules.cpp         \
     TextEditorTest.cpp          \
     nsHTMLEditRules.cpp         \
     nsEditorEventListeners.cpp  \
     nsEditProperty.cpp          \
-    nsEditFactory.cpp           \
-    nsHTMLEditFactory.cpp       \
+    nsEditorFactory.cpp         \
     nsHTMLEditor.cpp            \
-    nsTextEditFactory.cpp       \
     ChangeAttributeTxn.cpp      \
     EditTxn.cpp                 \
     EditAggregateTxn.cpp        \
@@ -53,6 +52,7 @@ CPPSRCS =                       \
     JoinElementTxn.cpp          \
     nsStyleSheetTxns.cpp        \
     TransactionFactory.cpp      \
+    TypeInState.cpp             \
     nsInternetCiter.cpp         \
     nsAOLCiter.cpp              \
     nsInterfaceState.cpp        \

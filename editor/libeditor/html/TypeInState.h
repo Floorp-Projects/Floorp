@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef ChangeAttributeTxn_h__
-#define ChangeAttributeTxn_h__
+#ifndef TypeInState_h__
+#define TypeInState_h__
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIEditProperty.h"
@@ -228,4 +228,5 @@ inline void TypeInState::SetPropValue(PRUint32 aProp, const nsString &aValue)
   }
 }
 
-#endif
+#endif	// TypeInState_h__
+
