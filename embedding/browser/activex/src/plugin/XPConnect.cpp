@@ -41,6 +41,7 @@
 
 #include "nsIMozAxPlugin.h"
 #include "nsIClassInfo.h"
+#include "nsIVariant.h"
 #include "nsMemory.h"
 
 #include "LegacyPlugin.h"
@@ -97,7 +98,11 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMOZAXPLUGIN
 
+private:
     HRESULT GetIDispatch(IDispatch **pdisp);
+    HRESULT ConvertVariants(nsIVariant *aIn, VARIANT *aOut);
+    HRESULT ConvertVariants(VARIANT *aIn, nsIVariant **aOut);
+    NS_IMETHOD InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[]);
 };
 
 // Happy happy fun fun - redefine some NPPVariable values that we might
@@ -183,6 +188,198 @@ nsScriptablePeer::GetIDispatch(IDispatch **pdisp)
     return S_OK;
 }
 
+HRESULT
+nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
+{
+    if (aIn == NULL || aOut == NULL)
+    {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRUint16 type;
+    nsresult rv = aIn->GetDataType(&type);
+    switch (type)
+    {
+    case nsIDataType::VTYPE_INT8:
+        {
+            PRUint8 value = 0;
+            rv = aIn->GetAsInt8(&value);
+            aOut->vt = VT_I1;
+            aOut->cVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_INT16:
+        {
+            PRInt16 value = 0;
+            rv = aIn->GetAsInt16(&value);
+            aOut->vt = VT_I2;
+            aOut->iVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_INT32:
+        {
+            PRInt32 value = 0;
+            rv = aIn->GetAsInt32(&value);
+            aOut->vt = VT_I4;
+            aOut->lVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_CHAR:
+    case nsIDataType::VTYPE_UINT8:
+        {
+            PRUint8 value = 0;
+            rv = aIn->GetAsInt8(&value);
+            aOut->vt = VT_UI1;
+            aOut->bVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_WCHAR:
+    case nsIDataType::VTYPE_UINT16:
+        {
+            PRUint16 value = 0;
+            rv = aIn->GetAsUint16(&value);
+            aOut->vt = VT_I2;
+            aOut->uiVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_UINT32:
+        {
+            PRUint32 value = 0;
+            rv = aIn->GetAsUint32(&value);
+            aOut->vt = VT_I4;
+            aOut->ulVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_FLOAT:
+        {
+            float value = 0;
+            rv = aIn->GetAsFloat(&value);
+            aOut->vt = VT_R4;
+            aOut->fltVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_DOUBLE:
+        {
+            double value = 0;
+            rv = aIn->GetAsDouble(&value);
+            aOut->vt = VT_R4;
+            aOut->dblVal = value;
+        }
+        break;
+    case nsIDataType::VTYPE_BOOL:
+        {
+            PRBool value = 0;
+            rv = aIn->GetAsBool(&value);
+            aOut->vt = VT_BOOL;
+            aOut->dblVal = value ? VARIANT_TRUE : VARIANT_FALSE;
+        }
+        break;
+    case nsIDataType::VTYPE_EMPTY:
+        VariantClear(aOut);
+        break;
+
+    // TODO
+    case nsIDataType::VTYPE_CSTRING:
+    case nsIDataType::VTYPE_ASTRING:
+    case nsIDataType::VTYPE_DOMSTRING:
+
+    // Unsupported types
+    default:
+    case nsIDataType::VTYPE_INT64:
+    case nsIDataType::VTYPE_UINT64:
+    case nsIDataType::VTYPE_VOID:
+    case nsIDataType::VTYPE_ID:
+    case nsIDataType::VTYPE_CHAR_STR:
+    case nsIDataType::VTYPE_WCHAR_STR:
+    case nsIDataType::VTYPE_INTERFACE:
+    case nsIDataType::VTYPE_INTERFACE_IS:
+    case nsIDataType::VTYPE_ARRAY:
+    case nsIDataType::VTYPE_STRING_SIZE_IS:
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_UTF8STRING:
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
+}
+
+HRESULT
+nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
+{
+    if (aIn == NULL || aOut == NULL)
+    {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    return E_NOTIMPL;
+} 
+
+NS_IMETHODIMP
+nsScriptablePeer::InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[])
+{
+    HRESULT hr;
+    DISPID dispid;
+
+    IDispatchPtr disp;
+    if (FAILED(GetIDispatch(&disp)))
+    {
+        return NPERR_GENERIC_ERROR; 
+    }
+
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(aMethod);
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
+        return NPERR_GENERIC_ERROR; 
+    }
+    
+    _variant_t *pArgs = NULL;
+    if (aNumArgs > 0)
+    {
+        pArgs = new _variant_t[aNumArgs];
+        if (pArgs == NULL)
+        {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        for (unsigned int i = 0; i < aNumArgs; i++)
+        {
+            hr = ConvertVariants(aArgs[i], &pArgs[i]);
+            if (FAILED(hr))
+            {
+                delete []pArgs;
+                return NS_ERROR_INVALID_ARG;
+            }
+        }
+    }
+
+    DISPPARAMS dispparams = {NULL, NULL, 0, 0};
+    _variant_t vResult;
+
+    dispparams.cArgs = aNumArgs;
+    dispparams.rgvarg = pArgs;
+
+    hr = disp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_METHOD,
+        &dispparams, &vResult, NULL, NULL);
+
+    if (pArgs)
+    {
+        delete []pArgs;
+    }
+
+    if (FAILED(hr))
+    { 
+        return NPERR_GENERIC_ERROR; 
+    }
+
+    return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
@@ -239,42 +436,52 @@ NS_IMETHODIMP_(nsrefcnt) nsScriptablePeer::Release()
 // the following method will be callable from JavaScript
 
 NS_IMETHODIMP 
-nsScriptablePeer::Invoke(const char *str)
+nsScriptablePeer::Invoke(const char *aMethod)
 {
-    HRESULT hr;
-    DISPID dispid;
+    return InternalInvoke(aMethod, 0, NULL);
+}
 
-    IDispatchPtr disp;
-    if (FAILED(GetIDispatch(&disp)))
-    {
-        return NPERR_GENERIC_ERROR; 
-    }
-    USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(str);
-    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr))
-    { 
-        return NPERR_GENERIC_ERROR; 
-    }
+NS_IMETHODIMP 
+nsScriptablePeer::Invoke1(const char *aMethod, nsIVariant *a)
+{
+    nsIVariant *args[1];
+    args[0] = a;
+    return InternalInvoke(aMethod, sizeof(args) / sizeof(args[0]), args);
+}
 
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    hr = disp->Invoke(
-        dispid,
-        IID_NULL,
-        LOCALE_USER_DEFAULT,
-        DISPATCH_METHOD,
-        &dispparamsNoArgs, NULL, NULL, NULL);
-    if (FAILED(hr))
-    { 
-        return NPERR_GENERIC_ERROR; 
-    }
+NS_IMETHODIMP 
+nsScriptablePeer::Invoke2(const char *aMethod, nsIVariant *a, nsIVariant *b)
+{
+    nsIVariant *args[2];
+    args[0] = a;
+    args[1] = b;
+    return InternalInvoke(aMethod, sizeof(args) / sizeof(args[0]), args);
+}
 
-    return NS_OK;
+NS_IMETHODIMP 
+nsScriptablePeer::Invoke3(const char *aMethod, nsIVariant *a, nsIVariant *b, nsIVariant *c)
+{
+    nsIVariant *args[3];
+    args[0] = a;
+    args[1] = b;
+    args[2] = c;
+    return InternalInvoke(aMethod, sizeof(args) / sizeof(args[0]), args);
+}
+
+NS_IMETHODIMP 
+nsScriptablePeer::Invoke4(const char *aMethod, nsIVariant *a, nsIVariant *b, nsIVariant *c, nsIVariant *d)
+{
+    nsIVariant *args[4];
+    args[0] = a;
+    args[1] = b;
+    args[2] = c;
+    args[3] = d;
+    return InternalInvoke(aMethod, sizeof(args) / sizeof(args[0]), args);
 }
 
 
 NS_IMETHODIMP 
-nsScriptablePeer::GetProperty(const char *propertyName, char **_retval)
+nsScriptablePeer::GetProperty(const char *propertyName, nsIVariant **_retval)
 {
 /*    HRESULT hr;
     DISPID dispid;
@@ -347,58 +554,8 @@ nsScriptablePeer::GetProperty(const char *propertyName, char **_retval)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptablePeer::GetNProperty(const char *propertyName, PRInt16 *_retval)
-{
-/*    HRESULT hr;
-    DISPID dispid;
-    VARIANT VarResult;
-    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
-    const char* property = propertyName;
-    PluginInstanceData *pData = mPlugin;
-    if (pData == NULL) { 
-        return NPERR_INVALID_INSTANCE_ERROR;
-    }
-    IUnknown FAR* punk;
-    hr = pData->pControlSite->GetControlUnknown(&punk);
-    if (FAILED(hr)) { return NULL; }
-    punk->AddRef();
-    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
-    if (FAILED(hr)) { 
-        punk->Release();
-        return NPERR_GENERIC_ERROR; 
-    }
-    USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(property);
-    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr)) { 
-        punk->Release();
-        return NPERR_GENERIC_ERROR;
-    }
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    hr = pdisp->Invoke(
-        dispid,
-        IID_NULL,
-        LOCALE_USER_DEFAULT,
-        DISPATCH_PROPERTYGET,
-        &dispparamsNoArgs, &VarResult, NULL, NULL);
-    if (FAILED(hr)) { 
-        return NPERR_GENERIC_ERROR;
-    }
-    punk->Release();
-    if(!_retval) return NS_ERROR_NULL_POINTER;
-    // make sure we are dealing with an int
-    if ((VarResult.vt & VT_TYPEMASK) != VT_I2) {
-        *_retval = NULL;
-        return NPERR_GENERIC_ERROR;
-    }
-    *_retval = VarResult.iVal; */
-
-	// caller will be responsible for any memory allocated.
-	return NS_OK;
-}
-
 /* void setProperty (in string propertyName, in string propertyValue); */
-NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, const char *propertyValue)
+NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValue)
 {
     HRESULT hr;
     DISPID dispid;
@@ -415,16 +572,15 @@ NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, const char
         return NPERR_GENERIC_ERROR;
     }
 
-    _variant_t *pvars = new _variant_t[1];
-    pvars->vt = VT_BSTR;
-    pvars->bstrVal = ::SysAllocString(A2OLE(propertyValue));
+    _variant_t v;
+    ConvertVariants(propertyValue, &v);
     
     DISPID dispIdPut = DISPID_PROPERTYPUT;
     DISPPARAMS functionArgs;
     _variant_t vResult;
     
     functionArgs.rgdispidNamedArgs = &dispIdPut;
-    functionArgs.rgvarg = pvars;
+    functionArgs.rgvarg = &v;
     functionArgs.cArgs = 1;
     functionArgs.cNamedArgs = 1;
 
@@ -435,52 +591,6 @@ NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, const char
         DISPATCH_PROPERTYPUT,
         &functionArgs, &vResult, NULL, NULL);
     
-    delete []pvars;
-    
-    if (FAILED(hr))
-    { 
-        return NPERR_GENERIC_ERROR;
-    }
-    return NS_OK;
-}
-
-/* void setNProperty (in string propertyName, in string propertyValue); */
-NS_IMETHODIMP nsScriptablePeer::SetNProperty(const char *propertyName, PRInt16 propertyValue)
-{
-    HRESULT hr;
-    DISPID dispid;
-    IDispatchPtr disp;
-    if (FAILED(GetIDispatch(&disp)))
-    {
-        return NPERR_GENERIC_ERROR; 
-    }
-    USES_CONVERSION;
-    OLECHAR FAR* szMember = A2OLE(propertyName);
-    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-    if (FAILED(hr)) { 
-        return NPERR_GENERIC_ERROR;
-    }
-   
-    _variant_t *pvars = new _variant_t[1];
-    pvars->vt = VT_I2;
-    pvars->iVal = propertyValue;
-
-    DISPID dispIdPut = DISPID_PROPERTYPUT;
-    DISPPARAMS functionArgs;
-    _variant_t vResult;
-
-    functionArgs.rgdispidNamedArgs = &dispIdPut;
-    functionArgs.rgvarg = pvars;
-    functionArgs.cArgs = 1;
-    functionArgs.cNamedArgs = 1;
-
-    hr = disp->Invoke(
-        dispid,
-        IID_NULL,
-        LOCALE_USER_DEFAULT,
-        DISPATCH_PROPERTYPUT,
-        &functionArgs, &vResult, NULL, NULL);
-    delete []pvars;
     if (FAILED(hr))
     { 
         return NPERR_GENERIC_ERROR;
