@@ -71,7 +71,7 @@ public class MenuBarCtrl extends JMenuBar implements Control {
    * @param name the control's name
    * @param component the control
    */
-  public void addItemByName(String name, Component component) {
+  public void addItemByName(String name, JMenuItem component) {
     controls.put(name, component);
     add(component);
   }

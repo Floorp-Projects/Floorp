@@ -30,8 +30,8 @@
 # setenv CLASSPATH ${CLASSPATH}:/u/jwz/tmp/grendel/swing-1.1/swingall.jar
 
 # Set these to the correct paths on your system
-MOZILLA_BUILD = /disk2/mozilla
-GRENDEL_BUILD = /disk2/mozilla/grendel
+MOZILLA_BUILD = /export/home/grail/codemonkey/mozilla/mozilla
+GRENDEL_BUILD = /export/home/grail/codemonkey/mozilla/grendel
 MOZILLA_HOME = /usr/local/netscape-4.5
 JAVAC	= javac
 
@@ -42,7 +42,7 @@ OBJS	= $(subst .java,.class,$(SRCS))
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) -J-mx64m -classpath $(MOZILLA_BUILD):$(GRENDEL_BUILD) -g $*.java
+	$(JAVAC) -J-mx64m -g $*.java
 
 all:: $(OBJS)
 
