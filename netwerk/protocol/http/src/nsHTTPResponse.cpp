@@ -351,12 +351,23 @@ nsresult nsHTTPResponse::ParseHeader(nsCString& aHeaderString)
     nsCOMPtr<nsIAtom> headerAtom;
 
     colonOffset = aHeaderString.FindChar(':');
-    if (kNotFound == colonOffset) {
+    if (kNotFound == colonOffset)
+    {
         //
-        // The header is malformed... Just clear it.
+        // The header is malformed... But - there're malformed headers in the world. Search
+        // for ' '/\t to simulate 4.x/IE behavior
         //
-        aHeaderString.Truncate();
-        return NS_ERROR_FAILURE;
+        colonOffset = aHeaderString.FindChar(' ');
+        if (kNotFound == colonOffset)
+        {
+            colonOffset = aHeaderString.FindChar('\t');
+            if (kNotFound == colonOffset)
+            {
+                // oh well. That's really malformed - fail the call
+                aHeaderString.Truncate();
+                return NS_ERROR_FAILURE;
+            }
+        }
     }
     (void) aHeaderString.Left(headerKey, colonOffset);
     headerKey.ToLowerCase();
