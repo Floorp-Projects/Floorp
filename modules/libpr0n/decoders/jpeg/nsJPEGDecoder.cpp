@@ -122,7 +122,8 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
   mRequest = aRequest;
   mObserver = do_QueryInterface(mRequest);
 
-  aRequest->GetImage(getter_AddRefs(mImage));
+  mImage = do_CreateInstance("@mozilla.org/image/container;1");
+  aRequest->SetImage(mImage);
 
   /* We set up the normal JPEG error routines, then override error_exit. */
   mInfo.err = jpeg_std_error(&mErr.pub);
