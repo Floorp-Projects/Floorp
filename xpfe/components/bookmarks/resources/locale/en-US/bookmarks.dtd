@@ -54,4 +54,4 @@
 <!ENTITY tree.header.lastmod.label      "Last Modified">
 <!ENTITY tree.header.lastvisit.label    "Last Visit">
 <!ENTITY tree.header.description.label  "Description">
-<!ENTITY bookmarksWindowTitle.label	"Bookmarks">
+<!ENTITY bookmarksWindowTitle.label	"Manage Bookmarks">
