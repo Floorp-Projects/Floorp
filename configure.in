@@ -3920,6 +3920,11 @@ MOZ_ARG_ENABLE_BOOL(svg,
 dnl To build transformiix standalone, set TX_EXE while configuring
 if test "$TX_EXE"; then
   AC_DEFINE(TX_EXE)
+  dnl need to know about endianess for standalone
+  AC_C_BIGENDIAN
+  if test $ac_cv_c_bigendian = yes; then
+    AC_DEFINE(IS_BIG_ENDIAN)
+  fi
 fi
 
 dnl Need the contents of config-defs.h in the build logs
