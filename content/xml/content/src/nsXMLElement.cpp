@@ -27,6 +27,7 @@
 #include "nsDOMEvent.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIURL.h"
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -145,9 +146,9 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString show, href, base, target;
+            nsAutoString show, href, target;
+            nsIURL* baseURL = nsnull;
 	          nsLinkVerb verb = eLinkVerb_Replace;
-	          base.Truncate();
 	          target.Truncate();
             GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
             GetAttribute(kNameSpaceID_XML, kShowAtom, show);
@@ -158,7 +159,9 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
 	          else if (show.Equals("embed")) {
 	            verb = eLinkVerb_Embed;
 	          }
-            mInner.TriggerLink(aPresContext, verb, base, href, target, PR_TRUE);
+            mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
+              // XXX shouldn't base URL come from document???
+            NS_IF_RELEASE(baseURL);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
@@ -172,9 +175,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
       //mouse enter doesn't work yet.  Use move until then.
       {
-        nsAutoString base, href, target;
+        nsAutoString href, target;
+        nsIURL* baseURL = nsnull;
         GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, base, href, target, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
+              // XXX shouldn't base URL come from document???
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
@@ -183,7 +188,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
