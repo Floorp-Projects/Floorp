@@ -4958,10 +4958,8 @@ nsresult nsNNTPProtocol::CloseSocket()
 		int status;
         nsresult rv;
        /* XXX - how/when to Release() this? */
-        rv = m_newsgroupList->FinishXOVERLINE(status,&status);
+        rv = m_newsgroupList->FinishXOVERLINE(0,&status);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "FinishXOVERLINE failed");
-		if (NS_SUCCEEDED(rv) && status >= 0 && status < 0)
-					  status = status;
 	}
 	else
 	{
