@@ -70,12 +70,15 @@ PT_LOCALE		= pt
 ######################################################################
 
 DLL_SUFFIX		= so.1.0
-PERL			= $(LOCAL_SUN4)perl
 RANLIB			= /bin/ranlib
 TAR			= /usr/bin/tar
 WHOAMI			= /usr/ucb/whoami
 UNZIP_PROG		= $(NS_BIN)unzip
 ZIP_PROG		= $(NS_BIN)zip
+
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 
 ######################################################################
 # Other
