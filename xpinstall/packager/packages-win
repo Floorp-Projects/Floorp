@@ -192,6 +192,7 @@ bin\components\xppref32.dll
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsXmlRpcClient.js
+bin\plugins\npnul32.dll
 
 ; chrome stuff
 bin\chrome\packages\core\*
