@@ -151,6 +151,9 @@ XFE_ToolbarUrlBar::createBaseWidget(Widget			parent,
 // 							   XmNtraversalOn,			False,
 // 							   XmNhighlightThickness,	0,
 							  NULL);
+
+    fe_HackTranslations(getAncestorContext(), urlbar);
+
 	return urlbar;
 }
 //////////////////////////////////////////////////////////////////////////
