@@ -19,6 +19,12 @@
 
 #include "nsDTDUtils.h"
 #include "CNavDTD.h" 
+#include "nsIObserverService.h"
+#include "nsIServiceManager.h"
+#include "nsIElementObserver.h"
+
+static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
+static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
  
 /***************************************************************
@@ -584,47 +590,66 @@ CObserverDictionary::~CObserverDictionary() {
   UnregisterObservers();
 }
 
+/**************************************************************
+  Define the nsIElementObserver release class...
+ **************************************************************/
+class nsObserverReleaser: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    nsIElementObserver* theObserver= (nsIElementObserver*)anObject;
+    NS_RELEASE(theObserver);
+    return 0;
+  }
+};
+
 void CObserverDictionary::UnregisterObservers() {
   int theIndex=0;
+  nsObserverReleaser theReleaser;
   for(theIndex=0;theIndex<NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
-      /*
-      nsIObserver* theObserver=0;
-      while(theObserver=mObserver[theIndex]->Pop()){
-        NS_RELEASE(theObserver);
-      }
-      */
+      nsIElementObserver* theElementObserver=0;
+      mObservers[theIndex]->ForEach(theReleaser);
+      delete mObservers[theIndex];
     }
   }
 }
 
 void CObserverDictionary::RegisterObservers() {
-  /*
-    nsIObserverService* theObserverService=GetService("observer"); //or whatever the call is here...
-    if(theObserverService){
-      nsIObserverEnumerator* theEnum=theObserverService->GetObserversForTopic("htmlparser"); //again, put the real call here!
-      if(theEnum){
-        nsIObserver* theObserver=theEnum->First();
-        while(theObserver){
-          const char* theTagStr=theObserver->GetTag();
-          if(theTagStr){
-            eHTMLTags theTag=NS_TagToEnum(theTagStr);
+  nsresult result = NS_OK;
+  nsIObserverService* theObserverService = nsnull;
+  result = nsServiceManager::GetService(kObserverServiceCID, kIObserverServiceIID,
+                                      (nsISupports**) &theObserverService, nsnull);
+  if(result == NS_OK){
+    nsString  theTopic("htmlparser");
+    nsIEnumerator* theEnum;
+    result = theObserverService->EnumerateObserverList(&theEnum, &theTopic);
+    if(result == NS_OK){
+      nsIElementObserver* theElementObserver;
+      nsISupports *inst;
+      
+      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
+        result = theEnum->CurrentItem(&inst);
+        if (NS_SUCCEEDED(result))
+          result = inst->QueryInterface(nsIElementObserver::GetIID(), (void**)&theElementObserver);
+        if(result == NS_OK) {
+          const char* theTagStr;
+          theTagStr = theElementObserver->GetTagName();
+          if(theTagStr != nsnull) {
+            eHTMLTags theTag = NS_TagToEnum(theTagStr);
             if(eHTMLTag_userdefined!=theTag){
-              nsDeque* theDeque=mObservers[theTag];
-              if(theDeque){
-                NS_ADDREF(theObserver);
-                theDeque->Push(theObserver);
+              if(mObservers[theTag] == nsnull) {
+                 mObservers[theTag] = new nsDeque(0);
               }
+              NS_ADDREF(theElementObserver);
+              mObservers[theTag]->Push(theElementObserver);
             }
           }
-          theObserver=theEnum->Next();
         }
       }
     }
-  */
+  }
 }
 
 nsDeque* CObserverDictionary::GetObserversForTag(eHTMLTags aTag) {
-  nsDeque* result=mObservers[aTag];
-  return result;
+  return mObservers[aTag];
 }
