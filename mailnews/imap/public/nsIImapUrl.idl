@@ -132,6 +132,7 @@ interface nsIImapUrl : nsISupports
   const long nsImapUpgradeToSubscription = 0x00000015;
   const long nsImapFolderStatus	= 0x00000016;
   const long nsImapRefreshFolderUrls = 0x00000017;
+  const long nsImapEnsureExistsFolder = 0x00000018;
   // it's okay to add more imap actions that require us to 
   // be in the authenticated state here without renumbering
   // the imap selected state url actions. just make sure you don't
