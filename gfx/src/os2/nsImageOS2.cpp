@@ -368,8 +368,8 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
         BITMAPINFOHEADER2 bihMem = { 0 };
 
         bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
-        bihMem.cx = aDWidth;
-        bihMem.cy = aDHeight;
+        bihMem.cx = aSWidth;
+        bihMem.cy = aSHeight;
         bihMem.cPlanes = 1;
         LONG lBitCount = 0;
         GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
@@ -381,11 +381,12 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
         {
           GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
 
-          POINTL aptlDevToMem [3] = { 0, 0,                       // TLL - mem bitmap (0, 0)
+          POINTL aptlDevToMem [4] = { 0, 0,                       // TLL - mem bitmap (0, 0)
                                       bihMem.cx, bihMem.cy,       // TUR - mem bitmap (cx, cy)
-                                      dest.xLeft, dest.yBottom }; // SLL - device (Dx1, Dy2)
+                                      dest.xLeft, dest.yBottom,   // SLL - device (Dx1, Dy2)
+                                      dest.xRight, dest.yTop };   // SUR - device (Dx2, Dy1)
 
-          GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+          GFX (::GpiBitBlt (MemPS, surf->GetPS (), 4, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
           // Now we want direct access to bitmap raw data. 
           // Must copy data again because GpiSetBitmap doesn't provide pointer to
@@ -454,11 +455,12 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
               GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
               
               // Transfer bitmap from memory bitmap back to device
-              POINTL aptlMemToDev [3] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
+              POINTL aptlMemToDev [4] = { dest.xLeft, dest.yBottom,   // TLL - device (Dx1, Dy2)
                                           dest.xRight, dest.yTop,     // TUR - device (Dx2, Dy1)
-                                          0, 0 };                     // SLL - mem bitmap (0, 0)
+                                          0, 0,                       // SLL - mem bitmap (0, 0)
+                                          bihMem.cx, bihMem.cy};      // SUR - mem bitmap (cx, cy)
 
-              GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+              GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
             
               rv = NS_OK;
             }
