@@ -47,6 +47,8 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 
+#include "nsIElementFactory.h"
+
 #include "nsIDocumentEncoder.h"
 
 // XXX
@@ -298,6 +300,8 @@ struct Components {
   const char* mProgID;
 };
 
+// The HTML namespace.
+
 // The list of components we register
 static Components gComponents[] = {
   { "Namespace manager", NS_NAMESPACEMANAGER_CID, nsnull, },
@@ -316,10 +320,10 @@ static Components gComponents[] = {
   { "CSS parser", NS_CSSPARSER_CID, nsnull, },
   { "CSS loader", NS_CSS_LOADER_CID, nsnull, },
 
-  { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, nsnull, },
+  { "HTML element factory", NS_HTML_ELEMENT_FACTORY_CID, NS_HTML_ELEMENT_FACTORY_PROGID, },
   { "Text element", NS_TEXTNODE_CID, nsnull, },
 
-  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, nsnull, },
+  { "XML element factory", NS_XML_ELEMENT_FACTORY_CID, NS_XML_ELEMENT_FACTORY_PROGID, },
 
   { "Selection", NS_SELECTION_CID, nsnull, },
   { "Frame selection", NS_FRAMESELECTION_CID, nsnull, },
