@@ -346,15 +346,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
                                        "UrlListenerManager",
-                                       nsnull,
+                                       "component://netscape/messenger/urlListenerManager",
                                        path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
-                                       "Netscape Messenger Bootstrapper",
-                                       "component://netscape/messenger",
-                                       path,
-                                       PR_TRUE, PR_TRUE);
+                                  "Netscape Messenger Bootstrapper",
+                                  "component://netscape/appshell/component/messenger",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMsgAppCoreCID,
@@ -395,7 +395,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 #endif
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
-                                  nsnull,
+                                  "component://netscape/messenger/services/session",
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
@@ -444,7 +444,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 #ifdef DEBUG_bienvenu  
   printf("register filter service\n");
   rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
-                                  "Message Filter Service", nsnull,
+                                  "Message Filter Service",
+                                  "component://netscape/messenger/services/filters",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 #endif   
