@@ -1230,6 +1230,19 @@ PK11_FindObjectsFromNickname(char *nickname,PK11SlotInfo **slotptr,
    
 CERTCertificate *
 PK11_FindCertFromNickname(char *nickname, void *wincx) {
+#ifndef NSS_SOFTOKEN_MODULE
+    PK11SlotInfo *slot;
+    int count=0;
+    CK_OBJECT_HANDLE *certID = PK11_FindObjectsFromNickname(nickname,&slot,
+				 		CKO_CERTIFICATE, &count, wincx);
+    CERTCertificate *cert;
+
+    if (certID == CK_INVALID_KEY) return NULL;
+    cert = PK11_MakeCertFromHandle(slot,certID[0],NULL);
+    PK11_FreeSlot(slot);
+    PORT_Free(certID);
+#else
+    return cert;
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert;
     cert = NSSTrustDomain_FindBestCertificateByNickname(
@@ -1242,6 +1255,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	rvCert = STAN_GetCERTCertificate(cert);
     }
     return rvCert;
+#endif
 }
 
 CERTCertList *
@@ -2263,6 +2277,31 @@ SECStatus
 PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
+#ifndef NSS_SOFTOKEN_MODULE
+    pk11DoCertCallback caller;
+    pk11TraverseSlot callarg;
+    CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
+    CK_ATTRIBUTE theTemplate[] = {
+	{ CKA_CLASS, NULL, 0 },
+    };
+    CK_ATTRIBUTE *attr = theTemplate;
+    int templateSize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+
+    PK11_SETATTRS(attr,CKA_CLASS, &certClass, sizeof(certClass)); attr++;
+
+    if (slot == NULL) {
+	return SECSuccess;
+    }
+
+    caller.noslotcallback = callback;
+    caller.callback = NULL;
+    caller.callbackArg = arg;
+    callarg.callback = pk11_DoCerts;
+    callarg.callbackArg = (void *) & caller;
+    callarg.findTemplate = theTemplate;
+    callarg.templateCount = templateSize;
+#else
+    return PK11_TraverseSlot(slot, &callarg);
     struct nss3_cert_cbstr pk11cb;
     NSSToken *tok;
     pk11cb.callback = callback;
@@ -2274,6 +2313,7 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     } else {
 	return SECFailure;
     }
+#endif
 }
 
 /*
