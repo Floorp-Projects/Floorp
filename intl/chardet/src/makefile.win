@@ -65,6 +65,7 @@ MODULE_NAME=nsCharDetModule
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
+		  unicharutil \
 		  webshell \
 		  docshell \
 		  htmlparser \
@@ -77,6 +78,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 LLIBS= \
+	$(DIST)\lib\unicharutil_s.lib \
 	$(DIST)\lib\xpcom.lib	\
 	$(LIBNSPR)	
 

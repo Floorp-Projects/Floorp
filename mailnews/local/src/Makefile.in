@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  msgdb \
 		  rdf \
 		  intl \
+		  unicharutil \
 		  mime \
 		  dom \
 		  rdfutil \

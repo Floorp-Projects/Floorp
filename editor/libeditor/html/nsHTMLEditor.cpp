@@ -39,6 +39,7 @@
 #include "nsICaret.h"
 
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
@@ -1141,8 +1142,8 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
         else if (nsHTMLEditUtils::IsListItem(blockParent))
         {
           nsAutoString indentstr;
-          if (isShift) indentstr.AssignWithConversion("outdent");
-          else         indentstr.AssignWithConversion("indent");
+          if (isShift) indentstr.Assign(NS_LITERAL_STRING("outdent"));
+          else         indentstr.Assign(NS_LITERAL_STRING("indent"));
           res = Indent(indentstr);
           bHandled = PR_TRUE;
         }
@@ -1305,7 +1306,7 @@ NS_IMETHODIMP nsHTMLEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode> *aInOutParent,
   nsCOMPtr<nsIDOMNode> node = *aInOutParent;
   PRInt32 theOffset = *aInOutOffset;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  nsAutoString brType; brType.AssignWithConversion("br");
+  nsAutoString brType; brType.Assign(NS_LITERAL_STRING("br"));
   nsCOMPtr<nsIDOMNode> brNode;
   if (nodeAsText)  
   {
@@ -1541,7 +1542,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInse
   // Do not use nsAutoRules -- rules code won't let us insert in <head>
   // Use the head node as a parent and delete/insert directly
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag; headTag.AssignWithConversion("head"); 
+  nsAutoString headTag; headTag.Assign(NS_LITERAL_STRING("head")); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -1966,7 +1967,7 @@ nsHTMLEditor::SetParagraphFormat(const nsAReadableString& aParagraphFormat)
 {
   nsAutoString tag; tag.Assign(aParagraphFormat);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("dd") || tag.EqualsWithConversion("dt"))
+  if (tag.Equals(NS_LITERAL_STRING("dd")) || tag.Equals(NS_LITERAL_STRING("dt")))
     return MakeDefinitionItem(tag);
   else
     return InsertBasicBlock(tag);
@@ -2114,7 +2115,7 @@ nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutCol
   nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString styleName; styleName.AssignWithConversion("bgcolor");
+  nsAutoString styleName; styleName.Assign(NS_LITERAL_STRING("bgcolor"));
 
   while (element)
   {
@@ -2256,7 +2257,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entire
       res = CreateNode(aListType, parent, offset, getter_AddRefs(newList));
       if (NS_FAILED(res)) return res;
       // make a list item
-      nsAutoString tag; tag.AssignWithConversion("li");
+      nsAutoString tag; tag.Assign(NS_LITERAL_STRING("li"));
       nsCOMPtr<nsIDOMNode> newItem;
       res = CreateNode(tag, newList, 0, getter_AddRefs(newItem));
       if (NS_FAILED(res)) return res;
@@ -2442,7 +2443,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
-    nsAutoString inward; inward.AssignWithConversion("indent");
+    nsAutoString inward; inward.Assign(NS_LITERAL_STRING("indent"));
     if (aIndent == inward)
     {
       if (isCollapsed)
@@ -2559,10 +2560,10 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAReadableString& aTagName, nsI
   PRBool getNamedAnchor = IsNamedAnchorTag(TagName);
   if ( getLink || getNamedAnchor)
   {
-    TagName.AssignWithConversion("a");  
+    TagName.Assign(NS_LITERAL_STRING("a"));  
   }
-  PRBool findTableCell = TagName.EqualsWithConversion("td");
-  PRBool findList = TagName.EqualsWithConversion("list");
+  PRBool findTableCell = TagName.Equals(NS_LITERAL_STRING("td"));
+  PRBool findList = TagName.Equals(NS_LITERAL_STRING("list"));
 
   // default is null - no element found
   *aReturn = nsnull;
@@ -2898,7 +2899,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDO
 
   if (IsLinkTag(TagName) || IsNamedAnchorTag(TagName))
   {
-    realTagName.AssignWithConversion("a");
+    realTagName.Assign(NS_LITERAL_STRING("a"));
   } else {
     realTagName = TagName;
   }
@@ -2920,17 +2921,17 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDO
   newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), nsAutoString());
 
   // Set default values for new elements
-  if (TagName.EqualsWithConversion("hr"))
+  if (TagName.Equals(NS_LITERAL_STRING("hr")))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
     newElement->SetAttribute(NS_LITERAL_STRING("width"),NS_LITERAL_STRING("100%"));
     newElement->SetAttribute(NS_LITERAL_STRING("size"),NS_LITERAL_STRING("2"));
-  } else if (TagName.EqualsWithConversion("table"))
+  } else if (TagName.Equals(NS_LITERAL_STRING("table")))
   {
     newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
     newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
     newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
-  } else if (TagName.EqualsWithConversion("td"))
+  } else if (TagName.Equals(NS_LITERAL_STRING("td")))
   {
     newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   }
@@ -3355,9 +3356,9 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
         tagName.ToLowerCase();
 
         // See if it's an image or an embed
-        if (tagName.EqualsWithConversion("img") || tagName.EqualsWithConversion("embed"))
+        if (tagName.Equals(NS_LITERAL_STRING("img")) || tagName.Equals(NS_LITERAL_STRING("embed")))
           (*aNodeList)->AppendElement(node);
-        else if (tagName.EqualsWithConversion("a"))
+        else if (tagName.Equals(NS_LITERAL_STRING("a")))
         {
           // Only include links if they're links to file: URLs
           nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
@@ -3391,7 +3392,7 @@ static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection
   nsresult res = NS_OK;
   // Set selection around <head> node
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString headTag; headTag.AssignWithConversion("head"); 
+  nsAutoString headTag; headTag.Assign(NS_LITERAL_STRING("head")); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(aDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -3677,9 +3678,9 @@ nsHTMLEditor::TagCanContainTag(const nsAReadableString& aParentTag, const nsARea
 
 /*  
   // if parent is a pre, and child is not inline, say "no"
-  if ( aParentTag.EqualsWithConversion("pre") )
+  if ( aParentTag.Equals(NS_LITERAL_STRING("pre")) )
   {
-    if (aChildTag.EqualsWithConversion("__moz_text"))
+    if (aChildTag.Equals(NS_LITERAL_STRING("__moz_text")))
       return PR_TRUE;
     PRInt32 childTagEnum, parentTagEnum;
     nsAutoString non_const_childTag(aChildTag);

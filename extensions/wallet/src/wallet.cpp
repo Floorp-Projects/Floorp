@@ -48,6 +48,7 @@
 
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -1779,7 +1780,7 @@ static PRInt32 FieldToValue(
 
           if (!failed && wallet_ReadFromList(sublistPtr->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
             if (value.Length()>0) {
-              value.AppendWithConversion(" ");
+              value.Append(NS_LITERAL_STRING(" "));
             }
 
             /* found an unused value for the multi-rhs item */
@@ -1813,7 +1814,7 @@ static PRInt32 FieldToValue(
 
     nsAutoString temp;
     wallet_GetHostFile(wallet_lastUrl, temp);
-    temp.AppendWithConversion(":");
+    temp.Append(NS_LITERAL_STRING(":"));
     temp.Append(field);
 
     if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
@@ -2107,7 +2108,7 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsString& schema) {
       nsAutoString fractionStringWithoutDenominator; /* of form 2/ meaning 2nd in any-length set */
       fractionString.SetLength(0);
       fractionString.AppendInt(numerator);
-      fractionString.AppendWithConversion("/");
+      fractionString.Append(NS_LITERAL_STRING("/"));
       fractionStringWithoutDenominator.Assign(fractionString);
       fractionString.AppendInt(denominator);
 
@@ -2203,7 +2204,7 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsString& schema) {
             /* test to see if we obtained the catch-all (*) state.
              *   Note: the catch-all must be the last entry in the list
              */
-            if (sublistPtr->item.EqualsWithConversion("*")) {
+            if (sublistPtr->item.Equals(NS_LITERAL_STRING("*"))) {
               sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
               schema = sublistPtr->item;
               return;
@@ -2237,7 +2238,7 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsString& schema) {
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 j=0; j<count2; j=j+2) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j));
-        if (sublistPtr->item.EqualsWithConversion("*")) {
+        if (sublistPtr->item.Equals(NS_LITERAL_STRING("*"))) {
           previousElementNode = localElementNode;
           sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
           schema = sublistPtr->item;
@@ -2378,7 +2379,7 @@ wallet_GetPrefills(
         if (schema.Length() == 0) {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
-            nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
+            nsAutoString vcard; vcard.Assign(NS_LITERAL_STRING("VCARD_NAME"));
             nsAutoString vcardValue;
             result = element->GetAttribute(vcard, vcardValue);
             if (NS_OK == result) {
@@ -2754,7 +2755,7 @@ wallet_OKToCapture(char* urlName, nsIDOMWindowInternal* window) {
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
   nsVoidArray* dummy;
-  nsAutoString value; value.AssignWithConversion("nn");
+  nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
   if (wallet_ReadFromList(url, value, dummy, wallet_URL_list, PR_FALSE)) {
     if (value.CharAt(NO_CAPTURE) == 'y') {
       return PR_FALSE;
@@ -2852,7 +2853,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
 
     nsAutoString concat_param;
     wallet_GetHostFile(wallet_lastUrl, concat_param);
-    concat_param.AppendWithConversion(":");
+    concat_param.Append(NS_LITERAL_STRING(":"));
     concat_param.Append(field);
 
     while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
@@ -2878,7 +2879,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
       lastIndex = index;
 
       wallet_GetHostFile(wallet_lastUrl, concat_param);
-      concat_param.AppendWithConversion(":");
+      concat_param.Append(NS_LITERAL_STRING(":"));
       concat_param.Append(field);
     }
 
@@ -2886,7 +2887,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
     dummy = 0;
     nsAutoString hostFileField;
     wallet_GetHostFile(wallet_lastUrl, hostFileField);
-    hostFileField.AppendWithConversion(":");
+    hostFileField.Append(NS_LITERAL_STRING(":"));
     hostFileField.Append(field);
 
     if (wallet_WriteToList(hostFileField, value, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
@@ -2916,11 +2917,11 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_PREVIEW) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer.AppendWithConversion("<OPTION value=");
+      buffer.Append(NS_LITERAL_STRING("<OPTION value="));
       buffer.AppendInt(nopreviewNum, 10);
-      buffer.AppendWithConversion(">");
+      buffer.Append(NS_LITERAL_STRING(">"));
       buffer += url->item1;
-      buffer.AppendWithConversion("</OPTION>\n");
+      buffer.Append(NS_LITERAL_STRING("</OPTION>\n"));
       nopreviewNum++;
     }
   }
@@ -2940,11 +2941,11 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_CAPTURE) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer.AppendWithConversion("<OPTION value=");
+      buffer.Append(NS_LITERAL_STRING("<OPTION value="));
       buffer.AppendInt(nocaptureNum, 10);
-      buffer.AppendWithConversion(">");
+      buffer.Append(NS_LITERAL_STRING(">"));
       buffer += url->item1;
-      buffer.AppendWithConversion("</OPTION>\n");
+      buffer.Append(NS_LITERAL_STRING("</OPTION>\n"));
       nocaptureNum++;
     }
   }
@@ -2974,7 +2975,7 @@ WLLT_PostEdit(const nsString& walletList)
   tail = temp;
 
   /* return if OK button was not pressed */
-  if (!head.EqualsWithConversion("OK")) {
+  if (!head.Equals(NS_LITERAL_STRING("OK"))) {
     return;
   }
 
@@ -3183,10 +3184,10 @@ WLLT_PrefillReturn(const nsString& results)
   wallet_DecodeVerticalBars(urlName);
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (skip.EqualsWithConversion("true")) {
+  if (skip.Equals(NS_LITERAL_STRING("true"))) {
     nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
-    nsAutoString value; value.AssignWithConversion("nn");
+    nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
     wallet_ReadFromList(url, value, dummy, wallet_URL_list, PR_FALSE);
     value.SetCharAt('y', NO_PREVIEW);
     if (wallet_WriteToList(url, value, dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
@@ -3473,7 +3474,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   if (!quick) {
     wallet_InitializeURLList();
     nsVoidArray* dummy;
-    nsAutoString value; value.AssignWithConversion("nn");
+    nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
     if (urlName.Length() != 0) {
       wallet_ReadFromList(urlName, value, dummy, wallet_URL_list, PR_FALSE);
       noPreview = (value.CharAt(NO_PREVIEW) == 'y');
@@ -3533,7 +3534,7 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
           nsAutoString schema;
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
-            nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
+            nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
             nsAutoString vcardValue;
             result = element->GetAttribute(vcardName, vcardValue);
             if (NS_OK == result) {
@@ -3603,7 +3604,7 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
                 nsAutoString schema;
                 nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
                 if (element) {
-                  nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
+                  nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
                   nsAutoString vcardValue;
                   result = element->GetAttribute(vcardName, vcardValue);
                   if (NS_OK == result) {
@@ -3781,7 +3782,7 @@ wallet_IsFromCartman(nsIURI* aURL) {
 #ifdef AutoCapture
 PRIVATE PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
-  if (valueOnForm.EqualsWithConversion("")) {
+  if (valueOnForm.Equals(NS_LITERAL_STRING(""))) {
     return PR_FALSE;
   }
   nsIDOMHTMLInputElement* inputElement;

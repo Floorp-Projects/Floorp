@@ -28,6 +28,8 @@ REQUIRES	= xpcom \
 		  js \
 		  necko \
 		  uconv \
+		  chardet \
+		  unicharutil \
 		  msgcompo \
 		  editor \
 		  dom \
@@ -36,7 +38,6 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  mailnews \
 		  msgdb \
-		  chardet \
 		  caps \
 		  mimetype \
 		  uriloader \

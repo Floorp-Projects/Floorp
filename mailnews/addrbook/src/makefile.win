@@ -34,14 +34,14 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  locale \
-		  webshell \
 		  uconv \
+		  unicharutil \
+		  webshell \
 		  msgbase \
 		  msgbaseutil \
 		  mime \
 		  msgcompo \
 		  appcomps \
-		  raptor \
 		  gfx \
 		  content \
 		  mozldap \

@@ -28,6 +28,8 @@ REQUIRES	= xpcom \
 		  appshell \
 		  appcomps \
 		  uconv \
+		  locale \
+		  unicharutil \
 		  intl \
 		  htmlparser \
 		  widget \
@@ -36,7 +38,6 @@ REQUIRES	= xpcom \
 		  editor \
 		  layout \
 		  mailnews \
-		  locale \
 		  msgbaseutil \
 		  webshell \
 		  txmgr \

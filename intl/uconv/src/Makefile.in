@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  chardet \
+		  unicharutil \
 		  necko \
 		  $(NULL)
 

@@ -34,6 +34,8 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  locale \
+		  uconv \
+		  unicharutil \
 		  layout \
 		  msgbaseutil \
 		  msgdb \
@@ -41,7 +43,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  msgimap \
 		  msgnews \
-		  uconv \
 		  docshell \
 		  webshell \
 		  addrbook \
@@ -55,7 +56,6 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  windowwatcher \
 		  content \
-		  raptor \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

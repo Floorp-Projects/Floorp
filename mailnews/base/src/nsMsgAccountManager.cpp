@@ -54,6 +54,7 @@
 #include "plstr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "nscore.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "prprf.h"
@@ -64,7 +65,6 @@
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsISmtpService.h"
-#include "nsString.h"
 #include "nsIMsgBiffManager.h"
 #include "nsIObserverService.h"
 #include "nsIMsgMailSession.h"
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
   nsAutoString shutdownString;
   shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   nsAutoString quitApplicationString;
-  quitApplicationString.AssignWithConversion("quit-application");
+  quitApplicationString.Assign(NS_LITERAL_STRING("quit-application"));
   nsAutoString offlineStatusChangedString(NS_LITERAL_STRING("network:offline-status-changed"));
   NS_NAMED_LITERAL_STRING(sessionLogoutString, "session-logout");
   NS_NAMED_LITERAL_STRING(beforeProfileChangeString, "profile-before-change");
@@ -1041,7 +1041,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
                nsXPIDLString folderName;
                inboxFolder->GetName(getter_Copies(folderName));
-               if (folderName && nsCRT::strcasecmp(folderName, NS_LITERAL_STRING("INBOX").get()) ==0)
+               if (folderName && Compare(folderName, NS_LITERAL_STRING("INBOX"), nsCaseInsensitiveStringComparator()) ==0)
                {
                  rv1 = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
                  if (NS_SUCCEEDED(rv1))

@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  locale \
+		  unicharutil \
 		  layout \
 		  content \
 		  msgbaseutil \

@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  necko \
 		  locale \
+		  unicharutil \
 		  xul \
 		  xuldoc \
 		  $(NULL)

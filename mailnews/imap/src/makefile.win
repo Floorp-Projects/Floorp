@@ -32,6 +32,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  msgdb \
 		  uconv \
+		  unicharutil \
 		  mime \
 		  pref \
 		  intl \

@@ -78,6 +78,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIImapFlagAndUidState.h"
 #include "nsIMessenger.h"
 #include "nsIMsgSearchAdapter.h"
@@ -677,12 +678,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;
 
-    if ( nsCRT::strcasecmp(folderName,"Trash") == 0 )   // Trash , a special folder
+    if ( Compare(nsDependentString(folderName),NS_LITERAL_STRING("Trash"),nsCaseInsensitiveStringComparator()) == 0 )   // Trash , a special folder
     {
         AlertSpecialFolderExists(msgWindow);
         return NS_MSG_FOLDER_EXISTS;
     }
-    else if ( nsCRT::strcasecmp(folderName,"Inbox") == 0 )  // Inbox, a special folder
+    else if ( Compare(nsDependentString(folderName),NS_LITERAL_STRING("Inbox"),nsCaseInsensitiveStringComparator()) == 0 )  // Inbox, a special folder
     {
         AlertSpecialFolderExists(msgWindow);
         return NS_MSG_FOLDER_EXISTS;
@@ -3684,7 +3685,7 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
       {
         nsXPIDLString folderName;
         GetName(getter_Copies(folderName));
-          if (!nsCRT::strncasecmp(folderName, convertedName, nsCRT::strlen(convertedName)))
+          if (!Compare(folderName, convertedName, nsCaseInsensitiveStringComparator()))
           showDeleted = PR_TRUE;
         }
       }

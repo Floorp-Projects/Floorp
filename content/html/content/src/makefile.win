@@ -28,8 +28,8 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  js \
-		  uriloader \
 		  locale \
+		  unicharutil \
 		  webshell \
 		  htmlparser \
 		  necko \

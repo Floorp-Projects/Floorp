@@ -106,6 +106,7 @@
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
 #include "nsMsgSimulateError.h"
 
@@ -1039,7 +1040,7 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
 
     // Now, lets init the editor here!
     // Just get a blank editor started...
-    m_editor->LoadUrl(NS_ConvertASCIItoUCS2("about:blank").get());
+    m_editor->LoadUrl(NS_LITERAL_STRING("about:blank").get());
 
     return NS_OK;
 } 
@@ -1783,7 +1784,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{
     PRUnichar       *u = nsnull; 
-    nsAutoString    fmt; fmt.AssignWithConversion("%s");
+    nsAutoString    fmt; fmt.Assign(NS_LITERAL_STRING("%s"));
 
     u = nsTextFormatter::smprintf(fmt.get(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
@@ -2102,7 +2103,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
         if (fieldsFCC && *fieldsFCC)
         {
-			    if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
+			    if (Compare(nsDependentString(fieldsFCC),
+                      NS_LITERAL_STRING("nocopy://"),
+                      nsCaseInsensitiveStringComparator()) == 0)
 			    {
 			      compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
@@ -3577,7 +3580,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
           && pAttributes)
       {
-        nsAutoString typeName; typeName.AssignWithConversion("type");
+        nsAutoString typeName; typeName.Assign(NS_LITERAL_STRING("type"));
         if (NS_SUCCEEDED(pAttributes->GetNamedItem(typeName,
                                                    getter_AddRefs(pItem)))
             && pItem)
@@ -3612,7 +3615,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           && pAttributes)
       {
         nsAutoString className;
-        className.AssignWithConversion("class");
+        className.Assign(NS_LITERAL_STRING("class"));
         if (NS_SUCCEEDED(pAttributes->GetNamedItem(className,
                                                    getter_AddRefs(pItem)))
             && pItem)
@@ -3638,7 +3641,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
         if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
             && pAttributes)
         {
-          nsAutoString hrefName; hrefName.AssignWithConversion("href");
+          nsAutoString hrefName; hrefName.Assign(NS_LITERAL_STRING("href"));
           if (NS_SUCCEEDED(pAttributes->GetNamedItem(hrefName,
                                                      getter_AddRefs(pItem)))
               && pItem)
@@ -3677,7 +3680,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
             && pAttributes)
         {
           nsAutoString styleName;
-          styleName.AssignWithConversion("style");
+          styleName.Assign(NS_LITERAL_STRING("style"));
           if (NS_SUCCEEDED(pAttributes->GetNamedItem(styleName,
                                                      getter_AddRefs(pItem)))
               && pItem)
@@ -3792,7 +3795,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
       {
         nsAutoString attributeName;
         nsAutoString attributeValue;
-        attributeName.AssignWithConversion("class");
+        attributeName.Assign(NS_LITERAL_STRING("class"));
 
         rv = element->GetAttribute(attributeName, attributeValue);
         if (NS_SUCCEEDED(rv))
@@ -3813,7 +3816,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             if (tempNode)
             {
               tempNode->GetLocalName(tagLocalName);
-              if (tagLocalName.EqualsWithConversion("BR"))
+              if (tagLocalName.Equals(NS_LITERAL_STRING("BR")))
                 editor->DeleteNode(tempNode);
             }
             editor->EndTransaction();
@@ -3834,7 +3837,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
         switch (searchState)
         {
           case 0: 
-            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
               searchState = 1;
             break;
 
@@ -3844,11 +3847,11 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             {
               nsString nodeValue;
               node->GetNodeValue(nodeValue);
-              if (nodeValue.EqualsWithConversion("-- "))
+              if (nodeValue.Equals(NS_LITERAL_STRING("-- ")))
                 searchState = 2;
             }
             else
-              if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+              if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
               {
                 searchState = 1;
                 break;
@@ -3856,7 +3859,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             break;
 
           case 2:
-            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsWithConversion("BR"))
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
               searchState = 3;
             else
               searchState = 0;               

@@ -33,10 +33,10 @@ REQUIRES	= xpcom \
 		  docshell \
 		  appshell \
 		  intl \
+		  unicharutil \
 		  windowwatcher \
 		  gfx \
 		  content \
-		  raptor \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
@@ -67,22 +67,11 @@ EXPORTS= $(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
 	$(DIST)\lib\xpcom.lib		\
+	$(DIST)\lib\unicharutil_s.lib \
 !ifndef NECKO
 	$(DIST)\lib\netlib.lib \
 !endif
 	$(NULL)
-
-LINCS= \
-    -I$(PUBLIC)\raptor	\
-    -I$(PUBLIC)\xpcom	\
-    -I$(PUBLIC)\dom	\
-    -I$(PUBLIC)\js	\
-    -I$(PUBLIC)\security\
-    -I$(PUBLIC)\pref	\
-    -I$(PUBLIC)\wallet	\
-    -I$(PUBLIC)\intl	\
-    -I$(PUBLIC)\locale	\
-    $(NULL)
 
 LCFLAGS = \
 	$(LCFLAGS) \

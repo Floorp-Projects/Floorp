@@ -52,6 +52,7 @@
 #include "nsIURL.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
@@ -448,7 +449,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       // or text/html emitter.
       // check the desired output content type that was passed into AsyncConvertData.
 
-      if (mDesiredOutputType && nsCRT::strcasecmp(mDesiredOutputType, "application/vnd.mozilla.xul+xml") == 0)
+      if (mDesiredOutputType && Compare(nsDependentString(mDesiredOutputType), NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"),nsCaseInsensitiveStringComparator()) == 0)
       {
         CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("application/vnd.mozilla.xul+xml");

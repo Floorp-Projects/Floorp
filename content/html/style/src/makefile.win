@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  docshell \
 		  uconv \
+		  unicharutil \
 		  xpconnect \
 		  pref \
 		  layout \

@@ -44,6 +44,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
 #include "nsMemory.h"
@@ -221,17 +222,17 @@ nsMsgFolder::initializeStrings()
                                      getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("inboxFolderName").get(),
                               &kInboxName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("trashFolderName").get(),
                               &kTrashName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("sentFolderName").get(),
                               &kSentName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("draftsFolderName").get(),
                               &kDraftsName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("templatesFolderName").get(),
                               &kTemplatesName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
                               &kUnsentName);
     return NS_OK;
 }
@@ -916,7 +917,8 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 
 			rv = folder->GetName(getter_Copies(folderName));
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(folderName, uniName.get()) == 0)
+			if (NS_SUCCEEDED(rv) && Compare(folderName, uniName,
+                                      nsCaseInsensitiveStringComparator()) == 0)
 			{
 				*aChild = folder;
 				NS_ADDREF(*aChild);
@@ -2071,7 +2073,7 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aD
       // put this test here because we don't want to just put "folder name on"
       // in case the above failed
       if (!(mFlags & MSG_FOLDER_FLAG_INBOX))
-        description.AppendWithConversion(" on ");
+        description.Append(NS_LITERAL_STRING(" on "));
 			description.Append(serverName);
     }
 	}
@@ -2455,7 +2457,7 @@ nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
 nsresult
 nsGetMailFolderSeparator(nsString& result)
 {
-  result.AssignWithConversion(".sbd");
+  result.Assign(NS_LITERAL_STRING(".sbd"));
   return NS_OK;
 }
 

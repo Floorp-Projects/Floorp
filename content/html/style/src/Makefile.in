@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  caps \
 		  locale \
+		  unicharutil \
 		  js \
 		  necko \
 		  webshell \

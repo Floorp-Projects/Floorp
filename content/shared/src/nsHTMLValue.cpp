@@ -40,6 +40,7 @@
 #include "nsHTMLValue.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
 
@@ -172,7 +173,9 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
         }
       }
       else if (nsnull != aOther.mValue.mString) {
-        return 0 == nsCRT::strcasecmp(mValue.mString, aOther.mValue.mString);
+        return 0 == Compare(nsDependentString(mValue.mString),
+                            nsDependentString(aOther.mValue.mString),
+                            nsCaseInsensitiveStringComparator());
       }
     }
     else if (eHTMLUnit_ISupports == mUnit) {

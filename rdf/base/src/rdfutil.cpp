@@ -63,6 +63,7 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "prtime.h"
 #include "rdfutil.h"
 

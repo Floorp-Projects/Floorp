@@ -118,6 +118,7 @@ CPP_OBJS=                               \
 LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\rdfutil_s.lib		\
+	$(DIST)\lib\unicharutil_s.lib   \
 	$(LIBNSPR)						\
 	$(NULL)
 

@@ -26,8 +26,8 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  chardet \
+		  unicharutil \
 		  necko \
-		  pref \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
@@ -99,6 +99,7 @@ EXPORTS=				\
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\unicharutil_s.lib \
  $(LIBNSPR)
 
 LCFLAGS = \

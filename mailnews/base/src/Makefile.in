@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  content \
 		  mailnews \
 		  locale \
+		  unicharutil \
 		  msgbaseutil \
 		  webshell \
 		  txmgr \

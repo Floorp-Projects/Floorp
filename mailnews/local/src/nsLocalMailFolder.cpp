@@ -76,6 +76,7 @@
 #include "nsMsgLocalCID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsLocalFolderSummarySpec.h"
 #include "nsMsgUtils.h"
 #include "nsICopyMsgStreamListener.h"
@@ -296,7 +297,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 		else if (name->EqualsIgnoreCase(nsAutoString(kTrashName)))
 			flags |= MSG_FOLDER_FLAG_TRASH;
 		else if (name->EqualsIgnoreCase(nsAutoString(kUnsentName))
-             || name->CompareWithConversion("Outbox", PR_TRUE) == 0)
+             || Compare(*name, NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()) == 0)
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
 		// the logic for this has been moved into 
@@ -767,21 +768,20 @@ nsresult
 nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow)
 {
    nsresult rv = NS_OK;
-   char *leafName=nsnull;
+   nsAutoString leafName;
    for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
    {
       nsFileSpec currentFolderPath = dir.Spec();
-      leafName = currentFolderPath.GetLeafName();
-      if (leafName && nsCRT::strcasecmp(folderName,leafName) == 0)
+      currentFolderPath.GetLeafName(leafName);
+      if (!leafName.IsEmpty() &&
+          Compare(nsDependentString(folderName), leafName,
+                  nsCaseInsensitiveStringComparator()) == 0)
       {
            if (msgWindow)
               AlertFolderExists(msgWindow);
-           PL_strfree(leafName);
            return NS_MSG_FOLDER_EXISTS;
       }
    }
-   if (leafName)
-      PL_strfree(leafName);
    return rv;
 }
 

@@ -57,6 +57,7 @@
 #include "nsIFrameManager.h"
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
+#include "nsUnicharUtils.h"
 
 
 //
@@ -699,7 +700,7 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled;
   aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsWithConversion("true"))
+  if (disabled.Equals(NS_LITERAL_STRING("true")))
     return PR_TRUE;
   return PR_FALSE;
 }

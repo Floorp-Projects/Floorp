@@ -34,6 +34,7 @@ MODULE_NAME	= nsCharDetModule
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
+		  unicharutil \
 		  webshell \
 		  docshell \
 		  htmlparser \

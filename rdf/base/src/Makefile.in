@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  content \
 		  htmlparser \
 		  js \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  pref \
 		  necko \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsUrlbarHistory.cpp

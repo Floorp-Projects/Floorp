@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLUtils.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement.h"
 #include "nsIDOMEventReceiver.h"
@@ -395,8 +396,8 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (nsCRT::strcasecmp(PromiseFlatString(aValue).get(),
-                          NS_LITERAL_STRING("true").get())) {
+    if (Compare(aValue,NS_LITERAL_STRING("true"),
+                nsCaseInsensitiveStringComparator())) {
       aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

@@ -45,6 +45,7 @@
 #include "nsIAbCard.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
@@ -107,7 +108,8 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
                         rv = resultItem->GetValue(valueStr);
                         if (NS_SUCCEEDED(rv) && !valueStr.IsEmpty())
                         {
-                          if (nsCRT::strcasecmp(fullAddrStr, valueStr.get())==0)
+                          if (Compare(nsDependentString(fullAddrStr), valueStr,
+                                      nsCaseInsensitiveStringComparator())==0)
                             return PR_TRUE;
                         }
                     }
@@ -139,7 +141,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       return;
 
     nsAutoString aStr(pDisplayNameStr);
-    aStr.AppendWithConversion('@');
+    aStr.Append(PRUnichar('@'));
     aStr += mDefaultDomain;
     fullAddrStr = ToNewUnicode(aStr);
   }
@@ -184,9 +186,9 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       // check this so we do not get a bogus entry "someName <>"
       if (pStr && pStr[0] != 0) {
         nsAutoString aStr(pDisplayNameStr);
-        aStr.AppendWithConversion(" <");
+        aStr.Append(NS_LITERAL_STRING(" <"));
         aStr += pStr;
-        aStr.AppendWithConversion(">");
+        aStr.Append(NS_LITERAL_STRING(">"));
         fullAddrStr = ToNewUnicode(aStr);
       }
       else
@@ -249,8 +251,25 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
   PR_Free(fullAddrStr);
 }
 
-PRBool nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName, const PRUnichar* displayName,
-  const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType)
+static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, PRInt32 aSubstrLen) {
+  PRUint32 len = MinInt(aSubstrLen, nsCRT::strlen(aString));
+
+  if (len == 0) return PR_FALSE;
+
+  return (Compare(nsDependentString(aString, len),
+                  nsDependentString(aSubstr, len),
+                  nsCaseInsensitiveStringComparator()) == 0);
+}
+
+
+PRBool
+nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr,
+                                    const PRUnichar* nickName,
+                                    const PRUnichar* displayName,
+                                    const PRUnichar* firstName,
+                                    const PRUnichar* lastName,
+                                    const PRUnichar* emailAddress,
+                                    MatchType* matchType)
 {
   const PRUnichar * fullString;
   PRUint32 fullStringLen;
@@ -267,70 +286,80 @@ PRBool nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchS
   }
 
   // First check for a Nickname exact match
-  if (nickName && nsCRT::strcasecmp(fullString, nickName) == 0)
+  if (nickName && Compare(nsDependentString(fullString),
+                          nsDependentString(nickName),
+                          nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NICKNAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a display Name exact match
-  if (displayName && nsCRT::strcasecmp(fullString, displayName) == 0)
+  if (displayName && Compare(nsDependentString(fullString),
+                             nsDependentString(displayName),
+                             nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a fisrt Name exact match
-  if (firstName && nsCRT::strcasecmp(fullString, firstName) == 0)
+  if (firstName && Compare(nsDependentString(fullString),
+                           nsDependentString(firstName),
+                           nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a last Name exact match
-  if (lastName && nsCRT::strcasecmp(fullString, lastName) == 0)
+  if (lastName && Compare(nsDependentString(fullString),
+                          nsDependentString(lastName),
+                          nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a Email exact match
-  if (emailAddress && nsCRT::strcasecmp(fullString, emailAddress) == 0)
+  if (emailAddress && Compare(nsDependentString(fullString),
+                              nsDependentString(emailAddress),
+                              nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = EMAIL_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a NickName partial match
-  if (nickName && nsCRT::strncasecmp(fullString, nickName, fullStringLen) == 0)
+  if (nickName && CommonPrefix(nickName, fullString, fullStringLen))
   {
   	*matchType = NICKNAME_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a display Name partial match
-  if (displayName && nsCRT::strncasecmp(fullString, displayName, fullStringLen) == 0)
+  if (displayName && CommonPrefix(displayName, fullString, fullStringLen))
   {
   	*matchType = NAME_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a first Name partial match
-  if (firstName && nsCRT::strncasecmp(fullString, firstName, fullStringLen) == 0)
+  if (firstName && CommonPrefix(firstName, fullString, fullStringLen))
   {
   	*matchType = NAME_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a last Name partial match
-  if (lastName && nsCRT::strncasecmp(fullString, lastName, fullStringLen) == 0)
+  if (lastName && CommonPrefix(lastName, fullString, fullStringLen))
   {
   	*matchType = NAME_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a Email partial match
-  if (emailAddress && nsCRT::strncasecmp(fullString, emailAddress, fullStringLen) == 0)
+  if (emailAddress && CommonPrefix(emailAddress, fullString, fullStringLen))
   {
   	*matchType = EMAIL_MATCH;
     return PR_TRUE;
@@ -339,11 +368,13 @@ PRBool nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchS
   //If we have a muti-part search string, look for a partial match with first name and last name or reverse
   if (searchStr->mFirstPartLen && searchStr->mSecondPartLen)
   {
-    if (((firstName && nsCRT::strncasecmp(searchStr->mFirstPart, firstName, searchStr->mFirstPartLen) == 0) &&
-        (lastName && nsCRT::strncasecmp(searchStr->mSecondPart, lastName, searchStr->mSecondPartLen) == 0)) ||
-        ((lastName && nsCRT::strncasecmp(searchStr->mFirstPart, lastName, searchStr->mFirstPartLen) == 0) &&
-        (firstName && nsCRT::strncasecmp(searchStr->mSecondPart, firstName, searchStr->mSecondPartLen) == 0))
-       )
+    if (((firstName && CommonPrefix(firstName, searchStr->mFirstPart, searchStr->mFirstPartLen)) &&
+        (lastName && CommonPrefix(lastName, searchStr->mSecondPart, searchStr->mSecondPartLen))) ||
+        
+        
+        ((lastName && CommonPrefix(lastName, searchStr->mFirstPart, searchStr->mFirstPartLen)) &&
+        (firstName && CommonPrefix(firstName, searchStr->mSecondPart, searchStr->mSecondPartLen)))
+        )
     {
       *matchType = NAME_MATCH;
       return PR_TRUE;
@@ -516,7 +547,8 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
         return NS_ERROR_FAILURE;
     
     PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
-    if (searchStr->mFullStringLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr->mFullString, prevSearchString, prevSearchStrLen != 0))
+    if (searchStr->mFullStringLen < prevSearchStrLen ||
+        CommonPrefix(searchStr->mFullString, prevSearchString, prevSearchStrLen))
         return NS_ERROR_ABORT;
 
     nsCOMPtr<nsISupportsArray> array;
