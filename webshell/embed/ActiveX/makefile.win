@@ -46,6 +46,8 @@ LINCS=  \
   -I$(PUBLIC)\netlib \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
+  -I$(PUBLIC)\caps \
+  -I$(PUBLIC)\oji \
   -I$(PUBLIC)\editor \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\rdf
