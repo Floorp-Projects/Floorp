@@ -185,6 +185,7 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
         {
           char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-workLine)));
           if (cp) {
+            cp++;
             char seps[]   = " \"\'"; 
             char *token; 
             char* newStr; 
