@@ -338,6 +338,12 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
   }
   
 #ifdef XP_UNIX
+  // Look for a group of config files in /etc/gre.d/
+  pGreLocation = GetPathFromConfigDir(GRE_CONF_DIR);
+  if (pGreLocation)
+    return pGreLocation;
+
+  // Look for a global /etc/gre.conf file
   pGreLocation = GetPathFromConfigFile(GRE_CONF_PATH);
   if (pGreLocation)
     return pGreLocation;
@@ -376,6 +382,42 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
 }
 
 char*
+nsGREDirServiceProvider::GetPathFromConfigDir(const char* dirname)
+{
+  // Open the directory provided and try to read any files in that
+  // directory that end with .conf.  We look for an entry that might
+  // point to the GRE that we're interested in.
+  PRDir *dir = PR_OpenDir(dirname);
+  if (!dir)
+    return nsnull;
+
+  char *pGreLocation = nsnull;
+  PRDirEntry *entry;
+
+  while (!pGreLocation && (entry = PR_ReadDir(dir, PR_SKIP_BOTH))) {
+
+    // Only look for files that end in .conf
+    char *offset = PL_strrstr(entry->name, ".conf");
+    if (!offset)
+      continue;
+
+    if (offset != entry->name + strlen(entry->name) - 5)
+      continue;
+
+    nsEmbedCString fullPath;
+    fullPath += dirname;
+    fullPath += "/";
+    fullPath += entry->name;
+
+    pGreLocation = GetPathFromConfigFile(fullPath.get());
+  }
+
+  PR_CloseDir(dir);
+
+  return pGreLocation;
+}
+
+char*
 nsGREDirServiceProvider::GetPathFromConfigFile(const char* filename)
 {
   char* pGreLocation = nsnull;
@@ -387,7 +429,7 @@ nsGREDirServiceProvider::GetPathFromConfigFile(const char* filename)
   if((cfg=fopen(filename,"r"))==nsnull) {
     return nsnull;
   }
-  
+
   while (fgets(buffer, 1024, cfg) != nsnull) {
     // skip over comment lines and blank lines
     if (buffer[0] == '#' || buffer[0] == '\n') {

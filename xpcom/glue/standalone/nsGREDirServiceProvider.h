@@ -59,6 +59,7 @@ public:
 
    static char* GetXPCOMPath();
    static char* GetGREDirectoryPath();
+   static char* GetPathFromConfigDir(const char* dirname);
    static char* GetPathFromConfigFile(const char* filename);
 
 protected:
