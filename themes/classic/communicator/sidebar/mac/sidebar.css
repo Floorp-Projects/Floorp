@@ -3,10 +3,13 @@
 #sidebar-box 
   {
     border-left           : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
+    border-right          : 1px solid #000000;
     background-color      : #9D9D9D;
+    border-bottom         : 1px solid #000000;
   }
 
+
+  
   #sidebar-splitter > .splitter-internal-box {
     border-top: 1px solid ThreeDHighlight;
   }  
