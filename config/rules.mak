@@ -491,7 +491,7 @@ JSRCS_DEPS = $(JAVA_DESTPATH) $(JAVA_DESTPATH)\$(PACKAGE) $(TMPDIR)
 
 export:: $(JSRCS_DEPS)
     @echo +++ make: building package: $(PACKAGE)
-	$(MOZ_TOOLS)\perl5\perl.exe $(DEPTH)\config\outofdate.pl \
+	$(PERL) $(DEPTH)\config\outofdate.pl \
 	-d $(JAVA_DESTPATH)\$(PACKAGE) $(JSRCS) >> $(TMPDIR)\javac.cfg
 	-$(JAVAC_PROG) -argfile $(TMPDIR)\javac.cfg
 	@$(RM) $(TMPDIR)\javac.cfg
@@ -502,7 +502,7 @@ export:: $(JSRC_DEPS)
     @echo +++ make: building package: $(PACKAGE)	
 	@echo -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) \
 	   -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) > $(TMPDIR)\javac.cfg
-	@$(MOZ_TOOLS)\perl5\perl $(DEPTH)\config\sj.pl \
+	@$(PERL) $(DEPTH)\config\sj.pl \
 	 $(JAVA_DESTPATH)\$(PACKAGE)\ $(TMPDIR)\javac.cfg <<
 	$(JSRCS)
 <<
