@@ -1,17 +1,26 @@
-/* -*- Mode: C++; tab-width: 4 -*-
-   BrowserView.h -- class definition for the browser view  class
-   Created: Radha Kulkarni <radha@netscape.com>, 23-Feb-1998
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
-
-/* Insert copyright and license here 1998 */
 
 #ifndef _xfe_browserview_h
 #define _xfe_browserview_h
 
 #include "NavCenterView.h"
 #include "HTMLView.h"
-
-
 #include "View.h"
 
 class XFE_BrowserView : public XFE_View
@@ -59,13 +68,11 @@ public:
   virtual XFE_Command* getCommand(CommandType) { return NULL; };
   virtual XFE_View*    getCommandView(XFE_Command*);
 #endif  /* UNDEF */
-protected:
-  XFE_HTMLView       *  htmlview;
-  XFE_NavCenterView  *  ncview;
+
 private:
-  Widget            base_widget;
-  Boolean           NavCenterShown;
-  
+
+	XFE_HTMLView       *  _htmlView;
+	XFE_NavCenterView  *  _navCenterView;
 };
 
 

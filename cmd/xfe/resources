@@ -7343,6 +7343,31 @@ when necessary
 *#333399.documentationString: RGB Color [ 51 51 153 ][ #333399 ]
 *#330099.documentationString: RGB Color [ 51 0 153 ][ #330099 ]
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!! Navigation Center
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!
+!! The Aurora pane sash 
+!!
+*browserViewPane.paneSashType:				pane_sash_filled_rectangle
+
+! This will resize it on the fly, but it will be slow
+!*browserViewPane.paneSashType:				pane_sash_live
+!*browserViewPane.dragThreshold:				20
+
+*browserViewPane.sashThickness:				4
+*browserViewPane.sashShadowType:			shadow_out
+*browserViewPane.sashShadowThickness:		1
+*browserViewPane.sashAlwaysVisible:			true
+*browserViewPane.sashColor:					Blue
+
+
+!!
+!! The Selector
+!!
 *selector*background:			gray70
 *selector*shadowThickness:		1
 *selector.orientation:			vertical

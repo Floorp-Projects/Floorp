@@ -1,12 +1,29 @@
-/* -*- Mode: C++; tab-width: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
    BrowserView.cpp -- class definition for the browser view  class
    Created: Radha Kulkarni <radha@netscape.com>, 23-Feb-1998
  */
 
-/* Insert copyright and license here 1998 */
-
 #include "BrowserView.h"
-#include <Xfe/XfeAll.h>
+
+#include <Xfe/Pane.h>
 
 #if DEBUG_radha
 #define D(x) x
@@ -14,60 +31,47 @@
 #define D(x)
 #endif
 
-XFE_BrowserView::XFE_BrowserView(XFE_Component * toplevel_component,
-				 Widget parent,
-				 XFE_View * parent_view,
-				 MWContext * context)
-  : XFE_View(toplevel_component, parent_view, context)
+//////////////////////////////////////////////////////////////////////////
+XFE_BrowserView::XFE_BrowserView(XFE_Component *	toplevel_component,
+								 Widget				parent,
+								 XFE_View *			parent_view,
+								 MWContext *		context)
+	: XFE_View(toplevel_component, parent_view, context),
+	  _htmlView(NULL),
+	  _navCenterView(NULL)
 {
+	Widget pane;
 
-  /* create the pane that holds the NavCenter and the HTML views */
-  base_widget = XtVaCreateManagedWidget("browserviewBaseWidget", 
-										xmFormWidgetClass,
-										parent, 
-									    NULL);
-  ncview = (XFE_NavCenterView *) 0;
-  NavCenterShown = False;
-  /* create the NavCenter View */
-  /*     ncview = new XFE_NavCenterView(toplevel_component, base_widget, this, context);*/
+	// Create a horizontal pane to hold the Navigation Center on the left
+	// and an HTML View on the right.
+	pane = XtVaCreateWidget("browserViewPane", 
+							xfePaneWidgetClass,
+							parent,
+							XmNorientation,		XmHORIZONTAL,
+							NULL);
+	
+	// create the HTML view
+	_htmlView = new XFE_HTMLView(toplevel_component, 
+								 pane, 
+								 this, 
+								 context);
 
-  /* create the HTML view */
-  htmlview = new XFE_HTMLView(toplevel_component, base_widget, this, context);
+	// Place the view to the right (child two)
+	XtVaSetValues(_htmlView->getBaseWidget(),
+				  XmNpaneChildType,			XmPANE_CHILD_WORK_AREA_TWO,
+				  NULL);
+	
+	// Add _htmlview to the sub-view list of browser view
+	addView(_htmlView);
 
-  /* Add ncview and htmlview to the sub-view list of browser view */
-  /*    addView(ncview);  */
-  addView(htmlview);
+	// show the html view only to begin with
+	_htmlView->show();
 
-  XtManageChild(base_widget);
-  /* show the views */
-  /*  ncview->show(); */
-  htmlview->show();
+	// Manage the pane after its children
+	XtManageChild(pane);
 
-  /* Attach the pane to the viewparent of the frame */
-  XtVaSetValues(base_widget,
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-  /*
-  XtVaSetValues(ncview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_NONE,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNresizable,  False,
-	    XmNwidth, 300,
-		NULL);
-*/
-  XtVaSetValues(htmlview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-//    showNavCenter();
-  setBaseWidget(base_widget);
+	// Set the pane as the base widget
+	setBaseWidget(pane);
 }
 
 #ifdef UNDEF
@@ -95,71 +99,70 @@ XP_Bool XFE_BrowserView::isCommandSelected(CommandType cmd, void *calldata = NUL
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserView::showNavCenter()
 {
-
-  if (!ncview)
+	// Create the nav center view for the first time
+	if (!_navCenterView)
 	{
-	  ncview = new XFE_NavCenterView(m_toplevel, base_widget, this, m_contextData);
-	  addView(ncview);
+		_navCenterView = new XFE_NavCenterView(m_toplevel, 
+											   m_widget, 
+											   this, 
+											   m_contextData);
+
+		// Add _navCenterView to the sub-view list of browser view
+		addView(_navCenterView);
 	}
 
-  htmlview->hide();
-  XtVaSetValues(ncview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_NONE,
-		XmNbottomAttachment, XmATTACH_FORM,
-		XmNresizable,  False,
-	    XmNwidth, 300,
-		NULL);
-  XtVaSetValues(htmlview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_WIDGET,
-		XmNleftWidget, ncview->getBaseWidget(),
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-  htmlview->show();
-  ncview->show();
-  NavCenterShown = True;
-
+	// Show the nav center
+	_navCenterView->show();
 }
-
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserView::hideNavCenter()
 {
-  htmlview->hide();
-  ncview->hide();
-  XtVaSetValues(htmlview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-  htmlview->show();
-  NavCenterShown = False;
-}
+	XP_ASSERT( _navCenterView != NULL );
 
+	if (_navCenterView)
+	{
+		_navCenterView->hide();
+	}
+}
+//////////////////////////////////////////////////////////////////////////
 Boolean
-XFE_BrowserView::isNavCenterShown(void) {
-  return NavCenterShown;
-
+XFE_BrowserView::isNavCenterShown(void) 
+{
+	return (_navCenterView && 
+			_navCenterView->isAlive() &&
+			_navCenterView->isShown());
 }
-
+//////////////////////////////////////////////////////////////////////////
 XFE_BrowserView::~XFE_BrowserView()
 {
-  
-  XtDestroyWidget(base_widget);
-}
+	// XFE_Frame cleans up views in its dtor() which should take care
+	// of cleaning up the base widget, or at least I think that -re.
+	//
+#ifdef IM_NOT_SURE
+	XtDestroyWidget(m_widget);
 
-XFE_NavCenterView * XFE_BrowserView::getNavCenterView() {
-  return ncview;
+	m_widget = NULL;
+#endif
 }
+//////////////////////////////////////////////////////////////////////////
+XFE_NavCenterView * XFE_BrowserView::getNavCenterView() 
+{
+	// Callers better know what they are doing
+	XP_ASSERT( _htmlView != NULL );
 
-
-XFE_HTMLView * XFE_BrowserView::getHTMLView() {
-  return htmlview;
+	return _navCenterView;
 }
+//////////////////////////////////////////////////////////////////////////
+XFE_HTMLView * XFE_BrowserView::getHTMLView() 
+{
+	// Callers better know what they are doing
+	XP_ASSERT( _htmlView != NULL );
+
+	return _htmlView;
+}
+//////////////////////////////////////////////////////////////////////////
