@@ -34,5 +34,11 @@ prwin16.h
 
 obsolete:protypes.h
 obsolete:prsem.h
+obsolete:probslet.h
+
+private:prpriv.h
+private:pprio.h
+private:pprthred.h
+
 md:prosdep.h
 md:_macos.h

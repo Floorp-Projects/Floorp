@@ -2,6 +2,11 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
+:jmcgen:include:Mcdoer.h
+:jmcgen:include:Mcf.h
+:jmcgen:include:Mcfb.h
+:jmcgen:include:Mcfmi.h
+:jmcgen:include:Mcrc.h
 :jmcgen:include:Mnfdoer.h
 :jmcgen:include:Mnff.h
 :jmcgen:include:Mnffbc.h
@@ -13,3 +18,5 @@
 :jmcgen:include:Mnfrf.h
 :jmcgen:include:Mnfstrm.h
 :jmcgen:include:Mnfdlm.h
+
+:macbuild:FontTypes.h
