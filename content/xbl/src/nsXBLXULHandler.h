@@ -49,13 +49,14 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLXULHandler : public nsIDOMXULListener, 
                         public nsXBLEventHandler
 {
 public:
-  nsXBLXULHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLXULHandler(nsIDOMEventReceiver* aReceiver,
+                  nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLXULHandler();
   
   // nsIDOMetc.
@@ -89,7 +90,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLXULHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLXULHandler(nsIDOMEventReceiver* aEventReceiver,
+                    nsXBLPrototypeHandler* aHandlerElement,
                     nsXBLXULHandler** aResult);
 
 

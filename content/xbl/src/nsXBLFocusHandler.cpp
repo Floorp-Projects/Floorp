@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLFocusHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -65,8 +65,9 @@ PRUint32 nsXBLFocusHandler::gRefCnt = 0;
 nsIAtom* nsXBLFocusHandler::kFocusAtom = nsnull;
 nsIAtom* nsXBLFocusHandler::kBlurAtom = nsnull;
 
-nsXBLFocusHandler::nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLFocusHandler::nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver,
+                                     nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -100,7 +101,8 @@ nsresult nsXBLFocusHandler::Blur(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLFocusHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLFocusHandler(nsIDOMEventReceiver* aRec,
+                      nsXBLPrototypeHandler* aHandler,
                       nsXBLFocusHandler** aResult)
 {
   *aResult = new nsXBLFocusHandler(aRec, aHandler);

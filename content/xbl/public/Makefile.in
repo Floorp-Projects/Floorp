@@ -29,15 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 
 EXPORTS		= \
-    nsIBindingManager.h \
-    nsIXBLBinding.h \
-    nsIXBLBindingAttachedHandler.h \
-    nsIXBLDocumentInfo.h \
-    nsIXBLInsertionPoint.h \
-    nsIXBLPrototypeBinding.h \
-    nsIXBLPrototypeHandler.h \
-    nsIXBLService.h \
-		$(NULL)
+	nsIBindingManager.h \
+	nsIXBLBinding.h \
+	nsIXBLBindingAttachedHandler.h \
+	nsIXBLDocumentInfo.h \
+	nsIXBLInsertionPoint.h \
+	nsIXBLPrototypeBinding.h \
+	nsIXBLService.h \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

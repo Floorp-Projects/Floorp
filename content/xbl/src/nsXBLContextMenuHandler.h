@@ -50,14 +50,14 @@ class nsIDOMUIEvent;
 class nsIDOMContextMenuEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLContextMenuHandler : public nsIDOMContextMenuListener, 
                                 public nsXBLEventHandler
 {
 public:
   nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver,
-                          nsIXBLPrototypeHandler* aHandler);
+                          nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLContextMenuHandler();
 
   // nsIDOMetc.
@@ -76,7 +76,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLContextMenuHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLContextMenuHandler(nsIDOMEventReceiver* aEventReceiver,
+                            nsXBLPrototypeHandler* aHandlerElement, 
                             nsXBLContextMenuHandler** aResult);
 
 

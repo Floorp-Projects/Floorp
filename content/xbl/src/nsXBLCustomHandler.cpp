@@ -39,8 +39,8 @@
 #include "nsXBLCustomHandler.h"
 
 nsXBLCustomHandler::nsXBLCustomHandler(nsIDOMEventReceiver* aReceiver,
-                                       nsIXBLPrototypeHandler* aHandler)
-  :nsXBLEventHandler(aReceiver,aHandler)
+                                       nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
 }
 
@@ -58,7 +58,8 @@ nsresult nsXBLCustomHandler::HandleEvent(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLCustomHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler,
+NS_NewXBLCustomHandler(nsIDOMEventReceiver* aRec,
+                       nsXBLPrototypeHandler* aHandler,
                        nsXBLCustomHandler** aResult)
 {
   *aResult = new nsXBLCustomHandler(aRec, aHandler);

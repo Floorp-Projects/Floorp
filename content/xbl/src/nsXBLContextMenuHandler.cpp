@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLContextMenuHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -66,8 +66,9 @@
 PRUint32 nsXBLContextMenuHandler::gRefCnt = 0;
 nsIAtom* nsXBLContextMenuHandler::kContextMenuAtom = nsnull;
 
-nsXBLContextMenuHandler::nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLContextMenuHandler::nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver,
+                                                 nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -93,8 +94,9 @@ nsresult nsXBLContextMenuHandler::ContextMenu(nsIDOMEvent* aContextMenuEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLContextMenuHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler,
-                      nsXBLContextMenuHandler** aResult)
+NS_NewXBLContextMenuHandler(nsIDOMEventReceiver* aRec,
+                            nsXBLPrototypeHandler* aHandler,
+                            nsXBLContextMenuHandler** aResult)
 {
   *aResult = new nsXBLContextMenuHandler(aRec, aHandler);
   if (!*aResult)

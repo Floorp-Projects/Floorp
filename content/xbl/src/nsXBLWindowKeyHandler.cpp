@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -86,10 +86,9 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
 NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 
 static void
-BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
+BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 {
-  nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
-  nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
+  nsXBLPrototypeHandler *firstHandler = nsnull, *currHandler = nsnull;
   
   PRInt32 handlerCount;
   aContent->ChildCount(handlerCount);
@@ -97,8 +96,7 @@ BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
     nsCOMPtr<nsIContent> handler;
     aContent->ChildAt(j, *getter_AddRefs(handler));
     
-    nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-    NS_NewXULKeyHandler(handler, getter_AddRefs(newHandler));
+    nsXBLPrototypeHandler* newHandler = new nsXBLPrototypeHandler(handler);
     
     if (newHandler) {
       if (currHandler)
@@ -109,7 +107,6 @@ BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
   }
 
   *aResult = firstHandler;
-  NS_IF_ADDREF(*aResult);
 }
 
 //
@@ -126,7 +123,7 @@ nsXBLWindowKeyHandler::EnsureHandlers()
     if (mHandler)
       return NS_OK;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-    BuildHandlerChain(content, getter_AddRefs(mHandler));
+    BuildHandlerChain(content, &mHandler);
   }
   else // We are an XBL file of handlers.
     nsXBLWindowHandler::EnsureHandlers();
@@ -203,15 +200,14 @@ nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 // See if the given handler cares about this particular key event
 //
 PRBool
-nsXBLWindowKeyHandler :: EventMatched ( nsIXBLPrototypeHandler* inHandler, nsIAtom* inEventType, nsIDOMEvent* inEvent )
+nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
+                                    nsIAtom* inEventType, nsIDOMEvent* inEvent)
 {
-  PRBool matched = PR_FALSE;
-  
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent ( do_QueryInterface(inEvent) );
-  if ( keyEvent )
-    inHandler->KeyEventMatched(inEventType, keyEvent, &matched);
-  
-  return matched;
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(inEvent));
+  if (keyEvent)
+    return inHandler->KeyEventMatched(inEventType, keyEvent);
+
+  return PR_FALSE;
 }
 
  

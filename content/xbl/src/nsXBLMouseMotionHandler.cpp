@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLMouseMotionHandler.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
@@ -65,8 +65,9 @@
 PRUint32 nsXBLMouseMotionHandler::gRefCnt = 0;
 nsIAtom* nsXBLMouseMotionHandler::kMouseMoveAtom = nsnull;
 
-nsXBLMouseMotionHandler::nsXBLMouseMotionHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLMouseMotionHandler::nsXBLMouseMotionHandler(nsIDOMEventReceiver* aReceiver,
+                                                 nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -93,7 +94,8 @@ nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLMouseMotionHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLMouseMotionHandler(nsIDOMEventReceiver* aRec,
+                            nsXBLPrototypeHandler* aHandler,
                             nsXBLMouseMotionHandler** aResult)
 {
   *aResult = new nsXBLMouseMotionHandler(aRec, aHandler);

@@ -50,13 +50,14 @@ class nsIDOMUIEvent;
 class nsIDOMMouseEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLMouseHandler : public nsIDOMMouseListener, 
                           public nsXBLEventHandler
 {
 public:
-  nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver,
+                    nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLMouseHandler();
   
   // nsIDOMetc.
@@ -85,7 +86,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLMouseHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLMouseHandler(nsIDOMEventReceiver* aEventReceiver,
+                      nsXBLPrototypeHandler* aHandlerElement, 
                       nsXBLMouseHandler** aResult);
 
 

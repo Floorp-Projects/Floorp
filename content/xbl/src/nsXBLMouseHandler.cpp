@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLMouseHandler.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
@@ -70,8 +70,9 @@ nsIAtom* nsXBLMouseHandler::kMouseDblClickAtom = nsnull;
 nsIAtom* nsXBLMouseHandler::kMouseOverAtom = nsnull;
 nsIAtom* nsXBLMouseHandler::kMouseOutAtom = nsnull;
 
-nsXBLMouseHandler::nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLMouseHandler::nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver,
+                                     nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -132,7 +133,8 @@ nsresult nsXBLMouseHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLMouseHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler,
+NS_NewXBLMouseHandler(nsIDOMEventReceiver* aRec,
+                      nsXBLPrototypeHandler* aHandler,
                       nsXBLMouseHandler** aResult)
 {
   *aResult = new nsXBLMouseHandler(aRec, aHandler);

@@ -46,7 +46,7 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMEventReceiver;
 class nsIXBLDocumentInfo;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 class nsIXBLPrototypeProperty; 
 class nsIXBLBinding;
 class nsISupportsArray;
@@ -81,13 +81,13 @@ public:
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 
-  NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler)=0;
-  NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)=0;
+  NS_IMETHOD GetPrototypeHandlers(nsXBLPrototypeHandler** aHandler)=0;
+  NS_IMETHOD SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler)=0;
   
-  NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult)=0;
-  NS_IMETHOD SetConstructor(nsIXBLPrototypeHandler* aConstructor)=0;
-  NS_IMETHOD GetDestructor(nsIXBLPrototypeHandler** aResult)=0;
-  NS_IMETHOD SetDestructor(nsIXBLPrototypeHandler* aDestructor)=0;
+  NS_IMETHOD GetConstructor(nsXBLPrototypeHandler** aResult)=0;
+  NS_IMETHOD SetConstructor(nsXBLPrototypeHandler* aConstructor)=0;
+  NS_IMETHOD GetDestructor(nsXBLPrototypeHandler** aResult)=0;
+  NS_IMETHOD SetDestructor(nsXBLPrototypeHandler* aDestructor)=0;
 
   NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject) = 0;
   

@@ -49,13 +49,14 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLFormHandler : public nsIDOMFormListener, 
                          public nsXBLEventHandler
 {
 public:
-  nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLFormHandler(nsIDOMEventReceiver* aReceiver,
+                   nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLFormHandler();
   
   // nsIDOMetc.
@@ -82,7 +83,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLFormHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLFormHandler(nsIDOMEventReceiver* aEventReceiver, 
+                     nsXBLPrototypeHandler* aHandlerElement, 
                      nsXBLFormHandler** aResult);
 
 

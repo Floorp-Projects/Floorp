@@ -76,7 +76,8 @@
 #include "nsIDOMFormListener.h"
 #include "nsXBLAtoms.h"
 
-nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler)
+nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
+                                     nsXBLPrototypeHandler* aHandler)
 {
   mEventReceiver = aEventReceiver;
   mProtoHandler = aHandler;
@@ -99,14 +100,12 @@ nsXBLEventHandler::RemoveEventHandlers()
   if (!mProtoHandler)
     return;
 
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+  nsCOMPtr<nsIAtom> eventName = mProtoHandler->GetEventName();
 
   nsAutoString type;
   eventName->ToString(type);
   
-  PRUint8 phase;
-  mProtoHandler->GetPhase(&phase);
+  PRUint8 phase = mProtoHandler->GetPhase();
   PRBool useCapture = (phase == NS_PHASE_CAPTURING);
   
   PRBool found = PR_FALSE;
@@ -146,7 +145,8 @@ nsXBLEventHandler::GetTextData(nsIContent *aParent, nsAString& aResult)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLEventHandler(nsIDOMEventReceiver* aRec,
+                      nsXBLPrototypeHandler* aHandler,
                       nsXBLEventHandler** aResult)
 {
   *aResult = new nsXBLEventHandler(aRec, aHandler);

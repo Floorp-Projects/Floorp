@@ -42,7 +42,7 @@
 #include "nsXMLContentSink.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsIXBLPrototypeBinding.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImpl.h"
 #include "nsICSSParser.h"
 #include "nsLayoutCID.h"
@@ -145,7 +145,7 @@ protected:
   nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
 
   nsCOMPtr<nsIXBLPrototypeBinding> mBinding;
-  nsCOMPtr<nsIXBLPrototypeHandler> mHandler;
+  nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding
   nsXBLProtoImpl* mImplementation;
   nsXBLProtoImplMember* mImplMember;
   nsXBLProtoImplProperty* mProperty;

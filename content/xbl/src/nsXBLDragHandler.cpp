@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLDragHandler.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
@@ -69,8 +69,9 @@ nsIAtom* nsXBLDragHandler::kDragExitAtom = nsnull;
 nsIAtom* nsXBLDragHandler::kDragDropAtom = nsnull;
 nsIAtom* nsXBLDragHandler::kDragGestureAtom = nsnull;
 
-nsXBLDragHandler::nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLDragHandler::nsXBLDragHandler(nsIDOMEventReceiver* aReceiver,
+                                   nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -124,7 +125,8 @@ nsresult nsXBLDragHandler::DragGesture(nsIDOMEvent* aMouseEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLDragHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLDragHandler(nsIDOMEventReceiver* aRec,
+                     nsXBLPrototypeHandler* aHandler,
                      nsXBLDragHandler** aResult)
 {
   *aResult = new nsXBLDragHandler(aRec, aHandler);

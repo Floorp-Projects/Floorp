@@ -51,7 +51,7 @@
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
@@ -89,12 +89,12 @@ public:
 public:
   void LoadDocInfo();
   void GetAllHandlers(const char* aType,
-                      nsIXBLPrototypeHandler** handler,
-                      nsIXBLPrototypeHandler** platformHandler,
-                      nsIXBLPrototypeHandler** userHandler);
+                      nsXBLPrototypeHandler** handler,
+                      nsXBLPrototypeHandler** platformHandler,
+                      nsXBLPrototypeHandler** userHandler);
   void GetHandlers(nsIXBLDocumentInfo* aInfo,
                    const nsACString& aRef,
-                   nsIXBLPrototypeHandler** aResult);
+                   nsXBLPrototypeHandler** aResult);
 
   nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
 };
@@ -146,7 +146,7 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
 void
 nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
                                  const nsACString& aRef,
-                                 nsIXBLPrototypeHandler** aResult)
+                                 nsXBLPrototypeHandler** aResult)
 {
   nsCOMPtr<nsIXBLPrototypeBinding> binding;
   aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
@@ -155,14 +155,14 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
   if (!binding)
     return;
 
-  binding->GetPrototypeHandlers(aResult); // Addref happens here.
+  binding->GetPrototypeHandlers(aResult);
 } // GetHandlers
 
 void
 nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
-                                    nsIXBLPrototypeHandler** aHandler,
-                                    nsIXBLPrototypeHandler** aPlatformHandler,
-                                    nsIXBLPrototypeHandler** aUserHandler)
+                                    nsXBLPrototypeHandler** aHandler,
+                                    nsXBLPrototypeHandler** aPlatformHandler,
+                                    nsXBLPrototypeHandler** aUserHandler)
 {
   if (mUserHTMLBindings) {
     nsCAutoString type(aType);
@@ -190,8 +190,13 @@ PRUint32 nsXBLWindowHandler::sRefCnt = 0;
 //
 // Increment the refcount
 //
-nsXBLWindowHandler :: nsXBLWindowHandler (nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
-  : mElement(aElement), mReceiver(aReceiver)
+nsXBLWindowHandler::nsXBLWindowHandler(nsIDOMElement* aElement,
+                                       nsIDOMEventReceiver* aReceiver)
+  : mElement(aElement),
+    mReceiver(aReceiver),
+    mHandler(nsnull),
+    mPlatformHandler(nsnull),
+    mUserHandler(nsnull)
 {
   ++sRefCnt;
 }
@@ -203,7 +208,7 @@ nsXBLWindowHandler :: nsXBLWindowHandler (nsIDOMElement* aElement, nsIDOMEventRe
 // Decrement the refcount. If we get to zero, get rid of the static XBL doc
 // info.
 //
-nsXBLWindowHandler :: ~nsXBLWindowHandler ( )
+nsXBLWindowHandler::~nsXBLWindowHandler()
 {
   --sRefCnt;
   if ( !sRefCnt ) {
@@ -259,11 +264,12 @@ nsXBLWindowHandler :: IsEditor()
 // so.
 //
 nsresult
-nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventType, 
-                                            nsIXBLPrototypeHandler* aHandler)
+nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
+                                         nsIAtom* aEventType, 
+                                         nsXBLPrototypeHandler* aHandler)
 {
   nsresult rv;
-  nsCOMPtr<nsIXBLPrototypeHandler> currHandler = aHandler;
+  nsXBLPrototypeHandler* currHandler = aHandler;
   while (currHandler) {
 
     PRBool stopped;
@@ -277,9 +283,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
       // ...but don't execute if it is disabled.
       nsAutoString disabled;
       
-      nsCOMPtr<nsIContent> elt;
-      currHandler->GetHandlerElement(getter_AddRefs(elt));
-
+      nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
       nsCOMPtr<nsIDOMElement> commandElt(do_QueryInterface(elt));
 
       // See if we're in a XUL doc.
@@ -315,9 +319,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
     }
 
     // the current handler didn't want it, try the next one.
-    nsCOMPtr<nsIXBLPrototypeHandler> nextHandler;
-    currHandler->GetNextHandler(getter_AddRefs(nextHandler));
-    currHandler = nextHandler;
+    currHandler = currHandler->GetNextHandler();
   }
 
   return NS_OK;
@@ -341,16 +343,12 @@ nsXBLWindowHandler::EnsureHandlers()
 
   // Now determine which handlers we should be using.
   if (IsEditor()) {
-    sXBLSpecialDocInfo->GetAllHandlers("editor",
-                                       getter_AddRefs(mHandler),
-                                       getter_AddRefs(mPlatformHandler),
-                                       getter_AddRefs(mUserHandler));
+    sXBLSpecialDocInfo->GetAllHandlers("editor", &mHandler, &mPlatformHandler,
+                                       &mUserHandler);
   }
   else {
-    sXBLSpecialDocInfo->GetAllHandlers("browser",
-                                       getter_AddRefs(mHandler),
-                                       getter_AddRefs(mPlatformHandler),
-                                       getter_AddRefs(mUserHandler));
+    sXBLSpecialDocInfo->GetAllHandlers("browser", &mHandler, &mPlatformHandler,
+                                       &mUserHandler);
   }
 
   return NS_OK;

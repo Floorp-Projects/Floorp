@@ -393,8 +393,8 @@ nsXBLBinding::GetFirstBindingWithConstructor(nsIXBLBinding** aResult)
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsIXBLPrototypeHandler> constructor;
-  mPrototypeBinding->GetConstructor(getter_AddRefs(constructor));
+  nsXBLPrototypeHandler* constructor;
+  mPrototypeBinding->GetConstructor(&constructor);
   if (constructor) {
     *aResult = this;
     NS_ADDREF(*aResult);
@@ -838,23 +838,21 @@ nsXBLBinding::InstallEventHandlers()
     if (!info)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
-    mPrototypeBinding->GetPrototypeHandlers(getter_AddRefs(handlerChain));
+    nsXBLPrototypeHandler* handlerChain;
+    mPrototypeBinding->GetPrototypeHandlers(&handlerChain);
   
     nsXBLEventHandler* currHandler = nsnull;
 
-    for (nsCOMPtr<nsIXBLPrototypeHandler> next, curr = handlerChain; curr; 
-         curr->GetNextHandler(getter_AddRefs(next)), curr = next) {
+    for (nsXBLPrototypeHandler* curr = handlerChain; curr;
+         curr = curr->GetNextHandler()) {
       // Fetch the event type.
-      nsCOMPtr<nsIAtom> eventAtom;
-      curr->GetEventName(getter_AddRefs(eventAtom));
+      nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
       if (!eventAtom) 
         continue;
 
       nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
       // Figure out if we're using capturing or not.
-      PRUint8 phase;
-      curr->GetPhase(&phase);
+      PRUint8 phase = curr->GetPhase();
       PRBool useCapture = (phase == NS_PHASE_CAPTURING);
         
       // Create a new nsXBLEventHandler.

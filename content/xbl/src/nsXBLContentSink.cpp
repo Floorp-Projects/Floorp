@@ -77,16 +77,17 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXBLContentSink::nsXBLContentSink()
+  : mState(eXBL_InDocument),
+    mSecondaryState(eXBL_None),
+    mDocInfo(nsnull),
+    mIsChromeOrResource(PR_FALSE),
+    mHandler(nsnull),
+    mImplementation(nsnull),
+    mImplMember(nsnull),
+    mProperty(nsnull),
+    mMethod(nsnull),
+    mField(nsnull)
 {
-  mState = eXBL_InDocument;
-  mSecondaryState = eXBL_None;
-  mDocInfo = nsnull;
-  mIsChromeOrResource = PR_FALSE;
-  mImplementation = nsnull;
-  mImplMember = nsnull;
-  mProperty = nsnull;
-  mMethod = nsnull;
-  mField = nsnull;
   mPrettyPrintXML = PR_FALSE;
 }
 
@@ -132,11 +133,11 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
       // BindingAttached and BindingDetached, and they're still implemented
       // using handlers.  At some point, we need to change these to just
       // be special functions on the class instead.
-      nsCOMPtr<nsIXBLPrototypeHandler> handler;
+      nsXBLPrototypeHandler* handler;
       if (mSecondaryState == eXBL_InConstructor)
-        mBinding->GetConstructor(getter_AddRefs(handler));
+        mBinding->GetConstructor(&handler);
       else
-        mBinding->GetDestructor(getter_AddRefs(handler));
+        mBinding->GetDestructor(&handler);
 
       // Get the text and add it to the constructor/destructor.
       handler->AppendHandlerText(text);
@@ -377,19 +378,19 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     else if (mState == eXBL_InImplementation) {
       if (aTagName == nsXBLAtoms::constructor) {
         mSecondaryState = eXBL_InConstructor;
-        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  getter_AddRefs(newHandler));
+        nsXBLPrototypeHandler* newHandler;
+        newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                               nsnull, nsnull, nsnull, nsnull,
+                                               nsnull, nsnull);
         newHandler->SetEventName(nsXBLAtoms::constructor);
         mBinding->SetConstructor(newHandler);
       }
       else if (aTagName == nsXBLAtoms::destructor) {
         mSecondaryState = eXBL_InDestructor;
-        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  nsnull, nsnull, nsnull, nsnull, nsnull,
-                                  getter_AddRefs(newHandler));
+        nsXBLPrototypeHandler* newHandler;
+        newHandler = new nsXBLPrototypeHandler(nsnull, nsnull, nsnull, nsnull,
+                                               nsnull, nsnull, nsnull, nsnull,
+                                               nsnull, nsnull);
         newHandler->SetEventName(nsXBLAtoms::destructor);
         mBinding->SetDestructor(newHandler);
       }
@@ -496,11 +497,11 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
 
   // All of our pointers are now filled in.  Construct our handler with all of these
   // parameters.
-  nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-  NS_NewXBLPrototypeHandler(event, phase, action, command, 
-                            keycode, charcode, modifiers, button,
-                            clickcount, preventdefault,
-                            getter_AddRefs(newHandler));
+  nsXBLPrototypeHandler* newHandler;
+  newHandler = new nsXBLPrototypeHandler(event, phase, action, command,
+                                         keycode, charcode, modifiers, button,
+                                         clickcount, preventdefault);
+
   if (newHandler) {
     // Add this handler to our chain of handlers.
     if (mHandler)

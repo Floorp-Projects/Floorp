@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLMutationHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -63,8 +63,9 @@ nsIAtom* nsXBLMutationHandler::kNodeInsertedAtom = nsnull;
 nsIAtom* nsXBLMutationHandler::kNodeRemovedFromDocumentAtom = nsnull;
 nsIAtom* nsXBLMutationHandler::kNodeInsertedIntoDocumentAtom = nsnull;
 
-nsXBLMutationHandler::nsXBLMutationHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLMutationHandler::nsXBLMutationHandler(nsIDOMEventReceiver* aReceiver,
+                                           nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -132,8 +133,9 @@ nsresult nsXBLMutationHandler::NodeRemovedFromDocument(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLMutationHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                     nsXBLMutationHandler** aResult)
+NS_NewXBLMutationHandler(nsIDOMEventReceiver* aRec,
+                         nsXBLPrototypeHandler* aHandler,
+                         nsXBLMutationHandler** aResult)
 {
   *aResult = new nsXBLMutationHandler(aRec, aHandler);
   if (!*aResult)

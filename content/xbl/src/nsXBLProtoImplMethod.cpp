@@ -184,8 +184,6 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     return NS_ERROR_FAILURE; // Without a valid name, we can't install the member.
 
   // We have a method.
-  nsresult rv = NS_OK;
-
   // Allocate an array for our arguments.
   PRInt32 paramCount = mUncompiledMethod->GetParameterCount();
   char** args = nsnull;

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLScrollHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -60,8 +60,9 @@ nsIAtom* nsXBLScrollHandler::kOverflowAtom = nsnull;
 nsIAtom* nsXBLScrollHandler::kUnderflowAtom = nsnull;
 nsIAtom* nsXBLScrollHandler::kOverflowChangedAtom = nsnull;
 
-nsXBLScrollHandler::nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLScrollHandler::nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver,
+                                       nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -101,7 +102,8 @@ nsresult nsXBLScrollHandler::OverflowChanged(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLScrollHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLScrollHandler(nsIDOMEventReceiver* aRec,
+                       nsXBLPrototypeHandler* aHandler,
                        nsXBLScrollHandler** aResult)
 {
   *aResult = new nsXBLScrollHandler(aRec, aHandler);

@@ -49,13 +49,14 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIAtom;
 class nsIController;
-class nsIXBLPrototypeHandler;
+class nsXBLPrototypeHandler;
 
 class nsXBLScrollHandler : public nsIDOMScrollListener, 
                            public nsXBLEventHandler
 {
 public:
-  nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver,
+                     nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLScrollHandler();
   
   // nsIDOMetc.
@@ -78,7 +79,8 @@ protected:
 };
 
 extern nsresult
-NS_NewXBLScrollHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
+NS_NewXBLScrollHandler(nsIDOMEventReceiver* aEventReceiver,
+                       nsXBLPrototypeHandler* aHandlerElement,
                        nsXBLScrollHandler** aResult);
 
 

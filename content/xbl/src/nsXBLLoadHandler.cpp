@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLLoadHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -60,8 +60,9 @@ nsIAtom* nsXBLLoadHandler::kUnloadAtom = nsnull;
 nsIAtom* nsXBLLoadHandler::kAbortAtom = nsnull;
 nsIAtom* nsXBLLoadHandler::kErrorAtom = nsnull;
 
-nsXBLLoadHandler::nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
-:nsXBLEventHandler(aReceiver,aHandler)
+nsXBLLoadHandler::nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver,
+                                   nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aReceiver, aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -108,7 +109,8 @@ nsresult nsXBLLoadHandler::Abort(nsIDOMEvent* aEvent)
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLLoadHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
+NS_NewXBLLoadHandler(nsIDOMEventReceiver* aRec,
+                     nsXBLPrototypeHandler* aHandler,
                      nsXBLLoadHandler** aResult)
 {
   *aResult = new nsXBLLoadHandler(aRec, aHandler);
