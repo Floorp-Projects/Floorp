@@ -61,7 +61,10 @@
 #endif
 
 /* sigh */
+#ifndef EOF
+/* stdio was not included */
 extern int sprintf(char *out, char *fmt, ...);
+#endif
 
 #ifdef XP_MAC 
 #ifndef __POWERPC__
