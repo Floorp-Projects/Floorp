@@ -22,7 +22,7 @@
 #include "nsPrincipalArray.h"
 #include "nsCaps.h"
 #include "nsICapsSecurityCallbacks.h"
-#include "nsLoadZig.h"
+//#include "nsLoadZig.h"
 #include "secnav.h"
 #ifdef MOZ_SECURITY
 #include "navhook.h"
