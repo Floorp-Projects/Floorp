@@ -1730,19 +1730,11 @@ nsWebShell::DoContent(const char * aContentType,
   // own load group!!! So the request would get canceled out from under us...
   // after retargeting we may be able to safely call DoLoadURL. 
   DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
-#if 0
-  return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
-                                        strCommand,
-                                        (nsIWebShell*)this,
-                                        nsnull,
-                                        nsnull,
-                                        aContentHandler);
-#else
+
   return CreateViewer(aOpenedChannel, 
                       aContentType, 
                       strCommand, 
                       aContentHandler);
-#endif
 }
 
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);

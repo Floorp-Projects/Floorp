@@ -117,13 +117,6 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD LoadOpenedDocument(nsIChannel * aOpenedChannel, 
-                                  const char * aCommand,
-                                  nsIContentViewerContainer *aContainer,
-                                  nsIInputStream * aPostDataStream,
-                                  nsIURI * aReffererUrl,
-                                  nsIStreamListener ** aContentHandler);
-
     // nsIDocumentLoader interface
     NS_IMETHOD LoadDocument(nsIURI * aUri, 
                             const char *aCommand,
@@ -347,18 +340,6 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel, 
-                                  const char * aCommand,
-                                  nsIContentViewerContainer *aContainer,
-                                  nsIInputStream * aPostDataStream,
-                                  nsIURI * aReffererUrl,
-                                  nsIStreamListener ** aContentHandler)
-{
-  NS_ASSERTION(0, "This method is OBSOLETE!!");
-  return NS_ERROR_FAILURE;
-}
-
 
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 
@@ -422,9 +403,12 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
                                mLoadGroup, 
                                getter_AddRefs(openContext));
 
-    if (openContext) {
-      mLoadGroup = do_QueryInterface(openContext);
-    }
+// I think that this is wrong...  Do *not* destroy the loadGroup assosicated
+// with a DocLoader if the URI is retargeted!!  The DocLoader does not care.
+//
+///    if (openContext) {
+///      mLoadGroup = do_QueryInterface(openContext);
+///    }
   } 
 
   return rv;
