@@ -551,10 +551,15 @@ static void SaltProfileName(nsACString& aName)
     // use 1e-6, granularity of PR_Now() on the mac is seconds
     srand((uint)(fpTime * 1e-6 + 0.5));
 
-    aName.Append('.');
+    char salt[9];
+
     int i;
-    for (i = 0; i < 3; ++i)
-        aName.Append(kTable[rand() % NS_ARRAY_LENGTH(kTable)]);
+    for (i = 0; i < 8; ++i)
+        salt[i] = kTable[rand() % NS_ARRAY_LENGTH(kTable)];
+
+    salt[8] = '.';
+
+    aName.Insert(salt, 0, 9);
 }
 
 NS_IMETHODIMP
