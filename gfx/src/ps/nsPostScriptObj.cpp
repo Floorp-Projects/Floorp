@@ -2653,9 +2653,7 @@ int postscriptFont = 0;
   if( aFontIndex >= 0) {
     postscriptFont = aFontIndex;
   } else {
-    postscriptFont = 0;
-  }
-
+  
 
   //#ifdef NOTNOW
   //XXX:PS Add bold, italic and other settings here
@@ -2685,7 +2683,7 @@ int postscriptFont = 0;
 	    break;
 	}
     //#endif
-
+   }
 	 fprintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
 
 

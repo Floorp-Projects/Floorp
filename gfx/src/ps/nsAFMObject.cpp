@@ -52,23 +52,48 @@
 #include "Symbol.h"
 #include "nsReadableUtils.h"
 
+struct SubstituteMap {
+  const char *name;
+  PRUint8    italic;
+  PRBool     bold;
+  PRInt16    index;
+};
 
+static SubstituteMap gSubstituteMap[] = {
+  { "serif", 0,0,0},
+  { "serif", 0,1,1},
+  { "serif", 1,1,2},
+  { "serif", 1,0,3},
+  { "sans serif", 0,0,4},
+  { "sans serif", 0,1,5},
+  { "sans serif", 1,1,6},
+  { "sans serif", 1,0,7},
+  { "monospace", 0,0,8},
+  { "monospace", 0,1,9},
+  { "monospace", 1,1,10},
+  { "monospace", 1,0,11},
+};
+
+
+static  const PRUint32 gNumSubstituteMap = sizeof(gSubstituteMap)/sizeof(SubstituteMap);
+
+#define NS_IS_BOLD(weight)  ((weight) >= 401 ? 1 : 0)
 
 // this is the basic font set supported currently
 DefFonts gSubstituteFonts[] = 
 {
   {"Times-Roman","Times",400,0,&Times_RomanAFM,AFMTimes_RomanChars,-1},
-  {"Times-Bold","Times",700,0,&Times_BoldAFM,AFMTimes_RomanChars,-1},
-  {"Times-BoldItalic","Times",700,1,&Times_BoldItalicAFM,AFMTimes_RomanChars,-1},
-  {"Times-Italic","Times",400,1,&Times_ItalicAFM,AFMTimes_RomanChars,-1},
+  {"Times-Bold","Times",700,0,&Times_BoldAFM,AFMTimes_BoldChars,-1},
+  {"Times-BoldItalic","Times",700,1,&Times_BoldItalicAFM,AFMTimes_BoldItalicChars,-1},
+  {"Times-Italic","Times",400,1,&Times_ItalicAFM,AFMTimes_ItalicChars,-1},
   {"Helvetica","Helvetica",400,0,&HelveticaAFM,AFMHelveticaChars,-1},
-  {"Helvetica-Bold","Helvetica",700,0,&Helvetica_BoldAFM,AFMHelveticaChars,-1},
-  {"Helvetica-BoldOblique","Helvetica",700,2,&Helvetica_BoldObliqueAFM,AFMHelveticaChars,-1},
-  {"Helvetica_Oblique","Helvetica",400,2,&Helvetica_ObliqueAFM,AFMHelveticaChars,-1},
+  {"Helvetica-Bold","Helvetica",700,0,&Helvetica_BoldAFM,AFMHelvetica_BoldChars,-1},
+  {"Helvetica-BoldOblique","Helvetica",700,2,&Helvetica_BoldObliqueAFM,AFMHelvetica_BoldObliqueChars,-1},
+  {"Helvetica_Oblique","Helvetica",400,2,&Helvetica_ObliqueAFM,AFMHelvetica_ObliqueChars,-1},
   {"Courier","Courier",400,0,&CourierAFM,AFMCourierChars,-1},
-  {"Courier-Bold","Courier",700,0,&Courier_BoldAFM,AFMCourierChars,-1},
-  {"Courier-BoldOblique","Courier",700,2,&Courier_BoldObliqueAFM,AFMCourierChars,-1},
-  {"Courier-Oblique","Courier",400,2,&Courier_ObliqueAFM,AFMCourierChars,-1},
+  {"Courier-Bold","Courier",700,0,&Courier_BoldAFM,AFMCourier_BoldChars,-1},
+  {"Courier-BoldOblique","Courier",700,2,&Courier_BoldObliqueAFM,AFMCourier_BoldObliqueChars,-1},
+  {"Courier-Oblique","Courier",400,2,&Courier_ObliqueAFM,AFMCourier_ObliqueChars,-1},
   {"Symbol","Symbol",400,0,&SymbolAFM,AFMSymbolChars,-1}
 };
 
@@ -277,15 +302,36 @@ PRInt16
 nsAFMObject::CreateSubstituteFont(const nsFont &aFontName)
 {
 PRInt16     ourfont = 0;
+PRUint32    i;
+
+ 
+ for(i=0;i<gNumSubstituteMap;i++){
+    if(aFontName.name.EqualsWithConversion(gSubstituteMap[i].name, PR_TRUE) && 
+       (aFontName.style != NS_FONT_STYLE_NORMAL)== gSubstituteMap[i].italic &&
+       NS_IS_BOLD(aFontName.weight) == gSubstituteMap[i].bold) {
+      ourfont = gSubstituteMap[i].index;
+      break;
+   }
+  }
+
+  // no matches in the substitution table -- default to times
+  if(i == gNumSubstituteMap){
+    printf(" NO FONT WAS FOUND \n");
+    if(aFontName.style == NS_FONT_STYLE_NORMAL){
+      ourfont = NS_IS_BOLD(aFontName.weight) ? 1 : 0;
+    } else {
+      ourfont = NS_IS_BOLD(aFontName.weight) ? 3 : 4;
+    }
+  }
 
   mPSFontInfo = new AFMFontInformation;
   memset(mPSFontInfo,0,sizeof(AFMFontInformation));
 
   // put in default AFM data, can't find the correct AFM file
-  memcpy(mPSFontInfo,&Times_RomanAFM,sizeof(AFMFontInformation));
+  memcpy(mPSFontInfo,gSubstituteFonts[ourfont].mFontInfo,sizeof(AFMFontInformation));
   mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
   memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
-  memcpy(mPSFontInfo->mAFMCharMetrics,AFMTimes_RomanChars,Times_RomanAFM.mNumCharacters*sizeof(AFMscm));
+  memcpy(mPSFontInfo->mAFMCharMetrics,gSubstituteFonts[ourfont].mCharInfo,Times_RomanAFM.mNumCharacters*sizeof(AFMscm));
   return ourfont;
 }
 
