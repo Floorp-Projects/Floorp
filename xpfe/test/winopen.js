@@ -123,7 +123,7 @@ function reportResults() {
         avgOpenTime += openingTimes[i];
     }
     avgOpenTime = Math.round(avgOpenTime / (MAX_INDEX - 1));
-    dump("TinderboxPrint:Txul:" + avgOpenTime + "ms\n");
+    dump("__xulWinOpenTime:" + avgOpenTime + "\n");
     window.close();
 }
 
