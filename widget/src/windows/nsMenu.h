@@ -97,6 +97,7 @@ protected:
     nsIMenu       * pParentMenu,
     nsIDOMElement * menuitemElement,
     nsIDOMNode    * menuitemNode,
+	unsigned short  menuitemIndex,
 	nsIWebShell   * aWebShell);
   
   void LoadSubMenu(
