@@ -164,11 +164,11 @@ net_pop3_load_state(const char* searchhost,
 	return NULL;
   }
 
-  char* popstatePath = PR_smprintf("%s\\popstate.dat", mailDirectory);
-  nsFilePath filePath(popstatePath);
-  nsInputFileStream fileStream(filePath);
+  nsNativeFileSpec fileSpec(mailDirectory);
+  fileSpec += "popstate.dat";
 
-  PR_FREEIF(popstatePath);
+  nsFilePath filePath(fileSpec);
+  nsInputFileStream fileStream(filePath);
 
   buf = (char*)PR_CALLOC(512);
   if (buf) {
@@ -269,8 +269,12 @@ static void
 net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
 {
   PRInt32 len = 0;
-  char *popstatePath = PR_smprintf("%s\\popstate.dat", mailDirectory);
-  nsFilePath filePath(popstatePath);
+
+  nsNativeFileSpec fileSpec(mailDirectory);
+  fileSpec += "popstate.dat";
+
+  nsFilePath filePath(fileSpec);
+
   nsOutputFileStream outFileStream(filePath, PR_WRONLY | PR_CREATE_FILE |
                                    PR_TRUNCATE);
 	char* tmpBuffer = PR_smprintf("%s", "# Netscape POP3 State File" LINEBREAK
@@ -279,8 +283,7 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
 
   outFileStream << tmpBuffer;
 
-  PR_Free(popstatePath);
-	PR_Free(tmpBuffer);
+ 	PR_Free(tmpBuffer);
 
   for (; host && (len >= 0); host = host->next)
   {
