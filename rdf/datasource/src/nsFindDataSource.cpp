@@ -421,28 +421,24 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 	if ((nsnull == literal) || (nsnull == matchMethod) || (nsnull == matchText))
 		return(found);
 
-        nsXPIDLString str;
+        nsXPIDLString	str;
 	literal->GetValue( getter_Copies(str) );
 	if (! str)	return(found);
 	nsAutoString	value(str);
 
-	// XXX Note: nsString.Find() is currently only case-significant.
-	//           We really want a case insignificant Find() for all
-	//           the comparisons below.
-
 	if (!PL_strcmp(matchMethod, "contains"))
 	{
-		if (value.Find(matchText) >= 0)
+		if (value.Find(matchText, PR_TRUE) >= 0)
 			found = PR_TRUE;
 	}
 	else if (!PL_strcmp(matchMethod, "startswith"))
 	{
-		if (value.Find(matchText) == 0)
+		if (value.Find(matchText, PR_TRUE) == 0)
 			found = PR_TRUE;
 	}
 	else if (!PL_strcmp(matchMethod, "endswith"))
 	{
-		PRInt32 pos = value.Find(matchText);
+		PRInt32 pos = value.RFind(matchText, PR_TRUE);
 		if ((pos >= 0) && (pos == (value.Length() - strlen(matchText))))
 			found = PR_TRUE;
 	}
@@ -458,7 +454,7 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 	}
 	else if (!PL_strcmp(matchMethod, "doesntcontain"))
 	{
-		if (value.Find(matchText) < 0)
+		if (value.Find(matchText, PR_TRUE) < 0)
 			found = PR_TRUE;
 	}
 	return(found);
