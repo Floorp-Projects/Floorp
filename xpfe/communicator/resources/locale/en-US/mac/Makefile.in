@@ -1,4 +1,3 @@
-#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,13 +17,15 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..\..\..\..\..
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-include <$(DEPTH)\config\rules.mak>
+include $(DEPTH)/config/autoconf.mk
 
-DIRS = win
+include $(topsrcdir)/config/rules.mk
 
-chrome::
-        $(REGCHROME) content communicator comm.jar
-        $(REGCHROME) locale en-US/communicator en-US.jar
+
