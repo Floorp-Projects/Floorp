@@ -68,6 +68,14 @@
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
 
+#ifdef XPC_IDISPATCH_SUPPORT
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMLocation.h"
+#include "nsNetUtil.h"
+#include "nsEmbedString.h"
+#include "nsIURI.h"
+#endif
+
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -936,6 +944,36 @@ void MozAxPlugin::Release()
         XPCOMGlueShutdown();
     }
 }
+
+#ifdef XPC_IDISPATCH_SUPPORT
+nsresult MozAxPlugin::GetCurrentLocation(NPP instance, nsIURI **aLocation)
+{
+    NS_ENSURE_ARG_POINTER(aLocation);
+    *aLocation = nsnull;
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    NPN_GetValue(instance, NPNVDOMWindow, (void *) &domWindow);
+    if (!domWindow)
+    {
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(domWindow);
+    if (!windowInternal)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMLocation> location;
+    nsEmbedString href;
+    windowInternal->GetLocation(getter_AddRefs(location));
+    if (!location ||
+        NS_FAILED(location->GetHref(href)))
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_NewURI(aLocation, href);
+}
+#endif
 
 CLSID MozAxPlugin::GetCLSIDForType(const char *mimeType)
 {

@@ -51,6 +51,7 @@
 #include "nsIClassInfo.h"
 #include "nsIMozAxPlugin.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsIURI.h"
 
 #include "ControlEventSink.h"
 
@@ -152,6 +153,7 @@ namespace MozAxPlugin {
 #ifdef XPC_IDISPATCH_SUPPORT
     extern PRUint32 PrefGetHostingFlags();
     extern void ReleasePrefObserver();
+    extern nsresult GetCurrentLocation(NPP instance, nsIURI **aLocation);
 #endif
 }
 
