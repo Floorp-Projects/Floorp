@@ -37,7 +37,7 @@ public:
   /*
    *   This method return the tag which the observer care about
    */
-  NS_IMETHOD GetTagName(nsString& oTag);
+  NS_IMETHOD_(const char*) GetTagName();
 
   /*
    *   Subject call observer when the parser hit the tag
@@ -47,7 +47,7 @@ public:
    *   @param nameArray - array of name. 
    *   @param valueArray - array of value
    */
-  NS_IMETHOD Notify(PRUint32 aDocumentID, const nsString& aTag, PRUint32 numOfAttributes, 
+  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                     const nsString* nameArray, const nsString* valueArray);
 
   NS_IMETHOD Notify(nsISupports** result) = 0;
