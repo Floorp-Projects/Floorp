@@ -42,8 +42,11 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsObserverService.h"
-
 #include "nsIWindowMediator.h"
+
+// just to do the reverse-lookup! sheesh.
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShell.h"
 
 PRUint32 nsWindowDataSource::windowCount = 0;
 
@@ -171,7 +174,7 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
 {
     nsresult rv;
     
-    nsISupportsKey key(window);
+    nsPRUint32Key key(NS_PTR_TO_INT32(window));
 
     nsCOMPtr<nsISupports> sup =
         dont_AddRef(mWindowResources.Get(&key));
@@ -222,7 +225,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
     nsCOMPtr<nsIRDFResource> windowResource;
     gRDFService->GetResource(windowId.get(), getter_AddRefs(windowResource));
 
-    nsISupportsKey key(window);
+    nsPRUint32Key key(NS_PTR_TO_INT32(window));
     mWindowResources.Put(&key, windowResource);
 
     // assert the new window
@@ -236,7 +239,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 NS_IMETHODIMP
 nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 {
-    nsISupportsKey key(window);
+    nsPRUint32Key key(NS_PTR_TO_INT32(window));
     nsCOMPtr<nsIRDFResource> resource;
 
     nsresult rv;
@@ -318,6 +321,30 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
     return NS_OK;
 }
 
+struct findWindowClosure {
+    nsIRDFResource* targetResource;
+    nsIXULWindow *resultWindow;
+};
+
+static PRBool findWindow(nsHashKey* aKey, void *aData, void* aClosure)
+{
+    nsPRUint32Key *thisKey = NS_STATIC_CAST(nsPRUint32Key*, aKey);
+
+    nsIRDFResource *resource =
+        NS_STATIC_CAST(nsIRDFResource*, aData);
+    
+    findWindowClosure* closure =
+        NS_STATIC_CAST(findWindowClosure*, aClosure);
+
+    if (resource == closure->targetResource) {
+        closure->resultWindow =
+            NS_STATIC_CAST(nsIXULWindow*,
+                           NS_INT32_TO_PTR(thisKey->GetValue()));
+        return PR_TRUE;         // stop enumerating
+    }
+    return PR_FALSE;
+}
+
 // nsIWindowDataSource implementation
 
 NS_IMETHODIMP
@@ -328,6 +355,23 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
     gRDFService->GetResource(aResourceString, getter_AddRefs(windowResource));
 
     // now reverse-lookup in the hashtable
+    findWindowClosure closure = { windowResource.get(), nsnull };
+    mWindowResources.Enumerate(findWindow, (void*)&closure);
+    if (closure.resultWindow) {
+
+        // this sucks, we have to jump through docshell to go from
+        // nsIXULWindow -> nsIDOMWindowInternal
+        nsCOMPtr<nsIDocShell> docShell;
+        closure.resultWindow->GetDocShell(getter_AddRefs(docShell));
+
+        if (docShell) {
+            nsCOMPtr<nsIDOMWindowInternal> result =
+                do_GetInterface(docShell);
+        
+            *aResult = result;
+            NS_IF_ADDREF(*aResult);
+        }
+    }
 
     return NS_OK;
 }
