@@ -71,7 +71,7 @@ interface nsIStreamAsFile : nsISupports
 interface nsIStreamAsFileObserver : nsISupports
 {
     /**
-     * Flag bits for argument to Observe() method.
+     * Flag bits for argument to observeStreamAsFile() method.
      */
     const long NOTIFY_AVAILABLE    = 1 << 0; // Stream-as-file now available for reading
     const long NOTIFY_ERROR        = 1 << 1; // Error while loading stream / creating file
