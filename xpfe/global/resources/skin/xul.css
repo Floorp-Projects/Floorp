@@ -156,6 +156,10 @@ titledbutton {
 tree {
  display: table;
  table-layout: fixed;
+ width: 200px;
+ height: 200px;
+ min-width: 0px;
+ min-height: 0px;
 }
 
 treeitem { 

@@ -40,9 +40,8 @@
      though there is no datasource from which to build content yet.
   -->
 
-  <html:div style="width:100%; height:100%" flex="1">
   <tree id="Tree" ref="NC:RelatedLinks" container="true"
-    style="width: 100%; height: 100%"
+    flex="1"
     datasources="rdf:null"
     onclick="openURL(event, event.target.parentNode.parentNode, 'Tree')">
 
@@ -76,5 +75,4 @@
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
   </tree>
-  </html:div>
 </window>
