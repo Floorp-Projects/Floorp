@@ -994,7 +994,7 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="click">
+      <handler event="command">
         if (event.originalTarget.getAttribute("anonid") == "messageButton") {
           var os = Components.classes["@mozilla.org/observer-service;1"]
                              .getService(Components.interfaces.nsIObserverService);
