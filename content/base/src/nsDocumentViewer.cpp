@@ -4727,7 +4727,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   // Very important! Turn On scripting
   TurnScriptingOn(PR_TRUE);
 
-  nsresult rv = Init(mParentWidget, mDeviceContext, bounds);
+  Init(mParentWidget, mDeviceContext, bounds);
 
   // this needs to be set here not earlier,
   // because it is needing when re-constructing the Galley Mode)
