@@ -1,7 +1,12 @@
  
 menubar 
   {
-    background-color      : #CCCCCC;
+    background-color      : white;
+  }
+
+menubar > toolbargrippy 
+  {
+    display               : none;
   }
 
 menu, menuitem  
@@ -21,15 +26,18 @@ menuitem[menuactive="true"][disabled="true"]
 menupopup, popup 
   {
     background-color      : #CCCCCC;
-    border                : 1px outset #CCCCCC;
+    border                : 1px solid #336699;
   }
 
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-    max-width             : 25em;
-    min-width             : 10em;
-    margin                : 0px;
+    max-width             : 250px;
+    min-width             : 125px;
+    margin-left           : 0px;
+    margin-right          : 0px;
+    margin-top            : 0px;
+    margin-bottom         : 0px;
   }
 
 menuseparator 
@@ -40,7 +48,7 @@ menuseparator
 
 menubar > menu 
   {
-    border                : 1px solid transparent;
+    border                : 1px solid #FFFFFF;
     padding               : 2px 3px 2px 3px;
     margin                : 2px 0px 2px 0px;
   }
@@ -53,12 +61,17 @@ popup > menu, popup > menuitem
 
 menubar > menu[menuactive="true"] 
   {
-    border                : 1px outset #CCCCCC;
+    border                : 1px solid #CCCCCC;
+    background-color      : #CCCCCC;
+    -moz-border-radius    : 4px;
   }
 
 menubar > menu[menuactive="true"][open="true"] 
   {
-    border                : 1px outset #CCCCCC;
+    border                : 1px solid #336699;
+    border-bottom         : 1px solid #CCCCCC;
+    background-color      : #CCCCCC;
+    -moz-border-radius    : 4px 4px 0px 0px;
   }
 
 menupopup > menu[menuactive="true"],
@@ -66,9 +79,10 @@ menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"]
   {
-    background-color      : #000080;
+    background-color      : #336699;
     color                 : #FFFFFF;
   }
+
 
 /** 
  * Atomic sub-parts of standard menus
