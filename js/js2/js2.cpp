@@ -403,7 +403,7 @@ static float64 testFactorial(float64 n)
     std::cout << icg;
 
     // test the iCode interpreter.
-    JSValues args(32);
+    JSValues args(1);
     args[0] = JSValue(n);
     JSValue result = interpret(icm, args);
     std::cout << "fact(" << n << ") = " << result.f64 << std::endl;
@@ -460,7 +460,7 @@ static float64 testObjects(World &world, int32 n)
     std::cout << incrCG;
 
     // run initialization code.
-    JSValues args(32);
+    JSValues args;
     interpret(initCode, args);
 
     // call the increment function some number of times.
