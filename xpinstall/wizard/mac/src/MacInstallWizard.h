@@ -120,7 +120,8 @@ if (err) 								\
 #define END_SECTION		']'
 #define KV_DELIM		'='
 
-#define TEMP_DIR		"\pTemp NSInstall"	// XXX must go away (wrong dl location)
+#define kTempFolder		"\pTemp NSInstall"  // only used in debugging
+#define kViewerFolder	"\p:viewer"
 
 #define kScrollBarPad	3		/* constants */	
 #define kTxtRectPad		5
@@ -183,6 +184,8 @@ if (err) 								\
 #define rAllProgBar		161
 #define rPerXPIProgBar	162
 #define rSiteSelector	163
+#define rSaveCheckbox   164
+#define rSaveBitsMsgBox	165
 
 #define rGrayPixPattern 128
 
@@ -405,6 +408,7 @@ typedef struct Config {
 	short		 numSites;
 	SiteSelector site[kMaxSites];
 	Redirect	 redirect;
+	Handle		 saveBitsMsg;
 	
 	/* "Tunneled" IDI keys */
 	Handle	coreFile;
@@ -444,6 +448,7 @@ typedef struct Options {
 				 
 	/* from TerminalWin */
 	short			siteChoice;
+	Boolean			saveBits;
 	
 } Options;
 
@@ -484,6 +489,9 @@ typedef struct TermWin {
 	ControlHandle	xpiProgressBar;
 	TEHandle		xpiProgressMsg;
 	ControlHandle	siteSelector;
+	ControlHandle	saveBitsCheckbox;
+	TEHandle		saveBitsMsg;
+	Rect			saveBitsMsgBox;
 } TermWin;
 
 typedef struct InstWiz {
@@ -686,6 +694,7 @@ void		DisableTerminalWin(void);
 pascal void *Install(void*);
 Boolean		DownloadRedirect(short, long, FSSpecPtr);
 void		ParseRedirect(FSSpecPtr);
+void		IfRemoveOldCore(short, long);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);

@@ -27,6 +27,8 @@
  *   Install Action
  *-----------------------------------------------------------*/
 
+static Boolean bXPIsExisted = true;
+
 pascal void* Install(void* unused)
 {	
 	short			vRefNum, srcVRefNum;
@@ -35,10 +37,11 @@ pascal void* Install(void* unused)
 	FSSpec			idiSpec, coreFileSpec;
 #if MOZILLA == 0
 	FSSpec 			redirectSpec;
+	HRESULT			dlErr;
 #endif
 #ifdef MIW_DEBUG
 	FSSpec			tmpSpec;
-#endif
+#endif /* MIW_DEBUG */
 	SDISTRUCT		sdistruct;
 	Str255			pIDIfname, pModulesDir;
 	StringPtr		coreFile;
@@ -52,7 +55,7 @@ pascal void* Install(void* unused)
 #else
 	/* for DEBUG builds dump downloaded items in "<currProcessVolume>:Temp NSInstall:" */
 	vRefNum = gControls->opt->vRefNum;
-	err = FSMakeFSSpec( vRefNum, 0, TEMP_DIR, &tmpSpec );
+	err = FSMakeFSSpec( vRefNum, 0, kTempFolder, &tmpSpec );
 	if (err != noErr)
 	{
 		err = FSpDirCreate(&tmpSpec, smSystemScript, &dirID);
@@ -86,12 +89,10 @@ pascal void* Install(void* unused)
 	modulesDirID = 0;
 	GetDirectoryID(srcVRefNum, srcDirID, pModulesDir, &modulesDirID, &isDir);
 	srcDirID = modulesDirID;
+	
 	if (!isDir || !ExistArchives(srcVRefNum, srcDirID))
-	{
-		/* download location is same as extraction location */
-		srcVRefNum = vRefNum;
-		srcDirID = dirID;
-		
+	{	
+		bXPIsExisted = false;
 		GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
 		/* preparing to download */
@@ -117,17 +118,24 @@ pascal void* Install(void* unused)
 		/* populate SDI struct */
 		sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
 		sdistruct.fsIDIFile 	= idiSpec;
-		sdistruct.dlDirVRefNum 	= vRefNum;
-		sdistruct.dlDirID 		= dirID;
+		sdistruct.dlDirVRefNum 	= srcVRefNum;
+		sdistruct.dlDirID 		= srcDirID;
 		sdistruct.hwndOwner    	= NULL;
 	
 		/* call SDI_NetInstall */
 #if MOZILLA == 0	
 #if SDINST_IS_DLL == 1
-		gInstFunc(&sdistruct);
+		dlErr = gInstFunc(&sdistruct);
 #else
-		SDI_NetInstall(&sdistruct);
+		dlErr = SDI_NetInstall(&sdistruct);
 #endif /* SDINST_IS_DLL */
+#ifdef MIW_DEBUG
+		if (dlErr != 0)
+		{
+			ErrorHandler();
+			return (void*) nil;
+		}
+#endif
 #endif /* MOZILLA */
 
 		SetPort(oldPort);
@@ -173,6 +181,7 @@ pascal void* Install(void* unused)
 			InitProgressBar();
 			
 			/* extract contents of downloaded or packaged core file */
+			IfRemoveOldCore(vRefNum, dirID);
 			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
@@ -188,14 +197,6 @@ pascal void* Install(void* unused)
 				ErrorHandler();
 				
 			CleanupExtractedFiles(vRefNum, dirID);
-			
-			if (!bCoreExists)
-			{
-				err = FSpDelete(&coreFileSpec);
-#ifdef MIW_DEBUG
-				if (err!=noErr) SysBeep(10); 
-#endif
-			}
 		}
 		
 		if (coreFile)
@@ -203,15 +204,17 @@ pascal void* Install(void* unused)
 	}
 	
 	/* launch the downloaded apps who had the LAUNCHAPP attr set */
-	LaunchApps(vRefNum, dirID);
+	if (err == noErr)
+		LaunchApps(srcVRefNum, srcDirID);
 	
 	/* run apps that were set in RunAppsX sections */
-	if (gControls->cfg->numRunApps > 0)
+	if (err == noErr && gControls->cfg->numRunApps > 0)
 		RunApps();
 	 
 #if MOZILLA == 0
 	/* cleanup downloaded .xpis */
-	DeleteXPIs(vRefNum, dirID);  /* temp folder location is supplied */
+	if (!gControls->opt->saveBits  && !bXPIsExisted)
+		DeleteXPIs(srcVRefNum, srcDirID);  /* "Installer Modules" folder location is supplied */
 #endif
 
 	/* wind down app */
@@ -418,6 +421,17 @@ BAIL:
 		DisposePtr((Ptr) cSection);
 	if (cIndex)
 		free(cIndex);
+}
+
+void
+IfRemoveOldCore(short vRefNum, long dirID)
+{
+	FSSpec 	fsViewer;
+	OSErr 	err = noErr;
+	
+	err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &fsViewer);
+	if (err == noErr)  // old core exists
+		err = DeleteDirectory(fsViewer.vRefNum, fsViewer.parID, fsViewer.name);
 }
 
 Boolean 	
