@@ -1292,7 +1292,6 @@ nsresult
 nsParseNewMailState::Init(nsFileSpec &folder)
 {
     nsresult rv;
-//	SetMaster(master);
 	m_mailboxName = nsCRT::strdup(folder);
 
 	m_position = folder.GetFileSize();
@@ -1591,7 +1590,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 						}
 						case nsMsgFilterActionMoveToFolder:
 							// if moving to a different file, do it.
-							if (value && XP_FILENAMECMP(m_mailDB->GetFolderName(), (char *) value))
+							if (value && PL_strcasecmp(m_mailboxName, (char *) value))
 							{
 								PRUint32 msgFlags;
 								msgHdr->GetFlags(&msgFlags);
@@ -1636,7 +1635,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 									PR_FREEIF(tmp);
 								}
 								nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (char *) value, filter);
-								if (NS_SUCCEEDED(err)
+								if (NS_SUCCEEDED(err))
 									msgMoved = TRUE;
 
 							}
@@ -1655,7 +1654,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 							msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 							break;
 						case nsMsgFilterActionChangePriority:
-							m_mailDB->SetPriority(msgHdr,  * ((nsMsgPriority *) &value));
+							msgHdr->SetPriority(*(nsMsgPriority *) &value));
 							break;
 						default:
 							break;
