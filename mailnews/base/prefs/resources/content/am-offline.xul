@@ -69,7 +69,7 @@ Contributors:
     <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&selectButtonDesc.label;</html>
 
     <hbox iscontrolcontainer="true" hidable="true" hidefor="pop3" align="right">
-        <button label="&offlineSelect.label;" oncommand="onClickSelect()"/>
+        <button label="&offlineSelect.label;" oncommand="onClickSelect()" id="selectFolderButton"/>
     </hbox>
 
     </groupbox>    

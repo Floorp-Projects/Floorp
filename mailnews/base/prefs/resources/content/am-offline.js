@@ -22,9 +22,13 @@
 var gIncomingServer;
 var gServerType;
 var gImapIncomingServer;
+var gPref = null;
+var gLockedPref = null;
 
 function onInit() 
 {
+    onLockPreference();	
+
     // init values here
     initServerSettings();
     initRetentionSettings();
@@ -50,7 +54,6 @@ function initServerSettings()
         document.getElementById("offline.downloadBodiesOnGetNewMail").checked =  gImapIncomingServer.downloadBodiesOnGetNewMail;
         document.getElementById("offline.newFolder").checked =  gImapIncomingServer.offlineDownload;
     }
-   // onLockPreference();	
 }
   
 function initRetentionSettings()
@@ -232,19 +235,29 @@ function onSave()
         gImapIncomingServer.offlineDownload = document.getElementById("offline.newFolder").checked;
     }
 }
-var gPref = null;
 
+// Does the work of disabling an element given the array which contains xul id/prefstring pairs.
+// Also saves the id/locked state in an array so that other areas of the code can avoid
+// stomping on the disabled state indiscriminately.
 function disableIfLocked( prefstrArray )
 {
+    if (!gLockedPref)
+      gLockedPref = new Array;
+
     for (i=0; i<prefstrArray.length; i++) {
-        var element = document.getElementById(prefstrArray[i].id);
-        if (gPref.prefIsLocked(prefstrArray[i].prefstring))
+        var id = prefstrArray[i].id;
+        var element = document.getElementById(id);
+        if (gPref.prefIsLocked(prefstrArray[i].prefstring)) {
             element.disabled = true;
-        else
+            gLockedPref[id] = true;
+        } else {
             element.removeAttribute("disabled");
+            gLockedPref[id] = false;
+        }
     }
 }
 
+// Disables xul elements that have associated preferences locked.
 function onLockPreference()
 {
     var isDownloadLocked = false;
@@ -259,7 +272,7 @@ function onLockPreference()
     // This panel does not use the code in AccountManager.js to handle
     // the load/unload/disable.  keep in mind new prefstrings and changes
     // to code in AccountManager, and update these as well.
-    var prefElements = [
+    var allPrefElements = [
       { prefstring:"offline_download", id:"offline.newFolder"},
       { prefstring:"download_bodies_on_get_new_mail",
                            id:"offline.downloadBodiesOnGetNewMail"},
@@ -273,25 +286,21 @@ function onLockPreference()
       { prefstring:"numHdrsToKeep", id:"nntp.keepNewMsgMin"},
       { prefstring:"keepUnreadOnly", id:"nntp.keepUnread"},
       { prefstring:"daysToKeepBodies", id:"nntp.removeBodyMin"},
+      { prefstring:"cleanupBodies", id:"nntp.removeBody" },
       { prefstring:"disable_button.selectFolder", id:"selectFolderButton"}
     ];
 
     finalPrefString = initPrefString + "." + gIncomingServer.key + ".";
     gPref = prefService.getBranch(finalPrefString);
 
-    disableIfLocked( prefElements );
-
-/*  This element doesn't currently work.  When it does and the prefstring
-is known, it needs to be added to the array.  See bugs 91560 and 79561
-    { prefstring:"", id:"nntp.removeBody" }
-*/
+    disableIfLocked( allPrefElements );
 } 
 
 function onCheckItem(broadcasterElementId, checkElementId)
 {
     var broadcaster = document.getElementById(broadcasterElementId);
     var checked = document.getElementById(checkElementId).checked;
-    if(checked) {
+    if(checked && !gLockedPref[checkElementId] ) {
         broadcaster.removeAttribute("disabled");
     }
     else {
@@ -302,6 +311,12 @@ function onCheckItem(broadcasterElementId, checkElementId)
 
 function onCheckKeepMsg()
 {
+    if (gLockedPref["nntp.keepMsg"]) {
+        // if the pref associated with the radiobutton is locked, as indicated
+        // by the gLockedPref, skip this function.  All elements in this
+        // radiogroup have been locked by the function onLockPreference.
+        return;
+    }
     var broadcaster_keepMsg = document.getElementById("bc_keepMsg");
     var checkedOld = document.getElementById("nntp.keepOldMsg").checked;
     var checkedNew = document.getElementById("nntp.keepNewMsg").checked;
