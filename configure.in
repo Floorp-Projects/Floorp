@@ -131,6 +131,9 @@ fi
 dnl now the exceptions
 dnl ========================================================
 case "$target" in
+*-*-aix*)
+    DSO_CFLAGS=
+    ;;
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test -z "$GNU_CC"; then
@@ -418,7 +421,7 @@ if test $ac_cv_cxx_include_flag = true ; then
 else
   AC_MSG_RESULT(no)
 fi  
-rm -f include-test-*.h
+rm -f $_tmp_header
 CFLAGS=$_SAVE_CFLAGS
 
 dnl Check cc and cxx for -Wall flag support (adds compiler warnings)
@@ -504,10 +507,7 @@ if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
   fi
 fi
 
-AC_DEFINE_UNQUOTED(MOZ_TOOLKIT,   $MOZ_TOOLKIT)
 AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, $DLL_SUFFIX)
-
-OS_TARGET=`uname -s`
 
 MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        disable building of internal shared libs],
@@ -584,9 +584,9 @@ dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
   if [ test $res != 0 ]; then
     AC_MSG_ERROR("Homedir must be single relative path.")
   else 
-    MOZ_USER_DIR=\\\"$enableval\\\"
+    AC_DEFINE(MOZ_USER_DIR,"$enableval")
   fi], 
-  MOZ_USER_DIR='\".mozilla\"' )
+  AC_DEFINE(MOZ_USER_DIR,".mozilla") )
 
 MOZ_ARG_ENABLE_BOOL(smart-mail,
 [  --enable-smart-mail     enable HTML/RDF-based client-side mail (untested)],
@@ -616,7 +616,6 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc-=\$dir location of malloc wrapper library],
   WRAP_MALLOC_LIB=$withval)
 
-AC_SUBST(OS_TARGET)
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_SECURITY)
@@ -1088,23 +1087,65 @@ if test "$USING_HCC"; then
 fi
 
 dnl Check for missing components
-if [ test "$no_x" != "yes" ]; then
-if [ test -n "$MISSING_X" ]; then
+if test "$no_x" != "yes"; then
+if test -n "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
-if [ test -n "$MISSING_GTK" ]; then
+if test -n "$MISSING_GTK"; then
    AC_MSG_ERROR([ Could not link sample program with the following gtk libraries: $MISSING_GTK ])
 fi
 
-if [ test -n "$MISSING_MOTIF" ]; then
+if test -n "$MISSING_MOTIF"; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
 fi # $no_x
 
-if [ test -n "$MISSING_NSPR" ]; then
+if test -n "$MISSING_NSPR"; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
+
+dnl Set various defines and substitutions
+dnl ========================================================
+# netlib stuff
+AC_DEFINE(MODULAR_NETLIB)
+MODULAR_NETLIB=1
+AC_SUBST(MODULAR_NETLIB)
+if test "$MODULAR_NETLIB" = ""; then
+  AC_DEFINE(CookieManagement)
+fi
+
+# imagelib
+AC_DEFINE(STANDALONE_IMAGE_LIB)
+STANDALONE_IMAGE_LIB=1
+AC_SUBST(STANDALONE_IMAGE_LIB)
+
+OS_TARGET=`uname -s`
+AC_SUBST(OS_TARGET)
+
+if test "$OS_TARGET" = "OS2"; then
+  AC_DEFINE(XP_PC)
+elif test "$OS_TARGET" = "WINNT"; then
+  AC_DEFINE(XP_PC)
+else
+  AC_DEFINE(XP_UNIX)
+  AC_DEFINE(UNIX_EMBED)
+  AC_DEFINE(X_PLUGINS)
+  AC_DEFINE(UNIX_LDAP)
+  AC_DEFINE(UNIX_ASYNC_DNS)
+fi
+
+AC_DEFINE(JS_THREADSAFE)
+AC_DEFINE(LAYERS)
+AC_DEFINE(NETSCAPE)
+
+if test "$MOZ_EDITOR"; then
+  AC_DEFINE(NGEDITOR)
+fi
+
+
+dnl Spit out some output
+dnl ========================================================
 
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
