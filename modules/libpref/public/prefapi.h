@@ -412,7 +412,15 @@ PR_EXTERN(PrefResult) PREF_CopyPrefsTree(const char *srcRoot, const char *destRo
 // Return a non-zero result (a PrefResult enumerated value) to pass an error up to the caller.
 // </font>
 */
+/* Temporarily conditionally compile PrefChangedFunc typedef.
+** During migration from old libpref to nsIPref we need it in
+** both header files.  Eventually prefapi.h will become a private
+** file.  The two types need to be in sync for now.  Certain
+** compilers were having problems with multiple definitions.
+*/
+#ifndef nsIPref_h__
 typedef int (*PrefChangedFunc) (const char *, void *); 
+#endif /* nsIPref_h__ */
 
 /*
 // <font color=blue>
