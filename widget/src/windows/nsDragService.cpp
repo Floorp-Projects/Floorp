@@ -166,6 +166,11 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 {
+  if ( !mDataObject ) {
+    *aNumItems = 0;
+    return NS_OK;
+  }
+
   if ( IsCollectionObject(mDataObject) ) {
     nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
     if ( dataObjCol )
