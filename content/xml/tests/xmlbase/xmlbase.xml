@@ -69,4 +69,14 @@
   <xlink:link xlink:type="simple" xlink:href="m.xml">m.xml</xlink:link>
   <p>Expected: http://foobar.com/%20/%20/m.xml</p>
 </sect1>
+<sect1 xml:base="chrome://navigator">
+  <title>Sect1: xml:base="chrome://navigator"</title>
+  <xlink:link xlink:type="simple" xlink:href="n.xml">n.xml</xlink:link>
+  <p>Expected: |current path|/n.xml because chrome URL is not allowed</p>
+  <sect2 xml:base="http://www.mozilla.org">
+    <title>Sect2: xml:base="http://www.mozilla.org"</title>
+    <xlink:link xlink:type="simple" xlink:href="o.xml" xml:base="chrome://navigator">o.xml, this element has xml:base="chrome://navigator"</xlink:link>
+    <p>Expected: http://www.mozilla.org/o.xml because chrome base is not allowed</p>
+  </sect2>
+</sect1>
 </root>

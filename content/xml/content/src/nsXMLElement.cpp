@@ -257,7 +257,48 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         rv = MakeURI(str,docBase,aURI);
       }
     }
-  } else {
+
+    // Finally do a security check, almost the same as nsDocument::SetBaseURL()
+    if (*aURI) {
+      nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> docURI;
+        mDocument->GetDocumentURL(getter_AddRefs(docURI));
+        rv = securityManager->CheckLoadURI(docURI, *aURI, nsIScriptSecurityManager::STANDARD);
+        if (NS_FAILED(rv)) {
+          // Now we need to get the "closest" allowed base URI
+          NS_RELEASE(*aURI);
+
+          if (content) { // content is the last content we tried above
+            nsCOMPtr<nsIContent> parent;
+            content->GetParent(*getter_AddRefs(parent));
+            content = parent;
+            while (content) {
+              nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(content));
+              if (xml) {
+                return xml->GetXMLBaseURI(aURI);
+              }
+              content->GetParent(*getter_AddRefs(parent));
+              content = parent;
+            }
+          }
+          
+          nsCOMPtr<nsIURI> docBase;
+          mDocument->GetBaseURL(*getter_AddRefs(docBase));
+          if (!docBase) {
+            mDocument->GetDocumentURL(getter_AddRefs(docBase));
+          }
+
+          *aURI = docBase.get();
+          NS_IF_ADDREF(*aURI);
+          rv = NS_OK;
+        }
+      }
+    }
+  }
+
+  if (NS_FAILED(rv)) {
     NS_IF_RELEASE(*aURI);
   }
 
