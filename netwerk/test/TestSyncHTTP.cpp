@@ -1,3 +1,25 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
 #include <nsCOMPtr.h>
 #include <nsString.h>
 #include <nsIURI.h>
@@ -7,9 +29,7 @@
 #include <nsNetUtil.h>
 
 /*
- * This is a very simple program that tests a "blocking" HTTP get.  The call to
- * OpenInputStream does not block; instead it returns a blocking nsIInputStream,
- * from which we read the HTTP response content.
+ * Test synchronous HTTP.
  */
 
 #define RETURN_IF_FAILED(rv, what) \
@@ -20,48 +40,77 @@
     } \
     PR_END_MACRO
 
-int
-main(int argc, char **argv)
-{
-    nsresult rv;
+#define NMAX 4
+
+struct TestContext {
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIInputStream> inputStream;
     PRTime t1, t2;
+    PRUint32 bytesRead, totalRead;
+};
+
+int
+main(int argc, char **argv)
+{
+    nsresult rv;
+    TestContext c[NMAX];
+    int i, nc=0, npending=0;
+    char buf[256];
 
     if (argc < 2) {
-        printf("Usage: TestSyncHTTP <url>\n");
+        printf("Usage: TestSyncHTTP <url-list>\n");
         return -1;
     }
 
-    rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
-    RETURN_IF_FAILED(rv, "NS_NewURI");
+    for (i=0; i<(argc-1); ++i, ++nc) {
+        if (i == NMAX) {
+            printf("exceeded url limit of %d: truncating url-list given as input\n", NMAX);
+            break;
+        }
+        rv = NS_NewURI(getter_AddRefs(c[i].uri), argv[i+1]);
+        RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull);
-    RETURN_IF_FAILED(rv, "NS_OpenURI");
+        rv = NS_OpenURI(getter_AddRefs(c[i].channel), c[i].uri, nsnull, nsnull);
+        RETURN_IF_FAILED(rv, "NS_OpenURI");
 
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
-    if (httpChannel)
-        httpChannel->SetOpenInputStreamHasEventQueue(PR_FALSE);
+        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(c[i].channel);
+        if (httpChannel)
+            httpChannel->SetOpenInputStreamHasEventQueue(PR_FALSE);
 
-    t1 = PR_Now();
-
-    rv = channel->OpenInputStream(getter_AddRefs(inputStream));
-    RETURN_IF_FAILED(rv, "nsIChannel::OpenInputStream");
-
-    //
-    // read the response content...
-    //
-    char buf[256];
-    PRUint32 bytesRead = 1, totalRead = 0;
-    while (bytesRead > 0) {
-        rv = inputStream->Read(buf, sizeof buf, &bytesRead);
-        RETURN_IF_FAILED(rv, "nsIInputStream::Read");
-        totalRead += bytesRead;
+        // initialize these fields for reading
+        c[i].bytesRead = 1;
+        c[i].totalRead = 0;
     }
-    t2 = PR_Now();
 
-    printf("total read: %u bytes\n", totalRead);
-    printf("total read time: %0.3f\n", ((double) (t2 - t1))/1000000.0);
+    for (i=0; i<nc; ++i) {
+        c[i].t1 = PR_Now();
+
+        rv = c[i].channel->OpenInputStream(getter_AddRefs(c[i].inputStream));
+        RETURN_IF_FAILED(rv, "nsIChannel::OpenInputStream");
+    }
+
+    npending = nc;
+    while (npending) {
+        for (i=0; i<nc; ++i) {
+            //
+            // read the response content...
+            //
+            if (c[i].bytesRead > 0) {
+                rv = c[i].inputStream->Read(buf, sizeof buf, &c[i].bytesRead);
+                RETURN_IF_FAILED(rv, "nsIInputStream::Read");
+                c[i].totalRead += c[i].bytesRead;
+
+                if (c[i].bytesRead == 0) {
+                    c[i].t2 = PR_Now();
+                    printf("finished GET of: %s\n", argv[i+1]);
+                    printf("total read: %u bytes\n", c[i].totalRead);
+                    printf("total read time: %0.3f\n",
+                            ((double) (c[i].t2 - c[i].t1))/1000000.0);
+                    npending--;
+                }
+            }
+        }
+    }
     return 0;
 }
