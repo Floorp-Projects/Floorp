@@ -57,11 +57,9 @@
 #include "prlog.h"
 #include "prprf.h"
 
-#ifndef XP_MAC
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-#endif // XP_MAC
 
 #include <iostream.h>
 
@@ -1199,10 +1197,10 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
     if (aLoadInitiator->mDocumentChannel)
         rv = aLoadInitiator->mDocumentChannel->GetURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv)) {
-        char* buffer = nsCRT::strdup("?");
+        char* buffer = nsnull;
         if (uri)
             rv = uri->GetSpec(&buffer);
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && buffer != nsnull) {
             PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                    ("DocLoader:%p: Firing OnEndDocumentLoad(...) called for [DocLoader:%p] %s\n", 
                     this, aLoadInitiator, buffer));
@@ -2392,7 +2390,6 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
   ///////////////////////////////
   // STREAM CONVERTERS
   ///////////////////////////////
-#ifndef XP_MAC
   char *contentType = nsnull;
   rv = aChannel->GetContentType(&contentType);
   if (NS_FAILED(rv)) return rv;
@@ -2420,7 +2417,6 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
     mNextListener = converterListener;
   }
   nsAllocator::Free(contentType);
-#endif // XP_MAC
 
   //////////////////////////////
   // END STREAM CONVERTERS
