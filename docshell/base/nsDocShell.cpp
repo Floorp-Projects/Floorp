@@ -3352,14 +3352,11 @@ nsDocShell::InternalLoad(nsIURI * aURI, nsIURI * aReferrer,
             mURIResultedInDocument = PR_TRUE;
             OnNewURI(aURI, nsnull, mLoadType);
 
+            // Save the new entry in OSHE
+            OSHE = LSHE;
+
             /* Clear out LSHE so that further anchor visits get
-               * recorded in SH and SH won't misbehave. i think this is  
-               * sufficient for now to take care of any Sh mis-behaviors.
-               * Other option is to call OnEndDocumentLoad() with a dummy channel
-               * and uriloader and letting everybody know that we are done
-               *  with this target load. I don't think that is necessay
-               * considering that nsIDocLoaderObserver is on its way out.
-               *  Hopefully  the following is sufficient.
+             * recorded in SH and SH won't misbehave. 
              */
             LSHE = nsnull;
             /* Set the title for the SH entry for this target url. so that
@@ -4487,6 +4484,36 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       NS_ERROR_FAILURE);
     NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
                       NS_ERROR_FAILURE);
+#if 0
+    /* If there is a valid postdata *and* the user pressed
+     * shift-reload, take user's permission before we repost the 
+     * data to the server.
+     */
+    if ((aLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
+        aLoadType == LOAD_RELOAD_BYPASS_CACHE) && postData) {
+
+      nsCOMPtr<nsIPrompt> prompter;
+      PRBool repost;
+      nsCOMPtr<nsIStringBundle> stringBundle;
+      GetPromptAndStringBundle(getter_AddRefs(prompter), 
+                                getter_AddRefs(stringBundle));
+ 
+      if (stringBundle && prompter) {
+        nsXPIDLString messageStr;
+        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repostConfirm").GetUnicode(), 
+                                                      getter_Copies(messageStr));
+          
+        if (NS_SUCCEEDED(rv) && messageStr) {
+          prompter->Confirm(nsnull, messageStr, &repost);
+          /* If the user pressed cancel in the dialog, 
+           * return failure. 
+           */
+          if (!repost)
+            return NS_ERROR_FAILURE;  
+        }
+      }
+    }
+#endif /* 0 */
 
     NS_ENSURE_SUCCESS(InternalLoad
                       (uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull,
