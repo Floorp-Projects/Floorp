@@ -783,9 +783,9 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         return result;
       }
       else {
-        // If you're here then we have seen a /noscript.
-        // After handling the text token intentionally
-        // fall thro' such that /noscript gets handled.
+        // If you're here then we have either seen a /noscript,
+        // or /noframes, or /iframe. After handling the text token 
+        // intentionally fall thro' to handle the current end token.
         CTextToken theTextToken(mScratch);        
         result=HandleStartToken(&theTextToken);
         
@@ -840,6 +840,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
       switch(theTag) {
         case eHTMLTag_html:
+        case eHTMLTag_iframe:
         case eHTMLTag_noframes:
         case eHTMLTag_noscript:
         case eHTMLTag_script:
