@@ -28,7 +28,7 @@ EmitHtmlTitleAndHeader("tinderbox: add images", "add images");
 
 $| = 1;
 
-require "globals.pl";
+require "tbglobals.pl";
 require "imagelog.pl";
 
 &split_cgi_args;

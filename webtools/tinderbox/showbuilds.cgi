@@ -18,7 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 use lib '../bonsai';
-require 'globals.pl';
+require 'tbglobals.pl';
 require 'lloydcgi.pl';
 require 'imagelog.pl';
 require 'header.pl';
@@ -164,9 +164,10 @@ sub print_page_head {
   # Get the warnings summary
   do "$tree/warn.pl" if $nowdate eq $maxdate;
 
-  use POSIX qw(strftime);
+#  use POSIX qw(strftime);
   # Print time in format, "HH:MM timezone"
-  my $now = strftime("%H:%M %Z", localtime);
+#  my $now = strftime("%H:%M %Z", localtime);
+  $now = "Now";
 
   EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
                          "tree: $tree ($now)");
@@ -453,19 +454,22 @@ sub has_who_list {
 }
 
 sub tree_open {
-  my $done, $line, $a, $b;
-  open(BID, "<../bonsai/data/$bonsai_tree/batchid")
+  my $line, $treestate;
+  open(BID, "<../bonsai/data/$bonsai_tree/batchid.pl")
     or print "can't open batchid<br>";
-  ($a,$b,$bid) = split / /, <BID>;
+  $line = <BID>;
   close(BID);
-  open(BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}")
-    or print "can't open batch-${bid}<br>";;
-  $done = 0;
-  while (($line = <BATCH>) and not $done){ 
-    if ($line =~ /^set treeopen/) {
-      chop $line;
-      ($a,$b,$treestate) = split / /, $line ;
-      $done = 1;
+  if ($line =~ m/'(\d+)'/) {
+      $bid = $1;
+  } else {
+      return 0;
+  }
+  open(BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}.pl")
+    or print "can't open batch-${bid}.pl<br>";
+  while ($line = <BATCH>){ 
+    if ($line =~ /^$::TreeOpen = '(\d+)';/) {
+        $treestate = $1;
+        break;
     }
   }
   close(BATCH);
@@ -688,7 +692,7 @@ sub do_flash {
     $text .= ($busted > 1 ? ' are ' : ' is ') . 'busted';
     
     # The Flash spec says we need to give ctime.
-    use POSIX;
+#    use POSIX;
     my $tm = POSIX::ctime(time());
     $tm =~ s/^...\s//;   # Strip day of week
     $tm =~ s/:\d\d\s/ /; # Strip seconds

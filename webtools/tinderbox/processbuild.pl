@@ -17,7 +17,7 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-require 'globals.pl';
+require 'tbglobals.pl';
 require 'timelocal.pl';
 
 umask 0;

@@ -19,7 +19,7 @@
 
 use Socket;
 
-require 'globals.pl';
+require 'tbglobals.pl';
 require 'imagelog.pl';
 
 # Port an old-style imagelog thing to a newstyle one

@@ -277,7 +277,7 @@ ep_windows.pl	Knows how to parse Windows build error logs.  Used by ???
 faq.html	Wildly out of date.
 
 fixupimages.pl	???
-globals.pl	???
+tbglobals.pl	???
 imagelog.pl	???
 index.html	???
 reledanim.gif	???

@@ -40,13 +40,13 @@ ep_mac.pl	\
 ep_unix.pl	\
 ep_windows.pl	\
 fixupimages.pl	\
-globals.pl	\
 handlemail.pl	\
 imagelog.pl	\
 processbuild.pl	\
 showbuilds.cgi	\
 showimages.cgi	\
 showlog.cgi	\
+tbglobals.pl	\
 Empty.html	\
 faq.html	\
 index.html	\

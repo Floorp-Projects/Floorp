@@ -18,7 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 use lib '../bonsai';
-require "globals.pl";
+require "tbglobals.pl";
 require 'lloydcgi.pl';
 require 'header.pl';
 

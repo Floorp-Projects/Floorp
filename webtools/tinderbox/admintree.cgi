@@ -20,7 +20,7 @@
 use lib "../bonsai";
 
 require 'lloydcgi.pl';
-require 'globals.pl';
+require 'tbglobals.pl';
 require 'header.pl';
 
 $|=1;

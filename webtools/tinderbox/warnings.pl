@@ -22,9 +22,9 @@
 use FileHandle;
 
 $tree = 'SeaMonkey';
-# tinderbox/globals.pl uses many shameful globals
+# tinderbox/tbglobals.pl uses many shameful globals
 $form{tree} = $tree;
-require 'globals.pl';
+require 'tbglobals.pl';
 
 $cvsroot = '/cvsroot/mozilla';
 $lxr_data_root = '/export2/lxr-data';

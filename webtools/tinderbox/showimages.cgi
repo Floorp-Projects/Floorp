@@ -22,7 +22,7 @@ $| = 1;
 
 use lib "../bonsai";
 
-require 'globals.pl';
+require 'tbglobals.pl';
 require 'imagelog.pl';
 require 'lloydcgi.pl';
 require 'header.pl';

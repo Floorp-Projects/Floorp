@@ -20,7 +20,7 @@
 use lib "../bonsai";
 use Fcntl;
 
-require "globals.pl";
+require "tbglobals.pl";
 require 'lloydcgi.pl';
 
 if (defined($args = $form{log})) {

@@ -19,7 +19,7 @@
 
 use lib "../bonsai";
 
-require 'globals.pl';
+require 'tbglobals.pl';
 
 $F_DEBUG=1;
 
