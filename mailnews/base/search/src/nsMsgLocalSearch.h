@@ -52,6 +52,7 @@ public:
 
 	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,
                                          nsISupportsArray *termList,
+                                         const char *defaultCharset,
                                          nsIMsgSearchScopeTerm *scope, 
                                          nsIMsgDatabase * db, 
                                          const char * headers,
@@ -60,6 +61,7 @@ public:
 
   static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch,
                                       nsISupportsArray * termList,
+                                      const char *defaultCharset,
                                       nsIMsgSearchScopeTerm *scope,
                                       nsIMsgDatabase *db, PRBool *pResult);
 
@@ -67,11 +69,10 @@ public:
 	virtual nsresult OpenSummaryFile ();
 	nsresult SummaryFileError();
 
-
-
 protected:
 	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
                                 nsISupportsArray *termList,
+                                const char *defaultCharset,
                                 nsIMsgSearchScopeTerm *scope, 
                                 nsIMsgDatabase * db, 
                                 const char * headers,

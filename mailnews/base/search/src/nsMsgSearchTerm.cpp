@@ -701,14 +701,6 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 		PRBool endOfFile = PR_FALSE;  // if retValue == 0, we've hit the end of the file
 		uint32 lines = 0;
 
-		PRBool getConverter = PR_FALSE;
-#ifdef DO_I18N
-		CCCDataObject conv = INTL_CreateCharCodeConverter();
-		PRInt16 win_csid = INTL_DocToWinCharSetID(foldcsid);
-		PRInt16 mail_csid = INTL_DefaultMailCharSetID(win_csid);    // to default mail_csid (e.g. JIS for Japanese)
-		if ((nsnull != conv) && INTL_GetCharCodeConverter(mail_csid, win_csid, conv)) 
-			getConverter = PR_TRUE;
-#endif // DO_I18N
 		// Change the sense of the loop so we don't bail out prematurely
 		// on negative terms. i.e. opDoesntContain must look at all lines
 		PRBool boolContinueLoop;
@@ -733,27 +725,13 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 				// Do in-place decoding of quoted printable
 				if (isQuotedPrintable)
 					StripQuotedPrintable ((unsigned char*)buf);
-
-				nsCString compare(buf);
-				if (getConverter) 
-				{	
-#ifdef DO_I18N
-					// In here we do I18N conversion if we get the converter
-					char *newBody = nsnull;
-					newBody = (char *)INTL_CallCharCodeConverter(conv, (unsigned char *) buf, (int32) PL_strlen(buf));
-					if (newBody && (newBody != buf))
-					{
-						// CharCodeConverter return the char* to the orginal string
-						// we don't want to free body in that case 
-						compare = newBody;
-					}
-#endif
-				}
+			    nsCString  compare(buf);
+//				ConvertToUnicode(charset, buf, compare);
 				if (compare.Length() > 0) {
 					char startChar = (char) compare.CharAt(0);
 					if (startChar != CR && startChar != LF)
 					{
-						err = MatchString (compare, nsnull, &result);
+						err = MatchString (compare, folderCharset, &result);
 						lines++; 
 					}
 				}
@@ -793,6 +771,7 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
 	if (NS_SUCCEEDED(res)) {
 		stringToMatch = decodedString.ToNewUTF8String();
 		mimedecode = PR_TRUE;
+		charset = nsnull;
 	}
 	else
 		stringToMatch = rfc2047string; // Try to match anyway
@@ -816,75 +795,83 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 
 	nsresult err = NS_OK;
 	nsCAutoString n_str;
-	const char* n_header = nsnull;
+	const char *utf8 = stringToMatch;
 	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
-		n_header = stringToMatch;
 		n_str = m_value.string;
+		if (charset != nsnull)
+		{
+			nsAutoString  srcCharset;
+			srcCharset.AssignWithConversion(charset);
+			nsString out;
+			ConvertToUnicode(srcCharset, stringToMatch ? stringToMatch : "", out);
+			utf8 = out.ToNewUTF8String();
+		}
 	}
+
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::Contains:
-		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			PL_strcasestr(stringToMatch, n_str))
+		if ((nsnull != utf8) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
+			PL_strcasestr(utf8, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
-		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			!PL_strcasestr(stringToMatch, n_str))
+		if ((nsnull != utf8) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
+			!PL_strcasestr(utf8, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
-		if(n_header)
+		if(utf8)
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (n_str.EqualsWithConversion(stringToMatch, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (n_str.EqualsWithConversion(utf8, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
-			else if (n_header[0] == '\0') // Special case for "is <the empty string>"
+			else if (utf8[0] == '\0') // Special case for "is <the empty string>"
 				result = PR_TRUE;
 		}
 		break;
 	case nsMsgSearchOp::Isnt:
-		if(n_header)
+		if(utf8)
 		{
 			if ((n_str.GetBuffer())[0])
 			{
-				if (!n_str.EqualsWithConversion(stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
+				if (!n_str.EqualsWithConversion(utf8, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
 			}
-			else if (n_header[0] != '\0') // Special case for "isn't <the empty string>"
+			else if (utf8[0] != '\0') // Special case for "isn't <the empty string>"
 				result = PR_TRUE;
 		}
 		break;
 	case nsMsgSearchOp::IsEmpty:
-		if (!PL_strlen(stringToMatch))
+		if (!PL_strlen(utf8))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::BeginsWith:
 #ifdef DO_I18N_YET
-		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrBeginWith(csid, n_header, n_str))
+		if((nsnull != n_str) && (nsnull != utf8) && INTL_StrBeginWith(csid, utf8, n_str))
 			result = PR_TRUE;
 #else
 		// ### DMB - not the  most efficient way to do this.
-		if (PL_strncmp(stringToMatch, n_str, PL_strlen(n_str)) == 0)
+		if (PL_strncmp(utf8, n_str, PL_strlen(n_str)) == 0)
 			result = PR_TRUE;
 #endif
 		break;
 	case nsMsgSearchOp::EndsWith: 
     {
-      PRUint32 searchStrLen = (PRUint32) PL_strlen(stringToMatch);
+      PRUint32 searchStrLen = (PRUint32) PL_strlen(utf8);
       if (n_str.Length() <= searchStrLen)
       {
         PRInt32 sourceStrOffset = searchStrLen - n_str.Length();
-        if (PL_strcmp(stringToMatch + sourceStrOffset, n_str) == 0)
+        if (PL_strcmp(utf8 + sourceStrOffset, n_str) == 0)
           result = PR_TRUE;
       }
     }
 #ifdef DO_I18N_YET
 		{
-		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrEndWith(csid, n_header, n_str))
+		if((nsnull != n_str) && (nsnull != utf8) && INTL_StrEndWith(csid, utf8, n_str))
 			result = PR_TRUE;
 		}
 #else
@@ -894,6 +881,9 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	default:
 		NS_ASSERTION(PR_FALSE, "invalid operator matching search results");
 	}
+
+	if (utf8 != nsnull && utf8 != stringToMatch)
+	  free((void *)utf8);
 
 	*pResult = result;
 	return err;

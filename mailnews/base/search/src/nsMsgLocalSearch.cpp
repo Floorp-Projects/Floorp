@@ -478,28 +478,31 @@ nsresult nsMsgSearchOfflineMail::SummaryFileError ()
 nsresult
 nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
                                             nsISupportsArray *termList,
+                                            const char *defaultCharset,
                                             nsIMsgSearchScopeTerm * scope,
                                             nsIMsgDatabase * db, 
                                             const char * headers,
                                             PRUint32 headerSize,
                                             PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, PR_TRUE, pResult);
+    return MatchTerms(msgToMatch, termList, defaultCharset, scope, db, headers, headerSize, PR_TRUE, pResult);
 }
 
 // static method which matches a header against a list of search terms.
 nsresult
 nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch, 
                                             nsISupportsArray* termList,
+                                            const char *defaultCharset,
                                             nsIMsgSearchScopeTerm *scope,
                                             nsIMsgDatabase *db,
                                             PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, PR_FALSE, pResult);
+    return MatchTerms(msgToMatch, termList, defaultCharset, scope, db, nsnull, 0, PR_FALSE, pResult);
 }
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                                             nsISupportsArray * termList,
+                                            const char *defaultCharset,
                                             nsIMsgSearchScopeTerm * scope,
                                             nsIMsgDatabase * db, 
                                             const char * headers,
@@ -511,9 +514,10 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     nsXPIDLCString  recipients;
     nsXPIDLCString  ccList;
     nsXPIDLCString  matchString;
-	PRUint32 msgFlags;
-
-	PRBool result;
+    nsXPIDLCString  msgCharset;
+    const char *charset;
+    PRUint32 msgFlags;
+    PRBool result;
 
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -526,8 +530,6 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         result = PR_FALSE;
 
     // Loop over all terms, and match them all to this message. 
-
-    const char *charset = nsnull; // scope->m_folder->GetFolderCSID() & ~CS_AUTO;
 
     nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
     if (!expression)
@@ -544,6 +546,8 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 
         nsMsgSearchAttribValue attrib;
         pTerm->GetAttrib(&attrib);
+        msgToMatch->GetCharset(getter_Copies(msgCharset));
+        charset = *(const char *)msgCharset ? msgCharset : defaultCharset;
         switch (attrib)
         {
         case nsMsgSearchAttrib::Sender:
@@ -658,6 +662,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
     err = OpenSummaryFile ();
   if (!m_db)  // must be reparsing.
     return err;
+
   // Reparsing is unnecessary or completed
   if (NS_SUCCEEDED(err))
   {
@@ -678,8 +683,11 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
     else
     {
       PRBool match = PR_FALSE;
+      nsAutoString nullCharset, folderCharset;
+      GetSearchCharsets(nullCharset, folderCharset);
+      const char *charset = NS_ConvertUCS2toUTF8(folderCharset);
       // Is this message a hit?
-      err = MatchTermsForSearch (msgDBHdr, m_searchTerms, m_scope, m_db, &match);
+      err = MatchTermsForSearch (msgDBHdr, m_searchTerms, charset, m_scope, m_db, &match);
 
       // Add search hits to the results list
       if (NS_SUCCEEDED(err) && match)

@@ -72,9 +72,6 @@ public:
 	
 	static nsresult EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd);
 
-	static char *TryToConvertCharset(const PRUnichar *sourceStr,
-                                     const PRUnichar *destCharset,
-                                     PRBool useMIME2Style);
 	static char *GetImapCharsetParam(const PRUnichar *destCharset);
 	void GetSearchCharsets(nsString &srcCharset, nsString &destCharset);
   static PRUnichar *EscapeSearchUrl (const PRUnichar *nntpCommand);

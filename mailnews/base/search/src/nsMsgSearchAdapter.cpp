@@ -137,73 +137,6 @@ NS_IMETHODIMP nsMsgSearchAdapter::AddHit(nsMsgKey key)
 
 
 char *
-nsMsgSearchAdapter::TryToConvertCharset(const PRUnichar *sourceStr,
-                                        const PRUnichar * destCharset,
-                                        PRBool useMime2)
-{
-	char *result = nsnull;
-
-	if (sourceStr == nsnull) 
-		return nsnull;
-
-  // Convert from unicode to a destination charset.
-  if (NS_FAILED(ConvertFromUnicode(nsAutoString(destCharset), nsAutoString(sourceStr), &result))) {
-    PR_FREEIF(result);
-    result = nsnull;
-  }
-
-#ifdef DO_I18N  // I have no idea what we should do here.
-	if ((src_csid != dest_csid) || (useMime2))
-	{
-		// Need to convert. See if we can.
-
-		// ### mwelch Much of this code is lifted from 
-		//     lib/libi18n/mime2fun.c (in particular,
-		//     intl_EncodeMimePartIIStr).
-		CCCDataObject obj = nsnull;
-		CCCFunc cvtfunc = nsnull;
-		int srcLen = XP_STRLEN(sourceStr);
-
-		obj = INTL_CreateCharCodeConverter();
-		if (obj == nsnull)
-			return 0;
-
-		/* setup converter from src_csid --> dest_csid */
-		INTL_GetCharCodeConverter(src_csid, dest_csid, obj) ;
-		cvtfunc = INTL_GetCCCCvtfunc(obj);
-
-		if (cvtfunc)
-		{
-			// We can convert, so do it.
-			if (useMime2)
-				// Force MIME-2 encoding so that the charset (if necessary) gets
-				// passed to the Dredd server inline
-				result = INTL_EncodeMimePartIIStr(sourceStr, src_csid, TRUE);
-			else
-			{
-				// Copy the source string before using it for conversion.
-				// You just don't know where those bits have been.
-				char *temp = XP_STRDUP(sourceStr);
-				if (temp)
-				{
-					// (result) will differ from (temp) iff a larger string 
-					// were needed to contain the converted chars.
-					// (or so I understand)
-					result = (char *) cvtfunc(obj, 
-											  (unsigned char*)temp, 
-											  srcLen);
-					if (result != temp)
-						XP_FREE(temp);
-				}
-			}
-		}
-		XP_FREEIF(obj);
-	}
-#endif
-	return result;
-}
-
-char *
 nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 {
 	char *result = nsnull;
@@ -370,8 +303,10 @@ void
 nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset)
 {
     nsresult rv;
-//  char *defaultCharset =   nsMsgI18NGetDefaultMailCharset();
-  nsAutoString defaultCharset; defaultCharset.AssignWithConversion(nsMsgI18NGetDefaultMailCharset());
+	nsAutoString defaultCharset; 
+	char *search_charset = nsMsgI18NGetDefaultMailCharset();
+	defaultCharset.AssignWithConversion(search_charset);
+	PR_Free((void *)search_charset);
 	srcCharset = defaultCharset;
 	dstCharset = defaultCharset;
 
@@ -646,7 +581,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 			useQuotes = !reallyDredd ||
                 (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
 			// now convert to char* and escape quoted_specials
-			value = TryToConvertCharset(convertedValue, destCharset, reallyDredd);
+			ConvertFromUnicode(nsAutoString(convertedValue), nsAutoString(destCharset), &value);
 			if (value)
 			{
 				char *oldValue = value;
