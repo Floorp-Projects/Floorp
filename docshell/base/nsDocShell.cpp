@@ -55,6 +55,7 @@
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
 #include "nsIPluginViewer.h"
+#include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 
 // Local Includes
 #include "nsDocShell.h"
@@ -4482,6 +4483,24 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
     if (aRequest) {
         *aRequest = nsnull;
+    }
+
+    //
+    // First, notify any nsIContentPolicy listeners about the document load.
+    // Only abort the load if a content policy listener explicitly vetos it!
+    //
+    PRBool bShouldLoad = PR_TRUE;
+    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface((nsIDocShell*)this);
+
+    (void) NS_CheckContentLoadPolicy((IsFrame() ? nsIContentPolicy::SUBDOCUMENT
+                                                : nsIContentPolicy::DOCUMENT),
+                                     aURI,
+                                     nsnull,
+                                     domWindow,
+                                     &bShouldLoad);
+    if (!bShouldLoad) {
+      // XXX: There must be a better return code...
+      return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsISupports> owner(aOwner);

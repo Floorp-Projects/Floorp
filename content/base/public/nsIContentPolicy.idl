@@ -41,6 +41,7 @@ interface nsIContentPolicy : nsISupports
   const PRInt32 SUBDOCUMENT = 5;
   const PRInt32 CONTROL_TAG = 6;
   const PRInt32 RAW_URL     = 7;
+  const PRInt32 DOCUMENT    = 8;
 
   /**
    * Should the content at this location be loaded and processed?
