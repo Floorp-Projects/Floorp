@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..
 
-DEFINES=-D_IMPL_NS_HTML 
+DEFINES=-D_IMPL_NS_DOM
 
 MODULE=raptor 
 REQUIRES=xpcom raptor dom
