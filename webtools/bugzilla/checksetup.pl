@@ -1784,14 +1784,13 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 }
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
-# How do we make the new directory owned by the webserver's group? Until 
-# we find out, make it 0777.
+# This code copied from what happens for the 'data' dir above.
 unless (-d 'graphs') {
     print "Creating graphs directory ...\n";
-    mkdir 'graphs', 0777;   # was 0770 in the code (above) I pinched this from
+    mkdir 'graphs', 0770; 
     if ($::webservergroup eq "") {
         chmod 0777, 'graphs';
-    }
+    } 
 }
 
 
