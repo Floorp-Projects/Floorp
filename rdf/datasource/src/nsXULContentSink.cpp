@@ -203,7 +203,7 @@ protected:
     PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
     void      PopNameSpaces(void);
 
-    nsINameSpaceManager* mNameSpaceManager;
+    nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
     nsVoidArray mNameSpaceStack;
     
     void SplitQualifiedName(const nsString& aQualifiedName,
@@ -242,7 +242,7 @@ protected:
                               const nsString& aMedia);
     
     // Miscellaneous RDF junk
-    nsIRDFDataSource*      mDataSource;
+    nsCOMPtr<nsIRDFDataSource> mDataSource; // [OWNER]
     XULContentSinkState    mState;
 
     // content stack management
@@ -250,25 +250,25 @@ protected:
     nsresult        PopResourceAndState(nsIRDFResource*& rContext, XULContentSinkState& rState);
     nsIRDFResource* GetTopResource(void);
 
-    nsVoidArray* mContextStack;
+    nsVoidArray*     mContextStack;
 
-    nsIURI*      mDocumentURL;
-    nsIURI*      mDocumentBaseURL;
+    nsCOMPtr<nsIURI> mDocumentURL;         // [OWNER]
+    nsCOMPtr<nsIURI> mDocumentBaseURL;     // [OWNER]
 
     PRBool       mHaveSetRootResource;
 
-    nsIDocument* mDocument;
-    nsIDocument* mChildDocument;
-    nsIParser*   mParser;
+    nsCOMPtr<nsIDocument> mDocument;       // [OWNER]
+    nsIDocument*          mChildDocument;  // [WEAK] ????
+    nsIParser*            mParser;         // [OWNER] We use regular pointer b/c of funky exports on nsIParser
     
-    PRInt32      mUnprocessedOverlayCount;
+    PRInt32            mUnprocessedOverlayCount;
     nsVoidArray*       mOverlayArray;
-    PRInt32        mCurrentOverlay;
-    nsIXULContentSink* mParentContentSink;
+    PRInt32            mCurrentOverlay;
+    nsCOMPtr<nsIXULContentSink> mParentContentSink; // [OWNER]????
   
-    nsString      mPreferredStyle;
-    PRInt32       mStyleSheetCount;
-    nsICSSLoader* mCSSLoader;
+    nsString               mPreferredStyle;
+    PRInt32                mStyleSheetCount;
+    nsCOMPtr<nsICSSLoader> mCSSLoader;     // [OWNER]
 };
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
@@ -288,24 +288,16 @@ XULContentSinkImpl::XULContentSinkImpl()
       mTextLength(0),
       mTextSize(0),
       mConstrainSize(PR_TRUE),
-      mNameSpaceManager(nsnull),
       mInScript(PR_FALSE),
       mScriptLineNo(0),
-      mDataSource(nsnull),
       mState(eXULContentSinkState_InProlog),
       mContextStack(nsnull),
-      mDocumentURL(nsnull),
-      mDocumentBaseURL(nsnull),
       mHaveSetRootResource(PR_FALSE),
-      mDocument(nsnull),
-      mChildDocument(nsnull),
       mParser(nsnull),
       mUnprocessedOverlayCount(0),
       mOverlayArray(nsnull),
       mCurrentOverlay(0),
-      mParentContentSink(nsnull),
-      mStyleSheetCount(0),
-      mCSSLoader(nsnull)
+      mStyleSheetCount(0)
 {
     NS_INIT_REFCNT();
 
@@ -341,6 +333,8 @@ XULContentSinkImpl::XULContentSinkImpl()
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
+    NS_IF_RELEASE(mParser); // XXX should've been released by now, unless error.
+
     {
         // There shouldn't be any here except in an error condition
         PRInt32 i = mNameSpaceStack.Count();
@@ -441,15 +435,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
         delete mContextStack;
     }
 
-
-    NS_IF_RELEASE(mNameSpaceManager);
-    NS_IF_RELEASE(mDocumentURL);
-    NS_IF_RELEASE(mDocumentBaseURL);
-    NS_IF_RELEASE(mDataSource);
-    NS_IF_RELEASE(mDocument);
-    NS_IF_RELEASE(mParser);
-    NS_IF_RELEASE(mCSSLoader);
-
     PR_FREEIF(mText);
 
     if (--gRefCnt == 0) {
@@ -540,7 +525,7 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 
     // Drop our reference to the parser to get rid of a circular
     // reference.
-    NS_IF_RELEASE(mParser);
+    NS_RELEASE(mParser);
     return NS_OK;
 }
 
@@ -563,7 +548,7 @@ XULContentSinkImpl::SetParser(nsIParser* aParser)
 {
     NS_IF_RELEASE(mParser);
     mParser = aParser;
-    NS_IF_ADDREF(aParser);
+    NS_IF_ADDREF(mParser);
     return NS_OK;
 }
 
@@ -1077,70 +1062,56 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
 
     nsCOMPtr<nsIXULChildDocument> childDocument;
     childDocument = do_QueryInterface(aDocument);
-    childDocument->GetContentSink(&mParentContentSink);
+    childDocument->GetContentSink(getter_AddRefs(mParentContentSink));
     if (mParentContentSink) {
         // We're an overlay. Find the parent document's
         // data source and make assertions there.
       
         // First of all, find the root document.
-        nsIDocument* rootDocument = nsnull; 
-        nsIDocument* currDocument; 
-        currDocument = aDocument; 
-        NS_ADDREF(currDocument); 
-        while (currDocument != nsnull) { 
-            NS_IF_RELEASE(rootDocument); 
-            rootDocument = currDocument; 
-            currDocument = rootDocument->GetParentDocument(); 
-        } 
+        nsCOMPtr<nsIDocument> root = dont_QueryInterface(aDocument);
+        while (1) {
+            nsCOMPtr<nsIDocument> parent = dont_AddRef(root->GetParentDocument());
+
+            // root will have no parent.
+            if (! parent)
+                break;
+
+            root = parent;
+        }
 
         // Retrieve the root data source. 
-        nsCOMPtr<nsIRDFDocument> rdfRootDoc; 
-        rdfRootDoc = do_QueryInterface(rootDocument); 
-        if (rdfRootDoc == nsnull) { 
-            NS_ERROR("Root document of a XUL fragment is not an RDF doc."); 
-            NS_RELEASE(rootDocument); 
+        nsCOMPtr<nsIRDFDocument> rdfdoc; 
+        rdfdoc = do_QueryInterface(root);
+        NS_ASSERTION(rdfdoc != nsnull, "Root document of a XUL fragment is not an RDF doc.");
+        if (! rdfdoc)
             return NS_ERROR_INVALID_ARG; 
-        } 
 
-		    aDocument = rootDocument;
+        aDocument = root;
 		
-        nsCOMPtr<nsIRDFDataSource> docDataSource; 
-        if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
-            NS_ERROR("Unable to retrieve an RDF document's data source."); 
-            NS_RELEASE(rootDocument); 
-            return rv; 
-        } 
+        nsCOMPtr<nsIRDFDataSource> datasource; 
+        rv = rdfdoc->GetDocumentDataSource(getter_AddRefs(datasource));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to retrieve an RDF document's data source."); 
+        if (NS_FAILED(rv)) return rv;
 
-        NS_IF_RELEASE(mDataSource);
-        mDataSource = docDataSource.get();
-        NS_ADDREF(mDataSource);
-
+        mDataSource = datasource;
     }
     else {
-
         NS_PRECONDITION(aDataSource != nsnull, "null ptr");
         if (! aDataSource)
             return NS_ERROR_NULL_POINTER;
 
-        NS_IF_RELEASE(mDataSource);
         mDataSource = aDataSource;
-        NS_ADDREF(aDataSource);
     }
     
     
-    NS_IF_RELEASE(mDocument);
     mDocument = aDocument;
-    NS_ADDREF(mDocument);
 
-    NS_IF_RELEASE(mDocumentURL);
-    mDocumentURL = mDocument->GetDocumentURL();
-    NS_IF_RELEASE(mDocumentBaseURL);
-    mDocumentBaseURL = mDocument->GetDocumentURL(); // base URL can be reset by HTTP header
+    mDocumentURL = dont_AddRef(mDocument->GetDocumentURL());
+    mDocumentBaseURL = mDocumentURL;
 
-    if (NS_FAILED(rv = mDocument->GetNameSpaceManager(mNameSpaceManager))) {
-        NS_ERROR("unable to get document namespace manager");
-        return rv;
-    }
+    rv = mDocument->GetNameSpaceManager(*getter_AddRefs(mNameSpaceManager));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get document namespace manager");
+    if (NS_FAILED(rv)) return rv;
 
     if (mParentContentSink == nsnull) {
         // XUL Namespace isn't registered if we're a root document.
@@ -1157,15 +1128,14 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
       NS_RELEASE(defaultStyle);
     }
 
-    nsIHTMLContentContainer* htmlContainer = nsnull;
-    if (NS_SUCCEEDED(mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
-      htmlContainer->GetCSSLoader(mCSSLoader);
-      NS_RELEASE(htmlContainer);
-    }
+    nsCOMPtr<nsIHTMLContentContainer> htmlContainer = do_QueryInterface(mDocument);
+    NS_ASSERTION(htmlContainer != nsnull, "not an HTML container");
+    if (! htmlContainer)
+        return NS_ERROR_UNEXPECTED;
 
+    htmlContainer->GetCSSLoader(*getter_AddRefs(mCSSLoader));
 
     mState = eXULContentSinkState_InProlog;
-
     return NS_OK;
 }
 
