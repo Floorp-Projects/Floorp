@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 #include "nsHTMLParts.h"
-#include "nsContainerFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
 #include "nsIReflowCommand.h"

@@ -2014,6 +2014,19 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::Paint(nsIPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect,
+                              nsFramePaintLayer aWhichLayer)
+{
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
+  return nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)

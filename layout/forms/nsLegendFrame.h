@@ -52,6 +52,11 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif

@@ -156,10 +156,9 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint our background and border
-    const nsStyleDisplay* disp =
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
-    if (disp->IsVisible() && mRect.width && mRect.height) {
+    PRBool isVisible;
+    if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
+                     isVisible && mRect.width && mRect.height) {
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);

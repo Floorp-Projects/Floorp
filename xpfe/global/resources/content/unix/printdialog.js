@@ -54,6 +54,14 @@ function initDialog()
   dialog.legalRadio      = document.getElementById("legalRadio");
   dialog.exectiveRadio   = document.getElementById("exectiveRadio");
 
+  dialog.allpagesRadio   = document.getElementById("allpagesRadio");
+  dialog.rangeRadio      = document.getElementById("rangeRadio");
+  dialog.selectionRadio  = document.getElementById("selectionRadio");
+  dialog.frompageInput   = document.getElementById("frompageInput");
+  dialog.frompageLabel   = document.getElementById("frompageLabel");
+  dialog.topageInput     = document.getElementById("topageInput");
+  dialog.topageLabel     = document.getElementById("topageLabel");
+
   dialog.topInput        = document.getElementById("topInput");
   dialog.bottomInput     = document.getElementById("bottomInput");
   dialog.leftInput       = document.getElementById("leftInput");
@@ -99,6 +107,21 @@ function doPrintToFile( value )
   }
 }
 
+function doPrintRange( value )
+{
+  if ( value == true) {
+    dialog.frompageInput.removeAttribute("disabled"); 
+    dialog.frompageLabel.removeAttribute("disabled"); 
+    dialog.topageInput.removeAttribute("disabled"); 
+    dialog.topageLabel.removeAttribute("disabled"); 
+  } else {
+    dialog.frompageInput.setAttribute("disabled","true" );
+    dialog.frompageLabel.setAttribute("disabled","true" );
+    dialog.topageInput.setAttribute("disabled","true" );
+    dialog.topageLabel.setAttribute("disabled","true" );
+  }
+}
+
 function loadDialog()
 {
   var print_tofile = false;
@@ -112,6 +135,7 @@ function loadDialog()
   var print_margin_right = 500;
   var print_command = default_command;
   var print_file = default_file;
+  var print_selection_radio_enabled = false;
 
   try {
     prefs = Components.classes["@mozilla.org/preferences;1"];
@@ -127,12 +151,19 @@ function loadDialog()
     try { print_reversed = prefs.GetBoolPref("print.print_reversed"); } catch(e) { }
     try { print_color = prefs.GetBoolPref("print.print_color"); } catch(e) { }
     try { print_paper_size = prefs.GetIntPref("print.print_paper_size"); } catch(e) { }
-    try { print_margin_top = prefs.GetIntPref("print.print_margin_top"); } catch(e) { }
-    try { print_margin_left = prefs.GetIntPref("print.print_margin_left"); } catch(e) { }
-    try { print_margin_bottom = prefs.GetIntPref("print.print_margin_bottom"); } catch(e) { }
-    try { print_margin_right = prefs.GetIntPref("print.print_margin_right"); } catch(e) { }
+    //
+    // margins are set/get with the _js extention because we aren't converting them to twips
+    // the are multiplied by a 1000, i.e. 0.5 inches equals 500
+    //
+    try { print_margin_top = prefs.GetIntPref("print.print_margin_top_js"); } catch(e) { }
+    try { print_margin_left = prefs.GetIntPref("print.print_margin_left_js"); } catch(e) { }
+    try { print_margin_bottom = prefs.GetIntPref("print.print_margin_bottom_js"); } catch(e) { }
+    try { print_margin_right = prefs.GetIntPref("print.print_margin_right_js"); } catch(e) { }
+
     try { print_command = prefs.CopyCharPref("print.print_command"); } catch(e) { }
     try { print_file = prefs.CopyCharPref("print.print_file"); } catch(e) { }
+    try { print_tofile = prefs.GetBoolPref("print.print_tofile"); } catch(e) { }
+    try { print_selection_radio_enabled = prefs.GetBoolPref("print.selection_radio_enabled"); } catch(e) { }
   }
 
   if ( print_tofile == true) {
@@ -165,6 +196,17 @@ function loadDialog()
     dialog.a4Radio.checked = true;
   }
 
+  dialog.allpagesRadio.checked = true;
+  if ( print_selection_radio_enabled == true) {
+    dialog.selectionRadio.removeAttribute("disabled"); 
+  } else {
+    dialog.selectionRadio.setAttribute("disabled","true" );
+  }
+  doPrintRange(dialog.rangeRadio.checked);
+  dialog.frompageInput.value = 1;
+  dialog.topageInput.value   = 1;
+
+  // convert back to inches
   dialog.topInput.value = print_margin_top * 0.001;
   dialog.bottomInput.value = print_margin_bottom * 0.001;
   dialog.leftInput.value = print_margin_left * 0.001;
@@ -236,13 +278,21 @@ function onOK()
     }
     prefs.SetIntPref("print.print_paper_size", print_paper_size);
 
-    prefs.SetIntPref("print.print_margin_top", dialog.topInput.value * 1000);
-    prefs.SetIntPref("print.print_margin_left", dialog.leftInput.value * 1000);
-    prefs.SetIntPref("print.print_margin_bottom", dialog.bottomInput.value *1000);
-    prefs.SetIntPref("print.print_margin_right", dialog.rightInput.value * 1000);
+    // save these out so they can be picked up by the device spec
+    prefs.SetIntPref("print.print_margin_top_js", dialog.topInput.value * 1000);
+    prefs.SetIntPref("print.print_margin_left_js", dialog.leftInput.value * 1000);
+    prefs.SetIntPref("print.print_margin_bottom_js", dialog.bottomInput.value *1000);
+    prefs.SetIntPref("print.print_margin_right_js", dialog.rightInput.value * 1000);
 
     prefs.SetCharPref("print.print_command", dialog.cmdInput.value);
     prefs.SetCharPref("print.print_file", dialog.fileInput.value);
+
+    prefs.SetBoolPref("print.print_allpagesrange", dialog.allpagesRadio.checked);
+    prefs.SetBoolPref("print.print_pagerange", dialog.rangeRadio.checked);
+    prefs.SetBoolPref("print.print_selectionrange", dialog.selectionRadio.checked);
+    prefs.SetIntPref("print.print_frompage", dialog.frompageInput.value);
+    prefs.SetIntPref("print.print_topage", dialog.topageInput.value);
+
   }
 
   if (param) {

@@ -150,6 +150,9 @@ public:
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
 
+  NS_IMETHOD SetIsRenderingOnlySelection(PRBool aVal) { mIsRenderingOnlySelection = aVal; return NS_OK; }
+  NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult);
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
 #endif
@@ -205,7 +208,7 @@ protected:
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?
   PRUint8               mDefaultDirection;
-  
+  PRPackedBool          mIsRenderingOnlySelection;
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif

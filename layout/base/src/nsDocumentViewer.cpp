@@ -87,6 +87,13 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 
+// Print Options
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+#include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
+
 //focus
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMFocusListener.h"
@@ -248,12 +255,16 @@ private:
                       const nsRect& aBounds);
 
   nsresult GetDocumentSelection(nsISelection **aSelection);
+  nsresult GetDocumentSelection(nsIPresShell * aPresShell, nsISelection **aSelection);
   nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID);
+  PRBool   IsThereASelection();
 
   //
   // The following three methods are used for printing...
   //
   void DocumentReadyForPrinting();
+  //nsresult PrintSelection(nsIDeviceContextSpec * aDevSpec);
+  nsresult GetSelectionDocument(nsIDeviceContextSpec * aDevSpec, nsIDocument ** aNewDoc);
 
   static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
@@ -297,6 +308,8 @@ protected:
   nsIViewManager    *mPrintVM;
   nsIView           *mPrintView;
   FILE              *mFilePointer;   // a file where information can go to when printing
+  nsIDocument       *mSelectionDoc;
+  nsIDocShell       *mSelectionDocShell;
 
   nsCOMPtr<nsIPrintListener>  mPrintListener; // An observer for printing...
 
@@ -339,6 +352,7 @@ DocumentViewerImpl::DocumentViewerImpl()
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
   mPrintListener = nsnull;
+  mSelectionDoc = nsnull;
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
@@ -879,6 +893,386 @@ DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent, const nsIID
   return NS_ERROR_FAILURE;
 }
 
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+//-- Debug helper routines
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+
+/** ---------------------------------------------------
+ *  Dumps Frames for Printing
+ */
+static void DumpFrames(FILE*                 out, 
+                       nsIPresContext*       aPresContext, 
+                       nsIRenderingContext * aRendContext, 
+                       nsIFrame *            aFrame, 
+                       PRInt32               aLevel)
+{
+  nsIFrame * child;
+  aFrame->FirstChild(aPresContext, nsnull, &child);
+  while (child != nsnull) {
+    for (PRInt32 i=0;i<aLevel;i++) {
+     fprintf(out, "  ");
+    }
+    nsAutoString tmp;
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(child->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(tmp);
+    }
+    fputs(tmp, out);
+    nsFrameState state;
+    child->GetFrameState(&state);
+    PRBool isSelected;
+    if (NS_SUCCEEDED(child->IsVisibleForPainting(aPresContext, *aRendContext, PR_TRUE, &isSelected))) {
+      fprintf(out, " %p %s", child, isSelected?"VIS":"UVS");
+      nsRect rect;
+      child->GetRect(rect);
+      fprintf(out, "[%d,%d,%d,%d] ", rect.x, rect.y, rect.width, rect.height);
+      nsIView * view;
+      child->GetView(aPresContext, &view);
+      fprintf(out, "v: %p ", view);
+      fprintf(out, "\n");
+      DumpFrames(out, aPresContext, aRendContext, child, aLevel+1);
+      child->GetNextSibling(&child);
+    }
+  }
+}
+
+/** ---------------------------------------------------
+ *  Helper function needed for "DumpViews"
+ */
+static nsIPresShell*
+GetPresShellFor(nsIDocShell* aDocShell)
+{
+  nsIPresShell* shell = nsnull;
+  if (nsnull != aDocShell) {
+    nsIContentViewer* cv = nsnull;
+    aDocShell->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx;
+        docv->GetPresContext(cx);
+        if (nsnull != cx) {
+          cx->GetShell(&shell);
+          NS_RELEASE(cx);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  return shell;
+}
+
+/** ---------------------------------------------------
+ *  Dumps the Views from the DocShell
+ */
+static void
+DumpViews(nsIDocShell* aDocShell, FILE* out)
+{
+  if (nsnull != aDocShell) {
+    fprintf(out, "docshell=%p \n", aDocShell);
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
+    if (nsnull != shell) {
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        nsIView* root;
+        vm->GetRootView(root);
+        if (nsnull != root) {
+          root->List(out);
+        }
+      }
+      NS_RELEASE(shell);
+    }
+    else {
+      fputs("null pres shell\n", out);
+    }
+
+    // dump the views of the sub documents
+    PRInt32 i, n;
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
+    for (i = 0; i < n; i++) {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell) {
+        DumpViews(childAsShell, out);
+      }
+    }
+  }
+}
+
+/** ---------------------------------------------------
+ *  Dumps the Views and Frames
+ */
+void DumpLayoutData(nsIPresContext*    aPresContext,
+                    nsIDeviceContext * aDC,
+                    nsIFrame *         aRootFrame,
+                    nsIWebShell *      aWebShell)
+{
+  // Dump all the frames and view to a a file
+  FILE * fd = fopen("dump.txt", "w");
+  if (fd) {
+    fprintf(fd, "--------------- Frames ----------------\n");
+    nsCOMPtr<nsIRenderingContext> renderingContext;
+    aDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
+    DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
+    fprintf(fd, "---------------------------------------\n\n");
+    fprintf(fd, "--------------- Views From Root Frame----------------\n");
+    nsIView * v;
+    aRootFrame->GetView(aPresContext, &v);
+    if (v) {
+      v->List(fd);
+    } else {
+      printf("View is null!\n");
+    }
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+    if (docShell) {
+      fprintf(fd, "--------------- All Views ----------------\n");
+      DumpViews(docShell, fd);
+      fprintf(fd, "---------------------------------------\n\n");
+    }
+    fclose(fd);
+  }
+}
+
+#endif
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+//-- End of debug helper routines
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+
+/** ---------------------------------------------------
+ *  Giving a child frame it searches "up" the tree until it 
+ *  finds a "Page" frame.
+ */
+static nsIFrame * GetPageFrame(nsIFrame * aFrame)
+{
+  nsIFrame * frame = aFrame;
+  while (frame != nsnull) {
+    nsCOMPtr<nsIAtom> type;
+    frame->GetFrameType(getter_AddRefs(type));
+    if (type.get() == nsLayoutAtoms::pageFrame) {
+      return frame;
+    }
+    frame->GetParent(&frame);
+  }
+  return nsnull;
+}
+
+
+/** ---------------------------------------------------
+ *  Find by checking content's tag type
+ */
+static nsIFrame * FindFrameByType(nsIPresContext* aPresContext,
+                                  nsIFrame *      aParentFrame,
+                                  nsIAtom *       aType,
+                                  nsRect&         aRect,
+                                  nsRect&         aChildRect) 
+{
+  nsIFrame * child;
+  nsRect rect;
+  aParentFrame->GetRect(rect);
+  aRect.x += rect.x;
+  aRect.y += rect.y;
+  aParentFrame->FirstChild(aPresContext, nsnull, &child);
+  while (child != nsnull) {
+    nsCOMPtr<nsIContent> content;
+    child->GetContent(getter_AddRefs(content));
+    if (content) {
+      nsCOMPtr<nsIAtom> type;
+      content->GetTag(*getter_AddRefs(type));
+      if (type.get() == aType) {
+        nsRect r;
+        child->GetRect(r);
+        aChildRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
+        aRect.x -= rect.x;
+        aRect.y -= rect.y;
+        return child;
+      }
+    }
+    nsIFrame * fndFrame = FindFrameByType(aPresContext, child, aType, aRect, aChildRect);
+    if (fndFrame != nsnull) {
+      return fndFrame;
+    }
+    child->GetNextSibling(&child);
+  }
+  aRect.x -= rect.x;
+  aRect.y -= rect.y;
+  return nsnull;
+}
+
+/** ---------------------------------------------------
+ *  Find by checking frames type
+ */
+static nsresult FindSelectionBounds(nsIPresContext* aPresContext,
+                                    nsIRenderingContext& aRC,
+                                    nsIFrame *      aParentFrame,
+                                    nsRect&         aRect,
+                                    nsIFrame *&     aStartFrame,
+                                    nsRect&         aStartRect,
+                                    nsIFrame *&     aEndFrame,
+                                    nsRect&         aEndRect)
+{
+  nsIFrame * child;
+  aParentFrame->FirstChild(aPresContext, nsnull, &child);
+  nsRect rect;
+  aParentFrame->GetRect(rect);
+  aRect.x += rect.x;
+  aRect.y += rect.y;
+  while (child != nsnull) {
+    nsFrameState state;
+    child->GetFrameState(&state);
+    // only leaf frames have this bit flipped
+    // then check the hard way
+    PRBool isSelected = (state & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    if (isSelected) {
+      if (NS_FAILED(child->IsVisibleForPainting(aPresContext, aRC, PR_TRUE, &isSelected))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    if (isSelected) {
+      nsRect r;
+      child->GetRect(r);
+      if (aStartFrame == nsnull) {
+        aStartFrame = child;
+        aStartRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
+      } else {
+        child->GetRect(r);
+        aEndFrame = child;
+        aEndRect.SetRect(aRect.x + r.x, aRect.y + r.y, r.width, r.height);
+      }
+    }
+    FindSelectionBounds(aPresContext, aRC, child, aRect, aStartFrame, aStartRect, aEndFrame, aEndRect);
+    child->GetNextSibling(&child);
+  }
+  aRect.x -= rect.x;
+  aRect.y -= rect.y;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  This method finds the starting and ending page numbers
+ *  of the selection and also returns rect for each where
+ *  the x,y of the rect is relative to the very top of the
+ *  frame tree (absolutely positioned)
+ */
+static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
+                                         nsIPresContext*       aPresContext,
+                                         nsIRenderingContext&  aRC,
+                                         nsISelection*         aSelection,
+                                         nsIPageSequenceFrame* aPageSeqFrame,
+                                         nsIFrame**            aStartFrame,
+                                         PRInt32&              aStartPageNum,
+                                         nsRect&               aStartRect,
+                                         nsIFrame**            aEndFrame,
+                                         PRInt32&              aEndPageNum,
+                                         nsRect&               aEndRect)
+{
+  nsIFrame * seqFrame;
+  if (NS_FAILED(aPageSeqFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIFrame * startFrame = nsnull;
+  nsIFrame * endFrame   = nsnull;
+  nsRect rect;
+  seqFrame->GetRect(rect);
+
+  // start out with the sequence frame and search the entire frame tree
+  // capturing the the starting and ending child frames of the selection 
+  // and their rects
+  FindSelectionBounds(aPresContext, aRC, seqFrame, rect, startFrame, aStartRect, endFrame, aEndRect);
+
+#ifdef DEBUG_rods
+  printf("Start Frame: %p\n", startFrame);
+  printf("End Frame:   %p\n", endFrame);
+#endif
+
+  // initial the page numbers here 
+  // in case we don't find and frames
+  aStartPageNum = -1;
+  aEndPageNum   = -1;
+
+  nsIFrame * startPageFrame;
+  nsIFrame * endPageFrame;
+
+  // check to make sure we found a starting frame
+  if (startFrame != nsnull) {
+    // Now search up the tree to find what page the
+    // start/ending selections frames are on
+    //
+    // Check to see if start should be same as end if
+    // the end frame comes back null
+    if (endFrame == nsnull) {
+      // XXX the "GetPageFrame" step could be integrated into 
+      // the FindSelectionBounds step, but walking up to find
+      // the parent of a child frame isn't expensive and it makes
+      // FindSelectionBounds a little easier to understand
+      startPageFrame = GetPageFrame(startFrame);
+      endPageFrame   = startPageFrame;
+      aEndRect       = aStartRect;
+    } else {
+      startPageFrame = GetPageFrame(startFrame);
+      endPageFrame   = GetPageFrame(endFrame);
+    }
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+#ifdef DEBUG_rods
+  printf("Start Page: %p\n", startPageFrame);
+  printf("End Page:   %p\n", endPageFrame);
+
+  // dump all the pages and their pointers
+  {
+  PRInt32 pageNum = 1;
+  nsIFrame * child;
+  seqFrame->FirstChild(aPresContext, nsnull, &child);
+  while (child != nsnull) {
+    printf("Page: %d - %p\n", pageNum, child);
+    pageNum++;
+    child->GetNextSibling(&child);
+  }
+  }
+#endif
+
+  // Now that we have the page frames
+  // find out what the page numbers are for each frame
+  PRInt32 pageNum = 1;
+  nsIFrame * page;
+  seqFrame->FirstChild(aPresContext, nsnull, &page);
+  while (page != nsnull) {
+    if (page == startPageFrame) {
+      aStartPageNum = pageNum;
+    } 
+    if (page == endPageFrame) {
+      aEndPageNum = pageNum;
+    }
+    pageNum++;
+    page->GetNextSibling(&page);
+  }
+
+#ifdef DEBUG_rods
+  printf("Start Page No: %d\n", aStartPageNum);
+  printf("End Page No:   %d\n", aEndPageNum);
+#endif
+
+  *aStartFrame = startPageFrame;
+  *aEndFrame   = endPageFrame;
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------
 nsresult
 DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
                                  nsIDeviceContext * aDContext)
@@ -889,7 +1283,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   nsCOMPtr<nsIStyleSet>       ss;
   nsCOMPtr<nsIViewManager>    vm;
   PRInt32                     width, height;
-  nsIView                     *view;
   nsresult                    rv;
   PRInt32                     count,i;
   nsCOMPtr<nsIContentViewer>  viewer;
@@ -922,7 +1315,10 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+        if (mSelectionDoc) {
+          doc = mSelectionDoc;
+        }
+        nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
         if (rootContent) {
           if (NS_SUCCEEDED(FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
             doesContainFrameSet = PR_TRUE;
@@ -954,6 +1350,16 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   if (!doesContainFrameSet) {
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
+
+    // XXX - Hack Alert
+    // OK,  so ther eis a selection, we will print the entire selection 
+    // on one page and then crop the page.
+    // This means you can never print any selection that is longer than one page
+    // put it keeps it from page breaking in the middle of your print of the selection
+    // (see also nsSimplePageSequence.cpp)
+    if (IsThereASelection()) {
+      height = 0x0FFFFFFF;
+    }
 
     nsCOMPtr<nsIPresContext> cx;
     nsCOMPtr<nsIPrintContext> printcon;
@@ -992,17 +1398,18 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     nsRect tbounds = nsRect(0, 0, width, height);
 
     // Create a child window of the parent that is our "root view/window"
-    rv = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
+    nsIView* rootView;
+    rv = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&rootView);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    rv = view->Init(vm, tbounds, nsnull);
+    rv = rootView->Init(vm, tbounds, nsnull);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     // Setup hierarchical relationship in view manager
-    vm->SetRootView(view);
+    vm->SetRootView(rootView);
 
     ps->Init(mDocument, cx, vm, ss);
 
@@ -1018,10 +1425,30 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
     presShell->CaptureHistoryState(getter_AddRefs(layoutState),PR_TRUE);
 
+
     ps->BeginObservingDocument();
     //lay it out...
     ps->InitialReflow(width, height);
 
+    // Transfer Selection Ranges to the new Print PresShell
+    nsCOMPtr<nsISelection> selection;
+    nsCOMPtr<nsISelection> selectionPS;
+    GetDocumentSelection(getter_AddRefs(selection));
+    if (selection) {
+      GetDocumentSelection(ps, getter_AddRefs(selectionPS));
+      if (selectionPS) {
+        PRInt32 cnt;
+        selection->GetRangeCount(&cnt);
+        PRInt32 inx;
+        for (inx=0;inx<cnt;inx++) {
+          nsCOMPtr<nsIDOMRange> range;
+          if (NS_SUCCEEDED(selection->GetRangeAt(inx, getter_AddRefs(range)))) {
+            selectionPS->AddRange(range);
+          }
+        }
+      }
+    }
+          
     // update the history from the old presentation shell
     nsCOMPtr<nsIFrameManager> fm;
     rv = ps->GetFrameManager(getter_AddRefs(fm));
@@ -1034,8 +1461,8 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
 
     // Ask the page sequence frame to print all the pages
     nsIPageSequenceFrame* pageSequence;
-    nsPrintOptions        options;
 
+    // 
     ps->GetPageSequenceFrame(&pageSequence);
     NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
     
@@ -1051,7 +1478,97 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
       }
       fclose(mFilePointer);      
     } else {
-      pageSequence->Print(cx, options, nsnull);
+      nsIFrame* rootFrame;
+      ps->GetRootFrame(&rootFrame);
+
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+      DumpLayoutData(cx, aDContext, rootFrame, aParent);
+#endif
+
+      nsPrintRange printRangeType = ePrintRange_AllPages;
+      NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+      if (NS_SUCCEEDED(rv) && printService) {
+        PRInt32 printType;
+        printService->GetPrintRange(&printType);
+        printRangeType = (nsPrintRange)printType;
+
+        // get the document title
+        const nsString* docTitle = mDocument->GetDocumentTitle();
+        PRUnichar * docStr = docTitle->ToNewUnicode();
+        printService->SetTitle(docStr);
+        nsMemory::Free(docStr);
+
+        // Get Document URL String
+        nsCOMPtr<nsIURI> url(getter_AddRefs(mDocument->GetDocumentURL()));
+        char * urlCStr;
+        url->GetSpec(&urlCStr);
+        nsAutoString urlStr;
+        urlStr.AssignWithConversion(urlCStr);
+        PRUnichar * urlUStr = urlStr.ToNewUnicode();
+        printService->SetURL(urlUStr);
+        nsMemory::Free(urlUStr);
+        nsMemory::Free(urlCStr);
+
+        if (ePrintRange_Selection == printRangeType) {
+          cx->SetIsRenderingOnlySelection(PR_TRUE);
+
+          // temporarily creating rendering context
+          // which is needed to dinf the selection frames
+          nsCOMPtr<nsIRenderingContext> rc;
+          aDContext->CreateRenderingContext(*getter_AddRefs(rc));
+
+          // find the starting and ending page numbers
+          // via the selection
+          nsIFrame* startFrame;
+          nsIFrame* endFrame;
+          PRInt32   startPageNum;
+          PRInt32   endPageNum;
+          nsRect    startRect;
+          nsRect    endRect;
+          rv = GetPageRangeForSelection(ps, cx, *rc, selectionPS, pageSequence, 
+                                        &startFrame, startPageNum, startRect, 
+                                        &endFrame, endPageNum, endRect);
+          if (NS_SUCCEEDED(rv)) {
+            printService->SetPageRange(startPageNum, endPageNum);
+            if (startPageNum == endPageNum) {
+              nsIFrame * seqFrame;
+              if (NS_FAILED(pageSequence->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
+                return NS_ERROR_FAILURE;
+              }
+              nsRect rect(0,0,0,0);
+              nsRect areaRect;
+              nsIFrame * areaFrame = FindFrameByType(cx, startFrame, nsHTMLAtoms::body, rect, areaRect);
+              if (areaFrame) {
+                areaRect.y = areaRect.y - startRect.y;
+                areaFrame->SetRect(cx, areaRect);
+              }
+            }
+          }
+        }
+
+        nsIFrame * seqFrame;
+        if (NS_FAILED(pageSequence->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
+          return NS_ERROR_FAILURE;
+        }
+
+        nsRect srect;
+        seqFrame->GetRect(srect);
+
+        nsRect r;
+        rootView->GetBounds(r);
+        r.height = srect.height;
+        rootView->SetBounds(r);
+
+        rootFrame->GetRect(r);
+        r.height = srect.height;
+        rootFrame->SetRect(cx, r);
+
+        pageSequence->Print(cx, printService, nsnull);
+
+      } else {
+        // not sure what to do here!
+        return NS_ERROR_FAILURE;
+      }
     }
 
     aDContext->EndDocument();
@@ -1287,15 +1804,21 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   return rv;
 }
 
-nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection)
+nsresult DocumentViewerImpl::GetDocumentSelection(nsIPresShell * aPresShell, nsISelection **aSelection)
 {
   if (!aSelection) return NS_ERROR_NULL_POINTER;
-  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  if (!aPresShell) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsISelectionController> selcon;
-  selcon = do_QueryInterface(mPresShell);
+  selcon = do_QueryInterface(aPresShell);
   if (selcon) 
     return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  
   return NS_ERROR_FAILURE;
+}
+
+nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection)
+{
+  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  return GetDocumentSelection(mPresShell, aSelection);
 }
 
 NS_IMETHODIMP
@@ -1386,6 +1909,8 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     NS_RELEASE(mPrintVM);
     NS_RELEASE(mPrintSS);
     NS_RELEASE(mPrintDC);
+    NS_IF_RELEASE(mSelectionDoc);
+    
   }
 }
 
@@ -1535,6 +2060,198 @@ DocumentViewerImpl::GetSaveable(PRBool *aSaveable)
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
+//------------------------------------------------------------------
+#include "nsINodeInfo.h"
+#include "nsIDocument.h"
+#include "nsHTMLAtoms.h"
+#include "nsIHTMLContent.h"
+#include "nsINameSpaceManager.h"
+#include "nsIWebShell.h"
+
+static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+
+#if 0
+nsresult
+DocumentViewerImpl::CreateDocShell(nsIPresContext* aPresContext, const nsSize& aSize)
+{
+  nsresult rv;
+  mSelectionDocShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mSelectionDocShell, NS_ERROR_FAILURE);
+
+  // pass along marginwidth and marginheight so sub document can use it
+  mSelectionDocShell->SetMarginWidth(0);
+  mSelectionDocShell->SetMarginHeight(0);
+  
+  /* our parent must be a docshell.  we need to get our prefs from our parent */
+  nsCOMPtr<nsISupports> container;
+  aPresContext->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(container, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDocShell> outerShell = do_QueryInterface(container);
+  NS_ENSURE_TRUE(outerShell, NS_ERROR_UNEXPECTED);
+
+  float t2p;
+  aPresContext->GetTwipsToPixels(&t2p);
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = aPresContext->GetShell(getter_AddRefs(presShell));     
+  if (NS_FAILED(rv)) { return rv; }
+
+  // create, init, set the parent of the view
+  nsIView* view;
+  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
+                                         (void **)&view);
+  if (NS_FAILED(rv)) { return rv; }
+
+  nsIView* parView;
+  nsPoint origin;
+  GetOffsetFromView(aPresContext, origin, &parView);  
+
+  nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
+#ifdef NOISY
+  printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height);
+#endif
+
+  nsCOMPtr<nsIViewManager> viewMan;
+  presShell->GetViewManager(getter_AddRefs(viewMan));  
+  rv = view->Init(viewMan, viewBounds, parView);
+  if (NS_FAILED(rv)) { return rv; }
+  viewMan->InsertChild(parView, view, 0);
+  rv = view->CreateWidget(kCChildCID);
+  if (NS_FAILED(rv)) { return rv; }
+  SetView(aPresContext, view);
+
+  // if the visibility is hidden, reflect that in the view
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  if (!display->IsVisible()) {
+    view->SetVisibility(nsViewVisibility_kHide);
+  }
+
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  nsMargin border;
+  spacing->CalcBorderFor(this, border);
+
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
+
+  mSelectionDocShell->SetAllowPlugins(PR_FALSE);
+  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mSelectionDocShell));
+
+  PRInt32 x = NSToCoordRound(border.left * t2p);
+  PRInt32 y = NSToCoordRound(border.top * t2p);
+  PRInt32 cx = NSToCoordRound((aSize.width  - border.right) * t2p);
+  PRInt32 cy = NSToCoordRound((aSize.height - border.bottom) * t2p);
+  NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, widget, (x >= 0) ? x : 0,
+      (y >= 0) ? y : 0, cx, cy), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(docShellAsWin->Create(), NS_ERROR_FAILURE);
+
+  // move the view to the proper location
+  viewMan->MoveViewTo(view, origin.x, origin.y);
+
+  mSelectionDocShell->SetDocLoaderObserver(mTempObserver);
+ 
+  PRInt32 type;
+  GetType(&type);
+  if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type)) {
+    docShellAsWin->SetVisibility(PR_TRUE);
+  }
+  return NS_OK;
+}
+#endif
+
+//nsresult DocumentViewerImpl::PrintSelection(nsIDeviceContextSpec * aDevSpec)
+nsresult DocumentViewerImpl::GetSelectionDocument(nsIDeviceContextSpec * aDevSpec, nsIDocument ** aNewDoc)
+{
+  //NS_ENSURE_ARG_POINTER(*aDevSpec);
+  NS_ENSURE_ARG_POINTER(aNewDoc);
+
+    // create document
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv)) { return rv; }
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
+
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nimgr->GetNodeInfo(nsHTMLAtoms::html, nsnull, kNameSpaceID_None,
+                     *getter_AddRefs(nodeInfo));
+
+  // create document content
+  nsCOMPtr<nsIHTMLContent> htmlElement;
+  nsCOMPtr<nsIHTMLContent> headElement;
+  nsCOMPtr<nsIHTMLContent> bodyElement;
+    // create the root
+  rv = NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), nodeInfo);
+  if (NS_FAILED(rv)) { return rv; }
+  if (!htmlElement) { return NS_ERROR_NULL_POINTER; }
+    // create the head
+
+  nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("head"), nsnull,
+                     kNameSpaceID_None, *getter_AddRefs(nodeInfo));
+
+  rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), nodeInfo);
+  if (NS_FAILED(rv)) { return rv; }
+  if (!headElement) { return NS_ERROR_NULL_POINTER; }
+  headElement->SetDocument(doc, PR_FALSE, PR_TRUE);
+    // create the body
+
+  nimgr->GetNodeInfo(nsHTMLAtoms::body, nsnull, kNameSpaceID_None,
+                    *getter_AddRefs(nodeInfo));
+
+  rv = NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), nodeInfo);
+  if (NS_FAILED(rv)) { return rv; }
+  if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
+  bodyElement->SetDocument(doc, PR_FALSE, PR_TRUE);
+    // put the head and body into the root
+  rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
+  if (NS_FAILED(rv)) { return rv; }
+  rv = htmlElement->AppendChildTo(bodyElement, PR_FALSE);
+  if (NS_FAILED(rv)) { return rv; }
+  
+  // load the document into the docshell
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  if (!domDoc) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(htmlElement);
+  if (!htmlDOMElement) { return NS_ERROR_NULL_POINTER; }
+
+  //nsCOMPtr<nsIContent> rootContent(do_QueryInterface(htmlElement));
+  //doc->SetRootContent(rootContent);
+
+  *aNewDoc = doc.get();
+  NS_ADDREF(*aNewDoc);
+
+  return rv;
+
+}
+
+PRBool 
+DocumentViewerImpl::IsThereASelection()
+{
+  // check here to see if there is a range selection
+  // so we know whether to turn on the "Selection" radio button
+  nsCOMPtr<nsISelection> selection;
+  GetDocumentSelection(getter_AddRefs(selection));
+  if (selection) {
+    PRInt32 count;
+    selection->GetRangeCount(&count);
+    if (count == 1) {
+      nsCOMPtr<nsIDOMRange> range;
+      if (NS_SUCCEEDED(selection->GetRangeAt(0, getter_AddRefs(range)))) {
+        // check to make sure it isn't an insertion selection
+        PRBool isCollapsed;
+        selection->GetIsCollapsed(&isCollapsed);
+        return !isCollapsed;
+      }
+    }
+  }
+  return PR_FALSE;
+}
 
 /** ---------------------------------------------------
  *  See documentation above in the nsIContentViewerfile class definition
@@ -1543,9 +2260,15 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
 NS_IMETHODIMP
 DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
 {
-nsCOMPtr<nsIWebShell>                 webContainer;
-nsCOMPtr<nsIDeviceContextSpecFactory> factory;
-PRInt32                               width,height;
+  nsCOMPtr<nsIWebShell>                 webContainer;
+  nsCOMPtr<nsIDeviceContextSpecFactory> factory;
+  PRInt32                               width,height;
+
+  nsresult  rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && printService) {
+    printService->SetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, IsThereASelection());
+  }
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
                                      nsnull,
@@ -1566,10 +2289,13 @@ PRInt32                               width,height;
     factory->CreateDeviceContextSpec(nsnull, devspec, aSilent);
     if (nsnull != devspec) {
       mPresContext->GetDeviceContext(getter_AddRefs(dx));
-      nsresult rv = dx->GetDeviceContextFor(devspec, mPrintDC); 
+      rv = dx->GetDeviceContextFor(devspec, mPrintDC); 
       if (NS_SUCCEEDED(rv)) {
 
         NS_RELEASE(devspec);
+
+        nsCOMPtr<nsIDocument> printDoc;
+        printDoc = mDocument;
 
         // Get the webshell for this documentviewer
         webContainer = do_QueryInterface(mContainer);
@@ -1588,15 +2314,24 @@ PRInt32                               width,height;
           
 
           mPrintDC->GetDeviceSurfaceDimensions(width,height);
+          // XXX - Hack Alert
+          // OK,  so ther eis a selection, we will print the entire selection 
+          // on one page and then crop the page.
+          // This means you can never print any selection that is longer than one page
+          // put it keeps it from page breaking in the middle of your print of the selection
+          if (IsThereASelection()) {
+            height = 0x0FFFFFFF;
+          }
+
           mPrintPC->Init(mPrintDC);
           mPrintPC->SetContainer(webContainer);
-          CreateStyleSet(mDocument,&mPrintSS);
+          CreateStyleSet(printDoc,&mPrintSS);
 
           rv = NS_NewPresShell(&mPrintPS);
           if(NS_FAILED(rv)){
             return rv;
           }
-          
+
           rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull, NS_GET_IID(nsIViewManager),(void**)&mPrintVM);
           if(NS_FAILED(rv)) {
             return rv;
@@ -1611,7 +2346,7 @@ PRInt32                               width,height;
           if(NS_FAILED(rv)) {
             return rv;
           }
-          
+
           nsRect  tbounds = nsRect(0,0,width,height);
           rv = mPrintView->Init(mPrintVM,tbounds,nsnull);
           if(NS_FAILED(rv)) {
@@ -1620,7 +2355,7 @@ PRInt32                               width,height;
 
           // setup hierarchical relationship in view manager
           mPrintVM->SetRootView(mPrintView);
-          mPrintPS->Init(mDocument,mPrintPC,mPrintVM,mPrintSS);
+          mPrintPS->Init(printDoc,mPrintPC,mPrintVM,mPrintSS);
 
           nsCOMPtr<nsIImageGroup> imageGroup;
           mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));

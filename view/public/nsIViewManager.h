@@ -434,7 +434,7 @@ public:
   /**
    * Display the specified view. Used when printing.
    */
-  NS_IMETHOD Display(nsIView *aView) = 0;
+  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY) = 0;
 
   /**
    * Add a listener to the view manager's composite listener list.

@@ -193,6 +193,11 @@ public:
   NS_IMETHOD MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
+
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsString* aName);

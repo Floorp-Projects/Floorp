@@ -106,6 +106,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../xul/base/src \
 		-I$(srcdir)/../../../xul/content/src \
 		-I$(srcdir)/../../style/src \
+		-I$(srcdir)/../../forms/src \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir) \
 		$(NULL)

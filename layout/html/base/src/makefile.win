@@ -123,6 +123,7 @@ CPP_OBJS=						\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib	-I$(PUBLIC)\unicharutil			\
  -I..\..\style\src						\
+ -I..\..\forms\src						\
  -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java \
  -I$(PUBLIC)\pref \
  -I$(PUBLIC)\lwbrk \

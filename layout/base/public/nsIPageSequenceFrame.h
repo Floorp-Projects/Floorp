@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 
 class nsIPresContext;
+class  nsIPrintOptions;
 
 // IID for the nsIPageSequenceFrame interface 
 // a6cf90d2-15b3-11d2-932e-00805f8add32
@@ -91,27 +92,6 @@ public:
 
 //----------------------------------------------------------------------
 
-enum nsPrintRange {
-  ePrintRange_AllPages,       // print all pages
-  ePrintRange_SpecifiedRange  // only print pages in the specified range
-};
-
-/**
- * Structure containing options for printing.
- */
-struct nsPrintOptions {
-  nsPrintRange  range;
-  PRInt32       startPage, endPage;  // only used for ePrintRange_SpecifiedRange
-  PRPackedBool  oddNumberedPages;    // print the odd-numbered pages
-  PRPackedBool  evenNumberedPages;   // print the even-numbered pages
-
-  nsPrintOptions() {
-    range = ePrintRange_AllPages;
-    startPage = endPage = 1;
-    oddNumberedPages = evenNumberedPages = PR_TRUE;
-  }
-};
-
 /**
  * Interface for accessing special capabilities of the page sequence frame.
  *
@@ -136,7 +116,7 @@ public:
    * @see     nsIPrintStatusCallback#OnProgress()
    */
   NS_IMETHOD Print(nsIPresContext*         aPresContext,
-                   const nsPrintOptions&   aPrintOptions,
+                   nsIPrintOptions*        aPrintOptions,
                    nsIPrintStatusCallback* aStatusCallback) = 0;
 
 private:

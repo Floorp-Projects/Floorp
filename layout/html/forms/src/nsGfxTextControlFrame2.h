@@ -69,6 +69,11 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect,
+                    nsFramePaintLayer aWhichLayer);
+
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);

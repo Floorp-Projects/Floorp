@@ -146,7 +146,7 @@ public:
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
-  NS_IMETHOD Display(nsIView *aView);
+  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY);
 
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);

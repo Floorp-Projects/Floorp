@@ -100,6 +100,19 @@ nsIsIndexFrame::~nsIsIndexFrame()
 }
 
 NS_IMETHODIMP
+nsIsIndexFrame::Paint(nsIPresContext* aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect& aDirtyRect,
+                      nsFramePaintLayer aWhichLayer)
+{
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
+  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+NS_IMETHODIMP
 nsIsIndexFrame::UpdatePromptLabel()
 {
   nsresult result;
@@ -125,7 +138,8 @@ nsIsIndexFrame::UpdatePromptLabel()
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
     // it might not be the string "This is a searchable index. Enter search keywords: "
-    result = nsFormControlHelper::GetLocalizedString("IsIndexPrompt", prompt);
+    result = nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
+                                                     "IsIndexPrompt", prompt);
   }
   nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
   result = text->SetText(prompt.GetUnicode(), prompt.Length(), PR_TRUE);

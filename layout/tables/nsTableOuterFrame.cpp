@@ -330,6 +330,10 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
 
   // the remaining code was copied from nsContainerFrame::PaintChildren since
   // it only paints the primary child list

@@ -590,9 +590,9 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->IsVisible() && mRect.width && mRect.height) {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
+      isVisible && mRect.width && mRect.height) {
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);

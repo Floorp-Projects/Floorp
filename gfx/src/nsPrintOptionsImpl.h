@@ -25,6 +25,7 @@
 
 #include "nsIPrintOptions.h"  
 
+class nsIPref;
 
 //*****************************************************************************
 //***    nsPrintOptions
@@ -35,17 +36,39 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTOPTIONS
 
+  // C++ methods
+  NS_IMETHOD SetDefaultFont(const nsFont &aFont);
+  NS_IMETHOD SetFontNamePointSize(const nsString& aFontName, nscoord aPointSize);
+
+  NS_IMETHOD GetDefaultFont(nsFont &aFont);
+
+  // non-scriptable C++ helper method
+  NS_IMETHOD GetMargin(nsMargin& aMargin);
+
   nsPrintOptions();
   virtual ~nsPrintOptions();
 
+protected:
+  void ReadBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
+  void WriteBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
+  void ReadJustification(nsIPref *  aPref, const char * aPrefId, PRInt32& aJust, PRInt32 aInitValue);
+  void WriteJustification(nsIPref * aPref, const char * aPrefId, PRInt32 aJust);
+  void ReadInchesToTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord&  aTwips);
+  void WriteInchesFromTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord aTwips);
 
   // Members 
-  PRInt32 mTopMargin;
-  PRInt32 mLeftMargin;
-  PRInt32 mRightMargin;
-  PRInt32 mBottomMargin;
+  nsMargin      mMargin;
 
+  nsPrintRange  mPrintRange;
+  PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
+  PRInt32       mEndPageNum;
+  PRInt32       mPageNumJust;
 
+  PRInt32       mPrintOptions;
+
+  nsFont*       mDefaultFont;
+  nsString      mTitle;
+  nsString      mURL;
 
 };
 

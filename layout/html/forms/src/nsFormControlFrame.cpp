@@ -402,6 +402,10 @@ nsFormControlFrame::Paint(nsIPresContext* aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
 
   nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                             aWhichLayer);

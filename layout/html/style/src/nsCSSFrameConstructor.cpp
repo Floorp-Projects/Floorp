@@ -10097,7 +10097,8 @@ GetAlternateTextFor(nsIContent* aContent,
       // If there's no "value" attribute either, then use the localized string 
       // for "Submit" as the alternate text.
       if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-        nsFormControlHelper::GetLocalizedString("Submit", aAltText);      
+        nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
+                                                "Submit", aAltText);      
       }
     }
   }

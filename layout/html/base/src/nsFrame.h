@@ -278,6 +278,12 @@ public:
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship);
 
+  // Check Style Visibility and mState for Selection (when printing)
+  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+                                  nsIRenderingContext& aRenderingContext,
+                                  PRBool               aCheckVis,
+                                  PRBool*              aIsVisible);
+
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
   NS_IMETHOD  Reflow(nsIPresContext*          aPresContext,

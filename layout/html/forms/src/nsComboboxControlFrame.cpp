@@ -2473,6 +2473,10 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
 {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
 #ifdef NOISY
   printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
     aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
