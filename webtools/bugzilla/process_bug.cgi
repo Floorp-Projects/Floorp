@@ -23,7 +23,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
-#                 Frédéric Buclin <LpSolit@netscape.net>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 use strict;
 
@@ -908,11 +908,8 @@ SWITCH: for ($::FORM{'knob'}) {
     /^accept$/ && CheckonComment( "accept" ) && do {
         DoConfirm();
         ChangeStatus('ASSIGNED');
-        if (Param("musthavemilestoneonaccept") &&
-                scalar(@{$::target_milestone{$::FORM{'product'}}}) > 1) {
-            if (Param("usetargetmilestone")) {
-                $requiremilestone = 1;
-            }
+        if (Param("usetargetmilestone") && Param("musthavemilestoneonaccept")) {
+            $requiremilestone = 1;
         }
         last SWITCH;
     };
@@ -1249,14 +1246,23 @@ foreach my $id (@idlist) {
                        { product => $::FORM{'product'} }, "abort");
     }
     if ($requiremilestone) {
-        my $value = $::FORM{'target_milestone'};
-        if (!defined $value || $value eq $::FORM{'dontchange'}) {
-            $value = $oldhash{'target_milestone'};
-        }
-        SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
-                SqlQuote($oldhash{'product'}));
-        if ($value eq FetchOneColumn()) {
-            ThrowUserError("milestone_required", { bug_id => $id }, "abort");
+        # musthavemilestoneonaccept applies only if at least two
+        # target milestones are defined for the current product.
+        my $nb_milestones = scalar(@{$::target_milestone{$oldhash{'product'}}});
+        if ($nb_milestones > 1) {
+            my $value = $cgi->param('target_milestone');
+            if (!defined $value || $value eq $cgi->param('dontchange')) {
+                $value = $oldhash{'target_milestone'};
+            }
+            my $defaultmilestone =
+                $dbh->selectrow_array("SELECT defaultmilestone
+                                       FROM products WHERE id = ?",
+                                       undef, $oldhash{'product_id'});
+            # if musthavemilestoneonaccept == 1, then the target
+            # milestone must be different from the default one.
+            if ($value eq $defaultmilestone) {
+                ThrowUserError("milestone_required", { bug_id => $id }, "abort");
+            }
         }
     }   
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
