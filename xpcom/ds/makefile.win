@@ -28,7 +28,8 @@ MODULE = xpcom
 ## exports
 
 EXPORTS =                          \
-        nsTextFormatter.h           \
+        nsAlgorithm.h              \
+        nsTextFormatter.h          \
         nsAVLTree.h                \
         nsCppSharedAllocator.h     \
         nsCRT.h                    \
