@@ -50,7 +50,7 @@ IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
 DLLFLAGS += -DEF:ssl.def
 
-EXTRA_LIBS += \
+EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
