@@ -829,7 +829,7 @@ void CNetscapeEditView::OnRemoveFontFace()
 void CNetscapeEditView::OnSetLocalFontFace()
 {
     // Popup Window's font face picker dialog
-    CFontDialog dlg(NULL, CF_SCREENFONTS | CF_TTONLY, NULL, this);
+    CFontDialog dlg(NULL, CF_SCREENFONTS | CF_TTONLY | CF_NOSIZESEL | CF_NOSTYLESEL | CF_NOSCRIPTSEL, NULL, this);
     if( dlg.DoModal() ){
         CString csNewFont = dlg.GetFaceName();
         // Set the arbitrary font face 
@@ -1252,6 +1252,7 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     // Check if clicking on a Table or Cell selection point
     LO_Element * pTableElement = NULL;
     BOOL bSizeTable = FALSE;
+    BOOL bIsInSelectedText = GetContext()->PtInSelectedRegion(cpPoint, TRUE);
 
     ED_HitType iTableHit = ED_HIT_NONE;
 
@@ -1276,60 +1277,62 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
         // Don't select anything else -- just position caret in closest table cell
         EDT_PositionCaret(pMWContext, x, y);
     } else {
-        // EDT_GetTableHitRegion kindly returns the cell we clicked in 
-        //  even if we didn't hit one of the edges.
-        // Check if we clicked inbetween cells (pTableElement = LO_TABLE)
-        //  or within a cell that is selected.
-        BOOL bCanSelectObject = TRUE;
-        if( pTableElement && (pTableElement->type == LO_TABLE ||
-            (pTableElement->lo_cell.ele_attrmask & LO_ELE_SELECTED)) )
+        if( !bIsInSelectedText )
         {
-            // Don't select internal object, just
-            //  position the caret within the selected cell
-            //  or in closest cell if pTableElement is a table
-            // Use x, y from element to be sure we position within the table
-            if( pTableElement->type == LO_TABLE )
+            // EDT_GetTableHitRegion kindly returns the cell we clicked in 
+            //  even if we didn't hit one of the edges.
+            // Check if we clicked inbetween cells (pTableElement = LO_TABLE)
+            //  or within a cell that is selected.
+            if( pTableElement && (pTableElement->type == LO_TABLE ||
+                (pTableElement->lo_cell.ele_attrmask & LO_ELE_SELECTED)) )
             {
-                // We hit between cells - select the table
-                iTableHit = ED_HIT_SEL_TABLE;
+                // Don't select internal object, just
+                //  position the caret within the selected cell
+                //  or in closest cell if pTableElement is a table
+                // Use x, y from element to be sure we position within the table
+                if( pTableElement->type == LO_TABLE )
+                {
+                    // We hit between cells - select the table
+                    iTableHit = ED_HIT_SEL_TABLE;
 
-                // We need to adjust hit spot so caret will be placed
-                //  within the nearest cell (bellow/right)
-                // If we don't, caret will be postitioned before the table!
-                // TODO: Write an EDT_ function to find closest cell.
-                x += (pTableElement->lo_table.inter_cell_space + 2);
-                y += (pTableElement->lo_table.inter_cell_space + 2);
+                    // We need to adjust hit spot so caret will be placed
+                    //  within the nearest cell (bellow/right)
+                    // If we don't, caret will be postitioned before the table!
+                    // TODO: Write an EDT_ function to find closest cell.
+                    x += (pTableElement->lo_table.inter_cell_space + 2);
+                    y += (pTableElement->lo_table.inter_cell_space + 2);
 
-                EDT_PositionCaret(pMWContext, x, y);
-                EDT_SelectTableElement(pMWContext, 0, 0, pTableElement, iTableHit, FALSE, FALSE);
-                bSelectTableOrCell = TRUE;
-            } else {
-                // Get last-selected table region type so 
-                //  we can show region-specific properties item,
-                //  even though we will also show character and other property menu items above it
-                iTableHit = EDT_GetSelectedTableElement(pMWContext, NULL );
-                EDT_PositionCaret(pMWContext, x, y);
-            }
-        } 
-        else if ( !GetContext()->PtInSelectedRegion(cpPoint, TRUE) )
-        {
-            // We are not over an existing selection
-            //   and not inside a selected cell
-            // Remove any existing selection, move caret to cursor position,
-            //  then start selection. This will select single objects
-            //  such as image or HRule. If no object selected,
-            //  the caret is moved to inside the cell.
-            //  Note: THIS DOES NOT REMOVE TABLE SELECTION!
-            EDT_SelectObject(pMWContext, x, y);
-            if( EDT_IsSelected(pMWContext) )
+                    EDT_PositionCaret(pMWContext, x, y);
+                    EDT_SelectTableElement(pMWContext, 0, 0, pTableElement, iTableHit, FALSE, FALSE);
+                    bSelectTableOrCell = TRUE;
+                } else {
+                    // Get last-selected table region type so 
+                    //  we can show region-specific properties item,
+                    //  even though we will also show character and other property menu items above it
+                    iTableHit = EDT_GetSelectedTableElement(pMWContext, NULL );
+                    EDT_PositionCaret(pMWContext, x, y);
+                }
+            } 
+            else
             {
-                // Set flag so we can undo the selection when done with property dialog
-                m_bAutoSelectObject = TRUE;
+                // We are not over an existing selection
+                //   and not inside a selected cell
+                // Remove any existing selection, move caret to cursor position,
+                //  then start selection. This will select single objects
+                //  such as image or HRule. If no object selected,
+                //  the caret is moved to inside the cell.
+                //  Note: THIS DOES NOT REMOVE TABLE SELECTION!
+                EDT_SelectObject(pMWContext, x, y);
+                if( EDT_IsSelected(pMWContext) )
+                {
+                    // Set flag so we can undo the selection when done with property dialog
+                    m_bAutoSelectObject = TRUE;
+                }
+                // Clear any cell selection if caret isn't inside a selected cell
+                // By not clearing selection if we ARE inside,
+                //   user can do properties on selected cells
+                EDT_ClearCellSelectionIfNotInside(pMWContext);
             }
-            // Clear any cell selection if caret isn't inside a selected cell
-            // By not clearing selection if we ARE inside,
-            //   user can do properties on selected cells
-            EDT_ClearCellSelectionIfNotInside(pMWContext);
         }
     }
 
@@ -1684,10 +1687,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 		XP_FREEIF(pImageEditor);
     }
 
-    if( type == ED_ELEMENT_TEXT )
-    {
-	    cmPopup.AppendMenu(MF_ENABLED, ID_COPY_STYLE, szLoadString(IDS_COPY_STYLE));
-    }
 
     if ( bIsSelected )
     {

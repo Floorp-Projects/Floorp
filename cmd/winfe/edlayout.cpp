@@ -634,7 +634,10 @@ void FE_DisplayEntireTableOrCell(MWContext * pMWContext, LO_Element * pElement)
         if( pElement->type == LO_TABLE )
         {
             iWidth = pElement->lo_table.width;
-            iHeight = pElement->lo_table.height;
+            // Calculate the full height instead of just the table height
+            //   in case table has a caption
+            iHeight = pElement->lo_table.line_height + pElement->lo_table.border_bottom_width
+                      + pElement->lo_table.inter_cell_space;
         }
         else if ( pElement->type == LO_CELL )
         {

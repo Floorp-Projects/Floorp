@@ -32,6 +32,7 @@
 #include "intl_csi.h"
 #include "prefinfo.h"
 #include "cxprint.h"
+#include "edt.h"
 
 #if defined(OJI)
 #include "jvmmgr.h"
@@ -3540,19 +3541,40 @@ void CDCCX::DisplayTable(MWContext *pContext, int iLocation, LO_TableStruct *pTa
 	LTRB Rect;
     int32 iSelectionBorder = 0;
     BOOL bHaveBorder = TABLE_HAS_BORDER(pTable);
+    BOOL bSelected = pTable->ele_attrmask & LO_ELE_SELECTED;
 
 	if(ResolveElement(Rect, pTable->x, pTable->y, pTable->x_offset,
 						pTable->y_offset, pTable->width, pTable->height) == TRUE)	{
 		SafeSixteen(Rect);
         LTRB TableRect = Rect;
- 
+
+#ifdef EDITOR
+        if( EDT_IS_EDITOR(pContext) && bSelected )
+        {
+            // Adjust the top or bottom of the rect if table is selected
+            //  so the selection encloses area with the caption
+            XP_Rect xpRect;
+            xpRect.left = Rect.left;
+            xpRect.top = Rect.top;
+            xpRect.right = Rect.right;
+            xpRect.bottom = Rect.bottom;
+            if( EDT_AdjustTableRectForCaption(pTable, &xpRect) )
+            {
+                // Note: we don't change the left and right
+                Rect.top = xpRect.top;
+                Rect.bottom = xpRect.bottom;
+            }
+            // We use the larger rect including caption if selected
+            TableRect = Rect;
+        }
+#endif 
         //TRACE0("DisplayTable\n");
 
 		if( bHaveBorder ) {
             iSelectionBorder = DisplayTableBorder(Rect, pTable);
 		} 
 #ifdef EDITOR
-        else if ( EDT_DISPLAY_TABLE_BORDERS(pContext) )
+        else // if ( EDT_DISPLAY_TABLE_BORDERS(pContext) ) // We always display table borders
         {
             if( 0 == pTable->inter_cell_space )
             {
@@ -3561,12 +3583,11 @@ void CDCCX::DisplayTable(MWContext *pContext, int iLocation, LO_TableStruct *pTa
                 TableRect.Inflate(1);
                 iSelectionBorder = 1;
             }
-            EditorDisplayZeroWidthBorder(TableRect, pTable->ele_attrmask & LO_ELE_SELECTED);
+            EditorDisplayZeroWidthBorder(TableRect, bSelected);
         }
 
         // Show extra selection if border was not wide enough for clear selection feedback
-        if( EDT_IS_EDITOR(pContext) && (pTable->ele_attrmask & LO_ELE_SELECTED) &&
-            iSelectionBorder < ED_SELECTION_BORDER )
+        if( EDT_IS_EDITOR(pContext) && bSelected && iSelectionBorder < ED_SELECTION_BORDER )
         {
             // If directly-drawn selection border is too narrow (or none),
             //  add Inverse-Video highlighting to the maximum thickness allowed

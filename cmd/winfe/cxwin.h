@@ -284,6 +284,10 @@ public:
     BOOL m_bInPopupMenu;
 
     LTRB m_rectSizing;
+    // Save the time when button goes down to allow
+    // 1-pixel resizing only if a time threshold
+    // has been exceeded
+    time_t m_StartSizingTime;
 
     // Used only in Editor when dragging to select multiple cells
     BOOL m_bSelectingCells;

@@ -87,6 +87,10 @@ COLORREF wfe_crLastBkgrndColorPicked;
 
 int wfe_iTrueTypeFontBase = 0;
 int wfe_iTrueTypeFontCount = 0;
+// Temporaritly set this to 0 to ignore the limit
+//  when using EnumTrueTypeFonts() callback
+//  to get a list of ALL fonts
+int wfe_iTrueTypeFontLimit = MAX_TRUETYPE_FONTS;
 
 // Global array of True-Type fonts
 // Neccesitates restarting program after new fonts installed
@@ -95,16 +99,28 @@ char **wfe_ppTrueTypeFonts = NULL;
 // Global index within wfe_ppTrueTypeFonts if "Other..." was needed (too many fonts)
 int wfe_iFontFaceOtherIndex = 0;
 
+// Limit count is now a variable -- if its 0, we are retrieving all fonts
+//  and directly filling a listbox or combobox with font names
 int CALLBACK EXPORT
 EnumTrueTypeFonts(LPLOGFONT lpnlf, LPTEXTMETRIC lpntm, int nFontType, LPARAM lParam)
 {
 	if (lpntm->tmPitchAndFamily & (/*TMPF_VECTOR|TMPF_DEVICE|*/TMPF_TRUETYPE)){
-        if( wfe_iTrueTypeFontCount < MAX_TRUETYPE_FONTS ){
+        
+        if( wfe_iTrueTypeFontCount == 0 )
+        {
+            // For this usage, lParam = handle to a CComboBox or CListBox we are filling
+            // (This is same as ListBox_AddString macro in WINDOWSX.H)
+            SendMessage((HWND)lParam, LB_ADDSTRING, 0L, (LPARAM)(LPCTSTR)(lpnlf->lfFaceName));
+        } 
+        else if( wfe_iTrueTypeFontCount < wfe_iTrueTypeFontLimit )
+        {
+            // We are filling the cached global list of font faces
 		    wfe_ppTrueTypeFonts[wfe_iTrueTypeFontCount] = XP_STRDUP(lpnlf->lfFaceName);
             wfe_iTrueTypeFontCount++;
         } else {
             // Too many fonts -- add "Other..." to use common dialog
             *((BOOL*)lParam) = TRUE;
+            // Stop looking for more fonts
             return FALSE;
         }
     }
@@ -226,7 +242,6 @@ int wfe_FillFontComboBox(CComboBox * pCombo, int * pMaxWidth)
     		}
         } 
     } else {
-        // Should never get here if wfe_IntTrueTypeArray was ever called
         bTooManyFonts = TRUE;;
     }
     if( pMaxWidth ){
@@ -4852,9 +4867,11 @@ void CCharacterPage::SetCharacterStyle(CButton *pButton, ED_TextFormat tf)
 
 void CCharacterPage::OnChooseLocalFont()
 {
-    CFontDialog dlg(NULL, CF_SCREENFONTS | CF_TTONLY, NULL, this);
+    CFontDialog dlg(NULL, CF_SCREENFONTS | CF_TTONLY | CF_NOSIZESEL | CF_NOSTYLESEL | CF_NOSCRIPTSEL, NULL, this);
     if( dlg.DoModal() ){
         CString csNewFont = dlg.GetFaceName();
+        CString csStyle = dlg.GetStyleName();
+        int iSize = dlg.GetSize();
         m_FontFaceCombo.SetWindowText(LPCSTR(csNewFont));
         GetDlgItem(IDC_FONTFACE_MSG)->SetWindowText(szLoadString(IDS_TRUE_TYPE));
         SetModified(TRUE);

@@ -43,6 +43,14 @@
 #ifdef ENDER
 #include "editfloat.h"
 #endif //ENDER
+
+// For XP Strings
+extern "C" {
+#include "xpgetstr.h"
+#define WANT_ENUM_STRING_IDS
+#include "allxpstr.h"
+#undef WANT_ENUM_STRING_IDS
+}
  
 #ifdef _IME_COMPOSITION
 #define CLEARBIT(A, N)	A&=~N
@@ -307,7 +315,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_COMMAND(ID_EDIT_CUT, OnEditCut)
     ON_COMMAND(ID_EDIT_PASTE, OnEditPaste)
     ON_COMMAND(ID_EDIT_COPY, OnEditCopy)
-    ON_COMMAND(ID_COPY_STYLE, OnCopyStyle)
     ON_COMMAND(ID_EDIT_DELETE, OnEditDelete)
     ON_COMMAND(ID_EDIT_FINDAGAIN, OnEditFindAgain)
     ON_COMMAND( ID_EDITOR_PAGEUP, OnPageUp )
@@ -398,9 +405,8 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TABLE_CELL, OnUpdateInTableCell)
     ON_UPDATE_COMMAND_UI(ID_DISPLAY_TABLES, OnUpdateDisplayTables)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateEditCopy)
-	ON_UPDATE_COMMAND_UI(ID_COPY_STYLE, OnUpdateCopyStyle)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateEditCut)
-	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnCanInteract)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, OnUpdateEditCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdateEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_LOCAL_POPUP, OnCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDITSOURCE, OnCanInteract)
@@ -1359,13 +1365,6 @@ void CNetscapeEditView::OnChar(UINT nChar, UINT nRepCnt, UINT nflags)
 
     MWContext * pMWContext = GET_MWCONTEXT;
 
-    // Any kepress except when holding Ctrl
-    //   should clear a table selection???
-    // Allows Ctrl+[ for decrease font size,
-    //  and Ctrl+C, X, and V for copy/cut/paste
-//    if( !bControl )
-//        EDT_ClearTableAndCellSelection(pMWContext);
-
     // Ignore keys if we can't interact
     INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pMWContext);
     int16 win_csid = INTL_GetCSIWinCSID(csi);
@@ -1967,28 +1966,26 @@ void CNetscapeEditView::ReportCopyError(int iError)
 {
     SetCursor(theApp.LoadStandardCursor(IDC_ARROW));
     UINT nIDS = 0;
-    switch(iError) {
+    switch(iError) 
+    {
         case EDT_COP_DOCUMENT_BUSY:
-            nIDS = IDS_DOCUMENT_BUSY;
+            nIDS = XP_EDT_DOCUMENT_BUSY;
             break;
-        //TODO: Maybe don't do this message either?
-        // This doesn't occur as often with new table selection model
         case EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL:
-            nIDS = IDS_SELECTION_CROSSES_TABLE_DATA_CELL;
+        case EDT_COP_SELECTION_CROSSES_NESTED_TABLE:
+            // If there's nothing selected, thus nothing to delete, 
+            //   don't bother telling the user
+            if( EDT_IsSelected(GET_MWCONTEXT) )
+            {
+                nIDS = XP_EDT_SELECTION_CROSSES_NESTED_TABLE;
+            }
             break;
-    }
-    // Trap case where error tells us its a table error,
-    //  but really there's nothing selected, thus nothing to delete
-    if( nIDS == IDS_SELECTION_CROSSES_TABLE_DATA_CELL && 
-        !EDT_IsSelected(GET_MWCONTEXT) ) {
-        nIDS = 0; //IDS_NOTHING_TO_DELETE; Don't do message if just no selection
     }
 
-    if( nIDS ){
-        MessageBox( szLoadString(nIDS),
-                    szLoadString(IDS_COPY_ERROR_CAPTION), 
+    if( nIDS )
+        MessageBox( XP_GetString(nIDS),
+                    XP_GetString(XP_EDT_DELETE_OR_COPY_CAPTION),
                     MB_OK | MB_ICONINFORMATION );
-    }
 }
 
 void CNetscapeEditView::OnEditCut()

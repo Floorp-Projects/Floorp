@@ -332,8 +332,6 @@ BEGIN
     ID_SPLIT_TABLE_CELL     "Split cell into separate cells and distribute paragraphs into new cells"
     IDS_MERGE_SELECTED_CELLS "&Join Selected Cells"
     IDS_SPLIT_TABLE_CELL    "Spli&t Cell"
-    IDS_COPY_STYLE          "Copy St&yle"
-    ID_COPY_STYLE           "Copy character and paragraph styles to the next-selected item"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -470,10 +468,6 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_SELECTION_CROSSES_TABLE_DATA_CELL 
-                            "The selection includes a table cell boundary.\nDeleting and copying are not allowed."
-    IDS_COPY_ERROR_CAPTION  "Command Not Available"
-    IDS_SELECTION_EMPTY     "Nothing is selected."
     IDS_WHITE_ON_BLACK      "White on Black"
     IDS_WHITE_ON_BLUE       "White on Blue"
     IDS_BLUE_ON_ORANGE      "Blue on Orange"
@@ -520,7 +514,6 @@ BEGIN
     IDS_TAG_UNTERMINATED_STRING 
                             "Unterminated String in tag: closing quote expected"
     IDS_TAG_ERROR           "Unknown tag error"
-    IDS_DOCUMENT_BUSY       "Cannot copy or cut at this time, try again later."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

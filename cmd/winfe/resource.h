@@ -1655,8 +1655,6 @@
 #define ID_SPLIT_TABLE_CELL             1681
 #define IDS_MERGE_SELECTED_CELLS        1682
 #define IDS_SPLIT_TABLE_CELL            1684
-#define IDS_COPY_STYLE                  1685
-#define ID_COPY_STYLE                   1686
 #define IDD_EDIT_HEADER                 1700
 #define IDB_OFFLINE_STATUS              1720
 #define IDD_DOWNLOAD_CONTROL_PANEL      1735
@@ -2830,10 +2828,6 @@
 #define IDS_TAG_TAGNAME_EXPECTED        42300
 #define IDS_TAG_UNTERMINATED_STRING     42301
 #define IDS_TAG_ERROR                   42302
-#define IDS_DOCUMENT_BUSY               42303
-#define IDS_SELECTION_CROSSES_TABLE_DATA_CELL 42304
-#define IDS_COPY_ERROR_CAPTION          42305
-#define IDS_SELECTION_EMPTY             42306
 #define IDS_WHITE_ON_BLACK              42307
 #define IDS_WHITE_ON_BLUE               42308
 #define IDS_BLUE_ON_ORANGE              42309

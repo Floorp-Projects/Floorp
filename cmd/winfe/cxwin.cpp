@@ -2139,10 +2139,11 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
                 // (This is ignored when sizing table elements)
                 BOOL bLock = (uFlags & MK_CONTROL) != 0;
                 XP_Rect rect;
+                EDT_ClearSelection(pMWContext);
                 if( EDT_StartSizing(pMWContext, pElement, Point.x, Point.y, bLock, &rect) )
                 {
                     // Force redraw of table or cells that might have been selected
-                    //   else we have NOT conflicts and garbage at overlaps
+                    //   else we have XOR conflicts and garbage at overlaps
                     UpdateWindow(GetPane());
                     // Save the new rect.
                     m_rectSizing.left = rect.left;
@@ -2151,6 +2152,8 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
                     m_rectSizing.bottom = rect.bottom;
                     // Draw the initial feedback -- similar to when selected
                     DisplaySelectionFeedback(LO_ELE_SELECTED, m_rectSizing);
+                    // Get the time at the start of the action
+                    time( &m_StartSizingTime);
                     goto MOUSE_TIMER;
                 }
             }
@@ -2555,10 +2558,21 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
         // Remove last sizing feedback
         DisplaySelectionFeedback(LO_ELE_SELECTED, m_rectSizing);
 
-        // We need this check or it is impossible to place a caret between
-        //  adjacent objects)
-        if(abs(m_cpLBUp.x - m_cpLBDown.x) > CLICK_THRESHOLD ||
-	        abs(m_cpLBUp.y - m_cpLBDown.y) > CLICK_THRESHOLD)	{
+        // This is a tricky problem
+        // If we set the threshold of moving the mouse too small,
+        //  then a single click down/up will resize when user might
+        //  just be placing the caret. If we set it too high,
+        //  then we limit resizing resolution.
+        //  Solution is to use a larger threshold when elapsed time
+        //  is short, and allow 1-pixel resizing once the mouse
+        //  is held down for at least one second
+        
+        time_t EndSizingTime;
+        time( &EndSizingTime );
+        int iThreshold = (EndSizingTime - m_StartSizingTime) >= 1 ? 0 : CLICK_THRESHOLD;
+        
+        if(abs(m_cpLBUp.x - m_cpLBDown.x) > iThreshold ||
+	        abs(m_cpLBUp.y - m_cpLBDown.y) > iThreshold)	{
 
             // Resize the object
             EDT_EndSizing(pMWContext);
@@ -6319,7 +6333,11 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             // Give user text feedback for table cursors
             if( nID_Status )
             {
-                wfe_Progress(context, XP_GetString(nID_Status));
+                char *pMsg = XP_GetString(nID_Status);
+                if( iTableHit == ED_HIT_SEL_TABLE )
+                    pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_SEL_TABLE_EXTRA));
+
+                wfe_Progress(context, pMsg);
                 bTextSet = TRUE;
             }
             bCursorSet = TRUE;
@@ -6578,12 +6596,33 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
 #ifdef EDITOR
     // The IBeam cursor is normally displayed only when over text,
     //  but if we arrive here and have not set cursor, use the IBeam, except
-    //  if we are in a location to select the entire line: use right-facing arrow
-    // Otherwise we get the default left-facing arrow, which is confusing
+    //  if we are in a location to select the entire line (use right-facing arrow)
+    //   or entire table (use select table cursor)
+    //  (Otherwise we get the default left-facing arrow, which is confusing)
     if( bIsEditor && !bCursorSet )
     {
-        SetCursor( theApp.LoadCursor(LO_CanSelectLine(context, pClose->xVal, pClose->yVal) ? 
-                                     IDC_ARROW_RIGHT : IDC_EDIT_IBEAM) );
+        XP_Bool bSelectLine = LO_CanSelectLine(context, pClose->xVal, pClose->yVal);
+        UINT nID = 0;
+        UINT nIDCursor;
+        if( bSelectLine && lo_element && lo_element->type == LO_TABLE )
+        {
+            nIDCursor = IDC_TABLE_SEL;
+            nID = XP_EDT_SEL_TABLE;
+        }
+        else if( bSelectLine )
+        {
+            nIDCursor = IDC_ARROW_RIGHT;
+            nID = XP_EDT_SEL_LINE;
+        }
+        else
+            nIDCursor = IDC_EDIT_IBEAM;
+
+        if( nID )
+        {
+            wfe_Progress(context, XP_GetString(nID));
+            bTextSet = TRUE;
+        }
+        SetCursor( theApp.LoadCursor(nIDCursor) );
         bCursorSet = TRUE;
     }
 #endif

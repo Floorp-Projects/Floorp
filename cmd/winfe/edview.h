@@ -473,7 +473,6 @@ protected:
     afx_msg	void OnEditCopy();
     afx_msg void OnCopyStyle();
     afx_msg void OnUpdateCopyStyle(CCmdUI* pCmdUI);
-    afx_msg	void ReportCopyError(int iError);
     afx_msg	void OnEditCut();
     afx_msg	void OnEditDelete();
     afx_msg	void OnEditPaste();
@@ -502,6 +501,8 @@ protected:
     void OnCharacterStyle(UINT nID);
     void OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI);
 
+    void ReportCopyError(int iError);
+
     // Keep these outside of AFX_MSG - they use calculated
     //   or use a range of IDs and are not understood by App/Class wizards
     afx_msg void OnFormatParagraph( UINT nID );
@@ -511,6 +512,7 @@ protected:
     afx_msg void OnFontColorMenu(UINT nID);
     //afx_msg void OnUpdateFontSize(CCmdUI* pCmdUI);
     afx_msg void OnUpdateInsertMenu(CCmdUI* pCmdUI);
+
 #ifdef _IME_COMPOSITION
     afx_msg void OnLButtonDown(UINT uFlags, CPoint cpPoint);
     #ifdef XP_WIN32
