@@ -569,8 +569,8 @@ BookmarksService::ReadBookmarks()
   nsCOMPtr<nsISyncLoadDOMService> loader = do_GetService("@mozilla.org/content/syncload-dom-service;1");
   nsCOMPtr<nsIChannel> channel;
   NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull);
-  loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(domDoc));
-  CallQueryInterface(domDoc, &gBookmarksDocument);  // addrefs
+  loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(bookmarksDOMDoc));
+  CallQueryInterface(bookmarksDOMDoc, &gBookmarksDocument);  // addrefs
 
   // test for a parser error. The XML parser replaces the document with one
   // that has a <parsererror> node as the root.
