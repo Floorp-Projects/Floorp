@@ -40,9 +40,6 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsCookie.h"
-#include "nsCCookie.h"
-#include "nsPermission.h"
 #include "nsCCookieManager.h"
 #include "nsCookieService.h"
 #include "nsImgManager.h"
@@ -50,20 +47,18 @@
 #include "nsPopupWindowManager.h"
 #include "nsCookieHTTPNotify.h"
 #include "nsICategoryManager.h"
-#include "nsXPIDLString.h"
 #include "nsCookiePromptService.h"
 #include "nsCookiePermission.h"
+#include "nsXPIDLString.h"
 
 // Define the constructor function for the objects
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookie)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPermission)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImgManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPopupWindowManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePromptService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookiePermission, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookiePromptService)
 
 static NS_METHOD
 RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
@@ -99,16 +94,6 @@ UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = {
-    { "Cookie",
-      NS_COOKIE_CID,
-      NS_COOKIE_CONTRACTID,
-      nsCookieConstructor
-    },
-    { "Permission",
-      NS_PERMISSION_CID,
-      NS_PERMISSION_CONTRACTID,
-      nsPermissionConstructor
-    },
     { "CookieManager",
       NS_COOKIEMANAGER_CID,
       NS_COOKIEMANAGER_CONTRACTID,

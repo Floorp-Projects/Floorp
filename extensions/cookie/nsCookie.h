@@ -69,15 +69,6 @@ class nsCookie : public nsICookie2
     NS_DECL_NSICOOKIE
     NS_DECL_NSICOOKIE2
 
-    // XXX the default ctor is required by nsModuleFactory.cpp,
-    // because it registers nsCookie as a module with a constructor.
-    // this probably shouldn't be happening. same for nsPermission.
-    nsCookie()
-     : mName(nsnull)
-     , mRefCnt(0)
-    {
-    }
-
     nsCookie(const nsACString &aName,
              const nsACString &aValue,
              const nsACString &aHost,
@@ -111,6 +102,8 @@ class nsCookie : public nsICookie2
     inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
 
   protected:
+    nsCookie(); // not to be implemented (required for nsDerivedSafe)
+
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
     // so we save on the overhead of using nsCStrings. However, we
@@ -132,8 +125,5 @@ class nsCookie : public nsICookie2
     PRUint32 mStatus    : 3;
     PRUint32 mPolicy    : 3;
 };
-
-#define NS_COOKIE_CID  {0xe9fcb9a4,0xd376,0x458f,{0xb7,0x20,0xe6,0x5e,0x7d,0xf5,0x93,0xbc}}
-#define NS_COOKIE2_CID {0xd3493503,0x7854,0x46ed,{0x82,0x84,0x8a,0xf5,0x4a,0x84,0x7e,0xfb}}
 
 #endif // nsCookie_h__
