@@ -37,8 +37,10 @@
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
 #define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
-#define XPINSTALL_ENABLE_NOTIFICATIONS   "xpinstall.notifications_enabled"  //TODO: this needs to be fixed at some point.
 #define XPINSTALL_MANUAL_CONFIRM         "xpinstall.manual_confirm"
+#define XPINSTALL_NOTIFICATIONS_ENABLE   "xpinstall.notifications.enabled"  //TODO: this needs to be fixed at some point.
+#define XPINSTALL_NOTIFICATIONS_LASTDATE "xpinstall.notifications.lastDate"  //TODO: this needs to be fixed at some point.
+#define XPINSTALL_NOTIFICATIONS_INTERVAL "xpinstall.notifications.interval"  //TODO: this needs to be fixed at some point.
 
 
 #define XPI_NO_NEW_THREAD   0x1000
