@@ -1903,11 +1903,10 @@ PRBool nsWindow::AutoErase()
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
 {
-	nsIWidget* 	widget;
-	if (NS_OK == aMenuBar->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    HMENU menu = (HMENU)widget->GetNativeData(NS_NATIVE_WIDGET);
-    ::SetMenu(mWnd, menu);
-		NS_RELEASE(widget);
+  HMENU nativeMenuHandle;
+  aMenuBar->GetNativeData(nativeMenuHandle);
+  if (nsnull != nativeMenuHandle) {
+    ::SetMenu(mWnd, nativeMenuHandle);
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE;
