@@ -38,7 +38,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
     for (InstructionIterator pc = iCode.begin(); pc != iCode.end(); ++pc) {
         Instruction* instruction = *pc;
 	    switch (instruction->opcode()) {
-        case LOAD_NAME:
+                case LOAD_NAME:
 			{
 				LoadName* i = static_cast<LoadName*>(instruction);
 				registers[op2(i)] = globals[*op1(i)];
