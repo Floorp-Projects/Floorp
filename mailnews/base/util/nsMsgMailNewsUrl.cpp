@@ -424,7 +424,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result)
   // of trying to resolve the url, return about:blank as a dummy place holder
   // I tried returning just an error code but too many callers always
   // assume they get back a url =(
-  *result = nsCRT::strdup("about:blank");
+  *result = nsCRT::strdup(relativePath);
   return NS_OK;
 }
 
