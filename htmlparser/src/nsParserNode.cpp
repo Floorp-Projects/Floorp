@@ -21,6 +21,8 @@
 #include "string.h"
 #include "nsHTMLTokens.h"
 
+const nsAutoString nsCParserNode::mEmptyString("");
+
 /**
  *  Default constructor
  *  
@@ -28,8 +30,7 @@
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken): nsIParserNode(), 
-  mName(), mEmptyString() {
+nsCParserNode::nsCParserNode(CToken* aToken): nsIParserNode() {
   NS_PRECONDITION(0!=aToken, "Null Token");
   mAttributeCount=0;
   mToken=aToken;
@@ -92,7 +93,8 @@ void nsCParserNode::SetSkippedContent(CToken* aToken){
  *  @return  string ref containing node name
  */
 const nsString& nsCParserNode::GetName() const {
-  return mName;
+  return mEmptyString;
+  // return mName;
 }
 
 
