@@ -190,7 +190,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 
 		// mscott: hack alert...now that the file is done...turn around and fire a file url 
 		// to display the message....
-		char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
+		char * fileUrl = PR_smprintf("file://%s", MESSAGE_PATH_URL);
 		if (m_displayConsumer)
 			m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
 		PR_FREEIF(fileUrl);
