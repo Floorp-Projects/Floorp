@@ -727,7 +727,7 @@ NS_IMETHODIMP mozXMLTerminal::GetWebShell(nsIWebShell** aWebShell)
   NS_PRECONDITION(mWebShell, "bad state, null mWebShell");
   if (!mWebShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mWebShell->QueryInterface(nsIWebShell::GetIID(),
+  return mWebShell->QueryInterface(NS_GET_IID(nsIWebShell),
                                     (void **)aWebShell);
 }
 

@@ -2360,7 +2360,7 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
   aSearch->mFont = nsnull;
   if (!gPref) {
     nsServiceManager::GetService(kPrefCID,
-      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+      NS_GET_IID(nsIPref), (nsISupports**) &gPref);
     if (!gPref) {
       return;
     }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nspr.h"
 #include "prlog.h"
@@ -271,7 +272,7 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
         *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
         NS_ADDREF_THIS();
         return NS_OK;        
@@ -1020,7 +1021,7 @@ nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult)
   nsresult rv = NS_OK;
   nsIGenericFactory* factory;
   rv = nsComponentManager::CreateInstance(kGenericFactoryCID, nsnull, 
-                                          nsIGenericFactory::GetIID(),
+                                          NS_GET_IID(nsIGenericFactory),
                                           (void**)&factory);
   if (NS_FAILED(rv)) return rv;
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -204,7 +205,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
   rv = nsComponentManager::CreateInstance(nsIHTMLToTXTSinkStream::GetCID(),
                                           nsnull,
-                                          nsIHTMLToTXTSinkStream::GetIID(),
+                                          NS_GET_IID(nsIHTMLToTXTSinkStream),
                                           getter_AddRefs(it));
   if (NS_SUCCEEDED(rv)) {
     rv = it->Initialize(aOutStream, nsnull, aFlags);
@@ -214,7 +215,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
       if (aCharsetOverride != nsnull) {
         it->SetCharsetOverride(aCharsetOverride);
       }
-      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+      rv = it->QueryInterface(NS_GET_IID(nsIHTMLContentSink),
                               (void**)aInstancePtrResult);
     }
   }
@@ -232,7 +233,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
   rv = nsComponentManager::CreateInstance(nsIHTMLToTXTSinkStream::GetCID(),
                                           nsnull,
-                                          nsIHTMLToTXTSinkStream::GetIID(),
+                                          NS_GET_IID(nsIHTMLToTXTSinkStream),
                                           getter_AddRefs(it));
   if (NS_SUCCEEDED(rv)) {
     rv = it->Initialize(nsnull, aOutString, aFlags);
@@ -241,7 +242,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
       it->SetWrapColumn(aWrapColumn);
       nsAutoString ucs2("ucs2");
       it->SetCharsetOverride(&ucs2);
-      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+      rv = it->QueryInterface(NS_GET_IID(nsIHTMLContentSink),
                               (void**)aInstancePtrResult);
     }
   }

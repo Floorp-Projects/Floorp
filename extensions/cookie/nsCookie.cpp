@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define alphabetize 1
@@ -193,7 +194,7 @@ cookie_Localize(char* genericString) {
     return v.ToNewUnicode();
   }
 
-  ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
+  ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
   nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
 
   if (NS_FAILED(ret)) {

@@ -397,7 +397,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 	nsCOMPtr<nsIDOMRange> range;
 	nsresult result;
 	result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
-						nsIDOMRange::GetIID(), getter_AddRefs(range));
+						NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
 
 	PRInt32 startIndex = 0;
 	PRInt32 endIndex = 0;
@@ -431,7 +431,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 	// Create the iterator
 	nsCOMPtr<nsIContentIterator> iter;
 	result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-																							nsIContentIterator::GetIID(), 
+																							NS_GET_IID(nsIContentIterator), 
 																							getter_AddRefs(iter));
 	if (NS_FAILED(result))
     return result;

@@ -363,7 +363,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         rv = NS_NewStringInputStream(getter_AddRefs(in), data);
         if (NS_FAILED(rv)) return rv;
 
-        rv = in->QueryInterface(nsIInputStream::GetIID(), (void**)result);
+        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)result);
         return rv;
     }
 }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCOMPtr.h"
@@ -347,7 +348,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(nsProxyStream, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(nsProxyStream, NS_GET_IID(nsIInputStream));
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -378,13 +379,13 @@ nsXULKeyListenerImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULKeyListener::GetIID()) ||
+    if (iid.Equals(NS_GET_IID(nsIXULKeyListener)) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIXULKeyListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    else if (iid.Equals(nsIDOMKeyListener::GetIID())) {
+    else if (iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
         *result = NS_STATIC_CAST(nsIDOMKeyListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -545,7 +546,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
         webShell->GetContentViewer(getter_AddRefs(cv));
         if (nsnull != cv) {
           nsCOMPtr<nsIDocumentViewer> docv;
-          cv->QueryInterface(nsIDocumentViewer::GetIID(), getter_AddRefs(docv));
+          cv->QueryInterface(NS_GET_IID(nsIDocumentViewer), getter_AddRefs(docv));
           if (nsnull != docv) {
             nsCOMPtr<nsIPresContext> cx;
             docv->GetPresContext(*getter_AddRefs(cx));
@@ -1101,7 +1102,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   // Create the XUL document
   nsCOMPtr<nsIDOMXULDocument> doc;
   nsresult rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
-                                                   nsIDOMXULDocument::GetIID(),
+                                                   NS_GET_IID(nsIDOMXULDocument),
                                                    getter_AddRefs(doc));
 
   if (NS_FAILED(rv)) return rv;

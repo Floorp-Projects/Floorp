@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMWindow.h"
 #include "nsICommonDialogs.h"
@@ -185,7 +186,7 @@ NS_IMETHODIMP nsCommonDialogs::UniversalDialog
 
 	nsIDialogParamBlock* block = NULL;
 	rv = nsComponentManager::CreateInstance
-		(kDialogParamBlockCID, 0, nsIDialogParamBlock::GetIID(), (void**)&block );
+		(kDialogParamBlockCID, 0, NS_GET_IID(nsIDialogParamBlock), (void**)&block );
 	if (NS_FAILED(rv)) {
 		return rv;
 	}

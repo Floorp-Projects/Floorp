@@ -182,7 +182,7 @@ CopyTest(char *testFile, char *targetDir)
 
   nsresult rv =
     nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, NULL,
-				       nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+				       NS_GET_IID(nsILocalFile), 
 				       (void**)getter_AddRefs(file));
     
   if (NS_FAILED(rv) || (!file)) 
@@ -195,7 +195,7 @@ CopyTest(char *testFile, char *targetDir)
   VerifyResult(rv);
   
   rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, NULL,
-					  nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+					  NS_GET_IID(nsILocalFile), 
 					  (void**)getter_AddRefs(dir));
 
   if (NS_FAILED(rv) || (!dir)) 
