@@ -186,19 +186,6 @@ public:
   void			ChangeNumPendingTotalMessages(PRInt32 delta);
 
 
-#ifdef HAVE_DB
-  NS_IMETHOD BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url);
-  
-  // updates num messages and num unread - should be pure virtual
-  // when I get around to implementing in all subclasses?
-  NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
-  NS_IMETHOD SetFolderPrefFlags(PRUint32 flags);
-  NS_IMETHOD GetFolderPrefFlags(PRUint32 *flags);
-
-
-  NS_IMETHOD SetLastMessageLoaded(nsMsgKey lastMessageLoaded);
-  NS_IMETHOD GetLastMessageLoaded();
-#endif
 
 
 #ifdef HAVE_ADMINURL
@@ -257,9 +244,6 @@ protected:
 
   nsWeakPtr mServer;
 
-#ifdef HAVE_DB
-  nsMsgKey	m_lastMessageLoaded;
-#endif
   // These values are used for tricking the front end into thinking that we have more 
   // messages than are really in the DB.  This is usually after and IMAP message copy where
   // we don't want to do an expensive select until the user actually opens that folder

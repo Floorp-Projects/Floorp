@@ -80,9 +80,6 @@ nsMsgFolder::nsMsgFolder(void)
 
   mSemaphoreHolder = NULL;
 
-#ifdef HAVE_DB
-	mLastMessageLoaded	= nsMsgKey_None;
-#endif
 	mNumPendingUnreadMessages = 0;
 	mNumPendingTotalMessages  = 0;
 	NS_NewISupportsArray(getter_AddRefs(mSubFolders));
@@ -443,19 +440,6 @@ NS_IMETHODIMP nsMsgFolder::GetFolderURL(char **url)
 		return NS_ERROR_NULL_POINTER;	
 }
 
-#ifdef HAVE_DB
-// this class doesn't have a url
-NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url)
-{
-	if(*url)
-	{
-		*url = NULL;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-#endif
 
 NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 {
@@ -1317,35 +1301,6 @@ void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
 
 }
 
-#ifdef HAVE_DB	
-// These functions are used for tricking the front end into thinking that we have more 
-// messages than are really in the DB.  This is usually after and IMAP message copy where
-// we don't want to do an expensive select until the user actually opens that folder
-// These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
-// struct used by the FE
-
-NS_IMETHODIMP nsMsgFolder::SetFolderPrefFlags(PRUint32 flags)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::GetFolderPrefFlags(PRUint32 *flags)
-{
-
-}
-
-
-NS_IMETHODIMP nsMsgFolder::SetLastMessageLoaded(nsMsgKey lastMessageLoaded)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::GetLastMessageLoaded()
-{
-
-}
-
-#endif
 
 NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
 {
@@ -2233,41 +2188,6 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *parentItem, nsISupports *it
 
 }
 
-nsresult nsMsgFolder::NotifyFolderLoaded()
-{
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
-	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnFolderLoaded(this);
-	}
-	//Notify listeners who listen to every folder
-	nsresult rv;
-	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		folderListenerManager->OnFolderLoaded(this);
-
-	return NS_OK;
-}
-
-nsresult nsMsgFolder::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
-{
-	PRInt32 i;
-	for(i = 0; i < mListeners->Count(); i++)
-	{
-		//Folderlistener's aren't refcounted.
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnDeleteOrMoveMessagesCompleted(this);
-	}
-	//Notify listeners who listen to every folder
-	nsresult rv;
-	NS_WITH_SERVICE(nsIFolderListener, folderListenerManager, kMsgFolderListenerManagerCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		folderListenerManager->OnDeleteOrMoveMessagesCompleted(folder);
-
-	return NS_OK;
-}
 
 nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
 {
