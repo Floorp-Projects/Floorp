@@ -255,10 +255,56 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   return !ret;
 }
 
+#define JS_OPTIONS_DOT_STR "javascript.options."
+
+static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
+static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
+static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
+
+int PR_CALLBACK
+nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
+    PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
+    PRUint32 newDefaultJSOptions = oldDefaultJSOptions;
+
+    PRBool strict;
+    if (NS_SUCCEEDED(prefs->GetBoolPref(js_strict_option_str, &strict))) {
+      if (strict)
+        newDefaultJSOptions |= JSOPTION_STRICT;
+      else
+        newDefaultJSOptions &= ~JSOPTION_STRICT;
+    }
+
+    PRBool werror;
+    if (NS_SUCCEEDED(prefs->GetBoolPref(js_werror_option_str, &werror))) {
+      if (werror)
+        newDefaultJSOptions |= JSOPTION_WERROR;
+      else
+        newDefaultJSOptions &= ~JSOPTION_WERROR;
+    }
+
+    if (newDefaultJSOptions != oldDefaultJSOptions) {
+      // Set options only if we used the old defaults; otherwise the page has
+      // customized some via the options object and we defer to its wisdom.
+      if (::JS_GetOptions(context->mContext) == oldDefaultJSOptions)
+        ::JS_SetOptions(context->mContext, newDefaultJSOptions);
+
+      // Save the new defaults for the next page load (InitContext).
+      context->mDefaultJSOptions = newDefaultJSOptions;
+    }
+  }
+  return 0;
+}
+
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   NS_INIT_REFCNT();
   mRootedScriptObject = nsnull;
+  mDefaultJSOptions = 0;
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);
@@ -267,21 +313,10 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      uint32 options = 0;
-      PRBool strict;
-      if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.strict",
-                                          &strict)) &&
-          strict) {
-        options |= JSOPTION_STRICT;
-      }
-      PRBool werror;
-      if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.options.werror",
-                                          &werror)) &&
-          werror) {
-        options |= JSOPTION_WERROR;
-      }
-      if (options)
-        ::JS_SetOptions(mContext, options);
+      (void) prefs->RegisterCallback(js_options_dot_str,
+                                     JSOptionChangedCallback,
+                                     this);
+      (void) JSOptionChangedCallback(js_options_dot_str, this);
     }
 
     ::JS_SetBranchCallback(mContext, DOMBranchCallback);
@@ -309,6 +344,15 @@ nsJSContext::~nsJSContext()
   if (!mContext)
     return;
 
+  // Unregister our "javascript.options.*" pref-changed callback.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    (void) prefs->UnregisterCallback(js_options_dot_str,
+                                     JSOptionChangedCallback,
+                                     this);
+  }
+
   // if we were handed an object to remember to unroot now, do it
   if (mRootedScriptObject)
     ::JS_RemoveRoot(mContext, &mRootedScriptObject);
@@ -318,7 +362,6 @@ nsJSContext::~nsJSContext()
   ::JS_DestroyContext(mContext);
 
   // Let xpconnect resync its JSContext tracker (this is optional)
-  nsresult rv;
   NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
   if (NS_SUCCEEDED(rv))
     xpc->SyncJSContexts();
@@ -1163,25 +1206,25 @@ static JSFunctionSpec TraceMallocFunctions[] = {
 NS_IMETHODIMP
 nsJSContext::InitClasses()
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
   JSObject *globalObj = ::JS_GetGlobalObject(mContext);
 
-  if (NS_OK == NS_InitWindowClass(this, global) &&
-      NS_OK == NS_InitNodeClass(this, nsnull) &&
-      NS_OK == NS_InitElementClass(this, nsnull) &&
-      NS_OK == NS_InitDocumentClass(this, nsnull) &&
-      NS_OK == NS_InitTextClass(this, nsnull) &&
-      NS_OK == NS_InitAttrClass(this, nsnull) &&
-      NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
-      NS_OK == NS_InitNodeListClass(this, nsnull) &&
-      NS_OK == NS_InitKeyEventClass(this, nsnull) &&
-      NS_OK == InitializeLiveConnectClasses() &&
-      NS_OK == InitializeExternalClasses() &&
+  if (NS_FAILED(NS_InitWindowClass(this, global)) ||
+      NS_FAILED(NS_InitNodeClass(this, nsnull)) ||
+      NS_FAILED(NS_InitElementClass(this, nsnull)) ||
+      NS_FAILED(NS_InitDocumentClass(this, nsnull)) ||
+      NS_FAILED(NS_InitTextClass(this, nsnull)) ||
+      NS_FAILED(NS_InitAttrClass(this, nsnull)) ||
+      NS_FAILED(NS_InitNamedNodeMapClass(this, nsnull)) ||
+      NS_FAILED(NS_InitNodeListClass(this, nsnull)) ||
+      NS_FAILED(NS_InitKeyEventClass(this, nsnull)) ||
+      NS_FAILED(InitializeLiveConnectClasses()) ||
+      NS_FAILED(InitializeExternalClasses()) ||
       // XXX Temporarily here. These shouldn't be hardcoded.
-      NS_OK == NS_InitHTMLImageElementClass(this, nsnull) &&
-      NS_OK == NS_InitHTMLOptionElementClass(this, nsnull)) {
-    rv = NS_OK;
+      NS_FAILED(NS_InitHTMLImageElementClass(this, nsnull)) ||
+      NS_FAILED(NS_InitHTMLOptionElementClass(this, nsnull))) {
+    rv = NS_ERROR_FAILURE;
   }
 
   // Initialize XPConnect classes
@@ -1196,8 +1239,11 @@ nsJSContext::InitClasses()
   if (NS_SUCCEEDED(rv)) {
     JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "options",
                                              &OptionsClass, nsnull, 0);
-    if (!optionsObj ||
-        !::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
+    if (optionsObj &&
+        ::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
+      ::JS_SetOptions(mContext, mDefaultJSOptions);
+    }
+    else {
       rv = NS_ERROR_FAILURE;
     }
   }
