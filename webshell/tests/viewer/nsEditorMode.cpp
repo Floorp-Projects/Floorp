@@ -37,6 +37,8 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "resources.h"
+#include "nsISelectionController.h"
+#include "nsIPresShell.h"
 
 static nsIEditor *gEditor;
 
@@ -81,8 +83,9 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if (!gEditor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  result = gEditor->Init(aDOMDocument, aPresShell, 0);
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(aPresShell);
+  result = gEditor->Init(aDOMDocument, aPresShell, selCon, 0);
   if (NS_SUCCEEDED(result))
     result = gEditor->PostCreate();
   return result;
