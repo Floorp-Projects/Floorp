@@ -430,7 +430,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 #else
     const char *tmpStr = NULL;
 #endif
-    nsString urlString;
+    nsAutoString urlString;
 
     aUrl->GetSpec(&tmpStr);
     urlString = tmpStr;
@@ -2757,7 +2757,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
         // Notify observers as instructed; the subject is "this" web shell window.
-        nsString topic = prefix;
+        nsAutoString topic(prefix);
         topic += ";";
         topic += aTopic;
         rv = svc->Notify( (nsIWebShellWindow*)this, topic.GetUnicode(), someData.GetUnicode() );
@@ -2777,7 +2777,9 @@ NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
       mStatus = mDefaultStatus;
     }
     // Broadcast status text change to interested parties.
-    rv = NotifyObservers( "status", aStatus );
+    nsAutoString statusName("status");
+    nsAutoString statusValue(aStatus);
+    rv = NotifyObservers( statusName, statusValue );
     return rv;
 }
  
