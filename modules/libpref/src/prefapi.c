@@ -142,29 +142,31 @@ JSObject *			gGlobalConfigObject = NULL;
 JSClass				global_class = {
 				    "global", 0,
 				    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-				    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+				    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+					JSCLASS_NO_OPTIONAL_MEMBERS
 					};
 JSClass				autoconf_class = {
 				    "PrefConfig", 0,
 				    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-				    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+				    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+					JSCLASS_NO_OPTIONAL_MEMBERS
 					};
 JSPropertySpec		autoconf_props[] = {
-					{0}
+					{0,0,0,0,0}
 					};
 JSFunctionSpec      autoconf_methods[] = {
-				    { "pref",				pref_NativeDefaultPref,	2 },
-				    { "defaultPref",		pref_NativeDefaultPref,	2 },
-				    { "user_pref",			pref_NativeUserPref,	2 },
-				    { "lockPref",			pref_NativeLockPref,	2 },
-				    { "unlockPref",			pref_NativeUnlockPref,	1 },
-				    { "config",				pref_NativeSetConfig,	2 },
-				    { "getPref",			pref_NativeGetPref,		1 },
-				    { "getLDAPAttributes",	pref_NativeGetLDAPAttr, 4 },
-				    { "localPref",			pref_NativeLILocalPref,	1 },
-				    { "localUserPref",		pref_NativeLIUserPref,	2 },
-				    { "localDefPref",		pref_NativeLIDefPref,	2 },
-				    { NULL,                 NULL,                   0 }
+				    { "pref",				pref_NativeDefaultPref,	2,0,0 },
+				    { "defaultPref",		pref_NativeDefaultPref,	2,0,0 },
+				    { "user_pref",			pref_NativeUserPref,	2,0,0 },
+				    { "lockPref",			pref_NativeLockPref,	2,0,0 },
+				    { "unlockPref",			pref_NativeUnlockPref,	1,0,0 },
+				    { "config",				pref_NativeSetConfig,	2,0,0 },
+				    { "getPref",			pref_NativeGetPref,		1,0,0 },
+				    { "getLDAPAttributes",	pref_NativeGetLDAPAttr, 4,0,0 },
+				    { "localPref",			pref_NativeLILocalPref,	1,0,0 },
+				    { "localUserPref",		pref_NativeLIUserPref,	2,0,0 },
+				    { "localDefPref",		pref_NativeLIDefPref,	2,0,0 },
+				    { NULL,                 NULL,                   0,0,0 }
 					};
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
@@ -1180,7 +1182,7 @@ PREF_SetSpecialPrefsLocal(void)
 	"profile.directory"
 	};
     PrefNode* pref;
-	int       i;
+	PRUint32  i;
 
 	if (!gHashTable)
 		return PREF_NOT_INITIALIZED;
