@@ -183,6 +183,9 @@ function createShortcuts()
     {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       registerProgramFolderKey(winreg, fFolderPath);
+      
+      var subkey = "SOFTWARE\\Microsoft\\MediaPlayer\\ShimInclusionList\\$MainExeFile$";
+      winreg.createKey(subkey, "");
     }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
