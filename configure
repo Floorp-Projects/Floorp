@@ -12059,6 +12059,15 @@ EOF
 #define UNIX_ASYNC_DNS 1
 EOF
 
+elif test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+  cat >> confdefs.h <<\EOF
+#define XP_UNIX 1
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define UNIX_ASYNC_DNS 1
+EOF
+
 else
   cat >> confdefs.h <<\EOF
 #define XP_UNIX 1
