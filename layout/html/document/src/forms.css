@@ -66,6 +66,14 @@ fieldset {
   margin-right: 2px;
 }
 
+label {
+  /* our <label> support is badly broken. 
+     does not support display types other than inline(b=100801) 
+   */
+  display: inline !important;
+}
+
+
 /* default inputs, text inputs, and selects */
 input {
   background-color: -moz-Field;
