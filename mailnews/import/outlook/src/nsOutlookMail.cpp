@@ -202,7 +202,7 @@ void nsOutlookMail::MakeAddressBookNameUnique( nsCString& name, nsCString& list)
 	while (!IsAddressBookNameUnique( newName, list)) {
 		newName = name;
 		newName.Append( ' ');
-		newName.Append( (PRInt32) idx);
+		newName.AppendInt( (PRInt32) idx);
 		idx++;
 	}
 	
@@ -804,7 +804,7 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
 						if (!nsCRT::strlen( a->description)) {
 							nsCRT::free( a->description);
 							nsCString	str = "Attachment ";
-							str.Append( (PRInt32) i);
+							str.AppendInt( (PRInt32) i);
 							a->description = nsCRT::strdup( (const char *)str);
 						}
 						a->pAttachment = pSpec;
@@ -1037,11 +1037,11 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 		else {
 			displayName = firstName;
 			if (!middleName.IsEmpty()) {
-				displayName.Append( ' ');
+				displayName.Append( PRUnichar(' '));
 				displayName.Append( middleName);
 			}
 			if (!lastName.IsEmpty()) {
-				displayName.Append( ' ');
+				displayName.Append( PRUnichar(' '));
 				displayName.Append( lastName);
 			}
 		}

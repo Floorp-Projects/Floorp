@@ -76,26 +76,26 @@ void CMapiMessage::FormatDateTime( SYSTEMTIME & tm, nsCString& s, BOOL includeTZ
 	long offset = _timezone;
 	s += sDaysOfWeek[tm.wDayOfWeek];
 	s += ", ";
-	s.Append( (PRInt32) tm.wDay);
+	s.AppendInt( (PRInt32) tm.wDay);
 	s += " ";
 	s += sMonths[tm.wMonth - 1];
 	s += " ";
-	s.Append( (PRInt32) tm.wYear);
+	s.AppendInt( (PRInt32) tm.wYear);
 	s += " ";
 	int val = tm.wHour;
 	if (val < 10)
 		s += "0";
-	s.Append( (PRInt32) val);
+	s.AppendInt( (PRInt32) val);
 	s += ":";
 	val = tm.wMinute;
 	if (val < 10)
 		s += "0";
-	s.Append( (PRInt32) val);
+	s.AppendInt( (PRInt32) val);
 	s += ":";
 	val = tm.wSecond;
 	if (val < 10)
 		s += "0";
-	s.Append( (PRInt32) val);
+	s.AppendInt( (PRInt32) val);
 	if (includeTZ) {
 		s += " ";
 		if (offset < 0) {
@@ -108,11 +108,11 @@ void CMapiMessage::FormatDateTime( SYSTEMTIME & tm, nsCString& s, BOOL includeTZ
 		val = (int) (offset / 60);
 		if (val < 10)
 			s += "0";
-		s.Append( (PRInt32) val);
+		s.AppendInt( (PRInt32) val);
 		val = (int) (offset % 60);
 		if (val < 10)
 			s += "0";
-		s.Append( (PRInt32) val);
+		s.AppendInt( (PRInt32) val);
 	}
 }
 
@@ -253,7 +253,7 @@ BOOL CMapiMessage::NeedsFromLine( void)
 {
 	nsCString	l;
 	m_headers.Left( l, 5);
-	if (l == "From ")
+	if (l.Equals("From "))
 		return( FALSE);
 	else
 		return( TRUE);
@@ -346,12 +346,12 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 				while (len < line.Length()) {
 					if (slash) {
 						slash = FALSE;
-						tStr.AppendWithConversion(line.CharAt( len));
+						tStr.Append(line.CharAt( len));
 					}
 					else if (line.CharAt( len) == '"')
 						break;
 					else if (line.CharAt( len) != '\\')
-						tStr.AppendWithConversion(line.CharAt( len));
+						tStr.Append(line.CharAt( len));
 					else
 						slash = TRUE;
 					len++;
@@ -368,7 +368,7 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 			}
 			tStr.Truncate();
 			while ((len < line.Length()) && (line.CharAt( len) != ';')) {
-				tStr.AppendWithConversion(line.CharAt( len));
+				tStr.Append(line.CharAt( len));
 				len++;
 			}
 			len++;
