@@ -241,7 +241,7 @@ or should be something which is globally required by a large ammount of code
 
 =head1 METHODS
 
-Note that all C<Bugzilla> functionailty is method based; use C<Bugzilla->dbh>
+Note that all C<Bugzilla> functionality is method based; use C<Bugzilla-E<gt>dbh>
 rather than C<Bugzilla::dbh>. Nothing cares about this now, but don't rely on
 that.
 
@@ -288,7 +288,7 @@ Bugzilla::User instance.
 
 =item C<logout_request>
 
-Essentially, causes calls to C<Bugzilla->user> to return C<undef>. This has the
+Essentially, causes calls to C<Bugzilla-E<gt>user> to return C<undef>. This has the
 effect of logging out a user for the current request only; cookies and
 database sessions are left intact.
 

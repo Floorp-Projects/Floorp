@@ -1155,7 +1155,7 @@ internally, such code must call this method to flush the cached result.
 Returns a hashref of group names for groups the user is a member of. The keys
 are the names of the groups, whilst the values are the respective group ids.
 (This is so that a set of all groupids for groups the user is in can be
-obtained by C<values(%{$user->groups})>.)
+obtained by C<values(%{$user-E<gt>groups})>.)
 
 =item C<in_group>
 
@@ -1169,7 +1169,7 @@ and getting all of the groups would be overkill.
 Returns a hashref of group names for groups that the user can bless. The keys
 are the names of the groups, whilst the values are the respective group ids.
 (This is so that a set of all groupids for groups the user can bless can be
-obtained by C<values(%{$user->bless_groups})>.)
+obtained by C<values(%{$user-E<gt>bless_groups})>.)
 
 =item C<can_see_bug(bug_id)>
 
