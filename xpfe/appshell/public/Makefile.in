@@ -26,6 +26,7 @@ include $(topsrcdir)/config/config.mk
 EXPORTS =                         \
         nsAppShellCIDs.h          \
         nsIAppShellService.h      \
+	nsICmdLineService.h	  \
         nsIWidgetController.h     \
         $(NULL)
 
