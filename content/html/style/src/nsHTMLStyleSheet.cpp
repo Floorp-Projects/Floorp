@@ -1073,7 +1073,14 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
   
     // See if we're paginated
     if (aPresContext->IsPaginated()) {
+      // nsScrollFrame*  scrollFrame;
       nsIFrame* pageSequenceFrame;
+
+#if 0
+      // Wrap the simple page sequence frame in a scroll frame
+      // XXX Only do this if it's print oreview
+      if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+#endif
 
       // Create a simple page sequence frame
       rv = NS_NewSimplePageSequenceFrame(aContent, aNewFrame, pageSequenceFrame);
@@ -1340,7 +1347,7 @@ HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
       if (NS_STYLE_DISPLAY_TABLE_CAPTION!=aChildDisplayType)
       {
         nsIFrame *innerTableFrame=nsnull;
-        aCurrentParentFrame->FirstChild(innerTableFrame);
+        aCurrentParentFrame->FirstChild(nsnull, innerTableFrame);
         if (nsnull!=innerTableFrame)
         {
           const nsStyleDisplay* innerTableDisplay;
@@ -1508,7 +1515,7 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent)
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
     if (display->IsBlockLevel() && IsScrollable(display)) {
-      frame->FirstChild(frame);
+      frame->FirstChild(nsnull, frame);
     }
   }
 

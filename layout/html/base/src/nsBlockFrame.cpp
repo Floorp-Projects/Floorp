@@ -262,7 +262,7 @@ public:
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext);
-  NS_IMETHOD FirstChild(nsIFrame*& aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -1839,10 +1839,15 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsBlockFrame::FirstChild(nsIFrame*& aFirstChild) const
+nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
-  aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
-  return NS_OK;
+  if (nsnull == aListName) {
+    aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
+    return NS_OK;
+  } else {
+    aFirstChild = nsnull;
+    return NS_ERROR_INVALID_ARG;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -4064,7 +4069,7 @@ FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
 
   if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
     nsIFrame* kid;
-    aFrame->FirstChild(kid);
+    aFrame->FirstChild(nsnull, kid);
     while (nsnull != kid) {
       nsresult rv = FindFloatersIn(kid, aArray);
       if (NS_OK != rv) {
@@ -4376,7 +4381,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   PRInt32   childCount;
   nsIFrame* firstChild;
-  nextInFlow->FirstChild(firstChild);
+  nextInFlow->FirstChild(nsnull, firstChild);
   childCount = LengthOf(firstChild);
   NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
                "deleting !empty next-in-flow");
@@ -4671,7 +4676,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
       // See if there are any non-zero sized child frames that precede
       // aFrame in the child list
       nsIFrame* child;
-      parent->FirstChild(child);
+      parent->FirstChild(nsnull, child);
       while ((nsnull != child) && (aFrame != child)) {
         nsSize  size;
 

@@ -324,7 +324,7 @@ NS_IMETHODIMP nsTableFrame::DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFra
 {
   nsresult rv=NS_OK;
   nsIFrame *nextRow=nsnull;
-  aRowGroupFrame->FirstChild(nextRow);
+  aRowGroupFrame->FirstChild(nsnull, nextRow);
   for ( ; nsnull!=nextRow; nextRow->GetNextSibling(nextRow))
   {
     const nsStyleDisplay *rowDisplay;
@@ -909,7 +909,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(rowFrame);
+      rowGroupFrame->FirstChild(nsnull, rowFrame);
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
@@ -2887,7 +2887,7 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
   else
   { // ah shucks, we have to go hunt for the column frame brute-force style
     nsIFrame *childFrame;
-    FirstChild(childFrame);
+    FirstChild(nsnull, childFrame);
     for (;;)
     {
       if (nsnull==childFrame)
@@ -2958,7 +2958,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     { // if it's a col group then get the columns and cache them in the CellMap
       nsTableColFrame *colFrame=nsnull;
-      childFrame->FirstChild((nsIFrame *&)colFrame);
+      childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
       while (nsnull!=colFrame)
       {
         nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex);
@@ -2976,7 +2976,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       if (PR_TRUE==RequiresPass1Layout())
       {
         nsIFrame *rowFrame;
-        childFrame->FirstChild(rowFrame);
+        childFrame->FirstChild(nsnull, rowFrame);
         while (nsnull!=rowFrame)
         {
           const nsStyleDisplay *rowDisplay;
@@ -2984,7 +2984,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
           if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
           {
             nsIFrame *cellFrame;
-            rowFrame->FirstChild(cellFrame);
+            rowFrame->FirstChild(nsnull, cellFrame);
             while (nsnull!=cellFrame)
             {
               /* this is the first time we are guaranteed to have both the cell frames
@@ -3015,7 +3015,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       nsTableColFrame *colFrame=nsnull;
-      childFrame->FirstChild((nsIFrame *&)colFrame);
+      childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
       while (nsnull!=colFrame)
       { // for every column, create an entry in the column cache
         // assumes that the col style has been twiddled to account for first cell width attribute
@@ -3102,7 +3102,7 @@ void nsTableFrame::InvalidateCellMap()
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(rowFrame);
+      rowGroupFrame->FirstChild(nsnull, rowFrame);
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
@@ -3135,7 +3135,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   // add headers and footers to cf
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   nsIFrame * rg = nsnull;
-  firstInFlow->FirstChild(rg);
+  firstInFlow->FirstChild(nsnull, rg);
   NS_ASSERTION (nsnull!=rg, "previous frame has no children");
   PRInt32 index = 0;
   nsIFrame * bodyRowGroupFromOverflow = mOverflowList;
@@ -3427,7 +3427,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
         // if found, the childFrame must be the inner frame
         nsresult rv;
         nsIFrame *childFrame=nsnull;
-        rv = aTableFrame->FirstChild(childFrame);
+        rv = aTableFrame->FirstChild(nsnull, childFrame);
         while ((NS_OK==rv) && (nsnull!=childFrame))
         {
           const nsStyleDisplay *childDisplay;

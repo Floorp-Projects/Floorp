@@ -240,7 +240,7 @@ NS_METHOD nsTableRowGroupFrame::HandleEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
 
   nsIFrame* kid;
-  FirstChild(kid);
+  FirstChild(nsnull, kid);
   while (nsnull != kid) {
     nsRect kidRect;
     kid->GetRect(kidRect);
@@ -694,7 +694,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
         if (gsDebug) printf("TRGF SWC: for row %p...\n", rowFrame);
         // check this row for a cell with rowspans
         nsIFrame *cellFrame;
-        rowFrame->FirstChild(cellFrame);
+        rowFrame->FirstChild(nsnull, cellFrame);
         while (nsnull != cellFrame)
         {
           const nsStyleDisplay *childDisplay;
@@ -1109,7 +1109,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
         (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == sibDisplay->mDisplay))
     {
       nsIFrame *childFrame=nsnull;
-      nextSib->FirstChild(childFrame);
+      nextSib->FirstChild(nsnull, childFrame);
       while (nsnull!=childFrame)
       {
         const nsStyleDisplay *childDisplay;
