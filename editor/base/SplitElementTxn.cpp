@@ -18,7 +18,7 @@
 
 #include "SplitElementTxn.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
+#include "nsIDOMSelection.h"
 #include "nsIEditorSupport.h"
 
 static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
@@ -30,8 +30,8 @@ SplitElementTxn::SplitElementTxn()
 }
 
 NS_IMETHODIMP SplitElementTxn::Init(nsIEditor  *aEditor,
-                               nsIDOMNode *aNode,
-                               PRInt32     aOffset)
+                                    nsIDOMNode *aNode,
+                                    PRInt32     aOffset)
 {
   mEditor = do_QueryInterface(aEditor);
   mExistingRightNode = do_QueryInterface(aNode);
@@ -45,6 +45,10 @@ SplitElementTxn::~SplitElementTxn()
 
 NS_IMETHODIMP SplitElementTxn::Do(void)
 {
+  NS_ASSERTION(mExistingRightNode, "bad state");
+  if (!mExistingRightNode) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   // create a new node
   nsresult result = mExistingRightNode->CloneNode(PR_FALSE, getter_AddRefs(mNewLeftNode));
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
@@ -58,8 +62,18 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
     {
       nsCOMPtr<nsIEditorSupport> editor;
       result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-      if (NS_SUCCEEDED(result) && editor) {
+      if (NS_SUCCEEDED(result) && editor) 
+      {
         result = editor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+        if (NS_SUCCEEDED(result) && mNewLeftNode)
+        {
+          nsCOMPtr<nsIDOMSelection>selection;
+          mEditor->GetSelection(getter_AddRefs(selection));
+          if (selection)
+          {
+            selection->Collapse(mNewLeftNode, mOffset);
+          }
+        }
       }
       else {
         result = NS_ERROR_NOT_IMPLEMENTED;
@@ -71,12 +85,42 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
 
 NS_IMETHODIMP SplitElementTxn::Undo(void)
 {
+  NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
+  if (!mExistingRightNode || !mNewLeftNode || !mParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+#ifdef NS_DEBUG
+  // sanity check
+  nsCOMPtr<nsIDOMNode>parent;
+  nsresult debugResult = mExistingRightNode->GetParentNode(getter_AddRefs(parent));
+  NS_ASSERTION((NS_SUCCEEDED(debugResult)), "bad GetParentNode result for right child");
+  NS_ASSERTION(parent, "bad GetParentNode for right child");
+  NS_ASSERTION(parent==mParent, "bad GetParentNode for right child, parents don't match");
+  
+  debugResult = mNewLeftNode->GetParentNode(getter_AddRefs(parent));
+  NS_ASSERTION((NS_SUCCEEDED(debugResult)), "bad GetParentNode result for left child");
+  NS_ASSERTION(parent, "bad GetParentNode for left child");
+  NS_ASSERTION(parent==mParent, "bad GetParentNode for right child, left don't match");
+
+#endif
+
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) {
+  if (NS_SUCCEEDED(result) && editor) 
+  {
     result = editor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+    if (NS_SUCCEEDED(result) && mNewLeftNode)
+    {
+      nsCOMPtr<nsIDOMSelection>selection;
+      mEditor->GetSelection(getter_AddRefs(selection));
+      if (selection)
+      {
+        selection->Collapse(mExistingRightNode, mOffset);
+      }
+    }
   }
   else {
     result = NS_ERROR_NOT_IMPLEMENTED;
@@ -84,8 +128,13 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
   return result;
 }
 
+/*
 NS_IMETHODIMP SplitElementTxn::Redo(void)
 {
+  NS_ASSERTION(mExistingRightNode && mNewLeftNode && mParent, "bad state");
+  if (!mExistingRightNode || !mNewLeftNode || !mParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
@@ -97,6 +146,7 @@ NS_IMETHODIMP SplitElementTxn::Redo(void)
   }
   return result;
 }
+*/
 
 NS_IMETHODIMP SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {

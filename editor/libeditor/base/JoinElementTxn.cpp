@@ -18,6 +18,8 @@
 
 #include "JoinElementTxn.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMCharacterData.h"
+#include "nsIDOMSelection.h"
 #include "nsIEditorSupport.h"
 
 static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
@@ -66,11 +68,33 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
           if ((NS_SUCCEEDED(result)) && (childNodes)) {
             childNodes->GetLength(&mOffset);
           }
+          else 
+          {
+            nsCOMPtr<nsIDOMCharacterData> leftNodeAsText;
+            leftNodeAsText = do_QueryInterface(mLeftNode);
+            if (leftNodeAsText) {
+              leftNodeAsText->GetLength(&mOffset);
+            }
+          }
           nsCOMPtr<nsIEditorSupport> editor;
           result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
           if (NS_SUCCEEDED(result) && editor) {
-            result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_TRUE);
+            result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
+            if (NS_SUCCEEDED(result))
+            {
+              nsCOMPtr<nsIDOMSelection>selection;
+              mEditor->GetSelection(getter_AddRefs(selection));
+              if (selection)
+              {
+                selection->Collapse(mRightNode, mOffset);
+              }
+            }
           }
+        }
+        else 
+        {
+          NS_ASSERTION(PR_FALSE, "2 nodes do not have same parent");
+          return NS_ERROR_INVALID_ARG;
         }
       }
     }
@@ -86,6 +110,15 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
   if (NS_SUCCEEDED(result) && editor) {
     result = editor->SplitNodeImpl(mRightNode, mOffset, mLeftNode, mParent);
+    if (NS_SUCCEEDED(result) && mLeftNode)
+    {
+      nsCOMPtr<nsIDOMSelection>selection;
+      mEditor->GetSelection(getter_AddRefs(selection));
+      if (selection)
+      {
+        selection->Collapse(mLeftNode, mOffset);
+      }
+    }
   }
   else {
     result = NS_ERROR_NOT_IMPLEMENTED;
@@ -98,14 +131,25 @@ NS_IMETHODIMP JoinElementTxn::Redo(void)
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) {
-    result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_TRUE);
+  if (NS_SUCCEEDED(result) && editor) 
+  {
+    result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
+    if (NS_SUCCEEDED(result))
+    {
+      nsCOMPtr<nsIDOMSelection>selection;
+      mEditor->GetSelection(getter_AddRefs(selection));
+      if (selection)
+      {
+        selection->Collapse(mRightNode, mOffset);
+      }
+    }
   }
   else {
     result = NS_ERROR_NOT_IMPLEMENTED;
   }
   return result;
 }
+
 
 NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
 {
