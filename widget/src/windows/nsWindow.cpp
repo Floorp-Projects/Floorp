@@ -1904,7 +1904,10 @@ PRBool nsWindow::AutoErase()
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
 {
   HMENU nativeMenuHandle;
-  aMenuBar->GetNativeData(nativeMenuHandle);
+  void * voidData;
+  aMenuBar->GetNativeData(voidData);
+  nativeMenuHandle = (HMENU)voidData;
+
   if (nsnull != nativeMenuHandle) {
     ::SetMenu(mWnd, nativeMenuHandle);
     return NS_OK;
