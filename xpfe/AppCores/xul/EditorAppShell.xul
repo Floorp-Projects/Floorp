@@ -94,6 +94,16 @@
     }
   }
 
+  function EditorRedo()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+	    dump("Opening New Window\n");
+      appCore.redo();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
 
   function EditorExit()
   {
@@ -139,6 +149,7 @@
     </menu>
     <menu name="Edit">
       <menuitem name="Undo" onClick="EditorUndo();"/>
+      <menuitem name="Redo" onClick="EditorRedo();"/>
       <separator />
       <menuitem name="Cut" onClick="EditorCut();"/>
       <menuitem name="Copy" onClick="EditorCopy();"/>
@@ -198,6 +209,7 @@
 
     <toolbar>
 	    <titledbutton src="resource:/res/toolbar/ED_Undo.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
+	    <titledbutton src="resource:/res/toolbar/ED_Redo.gif" align="bottom" value="" onClick="EditorRedo()">	</titledbutton>
 	    <titledbutton src="resource:/res/toolbar/ED_Bold.gif" align="bottom" value="" onClick="EditorBold()">	</titledbutton>
 	    <titledbutton src="resource:/res/toolbar/ED_Underline.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>
 	    <titledbutton src="resource:/res/toolbar/ED_Indent.gif" align="bottom" value="" onClick="EditorUndo()">	</titledbutton>

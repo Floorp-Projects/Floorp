@@ -199,6 +199,37 @@ EditorAppCoreUndo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+//
+// Native method Redo
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreRedo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Redo()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function redo requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 //
 // Native method Exit
@@ -389,6 +420,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
 {
   {"setAttribute",          EditorAppCoreSetAttribute,     2},
   {"undo",          EditorAppCoreUndo,     0},
+  {"redo",          EditorAppCoreRedo,     0},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},

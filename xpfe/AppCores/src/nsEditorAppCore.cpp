@@ -392,6 +392,16 @@ nsEditorAppCore::Undo()
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsEditorAppCore::Redo()
+{  
+  if (mEditor) {
+    mEditor->Redo(1);
+  }
+
+  return NS_OK;
+}
+
 //----------------------------------------
 void nsEditorAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName)
 {
