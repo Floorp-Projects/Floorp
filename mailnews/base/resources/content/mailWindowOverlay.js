@@ -384,10 +384,6 @@ function InitMessageMenu()
   if(labelMenu)
       labelMenu.setAttribute("disabled", !aMessage);
 
-  var openMenu = document.getElementById("openMessageWindowMenuitem");
-  if (openMenu)
-      openMenu.setAttribute("disabled", !aMessage);
-
   // Disable mark menu when we're not in a folder
   var markMenu = document.getElementById("markMenu");
   if(markMenu)
@@ -1139,23 +1135,15 @@ function MsgOpenFromFile()
   try {
      var ret = fp.show();
      if (ret == nsIFilePicker.returnCancel)
-       return null;
+       return;
    }
    catch (ex) {
      dump("filePicker.chooseInputFile threw an exception\n");
-     return null;
+     return;
    }
 
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
-  var handler = ioService.getProtocolHandler("file");
-  var fileHandler = handler.QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-
-  var fileUrl = fileHandler.getURLSpecFromFile(fp.file);
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"].
-              createInstance(Components.interfaces.nsIURI);
-  fileUrl += "?type=x-message-display";
-  uri.spec = fileUrl;
+  var uri = fp.fileURL;
+  uri.query = "type=x-message-display";
 
   MsgOpenNewWindowForMessage(uri, null);
 }
