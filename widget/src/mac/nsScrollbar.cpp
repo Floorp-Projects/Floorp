@@ -26,6 +26,7 @@
 NS_IMPL_ADDREF(nsScrollbar);
 NS_IMPL_RELEASE(nsScrollbar);
 
+#define SETUP_DRAW	0
 
 /**-------------------------------------------------------------------------------
  * nsScrollbar Constructor
@@ -174,6 +175,7 @@ RGBColor						redcolor = {255<<8,0,0};
 RgnHandle						thergn;
 
 
+#if SETUP_DRAW
 	CalcOffset(offx,offy);
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
@@ -183,17 +185,22 @@ RgnHandle						thergn;
 	thergn = ::NewRgn();
 	::GetClip(thergn);
 	::ClipRect(&macRect);
+#else
+	GetBounds(theRect);
+	nsRectToMacRect(theRect,macRect);
+#endif
 	::PenNormal();
 	::RGBForeColor(&blackcolor);
 	// Frame the general scrollbar
 	::FrameRect(&macRect);
 
+#if SETUP_DRAW
 	::RGBForeColor(&blackcolor);
 	::PenSize(1,1);
 	::SetClip(thergn);
 	::SetOrigin(0,0);
 	::SetPort(theport);
-
+#endif
 	DrawThumb(PR_FALSE);
 			
 }
@@ -216,10 +223,12 @@ RGBColor						redcolor = {255<<8,0,0};
 RgnHandle						thergn;
 
 
+#if SETUP_DRAW
 	CalcOffset(offx,offy);
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
 	::SetOrigin(-offx,-offy);
+#endif
 	GetBounds(frameRect);
 	nsRectToMacRect(frameRect,macFrameRect);
 	::PenNormal();
@@ -241,11 +250,15 @@ RgnHandle						thergn;
 		thumbRect.y = frameRect.y;
 		}
 
+#if SETUP_DRAW
 	// clip only at the thumb
 	thergn = ::NewRgn();
 	::GetClip(thergn);
 	nsRectToMacRect(thumbRect,macThumbRect);
 	::ClipRect(&macThumbRect);
+#else
+	nsRectToMacRect(thumbRect,macThumbRect);
+#endif
 	
 	if(aClear == PR_TRUE)
 		::EraseRect(&macThumbRect);
@@ -258,11 +271,13 @@ RgnHandle						thergn;
 	// Frame the general scrollbar
 	::FrameRect(&macFrameRect);
 
+#if SETUP_DRAW
 	::RGBForeColor(&blackcolor);
 	::PenSize(1,1);
 	::SetClip(thergn);
 	::SetOrigin(0,0);
 	::SetPort(theport);
+#endif
 }
 
 
@@ -420,19 +435,6 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 {
 	DrawWidget();
   return PR_FALSE;
-}
-
-
-/**-------------------------------------------------------------------------------
- * Resizes the button, currently handles by nsWindow
- * @update  dc 08/31/98
- * @Param aEvent -- The event for this resize
- * @return -- True if the event was handled, PR_FALSE is always return for now
- */ 
-PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
-{
-	//return nsWindow::OnResize(aEvent);
-	return PR_FALSE;
 }
 
 /**-------------------------------------------------------------------------------
