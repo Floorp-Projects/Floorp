@@ -171,7 +171,6 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
@@ -1114,6 +1113,11 @@ nsBrowserWindow::~nsBrowserWindow()
   if (nsnull != mImageInspector) {
     delete mImageInspector;
   }
+  if(mWebBrowserChrome)
+   {
+   mWebBrowserChrome->BrowserWindow(nsnull);
+   NS_RELEASE(mWebBrowserChrome);
+   }
 
 }
 
@@ -1208,6 +1212,10 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
   webShell->SetContainer((nsIWebShellContainer*) this);
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  EnsureWebBrowserChrome();
+  docShellAsItem->SetTreeOwner(mWebBrowserChrome);
 
   webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
@@ -1784,13 +1792,8 @@ nsBrowserWindow::IsIntrinsicallySized(PRBool& aResult)
 NS_IMETHODIMP
 nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 {
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  mTitle = aTitle;
-  nsAutoString newTitle(aTitle);
-  //newTitle.Append(" - Raptor");
-  newTitle.Append(*gTitleSuffix);
-  mWindow->SetTitle(newTitle);
-  return NS_OK;
+   EnsureWebBrowserChrome();
+   return mWebBrowserChrome->SetTitle(aTitle);
 }
 
 NS_IMETHODIMP
@@ -3471,6 +3474,19 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
   return result;
 }
 
+NS_IMETHODIMP nsBrowserWindow::EnsureWebBrowserChrome()
+{
+   if(mWebBrowserChrome)
+      return NS_OK;
+
+   mWebBrowserChrome = new nsWebBrowserChrome();
+   NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_OUT_OF_MEMORY);
+
+   NS_ADDREF(mWebBrowserChrome);
+   mWebBrowserChrome->BrowserWindow(this);
+
+   return NS_OK;
+}
 
 //----------------------------------------------------------------------
 
