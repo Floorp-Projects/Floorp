@@ -1055,10 +1055,16 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     break;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
+    // XXX Having this check conditional breaks the area frame's absolute
+    // conditioning code...
+#if 0
     if (HaveOutsideBullet()) {
+#endif
       *aListName = nsLayoutAtoms::bulletList;
       NS_ADDREF(*aListName);
+#if 0
     }
+#endif
     break;
   }
   return NS_OK;
