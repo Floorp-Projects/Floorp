@@ -100,6 +100,16 @@ public:
                                 const nsString& aRollOverURL) = 0;
 
  /**
+  * Get the URLS for the Toolbar Tab Images that enable
+  * the Toolbar to collapse
+  *
+  */
+  NS_IMETHOD GetCollapseTabURLs(nsString& aUpURL,
+                                nsString& aPressedURL,
+                                nsString& aDisabledURL,
+                                nsString& aRollOverURL) = 0;
+
+ /**
   * Registers the URLS for the Tab Images for the manager for
   * making toolbars expand
   *

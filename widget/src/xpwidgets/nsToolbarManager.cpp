@@ -46,8 +46,6 @@ NS_IMPL_RELEASE(nsToolbarManager)
 // images instead of being hard coded
 #define EXPAND_TAB_WIDTH  56
 #define EXPAND_TAB_HEIGHT 10
-#define COLLAPSE_TAB_WIDTH  9
-#define COLLAPSE_TAB_HEIGHT 42
 
 
 const PRInt32 kMaxNumToolbars = 32;
@@ -219,78 +217,6 @@ NS_METHOD nsToolbarManager::AddTabToManager(nsIToolbar *    aToolbar,
   return NS_OK;    
 }
 
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::AddTabToToolbar(nsIToolbar * aToolbar)
-{
-  nsresult rv;
-
-  // Get the toolbar's widget (the parent of the tab)
-  nsIWidget* parent;
-	if (NS_OK != aToolbar->QueryInterface(kIWidgetIID,(void**)&parent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create the generic toolbar holder for the tab widget
-  nsIToolbarItemHolder * toolbarItemHolder;
-  rv = nsRepository::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
-                                    (void**)&toolbarItemHolder);
-  if (NS_OK != rv) {
-    NS_RELEASE(parent);
-    return rv;
-  }
-
-  // Get the ToolbarItem interface for adding it to the toolbar
-  nsIToolbarItem * toolbarItem;
-	if (NS_OK != toolbarItemHolder->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
-    NS_RELEASE(parent);
-    NS_RELEASE(toolbarItemHolder);
-    return NS_OK;
-  }
-
-  nsRect rt(0, 0, COLLAPSE_TAB_WIDTH, COLLAPSE_TAB_HEIGHT);
-
-  nsIImageButton * tab;
-  rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
-                                    (void**)&tab);
-  if (NS_OK != rv) {
-    NS_RELEASE(parent);
-    NS_RELEASE(toolbarItem);
-    NS_RELEASE(toolbarItemHolder);
-    return rv;
-  }
-  
-  // Get the nsIWidget interface for the tab so it can be added to the parent widget
-  // and it can be put into the generic ToolbarItemHolder
-  nsIWidget * widget;
-	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, rt, NULL, NULL);
-	  widget->Show(PR_TRUE);
-	  widget->SetClientData((void *)parent);
-
-	  widget->Resize(0, 1, COLLAPSE_TAB_WIDTH, COLLAPSE_TAB_HEIGHT, PR_FALSE);
-
-    toolbarItemHolder->SetWidget(widget); // put the widget into the holder
-
-    tab->SetBorderWidth(0);
-    tab->SetBorderOffset(0);
-    tab->SetShowBorder(PR_FALSE);
-    tab->SetShowText(PR_FALSE);
-    tab->SetLabel("");
-    tab->SetImageDimensions(rt.width, rt.height);
-    tab->SetImageURLs(mCollapseUpURL, mCollapsePressedURL, mCollapseDisabledURL, mCollapseRollOverURL);
-
-    aToolbar->InsertItemAt(toolbarItem, 0, PR_TRUE, 0);  // add the item with zero gap, stretchable, zero position
-    tab->AddListener(this);
-
-		NS_RELEASE(widget);
-	}
-  NS_RELEASE(parent);
-  NS_RELEASE(tab);
-  NS_RELEASE(toolbarItem);
-  NS_RELEASE(toolbarItemHolder);
-
-  return NS_OK;    
-}
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::AddToolbar(nsIToolbar* aToolbar)
@@ -300,7 +226,6 @@ NS_METHOD nsToolbarManager::AddToolbar(nsIToolbar* aToolbar)
 
   // XXX should check here to make sure it isn't already added
   aToolbar->SetToolbarManager(this);
-  AddTabToToolbar(aToolbar);
   NS_ADDREF(aToolbar);
 
   return NS_OK;    
@@ -489,6 +414,20 @@ NS_METHOD nsToolbarManager::SetCollapseTabURLs(const nsString& aUpURL,
   mCollapsePressedURL  = aPressedURL;
   mCollapseDisabledURL = aDisabledURL;
   mCollapseRollOverURL = aRollOverURL;
+
+  return NS_OK;
+}
+
+//--------------------------------------------------------------------
+NS_METHOD nsToolbarManager::GetCollapseTabURLs(nsString& aUpURL,
+                                               nsString& aPressedURL,
+                                               nsString& aDisabledURL,
+                                               nsString& aRollOverURL) 
+{
+  aUpURL = mCollapseUpURL;
+  aPressedURL = mCollapsePressedURL;
+  aDisabledURL = mCollapseDisabledURL;
+  aRollOverURL = mCollapseRollOverURL;
 
   return NS_OK;
 }

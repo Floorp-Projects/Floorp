@@ -63,9 +63,13 @@ public:
     NS_IMETHOD Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint);
     NS_IMETHOD Resize(PRUint32 aX,  PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool   aRepaint);
     NS_IMETHOD SetCollapseTabURLs(const nsString& aUpURL,
-                          const nsString& aPressedURL,
-                          const nsString& aDisabledURL,
-                          const nsString& aRollOverURL);
+                                  const nsString& aPressedURL,
+                                  const nsString& aDisabledURL,
+                                  const nsString& aRollOverURL);
+    NS_IMETHOD GetCollapseTabURLs(nsString& aUpURL,
+                                  nsString& aPressedURL,
+                                  nsString& aDisabledURL,
+                                  nsString& aRollOverURL);
 
     NS_IMETHOD SetExpandTabURLs(const nsString& aUpURL,
                                 const nsString& aPressedURL,
@@ -77,7 +81,6 @@ public:
                                       nsGUIEvent     * aEvent);
 
 protected:
-  NS_IMETHOD AddTabToToolbar(nsIToolbar * aToolbar);
   NS_METHOD  AddTabToManager(nsIToolbar *    aToolbar,
                              const nsString& aUpURL,
                              const nsString& aPressedURL,
