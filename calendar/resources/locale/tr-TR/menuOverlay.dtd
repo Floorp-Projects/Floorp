@@ -140,7 +140,7 @@
 <!ENTITY toolsMenu.label                        "Araçlar">
 <!ENTITY toolsMenu.accesskey                    "A">
 
-<!ENTITY javaScriptConsoleCmd.label             "Java Betik Konsolu">
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript Konsolu">
 <!ENTITY javaScriptConsoleCmd.accesskey         "J">
 
 <!ENTITY navigatorCmd.label                     "Tarayıcı">
