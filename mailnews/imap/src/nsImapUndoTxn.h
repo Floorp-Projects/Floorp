@@ -73,6 +73,8 @@ public:
 private:
 
     nsCOMPtr<nsIMsgFolder> m_srcFolder;
+	nsCOMPtr<nsISupportsArray> m_srcHdrs;
+	nsMsgKeyArray m_dupKeyArray;
     nsMsgKeyArray m_srcKeyArray;
     nsCString m_srcMsgIdString;
     nsCOMPtr<nsIMsgFolder> m_dstFolder;

@@ -33,6 +33,7 @@
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 
+
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {
@@ -57,6 +58,7 @@ nsImapMoveCopyMsgTxn::Init(
 	nsIEventQueue* eventQueue, nsIUrlListener* urlListener)
 {
 	nsresult rv;
+	NS_NewISupportsArray(getter_AddRefs(m_srcHdrs));
     m_srcMsgIdString = srcMsgIdString;
     m_idsAreUids = idsAreUids;
     m_isMove = isMove;
@@ -66,6 +68,7 @@ nsImapMoveCopyMsgTxn::Init(
 	if (urlListener)
 		m_urlListener = do_QueryInterface(urlListener, &rv);
 	m_srcKeyArray.CopyArray(srcKeyArray);
+	m_dupKeyArray.CopyArray(srcKeyArray);
 	if (srcKeyArray->GetSize() > 1)
 	{
 		if (isMove)
@@ -116,7 +119,9 @@ nsImapMoveCopyMsgTxn::Init(
         rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIMsgDBHdr> srcHdr;
-        
+        nsCOMPtr<nsIMsgDBHdr> copySrcHdr;
+		nsMsgKey pseudoKey;
+	
         for (i=0; i<count; i++)
         {
             rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i),
@@ -127,6 +132,21 @@ nsImapMoveCopyMsgTxn::Init(
                 rv = srcHdr->GetMessageSize(&msgSize);
                 if (NS_SUCCEEDED(rv))
                     m_srcSizeArray.Add(msgSize);
+				if (isMove)
+				{
+                    srcDB->GetNextPseudoMsgKey(&pseudoKey);
+                    pseudoKey--;
+                    srcDB->SetNextPseudoMsgKey(pseudoKey);				
+				    m_dupKeyArray.SetAt(i,pseudoKey);
+                    rv = srcDB->CopyHdrFromExistingHdr(pseudoKey,
+                                                       srcHdr, PR_FALSE,
+                                                       getter_AddRefs(copySrcHdr));
+				    if (NS_SUCCEEDED(rv)) 
+                    {
+				      nsCOMPtr<nsISupports> supports = do_QueryInterface(copySrcHdr);
+				      m_srcHdrs->AppendElement(supports);
+					}
+				}
             }
         }
     }
@@ -330,25 +350,23 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
         PRUint32 i;
         nsCOMPtr<nsIMsgDBHdr> oldHdr;
         nsCOMPtr<nsIMsgDBHdr> newHdr;
+		nsCOMPtr<nsISupports> aSupport;
         for (i=0; i<count; i++)
         {
-            rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i),
-                                        getter_AddRefs(oldHdr));
-            NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
-
-            if (NS_SUCCEEDED(rv) && oldHdr)
-            {
-                rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
-                                                   oldHdr,
-                                                   getter_AddRefs(newHdr));
-                NS_ASSERTION(newHdr, "fatal ... cannot create new header\n");
-                if (NS_SUCCEEDED(rv) && newHdr)
-                {
-                    if (i < m_srcSizeArray.GetSize())
-                        newHdr->SetMessageSize(m_srcSizeArray.GetAt(i));
-                    srcDB->UndoDelete(newHdr);
-                }
-            }
+           aSupport = getter_AddRefs(m_srcHdrs->ElementAt(i));
+           oldHdr = do_QueryInterface(aSupport);
+           NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
+           rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
+                                              oldHdr,PR_TRUE,
+                                              getter_AddRefs(newHdr));
+           NS_ASSERTION(newHdr, "fatal ... cannot create new header\n");
+			
+           if (NS_SUCCEEDED(rv) && newHdr)
+           {
+		        if (i < m_srcSizeArray.GetSize())
+                newHdr->SetMessageSize(m_srcSizeArray.GetAt(i));
+                srcDB->UndoDelete(newHdr);
+		   }
         }
         srcDB->SetSummaryValid(PR_TRUE);
         srcDB->Commit(nsMsgDBCommitType::kLargeCommit);

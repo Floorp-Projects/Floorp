@@ -1932,7 +1932,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	{
 		nsIMsgDBHdr *newHdr = nsnull;
 
-		nsresult msgErr = destMailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, &newHdr);
+		nsresult msgErr = destMailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, PR_TRUE, &newHdr);
 		if (NS_SUCCEEDED(msgErr) && newHdr)
 		{
 			PRUint32 newFlags;

@@ -312,7 +312,7 @@ nsFolderCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
 
     // okay done with the current message; copying the existing message header
     // to the new database
-  m_db->CopyHdrFromExistingHdr(m_newKey, msgHdr,
+  m_db->CopyHdrFromExistingHdr(m_newKey, msgHdr, PR_TRUE, 
                                getter_AddRefs(newMsgHdr));
 
   m_db->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -2389,7 +2389,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
       if(NS_SUCCEEDED(rv))
       {
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
-                                               msgDBHdr, 
+                                               msgDBHdr, PR_TRUE,
                                                getter_AddRefs(newHdr));
         msgDatabase->SetSummaryValid(PR_TRUE);
         msgDatabase->Commit(nsMsgDBCommitType::kLargeCommit);

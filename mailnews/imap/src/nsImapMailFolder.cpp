@@ -4077,7 +4077,12 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
         {
             srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
                                       PR_TRUE, PR_TRUE);
-        }
+		    nsCOMPtr<nsIMsgLocalMailFolder> popFolder = do_QueryInterface(srcFolder); 
+		    if (popFolder)   //needed if move pop->imap to notify FE
+		        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+		}
+
+
     }
     return rv;
 }

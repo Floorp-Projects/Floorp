@@ -101,7 +101,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   void AddNewHdrToDB(in nsIMsgDBHdr newHdr, in boolean notify);
 
-  nsIMsgDBHdr CopyHdrFromExistingHdr(in nsMsgKey key, in nsIMsgDBHdr existingHdr);
+  nsIMsgDBHdr CopyHdrFromExistingHdr(in nsMsgKey key, in nsIMsgDBHdr existingHdr, in boolean addHdrToDB);
 
   [noscript] void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
 
@@ -210,5 +210,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   readonly attribute nsMsgKey LowWaterArticleNum;
   readonly attribute nsMsgKey HighWaterArticleNum;
+  attribute nsMsgKey NextPseudoMsgKey;   //for undo-redo of move pop->imap
+
 };
 

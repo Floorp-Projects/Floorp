@@ -179,6 +179,7 @@ protected:
 	nsresult			InitMDBInfo();
 
 	nsDBFolderInfo      *m_dbFolderInfo;
+	nsMsgKey            m_nextPseudoMsgKey;
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbAllMsgHeadersTable;

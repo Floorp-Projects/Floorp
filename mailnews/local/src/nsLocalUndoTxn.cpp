@@ -235,7 +235,7 @@ nsLocalMoveCopyMsgTxn::Undo()
                 if (NS_SUCCEEDED(rv) && oldHdr)
                 {
                     rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
-                                                       oldHdr,
+                                                       oldHdr, PR_TRUE,
                                                        getter_AddRefs(newHdr));
                     NS_ASSERTION(newHdr, 
                                  "fatal ... cannot create new msg header\n");
@@ -282,7 +282,7 @@ nsLocalMoveCopyMsgTxn::Redo()
         if (NS_SUCCEEDED(rv) && oldHdr)
         {
             rv = dstDB->CopyHdrFromExistingHdr(m_dstKeyArray.GetAt(i),
-                                               oldHdr,
+                                               oldHdr, PR_TRUE,
                                                getter_AddRefs(newHdr));
             NS_ASSERTION(newHdr, "fatal ... cannot get new msg header\n");
             if (NS_SUCCEEDED(rv) && newHdr)

@@ -42,6 +42,7 @@
 #include "prmon.h"
 #include "nsIEventQueue.h"
 #include "nsIMsgImapMailFolder.h"
+#include "nsIMsgLocalMailFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
 #include "nsIStreamListener.h"

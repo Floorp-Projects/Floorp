@@ -627,6 +627,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_HeaderParser(nsnull),
 	  m_headersInUse(nsnull),
 	  m_cachedHeaders(nsnull),
+	  m_nextPseudoMsgKey(-1),
 	  m_bCacheHeaders(PR_FALSE)
 
 {
@@ -2583,7 +2584,7 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 	return err;
 }
 
-NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr)
+NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, PRBool addHdrToDB, nsIMsgDBHdr **newHdr)
 {
 	nsresult	err = NS_OK;
 
@@ -2597,7 +2598,8 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 		err = destRow->SetRow(GetEnv(), sourceRow);
 		if (NS_SUCCEEDED(err))
 		{
-			err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
+			if(addHdrToDB)
+			    err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
 			if (NS_SUCCEEDED(err) && newHdr)
 				*newHdr = destMsgHdr;
 		}
@@ -3334,6 +3336,21 @@ NS_IMETHODIMP nsMsgDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsMsgKey NextPseudoMsgKey */
+
+NS_IMETHODIMP nsMsgDatabase::GetNextPseudoMsgKey(nsMsgKey *nextPseudoMsgKey)
+{
+  NS_ENSURE_ARG_POINTER(nextPseudoMsgKey);
+  *nextPseudoMsgKey = m_nextPseudoMsgKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::SetNextPseudoMsgKey(nsMsgKey nextPseudoMsgKey)
+{
+  m_nextPseudoMsgKey = nextPseudoMsgKey;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::HasMessagesOfType(PRUint32 viewType, PRBool *hasMessages)
