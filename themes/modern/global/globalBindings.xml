@@ -130,7 +130,7 @@
      so I've added them manually here.  This is bad. -->
 
   <binding id="menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
-  	<content inherits="false" includes="menupopup" flex="1">
+  	<content inherits="false" includes="menupopup">
     	<xul:spring class="menulist-spring-left" inherits="disabled"/>
     	<xul:box class="menulist-box-middle" flex="1" inherits="disabled">
     		<xul:image class="menulist-icon" inherits="src"/>
