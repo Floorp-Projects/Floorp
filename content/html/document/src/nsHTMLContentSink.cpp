@@ -5601,7 +5601,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   if (mCurrentContext->mStackPos <= 0) {
     return NS_ERROR_FAILURE;
   }
-  nsIHTMLContent* parent =
+
+  // Inserting the element into the document may execute a script.
+  // This can potentially make the parent go away. So, hold
+  // on to it till we are done.
+  nsCOMPtr<nsIHTMLContent> parent =
     mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
   nsCOMPtr<nsIHTMLContent> element;
   nsCOMPtr<nsINodeInfo> nodeInfo;
