@@ -1392,6 +1392,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 					 xpiDstPath + "\\" + Components[i].archive, TRUE);
 	}
 
+	if (linuxOption != "Linux")
+	{
 	if (cdDir.Compare("1") ==0)
 	{
 		
@@ -1410,6 +1412,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 			exit( 3 );
 
 		fprintf(infout,"[autorun]\nopen = setup.exe");
+	}
 	}
 	CString component;
 	CString configiniPath = xpiDstPath +"\\config.ini";
