@@ -84,8 +84,6 @@ function setWindowName()
   } else {
     objsign.setAttribute("checked", "false");
   }
-  
-  window.sizeToContent();
 }
 
 function doOK()
@@ -101,7 +99,7 @@ function doOK()
   //
   certdb.setCertTrust(cert, nsIX509Cert.CA_CERT, 
                       trustssl | trustemail | trustobjsign);
-  window.close();
+  return true;
 }
 
 function doLoadForSSLCert()
@@ -151,8 +149,6 @@ function doLoadForSSLCert()
   } else {
     trustssl.radioGroup.selectedItem = notrustssl;
   }
-  
-  window.sizeToContent();
 }
 
 function doSSLOK()
@@ -164,7 +160,7 @@ function doSSLOK()
   //  Set the cert trust
   //
   certdb.setCertTrust(cert, nsIX509Cert.SERVER_CERT, trustssl);
-  window.close();
+  return true;
 }
 
 function doLoadForEmailCert()
@@ -214,8 +210,6 @@ function doLoadForEmailCert()
   } else {
     trustemail.radioGroup.selectedItem = notrustemail;
   }
-  
-  window.sizeToContent();
 }
 
 function doEmailOK()
@@ -227,7 +221,7 @@ function doEmailOK()
   //  Set the cert trust
   //
   certdb.setCertTrust(cert, nsIX509Cert.EMAIL_CERT, trustemail);
-  window.close();
+  return true;
 }
 
 function editCaTrust()

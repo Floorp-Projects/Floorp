@@ -65,11 +65,11 @@ function doOK()
   var token = tokenList.value;
   dialogParams.SetInt(0,1);
   dialogParams.SetString(0, token);
-  window.close();
+  return true;
 }
 
 function doCancel()
 {
   dialogParams.SetInt(0,0);
-  window.close();
+  return true;
 }

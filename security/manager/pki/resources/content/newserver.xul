@@ -53,7 +53,7 @@
   buttons="accept,cancel,help"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
-  ondialoghelp="return doHelpButton();">
+  ondialoghelp="openHelp('new_web_cert');">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
@@ -62,37 +62,33 @@
 
 <stringbundle id="newserver_bundle" src="chrome://pippki/locale/newserver.properties"/>
 
-<vbox flex="1">
-  <hbox valign="top" align="center">
+<hbox valign="top" align="center">
 
-    <image class="alert-icon" style="margin: 5px"/>
-    <vbox flex="1" valign="middle">
+  <image class="alert-icon" style="margin: 5px"/>
+  <vbox flex="1" valign="middle">
 
-      <description id="intro"/>
-      <separator class="thin"/>
-      <description>&newserver.reasons;</description>
-      <description>&newserver.reason1;</description>
-      <description>&newserver.reason2;</description>
-      <description id="reason3"/>
-      <separator class="thin"/>
-      <description>&newserver.notify;</description>
-      <separator/>
-      <description id="question"/>
-      <separator class="thin"/>
-      <vbox flex="1" align="start">
-        <button id="examineCert-button" label="&newserver.examine;"
-                oncommand="viewCert();"/> 
-      </vbox>
-      <separator class="thin"/>
-      <vbox>
-        <radiogroup id="whatnow" flex="1">
-          <radio label="&newserver.remember;" id="remember"/>
-          <radio label="&newserver.session;" id="session" selected="true"/>
-          <radio label="&newserver.refuse;" id="refuse"/>
-        </radiogroup>
-      </vbox>
-    </vbox>
-  </hbox>
-</vbox>
+    <description id="intro"/>
+    <separator class="thin"/>
+    <description>&newserver.reasons;</description>
+    <description>&newserver.reason1;</description>
+    <description>&newserver.reason2;</description>
+    <description id="reason3"/>
+    <separator class="thin"/>
+    <description>&newserver.notify;</description>
+    <separator/>
+    <description id="question"/>
+    <separator class="thin"/>
+    <hbox>
+      <button id="examineCert-button" label="&newserver.examine;"
+              oncommand="viewCert();"/> 
+    </hbox>
+    <separator class="thin"/>
+    <radiogroup id="whatnow">
+      <radio label="&newserver.remember;" id="remember"/>
+      <radio label="&newserver.session;" id="session" selected="true"/>
+      <radio label="&newserver.refuse;" id="refuse"/>
+    </radiogroup>
+  </vbox>
+</hbox>
 
 </dialog>

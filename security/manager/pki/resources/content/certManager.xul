@@ -38,7 +38,6 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <?xul-overlay href="chrome://pippki/content/MineOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/OthersOverlay.xul"?>

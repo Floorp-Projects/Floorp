@@ -40,15 +40,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <?xul-overlay href="chrome://pippki/content/viewCertDetails.xul"?>
 <?xul-overlay href="chrome://pippki/content/certDump.xul"?>
 
 
-<window id="certDetails" 
+<dialog id="certDetails" 
   title="&certmgr.certdetail.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  buttons="accept,help"
+  buttonlabelaccept="&certmgr.close.label;"
+  ondialoghelp="openHelp('cert_details');"
   onload="setWindowName();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -56,40 +59,15 @@
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-<keyset id="keys">
-  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close()"/>
-</keyset>
+  <tabbox>
+    <tabs>
+      <tab id="general_tab" label="&certmgr.detail.general_tab.title;"/>
+      <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"/>
+    </tabs>
+    <tabpanels>
+      <vbox id="general_info"/>
+      <vbox id="certPrettyPrint"/>
+    </tabpanels>
+  </tabbox>
 
-  <grid flex="1">
-    <column flex="1"/>
-    <rows>
-      <row flex="1">
-        <tabbox flex="1">
-          <tabs>
-            <tab id="general_tab" label="&certmgr.detail.general_tab.title;"/>
-            <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"/>
-          </tabs>
-          <tabpanels flex="1">
-            <vbox id="general_info" flex="1"/>
-            <vbox id="certPrettyPrint" flex="1"/>
-          </tabpanels>
-        </tabbox>
-      </row>
-      <row>
-        <separator class="thin"/>
-      </row>
-      <row>
-        <hbox align="right" flex="1">
-          <button id="HelpButton"
-                  label="&certmgr.help.label;" 
-                  accesskey="&certmgr.helpButtonAccessKey;"
-                  oncommand="openHelp('cert_details');"/>
-          <button id="closeButton"
-                  label="&certmgr.close.label;" 
-                  accesskey="&certmgr.closeWindowAccessKey;"
-                  oncommand="window.close();"/>
-        </hbox>
-      </row>
-    </rows>
-  </grid>
-</window>
+</dialog>

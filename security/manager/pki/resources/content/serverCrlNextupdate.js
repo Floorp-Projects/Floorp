@@ -67,11 +67,5 @@ function onLoad()
   setText("message1", message1);
   setText("message2", message2);
 
-  // Set the focus
-  document.getElementById('ok-button').focus();
-}
-
-function doOK()
-{
-  window.close();
+  document.documentElement.getButton("accept").focus();
 }

@@ -37,16 +37,16 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
 %pippkiDTD;
 ]>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<window id="formsigning" title="&formSigning.title;"
+<dialog id="formsigning" title="&formSigning.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  class="dialog"
+  buttons="accept,cancel"
+  ondialogaccept="return doOK();"
+  ondialogcancel="return doCancel();"
   onload="onLoad();">
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
@@ -56,7 +56,6 @@
 <script type="application/x-javascript" src="chrome://pippki/content/formsigning.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
-<vbox>
   <description id="sign.intro" style="max-width: 50em;"/>
   <textbox readonly="true" id="sign.text" multiline="true"
     style="height: 10em;" wrap="off"/>
@@ -75,14 +74,6 @@
     <separator/>
   </groupbox>
   <separator class="thin"/>
-  <vbox>
-    <description style="max-width: 30em;">&formSigning.confirmPassword;</description>
-    <hbox>
-      <textbox id="pw" type="password" size="20"/>
-    </hbox>
-    <separator/>
-  </vbox>
-  <keyset id="dialogKeys"/>
-  <hbox id="okCancelHelpButtonsRight"/>
-</vbox>
-</window>
+  <description style="max-width: 30em;">&formSigning.confirmPassword;</description>
+  <textbox id="pw" type="password"/>
+</dialog>

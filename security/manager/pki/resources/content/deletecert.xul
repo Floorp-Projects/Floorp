@@ -38,40 +38,26 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window id="deleteCertificate" 
+<dialog id="deleteCertificate" 
   title="&certmgr.deletecert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
-  style="width:8ex">
+  buttons="accept,cancel,help"
+  ondialogaccept="return doOK();"
+  ondialogcancel="return doCancel();"
+  ondialoghelp="doHelp();">
 
   <script type="application/x-javascript" src="chrome://pippki/content/deletecert.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="pippki.js" />
 
-  <keyset id="keys">
-    <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
-    <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
-    <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
-  </keyset>
+  <description id="confirm"/>
+  <separator />
+  <vbox id="certlist"/>
+  <separator />
+  <description id="impact"/>
 
-  <vbox flex="1">
-     <description id="confirm"/>
-     <separator />
-     <vbox id="certlist" flex="100%"/>
-     <description id="impact"/>
-     <separator />
-
-    <hbox align="center">
-      <button id="ok-button" label="&certmgr.ok.label;"
-              oncommand="doOK();"/> 
-      <button id="cancel-button" label="&certmgr.cancel.label;"
-              oncommand="doCancel();"/> 
-      <button id="help-button" label="&certmgr.help.label;"
-              oncommand="doHelp();"/> 
-    </hbox>
-  </vbox>
-
-</window>
+</dialog>

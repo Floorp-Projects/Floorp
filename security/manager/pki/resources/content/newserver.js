@@ -69,13 +69,7 @@ function onLoad()
   setText("intro", intro);
   setText("reason3", reason3);
   setText("question", question);
-
-  window.sizeToContent();
-}
-
-function doHelpButton()
-{
-  openHelp('new_web_cert');
+  document.documentElement.getButton("accept").focus();
 }
 
 function doOK()
@@ -97,11 +91,14 @@ function doOK()
 
     dialogParams.SetInt(2, userchoice);
   }
+
+  return true;
 }
 
 function doCancel()
 {
   dialogParams.SetInt(1,0);
+  return true;
 }
 
 function viewCert()

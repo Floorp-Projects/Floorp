@@ -403,7 +403,7 @@ function doLoadDevice()
   var name_box = document.getElementById("device_name");
   var path_box = document.getElementById("device_path");
   pkcs11.addmodule(name_box.value, path_box.value, 0,0);
-  window.close();
+  return true;
 }
 
 // -------------------------------------   Old code

@@ -38,14 +38,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
 %pippkiDTD;
 ]>
 
 
-<window id="ssl_warning" title="&clientAuthAsk.title;"
+<dialog id="ssl_warning" title="&clientAuthAsk.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  buttons="accept,cancel,help"
+  ondialogaccept="return doOK();"
+  ondialogcancel="return doCancel();"
+  ondialoghelp="openHelp('which_cert');"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -53,14 +57,7 @@
 <script type="application/x-javascript" src="chrome://pippki/content/clientauthask.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
-<keyset id="keys">
-  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
-  <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
-  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel();"/>
-</keyset>
-
-<vbox style="margin: 5px;">
-    <groupbox>
+  <groupbox>
     <description style="font-weight: bold;">&clientAuthAsk.message1;</description>
     <description id="hostname"/>
     <description id="organization"/>
@@ -78,15 +75,6 @@
     <description>&clientAuthAsk.message3;</description>
     <textbox readonly="true" id="details" multiline="true"
       style="height: 11em;"/>
-    </groupbox>
-  <separator/>
-  <hbox>
-  <button id="ok-button" label="&ok.label;"
-          oncommand="doOK();"/> 
-  <button id="cancel-button" label="&cancel.label;"
-          oncommand="doCancel();"/> 
-  <button id="help-button" label="&help.label;"
-     style="width: 10ex" oncommand="openHelp('which_cert');" /> 
-  </hbox>
-</vbox>
-</window>
+  </groupbox>
+
+</dialog>

@@ -39,11 +39,19 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window id="domainMismatch" title="&domainMismatch.title;"
+<dialog id="domainMismatch" title="&domainMismatch.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 32em;"
+  spacerflex="1"
+  buttons="accept,cancel,help,extra2"
+  buttonlabelextra2="&examineCert.label;"
+  buttonaccesskeyextra2="&examineCert.accesskey;"
+  ondialogaccept="return doOK();"
+  ondialogcancel="return doCancel();"
+  ondialoghelp="openHelp('bad_name_web_cert');"
+  ondialogextra2="viewCert();"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -51,38 +59,8 @@
 <script type="application/x-javascript" src="chrome://pippki/content/domainMismatch.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-
-<keyset id="keys">
-  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
-  <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
-  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel()"/>
-</keyset>
-
-<vbox style="margin: 5px;" flex="1">
-
   <description id="message1"/>
   <separator/>
-  <description id="message2" flex="100%"/>
+  <description id="message2"/>
 
-  <hbox>
-  <button id="examineCert-button" label="&examineCert.label;"
-     oncommand="viewCert();"/> 
-  </hbox>
-  <separator/>
- 
-  <keyset id="keys">
-    <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
-    <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
-    <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel();"/>
-  </keyset>
- 
-  <hbox>
-  <button id="ok-button" label="&ok.label;"
-          oncommand="doOK();"/> 
-  <button id="cancel-button" label="&cancel.label;"
-          oncommand="doCancel();"/> 
-  <button id="help-button" label="&help.label;"
-          oncommand="openHelp('bad_name_web_cert');"/> 
-  </hbox>
-</vbox>
-</window>
+</dialog>

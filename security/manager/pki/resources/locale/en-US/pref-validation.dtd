@@ -66,9 +66,6 @@
 <!ENTITY  crl.import.nextupdate.label     "Next Update On: ">
 <!ENTITY  crl.autoupdate.fail.cnt.label      "Previous Consecutive Update Failures: ">
 <!ENTITY  crl.autoupdate.fail.reason.label   "Details of Last Update Failure: ">
-<!ENTITY  ok.button        "OK">
-<!ENTITY  cancel.button    "Cancel">
-<!ENTITY  help.button      "Help">
 <!ENTITY  edit.button      "Settings">
 
 <!ENTITY validation.ocsp.label      "OCSP">

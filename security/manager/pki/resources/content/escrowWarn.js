@@ -61,19 +61,18 @@ function onLoad()
   var msg = bundle.formatStringFromName("escrowFinalMessage",
                                         [dispName], 1);
   setText("message1",msg);
-  window.sizeToContent();
 }
 
 function doOK()
 {
   dialogParams.SetInt(1,1);
-  window.close();
+  return true;
 }
 
 function doCancel()
 {
   dialogParams.SetInt(1,0);
-  window.close();
+  return true;
 }
 
 function viewCert()

@@ -96,10 +96,7 @@
 <!ENTITY certmgr.serial "Serial Number">
 <!ENTITY certmgr.ocsp_info "Certificates have not been validated with OCSP. Click View to do so.">
 
-<!ENTITY certmgr.help.label "Help">
-<!ENTITY certmgr.ok.label "OK">
 <!ENTITY certmgr.close.label "Close">
-<!ENTITY certmgr.cancel.label "Cancel">
 <!ENTITY certmgr.view.label "View">
 <!ENTITY certmgr.edit.label "Edit">
 <!ENTITY certmgr.editca.label "Edit CA Trust">
@@ -112,6 +109,3 @@
 <!ENTITY certmgr.fields.label "Field Value">
 <!ENTITY certmgr.hierarchy.label "Certificate Hierarchy">
 
-<!-- access key definitions -->
-<!ENTITY certmgr.helpButtonAccessKey "h">
-<!ENTITY certmgr.closeWindowAccessKey "c">

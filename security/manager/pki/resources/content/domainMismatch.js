@@ -64,9 +64,7 @@ function onLoad()
                                               1);
   setText("message1", message1);
   setText("message2", message2);
-  //Set the focus so key press events work
-  document.getElementById('ok-button').focus();
-  window.sizeToContent();
+  document.documentElement.getButton("accept").focus();
 }
 
 function viewCert()
@@ -77,11 +75,11 @@ function viewCert()
 function doOK()
 {
   dialogParams.SetInt(1,1);
-  window.close();
+  return true;
 }
 
 function doCancel()
 {
   dialogParams.SetInt(1,0);
-  window.close();
+  return true;
 }
