@@ -36,7 +36,6 @@
 //
 // ***** END LICENSE BLOCK *****
 ?>
-
 <?php
 require"core/config.php";
 ?>

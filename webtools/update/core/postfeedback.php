@@ -59,12 +59,12 @@ $_POST["title"] = strip_tags($_POST["title"]);
 $_POST["comments"] = strip_tags($_POST["comments"]);
 
 
-$sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`) VALUES ('$_POST[id]', '$_POST[name]', '$_POST[rating]', '$_POST[title]', $_POST[comments], NOW(NULL));";
+$sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$_POST[id]', '$_POST[name]', '$_POST[rating]', '$_POST[title]', $_POST[comments], NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
 //Get Rating Data and Create $ratingarray
-$sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$_POST[id]' ORDER  BY `CommentDate` ASC";
+$sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$_POST[id]' AND `CommentVote` IS NOT NULL ORDER  BY `CommentDate` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
      $ratingarray[$row[ID]][] = $row["CommentVote"];

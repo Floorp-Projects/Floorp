@@ -106,7 +106,6 @@ include"$page_header";
 include"inc_sidebar.php";
 
 echo"<DIV id=\"content\">\n"; // Begin Content Area
-
 //Query for List Creation
 $s = "0";
 $startpoint = ($pageid-1)*$items_per_page;
@@ -237,7 +236,7 @@ $sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `t_applicat
   if ($row["release"]) {$release = ".$release$row[release]";}
 if ($app_version=="0.95") {$app_version="0.10"; }
 //Firesomething Support
-if ($application=="firefox" AND $row["major"]="0" AND $row["minor"]<"8") {$application="firebird";} else {$application="firefox";}
+if ($application=="firefox") { if ($release == "0.7") {$application="firebird";} else {$application="firefox";} }
 
 if ($subver !=="final") {$release="$release$subver";}
 echo"<OPTION value=\"$release\"";

@@ -104,10 +104,11 @@ if (!$application) { $application="firefox"; } //Default App is Firefox
 
 if ($detection_force_version=="true") {$application=$_SESSION["application"];}
 //Get Max Version for App Specified
-$sql = "SELECT `Release`, `SubVer` FROM `t_applications` WHERE `AppName` = '$application' ORDER BY `Release` DESC, `SubVer` DESC LIMIT 1";
+$sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `t_applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
-    $release = $row["Release"];
+  $release = "$row[major].$row[minor]";
+  if ($row["release"]) {$release = ".$release$row[release]";}
     $subver = $row["SubVer"];
     if ($subver !=="final") {$release="$release$subver";}
 

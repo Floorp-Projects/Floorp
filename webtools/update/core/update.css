@@ -168,7 +168,7 @@ DIV.tab {
 	MARGIN-LEFT: 18px; WIDTH: 250px; HEIGHT: 34px
 }
 .commentbox {
-	BORDER-RIGHT: #ccc 1px solid; PADDING-RIGHT: 2px; BORDER-TOP: #ccc 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 10pt; MIN-HEIGHT: 240px; PADDING-BOTTOM: 6px; MARGIN: auto 0px 5px auto; BORDER-LEFT: #ccc 1px solid; WIDTH: 50%; PADDING-TOP: 2px; BORDER-BOTTOM: #ccc 1px solid
+	BORDER-RIGHT: #ccc 1px solid; PADDING-RIGHT: 2px; BORDER-TOP: #ccc 1px solid; PADDING-LEFT: 5px; FONT-WEIGHT: bold; FONT-SIZE: 10pt; MIN-HEIGHT: 260px; PADDING-BOTTOM: 6px; MARGIN: auto 0px 5px auto; BORDER-LEFT: #ccc 1px solid; WIDTH: 50%; PADDING-TOP: 2px; BORDER-BOTTOM: #ccc 1px solid
 }
 .commenttitlebar {
 	PADDING-LEFT: 0px; FONT-WEIGHT: bold; FONT-SIZE: 11pt; HEIGHT: 20px; BACKGROUND-COLOR: #eee

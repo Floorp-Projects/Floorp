@@ -260,19 +260,18 @@ echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Install $name $ve
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
 <BR>";
-
-if ($appname=="Thunderbird") {
+if ($application=="thunderbird") {
 echo"<SPAN style=\"font-size: 10pt; color: #00F\">Extension Install Instructions for Thunderbird Users:</SPAN><BR>
 <SPAN style=\"font-size: 8pt;\">(1) Right-Click the link above and choose \"Save Link As...\" to Download and save the file to your hard disk.<BR>
 (2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
-(3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN>
+(3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN><BR>
 ";
 }
 if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this Extension? For Help and Technical Support, visit the <A HREF=\"$homepage\">Extension's Homepage</A>.</SPAN>";}
 
 echo"<UL style=\"font-size:10pt\">";
 if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Extension Home Page</A>"; }
-if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Right-click to Save\">Download Theme</A>"; }
+if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Right-click to Save\">Download Extension</A>"; }
 echo"<LI> <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=releases\">Other Versions</A>";
 ?>
 </UL>

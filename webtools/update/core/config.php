@@ -47,12 +47,12 @@ function getmicrotime() {
 $time_start = getmicrotime();
 
 //-- Website Variables--//
-$websitepath = "/opt/webtools/update"; // No trailing Slash
-$sitehostname = "update.mozilla.org"; //Hostname
+$websitepath = "/opt/update"; // Local Path to Site Files
+$sitehostname = "update.mozilla.org"; // DNS Hostname
 
 //-- MySQL Server/Database Properties/Connection --//
 $mysqlServer="localhost";
-$mysqlData=""; //MySQL Server Database Name
+$mysqlData="update"; //MySQL Server Database Name
 $mysqlLogin=""; //MySQL Server UserName
 $mysqlPass=""; //MySQL Server Password
 

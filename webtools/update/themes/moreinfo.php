@@ -259,7 +259,7 @@ echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
 <BR>";
-if ($appname=="Thunderbird") {
+if ($application=="thunderbird") {
 echo"<SPAN style=\"font-size: 10pt; color: #00F\">Theme Install Instructions for Thunderbird Users:</SPAN><BR>
 <SPAN style=\"font-size: 8pt;\">(1) Click the link above to Download and save the file to your hard disk.<BR>
 (2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
@@ -267,7 +267,7 @@ echo"<SPAN style=\"font-size: 10pt; color: #00F\">Theme Install Instructions for
 ";
 }
 
-if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this Extension? For Help and Technical Support, visit the <A HREF=\"$homepage\">Themes' Homepage</A>.</SPAN>";}
+if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this theme? For Help and Technical Support, visit the <A HREF=\"$homepage\">Theme's Homepage</A>.</SPAN>";}
 
 echo"<UL style=\"font-size:10pt\">";
 if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Theme Homepage</A>"; }

@@ -123,7 +123,8 @@ WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `DownloadCount` > '
    $vid = $row["vID"];
    $name = $row["Name"];
    $version = $row["Version"];
-   $downloadcount = $row["DownloadCount"];
+   $downloadcount = $row["downloadcount"];
+   $totaldownloads = $row["TotalDownloads"];
 if ($lastname == $name) {$i--; continue; }
   echo"$i - <a href=\"moreinfo.php?id=$id\">$name</a><br>\n";
   echo"<SPAN class=\"smallfont nocomment\">($downloadcount downloads)</SPAN><BR>\n";

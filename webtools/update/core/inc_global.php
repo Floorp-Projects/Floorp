@@ -54,11 +54,11 @@ $sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = '".ucwords(strtolo
    if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }
 
-if ($_GET["version"]) {
-$sql = "SELECT AppID FROM  `t_applications` WHERE `Release` = '$_GET[version]' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
-}
+//if ($_GET["version"]) {
+//$sql = "SELECT AppID FROM  `t_applications` WHERE `Release` = '$_GET[version]' LIMIT 1";
+// $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+//   if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
+//}
 
 if ($_GET["category"] AND $_GET["category"] !=="All"
     AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"

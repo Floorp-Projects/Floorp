@@ -86,6 +86,10 @@ $today=date("Ymd")."000000";
   $sql = "UPDATE `t_main` SET `downloadcount`='$downloadcount' WHERE `ID`='$_GET[id]' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
+  //Update the total downloadcount in the main record.
+  $sql = "UPDATE `t_main` SET `TotalDownloads`=TotalDownloads+1 WHERE `ID`='$_GET[id]' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
   //Clean up the Counts per day for >8 days. (and in the future, compile the week/ending records for this data)
     $sql = "DELETE FROM `t_downloads` WHERE `ID`='$_GET[id]' AND `date`<'$mindate' AND `type`='count'";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
