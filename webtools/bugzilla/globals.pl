@@ -461,7 +461,13 @@ sub Param {
     }
     # Um, maybe we haven't sourced in the params at all yet.
     if (stat("data/params")) {
+        # Write down and restore the version # here.  That way, we get around
+        # anyone who maliciously tries to tweak the version number by editing
+        # the params file.  Not to mention that in 2.0, there was a bug that
+        # wrote the version number out to the params file...
+        my $v = $::param{'version'};
         require "data/params";
+        $::param{'version'} = $v;
     }
     if (defined $::param{$value}) {
         return $::param{$value};
