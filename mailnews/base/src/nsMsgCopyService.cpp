@@ -252,6 +252,7 @@ nsMsgCopyService::DoNextCopy()
     for (i=0; i < cnt; i++)
     {
       copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+      copySource = nsnull;
       scnt = copyRequest->m_copySourceArray.Count();
       if (!copyRequest->m_processed)
       {

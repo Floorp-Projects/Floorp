@@ -251,16 +251,14 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   mMode = aMode;
   if (!waitForUrl)
   {
-    rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, msgWindow, aMsgSendObj);
-  }
-  else
-  {
+    // cache info needed for DoCopy and call DoCopy when OnStopUrl is called.
     mFileSpec = aFileSpec;
     mDstFolder = dstFolder;
     mMsgToReplace = aMsgToReplace;
     mIsDraft = isDraft;
     mMsgSendObj = aMsgSendObj;
-    // cache info needed for DoCopy and call DoCopy when OnStopUrl is called.
+    rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, msgWindow, aMsgSendObj);
+    // N.B. "this" may be deleted when this call returns.
   }
   return rv;
 }

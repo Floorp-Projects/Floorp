@@ -4833,6 +4833,12 @@ nsresult nsMsgComposeAndSend::Abort()
     mRunningRequest = nsnull;
   }
   
+  if (mCopyObj)
+  {
+    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    copyService->NotifyCompletion(mCopyFileSpec, mCopyObj->mDstFolder, NS_ERROR_ABORT);
+  }
   mAbortInProcess = PR_FALSE;
   return NS_OK;
 }
