@@ -381,6 +381,8 @@ endif
 # Windows equivalents
 pull_all: checkout
 build_all: build
+build_all_dep: alldep
+build_all_depend: alldep
 clobber clobber_all: clean
 pull_and_build_all: checkout depend build
 
@@ -605,7 +607,7 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-install export libs clean realclean distclean:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+install export libs clean realclean distclean alldep:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
 cleansrcdir:
@@ -626,4 +628,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout real_checkout depend build export libs install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
