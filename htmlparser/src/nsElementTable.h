@@ -77,12 +77,13 @@ struct nsHTMLElement {
   static  PRBool  IsInlineEntity(eHTMLTags aTag);
   static  PRBool  IsFlowEntity(eHTMLTags aTag);
   static  PRBool  IsBlockCloser(eHTMLTags aTag);
+  static  int     GetSynonymousGroups(int aGroup);
 
+  CTagList*       GetSynonymousTags(void) const {return mSynonymousTags;}
   CTagList*       GetRootTags(void) const {return mRootNodes;}
   CTagList*       GetEndRootTags(void) const {return mEndRootNodes;}
   CTagList*       GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   CTagList*       GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
-  CTagList*       GetSynonymousTags(void) const {return mSynonymousTags;}
   eHTMLTags       GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32 anIndex) const;
 
   CTagList*       GetSpecialChildren(void) const {return mSpecialKids;}
