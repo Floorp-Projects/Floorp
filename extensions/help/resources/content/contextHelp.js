@@ -18,26 +18,29 @@
  * Rights Reserved.
  */
 
-const MOZ_HELP_URI = "chrome://help/content/help.xul";
 const MOZILLA_HELP = "chrome://help/locale/mozillahelp.rdf";
 var helpFileURI = MOZILLA_HELP;
 
 // Call this function to display a help topic.
 // uri: [chrome uri of rdf help file][?topic]
 function openHelp(topic) {
+  // Try to find previously opened help.
   var topWindow = locateHelpWindow(helpFileURI);
+
   if ( topWindow ) {
+    // Open topic in existing window.
     topWindow.focus();
     topWindow.displayTopic(topic);
   } else {
-    var params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
-                           .createInstance(Components.interfaces.nsIDialogParamBlock);
+    // Open topic in new window.
+    const params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
+                             .createInstance(Components.interfaces.nsIDialogParamBlock);
     params.SetNumberStrings(2);
     params.SetString(0, helpFileURI);
     params.SetString(1, topic);
-    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService(Components.interfaces.nsIWindowWatcher);
-    ww.openWindow(null, MOZ_HELP_URI, "_blank", "chrome,all,alwaysRaised,dialog=no", params);
+    const ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+    ww.openWindow(null, "chrome://help/content/help.xul", "_blank", "chrome,all,alwaysRaised,dialog=no", params);
   }
 }
 
@@ -47,10 +50,13 @@ function setHelpFileURI(rdfURI) {
 
 // Locate mozilla:help window (if any) opened for this help file uri.
 function locateHelpWindow(helpFileURI) {
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  var iterator = windowManagerInterface.getEnumerator( "mozilla:help");
+  const windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
+                                  .getService(Components.interfaces.nsIWindowMediator);
+  var iterator = windowManager.getEnumerator("mozilla:help");
   var topWindow = null;
+
+  // Loop through the help windows looking for one with the
+  // current Help URI loaded.
   while (iterator.hasMoreElements()) {
     var aWindow = iterator.getNext();
     if (aWindow.getHelpFileURI() == helpFileURI) {

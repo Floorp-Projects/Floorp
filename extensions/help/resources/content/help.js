@@ -16,10 +16,12 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * Contributor(s): 
- *    Original author: oeschger@netscape.com 
- *    amended by: Peter Wilson (added sidebar tabs) */
- 
+ * Contributor(s):
+ *    Ian Oeschger <oeschger@brownhen.com> (Original Author)
+ *    Peter Wilson (added sidebar tabs)
+ *    R.J. Keller <rlk@trfenv.com>
+ */
+
 //-------- global variables
 var helpBrowser;
 var helpWindow;
@@ -38,25 +40,24 @@ const XML = "http://www.w3.org/XML/1998/namespace#"
 const MAX_LEVEL = 40; // maximum depth of recursion in search datasources.
 
 // Resources
-var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-var RDF_ROOT = RDF.GetResource("urn:root");
-var NC_PANELLIST = RDF.GetResource(NC + "panellist");
-var NC_PANELID = RDF.GetResource(NC + "panelid");
-var NC_EMPTY_SEARCH_TEXT = RDF.GetResource(NC + "emptysearchtext");
-var NC_EMPTY_SEARCH_LINK = RDF.GetResource(NC + "emptysearchlink");
-var NC_DATASOURCES = RDF.GetResource(NC + "datasources");
-var NC_SUBHEADINGS = RDF.GetResource(NC + "subheadings");
-var NC_NAME = RDF.GetResource(NC + "name");
-var NC_CHILD = RDF.GetResource(NC + "child");
-var NC_LINK = RDF.GetResource(NC + "link");
-var NC_TITLE = RDF.GetResource(NC + "title");
-var NC_BASE = RDF.GetResource(NC + "base"); 
-var NC_DEFAULTTOPIC = RDF.GetResource(NC + "defaulttopic"); 
+const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+const RDF_ROOT = RDF.GetResource("urn:root");
+const NC_PANELLIST = RDF.GetResource(NC + "panellist");
+const NC_PANELID = RDF.GetResource(NC + "panelid");
+const NC_EMPTY_SEARCH_TEXT = RDF.GetResource(NC + "emptysearchtext");
+const NC_EMPTY_SEARCH_LINK = RDF.GetResource(NC + "emptysearchlink");
+const NC_DATASOURCES = RDF.GetResource(NC + "datasources");
+const NC_SUBHEADINGS = RDF.GetResource(NC + "subheadings");
+const NC_NAME = RDF.GetResource(NC + "name");
+const NC_CHILD = RDF.GetResource(NC + "child");
+const NC_LINK = RDF.GetResource(NC + "link");
+const NC_TITLE = RDF.GetResource(NC + "title");
+const NC_BASE = RDF.GetResource(NC + "base"); 
+const NC_DEFAULTTOPIC = RDF.GetResource(NC + "defaulttopic"); 
 
-var RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService().
-   QueryInterface(Components.interfaces.nsIRDFContainerUtils);
-var RDFContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
-var CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+const RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService(Components.interfaces.nsIRDFContainerUtils);
+const RDFContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
+const CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
             
 var urnID = 0;
 var RE;
@@ -69,7 +70,7 @@ var helpBaseURI;
 
 const defaultHelpFile = "chrome://help/locale/mozillahelp.rdf";
 // Set from nc:defaulttopic. It is used when the requested uri has no topic specified. 
-var defaultTopic = "welcome"; 
+const defaultTopic = "welcome"; 
 var searchDatasources = "rdf:null";
 var searchDS = null;
 
@@ -78,11 +79,16 @@ const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7;
 // This function is called by dialogs/windows that want to display context-sensitive help
 // These dialogs/windows should include the script chrome://help/content/contextHelp.js
 function displayTopic(topic) {
+  // Use default topic if topic is not specified.
   if (!topic)
     topic = defaultTopic;
+
+  // Get the help page to open.
   var uri = getLink(topic);
+
+  // Use default topic if specified topic is not found.
   if (!uri) // Topic not found - revert to default.
-      uri = getLink(defaultTopic);
+    uri = getLink(defaultTopic);
   loadURI(uri);
 }
 
@@ -96,6 +102,7 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
 
+  // Get the help content pack, base URL, and help topic
   var helpTopic = defaultTopic;
   if ("arguments" in window && window.arguments[0] instanceof Components.interfaces.nsIDialogParamBlock) {
     helpFileURI = window.arguments[0].GetString(0);
@@ -107,19 +114,15 @@ function init() {
 
   displayTopic(helpTopic);
 
-  // move to right end of screen
-  var width = document.documentElement.getAttribute("width");
-  var height = document.documentElement.getAttribute("height");
-  window.moveTo(screen.availWidth-width, (screen.availHeight-height)/2);
-
+  // Initalize History.
   var sessionHistory =  Components.classes["@mozilla.org/browser/shistory;1"]
-                  .createInstance(Components.interfaces.nsISHistory);
+                                  .createInstance(Components.interfaces.nsISHistory);
 
-  getWebNavigation().sessionHistory = sessionHistory;
   window.XULBrowserWindow = new nsHelpStatusHandler();
-  // hook up UI through progress listener
-  var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
+
+  // Hook up UI through Progress Listener
+  const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
   webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   //Always show the Table of Contents sidebar at startup.
@@ -312,26 +315,6 @@ function gotoHistoryIndex(aEvent)
   return true;
 }
 
-function BrowserBack()
-{
-  try {
-    getWebNavigation().goBack();
-  }
-  catch(ex) {
-  }
-  UpdateBackForwardButtons();
-}
-
-function BrowserForward()
-{
-  try {
-    getWebNavigation().goForward();
-  }
-  catch(ex) {
-  }
-  UpdateBackForwardButtons();
-}
-
 function nsHelpStatusHandler()
 {
 }
@@ -403,58 +386,6 @@ function find(again, reverse)
 function getMarkupDocumentViewer()
 {
   return helpBrowser.markupDocumentViewer;
-}
-
-function BrowserReload()
-{
-  const reloadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  return BrowserReloadWithFlags(reloadFlags);
-}
-
-function BrowserReloadWithFlags(reloadFlags)
-{
-   try {
-     /* Need to get SessionHistory from docshell so that
-      * reload on framed pages will work right. This 
-      * method should not be used for the context menu item "Reload frame".
-      * "Reload frame" should directly call into docshell as it does right now
-      */
-     var sh = getWebNavigation().sessionHistory;
-     var webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);      
-     webNav.reload(reloadFlags);
-   }
-   catch(ex) {
-   }
- }
-
- // doc=null for regular page info, doc=owner document for frame info 
- function BrowserPageInfo(doc)
- {
-   window.openDialog("chrome://navigator/content/pageInfo.xul",
-                     "_blank",
-                     "chrome,dialog=no",
-                     doc);
-}
-
-function BrowserViewSource()
-{
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (focusedWindow == window)
-    focusedWindow = _content;
-
-  if (focusedWindow)
-    var docCharset = "charset=" + focusedWindow.document.characterSet;
-
-  BrowserViewSourceOfURL(_content.location, docCharset);
-}
-
-function BrowserViewSourceOfURL(url, charset)
-{
-  // try to open a view-source window while inheriting the charset (if any)
-  openDialog("chrome://navigator/content/viewSource.xul",
-             "_blank",
-             "scrollbars,resizable,chrome,dialog=no",
-             url, charset);
 }
 
 //Show the selected sidebar panel
@@ -543,7 +474,7 @@ function doFind() {
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
   // search glossary.
-  tree = document.getElementById("help-glossary-tree");
+  tree = document.getElementById("help-glossary-panel");
   sourceDS = tree.database;
   if (!sourceDS) // If the glossary has never been displayed this will be null (sigh!).
     sourceDS = loadCompositeDS(tree.datasources);
@@ -628,6 +559,7 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
     doFindOnDatasource(resultsDS, sourceDS, target, level+1);       
     }  
 }
+
 function assertSearchEmpty(resultsDS) {
 	var resSearchEmpty = RDF.GetResource("urn:emptySearch");
 	resultsDS.Assert(RDF_ROOT,
@@ -651,6 +583,7 @@ function isMatch(text) {
   }
   return true;
 }
+
 function loadCompositeDS(datasources) {
   // We can't search on each individual datasource's - only the aggregate (for each sidebar tab)
   // has the appropriate structure.
