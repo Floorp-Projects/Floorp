@@ -97,6 +97,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../html/content/src \
 		-I$(srcdir)/../../../xml/content/src \
 		-I$(srcdir)/../../../base/public \
+		-I$(srcdir)/../../../xul/base/src \
 		$(NULL)
 
 EXPORT_RESOURCE_CONTENT = \
