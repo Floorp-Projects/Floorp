@@ -286,6 +286,23 @@
         </setter>
       </property>
     
+      <method name="selectNewTab">
+        <parameter name="aNewTab"/>
+        <body>
+        <![CDATA[
+          var isTabFocused =
+            (document.commandDispatcher.focusedElement == this.selectedItem);
+          this.selectedItem = aNewTab;
+          if (isTabFocused) {
+            aNewTab.focus();
+          }
+          else if (this.getAttribute("setfocus") != "false") {
+            document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
+          }
+        ]]>
+        </body>
+      </method>
+      
       <method name="advanceSelectedTab">
         <parameter name="aDir"/>
         <body>
@@ -301,11 +318,7 @@
           }
 
           if (next && next != startTab) {
-            this.selectedItem = next;
-            if (this.getAttribute("setfocus") != "false") {
-              next.focus();
-              document.commandDispatcher.advanceFocusIntoSubtree(next);
-            }
+            this.selectNewTab(next);
           }
         ]]>
         </body>
@@ -499,7 +512,7 @@
     <handlers>
       <handler event="click" button="0">
       <![CDATA[
-        this.parentNode.selectedItem = this;
+        this.parentNode.selectNewTab(this);
       ]]>
       </handler>
       

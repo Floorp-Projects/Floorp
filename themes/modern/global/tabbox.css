@@ -84,6 +84,10 @@ tab {
   font: menu;
 }
 
+tab[selected="true"] {
+  -moz-user-focus: normal;
+}
+
 .tab-text {
   margin: 0px !important;
 }
@@ -136,6 +140,13 @@ tab:hover:active[selected="true"] {
 .tab-bottom[selected="true"] {
   -moz-border-top-colors: transparent !important;
   -moz-border-bottom-colors: #000000 #DFE2E6 #D0D7DD transparent !important;
+}
+
+tab:focus {
+  -moz-border-top-colors: #000000 #8C9DAF #8C9DAF;
+  -moz-border-left-colors: #000000 #8C9DAF #8C9DAF;
+  -moz-border-right-colors: #000000 #8C9DAF #8C9DAF;
+  -moz-border-bottom-colors: #8190A5 #8190A5 #899AAC;
 }
 
 .tab-bottom > .tab-text {
