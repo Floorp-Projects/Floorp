@@ -33,7 +33,7 @@ class nsIPresContext;
 
 /** editor Implementation of the DragListener interface
  */
-class nsMenuBarListener : public nsIDOMKeyListener, nsIDOMFocusListener, nsIDOMMouseListener
+class nsMenuBarListener : public nsIDOMKeyListener, public nsIDOMFocusListener, public nsIDOMMouseListener
 {
 public:
   /** default constructor

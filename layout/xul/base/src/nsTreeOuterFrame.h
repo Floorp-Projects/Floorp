@@ -25,7 +25,7 @@
 #include "nsISelfScrollingFrame.h"
 #include "nsITreeFrame.h"
 
-class nsTreeOuterFrame : public nsTableOuterFrame, nsIBox, nsISelfScrollingFrame
+class nsTreeOuterFrame : public nsTableOuterFrame, public nsIBox, public nsISelfScrollingFrame
 {
 public:
   friend nsresult NS_NewTreeOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
