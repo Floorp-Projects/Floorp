@@ -1881,16 +1881,13 @@ static JSFunctionSpec InstallMethods[] =
 };
 
 
-
-
-
 JSObject * InitXPInstallObjects(JSContext *jscontext,
                              JSObject *global,
                              nsIFile* jarfile,
                              const PRUnichar* url,
                              const PRUnichar* args,
                              PRUint32 flags,
-                             nsIXULChromeRegistry* reg,
+                             CHROMEREG_IFACE* reg,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;

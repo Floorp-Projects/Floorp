@@ -47,6 +47,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
+#include "nsIToolkitChromeRegistry.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -282,6 +283,9 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       rv = mProfileDir->Clone(getter_AddRefs(file));
       rv |= file->AppendNative(NS_LITERAL_CSTRING("chrome"));
     }
+    else if (!strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP) && mProfileDir) {
+      return mProfileDir->Clone(aFile);
+    }
     else if (mProfileNotified) {
       if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
           !strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
@@ -356,33 +360,47 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 }
 
 static void
-LoadDirsIntoArray(nsIFile* aComponentsList, nsCOMArray<nsIFile>& aDirectories)
+LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
+                  const char *const* aAppendList,
+                  nsCOMArray<nsIFile>& aDirectories)
 {
   nsINIParser parser;
   nsCOMPtr<nsILocalFile> lf(do_QueryInterface(aComponentsList));
   parser.Init(lf);
 
   char parserBuf[MAXPATHLEN];
-  nsresult rv = parser.GetString("Extra Files", "Count", parserBuf, MAXPATHLEN);
+  nsresult rv = parser.GetString(aSection, "Count", parserBuf, MAXPATHLEN);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 count = atoi(parserBuf);
-    char buf[10];
+    char buf[18];
     nsCOMPtr<nsIFile> parent;
     aComponentsList->GetParent(getter_AddRefs(parent));
-    for (PRInt32 i = 0; i < count; ++i) {
-      sprintf(buf, "File%d", i);
+    nsCOMPtr<nsILocalFile> lfParent (do_QueryInterface(parent));
 
-      rv = parser.GetString("Extra Files", buf, parserBuf, MAXPATHLEN);
+    for (PRInt32 i = 0; i < count; ++i) {
+      sprintf(buf, "Extension%d", i);
+
+      rv = parser.GetString(aSection, buf, parserBuf, MAXPATHLEN);
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsILocalFile> lfParent(do_QueryInterface(parent));
         nsCOMPtr<nsILocalFile> dir(do_CreateInstance("@mozilla.org/file/local;1"));
         dir->SetRelativeDescriptor(lfParent, nsDependentCString(parserBuf));
-        nsCOMPtr<nsIFile> dirAsFile(do_QueryInterface(dir));
-        aDirectories.AppendObject(dirAsFile);
+        const char* const* a = aAppendList;
+        while (*a) {
+          dir->AppendNative(nsDependentCString(*a));
+          ++a;
+        }
+
+        PRBool exists;
+        rv = dir->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists)
+          aDirectories.AppendObject(dir);
       }
     }
   }
 }
+
+static const char *const kAppendChromeManifests[] =
+  { "chrome.manifest", nsnull };
 
 NS_IMETHODIMP
 nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
@@ -402,16 +420,21 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
+    static const char *const kAppendCompDir[] = { "components", nsnull };
+
     nsCOMPtr<nsIFile> appFile;
     mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("components.ini"));
-    LoadDirsIntoArray(appFile, directories);
+    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+    LoadDirsIntoArray(appFile, "ExtensionDirs",
+                      kAppendCompDir, directories);
 
-    nsCOMPtr<nsIFile> profileFile;
     if (mProfileDir) {
+      nsCOMPtr<nsIFile> profileFile;
       mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("components.ini"));
-      LoadDirsIntoArray(profileFile, directories);
+      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendCompDir, directories);
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
@@ -429,19 +452,77 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
         directories.AppendObject(file);
     }
 
+    static const char *const kAppendPrefDir[] = { "defaults", "pref", nsnull };
+
     nsCOMPtr<nsIFile> appFile;
     mAppDir->Clone(getter_AddRefs(appFile));
-    appFile->AppendNative(NS_LITERAL_CSTRING("defaults.ini"));
-    LoadDirsIntoArray(appFile, directories);
+    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+    LoadDirsIntoArray(appFile, "ExtensionDirs",
+                      kAppendPrefDir, directories);
 
     nsCOMPtr<nsIFile> profileFile;
     if (mProfileDir) {
       mProfileDir->Clone(getter_AddRefs(profileFile));
-      profileFile->AppendNative(NS_LITERAL_CSTRING("defaults.ini"));
-      LoadDirsIntoArray(profileFile, directories);
+      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendPrefDir, directories);
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
+  }
+  else if (!strcmp(aProperty, NS_CHROME_MANIFESTS_FILE_LIST)) {
+    nsCOMArray<nsIFile> manifests;
+
+    nsCOMPtr<nsIFile> manifest;
+    mAppDir->Clone(getter_AddRefs(manifest));
+    manifest->AppendNative(NS_LITERAL_CSTRING("chrome"));
+    manifests.AppendObject(manifest);
+
+    if (mXULAppDir) {
+      nsCOMPtr<nsIFile> file;
+      mXULAppDir->Clone(getter_AddRefs(file));
+      file->AppendNative(NS_LITERAL_CSTRING("chrome"));
+      PRBool exists;
+      if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
+        manifests.AppendObject(file);
+    }
+    
+    nsCOMPtr<nsIFile> appFile;
+    mAppDir->Clone(getter_AddRefs(appFile));
+    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+    LoadDirsIntoArray(appFile, "ExtensionDirs",
+                      kAppendChromeManifests, manifests);
+
+    if (mProfileDir) {
+      nsCOMPtr<nsIFile> profileFile;
+      mProfileDir->Clone(getter_AddRefs(profileFile));
+      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendChromeManifests, manifests);
+    }
+
+    rv = NS_NewArrayEnumerator(aResult, manifests);
+  }  
+  else if (!strcmp(aProperty, NS_SKIN_MANIFESTS_FILE_LIST)) {
+    nsCOMArray<nsIFile> manifests;
+
+    nsCOMPtr<nsIFile> appFile;
+    mAppDir->Clone(getter_AddRefs(appFile));
+    appFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+    LoadDirsIntoArray(appFile, "ThemeDirs",
+                      kAppendChromeManifests, manifests);
+
+    if (mProfileDir) {
+      nsCOMPtr<nsIFile> profileFile;
+      mProfileDir->Clone(getter_AddRefs(profileFile));
+      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+
+      LoadDirsIntoArray(profileFile, "ThemeDirs",
+                        kAppendChromeManifests, manifests);
+    }
+
+    rv = NS_NewArrayEnumerator(aResult, manifests);
   }
   else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
