@@ -1148,9 +1148,13 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
           if(paintStruct.fErase)
             FillRect(hdc, &paintStruct.rcPaint, 
                      (HBRUSH) GetStockObject(WHITE_BRUSH)); 
-          
-          if(inst->fText)
-            TextOut(hdc, 0, 0, inst->fText, strlen(inst->fText));
+
+          if(inst->fText) {
+            RECT rcWnd;
+            GetWindowRect(hWnd, &rcWnd);
+            SetTextAlign(hdc, TA_CENTER);
+            TextOut(hdc, (rcWnd.right-rcWnd.left)/2, (rcWnd.bottom-rcWnd.top)/2, inst->fText, strlen(inst->fText));
+          }
 
           EndPaint( hWnd, &paintStruct );
           break;
