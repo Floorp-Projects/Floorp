@@ -76,6 +76,8 @@ extern PRBool Permission_Check
    PRBool warningPref, cookie_CookieStruct * cookie_s, const char * message_string, int count_for_message);
 extern nsresult Permission_AddHost
   (const nsAFlatCString &host, PRBool permission, PRInt32 type, PRBool save);
+extern nsresult permission_CheckFromList
+  (const char* hostname, PRBool &permission, PRInt32 type);
 //extern void Permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save);
 extern void Permission_Save(PRBool notify);
 
