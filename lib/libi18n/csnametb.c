@@ -97,7 +97,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"x-cns11643-16", "", CS_CNS11643_16},
 			{"VISCII", "", CS_VISCII},
 			{"VIQR", "", CS_VIQR},
-			{"KOI8-U", "", CS_KOI8_U},
+			{"koi8-u", "", CS_KOI8_U},
 			{"iso-ir-111", "", CS_ISO_IR_111},
 			{"iso_8859-6-e", "", CS_8859_6_E},
 			{"iso_8859-6-i", "", CS_8859_6_I},
@@ -220,6 +220,9 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 
 	/* aliases for koi8-r:	*/
 			{"csKOI8R", "", CS_KOI8_R},
+
+	/* aliases for koi8-u:	*/
+			{"koi8-ru", "", CS_KOI8_U},
 
 	/* aliases for Shift_JIS:	*/
 			{"x-sjis", "", CS_SJIS},

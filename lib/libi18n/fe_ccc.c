@@ -480,6 +480,9 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_CP_1251,		CS_KOI8_R,		0, (CCCFunc)One2OneCCC, 0},	
 		{CS_KOI8_R,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
 
+		/* UKRAINIAN */
+		{CS_KOI8_U, 		CS_KOI8_U,		0, (CCCFunc)0, 0},
+
 		/* ARMENIAN */
 		{CS_ARMSCII8, CS_ARMSCII8,		0, (CCCFunc)0, 0},
 
@@ -560,6 +563,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_LATIN2,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  		{CS_8859_5,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
  		{CS_KOI8_R,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
+ 		{CS_KOI8_U,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
   		{CS_8859_7,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
   		{CS_8859_9,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SINGLEBYTE},
 		{CS_SJIS,		CS_UTF8,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_SJIS},
@@ -574,6 +578,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
  		{CS_UTF8,		CS_LATIN2,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_8859_5,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
  		{CS_UTF8,		CS_KOI8_R,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
+ 		{CS_UTF8,		CS_KOI8_U,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
   		{CS_UTF8,		CS_8859_7,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
   		{CS_UTF8,		CS_8859_9,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},
 		{CS_UTF8,		CS_SJIS,		0, (CCCFunc)mz_AnyToAnyThroughUCS2,	INTL_CHARLEN_UTF8},

@@ -193,6 +193,13 @@ PRIVATE uint16 iso88599ToTbl[] = {
 #include "8859-9.ut"
 };
 /*--------------------------------------------------------------------------*/
+PRIVATE uint16 koi8uFromTbl[] = {
+#include "koi8u.uf"
+};
+PRIVATE uint16 koi8uToTbl[] = {
+#include "koi8u.ut"
+};
+/*--------------------------------------------------------------------------*/
 PRIVATE uint16 koi8rFromTbl[] = {
 #include "koi8r.uf"
 };
@@ -319,6 +326,7 @@ PRIVATE uint16 TIS620ToTbl[] = {
 /*--------------------------------------------------------------------------*/
 PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid) {
 	case CS_ASCII:
 		return (uTable*) asciiTbl;
@@ -338,6 +346,9 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 		
 	case CS_KOI8_R:
 		return (uTable*) koi8rToTbl;
+		
+	case CS_KOI8_U:
+		return (uTable*) koi8uToTbl;
 		
 	case CS_CP_1251:
 		return (uTable*) cp1251ToTbl;
@@ -404,6 +415,7 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 }
 PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid) {
 	case CS_ASCII:
 		return (uTable*) asciiTbl;
@@ -423,6 +435,9 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 		
 	case CS_KOI8_R:
 		return (uTable*) koi8rFromTbl;
+
+	case CS_KOI8_U:
+		return (uTable*) koi8uFromTbl;
 
 	case CS_CP_1251:
 		return (uTable*) cp1251FromTbl;
@@ -523,6 +538,7 @@ PRIVATE uTable* LoadUCS2Table(uint16 csid,int from)
 {
 	/* We need to add reference count here */
 	Handle tableHandle;
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid)
 	{
 		case CS_ASCII:
@@ -555,6 +571,7 @@ PRIVATE void UnloadUCS2Table(uint16 csid, uTable *utblPtr, int from)
 {
 	/* We need to add reference count here */
 	Handle tableHandle;
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid)
 	{
 		case CS_ASCII:
@@ -579,24 +596,28 @@ PRIVATE void UnloadUCS2Table(uint16 csid, uTable *utblPtr, int from)
 /*--------------------------------------------------------------------------*/
 PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	return LoadUCS2Table(csid, FALSE);
 }
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 PRIVATE void UnloadToUCS2Table(uint16 csid, uTable *utblPtr)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	UnloadUCS2Table(csid, utblPtr, FALSE);
 }
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	return LoadUCS2Table(csid, TRUE);
 }
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 PRIVATE void UnloadFromUCS2Table(uint16 csid, uTable *utblPtr)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	UnloadUCS2Table(csid, utblPtr, TRUE);
 }
 #endif /* XP_MAC */
@@ -620,6 +641,7 @@ PRLibrary* uniLib = NULL;
 PRIVATE uTable* LoadUCS2Table(uint16 csid, int from)
 {
 	uTable* ret = NULL;
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid)
 	{
 		case CS_ASCII:
@@ -654,6 +676,7 @@ PRIVATE uTable* LoadUCS2Table(uint16 csid, int from)
 }
 PRIVATE void UnloadUCS2Table(uint16 csid, uTable* utblPtr, int from)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid)
 	{
 		case CS_ASCII:
@@ -684,18 +707,22 @@ PRIVATE void UnloadUCS2Table(uint16 csid, uTable* utblPtr, int from)
 }
 PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	return(LoadUCS2Table(csid,0));
 }
 PRIVATE void UnloadToUCS2Table(uint16 csid, uTable *utblPtr)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	UnloadUCS2Table(csid, utblPtr, 0);
 }
 PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	return(LoadUCS2Table(csid,1));
 }
 PRIVATE void UnloadFromUCS2Table(uint16 csid, uTable *utblPtr)
 {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	UnloadUCS2Table(csid, utblPtr, 1);
 }
 #endif /* XP_WIN */
@@ -941,6 +968,7 @@ PRIVATE uint16 dingbatToTbl[] = {
  * Return the address of the To table given the codeset
  */
 PRIVATE uTable* LoadToUCS2Table(uint16 csid) {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid) {
 	case CS_ASCII:
 	case CS_LATIN1:		return (uTable*) cp1252ToTbl;
@@ -984,6 +1012,7 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid) {
  * Return the address of the From table given the codeset
  */
 PRIVATE uTable* LoadFromUCS2Table(uint16 csid) {
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	switch(csid) {
 	case CS_ASCII:
 	case CS_LATIN1:		return (uTable*) cp1252FromTbl;
@@ -1442,6 +1471,7 @@ LoadUCS2TableSet(uint16 csid, uTableSet* tableset,int from)
 {
 	UnicodeTableSet* set;
 	int i;
+  XP_ASSERT( (CS_UNKNOWN != csid) && (CS_DEFAULT != csid));
 	for(i=0;i<MAXINTERCSID;i++)
 	{
 		tableset->range[i].intercsid=CS_DEFAULT;
@@ -1643,6 +1673,7 @@ PUBLIC void    INTL_UnicodeToStr(
 	static uint16			num;
 	static uTableSet		tableset;
 	static INTL_Encoding_ID	lastEncoding = (INTL_Encoding_ID)INVALID_ENCODING_ID;
+  XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 
 	if (encoding != lastEncoding)
 	{
@@ -1819,6 +1850,7 @@ PUBLIC uint32    INTL_StrToUnicodeLen(
     unsigned char*    src
 )
 {
+  XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	/* for now, put a dump algorithm to caculate the length */
 	return INTL_TextToUnicodeLen(encoding, src, XP_STRLEN((char*)src));
 }
@@ -1832,6 +1864,7 @@ PUBLIC uint32    INTL_StrToUnicode(
 )
 {
 	uint32  len = XP_STRLEN((char*)src);
+  XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	return INTL_TextToUnicode(encoding,src,len,ustr,ubuflen);
 }
 PUBLIC uint32    INTL_TextToUnicodeLen(
@@ -1840,6 +1873,7 @@ PUBLIC uint32    INTL_TextToUnicodeLen(
     uint32			 srclen
 )
 {
+  XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	/* for now, put a dump algorithm to caculate the length */
 	return srclen + 1;
 }
@@ -1857,6 +1891,7 @@ PUBLIC uint32    INTL_TextToUnicode(
 	uint32	validlen;
 	uint16 num,scanlen, med;
 	uTableSet tableset;
+  XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	num = LoadUCS2TableSet(encoding, &tableset,FALSE);
 	for(validlen=0;	((srclen > 0) && ((*src) != '\0') && (ubuflen > 1));
 		srclen -= scanlen, src += scanlen, ustr++, ubuflen--,validlen++)
