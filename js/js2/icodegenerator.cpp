@@ -91,22 +91,6 @@ namespace ICG {
     
     /********************************************************************/
 
-    Register ICodeGenerator::loadVariable(uint32 frameIndex)
-    {
-        markMaxVariable(frameIndex);
-        Register dest = getRegister();
-        LoadVar *instr = new LoadVar(dest, frameIndex);
-        iCode->push_back(instr);
-        return dest;
-    }
-
-    void ICodeGenerator::saveVariable(uint32 frameIndex, Register value)
-    {
-        markMaxVariable(frameIndex);
-        SaveVar *instr = new SaveVar(frameIndex, value);
-        iCode->push_back(instr);
-    }
-
     Register ICodeGenerator::loadImmediate(double value)
     {
         Register dest = getRegister();
@@ -183,6 +167,12 @@ namespace ICG {
         return dest;
     }
         
+    void ICodeGenerator::move(Register destination, Register source)
+    {
+         Move *instr = new Move(destination, source);
+         iCode->push_back(instr);
+    } 
+
     Register ICodeGenerator::op(ICodeOp op, Register source1, 
                                 Register source2)
     {
@@ -638,4 +628,4 @@ namespace ICG {
         
 } // namespace ICG
     
-} // namespace JavaScript
+}; // namespace JavaScript

@@ -107,10 +107,11 @@ namespace ICG {
         { if (variableIndex > maxVariable) maxVariable = variableIndex; }
         
         Register topRegister;
+        Register registerBase;
         Register getRegister() \
         { return topRegister++; }
         void resetTopRegister() \
-        { markMaxRegister(); topRegister = stitcher.empty() ? 0 : \
+        { markMaxRegister(); topRegister = stitcher.empty() ? registerBase : \
             stitcher.back()->registerBase; }
         
         ICodeOp getBranchOp() \
@@ -126,7 +127,7 @@ namespace ICG {
         void branchConditional(Label *label, Register condition);
         
     public:
-        ICodeGenerator() : topRegister(0), maxRegister(0),
+        ICodeGenerator() : topRegister(0), registerBase(0), maxRegister(0),
                            maxVariable(0) \
         { iCode = new InstructionStream(); }
         
@@ -135,12 +136,17 @@ namespace ICG {
         void mergeStream(InstructionStream *sideStream);
         
         ICodeModule *complete();
+
+        Register allocateVariable(StringAtom &name) 
+        { Register result = getRegister(); registerBase = topRegister; return result; }
         
         Formatter& print(Formatter& f);
         
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
         Register call(Register target, RegisterList args);
+
+        void move(Register destination, Register source);
         
         Register compare(ICodeOp op, Register source1, Register source2);
         
