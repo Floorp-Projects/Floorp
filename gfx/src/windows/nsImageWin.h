@@ -189,8 +189,9 @@ public:
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
   NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);
 
-
-  static PRBool gIsWinNT;
+  // VER_PLATFORM_WIN32_WINDOWS == Win 95/98/ME
+  // VER_PLATFORM_WIN32_NT == Win NT/2K/XP/.NET Server
+  static PRInt32 gPlatform;
 
 private:
   /** 

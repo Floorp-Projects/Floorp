@@ -44,17 +44,16 @@ static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHei
 
 
 
-static PRBool
-IsWindowsNT()
+static PRInt32 GetPlatform()
 {
   OSVERSIONINFO versionInfo;
 
   versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
   ::GetVersionEx(&versionInfo);
-  return VER_PLATFORM_WIN32_NT == versionInfo.dwPlatformId;
+  return versionInfo.dwPlatformId;
 }
 
-PRBool nsImageWin::gIsWinNT = IsWindowsNT();
+PRInt32 nsImageWin::gPlatform = GetPlatform();
 
 /** ----------------------------------------------------------------
   * Constructor for nsImageWin
@@ -333,6 +332,11 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
   mHBitmap = ::CreateDIBSection(TheHDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
                                 (LPVOID *)&imageWithAlphaBits, NULL, 0);
 
+  if (!mHBitmap) {
+    mIsOptimized = PR_FALSE;
+    return;
+  }
+  
   if (256 == mNumPaletteColors) {
     for (int y = 0; y < mBHead->biHeight; y++) {
       unsigned char *imageWithAlphaRow = imageWithAlphaBits + y * mBHead->biWidth * 4;
@@ -365,6 +369,7 @@ void nsImageWin::CreateImageWithAlphaBits(HDC TheHDC)
       }
     }
   }
+  mIsOptimized = PR_TRUE;
 }
 
 /** ---------------------------------------------------
@@ -391,10 +396,11 @@ nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
        } else {
          mHBitmap = ::CreateDIBitmap(TheHDC,mBHead,CBM_INIT,mImageBits,(LPBITMAPINFO)mBHead,
                   256==mNumPaletteColors?DIB_PAL_COLORS:DIB_RGB_COLORS);
+         mIsOptimized = (mHBitmap != 0);
        }
-      mIsOptimized = PR_TRUE;
       //CleanUp(PR_FALSE);
-      CleanUpDIB();
+      if (mIsOptimized)
+        CleanUpDIB();
     }
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
@@ -617,6 +623,11 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
   ALPHA24BITMAPINFO bmi(aSWidth, aSHeight);
   HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
                                          (LPVOID *)&screenBits, NULL, 0);
+  if (!tmpBitmap) {
+    ::DeleteDC(memDC);
+    NS_WARNING("nsImageWin::DrawComposited failed to create tmpBitmap\n");
+    return;
+  }
   HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
 
   /* Copy from the HDC */
@@ -979,8 +990,12 @@ nsresult
 nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
   // Just set the flag sinze we may not have a valid HDC, like at startup, but at drawtime we do have a valid HDC
-  if ((8 != mAlphaDepth) || CanAlphaBlend())
-    mCanOptimize = PR_TRUE;      
+  
+  // Windows 95/98/Me: DDB size cannot exceed 16MB in size.
+  if (gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) 
+    mCanOptimize = PR_FALSE;
+  else if ((8 != mAlphaDepth) || CanAlphaBlend())
+    mCanOptimize = PR_TRUE;
   return NS_OK;
 }
 
@@ -1338,6 +1353,10 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
     if (imgWin->mSizeImage > 0) {
       void* bits;
       imgWin->mHBitmap = CreateDIBSection(dstMemDC,(LPBITMAPINFO)imgWin->mBHead,DIB_RGB_COLORS,&bits,nsnull,nsnull);
+      if (!imgWin->mHBitmap) {
+        ::DeleteDC(dstMemDC);
+        return NS_ERROR_UNEXPECTED;
+      }
       imgWin->mDIBSection = imgWin->mHBitmap;
       oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
 
