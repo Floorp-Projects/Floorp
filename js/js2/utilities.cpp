@@ -19,7 +19,6 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <new>
 #include <iomanip>
 #include <algorithm>
 #include "utilities.h"
@@ -1543,6 +1542,14 @@ const char16 *JS::skipWhiteSpace(const char16 *str, const char16 *strEnd)
 // #define DEBUG_ARENA to allocate each object in its own malloc block.
 // This allows tools such as Purify to do bounds checking on all blocks.
 
+struct JS::Arena::DestructorEntry: JS::ArenaObject {
+	DestructorEntry *next;		// Next destructor registration in linked list
+	void (*destructor)(void *);	// Destructor function
+	void *object;				// Object on which to call the destructor
+	
+	DestructorEntry(void (*destructor)(void *), void *object): destructor(destructor), object(object) {}
+};
+
 
 // Construct an Arena that allocates memory in chunks of the given size.
 JS::Arena::Arena(size_t blockSize): blockSize(blockSize), freeBegin(0), freeEnd(0)
@@ -1562,9 +1569,17 @@ void JS::Arena::Directory::clear()
 }
 
 
-// Deallocate the Arena's blocks and directories.
+// Call the Arena's registered destructors and then deallocate the Arena's blocks and
+// directories.
 void JS::Arena::clear()
 {
+	DestructorEntry *e = destructorEntries;
+	while (e) {
+		e->destructor(e->object);
+		e = e->next;
+	}
+	destructorEntries = 0;
+
 	Directory *d = rootDirectory.next;
 	while (d) {
 		Directory *next = d->next;
@@ -1626,6 +1641,41 @@ void *JS::Arena::allocate(size_t size)
 	freeBegin = p + size;
 	return p;
 #endif
+}
+
+
+// Ensure that object's destructor is called at the time the arena is deallocated or cleared.
+// The destructors will be called in reverse order of being registered.
+// registerDestructor might itself runs out of memory, in which case it immediately
+// calls object's destructor before throwing bad_alloc.
+void JS::Arena::newDestructorEntry(void (*destructor)(void *), void *object)
+{
+	try {
+		DestructorEntry *e = new(*this) DestructorEntry(destructor, object);
+		e->next = destructorEntries;
+		destructorEntries = e;
+	} catch (...) {
+		destructor(object);
+		throw;
+	}
+}
+
+
+// Allocate a String in the Arena and register that String so that it is deallocated at
+// the same time as the Arena.
+// DO NOT CALL DELETE ON THE RESULT!
+JS::String *JS::newArenaString(Arena &arena)
+{
+	String *s = new(arena) String();
+	arena.registerDestructor(s);
+	return s;
+}
+
+JS::String *JS::newArenaString(Arena &arena, const String &str)
+{
+	String *s = new(arena) String(str);
+	arena.registerDestructor(s);
+	return s;
 }
 
 
