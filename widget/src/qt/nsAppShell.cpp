@@ -20,9 +20,12 @@
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIUnixToolkitService.h"
 #include "nsICmdLineService.h"
 #include <stdlib.h>
 #include "nsWidget.h"
+#include <qwindowdefs.h>
+#include "xlibrgb.h"
 
 //-------------------------------------------------------------------------
 //
@@ -31,6 +34,9 @@
 //-------------------------------------------------------------------------
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
+
+nsAppShell::GfxToolkit nsAppShell::mGfxToolkit = nsAppShell::eInvalidGfxToolkit;
 
 //-------------------------------------------------------------------------
 //
@@ -99,10 +105,38 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
            PR_LOG_DEBUG, 
            ("nsAppShell::Create()\n"));
 
-    int argc = bac ? *bac : 0;
-    char **argv = bav;
-#if 1
-    nsresult rv;
+    int        argc        = bac ? *bac : 0;
+    char    ** argv        = bav;
+    nsresult   rv          = NS_OK;
+    Display  * aDisplay    = nsnull;
+    Screen   * aScreen     = nsnull;
+    GfxToolkit aGfxToolkit = GetGfxToolkit();
+
+    if (aGfxToolkit == eQtGfxToolkit)
+    {
+    }
+    else if (aGfxToolkit == eXlibGfxToolkit)
+    {
+        // Open the display
+        aDisplay = XOpenDisplay(NULL);
+    
+        if (aDisplay == NULL) 
+        {
+            fprintf(stderr, "%s: Cannot connect to X server\n",
+                    argv[0]);
+        
+            exit(1);
+        }
+
+        aScreen = DefaultScreenOfDisplay(aDisplay);
+    
+        xlib_rgb_init(aDisplay, aScreen);
+    }
+    else
+    {
+        fprintf(stderr, "Invalid toolkit\n");
+        exit(1);
+    }
 
     NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
     if (NS_SUCCEEDED(rv))
@@ -119,9 +153,15 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
             argv = bav;
         }
     }
-#endif
 
-    mApplication = new nsQApplication(argc, argv);
+    if (aDisplay && aScreen)
+    {
+        mApplication = new nsQApplication(aDisplay);
+    }
+    else
+    {
+        mApplication = new nsQApplication(argc, argv);
+    }
 
     if (!mApplication) 
     {
@@ -341,4 +381,42 @@ NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent,
     return NS_OK;
 }
 
+nsAppShell::GfxToolkit nsAppShell::GetGfxToolkit()
+{
+    nsString aGfxToolkit;
+    nsresult rv;
+
+    if (mGfxToolkit == eInvalidGfxToolkit)
+    {
+        nsIUnixToolkitService * unixToolkitService = nsnull;
+    
+        rv = nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
+                                                nsnull,
+                                                nsIUnixToolkitService::GetIID(),
+                                                (void **) &unixToolkitService);
+  
+        NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
+
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = unixToolkitService->GetGfxToolkitName(aGfxToolkit);
+        }
+
+        NS_IF_RELEASE(unixToolkitService);
+    }
+
+    if (NS_SUCCEEDED(rv))
+    {
+        if (aGfxToolkit == "qt")
+        {
+            mGfxToolkit = eQtGfxToolkit;
+        }
+        else if (aGfxToolkit == "xlib")
+        {
+            mGfxToolkit = eXlibGfxToolkit;
+        }
+    }
+
+    return mGfxToolkit;
+}
 
