@@ -126,7 +126,7 @@ public:
   nsDeque mDTDDeque;
 };
 
-//static CSharedParserObjects* gSharedParserObjects=0;
+static CSharedParserObjects* gSharedParserObjects=0;
 
 
 //-------------------------------------------------------------------------
@@ -169,8 +169,10 @@ public:
 };
 
 CSharedParserObjects& GetSharedObjects() {
-  static CSharedParserObjects gSharedParserObjects;
-  return gSharedParserObjects;
+  if (!gSharedParserObjects) {
+    gSharedParserObjects = new CSharedParserObjects();
+  }
+  return *gSharedParserObjects;
 }
 
 /** 
