@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsIAppShellComponentImpl.h"
 
 class nsITextServicesDocument;
 
@@ -23,7 +23,7 @@ class nsITextServicesDocument;
 #define NS_FINDCOMPONENT_CID \
     { 0x4aa267a0, 0xf81d, 0x11d2, { 0x80, 0x67, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3} }
 
-class nsFindComponent : public nsIFindComponent
+class nsFindComponent : public nsIFindComponent, public nsAppShellComponentImpl
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
@@ -74,9 +74,9 @@ public:
     }; // nsFindComponent::Context
 
 protected:
-    nsCOMPtr<nsIAppShellService> mAppShell;
     nsString                     mLastSearchString;
     PRBool                       mLastIgnoreCase;
     PRBool                       mLastSearchBackwards;
     PRBool                       mLastWrapSearch;
+    nsInstanceCounter            mInstanceCounter;
 }; // nsFindComponent
