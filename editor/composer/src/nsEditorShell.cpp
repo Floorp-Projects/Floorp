@@ -4393,9 +4393,11 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
     return NS_ERROR_ABORT;
   }
 
-  nsAutoString doneText;
-  GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
-  SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
+  if (!mMailCompose) {
+    nsAutoString doneText;
+    GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
+    SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
+  }
 
   //
   // By this time, we know that the page did not contain any frames
