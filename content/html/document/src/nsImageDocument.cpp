@@ -547,7 +547,7 @@ nsImageDocument::CheckOverflowing()
   visibleArea.Deflate(margin);
 
   float t2p;
-  context->GetTwipsToPixels(&t2p);
+  t2p = context->TwipsToPixels();
   mVisibleWidth = NSTwipsToIntPixels(visibleArea.width, t2p);
   mVisibleHeight = NSTwipsToIntPixels(visibleArea.height, t2p);
 

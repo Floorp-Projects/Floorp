@@ -2062,7 +2062,7 @@ void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
     nsIView *view;
     frame->GetOffsetFromView(aPresContext, aTargetPt, &view);
     float t2p;
-    aPresContext->GetTwipsToPixels(&t2p);
+    t2p = aPresContext->TwipsToPixels();
 
     // Start context menu down and to the right from top left of frame
     // use the lineheight. This is a good distance to move the context

@@ -229,10 +229,7 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-  float t2p;
-  if (NS_FAILED(presContext->GetTwipsToPixels(&t2p))) {
-    return NS_ERROR_FAILURE;
-  }
+  float t2p = presContext->TwipsToPixels();
 
   nsIFrame *frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));

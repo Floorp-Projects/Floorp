@@ -108,7 +108,7 @@ nsPlaceholderFrame::Paint(nsIPresContext*      aPresContext,
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     nscoord x = NSIntPixelsToTwips(-5, p2t);
     aRenderingContext.FillRect(x, 0, NSIntPixelsToTwips(13, p2t),

@@ -1481,14 +1481,14 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
-      aCX->GetTwipsToPixels(&t2p);
+      t2p = aCX->TwipsToPixels();
       fm->GetMaxAscent(ascent);
       bulletSize = NSTwipsToIntPixels(
         (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
       if (bulletSize < 1) {
         bulletSize = MIN_BULLET_SIZE;
       }
-      aCX->GetPixelsToTwips(&p2t);
+      p2t = aCX->PixelsToTwips();
       bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
       mPadding.bottom = NSIntPixelsToTwips((nscoord) NSToIntRound((float)ascent / (8.0f * p2t)),p2t);
       aMetrics.width = mPadding.right + bulletSize;
@@ -1681,7 +1681,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   aImage->GetHeight(&h);
 
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
 
   nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
@@ -1732,7 +1732,7 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
   // XXX what if this frame ever has a padding or border?
   
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);
@@ -1773,7 +1773,7 @@ NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
   nsRect r(*aDirtyRect);
 
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);

@@ -250,7 +250,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         if(context) {
           // Get the scale from that Presentation Context
           float scale;
-          context->GetTwipsToPixels(&scale);
+          scale = context->TwipsToPixels();
               
           // Convert to pixels using that scale
           aRect.x = NSTwipsToIntPixels(origin.x, scale);
@@ -314,7 +314,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
         if (widget) {
           // Get the scale from that Presentation Context
           float scale;
-          presContext->GetTwipsToPixels(&scale);
+          scale = presContext->TwipsToPixels();
           
           // Convert to pixels using that scale
           offsetX = NSTwipsToIntPixels(offsetX, scale);

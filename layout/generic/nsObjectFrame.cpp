@@ -1198,7 +1198,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
   // Just make the frigging widget
 
   float           t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
   PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
   PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
   PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -1228,7 +1228,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   nsPluginWindow  *window;
   float           t2p;
   
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
 
   mFullURL = aURI;
 
@@ -1321,7 +1321,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
   nsPoint origin;
   nsPluginWindow  *window;
   float           t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
 
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
@@ -1452,7 +1452,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   }
 
   float t2p;
-  presContext->GetTwipsToPixels(&t2p);
+  t2p = presContext->TwipsToPixels();
   origin.x = NSTwipsToIntPixels(origin.x, t2p);
   origin.y = NSTwipsToIntPixels(origin.y, t2p);
 
@@ -1608,7 +1608,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     rcTransform->GetTranslationCoord(&origin.x, &origin.y);
     
     // Get the conversion factor between pixels and twips
-    aPresContext->GetTwipsToPixels(&t2p);
+    t2p = aPresContext->TwipsToPixels();
 
     // set it all up
     // XXX is windowless different?
@@ -2392,7 +2392,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
     if (view)
     {
       float ptot;
-      mContext->GetPixelsToTwips(&ptot);
+      ptot = mContext->PixelsToTwips();
 
       nsRect rect((int)(ptot * invalidRect->left),
             (int)(ptot * invalidRect->top),
@@ -3988,7 +3988,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
 {
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  t2p = aPresContext.TwipsToPixels();
   aPixelRect.x = NSTwipsToIntPixels(aTwipsRect.x, t2p);
   aPixelRect.y = NSTwipsToIntPixels(aTwipsRect.y, t2p);
   aPixelRect.width = NSTwipsToIntPixels(aTwipsRect.width, t2p);

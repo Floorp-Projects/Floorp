@@ -498,7 +498,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
   if (!context) return NS_OK;
 
   float TwipsPerPx;
-  context->GetPixelsToTwips(&TwipsPerPx);
+  TwipsPerPx = context->PixelsToTwips();
   *aScreenPixelToMillimeterX = TwipsPerPx / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
   return NS_OK;
 }
@@ -1172,7 +1172,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   presShell->GetPrimaryFrameFor(this, &frame);
 
   float t2p;
-  context->GetTwipsToPixels(&t2p);
+  t2p = context->TwipsToPixels();
 
   
   nsIWidget* widget = nsnull;

@@ -365,7 +365,7 @@ nsSVGOuterSVGFrame::Reflow(nsIPresContext*          aPresContext,
     printf("nsSVGOuterSVGFrame(%p)::Reflow()[\n",this);
     float twipsPerScPx,twipsPerPx;
     aPresContext->GetScaledPixelsToTwips(&twipsPerScPx);
-    aPresContext->GetPixelsToTwips(&twipsPerPx);
+    twipsPerPx = aPresContext->PixelsToTwips();
     printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
     printf("]\n");
   }
@@ -787,7 +787,7 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
     printf("scale=(%f,%f)\n", sx, sy);
     float twipsPerScPx,twipsPerPx;
     aPresContext->GetScaledPixelsToTwips(&twipsPerScPx);
-    aPresContext->GetPixelsToTwips(&twipsPerPx);
+    twipsPerPx = aPresContext->PixelsToTwips();
     printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
     int fontsc;
     aPresContext->GetFontScaler(&fontsc);

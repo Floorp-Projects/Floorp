@@ -108,7 +108,7 @@ BRFrame::Paint(nsIPresContext*      aPresContext,
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
     nscoord five = NSIntPixelsToTwips(5, p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     aRenderingContext.FillRect(0, 0, five, five*2);

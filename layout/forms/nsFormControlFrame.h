@@ -61,7 +61,7 @@ class nsStyleCoord;
 #define COMPARE_QUIRK_SIZE(__class, __navWidth, __navHeight) \
 { \
   float t2p;                                            \
-  aPresContext->GetTwipsToPixels(&t2p);                  \
+  t2p = aPresContext->TwipsToPixels();                  \
   printf ("%-25s::Size=%4d,%4d %3d,%3d Nav:%3d,%3d Diffs: %3d,%3d\n",  \
            (__class),                                   \
            aDesiredSize.width, aDesiredSize.height,     \

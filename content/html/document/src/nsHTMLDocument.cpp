@@ -2584,7 +2584,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
 
     if (NS_SUCCEEDED(rv)) {
       float scale;
-      context->GetTwipsToPixels(&scale);
+      scale = context->TwipsToPixels();
 
       *aWidth = NSTwipsToIntPixels(size.width, scale);
       *aHeight = NSTwipsToIntPixels(size.height, scale);

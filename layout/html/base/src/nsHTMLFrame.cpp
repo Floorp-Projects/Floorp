@@ -450,7 +450,7 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
           outlineStyle.SetOutlineInvert();
           
           float p2t;
-          aPresContext->GetPixelsToTwips(&p2t);
+          p2t = aPresContext->PixelsToTwips();
           // XXX the CSS border for links is specified as 2px, but it
           // is only drawn as 1px.  Match this here.
           nscoord onePixel = NSIntPixelsToTwips(1, p2t);

@@ -442,7 +442,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
       // once we reach the 32k boundary for positioning
       if (nsPageFrame::GetCreateWidget()) {
         float t2p;
-        aPresContext->GetTwipsToPixels(&t2p);
+        t2p = aPresContext->TwipsToPixels();
         nscoord xp = NSTwipsToIntPixels(x, t2p);
         nscoord yp = NSTwipsToIntPixels(y, t2p);
         nsPageFrame::SetCreateWidget(xp < 0x8000 && yp < 0x8000);

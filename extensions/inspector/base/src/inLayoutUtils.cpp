@@ -210,7 +210,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
 
           // Get the scale from that Presentation Context
           float p2t;
-          presContext->GetPixelsToTwips(&p2t);
+          p2t = presContext->PixelsToTwips();
 
           // Convert screen rect to twips
           rect->x = NSIntPixelsToTwips(rect->x, p2t);

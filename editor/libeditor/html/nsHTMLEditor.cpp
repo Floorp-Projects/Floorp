@@ -5933,7 +5933,7 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   float t2p;
   nsCOMPtr<nsIPresContext> pcontext;
   ps->GetPresContext(getter_AddRefs(pcontext));
-  pcontext->GetTwipsToPixels(&t2p);
+  t2p = pcontext->TwipsToPixels();
 
 
   if (nsHTMLEditUtils::IsHR(aElement)) {

@@ -484,7 +484,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   }
 
   float p2t;
-  presContext->GetPixelsToTwips(&p2t);
+  p2t = presContext->PixelsToTwips();
   nsRectVisibility rectVisibility;
   viewManager->GetRectVisibility(containingView, relFrameRect, 
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
@@ -682,7 +682,7 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
     if (widget) {
       // Get the scale from that Presentation Context
       float t2p;
-      aPresContext->GetTwipsToPixels(&t2p);
+      t2p = aPresContext->TwipsToPixels();
     
       // Convert to pixels using that scale
       offsetX = NSTwipsToIntPixels(offsetX, t2p);
@@ -829,7 +829,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
   }
 
   float t2p;
-  presContext->GetTwipsToPixels(&t2p);   // Get pixels to twips conversion factor
+  t2p = presContext->TwipsToPixels();   // Get pixels to twips conversion factor
 
   nsRect unionRectTwips;
   nsIFrame* aBoundingFrame = nsnull;

@@ -186,7 +186,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
 
   // Convert from twips to pixels
   float t2p;
-  presContext->GetTwipsToPixels(&t2p);   // Get pixels conversion factor
+  t2p = presContext->TwipsToPixels();   // Get pixels conversion factor
   *x      = NSTwipsToIntPixels(rect.x, t2p); 
   *y      = NSTwipsToIntPixels(rect.y, t2p); 
 

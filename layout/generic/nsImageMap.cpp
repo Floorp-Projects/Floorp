@@ -494,7 +494,7 @@ void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   if (mHasFocus) {
     if (mNumCoords >= 4) {
       float p2t;
-      aCX->GetPixelsToTwips(&p2t);
+      p2t = aCX->PixelsToTwips();
       nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
       nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
       nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -513,7 +513,7 @@ void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 4) {
     float p2t;
-    aCX->GetPixelsToTwips(&p2t);
+    p2t = aCX->PixelsToTwips();
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -614,7 +614,7 @@ void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   if (mHasFocus) {
     if (mNumCoords >= 6) {
       float p2t;
-      aCX->GetPixelsToTwips(&p2t);
+      p2t = aCX->PixelsToTwips();
       nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
       nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
       nscoord x1, y1;
@@ -636,7 +636,7 @@ void PolyArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 6) {
     float p2t;
-    aCX->GetPixelsToTwips(&p2t);
+    p2t = aCX->PixelsToTwips();
     nscoord x1, x2, y1, y2, xtmp, ytmp;
     x1 = x2 = NSIntPixelsToTwips(mCoords[0], p2t);
     y1 = y2 = NSIntPixelsToTwips(mCoords[1], p2t);
@@ -700,7 +700,7 @@ void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   if (mHasFocus) {
     if (mNumCoords >= 3) {
       float p2t;
-      aCX->GetPixelsToTwips(&p2t);
+      p2t = aCX->PixelsToTwips();
       nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
       nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
       nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -719,7 +719,7 @@ void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 {
   if (mNumCoords >= 3) {
     float p2t;
-    aCX->GetPixelsToTwips(&p2t);
+    p2t = aCX->PixelsToTwips();
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);

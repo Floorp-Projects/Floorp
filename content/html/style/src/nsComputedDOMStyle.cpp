@@ -197,7 +197,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
 
   NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
 
-  presCtx->GetTwipsToPixels(&mT2P);
+  mT2P = presCtx->TwipsToPixels();
 
   return NS_OK;
 }

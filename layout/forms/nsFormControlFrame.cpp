@@ -903,8 +903,8 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
   // Get conversions between twips and pixels
   float t2p;
   float p2t;
-  aPresContext->GetTwipsToPixels(&t2p);
-  aPresContext->GetPixelsToTwips(&p2t);
+  t2p = aPresContext->TwipsToPixels();
+  p2t = aPresContext->PixelsToTwips();
 
   // Start with frame's offset from it it's containing view
   nsIView *view = nsnull;

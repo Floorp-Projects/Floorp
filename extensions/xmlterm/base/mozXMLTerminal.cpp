@@ -609,7 +609,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
 
   // Determine twips to pixels conversion factor
   float pixelScale;
-  presContext->GetTwipsToPixels(&pixelScale);
+  pixelScale = presContext->TwipsToPixels();
 
   // Convert dimensions to pixels
   float xdel, ydel;

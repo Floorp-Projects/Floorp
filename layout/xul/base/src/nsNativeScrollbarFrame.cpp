@@ -274,7 +274,7 @@ NS_IMETHODIMP
 nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   float p2t = 0.0;
-  aState.GetPresContext()->GetPixelsToTwips(&p2t);
+  p2t = aState.GetPresContext()->PixelsToTwips();
   
   PRInt32 narrowDimension = 0;
   nsCOMPtr<nsINativeScrollbar> native ( do_QueryInterface(mScrollbar) );

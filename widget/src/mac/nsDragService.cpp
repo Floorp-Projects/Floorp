@@ -186,7 +186,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   nsIWidget* aWidget = containingView->GetNearestWidget ( &widgetOffset );
 
   float t2p = 1.0;
-  presContext->GetTwipsToPixels(&t2p);
+  t2p = presContext->TwipsToPixels();
 
   // Shift our offset rect by offset into our view, and
   // the view's offset to the closest widget. Then convert that to global coordinates.
