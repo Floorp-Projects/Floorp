@@ -109,6 +109,8 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I..\..\content\src						\
  -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java \
  -I$(PUBLIC)\pref \
+ -I$(PUBLIC)\lwbrk \
+ -I$(PUBLIC)\unicharutil \
  -I$(PUBLIC)\oji
 
 LCFLAGS = \

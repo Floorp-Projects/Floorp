@@ -24,6 +24,7 @@
 
 class nsIFrame;
 class nsTextRun;
+class nsILineBreaker;
 
 /**
  * This object manages the transformation of text:
@@ -43,7 +44,9 @@ class nsTextRun;
  */
 class nsTextTransformer {
 public:
-  nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen);
+
+  nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, nsILineBreaker* aLineBreaker);
+
   ~nsTextTransformer();
 
   /**
@@ -93,6 +96,8 @@ protected:
 
   PRUint8 mTextTransform;
   PRUint8 mWhiteSpace;
+
+  nsILineBreaker* mLineBreaker;
 };
 
 #endif /* nsTextTransformer_h___ */
