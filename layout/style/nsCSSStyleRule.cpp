@@ -3514,12 +3514,17 @@ NS_IMETHODIMP
 CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
   mSelector.ToString( aCssText, mSheet, IsPseudoElement(mSelector.mTag) );
+  aCssText.Append(PRUnichar(' '));
+  aCssText.Append(PRUnichar('{'));
+  aCssText.Append(PRUnichar(' '));
   if (mDeclaration)
   {
     nsAutoString   tempString;
     mDeclaration->ToString( tempString );
     aCssText.Append( tempString );
   }
+  aCssText.Append(PRUnichar(' '));
+  aCssText.Append(PRUnichar('}'));
   return NS_OK;
 }
 
