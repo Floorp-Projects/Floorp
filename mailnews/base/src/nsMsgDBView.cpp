@@ -2708,7 +2708,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 		return retIndex;
 	}
 
-	int (*comparisonFun) (const void *pItem1, const void *pItem2, void *privateData)=nsnull;
+	int (* PR_CALLBACK comparisonFun) (const void *pItem1, const void *pItem2, void *privateData)=nsnull;
 	int retStatus = 0;
 	switch (fieldType)
 	{
