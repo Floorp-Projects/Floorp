@@ -3426,7 +3426,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
     aOwner->GetInstance(instance);
     if((!aMimeType || !isJava) && bCanHandleInternally)
-      rv = NewEmbededPluginStream(aURL, nsnull, instance);
+      rv = NewEmbededPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component 
     nsresult res;
@@ -3519,7 +3519,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     }
 
     if(havedata && !isJava && bCanHandleInternally)
-      rv = NewEmbededPluginStream(aURL, nsnull, instance);
+      rv = NewEmbededPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component 
     nsresult res;
@@ -5597,6 +5597,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   if (aURL.Length() <= 0)
     return NS_OK;
 
+  nsCOMPtr<nsILoadGroup> loadGroup;
+
   // get the full URL of the document that the plugin is embedded
   //   in to create an absolute url in case aURL is relative
   nsCOMPtr<nsIDocument> doc;
@@ -5613,6 +5615,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       {
         nsCOMPtr<nsIURI> docURL;
         doc->GetDocumentURL(getter_AddRefs(docURL));
+        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
  
         // Create an absolute URL
         rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
@@ -5656,8 +5659,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
       nsCOMPtr<nsIChannel> channel;
 
-      // XXX: Null LoadGroup?
-      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull, callbacks);
+      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, loadGroup, callbacks);
       if (NS_FAILED(rv)) 
         return rv;
 
@@ -5855,9 +5857,17 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
   else
     rv = NS_ERROR_ILLEGAL_VALUE;
 
-  if (NS_OK == rv) {
-    // XXX: Null LoadGroup?
-    rv = NS_OpenURI(listener, nsnull, aURL, nsnull);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsILoadGroup> loadGroup;
+
+    if (aOwner) {
+      rv = aOwner->GetDocument(getter_AddRefs(doc));
+      if (NS_SUCCEEDED(rv) && doc) {
+        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+      }
+    }
+    rv = NS_OpenURI(listener, nsnull, aURL, nsnull, loadGroup);
   }
 
   //NS_RELEASE(aURL);
