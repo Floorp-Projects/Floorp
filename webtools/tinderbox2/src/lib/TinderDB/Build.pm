@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.43 $ 
-# $Date: 2002/05/03 19:50:43 $ 
+# $Revision: 1.44 $ 
+# $Date: 2002/05/06 17:41:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -909,28 +909,31 @@ sub apply_db_updates {
       
       # If updates start too fast, remove older build from database.
 
-      if (
-          ($different_builds) && 
-          ($separation < $safe_separation) 
-          ) {
+      if ($different_builds) {
+          if ($separation < $safe_separation) {
+              
+              print LOG (
+                         "Not enough separation between builds. ".
+                         "separation: $separation tree: $tree build: $build \n".
+                         "");
+              
+              # Remove old entry
+              shift @{ $DATABASE{$tree}{$build}{'recs'} };          
+          }
 
-          print LOG (
-                     "Not enough separation between builds. ".
-                     "separation: $separation tree: $tree build: $build \n".
-                     "");
+          if ($different_builds) {
 
-          # Remove old entry
-          shift @{ $DATABASE{$tree}{$build}{'recs'} };          
-      }
+              # Some build machines are buggy and new builds appear to
+              # start before old builds finish. Fix the incoming data
+              # here so that builds do not overlap. Do not tamper with
+              # the start time since many different mail messages will
+              # have this new start time.  Instead we fix the end time
+              # of the last build.
 
-      # Some build machines are buggy and new builds appear to start
-      # before old builds finish. Fix the incoming data here so that
-      # builds do not overlap.
-
-      if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
-          $record->{'starttime'} = $previous_rec->{'endtime'}
-      }
-
+              if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
+                  $previous_rec->{'endtime'} = $record->{'starttime'};
+              }
+          }
     } 
     # Is this report for the same build as the [0] entry? If so we do not
     # want two entries for the same build. Must throw out either
@@ -1027,7 +1030,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+    $self->trim_db_history(@_);
   }
 
 
