@@ -306,20 +306,39 @@ NS_IMETHODIMP nsAbDirProperty::SetAddressLists(nsISupportsArray * aAddressLists)
 /* add mailing list to the parent directory */
 NS_IMETHODIMP nsAbDirProperty::AddMailListToDirectory(nsIAbDirectory *mailList)
 {
-	if (!m_AddressList)
-		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
-	m_AddressList->AppendElement(mailList);
-	return NS_OK;
+    if (!m_AddressList)
+        NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+    PRUint32 i, count;
+    m_AddressList->Count(&count);
+    for (i = 0; i < count; i++)
+    {
+        nsresult err;
+        nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
+        nsCOMPtr<nsIAbDirectory> pList(do_QueryInterface(pSupport, &err));
+        if (mailList == pList.get())
+            return NS_OK;
+    }	
+    m_AddressList->AppendElement(mailList);
+    return NS_OK;
 }
 
 /* add addresses to the mailing list */
 NS_IMETHODIMP nsAbDirProperty::AddAddressToList(nsIAbCard *card)
 {
-	if (!m_AddressList)
-		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
-	m_AddressList->AppendElement(card);
-	NS_IF_ADDREF(card);
-	return NS_OK;
+    if (!m_AddressList)
+        NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+    PRUint32 i, count;
+    m_AddressList->Count(&count);
+    for (i = 0; i < count; i++)
+    {
+        nsresult err;
+        nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
+        nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
+        if (card == pCard.get())
+            return NS_OK;
+    }
+    m_AddressList->AppendElement(card);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
