@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/08/30 02:15:11 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/09/10 20:44:03 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -67,37 +67,115 @@ $TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
 	       );
 
 
+# generate random build times to simulate real builds and stress the
+# boundary cases of the html rendering algorithm.
+
+sub rand_runtime {
+  my $runtime;
+  
+
+  if ( (rand 2) > 1 ) {
+    # mostly at the grid size boarder
+    # but there will be plenty smaller then gridsize
+    $runtime = (rand 5) + (rand 5);
+  } else {
+    # always bigger then grid size. 
+    $runtime = (rand 15) + 15;
+  }
+  
+
+  # convert minutes to seconds, remove fractions, then make sure that
+  # the numbers are not all round.
+
+  $runtime *= 60;
+  $runtime =~ s/\..*//;
+  $runtime += (rand 15);
+
+  return $runtime;
+}
+
+
+# Ocassionally we generate gaps between builds
+
+sub rand_gap {
+  my $gap;
+  
+  ( (rand 5) > 1 ) &&
+    return 0;
+
+
+  if ( (rand 2) > 1 ) {
+    # mostly at the grid size boarder
+    # but there will be plenty smaller then gridsize
+    $gap = (rand 5) + (rand 5);
+  } else {
+    # always bigger then grid size. 
+    $gap = (rand 15) + 15;
+  }
+  
+
+  # convert minutes to seconds, remove fractions, then make sure that
+  # the numbers are not all round.
+
+  $gap *= 60;
+  $gap =~ s/\..*//;
+  $gap += (rand 15);
+
+  return $gap;
+}
+
+
+sub rand_status {
+
+  # all ( $random_status > 2 ) will be converted to success everything
+  # else has equal weight.
+
+  my ($random_status) = rand 6;
+  my $status; 
+  @status_list = ( 'success', 'test_failed', 'build_failed', );
+
+  $random_status =~ s/\..*//;
+  if ( $random_status > 2 ) {
+    $status = 'success'; 
+  } else {
+    $status = @status_list[$random_status];
+  }
+
+  return $status;
+}
 
 
 
 
-foreach $i (0 .. 45) {
+foreach $tree (@TREES) {
 
-  foreach $tree (@TREES) {
+foreach $build (@BUILD_NAMES) {
+    
+    $starttime = time();
+    foreach $i (0 .. 45) {
 
-  foreach $build (@BUILD_NAMES) {
-      
-      $random_status = rand 6;
-      $random_status =~ s/\..*//;
-      if ( $random_status > 2 ) {
-	$status = 'success'; 
-      } else {
-	$status = ( 'success', 'test_failed', 'build_failed', ) [$random_status];
-      }
-      $runtime = (rand 25) + 10;
-      # convert minutes to seconds, and remove fractions.
-      $runtime *= 60;
-      $runtime =~ s/\..*//;
-      
-      if (!($starttime{$tree}{$build})) {
-	$starttime{$tree}{$build} = time();
-      }
-      $timenow = $starttime{$tree}{$build};
-      $starttime{$tree}{$build} -= $runtime;
-      $starttime = $starttime{$tree}{$build};
-      $local_starttime = localtime($starttime);
-      $local_endtime = localtime($timenow);
-      
+
+    $starttime -= rand_gap();
+    $timenow = $starttime;
+    $runtime = rand_runtime();
+    
+    # If the run was less then six minutes increase the gap between
+    # start times.
+    
+    $gap = (6*60) - $runtime;
+    if ($gap < 0){
+      $gap = 0;
+    }
+    
+    $starttime -= ($runtime + gap) ;
+    
+    $status = rand_status();
+    
+    # put the localtimes in the update file to ease debugging.
+    
+    $local_starttime = localtime($starttime);
+    $local_endtime = localtime($timenow);
+    
 $out = <<EOF;
 
 \$r = {
