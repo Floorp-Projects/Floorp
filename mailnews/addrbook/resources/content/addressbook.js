@@ -270,19 +270,18 @@ function AbPrintCard()
   if (!uri)
     return;
 
-  var escapedDirName = escape(addressbook.getAbDatabaseFromURI(uri).directoryName);
-
 	var statusFeedback;
 	statusFeedback = Components.classes["@mozilla.org/messenger/statusfeedback;1"].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
 	var selectionArray = new Array(numSelected);
+
 	var totalCard = 0;
 
 	for(var i = 0; i < numSelected; i++)
 	{
 		var card = selectedItems[i];
-    var printCardUrl = CreatePrintCardUrl(escapedDirName, card);
+    var printCardUrl = CreatePrintCardUrl(card);
 		if (printCardUrl)
 		{
 			selectionArray[totalCard++] = printCardUrl;
@@ -297,26 +296,37 @@ function AbPrintCard()
 	return;
 }
 
-function CreatePrintCardUrl(escapedDirName, card)
+function CreatePrintCardUrl(card)
 {
-  var url = "";
-
-  var email = card.primaryEmail;
-  if (email) {
-    url = "addbook:printone?email=" + email + "&folder=" + escapedDirName;
-  } 
+  var url = "data:text/xml;base64," + card.convertToBase64EncodedXML();
   return url;
 }
 
 function AbPrintAddressBook()
 {
-        dump("print address book \n");
-        try {
-                addressbook.PrintAddressbook();
-        }
-        catch (ex) {
-                dump("failed to print address book\n");
-        }
+  var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
+  var uri = GetAbViewURI();
+  if (!uri)
+    return;
+
+  var statusFeedback;
+	statusFeedback = Components.classes["@mozilla.org/messenger/statusfeedback;1"].createInstance();
+	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+
+  /*
+    turn "moz-abmdbdirectory://abook.mab" into
+    "addbook://moz-abmdbdirectory/abook.mab?action=print"
+   */
+
+  var abURIArr = uri.split("://");
+  var printUrl = "addbook://" + abURIArr[0] + "/" + abURIArr[1] + "?action=print"
+
+	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
+										"",
+										"chrome,dialog=no,all",
+										1, [printUrl], statusFeedback);
+
+	return;
 }
 
 function AbExport()

@@ -110,4 +110,7 @@ interface nsIAbCard : nsISupports {
 	void  editCardToDatabase(in string uri);
 
 	boolean equals(in nsIAbCard card);
+
+	string convertToBase64EncodedXML();
+	wstring convertToXMLData();
 };

@@ -38,15 +38,9 @@
 #ifndef nsAddbookUrl_h__
 #define nsAddbookUrl_h__
 
-#include "nsISmtpUrl.h"
 #include "nsIURI.h"
-#include "nsIFileSpec.h"
-#include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
-#include "nsISmtpServer.h"
 #include "nsIAddbookUrl.h"
-#include "nsAbCardProperty.h"
-#include "nsIAbCard.h"
 
 class nsAddbookUrl : public nsIAddbookUrl
 {
@@ -59,20 +53,10 @@ public:
     virtual ~nsAddbookUrl();
 
 protected:
-  nsresult                      CleanupAddbookState();
-
-  nsresult                      ParseUrl();         // This gets the ball rolling...
-  
-  NS_METHOD                     CrackAddURL(const char *searchPart);
-  NS_METHOD                     CrackPrintURL(const char *searchPart, PRInt32 aOperation);
-  NS_METHOD                     GetAbCardProperty(nsAbCardProperty **aAbCardProp);
-
-  nsCString                     mOperationPart;     // string name of operation requested
+  nsresult                      ParseUrl();         
   PRInt32                       mOperationType;     // the internal ID for the operation
 
   nsCOMPtr<nsIURI>              m_baseURL;          // the base URL for the object
-  nsCOMPtr<nsAbCardProperty>    mAbCardProperty;    // Hold all parsed user info here
-
 };
 
 #endif // nsAddbookUrl_h__

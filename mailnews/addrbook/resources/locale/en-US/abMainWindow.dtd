@@ -45,7 +45,7 @@ Rights Reserved.
 <!ENTITY printCardViewCmd.accesskey                     "p">
 <!-- LOCALIZATION NOTE (printCardViewCmd.key) : DONT_TRANSLATE -->  
 <!ENTITY printCardViewCmd.key                           "P">
-<!ENTITY printAddressBook.label                         ".Print Address Book...">  
+<!ENTITY printAddressBook.label                         "Print Address Book...">  
 
 <!-- Edit Menu -->
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  

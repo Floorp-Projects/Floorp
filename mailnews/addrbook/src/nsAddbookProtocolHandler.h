@@ -46,13 +46,6 @@
 #include "nsIAddbookUrl.h"
 #include "nsIAddrDatabase.h"
 
-typedef struct {
-  const char  *abField;
-  PRBool      includeIt;
-} reportColumnStruct;
-
-#define       kMaxReportColumns   39
-
 class nsAddbookProtocolHandler : public nsIProtocolHandler
 {
 public:
@@ -67,37 +60,18 @@ public:
   NS_DECL_NSIPROTOCOLHANDLER
 
 private:
-  // Output Generation calls to create the HTML output 
-  NS_METHOD    GenerateHTMLOutputChannel(const char *aHtmlOutput,
-                                         PRInt32  aHtmlOutputSize,
+  nsresult    GenerateXMLOutputChannel(nsString &aOutput,
                                          nsIAddbookUrl *addbookUrl,
                                          nsIURI *aURI, 
                                          nsIChannel **_retval);
 
-  NS_METHOD    GeneratePrintOutput(nsIAddbookUrl *addbookUrl, 
-                                   char          **outBuf);
-  NS_METHOD    BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory, 
-                               char *charEmail, nsString &workBuffer);
+  nsresult    GeneratePrintOutput(nsIAddbookUrl *addbookUrl, 
+                                   nsString &aOutput);
 
-  NS_METHOD    BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory, 
-                            nsString &workBuffer);
+  nsresult    BuildDirectoryXML(nsIAbDirectory *aDirectory, 
+                                   nsString &aOutput);
 
-  NS_METHOD    AddIndividualUserAttribPair(nsString &aString, const char *aColumn, nsIAbCard *workCard);
-
-  // Database access calls...
-  NS_METHOD    OpenAB(char *aAbName, nsIAddrDatabase **aDatabase);
-  NS_METHOD    FindPossibleAbName(nsIAbCard  *aCard,
-                                  PRUnichar  **retName);
-
-  NS_METHOD    CheckColumnValidity(nsIAbCard *aCard);
-  NS_METHOD    GenerateRowForCard(nsString           &aString, 
-                                  nsIAbCard          *aCard);
-  NS_METHOD    GenerateColumnHeadings(nsString           &aString);
-  NS_METHOD    InitPrintColumns();
-
-  // Member vars...
-  PRInt32             mAddbookOperation;
-  reportColumnStruct  *mReportColumns;
+  PRInt32     mAddbookOperation;
 };
 
 #endif /* nsAddbookProtocolHandler_h___ */

@@ -77,6 +77,7 @@ Contributor(s):
     <command id="cmd_newEditor"/>
     <command id="cmd_printSetup" oncommand="goPageSetup()"/>
     <command id="cmd_printCard" oncommand="AbPrintCard()"/>
+    <command id="cmd_printAddressBook" oncommand="AbPrintAddressBook()"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
@@ -135,6 +136,7 @@ Contributor(s):
                 <menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
+        <menuitem id="printAddressBook" label="&printAddressBook.label;" command="cmd_printAddressBook"/>
             </menupopup>
         </menu>
         

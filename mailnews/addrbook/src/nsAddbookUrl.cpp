@@ -43,8 +43,6 @@
 #include "nsAbBaseCID.h"
 #include "nsEscape.h"
 
-const char *kWorkAddressBook = "AddbookWorkAddressBook";
-
 /////////////////////////////////////////////////////////////////////////////////////
 // addbook url definition
 /////////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +51,6 @@ nsAddbookUrl::nsAddbookUrl()
   NS_INIT_ISUPPORTS();
   
   m_baseURL = do_CreateInstance(NS_SIMPLEURI_CONTRACTID);
-  mAbCardProperty = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID);
 
   mOperationType = nsIAddbookUrlOperation::InvalidUrl; 
 }
@@ -62,91 +59,7 @@ nsAddbookUrl::~nsAddbookUrl()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsAddbookUrl, nsIURI)
-
-//
-// This will do the parsing for a single address book entry print operation.
-// In this case, you will have address book folder and email:
-//
-// addbook:add?vcard=begin%3Avcard%0Afn%3ARichard%20Pizzarro%0Aemail%3Binternet%3Arhp%40netscape.com%0Aend%3Avcard%0A
-//
-NS_IMETHODIMP 
-nsAddbookUrl::CrackAddURL(const char *searchPart)
-{
-  return NS_OK;
-}
-
-//
-// This will do the parsing for a single address book entry print operation.
-// In this case, you will have address book folder and email:
-//
-// addbook:printall?folder=Netscape%20Address%20Book
-// addbook:printall?email=rhp@netscape.com&folder=Netscape%20Address%20Book
-//
-NS_IMETHODIMP 
-nsAddbookUrl::CrackPrintURL(const char *searchPart, PRInt32 aOperation)
-{
-  nsCString       emailAddr;
-  nsCString       folderName;
-
-	char *rest = NS_CONST_CAST(char*, searchPart);
-
-  // okay, first, free up all of our old search part state.....
-	CleanupAddbookState();
-
-  // Start past the '?'...
-	if (rest && *rest == '?')
-		rest++;
-
-	if (rest)
-	{
-    char *token = nsCRT::strtok(rest, "&", &rest);
-		while (token && *token)
-		{
-			char *value = 0;
-      char *eq = PL_strchr(token, '=');
-			if (eq)
-			{
-				value = eq+1;
-				*eq = 0;
-			}
-			
-			switch (nsCRT::ToUpper(*token))
-			{
-				case 'E':
-          if (!nsCRT::strcasecmp (token, "email"))
-					  emailAddr = value;
-				  break;
-				case 'F':
-            if (!nsCRT::strcasecmp (token, "folder"))
-					    folderName = value;
-					break;
-      } // end of switch statement...
-			
-			if (eq)
-				  *eq = '='; // put it back
-				token = nsCRT::strtok(rest, "&", &rest);
-		} // while we still have part of the url to parse...
-  } // if rest && *rest
-
-	// Now unescape any fields that need escaped...
-  if (emailAddr.IsEmpty() && (aOperation == nsIAddbookUrlOperation::PrintIndividual))
-    return NS_ERROR_FAILURE;
-
-  if (!emailAddr.IsEmpty())
-  {
-    nsUnescape(NS_CONST_CAST(char*, emailAddr.get()));
-    mAbCardProperty->SetCardValue(kPriEmailColumn, NS_ConvertASCIItoUCS2(emailAddr).get());
-  }
-
-  if (!folderName.IsEmpty())
-  {
-    nsUnescape(NS_CONST_CAST(char*, folderName.get()));
-    mAbCardProperty->SetCardValue(kWorkAddressBook, NS_ConvertASCIItoUCS2(folderName).get());
-  }
-  
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS2(nsAddbookUrl, nsIAddbookUrl, nsIURI)
 
 NS_IMETHODIMP 
 nsAddbookUrl::SetSpec(const char * aSpec)
@@ -155,105 +68,19 @@ nsAddbookUrl::SetSpec(const char * aSpec)
 	return ParseUrl();
 }
 
-nsresult nsAddbookUrl::CleanupAddbookState()
-{
-  PRUnichar *tString = nsnull;
-
-  mAbCardProperty->SetCardValue(kFirstNameColumn, tString);
-  mAbCardProperty->SetCardValue(kLastNameColumn, tString);
-  mAbCardProperty->SetCardValue(kDisplayNameColumn, tString);
-  mAbCardProperty->SetCardValue(kNicknameColumn, tString);
-  mAbCardProperty->SetCardValue(kPriEmailColumn, tString);
-  mAbCardProperty->SetCardValue(k2ndEmailColumn, tString);
-  mAbCardProperty->SetCardValue(kPreferMailFormatColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkPhoneColumn, tString);
-  mAbCardProperty->SetCardValue(kHomePhoneColumn, tString);
-  mAbCardProperty->SetCardValue(kFaxColumn, tString);
-  mAbCardProperty->SetCardValue(kPagerColumn, tString);
-  mAbCardProperty->SetCardValue(kCellularColumn, tString);
-  mAbCardProperty->SetCardValue(kHomeAddressColumn, tString);
-  mAbCardProperty->SetCardValue(kHomeAddress2Column, tString);
-  mAbCardProperty->SetCardValue(kHomeCityColumn, tString);
-  mAbCardProperty->SetCardValue(kHomeStateColumn, tString);
-  mAbCardProperty->SetCardValue(kHomeZipCodeColumn, tString);
-  mAbCardProperty->SetCardValue(kHomeCountryColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkAddressColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkAddress2Column, tString);
-  mAbCardProperty->SetCardValue(kWorkCityColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkStateColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkZipCodeColumn, tString);
-  mAbCardProperty->SetCardValue(kWorkCountryColumn, tString);
-  mAbCardProperty->SetCardValue(kJobTitleColumn, tString);
-  mAbCardProperty->SetCardValue(kDepartmentColumn, tString);
-  mAbCardProperty->SetCardValue(kCompanyColumn, tString);
-  mAbCardProperty->SetCardValue(kWebPage1Column, tString);
-  mAbCardProperty->SetCardValue(kWebPage2Column, tString);
-  mAbCardProperty->SetCardValue(kBirthYearColumn, tString);
-  mAbCardProperty->SetCardValue(kBirthMonthColumn, tString);
-  mAbCardProperty->SetCardValue(kBirthDayColumn, tString);
-  mAbCardProperty->SetCardValue(kCustom1Column, tString);
-  mAbCardProperty->SetCardValue(kCustom2Column, tString);
-  mAbCardProperty->SetCardValue(kCustom3Column, tString);
-  mAbCardProperty->SetCardValue(kCustom4Column, tString);
-  mAbCardProperty->SetCardValue(kNotesColumn, tString);
-  mAbCardProperty->SetCardValue(kLastModifiedDateColumn, tString);
-  return NS_OK;
-}
-
 nsresult nsAddbookUrl::ParseUrl()
 {
-	nsresult      rv = NS_OK;
-  nsCAutoString searchPart;
+	nsresult rv;
 
-  // we can get the path from the simple url.....
-  nsXPIDLCString aPath;
-  m_baseURL->GetPath(getter_Copies(aPath));
-  if (aPath)
-    mOperationPart.Assign(aPath);
+  nsXPIDLCString pathStr;
+  rv = m_baseURL->GetPath(getter_Copies(pathStr));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-  PRInt32 startOfSearchPart = mOperationPart.FindChar('?');
-  if (startOfSearchPart > 0)
-  {
-    // now parse out the search field...
-    PRUint32 numExtraChars = mOperationPart.Right(searchPart, 
-                                                  mOperationPart.Length() -
-                                                  startOfSearchPart);
-    if (!searchPart.IsEmpty())
-    {
-      // now we need to strip off the search part from the
-      // to part....
-      mOperationPart.Cut(startOfSearchPart, numExtraChars);
-    }
-	}
-  else if (!mOperationPart.IsEmpty())
-  {
-    nsUnescape(NS_CONST_CAST(char*, mOperationPart.get()));
-  }
-
-  ToLowerCase(mOperationPart);
-  // Now, figure out what we are supposed to be doing?
-  if (!nsCRT::strcmp(mOperationPart.get(), "printone"))
-  {
-    mOperationType = nsIAddbookUrlOperation::PrintIndividual;
-    rv = CrackPrintURL(searchPart.get(), mOperationType); 
-  }
-  else if (!nsCRT::strcmp(mOperationPart.get(), "printall"))
-  {
+  if (PL_strstr(pathStr.get(), "?action=print"))
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
-    rv = CrackPrintURL(searchPart.get(), mOperationType); 
-  }
-  else if (!nsCRT::strcmp(mOperationPart.get(), "add"))
-  {
-    mOperationType = nsIAddbookUrlOperation::AddToAddressBook;
-    rv = CrackAddURL(searchPart.get()); 
-  }
   else
     mOperationType = nsIAddbookUrlOperation::InvalidUrl;
-  
-  if (NS_FAILED(rv))
-    mOperationType = nsIAddbookUrlOperation::InvalidUrl;
-  
-  return rv;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -373,20 +200,5 @@ NS_IMETHODIMP
 nsAddbookUrl::GetAddbookOperation(PRInt32 *_retval)
 {
   *_retval = mOperationType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsAddbookUrl::GetAbCard(nsIAbCard **aAbCard)
-{
-  if (!mAbCardProperty)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAbCard> tCard = do_QueryInterface(mAbCardProperty);
-  if (!tCard)
-    return NS_ERROR_FAILURE;
-
-  *aAbCard = tCard;
-  NS_ADDREF(*aAbCard);
   return NS_OK;
 }

@@ -82,18 +82,16 @@ nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractI
 
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **aMessageService)
 {
-
-	nsCAutoString contractID;
 	nsresult rv;
 
+  nsCAutoString contractID;
 	rv = GetMessageServiceContractIDForURI(uri, contractID);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIMsgMessageService> msgService = do_GetService(contractID.get(), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  *aMessageService = msgService;
-  NS_IF_ADDREF(*aMessageService);
+  NS_IF_ADDREF(*aMessageService = msgService);
 	return rv;
 }
 

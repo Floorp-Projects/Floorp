@@ -87,6 +87,10 @@ function StopUrls()
 
 function PrintEnginePrint()
 {
+  // XXX fix me
+  // instead of moving this offscreen (which doesn't work)
+  // and the user can close it from the task bar
+  // we should hide the window
   var left = screen.width + 50;
   var top = screen.height + 50;
   printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",

@@ -256,7 +256,7 @@ NS_IMETHODIMP
 nsMsgPrintEngine::StartPrintOperation()
 {
   // Load the about:blank on the tail end...
-  nsresult rv = AddPrintURI((const PRUnichar*)NS_LITERAL_STRING("about:blank").get()); 
+  nsresult rv = AddPrintURI(NS_LITERAL_STRING("about:blank").get()); 
   if (NS_FAILED(rv)) return rv; 
   return StartNextPrintOperation();
 }
@@ -304,18 +304,37 @@ nsMsgPrintEngine::SetStatusFeedback(nsIMsgStatusFeedback *aFeedback)
 	return NS_OK;
 }
 
+#define DATA_URL_PREFIX     "data:"
+#define DATA_URL_PREFIX_LEN 5
+
+#define ADDBOOK_URL_PREFIX     "addbook:"
+#define ADDBOOK_URL_PREFIX_LEN 8
+
 NS_IMETHODIMP
 nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
 {
-  nsresult      rv = NS_OK;
+  nsresult rv = NS_OK;
 
   char  *tString = ToNewCString(*uri);
   if (!tString)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr <nsIMsgMessageService> messageService;
-  rv = GetMessageServiceFromURI(tString, getter_AddRefs(messageService));
-  
+
+  // if this is a data: url, skip it, because 
+  // we've already got something we can print
+  // and we know it is not a message.
+  //
+  // if this an about:blank url, skip it, because
+  //
+  // if this is an addbook: url, skip it, because
+  // we know that isn't a message.
+  if (PL_strncmp(tString, DATA_URL_PREFIX, DATA_URL_PREFIX_LEN) && 
+      PL_strncmp(tString, ADDBOOK_URL_PREFIX, ADDBOOK_URL_PREFIX_LEN) && 
+      PL_strcmp(tString, "about:blank")) {
+    rv = GetMessageServiceFromURI(tString, getter_AddRefs(messageService));
+  }
+
   if (NS_SUCCEEDED(rv) && messageService)
   {
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));

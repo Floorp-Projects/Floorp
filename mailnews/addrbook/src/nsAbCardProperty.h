@@ -110,6 +110,9 @@ protected:
 
 	PRBool   m_IsMailList;
 	char*    m_MailListURI;
+
+private:
+  nsresult AppendData(const char *attrName, nsString &result);
 };
 
 #endif

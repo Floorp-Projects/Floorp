@@ -38,20 +38,73 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAbCardProperty.h"	 
-#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
 #include "prprf.h"	 
-#include "rdf.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIPref.h"
 #include "nsIAbDirectory.h"
+#include "plbase64.h"
+#include "nsIAddrBookSession.h"
+
+#define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
+
+#define LIST_ATTRS_COUNT 4
+
+static const char *LIST_ARRTS_ARRAY[] = {
+  kMailListName,
+  kMailListNickName,
+  kMailListDescription,
+  kMailListTotalAddresses
+};
+
+#define   CARD_ATTRS_COUNT      37
+
+// XXX todo what about _AimScreenName, or other generic columns?
+static const char *CARD_ATTRS_ARRAY[] = { 
+      kFirstNameColumn,
+      kLastNameColumn,
+      kDisplayNameColumn,  
+      kNicknameColumn,   
+      kPriEmailColumn,
+      k2ndEmailColumn,
+      kPreferMailFormatColumn,
+      kWorkPhoneColumn,   
+      kHomePhoneColumn,  
+      kFaxColumn,       
+      kPagerColumn,       
+      kCellularColumn,     
+      kHomeAddressColumn, 
+      kHomeAddress2Column, 
+      kHomeCityColumn, 
+      kHomeStateColumn, 
+      kHomeZipCodeColumn,
+      kHomeCountryColumn, 
+      kWorkAddressColumn,   
+      kWorkAddress2Column, 
+      kWorkCityColumn,     
+      kWorkStateColumn,   
+      kWorkZipCodeColumn,  
+      kWorkCountryColumn, 
+      kJobTitleColumn,      
+      kDepartmentColumn,    
+      kCompanyColumn,
+      kWebPage1Column,
+      kWebPage2Column, 
+      kBirthYearColumn,
+      kBirthMonthColumn, 
+      kBirthDayColumn, 
+      kCustom1Column, 
+      kCustom2Column, 
+      kCustom3Column, 
+      kCustom4Column, 
+      kNotesColumn   
+};
 
 nsAbCardProperty::nsAbCardProperty(void)
 {
@@ -941,5 +994,96 @@ NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 NS_IMETHODIMP nsAbCardProperty::Equals(nsIAbCard *card, PRBool *result)
 {
   *result = (card == this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
+{
+  nsresult rv;
+  nsString xmlStr;
+
+  xmlStr.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
+  xmlStr.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
+  xmlStr.Append(NS_LITERAL_STRING("<directory>\n").get());
+
+  nsXPIDLString xmlSubstr;
+  rv = ConvertToXMLData(getter_Copies(xmlSubstr));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  xmlStr.Append(xmlSubstr.get());
+  xmlStr.Append(NS_LITERAL_STRING("</directory>\n").get());
+
+  *result = PL_Base64Encode(NS_ConvertUCS2toUTF8(xmlStr).get(), 0, nsnull);
+  if (!*result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
+{
+  NS_ENSURE_ARG_POINTER(aXMLSubstr);
+
+  nsresult rv;
+  nsString xmlStr;
+
+  xmlStr.Append(NS_LITERAL_STRING("<abcard>\n").get());
+  // get the generated name
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRInt32 generatedNameFormat;
+  rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &generatedNameFormat);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+    
+  nsXPIDLString generatedName;
+  rv = abSession->GenerateNameFromCard(this, generatedNameFormat, getter_Copies(generatedName));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  xmlStr.Append(NS_LITERAL_STRING("<GeneratedName>\n").get());
+  xmlStr.Append(generatedName.get());
+  xmlStr.Append(NS_LITERAL_STRING("</GeneratedName>\n").get());
+
+  PRUint32 i;
+  for (i=0;i<CARD_ATTRS_COUNT;i++) {
+   rv = AppendData(CARD_ATTRS_ARRAY[i], xmlStr);
+   NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  xmlStr.Append(NS_LITERAL_STRING("</abcard>\n").get());
+
+  *aXMLSubstr = ToNewUnicode(xmlStr);
+  return NS_OK;
+}
+
+nsresult nsAbCardProperty::AppendData(const char *attrName, nsString &result)
+{
+  nsXPIDLString attrValue;
+  nsresult rv = GetCardValue(attrName, getter_Copies(attrValue));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (attrValue.IsEmpty())
+    return NS_OK;
+
+  nsAutoString attrNameStr;
+  attrNameStr.AssignWithConversion(attrName);
+
+  result.Append(NS_LITERAL_STRING("<").get());
+  result.Append(attrNameStr.get());
+  result.Append(NS_LITERAL_STRING(">").get());
+
+  result.Append(attrValue.get());
+
+  result.Append(NS_LITERAL_STRING("</").get());
+  result.Append(attrNameStr.get());
+  result.Append(NS_LITERAL_STRING(">").get());
+
   return NS_OK;
 }

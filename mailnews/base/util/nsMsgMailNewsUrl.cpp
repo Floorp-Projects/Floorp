@@ -710,3 +710,4 @@ NS_IMETHODIMP nsMsgMailNewsUrl:: GetMemCacheEntry(nsICacheEntryDescriptor **memC
 
   return rv;
 }
+

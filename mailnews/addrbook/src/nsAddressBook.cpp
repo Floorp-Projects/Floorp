@@ -247,33 +247,6 @@ nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db,
 
 }
 
-NS_IMETHODIMP nsAddressBook::PrintCard()
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIContentViewer> viewer;
-
-  if (!mDocShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
-
-  if (viewer) 
-  {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-    if (viewerFile) {
-      rv = viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
-    }
-  }
-
-  return rv;  
-}
-
-NS_IMETHODIMP nsAddressBook::PrintAddressbook()
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
 {
    NS_PRECONDITION(aWin != nsnull, "null ptr");
