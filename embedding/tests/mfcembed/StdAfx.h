@@ -122,7 +122,7 @@
 #include "nsError.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIEmbeddingSiteWindow.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
 
