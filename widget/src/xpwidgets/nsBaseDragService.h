@@ -45,9 +45,6 @@ public:
 
 protected:
 
-  static void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive );
-  static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen );
-
   nsCOMPtr<nsISupportsArray> mTransArray;
   PRBool             mCanDrop;
   PRBool             mDoingDrag;

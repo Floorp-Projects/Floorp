@@ -36,6 +36,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
 
 
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -310,7 +311,7 @@ printf("flavor data size is %ld\n", dataSize);
 	          
           // put it into the transferable.
           nsCOMPtr<nsISupports> genericDataWrapper;
-          CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
           errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
           #ifdef NS_DEBUG
             if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
@@ -484,7 +485,7 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     *outDataSize = 0;
     nsCOMPtr<nsISupports> data;
     if ( NS_SUCCEEDED(item->GetTransferData(mimeFlavor.GetBuffer(), getter_AddRefs(data), outDataSize)) )
-      CreateDataFromPrimitive ( mimeFlavor.GetBuffer(), data, outData, *outDataSize );
+      nsPrimitiveHelpers::CreateDataFromPrimitive ( mimeFlavor.GetBuffer(), data, outData, *outDataSize );
     else
       retVal = cantGetFlavorErr;
   } // if valid item
