@@ -31,11 +31,23 @@ $XULWindowOpenTest        = 0;
 $StartupPerformanceTest   = 0;
 $TestsPhoneHome           = 0;  # Should test report back to server?
 
-$BloatTestTimeout  = 120;    # seconds
-$DomTestTimeout	   = 45;     # seconds
+#
+# Timeouts, values are in seconds.
+#
+
+$CreateProfileTimeout           = 45;
+$RegxpcomTimeout                = 15;
+
+$AliveTestTimeout               = 45;
+$ViewerTestTimeout              = 45;
+$EmbedTestTimeout               = 45;
+$BloatTestTimeout               = 120;    # seconds
+$JavaTestTimeout                = 45;
+$DomTestTimeout	                = 45;     # seconds
 $LayoutPerformanceTestTimeout   = 1200;  # seconds
 $StartupPerformanceTestTimeout  = 60;    # seconds
-$XULOpenWindowTestTimeout	= 300;   # seconds
+$XULOpenWindowTestTimeout	    = 300;   # seconds
+
 
 $MozConfigFileName = 'mozconfig';
 $MozProfileName = 'default';

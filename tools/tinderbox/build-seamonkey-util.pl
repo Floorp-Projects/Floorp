@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.93 $ ';
+$::UtilsVersion = '$Revision: 1.94 $ ';
 
 package TinderUtils;
 
@@ -723,7 +723,7 @@ sub create_profile {
   my ($build_dir, $binary_dir, $binary) = @_;
   my $result = run_cmd($build_dir, $binary_dir,
 					   $binary . " -CreateProfile $Settings::MozProfileName",
-					   "/dev/null", 30);
+					   "/dev/null", $Settings::CreateProfileTimeout);
   return $result;
 }
 
@@ -746,7 +746,8 @@ sub run_all_tests {
     # people change contractids on us (since we don't autoreg opt builds)
     #
     unlink("$binary_dir/component.reg");
-    AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0, 15);
+    AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
+			 $Settings::RegxpcomTimeout);
 
 	#
 	# Make sure we have a profile to run tests.  This is assumed to be called
@@ -823,7 +824,8 @@ sub run_all_tests {
     #
     if ($Settings::AliveTest and $test_result eq 'success') {
         $test_result = AliveTest("MozillaAliveTest", $build_dir,
-								 $binary, " -P $Settings::MozProfileName", 45);
+								 $binary, " -P $Settings::MozProfileName",
+								$Settings::AliveTestTimeout);
     }
 
 	# Mozilla java test
@@ -833,21 +835,23 @@ sub run_all_tests {
 	  $ENV{LD_ASSUME_KERNEL} = "2.2.5";
 
 	  $test_result = AliveTest("MozillaJavaTest", $build_dir,
-							   $binary, "http://java.sun.com", 45);
+							   $binary, "http://java.sun.com",
+							   $Settings::JavaTestTimeout);
     }
 	
 
     # Viewer alive test
     if ($Settings::ViewerTest and $test_result eq 'success') {
         $test_result = AliveTest("ViewerAliveTest", $build_dir,
-								 "$binary_dir/viewer", 0, 45);
+								 "$binary_dir/viewer", 0,
+								$Settings::ViewerTestTimeout);
     }
 
 	# Embed test.  Test the embedded app.
     if ($Settings::EmbedTest and $test_result eq 'success') {
       $test_result = AliveTest("EmbedAliveTest", $build_dir, 
-							   "$embed_binary_dir/$embed_binary_basename",
-							   0, 45);
+							   "$embed_binary_dir/$embed_binary_basename", 0,
+							   $Settings::EmbedTestTimeout);
     }
 
     # Bloat test (based on nsTraceRefcnt)
