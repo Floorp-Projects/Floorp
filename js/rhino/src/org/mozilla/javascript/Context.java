@@ -54,8 +54,6 @@ import java.beans.*;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.Locale;
-import java.util.ResourceBundle;
-import java.text.MessageFormat;
 import java.lang.reflect.*;
 import org.mozilla.javascript.debug.*;
 
@@ -811,7 +809,8 @@ public class Context
         // with special build preprocessing but that would require some ant
         // tweaking and then replacing token in resource files was simpler
         if (implementationVersion == null) {
-            implementationVersion = getMessage0("implementation.version");
+            implementationVersion
+                = ScriptRuntime.getMessage0("implementation.version");
         }
         return implementationVersion;
     }
@@ -1039,21 +1038,21 @@ public class Context
 
     static EvaluatorException reportRuntimeError0(String messageId)
     {
-        String msg = getMessage0(messageId);
+        String msg = ScriptRuntime.getMessage0(messageId);
         return reportRuntimeError(msg);
     }
 
     static EvaluatorException reportRuntimeError1(String messageId,
                                                   Object arg1)
     {
-        String msg = getMessage1(messageId, arg1);
+        String msg = ScriptRuntime.getMessage1(messageId, arg1);
         return reportRuntimeError(msg);
     }
 
     static EvaluatorException reportRuntimeError2(String messageId,
                                                   Object arg1, Object arg2)
     {
-        String msg = getMessage2(messageId, arg1, arg2);
+        String msg = ScriptRuntime.getMessage2(messageId, arg1, arg2);
         return reportRuntimeError(msg);
     }
 
@@ -1061,7 +1060,7 @@ public class Context
                                                   Object arg1, Object arg2,
                                                   Object arg3)
     {
-        String msg = getMessage3(messageId, arg1, arg2, arg3);
+        String msg = ScriptRuntime.getMessage3(messageId, arg1, arg2, arg3);
         return reportRuntimeError(msg);
     }
 
@@ -1069,7 +1068,8 @@ public class Context
                                                   Object arg1, Object arg2,
                                                   Object arg3, Object arg4)
     {
-        String msg = getMessage4(messageId, arg1, arg2, arg3, arg4);
+        String msg
+            = ScriptRuntime.getMessage4(messageId, arg1, arg2, arg3, arg4);
         return reportRuntimeError(msg);
     }
 
@@ -2244,37 +2244,6 @@ public class Context
 
     /********** end of API **********/
 
-    static String getMessage0(String messageId)
-    {
-        return getMessage(messageId, null);
-    }
-
-    static String getMessage1(String messageId, Object arg1)
-    {
-        Object[] arguments = {arg1};
-        return getMessage(messageId, arguments);
-    }
-
-    static String getMessage2(String messageId, Object arg1, Object arg2)
-    {
-        Object[] arguments = {arg1, arg2};
-        return getMessage(messageId, arguments);
-    }
-
-    static String getMessage3(String messageId, Object arg1, Object arg2,
-                              Object arg3)
-    {
-        Object[] arguments = {arg1, arg2, arg3};
-        return getMessage(messageId, arguments);
-    }
-
-    static String getMessage4(String messageId, Object arg1, Object arg2,
-                              Object arg3, Object arg4)
-    {
-        Object[] arguments = {arg1, arg2, arg3, arg4};
-        return getMessage(messageId, arguments);
-    }
-
     /**
      * Internal method that reports an error for missing calls to
      * enter().
@@ -2287,39 +2256,6 @@ public class Context
                 "No Context associated with current Thread");
         }
         return cx;
-    }
-
-    /* OPT there's a noticable delay for the first error!  Maybe it'd
-     * make sense to use a ListResourceBundle instead of a properties
-     * file to avoid (synchronized) text parsing.
-     */
-    static final String defaultResource =
-        "org.mozilla.javascript.resources.Messages";
-
-    static String getMessage(String messageId, Object[] arguments)
-    {
-        Context cx = getCurrentContext();
-        Locale locale = cx != null ? cx.getLocale() : Locale.getDefault();
-
-        // ResourceBundle does cacheing.
-        ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
-
-        String formatString;
-        try {
-            formatString = rb.getString(messageId);
-        } catch (java.util.MissingResourceException mre) {
-            throw new RuntimeException
-                ("no message resource found for message property "+ messageId);
-        }
-
-        /*
-         * It's OK to format the string, even if 'arguments' is null;
-         * we need to format it anyway, to make double ''s collapse to
-         * single 's.
-         */
-        // TODO: MessageFormat is not available on pJava
-        MessageFormat formatter = new MessageFormat(formatString);
-        return formatter.format(arguments);
     }
 
     private Object compileImpl(Scriptable scope,
@@ -2493,12 +2429,10 @@ public class Context
 
     private void newArrayHelper(Scriptable scope, Scriptable array)
     {
+        scope = ScriptableObject.getTopLevelScope(scope);
         array.setParentScope(scope);
-        Object ctor = ScriptRuntime.getTopLevelProp(scope, "Array");
-        if (ctor != null && ctor instanceof Scriptable) {
-            Scriptable s = (Scriptable) ctor;
-            array.setPrototype((Scriptable) s.get("prototype", s));
-        }
+        array.setPrototype(
+            ScriptableObject.getClassPrototype(scope, array.getClassName()));
     }
 
     final boolean isVersionECMA1()

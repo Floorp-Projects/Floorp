@@ -44,6 +44,9 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+import java.text.MessageFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.mozilla.javascript.xml.XMLObject;
 import org.mozilla.javascript.xml.XMLLib;
@@ -2082,22 +2085,6 @@ public class ScriptRuntime {
         return f;
     }
 
-    private static Object call(Object fun, Context cx, Scriptable scope,
-                               Object thisArg, Object[] args)
-    {
-        if (!(fun instanceof Function)) {
-            throw notFunctionError(fun);
-        }
-        Function function = (Function)fun;
-        Scriptable thisObj;
-        if (thisArg instanceof Scriptable || thisArg == null) {
-            thisObj = (Scriptable) thisArg;
-        } else {
-            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
-        }
-        return function.call(cx, scope, thisObj, args);
-    }
-
     /**
      * Perform function call in reference context. Should always
      * return value that can be passed to
@@ -2253,7 +2240,7 @@ public class ScriptRuntime {
             if (cx.hasFeature(Context.FEATURE_STRICT_MODE)) {
                 throw Context.reportRuntimeError0("msg.eval.nonstring.strict");
             }
-            String message = Context.getMessage0("msg.eval.nonstring");
+            String message = ScriptRuntime.getMessage0("msg.eval.nonstring");
             Context.reportWarning(message);
             return x;
         }
@@ -2283,7 +2270,7 @@ public class ScriptRuntime {
         // infinite looping on while(true) { eval('foo bar') } -
         // so we throw an EvaluatorException.
         if (script == null) {
-            String message = Context.getMessage0("msg.syntax");
+            String message = ScriptRuntime.getMessage0("msg.syntax");
             throw new EvaluatorException(message, filename, lineNumber,
                                          null, 0);
         }
@@ -2869,7 +2856,7 @@ public class ScriptRuntime {
 
     private static Scriptable locateDynamicScope(Context cx, Scriptable scope)
     {
-        // Return cx.topCallScope is scope is present on its prototype chain
+        // Return cx.topCallScope if scope is present on its prototype chain
         // and return scope otherwise.
         // Should only be called when scope is top scope.
         if (cx.topCallScope == scope) {
@@ -3219,22 +3206,69 @@ public class ScriptRuntime {
         }
     }
 
-    public static String getMessage0(String messageId) {
-        return Context.getMessage0(messageId);
-    }
-
-    public static String getMessage1(String messageId, Object arg1) {
-        return Context.getMessage1(messageId, arg1);
-    }
-
-    public static String getMessage2
-        (String messageId, Object arg1, Object arg2)
+    public static String getMessage0(String messageId)
     {
-        return Context.getMessage2(messageId, arg1, arg2);
+        return getMessage(messageId, null);
     }
 
-    public static String getMessage(String messageId, Object[] arguments) {
-        return Context.getMessage(messageId, arguments);
+    public static String getMessage1(String messageId, Object arg1)
+    {
+        Object[] arguments = {arg1};
+        return getMessage(messageId, arguments);
+    }
+
+    public static String getMessage2(
+        String messageId, Object arg1, Object arg2)
+    {
+        Object[] arguments = {arg1, arg2};
+        return getMessage(messageId, arguments);
+    }
+
+    public static String getMessage3(
+        String messageId, Object arg1, Object arg2, Object arg3)
+    {
+        Object[] arguments = {arg1, arg2, arg3};
+        return getMessage(messageId, arguments);
+    }
+
+    public static String getMessage4(
+        String messageId, Object arg1, Object arg2, Object arg3, Object arg4)
+    {
+        Object[] arguments = {arg1, arg2, arg3, arg4};
+        return getMessage(messageId, arguments);
+    }
+
+    /* OPT there's a noticable delay for the first error!  Maybe it'd
+     * make sense to use a ListResourceBundle instead of a properties
+     * file to avoid (synchronized) text parsing.
+     */
+    public static String getMessage(String messageId, Object[] arguments)
+    {
+        final String defaultResource
+            = "org.mozilla.javascript.resources.Messages";
+
+        Context cx = Context.getCurrentContext();
+        Locale locale = cx != null ? cx.getLocale() : Locale.getDefault();
+
+        // ResourceBundle does cacheing.
+        ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
+
+        String formatString;
+        try {
+            formatString = rb.getString(messageId);
+        } catch (java.util.MissingResourceException mre) {
+            throw new RuntimeException
+                ("no message resource found for message property "+ messageId);
+        }
+
+        /*
+         * It's OK to format the string, even if 'arguments' is null;
+         * we need to format it anyway, to make double ''s collapse to
+         * single 's.
+         */
+        // TODO: MessageFormat is not available on pJava
+        MessageFormat formatter = new MessageFormat(formatString);
+        return formatter.format(arguments);
     }
 
     public static EcmaError constructError(String error, String message)

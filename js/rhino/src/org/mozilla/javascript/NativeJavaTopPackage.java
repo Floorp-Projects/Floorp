@@ -169,8 +169,7 @@ public class NativeJavaTopPackage
                 offset = index+1;
             }
         }
-        throw Context.reportRuntimeError(
-            Context.getMessage0("msg.not.java.obj"));
+        throw Context.reportRuntimeError0("msg.not.java.obj");
     }
 
     private static final Object FTAG = new Object();

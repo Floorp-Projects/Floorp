@@ -108,7 +108,7 @@ public class Parser
 
     void addWarning(String messageId, String messageArg)
     {
-        String message = Context.getMessage1(messageId, messageArg);
+        String message = ScriptRuntime.getMessage1(messageId, messageArg);
         errorReporter.warning(message, sourceURI, ts.getLineno(),
                               ts.getLine(), ts.getOffset());
     }
@@ -116,7 +116,7 @@ public class Parser
     void addError(String messageId)
     {
         ++syntaxErrorCount;
-        String message = Context.getMessage0(messageId);
+        String message = ScriptRuntime.getMessage0(messageId);
         errorReporter.error(message, sourceURI, ts.getLineno(),
                             ts.getLine(), ts.getOffset());
     }
@@ -349,14 +349,15 @@ public class Parser
                 nf.addChildToBack(pn, n);
             }
         } catch (StackOverflowError ex) {
-            String msg = Context.getMessage0("mag.too.deep.parser.recursion");
+            String msg = ScriptRuntime.getMessage0(
+                "mag.too.deep.parser.recursion");
             throw Context.reportRuntimeError(msg, sourceURI,
                                              ts.getLineno(), null, 0);
         }
 
         if (this.syntaxErrorCount != 0) {
             String msg = String.valueOf(this.syntaxErrorCount);
-            msg = Context.getMessage1("msg.got.syntax.errors", msg);
+            msg = ScriptRuntime.getMessage1("msg.got.syntax.errors", msg);
             throw errorReporter.runtimeError(msg, sourceURI, baseLineno,
                                              null, 0);
         }
