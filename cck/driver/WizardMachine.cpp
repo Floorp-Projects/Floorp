@@ -1167,9 +1167,9 @@ void CWizardMachineApp::CreateNewCache()
 	{
 		if (CompareValue)
 		{	
-			if (GlobalWidgetArray[i].type != "RadioButton" 
+			if (/*GlobalWidgetArray[i].type != "RadioButton" 
 			&& GlobalWidgetArray[i].type != "RadioGroup" 
-			&& GlobalWidgetArray[i].type != "Text" 
+			&& */GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "GlobalText" 
 			&& GlobalWidgetArray[i].type != "Button" 
