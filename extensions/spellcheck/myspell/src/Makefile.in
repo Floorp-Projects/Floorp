@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  spellchecker \
 		  nspr \
+                  intl \
 		  $(NULL)
 
 CPPSRCS =				\
