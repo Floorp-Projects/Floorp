@@ -262,6 +262,10 @@ button[icon="select-font"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-select-font?size=button");
 }
 
+button[icon="select-color"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-color-picker?size=button");
+}
+
 button[icon="network"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-network?size=button");
 }
