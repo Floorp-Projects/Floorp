@@ -676,10 +676,16 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
   // source...
   nsCOMPtr<nsIURI> source;
   download->GetSource(getter_AddRefs(source));
-  
+
   // target...
   nsCOMPtr<nsILocalFile> target;
   download->GetTarget(getter_AddRefs(target));
+  
+  // helper app...
+  nsXPIDLString openingWith;
+  download->GetOpeningWith(getter_Copies(openingWith));
+  if (openingWith)
+    dl->SetOpeningWith(openingWith);
 
   dl->Init(source, target, nsnull, nsnull); 
   dl->SetObserver(this);
@@ -760,7 +766,8 @@ nsDownload::nsDownload():mStartTime(0),
                          mCurrBytes(0),
                          mMaxBytes(0),
                          mDownloadState(NOTSTARTED),
-                         mLastUpdate(-500)
+                         mLastUpdate(-500),
+                         mOpeningWith(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
