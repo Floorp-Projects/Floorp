@@ -224,8 +224,8 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [self setupToolbar];
     
 //  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
-//	duplicating a lot of the code found here.  I have moved it to that method.
-//	We now remove the IB tab, then add one of our own.
+//  duplicating a lot of the code found here.  I have moved it to that method.
+//  We now remove the IB tab, then add one of our own.
 
     [mTabBrowser removeTabViewItem:[mTabBrowser tabViewItemAtIndex:0]];
     [self newTab];
@@ -348,7 +348,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-    return [NSArray arrayWithObjects:	BackToolbarItemIdentifier,
+    return [NSArray arrayWithObjects:   BackToolbarItemIdentifier,
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
@@ -367,7 +367,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-    return [NSArray arrayWithObjects:	BackToolbarItemIdentifier,
+    return [NSArray arrayWithObjects:   BackToolbarItemIdentifier,
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
@@ -522,11 +522,11 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (void)beginLocationSheet
 {
-    [NSApp beginSheet:	mLocationSheetWindow
-       modalForWindow:	[self window]
-        modalDelegate:	nil
-       didEndSelector:	nil
-          contextInfo:	nil];
+    [NSApp beginSheet:  mLocationSheetWindow
+       modalForWindow:  [self window]
+        modalDelegate:  nil
+       didEndSelector:  nil
+          contextInfo:  nil];
 }
 
 - (IBAction)endLocationSheet:(id)sender
@@ -701,9 +701,11 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 }
 
 
-- (BOOL)findInPage:(NSString*)text
+- (BOOL)findInPageWithPattern:(NSString*)text caseSensitive:(BOOL)inCaseSensitive
+    wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
 {
-  return [[mBrowserView getBrowserView] findInPage:text];
+  return [[mBrowserView getBrowserView] findInPageWithPattern:text caseSensitive:inCaseSensitive
+    wrap:inWrap backwards:inBackwards];
 }
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder
@@ -764,7 +766,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     NSResponder* resp = [[self window] firstResponder];
     [[self window] makeFirstResponder: nil];
     
-    if ( ([mSidebarDrawer state] == NSDrawerClosedState) || ([mSidebarDrawer state] == NSDrawerClosingState) ) 	{
+    if ( ([mSidebarDrawer state] == NSDrawerClosedState) || ([mSidebarDrawer state] == NSDrawerClosingState) ) {
         // XXXHack to bypass sidebar crashes.
         [mSidebarDrawer openOnEdge: NSMaxXEdge];
     } else {

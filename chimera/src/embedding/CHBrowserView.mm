@@ -98,7 +98,7 @@ const char* dirServiceContractID = "@mozilla.org/file/directory_service;1";
 
 class nsCocoaBrowserListener : public nsSupportsWeakReference,
                                public nsIInterfaceRequestor,
-			                         public nsIWebBrowserChrome,
+                               public nsIWebBrowserChrome,
                                public nsIWindowCreator,
                                public nsIEmbeddingSiteWindow2,
                                public nsIWebProgressListener,
@@ -148,12 +148,12 @@ nsCocoaBrowserListener::~nsCocoaBrowserListener()
 }
 
 NS_IMPL_ISUPPORTS9(nsCocoaBrowserListener,
-		               nsIInterfaceRequestor,
-		               nsIWebBrowserChrome,
+                   nsIInterfaceRequestor,
+                   nsIWebBrowserChrome,
                    nsIWindowCreator,
-		               nsIEmbeddingSiteWindow,
+                   nsIEmbeddingSiteWindow,
                    nsIEmbeddingSiteWindow2,
-		               nsIWebProgressListener,
+                   nsIWebProgressListener,
                    nsISupportsWeakReference,
                    nsIContextMenuListener,
                    nsITooltipListener)
@@ -218,14 +218,14 @@ nsCocoaBrowserListener::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const 
   NSPoint where;
   where.x = aXCoords; where.y = aYCoords;
   [mContainer onShowTooltip:where withText:[NSString stringWithCharacters:aTipText length:nsCRT::strlen(aTipText)]];
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCocoaBrowserListener::OnHideTooltip()
 {
   [mContainer onHideTooltip];
-	return NS_OK;
+  return NS_OK;
 }
 
 // Implementation of nsIWebBrowserChrome
@@ -363,7 +363,7 @@ nsCocoaBrowserListener::ExitModalEventLoop(nsresult aStatus)
 NS_IMETHODIMP
 nsCocoaBrowserListener::Blur()
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 // Implementation of nsIEmbeddingSiteWindow
@@ -890,11 +890,11 @@ void nsHeaderSniffer::PerformSave()
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsHeaderSniffer::OnProgressChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 PRInt32 aCurSelfProgress, 
-					 PRInt32 aMaxSelfProgress, 
-					 PRInt32 aCurTotalProgress, 
-					 PRInt32 aMaxTotalProgress)
+           nsIRequest *aRequest, 
+           PRInt32 aCurSelfProgress, 
+           PRInt32 aMaxSelfProgress, 
+           PRInt32 aCurTotalProgress, 
+           PRInt32 aMaxTotalProgress)
 {
   return NS_OK;
 }
@@ -902,8 +902,8 @@ nsHeaderSniffer::OnProgressChange(nsIWebProgress *aWebProgress,
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
 nsHeaderSniffer::OnLocationChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 nsIURI *location)
+           nsIRequest *aRequest, 
+           nsIURI *location)
 {
   return NS_OK;
 }
@@ -911,9 +911,9 @@ nsHeaderSniffer::OnLocationChange(nsIWebProgress *aWebProgress,
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
 nsHeaderSniffer::OnStatusChange(nsIWebProgress *aWebProgress, 
-				       nsIRequest *aRequest, 
-				       nsresult aStatus, 
-				       const PRUnichar *aMessage)
+               nsIRequest *aRequest, 
+               nsresult aStatus, 
+               const PRUnichar *aMessage)
 {
   return NS_OK;
 }
@@ -1000,8 +1000,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   if (_webBrowser) {
     nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(_webBrowser);
     window->SetSize((PRInt32)frameRect.size.width, 
-		    (PRInt32)frameRect.size.height,
-		    PR_TRUE);
+        (PRInt32)frameRect.size.height,
+        PR_TRUE);
   }
 }
 
@@ -1173,14 +1173,14 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   if (_webBrowser) {
     // Set the container nsIWebBrowserChrome
     _webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, 
-						   _listener));
+               _listener));
 
     NSRect frame = [self frame];
  
     // Hook up the widget hierarchy with us as the parent
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(_webBrowser);
     baseWin->InitWindow((NSView*)self, nsnull, 0, 0, 
-			frame.size.width, frame.size.height);
+      frame.size.width, frame.size.height);
     baseWin->Create();
   }
 
@@ -1248,7 +1248,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     print->Print(nsnull, nsnull);
 }
 
--(BOOL)findInPage:(NSString*)inText
+- (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
+    wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
 {
     PRBool found =  PR_FALSE;
     
@@ -1265,6 +1266,10 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
       framesFind->SetRootSearchFrame(rootWindow);
       framesFind->SetCurrentSearchFrame(focusedWindow);
       
+      webFind->SetMatchCase(inCaseSensitive ? PR_TRUE : PR_FALSE);
+      webFind->SetWrapFind(inWrap ? PR_TRUE : PR_FALSE);
+      webFind->SetFindBackwards(inBackwards ? PR_TRUE : PR_FALSE);
+    
       PRUnichar* text = (PRUnichar*)nsMemory::Alloc(([inText length]+1)*sizeof(PRUnichar));
       if ( text ) {
         [inText getCharacters:text];
@@ -1537,7 +1542,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   }
   
   return dragAccepted;
-}	
+}
 
 
 @end

@@ -142,7 +142,8 @@ enum {
 
 - (void)printDocument;
 
-- (BOOL)findInPage:(NSString*)inText;
+- (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
+            wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
 
 -(IBAction)cut:(id)aSender;
 -(IBAction)copy:(id)aSender;

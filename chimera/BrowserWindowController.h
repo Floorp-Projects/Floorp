@@ -177,8 +177,6 @@ class nsIDOMNode;
 - (void)startThrobber;
 - (void)stopThrobber;
 
-//- (BOOL)findInPage:(NSString*)text;
-
 -(void) biggerTextSize;
 -(void) smallerTextSize;
 
