@@ -41,6 +41,7 @@ interface nsIMsgCompType {
     const long ReplyAll   = 2;
     const long ForwardAsAttachment = 3;
     const long ForwardInline = 4;
+    const long NewsPost		= 5;
 };
 
 

@@ -69,6 +69,7 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 {
 		var msgComposeType = Components.interfaces.nsIMsgCompType;
         var identity = null;
+	var newsgroup = null;
 
 	try 
 	{
@@ -82,6 +83,15 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 
 			// get the incoming server associated with this uri
 			var server = FindIncomingServer(uri);
+
+			// if they hit new and they are reading a newsgroup
+			// turn this into a new post, not a new mail message
+			if (type == msgComposeType.New) {
+				if (server.type == "nntp") {
+					type = msgComposeType.NewsPost;
+					newsgroup = uri;
+				}
+			}
 			// dump("server = " + server + "\n");
 			// get the identity associated with this server
 			var identities = accountManager.GetIdentitiesForServer(server);
@@ -111,6 +121,11 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
 		msgComposeService.OpenComposeWindow(null, null, 0, format, identity);
+		return;
+	}
+        else if (type == msgComposeType.NewsPost) 
+	{
+		msgComposeService.OpenComposeWindow(null, newsgroup, 5, format, identity);
 		return;
 	}
 		

@@ -128,9 +128,15 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 
 	if (originalMsgURI && *originalMsgURI)
 	{
-		args.Append(",originalMsg='");
-		args.Append(originalMsgURI);
-		args.Append("'");
+		if (type == nsIMsgCompType::NewsPost) {
+			args.Append(",newsgroups=");
+			args.Append(originalMsgURI);
+		}
+		else {
+			args.Append(",originalMsg='");
+			args.Append(originalMsgURI);
+			args.Append("'");
+		}
 	}
 	
 	if (msgComposeWindowURL && *msgComposeWindowURL)
