@@ -42,7 +42,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                   nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
@@ -59,6 +60,7 @@ public:
 
   NS_IMETHOD  GetFont(const nsFont*& aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
 
 protected:
   void RealizeFont();
@@ -69,6 +71,7 @@ protected:
 
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
+  nsCOMPtr<nsIAtom> mLangGroup;
   XFontStruct       *mFontInfo;
   Font              mFontHandle;
   nscoord           mCharWidths[256];
