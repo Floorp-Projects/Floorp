@@ -26,6 +26,10 @@
 
 #include "nsDocShell.h"
 
+// Factory Constructors
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocShell)
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kDocShellCID, NS_DOCSHELL_CID);
 
@@ -46,7 +50,7 @@ NSGetFactory(nsISupports* aServMgr,
    nsIGenericFactory* fact;
 
 	if(aClass.Equals(kDocShellCID))
-		rv = NS_NewGenericFactory(&fact, nsDocShell::Create);
+		rv = NS_NewGenericFactory(&fact, nsDocShellConstructor);
    else 
 		rv = NS_NOINTERFACE;
 
@@ -101,7 +105,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 
 static nsModuleComponentInfo components[] =
 {
-  { "DocShell Component", NS_DOCSHELL_CID, NS_DOCSHELL_PROGID, nsDocShell::Create }
+  { "DocShell Component", NS_DOCSHELL_CID, NS_DOCSHELL_PROGID, nsDocShellConstructor }
 };
 
 
