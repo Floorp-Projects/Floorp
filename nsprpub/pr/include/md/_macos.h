@@ -386,6 +386,19 @@ extern char* _MD_ReadDir(struct _MDDir *md,PRIntn flags);
 ** Socket I/O Related definitions
 */
 
+#if UNIVERSAL_INTERFACES_VERSION >= 0x0330
+/* In Universal Interfaces 3.3 and later, these are enums. */
+#define IP_TTL IP_TTL
+#define IP_TOS IP_TOS
+#define IP_ADD_MEMBERSHIP IP_ADD_MEMBERSHIP
+#define IP_DROP_MEMBERSHIP IP_DROP_MEMBERSHIP
+#define IP_MULTICAST_IF IP_MULTICAST_IF
+#define IP_MULTICAST_TTL IP_MULTICAST_TTL
+#define IP_MULTICAST_LOOP IP_MULTICAST_LOOP
+#define TCP_NODELAY TCP_NODELAY
+#define TCP_MAXSEG TCP_MAXSEG
+#endif
+
 #define _MD_SOCKET 			_MD_socket
 #define _MD_BIND			_MD_bind
 #define _MD_LISTEN			_MD_listen
