@@ -66,8 +66,12 @@ char *XP_GetString(int i)
   return ("XP_GetString replacement needed");
 }
 
-
 #ifdef XP_MAC
+
+#ifndef UNIXMINUSMACTIME
+#define UNIXMINUSMACTIME 2082844800UL
+#endif
+
 #include <OSUtils.h>
 
 static void MyReadLocation(MachineLocation * loc)
