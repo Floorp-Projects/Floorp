@@ -499,7 +499,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
 
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
    this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDayOfWeek, 0, 0, 0 );
-   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDayOfWeek, 0, 0, 0 );
+   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDayOfWeek, 23, 59, 59 );
    
    // prepare the dayBoxItemByDateArray, we will be filling this in
    

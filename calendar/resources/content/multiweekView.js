@@ -601,7 +601,7 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
 
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
    this.firstDateOfView = new Date( newYear, newMonth, newDay );
-   this.lastDateOfView = new Date( newYear, newMonth,  newDay + this.WeeksInView*7 -1 );
+   this.lastDateOfView = new Date( newYear, newMonth,  newDay + this.WeeksInView*7 -1, 23, 59, 59 );
 
    var firstDayOfMonth  = new Date( newYear, newMonth, 1 );
    var firstDayOfMonthIndex = this.indexOfDate( firstDayOfMonth );
