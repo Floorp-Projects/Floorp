@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.30 2000/12/15 05:38:09 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.31 2000/12/20 05:54:17 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -955,8 +955,10 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
 {
   mp_err   res;
   mp_int   *pQ, *pR;
-  mp_int   qtmp, rtmp;
+  mp_int   qtmp, rtmp, btmp;
   int      cmp;
+  mp_sign  signA = MP_SIGN(a);
+  mp_sign  signB = MP_SIGN(b);
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -965,47 +967,47 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
 
   DIGITS(&qtmp) = 0;
   DIGITS(&rtmp) = 0;
+  DIGITS(&btmp) = 0;
+
   /* Set up some temporaries... */
-  if (!q || q == a || q == b) {
-    if((res = mp_init_copy(&qtmp, a)) != MP_OKAY)
-      return res;
-    pQ = &qtmp;
-  } else {
-    if((res = mp_copy(a, q)) != MP_OKAY)
-      return res;
-    pQ = q;
-  }
   if (!r || r == a || r == b) {
-    if((res = mp_init_copy(&rtmp, b)) != MP_OKAY)
-      goto CLEANUP;
+    MP_CHECKOK( mp_init_copy(&rtmp, a) );
     pR = &rtmp;
   } else {
-    if((res = mp_copy(b, r)) != MP_OKAY)
-      goto CLEANUP;
+    MP_CHECKOK( mp_copy(a, r) );
     pR = r;
   }
 
+  if (!q || q == a || q == b) {
+    MP_CHECKOK( mp_init_size(&qtmp, MP_USED(a)) );
+    pQ = &qtmp;
+  } else {
+    MP_CHECKOK( s_mp_pad(q, MP_USED(a)) );
+    pQ = q;
+    mp_zero(pQ);
+  }
+
   /*
-    If a <= b, we can compute the solution without division;
+    If |a| <= |b|, we can compute the solution without division;
     otherwise, we actually do the work required.
    */
-  if((cmp = s_mp_cmp(pQ, pR)) < 0) {
-    s_mp_exch(pQ, pR);
-    mp_zero(pQ);
-  } else if(cmp == 0) {
-    mp_set(pQ, 1);
-    mp_zero(pR);
+  if ((cmp = s_mp_cmp(a, b)) <= 0) {
+    if (cmp) {
+      /* r was set to a above. */
+      mp_zero(pQ);
+    } else {
+      mp_set(pQ, 1);
+      mp_zero(pR);
+    }
   } else {
-    if((res = s_mp_div(pQ, pR)) != MP_OKAY)
-      goto CLEANUP;
+    MP_CHECKOK( mp_init_copy(&btmp, b) );
+    MP_CHECKOK( s_mp_div(pR, &btmp, pQ) );
   }
 
   /* Compute the signs for the output  */
-  SIGN(pR) = SIGN(a); /* Sr = Sa              */
-  if(SIGN(a) == SIGN(b))
-    SIGN(pQ) = ZPOS;  /* Sq = ZPOS if Sa = Sb */
-  else
-    SIGN(pQ) = NEG;   /* Sq = NEG if Sa != Sb */
+  MP_SIGN(pR) = signA;   /* Sr = Sa              */
+  /* Sq = ZPOS if Sa == Sb */ /* Sq = NEG if Sa != Sb */
+  MP_SIGN(pQ) = (signA == signB) ? ZPOS : NEG;
 
   if(s_mp_cmp_d(pQ, 0) == MP_EQ)
     SIGN(pQ) = ZPOS;
@@ -1020,6 +1022,7 @@ mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r)
     s_mp_exch(pR, r);
 
 CLEANUP:
+  mp_clear(&btmp);
   mp_clear(&rtmp);
   mp_clear(&qtmp);
 
@@ -4103,87 +4106,96 @@ mp_err   s_mp_sqr(mp_int *a)
   Compute a = a / b and b = a mod b.  Assumes b > a.
  */
 
-mp_err   s_mp_div(mp_int *a, mp_int *b)
+mp_err   s_mp_div(mp_int *rem, 	/* i: dividend, o: remainder */
+                  mp_int *div, 	/* i: divisor                */
+		  mp_int *quot)	/* i: 0;        o: quotient  */
 {
-  mp_int   quot, rem, t;
+  mp_int   part, t;
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
-  mp_word  q;
+  mp_word  q_msd;
 #else
-  mp_digit q;
+  mp_digit q_msd;
 #endif
   mp_err   res;
   mp_digit d;
-  mp_digit b_msd;
+  mp_digit div_msd;
   int      ix;
 
-  if(mp_cmp_z(b) == 0)
+  if(mp_cmp_z(div) == 0)
     return MP_RANGE;
 
-  /* Shortcut if b is power of two */
-  if((ix = s_mp_ispow2(b)) >= 0) {
-    mp_copy(a, b);  /* need this for remainder */
-    s_mp_div_2d(a, (mp_digit)ix);
-    s_mp_mod_2d(b, (mp_digit)ix);
+  /* Shortcut if divisor is power of two */
+  if((ix = s_mp_ispow2(div)) >= 0) {
+    MP_CHECKOK( mp_copy(rem, quot) );
+    s_mp_div_2d(quot, (mp_digit)ix);
+    s_mp_mod_2d(rem,  (mp_digit)ix);
 
     return MP_OKAY;
   }
 
-  /* Allocate space to store the quotient */
-  if((res = mp_init_size(&quot, MP_ALLOC(a))) != MP_OKAY)
-    return res;
+  DIGITS(&t) = 0;
+  MP_SIGN(rem) = ZPOS;
+  MP_SIGN(div) = ZPOS;
 
   /* A working temporary for division     */
-  if((res = mp_init_size(&t, MP_ALLOC(a))) != MP_OKAY)
-    goto T;
-
-  /* Allocate space for the remainder     */
-  if((res = mp_init_size(&rem, MP_ALLOC(a))) != MP_OKAY)
-    goto REM;
+  MP_CHECKOK( mp_init_size(&t, MP_ALLOC(rem)));
 
   /* Normalize to optimize guessing       */
-  MP_CHECKOK( s_mp_norm(a, b, &d) );
+  MP_CHECKOK( s_mp_norm(rem, div, &d) );
+
+  part = *rem;
 
   /* Perform the division itself...woo!   */
-  ix = USED(a) - 1;
+  MP_USED(quot) = MP_ALLOC(quot);
 
-  while(ix >= 0) {
+  /* Find a partial substring of rem which is at least div */
+  /* If we didn't find one, we're finished dividing    */
+  while (MP_USED(rem) > MP_USED(div) || s_mp_cmp(rem, div) >= 0) {
     int i;
+    int unusedRem;
 
-    /* Find a partial substring of a which is at least b */
-    while(s_mp_cmp(&rem, b) < 0 && ix >= 0) {
-      MP_CHECKOK( s_mp_lshd(&rem, 1) );
-      MP_CHECKOK( s_mp_lshd(&quot, 1) );
-      DIGIT(&rem, 0) = DIGIT(a, ix);
-      --ix;
+    unusedRem = MP_USED(rem) - MP_USED(div);
+    MP_DIGITS(&part) = MP_DIGITS(rem) + unusedRem;
+    MP_ALLOC(&part)  = MP_ALLOC(rem)  - unusedRem;
+    MP_USED(&part)   = MP_USED(div);
+    if (s_mp_cmp(&part, div) < 0) {
+      -- unusedRem;
+#if MP_ARGCHK == 2
+      assert(unusedRem >= 0);
+#endif
+      -- MP_DIGITS(&part);
+      ++ MP_USED(&part);
+      ++ MP_ALLOC(&part);
     }
-
-    /* If we didn't find one, we're finished dividing    */
-    if(s_mp_cmp(&rem, b) < 0) 
-      break;    
 
     /* Compute a guess for the next quotient digit       */
-    q = DIGIT(&rem, USED(&rem) - 1);
-    b_msd = DIGIT(b, USED(b) - 1);
-    if (q >= b_msd) {
-      q = 1;
-    } else if (USED(&rem) > 1) {
+    q_msd = MP_DIGIT(&part, MP_USED(&part) - 1);
+    div_msd = MP_DIGIT(div, MP_USED(div) - 1);
+    if (q_msd >= div_msd) {
+      q_msd = 1;
+    } else if (MP_USED(&part) > 1) {
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_DIV_WORD)
-      q = (q << DIGIT_BIT) | DIGIT(&rem, USED(&rem) - 2);
-      q /= b_msd;
-      if (q == RADIX)
-        --q;
+      q_msd = (q_msd << MP_DIGIT_BIT) | MP_DIGIT(&part, MP_USED(&part) - 2);
+      q_msd /= div_msd;
+      if (q_msd == RADIX)
+        --q_msd;
 #else
       mp_digit r;
-      MP_CHECKOK( s_mpv_div_2dx1d(q, DIGIT(&rem, MP_USED(&rem) - 2), 
-				  b_msd, &q, &r) );
+      MP_CHECKOK( s_mpv_div_2dx1d(q_msd, MP_DIGIT(&part, MP_USED(&part) - 2), 
+				  div_msd, &q_msd, &r) );
 #endif
     } else {
-      q = 0;
+      q_msd = 0;
     }
+#if MP_ARGCHK == 2
+    assert(q_msd > 0); /* This case should never occur any more. */
+#endif
+    if (q_msd <= 0)
+      break;
 
     /* See what that multiplies out to                   */
-    mp_copy(b, &t);
-    MP_CHECKOK( s_mp_mul_d(&t, (mp_digit)q) );
+    mp_copy(div, &t);
+    MP_CHECKOK( s_mp_mul_d(&t, (mp_digit)q_msd) );
 
     /* 
        If it's too big, back it off.  We should not have to do this
@@ -4192,50 +4204,41 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
        I didn't implement that here.
      * When using s_mpv_div_2dx1d, we may have to do this 3 times.
      */
-    for (i = 4; s_mp_cmp(&t, &rem) > 0 && i > 0; --i) {
-      --q;
-      s_mp_sub(&t, b);
+    for (i = 4; s_mp_cmp(&t, &part) > 0 && i > 0; --i) {
+      --q_msd;
+      s_mp_sub(&t, div);	/* t -= div */
     }
     if (i < 0) {
       res = MP_RANGE;
       goto CLEANUP;
     }
 
-    /* At this point, q should be the right next digit   */
-    MP_CHECKOK( s_mp_sub(&rem, &t) );
+    /* At this point, q_msd should be the right next digit   */
+    MP_CHECKOK( s_mp_sub(&part, &t) );	/* part -= t */
+    s_mp_clamp(rem);
 
     /*
       Include the digit in the quotient.  We allocated enough memory
       for any quotient we could ever possibly get, so we should not
       have to check for failures here
      */
-    DIGIT(&quot, 0) = (mp_digit)q;
+    MP_DIGIT(quot, unusedRem) = (mp_digit)q_msd;
   }
 
   /* Denormalize remainder                */
   if (d) {
-    s_mp_div_2d(&rem, d);
+    s_mp_div_2d(rem, d);
   }
 
-  s_mp_clamp(&quot);
-  s_mp_clamp(&rem);
-
-  /* Copy quotient back to output         */
-  s_mp_exch(&quot, a);
-  
-  /* Copy remainder back to output        */
-  s_mp_exch(&rem, b);
+  s_mp_clamp(quot);
 
 CLEANUP:
-  mp_clear(&rem);
-REM:
   mp_clear(&t);
-T:
-  mp_clear(&quot);
 
   return res;
 
 } /* end s_mp_div() */
+
 
 /* }}} */
 
