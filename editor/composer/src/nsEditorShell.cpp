@@ -1725,7 +1725,7 @@ nsEditorShell::UpdateWindowTitle()
         // find out if the doc already has a fileSpec associated with it.
         nsFileSpec    docFileSpec;
         PRBool noFileSpec = (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
-        if (!noFileSpec && docFileSpec)
+        if ((docFileSpec != nsnull) && !noFileSpec)
         {
           char *name = docFileSpec.GetLeafName();
           if (name)
