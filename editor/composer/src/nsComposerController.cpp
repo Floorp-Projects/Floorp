@@ -171,5 +171,9 @@ nsComposerController::RegisterHTMLEditorCommands(
   NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertImageNoUI", "img");
   NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertHR", "hr");
 
+  NS_REGISTER_ONE_COMMAND(nsAbsolutePositioningCommand, "cmd_absPos");
+  NS_REGISTER_ONE_COMMAND(nsDecreaseZIndexCommand, "cmd_decreaseZIndex");
+  NS_REGISTER_ONE_COMMAND(nsIncreaseZIndexCommand, "cmd_increaseZIndex");
+
   return NS_OK;
 }

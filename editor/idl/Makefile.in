@@ -42,6 +42,9 @@ XPIDLSRCS	= \
 		nsIEditorStyleSheets.idl \
 		nsIHTMLEditor.idl \
 		nsIHTMLObjectResizer.idl \
+		nsIHTMLAbsPosEditor.idl \
+		nsIHTMLObjectResizeListener.idl \
+		nsIHTMLInlineTableEditor.idl \
 		nsIPlaintextEditor.idl \
 		nsITableEditor.idl \
 		nsIURIRefObject.idl \

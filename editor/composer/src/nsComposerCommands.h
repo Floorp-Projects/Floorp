@@ -271,7 +271,17 @@ protected:
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
+class nsAbsolutePositioningCommand : public nsBaseStateUpdatingCommand
+{
+public:
+                   nsAbsolutePositioningCommand();
 
+protected:
+
+  NS_IMETHOD IsCommandEnabled(const char *aCommandName, nsISupports *aCommandRefCon, PRBool *_retval);
+  virtual nsresult  GetCurrentState(nsIEditor *aEditor, const char* aTagName, nsICommandParams *aParams);
+  virtual nsresult  ToggleState(nsIEditor *aEditor, const char* aTagName);
+};
 
 // composer commands
 
@@ -280,6 +290,9 @@ NS_DECL_COMPOSER_COMMAND(nsDocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsSetDocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsSetDocumentOptionsCommand)
 //NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
+
+NS_DECL_COMPOSER_COMMAND(nsDecreaseZIndexCommand)
+NS_DECL_COMPOSER_COMMAND(nsIncreaseZIndexCommand)
 
 // Generic commands
 

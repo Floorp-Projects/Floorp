@@ -58,6 +58,7 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsEditProperty.h"
 #include "nsTextEditUtils.h"
+#include "nsIHTMLInlineTableEditor.h"
 
 /*
  * nsHTMLEditorMouseListener implementation
@@ -116,7 +117,6 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
-  nsresult res;
 
   // Don't do anything special if not an HTML editor
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
@@ -126,7 +126,7 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     //XXX This should be easier to do!
     // But eDOMEvents_contextmenu and NS_CONTEXTMENU is not exposed in any event interface :-(
     PRUint16 buttonNumber;
-    res = mouseEvent->GetButton(&buttonNumber);
+    nsresult res = mouseEvent->GetButton(&buttonNumber);
     if (NS_FAILED(res)) return res;
 
     PRBool isContextClick;
@@ -270,8 +270,7 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       }
       // HACK !!! Context click places the caret but the context menu consumes
       // the event; so we need to check resizing state ourselves
-      nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(htmlEditor);
-      objectResizer->CheckResizingState(selection);
+      htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
 
       // Prevent bubbling if we changed selection or 
       //   for all context clicks
@@ -293,6 +292,32 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   return nsTextEditorMouseListener::MouseDown(aMouseEvent);
+}
+
+nsresult
+nsHTMLEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  NS_ENSURE_ARG_POINTER(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+  if (!mouseEvent) {
+    //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+
+  // Don't do anything special if not an HTML editor
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    nsCOMPtr<nsIDOMEventTarget> target;
+    nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
+    if (NS_FAILED(res)) return res;
+    if (!target) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+
+    nsCOMPtr<nsIHTMLInlineTableEditor> inlineTableEditing = do_QueryInterface(htmlEditor);
+    inlineTableEditing->DoInlineTableEditingAction(element);
+  }
+  return NS_OK;
 }
 
 nsresult

@@ -70,6 +70,7 @@ public:
 /*BEGIN implementations of mouseevent handler interface*/
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
 /*END implementations of mouseevent handler interface*/
 
 protected:

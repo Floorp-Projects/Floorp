@@ -48,7 +48,8 @@
     var _elementIDs = [
       "showNew", "showOpen", "showSave", "showPublish", "showPreview", "showSmaller", "showLarger", "showBold",
       "showCut", "showCopy", "showPaste", "showPrint", "showFind", "showBullets", "showNumbers", "showItalic",
-      "showImage", "showHline", "showTable", "showLink", "showAnchor", "showOutdent", "showIndent", "showUnderline"];
+      "showImage", "showHline", "showTable", "showLink", "showAnchor", "showOutdent", "showIndent", "showUnderline",
+      "showAbsolutePosition", "showDecreaseZIndex", "showIncreaseZIndex" ];
   ]]>
   </script>        
 
@@ -101,6 +102,8 @@
                 prefstring="editor.toolbars.showbutton.IncreaseFontSize"/>
       <checkbox label="&bold.label;"      id="showBold"
                 prefstring="editor.toolbars.showbutton.bold"/>
+      <checkbox label="&absolutePosition.label;" id="showAbsolutePosition"
+                prefstring="editor.toolbars.showbutton.absolutePosition"/>
     </vbox>
     <vbox flex="1">
       <checkbox label="&bullets.label;"   id="showBullets"
@@ -109,6 +112,8 @@
                 prefstring="editor.toolbars.showbutton.ol"/>
       <checkbox label="&italic.label;"    id="showItalic"
                 prefstring="editor.toolbars.showbutton.italic"/>
+      <checkbox label="&decreaseZIndex.label;" id="showDecreaseZIndex"
+                prefstring="editor.toolbars.showbutton.decreaseZIndex"/>
     </vbox>
     <vbox flex="1">
       <checkbox label="&outdent.label;"   id="showOutdent"
@@ -117,6 +122,8 @@
                 prefstring="editor.toolbars.showbutton.indent"/>
       <checkbox label="&underline.label;" id="showUnderline"
                 prefstring="editor.toolbars.showbutton.underline"/>
+      <checkbox label="&increaseZIndex.label;" id="showIncreaseZIndex"
+                prefstring="editor.toolbars.showbutton.increaseZIndex"/>
     </vbox>
   </groupbox>
 </page>
