@@ -859,11 +859,12 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         childBox->GetBounds(r);
         r.Inflate(margin);
 
-        nsAutoString fixed;
+        nsAutoString fixed, hidden;
         content->GetAttr(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
+        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
         if (count < childIndex) {
-            if (!fixed.Equals(NS_LITERAL_STRING("true"))) {              
+            if (!fixed.Equals(NS_LITERAL_STRING("true")) && !hidden.Equals(NS_LITERAL_STRING("true"))) {
                 mChildInfosBefore[mChildInfosBeforeCount].child   = childBox;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
@@ -874,7 +875,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                 mChildInfosBeforeCount++;
             }
         } else if (count > childIndex) {
-            if (!fixed.Equals(NS_LITERAL_STRING("true"))) {   
+            if (!fixed.Equals(NS_LITERAL_STRING("true")) && !hidden.Equals(NS_LITERAL_STRING("true"))) {
                 mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
                 mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
