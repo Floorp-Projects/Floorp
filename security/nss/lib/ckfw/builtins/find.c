@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: find.c,v $ $Revision: 1.2 $ $Date: 2000/04/20 03:14:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -214,11 +214,6 @@ nss_builtins_FindObjectsInit
       temp[ fo->n ] = o;
       fo->n++;
     }
-  }
-
-  if( 0 == fo->n ) {
-    *pError = CKR_OK;
-    goto loser;
   }
 
   fo->objs = nss_ZNEWARRAY(arena, builtinsInternalObject *, fo->n);

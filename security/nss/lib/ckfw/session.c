@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1405,7 +1405,8 @@ nssCKFWSession_CopyObject
     /* use create object */
     NSSArena *tmpArena;
     CK_ATTRIBUTE_PTR newTemplate;
-    CK_ULONG i;
+    CK_ULONG i, j, n, newLength, k;
+    CK_ATTRIBUTE_TYPE_PTR oldTypes;
     NSSCKFWObject *rv;
     
     tmpArena = NSSArena_Create();
@@ -1414,32 +1415,88 @@ nssCKFWSession_CopyObject
       return (NSSCKFWObject *)NULL;
     }
 
-    newTemplate = nss_ZNEWARRAY(tmpArena, CK_ATTRIBUTE, ulAttributeCount);
+    n = nssCKFWObject_GetAttributeCount(fwObject, pError);
+    if( (0 == n) && (CKR_OK != *pError) ) {
+      return (NSSCKFWObject *)NULL;
+    }
+
+    oldTypes = nss_ZNEWARRAY(tmpArena, CK_ATTRIBUTE_TYPE, n);
+    if( (CK_ATTRIBUTE_TYPE_PTR)NULL == oldTypes ) {
+      NSSArena_Destroy(tmpArena);
+      *pError = CKR_HOST_MEMORY;
+      return (NSSCKFWObject *)NULL;
+    }
+
+    *pError = nssCKFWObject_GetAttributeTypes(fwObject, oldTypes, n);
+    if( CKR_OK != *pError ) {
+      NSSArena_Destroy(tmpArena);
+      return (NSSCKFWObject *)NULL;
+    }
+
+    newLength = n;
+    for( i = 0; i < ulAttributeCount; i++ ) {
+      for( j = 0; j < n; j++ ) {
+        if( oldTypes[j] == pTemplate[i].type ) {
+          if( (CK_VOID_PTR)NULL == pTemplate[i].pValue ) {
+            /* Removing the attribute */
+            newLength--;
+          }
+          break;
+        }
+      }
+      if( j == n ) {
+        /* Not found */
+        newLength++;
+      }
+    }
+
+    newTemplate = nss_ZNEWARRAY(tmpArena, CK_ATTRIBUTE, newLength);
     if( (CK_ATTRIBUTE_PTR)NULL == newTemplate ) {
       NSSArena_Destroy(tmpArena);
       *pError = CKR_HOST_MEMORY;
       return (NSSCKFWObject *)NULL;
     }
 
-    for( i = 0; i < ulAttributeCount; i++ ) {
-      newTemplate[i] = pTemplate[i];
-      if( (void *)NULL == newTemplate[i].pValue ) {
-        NSSItem item;
-        NSSItem *it = nssCKFWObject_GetAttribute(fwObject, newTemplate[i].type,
+    k = 0;
+    for( j = 0; j < n; j++ ) {
+      for( i = 0; i < ulAttributeCount; i++ ) {
+        if( oldTypes[j] == pTemplate[i].type ) {
+          if( (CK_VOID_PTR)NULL == pTemplate[i].pValue ) {
+            /* This attribute is being deleted */
+            ;
+          } else {
+            /* This attribute is being replaced */
+            newTemplate[k].type = pTemplate[i].type;
+            newTemplate[k].pValue = pTemplate[i].pValue;
+            newTemplate[k].ulValueLen = pTemplate[i].ulValueLen;
+            k++;
+          }
+          break;
+        }
+      }
+      if( i == ulAttributeCount ) {
+        /* This attribute is being copied over from the old object */
+        NSSItem item, *it;
+        item.size = 0;
+        item.data = (void *)NULL;
+        it = nssCKFWObject_GetAttribute(fwObject, oldTypes[j],
           &item, tmpArena, pError);
         if( (NSSItem *)NULL == it ) {
-          if( CKR_OK != *pError ) {
+          if( CKR_OK == *pError ) {
             *pError = CKR_GENERAL_ERROR;
           }
           NSSArena_Destroy(tmpArena);
           return (NSSCKFWObject *)NULL;
         }
-        newTemplate[i].pValue = it->data;
-        newTemplate[i].ulValueLen = it->size;
+        newTemplate[k].type = oldTypes[j];
+        newTemplate[k].pValue = it->data;
+        newTemplate[k].ulValueLen = it->size;
+        k++;
       }
     }
+    /* assert that k == newLength */
 
-    rv = nssCKFWSession_CreateObject(fwSession, newTemplate, ulAttributeCount, pError);
+    rv = nssCKFWSession_CreateObject(fwSession, newTemplate, newLength, pError);
     if( (NSSCKFWObject *)NULL == rv ) {
       if( CKR_OK == *pError ) {
         *pError = CKR_GENERAL_ERROR;
@@ -1490,7 +1547,7 @@ nssCKFWSession_FindObjectsInit
   }
 #endif /* NSSDEBUG */
 
-  if( CK_TRUE == nssCKFWInstance_GetModuleHandlesSessionObjects(
+  if( CK_TRUE != nssCKFWInstance_GetModuleHandlesSessionObjects(
                    fwSession->fwInstance) ) {
     CK_ULONG i;
 

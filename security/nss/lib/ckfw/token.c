@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:41 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -250,7 +250,7 @@ nssCKFWToken_Create
     goto loser;
   }
 
-  if( CK_TRUE == nssCKFWInstance_GetModuleHandlesSessionObjects(
+  if( CK_TRUE != nssCKFWInstance_GetModuleHandlesSessionObjects(
                    fwToken->fwInstance) ) {
     fwToken->sessionObjectHash = nssCKFWHash_Create(fwToken->fwInstance, 
                                    arena, pError);
