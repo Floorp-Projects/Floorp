@@ -1259,7 +1259,7 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = rowRect.height;
-  border->mInsideNeighbor = &cellFrame->mBorderEdges;
+  border->mInsideNeighbor = cellFrame->mBorderEdges;
   // we need to factor in the table's horizontal borders.
   // but we can't compute that length here because we don't know how thick top and bottom borders are
   // see DidComputeHorizontalCollapsingBorders
@@ -1393,7 +1393,7 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
+    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
     mBorderEdges->mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.right);
     // since the table is our right neightbor, we need to factor in the table's horizontal borders.
     // can't compute that length here because we don't know how thick top and bottom borders are
@@ -1471,7 +1471,7 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border->mWidth *= NSToCoordCeil(p2t);
   border->mLength = GetColumnWidth(aColIndex);
-  border->mInsideNeighbor = &cellFrame->mBorderEdges;
+  border->mInsideNeighbor = cellFrame->mBorderEdges;
   if (0==aColIndex)
   { // if we're the first column, factor in the thickness of the left table border
     nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
@@ -1612,7 +1612,7 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = &cellFrame->mBorderEdges;
+    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
     mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.bottom);
     // since the table is our bottom neightbor, we need to factor in the table's vertical borders.
     PRInt32 lastColIndex = mCellMap->GetColCount()-1;

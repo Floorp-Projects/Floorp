@@ -44,6 +44,11 @@ NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 
+nsTableCellFrame::~nsTableCellFrame()
+{
+  delete mBorderEdges;
+}
+
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext&  aPresContext,
                        nsIContent*      aContent,
@@ -130,29 +135,31 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
   SetColIndex(aColIndex); // this also sets the contents col index
-  mBorderEdges.mOutsideEdge=PR_FALSE;
   nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
   {
     if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle())
     {
+      mBorderEdges = new nsBorderEdges;
+      mBorderEdges->mOutsideEdge=PR_FALSE;
+      
       PRInt32 rowspan = GetRowSpan();
       PRInt32 i;
       for (i=0; i<rowspan; i++)
       {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
-        mBorderEdges.mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
+        mBorderEdges->mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
         borderToAdd = new nsBorderEdge();
-        mBorderEdges.mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
+        mBorderEdges->mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
       }
       PRInt32 colspan = GetColSpan();
       for (i=0; i<colspan; i++)
       {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
-        mBorderEdges.mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
+        mBorderEdges->mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
         borderToAdd = new nsBorderEdge();
-        mBorderEdges.mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
+        mBorderEdges->mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
       }
     }
     mCollapseOffset = nsPoint(0,0);
@@ -189,12 +196,13 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
                                            PRInt32 aIndex, 
                                            nscoord aLength)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   if ((NS_SIDE_LEFT==aSide) || (NS_SIDE_RIGHT==aSide))
   {
     PRInt32 baseRowIndex;
     GetRowIndex(baseRowIndex);
     PRInt32 rowIndex = aIndex-baseRowIndex;
-    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
+    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
     border->mLength = aLength;
   }
   else {
@@ -254,7 +262,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           else
           {
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
-                                             aDirtyRect, rect, &mBorderEdges, mStyleContext, skipSides);
+                                             aDirtyRect, rect, mBorderEdges, mStyleContext, skipSides);
           }
         }
       }
@@ -341,6 +349,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
                                      nsBorderEdge *aBorder,
                                      nscoord       aOddAmountToAdd)
 {
+  NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
   nsBorderEdge *border = nsnull;
   switch (aSide)
   {
@@ -349,8 +358,8 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
       PRInt32 baseColIndex;
       GetColIndex(baseColIndex);
       PRInt32 colIndex = aColIndex-baseColIndex;
-      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges.mMaxBorderWidth.top = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.top);
+      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(colIndex));
+      mBorderEdges->mMaxBorderWidth.top = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.top);
       break;
     }
 
@@ -359,8 +368,8 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
       PRInt32 baseColIndex;
       GetColIndex(baseColIndex);
       PRInt32 colIndex = aColIndex-baseColIndex;
-      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.bottom);
+      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(colIndex));
+      mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.bottom);
       break;
     }
   
@@ -369,8 +378,8 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
       PRInt32 baseRowIndex;
       GetRowIndex(baseRowIndex);
       PRInt32 rowIndex = aRowIndex-baseRowIndex;
-      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges.mMaxBorderWidth.left = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.left);
+      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
+      mBorderEdges->mMaxBorderWidth.left = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.left);
       break;
     }
       
@@ -379,8 +388,8 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
       PRInt32 baseRowIndex;
       GetRowIndex(baseRowIndex);
       PRInt32 rowIndex = aRowIndex-baseRowIndex;
-      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges.mMaxBorderWidth.right = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.right);
+      border = (nsBorderEdge *)(mBorderEdges->mEdges[aSide].ElementAt(rowIndex));
+      mBorderEdges->mMaxBorderWidth.right = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges->mMaxBorderWidth.right);
       break;
     }
   }
@@ -1092,7 +1101,8 @@ void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFram
   }
 
   if (NS_STYLE_BORDER_COLLAPSE==aTableFrame->GetBorderCollapseStyle()) {
-    aBorder = mBorderEdges.mMaxBorderWidth;
+    NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
+    aBorder = mBorderEdges->mMaxBorderWidth;
   } else {
     const nsStyleSpacing* spacing;
     GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
