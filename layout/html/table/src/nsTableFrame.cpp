@@ -2123,9 +2123,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
               // TODO:  unify these 2 kinds of column data
               // TODO:  cache more column data, like the mWidth.GetUnit and what its value
 
-              nsTableColPtr col = (nsTableCol *)tableKid->ChildAt(j);
-              NS_ASSERTION(col.IsNotNull(), "bad content");
-              nsColLayoutData *colData = new nsColLayoutData(col);
+              nsColLayoutData *colData = new nsColLayoutData();
               nsTableColFrame *colFrame=nsnull;
               colGroupFrame->ChildAt(j, (nsIFrame *&)colFrame);
               colData->SetColFrame(colFrame);

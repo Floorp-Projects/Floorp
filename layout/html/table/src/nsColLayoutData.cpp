@@ -16,14 +16,12 @@
  * Reserved.
  */
 #include "nsColLayoutData.h"
-#include "nsTableCol.h"
 #include "nsVoidArray.h"
 #include "nsCellLayoutData.h"
 #include "nsTableCell.h"
 
-nsColLayoutData::nsColLayoutData(nsTableCol *aCol)
+nsColLayoutData::nsColLayoutData()
 {
-  mCol = aCol;
   mCells = new nsVoidArray();
   mColFrame = nsnull;
 }
@@ -43,11 +41,11 @@ nsColLayoutData::~nsColLayoutData()
   mCells = 0;
 }
 
-PRInt32 nsColLayoutData::IndexOf(nsTableCell* aTableCell) const
+PRInt32 nsColLayoutData::IndexOf(nsIContent* aCell) const
 {
   PRInt32 count = this->Count();
   PRInt32 result = -1;
-  if (aTableCell != nsnull)
+  if (aCell != nsnull)
   {
     for (PRInt32 index = 0; index < count; index++)
     {
@@ -57,10 +55,10 @@ PRInt32 nsColLayoutData::IndexOf(nsTableCell* aTableCell) const
         nsTableCellFrame* frame = cellData->GetCellFrame();
         if (frame != nsnull)
         {
-          nsTableCell* cell;
+          nsIContent* cell;
            
-          frame->GetContent((nsIContent*&)cell);
-          if (cell == aTableCell)
+          frame->GetContent(cell);
+          if (cell == aCell)
           {
             result = index;
             NS_RELEASE(cell);
