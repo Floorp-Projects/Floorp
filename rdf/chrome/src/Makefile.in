@@ -31,15 +31,6 @@ CPPSRCS =				\
 	nsChromeProtocolHandler.cpp     \
 	$(NULL)
 
-EXPORTS = \
-	$(NULL)
-
-LOCAL_INCLUDES += \
-	-I$(srcdir)/../src \
-	$(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
 MODULE = rdfbase
 
 REQUIRES = chrome netlib rdf rdfutil raptor xpcom
