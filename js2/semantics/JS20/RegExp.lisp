@@ -35,7 +35,6 @@
                                        (:character-literal #\a) :nbhy (:character-literal #\z) ")"))
                 () t)
                (:line-terminator (#?000A #?000D #?2028 #?2029) () t)
-               (:non-terminator (- :unicode-character :line-terminator) () t)
                (:decimal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                (($default-action $default-action)
                                 (digit-value digit-value)))
@@ -53,13 +52,13 @@
                (:control-letter (++ (#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
                                     (#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))
                                 (($default-action $default-action)))
-               (:pattern-character (- :non-terminator (#\^ #\$ #\\ #\. #\* #\+ #\? #\( #\) #\[ #\] #\{ #\} #\|))
+               (:pattern-character (- :unicode-character (#\^ #\$ #\\ #\. #\* #\+ #\? #\( #\) #\[ #\] #\{ #\} #\|))
                                    (($default-action $default-action)))
-               ((:class-character dash) (- :non-terminator (#\\ #\]))
+               ((:class-character dash) (- :unicode-character (#\\ #\]))
                 (($default-action $default-action)))
                ((:class-character no-dash) (- (:class-character dash) (#\-))
                 (($default-action $default-action)))
-               (:identity-escape (- :non-terminator :unicode-alphanumeric)
+               (:identity-escape (- :unicode-character :unicode-alphanumeric)
                                  (($default-action $default-action))))
               (($default-action character identity (*))
                (digit-value integer digit-char-16 ((:global-variable "digitValue") "(" * ")"))))
@@ -68,10 +67,8 @@
        (%charclass :unicode-character)
        (%charclass :unicode-alphanumeric)
        (%charclass :line-terminator)
-       (%charclass :non-terminator)
        
        (define line-terminators (set character) (set-of character #?000A #?000D #?2028 #?2029))
-       (define non-terminators (set character) (character-set-difference (set-of-ranges character #?0000 #?FFFF) line-terminators))
        (define re-whitespaces (set character) (set-of character #?000C #?000A #?000D #?0009 #?000B #\space))
        (define re-digits (set character) (set-of-ranges character #\0 #\9))
        (define re-word-characters (set character) (set-of-ranges character #\0 #\9 #\A #\Z #\a #\z #\_ nil))
@@ -132,22 +129,25 @@
          "characters that are accepted by a part of the pattern. The " (:type integer)
          " argument contains the number of capturing left parentheses seen so far in the pattern.")
        
-       (define (character-set-matcher (acceptance-set (set character))) matcher   ;*********ignore case?
+       (define (character-set-matcher (acceptance-set (set character)) (invert boolean)) matcher   ;*********ignore case?
          (function ((t r-e-input) (x r-e-match) (c continuation))
            (let ((i integer (& end-index x))
                  (s string (& str t)))
              (if (= i (length s))
                (oneof failure)
-               (if (character-set-member (nth s i) acceptance-set)
+               (if (xor (character-set-member (nth s i) acceptance-set) invert)
                  (c (tuple r-e-match (+ i 1) (& captures x)))
                  (oneof failure))))))
        (%text :semantics
          (:global character-set-matcher) " returns a " (:type matcher)
-         " that matches a single input string character. The match succeeds if the character is a member of the "
+         " that matches a single input string character. If "
+         (:local invert) " is false, the match succeeds if the character is a member of the "
+         (:local acceptance-set) " set of characters (possibly ignoring case). If "
+         (:local invert) " is true, the match succeeds if the character is not a member of the "
          (:local acceptance-set) " set of characters (possibly ignoring case).")
        
        (define (character-matcher (ch character)) matcher
-         (character-set-matcher (set-of character ch)))
+         (character-set-matcher (set-of character ch) false))
        (%text :semantics
          (:global character-matcher) " returns a " (:type matcher)
          " that matches a single input string character. The match succeeds if the character is the same as "
@@ -327,11 +327,17 @@
        
        (rule :assertion ((test-assertion (-> (r-e-input r-e-match) boolean)))
          (production :assertion (#\^) assertion-beginning
-           ((test-assertion (t r-e-input :unused) (x r-e-match))
-            (= (& end-index x) 0))) ;*********multiline
+           ((test-assertion (t r-e-input) (x r-e-match))
+            (if (= (& end-index x) 0)
+              true
+              (and (& multiline t)
+                   (character-set-member (nth (& str t) (- (& end-index x) 1)) line-terminators)))))
          (production :assertion (#\$) assertion-end
            ((test-assertion (t r-e-input) (x r-e-match))
-            (= (& end-index x) (length (& str t))))) ;*********multiline
+            (if (= (& end-index x) (length (& str t)))
+              true
+              (and (& multiline t)
+                   (character-set-member (nth (& str t) (& end-index x)) line-terminators)))))
          (production :assertion (#\\ #\b) assertion-word-boundary
            ((test-assertion (t r-e-input) (x r-e-match))
             (at-word-boundary (& end-index x) (& str t))))
@@ -342,10 +348,12 @@
        (%print-actions)
        
        (define (at-word-boundary (i integer) (s string)) boolean
-         (if (or (= i 0) (= i (length s)))
-           true
-           (xor (character-set-member (nth s (- i 1)) re-word-characters)
-                (character-set-member (nth s i) re-word-characters))))
+         (xor (in-word (- i 1) s) (in-word i s)))
+       
+       (define (in-word (i integer) (s string)) boolean
+         (if (or (= i -1) (= i (length s)))
+           false
+           (character-set-member (nth s i) re-word-characters)))
        
        
        (%section "Atoms")
@@ -357,7 +365,7 @@
            (count-parens 0))
          (production :atom (#\.) atom-dot
            ((gen-matcher (paren-index integer :unused))
-            (character-set-matcher non-terminators))
+            (character-set-matcher line-terminators true))
            (count-parens 0))
          (production :atom (#\\ :atom-escape) atom-atom-escape
            (gen-matcher (gen-matcher :atom-escape))
@@ -365,7 +373,7 @@
          (production :atom (:character-class) atom-character-class
            ((gen-matcher (paren-index integer))
             (let ((a (set character) ((acceptance-set :character-class) paren-index)))
-              (character-set-matcher a)))
+              (character-set-matcher a (invert :character-class))))
            (count-parens 0))
          (production :atom (#\( :disjunction #\)) atom-parentheses
            ((gen-matcher (paren-index integer))
@@ -381,6 +389,23 @@
            (count-parens (+ (count-parens :disjunction) 1)))
          (production :atom (#\( #\? #\: :disjunction #\)) atom-non-capturing-parentheses
            (gen-matcher (gen-matcher :disjunction))
+           (count-parens (count-parens :disjunction)))
+         (production :atom (#\( #\? #\= :disjunction #\)) atom-positive-lookahead
+           ((gen-matcher (paren-index integer))
+            (let ((match matcher ((gen-matcher :disjunction) paren-index)))
+              (function ((t r-e-input) (x r-e-match) (c continuation))
+                (let ((d continuation
+                         (function ((y r-e-match))
+                           (c (tuple r-e-match (& end-index x) (& captures y))))))
+                  (match t x d)))))
+           (count-parens (count-parens :disjunction)))
+         (production :atom (#\( #\? #\! :disjunction #\)) atom-negative-lookahead
+           ((gen-matcher (paren-index integer))
+            (let ((match matcher ((gen-matcher :disjunction) paren-index)))
+              (function ((t r-e-input) (x r-e-match) (c continuation))
+                (case (match t x success-continuation)
+                  ((success y r-e-match :unused) (oneof failure))
+                  (failure (c x))))))
            (count-parens (count-parens :disjunction))))
        
        (%charclass :pattern-character)
@@ -400,7 +425,7 @@
             (character-matcher (character-value :character-escape))))
          (production :atom-escape (:character-class-escape) atom-escape-character-class
            ((gen-matcher (paren-index integer :unused))
-            (character-set-matcher (acceptance-set :character-class-escape)))))
+            (character-set-matcher (acceptance-set :character-class-escape) false))))
        (%print-actions)
        
        (define (backreference-matcher (n integer)) matcher
@@ -415,7 +440,7 @@
                     (if (string-equal (subseq s i (- j 1)) ref)   ;*********ignore case?
                       (c (tuple r-e-match j (& captures x)))
                       (oneof failure))))))
-             (absent (oneof failure)))))
+             (absent (c x)))))
        
        (define (nth-backreference (x r-e-match) (n integer)) capture
          (if (and (> n 0) (<= n (length (& captures x))))
@@ -531,12 +556,13 @@
        
        (%section "User-Specified Character Classes")
        
-       (rule :character-class ((acceptance-set char-set-generator))
+       (rule :character-class ((acceptance-set char-set-generator) (invert boolean))
          (production :character-class (#\[ (:- #\^) :class-ranges #\]) character-class-positive
-           (acceptance-set (acceptance-set :class-ranges)))
+           (acceptance-set (acceptance-set :class-ranges))
+           (invert false))
          (production :character-class (#\[ #\^ :class-ranges #\]) character-class-negative
-           ((acceptance-set (paren-index integer))
-            (character-set-difference (set-of-ranges character #?0000 #?FFFF) ((acceptance-set :class-ranges) paren-index)))))
+           (acceptance-set (acceptance-set :class-ranges))
+           (invert true)))
        
        (rule :class-ranges ((acceptance-set char-set-generator))
          (production :class-ranges () class-ranges-none
@@ -657,6 +683,9 @@
 (run-regexp "[\\181A-ae-]+" "93ABC-@ezy43abc")
 (run-regexp "b[ace]+" "baaaacecfe")
 (run-regexp "b[^a]+" "baaaabc")
-
+(run-regexp "(?=(a+))a*b\\1" "baaabaac")
+(run-regexp "(?=(a+))" "baaabac")
+(run-regexp "(.*?)a(?!(a+)b\\2c)\\2(.*)" "baaabaac")
 |#
 
+(length (grammar-states *rg*))
