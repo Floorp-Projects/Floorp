@@ -119,10 +119,18 @@ components\necko_http.xpt
 components\necko_jar.xpt                
 components\necko_res.xpt                
 components\necko_strconv.xpt            
+components\nkcache.dll
 
 ; imagelib
 components\nsgif.dll                    
 components\nsjpg.dll                    
+components\imglib2.dll
+components\imggif.dll
+components\imgjpeg.dll
+components\imgpng.dll
+components\imgppm.dll
+components\gfx2.dll
+components\gfx2.xpt
 
 ; jar
 components\jar50.dll
