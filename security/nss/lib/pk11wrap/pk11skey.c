@@ -4237,13 +4237,50 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
     return symKey;
 }
 
+SECItem *
+PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem)
+{
+    /* pbe stuff */
+    CK_MECHANISM_TYPE type;
+    SECItem *mech;
+    PK11SymKey *symKey;
+    PK11SlotInfo *slot = PK11_GetInternalSlot();
+    int iv_len = 0;
+    CK_PBE_PARAMS_PTR pPBEparams;
+    SECItem src;
+    SECItem *iv;
+
+
+    mech = PK11_ParamFromAlgid(algid);
+    type = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    if(mech == NULL) {
+	return NULL;
+    }
+    symKey = PK11_RawPBEKeyGen(slot, type, mech, pwitem, PR_FALSE, NULL);
+    PK11_FreeSlot(slot);
+    if (symKey == NULL) {
+	SECITEM_ZfreeItem(mech, PR_TRUE);
+	return NULL;
+    }
+    PK11_FreeSymKey(symKey);
+    pPBEparams = (CK_PBE_PARAMS_PTR)mech->data;
+    iv_len = PK11_GetIVLength(type);
+
+    src.data = (unsigned char *)pPBEparams->pInitVector;
+    src.len = iv_len;
+    iv = SECITEM_DupItem(&src);
+
+    SECITEM_ZfreeItem(mech, PR_TRUE);
+    return iv;
+}
+
 
 SECStatus 
 PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 			SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem,
 			SECItem *nickname, SECItem *publicValue, PRBool isPerm,
-			PRBool isPrivate, KeyType keyType, unsigned int keyUsage,
-			void *wincx)
+			PRBool isPrivate, KeyType keyType, 
+			unsigned int keyUsage, void *wincx)
 {
     CK_MECHANISM_TYPE mechanism;
     SECItem *pbe_param, crypto_param;
