@@ -19,7 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): WADA <m-wada@japan.com>
+ * Contributor(s): Alexander LAW <1@1o.ru>
+ *                 WADA <m-wada@japan.com>
  *                 Bob Clary <bob@clary.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
