@@ -1965,6 +1965,19 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
     
+// ------------------------------------------------------------------------
+//
+// Validate a visible area of a widget.
+//
+// ------------------------------------------------------------------------
+
+NS_METHOD nsWindow::Validate()
+{
+  if (mWnd)
+    VERIFY(::ValidateRect(mWnd, NULL));
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Invalidate this component visible area

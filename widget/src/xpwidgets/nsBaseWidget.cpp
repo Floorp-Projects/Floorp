@@ -189,6 +189,11 @@ NS_IMETHODIMP nsBaseWidget::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBaseWidget::Validate()
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsBaseWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
   return NS_ERROR_FAILURE;
