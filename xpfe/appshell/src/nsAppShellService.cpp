@@ -461,7 +461,7 @@ NS_IMETHODIMP nsAppShellService::Quit()
 	if ( mQuiting )
 		return NS_OK;
  nsresult rv;
- mQuiting = true;
+ mQuiting = PR_TRUE;
 	// now step through all opened registered windows and close them.
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
