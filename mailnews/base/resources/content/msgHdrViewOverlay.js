@@ -41,6 +41,7 @@ var currentHeaderData = {};
 // the view all header popup will set it when we first generate a view of all the headers. this is 
 // just so it won't try to regenerate all the information every time the user clicks on the popup.
 var gGeneratedViewAllHeaderInfo = false; 
+var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 
@@ -94,6 +95,8 @@ function OnLoadMsgHeaderPane()
     msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
     msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
 
+    msgPaneData.ViewAllHeadersToolbar = document.getElementById("viewAllHeadersToolbar");
+    msgPaneData.ViewAllHeadersBox = document.getElementById("viewAllHeadersBox");
   }
   
   // load any preferences that at are global with regards to 
@@ -108,6 +111,13 @@ function OnLoadMsgHeaderPane()
 var messageHeaderSink = {
     onStartHeaders: function()
     {
+      // every time we start to redisplay a message, check the view all headers pref....
+      var showAllHeadersPref = pref.GetIntPref("mail.show_headers");
+      if (showAllHeadersPref == 2)
+        gViewAllHeaders = true;
+      else
+        gViewAllHeaders = false;
+
       ClearCurrentHeaders();
       gGeneratedViewAllHeaderInfo = false;
       ClearAttachmentMenu();
@@ -419,10 +429,10 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       }
       else
       {
-       itemInDocument = parentDiv.appendChild(item);
+        itemInDocument = parentDiv.appendChild(item);
       }
       
-      itemInDocument.setAttribute("value", fullAddress);           
+      itemInDocument.setAttribute("value", fullAddress);    
       itemInDocument.setTextAttribute("emailAddress", emailAddress);
       itemInDocument.setTextAttribute("fullAddress", fullAddress);  
       itemInDocument.setTextAttribute("displayName", displayName);  
@@ -437,6 +447,12 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
 
 function UpdateMessageHeaders()
 {
+  if (gViewAllHeaders)
+  {
+    fillBoxWithAllHeaders(msgPaneData.ViewAllHeadersBox, false);
+    return;
+  }
+
   if (currentHeaderData["subject"])
      hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData["subject"].headerValue);
   else
@@ -486,19 +502,34 @@ function ClearCurrentHeaders()
 
 function ShowMessageHeaderPane()
 { 
-  var node = document.getElementById("headerPart1");
-  if (node)
-    node.removeAttribute("hide");
-  node = document.getElementById("headerPart2");
-  if (node)
-    node.removeAttribute("hide");
-  node = document.getElementById("headerPart3");
-  if (node)
-    node.removeAttribute("hide");
+  if (gViewAllHeaders)
+  {
+    HideMessageHeaderPane();
+    msgPaneData.ViewAllHeadersToolbar.removeAttribute("hide");
+    msgPaneData.ViewAllHeadersBox.removeAttribute("collapsed");
+  }
+  else
+  {
+    msgPaneData.ViewAllHeadersToolbar.setAttribute("hide", "true");
+    msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
+    
+    var node = document.getElementById("headerPart1");
+    if (node)
+      node.removeAttribute("hide");
+    node = document.getElementById("headerPart2");
+    if (node)
+      node.removeAttribute("hide");
+    node = document.getElementById("headerPart3");
+    if (node)
+      node.removeAttribute("hide");
+  }
 }
 
 function HideMessageHeaderPane()
 {
+  msgPaneData.ViewAllHeadersToolbar.setAttribute("hide", "true");
+  msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
+
   var node = document.getElementById("headerPart1");
   if (node)
     node.setAttribute("hide", "true");
@@ -508,6 +539,7 @@ function HideMessageHeaderPane()
   node = document.getElementById("headerPart3");
   if (node)
     node.setAttribute("hide", "true");
+
 }
 
 // ToggleLongShortAddresses is used to toggle between showing
@@ -551,30 +583,21 @@ function ToggleLongShortAddresses(shortDivID, longDivID)
    }
 }
 
-// the on create handler for the view all headers popup...
-function fillAllHeadersPopup(node)
+// given a box, iterate through all of the headers and add them to 
+// the enclosing box. 
+function fillBoxWithAllHeaders(containerBox, boxPartOfPopup)
 {
-  // don't bother re-filling the popup if we've already done it for the
-  // currently displayed message....
-  if (gGeneratedViewAllHeaderInfo == true)
-    return true; 
-
-  var containerBox = document.getElementById('allHeadersPopupContainer');
-  
   // clear out the old popup date if there is any...
-    while ( containerBox.childNodes.length ) 
-        containerBox.removeChild(containerBox.childNodes[0]); 
-
-  containerBox.setAttribute("class", "header-part1");
-  containerBox.setAttribute("align", "vertical");
-  containerBox.setAttribute("flex", "1");
+  while ( containerBox.childNodes.length ) 
+    containerBox.removeChild(containerBox.childNodes[0]); 
 
   for (header in currentHeaderData)
   {
     var innerBox = document.createElement('box');
     innerBox.setAttribute("class", "headerBox");
     innerBox.setAttribute("align", "horizontal");
-    innerBox.setAttribute("autostretch", "never");
+    if (boxPartOfPopup)
+        innerBox.setAttribute("autostretch", "never");
 
     // for each header, create a header value and header name then assign those values...
 	var newHeaderTitle  = document.createElement('text');
@@ -584,20 +607,39 @@ function fillAllHeadersPopup(node)
 
     var newHeaderValue = document.createElement('html');
     // make sure we are properly resized...
-    newHeaderValue.setAttribute("width", window.innerWidth*.65);
+    if (boxPartOfPopup)
+        newHeaderValue.setAttribute("width", window.innerWidth*.65);
     newHeaderValue.setAttribute("class", "headerValue");
-    ProcessHeaderValue(innerBox, newHeaderValue, currentHeaderData[header]);
-
     innerBox.appendChild(newHeaderValue);
     containerBox.appendChild(innerBox);
+    ProcessHeaderValue(innerBox, newHeaderValue, currentHeaderData[header], boxPartOfPopup);
   }
+}
 
+// the on create handler for the view all headers popup...
+function fillAllHeadersPopup(node)
+{
+  // don't bother re-filling the popup if we've already done it for the
+  // currently displayed message....
+  if (gGeneratedViewAllHeaderInfo == true)
+    return true; 
+
+  var containerBox = document.getElementById('allHeadersPopupContainer');
+
+  containerBox.setAttribute("class", "header-part1");
+  containerBox.setAttribute("align", "vertical");
+  containerBox.setAttribute("flex", "1");
+
+  fillBoxWithAllHeaders(containerBox, true);
   gGeneratedViewAllHeaderInfo = true; // don't try to regenerate this information for the currently displayed message
-
   return true;
 }
 
-function ProcessHeaderValue(containingBox, containerNode, header)
+// containingBox --> the box containing the header
+// containerNode --> the div or box that we want to insert this specific header into
+// header --> an entry from currentHeaderData contains .headerName and .headerValue
+// boxPartOfPopup --> true if the box is part of a popup (certain functions are disabled in this scenario)
+function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup)
 {
     // in the simplest case, we'll just create a text node for the header
     // and append it to the container Node. for certain headers, we might want to do 
@@ -605,15 +647,18 @@ function ProcessHeaderValue(containingBox, containerNode, header)
     
     var headerName = header.headerName;
     headerName = headerName.toLowerCase();
-//    if (headerName == "cc" || headerName == "from" || headerName == "to")
-//    {
-//      OutputEmailAddresses(containingBox, containerNode, header.headerValue, "", "", "")
-//      return;
-//    }
+    if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to"))
+    {
+      OutputEmailAddresses(containingBox, containerNode, header.headerValue, "", "", "")
+      return;
+    }
     
     var textNode = document.createTextNode(header.headerValue);
     if (headerName == "subject")
+    {
         containerNode.setAttribute("class", "subjectvalue headerValue");
+    }
+
     containerNode.appendChild(textNode);
 }
 
