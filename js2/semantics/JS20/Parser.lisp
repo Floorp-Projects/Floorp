@@ -825,7 +825,7 @@
          (const sa class-opt ((super :relational-expression-or-super) e))
          (const sb class-opt ((super :shift-expression-or-super) e))
          (return ((bin-op-eval bin-op-less-or-equal sb sa) b a))))
-      (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
+      (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
         ((verify s)
          ((verify :relational-expression) s)
          ((verify :shift-expression) s))
@@ -1463,7 +1463,7 @@
     
     
     (%subsection "Use Directive")
-    (production :use-directive (use :no-line-break namespace :parenthesized-expressions :use-includes-excludes) use-directive-normal)
+    (production :use-directive (use namespace :parenthesized-expressions :use-includes-excludes) use-directive-normal)
     
     (production :use-includes-excludes () use-includes-excludes-none)
     (production :use-includes-excludes (\, exclude \( :use-name-patterns \)) use-includes-excludes-exclude-list)
@@ -1500,7 +1500,7 @@
     
     
     (%section "Pragma")
-    (production :pragma (use :no-line-break :pragma-items) pragma-pragma-items)
+    (production :pragma (use :pragma-items) pragma-pragma-items)
     
     (production :pragma-items (:pragma-item) pragma-items-one)
     (production :pragma-items (:pragma-items \, :pragma-item) pragma-items-more)
@@ -1779,7 +1779,7 @@
       (assert-true (= (length all-terminals) (1- (* 2 (length terminals)))))
       (setf (svref bins 2) (list '\# '&&= '-> '@ '^^ '^^= '\|\|=))
       (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import
-                                 'interface 'native 'package 'private 'protected 'public 'static 'super 'synchronized
+                                 'instanceof 'interface 'native 'package 'private 'protected 'public 'static 'super 'synchronized
                                  'throws 'transient 'volatile))
       ; Used to be reserved in JavaScript 1.5: 'boolean 'byte 'char 'double 'float 'int 'long 'short
       (do ((i (length terminals)))
