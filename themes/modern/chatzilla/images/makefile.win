@@ -29,21 +29,21 @@ clobber::
 	rm -f $(DIST)\chrome\$(THEME)\chatzilla\skin\images\*.*
 
 install:: 
-	$(MAKE_INSTALL) blue_rock.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-angry.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-cry.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-dunno.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-frown.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-screw.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-smile.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-surprise.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-tongue.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) face-wink.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) is-op.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) is-voice.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) isnt-op.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) isnt-voice.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) view-activity.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) view-current.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) view-normal.gif $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
-	$(MAKE_INSTALL) xtal.jpg $(DIST)\bin\chrome\$(THEME)\chatzila\skin\images
+	$(MAKE_INSTALL) blue_rock.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-angry.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-cry.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-dunno.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-frown.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-screw.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-smile.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-surprise.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-tongue.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) face-wink.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) is-op.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) is-voice.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) isnt-op.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) isnt-voice.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) view-activity.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) view-current.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) view-normal.gif $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images
+	$(MAKE_INSTALL) xtal.jpg $(DIST)\bin\chrome\$(THEME)\chatzilla\skin\images

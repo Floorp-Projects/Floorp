@@ -31,7 +31,7 @@ clobber::
 	rm -f $(DIST)\chrome\$(THEME)\chatzilla\skin\*.*
 
 install:: 
-	$(MAKE_INSTALL) chatzilla.css $(DIST)\bin\chrome\$(THEME)\chatzila\skin
-	$(MAKE_INSTALL) output-default.css $(DIST)\bin\chrome\$(THEME)\chatzila\skin
-	$(MAKE_INSTALL) output-loud.css $(DIST)\bin\chrome\$(THEME)\chatzila\skin
-	$(MAKE_INSTALL) output-marble.css $(DIST)\bin\chrome\$(THEME)\chatzila\skin
+	$(MAKE_INSTALL) chatzilla.css $(DIST)\bin\chrome\$(THEME)\chatzilla\skin
+	$(MAKE_INSTALL) output-default.css $(DIST)\bin\chrome\$(THEME)\chatzilla\skin
+	$(MAKE_INSTALL) output-loud.css $(DIST)\bin\chrome\$(THEME)\chatzilla\skin
+	$(MAKE_INSTALL) output-marble.css $(DIST)\bin\chrome\$(THEME)\chatzilla\skin
