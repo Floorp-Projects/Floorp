@@ -3349,50 +3349,50 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                           display->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE;
 
   if (docElemIsTable) {
-      // if the document is a table then just populate it.
-      rv = ConstructDocElementTableFrame(aPresShell, aPresContext, aDocElement, 
-                                    aParentFrame, contentFrame,
-                                    aState.mFrameState);
+    // if the document is a table then just populate it.
+    rv = ConstructDocElementTableFrame(aPresShell, aPresContext, aDocElement, 
+                                       aParentFrame, contentFrame,
+                                       aState.mFrameState);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    styleContext = contentFrame->GetStyleContext();
+  } else {
+    // otherwise build a box or a block
+#if defined(MOZ_SVG)
+    PRInt32 nameSpaceID;
+#endif
+#ifdef MOZ_XUL
+    if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
+      rv = NS_NewDocElementBoxFrame(aPresShell, &contentFrame);
       if (NS_FAILED(rv)) {
         return rv;
       }
-      styleContext = contentFrame->GetStyleContext();
-  } else {
-        // otherwise build a box or a block
-#if defined(MOZ_SVG)
-        PRInt32 nameSpaceID;
-#endif
-#ifdef MOZ_XUL
-        if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
-          rv = NS_NewDocElementBoxFrame(aPresShell, &contentFrame);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-        }
-        else
+    }
+    else
 #endif 
 #ifdef MOZ_SVG
-        if (aDocElement->GetNameSpaceID(&nameSpaceID),
-            (nameSpaceID == kNameSpaceID_SVG)) {
-          rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-          isBlockFrame = PR_TRUE;
-        }
-        else 
+    if (aDocElement->GetNameSpaceID(&nameSpaceID),
+        (nameSpaceID == kNameSpaceID_SVG)) {
+      rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      isBlockFrame = PR_TRUE;
+    }
+    else 
 #endif
-        {
-          rv = NS_NewDocumentElementFrame(aPresShell, &contentFrame);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-          isBlockFrame = PR_TRUE;
-        }
+    {
+      rv = NS_NewDocumentElementFrame(aPresShell, &contentFrame);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      isBlockFrame = PR_TRUE;
+    }
 
-        // initialize the child
-        InitAndRestoreFrame(aPresContext, aState, aDocElement, 
-                            aParentFrame, styleContext, nsnull, contentFrame);
+    // initialize the child
+    InitAndRestoreFrame(aPresContext, aState, aDocElement, 
+                        aParentFrame, styleContext, nsnull, contentFrame);
   }
   
   // set the primary frame
@@ -3400,18 +3400,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
   // Finish building the scrollframe
   if (isScrollable) {
-    FinishBuildingScrollFrame(aPresContext, 
-                          aState,
-                          aDocElement,
-                          aParentFrame,
-                          contentFrame,
-                          styleContext);
+    FinishBuildingScrollFrame(aPresContext, aState, aDocElement,
+                              aParentFrame, contentFrame, styleContext);
     // primary is set above (to the contentFrame)
     
     aNewFrame = scrollFrame;
   } else {
-     // if not scrollable the new frame is the content frame.
-     aNewFrame = contentFrame;
+    // if not scrollable the new frame is the content frame.
+    aNewFrame = contentFrame;
   }
 
   mInitialContainingBlock = contentFrame;
@@ -3427,38 +3423,39 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       PRBool haveFirstLetterStyle, haveFirstLineStyle;
       HaveSpecialBlockStyle(aPresContext, aDocElement, styleContext,
                             &haveFirstLetterStyle, &haveFirstLineStyle);
-      aState.PushAbsoluteContainingBlock(aPresContext, contentFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(aPresContext, contentFrame,
+                                         absoluteSaveState);
       aState.PushFloatContainingBlock(contentFrame, floatSaveState,
-                                        haveFirstLetterStyle,
-                                        haveFirstLineStyle);
+                                      haveFirstLetterStyle,
+                                      haveFirstLineStyle);
     }
 
     // Create any anonymous frames the doc element frame requires
     // This must happen before ProcessChildren to ensure that popups are
     // never constructed before the popupset.
-    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aDocElement, contentFrame,
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState,
+                          aDocElement, contentFrame,
                           PR_FALSE, childItems, PR_TRUE);
-    ProcessChildren(aPresShell, aPresContext, aState, aDocElement, contentFrame,
-                    PR_TRUE, childItems, isBlockFrame);
+    ProcessChildren(aPresShell, aPresContext, aState, aDocElement,
+                    contentFrame, PR_TRUE, childItems, isBlockFrame);
 
     // Set the initial child lists
     contentFrame->SetInitialChildList(aPresContext, nsnull,
                                       childItems.childList);
- 
 
     // only support absolute positioning if we are a block.
     // if we are a box don't do it.
     if (isBlockFrame) {
-        if (aState.mAbsoluteItems.childList) {
-          contentFrame->SetInitialChildList(aPresContext,
-                                         nsLayoutAtoms::absoluteList,
-                                         aState.mAbsoluteItems.childList);
-        }
-        if (aState.mFloatedItems.childList) {
-          contentFrame->SetInitialChildList(aPresContext,
-                                         nsLayoutAtoms::floatList,
-                                         aState.mFloatedItems.childList);
-        }
+      if (aState.mAbsoluteItems.childList) {
+        contentFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::absoluteList,
+                                          aState.mAbsoluteItems.childList);
+      }
+      if (aState.mFloatedItems.childList) {
+        contentFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::floatList,
+                                          aState.mFloatedItems.childList);
+      }
     }
   }
 
