@@ -256,22 +256,30 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         obj2 = JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj2, slot));
     }
 
-    if (slot == JSSLOT_PROTO && OBJ_IS_NATIVE(obj) && pobj) {
+    if (slot == JSSLOT_PROTO && OBJ_IS_NATIVE(obj)) {
+        /* Check to see whether obj shares its prototype's scope. */
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
         oldproto = JSVAL_TO_OBJECT(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO));
-        if (oldproto &&
-            OBJ_SCOPE(oldproto) == scope &&
-            OBJ_IS_NATIVE(pobj) &&
-            OBJ_SCOPE(pobj) != scope)
-        {
-            /* We can't deadlock because we checked for cycles above (2). */
-            JS_LOCK_OBJ(cx, pobj);
-            newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
-            obj->map = &newscope->map;
-            js_DropObjectMap(cx, &scope->map, obj);
-            JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
-            scope = newscope;
+        if (oldproto && OBJ_SCOPE(oldproto) == scope) {
+            /* Either obj needs a new empty scope, or it should share pobj's. */
+            if (!pobj) {
+                /* With no proto and no scope of its own, obj is truly empty. */
+                scope = js_GetMutableScope(cx, obj);
+                if (!scope) {
+                    JS_UNLOCK_OBJ(cx, obj);
+                    JS_RELEASE_LOCK(rt->setSlotLock);
+                    return JS_FALSE;
+                }
+            } else if (OBJ_IS_NATIVE(pobj) && OBJ_SCOPE(pobj) != scope) {
+                /* We can't deadlock because we checked for cycles above (2). */
+                JS_LOCK_OBJ(cx, pobj);
+                newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
+                obj->map = &newscope->map;
+                js_DropObjectMap(cx, &scope->map, obj);
+                JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
+                scope = newscope;
+            }
         }
         LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(pobj));
         JS_UNLOCK_SCOPE(cx, scope);
