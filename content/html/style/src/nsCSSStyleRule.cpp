@@ -1118,9 +1118,6 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAString& aDecl,
                                       getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
-      nsCSSDeclaration* declClone = decl->Clone();
-      NS_ENSURE_TRUE(declClone, NS_ERROR_OUT_OF_MEMORY);
-
       if (aClearOldDecl) {
         // This should be done with decl->Clear() once such a method exists.
         nsAutoString propName;
