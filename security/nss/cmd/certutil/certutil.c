@@ -935,19 +935,24 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
     return rv;
 }
 
-#ifdef notdef
 static SECStatus
-DeleteKey(SECKEYKeyDBHandle *handle, char *nickname)
+DeleteKey(char *nickname, secuPWData *pwdata)
 {
     SECStatus rv;
+    CERTCertificate *cert;
+    PK11SlotInfo *slot;
 
-    rv = SECU_DeleteKeyByName(handle, nickname);
+    slot = PK11_GetInternalKeySlot();
+    if (PK11_NeedLogin(slot))
+	PK11_Authenticate(slot, PR_TRUE, pwdata);
+    cert = PK11_FindCertFromNickname(nickname, pwdata);
+    if (!cert) return SECFailure;
+    rv = PK11_DeleteTokenCertAndKey(cert, pwdata);
     if (rv != SECSuccess) {
 	SECU_PrintError("problem deleting private key \"%s\"\n", nickname);
     }
     return rv;
 }
-#endif
 
 
 /*
@@ -2533,13 +2538,11 @@ main(int argc, char **argv)
 	rv = DeleteCert(certHandle, name);
 	return !rv - 1;
     }
-#ifdef notdef
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
-	rv = DeleteKey(keyHandle, name);
+	rv = DeleteKey(name, &pwdata);
 	return !rv - 1;
     }
-#endif
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
 	rv = ChangeTrustAttributes(certHandle, name, 
