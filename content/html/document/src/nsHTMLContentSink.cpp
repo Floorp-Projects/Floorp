@@ -2646,10 +2646,6 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
 typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
 
-const PRUnichar kNullCh       = PRUnichar('\0');
-const PRUnichar kSingleQuote  = PRUnichar('\'');
-const PRUnichar kDoubleQuote  = PRUnichar('\"');
-const PRUnichar kComma        = PRUnichar(',');
 
 static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
 {
@@ -2670,7 +2666,7 @@ static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFun
       start++;
     }
 
-    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
+    if ((kApostrophe == *start) || (kQuote == *start)) { // quoted string
       PRUnichar quote = *start++;
       quoted = PR_TRUE;
       end = start;
