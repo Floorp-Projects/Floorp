@@ -32,6 +32,9 @@ struct nsPrivilegeTable;
 struct NSJSJavaFrameWrapper;
 
 /* wrappers for nsPrivilegeManager object */
+PR_IMPLEMENT(PRBool) 
+nsCapsInitialize();
+
 PR_EXTERN(PRBool) 
 nsCapsRegisterPrincipal(struct nsPrincipal *principal); 
 

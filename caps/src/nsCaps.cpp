@@ -42,6 +42,32 @@ PR_BEGIN_EXTERN_C
 
 /* wrappers for nsPrivilegeManager object */
 PR_IMPLEMENT(PRBool) 
+nsCapsInitialize() 
+{
+#if defined(_WIN32)
+  nsPrincipal *sysPrin = CreateSystemPrincipal("java/classes/java40.jar", "java/lang/Object.class");
+#else
+  nsPrincipal *sysPrin = CreateSystemPrincipal("java40.jar", "java/lang/Object.class");
+#endif
+  if (sysPrin == NULL) {
+    sysPrin = new nsPrincipal(nsPrincipalType_Cert, "52:54:45:4e:4e:45:54:49", 
+                                         strlen("52:54:45:4e:4e:45:54:49"));
+  }
+
+  nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
+  if (nsPrivManager == NULL) {
+    nsPrivilegeManagerInitialize();
+    nsPrivilegeInitialize();
+    nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
+  }
+  PR_ASSERT(nsPrivManager != NULL);
+  nsPrivManager->registerSystemPrincipal(sysPrin);
+  return PR_TRUE;
+}
+
+
+/* wrappers for nsPrivilegeManager object */
+PR_IMPLEMENT(PRBool) 
 nsCapsRegisterPrincipal(struct nsPrincipal *principal) 
 {
   nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
