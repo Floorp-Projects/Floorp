@@ -170,6 +170,7 @@ CBrowserApp::CBrowserApp()
     		// HACK ALERT: Since we don't have prefs UI, reduce the font size here by hand
             prefs->SetIntPref("font.size.variable.x-western", 12);
             prefs->SetIntPref("font.size.fixed.x-western", 12);
+            prefs->SavePrefFile();
     	}
     	else
     		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
@@ -186,9 +187,9 @@ CBrowserApp::CBrowserApp()
 CBrowserApp::~CBrowserApp()
 {
    nsresult rv;
-   
    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-   prefs->SavePrefFile();
+   if (NS_SUCCEEDED(rv))	  
+      prefs->SavePrefFile();
 
    UMacUnicode::ReleaseUnit();
 	   
