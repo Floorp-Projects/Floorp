@@ -1026,16 +1026,23 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
         if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
             (nsnull != linkHandler)) {
-          nsAutoString base, href;  // XXX base??
+          nsAutoString base, href;
           nsresult attrState = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
 
           if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
             nsIURL* docURL = nsnull;
-            nsIDocument* doc = nsnull;
-            aContent->GetDocument(doc);
-            if (nsnull != doc) {
-              docURL = doc->GetDocumentURL();
-              NS_RELEASE(doc);
+            nsIHTMLContent* htmlContent;
+            if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+              htmlContent->GetBaseURL(docURL);
+              NS_RELEASE(htmlContent);
+            }
+            else {
+              nsIDocument* doc = nsnull;
+              aContent->GetDocument(doc);
+              if (nsnull != doc) {
+                doc->GetBaseURL(docURL);
+                NS_RELEASE(doc);
+              }
             }
 
             nsAutoString absURLSpec;
@@ -1491,7 +1498,7 @@ PRBool CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL) const
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
 
-  PRBool result = (*mURL == *aURL);
+  PRBool result = mURL->Equals(aURL);
 
   const nsICSSStyleSheet*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
