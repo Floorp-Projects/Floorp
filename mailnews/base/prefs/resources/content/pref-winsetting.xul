@@ -6,70 +6,61 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Window Setting')" >
+		onload="StartUp('Mailnews-Window Setting')"
+		align="vertical">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
-<html:div flex="100%">
-	<html:div id="top">
-		<html:span id="lefttext">&pane.title;</html:span>
-	</html:div>
-
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-	<html:table>
-		<html:tr><html:td><html:label>&chooseLayout.label;</html:label></html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="winlayout" type="radio" id="pref:0:int:mail.pane_arrangement" checked="true"/> 
-			<html:img src="chrome://messenger/skin/winclassic.gif"/>
-			<html:input name="winlayout" type="radio" id="pref:1:int:mail.pane_arrangement"/>
-			<html:img src="chrome://messenger/skin/winwide.gif"/>
-		</html:td></html:tr>
-	</html:table>
-	&chooseExp.label;
-</html:fieldset>
-</box>
-</html:form>
+	<box class="header" align="horizontal">
+		<html:div class="left-header-text">&pane.title;</html:div>
+		<spring flex="100%"/>
+		<html:div class="right-header-text">&pane.description;</html:div>
+	</box>
 
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-	<html:table>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_thread_window2"/>
-			<html:label>&reuseThread.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_message_window"/>
-			<html:label>&reuseMessage.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-	&reuseExp.label;
-</html:fieldset>
-</box>
-</html:form>
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&chooseLayout.label;</html:div>
+		</html:legend>
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&newsOpt.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="opennews" type="radio" id="pref:0:int:news.use_message_center" checked="true"/>
-			<html:label>&openMessenger.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="opennews" type="radio" id="pref:1:int:news.use_message_center"/>
-			<html:label>&openCenter.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
- 
-</html:div>
+		<html:div>
+			<html:input id="pref:0:int:mail.pane_arrangement" name="winlayout" type="radio" checked="true"/> 
+			<html:img style="height:32px width:26px" src="chrome://messenger/skin/winclassic.gif"/>
+			<html:input id="pref:1:int:mail.pane_arrangement" name="winlayout" type="radio"/>
+			<html:img style="height:32px width:26px" src="chrome://messenger/skin/winwide.gif"/>
+		</html:div>
+			
+		&chooseExp.label;
+	</html:fieldset>
+
+	<html:fieldset>
+		<html:div>
+			<html:input id="pref:1:int:mailnews.reuse_thread_window2" type="checkbox"/>
+			<html:label for="pref:1:int:mailnews.reuse_thread_window2">&reuseThread.label;</html:label>
+		</html:div>
+			
+		<html:div>
+			<html:input id="pref:1:int:mailnews.reuse_message_window" type="checkbox"/>
+			<html:label for="pref:1:int:mailnews.reuse_message_window">&reuseMessage.label;</html:label>
+		</html:div>
+		
+		&reuseExp.label;
+	</html:fieldset>
+
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&newsOpt.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:input id="pref:0:int:news.use_message_center" name="opennews" type="radio" checked="true"/>
+			<html:label for="pref:0:int:news.use_message_center">&openMessenger.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:1:int:news.use_message_center" name="opennews" type="radio"/>
+			<html:label for="pref:1:int:news.use_message_center">&openCenter.label;</html:label>
+		</html:div>
+	</html:fieldset>
+
 </window>

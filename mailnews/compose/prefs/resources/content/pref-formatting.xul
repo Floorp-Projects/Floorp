@@ -5,44 +5,48 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="StartUp('Mailnews-Formatting')" >
+		onload="StartUp('Mailnews-Formatting')"
+		align="vertical"
+		class="dialog">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 
-<html:div flex="100%">
-	<html:div id="top">
-		<html:span id="lefttext">&pane.title;</html:span>
-	</html:div>
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&sendMail.label;</html:div>
-</html:legend>
+	<box class="header" align="horizontal">
+		<html:div class="left-header-text">&pane.title;</html:div>
+		<spring flex="100%"/>
+		<html:div class="right-header-text">&pane.description;</html:div>
+	</box>
 
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="recipients" type="radio" id="pref:0:int:mail.default_html_action" checked="true"/>
-			<html:label>&askMe.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="recipients" type="radio" id="pref:1:int:mail.default_html_action"/>
-			<html:label>&convertPlain.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="recipients" type="radio" id="pref:2:int:mail.default_html_action"/>
-			<html:label>&sendHTML.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="recipients" type="radio" id="pref:3:int:mail.default_html_action"/>
-			<html:label>&sendBoth.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-	&override.label;
-</html:fieldset>
-</box>
-</html:form>
+	<!-- FIX ME - add fieldset tags back in when bug 20070 is fixed -->
+	<!--html:fieldset-->
+		<html:div class="vertical-gap">&sendMail.label;</html:div>
+		
+		<html:div>
+			<html:input id="pref:0:int:mail.default_html_action" class="indent" name="recipients" type="radio" checked="true"/>
+			<html:label for="pref:0:int:mail.default_html_action">&askMe.label;</html:label>
+			<html:label for="pref:0:int:mail.default_html_action" class="indent-second-label">&askMe2.label;</html:label>
+		</html:div>
 
-</html:div>
+		<html:div>
+			<html:input id="pref:1:int:mail.default_html_action" class="indent" name="recipients" type="radio"/>
+			<html:label for="pref:1:int:mail.default_html_action">&convertPlain.label;</html:label>
+			<html:label for="pref:1:int:mail.default_html_action" class="indent-second-label">&convertPlain2.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:2:int:mail.default_html_action" class="indent" name="recipients" type="radio"/>
+			<html:label for="pref:2:int:mail.default_html_action">&sendHTML.label;</html:label>
+			<html:label for="pref:2:int:mail.default_html_action" class="indent-second-label">&sendHTML2.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:3:int:mail.default_html_action" class="indent" name="recipients" type="radio"/>
+			<html:label for="pref:3:int:mail.default_html_action">&sendBoth.label;</html:label>
+			<html:label for="pref:3:int:mail.default_html_action" class="indent-second-label">&sendBoth2.label;</html:label>
+		</html:div>
+
+		<html:div class="vertical-gap">&override.label;</html:div>
+	<!--/html:fieldset-->
+
 </window>

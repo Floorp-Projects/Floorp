@@ -7,7 +7,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Return Receipts')" >
+		onload="StartUp('Mailnews-Return Receipts')"
+		align="vertical">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
@@ -23,74 +24,64 @@ function DoCustomize()
 </html:script>
 
 
-<html:div flex="100%">
-        <html:div id="top">
-                <html:span id="lefttext">&pane.title;</html:span>
-        </html:div>
+	<box class="header" align="horizontal">
+		<html:div class="left-header-text">&pane.title;</html:div>
+		<spring flex="100%"/>
+		<html:div class="right-header-text">&pane.description;</html:div>
+	</box>
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&requestReceipt.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:1:int:mail.request.return_receipt"/>
-			<html:label>&dsn.label;</html:label> 
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:2:int:mail.request.return_receipt" checked="true"/>
-			<html:label>&mdn.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="msgreceipt" type="radio" id="pref:3:int:mail.request.return_receipt"/>
-			<html:label>&both.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&receiptArrive.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="getreceipt" type="radio" id="pref:0:int:mail.incorporate.return_receipt" checked="true"/>
-			<html:label>&leaveIt.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="getreceipt" type="radio" id="pref:1:int:mail.incorporate.return_receipt"/>
-			<html:label>&moveToSent.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&requestReceipt.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:input id="pref:1:int:mail.request.return_receipt" name="msgreceipt" type="radio"/>
+			<html:label for="pref:1:int:mail.request.return_receipt">&dsn.label;</html:label> 
+		</html:div>
+		
+		<html:div>
+			<html:input id="pref:2:int:mail.request.return_receipt" name="msgreceipt" type="radio" checked="true"/>
+			<html:label for="pref:2:int:mail.request.return_receipt">&mdn.label;</html:label>
+		</html:div>
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&requestMDN.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>
-			<html:input name="returnreceipt" type="radio" id="pref:0:int:mail.mdn.report.enabled"/>
-			<html:label>&never.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="returnreceipt" type="radio" id="pref:1:int:mail.mdn.report.enabled" checked="true"/>
-			<html:label>&returnSome.label;</html:label>
-			<html:input name="custom" type="button" value="&custom.label;"/>
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
+		<html:div>
+			<html:input id="pref:3:int:mail.request.return_receipt" name="msgreceipt" type="radio"/>
+			<html:label for="pref:3:int:mail.request.return_receipt">&both.label;</html:label>
+		</html:div>
+	</html:fieldset>
 
-</html:div>
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&receiptArrive.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:input id="pref:0:int:mail.incorporate.return_receipt" name="getreceipt" type="radio" checked="true"/>
+			<html:label for="pref:0:int:mail.incorporate.return_receipt">&leaveIt.label;</html:label>
+		</html:div>
+		
+		<html:div>
+			<html:input id="pref:1:int:mail.incorporate.return_receipt" name="getreceipt" type="radio"/>
+			<html:label for="pref:1:int:mail.incorporate.return_receipt">&moveToSent.label;</html:label>
+		</html:div>
+	</html:fieldset>
+
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&requestMDN.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:input id="pref:0:int:mail.mdn.report.enabled" name="returnreceipt" type="radio"/>
+			<html:label for="pref:0:int:mail.mdn.report.enabled">&never.label;</html:label>
+		</html:div>
+		
+		<html:div>
+			<html:input id="pref:1:int:mail.mdn.report.enabled" name="returnreceipt" type="radio" checked="true"/>
+			<html:label for="pref:1:int:mail.mdn.report.enabled">&returnSome.label;</html:label>
+			<titledbutton class="push dialog" value="&custom.label;"/>
+		</html:div>
+	</html:fieldset>
+
 </window>

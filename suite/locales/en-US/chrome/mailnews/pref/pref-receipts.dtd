@@ -19,8 +19,8 @@ Rights Reserved.
 --> 
 
 <!-- LOCALIZATION NOTE pref-receipts.dtd: UI for Mail/News Return Receipts prefs -->
-<!ENTITY window.title "Return Receipts">
 <!ENTITY pane.title "Return Receipts">
+<!ENTITY pane.description "Settings for requesting or returning receipts">
 <!ENTITY requestReceipt.label " If I request a receipt when sending a message, I want">
 <!ENTITY dsn.label "A delivery receipt from the receiving server (DSN)">
 <!ENTITY mdn.label "A read receipt, notifying me when recipients display the message (MDN)">

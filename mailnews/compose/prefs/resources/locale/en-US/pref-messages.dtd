@@ -18,8 +18,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title "Messages">
 <!ENTITY pane.title "Messages">
+<!ENTITY pane.description "Settings for messages">
 <!ENTITY forwardReply.label "Forwarding and Replying to Messages">
 <!ENTITY forwardMsg.label "By default, forward messages:">
 <!ENTITY inline.label "Inline">

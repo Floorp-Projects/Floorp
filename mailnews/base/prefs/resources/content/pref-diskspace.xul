@@ -6,73 +6,74 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Disk Space')" >
+		onload="StartUp('Mailnews-Disk Space')"
+		align="vertical">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
-<html:div flex="100%">
-	<html:div id="top">
-		<html:span id="lefttext">&pane.title;</html:span>
-	</html:div>
+	<box class="header" align="horizontal">
+		<html:div class="left-header-text">&pane.title;</html:div>
+		<spring flex="100%"/>
+		<html:div class="right-header-text">&pane.description;</html:div>
+	</box>
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&allMsg.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.limit_message_size"/>
-			<html:label>&storeMsgLimit.label;</html:label>
-			<html:input name="maxsize" id="pref:string:mail.max_size" size="4"/>&kb.label;
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.prompt_purge_threshhold"/>
-			<html:label>&autoCompact.label;</html:label>
-			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4"/>&kb.label;
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
- 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&newgroupMsgOnly.label;</html:div>
-</html:legend>
-<html:table>
-		<html:tr><html:td><html:label>&whenToClean.label;</html:label></html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:1:int:news.keep.method"/>
-			<html:label>&keepMsgs.label;</html:label>
-			<html:input name="keepdays" id="pref:string:news.keep.days" size="4"/>&days.label;
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:0:int:news.keep.method" checked="true"/>
-			<html:label>&keepAllMsg.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="keepmsg" type="radio" id="pref:2:int:news.keep.method"/>
-			<html:label>&keepTheNewest.label;</html:label>
-			<html:input name="keepmsgcount" id="pref:string:news.keep.count" size="4"/>&messages.label;
-		</html:td></html:tr>
-		<html:tr><html:td> </html:td></html:tr>
-		<html:tr><html:td> </html:td></html:tr>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:news.keep.only_unread"/>
-			<html:label>&keepUnread.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:news.remove_bodies.by_age"/>
-			<html:label>&removeMsg.label;</html:label>
-			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4"/>&days.label;
-		</html:td></html:tr>
-</html:table>
-</html:fieldset>
-</box>
-</html:form>
-</html:div>
+	<html:fieldset style="width: 100%;">
+		<html:legend align="left">
+			<html:div>&allMsg.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:input id="pref:0:bool:mail.limit_message_size" type="checkbox"/>
+			<html:label for="pref:0:bool:mail.limit_message_size">&storeMsgLimit.label;</html:label>
+			<html:input name="maxsize" id="pref:string:mail.max_size" size="4" type="text"/>
+			<html:label>&kb.label;</html:label>
+		</html:div>
+		
+		<html:div>
+			<html:input id="pref:0:bool:mail.prompt_purge_threshhold" type="checkbox"/>
+			<html:label for="pref:0:bool:mail.prompt_purge_threshhold">&autoCompact.label;</html:label>
+			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4" type="text"/>
+			<html:label>&kb.label;</html:label>
+		</html:div>
+	</html:fieldset>
+
+	<html:fieldset style="width: 100%;">
+		<html:legend align="left">
+			<html:div>&newgroupMsgOnly.label;</html:div>
+		</html:legend>
+		
+		<html:div class="vertical-gap">&whenToClean.label;</html:div>
+
+		<html:div>
+			<html:input id="pref:1:int:news.keep.method" class="indent" name="keepmsg" type="radio"/>
+			<html:label for="pref:1:int:news.keep.method">&keepMsgs.label;</html:label>
+			<html:input name="keepdays" id="pref:string:news.keep.days" size="4" type="text"/>
+			<html:label>&days.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:0:int:news.keep.method" class="indent" name="keepmsg" type="radio" checked="true"/>
+			<html:label for="pref:0:int:news.keep.method">&keepAllMsg.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:2:int:news.keep.method" class="indent" name="keepmsg" type="radio"/>
+			<html:label for="pref:2:int:news.keep.method">&keepTheNewest.label;</html:label>
+			<html:input name="keepmsgcount" id="pref:string:news.keep.count" size="4" type="text"/>
+			<html:label>&messages.label;</html:label>
+		</html:div>
+
+		<html:div class="vertical-gap">
+			<html:input id="pref:0:bool:news.keep.only_unread" type="checkbox"/>
+			<html:label for="pref:0:bool:news.keep.only_unread">&keepUnread.label;</html:label>
+		</html:div>
+
+		<html:div>
+			<html:input id="pref:0:bool:news.remove_bodies.by_age" type="checkbox"/>
+			<html:label for="pref:0:bool:news.remove_bodies.by_age">&removeMsg.label;</html:label>
+			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4" type="text"/>
+			<html:label>&days.label;</html:label>
+		</html:div>
+	</html:fieldset>
+
 </window>

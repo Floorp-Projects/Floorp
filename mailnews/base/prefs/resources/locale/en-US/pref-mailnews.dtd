@@ -19,8 +19,8 @@ Rights Reserved.
 --> 
 
 <!-- LOCALIZATION NOTE pref-mailnews.dtd: UI for Mail/News prefs -->
-<!ENTITY window.title "Mail &amp; Newsgroups">
-<!ENTITY pane.title "Mail &amp; Newsgroups">
+<!ENTITY pane.title "Mail and Newsgroups">
+<!ENTITY pane.description "Settings for Mail and Newsgroups">
 <!ENTITY textBegin.label "Plain quoted text beginning with '>' is displayed with">
 <!ENTITY style.label "Style:">
 <!ENTITY regular.label "Regular">

@@ -19,16 +19,16 @@ Rights Reserved.
 --> 
 
 <!-- LOCALIZATION NOTE pref-winsetting.dtd: UI for Mail & News Window Settings prefs -->
-<!ENTITY window.title "Window Setting">
-<!ENTITY pane.title "Window Setting">
+<!ENTITY pane.title "Window Settings">
+<!ENTITY pane.description "Configure your window layout">
 <!-- LOCALIZATION NOTE chooseLayout.label: Never translate the product name "Messenger" -->
-<!ENTITY chooseLayout.label "Choose which layout you prefer for the Messenger window:">
+<!ENTITY chooseLayout.label "Preferred layout for the Mail window:">
 <!-- LOCALIZATION NOTE chooseExp.label Never translate the product name "Messenger" -->
-<!ENTITY chooseExp.label "Note:  a change to this setting will only take effect the next time you open a Messenger window.">
-<!ENTITY reuseThread.label "Double-clicking a folder or a newsgroup opens it in a new window">
+<!ENTITY chooseExp.label "Note:  changes to this setting will only take effect the next time you open a Mail window.">
+<!ENTITY reuseThread.label "Double-clicking a folder opens it in a new window">
 <!ENTITY reuseMessage.label "Double-clicking a message opens it in a new window">
-<!ENTITY reuseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
+<!ENTITY reuseExp.label "If you prefer fewer windows, unselect these options, and Mail will open items into existing windows.">
 <!ENTITY newsOpt.label "The Newsgroups menu item or button:">
 <!-- LOCALIZATION NOTE openMessenger.label Never translate the product name "Messenger" -->
-<!ENTITY openMessenger.label "Opens newsgroups in a Messenger window">
+<!ENTITY openMessenger.label "Opens newsgroups in a Mail window">
 <!ENTITY openCenter.label "Opens the Message Center">

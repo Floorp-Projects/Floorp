@@ -6,90 +6,138 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Main')" >
+		onload="StartUp('Mailnews-Main')"
+		align="vertical">
 
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:script language="javascript" src="chrome://messenger/content/pref-mailnews.js"/>
 
-<html:div flex="100%">
-	<html:div id="top">
-		<html:span id="lefttext">&pane.title;</html:span>
-	</html:div>
+	<box class="header" align="horizontal">
+		<html:div class="left-header-text">&pane.title;</html:div>
+		<spring flex="100%"/>
+		<html:div class="right-header-text">&pane.description;</html:div>
+	</box>
 
-<html:form>
-<box align="vertical" style="width: 100%;">
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&textBegin.label;</html:div>
-</html:legend>
-	<html:table>
-		<html:tr><html:td>&style.label;
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&textBegin.label;</html:div>
+		</html:legend>
+		
+		<html:div>
+			<html:label for="pref:int:mail.quoted_style">&style.label;</html:label>
 			<html:select id="pref:int:mail.quoted_style">
 				<html:option value="0" label="&regular.label;"/>
 				<html:option value="1" label="&bold.label;"/>
 				<html:option value="2" label="&italic.label;"/>
 				<html:option value="3" label="&boldItalic.label;"/>
 			</html:select>
-		</html:td></html:tr>
-		<html:tr><html:td>&size.label;
-			<html:select id="pref:int:mail.quoted_style">
+		</html:div>
+
+		<html:div>
+			<html:label for="pref:int:mail.quoted_size">&size.label;</html:label>
+
+			<html:select id="pref:int:mail.quoted_size">
 				<html:option value="0" label="&regular.label;"/>
 				<html:option value="1" label="&bigger.label;"/>
 				<html:option value="2" label="&smaller.label;"/>
 			</html:select>
-		</html:td></html:tr>
-		<html:tr><html:td>
-<!-- heeding and setting the "mail.citation_color" pref still needs work... -->
+		</html:div>
+
+		<!-- heeding and setting the "mail.citation_color" pref still needs work... -->
 		<menu>
+			<titledbutton value="&color.label;" class="popup" align="right"/> 
+			<html:div style="width:30px; background-color:white"/>
+			<menupopup>
+				<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+			</menupopup>
+        </menu>  
+		
+		<!--html:table>
+			<html:tr><html:td>&style.label;
+				<html:select id="pref:int:mail.quoted_style">
+					<html:option value="0" label="&regular.label;"/>
+					<html:option value="1" label="&bold.label;"/>
+					<html:option value="2" label="&italic.label;"/>
+					<html:option value="3" label="&boldItalic.label;"/>
+				</html:select>
+			</html:td></html:tr>
+			<html:tr><html:td>&size.label;
+				<html:select id="pref:int:mail.quoted_style">
+					<html:option value="0" label="&regular.label;"/>
+					<html:option value="1" label="&bigger.label;"/>
+					<html:option value="2" label="&smaller.label;"/>
+				</html:select>
+			</html:td></html:tr>
+			<html:tr><html:td>
+			<menu>
 				<titledbutton value="&color.label;" class="popup" align="right"/> 
-                                <html:div style="width:30px; background-color:white"/>
-                                <menupopup>
-                                        <colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
-                                </menupopup>
-                </menu>  
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+	        </menu>  
+			</html:td></html:tr>
+		</html:table-->
+	</html:fieldset>
 
-<html:form>
-<box align="vertical" style="width: 100%;"> 
-<html:fieldset style="width: 100%;">
-<html:legend align="left">
-<html:div>&displayWidth.label;</html:div>
-</html:legend>
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&displayWidth.label;</html:div>
+		</html:legend>
 
-	<html:table>
-		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:1:bool:mail.fixed_width_messages" checked="true"/>
+		<html:div>
+			<html:input id="pref:1:bool:mail.fixed_width_messages" name="fontwidth" type="radio" checked="true"/>
 			<html:label for="pref:1:bool:mail.fixed_width_messages">&fixedWidth.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:0:bool:mail.fixed_width_messages"/>
+		</html:div>
+			
+		<html:div>
+			<html:input id="pref:0:bool:mail.fixed_width_messages" name="fontwidth" type="radio"/>
 			<html:label for="pref:0:bool:mail.fixed_width_messages">&variableWidth.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
- 
-<html:form>
-<box align="vertical" style="width: 100%;"> 
-<html:fieldset style="width: 100%;">
-	<html:table>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
-		<html:label>&playSound.label;</html:label></html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>
-		<html:label>&rememberLastMsg.label;</html:label></html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash"/>
-		<html:label>&confirmMove.label;</html:label></html:td></html:tr>
-		<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
-		<html:label>&useMessenger.label;</html:label></html:td></html:tr>
-	</html:table>
-</html:fieldset>
-</box>
-</html:form>
+		</html:div>
 
-</html:div>
+		<!--html:table>
+			<html:tr><html:td><html:input name="fontwidth" type="radio"
+				id="pref:1:bool:mail.fixed_width_messages" checked="true"/>
+				<html:label for="pref:1:bool:mail.fixed_width_messages">&fixedWidth.label;</html:label>
+			</html:td></html:tr>
+			<html:tr><html:td><html:input name="fontwidth" type="radio"
+				id="pref:0:bool:mail.fixed_width_messages"/>
+				<html:label for="pref:0:bool:mail.fixed_width_messages">&variableWidth.label;</html:label>
+			</html:td></html:tr>
+		</html:table-->
+	</html:fieldset>
+	 
+	<html:fieldset>
+
+		<html:div>
+			<html:input id="pref:1:bool:mail.play_sound" type="checkbox"/>
+			<html:label for="pref:1:bool:mail.play_sound">&playSound.label;</html:label>
+		</html:div>
+			
+		<html:div>
+			<html:input id="pref:1:bool:mailnews.remember_selected_message" type="checkbox"/>
+			<html:label for="pref:1:bool:mailnews.remember_selected_message">&rememberLastMsg.label;</html:label>
+		</html:div>
+			
+		<html:div>
+			<html:input id="pref:1:bool:mailnews.confirm.moveFoldersToTrash" type="checkbox"/>
+			<html:label for="pref:1:bool:mailnews.confirm.moveFoldersToTrash">&confirmMove.label;</html:label>
+		</html:div>
+			
+		<html:div>
+			<html:input id="pref:0:bool:mail.use_mapi_server" type="checkbox"/>
+			<html:label for="pref:0:bool:mail.use_mapi_server">&useMessenger.label;</html:label>
+		</html:div>
+
+		<!--html:table>
+			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
+			<html:label>&playSound.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>
+			<html:label>&rememberLastMsg.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash"/>
+			<html:label>&confirmMove.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
+			<html:label>&useMessenger.label;</html:label></html:td></html:tr>
+		</html:table-->
+	</html:fieldset>
+
 </window>
