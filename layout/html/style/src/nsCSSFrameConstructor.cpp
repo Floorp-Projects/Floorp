@@ -6337,30 +6337,32 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
       // Get the childFrame for the added child (option)
       // then get the child's parent frame which should be an area frame
       aPresShell->GetPrimaryFrameFor(aChild, &childFrame);
-      childFrame->GetParent(&parentFrame);
+      if (nsnull != childFrame) {
+        childFrame->GetParent(&parentFrame);
 
-      // Now loop through all the child looking fr the frame whose content 
-      // is equal to the select element's content
-      // this is because when gernated content is created it stuff the parent content
-      // pointer into the generated frame, so in this case it has the select content
-      parentFrame->FirstChild(nsnull, &childFrame);
-      nsCOMPtr<nsIContent> selectContent = do_QueryInterface(aSelectElement);
-      while (nsnull != childFrame) {
-        nsIContent * content;
-        childFrame->GetContent(&content);
+        // Now loop through all the child looking fr the frame whose content 
+        // is equal to the select element's content
+        // this is because when gernated content is created it stuff the parent content
+        // pointer into the generated frame, so in this case it has the select content
+        parentFrame->FirstChild(nsnull, &childFrame);
+        nsCOMPtr<nsIContent> selectContent = do_QueryInterface(aSelectElement);
+        while (nsnull != childFrame) {
+          nsIContent * content;
+          childFrame->GetContent(&content);
       
-        // Found the dummy frame so get the FrameManager and 
-        // delete/remove the dummy frame
-        if (selectContent.get() == content) {
-          nsCOMPtr<nsIFrameManager> frameManager;
-          aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-          frameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame, nsnull, childFrame);
-          NS_IF_RELEASE(content);
-          return NS_OK;
-        }
+          // Found the dummy frame so get the FrameManager and 
+          // delete/remove the dummy frame
+          if (selectContent.get() == content) {
+            nsCOMPtr<nsIFrameManager> frameManager;
+            aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+            frameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame, nsnull, childFrame);
+            NS_IF_RELEASE(content);
+            return NS_OK;
+          }
 
-        NS_IF_RELEASE(content);
-        childFrame->GetNextSibling(&childFrame);
+          NS_IF_RELEASE(content);
+          childFrame->GetNextSibling(&childFrame);
+        }
       }
     }
   }
