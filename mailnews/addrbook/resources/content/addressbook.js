@@ -52,7 +52,6 @@ function GetCurrentPrefs()
 			cvPrefs.nameColumn = prefs.GetIntPref("mail.addr_book.lastnamefirst");
 			cvPrefs.lastFirstSeparator = ", ";
 			cvPrefs.firstLastSeparator = " ";
-			cvPrefs.titlePrefix = "Card for ";
 		}
 		catch (ex) {
 			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");

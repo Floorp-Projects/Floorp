@@ -131,7 +131,7 @@ function DisplayCardViewPane(abNode)
 
 	// set fields in card view pane
 
-	cvSetNode(data.CardTitle, cvPrefs.titlePrefix + cardTitle);
+	cvSetNode(data.CardTitle, Bundle.formatStringFromName("viewCardTitle", [ cardTitle], 1));
 	
 	// Name section
 	cvSetNode(data.cvhName, nameHeader);
