@@ -3607,6 +3607,13 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     {
         return(NS_RDF_NO_VALUE);
     }
+    if (entry) 
+    {
+        PRUint32 expTime;
+        entry->GetExpirationTime(&expTime);
+        if (expTime != PR_UINT32_MAX)
+          entry->SetExpirationTime(PR_UINT32_MAX);
+    }
     entry->Close();
 
     // ok, have a cached icon entry, so return the URL's associated favicon
