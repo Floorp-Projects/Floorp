@@ -29,7 +29,7 @@ class nsTransactionManager : public nsITransactionManager
 {
 private:
 
-  PRInt32                mMaxLevelsOfUndo;
+  PRInt32                mMaxTransactionCount;
   nsTransactionStack     mDoStack;
   nsTransactionStack     mUndoStack;
   nsTransactionRedoStack mRedoStack;
@@ -38,7 +38,7 @@ public:
 
   /** The default constructor.
    */
-  nsTransactionManager(PRInt32 aMaxLevelsOfUndo=-1);
+  nsTransactionManager(PRInt32 aMaxTransactionCount=-1);
 
   /** The default destructor.
    */
@@ -54,6 +54,7 @@ public:
   virtual nsresult Clear(void);
   virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
+  virtual nsresult SetMaxTransactionCount(PRInt32 aMaxCount);
   virtual nsresult PeekUndoStack(nsITransaction **aTransaction);
   virtual nsresult PeekRedoStack(nsITransaction **aTransaction);
   virtual nsresult Write(nsIOutputStream *aOutputStream);

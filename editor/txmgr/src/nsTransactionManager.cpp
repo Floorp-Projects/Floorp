@@ -25,17 +25,39 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 
-nsTransactionManager::nsTransactionManager(PRInt32 aMaxLevelsOfUndo)
-  : mMaxLevelsOfUndo(aMaxLevelsOfUndo)
+nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
+  : mMaxTransactionCount(aMaxTransactionCount)
 {
+  mRefCnt = 0;
 }
 
 nsTransactionManager::~nsTransactionManager()
 {
 }
 
+#ifdef DEBUG_TXMGR_REFCNT
+
+nsrefcnt nsTransactionManager::AddRef(void)
+{
+  return ++mRefCnt;
+}
+
+nsrefcnt nsTransactionManager::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+#else
+
 NS_IMPL_ADDREF(nsTransactionManager)
 NS_IMPL_RELEASE(nsTransactionManager)
+
+#endif
 
 nsresult
 nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -103,7 +125,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   result = aTransaction->GetIsTransient(&isTransient);
 
-  if (! NS_SUCCEEDED(result) || isTransient) {
+  if (! NS_SUCCEEDED(result) || isTransient || !mMaxTransactionCount) {
     delete tx;
     UNLOCK_TX_MANAGER(this);
     return result;
@@ -161,7 +183,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   result = mUndoStack.GetSize(&sz);
 
-  if (mMaxLevelsOfUndo > 0 && sz >= mMaxLevelsOfUndo) {
+  if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
     nsTransactionItem *overflow = 0;
 
     result = mUndoStack.PopBottom(&overflow);
@@ -200,7 +222,7 @@ nsTransactionManager::Undo()
 
   result = mDoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -214,7 +236,7 @@ nsTransactionManager::Undo()
   // until it has successfully completed.
   result = mUndoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -251,7 +273,7 @@ nsTransactionManager::Redo()
 
   result = mDoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -265,7 +287,7 @@ nsTransactionManager::Redo()
   // until it has successfully completed.
   result = mRedoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result)) {
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -297,7 +319,7 @@ nsTransactionManager::Clear()
 
   result = ClearRedoStack();
 
-  if (!NS_SUCCEEDED(result)) {
+  if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -334,6 +356,108 @@ nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 }
 
 nsresult
+nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
+{
+  PRInt32 numUndoItems  = 0, numRedoItems = 0, total = 0;
+  nsTransactionItem *tx = 0;
+  nsresult result;
+
+  LOCK_TX_MANAGER(this);
+
+  // It is illegal to call SetMaxTransactionCount() while the transaction
+  // manager is executing a  transaction's Do() method because the undo and
+  // redo stacks might get pruned! If this happens, the SetMaxTransactionCount()
+  // request is ignored, and we return NS_ERROR_FAILURE.
+
+  result = mDoStack.Peek(&tx);
+
+  if (NS_FAILED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  if (tx) {
+    UNLOCK_TX_MANAGER(this);
+    return NS_ERROR_FAILURE;
+  }
+
+  // If aMaxCount is less than zero, the user wants unlimited
+  // levels of undo! No need to prune the undo or redo stacks!
+
+  if (aMaxCount < 0) {
+    mMaxTransactionCount = -1;
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = mUndoStack.GetSize(&numUndoItems);
+
+  if (NS_FAILED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  result = mRedoStack.GetSize(&numRedoItems);
+
+  if (NS_FAILED(result)) {
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  total = numUndoItems + numRedoItems;
+
+  // If aMaxCount is greater than the number of transactions that currently
+  // exist on the undo and redo stack, there is no need to prune the
+  // undo or redo stacks!
+
+  if (aMaxCount > total ) {
+    mMaxTransactionCount = aMaxCount;
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
+  // Try getting rid of some transactions on the undo stack! Start at
+  // the bottom of the stack and pop towards the top.
+
+  while (numUndoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
+    tx = 0;
+    result = mUndoStack.PopBottom(&tx);
+
+    if (NS_FAILED(result) || !tx) {
+      UNLOCK_TX_MANAGER(this);
+      return result;
+    }
+
+    delete tx;
+
+    --numUndoItems;
+  }
+
+  // If neccessary, get rid of some transactions on the redo stack! Start at
+  // the bottom of the stack and pop towards the top.
+
+  while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
+    tx = 0;
+    result = mRedoStack.PopBottom(&tx);
+
+    if (NS_FAILED(result) || !tx) {
+      UNLOCK_TX_MANAGER(this);
+      return result;
+    }
+
+    delete tx;
+
+    --numRedoItems;
+  }
+
+  mMaxTransactionCount = aMaxCount;
+
+  UNLOCK_TX_MANAGER(this);
+
+  return result;
+}
+
+nsresult
 nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 {
   nsTransactionItem *tx = 0;
@@ -348,7 +472,7 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 
   result = mUndoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result) || !tx) {
+  if (NS_FAILED(result) || !tx) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
@@ -375,7 +499,7 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 
   result = mRedoStack.Peek(&tx);
 
-  if (!NS_SUCCEEDED(result) || !tx) {
+  if (NS_FAILED(result) || !tx) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
