@@ -11,7 +11,7 @@ UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(
 UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
 RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
 RegisterFactory__12nsRepositoryFRC4nsIDP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,nsIFactory*,int)
-CreateInstance2__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
+#CreateInstance2__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
 CreateInstance__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# nsRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
 #Initialize__12nsRepositoryFv		# nsRepository::Initialize()
 #checkInitialized__12nsRepositoryFv		# nsRepository::checkInitialized()
