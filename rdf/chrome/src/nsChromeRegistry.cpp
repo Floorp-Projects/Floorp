@@ -128,6 +128,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class nsChromeRegistry;
 
+nsIChromeRegistry* gChromeRegistry = nsnull;
+
 #define CHROME_URI "http://www.mozilla.org/rdf/chrome#"
 
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, selectedSkin);
@@ -288,6 +290,8 @@ static PRBool PR_CALLBACK DatasourceEnumerator(nsHashKey *aKey, void *aData, voi
 
 nsChromeRegistry::~nsChromeRegistry()
 {
+  gChromeRegistry = nsnull;
+  
   if (mDataSourceTable) {
       mDataSourceTable->Enumerate(DatasourceEnumerator, mChromeDataSource);
       delete mDataSourceTable;
@@ -313,6 +317,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsChromeRegistry, nsIChromeRegistry, nsIXULChromeR
 nsresult
 nsChromeRegistry::Init()
 {
+  gChromeRegistry = this;
+  
   nsresult rv;
   rv = nsServiceManager::GetService(kRDFServiceCID,
                                     NS_GET_IID(nsIRDFService),
