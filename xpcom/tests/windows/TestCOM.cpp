@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include <windows.h>
 #include <iostream.h>
 #include "nsISupports.h"
 #include "nsIFactory.h"
