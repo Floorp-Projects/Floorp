@@ -1635,6 +1635,9 @@ function InitObjectPropertiesMenuitem(id)
       case "dl":
         objStr = GetString("List");
         break;
+      case "li":
+        objStr = GetString("ListItem");
+        break;
       case "a":
         if (element.name)
         {
