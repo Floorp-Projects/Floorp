@@ -395,8 +395,8 @@ DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::GetBounds(nsRect& aResult)
 {
-    NS_PRECONDITION(nsnull != mWindow, "null window");
-    if (nsnull != mWindow) {
+    NS_PRECONDITION(mWindow, "null window");
+    if (mWindow) {
         mWindow->GetBounds(aResult);
     }
     else {
@@ -409,8 +409,8 @@ DocumentViewerImpl::GetBounds(nsRect& aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 {
-    NS_PRECONDITION(nsnull != mWindow, "null window");
-    if (nsnull != mWindow) {
+    NS_PRECONDITION(mWindow, "null window");
+    if (mWindow) {
         // Don't have the widget repaint. Layout will generate repaint requests
         // during reflow
         mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
@@ -422,8 +422,8 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 NS_IMETHODIMP
 DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
-    NS_PRECONDITION(nsnull != mWindow, "null window");
-    if (nsnull != mWindow) {
+    NS_PRECONDITION(mWindow, "null window");
+    if (mWindow) {
         mWindow->Move(aX, aY);
     }
     return NS_OK;
@@ -432,8 +432,8 @@ DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 DocumentViewerImpl::Show(void)
 {
-    NS_PRECONDITION(nsnull != mWindow, "null window");
-    if (nsnull != mWindow) {
+    NS_PRECONDITION(mWindow, "null window");
+    if (mWindow) {
         mWindow->Show(PR_TRUE);
     }
     return NS_OK;
@@ -442,8 +442,8 @@ DocumentViewerImpl::Show(void)
 NS_IMETHODIMP
 DocumentViewerImpl::Hide(void)
 {
-    NS_PRECONDITION(nsnull != mWindow, "null window");
-    if (nsnull != mWindow) {
+    NS_PRECONDITION(mWindow, "null window");
+    if (mWindow) {
         mWindow->Show(PR_FALSE);
     }
     return NS_OK;
