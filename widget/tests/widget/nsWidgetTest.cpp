@@ -1187,8 +1187,6 @@ nsresult WidgetTest(int *argc, char **argv)
     nsRepository::RegisterFactory(kCTabWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTooltipWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-
-    
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
@@ -1204,6 +1202,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsIAppShell *appShell;
     nsRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
     if (appShell != nsnull) {
+      fputs("Created AppShell\n", stderr);
       appShell->Create(argc, argv);
     } else {
       printf("AppShell is null!\n");
@@ -1392,9 +1391,15 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
     PRBool old;
-    rtextWidget->SetReadOnly(PR_TRUE,old);
-    nsString rinitialText("This is readonly");
-    rtextWidget->SetText(rinitialText,actualSize);
+
+    if (NS_OK == rtextWidget->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->Create(window, rect, HandleEvent, NULL);
+      nsString rinitialText("This is readonly");
+      rtextWidget->SetText(rinitialText,actualSize);
+      rtextWidget->SetReadOnly(PR_TRUE,old);
+      NS_IF_RELEASE(widget);
+    }
     //NS_RELEASE(rtextWidget); 
     y += rect.height + 5;
 
