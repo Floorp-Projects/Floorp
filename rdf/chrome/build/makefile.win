@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=brprof
+MODULE=chrome
 
 MAKE_OBJ_TYPE=DLL
 DLLNAME=chrome
@@ -44,7 +44,7 @@ MISCDEP=$(LLIBS)
 LINCS=  -I$(PUBLIC)\rdf                 \
         -I$(PUBLIC)\xpcom               \
         -I$(PUBLIC)\raptor              \
-        -I$(PUBLIC)\chrome              \
+		-I$(PUBLIC)\chrome              \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
@@ -52,5 +52,5 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-#   $(MAKE_INSTALL) directory.rdf $(DIST)\bin\res\samples
+    $(MAKE_INSTALL) registry.rdf $(DIST)\bin\chrome
 

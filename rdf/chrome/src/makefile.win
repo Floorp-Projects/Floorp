@@ -28,6 +28,7 @@ LINCS=  -I$(PUBLIC)\nspr        \
         -I$(PUBLIC)\xpcom       \
         -I$(PUBLIC)\chrome      \
         -I$(PUBLIC)\raptor      \
+		-I$(PUBLIC)\netlib		\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
