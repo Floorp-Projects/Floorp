@@ -763,11 +763,11 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
       *output_ret = convertedString;
       *output_size_ret = nsCRT::strlen(convertedString);
     }
+    PR_FREEIF(converted);
   }
 
   if (line != input_line)
     PR_Free(line);
-  PR_FREEIF(converted);
 
   return 0;
 }
