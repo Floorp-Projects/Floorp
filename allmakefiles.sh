@@ -540,6 +540,7 @@ xpinstall/res/locale/en-US/Makefile
 xpinstall/res/skin/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
+xpinstall/wizard/unix/src2/Makefile
 xpfe/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
@@ -756,7 +757,7 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
 END_EXTENSIONS_COOKIE_MAKEFILES
 fi
 
-if [ `echo "$MOZ_EXTENTIONS" | grep -c psm-glue` != 0 ]; then
+if [ `echo "$MOZ_EXTENSIONS" | grep -c psm-glue` != 0 ]; then
   add_makefiles <<END_EXTENTIONS_PSM_GLUE_MAKEFILES
   extensions/psm-glue/public/Makefile
   extensions/psm-glue/Makefile
