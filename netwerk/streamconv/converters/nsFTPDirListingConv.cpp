@@ -602,7 +602,7 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate) {
                    && nowETime.tm_mday > curTime.tm_mday) {
             thisCalendarYear = PR_TRUE;
         } else if (nowETime.tm_month == curTime.tm_month
-                   && nowETime.tm_mday == curTime.tm_mday)
+                   && nowETime.tm_mday == curTime.tm_mday
                    && nowETime.tm_hour > curTime.tm_hour) {
             thisCalendarYear = PR_TRUE;
         } else if (nowETime.tm_month == curTime.tm_month
