@@ -40,7 +40,7 @@
 
 interface nsIBrowserDOMWindow;
 
-[scriptable, uuid(934f7c7f-76cc-4246-a926-4e2b1b545f67)]
+[scriptable, uuid(445fa0fc-2151-4cb4-83d3-34c3e39453de)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
