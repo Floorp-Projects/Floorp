@@ -30,8 +30,8 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS = \
+	event.c  \
 	string.c \
-	event.c \
 	base64t.c
 
 ifeq ($(OS_ARCH), WINNT)
@@ -49,28 +49,24 @@ INCLUDES = -I$(DIST)/include
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.
 LDOPTS = -L$(DIST)/lib
-LIBPR = -llibnspr$(MOD_VERSION)
-LIBPLC = -llibplc$(MOD_VERSION)
-LIBDS = -llibplds$(MOD_VERSION)
+LIBPR = -lnspr$(MOD_VERSION)
+LIBPLC = -lplc$(MOD_VERSION)
+LIBPLDS = -lplds$(MOD_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
   LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
   LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
-  LIBDS= $(DIST)/lib/plds$(MOD_VERSION).lib
+  LIBPLDS= $(DIST)/lib/plds$(MOD_VERSION).lib
 else
-  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-  ifeq ($(OS_TARGET), WIN95)
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
-  else
-  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBDS= $(DIST)/lib/libpds$(MOD_VERSION).$(LIB_SUFFIX)
-  endif
+LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
+LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+LIBPLDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
 endif
 endif
+
+LIBPR += $(LIBPLDS)
 
 ifneq ($(OS_ARCH), WINNT)
 PWD = $(shell pwd)
@@ -189,10 +185,10 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) $(LIBDS) wsock32.lib -out:$@
+	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) wsock32.lib -out:$@
 endif
 else
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPLC) $(LIBDS) $(EXTRA_LIBS) -o $@
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPR) $(LIBPLC) $(EXTRA_LIBS) -o $@
 endif
 
 endif
