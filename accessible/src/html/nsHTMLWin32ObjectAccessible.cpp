@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLWin32ObjectAccessible.h"
-#include "Accessible.h"
+#include "nsAccessible.h"
 
 nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRInt32 aHwnd):
 nsAccessible(aNode, aShell)
