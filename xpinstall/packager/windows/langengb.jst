@@ -16,7 +16,7 @@ logComment("initInstall: " + err);
 fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
 
-if(verifyDiskSpace(fProgram, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
   err = addDirectory("",

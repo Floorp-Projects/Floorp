@@ -213,7 +213,7 @@ fProgram  = getFolder("Program");
 fWindowsSystem = getFolder("Win System");
 logComment("fProgram: " + fProgram);
 
-if(verifyDiskSpace(fProgram, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
   err = addDirectory("",
