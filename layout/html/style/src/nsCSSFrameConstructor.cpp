@@ -3147,12 +3147,12 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           PRUint32 numOptions = 0; 
           result = selectElement->GetLength(&numOptions); 
           if (NS_SUCCEEDED(result) && 0 == numOptions) { 
-            nsIStyleContext*  styleContext   = nsnull; 
+            nsCOMPtr<nsIStyleContext> styleContext;
             nsIFrame*         generatedFrame = nsnull; 
             scrolledFrame->GetStyleContext(&styleContext); 
             if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
                                             styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                            PR_FALSE, &generatedFrame)) { 
+                                            PR_FALSE, getter_AddRefs(generatedFrame))) { 
               // Add the generated frame to the child list 
               childItems.AddChild(generatedFrame); 
             } 
@@ -3299,9 +3299,9 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
       PRUint32 numOptions = 0;
       result = selectElement->GetLength(&numOptions);
       if (NS_SUCCEEDED(result) && 0 == numOptions) { 
-        nsIStyleContext*  styleContext   = nsnull; 
+        nsCOMPtr<nsIStyleContext> styleContext;
         nsIFrame*         generatedFrame = nsnull; 
-        scrolledFrame->GetStyleContext(&styleContext); 
+        scrolledFrame->GetStyleContext(getter_AddRefs(styleContext));
         if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
                                         styleContext, nsLayoutAtoms::dummyOptionPseudo, 
                                         PR_FALSE, &generatedFrame)) { 
