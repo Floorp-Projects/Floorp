@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<window xmlns:html="http://www.w3.org/TR/REC-html40">
+<window xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
