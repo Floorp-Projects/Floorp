@@ -1217,8 +1217,23 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
           // allocale an output buffer
           dstPtr = (char *) PR_Malloc(dstLength + 1);
           if (dstPtr != nsnull) {
-           res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-          dstPtr[dstLength] = '\0';
+            PRInt32 originalLength = unicharLength;
+            PRInt32 estimatedLength = dstLength;
+            res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+            // buffer was too small, reallocate buffer and try again
+            if (unicharLength < originalLength) {
+              PR_Free(dstPtr);
+              unicharLength = originalLength;
+              dstLength = estimatedLength * 4;  // estimation was not correct
+              dstPtr = (char *) PR_Malloc(dstLength + 1);
+              if (dstPtr != nsnull) {
+                res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+                NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
+              }
+            }
+            if (dstPtr != nsnull) {
+              dstPtr[dstLength] = '\0';
+            }
           }
           NS_IF_RELEASE(encoder);
         }
