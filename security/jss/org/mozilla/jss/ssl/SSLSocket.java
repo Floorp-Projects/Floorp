@@ -618,10 +618,28 @@ public class SSLSocket extends java.net.Socket {
         throws SocketException;
 
     /**
-     * Enables/disables the given cipher on this socket.
+     * Enables/disables the cipher on this socket.
      */
-    public static native void setCipherPreference( int cipher,
-        boolean enable);
+    public native void setCipherPreference(int cipher, boolean enable)
+        throws SocketException;
+
+    /**
+     * Returns whether this cipher is enabled or disabled on this socket.
+     */
+    public native boolean getCipherPreference( int cipher)
+        throws SocketException;
+
+    /**
+     * Sets the default for whether this cipher is enabled or disabled.
+     */
+    public static native void setCipherPreferenceDefault(int cipher,
+        boolean enable) throws SocketException;
+
+    /**
+     * Returns the default for whether this cipher is enabled or disabled.
+     */
+    public static native boolean getCipherPreferenceDefault(int cipher)
+        throws SocketException;
 
     native int socketAvailable()
         throws IOException;

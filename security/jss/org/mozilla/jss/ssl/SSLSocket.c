@@ -572,7 +572,61 @@ finish:
 
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
-    JNIEnv *env, jobject clazz, jint cipher, jboolean enable)
+    JNIEnv *env, jobject sockObj, jint cipher, jboolean enable)
+{
+    JSSL_SocketData *sock=NULL;
+    SECStatus status;
+
+    /* get the fd */
+    if( JSSL_getSockData(env, sockObj, &sock) != PR_SUCCESS) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    status = SSL_CipherPrefSet(sock->fd, cipher, enable);
+    if( status != SECSuccess ) {
+        char buf[128];
+        PR_snprintf(buf, 128, "Failed to %s cipher 0x%lx\n",
+            (enable ? "enable" : "disable"), cipher);
+        JSSL_throwSSLSocketException(env, buf);
+        goto finish;
+    }
+
+finish:
+    EXCEPTION_CHECK(env, sock);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreference(
+    JNIEnv *env, jobject sockObj, jint cipher)
+{
+    JSSL_SocketData *sock=NULL;
+    SECStatus status;
+    PRBool enabled;
+
+    /* get the fd */
+    if( JSSL_getSockData(env, sockObj, &sock) != PR_SUCCESS) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    status = SSL_CipherPrefGet(sock->fd, cipher, &enabled);
+    if( status != SECSuccess ) {
+        char buf[128];
+        PR_snprintf(buf, 128, "Failed to get preference for cipher 0x%lx\n",
+            cipher);
+        JSSL_throwSSLSocketException(env, buf);
+        goto finish;
+    }
+
+finish:
+    EXCEPTION_CHECK(env, sock);
+    return enabled;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreferenceDefault(
+    JNIEnv *env, jclass clazz, jint cipher, jboolean enable)
 {
     SECStatus status;
 
@@ -588,6 +642,27 @@ Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
 
 finish:
     return;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreferenceDefault(
+    JNIEnv *env, jclass clazz, jint cipher)
+{
+    SECStatus status;
+    PRBool enabled;
+
+    /* get the preference */
+    status = SSL_CipherPrefGetDefault(cipher, &enabled);
+    if(status != SECSuccess) {
+        char buf[128];
+        PR_snprintf(buf, 128, "Failed to get default preference for "
+            "cipher 0x%lx\n", cipher);
+        JSSL_throwSSLSocketException(env, buf);
+        goto finish;
+    }
+
+finish:
+    return enabled;
 }
 
 JNIEXPORT jint JNICALL 

@@ -174,7 +174,6 @@ class SocketBase {
         try {
             return convertIntToInetAddress( getPeerAddressNative() );
         } catch(SocketException e) {
-            e.printStackTrace();
             return null;
         }
     }
@@ -187,7 +186,6 @@ class SocketBase {
         try {
             return convertIntToInetAddress( getLocalAddressNative() );
         } catch(SocketException e) {
-            e.printStackTrace();
             return null;
         }
     }
@@ -197,7 +195,6 @@ class SocketBase {
         try {
             return getLocalPortNative();
         } catch(SocketException e) {
-            e.printStackTrace();
             return 0;
         }
     }

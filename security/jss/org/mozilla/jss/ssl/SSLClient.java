@@ -144,7 +144,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.4 2001/09/08 01:53:32 nicolson%netscape.com Exp $ " + 
+			"$Id: SSLClient.java,v 1.5 2002/09/05 01:16:59 nicolson%netscape.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -436,14 +436,14 @@ public class SSLClient
 	   i <= SSLSocket.SSL2_DES_192_EDE3_CBC_WITH_MD5; ++i) {
 //	SSLSocket.setPermittedByPolicy(i, SSLSocket.SSL_ALLOWED);
         if( i != 0xFF05 ) {
-            SSLSocket.setCipherPreference( i, true);
+            SSLSocket.setCipherPreferenceDefault( i, true);
         }
       }
       
       /* enable all the SSL3 cipher suites */
       for (i = 0; cipherSuites[i] != 0;  ++i) {
 //	SSLSocket.setPermittedByPolicy(cipherSuites[i], SSLSocket.SSL_ALLOWED);
-	SSLSocket.setCipherPreference( cipherSuites[i], true);
+	SSLSocket.setCipherPreferenceDefault( cipherSuites[i], true);
       }
       
       SSLClient x = new SSLClient(System.out, "Stand alone Ver 0.01", argv);

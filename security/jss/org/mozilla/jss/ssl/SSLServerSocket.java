@@ -226,7 +226,8 @@ public class SSLServerSocket extends java.net.ServerSocket {
      *  is used: <code>/tmp</code> on Unix and <code>\\temp</code> on Windows.
      */
     public static native void configServerSessionIDCache(int maxSidEntries,
-        int ssl2EntryTimeout, int ssl3EntryTimeout, String cacheFileDirectory);
+        int ssl2EntryTimeout, int ssl3EntryTimeout, String cacheFileDirectory)
+        throws SocketException;
 
     /**
      * Sets the certificate to use for server authentication.

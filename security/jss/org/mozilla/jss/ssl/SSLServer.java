@@ -355,13 +355,13 @@ public class SSLServer
 	for (i = SSLSocket.SSL2_RC4_128_WITH_MD5;
 	     i <= SSLSocket.SSL2_DES_192_EDE3_CBC_WITH_MD5; ++i) {
 //	    SSLSocket.setPermittedByPolicy(i, SSLSocket.SSL_ALLOWED);
-	    SSLSocket.setCipherPreference( i, true);
+	    SSLSocket.setCipherPreferenceDefault( i, true);
 	}
 
 	/* enable all the SSL3 cipher suites */
 	for (i = 0; cipherSuites[i] != 0;  ++i) {
 //	    SSLSocket.setPermittedByPolicy(cipherSuites[i], SSLSocket.SSL_ALLOWED);
-	    SSLSocket.setCipherPreference( cipherSuites[i], true);
+	    SSLSocket.setCipherPreferenceDefault( cipherSuites[i], true);
 	}
 
 	SSLServer x = new SSLServer(System.out, "Stand alone Ver 0.01");
