@@ -1,4 +1,3 @@
-#! gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -65,8 +64,7 @@ REQUIRES	=\
 			caps
 
 ifdef OJI
-REQUIRES +=	  oji \
-		  ojiimpl
+REQUIRES	+= oji ojiimpl
 endif
 
 ifdef MOZ_MAIL_NEWS
@@ -324,7 +322,7 @@ INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include \
 		-I$(DEPTH)/dist/public/security
 
 ifdef MOZ_MAIL_NEWS
-INCLUDES	+= -I$(DEPTH)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
+INCLUDES	+= -I$(DEPTH)/lib/libmsg
 endif
 
 DEFINES		+= -DNEW_DECODERS -DDELAYED_MENU_CREATION -DNETCASTER_ZAXIS_HACKERY

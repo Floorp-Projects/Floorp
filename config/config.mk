@@ -295,14 +295,13 @@ endif
 # be put in the library directories where it belongs so that it can
 # get exported to dist properly.
 #
-INCLUDES	= $(LOCAL_PREINCLUDES) $(MODULE_PREINCLUDES) -I$(topsrcdir)/include $(LOCAL_INCLUDES) $(OS_INCLUDES) $(G++INCLUDES)
+INCLUDES	= $(LOCAL_INCLUDES) -I$(DIST)/include -I$(XPDIST)/include -I$(topsrcdir)/include $(OS_INCLUDES) $(G++INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
 LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 
 NSPRDIR		= nsprpub
-INCLUDES	+= -I$(DIST)/include
 LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
 PURELIBNSPR	= $(DIST)/lib/purelibplds21.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr21.$(LIB_SUFFIX)
 
