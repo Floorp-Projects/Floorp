@@ -61,6 +61,9 @@
 	mflr	r0
 	stw	r0,8(sp)
 
+ 	mr	r12,r3		    # Move methodIndex into r12 for LATER
+ 	lwz	r3,104(sp)	    # Get the 'original' r3
+
         stwu	sp,-176(sp)	    # room for linkage (24), fprData (104), gprData(28)
 				    # outgoing params to PrepareAndDispatch (20)
 
@@ -88,8 +91,8 @@
 	addi	r6,sp,44	# gprData
 	addi	r7,sp,72	# fprData
 				# r3 has the 'self' pointer already
-#	mr	r4,r12		# methodIndex selector
-	addi	r5,sp,232	# pointer to callers args area, beyond r3-r10 mapped range
+	mr	r4,r12		# methodIndex selector (it is now LATER)
+	addi	r5,sp,312	# pointer to callers args area, beyond r3-r10 mapped range
 
 	bl	.PrepareAndDispatch
 	nop

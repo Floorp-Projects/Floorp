@@ -41,7 +41,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
     } DU;               // stack slots are not guaranteed 16 byte aligned
 
 #define PARAM_BUFFER_COUNT     16
-#define PARAM_GPR_COUNT                 7
+#define PARAM_GPR_COUNT         7  
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
@@ -193,12 +193,12 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
     return result;
 }
 
-extern "C" int SharedStub(void *, int);
+extern "C" int SharedStub(int);
 
 #define STUB_ENTRY(n)                \
 nsresult nsXPTCStubBase::Stub##n()   \
 {                                    \
-    return SharedStub(this, n);      \
+    return SharedStub(n);	     \
 }                                    \
 
 #define SENTINEL_ENTRY(n) \
