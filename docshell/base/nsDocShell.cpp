@@ -2278,6 +2278,8 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       }
    
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
+   // Cancel any timers that were set for this loader.
+   CancelRefreshURITimers();
 
    mLoadType = aLoadType;
 
