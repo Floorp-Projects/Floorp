@@ -23,7 +23,6 @@
 #ifndef NS_NEWSUTILS_H
 #define NS_NEWSUTILS_H
 
-#include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsIMsgIncomingServer.h"
 
@@ -36,13 +35,7 @@ static const char kNewsMessageRootURI[] = "news_message:/";
 #define kNewsMessageRootURILen 14
 
 extern nsresult
-nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
-
-extern nsresult
 nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32 *key);
-
-extern nsresult 
-nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);
 
 extern nsresult
 nsCreateNewsBaseMessageURI(const char *baseURI, char **baseMessageURI);

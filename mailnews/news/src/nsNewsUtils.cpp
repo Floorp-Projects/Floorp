@@ -67,107 +67,6 @@ nsGetNewsServer(const char* username, const char *hostname,
   return rv;
 }
 
-
-nsresult
-nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
-{
-#ifdef DEBUG_NEWS
-  printf("nsNewsURI2Path(%s,%s,??)\n",rootURI,uriStr);
-#endif
-  nsresult rv = NS_OK;
-  
-  pathResult = nsnull;
-  nsAutoString sep(PRUnichar(PR_GetDirectorySeparator()));
-
-  nsCAutoString uri(uriStr);
-  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
-    return NS_ERROR_FAILURE;
-
-  // verify that rootURI starts with "news:/" or "news_message:/"
-  if ((PL_strcmp(rootURI, kNewsRootURI) != 0) && 
-      (PL_strcmp(rootURI, kNewsMessageRootURI) != 0)) {
-    return NS_ERROR_FAILURE;
-	}
-
-  // the server name is the first component of the path, so extract it out
-  PRInt32 hostStart = 0;
-
-  hostStart = uri.FindChar('/');
-  if (hostStart <= 0) return NS_ERROR_FAILURE;
-
-  // skip past all //
-  while (uri.CharAt(hostStart) =='/') hostStart++;
-  
-  // cut 
-  // news://[username@]hostname -> username@hostname
-  // and
-  // news://[username@]hostname/newsgroup -> username@hostname/newsgroup
-  nsCAutoString hostname;
-  uri.Right(hostname, uri.Length() - hostStart);
-
-  PRInt32 hostEnd = hostname.FindChar('/');
-
-  PRInt32 atPos = hostname.FindChar('@');
-  nsCAutoString username;
-
-  username = "";
-  // we have a username here
-  // XXX do this right, this doesn't work -alecf@netscape.com
-  if (atPos != -1) {
-    hostname.Left(username, atPos);	
-#ifdef DEBUG_NEWS
-    printf("username = %s\n",username.get());
-#endif
-  }
-
-  // newsgroup comes after the hostname, after the '/'
-  nsCAutoString newsgroup;
-  nsCAutoString exacthostname;
-
-  if (hostEnd != -1) {
-    hostname.Right(newsgroup, hostname.Length() - hostEnd - 1);
-  }
-
-  // cut off first '/' and everything following it
-  // hostname/newsgroup -> hostname
-  if (hostEnd > 0) {
-    hostname.Truncate(hostEnd);
-  }
- 
-  // if we had a username, remove it to get the exact hostname
-  if (atPos != -1) {
-    hostname.Right(exacthostname, hostname.Length() - atPos - 1);
-  }
-  else {
-    exacthostname = hostname.get();
-#ifdef DEBUG_NEWS
-    printf("exacthostname = %s, hostname = %s\n",exacthostname.get(),hostname.get());
-#endif
-  } 
-
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = nsGetNewsServer(username.get(),
-                       exacthostname.get(), getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-
-  // now ask the server what it's root is
-  nsCOMPtr<nsIFileSpec> localPath;
-  rv = server->GetLocalPath(getter_AddRefs(localPath));
-  if (NS_FAILED(rv)) return rv;
-
-  localPath->GetFileSpec(&pathResult);
-
-  if (!pathResult.Exists())
-    pathResult.CreateDir();
-  
-  if (!newsgroup.IsEmpty()) {
-    NS_MsgHashIfNecessary(newsgroup);
-    pathResult += (const char *) newsgroup;
-  }
-
-  return NS_OK;
-}
-
 /* parses NewsMessageURI */
 nsresult 
 nsParseNewsMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key)
@@ -217,14 +116,6 @@ nsresult nsGetNewsGroupFromUri(const char *uri, nsIMsgNewsFolder **aFolder)
   if (NS_FAILED(rv)) return rv;
 
   if (!*aFolder) return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
-{
-  uri.Append(baseURI);
-  uri.Append('#');
-  uri.AppendInt(key);
   return NS_OK;
 }
 
