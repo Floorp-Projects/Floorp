@@ -61,6 +61,7 @@ private:
   DWORD m_dwStartTime;
   char m_szItemSeparator[80];
   int m_iStringDataWrap;
+  BOOL m_bStale;
 
 public:
   CLogger(LPSTR szTarget = NULL);
@@ -92,9 +93,13 @@ public:
   void blockDumpToFrame(BOOL bBlock);
 
   void closeLogToFile();
+
+  void markStale();
+  BOOL isStale();
 };
 
 #define LOGGER_DEFAULT_STRING_WRAP    32
+#define LOGGER_DEFAULT_TARGET "_npapi_Log"
 
 // Preferences profile stuff
 #define SECTION_LOG           "Log"

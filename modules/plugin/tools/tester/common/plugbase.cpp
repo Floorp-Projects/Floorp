@@ -44,7 +44,7 @@
 extern CLogger * pLogger;
 static char szINIFile[] = NPAPI_INI_FILE_NAME;
 #ifdef XP_UNIX
-    static char szTarget[] = "_npapi_Log";
+    static char szTarget[] = LOGGER_DEFAULT_TARGET;
 #endif
 
 CPluginBase::CPluginBase(NPP pNPInstance, WORD wMode) :

@@ -44,6 +44,7 @@
 
 extern CLogger * pLogger;
 static char szINIFile[] = NPAPI_INI_FILE_NAME;
+static char szTarget[] = LOGGER_DEFAULT_TARGET;
 
 // here the plugin creates a plugin instance object which 
 // will be associated with this newly created NPP instance and 
@@ -67,6 +68,15 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, ch
   }
 
   instance->pdata = (void *)pPlugin;
+
+  // recreate logger if needed
+  if (!pLogger)
+    pLogger = new CLogger(szTarget);
+  else if (pLogger->isStale()) {
+    delete pLogger;
+    pLogger = new CLogger(szTarget);
+  }
+
   pLogger->associate(pPlugin);
 
   char szFileName[_MAX_PATH];
@@ -106,6 +116,10 @@ Return:
   DWORD dwTickReturn = XP_GetTickCount();
   pLogger->appendToLog(action_npp_destroy, dwTickEnter, dwTickReturn, (DWORD)ret, (DWORD)instance, (DWORD)save);
   pLogger->blockDumpToFrame(FALSE);
+
+  // mark logger stale as the dll can remain in memory with no NP_Shutdown called
+  // and then come back with NPP_New where we should recreate the logger
+  pLogger->markStale();
   return ret;
 }
 
