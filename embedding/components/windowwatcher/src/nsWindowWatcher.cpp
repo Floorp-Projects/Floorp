@@ -1224,8 +1224,16 @@ nsWindowWatcher::FindItemWithName(
 {
   PRBool   more;
   nsresult rv;
+  nsAutoString name(aName);
 
   *aFoundItem = 0;
+
+  /* special cases */
+  if(name.Length() == 0)
+    return NS_OK;
+  if(name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
+    return NS_OK;
+  // _content will be handled by individual windows, below
 
   nsCOMPtr<nsISimpleEnumerator> windows;
   GetWindowEnumerator(getter_AddRefs(windows));
