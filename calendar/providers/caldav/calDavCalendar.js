@@ -192,8 +192,8 @@ calDavCalendar.prototype = {
         var newItem = aItem.clone();
         newItem.parent = this;
         newItem.generation = 1;
-        newItem.makeImmutable();
         newItem.setProperty("locationURI", itemUri.spec);
+        newItem.makeImmutable();
 
         dump("icalString = " + newItem.icalString + "\n");
         // XXX use if not exists
