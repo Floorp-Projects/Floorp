@@ -628,7 +628,6 @@ protected:
     nsIRDFContentModelBuilder* mXULBuilder;
     nsIRDFDataSource*          mLocalDataSource;
     nsIRDFDataSource*          mDocumentDataSource;
-    nsIParser*                 mParser;
     nsILineBreaker*            mLineBreaker;
     nsIWordBreaker*            mWordBreaker;
     nsIContentViewerContainer* mContentViewerContainer;
@@ -661,7 +660,6 @@ XULDocumentImpl::XULDocumentImpl(void)
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
       mDocumentDataSource(nsnull),
-      mParser(nsnull),
       mLineBreaker(nsnull),
       mWordBreaker(nsnull),
       mContentViewerContainer(nsnull),
@@ -719,7 +717,6 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mDocumentURL);
     NS_IF_RELEASE(mArena);
     NS_IF_RELEASE(mNameSpaceManager);
-    NS_IF_RELEASE(mParser);
     NS_IF_RELEASE(mLineBreaker);
     NS_IF_RELEASE(mWordBreaker);
     NS_IF_RELEASE(mContentViewerContainer);
@@ -1003,15 +1000,16 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         }
     }
 
+    nsCOMPtr<nsIParser> parser;
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
                                                     nsnull,
                                                     kIParserIID,
-                                                    (void**) &mParser))) {
+                                                    (void**) &parser))) {
         NS_ERROR("unable to create parser");
         return rv;
     }
 
-    if (NS_FAILED(rv = mParser->QueryInterface(kIStreamListenerIID, (void**) aDocListener))) {
+    if (NS_FAILED(rv = parser->QueryInterface(kIStreamListenerIID, (void**) aDocListener))) {
         NS_ERROR("parser doesn't support nsIStreamListener");
         return rv;
     }
@@ -1027,10 +1025,10 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
     mCommand = aCommand;
 
-    mParser->RegisterDTD(dtd);
-    mParser->SetCommand(aCommand);
-    mParser->SetContentSink(sink);
-    mParser->Parse(aURL);
+    parser->RegisterDTD(dtd);
+    parser->SetCommand(aCommand);
+    parser->SetContentSink(sink); // grabs a reference to the parser
+    parser->Parse(aURL);
    
     return NS_OK;
 }
