@@ -313,6 +313,21 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 }
 #endif
 
+#if DEBUG
+JS_STATIC_DLL_CALLBACK(intN)
+js_root_printer(JSHashEntry *he, intN i, void *arg)
+{
+    uint32 *leakedroots = (uint32 *)arg;
+
+    *leakedroots += 1;
+    fprintf(stderr,
+            "JS engine warning: leaking GC root \'%s\' at %p\n",
+            he->value ? (char *)he->value : "", he->key);
+
+    return HT_ENUMERATE_NEXT;
+}
+#endif
+
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -328,6 +343,30 @@ js_FinishGC(JSRuntime *rt)
         free(rt->gcFinalVec);
         rt->gcFinalVec = NULL;
     }
+
+#if DEBUG        
+    {
+        uint32 leakedroots = 0;
+        /* Warn (but don't assert) debug builds of any remaining roots. */
+        JS_HashTableEnumerateEntries(rt->gcRootsHash, js_root_printer,
+                                     &leakedroots);
+        if (leakedroots > 0) {
+            if (leakedroots == 1) {
+                fprintf(stderr,
+"JS engine warning: 1 GC root remains after destroying the JSRuntime.\n"
+"                   This root may point to freed memory. Objects reachable\n"
+"                   through it have not been finalized.\n");
+            } else {
+                fprintf(stderr,
+"JS engine warning: %lu GC roots remain after destroying the JSRuntime.\n"
+"                   These roots may point to freed memory. Objects reachable\n"
+"                   through them have not been finalized.\n",
+                        (unsigned long) leakedroots);
+            }
+        }
+    }
+#endif
+
     JS_HashTableDestroy(rt->gcRootsHash);
     rt->gcRootsHash = NULL;
     if (rt->gcLocksHash) {
