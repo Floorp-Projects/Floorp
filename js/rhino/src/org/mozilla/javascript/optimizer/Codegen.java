@@ -120,9 +120,7 @@ public class Codegen extends Interpreter {
                     try {
                         Class clazz;
                         if (securitySupport == null) {
-                            if (Context.isSecurityDomainRequired())
-                                throw new SecurityException("Required " +
-                                            "security context missing");
+                            Context.checkSecurityDomainRequired();
                             if (classLoader == null)
                                 classLoader = new JavaScriptClassLoader();
                             clazz = classLoader.defineClass(name, classFile);

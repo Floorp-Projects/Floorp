@@ -1767,25 +1767,38 @@ public final class Context {
         }
         if (result != null)
             return result;
-        if (requireSecurityDomain)
-            throw new SecurityException("Required security context not found");
+        if (requireSecurityDomain) 
+            checkSecurityDomainRequired();
         return null;
     }
 
     private static boolean requireSecurityDomain = true;
+    private static boolean resourceMissing = false;
+    final static String securityResourceName = 
+        "org.mozilla.javascript.resources.Security";
     static {
-        final String securityResourceName = 
-            "org.mozilla.javascript.resources.Security";
         try {
             ResourceBundle rb = ResourceBundle.getBundle(securityResourceName);
             String s = rb.getString("security.requireSecurityDomain");
             requireSecurityDomain = s.equals("true");
         } catch (java.util.MissingResourceException mre) {
             requireSecurityDomain = true;
+            resourceMissing = true;
         } catch (SecurityException se) {
             requireSecurityDomain = true;
         }   
-    }      
+    }
+    
+    final public static void checkSecurityDomainRequired() {
+        if (requireSecurityDomain) {
+            String msg = "Required security context not found";
+            if (resourceMissing) {
+                msg += ". Didn't find properties file at " + 
+                       securityResourceName;
+            }
+            throw new SecurityException(msg);
+        }
+    }
     
     static final boolean useJSObject = false;
 

@@ -62,8 +62,8 @@ class InterpreterData {
                                     : lastNumberTableIndex * 2];
         
         itsUseDynamicScope = useDynamicScope;
-        if (securityDomain == null && Context.isSecurityDomainRequired())
-            throw new SecurityException("Required security context missing");
+        if (securityDomain == null)
+            Context.checkSecurityDomainRequired();
         this.securityDomain = securityDomain;
     }
     
