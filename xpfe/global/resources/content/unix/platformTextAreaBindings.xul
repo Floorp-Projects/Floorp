@@ -55,15 +55,28 @@
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_lineNext');
     controller.doCommand('cmd_lineNext');"/>
-<key id="emPageDownkb" key="v" control="true" shift="false"
+
+<!-- Add the Windows/Mac cut, copy, paste, undo and redo keys -->
+<key id="emCutKey" key="x" control="true" shift="false"
   onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
-    controller.doCommand('cmd_scrollPageDown');"/>
-<key id="emacspagedownkb" key="v" control="true" onkeypress="SelectionPageDown()" />
-<key id="emPageUpkb" key="v" control="true" shift="false" meta="true"
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+    controller.doCommand('cmd_cut');"/>
+<key id="emCopyKey" key="c" control="true" shift="false"
   onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
-    controller.doCommand('cmd_scrollPageUp');"/>
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+<key id="emPasteKey" key="v" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+    controller.doCommand('cmd_paste');"/>
+<key id="emUndoKey" key="z" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
+    controller.doCommand('cmd_undo');"/>
+<key id="emRedoKey" key="r" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
+    controller.doCommand('cmd_redo');"/>
 
 </keyset>
 
