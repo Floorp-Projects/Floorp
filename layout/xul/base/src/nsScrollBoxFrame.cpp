@@ -392,14 +392,10 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
      nsIFrame* frame;
      kid->GetFrame(&frame);
      frame->GetView(presContext, &view);
-     nsCOMPtr<nsIViewManager> vm;
-     view->GetViewManager(*getter_AddRefs(vm));
+
      nsRect r(0, 0, childRect.width, childRect.height);
-     nsRect bnds;
-     view->GetBounds(bnds);
-     if (bnds != r) {
-       vm->ResizeView(view, r);
-     }
+     nsContainerFrame::SyncFrameViewAfterReflow(presContext, frame, view, &r,
+                                                NS_FRAME_NO_MOVE_VIEW);
   }
 
   nsIScrollableView* scrollingView;
