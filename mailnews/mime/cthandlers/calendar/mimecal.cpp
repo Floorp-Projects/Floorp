@@ -29,8 +29,7 @@ static int MimeInlineTextCalendar_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextCalendar_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextCalendar_parse_begin (MimeObject *obj);
 
-extern int MK_OUT_OF_MEMORY;
-
+extern "C" int MK_OUT_OF_MEMORY = 100;
 
 /*
  * These functions are the public interface for this content type
