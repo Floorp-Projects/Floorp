@@ -34,6 +34,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 # Install bloaturls.txt file for tinderbox Bloaty test.
-install:: $(srcdir)/bloaturls.txt
+install:: bloaturls.txt
 	$(INSTALL) $< $(DIST)/bin
 
