@@ -39,6 +39,7 @@
 #ifndef nsToolBoxFrame_h___
 #define nsToolBoxFrame_h___
 
+#include "nsIDOMDragListener.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
@@ -47,10 +48,16 @@
 #include "nsBoxFrame.h"
 
 
+#ifdef TOOLBAR_DD
+class nsToolboxFrame : public nsBoxFrame, public nsIDOMDragListener
+#else
 class nsToolboxFrame : public nsBoxFrame
+#endif
 {
 public:
   friend nsresult NS_NewToolboxFrame(nsIFrame** aNewFrame);
+
+  NS_DECL_ISUPPORTS
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
@@ -80,6 +87,17 @@ public:
     // Overridden to capture events
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
                               nsIFrame**     aFrame);
+
+#ifdef TOOLBAR_DD
+/*BEGIN implementations of dragevent handler interface*/
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+public:
+  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+/*END implementations of dragevent handler interface*/
+#endif
 
 protected:
   enum { kGrippyWidthInPixels = 10, kCollapsedGrippyHeightInPixels = 10, kCollapsedGrippyWidthInPixels = 50 } ;
