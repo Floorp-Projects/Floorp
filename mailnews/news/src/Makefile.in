@@ -22,6 +22,15 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE=nntp
+LIBRARY_NAME=nntp
+
+CPPSRCS = \
+	nsNNTPArticleList.cpp \
+	nsNNTPArticleSet.cpp \
+	nsNNTPNewsgroupList.cpp \
+	nsNNTPProtocol.cpp \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
