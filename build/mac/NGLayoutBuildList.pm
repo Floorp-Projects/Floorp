@@ -1409,7 +1409,9 @@ sub BuildClientDist()
 
     #SECURITY
     _InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",            "$distdirectory:idl:");
-    _InstallFromManifest(":mozilla:extensions:psm-glue:src:MANIFEST",            "$distdirectory:include:");
+    _InstallFromManifest(":mozilla:extensions:psm-glue:src:MANIFEST",               "$distdirectory:include:");
+
+    _InstallFromManifest(":mozilla:security:base:public:MANIFEST",                  "$distdirectory:idl:");
 
     _InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",               "$distdirectory:security:");
     _InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",             "$distdirectory:security:");
