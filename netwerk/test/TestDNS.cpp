@@ -115,9 +115,11 @@ int main(int argc, char **argv)
                 hostBuf = NS_ConvertUCS2toUTF8(NS_ConvertASCIItoUCS2(argv[i]));
 
             nsCOMPtr<nsIDNSListener> listener = new myDNSListener(argv[i], i);
+
             nsCOMPtr<nsIDNSRequest> req;
-            nsresult rv = dns->AsyncResolve(hostBuf, PR_FALSE, listener, nsnull,
-                                            getter_AddRefs(req));
+            nsresult rv = dns->AsyncResolve(hostBuf,
+                                            nsIDNSService::RESOLVE_CANONICAL_NAME,
+                                            listener, nsnull, getter_AddRefs(req));
             if (NS_FAILED(rv))
                 printf("### AsyncResolve failed [rv=%x]\n", rv);
         }

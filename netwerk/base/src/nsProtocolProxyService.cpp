@@ -1115,8 +1115,9 @@ nsProtocolProxyService::ConfigureFromWPAD()
     }
     
     nsCOMPtr<nsIDNSRequest> request;
-    rv = dnsService->AsyncResolve(NS_LITERAL_CSTRING("wpad"), PR_TRUE, this, curQ,
-                                  getter_AddRefs(request));
+    rv = dnsService->AsyncResolve(NS_LITERAL_CSTRING("wpad"),
+                                  nsIDNSService::RESOLVE_BYPASS_CACHE,
+                                  this, curQ, getter_AddRefs(request));
     if (NS_FAILED(rv)) {
         NS_ERROR("Can't run WPAD: AsyncResolve failed");
     }

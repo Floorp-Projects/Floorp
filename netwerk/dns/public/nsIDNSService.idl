@@ -45,7 +45,7 @@ interface nsIEventQueue;
 /**
  * nsIDNSService
  */
-[scriptable, uuid(98519315-f139-405e-9182-3339907c29fd)]
+[scriptable, uuid(2d6bbf2f-cf97-48f0-af29-642b86d0e59e)]
 interface nsIDNSService : nsISupports
 {
     /**
@@ -67,8 +67,8 @@ interface nsIDNSService : nsISupports
      *
      * @param aHostName
      *        the hostname or IP-address-literal to resolve.
-     * @param aBypassCache
-     *        if true, the internal DNS lookup cache will be bypassed.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
      * @param aListener
      *        the listener to be notified when the result is available.
      * @param aListenerEventQ
@@ -81,26 +81,43 @@ interface nsIDNSService : nsISupports
      * @return DNS request instance that can be used to cancel the host lookup.
      */
     nsIDNSRequest asyncResolve(in AUTF8String    aHostName,
-                               in boolean        aBypassCache,
+                               in unsigned long  aFlags,
                                in nsIDNSListener aListener,
                                in nsIEventQueue  aListenerEventQ);
 
     /**
-     * called to synchronously resolve a hostname.
+     * called to synchronously resolve a hostname.  warning this method may
+     * block the calling thread for a long period of time.  it is extremely
+     * unwise to call this function on the UI thread of an application.
      *
      * @param aHostName
      *        the hostname or IP-address-literal to resolve.
-     * @param aBypassCache
-     *        if true, the internal DNS lookup cache will be bypassed.
+     * @param aFlags
+     *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
      *
      * @return DNS record corresponding to the given hostname.
      * @throws NS_ERROR_UNKNOWN_HOST if host could not be resolved.
      */
-    nsIDNSRecord resolve(in AUTF8String aHostName,
-                         in boolean     aBypassCache);
+    nsIDNSRecord resolve(in AUTF8String   aHostName,
+                         in unsigned long aFlags);
 
     /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;
+
+    /*************************************************************************
+     * Listed below are the various flags that may be OR'd together to form
+     * the aFlags parameter passed to asyncResolve() and resolve().
+     */
+
+    /**
+     * if set, this flag suppresses the internal DNS lookup cache.
+     */
+    const unsigned long RESOLVE_BYPASS_CACHE = (1 << 0);
+
+    /**
+     * if set, the canonical name of the specified host will be queried.
+     */
+    const unsigned long RESOLVE_CANONICAL_NAME = (1 << 1);
 };

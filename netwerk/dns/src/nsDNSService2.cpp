@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -84,6 +85,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
 NS_IMETHODIMP
 nsDNSRecord::GetCanonicalName(nsACString &result)
 {
+    // this method should only be called if we have a CNAME
+    NS_ENSURE_TRUE(mHostRecord->flags & nsHostResolver::RES_CANON_NAME,
+                   NS_ERROR_NOT_AVAILABLE);
+
     // if the record is for an IP address literal, then the canonical
     // host name is the IP address literal.
     const char *cname;
@@ -177,17 +182,23 @@ public:
 
     nsDNSAsyncRequest(nsHostResolver   *res,
                       const nsACString &host,
-                      nsIDNSListener   *listener)
+                      nsIDNSListener   *listener,
+                      PRUint16          flags,
+                      PRUint16          af)
         : mResolver(res)
         , mHost(host)
-        , mListener(listener) {}
-    virtual ~nsDNSAsyncRequest() {}
+        , mListener(listener)
+        , mFlags(flags)
+        , mAF(af) {}
+    ~nsDNSAsyncRequest() {}
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
     nsCOMPtr<nsIDNSListener> mListener;
+    PRUint16                 mFlags;
+    PRUint16                 mAF;
 };
 
 void
@@ -219,7 +230,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSAsyncRequest, nsIDNSRequest)
 NS_IMETHODIMP
 nsDNSAsyncRequest::Cancel()
 {
-    mResolver->DetachCallback(mHost.get(), this);
+    mResolver->DetachCallback(mHost.get(), mFlags, mAF, this);
     return NS_OK;
 }
 
@@ -353,7 +364,7 @@ nsDNSService::Shutdown()
 
 NS_IMETHODIMP
 nsDNSService::AsyncResolve(const nsACString &hostname,
-                           PRBool            bypassCache,
+                           PRUint32          flags,
                            nsIDNSListener   *listener,
                            nsIEventQueue    *eventQ,
                            nsIDNSRequest   **result)
@@ -389,16 +400,17 @@ nsDNSService::AsyncResolve(const nsACString &hostname,
         listener = listenerProxy;
     }
 
-    nsDNSAsyncRequest *req = new nsDNSAsyncRequest(res, *hostPtr, listener);
+    PRUint16 af = GetAFForLookup(*hostPtr);
+
+    nsDNSAsyncRequest *req =
+            new nsDNSAsyncRequest(res, *hostPtr, listener, flags, af);
     if (!req)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = req);
 
-    PRUint16 af = GetAFForLookup(req->mHost);
-
     // addref for resolver; will be released when OnLookupComplete is called.
     NS_ADDREF(req);
-    rv = res->ResolveHost(req->mHost.get(), bypassCache, req, af); 
+    rv = res->ResolveHost(req->mHost.get(), flags, af, req);
     if (NS_FAILED(rv)) {
         NS_RELEASE(req);
         NS_RELEASE(*result);
@@ -408,7 +420,7 @@ nsDNSService::AsyncResolve(const nsACString &hostname,
 
 NS_IMETHODIMP
 nsDNSService::Resolve(const nsACString &hostname,
-                      PRBool            bypassCache,
+                      PRUint32          flags,
                       nsIDNSRecord    **result)
 {
     // grab reference to global host resolver and IDN service.  beware
@@ -448,7 +460,7 @@ nsDNSService::Resolve(const nsACString &hostname,
 
     PRUint16 af = GetAFForLookup(*hostPtr);
 
-    rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), bypassCache, &syncReq, af);
+    rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), flags, af, &syncReq);
     if (NS_SUCCEEDED(rv)) {
         // wait for result
         while (!syncReq.mDone)

@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -149,25 +150,33 @@ private:
 
 //----------------------------------------------------------------------------
 
+// this macro filters out any flags that are not used when constructing the
+// host key.  the significant flags are those that would affect the resulting
+// host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
+#define RES_KEY_FLAGS(_f) ((_f) & nsHostResolver::RES_CANON_NAME)
+
 nsresult
-nsHostRecord::Create(const char *host, nsHostRecord **result)
+nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 {
-    size_t hostLen = strlen(host) + 1;
+    size_t hostLen = strlen(key->host) + 1;
     size_t size = hostLen + sizeof(nsHostRecord);
 
     nsHostRecord *rec = (nsHostRecord*) ::operator new(size);
     if (!rec)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rec->_refc = 1; // addref
     rec->host = ((char *) rec) + sizeof(nsHostRecord);
+    rec->flags = RES_KEY_FLAGS(key->flags);
+    rec->af = key->af;
+
+    rec->_refc = 1; // addref
     rec->addr_info = nsnull;
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
     rec->resolving = PR_FALSE;
     PR_INIT_CLIST(rec);
     PR_INIT_CLIST(&rec->callbacks);
-    memcpy(rec->host, host, hostLen);
+    memcpy((char *) rec->host, key->host, hostLen);
 
     *result = rec;
     return NS_OK;
@@ -192,7 +201,18 @@ PR_STATIC_CALLBACK(const void *)
 HostDB_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-    return he->rec->host;
+    return NS_STATIC_CAST(const nsHostKey *, he->rec);
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+HostDB_HashKey(PLDHashTable *table, const void *key)
+{
+    // it's sufficient to hash just the hostname here.  the hash table is
+    // designed to handle hash conflicts well, and moreover the flags and
+    // address family in use are assumed to be fairly static.
+
+    const nsHostKey *hk = NS_STATIC_CAST(const nsHostKey *, key);
+    return PL_DHashStringKey(table, hk->host);
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -201,7 +221,11 @@ HostDB_MatchEntry(PLDHashTable *table,
                   const void *key)
 {
     const nsHostDBEnt *he = NS_STATIC_CAST(const nsHostDBEnt *, entry);
-    return !strcmp(he->rec->host, (const char *) key);
+    const nsHostKey *hk = NS_STATIC_CAST(const nsHostKey *, key); 
+
+    return !strcmp(he->rec->host, hk->host) &&
+            he->rec->flags == hk->flags &&
+            he->rec->af == hk->af;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -249,7 +273,7 @@ HostDB_InitEntry(PLDHashTable *table,
                  const void *key)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-    nsHostRecord::Create(NS_REINTERPRET_CAST(const char *, key), &he->rec);
+    nsHostRecord::Create(NS_STATIC_CAST(const nsHostKey *, key), &he->rec);
     return PR_TRUE;
 }
 
@@ -258,7 +282,7 @@ static PLDHashTableOps gHostDB_ops =
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     HostDB_GetKey,
-    PL_DHashStringKey,
+    HostDB_HashKey,
     HostDB_MatchEntry,
     HostDB_MoveEntry,
     HostDB_ClearEntry,
@@ -355,9 +379,9 @@ nsHostResolver::Shutdown()
 
 nsresult
 nsHostResolver::ResolveHost(const char            *host,
-                            PRBool                 bypassCache,
-                            nsResolveHostCallback *callback,
-                            PRUint16               af = PR_AF_UNSPEC)
+                            PRUint16               flags,
+                            PRUint16               af,
+                            nsResolveHostCallback *callback)
 {
     NS_ENSURE_TRUE(host && *host, NS_ERROR_UNEXPECTED);
 
@@ -386,15 +410,15 @@ nsHostResolver::ResolveHost(const char            *host,
             // and return.  otherwise, add ourselves as first pending
             // callback, and proceed to do the lookup.
 
-            nsHostDBEnt *he =
-                NS_STATIC_CAST(nsHostDBEnt *,
-                               PL_DHashTableOperate(&mDB, host, PL_DHASH_ADD));
+            nsHostKey key = { host, flags, af };
+            nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *,
+                    PL_DHashTableOperate(&mDB, &key, PL_DHASH_ADD));
 
             // if the record is null, then HostDB_InitEntry failed.
             if (!he || !he->rec)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             // do we have a cached result that we can reuse?
-            else if (!bypassCache &&
+            else if (!(flags & RES_BYPASS_CACHE) &&
                      he->rec->HasResult() &&
                      NowInMinutes() <= he->rec->expiration) {
                 LOG(("using cached record\n"));
@@ -421,7 +445,6 @@ nsHostResolver::ResolveHost(const char            *host,
                 PR_APPEND_LINK(callback, &he->rec->callbacks);
 
                 if (!he->rec->resolving) {
-                    he->rec->af = af;
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
@@ -436,14 +459,17 @@ nsHostResolver::ResolveHost(const char            *host,
 
 void
 nsHostResolver::DetachCallback(const char            *host,
+                               PRUint16               flags,
+                               PRUint16               af,
                                nsResolveHostCallback *callback)
 {
     nsRefPtr<nsHostRecord> rec;
     {
         nsAutoLock lock(mLock);
 
+        nsHostKey key = { host, flags, af };
         nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *,
-                PL_DHashTableOperate(&mDB, host, PL_DHASH_LOOKUP));
+                PL_DHashTableOperate(&mDB, &key, PL_DHASH_LOOKUP));
         if (he && he->rec) {
             // walk list looking for |callback|... we cannot assume
             // that it will be there!
@@ -575,7 +601,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
                 nsHostRecord *head =
                     NS_STATIC_CAST(nsHostRecord *, PR_LIST_HEAD(&mEvictionQ));
                 PR_REMOVE_AND_INIT_LINK(head);
-                PL_DHashTableOperate(&mDB, head->host, PL_DHASH_REMOVE);
+                PL_DHashTableOperate(&mDB, (nsHostKey *) head, PL_DHASH_REMOVE);
                 // release reference to rec owned by mEvictionQ
                 NS_RELEASE(head);
             }
@@ -611,11 +637,17 @@ nsHostResolver::ThreadFunc(void *arg)
     PRAddrInfo *ai;
     while (resolver->GetHostToLookup(&rec)) {
         LOG(("resolving %s ...\n", rec->host));
-        ai = PR_GetAddrInfoByName(rec->host, rec->af, PR_AI_ADDRCONFIG);
+
+        PRIntn flags = PR_AI_ADDRCONFIG;
+        if (!(rec->flags & RES_CANON_NAME))
+            flags |= PR_AI_NOCANONNAME;
+
+        ai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
 #if defined(RES_RETRY_ON_FAILURE)
         if (!ai && rs.Reset())
-            ai = PR_GetAddrInfoByName(rec->host, rec->af, PR_AI_ADDRCONFIG);
+            ai = PR_GetAddrInfoByName(rec->host, rec->af, flags);
 #endif
+
         // convert error code to nsresult.
         nsresult status = ai ? NS_OK : NS_ERROR_UNKNOWN_HOST;
         resolver->OnLookupComplete(rec, status, ai);

@@ -50,9 +50,10 @@ native PRNetAddr(union PRNetAddr);
 interface nsIDNSRecord : nsISupports
 {
     /**
-     * @return the canonical hostname for this record.
+     * @return the canonical hostname for this record.  this value is empty if
+     * the record was not fetched with the RESOLVE_CANONICAL_NAME flag.
      *
-     * e.g., www.mozilla.org --> gila.mozilla.org
+     * e.g., www.mozilla.org --> rheet.mozilla.org
      */
     readonly attribute ACString canonicalName;
 
