@@ -111,7 +111,7 @@ sub objectInit {
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
-    $self->mode($mode); # 0=active, 1=logging out, 2=disabled   XXX need a way to make this extensible
+    $self->mode($mode); # 0=active, 1=disabled   XXX need a way to make this extensible
     $self->password($password);
     $self->adminMessage($adminMessage);
     $self->newFieldID($newFieldID);
@@ -275,8 +275,8 @@ sub hash {
     $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
-        $result->{'fields'}->{$field->fieldID} = $field->data; # (not an array btw: could have holes)
-        $result->{'fields'}->{$field->category.':'.$field->name} = $field->data;
+        $result->{'fields'}->{$field->fieldID} = $field->hash; # (not an array btw: could have holes)
+        $result->{'fields'}->{$field->category.':'.$field->name} = $field->hash;
     }
     return $result;
 }
@@ -287,32 +287,9 @@ sub checkPassword {
     return $self->app->getService('service.passwords')->checkPassword($self->password, $password);
 }
 
-sub logout {
-    my $self = shift;
-    if ($self->mode == 0) {
-        $self->mode(1);
-    }
-}
-
-sub loggedOut {
-    my $self = shift;
-    if ($self->mode == 1) {
-        $self->mode(0); # clear flag
-    }
-}
-
 sub checkLogin {
     my $self = shift;
-    if ($self->mode == 1) {
-        # user is logging out
-        return '0E0'; # true but zero
-    } elsif ($self->mode == 0) {
-        # account is in normal state
-        return 1; # true
-    } else {
-        # account is disabled
-        return 0; # false
-    }
+    return ($self->mode == 0);
 }
 
 sub joinGroup {
