@@ -10811,28 +10811,31 @@ keepLooking:
         }
       }
 
-      // We search the immediate children only, but if the child frame has
-      // the same content pointer as its parent then we need to search its
-      // child frames, too.
-      // We also need to search the child frame's children if the child frame
-      // is a "special" frame
-      // We also need to search if the child content is anonymous and scoped
-      // to the parent content.
-      nsCOMPtr<nsIContent> parentScope;
-      kidContent->GetBindingParent(getter_AddRefs(parentScope));
-      if (parentContent == kidContent || IsFrameSpecial(kidFrame) || 
-          (parentContent && (parentContent == parentScope))) 
-      {
-#ifdef NOISY_FINDFRAME
-        FFWC_recursions++;
-        printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
-               kidFrame, parentContent.get());
-#endif
-        nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, parentContent,
-                                                       aContent, nsnull);
+      // only do this if there is content
+      if (kidContent) {
+        // We search the immediate children only, but if the child frame has
+        // the same content pointer as its parent then we need to search its
+        // child frames, too.
+        // We also need to search the child frame's children if the child frame
+        // is a "special" frame
+        // We also need to search if the child content is anonymous and scoped
+        // to the parent content.
+        nsCOMPtr<nsIContent> parentScope;
+        kidContent->GetBindingParent(getter_AddRefs(parentScope));
+        if (parentContent == kidContent || IsFrameSpecial(kidFrame) || 
+            (parentContent && (parentContent == parentScope))) 
+        {
+  #ifdef NOISY_FINDFRAME
+          FFWC_recursions++;
+          printf("  recursing with new parent set to kidframe=%p, parentContent=%p\n", 
+                 kidFrame, parentContent.get());
+  #endif
+          nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, parentContent,
+                                                         aContent, nsnull);
 
-        if (matchingFrame) {
-          return matchingFrame;
+          if (matchingFrame) {
+            return matchingFrame;
+          }
         }
       }
 
@@ -12824,6 +12827,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   }
   return PR_FALSE;
 }
+
 
 /*
  * Recursively split an inline frame until we reach a block frame.

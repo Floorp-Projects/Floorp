@@ -63,6 +63,11 @@
 #include "nsListControlFrame.h"
 #include "nsIElementFactory.h"
 #include "nsContentCID.h"
+#include "nsIMutableAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
+
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -301,7 +306,20 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
     *aInstancePtr = (void*)(nsIScrollableViewProvider*)this;
     return NS_OK;
-  }
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+     nsIAccessible* acc = nsnull;
+     accService->CreateHTMLSelectAccessible(nsLayoutAtoms::popupList, node, mPresContext, &acc);
+     *aInstancePtr = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  } 
+  
+
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -524,7 +542,6 @@ nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 void
 nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 {
-
   nsIView* view = nsnull;
   mDropdownFrame->GetView(mPresContext, &view);
   nsCOMPtr<nsIViewManager> viewManager;
@@ -543,6 +560,23 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     viewManager->ResizeView(view, 0, 0);
   }
+
+  // fire a popup dom event
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = aShowPopup ? NS_MENU_CREATE : NS_MENU_DESTROY;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) 
+    rv = shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }
 
 // Show the dropdown list

@@ -38,6 +38,7 @@ class nsIRenderingContext;
 class nsIRegion;
 class nsIWidget;
 class nsIMenuItem;
+class nsIAccessible;
 
 /**
  * Return status for event processors.
@@ -194,6 +195,14 @@ struct nsMouseEvent : public nsInputEvent {
 };
 
 /**
+ * Accessible event
+ */
+
+struct nsAccessibleEvent : public nsInputEvent {
+    nsIAccessible*     accessible;           
+};
+
+/**
  * Keyboard event
  */
 
@@ -313,6 +322,7 @@ enum nsDragDropEventStatus {
 #define NS_COMPOSITION_QUERY  17
 #define NS_SCROLLPORT_EVENT   18
 #define NS_RECONVERSION_QUERY 19
+#define NS_ACCESSIBLE_EVENT   20
 
  /**
  * GUI MESSAGES
@@ -454,6 +464,11 @@ enum nsDragDropEventStatus {
 #define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
 #define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
 #define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
+
+// accessible events
+#define NS_ACCESSIBLE_START           1800
+#define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
+
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
