@@ -266,8 +266,11 @@ function PageDataToAccountData(pageData, accountData)
                 smtp.hostname = pageData.server.smtphostname.value;
         }
     }
-    
-    server.prettyName = pageData.accname.prettyName.value;
+
+    if (pageData.accname) {
+        if (pageData.accname.prettyName)
+            server.prettyName = pageData.accname.prettyName.value;
+    }
 
 }
 
