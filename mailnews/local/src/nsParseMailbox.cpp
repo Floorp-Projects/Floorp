@@ -1438,11 +1438,11 @@ nsParseNewMailState::nsParseNewMailState()
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
-nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
+nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   m_position = folder.GetFileSize();
-  m_rootFolder = rootFolder;
+  m_rootFolder = serverFolder;
   m_inboxFileSpec = folder;
   m_inboxFileStream = inboxFileStream;
   m_msgWindow = aMsgWindow;
@@ -1461,7 +1461,7 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
   if (NS_FAILED(rv)) 
     return rv;
   
-  nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+  nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(serverFolder, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -1557,9 +1557,12 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
   if (!pTrashFolder)
     return NS_ERROR_NULL_POINTER;
   
-  if(m_rootFolder)
+  if(m_downloadFolder)
   {
-    nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
+    nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+    m_downloadFolder->GetServer(getter_AddRefs(incomingServer));
+    nsCOMPtr <nsIMsgFolder> rootMsgFolder;
+    incomingServer->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
     if (rootMsgFolder)
     {
       PRUint32 numFolders;
