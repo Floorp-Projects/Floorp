@@ -26,7 +26,7 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-:fieldset-content {
+*|*:fieldset-content {
   display: block;
 }
 
@@ -87,7 +87,7 @@ textarea {
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
 }
 
-:-moz-singleline-textcontrol-frame {
+*|*:-moz-singleline-textcontrol-frame {
   overflow: hidden;
   white-space: nowrap;
   background-color: inherit;
@@ -141,7 +141,7 @@ select:-moz-dummy-option {
   content: "XX"; /* demo 8, edge case test 1 */
 }
 
-:-moz-display-comboboxcontrol-frame {
+*|*:-moz-display-comboboxcontrol-frame {
   overflow: hidden;
   white-space: nowrap;
   background-color: inherit;
@@ -187,7 +187,7 @@ optgroup:before {
   content: attr(label);
 }
 
-:-moz-dropdown-list {
+*|*:-moz-dropdown-list {
   background-color: inherit;
   border: 1px outset black; 
   border-top-style: none;
@@ -304,7 +304,7 @@ input[type="radio"]:hover:active {
   background-color: ThreeDHighlight;
 }
 
-:-moz-radio {
+*|*:-moz-radio {
   background-color: -moz-FieldText;
   width: 4px;
   height: 4px;
@@ -331,7 +331,7 @@ input[type="submit"] {
   -moz-binding: none;
 }
 
-:button-content {
+*|*:button-content {
   display: block;
   text-align: center;
 }

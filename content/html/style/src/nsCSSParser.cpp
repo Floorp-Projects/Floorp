@@ -1745,6 +1745,22 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       return;
     }
   }
+  else {
+    // no tag or namespace: implied universal selector
+    // set namespace to unknown since it is not specified
+    aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
+    if (mNameSpace) { // look for default namespace
+      nsINameSpace* defaultNameSpace = nsnull;
+      mNameSpace->FindNameSpace(nsnull, defaultNameSpace);
+      if (defaultNameSpace) {
+        PRInt32 defaultID;
+        defaultNameSpace->GetNameSpaceID(defaultID);
+        aSelector.SetNameSpace(defaultID);
+        NS_RELEASE(defaultNameSpace);
+      }
+    }
+  }
+
   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
   if (aIsNegated) {
     // restore last token read in case of a negated type selector

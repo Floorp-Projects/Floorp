@@ -90,11 +90,56 @@ td, th, tr, thead, tbody, tfoot {
 
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 
-body > :first-node, td > :first-node {
+/*
+ * While it may seem simpler to use :first-node and :last-node without
+ * tags, it's slower, since we have to do the :first-node or :last-node
+ * check on every single element in the document.  If we list all the
+ * element names for which the UA stylesheet specifies a margin, the
+ * selectors will be hashed in the RuleHash and things will be much more
+ * efficient.
+ */
+
+body > form:first-node, td > form:first-node,
+body > p:first-node, td > p:first-node,
+body > dl:first-node, td > dl:first-node,
+body > multicol:first-node, td > multicol:first-node,
+body > blockquote:first-node, td > blockquote:first-node,
+body > h1:first-node, td > h1:first-node,
+body > h2:first-node, td > h2:first-node,
+body > h3:first-node, td > h3:first-node,
+body > h4:first-node, td > h4:first-node,
+body > h5:first-node, td > h5:first-node,
+body > h6:first-node, td > h6:first-node,
+body > listing:first-node, td > listing:first-node,
+body > plaintext:first-node, td > plaintext:first-node,
+body > xmp:first-node, td > xmp:first-node,
+body > pre:first-node, td > pre:first-node,
+body > ul:first-node, td > ul:first-node,
+body > menu:first-node, td > menu:first-node,
+body > dir:first-node, td > dir:first-node,
+body > ol:first-node, td > ol:first-node {
   margin-top: 0;
 }
 
-td > :last-node {
+td > form:last-node,
+td > p:last-node,
+td > dl:last-node,
+td > multicol:last-node,
+td > blockquote:last-node,
+td > h1:last-node,
+td > h2:last-node,
+td > h3:last-node,
+td > h4:last-node,
+td > h5:last-node,
+td > h6:last-node,
+td > listing:last-node,
+td > plaintext:last-node,
+td > xmp:last-node,
+td > pre:last-node,
+td > ul:last-node,
+td > menu:last-node,
+td > dir:last-node,
+td > ol:last-node {
   margin-bottom: 0;
 }
 
@@ -209,6 +254,11 @@ img[align=left] {
 img[align=right] {
   margin-left: 3px;
 }
+
+/*
+ * XXX This is a potential performance problem.  This should not be
+ * using an attribute!
+ */
 
 /* Quirk: Make sure that the residual style tags' size info. 
  * does not take precedence over heading tags' size. (b=77352)
