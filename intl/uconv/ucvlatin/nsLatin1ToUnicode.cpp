@@ -35,8 +35,8 @@ static PRInt16 g_Latin1ShiftTable[] =  {
 // Class nsLatin1ToUnicode [implementation]
 
 nsLatin1ToUnicode::nsLatin1ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_Latin1ShiftTable, 
-                        (uMappingTable*) &g_Latin1MappingTable)
+: nsOneByteDecoderSupport((uShiftTable*) &g_Latin1ShiftTable, 
+                          (uMappingTable*) &g_Latin1MappingTable)
 {
 }
 
@@ -44,16 +44,4 @@ nsresult nsLatin1ToUnicode::CreateInstance(nsISupports ** aResult)
 {
   *aResult = new nsLatin1ToUnicode();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsLatin1ToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }

@@ -63,10 +63,10 @@ static uRange g_EUCJPRanges[] = {
 // Class nsEUCJPToUnicode [implementation]
 
 nsEUCJPToUnicode::nsEUCJPToUnicode() 
-: nsTablesDecoderSupport(4,
-                         (uRange *) &g_EUCJPRanges,
-                         (uShiftTable**) &g_EUCJPShiftTable, 
-                         (uMappingTable**) &g_EUCJPMappingTable)
+: nsMultiTableDecoderSupport(4,
+                            (uRange *) &g_EUCJPRanges,
+                            (uShiftTable**) &g_EUCJPShiftTable, 
+                            (uMappingTable**) &g_EUCJPMappingTable)
 {
 }
 
