@@ -37,9 +37,6 @@
  {
 private:
 	char *	mURI;
-private:
-	void operator delete(void *){;} // NOT TO BE IMPLEMENTED
-
 public: 
 	nsMsgFolder(const char* uri);
 	virtual ~nsMsgFolder();
