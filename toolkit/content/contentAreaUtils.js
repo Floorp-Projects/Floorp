@@ -112,7 +112,10 @@ function isContentFrame(aFocusedWindow)
 function getContentFrameURI(aFocusedWindow)
 {
   var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
-  return Components.lookupMethod(contentFrame, 'location').call(contentFrame).href;
+  if (contentFrame)
+    return Components.lookupMethod(contentFrame, 'location').call(contentFrame).href;
+  else
+    return null;
 }
 
 function getReferrer(doc)
@@ -120,13 +123,13 @@ function getReferrer(doc)
   var focusedWindow = doc.commandDispatcher.focusedWindow;
   var sourceURL = getContentFrameURI(focusedWindow);
 
-  try {
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-    uri.spec = sourceURL;
-    return uri;
-  } catch (e) {
-    return null;
+  if (sourceURL) {
+    try {
+      return makeURL(sourceURL);
+    }
+    catch (e) { }
   }
+  return null;
 }
 
 const kSaveAsType_Complete = 0;   // Save document with attached objects
