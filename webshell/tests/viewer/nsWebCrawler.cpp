@@ -24,7 +24,6 @@
 #include "nsWebCrawler.h"
 #include "nsViewerApp.h"
 #include "nsIWebShell.h"
-#include "nsIBrowserWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -778,7 +777,7 @@ nsWebCrawler::FindMoreURLs()
 }
 
 void 
-nsWebCrawler::SetBrowserWindow(nsIBrowserWindow* aWindow) 
+nsWebCrawler::SetBrowserWindow(nsBrowserWindow* aWindow) 
 {
   NS_IF_RELEASE(mBrowser);
   mBrowser = aWindow;
@@ -786,7 +785,7 @@ nsWebCrawler::SetBrowserWindow(nsIBrowserWindow* aWindow)
 }
 
 void
-nsWebCrawler::GetBrowserWindow(nsIBrowserWindow** aWindow)
+nsWebCrawler::GetBrowserWindow(nsBrowserWindow** aWindow)
 {
   NS_IF_ADDREF(mBrowser);
   *aWindow = mBrowser;

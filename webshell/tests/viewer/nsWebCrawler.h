@@ -23,7 +23,7 @@
 #define nsWebCrawler_h___
 
 #include "nsCOMPtr.h"
-#include "nsIBrowserWindow.h"
+#include "nsBrowserWindow.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
@@ -59,8 +59,8 @@ public:
   // Add a domain that must be avoided
   void AddAvoidDomain(const nsString& aDomain);
 
-  void SetBrowserWindow(nsIBrowserWindow* aWindow);
-  void GetBrowserWindow(nsIBrowserWindow** aWindow);
+  void SetBrowserWindow(nsBrowserWindow* aWindow);
+  void GetBrowserWindow(nsBrowserWindow** aWindow);
 
   // Set the delay (by default, the timer is set to one second)
   void SetDelay(PRInt32 aSeconds) {
@@ -143,7 +143,7 @@ protected:
   void PerformRegressionTest(const nsString& aOutputName);
 
   nsCOMPtr<nsIDocumentLoader> mDocLoader;
-  nsIBrowserWindow* mBrowser;
+  nsBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
   nsITimer* mTimer;
   FILE* mRecord;

@@ -31,7 +31,6 @@
 class nsIEventQueueService;
 class nsIPref;
 class nsBrowserWindow;
-class nsIBrowserWindow;
 
 class nsViewerApp : public nsISupports, public nsDispatchListener
 {
@@ -53,7 +52,7 @@ public:
   NS_IMETHOD OpenWindow();
   NS_IMETHOD CloseWindow(nsBrowserWindow* aBrowserWindow);
   NS_IMETHOD ViewSource(nsString& aURL);
-  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
+  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsBrowserWindow*& aNewWindow);
   NS_IMETHOD CreateRobot(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateSiteWalker(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);

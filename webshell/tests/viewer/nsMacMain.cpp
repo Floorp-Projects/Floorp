@@ -174,9 +174,9 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 					gTheApp->OpenWindow();
 					break;
 				case cmd_Open:
-					nsIBrowserWindow * newWindow;
+					nsBrowserWindow * newWindow;
 					gTheApp->OpenWindow((PRUint32)0, newWindow);
-					((nsBrowserWindow*)newWindow)->DoFileOpen();
+					newWindow->DoFileOpen();
 					break;
 				case cmd_Quit:
 					gTheApp->Exit();

@@ -98,21 +98,18 @@
 #include <fullsoft.h>
 #endif
 
-extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
@@ -280,10 +277,6 @@ nsViewerApp::SetupRegistry()
 
   // Register our browser window factory
   nsIFactory* bwf;
-  NS_NewBrowserWindowFactory(&bwf);
-  nsComponentManager::RegisterFactory(kBrowserWindowCID, 0, 0, bwf, PR_FALSE);
-  NS_RELEASE(bwf);
-
   NS_NewXPBaseWindowFactory(&bwf);
   nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
   NS_RELEASE(bwf);
@@ -694,19 +687,16 @@ nsViewerApp::OpenWindow()
   // XXX Some piece of code needs to properly hold the reference to this
   // browser window. For the time being the reference is released by the
   // browser event handling code during processing of the NS_DESTROY event...
-  nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
-                                             kIBrowserWindowIID,
-                                             (void**) &bw);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsBrowserWindow* bw = new nsNativeBrowserWindow();
+  NS_ENSURE_TRUE(bw, NS_ERROR_FAILURE);
+  NS_ADDREF(bw);
+
   bw->SetApp(this);
   bw->SetShowLoadTimes(mShowLoadTimes);
   bw->Init(mAppShell, nsRect(0, 0, mWidth, mHeight),
            PRUint32(~0), mAllowPlugins);
-  bw->Show();
-  nsIBrowserWindow*	bwCurrent;
+  bw->SetVisibility(PR_TRUE);
+  nsBrowserWindow*	bwCurrent;
   mCrawler->GetBrowserWindow(&bwCurrent);
   if (!bwCurrent) {
 	  mCrawler->SetBrowserWindow(bw);
@@ -745,8 +735,8 @@ nsViewerApp::OpenWindow()
 NS_IMETHODIMP
 nsViewerApp::CloseWindow(nsBrowserWindow* aBrowserWindow)
 {
-  aBrowserWindow->Close();
-  nsIBrowserWindow* bw;
+  aBrowserWindow->Destroy();
+  nsBrowserWindow* bw;
   mCrawler->GetBrowserWindow(&bw);
   if (bw == aBrowserWindow) {
     mCrawler->SetBrowserWindow(nsnull);
@@ -764,18 +754,15 @@ nsViewerApp::ViewSource(nsString& aURL)
   // XXX Some piece of code needs to properly hold the reference to this
   // browser window. For the time being the reference is released by the
   // browser event handling code during processing of the NS_DESTROY event...
-  nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
-                                             kIBrowserWindowIID,
-                                             (void**) &bw);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsBrowserWindow* bw = new nsNativeBrowserWindow();
+  NS_ENSURE_TRUE(bw, NS_ERROR_FAILURE);
+  NS_ADDREF(bw);
+
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->mDocShell->SetViewMode(nsIDocShell::viewSource);
   bw->SetTitle(nsAutoString("View Source").GetUnicode());
-  bw->Show();
+  bw->SetVisibility(PR_TRUE);
   bw->GoTo(aURL.GetUnicode(),"view-source");
   NS_RELEASE(bw);
 
@@ -783,16 +770,13 @@ nsViewerApp::ViewSource(nsString& aURL)
 }
 
 NS_IMETHODIMP
-nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
+nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsBrowserWindow*& aNewWindow)
 {
   // Create browser window
-  nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
-                                             kIBrowserWindowIID,
-                                             (void**) &bw);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsBrowserWindow* bw = new nsNativeBrowserWindow();
+  NS_ENSURE_TRUE(bw, NS_ERROR_FAILURE);
+  NS_ADDREF(bw);
+
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
 
