@@ -21,47 +21,60 @@
  * Contributor(s):
  *     Doug Turner <dougt@netscape.com>
  *     Christopher Blizzard <blizzard@mozilla.org>
+ *     Darin Fisher <darin@netscape.com>
  */
 
+#include "nsISupports.idl"
+
+interface nsISimpleEnumerator;
 
 /**
  * This is the only correct cross-platform way to specify a file.
  * Strings are not such a way. If you grew up on windows or unix, you
- * may think they are. Welcome to reality.
+ * may think they are.  Welcome to reality.
+ *
+ * All methods with string parameters have two forms.  The preferred
+ * form operates on UTF-8 encoded characters strings.  An alternate
+ * form operates on characters strings encoded in the "native" charset.
+ * On platforms that use UTF-8 as the native charset, there is no
+ * difference between the two set of methods.  See, for example: Append
+ * and AppendNative.
+ *
+ * A string containing characters encoded in the native charset cannot
+ * be safely passed to javascript via xpconnect.  Therefore, the "native
+ * methods" are not scriptable. 
+ *
+ * The abstract string types, AUTF8String and ACString are used to signify
+ * UTF-8 encoded strings and native encoded strings, respectively.
  *
  * @status UNDER_REVIEW
  */
-
-#include "nsISupports.idl"
-interface nsISimpleEnumerator;
-
 [scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFile : nsISupports
 {
     /**
-     *   Create Types
+     *  Create Types
      *
-     *   NORMAL_FILE_TYPE - A normal file.
-     *   DIRECTORY_TYPE   - A directory/folder.
+     *  NORMAL_FILE_TYPE - A normal file.
+     *  DIRECTORY_TYPE   - A directory/folder.
      */
     const unsigned long NORMAL_FILE_TYPE = 0;
     const unsigned long DIRECTORY_TYPE   = 1;
 
     /**
-     *  appendPath
+     *  append[Native]
      *
-     *  This function is used for constructing a descendant of the
+     *  This function is used for constructing a descendent of the
      *  current nsIFile.
      *
-     *  @param relativePath
-     *      A string which is intented to be a child node of the
-     *      nsIFile.
+     *   @param node
+     *       A string which is intended to be a child node of the nsIFile.
      */
     void append(in AUTF8String node);
     [noscript] void appendNative(in ACString node);
 
     /**
-     * Normalize the pathName (e.g. removing .. and . components on Unix).
+     *  Normalize the pathName (e.g. removing .. and . components on Unix).
      */
     void normalize();
 
@@ -85,17 +98,16 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
-
     void create(in unsigned long type, in unsigned long permissions);
 
     /**
-     *   Accessor to the leaf name of the file itself.
+     *  Accessor to the leaf name of the file itself.
      */
     attribute AUTF8String leafName;
     [noscript] attribute ACString nativeLeafName;
 
     /**
-     *  copyTo
+     *  copyTo[Native]
      *
      *  This will copy this file to the specified newParentDir.
      *  If a newName is specified, the file will be renamed.
@@ -109,33 +121,31 @@ interface nsIFile : nsISupports
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
-     *       newParentDir is null, copyTo() will use the parent
+     *       newParentDir is empty, copyTo() will use the parent
      *       directory of this file. If the newParentDir is not
-     *       null and is not a directory, an error will be
+     *       empty and is not a directory, an error will be
      *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
      *       This param allows you to specify a new name for
-     *       the file to be copied. This param may be null, in
+     *       the file to be copied. This param may be empty, in
      *       which case the current leaf name will be used.
-     *
      */
     void copyTo(in nsIFile newParentDir, in AUTF8String newName);
     [noscrpit] void CopyToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
-     *  copyToFollowingLinks
+     *  copyToFollowingLinks[Native]
      *
-     *  This function is identical to copyTo except it, as
-     *  the name implies, follows symbolic links.  Some OSes
-     *  such as Unix and Linux always follow symbolic links
-     *  when copying.
+     *  This function is identical to copyTo with the exception that,
+     *  as the name implies, it follows symbolic links.  The XP_UNIX
+     *  implementation always follow symbolic links when copying.
      */
     void copyToFollowingLinks(in nsIFile newParentDir, in AUTF8String newName);
     [noscript] void copyToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
 
     /**
-     *  moveTo
+     *  moveTo[Native]
      *
      *  This will move this file to the specified newParentDir.
      *  If a newName is specified, the file will be renamed.
@@ -148,16 +158,15 @@ interface nsIFile : nsISupports
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
-     *       newParentDir is null, moveTo() will rename the file
+     *       newParentDir is empty, moveTo() will rename the file
      *       within its current directory. If the newParentDir is
-     *       not null and does not name a directory, an error will
+     *       not empty and does not name a directory, an error will
      *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
      *       This param allows you to specify a new name for
-     *       the file to be moved. This param may be null, in
+     *       the file to be moved. This param may be empty, in
      *       which case the current leaf name will be used.
-     *
      */
     void moveTo(in nsIFile newParentDir, in AUTF8String newName);
     [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
@@ -186,10 +195,10 @@ interface nsIFile : nsISupports
     attribute PRInt64 lastModifiedTimeOfLink;
 
     /**
-     * WARNING!  On the Mac getting/setting the file size with nsIFile
-     * only deals with the size of the data fork.  If you need to
-     * know the size of the combined data and resource forks use the
-     * GetFileSizeWithResFork() method defined in nsILocalFileMac.h
+     *  WARNING!  On the Mac, getting/setting the file size with nsIFile
+     *  only deals with the size of the data fork.  If you need to
+     *  know the size of the combined data and resource forks use the
+     *  GetFileSizeWithResFork() method defined on nsILocalFileMac.
      */
     attribute PRInt64 fileSize;
     readonly attribute PRInt64 fileSizeOfLink;
@@ -197,22 +206,22 @@ interface nsIFile : nsISupports
     /**
      *  target & path
      *
-     *  Accessor to the string path.  These strings are
-     *  not guaranteed to be a usable path to pass to NSPR
-     *  or the C stdlib.  There are problems that affect
-     *  platforms on which a path does not fully specify a
-     *  file, because two volumes can have the same name.
-     *  This is solved by holding "private", native data in
-     *  the nsIFile implementation.  This native data is lost
-     *  when you convert to a string.
+     *  Accessor to the string path.  The native version of these
+     *  strings are not guaranteed to be a usable path to pass to
+     *  NSPR or the C stdlib.  There are problems that affect
+     *  platforms on which a path does not fully specify a file
+     *  because two volumes can have the same name (e.g., XP_MAC).
+     *  This is solved by holding "private", native data in the
+     *  nsIFile implementation.  This native data is lost when
+     *  you convert to a string.
      *
-     *      DO NOT PASS TO USE WITH NSPR OR STDLIB.
+     *      DO NOT PASS TO USE WITH NSPR OR STDLIB!
      *
-     *  target:
+     *  target
      *      Find out what the symlink points at.  Will give error
      *      (NS_ERROR_FILE_INVALID_PATH) if not a symlink.
      *
-     *  path:
+     *  path
      *      Find out what the nsIFile points at.
      */
     readonly attribute AUTF8String target;
@@ -233,7 +242,7 @@ interface nsIFile : nsISupports
      */
     boolean isSpecial();
 
-   /**
+    /**
      *  createUnique
      *  
      *  This function will create a new file or directory in the
@@ -279,25 +288,24 @@ interface nsIFile : nsISupports
     boolean equals(in nsIFile inFile);
 
     /**
-     * Will determine if inFile is a descendant of this file
-     * If |recur| is true, look in subdirectories too
+     *  Will determine if inFile is a descendant of this file
+     *  If |recur| is true, look in subdirectories too
      */
     boolean contains(in nsIFile inFile, in boolean recur);
 
     /**
-     * Parent will be null when this is at the top of the volume.
+     *  Parent will be null when this is at the top of the volume.
      */
     readonly attribute nsIFile parent;
     
     /**
-     * Returns an enumeration of the elements in a directory. Each
-     * element in the enumeration is an nsIFile.
+     *  Returns an enumeration of the elements in a directory. Each
+     *  element in the enumeration is an nsIFile.
      *
      *   @return NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
      *           not specify a directory.
      */
     readonly attribute nsISimpleEnumerator directoryEntries;
-
 };
 
 %{C++

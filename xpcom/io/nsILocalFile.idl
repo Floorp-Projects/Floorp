@@ -20,14 +20,10 @@
  *
  * Contributor(s): 
  *     Doug Turner <dougt@netscape.com>
+ *     Darin Fisher <darin@netscape.com>
  */
-
 
 #include "nsIFile.idl"
-
-/**
- * @status UNDER_REVIEW
- */
 
 %{C++
 #include "prio.h"
@@ -40,55 +36,60 @@
 [ptr] native PRLibraryStar(PRLibrary);
 [ptr] native FILE(FILE);
 
+/**
+ * This interface adds methods to nsIFile that are particular to a file
+ * that is accessible via the local file system.
+ *
+ * It follows the same string conventions as nsIFile.
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(aa610f20-a889-11d3-8c81-000064657374)]
 interface nsILocalFile : nsIFile
 {
     /**
-     * initWithPath
+     *  initWith[Native]Path
      *
-     * This function will initialize the nsILocalFile object.  Any
-     * internal state information will be reset.  
+     *  This function will initialize the nsILocalFile object.  Any
+     *  internal state information will be reset.  
      *
-     *  NOTE:  This function has a known bug on the macintosh and
-     *         other OSes which do not represent file locations 
-     *         as pathes.  If you do use this function, be very
-     *         aware of this problem as bugs.
+     *  NOTE: This function has a known bug on the macintosh and
+     *  other OSes which do not represent file locations as paths.
+     *  If you do use this function, be very aware of this problem!
      *
      *   @param filePath       
-     *          A string which specifies a full file path to a 
-     *          location.  Relative paths will be treated as an
-     *          error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
-     *          path must in native.
+     *       A string which specifies a full file path to a 
+     *       location.  Relative paths will be treated as an
+     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
+     *       path must in native.
      */
     void initWithPath(in AUTF8String filePath);
     [noscript] void initWithNativePath(in ACString filePath);
     
     /**
-     * initWithFile
+     *  initWithFile
      *
-     * Initialize this object with another file
+     *  Initialize this object with another file
      *
-     * @param aFile
-     *        the file this becomes equivalent to
-     *
+     *   @param aFile
+     *       the file this becomes equivalent to
      */
     void initWithFile(in nsILocalFile aFile);
-
     
     /**
-     * followLinks
+     *  followLinks
      *
-     *    This attribute will determine if the nsLocalFile will auto
-     *    resolve symbolic links.  By default, this value will be false
-     *    on all non unix systems.  On unix, this attribute is effectively
-     *    a noop.  
+     *  This attribute will determine if the nsLocalFile will auto
+     *  resolve symbolic links.  By default, this value will be false
+     *  on all non unix systems.  On unix, this attribute is effectively
+     *  a noop.  
      *
-     *    Be aware that changing this attribute from true to false after
-     *    the nsILocalFile has been initialized may lead to errors.  This
-     *    could happen if there were resolved symlink in the initialized
-     *    path.  For example if you had /a/b/c where |b| was a symlink, 
-     *    and you change this attribute to false, the next usage would 
-     *    mostlikely fail.
+     *  Be aware that changing this attribute from true to false after
+     *  the nsILocalFile has been initialized may lead to errors.  This
+     *  could happen if there were resolved symlink in the initialized
+     *  path.  For example if you had /a/b/c where |b| was a symlink, 
+     *  and you change this attribute to false, the next usage would 
+     *  mostlikely fail.
      */
     attribute PRBool followLinks;  
 
@@ -100,67 +101,69 @@ interface nsILocalFile : nsIFile
     readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
 
     /**
-     * appendRelativePath
+     *  appendRelative[Native]Path
      *
-     * Append a relative path to the current path of the nsILocalFile object.
+     *  Append a relative path to the current path of the nsILocalFile object.
      *
-     * @param relativeFilePath
-     *        relativeFilePath is a native relative path. For security reasons,
-     *        this cannot contain .. or cannot start with a directory separator
-     * XXXbe  Why not?  Bogus!
+     *   @param relativeFilePath
+     *       relativeFilePath is a native relative path. For security reasons,
+     *       this cannot contain .. or cannot start with a directory separator
+     *       XXXbe  Why not?  Bogus!
      */
     void appendRelativePath(in AUTF8String relativeFilePath);
     [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
     
     /**
-     *   Accessor to a null terminated string which will specify
-     *   the file in a persistent manner for disk storage.
+     *  Accessor to a null terminated string which will specify
+     *  the file in a persistent manner for disk storage.
      *
-     *   XXX charset undefined
+     *  The character set of this attribute is undefined.  Do not try to
+     *  interpret it as human readable text.
      */
     attribute ACString persistentDescriptor;
 
     /** 
-     * reveal --> Ask the operating system to open the folder which contains
-     * this file or folder. This routine only works on platforms which 
-     * support the ability to open a folder...
+     *  reveal
+     *
+     *  Ask the operating system to open the folder which contains
+     *  this file or folder. This routine only works on platforms which 
+     *  support the ability to open a folder...
      */
     void reveal();
     
     /** 
-     * launch --> Ask the operating system to attempt to open the file. 
-     * this really just simulates "double clicking" the file on your platform.
-     * This routine only works on platforms which support this functionality.
+     *  launch
+     *
+     *  Ask the operating system to attempt to open the file. 
+     *  this really just simulates "double clicking" the file on your platform.
+     *  This routine only works on platforms which support this functionality.
      */
     void launch();
     
     /**
-     *   getRelativeDescriptor
+     *  getRelativeDescriptor
      *
-     *   Returns a utf-8 encoded relative file path in an XP format.
-     *   It is therefore not a native path.
+     *  Returns a UTF-8 encoded relative file path in an XP format.
+     *  It is therefore not a native path.
      *
      *   @param fromFile
-     *          the file from which the descriptor is relative
+     *       the file from which the descriptor is relative
      */
     AUTF8String getRelativeDescriptor(in nsILocalFile fromFile);
 
-
     /**
-     *   setRelativeDescriptor
+     *  setRelativeDescriptor
      *
-     *   Initializes the file to the location relative to fromFile using
-     *   a string returned by getRelativeDescriptor.
+     *  Initializes the file to the location relative to fromFile using
+     *  a string returned by getRelativeDescriptor.
      *
      *   @param fromFile
-     *          the file to which the descriptor is relative
+     *       the file to which the descriptor is relative
      */
     void setRelativeDescriptor(in nsILocalFile fromFile, in AUTF8String relativeDesc);    
-
 };
 
 %{C++
-
 #define NS_LOCAL_FILE_CONTRACTID "@mozilla.org/file/local;1"
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
@@ -168,5 +171,4 @@ extern "C" NS_EXPORT nsresult
 NS_NewLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 extern "C" NS_EXPORT nsresult
 NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
-
 %}
