@@ -39,6 +39,7 @@
 
 #include "nsReadConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIAppShellService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIAutoConfig.h"
 #include "nsIComponentManager.h"
@@ -47,12 +48,13 @@
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIPromptService.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "prmem.h"
 #include "nsString.h"
 #include "nsCRT.h"
-
 
 
 extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
@@ -63,6 +65,37 @@ extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
 extern nsresult CentralizedAdminPrefManagerInit();
 extern nsresult CentralizedAdminPrefManagerFinish();
 
+
+static void DisplayError(void)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+    if (!promptService)
+        return;
+
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (!bundleService)
+        return;
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    bundleService->CreateBundle("chrome://autoconfig/locale/autoconfig.properties",
+                                getter_AddRefs(bundle));
+    if (!bundle)
+        return;
+
+    nsXPIDLString title;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("readConfigTitle").get(), getter_Copies(title));
+    if (NS_FAILED(rv))
+        return;
+
+    nsXPIDLString err;
+    rv = bundle->GetStringFromName(NS_LITERAL_STRING("readConfigMsg").get(), getter_Copies(err));
+    if (NS_FAILED(rv))
+        return;
+
+    promptService->Alert(nsnull, title.get(), err.get());
+}
 
 
 // nsISupports Implementation
@@ -90,9 +123,7 @@ nsresult nsReadConfig::Init()
 
 nsReadConfig::~nsReadConfig()
 {
-
     CentralizedAdminPrefManagerFinish();
-    
 }
 
 NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
@@ -101,6 +132,14 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, c
 
     if (!nsCRT::strcmp(aTopic, NS_PREFSERVICE_READ_TOPIC_ID)) {
         rv = readConfigFile();
+        if (NS_FAILED(rv)) {
+            DisplayError();
+
+            nsCOMPtr<nsIAppShellService> appShellService =
+                do_GetService("@mozilla.org/appshell/appShellService;1");
+            if (appShellService)
+                appShellService->Quit();
+        }
     }
     return rv;
 }
@@ -129,7 +168,7 @@ nsresult nsReadConfig::readConfigFile()
     rv = prefBranch->GetCharPref("general.config.filename", 
                                   getter_Copies(lockFileName));
     if (NS_FAILED(rv))
-        return NS_OK;
+        return rv;
 
     // This needs to be read only once.
     //

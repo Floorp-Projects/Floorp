@@ -98,7 +98,7 @@ AutoConfigSecMan::CanAccess(PRUint32 aAction,
 
 //*****************************************************************************
 
-static  JSContext *autoconfig_cx;
+static  JSContext *autoconfig_cx = nsnull;
 static  JSObject *autoconfig_glob;
 
 static JSClass global_class = {

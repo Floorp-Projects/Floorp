@@ -53,11 +53,14 @@ LIBRARY_NAME    = autoconfig
 MODULE_NAME     = nsAutoConfigModule
 REQUIRES        = xpcom \
                   string \
+                  intl \
                   necko \
                   profile \
                   pref \
                   appstartup \
+                  appshell \
                   js \
+                  windowwatcher \
                   xpconnect \
 !if !defined(DISABLE_LDAP)
                   mozldap \
