@@ -1842,7 +1842,9 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity, PRBool mig
 
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
-  if (identity) {
+  // this only makes sense when we are migrating
+  // for a new profile, that pref won't be set.
+  if (identity && migrating) {
     rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
   }
   else {
