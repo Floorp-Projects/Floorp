@@ -1632,7 +1632,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                    PR_FALSE,
                    PR_TRUE,
                    aJumpLines,
-                   PR_TRUE);//limit on scrolled views
+                   PR_TRUE,  //limit on scrolled views
+                   PR_FALSE);
   rv = PeekOffset(aPresContext, &startpos);
   if (NS_FAILED(rv))
     return rv;
@@ -1645,7 +1646,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                  PR_FALSE,
                  PR_FALSE,
                  aJumpLines,
-                 PR_TRUE);//limit on scrolled views
+                 PR_TRUE,  //limit on scrolled views
+                 PR_FALSE);
   rv = PeekOffset(aPresContext, &endpos);
   if (NS_FAILED(rv))
     return rv;
