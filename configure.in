@@ -2464,6 +2464,18 @@ if test "$ac_cv_cpp_partial_specialization" = yes ; then
   AC_DEFINE(HAVE_CPP_PARTIAL_SPECIALIZATION)
 fi
 
+dnl Some compilers support extern declarations of explicit template instantiations.
+AC_CACHE_CHECK(for extern explicit template instantiation,
+               ac_cv_cpp_extern_instantiation,
+               [AC_TRY_COMPILE(template<class T> class Foo{ T a; };
+                               extern template Foo<int>;,
+                               ,
+                               ac_cv_cpp_extern_instantiation=yes,
+                               ac_cv_cpp_extern_instantiation=no)])
+if test "$ac_cv_cpp_extern_instantiation" = yes ; then
+  AC_DEFINE(HAVE_CPP_EXTERN_INSTANTIATION)
+fi
+
 
 dnl Some compilers have limited support for operators with templates;
 dnl specifically, it is necessary to define derived operators when a base
