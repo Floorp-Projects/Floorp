@@ -47,6 +47,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIDOMDocument.h"
+#include "nsWeakReference.h"
 
 // freakin X headers
 #ifdef Success
@@ -92,7 +93,8 @@ private:
 // this class is a progress listener for the main content area, once
 // it has been loaded.
 
-class PhMozEmbedContentProgress : public nsIWebProgressListener
+class PhMozEmbedContentProgress : public nsIWebProgressListener,
+                                  public nsSupportsWeakReference
 {
 public:
   PhMozEmbedContentProgress();
@@ -110,7 +112,8 @@ private:
 };
 
 // this class is a progress listener for the chrome area
-class PhMozEmbedChromeProgress : public nsIWebProgressListener
+class PhMozEmbedChromeProgress : public nsIWebProgressListener,
+                                 public nsSupportsWeakReference
 {
 public:
   PhMozEmbedChromeProgress();
@@ -899,6 +902,7 @@ NS_IMPL_RELEASE(PhMozEmbedContentProgress)
 NS_INTERFACE_MAP_BEGIN(PhMozEmbedContentProgress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 void
@@ -1060,6 +1064,7 @@ NS_IMPL_RELEASE(PhMozEmbedChromeProgress)
 NS_INTERFACE_MAP_BEGIN(PhMozEmbedChromeProgress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 void

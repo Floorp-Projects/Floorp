@@ -32,11 +32,12 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebProgressListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsITimer.h"
@@ -67,7 +68,8 @@ class nsDocShellTreeOwner : public nsIDocShellTreeOwner,
                             public nsIBaseWindow,
                             public nsIInterfaceRequestor,
                             public nsIWebProgressListener,
-                            public nsICDocShellTreeOwner
+                            public nsICDocShellTreeOwner,
+                            public nsSupportsWeakReference
 {
 friend class nsWebBrowser;
 friend class nsCommandHandler;
@@ -100,7 +102,6 @@ protected:
    nsIDocShellTreeItem*    mPrimaryContentShell; 
 
    nsIWebBrowserChrome*    mWebBrowserChrome;
-   nsIWebProgressListener* mOwnerProgressListener;
    nsIBaseWindow*          mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
    

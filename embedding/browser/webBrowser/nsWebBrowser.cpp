@@ -41,6 +41,7 @@
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
 
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
@@ -54,7 +55,7 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
    mContentListener(nsnull), mInitInfo(nsnull), mContentType(typeContentWrapper),
    mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
-   mProgressListener(nsnull)
+   mProgressListener(nsnull), mListenerArray(nsnull)
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();
@@ -63,6 +64,12 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
 nsWebBrowser::~nsWebBrowser()
 {
    InternalDestroy();
+}
+
+PRBool deleteListener(void *aElement, void *aData) {
+    nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)aElement;
+    NS_DELETEXPCOM(state);
+    return PR_TRUE;
 }
 
 NS_IMETHODIMP nsWebBrowser::InternalDestroy()
@@ -88,6 +95,12 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       delete mInitInfo;
       mInitInfo = nsnull;
       }
+
+   if (mListenerArray) {
+      (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+      delete mListenerArray;
+      mListenerArray = nsnull;
+   }
 
    return NS_OK;
 }
@@ -142,17 +155,46 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsISupports *aListener, const 
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
 
+    // first determine if the listener supports weak references; it's required.
+    // see http://www.mozilla.org/projects/xpcom/weak_references.html for info 
+    // on how to support weak references.
+    nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
+    if (!listener) return NS_ERROR_INVALID_ARG;
+
+    if (!mWebProgress) {
+        // The window hasn't been created yet, so queue up the listener. They'll be
+        // registered when the window gets created.
+        nsWebBrowserListenerState *state = nsnull;
+        NS_NEWXPCOM(state, nsWebBrowserListenerState);
+        if (!state) return NS_ERROR_OUT_OF_MEMORY;
+
+        state->mWeakPtr = listener;
+        state->mID = aIID;
+
+        if (!mListenerArray) {
+            NS_NEWXPCOM(mListenerArray, nsVoidArray);
+            if (!mListenerArray) return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!mListenerArray->AppendElement(state)) return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = BindListener(aListener, aIID);
+    }
+    
+    return rv;
+}
+
+NS_IMETHODIMP nsWebBrowser::BindListener(nsISupports *aListener, const nsIID& aIID) {
+    NS_ASSERTION(aListener, "invalid args");
+    NS_ASSERTION(mWebProgress, "this should only be called after we've retrieved a progress iface");
+    nsresult rv = NS_OK;
+
     // register this listener for the specified interface id
     if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
-        if (mDocShell) {
-            nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell, &rv));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
-            if (NS_FAILED(rv)) return rv;
-            rv = progress->AddProgressListener(listener);
-        }
+        nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = mWebProgress->AddProgressListener(listener);
     }
-
     return rv;
 }
 
@@ -161,17 +203,50 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsISupports *aListener, con
     nsresult rv = NS_ERROR_INVALID_ARG;
     NS_ENSURE_ARG_POINTER(aListener);
 
-    // un-register this listener for the specified interface id
-    if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
-        if (mDocShell) {
-            nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell, &rv));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
-            if (NS_FAILED(rv)) return rv;
-            rv = progress->RemoveProgressListener(listener);
+    if (!mWebProgress) {
+        // if there's no-one to register the listener w/, and we don't have a queue going,
+        // the the called is calling Remove before an Add which doesn't make sense.
+        if (!mListenerArray) return NS_ERROR_FAILURE;
+
+        // iterate the array and remove the queued listener
+        PRInt32 count = mListenerArray->Count();
+        while (count > 0) {
+            nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)mListenerArray->ElementAt(count);
+            NS_ASSERTION(state, "list construction problem");
+
+            if (state->Equals(aListener, aIID)) {
+                // this is the one, pull it out.
+                mListenerArray->RemoveElementAt(count);
+                break;
+            }
+            count--; 
         }
+
+        // if we've emptied the array, get rid of it.
+        if (0 >= mListenerArray->Count()) {
+            (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+            NS_DELETEXPCOM(mListenerArray);
+            mListenerArray = nsnull;
+        }
+
+    } else {
+        rv = UnBindListener(aListener, aIID);
     }
     
+    return rv;
+}
+
+NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& aIID) {
+    NS_ASSERTION(aListener, "invalid args");
+    NS_ASSERTION(mWebProgress, "this should only be called after we've retrieved a progress iface");
+    nsresult rv = NS_OK;
+
+    // remove the listener for the specified interface id
+    if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
+        nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = mWebProgress->RemoveProgressListener(listener);
+    }
     return rv;
 }
 
@@ -655,6 +730,34 @@ NS_IMETHODIMP nsWebBrowser::Create()
    nsCOMPtr<nsIDocShell> docShell(do_CreateInstance(kWebShellCID));
    NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
 
+   // the docshell has been set so we now have our listener registrars.
+   if (mListenerArray) {
+      // we had queued up some listeners, let's register them now.
+      PRInt32 count = mListenerArray->Count();
+      PRInt32 i = 0;
+      NS_ASSERTION(count > 0, "array construction problem");
+      while (i < count) {
+          nsWebBrowserListenerState *state = (nsWebBrowserListenerState*)mListenerArray->ElementAt(i);
+          NS_ASSERTION(state, "array construction problem");
+          nsCOMPtr<nsISupports> listener = do_QueryReferent(state->mWeakPtr);
+          NS_ASSERTION(listener, "bad listener");
+          (void)BindListener(listener, state->mID);
+          i++;
+      }
+      (void)mListenerArray->EnumerateForwards(deleteListener, nsnull);
+      NS_DELETEXPCOM(mListenerArray);
+      mListenerArray = nsnull;
+   }
+
+   // HACK ALERT - this registration registers the nsDocShellTreeOwner as a 
+   // nsIWebBrowserListener so it can setup it's MouseListener in one of the 
+   // progress callbacks. If we can register the MouseListener another way, this 
+   // registration can go away, and nsDocShellTreeOwner can stop implementing
+   // nsIWebProgressListener.
+   nsCOMPtr<nsISupports> supports = nsnull;
+   (void)mDocShellTreeOwner->QueryInterface(NS_GET_IID(nsIWebProgressListener), (void**)&supports);
+   (void)BindListener(supports, NS_GET_IID(nsIWebProgressListener));
+
    NS_ENSURE_SUCCESS(mDocShellAsWin->InitWindow(nsnull,
       docShellParentWidget, mInitInfo->x, mInitInfo->y, mInitInfo->cx,
       mInitInfo->cy), NS_ERROR_FAILURE);
@@ -1087,7 +1190,9 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(aDocShell));
          nsCOMPtr<nsIScrollable> scrollable(do_QueryInterface(aDocShell));
          nsCOMPtr<nsITextScroll> textScroll(do_QueryInterface(aDocShell));
-         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll, NS_ERROR_FAILURE);
+         nsCOMPtr<nsIWebProgress> progress(do_GetInterface(aDocShell));
+         NS_ENSURE_TRUE(req && baseWin && item && nav && scrollable && textScroll && progress,
+             NS_ERROR_FAILURE);
  
          mDocShell = aDocShell;
          mDocShellAsReq = req;
@@ -1096,21 +1201,12 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          mDocShellAsNav = nav;
          mDocShellAsScrollable = scrollable;
          mDocShellAsTextScroll = textScroll;
-
-         nsCOMPtr<nsIWebProgressListener> listener = 
-             NS_STATIC_CAST(nsIWebProgressListener*, mDocShellTreeOwner);
-         (void)AddWebBrowserListener(listener,
-             NS_GET_IID(nsIWebProgressListener));
+         mWebProgress = progress;
      }
      else
      {
-         if (mDocShell)
-         {
-             nsCOMPtr<nsIWebProgressListener> listener = 
-                 NS_STATIC_CAST(nsIWebProgressListener*, mDocShellTreeOwner);
-             (void)RemoveWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
-             mDocShellAsWin->Destroy();
-         }
+         if (mDocShellAsWin) (void)mDocShellAsWin->Destroy();
+
          mDocShell = nsnull;
          mDocShellAsReq = nsnull;
          mDocShellAsWin = nsnull;
@@ -1118,6 +1214,7 @@ NS_IMETHODIMP nsWebBrowser::SetDocShell(nsIDocShell* aDocShell)
          mDocShellAsNav = nsnull;
          mDocShellAsScrollable = nsnull;
          mDocShellAsTextScroll = nsnull;
+         mWebProgress = nsnull;
      }
 
      return NS_OK; 

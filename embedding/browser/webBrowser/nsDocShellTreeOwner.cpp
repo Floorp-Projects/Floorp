@@ -60,7 +60,6 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mTreeOwner(nsnull),
    mPrimaryContentShell(nsnull),
    mWebBrowserChrome(nsnull),
-   mOwnerProgressListener(nsnull),
    mOwnerWin(nsnull),
    mOwnerRequestor(nsnull),
    mChromeListener(nsnull)
@@ -82,8 +81,7 @@ nsDocShellTreeOwner::~nsDocShellTreeOwner()
 
 NS_IMPL_ADDREF(nsDocShellTreeOwner)
 NS_IMPL_RELEASE(nsDocShellTreeOwner)
-
-
+            
 NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
@@ -91,6 +89,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsICDocShellTreeOwner)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -461,17 +460,7 @@ nsDocShellTreeOwner::OnProgressChange(nsIWebProgress* aProgress,
     // In the absence of DOM document creation event, this method is the
     // most convenient place to install the mouse listener on the
     // DOM document.
-    AddChromeListeners();
-
-    if(!mOwnerProgressListener)
-        return NS_OK;
-      
-    return mOwnerProgressListener->OnProgressChange(aProgress,
-                                                    aRequest,
-                                                    aCurSelfProgress,
-                                                    aMaxSelfProgress,
-                                                    aCurTotalProgress,
-                                                    aMaxTotalProgress);
+    return AddChromeListeners();
 }
 
 NS_IMETHODIMP
@@ -480,23 +469,14 @@ nsDocShellTreeOwner::OnStateChange(nsIWebProgress* aProgress,
                                    PRInt32 aProgressStateFlags,
                                    nsresult aStatus)
 {
-   if(!mOwnerProgressListener)
-      return NS_OK;
-   
-   return mOwnerProgressListener->OnStateChange(aProgress,
-                                                aRequest,
-                                                aProgressStateFlags,
-                                                aStatus);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDocShellTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
                                                     nsIRequest* aRequest,
                                                     nsIURI* aURI)
 {
-   if(!mOwnerProgressListener)
-      return NS_OK;
-
-   return mOwnerProgressListener->OnLocationChange(aWebProgress, aRequest, aURI);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -505,10 +485,7 @@ nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
                                     nsresult aStatus,
                                     const PRUnichar* aMessage)
 {
-   if(!mOwnerProgressListener)
-      return NS_OK;
-
-   return mOwnerProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -567,19 +544,16 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetWebBrowserChrome(nsIWebBrowserChrome* aWeb
    if(!aWebBrowserChrome) {
       mWebBrowserChrome = nsnull;
       mOwnerWin = nsnull;
-      mOwnerProgressListener = nsnull;
       mOwnerRequestor = nsnull;
    }
    else {
       nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(aWebBrowserChrome));
       nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(aWebBrowserChrome));
-      nsCOMPtr<nsIWebProgressListener> progressListener(do_QueryInterface(aWebBrowserChrome));
 
       NS_ENSURE_TRUE(baseWin, NS_ERROR_INVALID_ARG);
 
       mWebBrowserChrome = aWebBrowserChrome;
       mOwnerWin = baseWin;
-      mOwnerProgressListener = progressListener;
       mOwnerRequestor = requestor;
    }
    return NS_OK;

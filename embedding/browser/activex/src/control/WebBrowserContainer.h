@@ -27,6 +27,7 @@
 
 #include "nsIContextMenuListener.h"
 #include "nsICommandHandler.h"
+#include "nsWeakReference.h"
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.
@@ -42,7 +43,8 @@ class CWebBrowserContainer :
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
         public nsIContextMenuListener,
-        public nsICommandHandler
+        public nsICommandHandler,
+        public nsSupportsWeakReference
 {
 public:
 	CWebBrowserContainer(CMozillaBrowser *pOwner);
