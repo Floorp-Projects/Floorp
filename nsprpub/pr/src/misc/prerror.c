@@ -54,8 +54,7 @@ PR_IMPLEMENT(void) PR_SetError(PRErrorCode code, PRInt32 osErr)
     PRThread *thread = PR_GetCurrentThread();
     thread->errorCode = code;
     thread->osErrorCode = osErr;
-    thread->errorStringSize = 0;
-    PR_DELETE(thread->errorString);
+    thread->errorStringLength = 0;
 }
 
 PR_IMPLEMENT(void) PR_SetErrorText(PRIntn textLength, const char *text)
@@ -66,33 +65,40 @@ PR_IMPLEMENT(void) PR_SetErrorText(PRIntn textLength, const char *text)
     {
 	    if (NULL != thread->errorString)
 	        PR_DELETE(thread->errorString);
+            thread->errorStringSize = 0;
     }
     else
     {
-	    PRIntn size = textLength + 1;  /* actual length to allocate */
-        if (thread->errorStringSize < textLength)  /* do we have room? */
+	    PRIntn size = textLength + 31;  /* actual length to allocate. Plus a little extra */
+        if (thread->errorStringSize < textLength+1)  /* do we have room? */
         {
 	        if (NULL != thread->errorString)
 	            PR_DELETE(thread->errorString);
 		    thread->errorString = (char*)PR_MALLOC(size);
+            if ( NULL == thread->errorString ) {
+                thread->errorStringSize = 0;
+                thread->errorStringLength = 0;
+                return;
+            }
+            thread->errorStringSize = size;
 	    }
-        memcpy(thread->errorString, text, size);
+        thread->errorStringLength = textLength;
+        memcpy(thread->errorString, text, textLength+1 );
     }
-    thread->errorStringSize = textLength;
 }
 
 PR_IMPLEMENT(PRInt32) PR_GetErrorTextLength(void)
 {
     PRThread *thread = PR_GetCurrentThread();
-    return thread->errorStringSize;
+    return thread->errorStringLength;
 }  /* PR_GetErrorTextLength */
 
 PR_IMPLEMENT(PRInt32) PR_GetErrorText(char *text)
 {
     PRThread *thread = PR_GetCurrentThread();
     if (0 != thread->errorStringSize)
-        memcpy(text, thread->errorString, thread->errorStringSize + 1);
-    return thread->errorStringSize;
+        memcpy(text, thread->errorString, thread->errorStringLength+1);
+    return thread->errorStringLength;
 }  /* PR_GetErrorText */
 
 
