@@ -2649,9 +2649,11 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (folderName.IsEmpty())
+    {
       rv = mailnewsUrl->GetFileName(folderName);
-    if (NS_FAILED(rv)) 
-      return rv;
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
     
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
              do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -2717,9 +2719,11 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (folderName.IsEmpty())
+    {
       rv = mailnewsUrl->GetFileName(folderName);
-    if (NS_FAILED(rv)) 
-      return rv;
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
 
     nsCOMPtr <nsIMsgIncomingServer> server;
     rv = GetServerFromUrl(aImapUrl, getter_AddRefs(server));
