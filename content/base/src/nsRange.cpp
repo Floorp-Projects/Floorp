@@ -335,6 +335,126 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+/********************************************************
+ * Utilities for comparing points: API from nsIDOMNSRange
+ ********************************************************/
+NS_IMETHODIMP
+nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
+{
+  PRInt16 compareResult = 0;
+  nsresult res;
+  res = ComparePoint(aParent, aOffset, &compareResult);
+  if (compareResult) 
+    *aResult = PR_FALSE;
+  else 
+    *aResult = PR_TRUE;
+  return res;
+}
+  
+// returns -1 if point is before range, 0 if point is in range,
+// 1 if point is after range.
+NS_IMETHODIMP
+nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
+{
+  // check arguments
+  if (!aResult) 
+    return NS_ERROR_NULL_POINTER;
+  
+  // no trivial cases please
+  if (!aParent) 
+    return NS_ERROR_NULL_POINTER;
+  
+  // our range is in a good state?
+  if (!mIsPositioned) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  // check common case first
+  if ((aParent == mStartParent.get()) && (aParent == mEndParent.get()))
+  {
+    if (aOffset<mStartOffset)
+    {
+      *aResult = -1;
+      return NS_OK;
+    }
+    if (aOffset>mEndOffset)
+    {
+      *aResult = 1;
+      return NS_OK;
+    }
+    *aResult = 0;
+    return NS_OK;
+  }
+  
+  // more common cases
+  if ((aParent == mStartParent.get()) && (aOffset == mStartOffset)) 
+  {
+    *aResult = 0;
+    return NS_OK;
+  }
+  if ((aParent == mEndParent.get()) && (aOffset == mEndOffset)) 
+  {
+    *aResult = 0;
+    return NS_OK;
+  }
+  
+  // ok, do it the hard way
+  if (IsIncreasing(aParent,aOffset,mStartParent,mStartOffset)) 
+    *aResult = -1;
+  else if (IsIncreasing(mEndParent,mEndOffset,aParent,aOffset)) 
+    *aResult = 1;
+  else 
+    *aResult = 0;
+  
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsRange::IntersectsNode(nsIDOMNode* aNode, PRBool* aReturn)
+{
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
+  if (!content)
+  {
+    *aReturn = 0;
+    return NS_ERROR_UNEXPECTED;
+  }
+  *aReturn = IsNodeIntersectsRange(content, this);
+  return NS_OK;
+}
+
+// HOW does the node intersect the range?
+NS_IMETHODIMP
+nsRange::CompareNode(nsIDOMNode* aNode, PRInt16* aReturn)
+{
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
+  *aReturn = 0;
+  PRBool nodeBefore, nodeAfter;
+  nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
+  if (!content)
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult res = CompareNodeToRange(content, this, &nodeBefore, &nodeAfter);
+  if (NS_FAILED(res))
+    return res;
+
+  // nodeBefore -> range start after node start, i.e. node starts before range.
+  // nodeAfter -> range end before node end, i.e. node ends after range.
+  // But I know that I get nodeBefore && !nodeAfter when the node is
+  // entirely inside the selection!  This doesn't make sense.
+  if (nodeBefore && !nodeAfter)
+    *aReturn = nsIDOMNSRange::NODE_BEFORE;  // May or may not intersect
+  else if (!nodeBefore && nodeAfter)
+    *aReturn = nsIDOMNSRange::NODE_AFTER;   // May or may not intersect
+  else if (nodeBefore && nodeAfter)
+    *aReturn = nsIDOMNSRange::NODE_BEFORE_AND_AFTER;  // definitely intersects
+  else
+    *aReturn = nsIDOMNSRange::NODE_INSIDE;            // definitely intersects
+
+  return NS_OK;
+}
+
 /******************************************************
  * Private helper routines
  ******************************************************/
@@ -550,73 +670,6 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   }
 }
 
-nsresult nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
-{
-  PRInt32  compareResult = 0;
-  nsresult res;
-  res = ComparePointToRange(aParent, aOffset, &compareResult);
-  if (compareResult) 
-    *aResult = PR_FALSE;
-  else 
-    *aResult = PR_TRUE;
-  return res;
-}
-  
-// returns -1 if point is before range, 0 if point is in range, 1 if point is after range
-nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult)
-{
-  // check arguments
-  if (!aResult) 
-    return NS_ERROR_NULL_POINTER;
-  
-  // no trivial cases please
-  if (!aParent) 
-    return NS_ERROR_NULL_POINTER;
-  
-  // our range is in a good state?
-  if (!mIsPositioned) 
-    return NS_ERROR_NOT_INITIALIZED;
-  
-  // check common case first
-  if ((aParent == mStartParent.get()) && (aParent == mEndParent.get()))
-  {
-    if (aOffset<mStartOffset)
-    {
-      *aResult = -1;
-      return NS_OK;
-    }
-    if (aOffset>mEndOffset)
-    {
-      *aResult = 1;
-      return NS_OK;
-    }
-    *aResult = 0;
-    return NS_OK;
-  }
-  
-  // more common cases
-  if ((aParent == mStartParent.get()) && (aOffset == mStartOffset)) 
-  {
-    *aResult = 0;
-    return NS_OK;
-  }
-  if ((aParent == mEndParent.get()) && (aOffset == mEndOffset)) 
-  {
-    *aResult = 0;
-    return NS_OK;
-  }
-  
-  // ok, do it the hard way
-  if (IsIncreasing(aParent,aOffset,mStartParent,mStartOffset)) 
-    *aResult = -1;
-  else if (IsIncreasing(mEndParent,mEndOffset,aParent,aOffset)) 
-    *aResult = 1;
-  else 
-    *aResult = 0;
-  
-  return NS_OK;
-}
-  
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 {
   nsCOMPtr<nsIDOMNode> parentNode;
