@@ -41,7 +41,6 @@
 package org.mozilla.javascript;
 
 import java.io.*;
-import org.mozilla.javascript.*;
 import java.lang.reflect.*;
 
 class TestScan
