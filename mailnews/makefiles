@@ -76,6 +76,12 @@ mailnews/extensions/mdn/src/Makefile
 mailnews/extensions/bayesian-spam-filter/Makefile
 mailnews/extensions/bayesian-spam-filter/src/Makefile
 mailnews/extensions/bayesian-spam-filter/build/Makefile
+mailnews/extensions/mailviews/Makefile
+mailnews/extensions/mailviews/public/Makefile
+mailnews/extensions/mailviews/src/Makefile
+mailnews/extensions/mailviews/build/Makefile
+mailnews/extensions/mailviews/resources/Makefile
+mailnews/extensions/mailviews/resources/content/Makefile
 mailnews/mapi/Makefile
 mailnews/mapi/resources/content/Makefile
 mailnews/mapi/resources/locale/en-US/Makefile
