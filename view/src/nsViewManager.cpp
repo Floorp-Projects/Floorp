@@ -1525,6 +1525,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 // If non-null, the aIgnoreWidgetView's widget and its children are not updated.
 PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView)
 {
+  // If the bounds don't overlap at all, there's nothing to do
   nsRect bounds;
   aWidgetView->GetDimensions(bounds);
 
@@ -1533,14 +1534,28 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
     return PR_FALSE;
   }
 
-  PRBool noCropping = bounds == aDamagedRect;
+  // If the widget is hidden, it don't cover nothing
   nsViewVisibility visible;
   aWidgetView->GetVisibility(visible);
+  if (nsViewVisibility_kHide == visible) {
+#ifdef DEBUG
+    // Assert if view is hidden but widget is visible
+    nsCOMPtr<nsIWidget> widget;
+    GetWidgetForView(aWidgetView, getter_AddRefs(widget));
+    if (widget) {
+      PRBool visible;
+      widget->IsVisible(visible);
+      NS_ASSERTION(!visible, "View is hidden but widget is visible!");
+    }
+#endif
+    return PR_FALSE;
+  }
 
+  PRBool noCropping = bounds == aDamagedRect;
   if (aWidgetView == aIgnoreWidgetView) {
     // the widget for aIgnoreWidgetView (and its children) should be treated as already updated.
     // We still need to report whether this widget covers the rectangle.
-    return noCropping && nsViewVisibility_kShow == visible;
+    return noCropping;
   }
 
   nsCOMPtr<nsIWidget> widget;
@@ -1595,7 +1610,7 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
     }
   }
 
-  return noCropping && (nsViewVisibility_kShow == visible || childCovers);
+  return noCropping;
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
