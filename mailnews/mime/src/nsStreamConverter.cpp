@@ -33,7 +33,7 @@
 #include "plstr.h"
 #include "mimemoz2.h"
 #include "nsMimeTypes.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"

@@ -34,7 +34,7 @@ extern "C" {
 #include "nsIUnixToolkitService.h"
 #include "nsIWebShell.h"
 #include "nsIContentViewer.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
 

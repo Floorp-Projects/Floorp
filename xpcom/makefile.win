@@ -32,7 +32,6 @@ DIRS=   typelib        \
         reflect        \
         proxy          \
         build          \
-        appshell       \
         tools          \
 !if defined(MOZ_DEBUG)
         windbgdlg      \

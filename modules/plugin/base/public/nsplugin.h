@@ -82,8 +82,6 @@
 
 #ifndef nsplugins_h___
 #define nsplugins_h___
-
-#include "nsRepository.h"       // for NSGetFactory
 #include "nsIComponentManager.h"       // for NSGetFactory
 
 ////////////////////////////////////////////////////////////////////////////////

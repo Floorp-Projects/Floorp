@@ -84,6 +84,8 @@
 #include "prlog.h"
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 
+#include "nsAutoLock.h"
+
 // Enable printing of critical errors on screen even for release builds
 #define PRINT_CRITICAL_ERROR_TO_SCREEN
 
@@ -119,16 +121,29 @@ const char XPCOM_LIB_PREFIX[]          = "lib:";
 // This is used to mark non-existent contractid mappings
 static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
 
+
+
+#define NS_EMPTY_IID                                 \
+{                                                    \
+    0x00000000,                                      \
+    0x0000,                                          \
+    0x0000,                                          \
+    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
+
+
+nsIServiceManager* gServiceManager = NULL;
+PRBool gShuttingDown = PR_FALSE;
+
 // Build is using USE_NSREG to turn off xpcom using registry
 // but internally we use USE_REGISTRY. Map them propertly.
 #ifdef USE_NSREG
 #define USE_REGISTRY
 #endif /* USE_NSREG */
 
-
-extern PRBool gShuttingDown;
 nsresult
-
 nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
     {
         nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
@@ -198,9 +213,231 @@ nsCreateInstanceFromCategory::operator()( const nsIID& aIID,
     return status;
 }
 
+
+nsresult
+nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+  {
+    nsresult status;
+    	// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
+    if ( mServiceManager )
+    	status = mServiceManager->GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    else
+    	status = nsServiceManager::GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+
+		if ( !NS_SUCCEEDED(status) )
+			*aInstancePtr = 0;
+
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+    return status;
+  }
+
+nsresult
+nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+  {
+    nsresult status;
+    if ( mContractID )
+    	{
+    			// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
+    		if ( mServiceManager )
+    			status = mServiceManager->GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    		else
+    			status = nsServiceManager::GetService(mContractID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+
+        if ( !NS_SUCCEEDED(status) )
+      		*aInstancePtr = 0;
+      }
+    else
+      status = NS_ERROR_NULL_POINTER;
+
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+    return status;
+  }
+
+nsresult
+nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
+  const
+{
+  nsresult status;
+  nsXPIDLCString value;
+  nsCOMPtr<nsICategoryManager> catman = 
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &status);
+  
+  if (NS_FAILED(status)) goto error;
+  
+  if (!mCategory || !mEntry) {
+    // when categories have defaults, use that for null mEntry
+    status = NS_ERROR_NULL_POINTER;
+    goto error;
+  }
+  
+  /* find the contractID for category.entry */
+  status = catman->GetCategoryEntry(mCategory, mEntry,
+                                    getter_Copies(value));
+  if (NS_FAILED(status)) goto error;
+  if (!value) {
+    status = NS_ERROR_SERVICE_NOT_FOUND;
+    goto error;
+  }
+  
+  // Too bad |nsServiceManager| isn't an |nsIServiceManager|, then
+  // this could have been one call.
+  if ( mServiceManager )
+    status =
+      mServiceManager->GetService(value, aIID,
+                                  NS_REINTERPRET_CAST(nsISupports**,
+                                                      aInstancePtr), 0);
+  else
+    status =
+      nsServiceManager::GetService(value, aIID,
+                                   NS_REINTERPRET_CAST(nsISupports**,
+                                                       aInstancePtr), 0);
+  if (NS_FAILED(status)) {
+  error:
+    *aInstancePtr = 0;
+  }
+
+  *mErrorPtr = status;
+  return status;
+}
+
+
+/*
+ * CreateServicesFromCategory()
+ *
+ * Given a category, this convenience functions enumerates the category and 
+ * creates a service of every CID or ContractID registered under the category.
+ * If observerTopic is non null and the service implements nsIObserver,
+ * this will attempt to notify the observer with the origin, observerTopic string
+ * as parameter.
+ */
+nsresult
+NS_CreateServicesFromCategory(const char *category,
+                              nsISupports *origin,
+                              const PRUnichar *observerTopic)
+{
+    nsresult rv = NS_OK;
+    
+    int nFailed = 0; 
+    nsCOMPtr<nsICategoryManager> categoryManager = 
+        do_GetService("@mozilla.org/categorymanager;1", &rv);
+    if (!categoryManager) return rv;
+
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = categoryManager->EnumerateCategory(category, 
+            getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISupports> entry;
+    while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
+        // From here on just skip any error we get.
+        nsCOMPtr<nsISupportsString> catEntry = do_QueryInterface(entry, &rv);
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        nsXPIDLCString entryString;
+        rv = catEntry->GetData(getter_Copies(entryString));
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        nsXPIDLCString contractID;
+        rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(contractID));
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+        
+        nsCOMPtr<nsISupports> instance = do_GetService(contractID, &rv);
+        if (NS_FAILED(rv)) {
+            nFailed++;
+            continue;
+        }
+
+        if (observerTopic) {
+            // try an observer, if it implements it.
+            nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance, &rv);
+            if (NS_SUCCEEDED(rv) && observer)
+                observer->Observe(origin, observerTopic, NS_LITERAL_STRING("").get());
+        }
+    }
+    return (nFailed ? NS_ERROR_FAILURE : NS_OK);
+}
+
 /* prototypes for the Mac */
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
+
+
+
+nsServiceEntry::nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry)
+  : mObject(service), 
+    mListeners(NULL), 
+    mShuttingDown(PR_FALSE),
+    mFactoryEntry(factEntry)
+{
+    NS_ASSERTION(mObject, "Service Entry initialized with null service");
+    NS_IF_ADDREF(mObject);
+}
+
+nsServiceEntry::~nsServiceEntry()
+{
+    NotifyListeners();
+
+    //special case the nsComponentManagerImpl.
+    // XXX review-notes we need to see why we need to do this
+    if ((void*)mObject != (void*)nsComponentManagerImpl::gComponentManager)
+        NS_IF_RELEASE(mObject);
+}
+
+nsresult
+nsServiceEntry::AddListener(nsIShutdownListener* listener)
+{
+    if (listener == NULL)
+        return NS_OK;
+    if (mListeners == NULL) {
+        mListeners = new nsVoidArray();
+        if (mListeners == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    PRInt32 rv = mListeners->AppendElement(listener);
+    NS_ADDREF(listener);
+    return rv == -1 ? NS_ERROR_FAILURE : NS_OK;
+}
+
+nsresult
+nsServiceEntry::RemoveListener(nsIShutdownListener* listener)
+{
+    if (listener == NULL)
+        return NS_OK;
+    NS_ASSERTION(mListeners, "no listeners added yet");
+    if ( mListeners->RemoveElement(listener) )
+    	return NS_OK;
+    NS_ASSERTION(0, "unregistered shutdown listener");
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsServiceEntry::NotifyListeners(void)
+{
+    if (mListeners && mFactoryEntry) {
+        PRUint32 size = mListeners->Count();
+        for (PRUint32 i = 0; i < size; i++) {
+            nsIShutdownListener* listener = (nsIShutdownListener*)(*mListeners)[0];
+            nsresult rv = listener->OnShutdown(mFactoryEntry->cid, 
+                                               mObject);
+            if (NS_FAILED(rv)) return rv;
+            NS_RELEASE(listener);
+            mListeners->RemoveElementAt(0);
+        }
+        NS_ASSERTION(mListeners->Count() == 0, "failed to notify all listeners");
+        delete mListeners;
+        mListeners = NULL;
+    }
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
@@ -208,16 +445,16 @@ nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
 MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 
-nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, const char *aLocation,
+nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, 
+                               const char *aLocation,
                                int aType)
-    : cid(aClass), location(aLocation), factory(nsnull), typeIndex(aType)
+    : cid(aClass), location(aLocation), mServiceEntry(nsnull), typeIndex(aType)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
-    : cid(aClass), typeIndex(-1)
-
+    : cid(aClass), mServiceEntry(nsnull), typeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
     factory = aFactory;
@@ -232,7 +469,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
 nsresult
 nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 {
-    cid = aClass;
+    NS_ENSURE_TRUE(cid.Equals(aClass), NS_ERROR_INVALID_ARG);
     location = aLocation;
     typeIndex = aType;
     return NS_OK;
@@ -241,9 +478,10 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 nsresult
 nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 {
-    cid = aClass;
+    NS_ENSURE_TRUE(cid.Equals(aClass), NS_ERROR_INVALID_ARG);
+    NS_ENSURE_TRUE(typeIndex >= 0, NS_ERROR_INVALID_ARG);
     factory = aFactory;
-    typeIndex = -1;
+    typeIndex = NS_COMPONENT_TYPE_FACTORY_ONLY;
     return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,19 +492,34 @@ nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 nsComponentManagerImpl::nsComponentManagerImpl()
     : mFactories(NULL), mContractIDs(NULL), mMon(NULL), 
       mRegistry(NULL), mPrePopulationDone(PR_FALSE),
-      mNativeComponentLoader(0), mStaticComponentLoader(0),
+      mNativeComponentLoader(0),
+      mStaticComponentLoader(0),
       mShuttingDown(NS_SHUTDOWN_NEVERHAPPENED), mLoaderData(nsnull)
 {
     NS_INIT_REFCNT();
 }
 
-PRBool
-nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure)
+static PRBool
+nsFactoryEntry_mFactoryDestroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
     delete entry;
     return PR_TRUE;
 }
+
+static PRBool
+nsFactoryEntry_mContractIDsDestory(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
+    if (entry != kNonExistentContractID && 
+        entry->typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY && 
+        entry->cid.Equals(kEmptyCID)) {
+        // this object is owned by the hash.  Time to delete it.
+        delete entry;
+    }
+    return PR_TRUE;
+}
+
 
 nsresult nsComponentManagerImpl::Init(void) 
 {
@@ -285,16 +538,17 @@ nsresult nsComponentManagerImpl::Init(void)
 
     if (mFactories == NULL) {
         mFactories = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
-                                           nsFactoryEntry_Destroy, nsnull, 
+                                           nsFactoryEntry_mFactoryDestroy, nsnull, 
                                            256, /* Thread Safe */ PR_TRUE);
         if (mFactories == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mContractIDs == NULL) {
-        // No destroy function for these as they hold weak references to the factory entry.
+        // This hashtable holds references to the factory entry. All entries are non-owning 
+        // unless the typeIndex is NS_COMPONENT_TYPE_SERVICE_ONLY. 
         // The owning ref is from the mFactories hash table.
         mContractIDs = new nsObjectHashtable(nsnull, nsnull,      // should never be copied
-                                             nsnull, nsnull,
+                                             nsFactoryEntry_mContractIDsDestory, nsnull,
                                              256, /* Thread Safe */ PR_TRUE);
         if (mContractIDs == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -369,15 +623,10 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Beginning Shutdown."));
 
     // Release all cached factories
-    if (mFactories)
-        delete mFactories;
-
+    delete mContractIDs;
+    delete mFactories;
     // Unload libraries
     UnloadLibraries(NULL, NS_Shutdown);
-
-    // Release Contractid hash tables
-    if (mContractIDs)
-        delete mContractIDs;
 
 #ifdef USE_REGISTRY
     // Release registry
@@ -427,8 +676,11 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS3(nsComponentManagerImpl, nsIComponentManager,
-                   nsISupportsWeakReference, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS4(nsComponentManagerImpl, 
+                   nsIComponentManager, 
+                   nsIServiceManager,
+                   nsISupportsWeakReference, 
+                   nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -763,7 +1015,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     rv = mRegistry->GetStringUTF8(cidKey, componentTypeValueName, 
                               getter_Copies(componentTypeStr));
     const char* componentType = componentTypeStr.get();
-    int type = -1;
+    int type = NS_COMPONENT_TYPE_FACTORY_ONLY;
 
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_REG_NOT_FOUND) {
@@ -1353,6 +1605,385 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     
     return res;
 }
+
+// Service Manager Impl
+
+static PRBool FreeServiceEntry(nsHashKey *aKey, void *aData, void* aClosure)
+{
+    nsFactoryEntry* entry = NS_STATIC_CAST(nsFactoryEntry*, aData);
+    
+    if (!entry || entry == kNonExistentContractID) 
+        return PR_TRUE;
+    
+    if (entry->mServiceEntry) {
+        delete entry->mServiceEntry;
+        entry->mServiceEntry = nsnull;
+    }
+    return PR_TRUE;
+}
+
+nsresult 
+nsComponentManagerImpl::FreeServices()
+{
+    if (mFactories)
+        mFactories->Enumerate(FreeServiceEntry);
+
+    if (mContractIDs)
+        mContractIDs->Enumerate(FreeServiceEntry);
+
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
+                                   nsISupports* *result,
+                                   nsIShutdownListener* shutdownListener)
+{
+    nsAutoMonitor mon(mMon);
+
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+        NS_WARNING("Creating new service on shutdown. Denied.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_OK;
+    nsIDKey key(aClass);
+    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+    nsServiceEntry* serviceEntry;
+    if (entry && entry->mServiceEntry) {
+        serviceEntry = entry->mServiceEntry;
+
+        if (!serviceEntry->mObject)
+            return NS_ERROR_NULL_POINTER;
+
+        nsISupports* service; // keep as raw point (avoid extra addref/release)
+        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+        if (NS_SUCCEEDED(rv)) {
+            // The refcount acquired in QI() above is "returned" to
+            // the caller.
+            if (shutdownListener) {
+                rv = serviceEntry->AddListener(shutdownListener);
+                if (NS_FAILED(rv)) {
+                    NS_RELEASE(service);
+                    return rv;
+                }
+            }
+            
+            *result = service;
+
+            // If someone else requested the service to be shut down, 
+            // and we just asked to get it again before it could be 
+            // released, then cancel their shutdown request:
+            if (serviceEntry->mShuttingDown) {
+                serviceEntry->mShuttingDown = PR_FALSE;
+                NS_ADDREF(service);      // Released in UnregisterService
+            }
+        }
+        return rv;
+    }
+
+    nsISupports* service;
+    // We need to not be holding the service manager's monitor while calling 
+    // CreateInstance, because it invokes user code which could try to re-enter
+    // the service manager:
+    mon.Exit();
+    rv = CreateInstance(aClass, NULL, aIID, (void**)&service);
+    mon.Enter();
+
+    if (NS_FAILED(rv))
+        return rv;
+  
+    if (!entry) { // second hash lookup for GetService
+        entry = (nsFactoryEntry*)mFactories->Get(&key);
+        NS_ASSERTION(entry, "we should have a factory entry since CI succeeded - we should not get here");
+        if (!entry) return NS_ERROR_FAILURE; 
+    }
+  
+    serviceEntry = new nsServiceEntry(service, entry);
+    if (serviceEntry == NULL) {
+        NS_RELEASE(service);
+        return NS_ERROR_OUT_OF_MEMORY;       
+    }
+
+    if (shutdownListener) {
+        rv = serviceEntry->AddListener(shutdownListener);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(service);
+            delete serviceEntry;
+            return rv;
+        }
+    }
+    entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
+    *result = service; // transfer ownership
+    return rv;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
+                                     nsIShutdownListener* shutdownListener)
+{
+    PRBool serviceFound = PR_FALSE;
+    nsresult rv = NS_OK;
+
+#ifndef NS_DEBUG
+    // Do entry lookup only if there is a shutdownlistener to be removed.
+    //
+    // For Debug builds, Consistency check for entry always. Releasing service
+    // when the service is not with the servicemanager is mostly wrong.
+    if (shutdownListener)
+#endif
+    {
+        nsAutoMonitor mon(mMon);
+        nsIDKey key(aClass);
+        nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+
+        if (entry && entry->mServiceEntry) {
+            rv = entry->mServiceEntry->RemoveListener(shutdownListener);
+            serviceFound = PR_TRUE;
+        }
+    }
+    
+    nsrefcnt cnt;
+    NS_RELEASE2(service, cnt);
+
+    // Consistency check: Service ref count cannot go to zero because of the
+    // extra addref the service manager does, unless the service has been
+    // unregistered (ie) not found in the service managers hash table.
+    // 
+    NS_ASSERTION(cnt > 0 || !serviceFound,
+                 "*** Service in hash table but is being deleted. Dangling pointer\n"
+                 "*** in service manager hash table.");
+
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService)
+{
+    nsAutoMonitor mon(mMon);
+
+    // check to see if we have a factory entry for the service
+    nsIDKey key(aClass);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, key, 0);
+
+    if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
+        entry = new nsFactoryEntry(aClass, nsnull);
+        if (entry == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+        entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
+        mFactories->Put(&key, entry);
+    }
+    else {
+        if (entry->mServiceEntry)
+            return NS_ERROR_FAILURE;
+    }
+
+    nsServiceEntry *serviceEntry = new nsServiceEntry(aService, entry); //owns a ref to aService
+    if (serviceEntry == NULL) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    entry->mServiceEntry = serviceEntry;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
+{
+    nsresult rv = NS_OK;
+    nsAutoMonitor mon(mMon);
+
+    nsIDKey key(aClass);
+    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+
+    if (entry == NULL || entry->mServiceEntry == NULL)
+        return NS_ERROR_SERVICE_NOT_FOUND;
+
+    delete entry->mServiceEntry;
+    entry->mServiceEntry = nsnull;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aService)
+{
+    nsAutoMonitor mon(mMon);
+
+    // check to see if we have a factory entry for the service
+    nsCStringKey key(aContractID);
+    nsFactoryEntry *entry = GetFactoryEntry(aContractID, 0);
+
+    if (entry == kNonExistentContractID)
+        entry = nsnull;
+
+    if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
+        entry = new nsFactoryEntry(kEmptyCID, nsnull);
+        if (entry == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+        entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
+        mContractIDs->Put(&key, entry);
+    }
+    else {
+        if (entry->mServiceEntry)
+            return NS_ERROR_FAILURE;
+    }
+
+    nsServiceEntry *serviceEntry = new nsServiceEntry(aService, entry); //owns a ref to aService
+    if (serviceEntry == NULL) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    entry->mServiceEntry = serviceEntry;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::UnregisterService(const char* aContractID)
+{
+    nsresult rv = NS_OK;
+    nsAutoMonitor mon(mMon);
+
+    nsCStringKey key(aContractID);
+    nsFactoryEntry* entry = (nsFactoryEntry*)mFactories->Get(&key);
+
+    if (entry == NULL || entry == kNonExistentContractID || entry->mServiceEntry == NULL)
+        return NS_ERROR_SERVICE_NOT_FOUND;
+
+    delete entry->mServiceEntry;
+    entry->mServiceEntry = nsnull;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
+                                 nsISupports* *result,
+                                 nsIShutdownListener* shutdownListener)
+{
+    nsAutoMonitor mon(mMon);
+
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+        NS_WARNING("Creating new service on shutdown. Denied.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_OK;
+    nsCStringKey key(aContractID);
+    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsServiceEntry* serviceEntry;
+    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
+        serviceEntry = entry->mServiceEntry;
+
+        if (!serviceEntry->mObject)
+            return NS_ERROR_NULL_POINTER;
+
+        nsISupports* service; // keep as raw point (avoid extra addref/release)
+        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+        if (NS_SUCCEEDED(rv)) {
+            // The refcount acquired in QI() above is "returned" to
+            // the caller.
+            if (shutdownListener) {
+                rv = serviceEntry->AddListener(shutdownListener);
+                if (NS_FAILED(rv)) {
+                    NS_RELEASE(service);
+                    return rv;
+                }
+            }
+            
+            *result = service;
+
+            // If someone else requested the service to be shut down, 
+            // and we just asked to get it again before it could be 
+            // released, then cancel their shutdown request:
+            if (serviceEntry->mShuttingDown) {
+                serviceEntry->mShuttingDown = PR_FALSE;
+                NS_ADDREF(service);      // Released in UnregisterService
+            }
+        }
+        return rv;
+    }
+
+    nsISupports* service;
+    // We need to not be holding the service manager's monitor while calling 
+    // CreateInstance, because it invokes user code which could try to re-enter
+    // the service manager:
+    mon.Exit();
+    rv = CreateInstanceByContractID(aContractID, NULL, aIID, (void**)&service);
+    mon.Enter();
+
+    if (NS_FAILED(rv))
+        return rv;
+  
+    if (!entry) { // second hash lookup for GetService
+        entry = (nsFactoryEntry*)mContractIDs->Get(&key);
+        NS_ASSERTION(entry, "we should have a factory entry since CI succeeded - we should not get here");
+        if (!entry) return NS_ERROR_FAILURE; 
+    }
+  
+    serviceEntry = new nsServiceEntry(service, entry);
+    if (serviceEntry == NULL) {
+        NS_RELEASE(service);
+        return NS_ERROR_OUT_OF_MEMORY;       
+    }
+
+    if (shutdownListener) {
+        rv = serviceEntry->AddListener(shutdownListener);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(service);
+            delete serviceEntry;
+            return rv;
+        }
+    }
+    entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
+    *result = service; // transfer ownership
+    return rv;
+}
+
+NS_IMETHODIMP
+nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* service,
+                                     nsIShutdownListener* shutdownListener)
+{
+    PRBool serviceFound = PR_FALSE;
+    nsresult rv = NS_OK;
+
+#ifndef NS_DEBUG
+    // Do entry lookup only if there is a shutdownlistener to be removed.
+    //
+    // For Debug builds, Consistency check for entry always. Releasing service
+    // when the service is not with the servicemanager is mostly wrong.
+    if (shutdownListener)
+#endif
+    {
+        nsAutoMonitor mon(mMon);
+        nsCStringKey key(aContractID);
+        nsFactoryEntry* entry = (nsFactoryEntry*)mContractIDs->Get(&key);
+
+        if (entry && entry->mServiceEntry) {
+            rv = entry->mServiceEntry->RemoveListener(shutdownListener);
+            serviceFound = PR_TRUE;
+        }
+    }
+    
+    nsrefcnt cnt;
+    NS_RELEASE2(service, cnt);
+
+    // Consistency check: Service ref count cannot go to zero because of the
+    // extra addref the service manager does, unless the service has been
+    // unregistered (ie) not found in the service managers hash table.
+    // 
+    NS_ASSERTION(cnt > 0 || !serviceFound,
+                 "*** Service in hash table but is being deleted. Dangling pointer\n"
+                 "*** in service manager hash table.");
+
+    return rv;
+}
+
+
 
 /*
  * I want an efficient way to allocate a buffer to the right size
@@ -2310,7 +2941,7 @@ nsComponentManagerImpl::GetLoaderType(const char *typeStr)
             return i;
     }
     // Not found
-    return -1;
+    return NS_COMPONENT_TYPE_FACTORY_ONLY;
 }
 
 // Add a loader type if not already known. Return the typeIndex
@@ -2367,6 +2998,366 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
     }
 
     return rv;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Global component manager interface
+
+nsresult
+nsComponentManager::Initialize(void)
+{
+    return NS_OK;
+}
+
+nsresult
+nsComponentManager::FindFactory(const nsCID &aClass,
+                                nsIFactory **aFactory)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->FindFactory(aClass, aFactory);
+}
+
+nsresult
+nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                                   void **aResult)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->GetClassObject(aClass, aIID, aResult);
+}
+
+nsresult
+nsComponentManager::ContractIDToClassID(const char *aContractID,
+                                  nsCID *aClass)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->ContractIDToClassID(aContractID, aClass);
+}
+  
+nsresult
+nsComponentManager::CLSIDToContractID(nsCID *aClass,
+                                  char* *aClassName,
+                                  char* *aContractID)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->CLSIDToContractID(*aClass, aClassName, aContractID);
+}
+  
+nsresult
+nsComponentManager::CreateInstance(const nsCID &aClass, 
+                                   nsISupports *aDelegate,
+                                   const nsIID &aIID,
+                                   void **aResult)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->CreateInstance(aClass, aDelegate, aIID, aResult);
+}
+
+nsresult
+nsComponentManager::CreateInstance(const char *aContractID,
+                                   nsISupports *aDelegate,
+                                   const nsIID &aIID,
+                                   void **aResult)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->CreateInstanceByContractID(aContractID, aDelegate, aIID, aResult);
+}
+
+nsresult
+nsComponentManager::RegisterFactory(const nsCID &aClass,
+                                    const char *aClassName,
+                                    const char *aContractID,
+                                    nsIFactory *aFactory,
+                                    PRBool aReplace)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterFactory(aClass, aClassName, aContractID,
+                               aFactory, aReplace);
+}
+
+nsresult
+nsComponentManager::RegisterComponent(const nsCID &aClass,
+                                      const char *aClassName,
+                                      const char *aContractID,
+                                      const char *aLibraryPersistentDescriptor,
+                                      PRBool aReplace,
+                                      PRBool aPersist)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterComponent(aClass, aClassName, aContractID,
+                                 aLibraryPersistentDescriptor, aReplace, aPersist);
+}
+
+nsresult
+nsComponentManager::RegisterComponentSpec(const nsCID &aClass,
+                                      const char *aClassName,
+                                      const char *aContractID,
+                                      nsIFile *aLibrary,
+                                      PRBool aReplace,
+                                      PRBool aPersist)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterComponentSpec(aClass, aClassName, aContractID,
+                                     aLibrary, aReplace, aPersist);
+}
+
+nsresult
+nsComponentManager::RegisterComponentLib(const nsCID &aClass,
+                                         const char *aClassName,
+                                         const char *aContractID,
+                                         const char *adllName,
+                                         PRBool aReplace,
+                                         PRBool aPersist)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterComponentLib(aClass, aClassName, aContractID,
+                                     adllName, aReplace, aPersist);
+}
+
+nsresult
+nsComponentManager::UnregisterFactory(const nsCID &aClass,
+                                      nsIFactory *aFactory)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->UnregisterFactory(aClass, aFactory);
+}
+
+nsresult
+nsComponentManager::UnregisterComponent(const nsCID &aClass,
+                                        const char *aLibrary)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->UnregisterComponent(aClass, aLibrary);
+}
+
+nsresult
+nsComponentManager::UnregisterComponentSpec(const nsCID &aClass,
+                                            nsIFile *aLibrarySpec)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->UnregisterComponentSpec(aClass, aLibrarySpec);
+}
+
+nsresult
+nsComponentManager::FreeLibraries(void)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->FreeLibraries();
+}
+
+nsresult
+nsComponentManager::AutoRegister(PRInt32 when, nsIFile *directory)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->AutoRegister(when, directory);
+}
+
+nsresult
+nsComponentManager::AutoRegisterComponent(PRInt32 when,
+                                          nsIFile *fullname)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->AutoRegisterComponent(when, fullname);
+}
+
+nsresult
+nsComponentManager::AutoUnregisterComponent(PRInt32 when,
+                                          nsIFile *fullname)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->AutoUnregisterComponent(when, fullname);
+}
+
+nsresult 
+nsComponentManager::IsRegistered(const nsCID &aClass,
+                                 PRBool *aRegistered)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->IsRegistered(aClass, aRegistered);
+}
+
+nsresult 
+nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEmumerator)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->EnumerateCLSIDs(aEmumerator);
+}
+
+nsresult 
+nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEmumerator)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->EnumerateContractIDs(aEmumerator);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Global service manager interface (see nsIServiceManager.h)
+
+nsresult
+nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
+{
+    if (gShuttingDown)
+        return NS_ERROR_UNEXPECTED;
+
+    nsresult rv = NS_OK;
+    if (gServiceManager == NULL) {
+        // XPCOM not initialized yet. Let us do initialization of our module.
+        rv = NS_InitXPCOM(NULL, NULL);
+    }
+    // No ADDREF as we are advicing no release of this.
+    if (NS_SUCCEEDED(rv))
+        *result = gServiceManager;
+
+    return rv;
+}
+
+nsresult
+nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
+{
+    if (gServiceManager != NULL) {
+        nsrefcnt cnt;
+
+        nsComponentManagerImpl* compImpl = NS_STATIC_CAST(nsComponentManagerImpl*, gServiceManager);
+        compImpl->FreeServices();
+
+        NS_RELEASE2(gServiceManager, cnt);
+        // the only reference at this point should be the component manager.
+        NS_ASSERTION(cnt == 1, "Service Manager being held past XPCOM shutdown.");
+        gServiceManager = NULL;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
+                             nsISupports* *result,
+                             nsIShutdownListener* shutdownListener)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->GetService(aClass, aIID, result, shutdownListener);
+}
+
+nsresult
+nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
+                                 nsIShutdownListener* shutdownListener)
+{
+    // Don't create the global service manager here because we might be shutting
+    // down, and releasing all the services in its destructor
+    if (gServiceManager) 
+        return gServiceManager->ReleaseService(aClass, service, shutdownListener);
+    // If there wasn't a global service manager, just release the object:
+    NS_RELEASE(service);
+    return NS_OK;
+}
+
+nsresult
+nsServiceManager::RegisterService(const nsCID& aClass, nsISupports* aService)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->RegisterService(aClass, aService);
+}
+
+nsresult
+nsServiceManager::UnregisterService(const nsCID& aClass)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->UnregisterService(aClass);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// let's do it again, this time with ContractIDs...
+
+nsresult
+nsServiceManager::GetService(const char* aContractID, const nsIID& aIID,
+                             nsISupports* *result,
+                             nsIShutdownListener* shutdownListener)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->GetService(aContractID, aIID, result, shutdownListener);
+}
+
+nsresult
+nsServiceManager::ReleaseService(const char* aContractID, nsISupports* service,
+                                 nsIShutdownListener* shutdownListener)
+{
+    // Don't create the global service manager here because we might
+    // be shutting down, and releasing all the services in its
+    // destructor
+    if (gServiceManager)
+        return gServiceManager->ReleaseService(aContractID, service, shutdownListener);
+    // If there wasn't a global service manager, just release the object:
+    NS_RELEASE(service);
+    return NS_OK;
+}
+
+nsresult
+nsServiceManager::RegisterService(const char* aContractID, nsISupports* aService)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->RegisterService(aContractID, aService);
+}
+
+nsresult
+nsServiceManager::UnregisterService(const char* aContractID)
+{
+    // Don't create the global service manager here because we might
+    // be shutting down, and releasing all the services in its
+    // destructor
+    if (gServiceManager) 
+        return gServiceManager->UnregisterService(aContractID);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

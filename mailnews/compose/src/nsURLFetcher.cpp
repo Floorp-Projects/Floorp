@@ -32,7 +32,7 @@
 #include "comi18n.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"

@@ -17,7 +17,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsISupports.h"
 

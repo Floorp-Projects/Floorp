@@ -36,8 +36,6 @@ CPPSRCS		= \
 		nsGenericFactory.cpp \
 		nsNativeComponentLoader.cpp \
 		nsRegistry.cpp \
-		nsRepository.cpp \
-		nsServiceManager.cpp \
 		nsCategoryManager.cpp \
 		xcDll.cpp \
 		$(NULL)
@@ -53,7 +51,6 @@ EXPORTS		= \
 		nsIGenericFactory.h \
 		nsIRegistryUtils.h \
 		nsIServiceManager.h \
-		nsRepository.h \
 		nsXPComFactory.h \
 		nsStaticComponent.h \
 		$(NULL)

@@ -23,7 +23,7 @@
 
 #include "nsString.h"
 #include "nsISupportsArray.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"

@@ -32,7 +32,7 @@
 #include "nsInstallTrigger.h"
 #include "nsXPITriggerInfo.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsSoftwareUpdateIIDs.h"
 
@@ -85,7 +85,7 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
     static NS_DEFINE_CID(kInstallTrigger_CID,
                          NS_SoftwareUpdateInstallTrigger_CID);
 
-    result = nsRepository::CreateInstance(kInstallTrigger_CID,
+    result = nsComponentManager::CreateInstance(kInstallTrigger_CID,
                                         nsnull,
                                         NS_GET_IID(nsIDOMInstallTriggerGlobal),
                                         (void **)&nativeThis);

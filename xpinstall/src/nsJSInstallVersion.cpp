@@ -29,7 +29,7 @@
 #include "nsString.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsDOMCID.h"
 
 #include "nsSoftwareUpdateIIDs.h"
@@ -514,7 +514,7 @@ InstallVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-  result = nsRepository::CreateInstance(kInstallVersion_CID,
+  result = nsComponentManager::CreateInstance(kInstallVersion_CID,
                                         nsnull,
                                         NS_GET_IID(nsIDOMInstallVersion),
                                         (void **)&nativeThis);

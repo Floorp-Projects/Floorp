@@ -37,7 +37,7 @@
 
 #include "nsIProxyCreateInstance.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 

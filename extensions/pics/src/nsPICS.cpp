@@ -27,7 +27,7 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIPICS.h"
 #include "nsIPref.h"
 #include "nsIURL.h"

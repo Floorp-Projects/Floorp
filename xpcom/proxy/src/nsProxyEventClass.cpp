@@ -26,7 +26,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 

@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nscore.h"
 #include "nsIComponentManager.h"
 #include "nsAppShellCIDs.h"

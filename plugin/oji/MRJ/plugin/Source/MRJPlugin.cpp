@@ -36,7 +36,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIJVMManager.h"
 #include "nsIJVMPluginTagInfo.h"
 #include "nsIPluginManager2.h"

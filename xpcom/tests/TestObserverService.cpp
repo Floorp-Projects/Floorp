@@ -23,7 +23,7 @@
 
 #define NS_IMPL_IDS
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsString.h"

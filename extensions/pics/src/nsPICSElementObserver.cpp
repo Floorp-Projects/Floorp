@@ -25,7 +25,7 @@
 #include "pratom.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 //#include "nsIObserver.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"

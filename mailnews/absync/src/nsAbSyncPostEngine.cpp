@@ -33,7 +33,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsIPref.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsAbSyncPostEngine.h"
