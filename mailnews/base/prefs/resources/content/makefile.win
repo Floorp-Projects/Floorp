@@ -35,8 +35,8 @@ install::
 	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-copies.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
-f	$(MAKE_INSTALL) am-imap-advanced.xul	$(DIST)\bin\chrome\messenger\content\default
-f	$(MAKE_INSTALL) am-imap-advanced.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-imap-advanced.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-imap-advanced.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.js	$(DIST)\bin\chrome\messenger\content\default
