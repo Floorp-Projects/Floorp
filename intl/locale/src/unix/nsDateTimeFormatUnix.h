@@ -22,6 +22,7 @@
 
 #include "nsIDateTimeFormat.h"
 
+#define kPlatformLocaleLength 64
 
 class nsDateTimeFormatUnix : public nsIDateTimeFormat {
 
@@ -56,7 +57,20 @@ public:
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut); 
 
-  nsDateTimeFormatUnix() {NS_INIT_REFCNT();}
+
+  nsDateTimeFormatUnix() {NS_INIT_REFCNT();
+                          mLocale.SetString("");mAppLocale.SetString("");}
+
+  virtual ~nsDateTimeFormatUnix() {}
+
+private:
+  // init this interface to a specified locale
+  NS_IMETHOD Initialize(nsILocale* locale);
+
+  nsString    mLocale;
+  nsString    mAppLocale;
+  nsString    mCharset;                                    // in order to convert API result to unicode
+  char        mPlatformLocale[kPlatformLocaleLength+1];    // for setlocale
 };
 
 #endif  /* nsDateTimeFormatUnix_h__ */
