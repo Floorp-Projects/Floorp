@@ -60,7 +60,9 @@ XPCDispParams::XPCDispParams(PRUint32 args) :
     memset(mRefBuffer - sizeof(VARIANT), 0, RefBufferSize(args));
     // Initialize the IDispatch parameters
     mDispParams.cArgs = args;
-    if(args <= DEFAULT_ARG_ARRAY_SIZE)
+    if(args == 0)
+        mDispParams.rgvarg = nsnull;
+    else if (args <= DEFAULT_ARG_ARRAY_SIZE)
         mDispParams.rgvarg = mStackArgs + 1;
     else
     {

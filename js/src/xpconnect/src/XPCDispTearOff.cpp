@@ -310,14 +310,12 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         uint8 paramCount=0;
         nsresult retval = NS_ERROR_FAILURE;
         nsresult pending_result = NS_OK;
-        JSErrorReporter older;
         JSBool success;
         JSBool readyToDoTheCall = JS_FALSE;
         uint8 outConversionFailedIndex;
         JSObject* obj;
         jsval fval;
         nsCOMPtr<nsIException> xpc_exception;
-        jsval js_exception;
         void* mark;
         JSBool foundDependentParam;
         JSObject* thisObj;
