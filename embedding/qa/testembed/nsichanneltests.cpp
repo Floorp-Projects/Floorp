@@ -202,7 +202,6 @@ void CnsIChannelTests::SetNotificationsTest(nsIChannel *theChannel, PRInt16 disp
 void CnsIChannelTests::GetNotificationsTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->GetNotificationCallbacks(getter_AddRefs(theIRequestor));
-	if (!theIRequestor)
 	RvTestResult(rv, "GetNotificationCallbacks", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "GetNotificationCallbacks");
@@ -315,6 +314,17 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 		RvTestResultDlg(rv, "AsyncOpen()");
 }
 
+void CnsIChannelTests::PostAsyncTests(nsIChannel *theChannel, PRInt16 displayMode)
+{
+	//  tests which need to be run after the channel is opened (using AsyncOpen())
+		GetSecurityInfoTest(theChannel, displayMode);
+		SetContentTypeTest(theChannel, displayMode);
+		GetContentTypeTest(theChannel, displayMode);
+		SetContentCharsetTest(theChannel, displayMode);
+		GetContentCharsetTest(theChannel, displayMode);
+		SetContentLengthTest(theChannel, displayMode);
+		GetContentLengthTest(theChannel, displayMode);
+}
 
 void CnsIChannelTests::OnStartTests(UINT nMenuID)
 {
@@ -410,13 +420,7 @@ void CnsIChannelTests::RunAllTests()
 		SetNotificationsTest(theChannel, 1);
 		GetNotificationsTest(theChannel, 1);
 		AsyncOpenTest(theChannel, 1);
-		GetSecurityInfoTest(theChannel, 1);
-		SetContentTypeTest(theChannel, 1);
-		GetContentTypeTest(theChannel, 1);
-		SetContentCharsetTest(theChannel, 1);
-		GetContentCharsetTest(theChannel, 1);
-		SetContentLengthTest(theChannel, 1);
-		GetContentLengthTest(theChannel, 1);
+	 // PostAsyncTests() called from nsIRequestObservor::OnStartRequest (in BrowserImpl.cpp)
 		OpenTest(theChannel, 1);
 		QAOutput("\n");
 	}

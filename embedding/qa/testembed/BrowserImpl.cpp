@@ -89,6 +89,7 @@
 #include "nsirequest.h"
 #include "Tests.h"
 #include "prmem.h"
+#include "nsichanneltests.h"
 
 CBrowserImpl::CBrowserImpl()
 {
@@ -473,7 +474,7 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 {
 	nsCString stringMsg;
 	PRUint32 readLen;
-
+	QAOutput("\n");
 	QAOutput("##### inside nsIStreamListener::OnDataAvailable(). #####");
 
 	RequestName(request, stringMsg, 1);
@@ -509,8 +510,19 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 {
 	nsCString stringMsg;
 
+	QAOutput("\n");
 	QAOutput("##### BEGIN: nsIRequestObserver::OnStartRequest() #####");
+
 	RequestName(request, stringMsg, 1);
+
+	// these are for nsIChannel tests found in nsichanneltests.cpp (post AsyncOpen() tests)
+	nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
+	CnsIChannelTests  *obj = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
+	if (obj)
+		obj->PostAsyncTests(channel, 1);
+	else 
+		QAOutput("No object to run PostAsyncTests().", 1);
 
 	if (!ctxt)
 		QAOutput("OnStartRequest():We didn't get the nsISupports object.", 1);
@@ -524,7 +536,7 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 				nsISupports *ctxt, nsresult rv)
 {
 	nsCString stringMsg;
-
+	QAOutput("\n");
 	RvTestResult(rv, "nsIRequestObserver::OnStopRequest rv input", 1);
 	RequestName(request, stringMsg, 1);
 
