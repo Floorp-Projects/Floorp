@@ -656,7 +656,9 @@ function AddAttachment(attachment)
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
 		
-		cell.setAttribute("value", unescape(attachment));	//use for display only
+		if (msgCompose)
+			prettyName = msgCompose.AttachmentPrettyName(attachment);
+		cell.setAttribute("value", prettyName);				//use for display only
 		cell.setAttribute("attachment", attachment);		//full url stored here
 		row.appendChild(cell);
 		item.appendChild(row);
