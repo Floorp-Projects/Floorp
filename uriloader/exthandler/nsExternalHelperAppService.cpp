@@ -284,6 +284,8 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aConten
       if (element)
       {
         literal = do_QueryInterface(element);
+        if (!literal) return NS_ERROR_FAILURE;
+
         literal->GetValueConst(&stringValue);
         fileExtension.AssignWithConversion(stringValue);
         if (!fileExtension.IsEmpty())
