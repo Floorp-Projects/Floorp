@@ -48,6 +48,8 @@
 #include "nsIStringBundle.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
+#include "nsHashtable.h"
+
 #include "nsILocale.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -124,11 +126,54 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
-void DisplayNoDefaultPluginDialog(void);
+void DisplayNoDefaultPluginDialog(const char *mimeType);
 
-void DisplayNoDefaultPluginDialog(void)
+/**
+
+ * Used in DisplayNoDefaultPlugindialog to prevent showing the dialog twice
+ * for the same mimetype.
+
+ */
+
+static nsHashtable *mimeTypesSeen = nsnull;
+
+/**
+
+ * placeholder value for mimeTypesSeen hashtable
+
+ */
+
+static const char *hashValue = "value";
+
+/**
+
+ * Default number of entries in the mimeTypesSeen hashtable
+
+ */ 
+#define NS_MIME_TYPES_HASH_NUM (20)
+
+
+void DisplayNoDefaultPluginDialog(const char *mimeType)
 {
   nsresult rv;
+
+  if (nsnull == mimeTypesSeen) {
+    mimeTypesSeen = new nsHashtable(NS_MIME_TYPES_HASH_NUM);
+  }
+  if (nsnull != mimeTypesSeen){
+    nsStringKey key(mimeType);
+    // if we've seen this mimetype before
+    if (mimeTypesSeen->Get(&key)) {
+      // don't display the dialog
+      return;
+    }
+    else {
+      mimeTypesSeen->Put(&key, (void *) hashValue);
+    }
+  }
+
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
   nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
   nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
   nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
@@ -136,14 +181,22 @@ void DisplayNoDefaultPluginDialog(void)
   nsCOMPtr<nsIURI> uri;
   char *spec = nsnull;
   nsILocale* locale = nsnull;
-  nsCAutoString titleKey("noDefaultPluginTitle");
-  nsCAutoString messageKey("noDefaultPluginMessage");
   PRInt32 buttonPressed;
+  PRBool displayDialogPrefValue = PR_FALSE, checkboxState = PR_FALSE;
 
-  if (!prompt || !io || !strings) {
+  if (!prefs || !prompt || !io || !strings) {
     return;
   }
 
+  rv = prefs->GetBoolPref("plugin.display_plugin_downloader_dialog", 
+                          &displayDialogPrefValue);
+  if (NS_SUCCEEDED(rv)) {
+    // if the pref is false, don't display the dialog
+    if (!displayDialogPrefValue) {
+      return;
+    }
+  }
+  
   // Taken from mozilla\extensions\wallet\src\wallet.cpp
   // WalletLocalize().
 
@@ -166,11 +219,7 @@ void DisplayNoDefaultPluginDialog(void)
 
   PRUnichar *titleUni = nsnull;
   PRUnichar *messageUni = nsnull;
-  PRUnichar *titleKeyUni = titleKey.ToNewUnicode();
-  PRUnichar *messageKeyUni = messageKey.ToNewUnicode();
-  if (!titleKeyUni || !messageKeyUni) {
-    return;
-  }
+  PRUnichar *checkboxMessageUni = nsnull;
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginTitle"), 
                                  &titleUni);
   if (NS_FAILED(rv)) {
@@ -181,12 +230,17 @@ void DisplayNoDefaultPluginDialog(void)
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;
   }
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginCheckboxMessage"), 
+                                 &checkboxMessageUni);
+  if (NS_FAILED(rv)) {
+    goto EXIT_DNDPD;
+  }
 
   rv = prompt->UniversalDialog(
                                nsnull, /* title message */
                                titleUni, /* title text in top line of window */
                                messageUni, /* this is the main message */
-                               nsnull, /* This is the checkbox message */
+                               checkboxMessageUni, /* This is the checkbox message */
                                nsnull, /* first button text, becomes OK by default */
                                nsnull, /* second button text, becomes CANCEL by default */
                                nsnull, /* third button text */
@@ -196,17 +250,23 @@ void DisplayNoDefaultPluginDialog(void)
                                nsnull, /* first edit field initial and final value */
                                nsnull, /* second edit field initial and final value */
                                nsnull,  /* icon: question mark by default */
-                               PR_FALSE, /* initial and final value of checkbox */
+                               &checkboxState, /* initial and final value of checkbox */
                                1, /* number of buttons */
                                0, /* number of edit fields */
                                0, /* is first edit field a password field */
                                
                                &buttonPressed);
+
+  // if the user checked the checkbox, make it so the dialog doesn't
+  // display again.
+  if (checkboxState) {
+    prefs->SetBoolPref("plugin.display_plugin_downloader_dialog",
+                       !checkboxState);
+  }
  EXIT_DNDPD:
-  nsMemory::Free((void *)titleKeyUni);
-  nsMemory::Free((void *)messageKeyUni);
   nsMemory::Free((void *)titleUni);
   nsMemory::Free((void *)messageUni);
+  nsMemory::Free((void *)checkboxMessageUni);
   return;
 }
 
@@ -1797,7 +1857,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 	    result = aOwner->GetInstance(instance);
 
     if(result != NS_OK) {
-      DisplayNoDefaultPluginDialog();
+      DisplayNoDefaultPluginDialog(aMimeType);
       return NS_ERROR_FAILURE;
     }
 
