@@ -122,6 +122,7 @@ install::
 	$(MAKE_INSTALL) sortAscending.gif $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortDescending.gif $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\$(THEME)\global\skin
+	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-leftedge.gif $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-rightedge.gif $(DIST)\bin\chrome\$(THEME)\global\skin

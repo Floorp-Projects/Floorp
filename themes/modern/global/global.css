@@ -20,6 +20,7 @@
 @import url(chrome://global/skin/menu.css);
 @import url(chrome://global/skin/formatting.css);
 @import url(chrome://global/skin/textfield.css);
+@import url(chrome://global/skin/tabcontrol.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 @namespace html url("http://www.w3.org/TR/REC-html40"); 
@@ -58,7 +59,7 @@ window[wait-cursor] { cursor: wait !important; }
 window.dialog 
   { 
     background-color      : #CCCCCC;
-    padding               : 5px;
+    padding               : 7px 5px 5px 5px;
   }
 
 /**********************************

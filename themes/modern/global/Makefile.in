@@ -148,6 +148,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	tree.css \
 	wizardOverlay.css \
 	splitter.css \
+	tabcontrol.css \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
