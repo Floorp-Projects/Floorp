@@ -37,6 +37,7 @@ body > *:first-node {
 }
 
 frameset {
+  display: block ! important;
   overflow: hidden;
 }
 
