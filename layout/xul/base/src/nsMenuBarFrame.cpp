@@ -251,7 +251,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   NS_NAMED_LITERAL_STRING(active, "DOMMenuBarActive");
   NS_NAMED_LITERAL_STRING(inactive, "DOMMenuBarInactive");
   
-  FireDOMEvent(mPresContext, mIsActive ? active : inactive);
+  FireDOMEvent(mIsActive ? active : inactive);
 
   return NS_OK;
 }
@@ -670,6 +670,8 @@ nsMenuBarFrame::HideChain()
     mCurrentMenu->SelectMenu(PR_FALSE);
     mRecentRollupMenu = mCurrentMenu;
   }
+
+  SetActive(PR_FALSE);
 
   return NS_OK;
 }

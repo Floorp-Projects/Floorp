@@ -573,7 +573,7 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
     domEventToFire.AssignLiteral("DOMMenuItemInactive");
   }
 
-  FireDOMEvent(mPresContext, domEventToFire);
+  FireDOMEvent(domEventToFire);
   return NS_OK;
 }
 
@@ -662,6 +662,9 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
 
   } else {
+    if (mMenuOpen) {
+      menuPopup->FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"));
+    }
     nsIView* view = menuPopup->GetView();
     NS_ASSERTION(view, "View is gone, looks like someone forgot to rollup the popup!");
     if (view) {
@@ -847,8 +850,6 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     if ( !mCreateHandlerSucceeded || !OnDestroy() )
       return;
 
-    mMenuOpen = PR_FALSE;
-
     // Set the focus back to our view's widget.
     if (nsMenuFrame::sDismissalListener) {
       nsMenuFrame::sDismissalListener->EnableListener(PR_FALSE);
@@ -885,8 +886,15 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
     }
 
-    // activate false will also set the mMenuOpen to false.
     ActivateMenu(PR_FALSE);
+    // XXX hack: ensure that mMenuOpen is set to false, in case where
+    // there is actually no popup. because ActivateMenu() will return 
+    // early without setting it. It could be that mMenuOpen is true
+    // in that case, because OpenMenuInternal(true) gets called if
+    // the attribute open="true", whether there is a popup or not.
+    // We should not allow mMenuOpen unless there is a popup in the first place,
+    // in which case this line would not be necessary.
+    mMenuOpen = PR_FALSE;
 
     OnDestroyed();
 

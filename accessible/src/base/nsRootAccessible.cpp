@@ -243,10 +243,10 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
-    rv = target->AddEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
-    rv = target->AddEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -287,8 +287,8 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -640,10 +640,12 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   else {
     // Menu popup events
     PRUint32 menuEvent = 0;
-    if (eventType.LowerCaseEqualsLiteral("popupshowing"))
+    if (eventType.LowerCaseEqualsLiteral("popupshown")) {
       menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
-    else if (eventType.LowerCaseEqualsLiteral("popuphiding"))
+    }
+    else if (eventType.EqualsLiteral("DOMMenuInactive")) {
       menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
+    }
     if (menuEvent) {
       PRUint32 role = ROLE_NOTHING;
       accessible->GetRole(&role);
@@ -714,11 +716,11 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     stateData.state = STATE_EXPANDED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
   }
-  else if (eventType.LowerCaseEqualsLiteral("popupshowing")) {
+  else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
     FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
-    //FireAccessibleFocusEvent(accessible, targetNode);
+  else if (eventType.EqualsLiteral("DOMMenuInactive")) {
+    //FireAccessibleFocusEvent(accessible, targetNode);  // Not yet used in ATK
   }
 #endif
   return NS_OK;
