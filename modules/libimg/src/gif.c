@@ -638,10 +638,11 @@ gif_delay_time_callback(void *closure)
 
     XP_ASSERT(gs->state == gif_delay);
 
+    gs->delay_timeout = NULL;
+
     if (gs->ic->state == IC_ABORT_PENDING)
         return;
     
-    gs->delay_timeout = NULL;
     gs->delay_time = 0;         /* Reset for next image */
 
     if (gs->state == gif_delay) {
@@ -1490,15 +1491,11 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
         case gif_error: 
             ILTRACE(2,("il:gif: reached error state"));
-            ic->state=IC_ABORT_PENDING;
-
             return MK_IMAGE_LOSSAGE;
             break;
 
         default: 
             ILTRACE(0,("il:gif: unknown state"));
-            ic->state=IC_ABORT_PENDING;
-
             XP_ASSERT(0);
             break;
 		}
