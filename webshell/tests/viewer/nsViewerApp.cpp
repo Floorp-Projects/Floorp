@@ -753,7 +753,7 @@ void ShowConsole(nsBrowserWindow* aWindow)
       nsIScriptContextOwner *owner = nsnull;
       nsIScriptContext *context = nsnull;        
       // XXX needs to change to aWindow->mWebShell
-      if (NS_OK == aWindow->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
+      if (NS_OK == aWindow->mWebShell->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
         if (NS_OK == owner->GetScriptContext(&context)) {
 
           // create the console
