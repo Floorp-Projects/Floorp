@@ -1,0 +1,50 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+  
+[%# This is a list of all the possible messages. Please keep them in
+  # alphabetical order by message tag, and leave a blank line between messages.
+  #%]  
+  
+[% message_tag = message %]
+
+[% message = BLOCK %]
+  [% IF    message_tag == "aaa_example_message_tag" %]
+    [% title = "Example Message" %]
+    This is an example message. The title is set above. This text is the body
+    of the message. It can contain arbitrary <b>HTML</b>, and also references
+    to any [% parameters %] which you may have set.
+
+  [% ELSIF message_tag == "logged_out" %]
+    [% title = "Logged Out" %]
+    [% url = "query.cgi?GoAheadAndLogIn=1" %]
+    [% link = "Log in again." %]
+    <b>Your login has been forgotten</b>.
+    The cookie that was remembering your login is now gone. You will be 
+    prompted for a login the next time it is required.
+
+  [% ELSE %]
+    [%# Cope with legacy calling convention, where "message" was the string
+      # to print. 
+      #%]        
+    [% message_tag %]
+    
+  [% END %]
+[% END %]

@@ -33,6 +33,10 @@
   # message: string. A message to display to the user. May contain HTML.
   #%]
 
+[% IF message %]
+  [% PROCESS global/messages.html.tmpl %]
+[% END %]
+
 [% DEFAULT
   h1 = title
   h2 = ""
