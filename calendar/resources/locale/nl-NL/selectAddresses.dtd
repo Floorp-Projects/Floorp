@@ -53,4 +53,4 @@
 <!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Geen emailadres">
 <!ENTITY ab-selectAddressesDialogInvite.label "Uitnodigen">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Verwijderen">
-<!ENTITY ab-selectAddressesDialogInviteList.label "Invitatielijst:">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Uitnodigingenlijst:">

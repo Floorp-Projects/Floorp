@@ -424,7 +424,7 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nieuwe kalenderbestand">
+<!ENTITY calendar.server.dialog.title.new           "Nieuw kalenderbestand">
 <!ENTITY calendar.server.dialog.title.open          "Openen kalenderbestand">
 <!ENTITY calendar.server.dialog.title.edit          "Bewerk kalender">
 <!ENTITY calendar.server.dialog.name.label          "Naam">
