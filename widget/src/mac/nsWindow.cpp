@@ -235,6 +235,17 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_GRAPHIC:
+    // pinkerton
+    // Windows and GrafPorts are VERY different under Carbon, and we can no
+    // longer pass them interchagably. When we ask for a GrafPort, we cannot
+    // return a window or vice versa.
+#if TARGET_CARBON
+      retVal = (void*)::GetWindowPort(mWindowPtr);
+#else
+      retVal = (void*)mWindowPtr;
+#endif
+      break;
+      
     case NS_NATIVE_DISPLAY:
       retVal = (void*)mWindowPtr;
     	break;
@@ -270,7 +281,11 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 
 		// for compatibility with 4.X, this origin is what you'd pass
 		// to SetOrigin.
+#if TARGET_CARBON
+		mPluginPort->port = ::GetWindowPort(mWindowPtr);
+#else
 		mPluginPort->port = CGrafPtr(mWindowPtr);
+#endif
 		mPluginPort->portx = -point.x;
 		mPluginPort->porty = -point.y;
 		
@@ -589,10 +604,20 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 
 		GrafPtr savePort;
 		::GetPort(&savePort);
+#if TARGET_CARBON
+		::SetPortWindowPort(mWindowPtr);
+		Rect savePortRect;
+		::GetWindowPortBounds(mWindowPtr, &savePortRect);
+#else
 		::SetPort(mWindowPtr);
 		Rect savePortRect = mWindowPtr->portRect;
+#endif
 		::SetOrigin(0, 0);
+#if TARGET_CARBON
+		::InvalWindowRect(mWindowPtr, &macRect);
+#else
 		::InvalRect(&macRect);
+#endif
 //¥REVISIT		::SetOrigin(savePortRect.left, savePortRect.top);
 		::SetPort(savePort);
 	}
@@ -727,26 +752,39 @@ NS_IMETHODIMP	nsWindow::Update()
 		RgnHandle saveUpdateRgn = ::NewRgn();
 		if (!saveUpdateRgn)
 			return NS_ERROR_OUT_OF_MEMORY;
+#if TARGET_CARBON
+		::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
+#else
 		::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
+#endif
 
 		// draw the widget
 		GrafPtr savePort;
 		::GetPort(&savePort);
+#if TARGET_CARBON
+		::SetPortWindowPort(mWindowPtr);
+#else
 		::SetPort(mWindowPtr);
+#endif
 
 		::BeginUpdate(mWindowPtr);
 		HandleUpdateEvent();
 		::EndUpdate(mWindowPtr);
 
 		// restore the window update rgn
-		::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
+		//¥PINK - hrm, can't do this in Carbon for re-entrancy reasons
+		// ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
 
 		// validate the rect of the widget we have just drawn
 		nsRect bounds = mBounds;
 		LocalToWindowCoordinate(bounds);
 		Rect macRect;
 		nsRectToMacRect(bounds, macRect);
+#if TARGET_CARBON
+		::ValidWindowRect(mWindowPtr, &macRect);
+#else
 		::ValidRect(&macRect);
+#endif
 		::DisposeRgn(saveUpdateRgn);
 
 		::SetPort(savePort);
@@ -770,7 +808,12 @@ nsresult nsWindow::HandleUpdateEvent()
 		return NS_OK;
 
 	// get the damaged region from the OS
+#if TARGET_CARBON
+	RgnHandle damagedRgn = ::NewRgn();
+	::GetPortVisibleRegion ( GetWindowPort(mWindowPtr), damagedRgn );
+#else
 	RgnHandle damagedRgn = mWindowPtr->visRgn;
+#endif
 
 	// calculate the update region relatively to the window port rect
 	// (at this point, the grafPort origin should always be 0,0
@@ -793,7 +836,12 @@ nsresult nsWindow::HandleUpdateEvent()
 		{
 			// determine the rect to draw
 			nsRect rect;
+#if TARGET_CARBON
+			Rect macRect;
+			::GetRegionBounds ( updateRgn, &macRect );
+#else
 			Rect macRect = (*updateRgn)->rgnBBox;
+#endif
 			::OffsetRect(&macRect, -bounds.x, -bounds.y);
 			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
 
@@ -804,6 +852,9 @@ nsresult nsWindow::HandleUpdateEvent()
 		}
 	}
 	::DisposeRgn(updateRgn);
+#if TARGET_CARBON
+	::DisposeRgn(damagedRgn);
+#endif
 	return NS_OK;
 }
 
@@ -898,7 +949,11 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 		// Scroll the bits now
 		::ScrollRect(&macRect, aDx, aDy, updateRgn);
+#if TARGET_CARBON
+		::InvalWindowRgn(mWindowPtr, updateRgn);
+#else
 		::InvalRgn(updateRgn);
+#endif
 		::DisposeRgn(updateRgn);
 	EndDraw();
 
