@@ -565,11 +565,12 @@ void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
 
 nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
                                             nsGUIEvent* aEvent,
+                                            nsIDOMEvent* aDOMEvent,
                                             nsEventStatus& aEventStatus)
 {
   nsresult ret = NS_OK;
   
-  ret = nsHTMLContent::HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+  ret = nsHTMLContent::HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
 
   if (NS_OK == ret && nsEventStatus_eIgnore == aEventStatus) {
     switch (aEvent->message) {

@@ -17,7 +17,9 @@
  */
 
 #include "nsDOMEvent.h"
+#include "nsIDOMNode.h"
 
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kINSEventIID, NS_INSEVENT_IID);
 
@@ -56,9 +58,9 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode*& aTarget)
+NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return kTarget->QueryInterface(kIDOMNodeIID, (void**)aTarget);
 }
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32& aX)
@@ -73,33 +75,39 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32& aY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32& aX)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //XXX these are not client coords yet
+  aX = kEvent->point.x;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32& aY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //XXX these are not client coords yet
+  aY = kEvent->point.y;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetAltKey(PRBool& aIsDown)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aIsDown = ((nsInputEvent*)kEvent)->isAlt;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetCtrlKey(PRBool& aIsDown)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aIsDown = ((nsInputEvent*)kEvent)->isControl;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetShiftKey(PRBool& aIsDown)
 {
-  aIsDown = es.isShift;
+  aIsDown = ((nsInputEvent*)kEvent)->isShift;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetMetaKey(PRBool& aIsDown)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetCharCode(PRUint32& aCharCode)
@@ -109,13 +117,40 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32& aCharCode)
 
 NS_METHOD nsDOMEvent::GetKeyCode(PRUint32& aKeyCode)
 {
-  aKeyCode = es.keyCode;
+  switch (kEvent->message) {
+  case NS_KEY_UP:
+  case NS_KEY_DOWN:
+    aKeyCode = ((nsKeyEvent*)kEvent)->keyCode;
+    break;
+  default:
+    return NS_ERROR_FAILURE;
+    break;
+  }
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetButton(PRUint32& aButton)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  switch (kEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_UP:
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_LEFT_DOUBLECLICK:
+    aButton = 1;
+    break;
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    aButton = 2;
+    break;
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_RIGHT_DOUBLECLICK:
+    aButton = 3;
+    break;
+  default:
+    return NS_ERROR_FAILURE;
+    break;
+  }
+  return NS_OK;
 }
 
 // nsINSEventInterface
@@ -129,3 +164,14 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32& aY)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_METHOD nsDOMEvent::SetGUIEvent(nsGUIEvent *aEvent)
+{
+  kEvent = aEvent;
+  return NS_OK;
+}
+
+NS_METHOD nsDOMEvent::SetEventTarget(nsISupports *aTarget)
+{
+  kTarget = aTarget;
+  return NS_OK;
+}

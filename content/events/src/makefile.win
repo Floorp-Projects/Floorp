@@ -22,23 +22,25 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorevents_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom
+REQUIRES=xpcom raptor dom js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsEventListenerManager.cpp  \
+	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
 	    $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
+	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
 	    $(NULL)
 
 
-EXPORTS= nsEventListenerManager.h
+EXPORTS= nsEventListenerManager.h nsEventStateManager.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-  -I$(PUBLIC)\dom
+  -I$(PUBLIC)\dom -I$(PUBLIC)\js
 
 LCFLAGS = \
         $(LCFLAGS) \

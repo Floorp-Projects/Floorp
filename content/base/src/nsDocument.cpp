@@ -704,13 +704,14 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
 
 nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent* aEvent, 
+                                 nsIDOMEvent* aDOMEvent,
                                  nsEventStatus& aEventStatus)
 {
   //Capturing stage
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
   }
 
   //Bubbling stage

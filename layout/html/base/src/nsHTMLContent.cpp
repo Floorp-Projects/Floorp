@@ -596,18 +596,19 @@ nsresult nsHTMLContent::RemoveEventListener(nsIDOMEventListener *aListener, cons
 
 nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
                                             nsGUIEvent* aEvent,
+                                            nsIDOMEvent* aDOMEvent,
                                             nsEventStatus& aEventStatus)
 {  
   //Capturing stage
   
   //Local handling stage
   if (nsnull != mListenerManager) {
-    mListenerManager->HandleEvent(aPresContext, aEvent, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
   }
 
   //Bubbling stage
   if (mParent != nsnull) {
-    return mParent->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+    return mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);
   }
 
   return NS_OK;

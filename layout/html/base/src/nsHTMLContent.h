@@ -135,6 +135,7 @@ public:
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                             nsGUIEvent* aEvent, 
+                            nsIDOMEvent* aDOMEvent,
                             nsEventStatus& aEventStatus);
 
 protected:

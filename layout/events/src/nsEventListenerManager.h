@@ -55,13 +55,15 @@ public:
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
 
-  virtual nsresult HandleEvent(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsEventStatus& aEventStatus);
+  virtual nsresult HandleEvent(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIDOMEvent* aDOMEvent, nsEventStatus& aEventStatus);
 
 protected:
 
   PRUint32 mRefCnt : 31;
 
-  virtual nsresult TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, nsIDOMEvent** aDOMEvent);
+  virtual nsresult nsEventListenerManager::TranslateGUI2DOM(nsGUIEvent*& aGUIEvent, 
+                                                  nsIPresContext& aPresContext, 
+                                                  nsIDOMEvent** aDOMEvent);
 
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;

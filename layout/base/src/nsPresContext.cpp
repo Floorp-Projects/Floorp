@@ -23,6 +23,7 @@
 #include "nsIImageGroup.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
+#include "nsEventStateManager.h"
 
 #define NOISY_IMAGES
 
@@ -42,6 +43,7 @@ nsPresContext::nsPresContext()
   mImageGroup = nsnull;
   mLinkHandler = nsnull;
   mContainer = nsnull;
+  mEventManager = nsnull;
 }
 
 nsPresContext::~nsPresContext()
@@ -69,6 +71,7 @@ nsPresContext::~nsPresContext()
 
   NS_IF_RELEASE(mLinkHandler);
   NS_IF_RELEASE(mContainer);
+  NS_IF_RELEASE(mEventManager);
 }
 
 nsrefcnt
@@ -362,3 +365,24 @@ nsPresContext::GetContainer(nsISupports** aResult)
   NS_IF_ADDREF(mContainer);
   return NS_OK;
 }
+
+NS_METHOD
+nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
+{
+  NS_PRECONDITION(nsnull != aManager, "null ptr");
+  if (nsnull == aManager) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (nsnull == mEventManager) {
+    nsresult rv = NS_NewEventStateManager(&mEventManager);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  *aManager = mEventManager;
+  NS_IF_ADDREF(mEventManager);
+  return NS_OK;
+}
+

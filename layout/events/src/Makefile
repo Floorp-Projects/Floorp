@@ -23,6 +23,7 @@ DEFINES += -D_IMPL_NS_HTML
 
 CPPSRCS =				\
 	nsEventListenerManager.cpp	\
+	nsEventStateManager.cpp	\
 	nsDOMEvent.cpp			\
 	$(NULL)
 
@@ -30,9 +31,10 @@ MODULE = raptor
 
 EXPORTS = \
 	nsEventListenerManager.h \
+	nsEventStateManager.h \
 	$(NULL)
 
-REQUIRES = xpcom raptor dom
+REQUIRES = xpcom raptor dom js
 
 include $(DEPTH)/config/config.mk
 
