@@ -45,14 +45,13 @@
 #include "nsBlender.h"
 #include "nsFontMetricsPh.h"
 #include "nsRenderingContextPh.h"
-// aka    nsDeviceContextSpecPh.h
 #include "nsDeviceContextSpecPh.h"
-// aka    nsDeviceContextSpecFactoryPh.h
 #include "nsDeviceContextSpecFactoryP.h"
 #include "nsScreenManagerPh.h"
 #include "nsScriptableRegion.h"
 #include "nsDeviceContextPh.h"
 #include "nsPrintOptionsPh.h"
+#include "nsPrintSession.h"
 #include "nsFontList.h"
 #include "gfxImageFrame.h"
 
@@ -71,6 +70,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsPh)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 // our custom constructors
@@ -121,70 +121,78 @@ static const nsModuleComponentInfo components[] =
   { "Ph Font Metrics",
     NS_FONT_METRICS_CID,
     "@mozilla.org/gfx/fontmetrics;1",
-    //"@mozilla.org/gfx/font_metrics/Ph;1",
     nsFontMetricsPhConstructor },
+
   { "Ph Device Context",
     NS_DEVICE_CONTEXT_CID,
     "@mozilla.org/gfx/devicecontext;1",
-    //"@mozilla.org/gfx/device_context/Ph;1",
     nsDeviceContextPhConstructor },
+
   { "Ph Rendering Context",
     NS_RENDERING_CONTEXT_CID,
-    //"@mozilla.org/gfx/rendering_context/Ph;1",
     "@mozilla.org/gfx/renderingcontext;1",
     nsRenderingContextPhConstructor },
+
   { "Ph Image",
     NS_IMAGE_CID,
     "@mozilla.org/gfx/image;1",
-    //"@mozilla.org/gfx/image/Ph;1",
     nsImagePhConstructor },
+
   { "Ph Region",
     NS_REGION_CID,
     "@mozilla.org/gfx/region/Ph;1",
     nsRegionPhConstructor },
+
   { "Scriptable Region",
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",
-    //"@mozilla.org/gfx/scriptable_region;1",
     nsScriptableRegionConstructor },
+
   { "Blender",
     NS_BLENDER_CID,
     "@mozilla.org/gfx/blender;1",
     nsBlenderConstructor },
+
   { "Ph Device Context Spec",
     NS_DEVICE_CONTEXT_SPEC_CID,
     "@mozilla.org/gfx/devicecontextspec;1",
-    //"@mozilla.org/gfx/device_context_spec/Ph;1",
     nsDeviceContextSpecPhConstructor },
+
   { "Ph Device Context Spec Factory",
     NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
     "@mozilla.org/gfx/devicecontextspecfactory;1",
-    //"@mozilla.org/gfx/device_context_spec_factory/Ph;1",
     nsDeviceContextSpecFactoryPhConstructor },
-  { "Print Options",
-    NS_PRINTOPTIONS_CID,
-    //    "@mozilla.org/gfx/printoptions;1",
-    "@mozilla.org/gfx/printoptions;1",
+
+  { "PrintSettings Service",
+		NS_PRINTSETTINGSSERVICE_CID,
+		"@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsPhConstructor },
+
    { "Ph Font Enumerator",
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorPhConstructor },
+
 	{ "Font List",
 		NS_FONTLIST_CID,
-		//    "@mozilla.org/gfx/fontlist;1"
 		NS_FONTLIST_CONTRACTID,
 		nsFontListConstructor },
+
   { "Ph Screen Manager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
-    //"@mozilla.org/gfx/screenmanager/Ph;1",
     nsScreenManagerPhConstructor },
+
 	{ "Ph Printer Enumerator",
 	  NS_PRINTER_ENUMERATOR_CID,
-	  //    "@mozilla.org/gfx/printer_enumerator/win;1",
 	"@mozilla.org/gfx/printerenumerator;1",
 	nsPrinterEnumeratorPhConstructor },
+
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor },
+
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
