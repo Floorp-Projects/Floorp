@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.18 $ 
-# $Date: 2002/12/10 19:49:27 $ 
+# $Revision: 1.19 $ 
+# $Date: 2003/05/26 13:57:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -191,7 +191,7 @@ $VERSION = '#tinder_version#';
 #                   module => 'NSS',
 #                   branch => 'HEAD',
 #                  },
-#
+
 
 # ------------- Real Trees Go Here ---------- 
 #
@@ -200,10 +200,46 @@ $VERSION = '#tinder_version#';
                    root => '/cvsroot',
                    module => 'MozillaTinderboxAll',
                    branch => 'HEAD',
+
+                   # If you are using Perforce use perforce filespec
+                   # to specify branche/module pairs. Perforce blurs
+                   # the distincution between a branch and a module.
+
+                   # Tinderbox notion of tree is a good match for the
+                   # perforce notion of filespec.  The tinderbox
+                   # notion of module and branch are a bit contrived
+                   # in a perforce setting.
+
+                   # I assume that the branch is the prefix of the
+                   # filespex and the module is the suffix of the
+                   # filespec.  The funtion Tree2Filespec is more
+                   # important then the way you store the tree data.
+
+                   # In these Perforce examples I assume that the
+                   # filespec will be $branch.$module
+
+                   # Here is an example of "everything"
+
+                   # branch => '//',
+                   # module => '...',
+
+                   # Here is an example of a branch "2.5" which is
+                   # stored in a directory called releases.  There is
+                   # a subdirectory which contains the "web" part of
+                   # this release.
+
+                   # branch => '//releases/v2.5',
+                   # module => '/webmodule/...',
                   },
 
 
 	   );
+
+# what to append to a user name from the VC system to turn it into a
+# mail address.  The Mozilla/Netscape people do not need this because
+# they incode the Mail address in the user names.
+
+$VCMAIL_SUFFIX = '@mozilla.org';
 
 
 sub TreeName2Root {
@@ -236,6 +272,33 @@ sub TreeName2DirPattern {
     my $dir_pattern = $VC_TREE{$treename}{'dir_pattern'};
 
     return $dir_pattern;
+}
+
+# This is a Peforce specific function.  Here is where we convert the
+# Tinderbox notion of tree into the perforce notion of a filespec.
+# These two ideas are good matches for eachother but the notions of
+# branch and module are a bit contrived.  I allow the users to define
+# exactly how the mapping from branch/module to filespec takes place
+# though this function is probably suitable for most uses.
+
+sub Tree2Filespec {
+    my ($treename) = @_;
+
+    my $branch = $VC_TREE{$treename}{'branch'};
+    my $module = $VC_TREE{$treename}{'module'};
+
+    my $filespec = $branch.$module;
+
+    # This quick test for a reasonable filespec, and fix for strings
+    # which look wrong, comes in handy when I am testing (I tend to
+    # focus on test data which looks like CVS branch/modules) and may
+    # help a user who has totally botched their branch/module
+    # specifications to at least get a working system.
+
+    ($filespec =~ m!//.*\.\.\.!) ||
+        ($filespec = '//...');
+
+   return $filespec;
 }
 
 sub TreeName2is_bonsai_default {
@@ -382,6 +445,28 @@ sub get_all_trees {
   @out = sort (keys %VC_TREE);
 
   return @out;
+}
+
+
+# convert a name as given by the version control system into a email
+# address.
+
+
+sub VCName2MailAddress {
+    my ($vc_name) = (@_);
+
+    $mail_addr = $vc_name;
+
+    # The Netscape/Mozilla people have the CVS name be the same as the
+    # mail address with a single character subsitution.
+
+    if ($mail_addr =~ m/%/) {
+        $mail_addr =~ s/%/@/;
+    } else {
+        $mail_addr .= $VCMAIL_SUFFIX;
+    }
+
+    return $mail_addr;
 }
 
 1;
