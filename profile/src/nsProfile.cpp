@@ -1661,9 +1661,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
 
 #if defined(DEBUG_profile_verbose)
         printf(" uiLocale=%s\n", uiLocale.get());
-
-        nsCAutoString temp2; temp2.AssignWithConversion(contentLocale);
-        printf(" contentLocale=%s\n", temp2.get());
+        printf(" contentLocale=%s\n", contentLocale.get());
 #endif
 
         nsCAutoString pathBuf;
