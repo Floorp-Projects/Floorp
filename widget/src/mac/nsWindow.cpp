@@ -721,7 +721,33 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 {
 	return NS_OK;
 }
-    
+ 
+//-------------------------------------------------------------------------
+//
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
+{
+GrafPtr		curport;
+RgnHandle	thergn;
+
+
+	if(mWindowRegion)
+		{
+		::GetPort(&curport);
+		::SetPort(mWindowPtr);
+		thergn = ::NewRgn();
+		::SetRectRgn(thergn,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);
+		::SectRgn(thergn,mWindowRegion,thergn);
+		::InvalRgn(thergn);
+		::DisposeRgn(thergn);
+		::SetPort(curport);
+		}
+	return NS_OK;
+  
+}
+   
 //-------------------------------------------------------------------------
 //
 // Invalidate this component visible area

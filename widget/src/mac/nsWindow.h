@@ -91,6 +91,7 @@ public:
     virtual nsCursor        GetCursor();
     NS_IMETHOD            	SetCursor(nsCursor aCursor);
     NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD							Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
     virtual nsIRenderingContext* GetRenderingContext();
     NS_IMETHOD            	SetColorMap(nsColorMap *aColorMap);
