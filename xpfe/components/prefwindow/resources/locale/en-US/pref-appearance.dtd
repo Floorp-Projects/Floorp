@@ -13,3 +13,9 @@
 <!ENTITY picsNtextRadio.label "Pictures and Text">
 <!ENTITY picsOnlyRadio.label "Pictures Only">
 <!ENTITY textonlyRadio.label "Text Only">
+
+<!-- Debug: Turn on gfx-rendered widgets -->
+<!ENTITY widgetRendering.label "Debug: Widget rendering">
+<!ENTITY nativeWidgets.label "native">
+<!ENTITY partialGfxWidgets.label "partial-gfx">
+<!ENTITY gfxWidgets.label "gfx">
