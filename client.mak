@@ -14,9 +14,6 @@
 # Reserved.
 
 DEPTH=.
-IGNORE_MANIFEST=1
-THIS_MAKEFILE=nglayout.mak
-THAT_MAKEFILE=makefile.win
 
 !if !defined(MOZ_TOP)
 #enable builds from changed top level directories
@@ -24,9 +21,19 @@ MOZ_TOP=mozilla
 !endif
 
 #
+# Arbitrary required defines (should probably just turn them on in the
+#                              tree by default)
+
+MODULAR_NETLIB = 1
+STANDALONE_IMAGE_LIB = 1
+NGLAYOUT_PLUGINS = 1
+
+#
 # Command macro defines
 #
 
+# let's be explicit about CVSROOT... some windows cvs clients
+# are too stupid to correctly work without the -d option 
 !if defined(MOZ_DATE)
 CVSCO = cvs -q co -P -D "$(MOZ_DATE)"
 !elseif defined(CVSROOT)
@@ -59,10 +66,14 @@ CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
 
+# rules.mak include config.mak
+include <$(DEPTH)\config\config.mak>
 
+## The master target
 ############################################################
-## This should really be in a different file, like client.mak
-## but it's OK here for now.
+
+pull_and_build_all: pull_all build_all
+
 
 ## Rules for pulling the source from the cvs repository
 ############################################################
@@ -71,96 +82,21 @@ pull_and_build_all: pull_all build_all
 
 pull_all: pull_seamonkey
 
-pull_nglayout: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout \
-pull_editor
-
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
 	$(CVSCO) $(MOZ_TOP)/nsprpub
-	$(CVSCO_LIZARD) SeaMonkeyEditor
-
-pull_lizard:
-	cd $(MOZ_SRC)\.
-	$(CVSCO_LIZARD) $(MOZ_TOP)/LICENSE
-	$(CVSCO_LIZARD) $(MOZ_TOP)/LEGAL
-	$(CVSCO_LIZARD) $(MOZ_TOP)/config
-	$(CVSCO_LIZARD) $(MOZ_TOP)/dbm
-	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
-	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
-	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_LIZARD) $(MOZ_TOP)/nsprpub
-	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
-	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
-	$(CVSCO_LIZARD) $(MOZ_TOP)/js
-	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/security/freenav
-	$(CVSCO_LIBPREF) $(MOZ_TOP)/modules/libpref
-	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
-	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/oji
-	$(CVSCO_LIZARD) $(MOZ_TOP)/caps
-        $(CVSCO_LIZARD) $(MOZ_TOP)/rdf
-        $(CVSCO_LIZARD) $(MOZ_TOP)/intl
-!if defined(NGPREFS)
-	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
-	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h
-	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/nsIDefaultBrowser.h
-	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/prefs
-!endif
-
-pull_xpcom:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libreg 
-	$(CVSCO_XPCOM) $(MOZ_TOP)/xpcom
-
-pull_imglib:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_IMGLIB) $(MOZ_TOP)/jpeg
-	$(CVSCO_IMGLIB) $(MOZ_TOP)/modules/libutil
-	$(CVSCO_IMGLIB) $(MOZ_TOP)/modules/libimg 
-
-pull_netlib:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_NETWORK) $(MOZ_TOP)/lib/xp
-	$(CVSCO_NETWORK) $(MOZ_TOP)/lib/libpwcac
-	$(CVSCO_NETWORK) $(MOZ_TOP)/network
-	$(CVSCO_NETWORK) $(MOZ_TOP)/include
-
-pull_nglayout:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/base
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/dom
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/gfx
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/htmlparser
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/layout
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/view
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/webshell
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/widget
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/xpfe
-
-pull_editor:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_RAPTOR) $(MOZ_TOP)/editor
+	$(CVSCO) SeaMonkeyEditor
 
 ############################################################
 
-clobber_all:: clobber_nglayout clobber_apprunner
-
-clobber_apprunner:
-	@cd $(MOZ_SRC)\mozilla\xpfe
-	nmake -f makefile.win clobber
-
-clobber_nglayout:
-	@cd $(MOZ_SRC)\mozilla\.
-	nmake -f nglayout.mak clobber_all $(NGLAYOUT_ENV_VARS)
+clobber_all:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	$(NMAKE) -f makefile.win clobber_all 
 
 depend:
-	nmake -f nglayout.mak depend $(NGLAYOUT_ENV_VARS)
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	$(NMAKE) -f makefile.win depend 
 
-build_all: build_seamonkey build_apprunner
-
-build_seamonkey:
+build_all:
 	@cd $(MOZ_SRC)\mozilla\.
-	nmake -f nglayout.mak all
-
-build_apprunner:
-	@cd $(MOZ_SRC)\mozilla\xpfe\.
-	nmake -f makefile.win
+	$(NMAKE) -f makefile.win all

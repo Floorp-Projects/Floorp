@@ -15,14 +15,14 @@
 
 #//------------------------------------------------------------------------
 #//
-#// Makefile to build the NS tree
+#// Toplevel windows Makefile to build the mozilla tree
 #//
 #//------------------------------------------------------------------------
 
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
-#// root of NS
+#// root of mozilla
 #//
 #//------------------------------------------------------------------------
 DEPTH=.
@@ -34,82 +34,54 @@ DEPTH=.
 #// 
 #// DIRS          - There are subdirectories to process
 #//
-#// netcast needs to be before sun-java so marimba.* package is available
-#// to netscape.netcast.* - spider
 #//------------------------------------------------------------------------
-
-!ifdef MOZ_SECURITY
-SECDIR=security
-!else
-SECDIR=
-!endif
-
-DISTDIRS=$(NSPRDIR) dbm $(SECDIR) xpcom base caps
 
 !if "$(WATCOM)" != ""
 XTRADIRS = $(DISTDIRS)
 !endif
 
-!if "$(MOZ_BITS)" == "32"
-DIRS_JSD = js\jsd
-XTRADIRS = $(DISTDIRS)
-!endif
-
-!ifdef MOZ_SECURITY
-CORECONF=coreconf
-!else
-CORECONF=
-!endif
-
 DIRS = \
-!ifdef MOZILLA_OFFICIAL
-config $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
-!else
-    $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
+  config			\
+  dbm				\
+  nsprpub			\
+  include			\
+  jpeg				\
+  modules\libreg		\
+  xpcom				\
+  modules\zlib			\
+  modules\libutil		\
+  sun-java			\
+  js				\
+  modules\security\freenav	\
+  modules\libpref		\
+  modules\libimg		\
+  modules\plugin		\
+  modules\oji		\
+  base                          \
+  intl                          \
+  caps                          \
+  lib\xp			\
+  lib\libpwcac			\
+  network			\
+!if defined(NGPREFS)
+  cmd\wincom			\
+  cmd\winfe\prefs		\
 !endif
-!ifdef MOZ_NETCAST
-    netcast \
-!endif
-    sun-java \
-!ifdef MOZ_LDAP
-    ldap \
-!endif
-!ifdef MOZ_JAVA
-    ifc js nav-java \
-!else
-    nav-java js \
-!endif
-!ifdef MOZ_IFC_TOOLS
-    ifc\tools \
-!endif
-!ifdef MOZ_JAVA
-    $(DIRS_JSD) \
-!endif
-    privacy lib modules cmd
+# the following are associated with the layout engine
+  editor 			\
+  expat				\
+  htmlparser			\
+  gfx				\
+  dom				\
+  view				\
+  widget			\
+  layout			\
+  rdf                           \
+  silentdl                      \
+  webshell			\
+  xpfe				\
+  $(NULL)
 
-!if "$(STAND_ALONE_JAVA)" == "1"
-!if "$(OS_TARGET)" == "WINNT"
-#// When we build stand alone java with OS_TARGET == WINNT for
-#// nspr20, we do a gmake separately outside of makefile.win
-#// hence no NSPRDIR - sudu
-DIRS=jpeg modules\zlib sun-java ifc js ifc\tools sun-java\java
-!else
-DIRS=$(NSPRDIR) jpeg modules\zlib sun-java ifc js ifc\tools sun-java\java
-!endif
-!endif 
-
-!ifdef NSWINDBGMALLOC
-LLFLAGS= $(LLFLAGS)                 \
-        /EXPORT:malloc=ns_malloc    \
-        /EXPORT:realloc=ns_realloc  \
-        /EXPORT:calloc=ns_calloc    \
-        /EXPORT:free=ns_free        \
-        /EXPORT:_strdup=ns_strdup
-!endif
-
-!ifdef SERVER_BUILD
-LLIBS=$(DIST)/lib/httpdlw.lib $(DIST)/lib/libsjboot.lib
-!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -117,15 +89,3 @@ LLIBS=$(DIST)/lib/httpdlw.lib $(DIST)/lib/libsjboot.lib
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-
-#LCFLAGS=-D_USE_PR_DEBUG_MEMORY $(LCFLAGS)
-
-export::
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-    $(MAKE_INSTALL) $(GLOWDIR)\glowcode.dll $(DIST)\bin
-!endif
-
-clobber_all::
-    cd $(DEPTH)
-    $(RM_R) dist
-
