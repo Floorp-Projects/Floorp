@@ -90,9 +90,6 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
 
-// Timer Includes
-#include "nsITimer.h"
-
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
 const PRInt32 kDefaultMultiselectHeight = 4; // This is compatible with 4.x browsers
@@ -282,169 +279,21 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 //-- Done with macros
 //------------------------------------------------------
 
-//---------------------------------------------------
-//-- Update Timer Stuff
-//---------------------------------------------------
-class nsSelectUpdateTimer : public nsITimerCallback
-{
-public:
-
-  NS_DECL_ISUPPORTS
-
-  nsSelectUpdateTimer()
-      : mPresContext(nsnull), mDelay(0), mHasBeenNotified(PR_FALSE), 
-        mItemsAdded(PR_FALSE), mItemsRemoved(PR_FALSE), mItemsInxSet(PR_FALSE)
-  {
-  }
-
-  virtual ~nsSelectUpdateTimer();
-  NS_DECL_NSITIMERCALLBACK
-
-  // Additional Methods
-  nsresult Start(nsPresContext *aPresContext) 
-  {
-    mPresContext = aPresContext;
-
-    nsresult result = NS_OK;
-    if (!mTimer) {
-      mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
-
-      if (NS_FAILED(result))
-        return result;
-    }
-    result = mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
-
-    if (mHasBeenNotified) {
-      mItemsAdded      = PR_FALSE;
-      mItemsRemoved    = PR_FALSE;
-      mItemsInxSet     = PR_FALSE;
-      mHasBeenNotified = PR_FALSE;
-      mInxArray.Clear();
-    }
-
-    return result;
-  }
-
-  void Init(nsListControlFrame *aList, PRUint32 aDelay)  { mListControl = aList; mDelay = aDelay; }
-  void Stop() { if (mTimer) mTimer->Cancel(); }
-
-  void AdjustIndexes(PRBool aInserted, PRInt32 aInx)
-  {
-    // remove the index from the list
-    if (!aInserted) {
-      PRInt32 inx = (PRInt32)mInxArray.IndexOf((void*)aInx);
-      if (inx > -1) {
-        mInxArray.RemoveElementAt(inx);
-      }
-    }
-
-    PRInt32 count = mInxArray.Count();
-    for (PRInt32 i=0;i<count;i++) {
-      PRInt32 inx = NS_PTR_TO_INT32(mInxArray[i]);
-      if (inx > aInx) {
-        mInxArray.ReplaceElementAt((void*)(inx+(aInserted?1:-1)), i);
-      }
-    }
-  }
-
-  void ItemAdded(PRInt32 aInx, PRInt32 aNumItems)
-  { 
-    mItemsAdded = PR_TRUE;
-    if (mInxArray.Count() > 0 && aInx <= aNumItems-1) {
-      AdjustIndexes(PR_TRUE, aInx);
-    }
-  }
-
-  void ItemRemoved(PRInt32 aInx, PRInt32 aNumItems) 
-  { 
-    mItemsRemoved = PR_TRUE;
-    if (mInxArray.Count() > 0 && aInx <= aNumItems) {
-      AdjustIndexes(PR_FALSE, aInx);
-    }
-  }
-
-  void ItemIndexSet(PRInt32 aInx)  
-  { 
-    mItemsInxSet = PR_TRUE;
-    mInxArray.AppendElement((void*)aInx);
-  }
-
-  PRPackedBool HasBeenNotified()      { return mHasBeenNotified; }
-
-private:
-  nsListControlFrame * mListControl;
-  nsCOMPtr<nsITimer>   mTimer;
-  nsPresContext*      mPresContext;
-  PRUint32             mDelay;
-  PRPackedBool         mHasBeenNotified;
-
-  PRPackedBool         mItemsAdded;
-  PRPackedBool         mItemsRemoved;
-  PRPackedBool         mItemsInxSet;
-  nsVoidArray          mInxArray;
-
-};
-
-NS_IMPL_ADDREF(nsSelectUpdateTimer)
-NS_IMPL_RELEASE(nsSelectUpdateTimer)
-NS_IMPL_QUERY_INTERFACE1(nsSelectUpdateTimer, nsITimerCallback)
-
-nsresult NS_NewUpdateTimer(nsSelectUpdateTimer **aResult)
-{
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResult = (nsSelectUpdateTimer*) new nsSelectUpdateTimer;
-
-  if (!aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-// nsITimerCallback
-NS_IMETHODIMP nsSelectUpdateTimer::Notify(nsITimer *timer)
-{
-  if (mPresContext && mListControl && !mHasBeenNotified) {
-    mHasBeenNotified = PR_TRUE;
-    if (mItemsAdded || mItemsInxSet) {
-      mListControl->ResetList(mPresContext, &mInxArray);
-    } else {
-      mListControl->ItemsHaveBeenRemoved(mPresContext);
-    }
-  }
-  return NS_OK;
-}
-
-nsSelectUpdateTimer::~nsSelectUpdateTimer()
-{
-  if (mTimer) {
-    mTimer->Cancel();
-  }
-}
-
-//---------------------------------------------------
-//-- DONE: Update Timer Stuff
-//---------------------------------------------------
-
-
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   nsIDocument* aDocument)
   : nsHTMLScrollFrame(aShell, PR_FALSE)
 {
   mComboboxFrame      = nsnull;
+  mChangesSinceDragStart = PR_FALSE;
   mButtonDown         = PR_FALSE;
   mMaxWidth           = 0;
   mMaxHeight          = 0;
-  mPresContext        = nsnull;
 
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
-  mDoneWithInitialReflow = PR_FALSE;
+  mNeedToReset        = PR_TRUE;
 
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -457,7 +306,6 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   mOverrideReflowOpt           = PR_FALSE;
   mPassId                      = 0;
 
-  mUpdateTimer                 = nsnull;
   mDummyFrame                  = nsnull;
 
   REFLOW_COUNTER_INIT()
@@ -467,13 +315,8 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
 nsListControlFrame::~nsListControlFrame()
 {
   REFLOW_COUNTER_DUMP("nsLCF");
-  if (mUpdateTimer != nsnull) {
-    StopUpdateTimer();
-    NS_RELEASE(mUpdateTimer);
-  }
 
   mComboboxFrame = nsnull;
-  NS_IF_RELEASE(mPresContext);
 }
 
 // for Bug 47302 (remove this comment later)
@@ -583,15 +426,16 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     focusedIndex = mEndSelectionIndex;
   }
 
+  nsPresContext* presContext = GetPresContext();
   nsIScrollableView * scrollableView;
-  GetScrollableView(mPresContext, &scrollableView);
+  GetScrollableView(presContext, &scrollableView);
   if (!scrollableView) return;
 
-  nsIPresShell *presShell = mPresContext->GetPresShell();
+  nsIPresShell *presShell = presContext->GetPresShell();
   if (!presShell) return;
 
   nsIFrame* containerFrame;
-  GetOptionsContainer(mPresContext, &containerFrame);
+  GetOptionsContainer(presContext, &containerFrame);
   if (!containerFrame) return;
 
   nsIFrame * childframe = nsnull;
@@ -680,12 +524,12 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
 
   // set up back stop colors and then ask L&F service for the real colors
   nscolor color;
-  mPresContext->LookAndFeel()->
+  presContext->LookAndFeel()->
     GetColor(lastItemIsSelected ?
              nsILookAndFeel::eColor_WidgetSelectForeground :
              nsILookAndFeel::eColor_WidgetSelectBackground, color);
 
-  nscoord onePixelInTwips = mPresContext->IntScaledPixelsToTwips(1);
+  nscoord onePixelInTwips = presContext->IntScaledPixelsToTwips(1);
 
   nsRect dirty;
   nscolor colors[] = {color, color, color, color};
@@ -848,7 +692,8 @@ NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateHTMLListboxAccessible(node, mPresContext, aAccessible);
+    return accService->CreateHTMLListboxAccessible(node, GetPresContext(),
+                                                   aAccessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -1166,7 +1011,7 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
     nsIContent * option = GetOptionContent(0);
     if (option != nsnull) {
       nsIFrame * optFrame;
-      nsresult result = mPresContext->PresShell()->
+      nsresult result = GetPresContext()->PresShell()->
         GetPrimaryFrameFor(option, &optFrame);
       if (NS_SUCCEEDED(result) && optFrame != nsnull) {
         nsStyleContext* optStyle = optFrame->GetStyleContext();
@@ -1788,8 +1633,6 @@ nsListControlFrame::Init(nsPresContext*  aPresContext,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  mPresContext = aPresContext;
-  NS_ADDREF(mPresContext);
   nsresult result = nsHTMLScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                             aPrevInFlow);
 
@@ -2047,7 +1890,7 @@ nsListControlFrame::MouseClicked(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsListControlFrame::OnContentReset()
 {
-  ResetList(mPresContext);
+  ResetList();
   return NS_OK;
 }
 
@@ -2056,7 +1899,7 @@ nsListControlFrame::OnContentReset()
 // those values as determined by the original HTML
 //---------------------------------------------------------
 void 
-nsListControlFrame::ResetList(nsPresContext* aPresContext, nsVoidArray * aInxList)
+nsListControlFrame::ResetList()
 {
   REFLOW_DEBUG_MSG("LBX::ResetList\n");
 
@@ -2255,9 +2098,9 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
     // If so, then we can initialize;
     if (mIsAllFramesHere == PR_FALSE) {
       // if all the frames are now present we can initalize
-      if (CheckIfAllFramesHere() && mPresContext) {
+      if (CheckIfAllFramesHere()) {
         mHasBeenInitialized = PR_TRUE;
-        ResetList(mPresContext);
+        ResetList();
       }
     }
   }
@@ -2268,8 +2111,6 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
 NS_IMETHODIMP
 nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
-  StopUpdateTimer();
-
 #ifdef DO_REFLOW_DEBUG
   printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
 #endif
@@ -2291,10 +2132,8 @@ nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
     return NS_OK;
   }
 
-  nsresult rv = StartUpdateTimer(aPresContext);
-  if (NS_SUCCEEDED(rv) && mUpdateTimer) {
-    mUpdateTimer->ItemAdded(aIndex, numOptions);
-  }
+  // Make sure we scroll to the selected option as needed
+  mNeedToReset = PR_TRUE;
   return NS_OK;
 }
 
@@ -2302,12 +2141,9 @@ nsListControlFrame::AddOption(nsPresContext* aPresContext, PRInt32 aIndex)
 NS_IMETHODIMP
 nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
 {
-  StopUpdateTimer();
-  nsresult rv = StartUpdateTimer(aPresContext);
-  if (NS_SUCCEEDED(rv) && mUpdateTimer) {
-    PRInt32 numOptions;
-    GetNumberOfOptions(&numOptions);
-    mUpdateTimer->ItemRemoved(aIndex, numOptions);
+  // Need to reset if we're a dropdown
+  if (IsInDropDownMode()) {
+    mNeedToReset = PR_TRUE;
   }
 
   return NS_OK;
@@ -2407,7 +2243,7 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
       mComboboxFrame->RedisplaySelectedText();
     }
 
-    mComboboxFrame->RollupFromList(mPresContext);
+    mComboboxFrame->RollupFromList(GetPresContext());
   }
 
   return NS_OK;
@@ -2443,7 +2279,7 @@ nsListControlFrame::FireOnChange()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(NS_FORM_CHANGE);
 
-  nsIPresShell *presShell = mPresContext->GetPresShell();
+  nsIPresShell *presShell = GetPresContext()->GetPresShell();
   if (presShell) {
     rv = presShell->HandleEventWithTarget(&event, this, nsnull,
                                            NS_EVENT_FLAG_INIT, &status);
@@ -2597,26 +2433,25 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus         aStatus)
 {
+  nsresult rv;
+  
   if (PR_TRUE == IsInDropDownMode()) 
   {
     //SyncViewWithFrame();
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-    nsresult rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
+    rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
     SyncViewWithFrame(aPresContext);
-    return rv;
   } else {
-    nsresult rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
-    PRInt32 selectedIndex = mEndSelectionIndex;
-    if (selectedIndex == kNothingSelected) {
-      GetSelectedIndex(&selectedIndex);
-    }
-    if (!mDoneWithInitialReflow && selectedIndex != kNothingSelected) {
-      ScrollToIndex(selectedIndex);
-      mDoneWithInitialReflow = PR_TRUE;
-    }
-    return rv;
+    rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }
+
+  if (mNeedToReset) {
+    mNeedToReset = PR_FALSE;
+    ResetList();
+  }
+
+  return rv;
 }
 
 nsIAtom*
@@ -2710,13 +2545,13 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
           nsevent->PreventBubble();
         }
       } else {
-        CaptureMouseEvents(mPresContext, PR_FALSE);
+        CaptureMouseEvents(GetPresContext(), PR_FALSE);
         return NS_OK;
       }
-      CaptureMouseEvents(mPresContext, PR_FALSE);
+      CaptureMouseEvents(GetPresContext(), PR_FALSE);
       return NS_ERROR_FAILURE; // means consume event
     } else {
-      CaptureMouseEvents(mPresContext, PR_FALSE);
+      CaptureMouseEvents(GetPresContext(), PR_FALSE);
       return NS_OK;
     }
   }
@@ -2760,7 +2595,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
           nsevent->PreventBubble();
         }
 
-        CaptureMouseEvents(mPresContext, PR_FALSE);
+        CaptureMouseEvents(GetPresContext(), PR_FALSE);
         return NS_ERROR_FAILURE;
       }
 
@@ -2776,7 +2611,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   } else {
     REFLOW_DEBUG_MSG(">>>>>> Didn't find");
-    CaptureMouseEvents(mPresContext, PR_FALSE);
+    CaptureMouseEvents(GetPresContext(), PR_FALSE);
     // Notify
     if (mChangesSinceDragStart) {
       // reset this so that future MouseUps without a prior MouseDown
@@ -2827,12 +2662,13 @@ nsListControlFrame::FireMenuItemActiveEvent()
   nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<nsIEventListenerManager> manager;
   mContent->GetListenerManager(getter_AddRefs(manager));
+  nsPresContext* presContext = GetPresContext();
   if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"), PR_TRUE, PR_TRUE);
     PRBool noDefault;
-    mPresContext->EventStateManager()->DispatchNewEvent(mContent, event,
-                                                        &noDefault);
+    presContext->EventStateManager()->DispatchNewEvent(mContent, event,
+                                                       &noDefault);
   }
 }
 #endif
@@ -2856,7 +2692,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   mouseEvent->GetTarget(getter_AddRefs(node));
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
   nsIFrame * frame;
-  mPresContext->PresShell()->GetPrimaryFrameFor(content, &frame);
+  GetPresContext()->PresShell()->GetPrimaryFrameFor(content, &frame);
   printf("Target Frame: %p  this: %p\n", frame, this);
   printf("-->\n");
 #endif
@@ -2864,7 +2700,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   nsresult rv;
   
   nsCOMPtr<nsIContent> content;
-  mPresContext->EventStateManager()->
+  GetPresContext()->EventStateManager()->
     GetEventTargetContent(nsnull, getter_AddRefs(content));
 
   nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
@@ -2920,7 +2756,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
     if (!IsInDropDownMode()) {
       // Handle Like List
-      CaptureMouseEvents(mPresContext, PR_TRUE);
+      CaptureMouseEvents(GetPresContext(), PR_TRUE);
       mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
     }
   } else {
@@ -2935,7 +2771,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       mComboboxFrame->ShowDropDown(!isDroppedDown);
 
       if (isDroppedDown) {
-        CaptureMouseEvents(mPresContext, PR_FALSE);
+        CaptureMouseEvents(GetPresContext(), PR_FALSE);
       }
     }
   }
@@ -3025,7 +2861,8 @@ nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
   nsIScrollableView * scrollableView;
-  GetScrollableView(mPresContext, &scrollableView);
+  nsPresContext* presContext = GetPresContext();
+  GetScrollableView(presContext, &scrollableView);
 
   if (scrollableView) {
     // if null is passed in we scroll to 0,0
@@ -3035,7 +2872,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     }
   
     // otherwise we find the content's frame and scroll to it
-    nsIPresShell *presShell = mPresContext->PresShell();
+    nsIPresShell *presShell = presContext->PresShell();
     nsIFrame * childframe;
     nsresult result;
     if (aOptElement) {
@@ -3061,7 +2898,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         nsRect fRect = childframe->GetRect();
         nsPoint pnt;
         nsIView * view;
-        childframe->GetOffsetFromView(mPresContext, pnt, &view);
+        childframe->GetOffsetFromView(presContext, pnt, &view);
 
         // This change for 33421 (remove this comment later)
 
@@ -3469,7 +3306,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     // because this isn't needed for Gfx
     if (IsInDropDownMode() == PR_TRUE) {
       // Don't flush anything but reflows lest it destroy us
-      mPresContext->PresShell()->
+      GetPresContext()->PresShell()->
         GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
     }
     REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
@@ -3539,40 +3376,3 @@ IGNORE_EVENT(DragMove)
 #undef FORWARD_EVENT
 #undef IGNORE_EVENT
 
-/*=============== Timer Related Code ======================*/
-nsresult
-nsListControlFrame::StartUpdateTimer(nsPresContext * aPresContext)
-{
-
-  if (mUpdateTimer == nsnull) {
-    nsresult result = NS_NewUpdateTimer(&mUpdateTimer);
-    if (NS_FAILED(result))
-      return result;
-
-    mUpdateTimer->Init(this, 0); // delay "0"
-  }
-
-  if (mUpdateTimer != nsnull) {
-    return mUpdateTimer->Start(aPresContext);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-void
-nsListControlFrame::StopUpdateTimer()
-{
-  if (mUpdateTimer != nsnull) {
-    mUpdateTimer->Stop();
-  }
-}
-
-void
-nsListControlFrame::ItemsHaveBeenRemoved(nsPresContext * aPresContext)
-{
-  // Only adjust things if it is a combobox
-  // removing items on a listbox should effect anything
-  if (IsInDropDownMode()) {
-    ResetList(aPresContext);
-  }
-}
