@@ -2983,19 +2983,25 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
     break;
 
   case VIEWER_SHOW_CONTENT_QUALITY:
-#if XXX_fix_me
-    if ((nsnull != wd) && (nsnull != wd->observer)) {
-      nsIPresContext *px = wd->observer->mWebWidget->GetPresContext();
-      nsIPresShell   *ps = px->GetShell();
-      nsIViewManager *vm = ps->GetViewManager();
+    if (nsnull != mWebShell) {
+      nsIPresShell   *ps = GetPresShellFor(mWebShell);
+      nsIViewManager *vm = nsnull;
+      PRBool         qual;
 
-      vm->ShowQuality(!vm->GetShowQuality());
+      if (ps) {
+        ps->GetViewManager(&vm);
 
-      NS_RELEASE(vm);
-      NS_RELEASE(ps);
-      NS_RELEASE(px);
+        if (vm) {
+          vm->GetShowQuality(qual);
+          vm->ShowQuality(!qual);
+
+          NS_RELEASE(vm);
+        }
+
+        NS_RELEASE(ps);
+      }
     }
-#endif
+
     result = nsEventStatus_eConsumeNoDefault;
     break;
 
