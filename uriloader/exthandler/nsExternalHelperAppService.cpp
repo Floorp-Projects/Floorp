@@ -701,6 +701,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   RetargetLoadNotifications(aChannel);
   // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+  if ( httpChannel ) 
+  {
+    // Turn off content encoding conversions.
+    httpChannel->SetApplyConversion( PR_FALSE );
+  }
+
 
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
