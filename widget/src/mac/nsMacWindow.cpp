@@ -272,6 +272,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mIsActive(PR_FALSE)
 	, mZoomOnShow(PR_FALSE)
 	, mPhantomScrollbar(nsnull)
+	, mPhantomScrollbarData(nsnull)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
 	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
@@ -294,10 +295,8 @@ nsMacWindow::~nsMacWindow()
 	{
   	// cleanup the struct we hang off the scrollbar's refcon	
   	if ( mPhantomScrollbar ) {
-  	  PhantomScrollbarData* data = 
-  	    NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(mPhantomScrollbar));
-  	  delete data;
   	  ::SetControlReference(mPhantomScrollbar, (long)nsnull);
+  	  delete mPhantomScrollbarData;
   	}
   	
 		if (mWindowMadeHere)
@@ -534,14 +533,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // to the action proc.
   //
   // For Logitech, the scrollbar has to be in the content area but can have
-  // zero width. For USBOverdrive (used also my MSFT), the scrollbar can be
+  // zero width. For USBOverdrive (used also by MSFT), the scrollbar can be
   // anywhere, but must have a valid width (one pixel wide works). The
   // current location (one pixel wide, and flush along the left side of the
   // window) is a reasonable comprimise in the short term. It is not intended
   // to fix all cases. 
   Rect sbRect = { 100, 0, 200, 1 };
+  mPhantomScrollbarData = new PhantomScrollbarData;
   mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
-                                            kControlScrollBarLiveProc, (long)new PhantomScrollbarData );
+                                            kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
   ::EmbedControl ( rootControl, mPhantomScrollbar );
     
 	// register tracking and receive handlers with the native Drag Manager

@@ -31,6 +31,7 @@ using std::auto_ptr;
 #include "nsMacEventHandler.h"
 
 class nsMacEventHandler;
+struct PhantomScrollbarData;
 
 //-------------------------------------------------------------------------
 //
@@ -127,6 +128,7 @@ protected:
 	PRBool                          mZoomOnShow;
 	
 	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
+	PhantomScrollbarData* mPhantomScrollbarData;
 };
 
 #endif // MacWindow_h__
