@@ -772,6 +772,7 @@
 				F50E1BA80207EB8201F281DF,
 				F50E1BBC0207F27B01F281DF,
 				F50E1BAE0207EE5F01F281DF,
+				F5CB85F202AC49CC01000104,
 			);
 			isa = PBXGroup;
 			name = "Mozilla Source Tree";
@@ -3294,6 +3295,2936 @@
 			settings = {
 			};
 		};
+		F5CB85F202AC49CC01000104 = {
+			children = (
+				F5CB85F302AC4AA901000104,
+			);
+			isa = PBXGroup;
+			name = modules;
+			refType = 4;
+		};
+		F5CB85F302AC4AA901000104 = {
+			children = (
+				F5CB85F402AC4AA901000104,
+				F5CB867602AC4AAA01000104,
+				F5CB870502AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			name = plugin;
+			path = ../modules/plugin;
+			refType = 2;
+		};
+		F5CB85F402AC4AA901000104 = {
+			children = (
+				F5CB85F502AC4AA901000104,
+				F5CB863302AC4AA901000104,
+			);
+			isa = PBXGroup;
+			path = base;
+			refType = 4;
+		};
+		F5CB85F502AC4AA901000104 = {
+			children = (
+				F5CB85F702AC4AA901000104,
+				F5CB85F802AC4AA901000104,
+				F5CB85F902AC4AA901000104,
+				F5CB85FA02AC4AA901000104,
+				F5CB85FB02AC4AA901000104,
+				F5CB85FC02AC4AA901000104,
+				F5CB85FD02AC4AA901000104,
+				F5CB85FE02AC4AA901000104,
+				F5CB85FF02AC4AA901000104,
+				F5CB860002AC4AA901000104,
+				F5CB860102AC4AA901000104,
+				F5CB860202AC4AA901000104,
+				F5CB860302AC4AA901000104,
+				F5CB860402AC4AA901000104,
+				F5CB860502AC4AA901000104,
+				F5CB860602AC4AA901000104,
+				F5CB860702AC4AA901000104,
+				F5CB860802AC4AA901000104,
+				F5CB860902AC4AA901000104,
+				F5CB860A02AC4AA901000104,
+				F5CB860B02AC4AA901000104,
+				F5CB860C02AC4AA901000104,
+				F5CB860D02AC4AA901000104,
+				F5CB860E02AC4AA901000104,
+				F5CB860F02AC4AA901000104,
+				F5CB861002AC4AA901000104,
+				F5CB861102AC4AA901000104,
+				F5CB861202AC4AA901000104,
+				F5CB861302AC4AA901000104,
+				F5CB861402AC4AA901000104,
+				F5CB861502AC4AA901000104,
+				F5CB861602AC4AA901000104,
+				F5CB861702AC4AA901000104,
+				F5CB861802AC4AA901000104,
+				F5CB861902AC4AA901000104,
+				F5CB861A02AC4AA901000104,
+				F5CB861B02AC4AA901000104,
+				F5CB861C02AC4AA901000104,
+				F5CB861D02AC4AA901000104,
+				F5CB861E02AC4AA901000104,
+				F5CB861F02AC4AA901000104,
+				F5CB862002AC4AA901000104,
+				F5CB862102AC4AA901000104,
+				F5CB862202AC4AA901000104,
+				F5CB862302AC4AA901000104,
+				F5CB862402AC4AA901000104,
+				F5CB862502AC4AA901000104,
+				F5CB862602AC4AA901000104,
+				F5CB862702AC4AA901000104,
+				F5CB862802AC4AA901000104,
+				F5CB862902AC4AA901000104,
+				F5CB862A02AC4AA901000104,
+				F5CB862B02AC4AA901000104,
+				F5CB862C02AC4AA901000104,
+				F5CB862D02AC4AA901000104,
+				F5CB862E02AC4AA901000104,
+				F5CB862F02AC4AA901000104,
+				F5CB863002AC4AA901000104,
+				F5CB863102AC4AA901000104,
+				F5CB863202AC4AA901000104,
+			);
+			isa = PBXGroup;
+			path = public;
+			refType = 4;
+		};
+		F5CB85F702AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB85F802AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB85F902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = MANIFEST;
+			refType = 4;
+		};
+		F5CB85FA02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = MANIFEST_IDL;
+			refType = 4;
+		};
+		F5CB85FB02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = npapi.h;
+			refType = 4;
+		};
+		F5CB85FC02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = npupp.h;
+			refType = 4;
+		};
+		F5CB85FD02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsDefaultPlugin.h;
+			refType = 4;
+		};
+		F5CB85FE02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIClassicPluginFactory.h;
+			refType = 4;
+		};
+		F5CB85FF02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsICookieStorage.h;
+			refType = 4;
+		};
+		F5CB860002AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsICookieStorage.idl;
+			refType = 4;
+		};
+		F5CB860102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIEventHandler.h;
+			refType = 4;
+		};
+		F5CB860202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIEventHandler.idl;
+			refType = 4;
+		};
+		F5CB860302AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIFileUtilities.h;
+			refType = 4;
+		};
+		F5CB860402AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIHTTPHeaderListener.idl;
+			refType = 4;
+		};
+		F5CB860502AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIJRILiveConnectPlugin.h;
+			refType = 4;
+		};
+		F5CB860602AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIJRILiveConnectPlugin.idl;
+			refType = 4;
+		};
+		F5CB860702AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIJRILiveConnectPlugInstPeer.h;
+			refType = 4;
+		};
+		F5CB860802AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIJRILiveConnectPlugInstPeer.idl;
+			refType = 4;
+		};
+		F5CB860902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsILiveConnectPlugin.h;
+			refType = 4;
+		};
+		F5CB860A02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsILiveConnectPlugin.idl;
+			refType = 4;
+		};
+		F5CB860B02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsILiveConnectPlugInstPeer.h;
+			refType = 4;
+		};
+		F5CB860C02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsILiveConnectPlugInstPeer.idl;
+			refType = 4;
+		};
+		F5CB860D02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIMalloc.h;
+			refType = 4;
+		};
+		F5CB860E02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPlugin.h;
+			refType = 4;
+		};
+		F5CB860F02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPlugin.idl;
+			refType = 4;
+		};
+		F5CB861002AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInputStream.h;
+			refType = 4;
+		};
+		F5CB861102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInputStream2.h;
+			refType = 4;
+		};
+		F5CB861202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstance.h;
+			refType = 4;
+		};
+		F5CB861302AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstance.idl;
+			refType = 4;
+		};
+		F5CB861402AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstancePeer.h;
+			refType = 4;
+		};
+		F5CB861502AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstancePeer.idl;
+			refType = 4;
+		};
+		F5CB861602AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstancePeer2.h;
+			refType = 4;
+		};
+		F5CB861702AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstancePeer2.idl;
+			refType = 4;
+		};
+		F5CB861802AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginManager.idl;
+			refType = 4;
+		};
+		F5CB861902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginManager2.h;
+			refType = 4;
+		};
+		F5CB861A02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginManager2.idl;
+			refType = 4;
+		};
+		F5CB861B02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginManagerMac.idl;
+			refType = 4;
+		};
+		F5CB861C02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStream.h;
+			refType = 4;
+		};
+		F5CB861D02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamInfo.h;
+			refType = 4;
+		};
+		F5CB861E02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamInfo.idl;
+			refType = 4;
+		};
+		F5CB861F02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamListener.h;
+			refType = 4;
+		};
+		F5CB862002AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamListener.idl;
+			refType = 4;
+		};
+		F5CB862102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamListener2.h;
+			refType = 4;
+		};
+		F5CB862202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamPeer.h;
+			refType = 4;
+		};
+		F5CB862302AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginStreamPeer2.h;
+			refType = 4;
+		};
+		F5CB862402AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginTagInfo.h;
+			refType = 4;
+		};
+		F5CB862502AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginTagInfo.idl;
+			refType = 4;
+		};
+		F5CB862602AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginTagInfo2.h;
+			refType = 4;
+		};
+		F5CB862702AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginTagInfo2.idl;
+			refType = 4;
+		};
+		F5CB862802AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginViewer.idl;
+			refType = 4;
+		};
+		F5CB862902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIScriptablePlugin.idl;
+			refType = 4;
+		};
+		F5CB862A02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsISeekablePluginStreamPeer.h;
+			refType = 4;
+		};
+		F5CB862B02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIWindowlessPlugInstPeer.h;
+			refType = 4;
+		};
+		F5CB862C02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPIPluginHost.h;
+			refType = 4;
+		};
+		F5CB862D02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsplugin.h;
+			refType = 4;
+		};
+		F5CB862E02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPlugin.idl;
+			refType = 4;
+		};
+		F5CB862F02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsplugindefs.h;
+			refType = 4;
+		};
+		F5CB863002AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginDefs.idl;
+			refType = 4;
+		};
+		F5CB863102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginError.h;
+			refType = 4;
+		};
+		F5CB863202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginLogging.h;
+			refType = 4;
+		};
+		F5CB863302AC4AA901000104 = {
+			children = (
+				F5CB864102AC4AA901000104,
+				F5CB864202AC4AA901000104,
+				F5CB864302AC4AA901000104,
+				F5CB864402AC4AA901000104,
+				F5CB864502AC4AA901000104,
+				F5CB864602AC4AA901000104,
+				F5CB864802AC4AA901000104,
+				F5CB864902AC4AA901000104,
+				F5CB864B02AC4AA901000104,
+				F5CB864C02AC4AA901000104,
+				F5CB864D02AC4AA901000104,
+				F5CB864E02AC4AA901000104,
+				F5CB864F02AC4AA901000104,
+				F5CB865002AC4AA901000104,
+				F5CB865102AC4AA901000104,
+				F5CB865202AC4AA901000104,
+				F5CB865302AC4AA901000104,
+				F5CB865402AC4AA901000104,
+				F5CB865602AC4AA901000104,
+				F5CB865702AC4AA901000104,
+				F5CB865902AC4AA901000104,
+				F5CB865A02AC4AA901000104,
+				F5CB865C02AC4AA901000104,
+				F5CB865D02AC4AA901000104,
+				F5CB865F02AC4AA901000104,
+				F5CB866102AC4AA901000104,
+				F5CB866202AC4AAA01000104,
+				F5CB866302AC4AAA01000104,
+				F5CB866402AC4AAA01000104,
+				F5CB866502AC4AAA01000104,
+				F5CB866602AC4AAA01000104,
+				F5CB866702AC4AAA01000104,
+				F5CB866902AC4AAA01000104,
+				F5CB866A02AC4AAA01000104,
+				F5CB866B02AC4AAA01000104,
+				F5CB866D02AC4AAA01000104,
+				F5CB866E02AC4AAA01000104,
+				F5CB866F02AC4AAA01000104,
+				F5CB867002AC4AAA01000104,
+				F5CB867102AC4AAA01000104,
+				F5CB867202AC4AAA01000104,
+				F5CB867502AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = src;
+			refType = 4;
+		};
+		F5CB864102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = Makefile;
+			refType = 4;
+		};
+		F5CB864202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB864302AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB864402AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = MANIFEST;
+			refType = 4;
+		};
+		F5CB864502AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPlugin.cpp;
+			refType = 4;
+		};
+		F5CB864602AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPlugin.h;
+			refType = 4;
+		};
+		F5CB864802AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPluginInstance.cpp;
+			refType = 4;
+		};
+		F5CB864902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPluginInstance.h;
+			refType = 4;
+		};
+		F5CB864B02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPluginStream.cpp;
+			refType = 4;
+		};
+		F5CB864C02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPluginStream.h;
+			refType = 4;
+		};
+		F5CB864D02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = ns4xPluginStreamListener.h;
+			refType = 4;
+		};
+		F5CB864E02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginHost.h;
+			refType = 4;
+		};
+		F5CB864F02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsIPluginInstanceOwner.h;
+			refType = 4;
+		};
+		F5CB865002AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsMalloc.cpp;
+			refType = 4;
+		};
+		F5CB865102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsMalloc.h;
+			refType = 4;
+		};
+		F5CB865202AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginClassicModule.cpp;
+			refType = 4;
+		};
+		F5CB865302AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginDirServiceProvider.cpp;
+			refType = 4;
+		};
+		F5CB865402AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginDirServiceProvider.h;
+			refType = 4;
+		};
+		F5CB865602AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginDocLoaderFactory.cpp;
+			refType = 4;
+		};
+		F5CB865702AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginDocLoaderFactory.h;
+			refType = 4;
+		};
+		F5CB865902AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginHostImpl.cpp;
+			refType = 4;
+		};
+		F5CB865A02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginHostImpl.h;
+			refType = 4;
+		};
+		F5CB865C02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginInstancePeer.cpp;
+			refType = 4;
+		};
+		F5CB865D02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginInstancePeer.h;
+			refType = 4;
+		};
+		F5CB865F02AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginModule.cpp;
+			refType = 4;
+		};
+		F5CB866102AC4AA901000104 = {
+			isa = PBXFileReference;
+			path = nsPluginProxyImpl.cpp;
+			refType = 4;
+		};
+		F5CB866202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginProxyImpl.h;
+			refType = 4;
+		};
+		F5CB866302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginSafety.h;
+			refType = 4;
+		};
+		F5CB866402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsCID.h;
+			refType = 4;
+		};
+		F5CB866502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDir.h;
+			refType = 4;
+		};
+		F5CB866602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirBeOS.cpp;
+			refType = 4;
+		};
+		F5CB866702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirDarwin.cpp;
+			refType = 4;
+		};
+		F5CB866902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirMac.cpp;
+			refType = 4;
+		};
+		F5CB866A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirOS2.cpp;
+			refType = 4;
+		};
+		F5CB866B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirUnix.cpp;
+			refType = 4;
+		};
+		F5CB866D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirUtils.h;
+			refType = 4;
+		};
+		F5CB866E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginsDirWin.cpp;
+			refType = 4;
+		};
+		F5CB866F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginStreamPeer.cpp;
+			refType = 4;
+		};
+		F5CB867002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginStreamPeer.h;
+			refType = 4;
+		};
+		F5CB867102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginViewer.cpp;
+			refType = 4;
+		};
+		F5CB867202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsPluginViewer.h;
+			refType = 4;
+		};
+		F5CB867502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = win32.order;
+			refType = 4;
+		};
+		F5CB867602AC4AAA01000104 = {
+			children = (
+				F5CB867702AC4AAA01000104,
+				F5CB869502AC4AAA01000104,
+				F5CB869702AC4AAA01000104,
+				F5CB86CE02AC4AAA01000104,
+				F5CB86E302AC4AAA01000104,
+				F5CB86F102AC4AAA01000104,
+				F5CB86FD02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = samples;
+			refType = 4;
+		};
+		F5CB867702AC4AAA01000104 = {
+			children = (
+				F5CB867802AC4AAA01000104,
+				F5CB867902AC4AAA01000104,
+				F5CB867A02AC4AAA01000104,
+				F5CB868302AC4AAA01000104,
+				F5CB868402AC4AAA01000104,
+				F5CB868502AC4AAA01000104,
+				F5CB868602AC4AAA01000104,
+				F5CB868702AC4AAA01000104,
+				F5CB868802AC4AAA01000104,
+				F5CB868902AC4AAA01000104,
+				F5CB868A02AC4AAA01000104,
+				F5CB868B02AC4AAA01000104,
+				F5CB868C02AC4AAA01000104,
+				F5CB868D02AC4AAA01000104,
+				F5CB868E02AC4AAA01000104,
+				F5CB868F02AC4AAA01000104,
+				F5CB869002AC4AAA01000104,
+				F5CB869102AC4AAA01000104,
+				F5CB869202AC4AAA01000104,
+				F5CB869302AC4AAA01000104,
+				F5CB869402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = "4x-scriptable";
+			refType = 4;
+		};
+		F5CB867802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = acmeIScriptObject.idl;
+			refType = 4;
+		};
+		F5CB867902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = doc.html;
+			refType = 4;
+		};
+		F5CB867A02AC4AAA01000104 = {
+			children = (
+				F5CB867B02AC4AAA01000104,
+				F5CB867C02AC4AAA01000104,
+				F5CB867D02AC4AAA01000104,
+				F5CB867E02AC4AAA01000104,
+				F5CB867F02AC4AAA01000104,
+				F5CB868002AC4AAA01000104,
+				F5CB868102AC4AAA01000104,
+				F5CB868202AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = macbuild;
+			refType = 4;
+		};
+		F5CB867B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePlugin.mcp;
+			refType = 4;
+		};
+		F5CB867C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePlugin.xml;
+			refType = 4;
+		};
+		F5CB867D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePluginIDL.mcp;
+			refType = 4;
+		};
+		F5CB867E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePluginIDL.xml;
+			refType = 4;
+		};
+		F5CB867F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginDebugPrefix.h;
+			refType = 4;
+		};
+		F5CB868002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginPrefix.h;
+			refType = 4;
+		};
+		F5CB868102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Strings.rsrc;
+			refType = 4;
+		};
+		F5CB868202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Version.rsrc;
+			refType = 4;
+		};
+		F5CB868302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB868402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np4xscr.def;
+			refType = 4;
+		};
+		F5CB868502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np4xscr.rc;
+			refType = 4;
+		};
+		F5CB868602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np_entry.cpp;
+			refType = 4;
+		};
+		F5CB868702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npmac.cpp;
+			refType = 4;
+		};
+		F5CB868802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npn_gate.cpp;
+			refType = 4;
+		};
+		F5CB868902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npp_gate.cpp;
+			refType = 4;
+		};
+		F5CB868A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsI4xScriptablePlugin.idl;
+			refType = 4;
+		};
+		F5CB868B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.cpp;
+			refType = 4;
+		};
+		F5CB868C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.h;
+			refType = 4;
+		};
+		F5CB868D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer1.cpp;
+			refType = 4;
+		};
+		F5CB868E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer1.h;
+			refType = 4;
+		};
+		F5CB868F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB869002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB869102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = readme.txt;
+			refType = 4;
+		};
+		F5CB869202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB869302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "script-test.html";
+			refType = 4;
+		};
+		F5CB869402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = test.html;
+			refType = 4;
+		};
+		F5CB869502AC4AAA01000104 = {
+			children = (
+				F5CB869602AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = backward;
+			refType = 4;
+		};
+		F5CB869602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = badapter.cpp;
+			refType = 4;
+		};
+		F5CB869702AC4AAA01000104 = {
+			children = (
+				F5CB869802AC4AAA01000104,
+				F5CB86A002AC4AAA01000104,
+				F5CB86B102AC4AAA01000104,
+				F5CB86B902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = default;
+			refType = 4;
+		};
+		F5CB869802AC4AAA01000104 = {
+			children = (
+				F5CB869902AC4AAA01000104,
+				F5CB869A02AC4AAA01000104,
+				F5CB869B02AC4AAA01000104,
+				F5CB869C02AC4AAA01000104,
+				F5CB869D02AC4AAA01000104,
+				F5CB869E02AC4AAA01000104,
+				F5CB869F02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = mac;
+			refType = 4;
+		};
+		F5CB869902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = DefaultPlugin.xml;
+			refType = 4;
+		};
+		F5CB869A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npmac.cpp;
+			refType = 4;
+		};
+		F5CB869B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = NullPlugin.cpp;
+			refType = 4;
+		};
+		F5CB869C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = NullPlugin.rsrc;
+			refType = 4;
+		};
+		F5CB869D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = PluginConfig.h;
+			refType = 4;
+		};
+		F5CB869E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = PluginPrefix.h;
+			refType = 4;
+		};
+		F5CB869F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = PluginPrefixCarbon.h;
+			refType = 4;
+		};
+		F5CB86A002AC4AAA01000104 = {
+			children = (
+				F5CB86A102AC4AAA01000104,
+				F5CB86A202AC4AAA01000104,
+				F5CB86A302AC4AAA01000104,
+				F5CB86A402AC4AAA01000104,
+				F5CB86A502AC4AAA01000104,
+				F5CB86A602AC4AAA01000104,
+				F5CB86A702AC4AAA01000104,
+				F5CB86A802AC4AAA01000104,
+				F5CB86A902AC4AAA01000104,
+				F5CB86AA02AC4AAA01000104,
+				F5CB86AB02AC4AAA01000104,
+				F5CB86AC02AC4AAA01000104,
+				F5CB86AD02AC4AAA01000104,
+				F5CB86AE02AC4AAA01000104,
+				F5CB86AF02AC4AAA01000104,
+				F5CB86B002AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = os2;
+			refType = 4;
+		};
+		F5CB86A102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = .cvsignore;
+			refType = 4;
+		};
+		F5CB86A202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.cpp;
+			refType = 4;
+		};
+		F5CB86A302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.h;
+			refType = 4;
+		};
+		F5CB86A402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dialogs.cpp;
+			refType = 4;
+		};
+		F5CB86A502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dialogs.h;
+			refType = 4;
+		};
+		F5CB86A602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = maindll.cpp;
+			refType = 4;
+		};
+		F5CB86A702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB86A802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnulos2.h;
+			refType = 4;
+		};
+		F5CB86A902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnulos2.ico;
+			refType = 4;
+		};
+		F5CB86AA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnulos2.rc;
+			refType = 4;
+		};
+		F5CB86AB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npos2.cpp;
+			refType = 4;
+		};
+		F5CB86AC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npshell.cpp;
+			refType = 4;
+		};
+		F5CB86AD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB86AE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB86AF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = utils.cpp;
+			refType = 4;
+		};
+		F5CB86B002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = utils.h;
+			refType = 4;
+		};
+		F5CB86B102AC4AAA01000104 = {
+			children = (
+				F5CB86B202AC4AAA01000104,
+				F5CB86B302AC4AAA01000104,
+				F5CB86B402AC4AAA01000104,
+				F5CB86B502AC4AAA01000104,
+				F5CB86B602AC4AAA01000104,
+				F5CB86B702AC4AAA01000104,
+				F5CB86B802AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = unix;
+			refType = 4;
+		};
+		F5CB86B202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = .cvsignore;
+			refType = 4;
+		};
+		F5CB86B302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile;
+			refType = 4;
+		};
+		F5CB86B402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB86B502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npshell.c;
+			refType = 4;
+		};
+		F5CB86B602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npunix.c;
+			refType = 4;
+		};
+		F5CB86B702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nullplugin.c;
+			refType = 4;
+		};
+		F5CB86B802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nullplugin.h;
+			refType = 4;
+		};
+		F5CB86B902AC4AAA01000104 = {
+			children = (
+				F5CB86BA02AC4AAA01000104,
+				F5CB86BB02AC4AAA01000104,
+				F5CB86BC02AC4AAA01000104,
+				F5CB86BD02AC4AAA01000104,
+				F5CB86BE02AC4AAA01000104,
+				F5CB86BF02AC4AAA01000104,
+				F5CB86C002AC4AAA01000104,
+				F5CB86C102AC4AAA01000104,
+				F5CB86C202AC4AAA01000104,
+				F5CB86C302AC4AAA01000104,
+				F5CB86C402AC4AAA01000104,
+				F5CB86C502AC4AAA01000104,
+				F5CB86C602AC4AAA01000104,
+				F5CB86C702AC4AAA01000104,
+				F5CB86C802AC4AAA01000104,
+				F5CB86C902AC4AAA01000104,
+				F5CB86CA02AC4AAA01000104,
+				F5CB86CB02AC4AAA01000104,
+				F5CB86CC02AC4AAA01000104,
+				F5CB86CD02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB86BA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = .cvsignore;
+			refType = 4;
+		};
+		F5CB86BB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.cpp;
+			refType = 4;
+		};
+		F5CB86BC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.h;
+			refType = 4;
+		};
+		F5CB86BD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dialogs.cpp;
+			refType = 4;
+		};
+		F5CB86BE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dialogs.h;
+			refType = 4;
+		};
+		F5CB86BF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = maindll.cpp;
+			refType = 4;
+		};
+		F5CB86C002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB86C102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB86C202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnul32.def;
+			refType = 4;
+		};
+		F5CB86C302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Npnul32.dsp;
+			refType = 4;
+		};
+		F5CB86C402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnul32.dsw;
+			refType = 4;
+		};
+		F5CB86C502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npnul32.rc;
+			refType = 4;
+		};
+		F5CB86C602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npshell.cpp;
+			refType = 4;
+		};
+		F5CB86C702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npwin.cpp;
+			refType = 4;
+		};
+		F5CB86C802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugicon.ico;
+			refType = 4;
+		};
+		F5CB86C902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB86CA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB86CB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB86CC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = utils.cpp;
+			refType = 4;
+		};
+		F5CB86CD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = utils.h;
+			refType = 4;
+		};
+		F5CB86CE02AC4AAA01000104 = {
+			children = (
+				F5CB86CF02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = npthread;
+			refType = 4;
+		};
+		F5CB86CF02AC4AAA01000104 = {
+			children = (
+				F5CB86D002AC4AAA01000104,
+				F5CB86D102AC4AAA01000104,
+				F5CB86D202AC4AAA01000104,
+				F5CB86D302AC4AAA01000104,
+				F5CB86D402AC4AAA01000104,
+				F5CB86D502AC4AAA01000104,
+				F5CB86D602AC4AAA01000104,
+				F5CB86D702AC4AAA01000104,
+				F5CB86D802AC4AAA01000104,
+				F5CB86D902AC4AAA01000104,
+				F5CB86DA02AC4AAA01000104,
+				F5CB86DB02AC4AAA01000104,
+				F5CB86DC02AC4AAA01000104,
+				F5CB86DD02AC4AAA01000104,
+				F5CB86DE02AC4AAA01000104,
+				F5CB86DF02AC4AAA01000104,
+				F5CB86E002AC4AAA01000104,
+				F5CB86E102AC4AAA01000104,
+				F5CB86E202AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB86D002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = action.cpp;
+			refType = 4;
+		};
+		F5CB86D102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = action.h;
+			refType = 4;
+		};
+		F5CB86D202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.cpp;
+			refType = 4;
+		};
+		F5CB86D302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dbg.h;
+			refType = 4;
+		};
+		F5CB86D402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np_entry.cpp;
+			refType = 4;
+		};
+		F5CB86D502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npn_gate.cpp;
+			refType = 4;
+		};
+		F5CB86D602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npp_gate.cpp;
+			refType = 4;
+		};
+		F5CB86D702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npthread.def;
+			refType = 4;
+		};
+		F5CB86D802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npthread.dsp;
+			refType = 4;
+		};
+		F5CB86D902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npthread.dsw;
+			refType = 4;
+		};
+		F5CB86DA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npthread.rc;
+			refType = 4;
+		};
+		F5CB86DB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB86DC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB86DD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugload.cpp;
+			refType = 4;
+		};
+		F5CB86DE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugload.h;
+			refType = 4;
+		};
+		F5CB86DF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = readme.txt;
+			refType = 4;
+		};
+		F5CB86E002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB86E102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = thread.cpp;
+			refType = 4;
+		};
+		F5CB86E202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = thread.h;
+			refType = 4;
+		};
+		F5CB86E302AC4AAA01000104 = {
+			children = (
+				F5CB86E402AC4AAA01000104,
+				F5CB86E502AC4AAA01000104,
+				F5CB86E602AC4AAA01000104,
+				F5CB86E702AC4AAA01000104,
+				F5CB86E802AC4AAA01000104,
+				F5CB86E902AC4AAA01000104,
+				F5CB86EA02AC4AAA01000104,
+				F5CB86EB02AC4AAA01000104,
+				F5CB86EC02AC4AAA01000104,
+				F5CB86ED02AC4AAA01000104,
+				F5CB86EE02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = SanePlugin;
+			refType = 4;
+		};
+		F5CB86E402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = .cvsignore;
+			refType = 4;
+		};
+		F5CB86E502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile;
+			refType = 4;
+		};
+		F5CB86E602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB86E702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePlugin.cpp;
+			refType = 4;
+		};
+		F5CB86E802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePlugin.h;
+			refType = 4;
+		};
+		F5CB86E902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePlugin_CID.h;
+			refType = 4;
+		};
+		F5CB86EA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePluginControl.idl;
+			refType = 4;
+		};
+		F5CB86EB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePluginFactory.cpp;
+			refType = 4;
+		};
+		F5CB86EC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsSanePluginFactory.h;
+			refType = 4;
+		};
+		F5CB86ED02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = README;
+			refType = 4;
+		};
+		F5CB86EE02AC4AAA01000104 = {
+			children = (
+				F5CB86EF02AC4AAA01000104,
+				F5CB86F002AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = test;
+			refType = 4;
+		};
+		F5CB86EF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = camera.html;
+			refType = 4;
+		};
+		F5CB86F002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = scanner.html;
+			refType = 4;
+		};
+		F5CB86F102AC4AAA01000104 = {
+			children = (
+				F5CB86F202AC4AAA01000104,
+				F5CB86F302AC4AAA01000104,
+				F5CB86F402AC4AAA01000104,
+				F5CB86F502AC4AAA01000104,
+				F5CB86F602AC4AAA01000104,
+				F5CB86F702AC4AAA01000104,
+				F5CB86F802AC4AAA01000104,
+				F5CB86FA02AC4AAA01000104,
+				F5CB86FB02AC4AAA01000104,
+				F5CB86FC02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = simple;
+			refType = 4;
+		};
+		F5CB86F202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = .cvsignore;
+			refType = 4;
+		};
+		F5CB86F302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile;
+			refType = 4;
+		};
+		F5CB86F402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB86F502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB86F602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npsimple.cpp;
+			refType = 4;
+		};
+		F5CB86F702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsISimplePluginInstance.idl;
+			refType = 4;
+		};
+		F5CB86F802AC4AAA01000104 = {
+			children = (
+				F5CB86F902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = samples;
+			refType = 4;
+		};
+		F5CB86F902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "embed-test.html";
+			refType = 4;
+		};
+		F5CB86FA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = simpleCID.h;
+			refType = 4;
+		};
+		F5CB86FB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = SimpleScriptableTest.html;
+			refType = 4;
+		};
+		F5CB86FC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = SimpleTest.html;
+			refType = 4;
+		};
+		F5CB86FD02AC4AAA01000104 = {
+			children = (
+				F5CB86FE02AC4AAA01000104,
+				F5CB86FF02AC4AAA01000104,
+				F5CB870002AC4AAA01000104,
+				F5CB870102AC4AAA01000104,
+				F5CB870202AC4AAA01000104,
+				F5CB870302AC4AAA01000104,
+				F5CB870402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = testevents;
+			refType = 4;
+		};
+		F5CB86FE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile;
+			refType = 4;
+		};
+		F5CB86FF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB870002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB870102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npevents.cpp;
+			refType = 4;
+		};
+		F5CB870202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsIEventsPluginInstance.idl;
+			refType = 4;
+		};
+		F5CB870302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = README.txt;
+			refType = 4;
+		};
+		F5CB870402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = SimpleEventsTest.html;
+			refType = 4;
+		};
+		F5CB870502AC4AAA01000104 = {
+			children = (
+				F5CB870602AC4AAA01000104,
+				F5CB876E02AC4AAA01000104,
+				F5CB87A402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = tools;
+			refType = 4;
+		};
+		F5CB870602AC4AAA01000104 = {
+			children = (
+				F5CB870702AC4AAA01000104,
+				F5CB870802AC4AAA01000104,
+				F5CB870902AC4AAA01000104,
+				F5CB870A02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = sdk;
+			refType = 4;
+		};
+		F5CB870702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Makefile.in;
+			refType = 4;
+		};
+		F5CB870802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB870902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = readme.txt;
+			refType = 4;
+		};
+		F5CB870A02AC4AAA01000104 = {
+			children = (
+				F5CB870B02AC4AAA01000104,
+				F5CB872202AC4AAA01000104,
+				F5CB872702AC4AAA01000104,
+				F5CB872A02AC4AAA01000104,
+				F5CB872B02AC4AAA01000104,
+				F5CB874C02AC4AAA01000104,
+				F5CB876302AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = samples;
+			refType = 4;
+		};
+		F5CB870B02AC4AAA01000104 = {
+			children = (
+				F5CB870C02AC4AAA01000104,
+				F5CB871402AC4AAA01000104,
+				F5CB871502AC4AAA01000104,
+				F5CB871902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = basic;
+			refType = 4;
+		};
+		F5CB870C02AC4AAA01000104 = {
+			children = (
+				F5CB870D02AC4AAA01000104,
+				F5CB870E02AC4AAA01000104,
+				F5CB870F02AC4AAA01000104,
+				F5CB871002AC4AAA01000104,
+				F5CB871102AC4AAA01000104,
+				F5CB871202AC4AAA01000104,
+				F5CB871302AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = mac;
+			refType = 4;
+		};
+		F5CB870D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Basic Plugin.mcp";
+			refType = 4;
+		};
+		F5CB870E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Basic Plugin.xml";
+			refType = 4;
+		};
+		F5CB870F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Basic.rsrc;
+			refType = 4;
+		};
+		F5CB871002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB871102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB871202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginCarbonPrefix.h;
+			refType = 4;
+		};
+		F5CB871302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginPrefix.h;
+			refType = 4;
+		};
+		F5CB871402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = test.html;
+			refType = 4;
+		};
+		F5CB871502AC4AAA01000104 = {
+			children = (
+				F5CB871602AC4AAA01000104,
+				F5CB871702AC4AAA01000104,
+				F5CB871802AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = unix;
+			refType = 4;
+		};
+		F5CB871602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile;
+			refType = 4;
+		};
+		F5CB871702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB871802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB871902AC4AAA01000104 = {
+			children = (
+				F5CB871A02AC4AAA01000104,
+				F5CB871B02AC4AAA01000104,
+				F5CB871C02AC4AAA01000104,
+				F5CB871D02AC4AAA01000104,
+				F5CB871E02AC4AAA01000104,
+				F5CB871F02AC4AAA01000104,
+				F5CB872002AC4AAA01000104,
+				F5CB872102AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB871A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = basic.def;
+			refType = 4;
+		};
+		F5CB871B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = basic.rc;
+			refType = 4;
+		};
+		F5CB871C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB871D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npbasic.dsp;
+			refType = 4;
+		};
+		F5CB871E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npbasic.dsw;
+			refType = 4;
+		};
+		F5CB871F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB872002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB872102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB872202AC4AAA01000104 = {
+			children = (
+				F5CB872302AC4AAA01000104,
+				F5CB872402AC4AAA01000104,
+				F5CB872502AC4AAA01000104,
+				F5CB872602AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = common;
+			refType = 4;
+		};
+		F5CB872302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB872402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np_entry.cpp;
+			refType = 4;
+		};
+		F5CB872502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npn_gate.cpp;
+			refType = 4;
+		};
+		F5CB872602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npp_gate.cpp;
+			refType = 4;
+		};
+		F5CB872702AC4AAA01000104 = {
+			children = (
+				F5CB872802AC4AAA01000104,
+				F5CB872902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = include;
+			refType = 4;
+		};
+		F5CB872802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npplat.h;
+			refType = 4;
+		};
+		F5CB872902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginbase.h;
+			refType = 4;
+		};
+		F5CB872A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB872B02AC4AAA01000104 = {
+			children = (
+				F5CB872C02AC4AAA01000104,
+				F5CB873902AC4AAA01000104,
+				F5CB873A02AC4AAA01000104,
+				F5CB873F02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = scriptable;
+			refType = 4;
+		};
+		F5CB872C02AC4AAA01000104 = {
+			children = (
+				F5CB872D02AC4AAA01000104,
+				F5CB872E02AC4AAA01000104,
+				F5CB872F02AC4AAA01000104,
+				F5CB873002AC4AAA01000104,
+				F5CB873102AC4AAA01000104,
+				F5CB873202AC4AAA01000104,
+				F5CB873302AC4AAA01000104,
+				F5CB873402AC4AAA01000104,
+				F5CB873502AC4AAA01000104,
+				F5CB873602AC4AAA01000104,
+				F5CB873702AC4AAA01000104,
+				F5CB873802AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = mac;
+			refType = 4;
+		};
+		F5CB872D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsIScriptablePlugin.idl;
+			refType = 4;
+		};
+		F5CB872E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.cpp;
+			refType = 4;
+		};
+		F5CB872F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.h;
+			refType = 4;
+		};
+		F5CB873002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB873102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB873202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginCarbonPrefix.h;
+			refType = 4;
+		};
+		F5CB873302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginPrefix.h;
+			refType = 4;
+		};
+		F5CB873402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Scriptable Plugin.mcp";
+			refType = 4;
+		};
+		F5CB873502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Scriptable Plugin.xml";
+			refType = 4;
+		};
+		F5CB873602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Scriptable PluginIDL.mcp";
+			refType = 4;
+		};
+		F5CB873702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Scriptable PluginIDL.xml";
+			refType = 4;
+		};
+		F5CB873802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Scriptable.rsrc;
+			refType = 4;
+		};
+		F5CB873902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = test.html;
+			refType = 4;
+		};
+		F5CB873A02AC4AAA01000104 = {
+			children = (
+				F5CB873B02AC4AAA01000104,
+				F5CB873C02AC4AAA01000104,
+				F5CB873D02AC4AAA01000104,
+				F5CB873E02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = unix;
+			refType = 4;
+		};
+		F5CB873B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile;
+			refType = 4;
+		};
+		F5CB873C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsIScriptablePlugin.idl;
+			refType = 4;
+		};
+		F5CB873D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB873E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB873F02AC4AAA01000104 = {
+			children = (
+				F5CB874002AC4AAA01000104,
+				F5CB874102AC4AAA01000104,
+				F5CB874202AC4AAA01000104,
+				F5CB874302AC4AAA01000104,
+				F5CB874402AC4AAA01000104,
+				F5CB874502AC4AAA01000104,
+				F5CB874602AC4AAA01000104,
+				F5CB874702AC4AAA01000104,
+				F5CB874802AC4AAA01000104,
+				F5CB874902AC4AAA01000104,
+				F5CB874A02AC4AAA01000104,
+				F5CB874B02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB874002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB874102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npscriptable.def;
+			refType = 4;
+		};
+		F5CB874202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npscriptable.dsp;
+			refType = 4;
+		};
+		F5CB874302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npscriptable.dsw;
+			refType = 4;
+		};
+		F5CB874402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npscriptable.rc;
+			refType = 4;
+		};
+		F5CB874502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsIScriptablePlugin.idl;
+			refType = 4;
+		};
+		F5CB874602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.cpp;
+			refType = 4;
+		};
+		F5CB874702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.h;
+			refType = 4;
+		};
+		F5CB874802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB874902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB874A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = readme.txt;
+			refType = 4;
+		};
+		F5CB874B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB874C02AC4AAA01000104 = {
+			children = (
+				F5CB874D02AC4AAA01000104,
+				F5CB875502AC4AAA01000104,
+				F5CB875602AC4AAA01000104,
+				F5CB875702AC4AAA01000104,
+				F5CB875802AC4AAA01000104,
+				F5CB875902AC4AAA01000104,
+				F5CB875A02AC4AAA01000104,
+				F5CB875B02AC4AAA01000104,
+				F5CB875C02AC4AAA01000104,
+				F5CB875D02AC4AAA01000104,
+				F5CB875E02AC4AAA01000104,
+				F5CB875F02AC4AAA01000104,
+				F5CB876002AC4AAA01000104,
+				F5CB876102AC4AAA01000104,
+				F5CB876202AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = simple;
+			refType = 4;
+		};
+		F5CB874D02AC4AAA01000104 = {
+			children = (
+				F5CB874E02AC4AAA01000104,
+				F5CB874F02AC4AAA01000104,
+				F5CB875002AC4AAA01000104,
+				F5CB875102AC4AAA01000104,
+				F5CB875202AC4AAA01000104,
+				F5CB875302AC4AAA01000104,
+				F5CB875402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = macbuild;
+			refType = 4;
+		};
+		F5CB874E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginCarbonPrefix.h;
+			refType = 4;
+		};
+		F5CB874F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pluginPrefix.h;
+			refType = 4;
+		};
+		F5CB875002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Simple Plugin.mcp";
+			refType = 4;
+		};
+		F5CB875102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Simple Plugin.xml";
+			refType = 4;
+		};
+		F5CB875202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Simple PluginIDL.mcp";
+			refType = 4;
+		};
+		F5CB875302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = "Simple PluginIDL.xml";
+			refType = 4;
+		};
+		F5CB875402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Simple.rsrc;
+			refType = 4;
+		};
+		F5CB875502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile;
+			refType = 4;
+		};
+		F5CB875602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB875702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npsimple.def;
+			refType = 4;
+		};
+		F5CB875802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npsimple.dsp;
+			refType = 4;
+		};
+		F5CB875902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npsimple.dsw;
+			refType = 4;
+		};
+		F5CB875A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npsimple.rc;
+			refType = 4;
+		};
+		F5CB875B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsISimplePlugin.idl;
+			refType = 4;
+		};
+		F5CB875C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.cpp;
+			refType = 4;
+		};
+		F5CB875D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = nsScriptablePeer.h;
+			refType = 4;
+		};
+		F5CB875E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB875F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB876002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = readme.txt;
+			refType = 4;
+		};
+		F5CB876102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB876202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = test.html;
+			refType = 4;
+		};
+		F5CB876302AC4AAA01000104 = {
+			children = (
+				F5CB876402AC4AAA01000104,
+				F5CB876502AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = winless;
+			refType = 4;
+		};
+		F5CB876402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = test.html;
+			refType = 4;
+		};
+		F5CB876502AC4AAA01000104 = {
+			children = (
+				F5CB876602AC4AAA01000104,
+				F5CB876702AC4AAA01000104,
+				F5CB876802AC4AAA01000104,
+				F5CB876902AC4AAA01000104,
+				F5CB876A02AC4AAA01000104,
+				F5CB876B02AC4AAA01000104,
+				F5CB876C02AC4AAA01000104,
+				F5CB876D02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB876602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = makefile.win;
+			refType = 4;
+		};
+		F5CB876702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npwinless.def;
+			refType = 4;
+		};
+		F5CB876802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npwinless.dsp;
+			refType = 4;
+		};
+		F5CB876902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npwinless.dsw;
+			refType = 4;
+		};
+		F5CB876A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npwinless.rc;
+			refType = 4;
+		};
+		F5CB876B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB876C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB876D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB876E02AC4AAA01000104 = {
+			children = (
+				F5CB876F02AC4AAA01000104,
+				F5CB877A02AC4AAA01000104,
+				F5CB878502AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = spy;
+			refType = 4;
+		};
+		F5CB876F02AC4AAA01000104 = {
+			children = (
+				F5CB877002AC4AAA01000104,
+				F5CB877102AC4AAA01000104,
+				F5CB877202AC4AAA01000104,
+				F5CB877302AC4AAA01000104,
+				F5CB877402AC4AAA01000104,
+				F5CB877502AC4AAA01000104,
+				F5CB877602AC4AAA01000104,
+				F5CB877702AC4AAA01000104,
+				F5CB877802AC4AAA01000104,
+				F5CB877902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = common;
+			refType = 4;
+		};
+		F5CB877002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = epmanager.cpp;
+			refType = 4;
+		};
+		F5CB877102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = format.cpp;
+			refType = 4;
+		};
+		F5CB877202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logfile.cpp;
+			refType = 4;
+		};
+		F5CB877302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logger.cpp;
+			refType = 4;
+		};
+		F5CB877402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np_entry.cpp;
+			refType = 4;
+		};
+		F5CB877502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npn_gate.cpp;
+			refType = 4;
+		};
+		F5CB877602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npp_gate.cpp;
+			refType = 4;
+		};
+		F5CB877702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugload.cpp;
+			refType = 4;
+		};
+		F5CB877802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profile.cpp;
+			refType = 4;
+		};
+		F5CB877902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = utils.cpp;
+			refType = 4;
+		};
+		F5CB877A02AC4AAA01000104 = {
+			children = (
+				F5CB877B02AC4AAA01000104,
+				F5CB877C02AC4AAA01000104,
+				F5CB877D02AC4AAA01000104,
+				F5CB877E02AC4AAA01000104,
+				F5CB877F02AC4AAA01000104,
+				F5CB878002AC4AAA01000104,
+				F5CB878102AC4AAA01000104,
+				F5CB878202AC4AAA01000104,
+				F5CB878302AC4AAA01000104,
+				F5CB878402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = include;
+			refType = 4;
+		};
+		F5CB877B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = actionnames.h;
+			refType = 4;
+		};
+		F5CB877C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dirpick.h;
+			refType = 4;
+		};
+		F5CB877D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = epmanager.h;
+			refType = 4;
+		};
+		F5CB877E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = format.h;
+			refType = 4;
+		};
+		F5CB877F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logfile.h;
+			refType = 4;
+		};
+		F5CB878002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logger.h;
+			refType = 4;
+		};
+		F5CB878102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugload.h;
+			refType = 4;
+		};
+		F5CB878202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profile.h;
+			refType = 4;
+		};
+		F5CB878302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = setup.h;
+			refType = 4;
+		};
+		F5CB878402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = xp.h;
+			refType = 4;
+		};
+		F5CB878502AC4AAA01000104 = {
+			children = (
+				F5CB878602AC4AAA01000104,
+				F5CB878702AC4AAA01000104,
+				F5CB878802AC4AAA01000104,
+				F5CB878902AC4AAA01000104,
+				F5CB878A02AC4AAA01000104,
+				F5CB878B02AC4AAA01000104,
+				F5CB878C02AC4AAA01000104,
+				F5CB878D02AC4AAA01000104,
+				F5CB878E02AC4AAA01000104,
+				F5CB878F02AC4AAA01000104,
+				F5CB879002AC4AAA01000104,
+				F5CB879102AC4AAA01000104,
+				F5CB879202AC4AAA01000104,
+				F5CB879302AC4AAA01000104,
+				F5CB879402AC4AAA01000104,
+				F5CB879502AC4AAA01000104,
+				F5CB879F02AC4AAA01000104,
+				F5CB87A002AC4AAA01000104,
+				F5CB87A102AC4AAA01000104,
+				F5CB87A202AC4AAA01000104,
+				F5CB87A302AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB878602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dirpick.cpp;
+			refType = 4;
+		};
+		F5CB878702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_advanced.cpp;
+			refType = 4;
+		};
+		F5CB878802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_fiter.cpp;
+			refType = 4;
+		};
+		F5CB878902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_general.cpp;
+			refType = 4;
+		};
+		F5CB878A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_log.cpp;
+			refType = 4;
+		};
+		F5CB878B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_main.cpp;
+			refType = 4;
+		};
+		F5CB878C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = gui_pause.cpp;
+			refType = 4;
+		};
+		F5CB878D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loggerw.cpp;
+			refType = 4;
+		};
+		F5CB878E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loggerw.h;
+			refType = 4;
+		};
+		F5CB878F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npspy.def;
+			refType = 4;
+		};
+		F5CB879002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npspy.dsp;
+			refType = 4;
+		};
+		F5CB879102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npspy.dsw;
+			refType = 4;
+		};
+		F5CB879202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npspy.rc;
+			refType = 4;
+		};
+		F5CB879302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profilew.cpp;
+			refType = 4;
+		};
+		F5CB879402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profilew.h;
+			refType = 4;
+		};
+		F5CB879502AC4AAA01000104 = {
+			children = (
+				F5CB879602AC4AAA01000104,
+				F5CB879702AC4AAA01000104,
+				F5CB879802AC4AAA01000104,
+				F5CB879902AC4AAA01000104,
+				F5CB879A02AC4AAA01000104,
+				F5CB879B02AC4AAA01000104,
+				F5CB879C02AC4AAA01000104,
+				F5CB879D02AC4AAA01000104,
+				F5CB879E02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = res;
+			refType = 4;
+		};
+		F5CB879602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = cdrom.ico;
+			refType = 4;
+		};
+		F5CB879702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = floppy.ico;
+			refType = 4;
+		};
+		F5CB879802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = foldcl.ico;
+			refType = 4;
+		};
+		F5CB879902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = foldop.ico;
+			refType = 4;
+		};
+		F5CB879A02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = foldopse.ico;
+			refType = 4;
+		};
+		F5CB879B02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = harddr.ico;
+			refType = 4;
+		};
+		F5CB879C02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = icon.ico;
+			refType = 4;
+		};
+		F5CB879D02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = netdr.ico;
+			refType = 4;
+		};
+		F5CB879E02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = ramdr.ico;
+			refType = 4;
+		};
+		F5CB879F02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB87A002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = setupexe.cpp;
+			refType = 4;
+		};
+		F5CB87A102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = spysetup.dsp;
+			refType = 4;
+		};
+		F5CB87A202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = windowsxx.h;
+			refType = 4;
+		};
+		F5CB87A302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = winentry.cpp;
+			refType = 4;
+		};
+		F5CB87A402AC4AAA01000104 = {
+			children = (
+				F5CB87A502AC4AAA01000104,
+				F5CB87B502AC4AAA01000104,
+				F5CB87BA02AC4AAA01000104,
+				F5CB87CB02AC4AAA01000104,
+				F5CB87D102AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = tester;
+			refType = 4;
+		};
+		F5CB87A502AC4AAA01000104 = {
+			children = (
+				F5CB87A602AC4AAA01000104,
+				F5CB87A702AC4AAA01000104,
+				F5CB87A802AC4AAA01000104,
+				F5CB87A902AC4AAA01000104,
+				F5CB87AA02AC4AAA01000104,
+				F5CB87AB02AC4AAA01000104,
+				F5CB87AC02AC4AAA01000104,
+				F5CB87AD02AC4AAA01000104,
+				F5CB87AE02AC4AAA01000104,
+				F5CB87AF02AC4AAA01000104,
+				F5CB87B002AC4AAA01000104,
+				F5CB87B102AC4AAA01000104,
+				F5CB87B202AC4AAA01000104,
+				F5CB87B302AC4AAA01000104,
+				F5CB87B402AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = common;
+			refType = 4;
+		};
+		F5CB87A602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = log.cpp;
+			refType = 4;
+		};
+		F5CB87A702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logfile.cpp;
+			refType = 4;
+		};
+		F5CB87A802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logger.cpp;
+			refType = 4;
+		};
+		F5CB87A902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loghlp.cpp;
+			refType = 4;
+		};
+		F5CB87AA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = np_entry.cpp;
+			refType = 4;
+		};
+		F5CB87AB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npn_gate.cpp;
+			refType = 4;
+		};
+		F5CB87AC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npp_gate.cpp;
+			refType = 4;
+		};
+		F5CB87AD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugbase.cpp;
+			refType = 4;
+		};
+		F5CB87AE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pplib.cpp;
+			refType = 4;
+		};
+		F5CB87AF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profile.cpp;
+			refType = 4;
+		};
+		F5CB87B002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = script.cpp;
+			refType = 4;
+		};
+		F5CB87B102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = scripter.cpp;
+			refType = 4;
+		};
+		F5CB87B202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = scrpthlp.cpp;
+			refType = 4;
+		};
+		F5CB87B302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = strconv.cpp;
+			refType = 4;
+		};
+		F5CB87B402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = xp.cpp;
+			refType = 4;
+		};
+		F5CB87B502AC4AAA01000104 = {
+			children = (
+				F5CB87B602AC4AAA01000104,
+				F5CB87B702AC4AAA01000104,
+				F5CB87B802AC4AAA01000104,
+				F5CB87B902AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = doc;
+			refType = 4;
+		};
+		F5CB87B602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = auto.gif;
+			refType = 4;
+		};
+		F5CB87B702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = manual.gif;
+			refType = 4;
+		};
+		F5CB87B802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = samplescript.txt;
+			refType = 4;
+		};
+		F5CB87B902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = testerplugin.html;
+			refType = 4;
+		};
+		F5CB87BA02AC4AAA01000104 = {
+			children = (
+				F5CB87BB02AC4AAA01000104,
+				F5CB87BC02AC4AAA01000104,
+				F5CB87BD02AC4AAA01000104,
+				F5CB87BE02AC4AAA01000104,
+				F5CB87BF02AC4AAA01000104,
+				F5CB87C002AC4AAA01000104,
+				F5CB87C102AC4AAA01000104,
+				F5CB87C202AC4AAA01000104,
+				F5CB87C302AC4AAA01000104,
+				F5CB87C402AC4AAA01000104,
+				F5CB87C502AC4AAA01000104,
+				F5CB87C602AC4AAA01000104,
+				F5CB87C702AC4AAA01000104,
+				F5CB87C802AC4AAA01000104,
+				F5CB87C902AC4AAA01000104,
+				F5CB87CA02AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = include;
+			refType = 4;
+		};
+		F5CB87BB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = action.h;
+			refType = 4;
+		};
+		F5CB87BC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = comstrs.h;
+			refType = 4;
+		};
+		F5CB87BD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = helpers.h;
+			refType = 4;
+		};
+		F5CB87BE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loadstatus.h;
+			refType = 4;
+		};
+		F5CB87BF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = log.h;
+			refType = 4;
+		};
+		F5CB87C002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logfile.h;
+			refType = 4;
+		};
+		F5CB87C102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = logger.h;
+			refType = 4;
+		};
+		F5CB87C202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loghlp.h;
+			refType = 4;
+		};
+		F5CB87C302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugbase.h;
+			refType = 4;
+		};
+		F5CB87C402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = pplib.h;
+			refType = 4;
+		};
+		F5CB87C502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = profile.h;
+			refType = 4;
+		};
+		F5CB87C602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = script.h;
+			refType = 4;
+		};
+		F5CB87C702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = scripter.h;
+			refType = 4;
+		};
+		F5CB87C802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = scrpthlp.h;
+			refType = 4;
+		};
+		F5CB87C902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = strconv.h;
+			refType = 4;
+		};
+		F5CB87CA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = xp.h;
+			refType = 4;
+		};
+		F5CB87CB02AC4AAA01000104 = {
+			children = (
+				F5CB87CC02AC4AAA01000104,
+				F5CB87CD02AC4AAA01000104,
+				F5CB87CE02AC4AAA01000104,
+				F5CB87CF02AC4AAA01000104,
+				F5CB87D002AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = testcase;
+			refType = 4;
+		};
+		F5CB87CC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Display.html;
+			refType = 4;
+		};
+		F5CB87CD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = index.html;
+			refType = 4;
+		};
+		F5CB87CE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = Log.html;
+			refType = 4;
+		};
+		F5CB87CF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = testapi.html;
+			refType = 4;
+		};
+		F5CB87D002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = tester.html;
+			refType = 4;
+		};
+		F5CB87D102AC4AAA01000104 = {
+			children = (
+				F5CB87D202AC4AAA01000104,
+				F5CB87D302AC4AAA01000104,
+				F5CB87D402AC4AAA01000104,
+				F5CB87D502AC4AAA01000104,
+				F5CB87D602AC4AAA01000104,
+				F5CB87D702AC4AAA01000104,
+				F5CB87D802AC4AAA01000104,
+				F5CB87D902AC4AAA01000104,
+				F5CB87DA02AC4AAA01000104,
+				F5CB87DB02AC4AAA01000104,
+				F5CB87DC02AC4AAA01000104,
+				F5CB87DD02AC4AAA01000104,
+				F5CB87DE02AC4AAA01000104,
+				F5CB87DF02AC4AAA01000104,
+				F5CB87E002AC4AAA01000104,
+				F5CB87E102AC4AAA01000104,
+				F5CB87E202AC4AAA01000104,
+			);
+			isa = PBXGroup;
+			path = windows;
+			refType = 4;
+		};
+		F5CB87D202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dlgauto.cpp;
+			refType = 4;
+		};
+		F5CB87D302AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dlgman.cpp;
+			refType = 4;
+		};
+		F5CB87D402AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = dlgtstr.cpp;
+			refType = 4;
+		};
+		F5CB87D502AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = guihlp.cpp;
+			refType = 4;
+		};
+		F5CB87D602AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = guihlp.h;
+			refType = 4;
+		};
+		F5CB87D702AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = guiprefs.h;
+			refType = 4;
+		};
+		F5CB87D802AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = loadstatus.cpp;
+			refType = 4;
+		};
+		F5CB87D902AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npapi.def;
+			refType = 4;
+		};
+		F5CB87DA02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npapi.dsp;
+			refType = 4;
+		};
+		F5CB87DB02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npapi.dsw;
+			refType = 4;
+		};
+		F5CB87DC02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = npapi.rc;
+			refType = 4;
+		};
+		F5CB87DD02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.cpp;
+			refType = 4;
+		};
+		F5CB87DE02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = plugin.h;
+			refType = 4;
+		};
+		F5CB87DF02AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = resource.h;
+			refType = 4;
+		};
+		F5CB87E002AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = winentry.cpp;
+			refType = 4;
+		};
+		F5CB87E102AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = winutils.cpp;
+			refType = 4;
+		};
+		F5CB87E202AC4AAA01000104 = {
+			isa = PBXFileReference;
+			path = winutils.h;
+			refType = 4;
+		};
 		F5D3F1CE0209235A014E447F = {
 			isa = PBXFileReference;
 			name = libmork.dylib;
@@ -3892,7 +6823,6 @@
 				F6BD64B201B3167601A962F7,
 				F6BD64B301B3167601A962F7,
 				F6BD64B401B3167601A962F7,
-				F6BD64B501B3167601A962F7,
 				F5179421027F3FD301A967DF,
 				F6BD64B601B3167601A962F7,
 				F655020401B4812301A962F7,
@@ -5015,12 +7945,6 @@
 		};
 		F6BD64B401B3167601A962F7 = {
 			fileRef = F6BD644E01B315FA01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD64B501B3167601A962F7 = {
-			fileRef = F6BD644F01B315FA01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
