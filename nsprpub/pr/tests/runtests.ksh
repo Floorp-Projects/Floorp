@@ -22,6 +22,15 @@
 #	korn shell script for nspr tests
 #
 
+SYSTEM_INFO=`uname -a`
+OS_ARCH=`uname -s`
+if [ $OS_ARCH = "Windows_NT" ]
+then
+	NULL_DEVICE=nul
+else
+	NULL_DEVICE=/dev/null
+fi
+
 #
 # Irrevelant tests
 #
@@ -59,7 +68,7 @@
 #prpoll -  the bad-FD test needs to be moved to a different test
 #sleep	-  specific to OS/2
 
-LOGFILE=${NSPR_TEST_LOGFILE:-"/dev/null"}
+LOGFILE=${NSPR_TEST_LOGFILE:-$NULL_DEVICE}
 
 #
 # Tests run on all platforms
@@ -171,6 +180,14 @@ zerolen"
 
 rval=0
 
+
+#
+# When set, value of the environment variable TEST_TIMEOUT is the maximum
+# time (secs) allowed for a test program beyond which it is terminated.
+# If TEST_TIMEOUT is not set or if it's value is 0, then test programs
+# don't timeout.
+#
+
 OBJDIR=`basename $PWD`
 echo "\nNSPR Test Results - $OBJDIR\n"
 echo "BEGIN\t\t\t`date`"
@@ -180,8 +197,19 @@ for prog in $TESTS
 do
 echo "$prog\c"
 echo "\nBEGIN TEST: $prog\n" >> ${LOGFILE} 2>&1
-./$prog >> ${LOGFILE} 2>&1
-if [ 0 = $? ] ; then
+export test_rval
+./$prog >> ${LOGFILE} 2>&1 &
+test_pid=$!
+sleep_pid=0
+if [ "$TEST_TIMEOUT" -gt 0 ]
+then
+(sleep  $TEST_TIMEOUT; kill $test_pid >/dev/null 2>&1 ) &
+sleep_pid=$!
+fi
+wait $test_pid
+test_rval=$?
+[ sleep_pid -eq 0 ] || kill $sleep_pid >/dev/null 2>&1
+if [ 0 = $test_rval ] ; then
 	echo "\t\t\tPassed";
 else
 	echo "\t\t\tFAILED";
