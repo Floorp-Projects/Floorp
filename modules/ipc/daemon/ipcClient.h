@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipcClient_h__
-#define ipcClient_h__
+#ifndef ipcClientUnix_h__
+#define ipcClientUnix_h__
 
 #include "prio.h"
 #include "ipcMessageQ.h"
@@ -54,11 +54,10 @@
 class ipcClient
 {
 public:
-    int Init();
-    int Finalize();
-    int Process(PRFileDesc *fd, int poll_flags);
+    void Init();
+    void Finalize();
 
-    int ID() const { return mID; }
+    PRUint32 ID() const { return mID; }
 
     void   AddName(const char *name);
     void   DelName(const char *name);
@@ -81,19 +80,38 @@ public:
     //
     PRBool EnqueueOutboundMsg(ipcMessage *msg);
 
+#ifdef XP_UNIX
+    //
+    // called to process a client file descriptor.  the value of pollFlags
+    // indicates the state of the socket.
+    //
+    // returns:
+    //   0             - to cancel client connection  
+    //   PR_POLL_READ  - to poll for a readable socket
+    //   PR_POLL_WRITE - to poll for a writable socket
+    //   (both flags)  - to poll for either a readable or writable socket
+    //
+    // the socket is non-blocking.
+    // 
+    int Process(PRFileDesc *sockFD, int pollFlags);
+#endif
+
 private:
-    int WriteMsgs(PRFileDesc *fd);
+    static PRUint32 gLastID;
 
-    static int gLastID;
+    PRUint32      mID;
+    ipcStringList mNames;
+    ipcIDList     mTargets;
+    ipcMessage   *mInMsg;    // buffer for incoming message
+    ipcMessageQ   mOutMsgQ;  // outgoing message queue
 
-    int                       mID;
-    ipcStringList             mNames;
-    ipcIDList                 mTargets;
-    ipcMessage               *mInMsg;    // buffer for incoming message
-    ipcMessageQ               mOutMsgQ;  // outgoing message queue
-
+#ifdef XP_UNIX
     // keep track of the amount of the first message sent
-    PRUint32                  mSendOffset;
+    PRUint32      mSendOffset;
+
+    // utility function for writing out messages.
+    int WriteMsgs(PRFileDesc *fd);
+#endif
 };
 
-#endif // !ipcClient_h__
+#endif // !ipcClientUnix_h__

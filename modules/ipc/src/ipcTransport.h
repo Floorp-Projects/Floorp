@@ -130,6 +130,7 @@ public:
         , mWriteSuspended(PR_FALSE)
         , mSentHello(PR_FALSE)
         , mHaveConnection(PR_FALSE)
+        , mSpawnedDaemon(PR_FALSE)
         , mConnectionAttemptCount(0)
         { }
     virtual ~ipcTransport();
@@ -178,6 +179,7 @@ private:
     PRPackedBool           mWriteSuspended;
     PRPackedBool           mSentHello;
     PRPackedBool           mHaveConnection;
+    PRPackedBool           mSpawnedDaemon;
     PRUint8                mConnectionAttemptCount;
 };
 

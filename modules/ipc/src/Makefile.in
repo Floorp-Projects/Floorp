@@ -57,10 +57,12 @@ REQUIRES = \
 
 CPPSRCS = \
         ipcService.cpp \
-        ipcTransport.cpp
+        ipcTransport.cpp \
+        $(NULL)
 
-ifneq ($(OS_ARCH),WINNT)
-CPPSRC += ipcSocketProvider.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+else
+CPPSRCS += ipcSocketProviderUnix.cpp
 endif
 
 LOCAL_INCLUDES = \

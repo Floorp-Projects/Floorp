@@ -47,9 +47,9 @@
 //-----------------------------------------------------------------------------
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcService, Init)
 
-#ifndef IPC_USE_INET
-#include "ipcSocketProvider.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(ipcSocketProvider)
+#ifdef XP_UNIX
+#include "ipcSocketProviderUnix.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(ipcSocketProviderUnix)
 #endif
 
 //-----------------------------------------------------------------------------
@@ -62,11 +62,11 @@ static const nsModuleComponentInfo components[] = {
     IPC_SERVICE_CID,
     IPC_SERVICE_CONTRACTID,
     ipcServiceConstructor, },
-#ifndef IPC_USE_INET
+#ifdef XP_UNIX
   { IPC_SOCKETPROVIDER_CLASSNAME,
     IPC_SOCKETPROVIDER_CID,
-    NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ipc",
-    ipcSocketProviderConstructor, },
+    NS_NETWORK_SOCKET_CONTRACTID_PREFIX IPC_SOCKET_TYPE,
+    ipcSocketProviderUnixConstructor, },
 #endif
 };
 

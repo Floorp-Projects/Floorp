@@ -35,461 +35,69 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#ifdef XP_UNIX
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include "prprf.h"
-#endif
-
-#include "prio.h"
-#include "prerror.h"
-#include "prthread.h"
-#include "prinrval.h"
-#include "plstr.h"
-
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcMessage.h"
 #include "ipcClient.h"
 #include "ipcModuleReg.h"
 #include "ipcModule.h"
+#include "ipcdPrivate.h"
 #include "ipcd.h"
-
-#ifdef IPC_USE_INET
-#include "prnetdb.h"
-#endif
-
-//-----------------------------------------------------------------------------
-// ipc directory and locking...
-//-----------------------------------------------------------------------------
-
-#ifdef XP_UNIX
-
-static char *ipcDir;
-static char *ipcSockFile;
-static char *ipcLockFile;
-static int   ipcLockFD;
-
-static PRBool AcquireDaemonLock()
-{
-    const char lockName[] = "lock";
-
-    int dirLen = strlen(ipcDir);
-    int len = dirLen            // ipcDir
-            + 1                 // "/"
-            + sizeof(lockName); // "lock"
-
-    ipcLockFile = (char *) malloc(len);
-    memcpy(ipcLockFile, ipcDir, dirLen);
-    ipcLockFile[dirLen] = '/';
-    memcpy(ipcLockFile + dirLen + 1, lockName, sizeof(lockName));
-
-    ipcLockFD = open(ipcLockFile, O_WRONLY|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
-    if (ipcLockFD == -1)
-        return PR_FALSE;
-
-    //
-    // we use fcntl for locking.  assumption: filesystem should be local.
-    // this API is nice because the lock will be automatically released
-    // when the process dies.  it will also be released when the file
-    // descriptor is closed.
-    //
-    struct flock lock;
-    lock.l_type = F_WRLCK;
-    lock.l_start = 0;
-    lock.l_len = 0;
-    lock.l_whence = SEEK_SET;
-    if (fcntl(ipcLockFD, F_SETLK, &lock) == -1)
-        return PR_FALSE;
-
-    //
-    // write our PID into the lock file (this just seems like a good idea...
-    // no real purpose otherwise).
-    //
-    char buf[256];
-    int nb = PR_snprintf(buf, sizeof(buf), "%u\n", (unsigned long) getpid());
-    write(ipcLockFD, buf, nb);
-
-    return PR_TRUE;
-}
-
-static PRBool InitDaemonDir(const char *socketPath)
-{
-    LOG(("InitDaemonDir [sock=%s]\n", socketPath));
-
-    ipcSockFile = PL_strdup(socketPath);
-    ipcDir      = PL_strdup(socketPath);
-
-    //
-    // make sure IPC directory exists (XXX this should be recursive)
-    //
-    char *p = strrchr(ipcDir, '/');
-    if (p)
-        p[0] = '\0';
-    mkdir(ipcDir, 0700);
-
-    //
-    // if we can't acquire the daemon lock, then another daemon
-    // must be active, so bail.
-    //
-    if (!AcquireDaemonLock())
-        return PR_FALSE;
-
-    //
-    // delete an existing socket to prevent bind from failing.
-    //
-    unlink(socketPath);
-
-    return PR_TRUE;
-}
-
-static void ShutdownDaemonDir()
-{
-    LOG(("ShutdownDaemonDir [sock=%s]\n", ipcSockFile));
-
-    //
-    // unlink files from directory before giving up lock; otherwise, we'd be
-    // unable to delete it w/o introducing a race condition.
-    //
-    unlink(ipcLockFile);
-    unlink(ipcSockFile);
-
-    //
-    // should be able to remove the ipc directory now.
-    //
-    rmdir(ipcDir);
-
-    // 
-    // this removes the advisory lock, allowing other processes to acquire it.
-    //
-    close(ipcLockFD);
-
-    //
-    // free allocated memory
-    //
-    PL_strfree(ipcDir);
-    PL_strfree(ipcSockFile);
-    free(ipcLockFile);
-
-    ipcDir = NULL;
-    ipcSockFile = NULL;
-    ipcLockFile = NULL;
-}
-
-#endif
-
-//-----------------------------------------------------------------------------
-// poll list
-//-----------------------------------------------------------------------------
-
-// upper limit on the number of active connections
-// XXX may want to make this more dynamic
-#define MAX_CLIENTS 100
-
-//
-// the first element of this array is always zero; this is done so that the
-// n'th element of |clients| corresponds to the n'th element of |poll_fds|.
-//
-static ipcClient clients[MAX_CLIENTS + 1];
-
-static PRPollDesc poll_fds[MAX_CLIENTS + 1];
-static int        poll_fd_count;
-
-//-----------------------------------------------------------------------------
-
-static int AddClient(PRFileDesc *fd)
-{
-    if (poll_fd_count == MAX_CLIENTS + 1) {
-        LOG(("reached maximum client limit\n"));
-        return -1;
-    }
-
-    poll_fds[poll_fd_count].fd = fd;
-    poll_fds[poll_fd_count].in_flags = clients[poll_fd_count].Init();
-    poll_fds[poll_fd_count].out_flags = 0;
-
-    ++poll_fd_count;
-    return 0;
-}
-
-static int RemoveClient(int client_index)
-{
-    PRPollDesc *pd = &poll_fds[client_index];
-
-    PR_Close(pd->fd);
-
-    clients[client_index].Finalize();
-
-    //
-    // keep the clients and poll_fds contiguous; move the last one into
-    // the spot held by the one that is going away.
-    //
-    int to_idx = client_index;
-    int from_idx = poll_fd_count - 1;
-    if (from_idx != to_idx) {
-        memcpy(&clients[to_idx], &clients[from_idx], sizeof(ipcClient));
-        memcpy(&poll_fds[to_idx], &poll_fds[from_idx], sizeof(PRPollDesc));
-    }
-
-    //
-    // zero out the old entries.
-    //
-    memset(&clients[from_idx], 0, sizeof(ipcClient));
-    memset(&poll_fds[from_idx], 0, sizeof(PRPollDesc));
-
-    --poll_fd_count;
-    return 0;
-}
-
-//-----------------------------------------------------------------------------
-
-static void Process(PRFileDesc *listen_fd)
-{
-    poll_fd_count = 1;
-
-    poll_fds[0].fd = listen_fd;
-    poll_fds[0].in_flags = PR_POLL_EXCEPT | PR_POLL_READ;
-    
-    while (1) {
-        PRInt32 rv;
-        PRIntn i;
-
-        poll_fds[0].out_flags = 0;
-
-        //
-        // poll
-        //
-        // timeout after 5 minutes.  if no connections after timeout, then
-        // exit.  this timeout ensures that we don't stay resident when no
-        // clients are interested in connecting after spawning the daemon.
-        //
-        rv = PR_Poll(poll_fds, poll_fd_count, PR_SecondsToInterval(60 * 5));
-        if (rv == -1) {
-            LOG(("PR_Poll failed [%d]\n", PR_GetError()));
-            return;
-        }
-
-        if (rv > 0) {
-            //
-            // process clients that are ready
-            //
-            for (i = 1; i < poll_fd_count; ++i) {
-                if (poll_fds[i].out_flags != 0) {
-                    poll_fds[i].in_flags = clients[i].Process(poll_fds[i].fd, poll_fds[i].out_flags);
-                    poll_fds[i].out_flags = 0;
-                }
-            }
-
-            //
-            // cleanup any dead clients (indicated by a zero in_flags)
-            //
-            for (i = poll_fd_count - 1; i >= 1; --i) {
-                if (poll_fds[i].in_flags == 0)
-                    RemoveClient(i);
-            }
-
-            //
-            // check for new connection
-            //
-            if (poll_fds[0].out_flags & PR_POLL_READ) {
-                LOG(("got new connection\n"));
-
-                PRNetAddr client_addr;
-                memset(&client_addr, 0, sizeof(client_addr));
-                PRFileDesc *client_fd;
-
-                client_fd = PR_Accept(listen_fd, &client_addr, PR_INTERVAL_NO_WAIT);
-                if (client_fd == NULL) {
-                    LOG(("PR_Accept failed [%d]\n", PR_GetError()));
-                    return;
-                }
-
-                // make socket non-blocking
-                PRSocketOptionData opt;
-                opt.option = PR_SockOpt_Nonblocking;
-                opt.value.non_blocking = PR_TRUE;
-                PR_SetSocketOption(client_fd, &opt);
-
-                if (AddClient(client_fd) != 0)
-                    PR_Close(client_fd);
-            }
-        }
-
-        //
-        // shutdown if no clients
-        //
-        if (poll_fd_count == 1) {
-            LOG(("shutting down\n"));
-            break;
-        }
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-static void InitModuleReg(const char *exePath)
-{
-    static const char modDir[] = "ipc/modules";
-
-    char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
-    if (p == NULL) {
-        LOG(("unexpected exe path\n"));
-        return;
-    }
-
-    int baseLen = p - exePath;
-    int finalLen = baseLen + 1 + sizeof(modDir);
-
-    // build full path to ipc modules
-    char *buf = (char*) malloc(finalLen);
-    memcpy(buf, exePath, baseLen);
-    buf[baseLen] = IPC_PATH_SEP_CHAR;
-    memcpy(buf + baseLen + 1, modDir, sizeof(modDir));
-
-    IPC_InitModuleReg(buf);
-    free(buf);
-}
-
-int main(int argc, char **argv)
-{
-    PRFileDesc *listen_fd;
-    PRNetAddr addr;
-
-#ifdef XP_UNIX
-    signal(SIGINT, SIG_IGN);
-    umask(0077); // ensure strict file permissions
-#endif
-
-#ifdef DEBUG
-    IPC_InitLog("###");
-#endif
-
-//start:
-#ifdef IPC_USE_INET
-    listen_fd = PR_OpenTCPSocket(PR_AF_INET);
-    if (!listen_fd) {
-        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
-    PR_InitializeNetAddr(PR_IpAddrLoopback, IPC_PORT, &addr);
-
-#else
-    listen_fd = PR_OpenTCPSocket(PR_AF_LOCAL);
-    if (!listen_fd) {
-        LOG(("PR_OpenUDPSocket failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
-    const char *socket_path;
-    if (argc < 2)
-        socket_path = IPC_DEFAULT_SOCKET_PATH;
-    else
-        socket_path = argv[1];
-
-    if (!InitDaemonDir(socket_path))
-        return 0;
-
-    addr.local.family = PR_AF_LOCAL;
-    PL_strncpyz(addr.local.path, socket_path, sizeof(addr.local.path));
-#endif
-
-    if (PR_Bind(listen_fd, &addr) != PR_SUCCESS) {
-        LOG(("PR_Bind failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
-    InitModuleReg(argv[0]);
-
-    if (PR_Listen(listen_fd, 5) != PR_SUCCESS) {
-        LOG(("PR_Listen failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
-    Process(listen_fd);
-
-    IPC_ShutdownModuleReg();
-
-#ifndef IPC_USE_INET
-    ShutdownDaemonDir();
-#endif
-
-    LOG(("closing socket\n"));
-
-    if (PR_Close(listen_fd) != PR_SUCCESS) {
-        LOG(("PR_Close failed [%d]\n", PR_GetError()));
-        return -1;
-    }
-
-    return 0;
-}
 
 //-----------------------------------------------------------------------------
 // IPC API
 //-----------------------------------------------------------------------------
 
-int IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
+PRStatus
+IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 {
     // lookup handler for this message's topic and forward message to it.
     ipcModule *module = IPC_GetModuleByID(msg->Target());
-    if (module)
+    if (module) {
         module->HandleMsg(client, msg);
-    else
-        LOG(("no registered module; ignoring message\n"));
-    return 0;
+        return PR_SUCCESS;
+    }
+    LOG(("no registered module; ignoring message\n"));
+    return PR_FAILURE;
 }
 
-int IPC_SendMsg(ipcClient *client, ipcMessage *msg)
+PRStatus
+IPC_SendMsg(ipcClient *client, ipcMessage *msg)
 {
     if (client == NULL) {
         int i;
         //
         // walk clients array 
         //
-        for (i = 1; i < poll_fd_count - 1; ++i)
-            IPC_SendMsg(&clients[i], msg->Clone());
+        for (i = 0; i < ipcClientCount; ++i)
+            IPC_SendMsg(&ipcClients[i], msg->Clone());
 
         // send to last client w/o cloning to avoid extra malloc
-        IPC_SendMsg(&clients[i], msg);
+        IPC_SendMsg(&ipcClients[i], msg);
     }
-    else {
-        if (client->EnqueueOutboundMsg(msg)) {
-            //
-            // the message was successfully enqueued...
-            //
-            // since this client's Process method may have already been 
-            // called, we need to explicitly set the PR_POLL_WRITE flag.
-            //
-            int client_index = client - clients;
-            poll_fds[client_index].in_flags |= PR_POLL_WRITE;
-        }
-    }
-    return 0;
+    else
+        client->EnqueueOutboundMsg(msg);
+    return PR_SUCCESS;
 }
 
-ipcClient *IPC_GetClientByID(int clientID)
+ipcClient *
+IPC_GetClientByID(PRUint32 clientID)
 {
     // linear search OK since number of clients should be small
-    for (int i = 1; i < poll_fd_count; ++i) {
-        if (clients[i].ID() == clientID)
-            return &clients[i];
+    for (int i = 0; i < ipcClientCount; ++i) {
+        if (ipcClients[i].ID() == clientID)
+            return &ipcClients[i];
     }
     return NULL;
 }
 
-ipcClient *IPC_GetClientByName(const char *name)
+ipcClient *
+IPC_GetClientByName(const char *name)
 {
     // linear search OK since number of clients should be small
-    for (int i = 1; i < poll_fd_count; ++i) {
-        if (clients[i].HasName(name))
-            return &clients[i];
+    for (int i = 0; i < ipcClientCount; ++i) {
+        if (ipcClients[i].HasName(name))
+            return &ipcClients[i];
     }
     return NULL;
 }
@@ -528,8 +136,9 @@ IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void
     }
 }
 
-ipcClient *IPC_GetClients(int *count)
+ipcClient *
+IPC_GetClients(PRUint32 *count)
 {
-    *count = poll_fd_count - 1;
-    return &clients[1];
+    *count = (PRUint32) ipcClientCount;
+    return ipcClients;
 }

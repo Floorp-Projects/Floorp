@@ -51,8 +51,12 @@ CPPSRCS		= \
 		ipcd.cpp \
 		ipcClient.cpp \
 		ipcModuleReg.cpp \
-		ipcCommandModule.cpp \
-		$(NULL)
+		ipcCommandModule.cpp
+
+ifeq ($(OS_ARCH),WINNT)
+else
+CPPSRCS += ipcdUnix.cpp
+endif
 
 PROGRAM = mozipcd$(BIN_SUFFIX)
 

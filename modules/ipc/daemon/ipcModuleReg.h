@@ -41,9 +41,17 @@
 #include "ipcModule.h"
 
 //
-// called to init/shutdown module registry.
+// called to init the module registry.
 //
-void IPC_InitModuleReg(const char *moduleDir);
+// params:
+//   exePath - path to the daemon executable.  modules are loaded from a
+//             directory relative to the daemon executable.
+//
+void IPC_InitModuleReg(const char *exePath);
+
+//
+// called to shutdown the module registry.
+//
 void IPC_ShutdownModuleReg();
 
 #endif // !ipcModuleReg_h__

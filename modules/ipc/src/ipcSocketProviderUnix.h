@@ -35,19 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipcSocketProvider_h__
-#define ipcSocketProvider_h__
+#ifndef ipcSocketProviderUnix_h__
+#define ipcSocketProviderUnix_h__
 
 #include "nsISocketProvider.h"
 
-class ipcSocketProvider : public nsISocketProvider
+class ipcSocketProviderUnix : public nsISocketProvider
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKETPROVIDER
 
-    ipcSocketProvider() { NS_INIT_ISUPPORTS(); }
-    virtual ~ipcSocketProvider() { }
+    ipcSocketProviderUnix() { NS_INIT_ISUPPORTS(); }
+    virtual ~ipcSocketProviderUnix() { }
+
+    //
+    // called to initialize the socket path
+    //
+    static void SetSocketPath(const nsACString &socketPath);
 };
 
-#endif // !ipcSocketProvider_h__
+#endif // !ipcSocketProviderUnix_h__
