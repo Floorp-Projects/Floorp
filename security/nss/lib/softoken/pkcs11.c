@@ -3676,7 +3676,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
     };
     SECItem *copy = NULL;
     unsigned long classFlags = 
-	NSC_CERT|NSC_TRUST|NSC_PRIVATE|NSC_PUBLIC|NSC_KEY|NSC_SMIME;
+	NSC_CERT|NSC_TRUST|NSC_PRIVATE|NSC_PUBLIC|NSC_KEY|NSC_SMIME|NSC_CRL;
 
     /* if we aren't logged in, don't look for private or secret keys */
     if (!isLoggedIn) {
@@ -3695,11 +3695,11 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 	switch (pTemplate[i].type) {
 	case CKA_SUBJECT:
 	    copy = &derSubject;
-	    classFlags &= (NSC_CERT|NSC_PRIVATE|NSC_PUBLIC|NSC_SMIME);
+	    classFlags &= (NSC_CERT|NSC_PRIVATE|NSC_PUBLIC|NSC_SMIME|NSC_CRL);
 	    break;
 	case CKA_ISSUER: 
 	    copy = &issuerSN.derIssuer;
-	    classFlags &= (NSC_CERT|NSC_CRL|NSC_TRUST);
+	    classFlags &= (NSC_CERT|NSC_TRUST);
 	    break;
 	case CKA_SERIAL_NUMBER: 
 	    copy = &issuerSN.serialNumber;
