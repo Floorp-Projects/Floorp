@@ -50,6 +50,7 @@
 
 -(IBAction) find: (id)aSender;
 -(IBAction) findAgain: (id)aSender;
+-(void) storeSearchText:(NSString*)inText;
 
   // delegates for NSTextView
 - (void)controlTextDidChange:(NSNotification *)aNotification;

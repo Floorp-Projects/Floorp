@@ -42,10 +42,21 @@
 
 @implementation FindDlgController
 
+- (id)initWithWindowNibName:(NSString *)windowNibName
+{
+  if ( (self = [super initWithWindowNibName:windowNibName]) )
+    mSearchText = nil;
+  return self;
+}
+
+- (void)dealloc
+{
+  [mSearchText release];
+}
+
 - (void)windowDidLoad
 {
 }
-
 
 
 //
@@ -59,7 +70,7 @@
   NSWindowController* controller = [[NSApp mainWindow] windowController];
   if ( [controller conformsToProtocol:@protocol(CHFind)] ) {
     id<CHFind> browserController = controller;
-    mSearchText = [mSearchField stringValue];
+    [self storeSearchText:[mSearchField stringValue]];
     BOOL found = [browserController findInPage:mSearchText];
     if ( found ) 
       [self close];
@@ -104,4 +115,11 @@
     [mFindButton setEnabled:PR_FALSE];    
 }
 
+
+- (void)storeSearchText:(NSString*)inText
+{
+  [mSearchText autorelease];
+  mSearchText = inText;
+  [mSearchText retain];
+}
 @end
