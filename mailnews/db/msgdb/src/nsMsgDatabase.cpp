@@ -935,7 +935,8 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 			err = NS_MSG_MESSAGE_NOT_FOUND;
 			break;
 		}
-		err = DeleteHeader(msgHdr, instigator, kindex % 300 == 0, PR_TRUE);
+		if (msgHdr)
+			err = DeleteHeader(msgHdr, instigator, kindex % 300 == 0, PR_TRUE);
 		NS_IF_RELEASE(msgHdr);
 		if (err != NS_OK)
 			break;
