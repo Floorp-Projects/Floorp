@@ -94,6 +94,9 @@ public:
 
 //=====================================
 // HTML Editing methods
+  NS_IMETHOD AddBlockParent(nsString& aParentTag);
+  NS_IMETHOD RemoveBlockParent();
+
   NS_IMETHOD InsertLink(nsString& aURL);
   NS_IMETHOD InsertImage(nsString& aURL,
                          nsString& aWidth, nsString& aHeight,
@@ -126,7 +129,16 @@ protected:
 // rules initialization
 
   virtual void  InitRules();
+
+  NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag);
+
+  NS_IMETHOD ReParentBlockContent(nsIDOMNode  *aNode, 
+                                  nsString    &aParentTag,
+                                  nsIDOMNode  *aBlockParentNode,
+                                  nsString    &aBlockParentTag,
+                                  nsIDOMNode **aNewParentNode);
   
+  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, nsString &aParentTag);
 
 // EVENT LISTENERS AND COMMAND ROUTING NEEDS WORK
 // For now, the listners are tied to the nsTextEditor class
