@@ -33,7 +33,6 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 
-#include "nsIIOService.h"
 #include "nsILoadGroup.h"
 //#include "nsILoadGroupObserver.h"
 #include "nsNeckoUtil.h"
@@ -90,8 +89,6 @@ static NS_DEFINE_IID(kDocumentBindInfoIID,         NS_DOCUMENTBINDINFO_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
-
-static NS_DEFINE_CID(kIOServiceCID,                NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
