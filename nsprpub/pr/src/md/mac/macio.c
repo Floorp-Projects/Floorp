@@ -401,13 +401,21 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 	hpb.ioParam.ioPermssn 	= perm;
 
 	
-open:
-	err = PBHOpenDFSync(&hpb);
-	if ((err == fnfErr) && (flags & PR_CREATE_FILE)) {
+    if (flags & PR_CREATE_FILE) {
 		err = PBHCreateSync(&hpb);
-		if (err == noErr)
-			goto open;
+               
+       /* If opening with the PR_EXCL flag the existence of the file prior to opening is an error */
+       if ((flags & PR_EXCL) &&  (err == dupFNErr)) {
+           err = PR_FILE_EXISTS_ERROR;
+           goto ErrorExit;
+       }
+       if (err != noErr)
+          goto ErrorExit;
 	}
+ 
+open:
+    err = PBHOpenDFSync(&hpb);
+
 	if (err != noErr)
 		goto ErrorExit;
 
