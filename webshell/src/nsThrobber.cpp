@@ -488,7 +488,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   }
 
   nsIDeviceContext *deviceCtx = mWidget->GetDeviceContext();
-  mImageGroup->Init(deviceCtx);
+  mImageGroup->Init(deviceCtx, nsnull);
   NS_RELEASE(deviceCtx);
 
   rv = NS_NewTimer(&mTimer);

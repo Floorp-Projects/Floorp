@@ -821,7 +821,7 @@ char *str;
     if (gImageGroup == NULL) 
       {
       nsIDeviceContext *deviceCtx = scribbleData.mContext;
-      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx) != NS_OK) 
+      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx, nsnull) != NS_OK) 
         {
         NS_RELEASE(deviceCtx);
         return;

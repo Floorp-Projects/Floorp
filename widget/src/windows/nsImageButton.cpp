@@ -360,7 +360,7 @@ nsresult nsImageButton::CreateImageGroup()
     
     nsIDeviceContext * deviceCtx = GetDeviceContext();
 
-    mImageGroup->Init(deviceCtx);
+    mImageGroup->Init(deviceCtx, nsnull);
 
     NS_RELEASE(deviceCtx);
   }
