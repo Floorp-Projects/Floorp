@@ -48,6 +48,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMCID.h"
 #include "nsCSSOMFactory.h"
+#include "nsInspectorCSSUtils.h"
 #include "nsEventStateManager.h"
 #include "nsEventListenerManager.h"
 #include "nsGenericElement.h"
@@ -360,6 +361,7 @@ MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVG
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,                nsIDocumentLoaderFactory,   NS_NewContentDocumentLoaderFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 
@@ -611,6 +613,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CSSOMFACTORY_CID,
     nsnull,
     nsCSSOMFactoryConstructor },
+
+  { "Inspector CSS Utils",
+    NS_INSPECTORCSSUTILS_CID,
+    nsnull,
+    nsInspectorCSSUtilsConstructor },
 
   // Needed to support "new Option;" and "new Image;" in JavaScript
   { "HTML img element",

@@ -65,6 +65,7 @@ CPPSRCS		= \
 		nsHTMLAttributes.cpp \
 		nsHTMLStyleSheet.cpp \
 		nsHTMLCSSStyleSheet.cpp \
+		nsInspectorCSSUtils.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		nsDOMCSSRect.cpp \
 		$(NULL)
@@ -84,6 +85,7 @@ EXPORTS		= \
 		nsICSSOMFactory.h \
 		nsIHTMLCSSStyleSheet.h \
 		nsIHTMLAttributes.h \
+		nsIInspectorCSSUtils.h \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

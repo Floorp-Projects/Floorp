@@ -157,48 +157,6 @@ inLayoutUtils::GetClientOrigin(nsIFrame* aFrame)
   return result;
 }
 
-void
-inLayoutUtils::AdjustRectForMargins(nsIDOMElement* aElement, nsRect& aRect)
-{
-  if (!aElement) return;
-  
-  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
-  if (!window) return;
-  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
-  if (!presShell) return;
-
-  nsCOMPtr<nsIPresContext> pcontext;
-  presShell->GetPresContext(getter_AddRefs(pcontext));
-
-  // resolve style and get margins
-  nsCOMPtr<nsIStyleContext> scontext;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  pcontext->ResolveStyleContextFor(content, nsnull, PR_FALSE, getter_AddRefs(scontext));
-  const nsStyleStruct* mstruct = scontext->GetStyleData(eStyleStruct_Margin);
-  const nsStyleMargin* margins = (const nsStyleMargin*) mstruct;
-  
-  // adjust coordinates for margins
-  nsStyleCoord coord;
-  if (margins->mMargin.GetTopUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetTop(coord);
-    aRect.y -= coord.GetCoordValue();
-    aRect.height += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetLeftUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetLeft(coord);
-    aRect.x -= coord.GetCoordValue();
-    aRect.width += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetRightUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetRight(coord);
-    aRect.width += coord.GetCoordValue();
-  }
-  if (margins->mMargin.GetBottomUnit() == eStyleUnit_Coord) {
-    margins->mMargin.GetBottom(coord);
-    aRect.height += coord.GetCoordValue();
-  }
-}
-
 nsRect& 
 inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
 {

@@ -43,6 +43,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsISupportsArray.h"
+#include "nsIInspectorCSSUtils.h"
 
 class inDOMUtils : public inIDOMUtils
 {
@@ -52,6 +53,9 @@ public:
 
   inDOMUtils();
   virtual ~inDOMUtils();
+
+protected:
+  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
 };
 

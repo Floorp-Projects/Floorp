@@ -39,8 +39,11 @@
 #include "inCSSValueSearch.h"
 
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
+
+static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -55,12 +58,11 @@ inCSSValueSearch::inCSSValueSearch()
 
   mProperties = new nsCSSProperty[100];
   mPropertyCount = 0;
-  nsCSSProps::AddRefTable();
+  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inCSSValueSearch::~inCSSValueSearch()
 {
-  nsCSSProps::ReleaseTable();
   delete mProperties;
   delete mResults;
 }
@@ -233,9 +235,8 @@ inCSSValueSearch::SetNormalizeChromeURLs(PRBool aNormalizeChromeURLs)
 NS_IMETHODIMP 
 inCSSValueSearch::AddPropertyCriteria(const PRUnichar *aPropName)
 {
-  nsAutoString propName;
-  propName.Assign(aPropName);
-  nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
+  nsCSSProperty prop;
+  mCSSUtils->LookupCSSProperty(nsDependentString(aPropName), &prop);
   mProperties[mPropertyCount] = prop;
   mPropertyCount++;
   return NS_OK;
@@ -328,8 +329,6 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 nsresult
 inCSSValueSearch::SearchStyleValue(nsICSSStyleRule* aRule, nsCSSProperty aProp)
 {
-  const nsAFlatCString& cstring = nsCSSProps::GetStringValue(aProp);
-
   nsCSSValue value;
   aRule->GetValue(aProp, value);
 
