@@ -135,6 +135,8 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			_mkdir(linuxDir);
 			_chdir(linuxinstDirPath);
 			tnscpxpilinuxPath.Replace("\\","/");
+			tnscpxpilinuxPath.Replace(":","");
+			tnscpxpilinuxPath.Insert(0,"//");
 
 			CString command = "gzip -d " + tarfile;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
