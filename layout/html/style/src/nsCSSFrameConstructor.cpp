@@ -5441,6 +5441,10 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) {
       // Delete the current frame
       parentFrame->RemoveFrame(*aPresContext, *presShell, listName, aFrame);
+      
+      // Reset the primary frame mapping
+      presShell->SetPrimaryFrameFor(content, newFrame);
+
       if (placeholderFrame) {
         // Remove the association between the old frame and its placeholder
         presShell->SetPlaceholderFrameFor(aFrame, nsnull);
