@@ -75,10 +75,6 @@ nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 nsresult
 nsRDFDOMNodeList::Create(nsRDFDOMNodeList** aResult)
 {
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
     nsRDFDOMNodeList* list = new nsRDFDOMNodeList();
     if (! list)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -151,10 +147,6 @@ nsRDFDOMNodeList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
-        return NS_ERROR_NULL_POINTER;
-
     PRUint32 cnt;
     nsresult rv = mElements->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
