@@ -42,6 +42,7 @@ OBJS =                                       \
     .\$(OBJDIR)\ns4xPluginInstance.obj       \
     .\$(OBJDIR)\nsPluginDocLoaderFactory.obj \
     .\$(OBJDIR)\nsPluginHostImpl.obj         \
+    .\$(OBJDIR)\nsPluginProxyImpl.obj         \
     .\$(OBJDIR)\nsPluginModule.obj           \
     .\$(OBJDIR)\nsPluginInstancePeer.obj     \
     .\$(OBJDIR)\nsPluginViewer.obj           \
