@@ -722,9 +722,9 @@ static JSObjectOps WrappedNative_ops = {
     nsnull,                     /* call         */
     nsnull,                     /* construct    */
     nsnull,                     /* xdrObject    */
-    WrappedNative_HasInstance   /* hasInstance  */
-    NULL,                       /* setProto */
-    NULL,                       /* setParent */
+    WrappedNative_HasInstance,  /* hasInstance  */
+    nsnull,                     /* setProto */
+    nsnull,                     /* setParent */
     0,0,0,0                     /* spare */
 };
 
