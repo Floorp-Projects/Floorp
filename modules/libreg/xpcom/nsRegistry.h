@@ -43,12 +43,15 @@
 #include "nsIRegistry.h"
 #include "NSReg.h"
 
-struct nsRegistry : public nsIRegistry {
+struct nsRegistry : public nsIRegistry, nsIRegistryGetter {
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIRegistry interface functions.
     NS_DECL_NSIREGISTRY
+
+    // Fast registry getters
+    NS_DECL_NSIREGISTRYGETTER
 
     // ctor/dtor
     nsRegistry();

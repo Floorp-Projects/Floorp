@@ -119,6 +119,47 @@ interface nsIRegistryValue : nsISupports
     readonly attribute PRUint32 length;
 };
 
+[uuid(3A15FC88-7A61-4Ab4-8E58-31E95fAB3DA8)]
+/**
+ * It sucks that nsIRegistry has to always allocate and return
+ * strings. nsIRegistryGetter adds in interfaces for non allocating getters
+ * to registry values.
+ */
+interface nsIRegistryGetter : nsISupports
+{
+    /**
+     * Get a string value of attribute valname in widestring or utf8 format
+     *
+     * @return
+     *  NS_OK on success.
+     *    buf has the string value copied into it. length is NOT changed.
+     *  NS_ERROR_REG_BUFFER_TOO_SMALL if not enough buffer space.
+     *    length is updated to actual length in chars including
+     *    terminating NULL and buf will be unchanged.
+     *  NS_ERROR_FAILURE if an unknown error happened. state of buf and
+     *    length undefined.
+     *  various failure codes otherwise. buf and length wont be updated.
+     */
+    void getStringUTF8IntoBuffer(in nsRegistryKey baseKey, in string path,
+                                 inout char buf, inout PRUint32 length);
+
+    /**
+     * Get a a byte array value of attribute valname
+     *
+     * @return
+     *  NS_OK on success. buf has the string value copied into it.
+     *    length is updated to actual number of bytes copied into buf.
+     *  NS_ERROR_REG_BUFFER_TOO_SMALL if not enough buffer space.
+     *    length is updated to actual length in PRUint8s including
+     *    terminating NULL and buf will be unchanged.
+     *  NS_ERROR_FAILURE if an unknown error happened. state of buf and
+     *    length undefined.
+     *  various other failure codes otherwise. buf and length wont be updated.
+     */
+    void getBytesUTF8IntoBuffer(in nsRegistryKey baseKey, in string path,
+                                inout PRUint8 buf, inout PRUint32 length);
+};
+
 %{ C++
 #include "nsIRegistryUtils.h"
 %}

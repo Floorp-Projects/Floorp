@@ -736,7 +736,7 @@ nsComponentManagerImpl::PlatformInit(void)
 
     // Set larger-than-standard buffer size to speed startup.
     // This will be re-set at the end of PrePopulateRegistry()
-    mRegistry->SetBufferSize(500*1024);
+    ((nsRegistry *)mRegistry)->SetBufferSize(500*1024);
 
     // Check the version of registry. Nuke old versions.
     nsRegistryKey xpcomRoot;
@@ -1118,11 +1118,17 @@ nsComponentManagerImpl::PlatformCLSIDToContractID(const nsCID *aClass,
 nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 {
     nsresult rv;
+    char buf[MAXREGPATHLEN];
+    PRUint32 bufLength = sizeof(buf);
 
     if (mPrePopulationDone)
         return NS_OK;
 
-    (void)mRegistry->SetBufferSize( 500*1024 );
+    (void)((nsRegistry *)mRegistry)->SetBufferSize( 500*1024 );
+
+    nsCOMPtr<nsIRegistryGetter> regGetter = do_QueryInterface(mRegistry);
+    if (!regGetter.get())
+        return NS_ERROR_FAILURE;
 
     // Read in all CID entries and populate the mFactories
     nsCOMPtr<nsIEnumerator> cidEnum;
@@ -1148,30 +1154,32 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         rv = regEnum->CurrentItemInPlaceUTF8(&cidKey, &cidString);
         if (NS_FAILED(rv))  continue;
 
-        // Create the CID entry
-        nsXPIDLCString library;
-        PRUint32 tmp;
-        rv = mRegistry->GetBytesUTF8(cidKey, inprocServerValueName,
-                              &tmp, (PRUint8**)getter_Copies(library).operator char**());
-        if (NS_FAILED(rv)) continue;
-        nsCID aClass;
-
-        if (!(aClass.Parse(cidString))) continue;
-
-        nsXPIDLCString componentType;
-        if (NS_FAILED(mRegistry->GetStringUTF8(cidKey, componentTypeValueName,
-                                           getter_Copies(componentType))))
+        // Figure out the component type
+        // Use the non allocating registry getter. Our buffer is big enough
+        // We wont get NS_ERROR_REG_BUFFER_TOO_SMALL
+        bufLength = sizeof(buf);
+        rv = regGetter->GetStringUTF8IntoBuffer(cidKey, componentTypeValueName, buf, &bufLength);
+        if (NS_FAILED(rv))
             continue;
 
-        int loadertype = GetLoaderType(componentType);
+        int loadertype = GetLoaderType(buf);
         if (loadertype < 0) {
-            loadertype = AddLoaderType(componentType);
+            loadertype = AddLoaderType(buf);
         }
-        nsFactoryEntry* entry = 
-            new nsFactoryEntry(aClass, library, loadertype);
 
-        if (!entry)
+        // Create the CID entry
+        bufLength = sizeof(buf);
+        rv = regGetter->GetBytesUTF8IntoBuffer(cidKey, inprocServerValueName,
+                                               (PRUint8 *) buf, &bufLength);
+        if (NS_FAILED(rv))
             continue;
+        nsCID aClass;
+        if (!(aClass.Parse(cidString)))
+            continue;
+
+        nsFactoryEntry *entry = new nsFactoryEntry(aClass, buf, loadertype);
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
 
         nsAutoMonitor mon(mMon);
         
@@ -1208,22 +1216,21 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
          * It is also faster, and less painful in the allocation department.
          */
         rv = regEnum->CurrentItemInPlaceUTF8(&contractidKey, &contractidString);
-        if (NS_FAILED(rv)) continue;
-
-        nsXPIDLCString cidString;
-        rv = mRegistry->GetStringUTF8(contractidKey, classIDValueName,
-                                      getter_Copies(cidString));
-        if (NS_FAILED(rv)) continue;
-
-        nsCID aClass;
-        if (!(aClass.Parse(cidString)))
-        {
+        if (NS_FAILED(rv))
             continue;
-        }
+
+        // Use the non allocating registry getter. Our buffer is big enough
+        // We wont get NS_ERROR_REG_BUFFER_TOO_SMALL
+        bufLength = sizeof(buf);
+        rv = regGetter->GetStringUTF8IntoBuffer(contractidKey, classIDValueName, buf, &bufLength);
+        if (NS_FAILED(rv))
+            continue;
+        nsCID aClass;
+        if (!aClass.Parse(buf))
+            continue;
 
         // put the {contractid, Cid} mapping into our map
         HashContractID(contractidString, aClass);
-        //  printf("Populating [ %s, %s ]\n", cidString, contractidString);
     }
 
     //(void)mRegistry->SetBufferSize( 10*1024 );
@@ -2830,7 +2837,7 @@ nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
     nsresult rv;
-    mRegistry->SetBufferSize( 500*1024 );
+    ((nsRegistry *)mRegistry)->SetBufferSize( 500*1024 );
     rv = AutoRegisterImpl(when, inDirSpec);
     mRegistry->Flush();
     //mRegistry->SetBufferSize( 10*1024 );
