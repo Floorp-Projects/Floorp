@@ -747,10 +747,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
    } break;
 
-   // if the a resize reflow then it doesn't need to be reflowed. Only if the size is different
-   // from the new size would we actually do a reflow
+   // if it's a resize reflow, and it and it's children aren't dirty, then it
+   // doesn't need to be reflowed unless it's size is different from the new
+   // size.
    case eReflowReason_Resize:
-       needsReflow = PR_FALSE;
+       // blocks sometimes send resizes even when its children are dirty! We
+       // need to make sure we repair in these cases. So check the flags here.
+       needsReflow = mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
+
    break;
 
    // if its an initial reflow we must place the child.
