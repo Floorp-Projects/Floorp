@@ -3045,6 +3045,9 @@ PRInt32 GlobalWindowImpl::WinHasOption(char *options, char *name, PRBool* aPrese
 
    while(PR_TRUE)
       {
+      while (nsCRT::IsAsciiSpace(*options))
+         options++;
+
       comma = strchr(options, ',');
       if(comma)
          *comma = '\0';
