@@ -1016,9 +1016,10 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
       }
     } else {
       if (aContainer->Tag() == nsXULAtoms::tree) {
+        PRInt32 count = mRows.Count();
         ClearRows();
-        if (mBoxObject)
-          mBoxObject->Invalidate();
+        if (count && mBoxObject)
+          mBoxObject->RowCountChanged(0, -count);
       }
     }
   }
