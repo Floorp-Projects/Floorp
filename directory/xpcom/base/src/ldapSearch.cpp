@@ -48,7 +48,7 @@ lds(class nsLDAPChannel *chan, const char *url)
     nsCOMPtr<nsILDAPConnection> myConnection;
     nsCOMPtr<nsILDAPMessage> myMessage;
     nsCOMPtr<nsILDAPOperation> myOperation;
-    int returnCode;
+    PRInt32 returnCode;
     char *errString;
     PRInt32 lden;
     nsresult rv;
