@@ -289,7 +289,7 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
       nsCAutoString spec;
       uri->GetSpec(spec);
       if (NS_SUCCEEDED(uri->GetSpec(spec)))
-        SI_RemoveUser(spec.get(), nsnull);
+        SINGSIGN_RemoveUserAfterLoginFailure(spec.get(), nsnull, PR_TRUE);
     }
   }
   return NS_OK;

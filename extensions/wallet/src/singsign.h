@@ -105,6 +105,10 @@ SINGSIGN_RemoveUser
     (const char* passwordRealm, const PRUnichar *userName, PRBool notify);
 
 extern nsresult
+SINGSIGN_RemoveUserAfterLoginFailure
+    (const char* passwordRealm, const PRUnichar *userName, PRBool notify);
+
+extern nsresult
 SINGSIGN_RemoveReject
     (const char* host);
 

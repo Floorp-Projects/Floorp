@@ -659,6 +659,17 @@ si_CompareEncryptedToEncrypted(const nsString& crypt1, const nsString& crypt2) {
  * Managing Signon List *
  ************************/
 
+static PRUint32
+SecondsFromPRTime(PRTime prTime) {
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  PRUint32 seconds;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI(seconds, intermediateResult);
+  return seconds;
+}
+
 MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
 
 class si_SignonDataStruct {
@@ -691,6 +702,7 @@ public:
     }
     MOZ_COUNT_DTOR(si_SignonUserStruct);
   }
+  PRUint32 time;
   nsVoidArray signonData_list; // elements are si_SignonDataStruct
 };
 
@@ -789,7 +801,7 @@ si_GetURL(const char * passwordRealm) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, PRBool notify, PRBool first = PR_FALSE) {
+si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, PRBool loginFailure, PRBool notify, PRBool first = PR_FALSE) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -828,6 +840,9 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
     si_unlock_signon_list();
     return PR_FALSE; /* user not found so nothing to remove */
     foundUser: ;
+    if (loginFailure && (user->time + 300) < SecondsFromPRTime(PR_Now())) {
+      return PR_FALSE; /* password was set more than 5 minutes (300 seconds) ago */
+    }
   }
 
   /* free the user node */
@@ -853,7 +868,13 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
 
 PUBLIC nsresult
 SINGSIGN_RemoveUser(const char *host, const PRUnichar *user, PRBool notify) {
-  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, notify);
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, PR_FALSE, notify);
+  return rv ? NS_OK : NS_ERROR_FAILURE;
+}
+
+PUBLIC nsresult
+SINGSIGN_RemoveUserAfterLoginFailure(const char *host, const PRUnichar *user, PRBool notify) {
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, PR_TRUE, notify);
   return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1247,7 +1268,7 @@ PUBLIC void
 SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1272,7 +1293,7 @@ PUBLIC void
 SI_DeleteAll() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_TRUE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_TRUE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1563,6 +1584,7 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
           if (!si_CompareEncryptedToEncrypted(data->value, data2->value)) {
             si_signon_list_changed = PR_TRUE;
             data->value = data2->value;
+            user->time = SecondsFromPRTime(PR_Now()); 
 /* commenting out because I don't see how such randomizing could ever have worked. */
 //          si_Randomize(data->value);
           }
@@ -1630,11 +1652,13 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
      * we will be reversing the order when reading in.
      */
   if (save) {
+    user->time = SecondsFromPRTime(PR_Now());
     url->signonUser_list.InsertElementAt(user, 0);
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked("signons", PR_TRUE);
     si_unlock_signon_list();
   } else {
+    user->time = 0;
     url->signonUser_list.AppendElement(user);
   }
 }
@@ -2105,6 +2129,7 @@ si_RememberSignonData
 //    data2->value = data1->value;
 
     if (NS_SUCCEEDED(si_Encrypt(data1->value, data->value))) {
+      user->time = SecondsFromPRTime(PR_Now()); 
       si_signon_list_changed = PR_TRUE;
       si_SaveSignonDataLocked("signons", PR_TRUE);
       si_unlock_signon_list();
@@ -2457,7 +2482,7 @@ SINGSIGN_PromptUsernameAndPassword
     si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
   } else if (remembered) {
     /* a login was remembered but user unchecked the box; we forget the remembered login */
-    si_RemoveUser(passwordRealm, username, PR_TRUE, PR_TRUE);  
+    si_RemoveUser(passwordRealm, username, PR_TRUE, PR_FALSE, PR_TRUE);  
   }
 
   /* cleanup and return */
