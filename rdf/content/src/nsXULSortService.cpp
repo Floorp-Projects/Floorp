@@ -1032,6 +1032,17 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 					inplaceSortCallback, (void *)sortInfo);
 			}
 
+			// Bug 6665. This is a hack to "addref" the resources
+			// before we remove them from the content model. This
+			// keeps them from getting released, which causes
+			// performance problems for some datasources.
+			for (loop = 0; loop < numElements; loop++)
+			{
+				nsIRDFResource* resource;
+				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
+				// Note that we don't release; see part deux below...
+			}
+
 			RemoveAllChildren(container);
 			if (NS_FAILED(rv = container->UnsetAttribute(kNameSpaceID_None,
 			                        kTreeContentsGeneratedAtom,
@@ -1045,6 +1056,16 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			for (loop=0; loop<numElements; loop++)
 			{
 				container->InsertChildAt((nsIContent *)flatArray[loop], numChildren++, PR_FALSE);
+			}
+
+			// Bug 6665, part deux. The Big Hack.
+			for (loop = 0; loop < numElements; loop++)
+			{
+				nsIRDFResource* resource;
+				nsRDFContentUtils::GetElementResource(flatArray[loop], &resource);
+				nsrefcnt refcnt;
+				NS_RELEASE2(resource, refcnt);
+				NS_RELEASE(resource);
 			}
 
 			// recurse on grandchildren
