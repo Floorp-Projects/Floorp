@@ -31,7 +31,8 @@ MAKE_OBJ_TYPE = DLL
 
 OBJS	= \
 		.\$(OBJDIR)\nsRect.obj \
-		.\$(OBJDIR)\nsImage.obj \
+		.\$(OBJDIR)\nsImageContainer.obj \
+		.\$(OBJDIR)\nsImageFrame.obj \
 		.\$(OBJDIR)\nsGfxFactory.obj \
 		$(NULL)
 
