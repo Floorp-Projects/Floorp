@@ -35,16 +35,13 @@ EXPORTS		= \
 		  nsICollection.h \
 		  nsID.h \
 		  nsIID.h \
-		  nsIFactory.h \
 		  nsISimpleEnumerator.h \
-		  nsISupports.h \
 		  nsISupportsUtils.h \
 		  nsIPtr.h \
 		  nsIComponentManager.h \
 		  nsRepository.h \
 		  nsIServiceManager.h \
 		  nsISupportsArray.h \
-		  nsIEnumerator.h \
 		  nsTraceRefcnt.h \
 		  nsVector.h \
 		  plvector.h \
@@ -55,7 +52,6 @@ EXPORTS		= \
 		  nsIEventQueue.h \
 		  nsIGenericFactory.h \
 		  nsIRegistry.h \
-		  nsrootidl.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
