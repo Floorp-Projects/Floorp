@@ -43,7 +43,7 @@ public:
 	nsresult PlaybackMoves(nsIEventQueue *eventQueue);
 protected:
 	// m_sourceKeySets and m_destFolders are parallel arrays.
-	nsVoidArray					m_sourceKeySets;
+	nsVoidArray					m_sourceKeyArrays;
 	nsCOMPtr <nsISupportsArray> m_destFolders;
 	nsImapMailFolder			*m_sourceFolder;
 };

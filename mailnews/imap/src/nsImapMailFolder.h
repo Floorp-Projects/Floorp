@@ -314,6 +314,7 @@ public:
 									   char *destFolder,
 									   nsIMsgFilter *filter);
 	nsresult StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &msgKeys);
+	static nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);
 protected:
     // Helper methods
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
@@ -358,7 +359,6 @@ protected:
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsCString& msgIds, nsMsgKeyArray& keyArray);
 
-	nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);
 	nsresult GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
 
     nsNativeFileSpec *m_pathName;

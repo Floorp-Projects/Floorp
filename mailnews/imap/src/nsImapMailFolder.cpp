@@ -361,24 +361,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
             SetFlag(newFlags);
             rv = CreateSubFolders(path);
         }
-        else 
-        {
-            UpdateSummaryTotals(PR_FALSE);
-            // Look for a directory for this mail folder, and recurse into it.
-            // e.g. if the folder is "inbox", look for "inbox.sbd". 
-#if 0
-            char *folderName = path->GetLeafName();
-            char *newLeafName = (char*)malloc(PL_strlen(folderName) +
-                                              PL_strlen(kDirExt) + 2);
-            PL_strcpy(newLeafName, folderName);
-            PL_strcat(newLeafName, kDirExt);
-            path->SetLeafName(newLeafName);
-            if(folderName)
-                nsCRT::free(folderName);
-            if(newLeafName)
-                nsCRT::free(newLeafName);
-#endif
-        }
+        UpdateSummaryTotals(PR_FALSE);
 
         if (NS_FAILED(rv)) return rv;
         m_initialized = PR_TRUE;      // XXX do this on failure too?
@@ -947,7 +930,7 @@ nsImapMailFolder::BuildIdsAndKeyArray(nsISupportsArray* messages,
 	return AllocateUidStringFromKeyArray(keyArray, msgIds);
 }
 
-nsresult
+/* static */ nsresult
 nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds)
 {
     nsresult rv = NS_OK;
@@ -1435,7 +1418,6 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 	if (!mDatabase)
 		GetDatabase();
 
-#ifdef DOING_FILTERS
 	if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
 	{
 		NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
@@ -1466,7 +1448,6 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 		}
 
 	}
-#endif
 	m_nextMessageByteLength = aStreamInfo->size;
 	if (!m_msgParser)
 	{
@@ -1535,6 +1516,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 
 		newMsgHdr->SetMessageKey(m_curMsgUid);
 		TweakHeaderFlags(aProtocol, newMsgHdr);
+		m_msgMovedByFilter = PR_FALSE;
 		// If this is the inbox, try to apply filters.
 		if (mFlags & MSG_FOLDER_FLAG_INBOX)
 		{
@@ -1542,15 +1524,14 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 
 			if (NS_SUCCEEDED(rv) && headers)
 			{
-#ifdef DOING_FILTERS
 				if (m_filterList)
 					m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
 						headers, headersSize, this);
-#endif
 			}
 		}
 		// here we need to tweak flags from uid state..
-		mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+		if (!m_msgMovedByFilter)
+			mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
 		m_msgParser->FinishHeader();
 	}
     return NS_OK;
@@ -1704,7 +1685,6 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
 	return rv;
 }
 
-#ifdef DOING_FILTERS
 NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
 {
 	nsMsgRuleActionType actionType;
@@ -2019,8 +1999,6 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	return err;
 }
 
-
-#endif // DOING_FILTERS
 
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
 void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
