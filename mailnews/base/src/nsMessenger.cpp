@@ -873,6 +873,14 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
     filePicker->AppendFilters(nsIFilePicker::filterText);
     filePicker->AppendFilters(nsIFilePicker::filterAll);
     
+    // by default, set the filter type as "all"
+    // because the default string is "message.eml"
+    // and type is "all", we will use the filename extension, and will save as rfc/822 (.eml)
+    // but if the user just changes the name (to .html or .txt), we will save as those types
+    // if the type is "all".
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=96134#c23
+    filePicker->SetFilterIndex(ANY_FILE_TYPE);
+
     PRInt16 dialogResult;
     
     nsCOMPtr <nsILocalFile> lastSaveDir;
