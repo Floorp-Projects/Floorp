@@ -44,6 +44,7 @@
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
+#include "nsIDOMNode.h"
 
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"

@@ -56,6 +56,7 @@
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
+#include "nsIDOMNode.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
