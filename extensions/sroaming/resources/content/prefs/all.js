@@ -47,7 +47,7 @@ var gData; // for structure, see RegistryToData()
 function Unload()
 {
   UIToData();
-  parent.roaming.verifyData();
+  //parent.roaming.verifyData();
 }
 
 /* *sigh*!!! when the user clicks OK in another pane,
@@ -118,7 +118,7 @@ RoamingPrefs.prototype =
     {
       UIToData();
     }
-    //this.verifyData();
+    this.verifyData();
     this.dataToRegistry();
   },
 
