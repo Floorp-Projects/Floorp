@@ -35,7 +35,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.4 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.5 $ $Date: 2001/10/12 17:54:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -73,17 +73,6 @@ NSS_EXTERN NSSItem *
 NSSCertificate_GetID
 (
   NSSCertificate *c
-);
-
-/*
- * Look for a specific cert in the cache.
- */
-NSS_EXTERN NSSCertificate *
-nssTrustDomain_GetCertForIssuerAndSNFromCache
-(
-  NSSTrustDomain *td,
-  NSSDER *issuer,
-  NSSDER *serialNum
 );
 
 PR_END_EXTERN_C

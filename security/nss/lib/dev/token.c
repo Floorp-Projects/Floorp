@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.9 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.10 $ $Date: 2001/10/12 17:54:48 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -313,37 +313,30 @@ loser:
 }
 
 struct cert_callback_str {
+    nssListIterator *cachedCerts;
     PRStatus (*callback)(NSSCertificate *c, void *arg);
     void *arg;
 };
 
-/* Parts of this (cache lookup, creating a cert) should be passed up to
- * a higher level through a callback, but left here for now
- */
 static PRStatus 
 retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 {
-    PRStatus nssrv;
-    NSSCertificate *cert;
-    NSSDER issuer, serial;
-    CK_ULONG template_size;
-    /* Set up the unique id */
-    CK_ATTRIBUTE cert_template[] = {
-	{ CKA_ISSUER,        NULL, 0 },
-	{ CKA_SERIAL_NUMBER, NULL, 0 }
-    };
+    NSSCertificate *cert = NULL;
+    NSSCertificate *c;
     struct cert_callback_str *ccb = (struct cert_callback_str *)arg;
-    template_size = sizeof(cert_template) / sizeof(cert_template[0]);
-    /* Get the unique id */
-    nssrv = nssCKObject_GetAttributes(h, cert_template, template_size,
-                                      NULL, session, t->slot);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[0], &issuer);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[1], &serial);
-    /* Look in the cert's trust domain cache first */
-    cert = nssTrustDomain_GetCertForIssuerAndSNFromCache(t->trustDomain, 
-                                                         &issuer, &serial);
-    nss_ZFreeIf(issuer.data);
-    nss_ZFreeIf(serial.data);
+    if (ccb->cachedCerts) {
+	for (c  = (NSSCertificate *)nssListIterator_Start(ccb->cachedCerts);
+	     c != (NSSCertificate *)NULL;
+	     c  = (NSSCertificate *)nssListIterator_Next(ccb->cachedCerts)) 
+	{
+	    if (c->handle == h && c->token == t) {
+		/* this is enough, right? */
+		cert = c;
+		break;
+	    }
+	}
+	nssListIterator_Finish(ccb->cachedCerts);
+    }
     if (!cert) {
 	/* Could not find cert, so create it */
 	cert = NSSCertificate_CreateFromHandle(NULL, h, session, t->slot);
@@ -455,7 +448,7 @@ nssToken_TraverseCertificates
     };
     CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
     NSS_CK_SET_ATTRIBUTE_ITEM(cert_template, 0, &g_ck_class_cert);
-    nssrv = nssToken_FindCertificatesByTemplate(tok, sessionOpt, 
+    nssrv = nssToken_FindCertificatesByTemplate(tok, sessionOpt, NULL,
                                                 cert_template, ctsize,
                                                 callback, arg);
     return NULL; /* XXX */
@@ -466,6 +459,7 @@ nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
+  nssList *cachedList,
   CK_ATTRIBUTE_PTR cktemplate,
   CK_ULONG ctsize,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
@@ -477,6 +471,11 @@ nssToken_FindCertificatesByTemplate
     struct cert_callback_str ccb;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
     /* this isn't really traversal, it's find by template ... */
+    if (cachedList) {
+	ccb.cachedCerts = nssList_CreateIterator(cachedList);
+    } else {
+	ccb.cachedCerts = NULL;
+    }
     ccb.callback = callback;
     ccb.arg = arg;
     rvstack = nsstoken_TraverseObjects(tok, session, 
