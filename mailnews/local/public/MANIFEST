@@ -21,6 +21,5 @@
 #[installed by xpidl] nsIPop3Service.h
 #[installed by xpidl] nsIPop3IncomingServer.h
 
-nsIPop3URL.h
 nsIMailboxUrl.h
 nsIMsgParseMailMsgState.h
