@@ -237,8 +237,6 @@ PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 //-------------------------------------------------------------------------
 PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
-#define enterKey			0x03		/* ascii code for enter key */
-
 	// filter cursor keys
 	PRBool passKeyEvent = PR_TRUE;
 	switch (aEvent.message)
@@ -246,14 +244,19 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		case NS_KEY_DOWN:
 		case NS_KEY_UP:
 		{
-			// hack: if Enter is pressed, pass Return
-  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
-			if (keyEvent->keyCode == enterKey)
-				keyEvent->keyCode = NS_VK_RETURN;
+  		nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
 
+#if 0
+			// this hack is no longer needed, since Enter is being mapped to
+			// VK_RETURN in the event handler
+			if (keyEvent->keyCode == kEnterCharCode)
+				keyEvent->keyCode = NS_VK_RETURN;
+#endif
+			
+			// is this hack really needed?
 			EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
-			if (theOSEvent && ((theOSEvent->message & charCodeMask) == enterKey))
-				theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
+			if (theOSEvent && ((theOSEvent->message & charCodeMask) == kEnterCharCode))
+				theOSEvent->message = (theOSEvent->message & ~charCodeMask) + kReturnCharCode;
 
 			switch (keyEvent->keyCode)
 			{
@@ -318,7 +321,7 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		  		else
 		  		{
 		  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
-		  			theChar = keyEvent->keyCode;
+		  			theChar = keyEvent->charCode;
 		  			if (keyEvent->isShift)
 		  				theModifiers = shiftKey;
 		  			if (keyEvent->isControl)
