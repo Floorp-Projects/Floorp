@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -22,6 +23,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Eric Belhaire <belhaire@ief.u-psud.fr> 
+ *                 Stuart Parmenter <pavlov@pavlov.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,27 +64,27 @@ WeekView.prototype.constructor = WeekView;
 */
 function WeekView( calendarWindow )
 {
-   this.superConstructor( calendarWindow );
+    this.superConstructor( calendarWindow );
    
-   //set the time on the left hand side labels
-   //need to do this in JavaScript to preserve formatting
-   for( var i = 0; i < 24; i++ ) {
-      var TimeToFormat = new Date();
-      TimeToFormat.setHours( i );
-      TimeToFormat.setMinutes( "0" );
+    //set the time on the left hand side labels
+    //need to do this in JavaScript to preserve formatting
+    for (var i = 0; i < 24; i++) {
+        var TimeToFormat = new Date();
+        TimeToFormat.setHours( i );
+        TimeToFormat.setMinutes( "0" );
       
-      var FormattedTime = calendarWindow.dateFormater.getFormatedTime( TimeToFormat );
+        var FormattedTime = calendarWindow.dateFormater.getFormatedTime( TimeToFormat );
       
-      var Label = document.getElementById( "week-view-hour-" + i );
-      Label.setAttribute( "value", FormattedTime );
-   }
+        var Label = document.getElementById( "week-view-hour-" + i );
+        Label.setAttribute( "value", FormattedTime );
+    }
    
-   // get week view header items
-   gHeaderDateItemArray = new Array();
-   for( var dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
-      var headerDateItem = document.getElementById( "week-header-date-" + dayIndex );
-      gHeaderDateItemArray[ dayIndex ] = headerDateItem;
-   }
+    // get week view header items
+    gHeaderDateItemArray = new Array();
+    for (var dayIndex = 1; dayIndex <= 7; ++dayIndex) {
+        var headerDateItem = document.getElementById( "week-header-date-" + dayIndex );
+        gHeaderDateItemArray[ dayIndex ] = headerDateItem;
+    }
    
    var weekViewEventSelectionObserver = 
    {
@@ -109,8 +111,59 @@ function WeekView( calendarWindow )
 *
 *   Redraw the events for the current week
 */
-WeekView.prototype.refreshEvents = function( )
+WeekView.prototype.refreshEvents = function()
 {
+    //initialize view limits from prefs
+    var LowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
+    var HighestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
+
+    //now hide those that aren't applicable
+    for (i = 0; i < 24; i++) {
+        document.getElementById("week-view-row-"+i).removeAttribute("collapsed");
+    }
+    for (i = 0; i < LowestStartHour; i++) {
+        document.getElementById("week-view-row-"+i).setAttribute("collapsed", "true");
+    }
+    for (i = (HighestEndHour + 1); i < 24; i++) {
+        document.getElementById("week-view-row-"+i ).setAttribute("collapsed", "true");
+    }
+
+
+    // Figure out the start and end days for the week we're currently viewing
+    var startDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
+    var endDate = new Date(gHeaderDateItemArray[7].getAttribute("date"));
+
+
+    // Save this off so we can get it again in onGetResult below
+    var savedThis = this;
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            dump("onOperationComplete\n");
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            for (var i = 0; i < aCount; ++i) {
+                //items[aItems[i].id] = aItems[i];
+                var item = aItems[i];
+                dump(item + "\n");
+                var eventBox = savedThis.createEventBox(item);
+                dump(eventBox + "\n");
+                dump("adding box\n");
+                document.getElementById("week-view-content-board").appendChild(eventBox);
+            }
+        }
+    };
+
+    ccalendar = createCalendar(); // XXX Should get the composite calendar here
+
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_ALL | ccalendar.ITEM_FILTER_TYPE_EVENT,
+                      0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+
+    return;
+
+
+
+
+
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
   var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
 
@@ -130,11 +183,7 @@ WeekView.prototype.refreshEvents = function( )
    //expand the day's content box by setting allday to false..
    document.getElementById( "week-view-content-box" ).removeAttribute( "allday" );
    var allDayExist = false ;
-   
-   //initialize view limits from prefs
-   var LowestStartHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8 );
-   var HighestEndHour = getIntPref( this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17 );
-   
+      
    var allDayEventList = new Array();
    var normalEventList = new Array();   
    var eventList = new Array();
@@ -180,17 +229,7 @@ WeekView.prototype.refreshEvents = function( )
       document.getElementById( "week-view-content-box" ).setAttribute( "allday", "true" );
    }
    
-   //now hide those that aren't applicable
-   for( i = 0; i < 24; i++ ) {
-      document.getElementById( "week-view-row-"+i ).removeAttribute( "collapsed" );
-   }
-   for( i = 0; i < LowestStartHour; i++ ) {
-      document.getElementById( "week-view-row-"+i ).setAttribute( "collapsed", "true" );
-   }
-   for( i = ( HighestEndHour + 1 ); i < 24; i++ ) {
-      document.getElementById( "week-view-row-"+i ).setAttribute( "collapsed", "true" );
-   }
-   
+
    //START FOR LOOP FOR DAYS---> 
    for ( dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
@@ -279,77 +318,88 @@ WeekView.prototype.refreshEvents = function( )
 *
 *   This creates an event box for the week view
 */
-WeekView.prototype.createEventBox = function ( calendarEventDisplay )
+WeekView.prototype.createEventBox = function ( calItem )
 {
-   var eventText = calendarEventDisplay.event.title;
+    var eventText = calItem.title;
+    
+    var calEvent = calItem.QueryInterface(Components.interfaces.calIEvent);
+
+    var startHour = calEvent.startDate.hour;
+    var startMinutes = calEvent.startDate.minute;
+    var eventDuration = (calEvent.endDate.jsDate - calEvent.startDate.jsDate) / (60 * 60);
+    //var eventDuration = ((calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate) / (60 * 60 * 1000));
+    
+    /*
+    var displayDateObject = new Date( calendarEventDisplay.displayDate );
+    var startHour = displayDateObject.getHours();
+    var startMinutes = displayDateObject.getMinutes();
+    */
+
+
+    var eventBox = document.createElement( "vbox" );
    
-   var displayDateObject = new Date( calendarEventDisplay.displayDate );
-   var startHour = displayDateObject.getHours();
-   var startMinutes = displayDateObject.getMinutes();
-   var eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
+    var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
+    var hourHeight = ElementOfRef.boxObject.height;
+    var Height = eventDuration * hourHeight + 1;
+    eventBox.setAttribute("height", Height);
    
-   var eventBox = document.createElement( "vbox" );
-   eventBox.calendarEventDisplay = calendarEventDisplay;
+    var hourWidth = ElementOfRef.boxObject.width;
+    var eventSlotWidth = Math.round(hourWidth / 1/*calendarEventDisplay.totalSlotCount*/);
    
-   var ElementOfRef = document.getElementById("week-tree-day-"+gRefColumnIndex+"-item-"+startHour) ;
-   var hourHeight = ElementOfRef.boxObject.height;
-   var Height = eventDuration * hourHeight + 1 ;
-   eventBox.setAttribute( "height", Height );
+    var Width = ( 1 /*calendarEventDisplay.drawSlotCount*/ * eventSlotWidth ) - 1;
+    eventBox.setAttribute( "width", Width );
+
+    var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
+    top = top - ElementOfRef.parentNode.boxObject.y - 2;
+    eventBox.setAttribute("top", top);
    
-   var hourWidth = ElementOfRef.boxObject.width;
-   var eventSlotWidth = Math.round( hourWidth / calendarEventDisplay.totalSlotCount );
+    var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
    
-   var Width = ( calendarEventDisplay.drawSlotCount * eventSlotWidth ) - 1;
-   eventBox.setAttribute( "width", Width );
-   
-   var top = eval( ElementOfRef.boxObject.y + ( ( startMinutes/60 ) * hourHeight ) );
-   top = top - ElementOfRef.parentNode.boxObject.y - 2;
-   eventBox.setAttribute( "top", top );
-   
-   var dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
-   
-   var index = displayDateObject.getDay( ) - dayIndex.getDay( );
-   if( index < 0 ) {
-      index = index + 7;
-   }
-   var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
-                 document.getElementById( "week-view-content-box" ).boxObject.x +
-                 ( calendarEventDisplay.startDrawSlot * eventSlotWidth ) 
-                 - 2;
-   eventBox.setAttribute( "left", boxLeft );
+    // XXX figure out what column we need to put this on
+    var index = 3;//var index = displayDateObject.getDay( ) - dayIndex.getDay( );
+    if( index < 0 ) {
+        index = index + 7;
+    }
+    var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
+                  document.getElementById( "week-view-content-box" ).boxObject.x +
+                  ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth ) 
+                  - 2;
+    eventBox.setAttribute("left", boxLeft);
    
    // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-   this.setEventboxClass( eventBox, calendarEventDisplay.event, "week-view");
+   //this.setEventboxClass(eventBox, calItem, "week-view");
   
-   eventBox.setAttribute( "eventbox", "weekview" );
-   eventBox.setAttribute( "dayindex", index+1 );
-   eventBox.setAttribute( "onclick", "weekEventItemClick( this, event )" );
-   eventBox.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
-   eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
-   eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
-   eventBox.setAttribute( "id", "week-view-event-box-"+calendarEventDisplay.event.id );
-   eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
-   eventBox.setAttribute( "tooltip", "eventTooltip" );
+   eventBox.setAttribute("eventbox", "weekview");
+   eventBox.setAttribute("dayindex", index + 1);
+   eventBox.setAttribute("onclick", "weekEventItemClick(this, event)" );
+   eventBox.setAttribute("ondblclick", "weekEventItemDoubleClick(this, event)");
+   eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
+   eventBox.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
+   eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
+   eventBox.setAttribute("id", "week-view-event-box-" + calItem.id);
+   eventBox.setAttribute("name", "week-view-event-box-" + calItem.id);
+   eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calItem )");
+   eventBox.setAttribute("tooltip", "eventTooltip");
 
    // The event description. This doesn't go multi line, but does crop properly.
    var eventDescriptionElement = document.createElement( "label" );
-   eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
-   eventDescriptionElement.setAttribute( "class", "week-view-event-label-class" );
-   eventDescriptionElement.setAttribute( "value", eventText );
-   eventDescriptionElement.setAttribute( "flex", "1" );
-   var DescriptionText = document.createTextNode( " " );
-   eventDescriptionElement.appendChild( DescriptionText );
-   eventDescriptionElement.setAttribute( "height", Height );
-   eventDescriptionElement.setAttribute( "crop", "end" );
-   eventDescriptionElement.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
-   eventDescriptionElement.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
-   eventDescriptionElement.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
+   //eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
+   eventDescriptionElement.setAttribute("class", "week-view-event-label-class" );
+   eventDescriptionElement.setAttribute("value", eventText );
+   eventDescriptionElement.setAttribute("flex", "1" );
+
+   var DescriptionText = document.createTextNode(" ");
+   eventDescriptionElement.appendChild(DescriptionText);
+
+   eventDescriptionElement.setAttribute("height", Height);
+   eventDescriptionElement.setAttribute("crop", "end");
+   eventDescriptionElement.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
+   eventDescriptionElement.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
+   eventDescriptionElement.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
    
-   eventBox.appendChild( eventDescriptionElement );
+   eventBox.appendChild(eventDescriptionElement);
     
-   this.kungFooDeathGripOnEventBoxes.push( eventBox );
+//   this.kungFooDeathGripOnEventBoxes.push( eventBox );
    
    return( eventBox );
 }

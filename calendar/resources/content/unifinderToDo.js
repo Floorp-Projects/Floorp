@@ -109,7 +109,7 @@ var unifinderToDoDataSourceObserver =
 function prepareCalendarToDoUnifinder( )
 {
    // set up our calendar event observer
-   gICalLib.addTodoObserver( unifinderToDoDataSourceObserver );
+   //gICalLib.addTodoObserver( unifinderToDoDataSourceObserver );
 }
 
 /**
@@ -118,7 +118,7 @@ function prepareCalendarToDoUnifinder( )
 
 function finishCalendarToDoUnifinder( )
 {
-   gICalLib.removeTodoObserver( unifinderToDoDataSourceObserver  );
+  //gICalLib.removeTodoObserver( unifinderToDoDataSourceObserver  );
 }
 
 /**

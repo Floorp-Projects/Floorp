@@ -208,7 +208,7 @@ function prepareCalendarUnifinder( )
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
    
    // set up our calendar event observer
-   gICalLib.addObserver( unifinderEventDataSourceObserver );
+   //gICalLib.addObserver( unifinderEventDataSourceObserver );
 }
 
 /**
@@ -217,7 +217,7 @@ function prepareCalendarUnifinder( )
 
 function finishCalendarUnifinder( )
 {
-   gICalLib.removeObserver( unifinderEventDataSourceObserver  );
+  //gICalLib.removeObserver( unifinderEventDataSourceObserver  );
 }
 
 /**

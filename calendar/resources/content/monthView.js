@@ -218,6 +218,8 @@ function MonthView( calendarWindow )
 */
 MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 {
+  return;
+
   // Set the numberOfEventsToShow
   if( this.numberOfEventsToShow == false )
          this.setNumberOfEventsToShow();

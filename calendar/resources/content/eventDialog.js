@@ -123,6 +123,9 @@ function loadCalendarEventDialog()
 
     event = args.calendarEvent;
 
+
+
+
     // mode is "new or "edit" - show proper header
     var titleDataItem = null;
 
@@ -132,8 +135,14 @@ function loadCalendarEventDialog()
         title = document.getElementById("data-event-title-edit").getAttribute("value");
     }
 
-    document.getElementById("calendar-new-component-window").setAttribute("title", title);
+    //document.getElementById("calendar-new-component-window").setAttribute("title", title);
+    document.title = title;
 
+    dump("-----\n");
+    dump(event);
+    dump("-----\n");
+    dump(event.startDate);
+    dump("-----\n");
 
     // fill in fields from the event
     gStartDate = event.startDate.jsDate;

@@ -659,14 +659,6 @@ function multiweekToDoBoxDoubleClickEvent( todoBox, event )
       event.stopPropagation();
    }
 }
-   
-
-function jsDateToDateTime(date)
-{
-    newDate = createDateTime();
-    newDate.nativeTime = date;
-    return newDate;
-}
 
 /** 
 * Called when the new event button is clicked
@@ -723,7 +715,17 @@ function createDateTime()
 
 function createCalendar()
 {
-    return Components.classes["@mozilla.org/calendar/calendar;1?type=memory"].getService(Components.interfaces.calICalendar);
+    return calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"].getService(Components.interfaces.calICalendar);
+    /*
+    calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=storage"].getService(Components.interfaces.calICalendar);
+    if (!calendar.uri) {
+        ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+        var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
+        dbFile.initWithPath("c:\\builds\\calstore.db");
+        calendar.uri = ioservice.newFileURI(dbFile);
+    }
+    return calendar;
+    */
 }
 
 function isEvent ( aObject )
@@ -737,6 +739,13 @@ function isToDo ( aObject )
    return aObject instanceof Components.interfaces.calITodo;
 }
 
+
+function jsDateToDateTime(date)
+{
+    newDate = createDateTime();
+    newDate.jsDate = date;
+    return newDate;
+}
 
 /* 
 * returns true if lastModified match
@@ -1442,27 +1451,21 @@ function publishCalendarDataDialogResponse( CalendarPublishObject )
 
 function getCharPref (prefObj, prefName, defaultValue)
 {
-    try
-    {
+    try {
         return prefObj.getCharPref (prefName);
-    }
-    catch (e)
-    {
-       prefObj.setCharPref( prefName, defaultValue );  
-       return defaultValue;
+    } catch (e) {
+        prefObj.setCharPref( prefName, defaultValue );  
+        return defaultValue;
     }
 }
 
-function getIntPref (prefObj, prefName, defaultValue)
+function getIntPref(prefObj, prefName, defaultValue)
 {
-    try
-    {
-        return prefObj.getIntPref (prefName);
-    }
-    catch (e)
-    {
-       prefObj.setIntPref( prefName, defaultValue );  
-       return defaultValue;
+    try {
+        return prefObj.getIntPref(prefName);
+    } catch (e) {
+        prefObj.setIntPref(prefName, defaultValue);  
+        return defaultValue;
     }
 }
 

@@ -457,6 +457,13 @@ calendarManager.prototype.editServerDialogResponse = function calMan_editServerD
 */
 calendarManager.prototype.addCalendar = function calMan_addCalendar( ThisCalendarObject )
 {
+  dump(Components.stack.toString() + "\n");
+  var x = Components.stack.caller;
+  while (x) {
+    dump(x.toString() + "\n");
+    x = x.caller;
+  }
+
    gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ),
                          ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#type" ) );
    var id = ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" );

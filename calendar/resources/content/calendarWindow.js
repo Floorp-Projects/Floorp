@@ -84,7 +84,8 @@ function CalendarWindow( )
    this.miniMonth = document.getElementById( "lefthandcalendar" );
    
    //setup the calendars
-   this.calendarManager = new calendarManager( this );
+   this.calendarManager = new Object();
+   //this.calendarManager = new calendarManager( this );
    
    //setup the calendar event selection
    this.EventSelection = new CalendarEventSelection( this );
@@ -211,7 +212,7 @@ function CalendarWindow( )
    
    // add the observer to the event source
    
-   gICalLib.addObserver( this.calendarEventDataSourceObserver );
+   //gICalLib.addObserver( this.calendarEventDataSourceObserver );
 }
 
 
@@ -223,7 +224,7 @@ function CalendarWindow( )
 
 CalendarWindow.prototype.close = function calWin_close( )
 {
-   gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
+  //gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
 
 
