@@ -548,14 +548,14 @@ public class ScriptRuntime {
     {
         if (val == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
                 throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.undef.to.object", null),
                         scope);
             }
@@ -768,7 +768,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -808,7 +808,7 @@ public class ScriptRuntime {
         }
         if (s == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -839,7 +839,7 @@ public class ScriptRuntime {
         }
         if (s == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -866,7 +866,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -894,7 +894,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -914,7 +914,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -1485,7 +1485,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -1583,7 +1583,7 @@ public class ScriptRuntime {
         }
         if (start == null) {
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.null.to.object", null),
                         scope);
         }
@@ -1616,7 +1616,7 @@ public class ScriptRuntime {
         Object result = ((Scriptable) val).getDefaultValue(null);
         if (result != null && result instanceof Scriptable)
             throw NativeGlobal.constructError(
-                        Context.getContext(), "ConversionError",
+                        Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.bad.default.value", null),
                         val);
         return result;

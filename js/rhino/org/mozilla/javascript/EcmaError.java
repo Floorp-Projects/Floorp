@@ -72,7 +72,7 @@ public class EcmaError extends RuntimeException {
      * Gets the name of the error.
      * 
      * ECMA edition 3 defines the following
-     * errors: ConversionError, EvalError, RangeError, ReferenceError, 
+     * errors: EvalError, RangeError, ReferenceError, 
      * SyntaxError, TypeError, and URIError. Additional error names
      * may be added in the future.
      * 
