@@ -49,6 +49,9 @@ static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 // This is cached for Leave notification
 static POINTL gDragLastPoint;
 
+
+
+
 /*
  * class nsNativeDragTarget
  */
@@ -149,6 +152,16 @@ void nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect
   }
 }
 
+
+PRBool IsKeyDown ( char key ) ;
+
+inline
+PRBool IsKeyDown ( char key )
+{
+  return GetKeyState(key) & 0x80 ? PR_TRUE : PR_FALSE;
+}
+
+
 //-----------------------------------------------------
 void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, 
                                                POINTL   aPT)
@@ -159,7 +172,6 @@ void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType,
 
   nsWindow * win = NS_STATIC_CAST(nsWindow *, mWindow);
   win->InitEvent(event, aEventType);
-
   POINT cpos;
 
   cpos.x = aPT.x;
@@ -173,6 +185,11 @@ void nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType,
     event.point.x = 0;
     event.point.y = 0;
   }
+
+  event.isShift   = IsKeyDown(NS_VK_SHIFT);
+  event.isControl = IsKeyDown(NS_VK_CONTROL);
+  event.isMeta    = PR_FALSE;
+  event.isAlt     = IsKeyDown(NS_VK_ALT);
 
   mWindow->DispatchEvent(&event, status);
 }
