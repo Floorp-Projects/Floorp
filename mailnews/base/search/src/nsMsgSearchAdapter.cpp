@@ -348,6 +348,7 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
         {
             nsXPIDLCString folderCharset;
             folder->GetCharset(getter_Copies(folderCharset));
+      PR_Free(*dstCharset);
             *dstCharset = ToNewUnicode(folderCharset);
         }
 	}
@@ -359,7 +360,10 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
 	// was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
   if (!nsCRT::strcmp(*dstCharset, m_defaultCharset.get()))
+  {
+    PR_Free(*dstCharset);
     *dstCharset = nsCRT::strdup(*srcCharset);
+  }
 
 	if (m_forceAsciiSearch)
 	{
@@ -370,6 +374,7 @@ nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCha
 		// If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
 		// source text to US-ASCII. (Not for now.)
 		// if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
+    PR_Free(*dstCharset);
     *dstCharset = nsCRT::strdup(NS_LITERAL_STRING("us-ascii").get());
 	}
   return NS_OK;
