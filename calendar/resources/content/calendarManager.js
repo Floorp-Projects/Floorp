@@ -643,7 +643,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
       
                profileFile.append("Calendar");
                var CalendarName = "Local"+ CalendarManager.nextCalendar();
-               profileFile.append( calendarName + ".ics");
+               profileFile.append( CalendarName + ".ics");
                 
                FilePath = profileFile.path;
                saveDataToFile(FilePath, CalendarData, null);
