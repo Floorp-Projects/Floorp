@@ -23,9 +23,9 @@ var rdf;
 var editButton;
 var deleteButton;
 
-var nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
+const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
-var gBundle;
+var gFilterBundle;
 var gCommonDialogsService; 
 
 function onLoad()
@@ -37,7 +37,7 @@ function onLoad()
     gCommonDialogsService 
         = gCommonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
-    gBundle = srGetStrBundle("chrome://messenger/locale/filter.properties");
+    gFilterBundle = document.getElementById("bundle_filter");
 
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");
@@ -65,7 +65,7 @@ function onLoad()
 function onOk()
 {
     // make sure to save the filter to disk
-    filterList =  currentFilterList();
+    var filterList = currentFilterList();
     if (filterList) filterList.saveToDefaultFile();
     window.close();
 }
@@ -75,7 +75,6 @@ function onServerClick(event)
     var item = event.target;
 
     // don't check this in.
-    dump("setServer(\"" + item.id + "\");\n");
     setTimeout("setServer(\"" + item.id + "\");", 0);
 }
 
@@ -91,13 +90,12 @@ function onToggleEnabled(event)
 {
     var item = event.target;
     while (item && item.localName != "treeitem") {
-        lastItem = item;
         item = item.parentNode;
     }
     
     var filterResource = rdf.GetUnicodeResource(item.id);
-    filter = filterResource.GetDelegate("filter",
-                                        Components.interfaces.nsIMsgFilter);
+    var filter = filterResource.GetDelegate("filter",
+                                            Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
     refreshFilterList();
 }
@@ -148,26 +146,24 @@ function onFilterSelect(event)
 }
 
 function onEditFilter() {
-
     var selectedFilter = currentFilter();
-
     var args = {filter: selectedFilter};
     
     window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
-    if (args.refresh)
+    if ("refresh" in args && args.refresh)
         refreshFilterList();
 }
 
 function onNewFilter()
 {
     var curFilterList = currentFilterList();
-    var args = {filterList: curFilterList };
+    var args = {filterList: curFilterList};
     
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
-  if (args.refresh) refreshFilterList();
-  
+  if ("refresh" in args && args.refresh)
+    refreshFilterList();
 }
 
 function onDeleteFilter()
@@ -177,7 +173,7 @@ function onDeleteFilter()
     var filterList = currentFilterList();
     if (!filterList) return;
 
-    var confirmStr = getBundle().GetStringFromName("deleteFilterConfirmation");
+    var confirmStr = gFilterBundle.getString("deleteFilterConfirmation");
     
     if (!window.confirm(confirmStr)) return;
 
