@@ -39,11 +39,26 @@ nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask)
     return rv;
 }
 
-/* extract portnumber from string */
+/* extracts first number from a string and assumes that this is the port number*/
 NS_NET PRInt32 
 ExtractPortFrom(const char* src)
 {
+    // search for digits up to a slash or the string ends
+    const char* port = src;
     PRInt32 returnValue = -1;
+
+    // skip leading white space
+    while (nsCRT::IsAsciiSpace(*port))
+        port++;
+
+    char c;
+    while ((c = *port++) != '\0') {
+        // stop if slash reached
+        if (c == '/')
+            break;
+        else if (!nsCRT::IsAsciiDigit(c))
+            return returnValue;
+    }
     return (0 < PR_sscanf(src, "%d", &returnValue)) ? returnValue : -1;
 }
 
