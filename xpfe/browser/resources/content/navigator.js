@@ -704,20 +704,17 @@ function RevealSearchPanel()
     newWin.saveFileAndPos = true;
   }
   
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
   function BrowserOpenFileWindow()
   {
-    // Get filespecwithui component.            
-    var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-    var url = null;
+    // Get filepicker component.
     try {
-        fileSpec.parentWindow = window;
-        url = fileSpec.chooseFile( bundle.GetStringFromName( "openFile" ) );
-        fileSpec.parentWindow = null;
-    } catch ( exception ) {
-    }
-    if ( url && url != "" ) {
-        openNewWindowWith( url );
-    }
+      var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+      fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
+      fp.setFilters(nsIFilePicker.filterAll);
+      fp.show();
+      openNewWindowWith(fp.file.path);
+    } catch (ex) { }
   }
 
   function OpenFile(url) {
