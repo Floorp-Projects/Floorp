@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.46 2003/05/21 02:15:21 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.47 2003/05/21 14:46:38 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1229,7 +1229,9 @@ my $webservergid = '8'
         <section id="win32-code-bugmail">
           <title>Changes to <filename>BugMail.pm</filename></title>
 
-          <para>To make bug e-mail work on Win32 (until bug 124174 lands), the
+          <para>To make bug e-mail work on Win32 (until
+          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=84876">bug
+          84876</ulink> lands), the
           simplest way is to have Net::SMTP installed and change this (in
           <filename>Bugzilla/BugMail.pm</filename>):</para>
 
