@@ -2,13 +2,13 @@
 	{
 		identifier = chimera; 
 		panes = (
-            Chimera.SitesPrefPane,
-            Chimera.BrowsingPrefPane,
-            org.mozilla.chimera.preference.personal, 
-            Chimera.HelpersPrefPane,
+            org.mozilla.chimera.preference.navigation,
             org.mozilla.chimera.preference.privacy,
+            Chimera.SitesPrefPane,
+            Chimera.HelpersPrefPane,
             Chimera.SecurityPrefPane,
-            Chimera.AdvancedPrefPane
+            Chimera.AdvancedPrefPane,
+            org.mozilla.chimera.preference.personal
 		); 
 	} 
 )
