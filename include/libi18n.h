@@ -2721,8 +2721,64 @@ INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector);
 
 const char* INTL_CharsetCorrection(const char* charsetname);
 
+/*
+ * Date/Time Format Selectors
+ */
+typedef PRUint32	INTLLocaleID;
+typedef enum INTL_DateFormatSelector {
+	INTL_DateFormatNone,
+	INTL_DateFormatLong,
+	INTL_DateFormatShort,
+	INTL_DateFormatYearMonth,
+} INTL_DateFormatSelector;
 
-/* Definition for language country selector. 
+typedef enum INTL_TimeFormatSelector {
+	INTL_TimeFormatNone,
+	INTL_TimeFormatSeconds,
+	INTL_TimeFormatNoSeconds,
+	INTL_TimeFormatForce24Hour
+} INTL_TimeFormatSelector;
+/** 
+ * Locale sensitive Date/Time formmating function 
+ * 
+ * Using a given selector, this returns a charset ID. 
+ * Designed to retrieve a non-context dependent charset ID (e.g file system). 
+ * 
+ * @param	localeID		Specification for the Locale conventions to use.
+ * @param	formatSelector	Specification for the type of format to select
+ * @param	time			time
+ * @param	utf8Buffer		result buffer (in utf8)
+ * @param	bufferLength	length of result buffer
+ * @return	PRSuccess when succesful, PRFailure otherwise 
+ */ 
+PUBLIC PRStatus	INTL_FormatTime(INTLLocaleID localeID,
+									INTL_DateFormatSelector dateFormatSelector,
+									INTL_TimeFormatSelector	timeFormatSelector,
+									time_t	time,
+									unsigned char* utf8Buffer,
+									PRUint32 bufferLength);
+/** 
+ * Locale sensitive Date formmating function 
+ * 
+ * Using a given selector, this returns a charset ID. 
+ * Designed to retrieve a non-context dependent charset ID (e.g file system). 
+ * 
+ * @param	localeID		Specification for the Locale conventions to use.
+ * @param	formatSelector	Specification for the type of format to select
+ * @param	time			time
+ * @param	utf8Buffer		result buffer (in utf8)
+ * @param	bufferLength	length of result buffer
+ * @return	PRSuccess when succesful, PRFailure otherwise 
+ */ 
+PUBLIC PRStatus INTL_FormatTMTime(INTLLocaleID localeID,
+									  INTL_DateFormatSelector dateFormatSelector,
+									  INTL_TimeFormatSelector	timeFormatSelector,
+									  const struct tm* time,
+									  unsigned char* utf8Buffer,
+									  PRUint32 bufferLength);
+
+/*
+ * Definition for language country selector. 
  */ 
 typedef enum { 
     INTL_LanguageSel = 1, 	        /* User's default language */
