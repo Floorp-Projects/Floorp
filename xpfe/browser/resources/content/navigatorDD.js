@@ -103,6 +103,7 @@ var personalToolbarObserver = {
 
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
+      flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: uri };
       return flavourList;
     },
