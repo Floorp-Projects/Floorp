@@ -163,7 +163,8 @@ bin\chrome\directory\*
 bin\chrome\editor\*
 -bin\chrome\editor\content\default\EditorInitPage.html
 -bin\chrome\editor\content\default\EditorInitPagePlain.html
--bin\chrome\editor\content\default\TextEditorAppShell.xul
+;Include this for "debug" testing - remove for actual beta release:
+;-bin\chrome\editor\content\default\TextEditorAppShell.xul
 -bin\chrome\editor\content\default\sb-bookmarks-panel.xul
 -bin\chrome\editor\content\default\sb-bookmarks.js
 -bin\chrome\editor\content\default\sb-file-contextMenu.js

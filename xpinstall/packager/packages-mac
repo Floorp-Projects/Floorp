@@ -151,7 +151,8 @@ viewer:chrome:bookmarks:*
 viewer:chrome:editor:*
 -viewer:chrome:editor:content:default:EditorInitPage.html
 -viewer:chrome:editor:content:default:EditorInitPagePlain.html
--viewer:chrome:editor:content:default:TextEditorAppShell.xul
+;Include this for "debug" testing - remove for actual beta release:
+;-viewer:chrome:editor:content:default:TextEditorAppShell.xul
 -viewer:chrome:editor:content:default:sb-bookmarks-panel.xul
 -viewer:chrome:editor:content:default:sb-bookmarks.js
 -viewer:chrome:editor:content:default:sb-file-contextMenu.js
