@@ -488,7 +488,7 @@ END of Deprecated -->
 </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
+    <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
 		onkeypress="if (event.which == 9)
 		                if (event.shiftKey == true) {
 		                    document.getElementById('msgSubject').focus();
