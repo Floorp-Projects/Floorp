@@ -231,7 +231,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kStringBundleServiceCID, NULL, NULL, path,
+  rv = compMgr->RegisterComponent(kStringBundleServiceCID, 
+                                  "String Bundle", 
+                                  NS_STRINGBUNDLE_PROGID, 
+                                  path,
     PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 

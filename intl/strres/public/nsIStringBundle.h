@@ -38,6 +38,8 @@
 { 0xd85a17c2, 0xaa7c, 0x11d2, \
   { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
+#define NS_STRINGBUNDLE_PROGID "component://netscape/intl/stringbundle"
+
 class nsIStringBundle : public nsISupports
 {
 public:
