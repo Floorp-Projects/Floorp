@@ -358,7 +358,7 @@ nsPSMSocketInfo::GetPickledStatus(char * *pickledStatusString)
         unsigned char* ret    = nsnull;
 
         if (CMT_GetSSLSocketStatus(mControl, mSocket, &pickledStatus, &level) == PR_FAILURE)
-            return nsnull;
+            return NS_ERROR_FAILURE;
         
         ret = (unsigned char*) PR_Malloc( (SSMSTRING_PADDED_LENGTH(pickledStatus.len) + sizeof(int)) );
         if (!ret) 
