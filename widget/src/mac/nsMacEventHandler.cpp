@@ -736,6 +736,7 @@ enum
 	kKeypadEqualsKeyCode		= 0x51,			// no correpsonding raptor key code
 	kEnterKeyCode           = 0x4C,
 	kReturnKeyCode          = 0x24,
+	kPowerbookEnterKeyCode  = 0x34,     // Enter on Powerbook's keyboard is different
 	
 	kInsertKeyCode					= 0x72,				// also help key
 	kDeleteKeyCode					= 0x75,				// also forward delete key
@@ -1030,6 +1031,7 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kDownArrowKeyCode:			isSpecial = PR_TRUE; break;
 		case kReturnKeyCode:        isSpecial = PR_TRUE; break;
 		case kEnterKeyCode:         isSpecial = PR_TRUE; break;
+		case kPowerbookEnterKeyCode: isSpecial = PR_TRUE; break;
 
 		default:							isSpecial = PR_FALSE; break;
 	}
