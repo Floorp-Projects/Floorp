@@ -1669,7 +1669,6 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
       aStatus = NS_INLINE_LINE_BREAK_BEFORE();
     }
     else {
-      nsReflowStatus complete = NS_FRAME_COMPLETE;
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // When the block isn't complete create a continuation for it
         nsIFrame* newFrame;
@@ -1677,7 +1676,6 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
         if (NS_FAILED(rv)) {
           return rv;
         }
-        complete = NS_FRAME_NOT_COMPLETE;
       }
 
       // It's possible that the block frame is followed by one or more
@@ -1705,16 +1703,12 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
         }
       }
 
-      // Map reflow status so that nothing ends up on the same line as
-      // this frame.
-      aStatus = NS_INLINE_LINE_BREAK_AFTER(complete);
-
       // What we do here is to fudge the size. <b>This</b> frame will
       // be 0,0 but will contain a single child (the anonymous block)
       // that is properly sized.
-      aMetrics.width = 0;
-      aMetrics.height = 0;
-      aMetrics.ascent = 0;
+      aMetrics.width = bounds.width;
+      aMetrics.height = bounds.height;
+      aMetrics.ascent = bounds.height;
       aMetrics.descent = 0;
       aMetrics.mCarriedOutTopMargin = bc.GetCollapsedTopMargin();
       aMetrics.mCarriedOutBottomMargin = bc.GetCarriedOutBottomMargin();
