@@ -115,19 +115,6 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
   char                *inputString = nsnull;          // original string...
   PRInt32             inputStringLength;      
 
-  // If this is text compose, just insert what we have into the editor
-  if (!aHTMLEditor)
-  {
-    aEditor->InsertText(aBuf.GetUnicode());
-/* RICHIE SHERRY - InsertAsQuotation on a plain text editor is not working yet!
-    if (aQuoted)
-      aEditor->InsertAsQuotation(aBuf.GetUnicode());
-    else
-      aEditor->InsertText(aBuf.GetUnicode());
-***/
-    return NS_OK;
-  }
-
   // Get the service for charset conversion...
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
   if (NS_FAILED(res) || !ccm)
@@ -138,8 +125,7 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
   if (!decoder)
     return NS_ERROR_FAILURE;
 
-  // RICHIE
-  // This could go away....getting the aBuf in oneByteChar format...
+  // This could go away if we could get the aBuf in oneByteChar format...
   inputString = aBuf.ToNewCString();
   inputStringLength = (PRInt32) nsCRT::strlen(inputString);
 
@@ -161,8 +147,19 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
     return NS_ERROR_FAILURE;
   }
 
-  // Now, insert it into the editor the correct way!
-  if (aQuoted)
+  // Now, insert it into the editor...
+  //
+  // Akkana: There is a problem inserting converted unicode text into
+  //         the plain text editor with the InsertAsQuotation() method.
+  //         InsertText works fine, but InsertAsQuotation() seems to give
+  //         us a blank window. To see the bug, change the conditional below
+  //         from:
+  //                    "if ( (aQuoted) && (aHTMLEditor) )" 
+  //         to:
+  //                    "if (aQuoted)" 
+  //
+  // RICHIE SHERRY  if (aQuoted)
+  if ( (aQuoted) && (aHTMLEditor) )
     aEditor->InsertAsQuotation(unicodeInputString);
   else
   {
