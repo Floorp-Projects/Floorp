@@ -44,6 +44,7 @@ CPPSRCS		= \
 		nsSetupRegistry.cpp \
 		nsWindowCreator.cpp \
 		nsSigHandlers.cpp \
+                showOSAlert.cpp \
 		$(NULL)
 
 XP_LIBS		= \
@@ -106,7 +107,7 @@ endif
 
 #ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 #CPPSRCS += nsNativeAppSupportGtk.cpp
-#LIBS += $(MOZ_GTK_LDFLAGS) -lgdk -lglib -lX11 
+LIBS += $(MOZ_GTK_LDFLAGS)
 #endif
 
 include $(topsrcdir)/config/rules.mk
