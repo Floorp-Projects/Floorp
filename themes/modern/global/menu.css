@@ -57,9 +57,9 @@ menuitem[default="true"] {
   
 menu[disabled="true"],
 menuitem[disabled="true"],
-menu[disabled="true"]:-moz-menuactive,
-menuitem[disabled="true"]:-moz-menuactive {
-  color: #838E9B;
+menu[menuactive="true"][disabled="true"],
+menuitem[menuactive="true"][disabled="true"] {
+  color: #8C99AB;
 }
 
 /* ..... internal content .... */

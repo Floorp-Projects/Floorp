@@ -64,7 +64,7 @@ checkbox:focus {
 /* ..... disabled state ..... */
 
 checkbox[disabled="true"] > .checkbox-label-box > .checkbox-label {
-  color: #9FA6AE !important;
+  color: #8C99AB !important;
 }
 
 /* ::::: checkmark image ::::: */
