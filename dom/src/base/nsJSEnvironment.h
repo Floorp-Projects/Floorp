@@ -39,6 +39,9 @@ public:
   virtual void*                     GetNativeContext();
   virtual nsresult     InitClasses();
   virtual nsresult     InitContext(nsIScriptGlobalObject *aGlobalObject);
+  virtual nsresult     AddNamedReference(void *aSlot, void *aScriptObject,
+                                         const char *aName);
+  virtual nsresult RemoveReference(void *aSlot, void *aScriptObject);
 };
 
 class nsJSEnvironment {

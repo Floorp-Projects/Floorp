@@ -49,29 +49,29 @@ public:
    * @return true if the script was valid and got executed
    *
    **/
-  virtual PRBool              EvaluateString(const char *aScript, 
-                                             PRUint32 aScriptSize, 
-                                             const char *aURL,
-                                             PRUint32 aLineNo,
-                                             jsval *aRetValue) = 0;
+  virtual PRBool EvaluateString(const char *aScript, 
+                                PRUint32 aScriptSize, 
+                                const char *aURL,
+                                PRUint32 aLineNo,
+                                jsval *aRetValue) = 0;
 
   /**
    * Return the global object.
    *
    **/
-  virtual nsIScriptGlobalObject*  GetGlobalObject() = 0;
+  virtual nsIScriptGlobalObject* GetGlobalObject() = 0;
 
   /**
    * Return the native script context
    *
    **/
-  virtual void*                   GetNativeContext() = 0;
+  virtual void* GetNativeContext() = 0;
 
   /**
    * Init all DOM classes.
    *
    **/
-  virtual nsresult                InitClasses() = 0;
+  virtual nsresult InitClasses() = 0;
 
   /**
    * Init this context.
@@ -81,7 +81,33 @@ public:
    * @return NS_OK if context initialization was successful
    *
    **/
-  virtual nsresult            InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
+  virtual nsresult InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
+
+  /**
+   * Add a reference to a script object. For garbage collected systems
+   * the address of a slot to be used as a root is also provided. For
+   * reference counted systems, the object is provided.
+   * 
+   * @param aSlot Slot to use as a root for garbage collected systems
+   * @param aScriptObject Script object being referenced
+   * @param aName Name of the reference (could be null)
+   *
+   * @return NS_OK if the method is successful
+   */
+  virtual nsresult AddNamedReference(void *aSlot, void *aScriptObject,
+                                     const char *aName) = 0;
+
+  /**
+   * Remove a reference to a script object. For garbage collected 
+   * systems, this is equivalent to removing a root.
+   *
+   * @param aSlot Slot corresponding to the removed root
+   * @param aScriptObject script object to whom a reference is released
+   *
+   * @return NS_OK if the method is successful
+   */
+  virtual nsresult RemoveReference(void *aSlot, void *aScriptObject) = 0;
+
 };
 
 /**

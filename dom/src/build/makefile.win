@@ -27,7 +27,7 @@ CPPSRCS=dlldeps.cpp
 CPP_OBJS=.\$(OBJDIR)\dlldeps.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base
+	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base -I$(PUBLIC)\jsurl
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = jsdom
@@ -38,6 +38,7 @@ MISCDEP =						\
 	$(DIST)\lib\jsdomcore_s.lib			\
 	$(DIST)\lib\jsdomevents_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
+	$(DIST)\lib\jsurl.lib				\
 	$(DIST)\lib\raptorbase.lib			\
 	$(DIST)\lib\netlib.lib				\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
@@ -57,6 +58,7 @@ LLIBS=							\
 	$(DIST)\lib\jsdomcore_s.lib			\
 	$(DIST)\lib\jsdomevents_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
+	$(DIST)\lib\jsurl.lib				\
 	$(DIST)\lib\raptorbase.lib			\
 	$(DIST)\lib\netlib.lib				\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
