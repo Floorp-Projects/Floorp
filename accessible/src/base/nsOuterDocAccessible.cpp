@@ -53,6 +53,12 @@ nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode,
   mAccChildCount = 1;
 }
 
+NS_IMETHODIMP nsOuterDocAccessible::GetChildCount(PRInt32 *aAccChildCount) 
+{
+  *aAccChildCount = 1;
+  return NS_OK;  
+}
+
   /* attribute wstring accName; */
 NS_IMETHODIMP nsOuterDocAccessible::GetName(nsAString& aName) 
 { 

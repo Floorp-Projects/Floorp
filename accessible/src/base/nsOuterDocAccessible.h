@@ -52,6 +52,8 @@ class nsOuterDocAccessible : public nsAccessibleWrap
     nsOuterDocAccessible(nsIDOMNode* aNode, 
                          nsIWeakReference* aShell);
 
+    NS_IMETHOD GetChildCount(PRInt32 *_retval);
+
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetValue(nsAString& Value);
     NS_IMETHOD GetRole(PRUint32 *aRole);
