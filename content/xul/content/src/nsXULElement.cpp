@@ -3178,6 +3178,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 {
     nsresult ret = NS_OK;
   
+    PRBool retarget = PR_FALSE;
+    nsCOMPtr<nsIDOMEventTarget> oldTarget;
+
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT & aFlags) {
         aDOMEvent = &domEvent;
@@ -3222,6 +3225,52 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
             else return NS_ERROR_FAILURE;
         }
     }
+    
+    // Find out if we're anonymous.
+    nsCOMPtr<nsIContent> bindingParent;
+    GetBindingParent(getter_AddRefs(bindingParent));
+    if (bindingParent) {
+      // We're anonymous.  We may potentially need to retarget
+      // our event if our parent is in a different scope.
+      if (mParent) {
+        nsCOMPtr<nsIContent> parentScope;
+        mParent->GetBindingParent(getter_AddRefs(parentScope));
+        if (parentScope != bindingParent)
+          retarget = PR_TRUE;
+      }
+    }
+   
+    if (retarget) {
+      if (!*aDOMEvent) {
+        // We haven't made a DOMEvent yet.  Force making one now.
+        nsCOMPtr<nsIEventListenerManager> listenerManager;
+        if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
+          return ret;
+        }
+        nsAutoString empty;
+        if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
+          return ret;
+      }
+   
+      if (!*aDOMEvent) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (!privateEvent) {
+        return NS_ERROR_FAILURE;
+      }
+
+      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+    
+      PRBool hasOriginal;
+      privateEvent->HasOriginalTarget(&hasOriginal);
+
+      if (!hasOriginal)
+        privateEvent->SetOriginalTarget(oldTarget);
+
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mParent);
+      privateEvent->SetTarget(target);
+    }
   
     // Node capturing stage
     if (NS_EVENT_FLAG_BUBBLE != aFlags) {
@@ -3236,11 +3285,28 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
     
 
+    if (retarget) {
+      // The event originated beneath us, and we performed a retargeting.
+      // We need to restore the original target of the event.
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (privateEvent)
+        privateEvent->SetTarget(oldTarget);
+    }
+
     //Local handling stage
     if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         aEvent->flags |= aFlags;
         mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
         aEvent->flags &= ~aFlags;
+    }
+
+    if (retarget) {
+      // The event originated beneath us, and we need to perform a retargeting.
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (privateEvent) {
+        nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(mParent));
+        privateEvent->SetTarget(parentTarget);
+      }
     }
 
     //Bubbling stage
@@ -3256,6 +3322,14 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                         NS_EVENT_FLAG_BUBBLE, aEventStatus);
         }
+    }
+
+    if (retarget) {
+      // The event originated beneath us, and we performed a retargeting.
+      // We need to restore the original target of the event.
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
+      if (privateEvent)
+        privateEvent->SetTarget(oldTarget);
     }
 
     if (NS_EVENT_FLAG_INIT & aFlags) {
