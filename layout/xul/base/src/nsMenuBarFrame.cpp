@@ -611,7 +611,7 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled = "";
   aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled == "true")
+  if (disabled.Equals("true"))
     return PR_TRUE;
   return PR_FALSE;
 }

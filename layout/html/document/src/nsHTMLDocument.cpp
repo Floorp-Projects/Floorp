@@ -431,7 +431,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     NS_RELEASE(lastModKey);
     if (NS_SUCCEEDED(rv)) {
-      lastModified = lastModHeader;
+      lastModified.Assign(lastModHeader);
       SetLastModified(lastModified);
     }
 
@@ -445,7 +445,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     NS_RELEASE(referrerKey);
     if (NS_SUCCEEDED(rv)) {
-      referrer = referrerHeader;
+      referrer.Assign(referrerHeader);
       SetReferrer(referrer);
     }
 
@@ -457,7 +457,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       NS_RELEASE(contentTypeKey);
       if (NS_SUCCEEDED(rv)) {
         nsAutoString contentType;
-        contentType = contenttypeheader;
+        contentType.Assign(contenttypeheader);
         PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
         if(kNotFound != start)
         {

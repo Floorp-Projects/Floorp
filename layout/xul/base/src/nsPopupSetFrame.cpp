@@ -336,9 +336,9 @@ nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
     menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
     menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
 
-    if (popupAnchor == "")
+    if (popupAnchor.IsEmpty())
       popupAnchor = "bottomleft";
-    if (popupAlign == "")
+    if (popupAlign.IsEmpty())
       popupAlign = "topleft";
    
     ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(aPresContext, popupAnchor, popupAlign, mElementFrame, mXPos, mYPos);
@@ -442,7 +442,7 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
   // determine if this menu is a context menu and flag it
   nsIFrame* activeChild = GetActiveChild();
   nsCOMPtr<nsIMenuParent> childPopup ( do_QueryInterface(activeChild) );
-  if ( childPopup && aPopupType == "context" )
+  if ( childPopup && aPopupType.Equals("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
   // Now we'll have it in our child frame list.
@@ -482,7 +482,7 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
     nsAutoString value;
     childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                                value);
-    if (value == "true") {
+    if (value.Equals("true")) {
       // Ungenerate this element.
       childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
                                    PR_TRUE);
@@ -494,7 +494,7 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
   nsAutoString value;
   aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                               value);
-  if (value != "true") {
+  if (!value.Equals("true")) {
     // Generate this element.
     aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true",
                                 PR_TRUE);

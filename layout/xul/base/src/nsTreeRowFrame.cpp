@@ -309,7 +309,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
     if (colContent) {
       nsAutoString fixedValue;
       colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
-      if (fixedValue != "true") {
+      if (!fixedValue.Equals("true")) {
         // We are a proportional column and should be annotated with our current
         // width.
         PRInt32 colWidth = treeFrame->GetColumnWidth(i);

@@ -2277,7 +2277,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*        aPresShell,
             nsString charData;
             domData->GetData(charData);
             charData = charData.StripWhitespace();
-            if ((charData.Length() <= 0) && (charData != " ")) { // XXX check this
+            if ((charData.Length() <= 0) && (!charData.Equals(" "))) { // XXX check this
               needCell = PR_FALSE;  // only contains whitespace, don't create cell
             }
             NS_RELEASE(domData);
@@ -4326,7 +4326,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
       styleContext->GetStyleData(eStyleStruct_UserInterface);
 
-  if (ui->mBehavior != "") {
+  if (!ui->mBehavior.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
     NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
@@ -4489,7 +4489,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
   const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
       styleContext->GetStyleData(eStyleStruct_UserInterface);
 
-  if (ui->mBehavior != "") {
+  if (!ui->mBehavior.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
     NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
@@ -4577,7 +4577,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           aStyleContext->GetStyleData(eStyleStruct_UserInterface);
 
       // Ensure that our XBL bindings are installed.
-      if (ui->mBehavior != "") {
+      if (!ui->mBehavior.IsEmpty()) {
         // Get the XBL loader.
         nsresult rv;
         NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);

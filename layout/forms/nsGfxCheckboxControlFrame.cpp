@@ -549,9 +549,9 @@ nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& ou
 nsGfxCheckboxControlFrame::CheckState 
 nsGfxCheckboxControlFrame::StringToCheckState ( const nsString & aStateAsString )
 {
-  if ( aStateAsString == NS_STRING_TRUE )
+  if ( aStateAsString.Equals(NS_STRING_TRUE) )
     return eOn;
-  else if ( aStateAsString == NS_STRING_FALSE )
+  else if ( aStateAsString.Equals(NS_STRING_FALSE) )
     return eOff;
 
   // not true and not false means mixed

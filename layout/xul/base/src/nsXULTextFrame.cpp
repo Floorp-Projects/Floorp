@@ -139,7 +139,7 @@ nsXULTextFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString accesskey;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                          accesskey);
-  if (accesskey != "") {   
+  if (!accesskey.IsEmpty()) {   
       if (!mAccessKeyInfo)
           mAccessKeyInfo = new nsAccessKeyInfo();
 
@@ -540,7 +540,7 @@ nsXULTextFrame::UpdateAccessUnderline()
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
-    if (accesskey == "") {
+    if (accesskey.IsEmpty()) {
         if (mAccessKeyInfo) {
             delete mAccessKeyInfo;
             mAccessKeyInfo = nsnull;

@@ -481,7 +481,7 @@ nsGfxButtonControlFrame::ButtonLocalize(char* aKey, nsString& oVal)
     nsAutoString key(aKey);
     rv = bundle->GetStringFromName(key.GetUnicode(), getter_Copies(valUni));
     if (NS_SUCCEEDED(rv) && valUni) {
-      oVal = valUni;
+      oVal.Assign(valUni);
     } else {
       oVal.Truncate();
     }

@@ -340,7 +340,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
 {
   *aResult = nsnull;
 
-  if (aURLStr == nsCAutoString(""))
+  if (aURLStr.IsEmpty())
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIURL> uri;
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
     child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
     
     // If no ref is specified just use this.
-    if ((bindingName == "") || (bindingName == value)) {
+    if ((bindingName.IsEmpty()) || (bindingName == value)) {
       // Make a new binding
       NS_NewXBLBinding(aResult);
 
@@ -388,7 +388,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
 
       // Check for the presence of an extends attribute
       child->GetAttribute(kNameSpaceID_None, kExtendsAtom, value);
-      if (value != "") {
+      if (!value.IsEmpty()) {
         // See if we are extending a builtin tag.
         nsCOMPtr<nsIAtom> tag;
         (*aResult)->GetBaseTag(getter_AddRefs(tag));
@@ -538,7 +538,7 @@ nsXBLService::StripWhitespaceNodes(nsIContent* aElement)
       nsAutoString result;
       text->CopyText(result);
       result.StripWhitespace();
-      if (result == "") {
+      if (result.IsEmpty()) {
         // This node contained nothing but whitespace.
         // Remove it from the content model.
         aElement->RemoveChildAt(i, PR_TRUE);

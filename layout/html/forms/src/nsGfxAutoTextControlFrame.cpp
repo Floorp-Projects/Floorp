@@ -191,7 +191,7 @@ void nsGfxAutoTextControlFrame::ReadAttributes(nsIContent* aContent)
 	if (NS_SUCCEEDED(aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::autocompletetype, val)))
 	{
 		if (! val.IsEmpty())
-			mUseBlurr = (val == "blurr");
+			mUseBlurr = (val.Equals("blurr"));
 	}
 }
 

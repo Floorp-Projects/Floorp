@@ -539,7 +539,7 @@ nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex,
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen == "true") {
+      if (isOpen.Equals("true")) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
@@ -615,7 +615,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen == "true") {
+      if (isOpen.Equals("true")) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
@@ -683,7 +683,7 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
       nsCOMPtr<nsIContent> parent;
       childContent->GetParent(*getter_AddRefs(parent));
       parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen == "true")
+      if (isOpen.Equals("true"))
       ComputeTotalRowCount(aCount, childContent);
     }
   }
@@ -1566,7 +1566,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
                                      nsXULAtoms::curpos, value);
     }
    
-    if (nukeScrollbar || (value == "0" && !mIsFull)) {
+    if (nukeScrollbar || (value.Equals("0") && !mIsFull)) {
       
       // clear the scrollbar out of the event state manager so that the
       // event manager doesn't send events to the destroyed scrollbar frames

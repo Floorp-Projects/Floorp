@@ -319,35 +319,35 @@ nsMenuPopupFrame :: AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioY
                                                     const nsString& aPopupAnchor, const nsString& aPopupAlign,
                                                     PRBool* outFlushWithTopBottom )
 {
-  if (aPopupAnchor == "topright" && aPopupAlign == "topleft") {
+  if (aPopupAnchor.Equals("topright") && aPopupAlign.Equals("topleft")) {
     *ioXPos += inParentRect.width;
   }
-  else if (aPopupAnchor == "topright" && aPopupAlign == "bottomright") {
+  else if (aPopupAnchor.Equals("topright") && aPopupAlign.Equals("bottomright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == "bottomright" && aPopupAlign == "bottomleft") {
+  else if (aPopupAnchor.Equals("bottomright") && aPopupAlign.Equals("bottomleft")) {
     *ioXPos += inParentRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor == "bottomright" && aPopupAlign == "topright") {
+  else if (aPopupAnchor.Equals("bottomright") && aPopupAlign.Equals("topright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == "topleft" && aPopupAlign == "topright") {
+  else if (aPopupAnchor.Equals("topleft") && aPopupAlign.Equals("topright")) {
     *ioXPos -= mRect.width;
   }
-  else if (aPopupAnchor == "topleft" && aPopupAlign == "bottomleft") {
+  else if (aPopupAnchor.Equals("topleft") && aPopupAlign.Equals("bottomleft")) {
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == "bottomleft" && aPopupAlign == "bottomright") {
+  else if (aPopupAnchor.Equals("bottomleft") && aPopupAlign.Equals("bottomright")) {
     *ioXPos -= mRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor == "bottomleft" && aPopupAlign == "topleft") {
+  else if (aPopupAnchor.Equals("bottomleft") && aPopupAlign.Equals("topleft")) {
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
@@ -709,7 +709,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
-  if (menuActive != "true") {
+  if (!menuActive.Equals("true")) {
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
     if ( shouldDisplay.Equals("true") )
       mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
@@ -1221,7 +1221,7 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled = "";
   aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled == "true")
+  if (disabled.Equals("true"))
     return PR_TRUE;
   return PR_FALSE;
 }
