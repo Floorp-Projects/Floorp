@@ -840,6 +840,7 @@ HandleToolbarDemoWindowEvent(nsGUIEvent *aEvent)
 // attaches it to an RDF document, and sets the document's root
 // resource to be the top-level bookmark node.
 #include "nsRDFCID.h"
+#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFDocument.h"
@@ -853,18 +854,22 @@ rdf_CreateBookmarkDocument(nsIDocument*& result)
 {
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
-static NS_DEFINE_IID(kIDocumentIID,             NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,          NS_IRDFDATABASE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,        NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFDocumentIID,          NS_IRDFDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
+static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
+
+static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
+static NS_DEFINE_IID(kIRDFDataBaseIID,            NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,          NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFDocumentIID,            NS_IRDFDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 
   nsresult rv;
 
   nsIRDFDataSource* ds       = nsnull;
   nsIRDFDataBase* db         = nsnull;
   nsIRDFDocument* doc        = nsnull;
+  nsIRDFContentModelBuilder* builder = nsnull;
   nsIRDFService* service     = nsnull;
   nsIRDFResource* root       = nsnull;
 
@@ -875,13 +880,19 @@ static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
                                                   (nsISupports**) &service)))
     goto done;
 
-  if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFTreeDocumentCID,
+  if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFDocumentCID,
                                                   nsnull,
                                                   kIRDFDocumentIID,
                                                   (void**) &doc)))
     goto done;
 
-  if (NS_FAILED(rv = doc->Init()))
+  if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFTreeBuilderCID,
+                                                  nsnull,
+                                                  kIRDFContentModelBuilderIID,
+                                                  (void**) &builder)))
+    goto done;
+
+  if (NS_FAILED(rv = doc->Init(builder)))
     goto done;
 
   if (NS_FAILED(rv = doc->GetDataBase(db)))
@@ -929,6 +940,7 @@ done:
     nsServiceManager::ReleaseService(kRDFServiceCID, service);
     service = nsnull;
   }
+  NS_IF_RELEASE(builder);
   NS_IF_RELEASE(doc);
   NS_IF_RELEASE(db);
   NS_IF_RELEASE(ds);

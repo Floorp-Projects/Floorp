@@ -21,9 +21,10 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
-        nsIRDFContent.h         \
-        nsIRDFContentSink.h     \
-        nsIRDFDocument.h        \
+        nsIRDFContent.h                 \
+        nsIRDFContentModelBuilder.h     \
+        nsIRDFContentSink.h             \
+        nsIRDFDocument.h                \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -38,14 +38,10 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
+#include "nsRDFContentUtils.h"
 #include "nsString.h"
 #include "rdf.h"
 #include "rdfutil.h"
-
-// XXX should go in a header file...
-extern nsresult
-rdf_AttachTextNode(nsIContent* parent, nsIRDFNode* value);
-
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -85,7 +81,6 @@ public:
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
     NS_IMETHOD CreateRoot(nsIRDFResource* aResource);
-    NS_IMETHOD CreateChildrenFor(nsIRDFContent* aElement);
     NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
     NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
@@ -282,13 +277,6 @@ done:
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::CreateChildrenFor(nsIRDFContent* aElement)
-{
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 RDFTreeBuilderImpl::OnAssert(nsIRDFContent* parent,

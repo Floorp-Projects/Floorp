@@ -26,6 +26,7 @@ MODULE = rdf
 
 EXPORTS =				\
 	nsIRDFContent.h			\
+	nsIRDFContentModelBuilder.h	\
 	nsIRDFContentSink.h		\
 	nsIRDFDocument.h		\
         $(NULL)

@@ -109,7 +109,7 @@ ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
 
-    NS_ASSERTION(rdf_IsContainer(mRDFService, mDataSource, container), "not a container");
+    NS_ASSERTION(rdf_IsContainer(mDataSource, container), "not a container");
 }
 
 

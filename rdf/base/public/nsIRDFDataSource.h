@@ -177,6 +177,25 @@ public:
      */
     NS_IMETHOD Flush() = 0;
 
+    /**
+     * Determine whether the specified command is enabled for the
+     * resource.
+     *
+     * XXX We will probably need to make this interface much more intricate
+     * to handle arbitrary arguments and selection sets.
+     */
+    NS_IMETHOD IsCommandEnabled(const char* aCommand,
+                                nsIRDFResource* aCommandTarget,
+                                PRBool* aResult) = 0;
+
+    /**
+     * Perform the specified command on the resource.
+     *
+     * XXX We will probably need to make this interface much more intricate
+     * to handle arbitrary arguments and selection sets.
+     */
+    NS_IMETHOD DoCommand(const char* aCommand,
+                         nsIRDFResource* aCommandTarget) = 0;
 };
 
 #endif /* nsIRDFDataSource_h__ */

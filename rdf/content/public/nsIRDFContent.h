@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -29,8 +29,6 @@
 #include "nsISupports.h"
 #include "nsIXMLContent.h"
 
-class nsIRDFContent;
-class nsIRDFDocument;
 class nsIRDFResource;
 
 // {954F0810-81DC-11d2-B52A-000000000000}
@@ -38,27 +36,25 @@ class nsIRDFResource;
 { 0x954f0810, 0x81dc, 0x11d2, { 0xb5, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 /**
- * RDF content extensions to nsIXMLContent
+ * RDF content extensions to nsIContent
  */
-class nsIRDFContent : public nsIXMLContent {
+class nsIRDFContent : public nsIContent {
 public:
-  NS_IMETHOD Init(nsIRDFDocument* doc,
-                  const nsString& tag,
-                  nsIRDFResource* resource,
-                  PRBool childrenMustBeGenerated) = 0;
-
-  NS_IMETHOD SetResource(const nsString& aURI) = 0;
-  NS_IMETHOD GetResource(nsString& rURI) const = 0;
-
-  NS_IMETHOD SetResource(nsIRDFResource* aResource) = 0;
-  NS_IMETHOD GetResource(nsIRDFResource*& aResource) = 0;
-
-  NS_IMETHOD SetProperty(const nsString& aPropertyURI, const nsString& aValue) = 0;
-  NS_IMETHOD GetProperty(const nsString& aPropertyURI, nsString& rValue) const = 0;
+    NS_IMETHOD GetResource(nsIRDFResource*& aResource) const = 0;
+    NS_IMETHOD ChildrenHaveBeenGenerated(PRBool& aResult) const = 0;
 };
 
+nsresult
+NS_NewRDFResourceElement(nsIRDFContent** aResult,
+                         nsIRDFResource* aResource,
+                         PRInt32 aNameSpaceID,
+                         nsIAtom* aTag,
+                         PRBool aChildrenMustBeGenerated);
 
-extern nsresult
-NS_NewRDFElement(nsIRDFContent** aResult);
+nsresult
+NS_NewRDFGenericElement(nsIContent** aResult,
+                        PRInt32 aNameSpaceID,
+                        nsIAtom* aTag);
+
 
 #endif // nsIRDFContent_h___

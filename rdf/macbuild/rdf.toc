@@ -7,12 +7,14 @@ mozilla/rdf/base/src/nsRDFService.cpp
 mozilla/rdf/base/src/rdfutil.cpp
 mozilla/rdf/build/nsRDFFactory.cpp
 mozilla/rdf/content/src/nsRDFContentSink.cpp
+mozilla/rdf/content/src/nsRDFContentUtils.cpp
 mozilla/rdf/content/src/nsRDFDocument.cpp
 mozilla/rdf/content/src/nsRDFDocumentContentSink.cpp
-mozilla/rdf/content/src/nsRDFElement.cpp
-mozilla/rdf/content/src/nsRDFHTMLDocument.cpp
+mozilla/rdf/content/src/nsRDFGenericElement.cpp
+mozilla/rdf/content/src/nsRDFHTMLBuilder.cpp
+mozilla/rdf/content/src/nsRDFResourceElement.cpp
 mozilla/rdf/content/src/nsRDFSimpleContentSink.cpp
-mozilla/rdf/content/src/nsRDFTreeDocument.cpp
+mozilla/rdf/content/src/nsRDFTreeBuilder.cpp
 mozilla/rdf/datasource/src/nsBookmarkDataSource.cpp
 mozilla/rdf/datasource/src/nsMailDataSource.cpp
 mozilla/rdf/datasource/src/nsStreamDataSource.cpp

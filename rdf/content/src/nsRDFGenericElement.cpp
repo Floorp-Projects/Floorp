@@ -42,6 +42,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsISupportsArray.h"
+#include "nsRDFContentUtils.h"
 #include "nsString.h"
 #include "prlog.h"
 
@@ -102,6 +103,8 @@ public:
     NS_IMETHOD IsSynthetic(PRBool& aResult);
     NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+    NS_IMETHOD ParseAttributeString(const nsString& aStr, nsIAtom*& aName, PRInt32& aNameSpaceID);
+    NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
     NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
@@ -295,8 +298,6 @@ RDFGenericElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 RDFGenericElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    // XXX put me in a header file somewhere
-    extern nsresult NS_NewRDFDOMNodeList(nsIDOMNodeList** aChildNodes, nsIContent* aElement);
     return NS_NewRDFDOMNodeList(aChildNodes, this);
 }
 
@@ -417,7 +418,7 @@ RDFGenericElementImpl::GetTagName(nsString& aTagName)
 
 
 NS_IMETHODIMP
-RDFGenericElementImpl::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+RDFGenericElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -425,7 +426,7 @@ RDFGenericElementImpl::GetDOMAttribute(const nsString& aName, nsString& aReturn)
 
 
 NS_IMETHODIMP
-RDFGenericElementImpl::SetDOMAttribute(const nsString& aName, const nsString& aValue)
+RDFGenericElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -825,6 +826,25 @@ RDFGenericElementImpl::GetTag(nsIAtom*& aResult) const
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+RDFGenericElementImpl::ParseAttributeString(const nsString& aStr, 
+                                            nsIAtom*& aName, 
+                                            PRInt32& aNameSpaceID)
+{
+    // XXX Need to implement
+    aName = nsnull;
+    aNameSpaceID = kNameSpaceID_None;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFGenericElementImpl::GetNameSpacePrefix(PRInt32 aNameSpaceID, 
+                                          nsIAtom*& aPrefix)
+{
+    // XXX Need to implement
+    aPrefix = nsnull;
+    return NS_OK;
+}
 
 // XXX attribute code swiped from nsGenericContainerElement
 // this class could probably just use nsGenericContainerElement

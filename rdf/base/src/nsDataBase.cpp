@@ -41,7 +41,7 @@
 #include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFDataBase.h"
-#include "nsISupportsArray.h"
+#include "nsIRDFObserver.h"
 #include "nsRepository.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
@@ -52,12 +52,15 @@ static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFObserverIID,        NS_IRDFOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////
 // DataBase
 
-class DataBase : public nsIRDFDataBase {
+class DataBase : public nsIRDFDataBase,
+                 public nsIRDFObserver
+{
 protected:
     nsVoidArray*  mObservers;
         
@@ -124,32 +127,46 @@ public:
 
     NS_IMETHOD Flush();
 
+    NS_IMETHOD IsCommandEnabled(const char* aCommand,
+                                nsIRDFResource* aCommandTarget,
+                                PRBool* aResult);
+
+    NS_IMETHOD DoCommand(const char* aCommand,
+                         nsIRDFResource* aCommandTarget);
+
+
     // nsIRDFDataBase interface
     NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
     NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
 
+    // nsIRDFObserver interface
+    NS_IMETHOD OnAssert(nsIRDFResource* subject,
+                        nsIRDFResource* predicate,
+                        nsIRDFNode* object);
+
+    NS_IMETHOD OnUnassert(nsIRDFResource* subject,
+                          nsIRDFResource* predicate,
+                          nsIRDFNode* object);
+
+    // Implementation methods
     PRBool HasAssertionN(int n, nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv);
-
-
 };
-
-//NS_IMPL_ISUPPORTS(DataBase, kIRDFDataBaseIID);
 
 
 
 class DBArcsInOutCursor : public nsIRDFArcsOutCursor,
                           public nsIRDFArcsInCursor
 {
-    DataBase* mDataBase;
-    nsIRDFResource* mSource;
-    nsIRDFNode*     mTarget;
-    PRInt32         mCount;
+    DataBase*            mDataBase;
+    nsIRDFResource*      mSource;
+    nsIRDFNode*          mTarget;
+    PRInt32              mCount;
     nsIRDFArcsOutCursor* mOutCursor;
-    nsIRDFArcsInCursor* mInCursor;
-    nsVoidArray    mResults;
+    nsIRDFArcsInCursor*  mInCursor;
+    nsVoidArray          mResults;
 
 public:
     DBArcsInOutCursor(DataBase* db, nsIRDFNode* node, PRBool arcsOutp);
@@ -186,8 +203,6 @@ public:
 
 };
 
-// NS_IMPL_ISUPPORTS(DBArcsInOutCursor, kIRDFArcsOutCursorIID);
-//NS_IMPL_ISUPPORTS(DBArcsInOutCursor, kIRDFArcsInCursorIID);
         
 DBArcsInOutCursor::DBArcsInOutCursor (DataBase* db, nsIRDFNode* node, PRBool arcsOutp)
     : mDataBase(db), 
@@ -219,6 +234,11 @@ DBArcsInOutCursor::DBArcsInOutCursor (DataBase* db, nsIRDFNode* node, PRBool arc
 
 DBArcsInOutCursor::~DBArcsInOutCursor(void)
 {
+    for (PRInt32 i = mResults.Count() - 1; i >= 0; --i) {
+        nsIRDFNode* node = (nsIRDFNode*) mResults[i];
+        NS_RELEASE(node);
+    }
+
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mTarget);
 }
@@ -247,8 +267,9 @@ DBArcsInOutCursor::Advance(void)
 {
     nsIRDFDataSource* ds;
     while (mInCursor || mOutCursor) {
-        nsresult result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());        
-        while (NS_ERROR_RDF_CURSOR_EMPTY != result) {
+        nsresult result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());
+        
+        while (NS_SUCCEEDED(result)) {
             nsIRDFNode* obj ;
             GetValue(&obj);
             if (mResults.IndexOf(obj) < 0) {
@@ -257,6 +278,12 @@ DBArcsInOutCursor::Advance(void)
             }
             result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());        
         }
+
+        if (result != NS_ERROR_RDF_CURSOR_EMPTY)
+            return result;
+
+        NS_IF_RELEASE(mInCursor);
+        NS_IF_RELEASE(mOutCursor);
 
         if (mCount >= mDataBase->mDataSources.Count())
             break;
@@ -421,8 +448,8 @@ DBGetSTCursor::Advance(void)
 
 
 DataBase::DataBase(void)
+    : mObservers(nsnull)
 {
-    mObservers = 0;
     NS_INIT_REFCNT();
 }
 
@@ -431,8 +458,10 @@ DataBase::~DataBase(void)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+        ds->RemoveObserver(this);
         NS_IF_RELEASE(ds);
     }
+    delete mObservers;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -447,7 +476,6 @@ DataBase::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    *result = nsnull;
     if (iid.Equals(kIRDFDataBaseIID) ||
         iid.Equals(kIRDFDataSourceIID) ||
         iid.Equals(kISupportsIID)) {
@@ -455,7 +483,15 @@ DataBase::QueryInterface(REFNSIID iid, void** result)
 		NS_ADDREF(this);
         return NS_OK;
     }
-    return NS_NOINTERFACE;
+    else if (iid.Equals(kIRDFObserverIID)) {
+        *result = NS_STATIC_CAST(nsIRDFObserver*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else {
+        *result = nsnull;
+        return NS_NOINTERFACE;
+    }
 }
 
 
@@ -520,9 +556,9 @@ DataBase::GetSources(nsIRDFResource* property,
 
 NS_IMETHODIMP
 DataBase::GetTarget(nsIRDFResource* source,
-                            nsIRDFResource* property,
-                            PRBool tv,
-                            nsIRDFNode** target)
+                    nsIRDFResource* property,
+                    PRBool tv,
+                    nsIRDFNode** target)
 {
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
@@ -652,34 +688,26 @@ DataBase::HasAssertion(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::AddObserver(nsIRDFObserver* n)
+DataBase::AddObserver(nsIRDFObserver* obs)
 {
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        ds->AddObserver(n);
-    }
-
     if (!mObservers) {
         if ((mObservers = new nsVoidArray()) == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mObservers->AppendElement(n);
+    // XXX ensure uniqueness
 
+    mObservers->AppendElement(obs);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-DataBase::RemoveObserver(nsIRDFObserver* n)
+DataBase::RemoveObserver(nsIRDFObserver* obs)
 {
-    if (!mObservers) return NS_OK;
+    if (!mObservers)
+        return NS_OK;
 
-    PRInt32 count = mDataSources.Count();
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
-        ds->RemoveObserver(n);
-    }
+    mObservers->RemoveElement(obs);
     return NS_OK;
 }
 
@@ -725,6 +753,23 @@ DataBase::Flush()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+DataBase::IsCommandEnabled(const char* aCommand,
+                           nsIRDFResource* aCommandTarget,
+                           PRBool* aResult)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DataBase::DoCommand(const char* aCommand,
+                    nsIRDFResource* aCommandTarget)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataBase methods
 // XXX rvg We should make this take an additional argument specifying where
@@ -739,6 +784,7 @@ DataBase::AddDataSource(nsIRDFDataSource* source)
         return NS_ERROR_NULL_POINTER;
 
     mDataSources.InsertElementAt(source, 0);
+    source->AddObserver(this);
     NS_ADDREF(source);
     return NS_OK;
 }
@@ -754,10 +800,43 @@ DataBase::RemoveDataSource(nsIRDFDataSource* source)
 
     if (mDataSources.IndexOf(source) >= 0) {
         mDataSources.RemoveElement(source);
+        source->RemoveObserver(this);
         NS_RELEASE(source);
     }
     return NS_OK;
 }
+
+NS_IMETHODIMP
+DataBase::OnAssert(nsIRDFResource* subject,
+                   nsIRDFResource* predicate,
+                   nsIRDFNode* object)
+{
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnAssert(subject, predicate, object);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataBase::OnUnassert(nsIRDFResource* subject,
+                     nsIRDFResource* predicate,
+                     nsIRDFNode* object)
+{
+    if (mObservers) {
+        for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+            nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+            obs->OnUnassert(subject, predicate, object);
+            // XXX ignore return value?
+        }
+    }
+    return NS_OK;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 

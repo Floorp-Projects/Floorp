@@ -224,7 +224,7 @@ BookmarkParser::NextToken(void)
                 return;
 
             nsIRDFResource* parent = (nsIRDFResource*) mStack[mStack.Count() - 1];
-            rdf_Assert(mRDFService, mDataSource, parent, kURINC_Folder, folder);
+            rdf_Assert(mDataSource, parent, kURINC_Folder, folder);
         }
         else {
             // it's the root
@@ -244,21 +244,21 @@ BookmarkParser::NextToken(void)
         //NS_RELEASE(folder); 
 
         if (mState != eBookmarkParserState_InTitle)
-            rdf_Assert(mRDFService, mDataSource, mLastItem, kURINC_Name, mLine);
+            rdf_Assert(mDataSource, mLastItem, kURINC_Name, mLine);
 
         if (mLine.Find(kPersonalToolbar) == 0)
-            rdf_Assert(mRDFService, mDataSource, mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
+            rdf_Assert(mDataSource, mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
     }
     else if (mState == eBookmarkParserState_InItemTitle) {
         PR_ASSERT(mLastItem);
         if (! mLastItem)
             return;
 
-        rdf_Assert(mRDFService, mDataSource, mLastItem, kURINC_Name, mLine);
+        rdf_Assert(mDataSource, mLastItem, kURINC_Name, mLine);
         NS_IF_RELEASE(mLastItem);
     }
     else if (mState == eBookmarkParserState_InItemDescription) {
-        rdf_Assert(mRDFService, mDataSource, mLastItem, kURINC_Description, mLine);
+        rdf_Assert(mDataSource, mLastItem, kURINC_Description, mLine);
     }
 }
 
@@ -312,7 +312,7 @@ BookmarkParser::DoStateTransition(void)
              (mLine.Find(kBRString) == 0)) {
         // XXX in the original bmk2rdf.c, we only added the
         // description in the case that it wasn't set already...why?
-        rdf_Assert(mRDFService, mDataSource, mLastItem, kURINC_Description, mLine);
+        rdf_Assert(mDataSource, mLastItem, kURINC_Description, mLine);
     }
     else {
         mState = eBookmarkParserState_Initial;
@@ -364,7 +364,7 @@ BookmarkParser::CreateBookmark(void)
     if (! parent)
         return;
 
-    rdf_Assert(mRDFService, mDataSource, parent, kURINC_child, bookmark);
+    rdf_Assert(mDataSource, parent, kURINC_child, bookmark);
 
     if (values[eBmkAttribute_AddDate].Length() > 0)
         AssertTime(bookmark, kURINC_BookmarkAddDate, values[eBmkAttribute_AddDate]);
@@ -389,7 +389,7 @@ BookmarkParser::AssertTime(nsIRDFResource* object,
                            const nsString& time)
 {
     // XXX
-    return rdf_Assert(mRDFService, mDataSource, object, predicateURI, time);
+    return rdf_Assert(mDataSource, object, predicateURI, time);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -492,6 +492,13 @@ public:
     }
 
     NS_IMETHOD Flush(void);
+
+    NS_IMETHOD IsCommandEnabled(const char* aCommand,
+                                nsIRDFResource* aCommandTarget,
+                                PRBool* aResult);
+
+    NS_IMETHOD DoCommand(const char* aCommand,
+                         nsIRDFResource* aCommandTarget);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -540,6 +547,23 @@ BookmarkDataSourceImpl::Flush(void)
     return WriteBookmarks();
 }
 
+
+NS_IMETHODIMP
+BookmarkDataSourceImpl::IsCommandEnabled(const char* aCommand,
+                                         nsIRDFResource* aCommandTarget,
+                                         PRBool* aResult)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+BookmarkDataSourceImpl::DoCommand(const char* aCommand,
+                                  nsIRDFResource* aCommandTarget)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 nsresult

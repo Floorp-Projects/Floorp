@@ -143,10 +143,11 @@ static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
-static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
 
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
@@ -211,10 +212,11 @@ NS_SetupRegistry()
 
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFDataBaseCID,           RDF_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFDocumentCID,           RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFHTMLBuilderCID,        RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kRDFTreeDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFTreeBuilderCID,        RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFSimpleContentSinkCID,  RDF_DLL, PR_FALSE, PR_FALSE);
 
 
