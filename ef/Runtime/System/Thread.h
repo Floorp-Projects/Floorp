@@ -27,10 +27,10 @@ typedef CONTEXT ThreadContext;
 
 #elif defined (__linux__)
 
-#include <sys/ptrace.h>
+#include <sigcontext.h>
 
-typedef pid_t HANDLE;
-typedef pt_regs ThreadContext; 
+typedef void* HANDLE;
+typedef struct sigcontext ThreadContext; 
 
 #elif defined (__FreeBSD__)
 
