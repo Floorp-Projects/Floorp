@@ -749,9 +749,6 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
     }
   }
   else {  // load failed, cleanup    
-    URLKey  key(aLoadData->mURL);
-    Cleanup(key, aLoadData);
-
     // Dump error message to console.
     const char *url;
     if (nsnull != aLoadData->mURL) 
@@ -760,6 +757,9 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
       url = "";      
     cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
       << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
+
+    URLKey  key(aLoadData->mURL);
+    Cleanup(key, aLoadData);
   }
 
 }
