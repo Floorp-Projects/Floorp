@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  unicharutil \
 		  commandhandler \
+		  docshell \
 		  $(NULL)
 
 # Internal header files, needed by other editor sublibs:
