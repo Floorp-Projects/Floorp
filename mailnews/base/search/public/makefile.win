@@ -27,6 +27,7 @@ XPIDLSRCS =							\
 			.\nsIMsgFilterHitNotify.idl \
 			.\nsIMsgFilterList.idl \
 			.\nsIMsgSearchValue.idl \
+			.\nsIMsgSearchTerm.idl \
 			.\nsIMsgSearchSession.idl \
 			.\nsIMsgSearchAdapter.idl \
 			.\nsIMsgSearchScopeTerm.idl \
