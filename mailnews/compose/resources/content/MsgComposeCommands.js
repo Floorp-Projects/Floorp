@@ -69,7 +69,7 @@ function GetArgs()
 			args[argname] = argvalue.substring(1, argvalue.length - 1);
 		else
 			args[argname] = unescape(argvalue);
-//		dump("GETARGS: " + argname + "=[" + args[argname] + "]\n");
+		dump("[" + argname + "=" + args[argname] + "]\n");
 	}
 	return args;
 }
@@ -80,9 +80,6 @@ function ComposeStartup()
 
 	// Get arguments
 	var args = GetArgs();
-	dump("[type=" + args.type + "]\n");
-	dump("[format=" + args.format + "]\n");
-	dump("[originalMsg=" + args.originalMsg + "]\n");
 
     // fill in Identity combobox
     var identitySelect = document.getElementById("msgIdentity");
@@ -95,7 +92,7 @@ function ComposeStartup()
 
 	if (msgComposeService)
 	{
-		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format);
+		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr);
 		if (msgCompose)
 		{
 			//Creating a Editor Shell

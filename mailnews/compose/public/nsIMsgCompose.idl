@@ -79,7 +79,9 @@ interface nsIMsgCompose : nsISupports {
 
 	/* ... */
 	void Initialize(in nsIDOMWindow aWindow, in wstring originalMsgURI,
-		in MSG_ComposeType type, in MSG_ComposeFormat format, in nsISupports object); /*object is temporary*/
+		in MSG_ComposeType type, in MSG_ComposeFormat format,
+		in nsIMsgCompFields compFields,
+		in nsISupports object); /*object is temporary*/
 
 	/* ... */
 	void LoadFields();

@@ -38,7 +38,10 @@ interface nsIMsgComposeService : nsISupports {
 							in wstring subject, in wstring body);
 
 	/* ... */
-	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow, in wstring originalMsgURI, in long type, in long format);
+	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeFormat format, in nsIMsgCompFields compFields);
+
+	/* ... */
+	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow, in wstring originalMsgURI, in long type, in long format, in long compFieldsAddr);
 
 	/* ... */
 	void DisposeCompose(in nsIMsgCompose compose, in boolean closeWindow);	
