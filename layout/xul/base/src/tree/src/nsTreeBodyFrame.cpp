@@ -457,13 +457,18 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
   nsTreeColumn* col;
   EnsureColumns();
 
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIRenderingContext> rc;
+  presShell->CreateRenderingContext(this, getter_AddRefs(rc));
+
   for (PRInt32 row = 0; row < numRows; ++row) {
     rowWidth = 0;
     col = mColumns;
 
     while (col) {
       nscoord desiredWidth, currentWidth;
-      GetCellWidth(row, col->GetID(), desiredWidth, currentWidth);
+      GetCellWidth(row, col->GetID(), rc, desiredWidth, currentWidth);
       rowWidth += desiredWidth;
       col = col->GetNext();
     }
@@ -1509,7 +1514,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
 void
 nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
-                                  nscoord& aDesiredSize, nscoord& aCurrentSize)
+                              nsIRenderingContext* aRenderingContext,
+                              nscoord& aDesiredSize, nscoord& aCurrentSize)
 {
   nsTreeColumn* currCol = nsnull;
   // Keep looping until we find a column with a matching Id.
@@ -1581,15 +1587,11 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
     
     // Get the font style for the text and pass it to the rendering context.
     const nsStyleFont* fontStyle = (const nsStyleFont*) textContext->GetStyleData(eStyleStruct_Font);
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    nsCOMPtr<nsIRenderingContext> rc;
-    shell->CreateRenderingContext(this, getter_AddRefs(rc));
-    rc->SetFont(fontStyle->mFont, nsnull);
+    aRenderingContext->SetFont(fontStyle->mFont, nsnull);
 
     // Get the width of the text itself
     nscoord width;
-    rc->GetWidth(cellText, width);
+    aRenderingContext->GetWidth(cellText, width);
     nscoord totalTextWidth = width + bp.left + bp.right;
     aDesiredSize += totalTextWidth;
   }
@@ -1599,7 +1601,12 @@ NS_IMETHODIMP
 nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
 {  
   nscoord currentSize, desiredSize;
-  GetCellWidth(aRow, aColID, desiredSize, currentSize);
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIRenderingContext> rc;
+  presShell->CreateRenderingContext(this, getter_AddRefs(rc));
+
+  GetCellWidth(aRow, aColID, rc, desiredSize, currentSize);
   *_retval = desiredSize > currentSize;
   
   return NS_OK;
