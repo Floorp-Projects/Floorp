@@ -42,7 +42,7 @@ nsUnicodeToCP874::nsUnicodeToCP874()
 
 nsresult nsUnicodeToCP874::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToCP874();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToCP874();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

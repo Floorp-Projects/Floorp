@@ -42,7 +42,7 @@ nsUnicodeToISO88599::nsUnicodeToISO88599()
 
 nsresult nsUnicodeToISO88599::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToISO88599();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToISO88599();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

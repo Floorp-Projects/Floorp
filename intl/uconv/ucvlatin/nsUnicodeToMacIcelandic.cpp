@@ -42,7 +42,7 @@ nsUnicodeToMacIcelandic::nsUnicodeToMacIcelandic()
 
 nsresult nsUnicodeToMacIcelandic::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMacIcelandic();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacIcelandic();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

@@ -44,7 +44,7 @@ nsUnicodeToUTF8::nsUnicodeToUTF8()
 
 nsresult nsUnicodeToUTF8::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToUTF8();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUTF8();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
@@ -56,5 +56,10 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 * aDestLength)
 {
   *aDestLength = 3*aSrcLength;
+  return NS_OK;
+}
+NS_IMETHODIMP nsUnicodeToUTF8::FillInfo(PRUint32 *aInfo)
+{
+  memset(aInfo, 0xFF, (0x10000L >> 3));
   return NS_OK;
 }

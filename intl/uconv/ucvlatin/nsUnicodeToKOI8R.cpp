@@ -42,7 +42,7 @@ nsUnicodeToKOI8R::nsUnicodeToKOI8R()
 
 nsresult nsUnicodeToKOI8R::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToKOI8R();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToKOI8R();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 

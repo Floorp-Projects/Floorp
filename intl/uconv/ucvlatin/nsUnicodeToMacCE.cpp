@@ -42,7 +42,7 @@ nsUnicodeToMacCE::nsUnicodeToMacCE()
 
 nsresult nsUnicodeToMacCE::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToMacCE();
+  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacCE();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
