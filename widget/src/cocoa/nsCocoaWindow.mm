@@ -305,6 +305,8 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindowMadeHere(PR_FALSE)
 , mWindow(nil)
 {
+  printf("COCOA WINDOW GOT MADE!\n");
+
 #if 0
   mMacEventHandler.reset(new nsMacEventHandler(this));
   WIDGET_SET_CLASSNAME("nsCocoaWindow");  
@@ -401,6 +403,8 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     [content setFrame:[[mWindow contentView] frame]];
     [mWindow setContentView:content];
     
+    NSLog(@"New quickdraw view. %@", content);
+
     // register for mouse-moved events. The default is to ignore them for perf reasons.
     [mWindow setAcceptsMouseMovedEvents:YES];
     
@@ -853,7 +857,13 @@ nsCocoaWindow::GetNativeData(PRUint32 aDataType)
   return retVal;
 }
 
-
+NS_IMETHODIMP
+nsCocoaWindow::IsVisible(PRBool & aState)
+{
+  aState = mVisible;
+  return NS_OK;
+}
+   
 //-------------------------------------------------------------------------
 //
 // Hide or show this window
@@ -865,7 +875,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
     [mWindow orderFront:NULL];
   else
     [mWindow orderOut:NULL];
-    
+ 
+  mVisible = bState;
+
 #if 0
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is

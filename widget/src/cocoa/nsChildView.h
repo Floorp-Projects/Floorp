@@ -147,6 +147,8 @@ public:
   NS_IMETHOD              Show(PRBool aState);
   NS_IMETHOD              IsVisible(PRBool & aState);
 
+  virtual nsIWidget*      GetParent(void);
+  
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                            PRBool *aForWindow);
 
@@ -250,6 +252,8 @@ protected:
   
   id              mView;      // my parallel cocoa view, [STRONG]
 
+  NSView*         mParentView;
+  
   PRBool          mDestroyCalled;
   PRBool          mDestructorCalled;
   PRBool          mVisible;

@@ -137,7 +137,9 @@ nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
 
   mWindow = nil;
   mView = nil;
-
+  
+  mParentView = nil;
+  
   mDestroyCalled = PR_FALSE;
   mDestructorCalled = PR_FALSE;
   mVisible = PR_FALSE;
@@ -162,7 +164,7 @@ nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
 nsChildView::~nsChildView()
 {
   if ( mView ) {
-    [mView removeFromSuperview];
+    [mView removeFromSuperviewWithoutNeedingDisplay];
     [mView release];
   }
   
@@ -216,7 +218,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 
   // inherit things from the parent view and create our parallel 
   // NSView in the Cocoa display system
-  NSView* parentView = nsnull;
+  mParentView = nil;
   if ( aParent ) {
     SetBackgroundColor(aParent->GetBackgroundColor());
     SetForegroundColor(aParent->GetForegroundColor());
@@ -224,8 +226,8 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     // inherit the top-level window. NS_NATIVE_WIDGET is always a NSView
     // regardless of if we're asking a window or a view (for compatibility
     // with windows).
-    parentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
- 
+    mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+    
 #if 0
     // get the event sink for our view. Walk up the parent chain to the
     // toplevel window, it's the sink.
@@ -241,10 +243,10 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 #endif
     
   }
-  else 
-    parentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
-
-  NS_ASSERTION(parentView, "no parent view at all :(");
+  else
+    mParentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
+ 
+  NS_ASSERTION(mParentView, "no parent view at all :(");
   
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
@@ -253,10 +255,14 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   mView = [CreateCocoaView() retain];
   [mView setFrame:r];
   
-  NS_ASSERTION(parentView && mView, "couldn't hook up new NSView in hierarchy");
-  if ( parentView && mView ) {
-    [parentView addSubview:mView];
-    mWindow = [parentView window];
+  NS_ASSERTION(mParentView && mView, "couldn't hook up new NSView in hierarchy");
+  if (mParentView && mView ) {
+    if (![mParentView isKindOfClass: [ChildView class]]) {
+      [mParentView addSubview:mView];
+      mVisible = PR_TRUE;
+    }
+
+    mWindow = [mParentView window];
   }
   
   return NS_OK;
@@ -359,7 +365,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_WINDOW:
-      retVal = [mView window];
+      if (!mWindow)
+        retVal = [mView window];
+      else
+        retVal = mWindow;
       break;
       
     case NS_NATIVE_GRAPHIC:           // quickdraw port (for now)
@@ -436,11 +445,22 @@ NS_METHOD nsChildView::IsVisible(PRBool & bState)
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Show(PRBool bState)
-{
+{    
+  if (bState != mVisible) {
+    if (bState) 
+      [mParentView addSubview: mView];
+    else
+      [mView removeFromSuperviewWithoutNeedingDisplay];
+  }
   mVisible = bState;
   return NS_OK;
 }
 
+nsIWidget*
+nsChildView::GetParent(void)
+{
+  return nsnull;
+}
     
 NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                          PRBool *aForWindow)
@@ -816,7 +836,8 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   {
     // Invalidate the current location
     Invalidate(PR_FALSE);
-    [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
+    if (mVisible)
+      [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
     
     // Set the bounds
     mBounds.x = aX;
@@ -827,7 +848,9 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
     NSRect r;
     ConvertGeckoToCocoaRect(mBounds, r);
     [mView setFrame:r];
-    [mView setNeedsDisplay:YES];
+
+    if (mVisible)
+      [mView setNeedsDisplay:YES];
     
     // Report the event
     ReportMoveEvent();
@@ -848,14 +871,17 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     mBounds.width  = aWidth;
     mBounds.height = aHeight;
 
-    [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
+    if (mVisible)
+      [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
     
   // Recalculate the regions
   //CalcWindowRegions();
     NSRect r;
     ConvertGeckoToCocoaRect(mBounds, r);
     [mView setFrame:r];
-    [mView setNeedsDisplay:YES];
+
+    if (mVisible)
+      [mView setNeedsDisplay:YES];
 
     // Report the event
     ReportSizeEvent();
@@ -865,7 +891,9 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     // changed, hence changing our notion of visibility. We then also should make
     // sure that we invalidate ourselves correctly. Fixes bug 18240 (pinkerton).
     CalcWindowRegions();
-    [mView setNeedsDisplay:YES];
+
+    if (mVisible)
+      [mView setNeedsDisplay:YES];
   }
 
   return NS_OK;
@@ -990,9 +1018,9 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 {
-  if ( !mView )
+  if ( !mView || !mVisible)
     return NS_OK;
-    
+ 
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
   
@@ -1012,7 +1040,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
 
 NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
-  if ( !mView )
+  if ( !mView || !mVisible)
     return NS_OK;
     
 //FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
