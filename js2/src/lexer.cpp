@@ -336,6 +336,7 @@ bool JS::Lexer::lexIdentifier(String &s, bool allowLeadingDigit)
 bool JS::Lexer::lexNumeral()
 {
     int hasDecimalPoint = 0;
+    bool hexadecimal = false;
     String &s = nextToken->chars;
     uint digit;
 
@@ -348,6 +349,7 @@ bool JS::Lexer::lexNumeral()
             size_t pos = reader.getPos();
             char16 ch2 = getChar();
             if (isASCIIHexDigit(ch2, digit)) {
+                hexadecimal = true;
                 reader.recordChar(ch);
                 do {
                     reader.recordChar(ch2);
@@ -394,7 +396,7 @@ bool JS::Lexer::lexNumeral()
     const char16 *sBegin = s.data();
     const char16 *sEnd = sBegin + s.size();
     const char16 *numEnd;
-    nextToken->value = stringToDouble(sBegin, sEnd, numEnd);
+    nextToken->value = hexadecimal ? stringToInteger(sBegin, sEnd, numEnd, 16) : stringToDouble(sBegin, sEnd, numEnd);
     ASSERT(numEnd == sEnd);
     reader.unget();
     ASSERT(ch == reader.peek());
