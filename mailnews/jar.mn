@@ -244,6 +244,3 @@ en-US.jar:
     locale/en-US/messenger/mime.properties                              (mime/resources/mime.properties)
     locale/en-US/messenger/mimeheader.properties                        (mime/resources/mimeheader.properties)
     locale/en-US/messenger/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
-
-modern.jar:
-    skin/modern/messenger/abookstat.gif   (mime/abstatus/resources/skin/abookstat.gif)
