@@ -100,8 +100,6 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
 
   mTMatrix = nsnull;
 
-  PopState();
-
   // Destroy the State Machine
   if (nsnull != mStateCache)
   {
@@ -129,9 +127,9 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     delete mFrontBuffer;
   }
 
-  NS_IF_RELEASE(mContext);
-  NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mFontMetrics);
+  NS_IF_RELEASE(mFontCache);
+  NS_IF_RELEASE(mContext);
 
 }
 
