@@ -2661,6 +2661,14 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   mContentOffset = startingOffset;
   mContentLength = offset - startingOffset;
 
+  // If it's an incremental reflow command, then invalidate our existing
+  // bounds.
+  // XXX We need a finer granularity than this, but it isn't clear what
+  // has actually changed...
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    Invalidate(mRect);
+  }
+
   //go to selection and ask if we are selected here. and where!!
 
   nsReflowStatus rs = (offset == contentLength)
