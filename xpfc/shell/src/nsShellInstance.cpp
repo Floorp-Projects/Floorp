@@ -420,7 +420,7 @@ nsresult nsShellInstance::ExitApplication()
 {
 
 #ifdef NS_WIN32
-  PostQuitMessage(0);
+  ::PostMessage((HWND)GetApplicationWindowNativeInstance(),WM_CLOSE,0,0L);
 #endif
   return NS_OK;
 }
@@ -525,6 +525,9 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
 
     }
     
+  } else if ((aEvent->message == NS_DESTROY) && (gShellInstance->GetApplicationWidget() == aEvent->widget))
+  {
+    ::PostQuitMessage(0);    
   }
 
   return (gShellInstance->GetApplicationShell()->HandleEvent(aEvent));
