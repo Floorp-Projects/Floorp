@@ -197,6 +197,9 @@ public:
 
   inline nscoord GetAscent() { return mAscent; }
 
+  // Return true if aFrame is the (only) child of an nsTableCellFrame which has a TD content node.
+  static PRBool IsTDTableCellBlock(nsIFrame& aFrame);
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();

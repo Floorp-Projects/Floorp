@@ -61,6 +61,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
@@ -2971,6 +2972,10 @@ nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
   }
 
 
+  // IsEmpty treats standards and quirks mode differently. We want
+  // quirks behavior for a table cell block.
+  PRBool quirkMode = aIsQuirkMode || IsTDTableCellBlock(*this);
+
   const nsStyleText* styleText = NS_STATIC_CAST(const nsStyleText*,
       mStyleContext->GetStyleData(eStyleStruct_Text));
   PRBool isPre =
@@ -2981,7 +2986,7 @@ nsBlockFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
        line != line_end;
        ++line)
   {
-    line->IsEmpty(aIsQuirkMode, isPre, aResult);
+    line->IsEmpty(quirkMode, isPre, aResult);
     if (! *aResult)
       break;
   }
@@ -6551,6 +6556,27 @@ nsBlockFrame::BuildFloaterList()
 
 // XXX keep the text-run data in the first-in-flow of the block
 
+
+PRBool
+nsBlockFrame::IsTDTableCellBlock(nsIFrame& aFrame) 
+{
+  nsIFrame* parent;
+  aFrame.GetParent(&parent);
+  if (parent) {
+    nsCOMPtr<nsIAtom> frameType;
+    parent->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableCellFrame == frameType) {
+      nsCOMPtr<nsIContent> content;
+      aFrame.GetContent(getter_AddRefs(content));
+      nsCOMPtr<nsIDOMHTMLTableCellElement> cellContent(do_QueryInterface(content));
+      if (cellContent) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 #ifdef DEBUG
 void
 nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
@@ -6635,4 +6661,5 @@ nsBlockFrame::GetDepth() const
   }
   return depth;
 }
+
 #endif
