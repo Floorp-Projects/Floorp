@@ -30,11 +30,12 @@ MODULE		= dom
 
 DIRS		= base coreDom coreEvents range events html css
 
-XPIDLSRCS	= domstubs.idl
+XPIDLSRCS	= domstubs.idl \
+				  nsIScriptContextOwner.idl \
+				  $(NULL)
 
 EXPORTS		= \
 		nsIScriptContext.h \
-		nsIScriptContextOwner.h \
 		nsIJSScriptObject.h \
 		nsIJSNativeInitializer.h \
 		nsIScriptEventListener.h \
