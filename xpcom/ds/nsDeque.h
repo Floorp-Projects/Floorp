@@ -131,6 +131,16 @@ friend class nsDequeIterator;
    */
   void* Peek(void);
   
+  /**
+   * method used to retrieve ptr to
+   * ith member in container. DOesn't remove
+   * that item.
+   *
+   * @update	gess4/18/98
+   * @param   index of desired item
+   * @return  ptr to ith element in list
+   */
+  void* ObjectAt(int anIndex) const;
   
   /**
    * Remove all items from container without destroying them
@@ -239,17 +249,6 @@ private:
    * @return  *this
    */
   nsDeque& operator=(const nsDeque& anOther);
-
-  /**
-   * PRIVATE method used to retrieve ptr to
-   * ith member in container. DOesn't remove
-   * that item.
-   *
-   * @update	gess4/18/98
-   * @param   index of desired item
-   * @return  ptr to ith element in list
-   */
-  void* ObjectAt(int anIndex) const;
 
 };
 

@@ -664,7 +664,10 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
       result=-result;
       break;
     }
-    else if('+'==theChar) {
+    else if('+'==theChar) { //stop in a good state if you see this...
+      break;
+    }
+    else if(' '==theChar){ //stop in a good state if you see this...
       break;
     }
     else{
@@ -2066,9 +2069,11 @@ void nsString::SelfTest(void) {
   nsAutoString a("foobar");
   nsAutoString b("foo");
   nsAutoString c(".5111");
+  nsAutoString d(" 5");
   PRInt32 result=a.Compare(b);
   PRInt32 result2=result;
   result=c.ToInteger(&result2);
+  result=d.ToInteger(&result2);
   result2=result;
 
 #if 0
