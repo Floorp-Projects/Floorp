@@ -25,6 +25,10 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -D_IMPL_NS_UI
 
 EXPORTS = \
+	nsIFontSizeIterator.h \
+	nsIFontNameIterator.h \
+	nsIFontRetrieverService.h \
+	nsIFileListTransferable.h \
 	nsIMenuBar.h	\
 	nsIMenu.h		\
 	nsIMenuItem.h	\
