@@ -132,6 +132,12 @@ interface nsIOutlinerSelection : nsISupports
    * selected).
    */
   attribute long currentIndex;
+
+  /**
+   * The selection "pivot".  This is the first item the user selected as
+   * part of a ranged select.
+   */
+  readonly attribute long shiftSelectPivot;
 };
 
 %{C++

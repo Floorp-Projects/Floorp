@@ -52,7 +52,6 @@
 #include "nsGUIEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
-#include "nsIOutlinerContentView.h"
 
 // A helper class for managing our ranges of selection.
 struct nsOutlinerRange
@@ -350,7 +349,6 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
       if (count > 1) {
         // We need to deselect everything but our item.
         mFirstRange->RemoveAllBut(aIndex);
-        ContentViewDeselectAllBut(aIndex);
         FireOnSelectHandler();
       }
       return NS_OK;
@@ -358,7 +356,6 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
     else {
        // Clear out our selection.
        mFirstRange->Invalidate();
-       ContentViewDeselectAll();
        delete mFirstRange;
     }
   }
@@ -368,7 +365,6 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
   mFirstRange->Invalidate();
 
   // Fire the select event
-  ContentViewSelect(aIndex);
   FireOnSelectHandler();
   return NS_OK;
 }
@@ -390,16 +386,12 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
     Select(aIndex);
   else {
     if (!mFirstRange->Contains(aIndex)) {
-      if (! SingleSelection()) {
-        ContentViewSelect(aIndex);
+      if (! SingleSelection())
         mFirstRange->Add(aIndex);
-      }
     }
-    else {
-      ContentViewDeselect(aIndex);
+    else
       mFirstRange->Remove(aIndex);
-    }
-
+    
     mOutliner->InvalidateRow(aIndex);
 
     FireOnSelectHandler();
@@ -416,7 +408,6 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
   if (!aAugment) {
     // Clear our selection.
     if (mFirstRange) {
-        ContentViewDeselectAll();
         mFirstRange->Invalidate();
         delete mFirstRange;
     }
@@ -437,12 +428,10 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
   if (aAugment && mFirstRange) {
     // We need to remove all the items within our selected range from the selection,
     // and then we insert our new range into the list.
-    ContentViewDeselectRange(start, end);
     mFirstRange->RemoveRange(start, end);
   }
 
   nsOutlinerRange* range = new nsOutlinerRange(this, start, end);
-  ContentViewSelectRange(start, end);
   range->Invalidate();
 
   if (aAugment && mFirstRange)
@@ -464,7 +453,6 @@ NS_IMETHODIMP nsOutlinerSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndI
     PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
 
     mFirstRange->RemoveRange(start, end);
-    ContentViewDeselectRange(start, end);
 
     mOutliner->InvalidateRange(start, end);
   }
@@ -477,7 +465,6 @@ NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
   if (mFirstRange) {
     mFirstRange->Invalidate();
     delete mFirstRange;
-    ContentViewDeselectAll();
     mFirstRange = nsnull;
   }
   mShiftSelectPivot = -1;
@@ -512,7 +499,6 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
 
   mFirstRange = new nsOutlinerRange(this, 0, rowCount-1);
   mFirstRange->Invalidate();
-  ContentViewSelectAll();
 
   FireOnSelectHandler();
 
@@ -711,6 +697,13 @@ nsOutlinerSelection::InvalidateSelection()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerSelection::GetShiftSelectPivot(PRInt32* aIndex)
+{
+  *aIndex = mShiftSelectPivot;
+  return NS_OK;
+}
+
 nsresult
 nsOutlinerSelection::FireOnSelectHandler()
 {
@@ -760,69 +753,6 @@ PRBool nsOutlinerSelection::SingleSelection()
   return PR_FALSE;
 }
 
-nsresult
-nsOutlinerSelection::GetContentView(nsIOutlinerContentView** aView)
-{
-  nsCOMPtr<nsIOutlinerView> outlinerView;
-  mOutliner->GetView(getter_AddRefs(outlinerView));
-  return CallQueryInterface(outlinerView, aView);
-}
-
-void
-nsOutlinerSelection::ContentViewSelect(PRInt32 aIndex)
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->Select(aIndex);
-}
-
-void
-nsOutlinerSelection::ContentViewSelectAll()
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->SelectAll();
-}
-
-void
-nsOutlinerSelection::ContentViewDeselect(PRInt32 aIndex)
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->Deselect(aIndex);
-}
-
-void
-nsOutlinerSelection::ContentViewDeselectAll()
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->DeselectAll();
-}
-
-void
-nsOutlinerSelection::ContentViewSelectRange(PRInt32 aStart, PRInt32 aEnd)
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->SelectRange(aStart, aEnd);
-}
-
-void
-nsOutlinerSelection::ContentViewDeselectRange(PRInt32 aStart, PRInt32 aEnd)
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->DeselectRange(aStart, aEnd);
-}
-
-void
-nsOutlinerSelection::ContentViewDeselectAllBut(PRInt32 aIndex)
-{
-  nsCOMPtr<nsIOutlinerContentView> contentView;
-  if (NS_SUCCEEDED(GetContentView(getter_AddRefs(contentView))))
-    contentView->DeselectAllBut(aIndex);
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 

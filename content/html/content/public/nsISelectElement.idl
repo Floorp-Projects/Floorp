@@ -117,7 +117,8 @@ interface nsISelectElement : nsISupports
                                     in long aEndIndex,
                                     in boolean aIsSelected,
                                     in boolean aClearAll,
-                                    in boolean aSetDisabled);
+                                    in boolean aSetDisabled,
+                                    in boolean aNotify);
 
   /**
    * Called when an option is disabled

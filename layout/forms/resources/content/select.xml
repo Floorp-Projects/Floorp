@@ -55,8 +55,10 @@
            var row = {};
            var col = {};
            var obj = {};
-           var b = this.parentNode.parentNode.parentNode.outlinerBoxObject;
-           b.getCellAt(event.clientX, event.clientY, row, col, obj);
+           var select = this.parentNode.parentNode.parentNode;
+           var box = select.outlinerBoxObject;
+           var selection = box.selection;
+           box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
            // save off the last selected row
            this._lastSelectedRow = row.value;
@@ -64,8 +66,10 @@
            if (row.value == -1)
              return;
 
-           if (!b.selection.isSelected(row.value)) {
-             b.selection.select(row.value);
+           if (!selection.isSelected(row.value)) {
+             selection.select(row.value);
+             select.selectElement.setOptionsSelectedByIndex(row.value, row.value,
+                                                            true, true, false, false);
              if ("onchange" in this)
                this.onchange();
            }
@@ -81,18 +85,28 @@
          var row = {};
          var col = {};
          var obj = {};
-         var b = this.parentNode.parentNode.parentNode.outlinerBoxObject;
-         b.getCellAt(event.clientX, event.clientY, row, col, obj);
+         var select = this.parentNode.parentNode.parentNode;
+         var box = select.outlinerBoxObject;
+         select = select.selectElement;
+         var selection = box.selection;
+         box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
          if (row.value == -1)
            return;
 
          var augment = event.ctrlKey || event.metaKey;
-         if (event.shiftKey)
-           b.selection.rangedSelect(-1, row.value, augment);
+         if (event.shiftKey) {
+           selection.rangedSelect(-1, row.value, augment);
+           var start = selection.shiftSelectPivot;
+           if (start == -1)
+             start = selection.currentIndex;
+           select.setOptionsSelectedByIndex(start, row.value, true, !augment, false, false);
+         }
          else if (augment) {
-           b.selection.toggleSelect(row.value);
-           b.selection.currentIndex = row.value;
+           selection.toggleSelect(row.value);
+           select.setOptionsSelectedByIndex(row.value, row.value,
+                                            !selection.isSelected(row.value), false, false, false);
+           selection.currentIndex = row.value;
          }
          if ("onchange" in this)
            this.onchange();
@@ -106,7 +120,9 @@
            // mousedown and the time we click, don't fire the select handler.
            // see bug #92366
            if (this._lastSelectedRow == row.value) {
-             b.selection.select(row.value);  
+             selection.select(row.value);  
+             select.setOptionsSelectedByIndex(row.value, row.value,
+                                              true, true, false, false);
              if ("onchange" in this)
                this.onchange(); 
            }
@@ -134,8 +150,11 @@
 
     <implementation>
       <property name="outlinerBoxObject"
-               onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
-               readonly="true"/>
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
+                readonly="true"/>
+      <property name="selectElement"
+                onget="return this.QueryInterface(Components.interfaces.nsISelectElement);"
+                readonly="true"/>
       <property name="currentIndex"
                 onget="return this.outlinerBoxObject.selection.currentIndex;"
                 onset="return this.outlinerBoxObject.selection.currentIndex=val;"/>
@@ -164,6 +183,7 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(c-1, 500);
           this.outlinerBoxObject.ensureRowIsVisible(c-1);
+          this.selectElement.setOptionsSelectedByIndex(c-1, c-1, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -179,6 +199,7 @@
           this.selectionTail = -1;
           this.outlinerBoxObject.selection.timedSelect(c+1, 500);
           this.outlinerBoxObject.ensureRowIsVisible(c+1);
+          this.selectElement.setOptionsSelectedByIndex(c+1, c+1, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -191,19 +212,25 @@
           var c = this.currentIndex;
           if (c == -1 || c == 0)
             return;
+          var selection = this.outlinerBoxObject.selection;
+          var select = this.selectElement;
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
-              this.outlinerBoxObject.selection.toggleSelect(c);
+              selection.toggleSelect(c);
+              select.setOptionsSelectedByIndex(c, c, selection.isSelected(c), 
+                                               false, false, false);
               this.currentIndex = c - 1;
             }
             else {
-              this.outlinerBoxObject.selection.toggleSelect(c - 1);
+              selection.toggleSelect(c - 1);
+              select.setOptionsSelectedByIndex(c, c, true, false, false, false);
             }
           }
           else {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
             this.selectionHead = c;
-            this.outlinerBoxObject.selection.rangedSelect(c, c - 1, true);
+            selection.rangedSelect(c, c - 1, true);
+            select.setOptionsSelectedByIndex(c, c-1, true, true, false, false);
           }
           this.selectionTail = c - 1;
           this.outlinerBoxObject.ensureRowIsVisible(c - 1);
@@ -220,18 +247,24 @@
           try { if (c+1 == this.outlinerBoxObject.view.rowCount)
             return;
           } catch (e) {}
+          var selection = this.outlinerBoxObject.selection;
+          var select = this.selectElement;
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
-              this.outlinerBoxObject.selection.toggleSelect(c);
+              selection.toggleSelect(c);
+              select.setOptionsSelectedByIndex(c, c, !selection.isSelected(c), false, false, false);
               this.currentIndex = c + 1;
             }
-            else
-              this.outlinerBoxObject.selection.toggleSelect(c + 1);
+            else {
+              selection.toggleSelect(c + 1);
+              select.setOptionsSelectedByIndex(c+1, c+1, !selection.isSelected(c), false, false, false);
+            }
           }
           else {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
             this.selectionHead = c;
-            this.outlinerBoxObject.selection.rangedSelect(c, c + 1, true);
+            selection.rangedSelect(c, c + 1, true);
+            select.setOptionsSelectedByIndex(c, c+1, true, true, false, false);
           }
           this.selectionTail = c + 1;
           this.outlinerBoxObject.ensureRowIsVisible(c + 1);
@@ -279,6 +312,7 @@
             this.outlinerBoxObject.scrollByPages(-1);
           }
           this.outlinerBoxObject.selection.timedSelect(i, 500);
+          this.selectElement.setOptionsSelectedByIndex(i, i, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -304,6 +338,7 @@
             this.outlinerBoxObject.scrollByPages(1);
           }
           this.outlinerBoxObject.selection.timedSelect(i, 500);
+          this.selectElement.setOptionsSelectdByIndex(i, i, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -316,34 +351,43 @@
           var c = this.currentIndex;
           if (c == 0)
             return;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
+          var box = this.outlinerBoxObject;
+          var selection = box.selection;
+          var select = this.selectElement;
+          var f = box.getFirstVisibleRow();
           var i = 0;
           if (f > 0) {
-            var p = this.outlinerBoxObject.getPageCount();
+            var p = box.getPageCount();
             if (f - p >= 0)
               i = c - p;
             else
               i = c - f;
-            this.outlinerBoxObject.scrollByPages(-1);
+            box.scrollByPages(-1);
           }
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
               if (i < this.selectionHead) {
-                this.outlinerBoxObject.selection.clearRange(c, this.selectionHead + 1);
-                this.outlinerBoxObject.selection.rangedSelect(this.selectionHead - 1, i, true);
+                selection.clearRange(c, this.selectionHead + 1);
+                selection.rangedSelect(this.selectionHead - 1, i, true);
+                select.setOptionsSelectedByIndex(c, this.selectionHead + 1, false, false, false, false);
+                select.setOptionsSelectedByIndex(this.selectionHead - 1, i, true, false, false, false);
               }
               else {
-                this.outlinerBoxObject.selection.clearRange(c, i + 1);
+                selection.clearRange(c, i + 1);
+                select.setOptionsSelectedByIndex(c, i+1, false, false, false, false);
                 this.currentIndex = i;
               }
             }
-            else
-              this.outlinerBoxObject.selection.rangedSelect(c - 1, i, true);
+            else {
+              selection.rangedSelect(c - 1, i, true);
+              select.setOptionsSelectedByIndex(c-1, i, true, false, false, false);
+            }
           }
           else {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
             this.selectionHead = c;
-            this.outlinerBoxObject.selection.rangedSelect(c, i, true);
+            selection.rangedSelect(c, i, true);
+            select.setOptionsSelectedByIndex(c, i, true, true, false, false);
           }
           this.selectionTail = i;
           if ("onchange" in this)
@@ -356,11 +400,12 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var box = this.outlinerBoxObject;
+          var l = box.view.rowCount - 1;
           if (c == l)
             return;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
-          var p = this.outlinerBoxObject.getPageCount();
+          var f = box.getFirstVisibleRow();
+          var p = box.getPageCount();
           var i = l;
           var lastTopRowIndex = l - p;
           if (f <= lastTopRowIndex) {
@@ -368,26 +413,34 @@
               i = c + p;
             else
               i = lastTopRowIndex + c - f + 1;
-            this.outlinerBoxObject.scrollByPages(1);
+            box.scrollByPages(1);
           }
+          var selection = box.selection;
+          var select = this.selectElement;
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
               if (i > this.selectionHead) {
-                this.outlinerBoxObject.selection.clearRange(c, this.selectionHead - 1);
-                this.outlinerBoxObject.selection.rangedSelect(this.selectionHead + 1, i, true);
+                selection.clearRange(c, this.selectionHead - 1);
+                selection.rangedSelect(this.selectionHead + 1, i, true);
+                select.setOptionsSelectedByIndex(c, this.selectionHead - 1, false, false, false, false);
+                select.setOptionsSelectedByIndex(this.selectionHead + 1, i, true, false, false, false);
               }
               else {
-                this.outlinerBoxObject.selection.clearRange(c, i - 1);
+                selection.clearRange(c, i - 1);
+                select.setOptionsSelectedByIndex(c, i-1, false, false, false, false);
                 this.currentIndex = i;
               }
             }
-            else
-              this.outlinerBoxObject.selection.rangedSelect(c + 1, i, true);
+            else {
+              selection.rangedSelect(c + 1, i, true);
+              select.setOptionsSelectedByIndex(c+1, i, true, false, false, false);
+            }
           }
           else {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
             this.selectionHead = c;
-            this.outlinerBoxObject.selection.rangedSelect(c, i, true);
+            selection.rangedSelect(c, i, true);
+            select.setOptionsSelectedByIndex(c, i, true, true, false, false);
           }
           this.selectionTail = i;
           if ("onchange" in this)
@@ -441,8 +494,10 @@
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          this.outlinerBoxObject.selection.timedSelect(0, 500);
-          this.outlinerBoxObject.ensureRowIsVisible(0);
+          var box = this.outlinerBoxObject;
+          box.selection.timedSelect(0, 500);
+          this.selectElement.setOptionsSelectedByIndex(0, 0, true, true, false, false);
+          box.ensureRowIsVisible(0);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -450,13 +505,15 @@
       <handler event="keypress" keycode="vk_end">
         <![CDATA[
           event.preventDefault();
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var box = this.outlinerBoxObject;
+          var l = box.view.rowCount - 1;
           if (this.currentIndex == l)
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          this.outlinerBoxObject.selection.timedSelect(l, 500);
-          this.outlinerBoxObject.ensureRowIsVisible(l);
+          box.selection.timedSelect(l, 500);
+          this.selectElement.setOptionsSelectedByIndex(l, l, true, true, false, false);
+          box.ensureRowIsVisible(l);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -469,13 +526,18 @@
           var c = this.currentIndex;
           if (c == 0)
             return;
+          var box = this.outlinerBoxObject;
+          var selection = box.selection;
+          var select = this.selectElement;
           if (c != this.selectionTail) {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
+            select.setOptionsSelectedByIndex(-1, -1, true, true, false, false);
             this.selectionHead = c;
           }
-          this.outlinerBoxObject.selection.rangedSelect(c, 0, true);
+          selection.rangedSelect(c, 0, true);
+          select.setOptionsSelectedByIndex(c, 0, true, false, false, false);
           this.selectionTail = 0;
-          this.outlinerBoxObject.ensureRowIsVisible(0);
+          box.ensureRowIsVisible(0);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -486,16 +548,21 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var box = this.outlinerBoxObject;
+          var l = box.view.rowCount - 1;
           if (c == l)
             return;
+          var selection = box.selection;
+          var select = this.selectElement;
           if (c != this.selectionTail) {
-            this.outlinerBoxObject.selection.clearSelection();
+            selection.clearSelection();
+            select.setOptionsSelectedByIndex(-1, -1, true, true, false, false);
             this.selectionHead = c;
           }
-          this.outlinerBoxObject.selection.rangedSelect(c, l, true);
+          selection.rangedSelect(c, l, true);
+          select.setOptionsSelectedByIndex(c, l, true, false, false, false);
           this.selectionTail = l;
-          this.outlinerBoxObject.ensureRowIsVisible(l);
+          box.ensureRowIsVisible(l);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -524,8 +591,10 @@
           event.preventDefault();
           if (event.keyCode == ' ') {
             var c = this.currentIndex;
-            if (!this.outlinerBoxObject.selection.isSelected(c)) {
-              this.outlinerBoxObject.selection.toggleSelect(c);
+            var selection = this.outlinerBoxObject.selection;
+            if (!selection.isSelected(c)) {
+              selection.toggleSelect(c);
+              this.selectElement.setOptionsSelectedByIndex(c, c, true, false, false, false);
               if ("onchange" in this)
                 this.onchange();
             }
@@ -611,7 +680,7 @@
           return;
 
         this.selectElement.setOptionsSelectedByIndex(itemIndex, itemIndex, true,
-                                                     true, false);
+                                                     true, false, false);
         if ("onchange" in this)
           this.onchange();
         ]]>

@@ -2043,6 +2043,7 @@ nsListControlFrame::SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
                                                          aValue,
                                                          aClearAll,
                                                          PR_FALSE,
+                                                         PR_TRUE,
                                                          &wasChanged);
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
   if (NS_SUCCEEDED(rv) && !mChangesNotNotified && wasChanged) {
@@ -2077,6 +2078,7 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(PRInt32 aIndex)
                                                 !value,
                                                 PR_FALSE,
                                                 PR_FALSE,
+                                                PR_TRUE,
                                                 &wasChanged);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
