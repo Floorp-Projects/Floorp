@@ -422,6 +422,10 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 	nsVoidArray		*array = nsnull;
 	nsresult		rv = NS_ERROR_FAILURE;
 
+	// we only have positive assertions in the find data source.
+	if (! tv)
+		return rv;
+
 	if (isFindURI(source))
 	{
 		if (peq(property, kNC_Child))
@@ -492,6 +496,10 @@ FindDataSource::HasAssertion(nsIRDFResource *source,
 {
 	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_ERROR_FAILURE;
+
+	// we only have positive assertions in the find data source.
+	if (! tv)
+		return rv;
 
 	*hasAssertion = PR_FALSE;
 	if (isFindURI(source))
