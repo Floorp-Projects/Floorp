@@ -124,98 +124,7 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  PRUint32 keyCode;
-  PRBool   isShift, ctrlKey, altKey, metaKey;
-
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) {
-    //non-key event passed to keydown.  bad things.
-    return NS_OK;
-  }
-
-//  PRBool keyProcessed;
-//  ProcessShortCutKeys(aKeyEvent, keyProcessed);
-//  if (PR_FALSE==keyProcessed)
-   {
-      if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
-            NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
-            NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
-            NS_SUCCEEDED(uiEvent->GetAltKey(&altKey)) &&
-            NS_SUCCEEDED(uiEvent->GetMetaKey(&metaKey)))
-      {
-          {
-            switch(keyCode) {
-   //      case nsIDOMUIEvent::VK_BACK:
-   //        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
-   //        break;
-
-            case nsIDOMUIEvent::VK_DELETE:
-               mEditor->DeleteSelection(nsIEditor::eDeleteNext);
-               ScrollSelectionIntoView();
-               break;
-
-   //      case nsIDOMUIEvent::VK_RETURN:
-            //case nsIDOMUIEvent::VK_ENTER:         // why does this not exist?
-               // Need to implement creation of either <P> or <BR> nodes.
-   //        mEditor->InsertBreak();
-   //        break;
-      
-            case nsIDOMUIEvent::VK_LEFT:
-            case nsIDOMUIEvent::VK_RIGHT:
-            case nsIDOMUIEvent::VK_UP:
-            case nsIDOMUIEvent::VK_DOWN:
-            // these have already been handled in nsRangeList. Why are we getting them
-            // again here (Mac)? In switch to avoid putting in bogus chars.
-
-               //return NS_OK to allow page scrolling.
-               return NS_OK;
-            break;
-      
-            case nsIDOMUIEvent::VK_HOME:
-            case nsIDOMUIEvent::VK_END:
-            // who handles these?
-   #if DEBUG
-         printf("Key not handled\n");
-   #endif
-               return NS_OK;
-               break;
-
-            case nsIDOMUIEvent::VK_PAGE_UP:
-            case nsIDOMUIEvent::VK_PAGE_DOWN:
-               //return NS_OK to allow page scrolling.
-               return NS_OK;
-            break;
-
-            case nsIDOMUIEvent::VK_TAB:
-            {
-               PRUint32 flags=0;
-               mEditor->GetFlags(&flags);
-               if (! (flags & nsIHTMLEditor::eEditorSingleLineMask))
-               {
-                  if (metaKey || altKey)  // why block option-tab?
-                     return NS_OK;   // don't consume
-                  // else we insert the tab straight through  
-                  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-                   if (htmlEditor)
-                      htmlEditor->EditorKeyPress(uiEvent);
-                  ScrollSelectionIntoView();
-                  return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
-               }
-               else {
-                  return NS_OK;
-               }
-               break;
-            }
-
-            default:
-               return NS_OK; // this indicates that we have not handled the keyDown event in any way.
-            }
-         }
-      }
-   }
-  
-  return NS_ERROR_BASE;
+  return NS_OK;
 }
 
 
@@ -250,14 +159,15 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   ProcessShortCutKeys(aKeyEvent, keyProcessed);
   if (PR_FALSE==keyProcessed)
   {
-    PRUint32 flags;
     PRBool ctrlKey, altKey, metaKey;
     uiEvent->GetCtrlKey(&ctrlKey);
     uiEvent->GetAltKey(&altKey);
     uiEvent->GetMetaKey(&metaKey);
 
+#ifdef BLOCK_META_FOR_SOME_REASON
     if (metaKey)
       return NS_OK;   // don't consume
+#endif
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
@@ -270,8 +180,30 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
+      if (nsIDOMUIEvent::VK_DELETE==keyCode)
+      {
+        mEditor->DeleteSelection(nsIEditor::eDeleteNext);
+        ScrollSelectionIntoView();
+        return NS_ERROR_BASE; // consumed
+      }   
+      if (nsIDOMUIEvent::VK_TAB==keyCode)
+      {
+        if (metaKey || altKey)  // why block option-tab?
+          return NS_OK;   // don't consume
+
+        PRUint32 flags=0;
+        mEditor->GetFlags(&flags);
+        if ((flags & nsIHTMLEditor::eEditorSingleLineMask))
+          return NS_OK; // let it be used for focus switching
+
+        // else we insert the tab straight through
+        htmlEditor->EditorKeyPress(uiEvent);
+        ScrollSelectionIntoView();
+        return NS_ERROR_BASE; // "I handled the event, don't do default processing"
+      }
       if (nsIDOMUIEvent::VK_RETURN==keyCode) 
       {
+        PRUint32 flags=0;
         mEditor->GetFlags(&flags);
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
