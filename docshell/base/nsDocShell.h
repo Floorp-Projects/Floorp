@@ -197,6 +197,7 @@ protected:
    NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
+   virtual void OnNewURI(nsIURI *aURI, nsIChannel* aChannel, loadType aLoadType);
    virtual void SetCurrentURI(nsIURI* aURI);
    virtual void SetReferrerURI(nsIURI* aURI);
 
