@@ -115,6 +115,7 @@ static SECStatus GetItem(SECItem* src, SECItem* dest, PRBool includeTag)
         return SECSuccess;
     }
 
+	dest->type = 0;
     dest->data = definite_length_decoder(src->data,  src->len, &dest->len,
         includeTag);
     if (dest->data == NULL)
