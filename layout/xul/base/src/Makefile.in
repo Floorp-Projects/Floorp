@@ -44,7 +44,6 @@ CPPSRCS		= \
         nsBoxLayoutState.cpp \
         nsBoxToBlockAdaptor.cpp \
         nsButtonBoxFrame.cpp \
-        nsCheckBoxFrame.cpp \
         nsContainerBox.cpp \
         nsLeafBoxFrame.cpp \
         nsSprocketLayout.cpp \

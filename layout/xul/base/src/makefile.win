@@ -46,7 +46,6 @@ CPPSRCS=					\
     	nsSliderFrame.cpp \
         nsProgressMeterFrame.cpp        \
         nsTitledButtonFrame.cpp        \
-    	nsCheckBoxFrame.cpp \
         nsTitledBoxFrame.cpp        \
         nsBox.cpp        \
         nsContainerBox.cpp        \
