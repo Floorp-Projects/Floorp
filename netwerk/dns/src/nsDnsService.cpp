@@ -1492,10 +1492,10 @@ nsDNSService::Lookup(const char*     hostName,
         nsDNSLookup *lookup = nsnull;
         // IDN handling
         if (mIDNConverter && !nsCRT::IsAscii(hostName)) {
-            nsXPIDLCString hostNameACE;
-            rv = mIDNConverter->ConvertUTF8toACE(hostName, getter_Copies(hostNameACE));
-            if (!hostNameACE.get()) return NS_ERROR_OUT_OF_MEMORY;
-            lookup = FindOrCreateLookup(hostNameACE);
+            nsCAutoString hostNameACE;
+            rv = mIDNConverter->ConvertUTF8toACE(nsDependentCString(hostName), hostNameACE);
+            NS_ENSURE_SUCCESS(rv, rv);
+            lookup = FindOrCreateLookup(hostNameACE.get());
         }
 
         // if it hasn't been created (no IDN converter / not an IDN hostName)

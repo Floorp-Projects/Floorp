@@ -958,12 +958,12 @@ nsStandardURL::GetAsciiHost(nsACString &result)
 
     if (gIDNService) {
         nsresult rv;
-        rv = gIDNService->ConvertUTF8toACE(PromiseFlatCString(Host()).get(), &mHostA);
+        rv = gIDNService->ConvertUTF8toACE(Host(), result);
         if (NS_SUCCEEDED(rv)) {
-            result = mHostA;
+            mHostA = ToNewCString(result);
             return NS_OK;
         }
-        NS_WARNING("UTF8ToIDNHostName failed");
+        NS_WARNING("nsIDNService::ConvertUTF8toACE failed");
     }
 
     // something went wrong... guess all we can do is URL escape :-/

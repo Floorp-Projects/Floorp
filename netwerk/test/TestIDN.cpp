@@ -42,14 +42,15 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
+#include "nsString.h"
 
 int main(int argc, char **argv) {
-    char *buf = NULL;
     nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
     NS_ASSERTION(converter, "idnSDK not installed!");
     if (converter) {
-        converter->ConvertUTF8toACE("臺灣.公司", &buf);
-        printf("converted = %s", buf);
+        nsCAutoString buf;
+        converter->ConvertUTF8toACE(NS_LITERAL_CSTRING("臺灣.公司"), buf);
+        printf("converted = %s", buf.get());
     }
     return 0;
 }
