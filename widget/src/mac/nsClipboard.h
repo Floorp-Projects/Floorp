@@ -53,11 +53,6 @@ protected:
 
   static ResType MapMimeTypeToMacOSType ( const nsString & aMimeStr ) ;
 
-  // Utility routines. Closure of intrinsic flavors + those obtainable through conversion
-  // XXX Move into the transferable with permission
-  nsresult FlavorsTransferableCanImport ( nsITransferable* aTrans, nsISupportsArray** outFlavorList ) ;
-  nsresult FlavorsTransferableCanExport ( nsITransferable* aTrans, nsISupportsArray** outFlavorList ) ;
-
 }; // nsClipboard
 
 #endif // nsClipboard_h__

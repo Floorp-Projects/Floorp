@@ -22,6 +22,10 @@
 //
 // See header file for details.
 //
+// Remaining Work:
+// * only convert data to clipboard on an app switch.
+// * better mime type --> OS type conversion needed. Only a few formats supported now.
+//
 
 #include "nsCOMPtr.h"
 #include "nsClipboard.h"
@@ -40,21 +44,16 @@
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
-//-------------------------------------------------------------------------
 //
 // nsClipboard constructor
 //
-//-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-
 }
 
-//-------------------------------------------------------------------------
 //
 // nsClipboard destructor
 //
-//-------------------------------------------------------------------------
 nsClipboard::~nsClipboard()
 {
 }
@@ -126,74 +125,6 @@ nsClipboard :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
 
 
 //
-// FlavorsTransferableCanImport
-//
-// Computes a list of flavors that the transferable can accept into it, either through
-// intrinsic knowledge or input data converters.
-//
-nsresult
-nsClipboard :: FlavorsTransferableCanImport ( nsITransferable* aTransferable, nsISupportsArray** outFlavorList )
-{
-  if ( !aTransferable || !outFlavorList )
-    return NS_ERROR_INVALID_ARG;
-  
-  // Get the flavor list, and on to the end of it, append the list of flavors we
-  // can also get to through a converter. This is so that we can just walk the list
-  // in one go, looking for the desired flavor.
-  aTransferable->GetTransferDataFlavors(outFlavorList);  // addrefs
-  nsCOMPtr<nsIFormatConverter> converter;
-  aTransferable->GetConverter(getter_AddRefs(converter));
-  if ( converter ) {
-    nsCOMPtr<nsISupportsArray> convertedList;
-    converter->GetInputDataFlavors(getter_AddRefs(convertedList));
-    if ( convertedList ) {
-      for (int i=0;i<convertedList->Count();i++) {
-  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
-        (*outFlavorList)->AppendElement(temp);    // this addref's for us
-      } // foreach flavor that can be converted to
-    }
-  } // if a converter exists
-
-  return NS_OK;
-  
-} // FlavorsTransferableCanImport
-
-
-//
-// FlavorsTransferableCanExport
-//
-// Computes a list of flavors that the transferable can export, either through
-// intrinsic knowledge or output data converters.
-//
-nsresult
-nsClipboard :: FlavorsTransferableCanExport ( nsITransferable* aTransferable, nsISupportsArray** outFlavorList )
-{
-  if ( !aTransferable || !outFlavorList )
-    return NS_ERROR_INVALID_ARG;
-  
-  // Get the flavor list, and on to the end of it, append the list of flavors we
-  // can also get to through a converter. This is so that we can just walk the list
-  // in one go, looking for the desired flavor.
-  aTransferable->GetTransferDataFlavors(outFlavorList);  // addrefs
-  nsCOMPtr<nsIFormatConverter> converter;
-  aTransferable->GetConverter(getter_AddRefs(converter));
-  if ( converter ) {
-    nsCOMPtr<nsISupportsArray> convertedList;
-    converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
-    if ( convertedList ) {
-      for (int i=0;i<convertedList->Count();i++) {
-  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
-        (*outFlavorList)->AppendElement(temp);    // this addref's for us
-      } // foreach flavor that can be converted to
-    }
-  } // if a converter exists
-
-  return NS_OK;
-  
-} // FlavorsTransferableCanImport
-
-
-//
 // SetNativeClipboardData
 //
 // Take data off the transferrable and put it on the clipboard in as many formats
@@ -219,7 +150,7 @@ nsClipboard :: SetNativeClipboardData()
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
-  errCode = FlavorsTransferableCanExport ( mTransferable, getter_AddRefs(flavorList) );
+  errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
   if ( errCode != NS_OK )
     return NS_ERROR_FAILURE;
 
@@ -257,7 +188,6 @@ nsClipboard :: SetNativeClipboardData()
 } // SetNativeClipboardData
 
 
-
 //
 // GetNativeClipboardData
 //
@@ -275,7 +205,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   // get flavor list that includes all acceptable flavors (including ones obtained through
   // conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
-  errCode = FlavorsTransferableCanImport ( aTransferable, getter_AddRefs(flavorList) );
+  errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
   if ( errCode != NS_OK )
     return NS_ERROR_FAILURE;
 
