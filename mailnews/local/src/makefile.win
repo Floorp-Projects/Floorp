@@ -36,6 +36,7 @@ EXPORTS=				\
 	nsLocalMessage.h	\
 	nsLocalMailFolder.h \
 	nsLocalUtils.h		\
+	nsLocalStringBundle.h \
 	$(NULL)
 
 ################################################################################
@@ -57,6 +58,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsLocalMessage.obj			\
 	.\$(OBJDIR)\nsLocalUtils.obj			\
 	.\$(OBJDIR)\nsLocalUndoTxn.obj			\
+	.\$(OBJDIR)\nsLocalStringBundle.obj		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
