@@ -26,9 +26,11 @@
 
 #include "prtypes.h"
 #include "prio.h"
+#include "nsString.h"
 #include "nsIChannelSecurityInfo.h"
 #include "nsISSLSocketControl.h"
-#include "nsString.h"
+
+class nsIChannel;
 
 class nsNSSSocketInfo : public nsIChannelSecurityInfo,
                         public nsISSLSocketControl
@@ -60,6 +62,8 @@ protected:
   nsString mProxyName;
   PRInt32 mProxyPort;
   
+  nsIChannel* mChannel; // note, don't use an owning reference
+                        // to avoid circular references
   PRInt32 mSecurityState;
   nsString mShortDesc;
   PRBool mForceHandshake;

@@ -29,10 +29,11 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
+#include "nsIChannel.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "ssl.h"
 #include "cert.h"
@@ -48,18 +49,50 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (retry)
     return nsnull;
 
-  NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID,
-                          NS_UI_THREAD_EVENTQ, &rv);
-  if (NS_FAILED(rv)) return nsnull;
+  nsIChannelSecurityInfo* csi = NS_STATIC_CAST(nsIChannelSecurityInfo*, arg);
+  nsCOMPtr<nsIChannel> channel;
+  csi->GetChannel(getter_AddRefs(channel));
+  if (!channel) return nsnull;
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (!callbacks) return nsnull;
+
+  // The notification callbacks object may not be safe, so
+  // proxy the call to get the nsIPrompt.
+
+  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsIInterfaceRequestor),
+                              callbacks,
+                              PROXY_SYNC,
+                              getter_AddRefs(proxiedCallbacks));
+
+  nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
+
+  // Finally, get a proxy for the nsIPrompt
+
+  nsCOMPtr<nsIPrompt> proxyPrompt;
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+	                          NS_GET_IID(nsIPrompt),
+                              prompt,
+                              PROXY_SYNC,
+                              getter_AddRefs(proxyPrompt));
+
+  if (!proxyPrompt) {
+    NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+    return nsnull;
+  }
 
   nsString promptString;
   nsNSSComponent::GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt"),
                                         promptString);
   PRUnichar *uniString = promptString.ToNewUnicode();
-  rv = dialog->PromptPassword(nsnull, uniString,
-                              NS_LITERAL_STRING(" "),
-                              nsIPrompt::SAVE_PASSWORD_NEVER,
-                              &password, &value);
+  rv = proxyPrompt->PromptPassword(nsnull, uniString,
+                                   NS_LITERAL_STRING(" "),
+                                   nsIPrompt::SAVE_PASSWORD_NEVER,
+                                   &password, &value);
   nsMemory::Free(uniString);
   if (NS_SUCCEEDED(rv) && value) {
     char* str = nsString(password).ToNewCString();

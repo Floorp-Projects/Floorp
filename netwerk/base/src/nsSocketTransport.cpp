@@ -1026,6 +1026,9 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                 if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
                     nsCRT::strcmp(mSocketTypes[type], "tls") == 0) {
                     mSecurityInfo = socketInfo;
+                    nsCOMPtr<nsIChannelSecurityInfo> secinfo(do_QueryInterface(mSecurityInfo));
+                    if (secinfo)
+                      secinfo->SetChannel(this);
                 }
                 else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
                     mSecurityInfo = socketInfo;
