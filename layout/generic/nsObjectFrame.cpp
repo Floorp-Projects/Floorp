@@ -168,7 +168,9 @@ private:
 
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
-  //~~~
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -192,7 +194,6 @@ public:
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  //~~~
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
@@ -202,13 +203,11 @@ public:
 
   nsresult GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   
-  //~~~
   void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
 
 protected:
   virtual ~nsObjectFrame();
 
-  //~~~
   virtual PRIntn GetSkipSides() const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
@@ -271,7 +270,6 @@ static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
-//~~~
 PRIntn
 nsObjectFrame::GetSkipSides() const
 {
@@ -336,7 +334,17 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   }
 }
 
-//~~~
+NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                                 nsIAtom*        aListName,
+                                                 nsIFrame*       aChildList)
+{
+  // we don't want to call this if it is already set (image)
+  nsresult rv = NS_OK;
+  if(mFrames.IsEmpty())
+    rv = nsObjectFrameSuper::SetInitialChildList(aPresContext, aListName, aChildList);
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsIPresContext&  aPresContext,
                     nsIContent*      aContent,
@@ -632,7 +640,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		return NS_OK;
   }
 
-  //~~~
   //This could be an image
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
@@ -829,13 +836,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     NS_RELEASE(atom);
   }
 
-  if(rv == NS_OK)//~~~
+  if(rv == NS_OK)
   {
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
 
-  //~~~
   nsIPresShell* presShell;
   aPresContext.GetShell(&presShell);
   presShell->CantRenderReplacedElement(&aPresContext, this);
@@ -859,7 +865,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
   // Get our desired size
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
 
-  //~~~ could be an image
+  // could be an image
   nsIFrame * child = mFrames.FirstChild();
   if(child != nsnull)
   	return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
@@ -1354,7 +1360,6 @@ nsObjectFrame::GetBaseURL(nsIURL* &aURL)
 
 #endif // REFLOW_MODS
 
-//~~~
 NS_IMETHODIMP
 nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -1448,7 +1453,6 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      nsFramePaintLayer aWhichLayer)
 {
 #if !defined(XP_MAC)
-  //~~~
   nsIFrame * child = mFrames.FirstChild();
   if(child != NULL) //This is an image
   {
