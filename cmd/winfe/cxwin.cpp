@@ -4627,11 +4627,29 @@ void CWinCX::SetDocTitle(MWContext *pContext, char *pTitle)
 	}
 }
 
+/* accept a new internet keyword.  keyword must be a null-terminated string,
+   or null.  null and zero-length strings are taken to mean "no keyword". */
+void CWinCX::SetInternetKeyword(const char *keyword) {
+
+	// Guard against the case where our window has gone away and the
+	//   closing of the window causes the stream to complete which
+	//   causes us to get back in here with a half torn down window
+	if( GetDocumentContext() == NULL )
+		return;
+
+	// Only if we're the main context
+	if( GetFrame()->GetMainContext() == this ) {
+		CURLBar *urlBar = (CURLBar *) GetFrame()->GetChrome()->GetToolbar(ID_LOCATION_TOOLBAR);
+		if (urlBar)
+			urlBar->SetToolTip(keyword);
+	}
+}
+
 void CWinCX::ClearView(MWContext *pContext, int iView)  {
     //  Call the base.
     CDCCX::ClearView(pContext, iView);
 
-    //  Have the view erase it's background to clear.
+    //  Have the view erase its background to clear.
     RECT crClear;
 	::SetRect(&crClear, 0, 0, (int) GetWidth(), (int) GetHeight());
 	if(GetPane())	{
@@ -4800,7 +4818,7 @@ void CWinCX::DisplayEdge(MWContext *pContext, int iLocation, LO_EdgeStruct *pEdg
 		pEdge->FE_Data = pNewEdge;
 	}
 	else	{
-		//	Update the object's idea of it's owner in case layout is swapping objects on us,
+		//	Update the object's idea of its owner in case layout is swapping objects on us,
 		//		this in turn causes the edge to display in a possibly new location.
 		((CGridEdge *)pEdge->FE_Data)->UpdateEdge(pEdge);
 	}

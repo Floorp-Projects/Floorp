@@ -31,6 +31,9 @@
 #endif /* MOZ_MAIL_NEWS */
 #include "prefapi.h"
 #include "fmabstra.h"
+extern "C" {
+#include "httpurl.h"
+}
 
 #ifdef DEBUG_WHITEBOX
 #include "qa.h"
@@ -337,7 +340,7 @@ MWContext *FE_CreateNewEditWindow(MWContext *pContext, URL_Struct *pURL)	{
 	//	If there was no URL specified to load, load what's in the history.
 	//	Only take URLs from a browser window.
 	if(pURL == NULL)	{
-		//	Load the oldest thing in it's history (most likely the home page).
+		//	Load the oldest thing in its history (most likely the home page).
 		XP_List *pOldest = SHIST_GetList(pNewContext);
 		History_entry *pEntry = (History_entry *)XP_ListNextObject(pOldest);
 		if(pEntry == NULL)	{
@@ -704,7 +707,7 @@ void CFE_FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed)	{
 extern "C" void 
 FE_FreeFormElement(MWContext *pContext, LO_FormElementData *pFormElement)	
 {
-    //	Get our front end form element, and have it do it's thang.
+    //	Get our front end form element, and have it do its thang.
     CFormElement *pFormClass = CFormElement::GetFormElement(NULL, pFormElement);
     if(pFormClass != NULL)
         pFormClass->FreeFormElement(pFormElement);
@@ -1184,6 +1187,13 @@ void CFE_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
     ABSTRACTCX(pContext)->GetUrlExitRoutine(pUrl, iStatus, pContext);
 
 	if(iStatus != MK_CHANGING_CONTEXT)	{
+
+		if (pContext->type == MWContextBrowser && !EDT_IS_EDITOR(pContext)) {
+			char keyword[64];
+			NET_getInternetKeyword(pUrl, keyword, sizeof(keyword));
+			ABSTRACTCX(pContext)->SetInternetKeyword(keyword);
+		}
+
 		//	We autoproduce a title for those contexts which have none.
         //  Message compose window title is set by msglib. We don't want to overwrite 
         //  it here. - kamal

@@ -438,6 +438,7 @@ public:
 	virtual void AllConnectionsComplete(MWContext *pContext);
 	virtual void UpdateStopState(MWContext *pContext);
 	virtual void SetDocTitle(MWContext *pContext, char *pTitle);
+	virtual void SetInternetKeyword(const char *keyword);
 	virtual void ClearView(MWContext *pContext, int iView);
     virtual void CreateEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp);
     virtual void SaveEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp);

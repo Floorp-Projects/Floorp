@@ -499,6 +499,11 @@ void CURLBar::UpdateFields( const char * msg )
     m_nTextStatus = TRUE;
 }
 
+void CURLBar::SetToolTip(const char *pTip)
+{
+	m_pBox->SetToolTip(pTip);
+}
+
 void CURLBar::OnEditCopy()
 {
     m_pBox->Copy();
@@ -605,11 +610,13 @@ CEditWnd::~CEditWnd()
         KillTimer(m_idTimer);
     if (m_pComplete)
         free(m_pComplete);
+    delete m_ToolTip;
 }
 
 
 BEGIN_MESSAGE_MAP(CEditWnd,CGenericEdit)
     ON_WM_TIMER()
+    ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 
@@ -803,6 +810,27 @@ void CEditWnd::UrlCompletion()
 	}
 }
 
+void CEditWnd::SetToolTip(const char *inTipStr)
+{
+	// no tooltip created, and no tooltip to set.  ok fine.
+	if (!m_ToolTip && (!inTipStr || !*inTipStr))
+		return;
+
+	if (!m_ToolTip) {
+		m_ToolTip = new CNSToolTip2();
+		if (m_ToolTip) {
+			m_ToolTip->Create(this, TTS_ALWAYSTIP);
+			m_ToolTip->SetDelayTime(200);
+			m_ToolTip->AddTool(this, "");
+		}
+	}
+	if (m_ToolTip)
+		if (!inTipStr || !*inTipStr)
+			m_ToolTip->UpdateTipText("", this);
+		else
+			m_ToolTip->UpdateTipText(inTipStr, this);
+}
+
 void CEditWnd::DrawCompletion(CString & cs, char * pszResult)
 {
     if (pszResult)
@@ -860,6 +888,17 @@ void CEditWnd::OnTimer( UINT  nIDEvent )
       }
       DrawCompletion(csPartial, pszResult);
     }
+}
+
+void CEditWnd::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	CGenericEdit::OnMouseMove(nFlags, point);
+
+	if (m_ToolTip) {
+		m_ToolTip->Activate(TRUE);
+		MSG msg = *(GetCurrentMessage());
+		m_ToolTip->RelayEvent(&msg);
+	}
 }
 
 

@@ -102,6 +102,7 @@ public:
 	virtual void Back();
 	virtual void Forward();
 	virtual void ImageComplete(NI_Pixmap* image) {;}
+	virtual void SetInternetKeyword(const char *keyword) {}
 	virtual BITMAPINFO*	NewPixmap(NI_Pixmap* pImage, BOOL mask = FALSE) { return NULL;}
 
 

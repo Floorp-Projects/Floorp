@@ -32,16 +32,19 @@ protected:
     BOOL m_bRestart;
     char * m_pComplete;
     BOOL m_Scroll;
-	CWnd* m_pBar;
+    CWnd* m_pBar;
+    CNSToolTip2 *m_ToolTip;
 
 public:
-    CEditWnd(CWnd* bar) { m_pBar = bar; m_idTimer = 0; m_bRestart = TRUE; m_pComplete = NULL; m_Scroll = FALSE; }
+    CEditWnd(CWnd* bar) { m_pBar = bar; m_ToolTip = 0; m_idTimer = 0; m_bRestart = TRUE; m_pComplete = NULL; m_Scroll = FALSE; }
     ~CEditWnd();
     void UrlCompletion(void);
     void DrawCompletion(CString & cs, char * pszResult);
+    void SetToolTip(const char *inTipStr);
     virtual BOOL PreTranslateMessage ( MSG * msg );
     virtual LRESULT DefWindowProc( UINT message, WPARAM wParam, LPARAM lParam );
-	virtual afx_msg void OnTimer( UINT  nIDEvent );
+    virtual afx_msg void OnTimer( UINT  nIDEvent );
+    afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     DECLARE_MESSAGE_MAP();
 };
 
@@ -141,6 +144,7 @@ public:
 	LPMWCONTEXT GetContext() const { return m_pIMWContext; }
 
     void UpdateFields( const char * msg);
+    void SetToolTip(const char * inTip);
 	
 // Implementation
 protected:
