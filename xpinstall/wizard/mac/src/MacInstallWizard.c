@@ -154,9 +154,10 @@ InitOptObject(void)
 		return;
 	}
 	
-	ERR_CHECK(GetCWD(&gControls->opt->dirID, &gControls->opt->vRefNum));
-	ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
-	
+	err = HGetVol( (unsigned char *)&tmp.name, &tmp.vRefNum, &tmp.parID );
+	gControls->opt->vRefNum = tmp.vRefNum;
+	gControls->opt->dirID = tmp.parID;
+
 	pstrcpy( gControls->opt->folder, tmp.name );
 }
 

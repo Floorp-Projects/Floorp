@@ -248,7 +248,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		err = NavGetDefaultDialogOptions(&dlgOpts);
 		GetIndString( dlgOpts.message, rStringList, sFolderDlgMsg );
 		eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
-		ERR_CHECK(FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, NULL, &tmp));
+		FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, gControls->opt->folder, &tmp);
 		ERR_CHECK(AECreateDesc(typeFSS, (void*) &tmp, sizeof(FSSpec), &initDesc));
 		err = NavChooseFolder( &initDesc, &reply, &dlgOpts, eventProc, NULL, NULL );
 		
