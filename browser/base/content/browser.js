@@ -382,7 +382,7 @@ function delayedStartup(aElt)
 
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
   
-  window.addEventListener("keypress", altNumberTabSelection, true);
+  window.addEventListener("keypress", ctrlNumberTabSelection, true);
 
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
@@ -457,16 +457,16 @@ function Shutdown()
     appCore.close();
 }
 
-function altNumberTabSelection(event)
+function ctrlNumberTabSelection(event)
 {
-  if (!event.altKey)
-    return;
-
-  if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
+  if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
     // Don't let winxp beep on ALT+ENTER, since the URL bar uses it.
     event.preventDefault();
     return true;
   } 
+
+  if (!event.ctrlKey)
+    return;
 
   var index = event.charCode - 49;
   if (index == -1)
