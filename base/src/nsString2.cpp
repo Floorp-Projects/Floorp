@@ -2037,7 +2037,7 @@ nsAutoString2::nsAutoString2(eCharSize aCharSize) : nsString2(aCharSize){
  * @param   anExtBuffer describes an external buffer
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsAutoString2::nsAutoString2(nsStr& aStr,const char* aCString) : nsString2(aStr.mMultibyte) {
+nsAutoString2::nsAutoString2(nsStr& aStr,const char* aCString) : nsString2((eCharSize)aStr.mMultibyte) {
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aStr.mMultibyte)-1,0,aStr.mMultibyte,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
