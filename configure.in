@@ -581,7 +581,9 @@ case "$target" in
     _PEDANTIC=
     _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
-	4.*) ;;
+	4.*)
+            STRIP="$STRIP -d"
+            ;;
 	*)
 	    DSO_CFLAGS=''
 	    DSO_LDOPTS='-r'
@@ -811,7 +813,7 @@ case "$target" in
 	dnl Hack...
 	_OPENVMS_CROSS_COMPILE=1
     fi
-    NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
+    MISSING_NSPR="yes"
     AC_DEFINE(NO_PW_GECOS)
     AC_DEFINE(NO_UDSOCK)
     USE_PTHREADS=1
