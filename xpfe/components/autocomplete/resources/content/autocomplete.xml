@@ -1561,7 +1561,7 @@
 
     <handlers>
       <handler event="popuphiding"><![CDATA[
-        setTimeout(this.removeOpenAttribute, 0c, this.parentNode);
+        setTimeout(this.removeOpenAttribute, 0, this.parentNode);
       ]]></handler>
     </handlers>
   </binding>
