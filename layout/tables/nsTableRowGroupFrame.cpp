@@ -505,6 +505,19 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
   return NS_OK;
 }
 
+void GetNextRowSibling(nsIFrame** aRowFrame)
+{
+  nsresult rv = (*aRowFrame)->GetNextSibling(aRowFrame);
+  while(*aRowFrame && (NS_SUCCEEDED(rv))) {
+    const nsStyleDisplay *display;
+    (*aRowFrame)->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) {
+      return;
+    }
+    rv = (*aRowFrame)->GetNextSibling(aRowFrame);
+  }
+}
+
 /* CalculateRowHeights provides default heights for all rows in the rowgroup.
  * Actual row heights are ultimately determined by the table, when the table
  * height attribute is factored in.
@@ -671,7 +684,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                                          i, rowFrameToBeResized, rowRect.y + delta, delta);
                   }
                   // Get the next row frame
-                  rowFrameToBeResized->GetNextSibling((nsIFrame**)&rowFrameToBeResized);
+                  GetNextRowSibling((nsIFrame**)&rowFrameToBeResized);
                 }
                 delete []excessForRow;
               }
