@@ -659,11 +659,25 @@ nsSubDocumentFrame::ShowDocShell()
   nsCOMPtr<nsIScrollable> sc(do_QueryInterface(docShell));
 
   if (sc) {
-    const nsStyleDisplay *disp = GetStyleDisplay();
+    nsPresContext::ScrollbarStyles pref;
+    PRUint8 overflow = GetStyleDisplay()->mOverflow;
+    switch (overflow) {
+      case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+        pref.mHorizontal = NS_STYLE_OVERFLOW_HIDDEN;
+        pref.mVertical = NS_STYLE_OVERFLOW_SCROLL;
+        break;
+      case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+        pref.mHorizontal = NS_STYLE_OVERFLOW_SCROLL;
+        pref.mVertical = NS_STYLE_OVERFLOW_HIDDEN;
+        break;
+      default:
+        pref.mHorizontal = overflow;
+        pref.mVertical = overflow;
+    }
     sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                       ConvertOverflow(disp->mOverflowX));
+                                       ConvertOverflow(pref.mHorizontal));
     sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                       ConvertOverflow(disp->mOverflowY));
+                                       ConvertOverflow(pref.mVertical));
   }
 
   PRInt32 itemType = nsIDocShellTreeItem::typeContent;

@@ -272,8 +272,6 @@ private:
   nsresult GetPosition(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetClip(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOverflow(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
-  nsresult GetOverflowX(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
-  nsresult GetOverflowY(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /* User interface properties */
   nsresult GetCursor(nsIFrame *aFrame, nsIDOMCSSValue** aValue);

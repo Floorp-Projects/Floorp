@@ -190,8 +190,6 @@ private:
   void  UseBackgroundPosition(nsAString & aString,
                               PRInt32 & aBgPositionX,
                               PRInt32 & aBgPositionY) const;
-  void  TryOverflowShorthand(nsAString & aString,
-                             PRInt32 & aOverflowX, PRInt32 & aOverflowY) const;
 
   PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
                                        PRInt32 aThird, PRInt32 aFourth,

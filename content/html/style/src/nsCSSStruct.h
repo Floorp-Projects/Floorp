@@ -234,8 +234,7 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mFloat;
   nsCSSValue mClear;
   nsCSSRect  mClip;
-  nsCSSValue mOverflowX;
-  nsCSSValue mOverflowY;
+  nsCSSValue mOverflow;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
 

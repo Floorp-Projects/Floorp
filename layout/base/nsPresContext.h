@@ -438,12 +438,11 @@ public:
     ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
     ScrollbarStyles() {}
   };
-  void SetViewportOverflowOverride(PRUint8 aX, PRUint8 aY)
+  void SetViewportOverflowOverride(PRUint8 aOverflow)
   {
-    mViewportStyleOverflow.mHorizontal = aX;
-    mViewportStyleOverflow.mVertical = aY;
+    mViewportStyleOverflow = aOverflow;
   }
-  ScrollbarStyles GetViewportOverflowOverride()
+  PRUint8 GetViewportOverflowOverride()
   {
     return mViewportStyleOverflow;
   }
@@ -655,7 +654,7 @@ protected:
   nscolor               mFocusBackgroundColor;
   nscolor               mFocusTextColor;
 
-  ScrollbarStyles       mViewportStyleOverflow;
+  PRUint8               mViewportStyleOverflow;
   PRUint8               mFocusRingWidth;
 
   nsCompatibility       mCompatibilityMode;
