@@ -7298,27 +7298,29 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     //
 
     const nsIView* clipView = 0;
-    nsRect clipRect;
-
-    result = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
-
-    if (NS_FAILED(result))
-      return result;
 
     result = (*aScrollableView)->GetClipView(&clipView);
 
     if (NS_FAILED(result))
       return result;
 
+    nsRect clipRect;
+
     result = clipView->GetBounds(clipRect);
-    clipRect.x = clipRect.y = 0;
 
     if (NS_FAILED(result))
       return result;
 
+    result = (*aScrollableView)->GetScrollPosition(clipRect.x, clipRect.y);
+
+    if (NS_FAILED(result))
+      return result;
+
+    //
     // If the point we are interested is outside the clip
     // region, we will scroll it into view with a padding
     // equal to a quarter of the clip's width.
+    //
 
     PRInt32 pad = clipRect.width >> 2;
 
@@ -7334,6 +7336,42 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     }
     else
       aRect->width = 60; // Arbitrary
+
+    //
+    // Clip the x dimensions of aRect so that they are
+    // completely within the bounds of the scrolledView.
+    // This helps avoid unnecessary scrolling of parent
+    // scrolled views.
+    //
+    // Note that aRect is in the coordinate system
+    // of the scrolledView, so there is no need to take
+    // into account scrolledView's x and y position.
+    // We can just assume that (0,0) corresponds to the
+    // upper left corner, and (svRect.width, svRect.height)
+    // the lower right corner of the scrolledView.
+    //
+
+    nsIView* scrolledView = 0;
+
+    result = (*aScrollableView)->GetScrolledView(scrolledView);
+
+    if (NS_FAILED(result))
+      return result;
+
+    nsRect svRect;
+
+    result = scrolledView->GetBounds(svRect);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (aRect->x < 0)
+      aRect->x = 0;
+    else if (aRect->x >= svRect.width)
+      aRect->x = svRect.width - 1;
+
+    if (aRect->XMost() > svRect.width)
+      aRect->width = svRect.width - aRect->x;
   }
   else
   {
