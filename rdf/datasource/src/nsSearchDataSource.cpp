@@ -1108,9 +1108,9 @@ SearchDataSource::GetSearchEngineList()
 #endif
 				{
 #ifdef	XP_MAC
-					PRInt32	separatorOffset = uri.RFindChar(':');
+					PRInt32	separatorOffset = uri.RFindChar(PRUnichar(':'));
 #else
-					PRInt32	separatorOffset = uri.RFindChar('/');
+					PRInt32	separatorOffset = uri.RFindChar(PRUnichar('/'));
 #endif
 					if (separatorOffset > 0)
 					{
@@ -1243,7 +1243,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 				PRBool		wasAliased = PR_FALSE;
 				fileSpec.ResolveSymlink(wasAliased);
 				nsAutoString	childPath(childURL);
-				PRInt32		separatorOffset = childPath.RFindChar(':');
+				PRInt32		separatorOffset = childPath.RFindChar(PRUnichar(':'));
 				if (separatorOffset > 0)
 				{
 						childPath.Cut(0, separatorOffset+1);
@@ -1286,7 +1286,7 @@ SearchDataSource::GetData(nsString data, char *sectionToFind, char *attribToFind
 
 	while(buffer.Length() > 0)
 	{
-		PRInt32 eol = buffer.FindCharInSet("\r\n");
+		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
 		nsAutoString	line("");
 		if (eol > 0)
@@ -1356,13 +1356,13 @@ SearchDataSource::GetData(nsString data, char *sectionToFind, char *attribToFind
 nsresult
 SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 {
-	nsAutoString	buffer(data);	
+	nsAutoString	buffer(data);	// , eolStr("\r\n");	
 	nsresult	rv = NS_OK;
 	PRBool		inSection = PR_FALSE;
 
 	while(buffer.Length() > 0)
 	{
-		PRInt32 eol = buffer.FindCharInSet("\r\n");
+		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
 		nsAutoString	line("");
 		if (eol > 0)
@@ -1407,14 +1407,14 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 			PRInt32	nameOffset = line.Find("name", PR_TRUE);
 			if (nameOffset >= 0)
 			{
-				PRInt32 equal = line.FindChar(PRUnichar('='), nameOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), PR_TRUE, nameOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
-						if (endQuote >= 0)
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, startQuote + 1);
+						if (endQuote > 0)
 						{
 							line.Mid(nameAttrib, startQuote+1, endQuote-startQuote-1);
 						}
@@ -1424,7 +1424,7 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 						nameAttrib = line;
 						nameAttrib.Cut(0, equal+1);
 						nameAttrib = nameAttrib.Trim(" \t");
-						PRInt32 space = nameAttrib.FindCharInSet(" \t");
+						PRInt32 space = nameAttrib.FindCharInSet(" \t", 0);
 						if (space > 0)
 						{
 							nameAttrib.Truncate(space);
@@ -1440,13 +1440,13 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 			PRInt32	valueOffset = line.Find("value", PR_TRUE);
 			if (valueOffset >= 0)
 			{
-				PRInt32 equal = line.FindChar(PRUnichar('='), valueOffset);
+				PRInt32 equal = line.FindChar(PRUnichar('='), PR_TRUE, valueOffset);
 				if (equal >= 0)
 				{
-					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), equal + 1);
+					PRInt32	startQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, equal + 1);
 					if (startQuote >= 0)
 					{
-						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), startQuote + 1);
+						PRInt32	endQuote = line.FindChar(PRUnichar('\"'), PR_TRUE, startQuote + 1);
 						if (endQuote >= 0)
 						{
 							line.Mid(valueAttrib, startQuote+1, endQuote-startQuote-1);
@@ -1458,7 +1458,7 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 						valueAttrib = line;
 						valueAttrib.Cut(0, equal+1);
 						valueAttrib = valueAttrib.Trim(" \t");
-						PRInt32 space = valueAttrib.FindCharInSet(" \t>");
+						PRInt32 space = valueAttrib.FindCharInSet(" \t>", 0);
 						if (space > 0)
 						{
 							valueAttrib.Truncate(space);
@@ -1648,6 +1648,11 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		return(NS_OK);
 	}
 
+#if	0
+	printf("\n\n%s\n\n", mLine);
+#endif
+
+
 	nsAutoString	htmlResults(mLine);
 	delete [] mLine;
 	mLine = nsnull;
@@ -1681,7 +1686,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	SearchDataSource::GetData(data, "interpret", "relevanceStart", relevanceStartStr);
 	SearchDataSource::GetData(data, "interpret", "relevanceEnd", relevanceEndStr);
 
-#if 0
+#if 1
 	char *cStr;
 	cStr = resultListStartStr.ToNewCString();
 	if (cStr)
@@ -1750,9 +1755,12 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		resultItemEndStr = resultItemStartStr;
 	}
 
-	PRInt32	resultItemStart;
-	while((resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE)) >= 0)
+	while(PR_TRUE)
 	{
+		PRInt32	resultItemStart;
+		resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE);
+		if (resultItemStart < 0)	break;
+
 		htmlResults.Cut(0, resultItemStart + resultItemStartStr.Length());
 
 		PRInt32	resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE );
@@ -1864,7 +1872,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		mDataSource->GetTarget(res, kNC_Site, PR_TRUE, getter_AddRefs(oldSiteRes));
 		if (!oldSiteRes)
 		{
-			PRInt32	protocolOffset = site.FindCharInSet(":");
+			PRInt32	protocolOffset = site.FindCharInSet(":", 0);
 			if (protocolOffset >= 0)
 			{
 				site.Cut(0, protocolOffset+1);
@@ -1872,7 +1880,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 				{
 					site.Cut(0, 1);
 				}
-				PRInt32	slashOffset = site.FindCharInSet("/");
+				PRInt32	slashOffset = site.FindCharInSet("/", 0);
 				if (slashOffset >= 0)
 				{
 					site.Truncate(slashOffset);
@@ -1946,7 +1954,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		
 		// munge out anything inside of HTML "<" / ">" tags
 		PRInt32 tagStartOffset;
-		while ((tagStartOffset = nameStr.FindCharInSet("<")) >= 0)
+		while ((tagStartOffset = nameStr.FindCharInSet("<", 0)) >= 0)
 		{
 			PRInt32	tagEndOffset = nameStr.FindCharInSet(">", tagStartOffset);
 			if (tagEndOffset <= tagStartOffset)	break;
@@ -1955,7 +1963,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 
 		// cut out any CRs or LFs
 		PRInt32	eolOffset;
-		while ((eolOffset = nameStr.FindCharInSet("\n\r")) >= 0)
+		while ((eolOffset = nameStr.FindCharInSet("\n\r", 0)) >= 0)
 		{
 			nameStr.Cut(eolOffset, 1);
 		}
