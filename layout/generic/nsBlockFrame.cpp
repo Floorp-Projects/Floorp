@@ -4971,6 +4971,11 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         prevSibling->SetNextSibling(nextFrame);
       }
 
+      // Update the child count of the line to be accurate
+      PRInt32 lineChildCount = line->GetChildCount();
+      lineChildCount--;
+      line->SetChildCount(lineChildCount);
+
       // Destroy frame; capture its next-in-flow first in case we need
       // to destroy that too.
       nsIFrame* nextInFlow;
@@ -4989,8 +4994,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       aDeletedFrame = nextInFlow;
 
       // If line is empty, remove it now
-      PRInt32 lineChildCount = line->GetChildCount();
-      if (0 == --lineChildCount) {
+      if (0 == lineChildCount) {
         nsLineBox *cur = line;
         line = lines.erase(line);
         // Invalidate the space taken up by the line.
@@ -5017,7 +5021,6 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       }
       else {
         // Make the line that just lost a frame dirty
-        line->SetChildCount(lineChildCount);
         line->MarkDirty();
 
         // If we just removed the last frame on the line then we need
