@@ -16,14 +16,14 @@
  * Reserved.
  */
 /* 
-   RDFView.h -- class definition for XFE_RDFView
+   RDFChromeTreeView.h -- class definition for XFE_RDFChromeTreeView
    Created: Stephen Lamm <slamm@netscape.com>, 5-Nov-97.
  */
 
 
 
-#ifndef _xfe_rdfview_h
-#define _xfe_rdfview_h
+#ifndef _xfe_rdfchrometreeview_h
+#define _xfe_rdfchrometreeview_h
 
 #include "View.h"
 #include "IconGroup.h"
@@ -31,15 +31,14 @@
 #include "NavCenterView.h"
 #include "RDFTreeView.h"
 
-class XFE_RDFView : public XFE_View,
-                    public XFE_RDFBase
+class XFE_RDFChromeTreeView : public XFE_RDFTreeView
 {
 public:
 
-  XFE_RDFView(XFE_Component *toplevel, Widget parent,
+  XFE_RDFChromeTreeView(XFE_Component *toplevel, Widget parent,
               XFE_View *parent_view, MWContext *context);
 
-  ~XFE_RDFView();
+  ~XFE_RDFChromeTreeView();
 
   // Get tooltipString & docString; 
   // returned string shall be freed by the callee
@@ -58,10 +57,6 @@ public:
 
   // RDF Specific calls
   void setHTTitlebarProperties(HT_View view, Widget titleBar);
-
-	// Stand alone set/get methods
-	void setStandAloneState(XP_Bool state);
-	XP_Bool getStandAloneState();
 
 protected:
     // Override RDFBase methods
@@ -84,13 +79,13 @@ private:
 	// Toggle tree operating mode
 	Widget				_modeControl;
 
-	// The rdf tree view component
-	XFE_RDFTreeView *	_rdfTreeView;
-
-	// Is this a stand alone view ?
-	XP_Bool				_standAloneState;
-
 	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
+
+    // Create widgets
+    void createControlToolbar();
+    void createViewLabel();
+    void doAttachments();
+
 };
 
-#endif /* _xfe_rdfview_h */
+#endif /* _xfe_rdfchrometreeview_h */

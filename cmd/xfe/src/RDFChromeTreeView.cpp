@@ -16,13 +16,13 @@
  * Reserved.
  */
 /* 
-   RDFView.cpp -- view of rdf data
+   RDFChromeTreeView.cpp -- view of rdf data
    Created: Stephen Lamm <slamm@netscape.com>, 5-Nov-97.
  */
 
 
 
-#include "RDFView.h"
+#include "RDFChromeTreeView.h"
 #include "Command.h"
 #include "xfe2_extern.h"
 #include "xpgetstr.h"
@@ -51,42 +51,44 @@ extern "C"
 
 typedef struct _closeRdfViewCBStruct {
 
-  XFE_RDFView *  rdfview;
+  XFE_RDFChromeTreeView *  rdfview;
   XFE_NavCenterView *  ncview;
  } closeRdfViewCBStruct;
 
 //////////////////////////////////////////////////////////////////////////
-XFE_RDFView::XFE_RDFView(XFE_Component *	toplevel, 
+XFE_RDFChromeTreeView::XFE_RDFChromeTreeView(XFE_Component *	toplevel, 
 						 Widget				parent,
                          XFE_View *			parent_view, 
 						 MWContext *		context) :
-	XFE_View(toplevel, parent_view, context),
+	XFE_RDFTreeView(toplevel, parent, parent_view, context),
 	_viewLabel(NULL),
 	_controlToolBar(NULL),
 	_addBookmarkControl(NULL),
 	_closeControl(NULL),
-	_modeControl(NULL),
-	_rdfTreeView(NULL),
-	_standAloneState(False)
+	_modeControl(NULL)
 {
-	// Main form
-	Widget rdfMainForm = XtVaCreateWidget("rdfMainForm",
-									   xmFormWidgetClass,
-									   parent,
-									   XmNshadowThickness,		0,
-									   NULL);
+    createControlToolbar();
+    createViewLabel();
 
-	setBaseWidget(rdfMainForm);
+    doAttachments();
 
+    XtManageChild(_tree);
+
+	show();
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_RDFChromeTreeView::~XFE_RDFChromeTreeView()
+{
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFChromeTreeView::createControlToolbar()
+{
 	// Control Tool Bar
 	_controlToolBar = 
 		XtVaCreateManagedWidget("controlToolBar",
 								xfeToolBarWidgetClass,
-								rdfMainForm,
-								XmNtopAttachment,			XmATTACH_FORM,
-								XmNrightAttachment,			XmATTACH_FORM,
-								XmNleftAttachment,			XmATTACH_NONE,
-								XmNbottomAttachment,		XmATTACH_NONE,
+								getBaseWidget(),
 								XmNorientation,				XmHORIZONTAL,
 								XmNusePreferredWidth,		True,
 								XmNusePreferredHeight,		True,
@@ -96,19 +98,6 @@ XFE_RDFView::XFE_RDFView(XFE_Component *	toplevel,
 								XmNchildUsePreferredHeight,	False,
 								NULL);
 
-	// View label
-	_viewLabel = 
-		XtVaCreateManagedWidget("viewLabel",
-								xmLabelWidgetClass,
-								rdfMainForm,
-								XmNtopAttachment,		XmATTACH_WIDGET,
-								XmNtopWidget,			_controlToolBar,
-								XmNrightAttachment,		XmATTACH_FORM,
-								XmNleftAttachment,		XmATTACH_FORM,
-								XmNbottomAttachment,	XmATTACH_NONE,
-								XmNalignment,			XmALIGNMENT_BEGINNING,
-								NULL);
-                                     
 	// Add Bookmark
 	_addBookmarkControl = XtVaCreateManagedWidget("addBookmark",
 												  xfeButtonWidgetClass,
@@ -127,45 +116,61 @@ XFE_RDFView::XFE_RDFView(XFE_Component *	toplevel,
 										   NULL);
 #endif
 
+#ifdef NOT_YET
 	closeRdfViewCBStruct *  cb_str = new closeRdfViewCBStruct;
 	
 	cb_str->rdfview = this;
 	cb_str->ncview = (XFE_NavCenterView *)parent_view;
 	
-#ifdef NOT_YET
-	XtAddCallback(closeRDFView, XmNactivateCallback, (XtCallbackProc)closeRdfView_cb , (void *)cb_str);
+	XtAddCallback(closeRDFChromeTreeView, XmNactivateCallback, (XtCallbackProc)closeRdfView_cb , (void *)cb_str);
 #endif    /* NOT_YET */
 	
-	// Create the rdf tree view
-	_rdfTreeView = new XFE_RDFTreeView(toplevel, 
-									   rdfMainForm,
-									   this, 
-									   context);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFChromeTreeView::createViewLabel()
+{
+	// View label
+	_viewLabel = 
+		XtVaCreateManagedWidget("viewLabel",
+								xmLabelWidgetClass,
+								getBaseWidget(),
+								XmNalignment,			XmALIGNMENT_BEGINNING,
+								NULL);
+                                     
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFChromeTreeView::doAttachments()
+{
+    XtVaSetValues(_controlToolBar,
+                  XmNtopAttachment,			XmATTACH_FORM,
+                  XmNrightAttachment,		XmATTACH_FORM,
+                  XmNleftAttachment,		XmATTACH_NONE,
+                  XmNbottomAttachment,		XmATTACH_NONE,
+                  NULL);
 
-	// Place the tree underneath the view label
-	XtVaSetValues(_rdfTreeView->getBaseWidget(),
+    XtVaSetValues(_viewLabel,
+                  XmNtopAttachment,		XmATTACH_WIDGET,
+                  XmNtopWidget,			_controlToolBar,
+                  XmNrightAttachment,	XmATTACH_FORM,
+                  XmNleftAttachment,	XmATTACH_FORM,
+                  XmNbottomAttachment,	XmATTACH_NONE,
+                  NULL);
+	XtVaSetValues(_tree,
 				  XmNtopAttachment,		XmATTACH_WIDGET,
 				  XmNtopWidget,			_viewLabel,
 				  XmNrightAttachment,	XmATTACH_FORM,
 				  XmNleftAttachment,	XmATTACH_FORM,
 				  XmNbottomAttachment,	XmATTACH_FORM,
 				  NULL);
-
-	// Show the tree
-	_rdfTreeView->show();
-}
-//////////////////////////////////////////////////////////////////////////
-XFE_RDFView::~XFE_RDFView()
-{
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFView::updateRoot() 
+XFE_RDFChromeTreeView::updateRoot() 
 {
     char * label = HT_GetViewName(_ht_view);
     
-    XP_ASSERT( _rdfTreeView != NULL );
-
     // XXX  Aurora NEED TO LOCALIZE  XXX
     XmString xmstr = XmStringCreateLocalized(label);
     
@@ -175,22 +180,26 @@ XFE_RDFView::updateRoot()
         
     // Set the HT properties
     setHTTitlebarProperties(_ht_view, _viewLabel);
+
+    XFE_RDFTreeView::updateRoot();
 }
 
 void
-XFE_RDFView::notify(HT_Resource			n, 
+XFE_RDFChromeTreeView::notify(HT_Resource			n, 
                     HT_Event			whatHappened)
 {
+  D(debugEvent(n, whatHappened,"RV"););
+
 	// HT_EVENT_VIEW_SELECTED
 	if (whatHappened == HT_EVENT_VIEW_SELECTED)
 	{
         setHTView(HT_GetView(n));
 	}
-    _rdfTreeView->notify(n, whatHappened);
+    XFE_RDFTreeView::notify(n, whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
 void
-XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* callData */)
+XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* callData */)
 {
 
   closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData;
@@ -214,29 +223,9 @@ XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* 
   XtManageChild(selector);
 #endif /*MOZ_SELECTOR_BAR*/
 }
-//////////////////////////////////////////////////////////////////////////
-//
-// Toggle the stand alone state
-//
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_RDFView::setStandAloneState(XP_Bool state)
-{
-	XP_ASSERT( _rdfTreeView != NULL );
-
-	_rdfTreeView->setStandAloneState(state);
-}
-//////////////////////////////////////////////////////////////////////////
-XP_Bool
-XFE_RDFView::getStandAloneState()
-{
-	return _standAloneState;
-}
-//////////////////////////////////////////////////////////////////////////
-
 
 void
-XFE_RDFView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
+XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view, Widget  titleBar)
 {
 
    Arg           av[30];
