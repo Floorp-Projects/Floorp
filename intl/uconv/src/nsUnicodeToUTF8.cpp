@@ -134,7 +134,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
         *dest++ = (char)0x80 | (*src & 0x003f);
         destLen -= 3;
       } else {
-        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (PRUnichar)0x10000;
+        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (PRUint32)0x10000;
         *dest++ = (char)0xf0 | (n >> 18);
         *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
         *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
