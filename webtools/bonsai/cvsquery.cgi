@@ -55,7 +55,7 @@ $::CVS_ROOT = &pickDefaultRepository() unless $::CVS_ROOT;
 
 $::TreeID = $::query_module
     if (!exists($::FORM{'treeid'}) && 
-        exists($::query_module) &&
+        defined($::query_module) &&
         exists($::TreeInfo{$::query_module}{'repository'}));
 $::TreeID = 'default'
     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
