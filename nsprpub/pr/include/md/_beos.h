@@ -68,6 +68,9 @@
 #define _PR_GLOBAL_THREADS_ONLY
 #define _PR_BTHREADS
 #define _PR_NEED_FAKE_POLL
+#define _PR_HAVE_PEEK_BUFFER
+#define _PR_PEEK_BUFFER_MAX (16 * 1024)
+#define _PR_FD_NEED_EMULATE_MSG_PEEK(fd) 1
 
 /* Define threading functions and objects as native BeOS */
 struct _MDThread {

@@ -1349,7 +1349,8 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRInt32 bytesLeft = amount;
 
-    PR_ASSERT(flags == 0);
+    PR_ASSERT(flags == 0 ||
+        (opCode == kSTREAM_RECEIVE && flags == PR_MSG_PEEK));
     PR_ASSERT(opCode == kSTREAM_SEND || opCode == kSTREAM_RECEIVE);
     
     if (endpoint == NULL) {
