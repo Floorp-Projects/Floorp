@@ -16,6 +16,4 @@
  * Reserved.
  */
 
-#define EDITOR 1
-#undef HAVE_BOOLEAN 
-#include "IDE_Options.h"
+#undef HAVE_BOOLEAN

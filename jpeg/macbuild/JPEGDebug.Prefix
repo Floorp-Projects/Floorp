@@ -22,6 +22,5 @@
 //
 //
 
-#define DEBUG 1
-#define DEVELOPER_DEBUG 1
+#include "MacPrefix_debug.h"
 #include "JPEGConfig.h"
