@@ -243,6 +243,7 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
 
 NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 {
+    PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::ProcessData(%p, %lu)", aBuffer, aCount));
     if (!aCount || !mCurLine) // aCount=0 means EOF, mCurLine=0 means we're past end of image
         return NS_OK;
 
@@ -363,7 +364,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             at = (at + 1) % bpc;
         }
     }
-    else if (mBIH.compression == BI_BITFIELDS && mPos < (mLOH + 12)) {
+    else if (aCount && mBIH.compression == BI_BITFIELDS && mPos < (mLOH + 12)) {
         PRUint32 toCopy = (mLOH + 12) - mPos;
         if (toCopy > aCount)
             toCopy = aCount;
@@ -381,7 +382,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
     while (aCount && (mPos < mBFH.dataoffset)) { // Skip whatever is between header and data
         mPos++; aBuffer++; aCount--;
     }
-    if (++mPos >= mBFH.dataoffset) {
+    if (aCount && ++mPos >= mBFH.dataoffset) {
         // Need to increment mPos, else we might get to mPos==mLOH again
         // From now on, mPos is irrelevant
         if (!mBIH.compression || mBIH.compression == BI_BITFIELDS) {
@@ -578,7 +579,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                                 memset(mAlphaPtr, 0xFF, mStateData);
                                 mAlphaPtr += mStateData;
 
-                                mState = eRLEStateAbsoluteMode;
+                                if ((mStateData & 1) == 0)
+                                    mState = eRLEStateAbsoluteMode;
+                                else
+                                    mState = eRLEStateAbsoluteModePadded;
                                 continue;
                         }
                         break;
@@ -588,6 +592,8 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         byte = *aBuffer++;
                         aCount--;
                         mAlphaPtr += byte;
+                        if (mAlphaPtr > mAlpha + mBIH.width)
+                            mAlphaPtr = mAlpha + mBIH.width;
                         mDecoding += byte * GFXBYTESPERPIXEL;
 
                         mState = eRLEStateNeedYDelta;
@@ -606,6 +612,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         break;
 
                     case eRLEStateAbsoluteMode: // Absolute Mode
+                    case eRLEStateAbsoluteModePadded:
                         // In absolute mode, the second byte (mStateData)
                         // represents the number of pixels 
                         // that follow, each of which contains 
@@ -629,9 +636,9 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                             // In absolute mode, each run must 
                             // be aligned on a word boundary
 
-                            if ((((size_t)aBuffer) & 1) == 0) {  // Word Aligned
+                            if (mState == eRLEStateAbsoluteMode) { // Word Aligned
                                 mState = eRLEStateInitial;
-                            } else if (aCount > 0) {             // Not word Aligned
+                            } else if (aCount > 0) {               // Not word Aligned
                                 // "next" byte is just a padding byte
                                 // so "move" past it and we can continue
                                 aBuffer++;
