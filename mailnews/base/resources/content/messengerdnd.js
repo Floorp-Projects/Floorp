@@ -205,6 +205,12 @@ function DropOnFolderTree(event)
 		debugDump("***canFileMessages == false\n");
 		return(false);
 	}
+        var noSelect = treeItem.getAttribute("NoSelect");
+        if (noSelect == "true")
+        {
+		debugDump("***NoSelect == true\n");
+                return(false);
+        }
 
 	var dragService = GetDragService();
 	if ( !dragService )	return(false);
