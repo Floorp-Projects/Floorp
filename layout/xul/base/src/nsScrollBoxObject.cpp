@@ -221,7 +221,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     nsIFrame* frame = GetFrame();
     nsCOMPtr<nsIBox> box (do_QueryInterface(frame));
 
-    nsRect rect;
+    nsRect rect, crect;
     nsIBox* scrolledBox;
     nsCOMPtr<nsIDOMXULElement> childDOMXULElement (do_QueryInterface(child));
     nsIBoxObject * childBoxObject;
@@ -244,15 +244,19 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     scrolledBox->GetOrientation(horiz);
     nsPoint cp;
     scrollableView->GetScrollPosition(cp.x,cp.y);
+
+    GetOffsetRect(crect);    
+    crect.x = NSToIntRound(crect.x * pixelsToTwips);
+    crect.y = NSToIntRound(crect.y * pixelsToTwips);
     nscoord newx=cp.x, newy=cp.y;
 
     // we only scroll in the direction of the scrollbox orientation
+    // always scroll to left or top edge of child element
     if (horiz) {
-        newx = rect.x;
+        newx = rect.x - crect.x;
     } else {
-        newy = rect.y;
+        newy = rect.y - crect.y;
     }
-    
     // scroll away
     return scrollableView->ScrollTo(newx, newy, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
@@ -335,16 +339,16 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
 
     // we only scroll in the direction of the scrollbox orientation
     if (horiz) {
-        if (rect.x + rect.width > cp.x + crect.width) {
-            newx = cp.x + ((rect.x + rect.width)-(cp.x + crect.width));
-        } else if (rect.x < cp.x) {
-            newx = rect.x;
+        if ((rect.x - crect.x) + rect.width > cp.x + crect.width) {
+            newx = cp.x + (((rect.x - crect.x) + rect.width)-(cp.x + crect.width));
+        } else if (rect.x - crect.x < cp.x) {
+            newx = rect.x - crect.x;
         }
     } else {
-        if (rect.y + rect.height > cp.y + crect.height) {
-            newx = cp.y + ((rect.y + rect.height)-(cp.y + crect.height));
-        } else if (rect.y < cp.y) {
-            newy = rect.y;
+        if ((rect.y - crect.y) + rect.height > cp.y + crect.height) {
+            newy = cp.y + (((rect.y - crect.y) + rect.height)-(cp.y + crect.height));
+        } else if (rect.y - crect.y < cp.y) {
+            newy = rect.y - crect.y;
         }
     }
     
