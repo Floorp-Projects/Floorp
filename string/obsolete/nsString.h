@@ -706,7 +706,7 @@ public:
 
     nsCAutoString();
     nsCAutoString(const char* aString,PRInt32 aLength=-1);
-    nsCAutoString(CBufDescriptor& aBuffer);
+    nsCAutoString(const CBufDescriptor& aBuffer);
     nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
     nsCAutoString(const nsStr& aString);
     nsCAutoString(const nsCAutoString& aString);
