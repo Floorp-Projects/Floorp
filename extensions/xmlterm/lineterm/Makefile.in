@@ -33,54 +33,56 @@
 
 # makefile for xmlterm/base directory
 
+ifdef STAND_ALONE
+DEPTH      = ..
+topsrcdir  = ..
+srcdir     = .
+include $(topsrcdir)/config/autoconf.mk
+else
 DEPTH      = ../../..
 topsrcdir  = @top_srcdir@
 srcdir     = @srcdir@
 VPATH	   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
+endif
 
 ifdef DEBUG
 # Debug option
 DEBUG_LTERM = 1
 endif
 
+# C Sources
+ifdef NO_PTY
+CSRCS   = ltermManager.c ltermIO.c ltermInput.c ltermOutput.c ltermEscape.c \
+          tracelog.c unistring.c
+else
+CSRCS   = ltermManager.c ltermIO.c ltermInput.c ltermOutput.c ltermEscape.c \
+          tracelog.c unistring.c ptystream.c
+endif
+
 # Defines
+ifdef STAND_ALONE
+else
 DEFINES += $(TK_CFLAGS)
+endif
+
 ifdef DEBUG_LTERM
 DEFINES += -DDEBUG_LTERM
 endif
 
-# Exported header files (excluding XPCONNECT interfaces)
-EXPORTS = mozXMLT.h mozXMLTermUtils.h
-
-# C++ Sources
-CPPSRCS = \
-	mozLineTerm.cpp		 \
-	mozXMLTermUtils.cpp	 \
-	mozXMLTerminal.cpp       \
-	mozXMLTermSession.cpp    \
-	mozXMLTermListeners.cpp	 \
-	mozXMLTermShell.cpp	 \
-	mozXMLTermStream.cpp	 \
-	$(NULL)
+# Exported header files
+EXPORTS = lineterm.h tracelog.h unistring.h ptystream.h
 
 MODULE = xmlterm
-LIBRARY_NAME = xmlterm_s
+LIBRARY_NAME = lineterm_s
 
-REQUIRES     = xpcom string
-
-XPIDLSRCS = \
-	mozILineTerm.idl      \
-	mozIXMLTermShell.idl  \
-	mozIXMLTerminal.idl   \
-	mozIXMLTermStream.idl \
-	$(NULL)
-
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../lineterm \
-		$(NULL)
+REQUIRES     =
 
 FORCE_STATIC_LIB = 1
+
+ifdef STAND_ALONE
+include $(topsrcdir)/config/config.mk
+endif
 
 include $(srcdir)/../config/xmlterm_config.mk
 

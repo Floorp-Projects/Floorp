@@ -30,13 +30,10 @@
 #include "nsMemory.h"
 
 #include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIDocumentLoaderFactory.h"
 
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
@@ -46,49 +43,20 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 
-#include "nsIDOMWindowInternal.h"
-#include "nsIDOMWindowCollection.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDocument.h"
-
-#include "nsIURL.h"
-#include "nsNetUtil.h"
-
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermStream.h"
 
-static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
-
-/////////////////////////////////////////////////////////////////////////
-// mozXMLTermStream factory
-/////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewXMLTermStream(mozIXMLTermStream** aXMLTermStream)
-{
-    NS_PRECONDITION(aXMLTermStream != nsnull, "null ptr");
-    if (!aXMLTermStream)
-        return NS_ERROR_NULL_POINTER;
-
-    *aXMLTermStream = new mozXMLTermStream();
-    if (! *aXMLTermStream)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aXMLTermStream);
-    return NS_OK;
-}
-
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermStream implementation
 /////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+NS_IMPL_THREADSAFE_ISUPPORTS2(mozXMLTermStream, 
+                              mozIXMLTermStream,
+                              nsIInputStream);
 
 mozXMLTermStream::mozXMLTermStream() :
   mUTF8Buffer(""),
@@ -112,42 +80,6 @@ mozXMLTermStream::mozXMLTermStream() :
 mozXMLTermStream::~mozXMLTermStream()
 {
 }
-
-
-// Implement AddRef and Release
-NS_IMPL_ADDREF(mozXMLTermStream)
-NS_IMPL_RELEASE(mozXMLTermStream)
-
-NS_IMETHODIMP 
-mozXMLTermStream::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  if ( aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
-                                   NS_STATIC_CAST(mozIXMLTermStream*,this));
-  } else if(aIID.Equals(NS_GET_IID(nsIInputStream))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIInputStream*,this);
-
-  } else if(aIID.Equals(NS_GET_IID(mozIXMLTermStream))) {
-    *aInstancePtr = NS_STATIC_CAST(mozIXMLTermStream*,this);
-
-  } else {
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  XMLT_LOG(mozXMLTermStream::QueryInterface,20,("mRefCnt = %d\n", mRefCnt));
-
-  return NS_OK;
-}
-
 
 // mozIXMLTermStream interface
 
@@ -251,7 +183,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     return NS_ERROR_FAILURE;
 
 #ifdef NO_WORKAROUND
-  printf("mozXMLTermStream::Open, NO_WORKAROUND, url=%s\n", contentURL);
+  XMLT_WARNING("mozXMLTermStream::Open, NO_WORKAROUND, url=%s\n", contentURL);
 
   nsCOMPtr<nsIInputStream> inputStream = this;
 
@@ -326,22 +258,22 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
     return result;
 
 #else // !NO_WORKAROUND
-  printf("mozXMLTermStream::Open, WORKAROUND\n");
+  XMLT_WARNING("mozXMLTermStream::Open, WORKAROUND\n");
 
   nsCOMPtr<nsIDOMDocument> innerDOMDoc;
   result = mDOMWindow->GetDocument(getter_AddRefs(innerDOMDoc));
-  printf("mozXMLTermStream::Open,check1, 0x%x, 0x%x\n",
+  XMLT_WARNING("mozXMLTermStream::Open,check1, 0x%x, 0x%x\n",
          result, (int) innerDOMDoc.get());
   if (NS_FAILED(result) || !innerDOMDoc)
     return NS_ERROR_FAILURE;
 
   mDOMHTMLDocument = do_QueryInterface(innerDOMDoc);
-  printf("mozXMLTermStream::Open,check2, 0x%x\n", result);
+  XMLT_WARNING("mozXMLTermStream::Open,check2, 0x%x\n", result);
   if (!mDOMHTMLDocument)
     return NS_ERROR_FAILURE;
 
   result = mDOMHTMLDocument->Open();
-  printf("mozXMLTermStream::Open,check3, 0x%x\n", result);
+  XMLT_WARNING("mozXMLTermStream::Open,check3, 0x%x\n", result);
   if (NS_FAILED(result))
     return result;
 #endif // !NO_WORKAROUND
@@ -463,13 +395,13 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   pageWidth = PRInt32((float)contX*pixelScale);
   pageHeight = PRInt32((float)contY*pixelScale);
 
-  printf("mozXMLTermStream::SizeToContentHeight: scrollbar %d, %d\n",
+  XMLT_WARNING("mozXMLTermStream::SizeToContentHeight: scrollbar %d, %d\n",
          scrollBarWidth, scrollBarHeight);
 
-  printf("mozXMLTermStream::SizeToContentHeight: presShell %d, %d\n",
+  XMLT_WARNING("mozXMLTermStream::SizeToContentHeight: presShell %d, %d\n",
          shellWidth, shellHeight);
 
-  printf("mozXMLTermStream::SizeToContentHeight: page %d, %d, %e\n",
+  XMLT_WARNING("mozXMLTermStream::SizeToContentHeight: page %d, %d, %e\n",
          pageWidth, pageHeight, pixelScale);
 
   if ((pageHeight > shellHeight) || (pageWidth > shellWidth)) {
@@ -481,7 +413,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
     PRInt32 newPageHeight = pageHeight;
     PRInt32 excessWidth = (pageWidth+scrollBarWidth - shellWidth);
 
-    printf("mozXMLTermStream::SizeToContentHeight: excessWidth %d\n",
+    XMLT_WARNING("mozXMLTermStream::SizeToContentHeight: excessWidth %d\n",
            excessWidth);
 
     if (excessWidth > 0) {
@@ -499,7 +431,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
       if (excessWidth > scrollBarWidth)
         newPageHeight += scrollBarHeight;
 
-      printf("mozXMLTermStream::SizeToContentHeight: page2 %d, %d, %d\n",
+      XMLT_WARNING("mozXMLTermStream::SizeToContentHeight: page2 %d, %d, %d\n",
              pageWidth, pageHeight, newPageHeight);
 
       // Reset IFRAME width
@@ -610,7 +542,7 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
     return result;
 #endif // !NO_WORKAROUND
 
-  printf("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.get());
+  XMLT_WARNING("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.get());
 
   XMLT_LOG(mozXMLTermStream::Write,51,("returning mUTF8Offset=%d\n",
                                        mUTF8Offset));

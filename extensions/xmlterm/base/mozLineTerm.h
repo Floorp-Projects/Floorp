@@ -25,13 +25,15 @@
 #include "nspr.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsIGenericFactory.h"
 
 #include "nsIServiceManager.h"
 
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
 
-#include "mozILineTermAux.h"
+#include "mozILineTerm.h"
+#include "lineterm.h"
 
 #define MAXCOL 4096            // Maximum columns in line buffer
 
@@ -43,58 +45,12 @@ public:
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
+  NS_DECL_MOZILINETERM
+  NS_DECL_MOZILINETERMAUX
 
-  // mozILineTerm interface
-  NS_IMETHOD Open(const PRUnichar *command,
-                  const PRUnichar *initInput,
-                  const PRUnichar *promptRegexp,
-                  PRInt32 options, PRInt32 processType,
-                  nsIDOMDocument *domDoc);
-
-  NS_IMETHOD Close(const PRUnichar* aCookie);
-
-  NS_IMETHOD Write(const PRUnichar *buf, const PRUnichar* aCookie);
-
-  NS_IMETHOD Read(PRInt32 *opcodes, PRInt32 *opvals,
-                  PRInt32 *buf_row, PRInt32 *buf_col,
-                  const PRUnichar* aCookie,
-                  PRUnichar **_retval);
-
-  // mozILineTermAux interface add ons
-  // (not scriptable, no authentication cookie required)
-
-  NS_IMETHOD OpenAux(const PRUnichar *command,
-                     const PRUnichar *initInput,
-                     const PRUnichar *promptRegexp,
-                     PRInt32 options, PRInt32 processType,
-                     PRInt32 nRows, PRInt32 nCols,
-                     PRInt32 xPixels, PRInt32 yPixels,
-                     nsIDOMDocument *domDoc,
-                     nsIObserver* anObserver,
-                     nsString& aCookie);
-
-  NS_IMETHOD SuspendAux(PRBool aSuspend);
-
-  NS_IMETHOD CloseAux(void);
-
-  NS_IMETHOD CloseAllAux(void);
-
-  NS_IMETHOD ResizeAux(PRInt32 nRows, PRInt32 nCols);
-
-  NS_IMETHOD ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
-                     PRInt32 *buf_row, PRInt32 *buf_col,
-                     PRUnichar **_retval, PRUnichar **retstyle);
-
-  NS_IMETHOD GetCookie(nsString& aCookie);
-
-  NS_IMETHOD GetCursorRow(PRInt32 *aCursorRow);
-  NS_IMETHOD SetCursorRow(PRInt32 aCursorRow);
-
-  NS_IMETHOD GetCursorColumn(PRInt32 *aCursorColumn);
-  NS_IMETHOD SetCursorColumn(PRInt32 aCursorColumn);
-
-  NS_IMETHOD GetEchoFlag(PRBool *aEchoFlag);
-  NS_IMETHOD SetEchoFlag(PRBool aEchoFlag);
+  // Define a Create method to be used with a factory:
+  static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   // others
 
@@ -103,9 +59,6 @@ public:
   static void Callback(gpointer data,
                        gint source,
                        GdkInputCondition condition);
-
-  /** Flag controlling logging of user input to STDERR */
-  static PRBool mLoggingEnabled;
 
 protected:
   /** Checks if Mozilla preference settings are secure
@@ -145,5 +98,10 @@ protected:
 
   /** record of last time when timestamp was displayed in user input log */
   PRTime mLastTime;
+
+  /** Flag controlling logging of user input to STDERR */
+  static PRBool mLoggingEnabled;
+
+  static PRBool mLoggingInitialized;
 
 };

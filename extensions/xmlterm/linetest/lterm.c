@@ -66,7 +66,6 @@
 #ifdef LINUX
 #include <sys/ioctl.h>
 #include <sys/poll.h>
-typedef unsigned int nfds_t;
 #endif
 
 #include "lineterm.h"

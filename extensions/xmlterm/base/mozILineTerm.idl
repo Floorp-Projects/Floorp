@@ -22,10 +22,20 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIObserver.idl"
 #include "domstubs.idl"
 
 %{C++
+#include "nsString.h"
 class nsIDOMDocument;
+
+#define MOZLINETERM_CLASSNAME  "LineTerm Component"
+#define MOZLINETERM_CONTRACTID "@mozilla.org/xmlterm/lineterm;1"
+
+#define MOZLINETERM_CID                      \
+{ /* 0eb82b01-43a2-11d3-8e76-006008948af5 */ \
+   0x0eb82b01, 0x43a2, 0x11d3,               \
+{0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5} }
 %}
 
 [scriptable, uuid(0eb82b00-43a2-11d3-8e76-006008948af5)]
@@ -75,13 +85,80 @@ interface mozILineTerm : nsISupports
                out PRInt32 buf_row, out PRInt32 buf_col, in wstring aCookie);
 };
 
+[ref] native nsNativeStringRef(nsString);
 
-%{ C++
-#define MOZLINETERM_CID                      \
-{ /* 0eb82b01-43a2-11d3-8e76-006008948af5 */ \
-   0x0eb82b01, 0x43a2, 0x11d3,               \
-{0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5} }
+/* NOT SCRIPTABLE */
+[uuid(0eb82b10-43a2-11d3-8e76-006008948af5)]
 
-extern nsresult
-NS_NewLineTerm(mozILineTerm** aLineTerm);
-%}
+interface mozILineTermAux : mozILineTerm
+{
+
+  /** Opens LineTerm, a line-oriented terminal interface (without graphics)
+   * @param command name of command to be executed; usually a shell,
+   *        e.g., "/bin/sh"; if set to null string, the command name is
+   *        determined from the environment variable SHELL
+   * @param promptRegexp command prompt regular expression (for future use);
+   *        at the moment, any string terminated by one of the characters
+   *        "#$%>?", followed by a space, is assumed to be a prompt
+   * @param options LineTerm option bits (usually 0; see lineterm.h)
+   * @param processType command shell type; if set to -1, type is determined
+   *        from the command name
+   * @param nRows no. of screen rows
+   * @param nCols no. of screen columns
+   * @param xPixels screen width in pixels (or 0 if unknown)
+   * @param yPixels screen height in pixels (or 0 if unknown)
+   * @param domDoc DOM document object associated with the LineTerm
+   *        (document.cookie will be defined for this document on return)
+   * @param aCookie (output) cookie associated with LineTerm
+   */
+
+  void openAux(in wstring command,
+               in wstring initInput,
+               in wstring promptRegexp,
+               in PRInt32 options, in PRInt32 processType,
+               in PRInt32 nRows, in PRInt32 nCols,
+               in PRInt32 xPixels, in PRInt32 yPixels,
+               in nsIDOMDocument domDoc,
+               in nsIObserver anObserver,
+               in nsNativeStringRef aCookie);
+
+  /** Suspend/restores LineTerm operation
+   * @param aSuspend suspension state flag
+   */
+  void suspendAux(in boolean suspend);
+
+  /** Closes LineTerm
+   */
+  void closeAux();
+
+  /** Close all LineTerms, not just this one
+   */
+  void closeAllAux();
+
+  /** Resizes XMLterm to match a resized window.
+   * @param nRows number of rows
+   * @param nCols number of columns
+   */
+  void resizeAux(in long nRows, in long nCols);
+
+  /** Read output data and style strings and parameters from LineTerm
+   * @param opcodes (output) output data descriptor bits (see lineterm.h)
+   * @param opvals (output) output data value(s)
+   * @param buf_row (output) row number (>=-1)
+   *                (-1 denotes line mode and 0 represents bottom row)
+   * @param buf_col (output) column number (>=0)
+   * @param _retval (output) success code
+   * @param retstyle (output) output style string
+   * @return output data string from LineTerm
+   */
+  void readAux(out long opcodes, out long opvals,
+               out long buf_row, out long buf_col,
+               out wstring retval, out wstring retstyle);
+
+  void getCookie(in nsNativeStringRef aCookie);
+
+  attribute long cursorRow;
+  attribute long cursorColumn;
+  attribute boolean echoFlag;
+};
+

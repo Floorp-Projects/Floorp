@@ -649,7 +649,7 @@ int ltermReceiveData(struct lterms *lts, int readERR)
                     temERRBuf + lto->rawERRBytes, (SIZE_T) readERRMax);
 
     if (nReadERR < 0) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
+#if defined(DEBUG_LTERM) && !defined(USE_NSPR_IO)
       int errcode = errno;
       /*    perror("ltermReceiveData"); */
 #else
@@ -701,7 +701,7 @@ int ltermReceiveData(struct lterms *lts, int readERR)
                     temOUTBuf + lto->rawOUTBytes, (SIZE_T) readOUTMax);
 
     if (nReadOUT < 0) {
-#if defined(DEBUG) && !defined(USE_NSPR_IO)
+#if defined(DEBUG_LTERM) && !defined(USE_NSPR_IO)
       int errcode = errno;
       /*    perror("ltermReceiveData"); */
 #else

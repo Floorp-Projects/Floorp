@@ -10,11 +10,11 @@
 # implied. See the MPL for the specific language governing
 # rights and limitations under the MPL.
 # 
-# The Original Code is lineterm.
+# The Original Code is XMLterm.
 # 
 # The Initial Developer of the Original Code is Ramalingam Saravanan.
 # Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
-# Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
+# Copyright (C) 1999,2001 Ramalingam Saravanan. All Rights Reserved.
 # 
 # Contributor(s):
 # 
@@ -31,63 +31,74 @@
 # GPL.
 #
 
-# makefile for xmlterm/base directory
+# Makefile for xmlterm/build directory
 
-DEPTH      = ../../..
-topsrcdir  = @top_srcdir@
-srcdir     = @srcdir@
-VPATH	   = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
 include $(DEPTH)/config/autoconf.mk
 
-ifdef DEBUG
 # Debug option
-DEBUG_LTERM = 1
-endif
+DEBUG = 1
 
-# Defines
+XPI_MODULE	= xmlterm
+XPI_MODULE_VERS = 0.53
+
+MODULE		= xmlterm
+LIBRARY_NAME	= xmlterm
+EXPORT_LIBRARY  = 1
+SHORT_LIBNAME	= xmlterm
+IS_COMPONENT	= 1
+
+REQUIRES	= xpcom string
+
+MODULE_NAME	= XMLTermModule
+
 DEFINES += $(TK_CFLAGS)
-ifdef DEBUG_LTERM
-DEFINES += -DDEBUG_LTERM
-endif
 
-# Exported header files (excluding XPCONNECT interfaces)
-EXPORTS = mozXMLT.h mozXMLTermUtils.h
+CPPSRCS         = mozXMLTermModule.cpp
 
-# C++ Sources
-CPPSRCS = \
-	mozLineTerm.cpp		 \
-	mozXMLTermUtils.cpp	 \
-	mozXMLTerminal.cpp       \
-	mozXMLTermSession.cpp    \
-	mozXMLTermListeners.cpp	 \
-	mozXMLTermShell.cpp	 \
-	mozXMLTermStream.cpp	 \
-	$(NULL)
-
-MODULE = xmlterm
-LIBRARY_NAME = xmlterm_s
-
-REQUIRES     = xpcom string
-
-XPIDLSRCS = \
-	mozILineTerm.idl      \
-	mozIXMLTermShell.idl  \
-	mozIXMLTerminal.idl   \
-	mozIXMLTermStream.idl \
-	$(NULL)
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/liblineterm_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxmlterm_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 LOCAL_INCLUDES	= \
+		-I$(srcdir)/../base \
 		-I$(srcdir)/../lineterm \
 		$(NULL)
 
-FORCE_STATIC_LIB = 1
+EXTRA_DSO_LDOPTS = \
+                -lgkgfx \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 include $(srcdir)/../config/xmlterm_config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef STAND_ALONE
+PLATFORM_STR = unknown
+
+# Edit the lines below as needed, depending upon your platform(s)
 ifeq ($(OS_ARCH),Linux)
-OS_CFLAGS += -ansi
+PLATFORM_STR = linux2-ix86
 endif
+
+ifeq ($(OS_CONFIG),SunOS5)
+PLATFORM_STR = sunos5-sparc
 endif
+
+ifeq ($(OS_ARCH),FreeBSD)
+PLATFORM_STR = freebsd-ix86
+endif
+
+XPIFILE = $(XPI_MODULE)-$(XPI_MODULE_VERS)-$(PLATFORM_STR).xpi
+
+xpi::
+	zip -r $(DIST)/bin/$(XPIFILE) install.js
+	cd $(DIST)/bin; zip -g $(XPIFILE) \
+               components/$(XPI_MODULE).xpt \
+               components/lib$(XPI_MODULE).so
+	echo Created $(DIST)/bin/$(XPIFILE)

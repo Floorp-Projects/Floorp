@@ -26,6 +26,27 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIGenericFactory.h"
+
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDocument.h"
+
+#include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderFactory.h"
+
+#include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsIIOService.h"
+
+#include "nsIWebShell.h"
+#include "nsIPresShell.h"
+#include "nsIScriptContext.h"
 
 #include "mozXMLT.h"
 #include "mozIXMLTermStream.h"
@@ -39,23 +60,9 @@ class mozXMLTermStream : public mozIXMLTermStream
   mozXMLTermStream();
   virtual ~mozXMLTermStream();
 
-  // nsISupports interface
   NS_DECL_ISUPPORTS
-
-  // nsIInputStream interface
   NS_DECL_NSIINPUTSTREAM
-
-  // mozIXMLTermStream interface
-
-  // Open stream in specified frame, or in current frame if frameName is null
-  NS_IMETHOD Open(nsIDOMWindowInternal* aDOMWindow,
-                  const char* frameName,
-                  const char* contentURL,
-                  const char* contentType,
-                  PRInt32 maxResizeHeight);
-
-  // Write Unicode string to stream
-  NS_IMETHOD Write(const PRUnichar* buf);
+  NS_DECL_MOZIXMLTERMSTREAM
 
  protected:
 

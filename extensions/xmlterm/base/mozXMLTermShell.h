@@ -29,6 +29,7 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIGenericFactory.h"
 
 #include "mozXMLT.h"
 #include "mozIXMLTerminal.h"
@@ -43,31 +44,24 @@ class mozXMLTermShell : public mozIXMLTermShell
   virtual ~mozXMLTermShell();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_MOZIXMLTERMSHELL
 
-  // mozIXMLTermShell interface
-    
-  NS_IMETHOD GetCurrentEntryNumber(PRInt32 *aNumber);
+  // Define a Create method to be used with a factory:
+  static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-  NS_IMETHOD SetHistory(PRInt32 aHistory, const PRUnichar* aCookie);
+  static NS_METHOD
+    RegisterProc(nsIComponentManager *aCompMgr,
+                 nsIFile *aPath,
+                 const char *registryLocation,
+                 const char *componentType,
+                 const nsModuleComponentInfo *info);
 
-  NS_IMETHOD SetPrompt(const PRUnichar* aPrompt, const PRUnichar* aCookie);
-
-  NS_IMETHOD IgnoreKeyPress(PRBool aIgnore,
-                            const PRUnichar* aCookie);
-
-  NS_IMETHOD Init(nsIDOMWindowInternal* aContentWin,
-                  const PRUnichar* URL,
-                  const PRUnichar* args);
-
-  NS_IMETHOD Close(const PRUnichar* aCookie);
-
-  NS_IMETHOD Poll(void);
-
-  NS_IMETHOD Resize(void);
-
-  NS_IMETHOD SendText(const PRUnichar* aString, const PRUnichar* aCookie);
-
-  NS_IMETHOD Exit(void);
+  static NS_METHOD
+    UnregisterProc(nsIComponentManager *aCompMgr,
+                   nsIFile *aPath,
+                   const char *registryLocation,
+                   const nsModuleComponentInfo *info);
 
   NS_IMETHOD Finalize(void);
 
@@ -84,4 +78,6 @@ protected:
 
   /** owning reference to XMLTerminal object created by us */
   nsCOMPtr<mozIXMLTerminal> mXMLTerminal;
+
+  static PRBool mLoggingInitialized;
 };

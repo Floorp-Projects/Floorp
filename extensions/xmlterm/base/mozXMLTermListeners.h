@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 
 #include "mozIXMLTerminal.h"
-#include "mozIXMLTermSuspend.h"
 
 /* XMLTerm Key Listener */
 class mozXMLTermKeyListener : public nsIDOMKeyListener,

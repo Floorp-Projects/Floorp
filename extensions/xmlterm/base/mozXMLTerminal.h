@@ -28,11 +28,12 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsString.h"
+#include "nsIGenericFactory.h"
 #include "nsIWebProgressListener.h"
 
 #include "mozXMLT.h"
 
-#include "mozILineTermAux.h"
+#include "mozILineTerm.h"
 #include "mozIXMLTerminal.h"
 #include "mozXMLTermSession.h"
 #include "mozXMLTermListeners.h"
@@ -56,49 +57,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // mozIXMLTerminal interface
-
-  NS_IMETHOD Init(nsIDocShell* aDocShell,
-                  mozIXMLTermShell* aXMLTermShell,
-                  const PRUnichar* aURL,
-                  const PRUnichar* args);
-
-  NS_IMETHOD Finalize(void);
-  NS_IMETHOD Poll(void);
-
-  NS_IMETHOD GetCurrentEntryNumber(PRInt32 *aNumber);
-  NS_IMETHOD GetHistory(PRInt32 *aHistory);
-  NS_IMETHOD SetHistory(PRInt32 aHistory);
-  NS_IMETHOD GetPrompt(PRUnichar **aPrompt);
-  NS_IMETHOD SetPrompt(const PRUnichar* aPrompt);
-  NS_IMETHOD GetKeyIgnore(PRBool* aIgnore);
-  NS_IMETHOD SetKeyIgnore(const PRBool aIgnore);
-
-  NS_IMETHOD SendTextAux(const nsString& aString);
-  NS_IMETHOD SendText(const nsString& aString, const PRUnichar* aCookie);
-
-  NS_IMETHOD Paste();
-
-  NS_IMETHOD GetDocument(nsIDOMDocument** aDoc);
-
-  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
-
-  NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
-
-  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument);
-
-  NS_IMETHOD GetSelectionController(nsISelectionController** aSelectionController);
-
-  NS_IMETHOD GetScreenMode(PRBool* aFlag);
-
-  NS_IMETHOD MatchesCookie(const PRUnichar* aCookie, PRBool *_retval);
-
-  NS_IMETHOD Resize(void);
-
-  NS_IMETHOD ShowCaret(void);
-
-  NS_IMETHOD ScreenSize(PRInt32& rows, PRInt32& cols,
-                        PRInt32& xPixels, PRInt32& yPixels);
-
+  NS_DECL_MOZIXMLTERMINAL
 
   // nsIObserver interface
   NS_IMETHOD Observe(nsISupports *aSubject, const PRUnichar *aTopic,

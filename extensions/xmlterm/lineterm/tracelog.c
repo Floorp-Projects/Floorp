@@ -40,6 +40,10 @@
 #include "unistring.h"
 #include "tracelog.h"
 
+#ifdef USE_NSPR_BASE
+#include "prlog.h"
+#endif
+
 /* private declarations */
 
 /* TRACELOG global variable structure */
@@ -53,7 +57,9 @@ void tlog_init(FILE* fileStream)
 {
   int imodule;
 
+#ifdef DEBUG_LTERM
   fprintf(stderr, "tlog_init:\n");
+#endif
 
   /* Error output stream */
   tlogGlobal.errorStream = fileStream;
@@ -76,7 +82,9 @@ int tlog_set_level(int imodule, int messageLevel, const char *functionList)
 {
   int j;
 
+#ifdef DEBUG_LTERM
   fprintf(stderr, "tlog_set_level:%d, %d\n", imodule, messageLevel);
+#endif
 
   if ((imodule < 0) || (imodule >= TLOG_MAXMODULES))
     return -1;
@@ -149,7 +157,11 @@ int tlog_test(int imodule, char *procstr, int level)
           ( (strstr(tlogGlobal.functionList[imodule],procstr) != NULL) ||
              (strstr(procstr,tlogGlobal.functionList[imodule]) != NULL)) ) )) {
     /* Display message */
+#if defined(USE_NSPR_BASE) && !defined(DEBUG_LTERM)
+    PR_LogPrint("%s%2d: ", procstr, level);
+#else
     fprintf(tlogGlobal.errorStream, "%s%2d: ", procstr, level);
+#endif
     return 1;
   }
 
@@ -196,10 +208,13 @@ void tlog_unichar(const UNICHAR *buf, int count)
   if (tlogGlobal.errorStream == NULL)
     return;
 
+#if defined(USE_NSPR_BASE) && !defined(DEBUG_LTERM)
+  PR_LogPrint("U(%d):\n", count);
+#else
   fprintf(tlogGlobal.errorStream, "U(%d): ", count);
-
   ucsprint(tlogGlobal.errorStream, buf, count);
-
   fprintf(tlogGlobal.errorStream, "\n");
+#endif
+
 }
 #endif

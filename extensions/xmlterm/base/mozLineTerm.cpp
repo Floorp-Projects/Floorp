@@ -41,7 +41,6 @@
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
 #include "mozLineTerm.h"
-#include "lineterm.h"
 
 #define MAXCOL 4096            // Maximum columns in line buffer
 
@@ -54,43 +53,55 @@ static NS_DEFINE_IID(kILineTermAuxIID,  MOZILINETERMAUX_IID);
 static NS_DEFINE_IID(kLineTermCID,      MOZLINETERM_CID);
 
 /////////////////////////////////////////////////////////////////////////
-// mozLineTerm, mozLineTermAux factories
-/////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewLineTerm(mozILineTerm** aLineTerm)
-{
-    NS_PRECONDITION(aLineTerm != nsnull, "null ptr");
-    if (! aLineTerm)
-        return NS_ERROR_NULL_POINTER;
-
-    *aLineTerm = new mozLineTerm();
-    if (! *aLineTerm)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aLineTerm);
-    return NS_OK;
-}
-
-nsresult
-NS_NewLineTermAux(mozILineTermAux** aLineTermAux)
-{
-    NS_PRECONDITION(aLineTermAux != nsnull, "null ptr");
-    if (! aLineTermAux)
-        return NS_ERROR_NULL_POINTER;
-
-    *aLineTermAux = new mozLineTerm();
-    if (! *aLineTermAux)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aLineTermAux);
-    return NS_OK;
-}
-
-/////////////////////////////////////////////////////////////////////////
 // mozLineTerm implementaion
 /////////////////////////////////////////////////////////////////////////
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozLineTerm)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(mozLineTerm, 
+                              mozILineTerm,
+                              mozILineTermAux);
+
+
 PRBool mozLineTerm::mLoggingEnabled = PR_FALSE;
+
+PRBool mozLineTerm::mLoggingInitialized = PR_FALSE;
+
+NS_METHOD
+mozLineTerm::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  if (!mLoggingInitialized) {
+    // Initialize all LINETERM operations
+    // (This initialization needs to be done at factory creation time;
+    //  trying to do it earlier, i.e., at registration time,
+    //  does not work ... something to do with loading of static global
+    //  variables.)
+
+    int messageLevel = 0;
+    char* debugStr = (char*) PR_GetEnv("LTERM_DEBUG");
+
+    if (debugStr && (strlen(debugStr) == 1)) {
+      messageLevel = 98;
+      debugStr = nsnull;
+    }
+
+    int result = lterm_init(0);
+    if (result == 0) {
+      tlog_set_level(LTERM_TLOG_MODULE, messageLevel, debugStr);
+    }
+    mLoggingInitialized = PR_TRUE;
+
+    char* logStr = (char*) PR_GetEnv("LTERM_LOG");
+    if (logStr && (strlen(logStr) > 0)) {
+      // Enable LineTerm logging
+      mozLineTerm::mLoggingEnabled = PR_TRUE;
+    }
+  }
+
+  return mozLineTermConstructor( aOuter,
+                                 aIID,
+                                 aResult );
+}
 
 mozLineTerm::mozLineTerm() :
   mCursorRow(0),
@@ -110,44 +121,6 @@ mozLineTerm::~mozLineTerm()
 {
   lterm_delete(mLTerm);
   mObserver = nsnull;
-}
-
-
-// Implement AddRef and Release
-NS_IMPL_ADDREF(mozLineTerm)
-NS_IMPL_RELEASE(mozLineTerm)
-
-
-NS_IMETHODIMP 
-mozLineTerm::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aInstancePtr = NULL;
-
-  //XMLT_LOG(mozLineTerm::QueryInterface,30,("0x%x\n",aIID));
-
-  if ( aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
-                                   NS_STATIC_CAST(mozILineTermAux*,this));
-
-  } else if ( aIID.Equals(NS_GET_IID(mozILineTerm)) ) {
-    *aInstancePtr = NS_STATIC_CAST(mozILineTerm*,
-                                   NS_STATIC_CAST(mozILineTermAux*,this));
-
-  } else if ( aIID.Equals(NS_GET_IID(mozILineTermAux)) ) {
-    *aInstancePtr = NS_STATIC_CAST(mozILineTermAux*,this);
-
-  } else {
-    return NS_ERROR_NO_INTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  return NS_OK;
 }
 
 
@@ -412,7 +385,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
     result = mozXMLTermUtils::TimeStamp(0, mLastTime, timeStamp);
     if (NS_SUCCEEDED(result)) {
       char* temStr = timeStamp.ToNewCString();
-      fprintf(stderr, "<TS %s> LineTerm %d opened by principal %s\n",
+      PR_LogPrint("<TS %s> LineTerm %d opened by principal %s\n",
               temStr, mLTerm, securePrincipal);
       nsMemory::Free(temStr);
     }
@@ -576,11 +549,11 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
 
     if (NS_SUCCEEDED(result) && (timeStamp.Length() > 0)) {
       char* temStr = timeStamp.ToNewCString();
-      fprintf(stderr, "<TS %s>\n", temStr);
+      PR_LogPrint("<TS %s>\n", temStr);
       nsMemory::Free(temStr);
 
     } else if (newline) {
-      fprintf(stderr, "\n");
+      PR_LogPrint("\n");
     }
   }
 

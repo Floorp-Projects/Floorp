@@ -31,6 +31,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
+#include "nsIPresShell.h"
 #include "nsISelectionController.h"
 
 /////////////////////////////////////////////////////////////////////////
@@ -419,7 +420,7 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       keyString.Append((PRUnichar) keyChar);
 
-      result = mXMLTerminal->SendTextAux(keyString);
+      result = mXMLTerminal->SendTextAux(keyString.get());
     }
   }
 
@@ -500,7 +501,7 @@ mozXMLTermTextListener::HandleText(nsIDOMEvent* aTextEvent)
   textEvent->GetText(textStr);
 
   // Transmit text to terminal
-  mXMLTerminal->SendTextAux(textStr);
+  mXMLTerminal->SendTextAux(textStr.get());
 
   return NS_OK;
 }

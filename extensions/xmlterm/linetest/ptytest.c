@@ -53,7 +53,6 @@
 #if defined(LINUX) || defined(BSDFAMILY)
 #include <sys/ioctl.h>
 #include <sys/poll.h>
-typedef unsigned int nfds_t;
 #endif
 
 #include "ptystream.h"
