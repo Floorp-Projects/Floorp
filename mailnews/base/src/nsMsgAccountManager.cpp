@@ -1276,7 +1276,10 @@ nsMsgAccountManager::UpgradePrefs()
   	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, spec, PR_FALSE /* set default */);
 	if (NS_FAILED(rv)) return rv;
 	
-	return rv;
+	// return NS_ERROR_FAILURE because we failed to upgrade the pref.js
+	// by returning a failure code, this will case the Account Wizard
+	// to be automatically opened.
+	return NS_ERROR_FAILURE;
     }
 #ifdef DEBUG_ACCOUNTMANAGER
     else {
