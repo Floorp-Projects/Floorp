@@ -906,7 +906,7 @@ select, select[size="1"] {
   border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
-  white-space:nowrap;
+  white-space:pre;
   text-align: left; 
 }
 
@@ -946,13 +946,14 @@ select[size="1"] {
   border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
-  white-space:nowrap;
+  white-space:pre;
   text-align: left; 
 }
 
 
 /* combobox button */
 select input[type=button] {
+  white-space:nowrap;
   border: outset 1px rgb(204, 204, 204);
   background-image:url("arrow.gif");
   background-repeat:no-repeat;
@@ -1025,6 +1026,16 @@ select option[-moz-option-selected] {
 }
 
 /* List box item selected style */
+select option[disabled][-moz-option-selected] {
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
+}
+
+select option[disabled] {
+  color:rgb(153,153,153); 
+  background-color:rgb(204,204,204); 
+}
+
 select[size] option[-moz-option-selected] {
  color:white;
  background-color:rgb(51,51,102); 
