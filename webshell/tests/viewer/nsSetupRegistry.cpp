@@ -54,18 +54,18 @@
 #define RDF_DLL    "rdf.dll"
 #else
 #ifdef XP_MAC
-#define XPCOM_DLL   "XPCOM.DLL" // XXX: is this correct?
-#define WIDGET_DLL		"WIDGET_DLL"
-#define GFXWIN_DLL		"GFXWIN_DLL"
+#define XPCOM_DLL   "XPCOM_DLL"
+#define WIDGET_DLL	"WIDGET_DLL"
+#define GFXWIN_DLL	"GFXWIN_DLL"
 #define VIEW_DLL		"VIEW_DLL"
 #define WEB_DLL			"WEB_DLL"
-#define PLUGIN_DLL		"PLUGIN_DLL"
+#define PLUGIN_DLL	"PLUGIN_DLL"
 #define PREF_DLL		"PREF_DLL"
-#define PARSER_DLL		"PARSER_DLL"
-#define DOM_DLL    		"DOM_DLL"
-#define LAYOUT_DLL		"LAYOUT_DLL"
-#define NETLIB_DLL		"NETLIB_DLL"
-//#define EDITOR_DLL	"EDITOR_DLL"	// temporary
+#define PARSER_DLL	"PARSER_DLL"
+#define DOM_DLL    	"DOM_DLL"
+#define LAYOUT_DLL	"LAYOUT_DLL"
+#define NETLIB_DLL	"NETLIB_DLL"
+#define EDITOR_DLL	"ENDER_DLL"
 #define RDF_DLL			"RDF_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
@@ -204,9 +204,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCHTMLImageElement, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNameSpaceManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#ifndef XP_MAC		// temporary
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
-#endif	//XP_MAC
 
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFDataBaseCID,           RDF_DLL, PR_FALSE, PR_FALSE);
