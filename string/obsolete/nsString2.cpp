@@ -57,8 +57,8 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
 /**
  * Default constructor. 
  */
-nsString::nsString(eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
-  nsStr::Initialize(*this,aCharSize);
+nsString::nsString(nsIMemoryAgent* anAgent) : mAgent(anAgent) {
+  nsStr::Initialize(*this,eTwoByte);
 }
 
 /**
@@ -67,8 +67,8 @@ nsString::nsString(eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent
  * @param   aCString is a ptr to a 1-byte cstr
  * @param   aLength tells us how many chars to copy from given CString
  */
-nsString::nsString(const char* aCString,eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
-  nsStr::Initialize(*this,aCharSize);
+nsString::nsString(const char* aCString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
+  nsStr::Initialize(*this,eTwoByte);
   Assign(aCString);
 }
 
@@ -88,8 +88,8 @@ nsString::nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent) : mAgent(an
  * @update	gess 1/4/99
  * @param   reference to another nsCString
  */
-nsString::nsString(const nsStr &aString,eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
-  nsStr::Initialize(*this,aCharSize);
+nsString::nsString(const nsStr &aString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
+  nsStr::Initialize(*this,eTwoByte);
   nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
 }
 
@@ -1899,10 +1899,10 @@ public:
     mDeque.Push(aString);
   }
 
-  nsString* CreateString(eCharSize aCharSize){
+  nsString* CreateString(void){
     nsString* result=(nsString*)mDeque.Pop();
     if(!result)
-      result=new nsString(aCharSize);
+      result=new nsString();
     return result;
   }
   nsDeque mDeque;
@@ -1928,10 +1928,10 @@ nsStringRecycler& GetRecycler(void){
  * @param 
  * @return
  */
-nsString* nsString::CreateString(eCharSize aCharSize){
+nsString* nsString::CreateString(void){
   nsString* result=0;
 #ifndef RICKG_TESTBED
-  GetRecycler().CreateString(aCharSize);
+  GetRecycler().CreateString();
 #endif
   return result;
 }
@@ -2028,8 +2028,8 @@ NS_COM int fputs(const nsString& aString, FILE* out)
  * Default constructor
  *
  */
-nsAutoString::nsAutoString(eCharSize aCharSize) : nsString(aCharSize) {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+nsAutoString::nsAutoString() : nsString() {
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
 }
@@ -2113,12 +2113,12 @@ nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
  * @param   reference to a subsumeString
  */
 #ifdef AIX
-nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStr) :nsString(aSubsumeStr.mCharSize) {
+nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStr) :nsString() {
   mAgent=0;
   nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
   Subsume(*this,temp);
 #else
-nsAutoString::nsAutoString( nsSubsumeStr& aSubsumeStr) :nsString(aSubsumeStr.mCharSize) {
+nsAutoString::nsAutoString( nsSubsumeStr& aSubsumeStr) :nsString() {
   mAgent=0;
   Subsume(*this,aSubsumeStr);
 #endif // AIX
@@ -2137,19 +2137,20 @@ void nsAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   }
 }
 
-nsSubsumeStr::nsSubsumeStr(nsStr& aString) : nsString(aString.mCharSize) {
+nsSubsumeStr::nsSubsumeStr(nsStr& aString) : nsString() {
   Subsume(*this,aString);
 }
 
-nsSubsumeStr::nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString(eTwoByte) {
+nsSubsumeStr::nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString() {
   mUStr=aString;
-  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength-1;
+  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
 }
  
-nsSubsumeStr::nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString(eOneByte) {
+nsSubsumeStr::nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString() {
   mStr=aString;
-  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength-1;
+  mCharSize=eOneByte;
+  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
 }
 
