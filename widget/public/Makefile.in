@@ -74,6 +74,9 @@ EXPORTS = \
 	nsIDragSession.h \
 	nsIClipboardOwner.h \
 	nsIFormatConverter.h \
+	nsIFontNameIterator.h \
+	nsIFontSizeIterator.h \
+	nsIFontRetrieverService.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
