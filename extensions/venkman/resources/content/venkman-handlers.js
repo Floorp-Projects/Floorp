@@ -35,6 +35,12 @@
 
 /* Alphabetical order, please. */
 
+console.displayUsageError =
+function con_dusage (command)
+{
+    display (command.name + " " + command.usage, MT_ERROR);
+}
+
 console.onLoad =
 function con_load (e)
 {
@@ -76,6 +82,46 @@ function con_icommand (e)
 
 }
 
+console.onInputBreak =
+function cli_ibreak(e)
+{
+    var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
+    if (!ary)
+    {
+        console.displayUsageError(e.commandEntry);
+        return false;
+    }
+
+    dd ("onInputBreak(): " + ary[1] + ", " + ary[2]);
+    
+    var scriptMatched;
+    
+    for (var scriptName in console._scripts)
+    {
+        if (scriptName.indexOf(ary[1]) != -1)
+        {
+            scriptMatched = true;
+
+            var bpList = setBreakpoint (scriptName, ary[2]);
+            if (bpList.length)
+                display (getMsg(MSN_BP_CREATED,
+                                [scriptName, ary[2], bpList.length]));
+            else
+                display (getMsg(MSN_ERR_BP_NOLINE, [scriptName, ary[2]]),
+                         MT_ERROR);
+        }
+    }
+    
+    if (!scriptMatched)
+    {
+        display (getMsg(MSN_ERR_BP_NOSCRIPT, ary[1]), MT_ERROR);
+        return false;
+    }
+    
+    return true;
+    
+}            
+            
 console.onInputCommands =
 function cli_icommands (e)
 {
@@ -109,7 +155,7 @@ function con_icline (e)
     console._lastHistoryReferenced = -1;
     console._incompleteLine = "";
 
-    var ary = e.line.match (/(\S+)? ?(.*)/);
+    var ary = e.line.match (/(\S+) ?(.*)/);
     var command = ary[1];
 
     e.command = command;
@@ -213,7 +259,7 @@ function con_iprops (e, forceDebuggerScope)
     else
         v = evalInTargetScope (e.inputData);
     
-    if (!(v instanceof jsdIValue))
+    if (!(v instanceof jsdIValue) || v.jsType != jsdIValue.TYPE_OBJECT)
     {
         display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, String(v)]),
                  MT_ERROR);
@@ -246,6 +292,22 @@ function con_iscope ()
     else
         displayProperties (console.frames[console.currentFrameIndex].scope);
     
+    return true;
+}
+
+console.onInputStep =
+function con_iwhere ()
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+    
+    console.jsds.interruptHook = console._executionHook;
+    var topFrame = console.frames[0];
+    console._stepPast = topFrame.script.fileName + topFrame.line;
+    console.jsds.exitNestedEventLoop();
     return true;
 }
 
