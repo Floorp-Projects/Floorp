@@ -623,7 +623,12 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mArena);
-  NS_IF_RELEASE(mListenerManager);
+
+  if (mListenerManager != nsnull) {
+    mListenerManager->SetListenerTarget(nsnull);
+    NS_RELEASE(mListenerManager);
+  }
+
   NS_IF_RELEASE(mDOMStyleSheets);
   NS_IF_RELEASE(mNameSpaceManager);
   if (nsnull != mHeaderData) {
@@ -2767,6 +2772,7 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
   if (NS_OK == GetNewListenerManager(aInstancePtrResult)) {
     mListenerManager = *aInstancePtrResult;
     NS_ADDREF(mListenerManager);
+    mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIDocument*,this));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

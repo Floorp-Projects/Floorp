@@ -468,6 +468,9 @@ nsXULDocument::~nsXULDocument()
     delete mTemplateBuilderTable;
     delete mBoxObjectTable;
 
+    if (mListenerManager)
+        mListenerManager->SetListenerTarget(nsnull);
+
     if (--gRefCnt == 0) {
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -4174,6 +4177,8 @@ nsXULDocument::GetListenerManager(nsIEventListenerManager** aResult)
                                                 getter_AddRefs(mListenerManager));
 
         if (NS_FAILED(rv)) return rv;
+
+        mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIDocument*,this));
     }
     *aResult = mListenerManager;
     NS_ADDREF(*aResult);
