@@ -87,6 +87,12 @@ PR_LOG_DEFINE(APPLET);
 extern PRLogModuleInfo *APPLET;
 #endif
 
+#ifdef LAYPROBE_API
+extern "C" {
+#include "layprobe.h"
+}
+#endif // LAYPROBE_API
+
 /*
 ** API for querying the Navigator's Color Palette from the "outside"...
 ** 
@@ -4627,6 +4633,22 @@ void CWinCX::AllConnectionsComplete(MWContext *pContext)
 {
     //  Call the base.
     CDCCX::AllConnectionsComplete(pContext);
+
+#ifdef LAYPROBE_API
+	{
+		// Send a notification when all network activity for this page is over.		   
+		XP_List* pList = GetCallbackFuncList((int32)BROWSER_NAVIGATION_COMPLETE);
+		
+		if (pList)
+		{
+			while (pList = pList->next)
+			{
+				if (pList->object)
+					(*((ID_NOTIFY_PT)(pList->object)))((void*)pContext);
+			}
+		}
+	}
+#endif // LAYPROBE_API
 
 	//	Stop our frame's animation, if the main context of the frame is no longer busy.
     if(GetFrame()->GetMainContext()) {
