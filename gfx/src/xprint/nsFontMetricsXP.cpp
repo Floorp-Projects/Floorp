@@ -1732,7 +1732,7 @@ nsFontXpNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   if ((mFont->min_byte1 == 0) && (mFont->max_byte1 == 0))
     return XTextWidth(mFont, (char*) buf, len);
   else
-    return XTextWidth16(mFont, buf, len);
+    return XTextWidth16(mFont, buf, len / 2);
 }
 
 #ifdef XPRINT_NOT_NOW
@@ -1770,12 +1770,25 @@ nsFontXpNormal::DrawString(nsXPrintContext* aSurface,
   }
   else
   {
+    /* XXX is this the right way to do it? Can I get GCCache to give me a
+     * new GC? */
+    GC copyGC;
+    XGCValues values;
+    memset(&values, 0, sizeof(XGCValues));
+
+    XGetGCValues(aSurface->GetDisplay(), aSurface->GetGC(), 
+        GCForeground | GCBackground, &values);
+    values.font = mFont->fid;
+    copyGC = XCreateGC(aSurface->GetDisplay(), aSurface->GetDrawable(),
+        GCForeground | GCBackground | GCFont, &values);
+
+    /* note the length must be divided by 2 for X*16 functions */
     XDrawString16(aSurface->GetDisplay(),
                   aSurface->GetDrawable(),
-                  aSurface->GetGC(),
-                  aX, aY + mBaselineAdjust, buf, len);              
-    
-    return XTextWidth16(mFont, buf, len);
+                  copyGC,
+                  aX, aY + mBaselineAdjust, buf, len / 2);
+    XFreeGC(aSurface->GetDisplay(), copyGC);
+    return XTextWidth16(mFont, buf, len / 2);
   }
 }                                                       
 

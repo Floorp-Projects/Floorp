@@ -58,7 +58,7 @@ public:
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-  void               SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
+  void               SetDrawingSurface(nsDrawingSurface  aSurface);
   NS_IMETHOD         GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   NS_IMETHOD         CheckFontExistence(const nsString& aFontName);
@@ -77,9 +77,9 @@ public:
   NS_IMETHOD         BeginPage(void);
   NS_IMETHOD         EndPage(void);
 
-  NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
+  NS_IMETHOD         SetSpec(nsIDeviceContextSpec *aSpec);
 
-  Display * GetDisplay();
+  Display           *GetDisplay();
   NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);
 
   NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
@@ -89,25 +89,12 @@ public:
 protected:
   virtual         ~nsDeviceContextXp();
 
-  nsDrawingSurface       mSurface;
   nsXPrintContext      *mPrintContext;  
   Display              *mDisplay;
   Screen               *mScreen;
-  PRUint32              mDepth;
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
-  float                 mPixelScale;
   nsCOMPtr<nsISupportsArray> mFontMetrics;  // we are not using the normal font cache
   nsIDeviceContext     *mParentDeviceContext;
-  
-private:
-  nsPaletteInfo        mPaletteInfo;
-  PRBool               mWriteable;
-  PRUint32             mNumCells;
-
-  float                mWidthFloat;
-  float                mHeightFloat;
-  PRInt32              mWidth;
-  PRInt32              mHeight;
 };
 
 #endif /* !nsDeviceContextXp_h___ */

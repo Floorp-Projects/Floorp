@@ -29,9 +29,15 @@
 #include "xlibrgb.h"
 #include "nsXPrintContext.h"
 #include "xprintutil.h"
+#include "prenv.h" /* for PR_GetEnv */
 
 //#define HACK_PRINTONSCREEN 1
-//#define XPRINT_PRINT_IMAGES 1
+
+#ifdef XPRINT_NOT_YET /* ToDo: make this dynamically */
+#define MY_XLIB_RGB_DITHER_XPRINT XLIB_RGB_DITHER_NONE
+#else
+#define MY_XLIB_RGB_DITHER_XPRINT XLIB_RGB_DITHER_MAX
+#endif
 
 #ifdef PR_LOGGING 
 /* DEBUG: use 
@@ -45,7 +51,7 @@ static PRLogModuleInfo *nsXPrintContextLM = PR_NewLogModule("nsXPrintContext");
 extern "C" /* Make Sun Workshop and other conformant compilers happy... :-) */
 #endif
 static 
-int xerror_handler(Display *display, XErrorEvent *ev) 
+int xerror_handler( Display *display, XErrorEvent *ev )
 {
     /* this should _never_ be happen... but if this happens - debug mode or not - scream !!! */
     char errmsg[80];
@@ -59,17 +65,17 @@ int xerror_handler(Display *display, XErrorEvent *ev)
  */
 nsXPrintContext::nsXPrintContext()
 {
-   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
    
-   mPDisplay    = (Display *)nsnull;
-   mPContext    = (XPContext)None;
-   mScreen      = (Screen *)nsnull;
-   mVisual      = (Visual *)nsnull;
-   mGC          = (GC)None;
-   mDrawable    = (Drawable)None;
-   mDepth       = 0;
-   mIsGrayscale = PR_FALSE; /* default is color output */
-   mIsAPrinter  = PR_TRUE;  /* default destination is printer */
+  mPDisplay    = (Display *)nsnull;
+  mPContext    = (XPContext)None;
+  mScreen      = (Screen *)nsnull;
+  mVisual      = (Visual *)nsnull;
+  mGC          = (GC)None;
+  mDrawable    = (Drawable)None;
+  mDepth       = 0;
+  mIsGrayscale = PR_FALSE; /* default is color output */
+  mIsAPrinter  = PR_TRUE;  /* default destination is printer */
 }
 
 /** ---------------------------------------------------
@@ -149,35 +155,34 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
          ("nsXPrintContext::SetupWindow: x=%d y=%d width=%d height=%d\n", 
          x, y, width, height));
 
-  XSetWindowAttributes  xattributes;
-  long                  xattributes_mask;
-  Window                parent_win;
-  XVisualInfo          *visual_info;
-  unsigned long         gcmask;
-  XGCValues             gcvalues;
-
-  mWidth = width;
+  Window                 parent_win;
+  XVisualInfo           *visual_info;
+  unsigned long          gcmask;
+  XGCValues              gcvalues;
+  XSetWindowAttributes   xattributes;
+  long                   xattributes_mask;  
+  
+  mWidth  = width;
   mHeight = height;
+
   visual_info = xlib_rgb_get_visual_info();
+  mVisual     = xlib_rgb_get_visual();
+  mDepth      = xlib_rgb_get_depth();
+  
+  parent_win = XRootWindow(mPDisplay, mScreenNumber);
+                                           
+                                             
+  xattributes.background_pixel = XWhitePixel(mPDisplay, mScreenNumber);
+  xattributes.border_pixel     = XBlackPixel(mPDisplay, mScreenNumber);
+  xattributes_mask             = CWBorderPixel | CWBackPixel;                                                                                                                                                                
+  mDrawable = (Drawable)XCreateWindow(mPDisplay, parent_win, x, y, width,
+                                      height, 0,
+                                      mDepth, InputOutput, mVisual, xattributes_mask,
+                                      &xattributes);
 
-  parent_win = RootWindow(mPDisplay, mScreenNumber);
-  xattributes.background_pixel = WhitePixel(mPDisplay, mScreenNumber);
-  xattributes.border_pixel     = BlackPixel(mPDisplay, mScreenNumber);
-  xattributes_mask |= CWBorderPixel | CWBackPixel;
-
-  mDrawable = (Drawable)XCreateSimpleWindow(mPDisplay,
-                                parent_win,
-                                x, y,
-                                width, height,
-                                0, 
-                                BlackPixel(mPDisplay, mScreenNumber),
-                                WhitePixel(mPDisplay, mScreenNumber));
-  mDepth  = XDefaultDepth(mPDisplay, mScreenNumber);
-  mVisual = XDefaultVisual(mPDisplay, mScreenNumber);
-
-  gcmask = GCBackground | GCForeground | GCFunction ;
-  gcvalues.background = WhitePixel(mPDisplay, mScreenNumber);
-  gcvalues.foreground = BlackPixel(mPDisplay, mScreenNumber);
+  gcmask = GCBackground | GCForeground | GCFunction;
+  gcvalues.background = XWhitePixel(mPDisplay, mScreenNumber);
+  gcvalues.foreground = XBlackPixel(mPDisplay, mScreenNumber);
   gcvalues.function = GXcopy;
   mGC     = XCreateGC(mPDisplay, mDrawable, gcmask, &gcvalues); /* ToDo: Check for error */
   return NS_OK;
@@ -384,70 +389,324 @@ nsXPrintContext::EndDocument()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXPrintContext::DrawImage(nsIImage *aImage,
-                PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+static
+XImage *
+GetScaledXImage(XImage *img,
+                double factorX, double factorY,
+                unsigned short aSWidth,  unsigned short aSHeight,
+                unsigned short newWidth, unsigned short newHeight)
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
-         (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
-         (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
-
-  PRUint8 *image_bits = aImage->GetBits();
-  PRInt32  row_bytes  = aImage->GetLineStride();
+  XImage         *newImg;
+  unsigned short  dx, dy, sx, sy;
   
-  NS_ASSERTION((aSWidth==aDWidth)&&(aSHeight==aDHeight), 
-               "nsXPrintContext::DrawImage(): Image scaling not implemented yet... ,-( .");  
+  if ((newImg = (XImage *)malloc(sizeof(XImage))) == nsnull)
+    return nsnull;
 
-#ifdef XPRINT_PRINT_IMAGES   
-  // XpSetImageResolution(mPDisplay, mPContext, new_res, &prev_res);
-  
-  if( mIsGrayscale )
-  {  
-    xlib_draw_gray_image(mDrawable,
-                        mGC,
-                        aDX, aDY, aDWidth, aDHeight,
-                        XLIB_RGB_DITHER_MAX,
-                        image_bits + row_bytes * aSY + 3 * aDX,
-                        row_bytes);
-  }
-  else
+  /* this is _evil_ code... I don't know how to make it better... ;-(( */
+  memset(newImg, 0, sizeof(XImage));
+  newImg->width            = newWidth;
+  newImg->height           = newHeight;
+  newImg->format           = img->format;
+  newImg->byte_order       = img->byte_order;
+  newImg->bitmap_unit      = img->bitmap_unit;
+  newImg->bitmap_bit_order = img->bitmap_bit_order;
+  newImg->bitmap_pad       = img->bitmap_pad;
+  newImg->depth            = img->depth;
+  newImg->bits_per_pixel   = img->bits_per_pixel;
+  newImg->xoffset          = 0;
+  newImg->depth            = img->depth;
+  newImg->data             = nsnull;
+  newImg->bytes_per_line   = 0; /* XInitImage() will calculate the correct value */
+  if(!XInitImage(newImg))
   {
-    xlib_draw_rgb_image(mDrawable,
-                        mGC,
-                        aDX, aDY, aDWidth, aDHeight,
-                        XLIB_RGB_DITHER_MAX,
-                        image_bits + row_bytes * aSY + 3 * aDX,
-                        row_bytes);  
-  }                    
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("GetScaledXImage: XInitImage() failure\n"));
+    XDestroyImage(newImg);
+    return nsnull;
+  }
 
-  // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
-#else
-    XDrawRectangle(mPDisplay, mDrawable, mGC, aDX, aDY, aDWidth, aDHeight);
-#endif /* XPRINT_PRINT_IMAGES */
+  newImg->data = (char *)malloc((newHeight * newImg->bytes_per_line)+16); 
 
-  return NS_OK;
+  if (!newImg->data) {
+    XDestroyImage(newImg);
+    return nsnull;
+  }
+  
+  for(dx = 0 ; dx < newWidth ; dx++)
+  {
+    sx = dx * factorX;
+    for(dy = 0 ; dy < newHeight ; dy++) 
+    {
+      sy = dy * factorY;
+      XPutPixel(newImg, dx, dy, XGetPixel(img, sx, sy));
+    }
+  }
+  
+  return newImg;
 }
 
 
-// Draw the bitmap, this draw just has destination coordinates
+NS_IMETHODIMP
+nsXPrintContext::DrawImage(nsIImage *aImage,
+                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+         ("nsXPrintContext::DrawImage(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
+          (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
+          (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
+
+  static PRPackedBool got_env_var         = PR_FALSE;
+  static PRPackedBool enable_xprt_scaling = PR_FALSE;
+  
+  if( !got_env_var )
+  {
+    enable_xprt_scaling = (PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_ENABLE_XPRT_SCALING") != nsnull);
+    got_env_var = PR_TRUE;
+  }
+  
+  /* this is a temporary solution until bug 57820 will be fixed. */
+  if( !enable_xprt_scaling )
+  {
+    return DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
+  }
+  
+  double   scaler;
+  int      prev_res = 0,
+           dummy;
+  long     imageResolution;
+  PRInt32  aDWidth_scaled;
+  PRInt32  aDHeight_scaled;
+  nsresult rv = NS_OK;
+  
+  PRInt32 aSrcWidth  = aImage->GetWidth();
+  PRInt32 aSrcHeight = aImage->GetHeight();
+
+  double factorX = (double)aSrcWidth  / (double)aDWidth;
+  double factorY = (double)aSrcHeight / (double)aDHeight;
+  
+  scaler = (factorX > factorY)?(factorX):(factorY);
+  
+  imageResolution = (double)mPrintResolution * scaler;
+  aDWidth_scaled  = (double)aDWidth  * scaler;
+  aDHeight_scaled = (double)aDHeight * scaler;
+  
+  /* set image resolution */
+  if( XpSetImageResolution(mPDisplay, mPContext, imageResolution, &prev_res) )
+  {
+    /* draw image, Xprt will do the main scaling part... */
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+           ("Xp scaling res=%d, aSWidth=%d, aSHeight=%d, aDWidth_scaled=%d, aDHeight_scaled=%d\n", 
+            (int)imageResolution, (int)aSWidth, (int)aSHeight, (int)aDWidth_scaled, (int)aDHeight_scaled));
+    
+    if( (aSX != 0) || (aSY != 0) || (aSWidth != aDWidth_scaled) || (aSHeight != aDHeight_scaled) )
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImageBitsScaled()\n"));
+      rv = DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+    }
+    else
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImage() [shortcut]\n"));
+      rv = DrawImage(aImage, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+    }
+    
+    /* reset image resolution to previous resolution */
+    (void)XpSetImageResolution(mPDisplay, mPContext, prev_res, &dummy);
+  }
+  else /* fallback */
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("BAD BAD local scaling... ;-((\n"));
+    /* reset image resolution to previous value to be sure... */
+    (void)XpSetImageResolution(mPDisplay, mPContext, prev_res, &dummy);
+    
+    /* scale image on our side (bad) */
+    rv = DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
+  }
+  
+  return rv;
+}  
+
+// use DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) 
+// to get the pixel scale of the device context
+nsresult
+nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
+                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+         ("nsXPrintContext::DrawImageBitsScaled(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
+          (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
+          (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
+
+  nsresult rv = NS_OK;
+  
+  PRUint8 *image_bits    = aImage->GetBits();
+  PRInt32  row_bytes     = aImage->GetLineStride();
+  PRUint8 *alphaBits     = aImage->GetAlphaBits();
+  PRInt32  alphaRowBytes = aImage->GetAlphaLineStride();
+  
+  XImage *srcImg        = nsnull;
+  XImage *srcAlphaImg   = nsnull;
+  XImage *subImg        = nsnull;
+  XImage *subAlphaImg   = nsnull;
+  XImage *dstImg        = nsnull;
+  XImage *dstAlphaImg   = nsnull;
+    
+  PRInt32 aSrcWidth  = aImage->GetWidth();
+  PRInt32 aSrcHeight = aImage->GetHeight();
+
+  double factorX = (double)aSrcWidth  / (double)aDWidth;
+  double factorY = (double)aSrcHeight / (double)aDHeight;
+  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("DrawImageBitsScaled: factorX=%f, factorY=%f\n", factorX, factorY));
+  
+  srcImg = (XImage *)malloc(sizeof(XImage));
+  if( srcImg == nsnull )
+    return NS_ERROR_OUT_OF_MEMORY;  // BUG: We should free all other stuff at this point, too
+  memset(srcImg, 0, sizeof(XImage));
+  srcImg->width            = aSrcWidth;
+  srcImg->height           = aSrcHeight;
+  srcImg->format           = ZPixmap;
+  srcImg->byte_order       = MSBFirst;
+  srcImg->bitmap_unit      = 32;
+  srcImg->bitmap_bit_order = MSBFirst;
+  srcImg->red_mask         = srcImg->green_mask = srcImg->blue_mask = 0;
+  srcImg->bits_per_pixel   = 24; /* R8G8B8 packed. Thanks to "tor" for that hint... */
+  srcImg->xoffset          = 0;
+  srcImg->bitmap_pad       = 32;
+  srcImg->depth            = 24;
+  srcImg->data             = (char *)image_bits;
+  srcImg->bytes_per_line   = row_bytes;
+
+  if( !XInitImage(srcImg) )
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XInitImage failure... ;-(\n"));
+
+  if( (aSX != 0) || (aSY != 0) || (aSrcWidth != aSWidth) || (aSrcHeight != aSHeight))
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+           ("  XSubImage(srcImg, aSX=%d, aSY=%d, aSWidth=%d, aSHeight=%d);\n", 
+            (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight));                          
+    subImg = XSubImage(srcImg, aSX, aSY, aSWidth, aSHeight);
+    
+    srcImg->data = nsnull; /* we do not own this piece of memory */
+    XDestroyImage(srcImg);
+    srcImg = subImg;       
+  }
+
+  dstImg = GetScaledXImage(srcImg, factorX, factorY,
+                           aSWidth, aSHeight,
+                           aDWidth, aDHeight);
+
+  if (!dstImg)
+  {
+    return PR_FALSE;
+  }
+      
+  if(alphaBits != nsnull)
+  {
+    srcAlphaImg = (XImage *)malloc(sizeof(XImage));
+    if( srcAlphaImg == nsnull )
+      return NS_ERROR_OUT_OF_MEMORY; // BUG: We should free all other stuff at this point, too
+    memset(srcAlphaImg, 0, sizeof(XImage));
+    srcAlphaImg->width            = aSrcWidth;
+    srcAlphaImg->height           = aSrcHeight;
+    srcAlphaImg->format           = XYPixmap;
+    srcAlphaImg->byte_order       = MSBFirst;
+    srcAlphaImg->bitmap_unit      = 32;
+    srcAlphaImg->bitmap_bit_order = MSBFirst;
+    srcAlphaImg->red_mask         = srcImg->green_mask = srcImg->blue_mask = 0;
+    srcAlphaImg->bits_per_pixel   = 1;
+    srcAlphaImg->xoffset          = 0;
+    srcAlphaImg->bitmap_pad       = 32;
+    srcAlphaImg->depth            = 1;
+    srcAlphaImg->data             = (char *)alphaBits;
+    srcAlphaImg->bytes_per_line   = alphaRowBytes;
+
+    if( !XInitImage(srcAlphaImg) )
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XInitImage failure... ;-(\n"));
+
+    if( (aSX != 0) || (aSY != 0) || (aSrcWidth != aSWidth) || (aSrcHeight != aSHeight) )
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
+             ("  XSubImage(srcAlphaImg, aSX=%d, aSY=%d, aSWidth=%d, aSHeight=%d);\n", 
+              (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight));
+      subAlphaImg = XSubImage(srcAlphaImg, aSX, aSY, aSWidth, aSHeight);                            
+      if (!subAlphaImg)
+        return PR_FALSE;
+        
+       srcAlphaImg->data = nsnull; /* we do not own this piece of memory */
+       XDestroyImage(srcAlphaImg);
+       srcAlphaImg = subAlphaImg;        
+    }   
+
+    dstAlphaImg = GetScaledXImage(srcAlphaImg, factorX, factorY,
+                                  aSWidth, aSHeight,
+                                  aDWidth, aDHeight);
+
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("rendering ALPHA image !!\n"));
+    rv = DrawImageBits((PRUint8 *)dstAlphaImg->data, dstAlphaImg->bytes_per_line, 
+                       (PRUint8 *)dstImg->data,      dstImg->bytes_per_line, 
+                       aDX, aDY, aDWidth, aDHeight);
+
+    XDestroyImage(dstAlphaImg);
+  }
+  else
+  {
+    /* shortcut */
+    xlib_draw_rgb_image(mDrawable,
+                        mGC,
+                        aDX, aDY, aDWidth, aDHeight,
+                        MY_XLIB_RGB_DITHER_XPRINT,
+                        (unsigned char *)dstImg->data, dstImg->bytes_per_line);
+    rv = NS_OK;                        
+  }
+
+  if( srcImg != nsnull )
+  {
+    if( subImg == nsnull )
+    {
+      srcImg->data = nsnull; /* we do not own this piece of memory */
+      XDestroyImage(srcImg);
+    }
+    else
+    {
+      XDestroyImage(subImg);
+    }  
+  }      
+
+  if( srcAlphaImg != nsnull )
+  {
+    if( subAlphaImg == nsnull )
+    {
+      srcAlphaImg->data = nsnull; /* we do not own this piece of memory */
+      XDestroyImage(srcAlphaImg);
+    }
+    else
+    {
+      XDestroyImage(subAlphaImg);
+    }  
+  }  
+  
+
+  XDestroyImage(dstImg);
+  
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsXPrintContext::DrawImage(nsIImage *aImage,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
-{ 
+{
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImage(%d/%d/%d/%d)\n",
          (int)aX, (int)aY, (int)aWidth, (int)aHeight));
-
-#ifdef XPRINT_PRINT_IMAGES
+         
   PRInt32  width         = aImage->GetWidth();
   PRInt32  height        = aImage->GetHeight();
   PRUint8 *alphaBits     = aImage->GetAlphaBits();
   PRInt32  alphaRowBytes = aImage->GetAlphaLineStride();
   PRUint8 *image_bits    = aImage->GetBits();
   PRInt32  row_bytes     = aImage->GetLineStride();
-  Pixmap   alpha_pixmap  = None;
-  Pixmap   image_pixmap  = None;
   
   // XXX kipp: this is temporary code until we eliminate the
   // width/height arguments from the draw method.
@@ -456,6 +715,25 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     aWidth  = width;
     aHeight = height;
   }
+    
+  return DrawImageBits(alphaBits, alphaRowBytes, 
+                       image_bits, row_bytes, 
+                       aX, aY, aWidth, aHeight);
+}
+
+                           
+// Draw the bitmap, this draw just has destination coordinates
+nsresult
+nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+                               PRUint8 *image_bits, PRInt32  row_bytes,
+                               PRInt32 aX, PRInt32 aY,
+                               PRInt32 aWidth, PRInt32 aHeight)
+{ 
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImageBits(%d/%d/%d/%d)\n",
+         (int)aX, (int)aY, (int)aWidth, (int)aHeight));
+
+  Pixmap   alpha_pixmap  = None;
+  Pixmap   image_pixmap  = None;
 
   // Create gc clip-mask on demand
   if ( alphaBits != nsnull ) {
@@ -488,14 +766,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
      * bitmask data are arranged left to right on the screen,
      * low to high address in memory. */
     x_image->byte_order = MSBFirst;
-#if defined(IS_LITTLE_ENDIAN)
-    // no, it's still MSB XXX check on this!!
-    //      x_image->byte_order = LSBFirst;
-#elif defined (IS_BIG_ENDIAN)
-    x_image->byte_order = MSBFirst;
-#else
-#error ERROR! Endianness is unknown;
-#endif
+
     // Write into the pixemap that is underneath gdk's alpha_pixmap
     // the image we just created.
     memset(&gcv, 0, sizeof(XGCValues));
@@ -538,7 +809,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     xlib_draw_gray_image(image_pixmap,
                          gc,
                          0, 0, aWidth, aHeight,
-                         XLIB_RGB_DITHER_MAX,
+                         MY_XLIB_RGB_DITHER_XPRINT,
                          image_bits, row_bytes);  
   }
   else
@@ -546,7 +817,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     xlib_draw_rgb_image(image_pixmap,
                         gc,
                         0, 0, aWidth, aHeight,
-                        XLIB_RGB_DITHER_MAX,
+                        MY_XLIB_RGB_DITHER_XPRINT,
                         image_bits, row_bytes);
   }
   // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
@@ -577,10 +848,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
   
   if( image_pixmap != None )  XFreePixmap(mPDisplay, image_pixmap);
   if( alpha_pixmap != None )  XFreePixmap(mPDisplay, alpha_pixmap);
-#else
-    XDrawRectangle(mPDisplay, mDrawable, mGC, aX, aY, aWidth, aHeight);
-#endif /* XPRINT_PRINT_IMAGES */
-
+  
   return NS_OK;
 }
 

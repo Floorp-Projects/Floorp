@@ -46,7 +46,7 @@ public:
   NS_IMETHOD Init(nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
-  NS_IMETHOD BeginDocument(PRUnichar * aTitle);
+  NS_IMETHOD BeginDocument(PRUnichar *aTitle);
   NS_IMETHOD EndDocument();
  
   GC         GetGC(void) { return mGC; }
@@ -71,8 +71,17 @@ public:
 
   
   NS_IMETHOD SetForegroundColor(nscolor aColor); 
- 
+
 private:
+  nsresult DrawImageBitsScaled(nsIImage *aImage,
+                PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+                
+  nsresult DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+                         PRUint8 *image_bits, PRInt32  row_bytes,
+                         PRInt32 aX, PRInt32 aY,
+                         PRInt32 aWidth, PRInt32 aHeight); 
+
   Display      *mPDisplay;
   Screen       *mScreen;
   Visual       *mVisual;

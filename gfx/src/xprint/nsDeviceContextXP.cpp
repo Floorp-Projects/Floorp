@@ -51,21 +51,11 @@ nsDeviceContextXp :: nsDeviceContextXp()
 {
   NS_INIT_REFCNT();
   /* Inherited from xlib device context code */
-  mTwipsToPixels               = 1.0;
-  mPixelsToTwips               = 1.0;
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette     = 0;
-  mPaletteInfo.numReserved     = 0;
-  mPaletteInfo.palette         = nsnull;
-  mNumCells                    = 0;
+  //mTwipsToPixels               = 1.0;
+  //mPixelsToTwips               = 1.0;
   mPrintContext                = nsnull;
   mSpec                        = nsnull; 
   mParentDeviceContext         = nsnull;
-
-  mWidthFloat  = 0.0f;
-  mHeightFloat = 0.0f;
-  mWidth       = -1;
-  mHeight      = -1;
 
   NS_NewISupportsArray(getter_AddRefs(mFontMetrics));
 }
@@ -129,19 +119,7 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   GetTwipsToDevUnits(newscale);
   aParentContext->GetTwipsToDevUnits(origscale);
 
-/* gisburn: Unfortunately the image scaling code doesn't work properly yet 
- * - scaling both images+fonts would break the images.
- * For now we do do the scaling right and disable the images (see 
- * XPRINT_PRINT_IMAGES in nsXPrintContext).
- * Change "#if 1" to "#if 0" and set XPRINT_PRINT_IMAGES in nsXPrintContext 
- * - this only scales the fonts and does not scale the images.
- * This will be removed when image scaling has been fixed.
- */  
-#if 1
   mCPixelScale = newscale / origscale;
-#else
-  mTextZoom = newscale / origscale;
-#endif
 
   aParentContext->GetTwipsToDevUnits(t2d);
   aParentContext->GetAppUnitsToDevUnits(a2d);
@@ -201,13 +179,17 @@ NS_IMETHODIMP nsDeviceContextXp :: GetScrollBarDimensions(float &aWidth,
   return NS_OK;
 }
 
+void  nsDeviceContextXp :: SetDrawingSurface(nsDrawingSurface  aSurface) 
+{ 
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
 NS_IMETHODIMP nsDeviceContextXp :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  aSurface = nsnull;
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -283,11 +265,10 @@ NS_IMETHODIMP nsDeviceContextXp::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
                                                         PRInt32 &aHeight)
 {
   float width, height;
-  width = (float) mPrintContext->GetWidth();
+  width  = (float) mPrintContext->GetWidth();
   height = (float) mPrintContext->GetHeight();
-  // width = width - 200;
-  // height = height - 200;
-  aWidth = NSToIntRound(width * mDevUnitsToAppUnits);
+
+  aWidth  = NSToIntRound(width  * mDevUnitsToAppUnits);
   aHeight = NSToIntRound(height * mDevUnitsToAppUnits);
 
   return NS_OK;
