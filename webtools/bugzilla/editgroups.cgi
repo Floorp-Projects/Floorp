@@ -33,7 +33,7 @@ require "CGI.pl";
 ConnectToDatabase();
 confirm_login();
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 if (!UserInGroup("creategroups")) {
     PutHeader("Not Authorized","Edit Groups","","Not Authorized for this function!");

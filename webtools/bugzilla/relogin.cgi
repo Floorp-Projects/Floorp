@@ -37,6 +37,8 @@ require "CGI.pl";
 ConnectToDatabase();
 quietly_check_login();
 
+my $cgi = Bugzilla->cgi;
+
 if ($::userid) {
     # Even though we know the userid must match, we still check it in the
     # SQL as a sanity check, since there is no locking here, and if
@@ -49,17 +51,17 @@ if ($::userid) {
             "AND userid = $::userid");
 }
 
-my $cookiepath = Param("cookiepath");
-print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-";
+$cgi->send_cookie(-name => "Bugzilla_login",
+                  -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+$cgi->send_cookie(-name => "Bugzilla_logincookie",
+                  -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
 
 delete $::COOKIE{"Bugzilla_login"};
 
-$vars->{'message'} = "logged_out";                          
+$vars->{'message'} = "logged_out";
 $vars->{'user'} = {};
 
-print "Content-Type: text/html\n\n";
+print $cgi->header();
 $template->process("global/message.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 

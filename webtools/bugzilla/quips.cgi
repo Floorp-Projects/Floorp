@@ -39,6 +39,8 @@ require "CGI.pl";
 ConnectToDatabase();
 confirm_login();
 
+my $cgi = Bugzilla->cgi;
+
 if (Param('enablequips') eq "off") {
     ThrowUserError("quips_disabled");
 }
@@ -129,6 +131,6 @@ if ($action eq "delete") {
     SendSQL("DELETE FROM quips WHERE quipid = $quipid");
 }
 
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $template->process("list/quips.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

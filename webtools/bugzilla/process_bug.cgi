@@ -31,6 +31,7 @@ my $UserInCanConfirmGroupSet = -1;
 
 use lib qw(.);
 
+use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
@@ -57,6 +58,8 @@ use vars qw(%versions
 
 ConnectToDatabase();
 my $whoid = confirm_login();
+
+my $cgi = Bugzilla->cgi;
 
 my $requiremilestone = 0;
 
@@ -143,7 +146,7 @@ foreach my $field ("dependson", "blocked") {
 # End Data/Security Validation
 ######################################################################
 
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $vars->{'title_tag'} = "bug_processed";
 
 # Set the title if we can see a mid-air coming. This test may have false
@@ -493,7 +496,7 @@ sub DuplicateUserConfirm {
     
     # Confirm whether or not to add the reporter to the cc: list
     # of the original bug (the one this bug is being duped against).
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("bug/process/confirm-duplicate.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;

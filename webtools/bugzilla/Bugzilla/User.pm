@@ -366,7 +366,7 @@ sub match_field {
     $vars->{'matches'}       = $matches; # matches that were made
     $vars->{'matchsuccess'}  = $matchsuccess; # continue or fail
 
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     $::template->process("global/confirm-user-match.html.tmpl", $vars)
       || &::ThrowTemplateError($::template->error());

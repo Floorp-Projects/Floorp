@@ -33,7 +33,7 @@ use strict;
 
 use lib qw(.);
 
-use vars qw($cgi $template $vars);
+use vars qw($template $vars);
 
 use Bugzilla;
 use Bugzilla::Search;
@@ -56,10 +56,12 @@ use vars qw($db_name
             $userid
             @versions);
 
+my $cgi = Bugzilla->cgi;
+
 if (length($::buffer) == 0) {
-    print "Refresh: 10; URL=query.cgi\n";
+    print $cgi->header(-refresh=> '10; URL=query.cgi');
     ThrowUserError("buglist_parameters_required");
-}    
+}
 
 ConnectToDatabase();
 
@@ -131,8 +133,7 @@ if ($::FORM{'regetlastlist'}) {
 
 if ($::buffer =~ /&cmd-/) {
     my $url = "query.cgi?$::buffer#chart";
-    print "Refresh: 0; URL=$url\n";
-    print "Content-Type: text/html\n\n";
+    print $cgi->redirect(-location => $url);
     # Generate and return the UI (HTML page) from the appropriate template.
     $vars->{'message'} = "buglist_adding_field";
     $vars->{'url'} = $url;
@@ -257,8 +258,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     }
     elsif ($::FORM{'remaction'} eq "load") {
         my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
-        print "Refresh: 0; URL=$url\n";
-        print "Content-Type: text/html\n\n";
+        print $cgi->redirect(-location=>$url);
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'message'} = "buglist_load_named_query";
         $vars->{'namedcmd'} = $::FORM{'namedcmd'};
@@ -282,7 +282,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
             $count++;
         }
 
-        print "Content-Type: text/html\n\n";
+        print $cgi->header();
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'message'} = "buglist_query_gone";
         $vars->{'namedcmd'} = $::FORM{'namedcmd'};
@@ -535,8 +535,8 @@ if ($order) {
                 if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
                     $vars->{'fragment'} = $fragment;
                     if ($order_from_cookie) {
-                        my $cookiepath = Param("cookiepath");
-                        print "Set-Cookie: LASTORDER= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+                        $cgi->send_cookie(-name => 'LASTORDER',
+                                          -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
                         ThrowCodeError("invalid_column_name_cookie");
                     }
                     else {
@@ -618,15 +618,15 @@ $query .= " ORDER BY $db_order " if ($order);
 # Time to use server push to display an interim message to the user until
 # the query completes and we can display the bug list.
 if ($serverpush) {
-    # Generate HTTP headers.
-    print "Content-Disposition: inline; filename=$filename\n";
-    print "Content-Type: multipart/x-mixed-replace;boundary=thisrandomstring\n\n";
-    print "--thisrandomstring\n";
-    print "Content-Type: text/html\n\n";
+    print $cgi->multipart_init(-content_disposition => "inline; filename=$filename");
+
+    print $cgi->multipart_start();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("list/server-push.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
+
+    print $cgi->multipart_end();
 }
 
 # Connect to the shadow database if this installation is using one to improve
@@ -800,39 +800,47 @@ if ($dotweak) {
 # HTTP Header Generation
 ################################################################################
 
-# If we are doing server push, output a separator string.
-print "\n--thisrandomstring\n" if $serverpush;
-    
 # Generate HTTP headers
 
-# Suggest a name for the bug list if the user wants to save it as a file.
-# If we are doing server push, then we did this already in the HTTP headers
-# that started the server push, so we don't have to do it again here.
-print "Content-Disposition: inline; filename=$filename\n" unless $serverpush;
+my $contenttype;
 
 if ($format->{'extension'} eq "html") {
     my $cookiepath = Param("cookiepath");
-    print "Content-Type: text/html\n";
 
     if ($order) {
         my $qorder = url_quote($order);
-        print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        $cgi->send_cookie(-name => 'LASTORDER',
+                          -value => $qorder,
+                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
     }
     my $bugids = join(":", @bugidlist);
     # See also Bug 111999
     if (length($bugids) < 4000) {
-        print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        $cgi->send_cookie(-name => 'BUGLIST',
+                          -value => $bugids,
+                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
     }
     else {
-        print "Set-Cookie: BUGLIST= ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        $cgi->send_cookie(-name => 'BUGLIST',
+                          -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
         $vars->{'toolong'} = 1;
     }
+
+    $contenttype = "text/html";
 }
 else {
-    print "Content-Type: $format->{'ctype'}\n";
+    $contenttype = $format->{'ctype'};
 }
 
-print "\n"; # end HTTP headers
+if ($serverpush) {
+    print $cgi->multipart_start(-type=>$contenttype);
+} else {
+    # Suggest a name for the bug list if the user wants to save it as a file.
+    # If we are doing server push, then we did this already in the HTTP headers
+    # that started the server push, so we don't have to do it again here.
+    print $cgi->header(-type => $contenttype,
+                       -content_disposition => "inline; filename=$filename");
+}
 
 
 ################################################################################
@@ -848,4 +856,4 @@ $template->process($format->{'template'}, $vars)
 # Script Conclusion
 ################################################################################
 
-print "\n--thisrandomstring--\n" if $serverpush;
+print $cgi->multipart_final() if $serverpush;

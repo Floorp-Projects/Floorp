@@ -32,12 +32,16 @@ use vars qw(
   $vars
 );
 
+use Bugzilla;
+
 require "CGI.pl";
 
 ConnectToDatabase();
 quietly_check_login();
 
 GetVersionTable();
+
+my $cgi = Bugzilla->cgi;
 
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
@@ -87,12 +91,15 @@ if (defined $::FORM{'rememberedquery'}) {
     }
     my $list = join(" ", @collist);
     my $urlbase = Param("urlbase");
-    my $cookiepath = Param("cookiepath");
-    
-    print "Set-Cookie: COLUMNLIST=$list ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-    print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-    print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
-    print "Content-type: text/html\n\n";
+
+    $cgi->send_cookie(-name => 'COLUMNLIST',
+                      -value => $list,
+                      -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+    $cgi->send_cookie(-name => 'SPLITHEADER',
+                      -value => $::FORM{'splitheader'},
+                      -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+
+    print $cgi->redirect("buglist.cgi?$::FORM{'rememberedquery'}");
     $vars->{'message'} = "change_columns";
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -111,6 +118,6 @@ $vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 $vars->{'buffer'} = $::buffer;
 
 # Generate and return the UI (HTML page) from the appropriate template.
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $template->process("list/change-columns.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

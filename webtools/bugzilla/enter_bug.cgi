@@ -36,6 +36,7 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
@@ -65,6 +66,8 @@ ConnectToDatabase();
 # user is right from the start. 
 confirm_login() if AnyEntryGroups();
 
+my $cgi = Bugzilla->cgi;
+
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
     quietly_check_login();
@@ -88,7 +91,7 @@ if (!defined $::FORM{'product'}) {
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $::FORM{'format'};
         
-        print "Content-type: text/html\n\n";
+        print $cgi->header();
         $template->process("global/choose-product.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;        
@@ -364,7 +367,7 @@ $vars->{'use_keywords'} = 1 if (@::legal_keywords);
 my $format = 
   GetFormat("bug/create/create", $::FORM{'format'}, $::FORM{'ctype'});
 
-print "Content-type: $format->{'ctype'}\n\n";
+print $cgi->header($format->{'ctype'});
 $template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());          
 

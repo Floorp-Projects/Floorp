@@ -59,7 +59,7 @@ if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
     $::vars->{'message'} = "shutdown";
     
     # Return the appropriate HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
     
     # Generate and return an HTML message about the downtime.
     $::template->process("global/message.html.tmpl", $::vars)
@@ -320,7 +320,7 @@ sub ThrowCodeError {
       $vars->{'variables'} = $extra_vars;
   }
   
-  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  print Bugzilla->cgi->header();
   $template->process("global/code-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
     

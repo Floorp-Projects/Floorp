@@ -31,6 +31,9 @@
 use strict;
 
 use lib ".";
+
+use Bugzilla;
+
 require "CGI.pl";
 
 use vars qw($template $vars);
@@ -38,6 +41,8 @@ use vars qw($template $vars);
 ConnectToDatabase();
 
 quietly_check_login();
+
+my $cgi = Bugzilla->cgi;
 
 if ($::FORM{'id'}) {
     # Remove all dodgy chars, and split into name and ctype.
@@ -47,8 +52,8 @@ if ($::FORM{'id'}) {
     my $format = GetFormat($1, undef, $2);
     
     $vars->{'form'} = \%::FORM; 
-    
-    print "Content-Type: $format->{'ctype'}\n\n";
+
+    print $cgi->header($format->{'ctype'});
 
     $template->process("pages/$format->{'template'}", $vars)
       || ThrowTemplateError($template->error());

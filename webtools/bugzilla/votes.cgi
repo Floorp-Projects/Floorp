@@ -26,13 +26,16 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
+use Bugzilla;
 
+require "CGI.pl";
 
 # Use global template variables
 use vars qw($template $vars);
 
 ConnectToDatabase();
+
+my $cgi = Bugzilla->cgi;
 
 # If the action is show_bug, you need a bug_id.
 # If the action is show_user, you can supply a userid to show the votes for
@@ -86,6 +89,8 @@ exit;
 
 # Display the names of all the people voting for this one bug.
 sub show_bug {
+    my $cgi = Bugzilla->cgi;
+
     my $bug_id = $::FORM{'bug_id'} 
       || ThrowCodeError("missing_bug_id");
       
@@ -107,7 +112,7 @@ sub show_bug {
     $vars->{'users'} = \@users;
     $vars->{'total'} = $total;
     
-    print "Content-type: text/html\n\n";
+    print $cgi->header();
     $template->process("bug/votes/list-for-bug.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -117,6 +122,8 @@ sub show_bug {
 sub show_user {
     GetVersionTable();
     
+    my $cgi = Bugzilla->cgi;
+
     # If a bug_id is given, and we're editing, we'll add it to the votes list.
     my $bug_id = $::FORM{'bug_id'} || "";
         
@@ -213,7 +220,7 @@ sub show_user {
     $vars->{'voting_user'} = { "login" => $name };
     $vars->{'products'} = \@products;
 
-    print "Content-type: text/html\n\n";
+    print $cgi->header();
     $template->process("bug/votes/list-for-user.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -224,6 +231,8 @@ sub record_votes {
     # Begin Data/Security Validation
     ############################################################################
 
+    my $cgi = Bugzilla->cgi;
+
     # Build a list of bug IDs for which votes have been submitted.  Votes
     # are submitted in form fields in which the field names are the bug 
     # IDs and the field values are the number of votes.
@@ -233,13 +242,13 @@ sub record_votes {
     # that their votes will get nuked if they continue.
     if (scalar(@buglist) == 0) {
         if (!defined($::FORM{'delete_all_votes'})) {
-            print "Content-type: text/html\n\n";
+            print $cgi->header();
             $template->process("bug/votes/delete-all.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
             exit();
         }
         elsif ($::FORM{'delete_all_votes'} == 0) {
-            print "Location: votes.cgi\n\n";
+            print $cgi->redirect("votes.cgi");
             exit();
         }
     }

@@ -59,6 +59,8 @@ BEGIN {
 chdir $::path;
 use lib ($::path);
 
+use Bugzilla;
+
 use XML::Parser;
 use Data::Dumper;
 $Data::Dumper::Useqq = 1;
@@ -136,7 +138,7 @@ sub Lock {
         open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
-            print "Content-type: text/html\n\n";
+            print Bugzilla->cgi->header();
             print "Lock failed: $val\n";
         }
         chmod 0666, "data/maillock";

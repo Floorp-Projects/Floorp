@@ -37,6 +37,8 @@ ConnectToDatabase();
 
 quietly_check_login();
 
+my $cgi = Bugzilla->cgi;
+
 # Connect to the shadow database if this installation is using one to improve
 # performance.
 Bugzilla->switch_to_shadow_db();
@@ -95,7 +97,7 @@ $vars->{'maxdepth'}       = $maxdepth;
 $vars->{'hide_resolved'}  = $hide_resolved;
 $vars->{'canedit'}        = UserInGroup("editbugs");
 
-print "Content-Type: text/html\n\n";
+print $cgi->header();
 $template->process("bug/dependency-tree.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 

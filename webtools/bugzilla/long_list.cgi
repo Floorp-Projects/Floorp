@@ -24,6 +24,8 @@
 use strict;
 use lib qw(.);
 
+use Bugzilla;
+
 require "CGI.pl";
 
 use vars qw($userid @legal_keywords %FORM);
@@ -36,6 +38,8 @@ ConnectToDatabase();
 quietly_check_login();
 
 GetVersionTable();
+
+my $cgi = Bugzilla->cgi;
 
 my $generic_query = "
   SELECT 
@@ -116,8 +120,7 @@ my @time = localtime(time());
 my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 my $filename = "bugs-$date.html";
 
-print "Content-Type: text/html\n";
-print "Content-Disposition: inline; filename=$filename\n\n";
+print $cgi->header(-content_disposition => "inline; filename=$filename");
 
 # Generate and return the UI (HTML page) from the appropriate template.
 $template->process("bug/show-multiple.html.tmpl", $vars)

@@ -24,13 +24,17 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla;
+
 require "CGI.pl";
 
 ConnectToDatabase();
 
-use vars qw($cgi $template $vars $userid);
+use vars qw($template $vars $userid);
 
 use Bug;
+
+my $cgi = Bugzilla->cgi;
 
 if ($::FORM{'GoAheadAndLogIn'}) {
     confirm_login();
@@ -44,7 +48,7 @@ my $single = !$cgi->param('format')
 
 # If we don't have an ID, _AND_ we're only doing a single bug, then prompt
 if (!defined $cgi->param('id') && $single) {
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("bug/choose.html.tmpl", $vars) ||
       ThrowTemplateError($template->error());
     exit;
@@ -100,6 +104,7 @@ foreach ($cgi->param("excludefield")) {
 
 $vars->{'displayfields'} = \%displayfields;
 
-print "Content-type: $format->{'ctype'}\n\n";
+print $cgi->header($format->{'ctype'});
+
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());

@@ -29,6 +29,8 @@ use vars qw(
 ConnectToDatabase();
 quietly_check_login();
 
+my $cgi = Bugzilla->cgi;
+
 ###############################################################################
 # Main Body Execution
 ###############################################################################
@@ -63,13 +65,10 @@ if (defined $::COOKIE{'Bugzilla_login'}) {
 
 my $useragent = $ENV{HTTP_USER_AGENT};
 if ($useragent =~ m:Mozilla/([1-9][0-9]*):i && $1 >= 5 && $useragent !~ m/compatible/i) {
-    print "Content-type: application/vnd.mozilla.xul+xml\n\n";
+    print $cgi->header("application/vnd.mozilla.xul+xml");
     # Generate and return the XUL from the appropriate template.
     $template->process("sidebar.xul.tmpl", $vars)
       || ThrowTemplateError($template->error());
 } else {
     ThrowUserError("sidebar_supports_mozilla_only");
 }
-
-
-

@@ -24,6 +24,8 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla;
+
 require "CGI.pl";
 
 use RelationSet;
@@ -354,6 +356,8 @@ confirm_login();
 
 GetVersionTable();
 
+my $cgi = Bugzilla->cgi;
+
 $vars->{'login'} = $::COOKIE{'Bugzilla_login'};
 $vars->{'changes_saved'} = $::FORM{'dosave'};
 
@@ -390,7 +394,7 @@ SWITCH: for ($current_tab_name) {
 }
 
 # Generate and return the UI (HTML page) from the appropriate template.
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $template->process("account/prefs/prefs.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 

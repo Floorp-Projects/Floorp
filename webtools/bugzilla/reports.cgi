@@ -62,6 +62,8 @@ GetVersionTable();
 
 Bugzilla->switch_to_shadow_db();
 
+my $cgi = Bugzilla->cgi;
+
 # We only want those products that the user has permissions for.
 my @myproducts;
 push( @myproducts, "-All-");
@@ -69,7 +71,7 @@ push( @myproducts, GetSelectableProducts());
 
 if (! defined $FORM{'product'}) {
 
-    print "Content-type: text/html\n\n";
+    print $cgi->header();
     PutHeader("Bug Charts");
     choose_product(@myproducts);
     PutFooter();
@@ -93,10 +95,7 @@ if (! defined $FORM{'product'}) {
     # This means that is OK to detaint
     trick_taint($FORM{'product'});
 
-    # Output appropriate HTTP response headers
-    print "Content-type: text/html\n";
-    # Changing attachment to inline to resolve 46897 - zach@zachlipton.com
-    print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
+    print $cgi->header(-Content_Disposition=>'inline; filename=bugzilla_report.html');
 
     PutHeader("Bug Charts");
 

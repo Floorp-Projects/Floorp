@@ -51,10 +51,12 @@ quietly_check_login('permit_anonymous');
 # Main Body Execution
 ###############################################################################
 
+my $cgi = Bugzilla->cgi;
+
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
 
 # Return the appropriate HTTP response headers.
-print "Content-Type: text/html\n\n";
+print $cgi->header();
 
 # Generate and return the UI (HTML page) from the appropriate template.
 $template->process("index.html.tmpl", $vars)

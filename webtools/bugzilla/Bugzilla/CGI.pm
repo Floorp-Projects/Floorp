@@ -23,11 +23,12 @@ use strict;
 
 package Bugzilla::CGI;
 
-use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles);
+use CGI qw(-no_xhtml -oldstyle_urls :private_tempfiles :unique_headers);
 
 use base qw(CGI);
 
 use Bugzilla::Util;
+use Bugzilla::Config;
 
 # We need to disable output buffering - see bug 179174
 $| = 1;
@@ -43,6 +44,9 @@ sub new {
     my $class = ref($invocant) || $invocant;
 
     my $self = $class->SUPER::new(@args);
+
+    # Make sure that we don't send any charset headers
+    $self->charset('');
 
     # Check for errors
     # All of the Bugzilla code wants to do this, so do it here instead of
@@ -62,20 +66,18 @@ sub new {
         # multipart requests, and so should never happen unless there is a
         # browser bug.
 
-        # Using CGI.pm to do this means that ThrowCodeError prints the
-        # content-type again...
-        #print $self->header(-status => $err);
-        print "Status: $err\n";
+        print $self->header(-status => $err);
 
-        my $vars = {};
-        if ($err =~ m/(\d{3})\s(.*)/) {
-            $vars->{http_error_code} = $1;
-            $vars->{http_error_string} = $2;
-        } else {
-            $vars->{http_error_string} = $err;
-        }
-
-        &::ThrowCodeError("cgi_error", $vars);
+        # ThrowCodeError wants to print the header, so it grabs Bugzilla->cgi
+        # which creates a new Bugzilla::CGI object, which fails again, which
+        # ends up here, and calls ThrowCodeError, and then recurses forever.
+        # So don't use it.
+        # In fact, we can't use templates at all, because we need a CGI object
+        # to determine the template lang as well as the current url (from the
+        # template)
+        # Since this is an internal error which indicates a severe browser bug,
+        # just die.
+        die "CGI parsing error: $err";
     }
 
     return $self;
@@ -104,6 +106,46 @@ sub canonicalise_query {
 
     return join("&", @parameters);
 }
+
+# CGI.pm makes this nph, but apache doesn't like that
+sub multipart_init {
+    my $self = shift;
+
+    unshift(@_, '-nph' => undef);
+
+    return $self->SUPER::multipart_init(@_);
+}
+
+sub cookie {
+    my $self = shift;
+
+    # Add the default path in, but only if we're fetching stuff
+    # (This test fails for |$cgi->cookie(-name=>'x')| which _is_ meant to
+    # fetch, but thats an ugly notation for the fetch case which we shouldn't
+    # be using)
+    unshift(@_, '-path' => Param('cookiepath')) if scalar(@_)>1;
+
+    return $self->SUPER::cookie(@_);
+}
+
+# The various parts of Bugzilla which create cookies don't want to have to
+# pass them arround to all of the callers. Instead, store them locally here,
+# and then output as required from |headers|.
+# This is done instead of just printing the result from the script, because
+# we need to use |$r->header_out| under mod_perl (which is what CGI.pm
+# does, and we need to match, plus if we don't |print| anything, we can turn
+# off mod_perl/Apache's header parsing for a small perf gain)
+sub send_cookie {
+    my $self = shift;
+
+    my $cookie = $self->cookie(@_);
+
+    # XXX - mod_perl
+    print "Set-Cookie: $cookie\r\n";
+
+    return;
+}
+
 
 1;
 
@@ -149,4 +191,21 @@ I<Bugzilla::CGI> also includes additional functions.
 This returns a sorted string of the parameters, suitable for use in a url.
 Values in C<@exclude> are not included in the result.
 
+=item C<cookie>
+
+Identical to the CGI.pm C<cookie> routine, except that the cookie path is
+automatically added.
+
+=item C<send_cookie>
+
+This routine is identical to CGI.pm's C<cookie> routine, except that the cookie
+is sent to the browser, rather than returned. This should be used by all
+Bugzilla code (instead of C<cookie> or the C<-cookie> argument to C<header>),
+so that under mod_perl the headers can be sent correctly, using C<print> or
+the mod_perl APIs as appropriate.
+
 =back
+
+=head1 SEE ALSO
+
+L<CGI|CGI>, L<CGI::Cookie|CGI::Cookie>

@@ -40,7 +40,6 @@ use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
 sub globals_pl_sillyness {
     my $zz;
     $zz = @main::SqlStateStack;
-    $zz = $main::contenttypes;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
     $zz = @main::enterable_products;
@@ -1536,7 +1535,7 @@ sub GetFormat {
     {
         'template'    => $template ,
         'extension'   => $ctype ,
-        'ctype' => $::contenttypes->{$ctype} ,
+        'ctype'       => Bugzilla::Constants::contenttypes->{$ctype} ,
     };
 }
 

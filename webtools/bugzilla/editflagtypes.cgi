@@ -35,6 +35,7 @@ require "CGI.pl";
 ConnectToDatabase();
 
 # Use Bugzilla's flag modules for handling flag types.
+use Bugzilla;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 
@@ -94,7 +95,7 @@ sub list {
       Bugzilla::FlagType::match({ 'target_type' => 'attachment' }, 1);
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("admin/flag-type/list.html.tmpl", $vars)
@@ -138,7 +139,7 @@ sub edit {
     }
     
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("admin/flag-type/edit.html.tmpl", $vars)
@@ -189,7 +190,7 @@ sub processCategoryChange {
     $vars->{'type'} = $type;
     
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("admin/flag-type/edit.html.tmpl", $vars)
@@ -246,7 +247,7 @@ sub insert {
     $vars->{'message'} = "flag_type_created";
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("global/message.html.tmpl", $vars)
@@ -328,7 +329,7 @@ sub update {
     $vars->{'message'} = "flag_type_changes_saved";
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("global/message.html.tmpl", $vars)
@@ -348,7 +349,7 @@ sub confirmDelete
     $vars->{'flag_count'} = scalar($count);
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("admin/flag-type/confirm-delete.html.tmpl", $vars)
@@ -380,7 +381,7 @@ sub delete {
     $vars->{'message'} = "flag_type_deleted";
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("global/message.html.tmpl", $vars)
@@ -400,7 +401,7 @@ sub deactivate {
     $vars->{'flag_type'} = Bugzilla::FlagType::get($::FORM{'id'});
     
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("global/message.html.tmpl", $vars)

@@ -211,7 +211,7 @@ my $modules = [
     }, 
     { 
         name => 'CGI', 
-        version => '2.88' 
+        version => '2.93' 
     }, 
     {
         name => 'Data::Dumper', 
@@ -586,24 +586,6 @@ LocalVar('platforms', '
         "Other"
 );
 ');
-
-
-
-LocalVar('contenttypes', '
-#
-# The types of content that template files can generate, indexed by file extension.
-#
-$contenttypes = {
-  "html" => "text/html" , 
-   "rdf" => "application/xml" , 
-   "xml" => "text/xml" , 
-    "js" => "application/x-javascript" , 
-   "csv" => "text/plain" ,
-   "png" => "image/png" ,
-};
-');
-
-
 
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",

@@ -191,7 +191,7 @@ sub PutTrailer (@)
 ConnectToDatabase();
 confirm_login();
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 unless (UserInGroup("editcomponents")) {
     PutHeader("Not allowed");

@@ -26,6 +26,7 @@
 use strict;
 use lib qw(.);
 
+use Bugzilla;
 use Bugzilla::Constants;
 require "CGI.pl";
 
@@ -54,6 +55,8 @@ use vars qw($vars $template);
 
 ConnectToDatabase();
 my $whoid = confirm_login();
+
+my $cgi = Bugzilla->cgi;
 
 # do a match on the fields if applicable
 
@@ -85,16 +88,17 @@ if (!$product_id) {
 # Set cookies
 my $cookiepath = Param("cookiepath");
 if (exists $::FORM{'product'}) {
-    if (exists $::FORM{'version'}) {           
-        print "Set-Cookie: VERSION-$product=$::FORM{'version'} ; " .
-              "path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n"; 
+    if (exists $::FORM{'version'}) {
+        $cgi->send_cookie(-name => "VERSION-$product",
+                          -value => $cgi->param('version'),
+                          -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
     }
 }
 
 if (defined $::FORM{'maketemplate'}) {
     $vars->{'url'} = $::buffer;
     
-    print "Content-type: text/html\n\n";
+    print $cgi->header();
     $template->process("bug/create/make-template.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -491,7 +495,7 @@ if ($::COOKIE{"BUGLIST"}) {
 }
 $vars->{'bug_list'} = \@bug_list;
 
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $template->process("bug/create/created.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 

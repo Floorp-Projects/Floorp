@@ -26,15 +26,19 @@ use lib ".";
 
 require "CGI.pl";
 
-use vars qw($cgi $template $vars);
+use vars qw($template $vars);
 
 use Bugzilla;
+
+my $cgi = Bugzilla->cgi;
 
 # Go straight back to query.cgi if we are adding a boolean chart.
 if (grep(/^cmd-/, $cgi->param())) {
     my $params = $cgi->canonicalise_query("format", "ctype");
-    print "Location: query.cgi?format=" . $cgi->param('query_format') . 
-                                           ($params ? "&$params" : "") . "\n\n";
+    my $location = "query.cgi?format=" . $cgi->param('query_format') . 
+      ($params ? "&$params" : "") . "\n\n";
+
+    print $cgi->redirect($location);
     exit;
 }
 
@@ -52,7 +56,7 @@ my $action = $cgi->param('action') || 'menu';
 
 if ($action eq "menu") {
     # No need to do any searching in this case, so bail out early.
-    print "Content-Type: text/html\n\n";
+    print $cgi->header();
     $template->process("reports/menu.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -276,8 +280,8 @@ $format->{'ctype'} = "text/html" if $::FORM{'debug'};
 my @time = localtime(time());
 my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 my $filename = "report-$date.$format->{extension}";
-print "Content-Disposition: inline; filename=$filename\n";
-print "Content-Type: $format->{'ctype'}\n\n";
+print $cgi->header(-type => $format->{'ctype'},
+                   -content_disposition => "inline; filename=$filename");
 
 # Problems with this CGI are often due to malformed data. Setting debug=1
 # prints out both data structures.

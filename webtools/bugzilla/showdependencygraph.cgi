@@ -26,12 +26,15 @@ use strict;
 use lib qw(.);
 
 use File::Temp;
+use Bugzilla;
 
 require "CGI.pl";
 
 ConnectToDatabase();
 
 quietly_check_login();
+
+my $cgi = Bugzilla->cgi;
 
 # Connect to the shadow database if this installation is using one to improve
 # performance.
@@ -228,6 +231,6 @@ $vars->{'rankdir'} = $::FORM{'rankdir'};
 $vars->{'showsummary'} = $::FORM{'showsummary'};
 
 # Generate and return the UI (HTML page) from the appropriate template.
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $template->process("bug/dependency-graph.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

@@ -36,15 +36,18 @@ use vars qw($buffer);
 
 use Bugzilla;
 use Bugzilla::Search;
-use Bugzilla::CGI;
+
+my $cgi = Bugzilla->cgi;
 
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
 # the user to a signed copy of the script in duplicates.jar if it exists.
 if ($::FORM{'ctype'} && $::FORM{'ctype'} eq "xul") {
     my $params = CanonicaliseParams($::buffer, ["format", "ctype"]);
-    print "Location: " . (-e "duplicates.jar" ? "duplicates.jar!/" : "") . 
+    my $url = (-e "duplicates.jar" ? "duplicates.jar!/" : "") . 
           "duplicates.xul" . ($params ? "?$params" : "") . "\n\n";
+
+    print $cgi->redirect($url);
     exit;
 }
 
@@ -261,8 +264,8 @@ $vars->{'products'} = \@::legal_product;
 
 my $format = 
   GetFormat("reports/duplicates", $::FORM{'format'}, $::FORM{'ctype'});
- 
-print "Content-Type: $format->{'ctype'}\n\n";
+
+print $cgi->header($format->{'ctype'});
 
 # Generate and return the UI (HTML page) from the appropriate template.
 $template->process($format->{'template'}, $vars)

@@ -70,9 +70,13 @@ sub login {
                  undef,
                  $userid, $ipaddr);
         my $logincookie = $dbh->selectrow_array("SELECT LAST_INSERT_ID()");
-        my $cookiepath = Param("cookiepath");
-        print "Set-Cookie: Bugzilla_login=$userid ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+
+        $cgi->send_cookie(-name => 'Bugzilla_login',
+                          -value => $userid,
+                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+        $cgi->send_cookie(-name => 'Bugzilla_logincookie',
+                          -value => $logincookie,
+                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
 
         # compat code. The cookie value is used for logouts, and that
         # isn't generic yet.
@@ -120,7 +124,7 @@ sub login {
     if ($authres == AUTH_NODATA && $type == LOGIN_REQUIRED) {
         # Throw up the login page
 
-        print "Content-Type: text/html\n\n";
+        print Bugzilla->cgi->header();
 
         my $template = Bugzilla->template;
         $template->process("account/auth/login.html.tmpl",
@@ -152,9 +156,12 @@ sub login {
     # The account may be disabled
     if ($authres == AUTH_DISABLED) {
         # Clear the cookie
-        my $cookiepath = Param("cookiepath");
-        print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
-        print "Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+
+        $cgi->send_cookie(-name => 'Bugzilla_login',
+                          -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+        $cgi->send_cookie(-name => 'Bugzilla_logincookie',
+                          -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
+
         # and throw a user error
         &::ThrowUserError("account_disabled",
                           {'disabled_reason' => $extra});

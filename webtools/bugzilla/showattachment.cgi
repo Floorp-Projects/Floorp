@@ -25,12 +25,16 @@ use strict;
 
 use lib qw(.);
 
-require "CGI.pl";
+use Bugzilla;
+use Bugzilla::Util;
 
-# Redirect to the new interface for displaying attachments.
-detaint_natural($::FORM{'attach_id'}) if defined($::FORM{'attach_id'});
-my $id = $::FORM{'attach_id'} || "";
-print "Status: 301 Permanent Redirect\n";
-print "Location: attachment.cgi?id=$id&action=view\n\n";
+my $cgi = Bugzilla->cgi;
+
+my $id = $cgi->param('attach_id');
+detaint_natural($id) if defined $id;
+$id ||= "";
+
+print $cgi->redirect(-location=>"attachment.cgi?id=$id&action=view",
+                     -status=>'301 Permanent Redirect');
+
 exit;
- 

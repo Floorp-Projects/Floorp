@@ -24,6 +24,8 @@
 use strict;
 use lib ".";
 
+use Bugzilla;
+
 require "CGI.pl";
 
 # Use the global template variables. 
@@ -32,6 +34,8 @@ use vars qw($vars $template);
 ConnectToDatabase();
 
 quietly_check_login();
+
+my $cgi = Bugzilla->cgi;
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id)
@@ -52,6 +56,6 @@ while (MoreSQLData()) {
 $vars->{'keywords'} = \@keywords;
 $vars->{'caneditkeywords'} = UserInGroup("editkeywords");
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 $template->process("reports/keywords.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

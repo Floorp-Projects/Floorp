@@ -51,7 +51,7 @@ ValidateBugID($::FORM{'id'});
 
 $vars->{'bug_id'} = $::FORM{'id'};
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 $template->process("bug/activity/show.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

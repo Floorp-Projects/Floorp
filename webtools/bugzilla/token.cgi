@@ -31,6 +31,8 @@ use lib qw(.);
 
 use vars qw($template $vars);
 
+use Bugzilla;
+
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
@@ -156,7 +158,7 @@ sub requestChangePassword {
 
     $vars->{'message'} = "password_change_request";
 
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -164,7 +166,7 @@ sub requestChangePassword {
 sub confirmChangePassword {
     $vars->{'token'} = $::token;
     
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("account/password/set-forgotten-password.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -173,7 +175,7 @@ sub cancelChangePassword {
     $vars->{'message'} = "password_change_canceled";
     Token::Cancel($::token, $vars->{'message'});
 
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
@@ -200,14 +202,14 @@ sub changePassword {
 
     $vars->{'message'} = "password_changed";
 
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 }
 
 sub confirmChangeEmail {
     # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     $vars->{'token'} = $::token;
 
@@ -249,7 +251,7 @@ sub changeEmail {
     DeriveGroup($userid);
 
     # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Let the user know their email address has been changed.
 
@@ -300,7 +302,7 @@ sub cancelChangeEmail {
     SendSQL("UNLOCK TABLES");
 
     # Return HTTP response headers.
-    print "Content-Type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());

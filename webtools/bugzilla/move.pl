@@ -31,6 +31,7 @@ require "CGI.pl";
 use vars qw($template $userid %COOKIE);
 
 use Bug;
+use Bugzilla;
 use Bugzilla::BugMail;
 
 $::lockcount = 0;
@@ -43,6 +44,8 @@ unless ( Param("move-enabled") ) {
 
 ConnectToDatabase();
 confirm_login();
+
+my $cgi = Bugzilla->cgi;
 
 sub Log {
     my ($str) = (@_);
@@ -59,7 +62,7 @@ sub Lock {
         open(LOCKFID, ">>data/maillock") || die "Can't open data/maillock: $!";
         my $val = flock(LOCKFID,2);
         if (!$val) { # '2' is magic 'exclusive lock' const.
-            print "Content-type: text/html\n\n";
+            print $cgi->header();
             print "Lock failed: $val\n";
         }
         chmod 0666, "data/maillock";
@@ -76,7 +79,7 @@ sub Unlock {
 }
 
 if ( !defined $::FORM{'buglist'} ) {
-  print "Content-type: text/html\n\n";
+  print $cgi->header();
   PutHeader("Move Bugs");
   print "Move bugs either from the bug display page or perform a ";
   print "<A HREF=\"query.cgi\">query</A> and change several bugs at once.\n";
@@ -91,7 +94,7 @@ my $movers = Param("movers");
 $movers =~ s/\s?,\s?/|/g;
 $movers =~ s/@/\@/g;
 unless ($exporter =~ /($movers)/) {
-  print "Content-type: text/html\n\n";
+  print $cgi->header();
   PutHeader("Move Bugs");
   print "<P>You do not have permission to move bugs<P>\n";
   PutFooter();

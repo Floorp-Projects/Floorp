@@ -39,8 +39,7 @@ sub ThrowUserError {
 
     Bugzilla->dbh->do("UNLOCK TABLES") if $unlock_tables;
 
-    # XXX - mod_perl
-    print "Content-type: text/html\n\n" if !$::vars->{'header_done'};
+    print Bugzilla->cgi->header();
 
     my $template = Bugzilla->template;
     $template->process("global/user-error.html.tmpl", $vars)

@@ -266,7 +266,7 @@ sub queue {
     $vars->{'types'} = \@types;
 
     # Return the appropriate HTTP response headers.
-    print "Content-type: text/html\n\n";
+    print Bugzilla->cgi->header();
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("request/queue.html.tmpl", $vars)

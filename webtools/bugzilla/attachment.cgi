@@ -33,7 +33,6 @@ use strict;
 use lib qw(.);
 
 use vars qw(
-  $cgi
   $template
   $vars
 );
@@ -62,6 +61,8 @@ quietly_check_login();
 # instead.  We should move the validation into each function and then move this
 # to just above validateID().
 my $bugid;
+
+my $cgi = Bugzilla->cgi;
 
 ################################################################################
 # Main Body Execution
@@ -399,11 +400,12 @@ sub view
     # Return the appropriate HTTP response headers.
     $filename =~ s/^.*[\/\\]//;
     my $filesize = length($thedata);
-    print qq{Content-Type: $contenttype; name="$filename"\n};
-    print qq{Content-Disposition: inline; filename=$filename\n};
-    print qq{Content-Length: $filesize\n};
-    print qq{\n$thedata};
 
+    print Bugzilla->cgi->header(-type=>"$contenttype; name=\"$filename\"",
+                                -content_disposition=> "inline; filename=$filename\n",
+                                -content_length => $filesize);
+
+    print $thedata;
 }
 
 
@@ -450,8 +452,7 @@ sub viewall
   $vars->{'bugsummary'} = $bugsummary;
   $vars->{'GetBugLink'} = \&GetBugLink;
 
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: text/html\n\n";
+  print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/show-multiple.html.tmpl", $vars)
@@ -495,8 +496,7 @@ sub enter
   $vars->{'bugsummary'} = $bugsummary;
   $vars->{'GetBugLink'} = \&GetBugLink;
 
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: text/html\n\n";
+  print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/create.html.tmpl", $vars)
@@ -604,8 +604,7 @@ sub insert
   $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
   $vars->{'contenttype'} = $::FORM{'contenttype'};
 
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: text/html\n\n";
+  print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/created.html.tmpl", $vars)
@@ -667,8 +666,7 @@ sub edit
   $vars->{'attachments'} = \@bugattachments; 
   $vars->{'GetBugLink'} = \&GetBugLink;
 
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: text/html\n\n";
+  print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/edit.html.tmpl", $vars)
@@ -815,8 +813,7 @@ sub update
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'bugid'} = $bugid; 
 
-  # Return the appropriate HTTP response headers.
-  print "Content-Type: text/html\n\n";
+  print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/updated.html.tmpl", $vars)

@@ -110,7 +110,7 @@ sub Validate ($$) {
 ConnectToDatabase();
 confirm_login();
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 unless (UserInGroup("editkeywords")) {
     PutHeader("Not allowed");

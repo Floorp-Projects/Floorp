@@ -587,7 +587,7 @@ sub notify {
     my $rv = 
       $::template->process($template_file, $::vars, \$message);
     if (!$rv) {
-        print "Content-Type: text/html\n\n" unless $::vars->{'header_done'};
+        Bugzilla->cgi->header();
         &::ThrowTemplateError($::template->error());
     }
     

@@ -47,7 +47,8 @@ use base qw(Exporter);
     LOGIN_NORMAL
     LOGIN_REQUIRED
 );
-   
+
+@Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
 
 # CONSTANTS
 #
@@ -93,5 +94,15 @@ use constant AUTH_DISABLED => 4;
 use constant LOGIN_OPTIONAL => 0;
 use constant LOGIN_NORMAL => 1;
 use constant LOGIN_REQUIRED => 2;
+
+use constant contenttypes =>
+  {
+   "html" => "text/html" , 
+   "rdf" => "application/xml" , 
+   "xml" => "text/xml" , 
+   "js" => "application/x-javascript" , 
+   "csv" => "text/plain" ,
+   "png" => "image/png" ,
+  };
 
 1;

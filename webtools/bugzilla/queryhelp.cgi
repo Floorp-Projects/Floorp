@@ -35,7 +35,7 @@ quietly_check_login();
 
 GetVersionTable();
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 my $product = $::FORM{'product'};
 

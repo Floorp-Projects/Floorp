@@ -32,7 +32,7 @@ require "CGI.pl";
 ConnectToDatabase();
 confirm_login();
 
-print "Content-type: text/html\n\n";
+print Bugzilla->cgi->header();
 
 if (!UserInGroup("tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";

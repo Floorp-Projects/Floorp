@@ -50,6 +50,9 @@ use vars qw(
 );
 
 ConnectToDatabase();
+
+my $cgi = Bugzilla->cgi;
+
 my $userid = 0;
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
@@ -87,8 +90,8 @@ if ($userid) {
                             "($userid, $qname, " . SqlQuote($value) . ")");
                 }
             }
-            print "Set-Cookie: $cookiename= ; path=" . Param("cookiepath") . 
-                  "; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
+            $cgi->send_cookie(-name => $cookiename,
+                              -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
         }
     }
 }
@@ -398,6 +401,8 @@ $vars->{'format'} = $::FORM{'format'};
 my $format = GetFormat("search/search", 
                        $::FORM{'query_format'} || $::FORM{'format'}, 
                        $::FORM{'ctype'});
-print "Content-Type: $format->{'ctype'}\n\n";
+
+print $cgi->header($format->{'ctype'});
+
 $template->process($format->{'template'}, $vars)
   || ThrowTemplateError($template->error());

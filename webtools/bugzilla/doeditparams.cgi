@@ -25,6 +25,7 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT :admin);
 
 require "CGI.pl";
@@ -34,7 +35,9 @@ use vars %::MFORM;
 ConnectToDatabase();
 confirm_login();
 
-print "Content-type: text/html\n\n";
+my $cgi = Bugzilla->cgi;
+
+print $cgi->header();
 
 if (!UserInGroup("tweakparams")) {
     print "<H1>Sorry, you aren't a member of the 'tweakparams' group.</H1>\n";

@@ -31,12 +31,16 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla;
+
 require "CGI.pl";
 
 ConnectToDatabase();
 quietly_check_login();
 
 GetVersionTable();
+
+my $cgi = Bugzilla->cgi;
 
 if (!defined $::FORM{'product'}) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
@@ -63,7 +67,7 @@ if (!defined $::FORM{'product'}) {
         $::vars->{'proddesc'} = \%products;
         $::vars->{'target'} = "describecomponents.cgi";
 
-        print "Content-type: text/html\n\n";
+        print $cgi->header();
         $::template->process("global/choose-product.html.tmpl", $::vars)
           || ThrowTemplateError($::template->error());
         exit;
@@ -118,7 +122,7 @@ while (MoreSQLData()) {
 $::vars->{'product'} = $product;
 $::vars->{'components'} = \@components;
 
-print "Content-type: text/html\n\n";
+print $cgi->header();
 $::template->process("reports/components.html.tmpl", $::vars)
   || ThrowTemplateError($::template->error());
 
