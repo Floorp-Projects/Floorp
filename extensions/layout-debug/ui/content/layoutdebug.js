@@ -428,7 +428,7 @@ RTestURLList.prototype = {
         this.mRegressionTester.compareFrameModels(base_data, data,
           nsILayoutRegressionTester.COMPARE_FLAGS_VERBOSE)
       dump("Comparison for " + this.mCurrentURL.url + " " +
-           (filesDiffer ? "failed" : "passed") + ".");
+           (filesDiffer ? "failed" : "passed") + ".\n");
     }
 
     this.mCurrentURL = null;
