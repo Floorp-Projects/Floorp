@@ -150,6 +150,9 @@ then
     #if [ ! -d $UX_MASTERBUILD ] ; then
         #UX_MASTERBUILD=booboo_Solaris8_forte6
     #fi
+    UX_MB_WAS_SET=FALSE
+else
+    UX_MB_WAS_SET=TRUE
 fi
 if [ -z "$NT_MASTERBUILD" ]
 then                     
@@ -195,6 +198,9 @@ then
         BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
     fi
     BC_MASTER=$BC_UX_MASTER
+    BC_MASTER_WAS_SET=FALSE
+else
+    BC_MASTER_WAS_SET=TRUE
 fi
 BC_RELEASE=3.2
 export BC_RELEASE
@@ -217,12 +223,6 @@ glob_init()
     Debug "Setting up environment...( $QASCRIPT_DIR/set_environment) "
     . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
     Debug "OPerating system: $os_name $os_full"
-    if [ $O_WIN = "ON" ] ; then
-        win_set_tmp
-        write_to_tmpfile
-        MASTERBUILD=$NT_MASTERBUILD
-        BC_MASTER=$BC_NT_MASTER
-    fi
     umask 0    
     init_dirs
     init_files
@@ -534,12 +534,43 @@ tbx_dirs()
     export_dirs
 }
 
+################################### init_mcom ###########################
+# global shell function, sets domain specific variables for AOL's 
+# domains according to Bishakah's instructions
+########################################################################
+init_mcom()
+{
+    Debug "Running in mcom or netscape domain - changing directories..."
+    if [ "${UX_MB_WAS_SET}" = "FALSE" ] ; then #in case it was set
+        # before script was called use these values 
+        UX_MASTERBUILD=spd04_Solaris8
+    fi
+    if [ "${NT_MB_WAS_SET}" = "FALSE" ] ; then 
+        UX_MASTERBUILD=spd06_NT4
+    fi
+    MASTERBUILD=$UX_MASTERBUILD
+    if [ "${BC_MASTER_WAS_SET}" = "FALSE" ] ; then
+        BC_UX_MASTER=nss332/builds/20011213.1/spd04_Solaris8
+        BC_UX_MASTER=nss332/builds/20011213.1/spd06_NT4
+        BC_MASTER=$BC_UX_MASTER
+    fi
+    UX_D0=/share/builds/components2/mccrel/nss
+}
 ################################### init_dirs ###########################
 # global shell function, sets the directories for standard QA
 # calls special functions for tinderbox, windows or local QA, part of init 
 ########################################################################
 init_dirs()
 {
+    if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" ] ; then
+        init_mcom
+    fi
+    if [ $O_WIN = "ON" ] ; then
+        win_set_tmp
+        write_to_tmpfile
+        MASTERBUILD=$NT_MASTERBUILD
+        BC_MASTER=$BC_NT_MASTER
+    fi
     if [ "$O_LOCAL" = "ON" -a $O_LN = "OFF" ] ; then  # if it is a LN we need to know
                        # all the directories off the network first to copy them
         local_dirs     # O_LOCAL alone assumes that all the directories are already there 
