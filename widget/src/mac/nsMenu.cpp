@@ -270,13 +270,8 @@ NS_METHOD nsMenu::SetLabel(const nsAReadableString &aText)
       
     mMacMenuIDCount++;
     // Replace standard MDEF with our stub MDEF
-    if(mMacMenuHandle) {    
-      SInt8 state = ::HGetState((Handle)mMacMenuHandle);
-      ::HLock((Handle)mMacMenuHandle);
-      //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
+    if(mMacMenuHandle && gMDEF)  
       (**mMacMenuHandle).menuProc = gMDEF;
-      ::HSetState((Handle)mMacMenuHandle, state);
-    }
   }
   
   return NS_OK;
@@ -1412,13 +1407,8 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
 
     // Replace standard MDEF with our stub MDEF
-    if(mMacMenuHandle) {    
-      SInt8 state = ::HGetState((Handle)mMacMenuHandle);
-      ::HLock((Handle)mMacMenuHandle);
-      //gSystemMDEFHandle = (**mMacMenuHandle).menuProc;
+    if(mMacMenuHandle && gMDEF) 
       (**mMacMenuHandle).menuProc = gMDEF;
-      ::HSetState((Handle)mMacMenuHandle, state);
-    }
 
     // Need to get the menuID of the next visible menu
     SInt16  nextMenuID = -1;    // default to the submenu case
