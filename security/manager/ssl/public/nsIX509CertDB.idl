@@ -124,16 +124,18 @@ interface nsIX509CertDB : nsISupports {
                                               out nsISupportsArray certs);
 
   /*
-   * importCertificate
-   *
-   * Import a certificate into the database.
-   * XXX For now, this only imports into the default internal slot.
-   *     should there be a importCertificateToSlot?  Or change the sig?
+   * importCertificates
+   * Use this to import a stream sent down as a mime type into
+   * the default cert db.  The stream may consist of one or more
+   * certificates.
+   * XXX We may want to add a parameter for a PK11 Token where
+   *     the certs will utlimtately live.  Currently, they'll
+   *     be placed in the default token.
    */
-  [noscript] void importCertificate(in nsIX509Cert cert, 
-                                    in unsigned long type,
-                                    in unsigned long trust,
-                                    in wstring nickname); 
+  [noscript] void importCertificates(in charPtr data,
+                                     in unsigned long length,
+                                     in unsigned long type,
+                                     in nsIInterfaceRequestor ctx);
 
   /*
    * importCertificate

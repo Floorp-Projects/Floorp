@@ -77,6 +77,7 @@ private:
                          PRUint32 *_verified,
                          PRUint32 *_count,
                          PRUnichar **tmpUsages);
+
 };
 
 class nsNSSCertificateDB : public nsIX509CertDB
@@ -97,6 +98,10 @@ private:
                     PRUint32     *_count,
                     PRUnichar  ***_certNameList);
 
+  CERTDERCerts *getCertsFromPackage(PRArenaPool *arena, char *data, 
+                                    PRUint32 length);
+  nsresult handleCACertDownload(nsISupportsArray *x509Certs, 
+                                nsIInterfaceRequestor *ctx);
 };
 
 // Use this function to generate a default nickname for a user
