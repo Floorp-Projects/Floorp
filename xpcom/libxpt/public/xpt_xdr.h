@@ -97,7 +97,7 @@ struct XPTCursor {
 };
 
 XPTState *
-XPT_NewXDRState(XPTMode mode);
+XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
 
 void
 XPT_DestroyXDRState(XPTState *state);
@@ -180,7 +180,7 @@ XPT_GrowPool(XPTDatapool *pool);
         localp = *addrp;                                                      \
     }
 
-#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already)            \
+#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already, XPTType, localp)            \
     XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already, XPT_ALLOC)
 
 #define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
