@@ -631,11 +631,21 @@ InMemoryDataSource::Init()
                                    nsnull);
 
     if (! mReverseArcs)
+    {
+    	PL_HashTableDestroy(mForwardArcs);
+    	mForwardArcs = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mLock = PR_NewLock();
     if (! mLock)
+    {
+    	PL_HashTableDestroy(mForwardArcs);
+    	mForwardArcs = nsnull;
+    	PL_HashTableDestroy(mReverseArcs);
+    	mReverseArcs = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
 #ifdef PR_LOGGING
     if (! gLog)
