@@ -2356,7 +2356,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 {
     nsCOMPtr<nsIURI> uri;
 
-    nsresult rv = CreateFixupURI(aURI, getter_AddRefs(uri));
+    nsresult rv = CreateFixupURI(nsDependentString(aURI), getter_AddRefs(uri));
 
     if (NS_ERROR_UNKNOWN_PROTOCOL == rv ||
         NS_ERROR_MALFORMED_URI == rv) {
@@ -4924,7 +4924,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 }
 
 NS_IMETHODIMP
-nsDocShell::CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI)
+nsDocShell::CreateFixupURI(const nsAString& aStringURI, nsIURI ** aURI)
 {
     *aURI = nsnull;
     nsAutoString uriString(aStringURI);
