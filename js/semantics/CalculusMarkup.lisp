@@ -39,7 +39,7 @@
 ;;; SEMANTIC DEPICTION UTILITIES
 
 (defparameter *semantic-keywords*
-  '(not and or is type oneof tuple action function if then else in new case of end let letexc))
+  '(not and or is type oneof tuple action function if then else throw try catch in new case of end let letexc))
 
 ; Emit markup for one of the semantic keywords, as specified by keyword-symbol.
 (defun depict-semantic-keyword (markup-stream keyword-symbol)
@@ -430,9 +430,9 @@
        ,@body)))
 
 
-; (bottom <type>)
-(defun depict-bottom (markup-stream world level type-expr)
-  (declare (ignore world level type-expr))
+; (bottom)
+(defun depict-bottom (markup-stream world level)
+  (declare (ignore world level))
   (depict markup-stream ':bottom-10))
 
 
@@ -472,6 +472,32 @@
     (depict-space markup-stream)
     (depict-logical-block (markup-stream (if (special-form-annotated-expr? 'if false-annotated-expr) nil 6))
       (depict-annotated-value-expr markup-stream world false-annotated-expr %stmt%))))
+
+
+; (throw <value-expr>)
+(defun depict-throw (markup-stream world level value-annotated-expr)
+  (depict-statement (markup-stream 'throw)
+    (depict-logical-block (markup-stream 4)
+      (depict-annotated-value-expr markup-stream world value-annotated-expr))))
+
+
+; (catch <body> (<var> [:unused]) <handler>)
+(defun depict-catch (markup-stream world level body-annotated-expr arg-binding-expr handler-annotated-expr)
+  (depict-statement (markup-stream 'try nil)
+    (depict-logical-block (markup-stream 4)
+      (depict-break markup-stream)
+      (depict-annotated-value-expr markup-stream world body-annotated-expr %stmt%))
+    (depict-break markup-stream)
+    (depict-semantic-keyword markup-stream 'catch)
+    (depict-space markup-stream)
+    (depict markup-stream "(")
+    (depict-local-variable markup-stream (first arg-binding-expr))
+    (depict markup-stream ": ")
+    (depict-type-expr markup-stream world *semantic-exception-type-name*)
+    (depict markup-stream ")")
+    (depict-logical-block (markup-stream 4)
+      (depict-break markup-stream)
+      (depict-annotated-value-expr markup-stream world handler-annotated-expr %stmt%))))
 
 
 ;;; Vectors
