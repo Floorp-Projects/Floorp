@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  addrbook \
 		  rdf \
 		  intl \
+		  uconv \
 		  mailnews \
 		  widget \
 		  msgdb \
