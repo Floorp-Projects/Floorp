@@ -779,7 +779,7 @@ public class AddressList extends JScrollPane implements Serializable {
          * addNotify creates the preferred size dimension because only
          * after the peer has been created can we get the font metrics.
          */
-        public void addNotify () {
+/*        public void addNotify () {
             super.addNotify ();
 
             if (null == mPerfSize) {
@@ -795,6 +795,7 @@ public class AddressList extends JScrollPane implements Serializable {
                 }
             }
         }
+				*/
 
         /**
          * Return PerfSize created in addNotify.
