@@ -406,7 +406,7 @@ nsCString::Right( self_type& aResult, size_type aLengthToCopy ) const
 class NS_COM nsCAutoString : public nsCString {
 public: 
 
-    virtual ~nsCAutoString();
+    virtual ~nsCAutoString() {}
 
     nsCAutoString();
     explicit nsCAutoString(const nsCString& );
