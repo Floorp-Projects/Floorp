@@ -32,7 +32,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.6 2002/04/05 09:17:50 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.7 2002/09/27 17:46:36 relyea%netscape.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -130,6 +130,9 @@ extern SECStatus nsslowkey_StoreKeyByPublicKey(NSSLOWKEYDBHandle *handle,
 /* does the key for this cert exist in the database filed by modulus */
 extern PRBool nsslowkey_KeyForCertExists(NSSLOWKEYDBHandle *handle,
 					 NSSLOWCERTCertificate *cert);
+/* does a key with this ID already exist? */
+extern PRBool nsslowkey_KeyForIDExists(NSSLOWKEYDBHandle *handle, SECItem *id);
+
 
 extern SECStatus nsslowkey_HasKeyDBPassword(NSSLOWKEYDBHandle *handle);
 extern SECStatus nsslowkey_SetKeyDBPassword(NSSLOWKEYDBHandle *handle,

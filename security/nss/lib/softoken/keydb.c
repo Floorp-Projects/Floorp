@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.30 2002/09/06 23:16:42 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.31 2002/09/27 17:46:35 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -1094,6 +1094,25 @@ nsslowkey_UpdateNickname(NSSLOWKEYDBHandle *handle,
 {
     return nsslowkey_StoreKeyByPublicKeyAlg(handle, privkey, pubKeyData, 
 	     nickname, arg, nsslowkey_GetDefaultKeyDBAlg(),PR_TRUE);
+}
+
+/* see if the symetric CKA_ID already Exists.
+ */
+PRBool
+nsslowkey_KeyForIDExists(NSSLOWKEYDBHandle *handle, SECItem *id)
+{
+    DBT namekey;
+    DBT dummy;
+    int status;
+
+    namekey.data = (char *)id->data;
+    namekey.size = id->len;
+    status = (* handle->db->get)(handle->db, &namekey, &dummy, 0);
+    if ( status ) {
+	return PR_FALSE;
+    }
+    
+    return PR_TRUE;
 }
 
 /* see if the public key for this cert is in the database filed
