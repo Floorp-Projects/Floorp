@@ -22,13 +22,6 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var DEBUG_alecf = false;
-function _dd(aString) 
-{
-  if (DEBUG_alecf)
-    dump(aString);
-} 
- 
 var protocolinfo = null;
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
@@ -61,7 +54,7 @@ function onInit() {
       var pageData = parent.wizardManager.WSM.PageData;
       var type = parent.getCurrentServerType(pageData);
 
-      _dd("type = " + type + "\n");
+      dump("type = " + type + "\n");
       protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
 
       if (protocolinfo.requiresUsername) {
@@ -77,7 +70,7 @@ function onInit() {
 var savedPassword="";
 
 function onSavePassword(target) {
-    _dd("savePassword changed! (" + target.checked + ")\n");
+    dump("savePassword changed! (" + target.checked + ")\n");
     var passwordField = document.getElementById("server.password");
     if (!passwordField) return;
     

@@ -21,18 +21,11 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var DEBUG_alecf = false;
-function _dd(aString) 
-{
-  if (DEBUG_alecf)
-    dump(aString);
-} 
- 
 var gFieldList;
          
 function GetFields()
 {
-    _dd("wizardAdapter: GetFields()\n");
+    dump("wizardAdapter: GetFields()\n");
     if (!gFieldList)
         gFieldList = document.getElementsByAttribute("wsm_persist", "true");
 
@@ -42,7 +35,7 @@ function GetFields()
 
         if (field.parentNode.tagName == "template") continue;
         
-        _dd("    for field <" + field.tagName + ">\n");
+        dump("    for field <" + field.tagName + ">\n");
         var obj = new Object;
         obj.id = field.id;
 
@@ -54,7 +47,7 @@ function GetFields()
         else
             obj.value = field.value;
         
-        _dd("    returning " + obj.id + " and " + obj.value + " value=" + field.value + "\n");
+        dump("    returning " + obj.id + " and " + obj.value + " value=" + field.value + "\n");
         fields[field.id] = obj;
     }
 
@@ -63,16 +56,16 @@ function GetFields()
 
 function SetFields(id, value)
 {
-    _dd("wizardAdapter: SetFields(" + id + ", " + value + ")\n");
+    dump("wizardAdapter: SetFields(" + id + ", " + value + ")\n");
     var field = document.getElementById(id);
 
     if (!field) {
-        _dd("    Unknown field with id " + id + "\n");
-        _dd("    Trying to find it in the ispbox \n");
+        dump("    Unknown field with id " + id + "\n");
+        dump("    Trying to find it in the ispbox \n");
         var ispBox = document.getElementById("ispBox");
         var fields = document.getElementsByAttribute("id", id);
         if (!fields || fields.length == 0) {
-            _dd("still couldn't find it!\n");
+            dump("still couldn't find it!\n");
             return;
         } else
             field = fields[0];
@@ -81,7 +74,7 @@ function SetFields(id, value)
         return;
     }
 
-    _dd("    SetFields(<" + field.tagName + ">);\n");
+    dump("    SetFields(<" + field.tagName + ">);\n");
     if (field.tagName == "radio" ||
         field.tagName == "checkbox")
         field.checked = value;

@@ -91,20 +91,9 @@ function hideShowSmtpSettings(smtpServer) {
   if (smtpServer && smtpServer.hostname &&
       smtpServer.hostname != "") {
     // we have a hostname, so show the static text
-    
-    // XXX, UI - this text provides little value to the vast majority of
-    //           users who will not need or want to specify a second
-    //           smtp server. As this panel is cramped for space, and
-    //           as this text offers nothing other than visual clutter,
-    //           it is being removed. - Ben (09/06/2000)
-    
     boxToShow = haveSmtpBox;
     boxToHide = noSmtpBox;
 
-    // turn off but leave logic behind, just in case.
-    if (boxToShow) 
-      boxToShow.setAttribute("hidden", "true");
-    boxToShow = null;
   } else {
     // no default hostname yet
     boxToShow = noSmtpBox;
