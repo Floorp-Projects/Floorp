@@ -138,11 +138,9 @@ public:
 class CTagHandlerRegister {
 public:
   
-  CTagHandlerRegister() : mTagHandlerDeque(new CTagHandlerDeallocator()) {
-  }
+  CTagHandlerRegister();
 
-  ~CTagHandlerRegister() {
-  }
+  ~CTagHandlerRegister();
 
   void RegisterTagHandler(nsITagHandler *aTagHandler){
     mTagHandlerDeque.Push(aTagHandler);
@@ -161,6 +159,17 @@ public:
   CTagFinder              mTagFinder;
 };
 
+MOZ_DECL_CTOR_COUNTER(CTagHandlerRegister);
+
+CTagHandlerRegister::CTagHandlerRegister() : mTagHandlerDeque(new CTagHandlerDeallocator())
+{
+  MOZ_COUNT_CTOR(CTagHandlerRegister);
+}
+
+CTagHandlerRegister::~CTagHandlerRegister() 
+{
+  MOZ_COUNT_DTOR(CTagHandlerRegister);
+}
 
 /************************************************************************
   The CTagHandlerRegister for a CNavDTD.
@@ -1243,9 +1252,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           result=HandleDefaultStartToken(aToken,theChildTag,*theNode);
           break;
 
-        case eHTMLTag_userdefined:
-          break; //drop them on the floor for now...
-
         case eHTMLTag_script:
           theHeadIsParent=(!mHasOpenBody); //intentionally fall through...
           mHasOpenScript=PR_TRUE;
@@ -1783,7 +1789,8 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     theStr+=theTempStr;
     theRecycler->RecycleToken(theNextToken);
   }
-
+  // Let's hope that this does not hamper the  PERFORMANCE!!
+  mLineNumber += (theStr).CountChar(kNewLine);
   aNode.SetSkippedContent(theStr);
   return NS_OK;
 }

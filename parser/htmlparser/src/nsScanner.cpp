@@ -37,6 +37,7 @@ const int   kBufsize=1;
 const int   kBufsize=64;
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsScanner);
 
 /**
  *  Use this constructor if you want i/o to be based on 
@@ -50,6 +51,8 @@ const int   kBufsize=64;
 nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource) : 
   mBuffer(anHTMLString), mFilename(""), mUnicodeXferBuf("")
 {
+  MOZ_COUNT_CTOR(nsScanner);
+
   mTotalRead=mBuffer.Length();
   mIncremental=PR_FALSE;
   mOwnsStream=PR_FALSE;
@@ -74,6 +77,8 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
 nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource) : 
     mBuffer(""), mFilename(aFilename), mUnicodeXferBuf("")
 {
+  MOZ_COUNT_CTOR(nsScanner);
+
   mIncremental=PR_TRUE;
   mOffset=0;
   mMarkPos=0;
@@ -100,7 +105,9 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  */
 nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource) :
     mBuffer(""), mFilename(aFilename) , mUnicodeXferBuf("")
-{    
+{  
+  MOZ_COUNT_CTOR(nsScanner);
+
   mIncremental=PR_FALSE;
   mOffset=0;
   mMarkPos=0;
@@ -177,6 +184,9 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
  *  @return  
  */
 nsScanner::~nsScanner() {
+    
+  MOZ_COUNT_DTOR(nsScanner);
+
   if(mInputStream) {
     mInputStream->close();
     if(mOwnsStream)

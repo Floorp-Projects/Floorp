@@ -24,6 +24,10 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
+MOZ_DECL_CTOR_COUNTER(nsEntryStack);
+MOZ_DECL_CTOR_COUNTER(nsDTDContext);
+MOZ_DECL_CTOR_COUNTER(CTokenRecycler);
+MOZ_DECL_CTOR_COUNTER(CObserverService);
  
 /***************************************************************
   First, define the tagstack class
@@ -36,6 +40,9 @@
  * @update  gess 04/22/99
  */
 nsEntryStack::nsEntryStack()  {
+  
+  MOZ_COUNT_CTOR(nsEntryStack);
+
   mCapacity=0;
   mCount=0;
   mEntries=0;
@@ -47,6 +54,9 @@ nsEntryStack::nsEntryStack()  {
  * @update  gess 04/22/99
  */
 nsEntryStack::~nsEntryStack() {
+
+  MOZ_COUNT_DTOR(nsEntryStack);
+
   if(mEntries)
     delete [] mEntries;
   mCount=mCapacity=0;
@@ -189,6 +199,9 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
  * @update	gess9/10/98
  */
 nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
+    
+  MOZ_COUNT_CTOR(nsDTDContext);
+
 #ifdef  NS_DEBUG
   nsCRT::zero(mTags,sizeof(mTags));
 #endif
@@ -200,6 +213,9 @@ nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
  * @update	gess9/10/98
  */
 nsDTDContext::~nsDTDContext() {
+
+  MOZ_COUNT_DTOR(nsDTDContext);
+
   PRInt32 theSize=mSkipped.GetSize();
   if(theSize>0) {
     CTokenDeallocator theDeallocator;
@@ -427,6 +443,9 @@ PRInt32  nsDTDContext::TokenCountAt(PRInt32 aID)
  * @param 
  */
 CTokenRecycler::CTokenRecycler() : nsITokenRecycler(),mEmpty("") {
+
+  MOZ_COUNT_CTOR(CTokenRecycler);
+
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
     mTokenCache[i]=new nsDeque(new CTokenDeallocator());
@@ -441,6 +460,9 @@ CTokenRecycler::CTokenRecycler() : nsITokenRecycler(),mEmpty("") {
  * @update  gess7/25/98
  */
 CTokenRecycler::~CTokenRecycler() {
+
+  MOZ_COUNT_DTOR(CTokenRecycler);
+
   //begin by deleting all the known (recycled) tokens...
   //We're also deleting the cache-deques themselves.
   int i;
@@ -558,7 +580,7 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
       case eToken_instruction:      result=new CInstructionToken(); break;
       case eToken_cdatasection:     result=new CCDATASectionToken(); break;
       case eToken_error:            result=new CErrorToken(); break;
-      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(); break;
+      case eToken_doctypeDecl:      result=new CDoctypeDeclToken(aTag); break;
         default:
           break;
     }
@@ -655,6 +677,8 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
 
 CObserverService::CObserverService() {
 
+  MOZ_COUNT_CTOR(CObserverService);
+
   nsCRT::zero(mObservers,sizeof(mObservers));
 
   nsAutoString theHTMLTopic("htmlparser");
@@ -666,6 +690,9 @@ CObserverService::CObserverService() {
 }
 
 CObserverService::~CObserverService() {
+
+  MOZ_COUNT_DTOR(CObserverService);
+
   UnregisterObservers();
 }
 

@@ -792,7 +792,11 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);          
             if(NS_OK==result){
-
+              aChar=aString.CharAt(aString.Length()-3);
+              if(kMinus==aChar) {
+                aChar=aString.CharAt(aString.Length()-2);
+                if(kMinus==aChar) return result; // We have found the dflt end comment delimiter ("-->")
+              }
               if(kNotFound==theBestAltPos) {
                 const PRUnichar* theBuf=aString.GetUnicode();
                 findpos=aString.Length()-3;
@@ -1884,7 +1888,7 @@ const nsParserError * CErrorToken::GetError(void)
 
 // Doctype decl token
 
-CDoctypeDeclToken::CDoctypeDeclToken() : CHTMLToken(eHTMLTag_unknown) {
+CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
 nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
