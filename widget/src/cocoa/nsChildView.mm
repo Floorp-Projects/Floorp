@@ -1702,25 +1702,25 @@ NS_IMETHODIMP
 nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseGlobalY,
                          PRUint16 aKeyModifiers, PRBool *_retval)
 {
-printf("--------- dragEvent\n");
   nsMouseEvent geckoEvent;
 	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
+  
+  // we're given the point in global coordinates. We need to convert it to
+  // window coordinates for convert:message:toGeckoEvent
   NSPoint pt; pt.x = aMouseGlobalX; pt.y = aMouseGlobalY;
+  [[mView window] convertScreenToBase:pt];
 	[mView convert:pt message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
 
-printf("mouse location is %d %d\n", geckoEvent.point.x, geckoEvent.point.y);
-  DispatchMouseEvent(geckoEvent);
-
-#if 0
-  nsMouseEvent geckoEvent;
-  geckoEvent.eventStructType = NS_MOUSE_EVENT;
-  [mView convert:theEvent message:aMessage toGeckoEvent:&geckoEvent];
-
-  *_retval = PR_FALSE;
-  Point globalPoint = {aMouseGlobalY, aMouseGlobalX};         // QD Point stored as v, h
-  if (mMacEventHandler.get())
-    *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
-#endif
+// XXXPINK
+// hack, because we're currently getting the point in Carbon global coordinates,
+// but obviously the cocoa views don't know how to convert those (because they
+// use an entirely different coordinate system).
+  geckoEvent.point.x = 50; geckoEvent.point.y = 50;
+//printf("mouse location is %d %d\n", geckoEvent.point.x, geckoEvent.point.y);
+  DispatchWindowEvent(geckoEvent);
+  
+  // we handled the event
+  *_retval = PR_TRUE;
   
   return NS_OK;
 }
