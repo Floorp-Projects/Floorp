@@ -1454,12 +1454,15 @@ void ModifySidebar(CString inputFile, CString outputFile)
 		dstf << tempbuf << "\n";
 		if ((CString(tempbuf).Find(searchstr)) != -1)
 		{
-			dstf << "        <RDF:li>" << "\n";
-			dstf << "         <RDF:Description about=\"" << sidebartabTitle << "\">\n";
-			dstf << "          <NC:title>" << sidebartabTitle << "</NC:title>" << "\n";
-			dstf << "          <NC:content>" << sidebartabURL << "</NC:content>" << "\n";
-			dstf << "         </RDF:Description>" << "\n";
-			dstf << "        </RDF:li>" << "\n";
+			if (!(sidebartabTitle.IsEmpty()) && !(sidebartabURL.IsEmpty()))
+			{
+				dstf << "        <RDF:li>" << "\n";
+				dstf << "         <RDF:Description about=\"" << sidebartabTitle << "\">\n";
+				dstf << "          <NC:title>" << sidebartabTitle << "</NC:title>" << "\n";
+				dstf << "          <NC:content>" << sidebartabURL << "</NC:content>" << "\n";
+				dstf << "         </RDF:Description>" << "\n";
+				dstf << "        </RDF:li>" << "\n";
+			}
 		}
 	}
 	
@@ -1693,9 +1696,12 @@ void ModifyHelpMenu(CString inputFile, CString outputFile)
 		dstf << tempbuf << "\n";
 		if ((CString(tempbuf).Find(searchstr)) != -1)
 		{
-			dstf << "     <menuitem label=\"" << helpMenuName << "\"\n"; 
-			dstf << "        position=\"7\"\n"; 
-			dstf << "        oncommand=\"openTopWin('" << helpMenuUrl << "');\" />\n";
+			if (!(helpMenuName.IsEmpty()) && !(helpMenuUrl.IsEmpty()))
+			{
+				dstf << "     <menuitem label=\"" << helpMenuName << "\"\n"; 
+				dstf << "        position=\"7\"\n"; 
+				dstf << "        oncommand=\"openTopWin('" << helpMenuUrl << "');\" />\n";
+			}
 		}
 	}
 	
@@ -2274,13 +2280,13 @@ void invisible()
 	CString Setup1Long = "You may choose the options you want to install.  Recommended for advanced users.";
 
 	WritePrivateProfileString("Setup Type0", NULL, "", iniDstPath);
-	WritePrivateProfileString("Setup Type1", NULL, "", iniDstPath);
+	WritePrivateProfileString("Setup Type2", NULL, "", iniDstPath);
 
 	WritePrivateProfileString("Setup Type0","Description Short",(LPCTSTR)Setup0Short,iniDstPath);
 	WritePrivateProfileString("Setup Type0","Description Long", (LPCTSTR)Setup0Long,iniDstPath);
-	WritePrivateProfileString("Setup Type1","Description Short",(LPCTSTR)Setup1Short,iniDstPath);
-	WritePrivateProfileString("Setup Type1","Description Long", (LPCTSTR)Setup1Long,iniDstPath);
-	WritePrivateProfileString("Setup Type2",NULL," ",iniDstPath);
+	WritePrivateProfileString("Setup Type2","Description Short",(LPCTSTR)Setup1Short,iniDstPath);
+	WritePrivateProfileString("Setup Type2","Description Long", (LPCTSTR)Setup1Long,iniDstPath);
+	WritePrivateProfileString("Setup Type1",NULL," ",iniDstPath);
 	WritePrivateProfileString("Setup Type3",NULL," ",iniDstPath);
 	CString Cee;
 	tempWidget = findWidget("SelectedComponents");
@@ -2293,7 +2299,7 @@ void invisible()
 			component = Components[i].compname;	
 			Cee.Format("C%d", componentOrder);
 			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
-			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
+			WritePrivateProfileString("Setup Type2",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 
 			CString strAttributes = "SELECTED";
 			CString strSep = "|";
@@ -2485,7 +2491,7 @@ void AddThirdParty()
 		componentOrder++;
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer1, iniDstPath);
 		numComponents++;
 		CopyFile(tpCompPath1, xpiDstPath + "\\" + Archive1, FALSE);
@@ -2500,7 +2506,7 @@ void AddThirdParty()
 		cName.Format("C%d", componentOrder);
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
-		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer2, iniDstPath);
 		CopyFile(tpCompPath2, xpiDstPath + "\\" + Archive2, FALSE);
 		DWORD e2 = GetLastError();
