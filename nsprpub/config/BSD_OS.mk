@@ -35,6 +35,10 @@ ifeq ($(OS_RELEASE),2.1)
 OS_CFLAGS	+= -DBSDI_2
 endif
 
+ifdef USE_AUTOCONF
+OS_CFLAGS	=
+endif
+
 G++INCLUDES	= -I/usr/include/g++
 
 CPU_ARCH	= x86

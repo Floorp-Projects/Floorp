@@ -42,7 +42,11 @@ PDJAVA_FLAGS		= -mx128m
 OS_GPROF_FLAGS		= -pg
 LD_FLAGS		= -L/usr/X11R6/lib -lXm
 
+ifdef USE_AUTOCONF
+OS_CFLAGS		=
+else
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
+endif
 
 LOCALE_MAP		= $(DEPTH)/cmd/xfe/intl/bsd386.lm
 EN_LOCALE		= C

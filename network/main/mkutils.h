@@ -18,11 +18,6 @@
 #ifndef MKUTILS_H
 #define MKUTILS_H
 
-/* Used throughout netlib. */
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN 64
-#endif
-
 #include "net.h"
 #include "xp.h"                 /* The cross-platform API */
 #include "plstr.h"
@@ -30,6 +25,11 @@
 #include "prmem.h"
 #include "mktrace.h"
 #include "mkselect.h"           /* needed by all files in netlib */
+
+/* Used throughout netlib. */
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 64
+#endif
 
 #define CONST const             /* "const" only exists in STDC? */
 

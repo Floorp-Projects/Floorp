@@ -66,12 +66,15 @@
 #			(output goes into the _jmc sub-dir)
 #
 ################################################################################
+ifndef topsrcdir
+topsrcdir = $(DEPTH)
+endif
 
 #
 # Common rules used by lots of makefiles...
 #
 ifndef NS_CONFIG_MK
-include $(DEPTH)/config/config.mk
+include $(topsrcdir)/config/config.mk
 endif
 
 ifdef PROGRAM
@@ -131,6 +134,10 @@ endif
 
 ifdef NO_STATIC_LIB
 LIBRARY			= $(NULL)
+endif
+
+ifdef NO_SHARED_LIB
+DLL_SUFFIX		= a
 endif
 
 ifndef TARGETS
@@ -262,11 +269,21 @@ TARGETS			+= tweak_nspr
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
 #
 tweak_nspr:
+ifdef USE_AUTOCONF
+	@( cp $(topsrcdir)/nsprpub/config/UNIX.mk $(DEPTH); \
+		cd $(DEPTH)/nsprpub/config; \
+		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; fi; \
+		cp ../../UNIX.mk UNIX.mk.orig; \
+		awk '/^OBJDIR_NAME[ 	]*=/ { \
+			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk); \
+		rm -f $(DEPTH)/UNIX.mk
+else
 	@(cd $(DEPTH)/nsprpub/config; \
 		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; fi; \
 		mv UNIX.mk UNIX.mk.orig; \
 		awk '/^OBJDIR_NAME[ 	]*=/ { \
 			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk)
+endif
 
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
@@ -404,37 +421,37 @@ endif
 $(OBJDIR)/%: %.c
 	@$(MAKE_OBJDIR)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CC) -Fo$@ -c $(CFLAGS) $*.c
+	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CCF) $(LDFLAGS) -o $@ $*.c
+	$(CCF) $(LDFLAGS) -o $@ $<
 endif
 
 $(OBJDIR)/%.o: %.c
 	@$(MAKE_OBJDIR)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CC) -Fo$@ -c $(CFLAGS) $*.c
+	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CC) -o $@ -c $(CFLAGS) $*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.s
+	$(AS) -o $@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/%.o: %.S
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.S
+	$(AS) -o $@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/%: %.cpp
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) $*.c $(LDFLAGS)
+	$(CCC) -o $@ $(CFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
 $(OBJDIR)/%.o: %.cc
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ -c $(CFLAGS) $*.cc
+	$(CCC) -o $@ -c $(CFLAGS) $<
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
@@ -444,9 +461,9 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
+	$(CCC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CFLAGS) $*.cpp
+	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
@@ -457,10 +474,10 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 
 %: %.pl
-	rm -f $@; cp $*.pl $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 %: %.sh
-	rm -f $@; cp $*.sh $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 ifdef DIRS
 $(DIRS)::
@@ -492,7 +509,7 @@ $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE) $(JMCSRCDIR)::
 ifneq ($(JSRCS),)
 ifdef JAVA_OR_NSJVM
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	list=`$(PERL) $(DEPTH)/config/outofdate.pl $(PERLARG)	\
+	list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
 		    -d $(JAVA_DESTPATH)/$(PACKAGE) $(JSRCS)`;	\
 	if test "$$list"x != "x"; then				\
 	    echo $(JAVAC) $$list;				\
@@ -521,7 +538,7 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 		if test -d $$d; then						\
 			set $(EXIT_ON_ERROR);					\
 			files=`echo $$d/*.java`;				\
-			list=`$(PERL) $(DEPTH)/config/outofdate.pl $(PERLARG)	\
+			list=`$(PERL) $(topsrcdir)/config/outofdate.pl $(PERLARG)	\
 				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
 			if test "$${list}x" != "x"; then			\
 			    echo Building all java files in $$d;		\
@@ -723,6 +740,10 @@ endif
 
 ################################################################################
 
+
+ifdef USE_AUTOCONF
+ALL_TRASH := $(filter-out $(OBJDIR), $(ALL_TRASH))
+else
 -include $(DEPENDENCIES)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
@@ -757,6 +778,7 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		exit(1);                                                      \
 	    }'
 endif
+endif # USE_AUTOCONF
 
 #############################################################################
 # X dependency system

@@ -121,7 +121,11 @@ OS_DEFINES		+= -D_REENTRANT
 endif
 
 # Purify doesn't like -MDupdate
+ifdef USE_AUTOCONF
+NOMD_OS_CFLAGS		= $(DSO_CFLAGS) #-DSOLARIS
+else
 NOMD_OS_CFLAGS		= $(DSO_CFLAGS) $(OS_DEFINES) $(SOL_CFLAGS)
+endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 

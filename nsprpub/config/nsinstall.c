@@ -24,6 +24,7 @@
 #include <stdio.h>  /* OSF/1 requires this before grp.h, so put it first */
 #include <assert.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -78,7 +79,8 @@ mkdirs(char *path, mode_t mode)
 {
     char *cp;
     struct stat sb;
-    
+    int res;
+
     while (*path == '/' && path[1] == '/')
 	path++;
     while ((cp = strrchr(path, '/')) && cp[1] == '\0')
@@ -91,7 +93,11 @@ mkdirs(char *path, mode_t mode)
 	}
 	*cp = '/';
     }
-    return mkdir(path, mode);
+    res = mkdir(path, mode);
+    if ((res != 0) && (errno == EEXIST))
+      return 0;
+    else
+      return res;
 }
 
 static uid_t

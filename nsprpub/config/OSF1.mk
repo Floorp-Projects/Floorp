@@ -76,6 +76,9 @@ endif
 
 NON_LD_FLAGS		= -ieee_with_inexact
 
+ifdef USE_AUTOCONF
+OS_CFLAGS		=
+else
 OS_CFLAGS		= -DOSF1 -D_REENTRANT -taso
 
 ifeq ($(OS_RELEASE),V3.2)
@@ -85,6 +88,7 @@ endif
 ifeq (V4,$(findstring V4,$(OS_RELEASE)))
 OS_CFLAGS		+= -DOSF1V4
 endif
+endif # USE_AUTOCONF
 
 ifeq ($(USE_PTHREADS),1)
 OS_CFLAGS		+= -pthread

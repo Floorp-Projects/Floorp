@@ -28,3 +28,8 @@ CSRCS	        =
 EXPORTS         = java_lang_String.h   \
 		  jdk_java_lang_String.h \
 		  $(NULL)
+
+ifdef USE_AUTOCONF
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+endif
+

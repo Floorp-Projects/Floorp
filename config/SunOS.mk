@@ -19,7 +19,7 @@
 # Config stuff for SunOS.  4 and 5 are vastly different, so we use 2 different files.
 #
 ifeq ($(OS_RELEASE),4.1)
-include $(DEPTH)/config/SunOS4.mk
+include $(topsrcdir)/config/SunOS4.mk
 else
-include $(DEPTH)/config/SunOS5.mk
+include $(topsrcdir)/config/SunOS5.mk
 endif

@@ -23,6 +23,7 @@
 #include <stdio.h>  /* OSF/1 requires this before grp.h, so put it first */
 #include <assert.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #ifndef XP_OS2
 #include <grp.h>
@@ -110,6 +111,7 @@ mkdirs(char *path, mode_t mode)
 {
     char *cp;
     struct stat sb;
+    int res;
 
     while (*path == '/' && path[1] == '/')
 	path++;
@@ -123,7 +125,12 @@ mkdirs(char *path, mode_t mode)
 	}
 	*cp = '/';
     }
-    return mkdir(path, mode);
+    
+    res = mkdir(path, mode);
+    if ((res != 0) && (errno == EEXIST))
+      return 0;
+    else
+      return res;
 }
 
 #ifndef XP_OS2
