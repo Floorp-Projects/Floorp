@@ -23,6 +23,8 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
+DIRS = win
+
 chrome::
         $(REGCHROME) content communicator comm.jar
         $(REGCHROME) locale en-US/communicator en-US.jar
