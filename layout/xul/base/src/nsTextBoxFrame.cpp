@@ -521,7 +521,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     }
 
     // start with an ellipsis
-    mCroppedTitle.AssignWithConversion(ELLIPSIS);
+    mCroppedTitle.AssignASCII(ELLIPSIS);
 
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
@@ -663,7 +663,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 
             // form the new cropped string
             nsAutoString ellipsisString;
-            ellipsisString.AssignWithConversion(ELLIPSIS);
+            ellipsisString.AssignASCII(ELLIPSIS);
 
             mCroppedTitle = leftString + ellipsisString + rightString;
         }

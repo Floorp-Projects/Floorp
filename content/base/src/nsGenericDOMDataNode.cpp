@@ -419,7 +419,7 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     nsCAutoString old_data;
     mText.AppendTo(old_data);
     length = old_data.Length();
-    old_data.AppendWithConversion(aData);
+    LossyAppendUTF16toASCII(aData, old_data);
     SetText(old_data.get(), old_data.Length(), PR_FALSE);
   }
 

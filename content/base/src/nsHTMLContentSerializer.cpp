@@ -133,7 +133,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mLineBreak.AssignLiteral("\n");
   }
   else {
-    mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
+    mLineBreak.AssignLiteral(NS_LINEBREAK);         // Platform/default
   }
 
   mPreLevel = 0;

@@ -196,7 +196,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   }
   else {
     // Platform/default
-    mLineBreak.AssignWithConversion(NS_LINEBREAK);
+    mLineBreak.AssignLiteral(NS_LINEBREAK);
   }
 
   mLineBreakDue = PR_FALSE;
