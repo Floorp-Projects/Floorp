@@ -2005,7 +2005,7 @@ bookmarksFavIconLoadListener.prototype = {
     if (!iid.equals(Components.interfaces.nsISupports) &&
         !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsIRequestObserver) &&
-        !iid.equals(Components.interfaces.nsIHttpEventSink) &&
+        !iid.equals(Components.interfaces.nsIChannelEventSink) &&
         !iid.equals(Components.interfaces.nsIProgressEventSink) && // see below
         !iid.equals(Components.interfaces.nsIStreamListener)) {
       throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -2082,8 +2082,8 @@ bookmarksFavIconLoadListener.prototype = {
     this.mCountRead += aCount;
   },
 
-  // nsIHttpEventSink
-  onRedirect : function (aHttpChannel, aNewChannel) {
+  // nsIChannelEventSink
+  onChannelRedirect : function (aOldChannel, aNewChannel, aFlags) {
     this.mChannel = aNewChannel;
   },
 

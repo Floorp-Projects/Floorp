@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsIDOMLoadListener.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIScriptContext.h"
 #include "nsISyncLoadDOMService.h"
@@ -97,7 +97,7 @@ public:
  */
 
 class nsSyncLoader : public nsIDOMLoadListener,
-                     public nsIHttpEventSink,
+                     public nsIChannelEventSink,
                      public nsIInterfaceRequestor,
                      public nsSupportsWeakReference
 {
@@ -121,7 +121,7 @@ public:
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
-    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
 
     NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -309,7 +309,7 @@ nsSyncLoader::~nsSyncLoader()
 
 NS_IMPL_ISUPPORTS4(nsSyncLoader,
                    nsIDOMLoadListener,
-                   nsIHttpEventSink,
+                   nsIChannelEventSink,
                    nsIInterfaceRequestor,
                    nsISupportsWeakReference)
 
@@ -513,13 +513,14 @@ nsSyncLoader::Error(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnRedirect(nsIHttpChannel *aHttpChannel,
-                         nsIChannel *aNewChannel)
+nsSyncLoader::OnChannelRedirect(nsIChannel *aOldChannel,
+                                nsIChannel *aNewChannel,
+                                PRUint32    aFlags)
 {
-    NS_ENSURE_ARG_POINTER(aNewChannel);
+    NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
 
     nsCOMPtr<nsIURI> oldURI;
-    nsresult rv = aHttpChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+    nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> newURI;

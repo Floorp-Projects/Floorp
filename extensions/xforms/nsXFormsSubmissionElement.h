@@ -46,12 +46,13 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsSubmitElement.h"
 #include "nsIXFormsSubmissionElement.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 
 class nsIMultiplexInputStream;
 class nsIDOMElement;
 class nsIChannel;
+class nsIURI;
 class nsIFile;
 class nsCString;
 class nsString;
@@ -66,14 +67,14 @@ class SubmissionAttachmentArray;
 class nsXFormsSubmissionElement : public nsXFormsStubElement,
                                   public nsIRequestObserver,
                                   public nsIXFormsSubmissionElement,
-                                  public nsIHttpEventSink,
+                                  public nsIChannelEventSink,
                                   public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIXFORMSSUBMISSIONELEMENT
-  NS_DECL_NSIHTTPEVENTSINK
+  NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
 
   nsXFormsSubmissionElement()

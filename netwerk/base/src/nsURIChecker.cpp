@@ -64,7 +64,7 @@ NS_IMPL_ISUPPORTS5(nsURIChecker,
                    nsIURIChecker,
                    nsIRequest,
                    nsIStreamListener,
-                   nsIHttpEventSink,
+                   nsIChannelEventSink,
                    nsIInterfaceRequestor)
 
 nsURIChecker::nsURIChecker()
@@ -358,11 +358,13 @@ nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 //-----------------------------------------------------------------------------
-// nsIHttpEventSink methods:
+// nsIChannelEventSink methods:
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsURIChecker::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
+nsURIChecker::OnChannelRedirect(nsIChannel *aOldChannel,
+                                nsIChannel *aNewChannel,
+                                PRUint32    aFlags)
 {
     // We have a new channel
     mChannel = aNewChannel;

@@ -51,6 +51,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIStreamListener.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -206,6 +207,7 @@ private:
     nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
     nsCOMPtr<nsIProgressEventSink>    mProgressSink;
     nsCOMPtr<nsIHttpEventSink>        mHttpEventSink;
+    nsCOMPtr<nsIChannelEventSink>     mChannelEventSink;
     nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsIURI>                  mReferrer;
     nsCOMPtr<nsISupports>             mSecurityInfo;

@@ -1965,7 +1965,18 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     // call out to the event sink to notify it of this redirection.
     if (mHttpEventSink) {
+        // Note: mHttpEventSink is only kept for compatibility with pre-1.8
+        // versions.
         rv = mHttpEventSink->OnRedirect(this, newChannel);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (mChannelEventSink) {
+        PRUint32 flags;
+        if (redirectType == 301) // Moved Permanently
+            flags = nsIChannelEventSink::REDIRECT_PERMANENT;
+        else
+            flags = nsIChannelEventSink::REDIRECT_TEMPORARY;
+        rv = mChannelEventSink->OnChannelRedirect(this, newChannel, flags);
         if (NS_FAILED(rv)) return rv;
     }
     // XXX we used to talk directly with the script security manager, but that
@@ -3093,6 +3104,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     // Initialize callback interfaces
     GetCallback(mHttpEventSink);
+    GetCallback(mChannelEventSink);
     GetCallback(mProgressSink);
 
     // we want to grab a reference to the calling thread's event queue at
@@ -3826,6 +3838,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     mCallbacks = nsnull;
     mHttpEventSink = nsnull;
+    mChannelEventSink = nsnull;
     mProgressSink = nsnull;
     
     return NS_OK;

@@ -53,6 +53,9 @@ interface nsIURI;
  *
  * These methods are called before onStartRequest, and should be handled
  * SYNCHRONOUSLY.
+ *
+ * @deprecated Newly written code should use nsIChannelEventSink instead of this
+ * interface.
  */
 [scriptable, uuid(9475a6af-6352-4251-90f9-d65b1cd2ea15)]
 interface nsIHttpEventSink : nsISupports

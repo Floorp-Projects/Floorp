@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS_INHERITED5(nsXFormsInstanceElement,
                              nsIStreamListener,
                              nsIRequestObserver,
                              nsIInterfaceRequestor,
-                             nsIHttpEventSink)
+                             nsIChannelEventSink)
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
@@ -166,13 +166,14 @@ nsXFormsInstanceElement::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-// nsIHttpEventSink
+// nsIChannelEventSink
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::OnRedirect(nsIHttpChannel *aHttpChannel,
-                                    nsIChannel *aNewChannel)
+nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
+                                           nsIChannel *aNewChannel,
+                                           PRUint32    aFlags)
 {
-  NS_ENSURE_ARG_POINTER(aNewChannel);
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
   nsCOMPtr<nsIURI> newURI;
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);

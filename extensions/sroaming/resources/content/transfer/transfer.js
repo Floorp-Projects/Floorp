@@ -980,7 +980,7 @@ TransferProgressListener.prototype =
     // dummy
   },
 
-  OnRedirect : function(anHTTPChannel, aNewChannel)
+  onChannelRedirect : function(aOldChannel, aNewChannel, aFlags)
   {
     // dummy
   },
@@ -1350,7 +1350,7 @@ TransferProgressListener.prototype =
      || aIID.equals(Components.interfaces.nsIPrompt)
      || aIID.equals(Components.interfaces.nsIAuthPrompt)
      || aIID.equals(Components.interfaces.nsIFTPEventSink)
-     || aIID.equals(Components.interfaces.nsIHttpEventSink)
+     || aIID.equals(Components.interfaces.nsIChannelEventSink)
      || aIID.equals(Components.interfaces.nsIDocShellTreeItem)
      || aIID.equals(Components.interfaces.nsIInterfaceRequestor))
       return this;

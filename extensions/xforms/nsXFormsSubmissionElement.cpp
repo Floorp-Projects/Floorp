@@ -269,7 +269,7 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsXFormsSubmissionElement,
                              nsIRequestObserver,
                              nsIXFormsSubmissionElement,
                              nsIInterfaceRequestor,
-                             nsIHttpEventSink)
+                             nsIChannelEventSink)
 
 // nsIXTFElement
 
@@ -343,13 +343,14 @@ nsXFormsSubmissionElement::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-// nsIHttpEventSink
+// nsIChannelEventSink
 
 NS_IMETHODIMP
-nsXFormsSubmissionElement::OnRedirect(nsIHttpChannel *aHttpChannel,
-                                      nsIChannel *aNewChannel)
+nsXFormsSubmissionElement::OnChannelRedirect(nsIChannel *aOldChannel,
+                                             nsIChannel *aNewChannel,
+                                             PRUint32    aFlags)
 {
-  NS_ENSURE_ARG_POINTER(aNewChannel);
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
   nsCOMPtr<nsIURI> newURI;
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -54,7 +54,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsISupportsPriority.h"
 #include "nsInt64.h"
@@ -82,7 +82,7 @@ class nsDocLoader : public nsIDocumentLoader,
                     public nsIProgressEventSink,
                     public nsIWebProgress,
                     public nsIInterfaceRequestor,
-                    public nsIHttpEventSink,
+                    public nsIChannelEventSink,
                     public nsISecurityEventSink,
                     public nsISupportsPriority
 {
@@ -115,7 +115,7 @@ public:
     NS_DECL_NSIWEBPROGRESS
 
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSISUPPORTSPRIORITY
 
     // Implementation specific methods...

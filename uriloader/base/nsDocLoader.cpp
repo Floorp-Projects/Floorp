@@ -230,7 +230,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoader)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
+   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
    if (aIID.Equals(kThisImplCID))
@@ -1380,8 +1380,9 @@ PRInt64 nsDocLoader::CalculateMaxProgress()
   return max;
 }
 
-NS_IMETHODIMP nsDocLoader::OnRedirect(nsIHttpChannel *aOldChannel,
-                                      nsIChannel *aNewChannel)
+NS_IMETHODIMP nsDocLoader::OnChannelRedirect(nsIChannel *aOldChannel,
+                                             nsIChannel *aNewChannel,
+                                             PRUint32    aFlags)
 {
   if (aOldChannel)
   {
