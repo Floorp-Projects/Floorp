@@ -43,9 +43,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
-#if 0
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSDialogs)
-#endif
 
 static nsModuleComponentInfo components[] =
 {
@@ -132,14 +129,6 @@ static nsModuleComponentInfo components[] =
     NS_PK11TOKENDB_CONTRACTID,
     nsPK11TokenDBConstructor
   },
-#if 0
-  {
-    "NSS Dialogs",
-    NS_NSSDIALOGS_CID,
-    NS_NSSDIALOGS_CONTRACTID,
-    nsNSSDialogsConstructor
-  },
-#endif
 };
 
 NS_IMPL_NSGETMODULE("NSS", components);

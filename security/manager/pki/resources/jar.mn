@@ -1,0 +1,5 @@
+pippki.jar:
+    content/pippki/contents.rdf             (content/contents.rdf)
+    content/pippki/changepassword.xul       (content/changepassword.xul)
+    content/pippki/password.js              (content/password.js)
+    locale/en-US/pippki/contents.rdf        (locale/en-US/contents.rdf)
