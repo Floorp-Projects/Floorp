@@ -237,7 +237,7 @@ fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
 	if (filePathname == NULL)			return(true);
 	if ((d = OpenDir(filePathname)) == NULL)	return(true);
 
-	while (de = PR_ReadDir(d, n++))
+	while ((de = PR_ReadDir(d, (PRDirFlags)(n++))) != NULL)
 	{
 		base = NET_Escape(de->name, URL_XALPHAS);
 		if (base == NULL)	return(true);
@@ -388,7 +388,7 @@ fsHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 			return(0);
 		}
 
-		while (de = PR_ReadDir(d, n++))
+		while ((de = PR_ReadDir(d, (PRDirFlags)(n++))) != NULL)
 		{
 			if (strcmp(name, de->name) == 0)
 			{
@@ -624,12 +624,6 @@ fsNextValue (RDFT rdf, RDF_Cursor c)
 	char			*base, *encoded = NULL, *url, *url2;
 	void			*retVal = NULL;
 
-#ifdef	XP_MAC
-	FInfo			finfo;
-	FSSpec			fsspec;
-	OSErr			err;
-#endif
-
 	XP_ASSERT(c != NULL);
 	if (c == NULL)				return(NULL);
 	if (c->type != RDF_RESOURCE_TYPE)	return(NULL);
@@ -652,7 +646,7 @@ fsNextValue (RDFT rdf, RDF_Cursor c)
 	}
 	else if (c->pdata != NULL)
 	{
-		while ((de = PR_ReadDir((PRDir*)c->pdata, c->count++)) != NULL)
+		while ((de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++))) != NULL)
 		{
 			if ((base = NET_Escape(de->name, URL_XALPHAS)) != NULL)		/* URL_PATH */
 			{

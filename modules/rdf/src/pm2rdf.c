@@ -166,7 +166,7 @@ pmHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
     int n = 0;
     PRBool ans = 0;
 
-    while (de = PR_ReadDir(d, n++)) {
+    while ((de = PR_ReadDir(d, (PRDirFlags)(n++))) != NULL) {
       if (strcmp(name, de->name) == 0) {
 	ans = 1;
 	break;
@@ -218,7 +218,7 @@ pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
   	char *pathname, *name = NULL;
   	int len,n;
   	
-  	if (pathname = copyString( resourceID(u))) {
+  	if ((pathname = copyString( resourceID(u))) != NULL) {
   	  len = strlen(pathname);
   	  if (pathname[len-1] == '/')  pathname[--len] = '\0';
   	  if (endsWith(".sbd", pathname))	pathname[len-4] = '\0';
@@ -290,7 +290,7 @@ pmNextValue (RDFT rdf, RDF_Cursor c)
     return NULL;
   } else {
 
-    PRDirEntry* de = PR_ReadDir((PRDir*)c->pdata, c->count++);
+    PRDirEntry* de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++));
     if (de == NULL) {
 
       PR_CloseDir((PRDir*)c->pdata);

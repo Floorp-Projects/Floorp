@@ -1080,7 +1080,7 @@ AtalkNextValue (RDFT rdf, RDF_Cursor c)
 		{
 			passThru = PR_FALSE;
 
-			if ((de = PR_ReadDir((PRDir*)c->pdata, c->count++)) != NULL)
+			if ((de = PR_ReadDir((PRDir*)c->pdata, (PRDirFlags)(c->count++))) != NULL)
 			{
 				if ((base = NET_Escape(de->name, URL_XALPHAS)) != NULL)		/* URL_PATH */
 				{

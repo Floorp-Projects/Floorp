@@ -61,13 +61,17 @@ PRBool
 ESAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
 		   RDF_ValueType type, PRBool tv)
 {
+	PRBool		retVal;
+
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
       (tv) && (containerp((RDF_Resource)v))) {
     ESAddChild((RDF_Resource)v, u);
+    retVal = PR_TRUE;
   } else {
-    return 0;
+    retVal = PR_FALSE;
   }
+  return(retVal);
 }
 
 
@@ -76,13 +80,17 @@ PRBool
 ESUnassert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
 		   RDF_ValueType type)
 {
+	PRBool		retVal;
+
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
       (containerp((RDF_Resource)v))) {
     ESRemoveChild((RDF_Resource)v, u);
+    retVal = PR_TRUE;
   } else {
-    return 0;
+    retVal = PR_FALSE;
   }
+  return(retVal);
 }
 
 

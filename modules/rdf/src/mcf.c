@@ -137,7 +137,7 @@ RDF_AddDataSource(RDF rdf, char* dataSource)
   RDFT newDB;
   int16 n = 0;
   RDFT next;
-  while ((next = rdf->translators[n++]) && (n < rdf->numTranslators)) {
+  while (((next = rdf->translators[n++]) != NULL) && (n < rdf->numTranslators)) {
     if (strcmp(next->url, dataSource) == 0) return next;
   }
 #ifdef MOZILLA_CLIENT
@@ -181,7 +181,7 @@ RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
   int16 m = 0;
   int16 n= 0;
   RDFT next;
-  while (next = rdf->translators[n++]) {
+  while ((next = rdf->translators[n++]) != NULL) {
     if (next != dataSource) {
       *(temp + m) = (RDFT) next;
     }
@@ -863,7 +863,7 @@ itemMatchesFind (RDF r, RDF_Resource u, RDF_Resource s, void* v,
 
   c = RDF_GetTargets(r, u, s, type, 1);
   if (c != NULL) {
-    while (val = RDF_NextValue(c)) {
+    while ((val = RDF_NextValue(c)) != NULL) {
       if (type == RDF_RESOURCE_TYPE) {
         ok = (u == v);
       } else if (type == RDF_STRING_TYPE) {

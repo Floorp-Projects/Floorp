@@ -416,7 +416,7 @@ outputRDFTreeInt (RDF rdf, PRFileDesc *fp, RDF_Resource node, uint32 depth, PRBo
     sprintf(buf, "%s<Topic %s=\"%s\"\n%s       name=\"%s\">\n", space, hrefid, url, space,   name);  
 	PR_Write(fp, buf, strlen(buf));
     
-    while (next = RDF_NextValue(c)) {
+    while ((next = RDF_NextValue(c)) != NULL) {
     
       /* if exporting EVERYTHING, need to skip over certain things */
       if ((localOnly == PR_FALSE) || ((!startsWith("ftp:",url)) && (!startsWith("file:",url))

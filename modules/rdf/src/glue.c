@@ -208,7 +208,7 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
 	URL_Struct                      *urls;
 
 	if (cx == NULL)  return 0;
-	urls = NET_CreateURLStruct(rdfFile->url, rdfRetrievalType(rdfFile));
+	urls = NET_CreateURLStruct(rdfFile->url, (NET_ReloadMethod)rdfRetrievalType(rdfFile));
 	if (urls == NULL) return 0;
         /*	urls->use_local_copy = rdfFile->localp;*/
 	urls->fe_data = rdfFile;

@@ -72,7 +72,7 @@ walkThroughAllBookmarks (RDF_Resource u)
 #ifdef MOZILLA_CLIENT
   RDF_Cursor c = RDF_GetSources(gNCDB, u, gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, true);
   RDF_Resource next;
-  while (next = RDF_NextValue(c)) {
+  while ((next = RDF_NextValue(c)) != NULL) {
     if (resourceType(next) == RDF_RT) walkThroughAllBookmarks(next);
   }
 #endif

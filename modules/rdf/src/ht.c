@@ -2735,7 +2735,7 @@ menus[] = {
 
 	HT_CMD_SEPARATOR,
 	/* commands from the graph appear at the end */
-	-1,
+	(HT_MenuCmd)(-1),
 };
 
 
@@ -3407,7 +3407,7 @@ HT_NextContextMenuItem (HT_Cursor cursor, HT_MenuCmd *menuCmd)
 			cursor->commandExtensions = PR_TRUE;
 			cursor->container = NULL;
 			cursor->foundValidMenuItem = false;
-			cursor->menuCmd = NUM_MENU_CMDS+1;
+			cursor->menuCmd = (HT_MenuCmd)(NUM_MENU_CMDS+1);
 
 			/* process commands from the RDF graph last */
 			freeMenuCommandList();

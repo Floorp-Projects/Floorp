@@ -119,8 +119,13 @@ remoteAssert3 (RDFFile fi, RDFT mcf, RDF_Resource u, RDF_Resource s, void* v,
 void
 remoteStoreflushChildren(RDFT mcf, RDF_Resource parent)
 {
-	RDF_Cursor		c, cc;
-	RDF_Resource		child, s, value;
+	RDF_Cursor		c;
+	RDF_Resource		child;
+#if 0
+	RDF_Cursor		cc;
+	RDF_Resource		s;
+	char			*value;
+#endif
 
 	if (parent == NULL)	return;
 	if ((c = remoteStoreGetSlotValues (mcf, parent, gCoreVocab->RDF_parent,

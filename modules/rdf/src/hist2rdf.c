@@ -505,6 +505,7 @@ histAddParent (RDF_Resource child, RDF_Resource parent)
   sendNotifications2(gHistoryStore, RDF_ASSERT_NOTIFY, child, s, parent, type, 1);
   /* XXX have to mark the entire subtree XXX */
   /*  sendNotifications(gHistoryStore->rdf, RDF_ASSERT_NOTIFY, child, s, parent, type, 1); */
+  return(newAs);
 }
 
 
