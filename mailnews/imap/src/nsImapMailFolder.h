@@ -176,7 +176,7 @@ protected:
 	PRBool GetFlagSetInRightsForUser(const char *userName, char flag, PRBool defaultIfNotFound);
 	void BuildInitialACLFromCache();
 	void UpdateACLCache();
-        static PRBool FreeHashRights(nsHashKey *aKey, void *aData, void *closure);
+        static PRBool PR_CALLBACK FreeHashRights(nsHashKey *aKey, void *aData, void *closure);
 
 protected:
 	nsHashtable    *m_rightsHash;	// Hash table, mapping username strings to rights strings.
