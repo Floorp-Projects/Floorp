@@ -57,6 +57,20 @@ class nsHTMLEditor : public nsEditor,
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
 
 public:
+
+  enum OperationID
+  {
+    kOpInsertBreak         = 3000,
+    kOpMakeList            = 3001,
+    kOpIndent              = 3002,
+    kOpOutdent             = 3003,
+    kOpAlign               = 3004,
+    kOpMakeBasicBlock      = 3005,
+    kOpRemoveList          = 3006,
+    kOpInsertElement       = 3008
+  };
+
+
   // see nsIHTMLEditor for documentation
 
 //Interfaces for addref and release and queryinterface
@@ -97,7 +111,7 @@ public:
   NS_IMETHOD InsertHTML(const nsString &aInputString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
-  NS_IMETHOD DeleteSelection(ESelectionCollapseDirection aAction);
+  NS_IMETHOD DeleteSelection(EDirection aAction);
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
@@ -107,11 +121,11 @@ public:
   NS_IMETHOD GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists);
   NS_IMETHOD GetParagraphTags(nsStringArray *aTagList);
   NS_IMETHOD GetListTags(nsStringArray *aTagList);
-  NS_IMETHOD RemoveParagraphStyle();
+//  NS_IMETHOD RemoveParagraphStyle();
 
-  NS_IMETHOD AddBlockParent(nsString& aParentTag);
-  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
-  NS_IMETHOD RemoveParent(const nsString &aParentTag);
+//  NS_IMETHOD AddBlockParent(nsString& aParentTag);
+//  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
+//  NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
   NS_IMETHOD MakeOrChangeList(const nsString& aListType);
   NS_IMETHOD RemoveList(const nsString& aListType);
@@ -225,6 +239,14 @@ public:
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
+  /** All editor operations which alter the doc should be prefaced
+   *  with a call to StartOperation, naming the action and direction */
+  NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+
+  /** All editor operations which alter the doc should be followed
+   *  with a call to EndOperation, naming the action and direction */
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
 
@@ -307,10 +329,10 @@ protected:
                                   BlockTransformationType aTranformation,
                                   nsIDOMNode **aNewParentNode);
   
-  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, 
+/*  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, 
                                     nsString    &aParentTag,
                                     BlockTransformationType aTranformation);
-
+*/
   NS_IMETHOD RemoveParagraphStyleFromRange(nsIDOMRange *aRange);
   
   NS_IMETHOD RemoveParagraphStyleFromBlockContent(nsIDOMRange *aRange);

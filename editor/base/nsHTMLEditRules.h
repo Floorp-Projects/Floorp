@@ -41,6 +41,8 @@ public:
   virtual   ~nsHTMLEditRules();
 
   // nsEditRules methods
+  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
@@ -64,7 +66,7 @@ protected:
                             TypeInState      typeInState,
                             PRInt32          aMaxLength);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
-  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, 
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
@@ -144,7 +146,11 @@ protected:
 
   nsresult AdjustSpecialBreaks();
   nsresult AdjustWhitespace(nsIDOMSelection *aSelection);
-  nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction);
+  nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction);
+  nsresult FindNearTextNode(nsIDOMNode *aSelNode, 
+                            PRInt32 aSelOffset, 
+                            nsIEditor::EDirection aDirection,
+                            nsCOMPtr<nsIDOMNode> *outTextNode);
   nsresult RemoveEmptyNodes();
   nsresult DoTextNodeWhitespace(nsIDOMCharacterData *aTextNode, PRInt32 aStart, PRInt32 aEnd);
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
@@ -193,6 +199,8 @@ public:
   NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
   NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
+  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection);
+  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection);
 
 protected:
 

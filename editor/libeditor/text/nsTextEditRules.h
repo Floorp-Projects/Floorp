@@ -51,6 +51,8 @@ public:
 
   // nsEditRules methods
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
@@ -103,11 +105,11 @@ protected:
   nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
 
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, 
-                               nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
+                               nsIEditor::EDirection aCollapsedAction, 
                                PRBool *aCancel,
                                PRBool *aHandled);
   nsresult DidDeleteSelection(nsIDOMSelection *aSelection, 
-                              nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
+                              nsIEditor::EDirection aCollapsedAction, 
                               nsresult aResult);
 
   nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
@@ -222,11 +224,17 @@ protected:
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
 
-  // data
+  // data members
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
+  PRUint32 mActionNesting;
+  PRBool mLockRulesSniffing;
+
+  // friends
+  friend class nsAutoLockRulesSniffing;
+
 };
 
 
@@ -242,7 +250,7 @@ class nsTextRulesInfo : public nsRulesInfo
     outputFormat(0),
     typeInState(),
     maxLength(-1),
-    collapsedAction(nsIEditor::eDeleteNext),
+    collapsedAction(nsIEditor::eNext),
     bOrdered(PR_FALSE),
     alignType(0),
     blockType(0),
@@ -259,7 +267,7 @@ class nsTextRulesInfo : public nsRulesInfo
   PRInt32 maxLength;
   
   // kDeleteSelection
-  nsIEditor::ESelectionCollapseDirection collapsedAction;
+  nsIEditor::EDirection collapsedAction;
   
   // kMakeList
   PRBool bOrdered;
@@ -273,6 +281,27 @@ class nsTextRulesInfo : public nsRulesInfo
   // kInsertElement
   const nsIDOMElement* insertElement;
 };
+
+
+/***************************************************************************
+ * stack based helper class for StartOperation()/EndOperation() sandwich.
+ * this class sets a bool letting us know to ignore any rules sniffing
+ * that tries to occur reentrantly. 
+ */
+class nsAutoLockRulesSniffing
+{
+  public:
+  
+  nsAutoLockRulesSniffing(nsTextEditRules *rules) : mRules(rules) 
+                 {if (mRules) mRules->mLockRulesSniffing = PR_TRUE;}
+  ~nsAutoLockRulesSniffing() 
+                 {if (mRules) mRules->mLockRulesSniffing = PR_FALSE;}
+  
+  protected:
+  nsTextEditRules *mRules;
+};
+
+
 
 #endif //nsTextEditRules_h__
 

@@ -193,7 +193,7 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   }
   else if (PR_TRUE==mDeleteString.Equals(aCommand))
   { 
-    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eDeleteNext), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNext), NS_ERROR_FAILURE);
   }
   else if (PR_TRUE==mSelectAllString.Equals(aCommand))    
   { 

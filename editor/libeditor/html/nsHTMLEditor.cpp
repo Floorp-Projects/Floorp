@@ -826,7 +826,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
-    res = DeleteSelection(nsIEditor::eDoNothing);
+    res = DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(res)) return res;
   }
   nsCOMPtr<nsIDOMNode> selNode;
@@ -1109,6 +1109,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsAutoEditBatch batchIt(this);
+  nsAutoRules beginRulesSniffing(this, kOpRemoveTextProperty, nsIEditor::eNext);
   
   if (gNoisy) 
   { 
@@ -1277,7 +1278,7 @@ NS_IMETHODIMP nsHTMLEditor::GetTypingStateValue(nsIAtom *aProperty, nsString &aV
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirection aAction)
+NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1286,6 +1287,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirecti
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
+  nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
   nsresult result = GetSelection(getter_AddRefs(selection));
@@ -1315,17 +1317,22 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel, handled;
-
+  PRInt32 theAction = nsTextEditRules::kInsertText;
+  PRInt32 opID = kOpInsertText;
+  if (mInIMEMode) 
+  {
+    theAction = nsTextEditRules::kInsertTextIME;
+    opID = kOpInsertIMEText;
+  }
   nsAutoPlaceHolderBatch batch(this, nsnull); 
+  nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsAutoString resultString;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertText);
-  // set a different action flag if we are an IME event
-  if (mInIMEMode) ruleInfo.action = nsTextEditRules::kInsertTextIME;
+  nsTextRulesInfo ruleInfo(theAction);
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.typeInState = *mTypeInState;
@@ -1349,7 +1356,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
   nsAutoEditBatch beginBatching(this);
-
+  nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
+  
   nsresult res;
 
   nsCOMPtr<nsIDOMSelection>selection;
@@ -1538,6 +1546,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
     return NS_ERROR_NULL_POINTER;
   
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMSelection>selection;
   res = GetSelection(getter_AddRefs(selection));
@@ -1869,6 +1878,7 @@ nsHTMLEditor::GetListTags(nsStringArray *aTagList)
   return GetParentBlockTags(aTagList, PR_TRUE);
 }
 
+/*
 // use this when block parents are to be added regardless of current state
 NS_IMETHODIMP 
 nsHTMLEditor::AddBlockParent(nsString& aParentTag)
@@ -1955,7 +1965,6 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
   return res;
 }
 
-
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParagraphStyle()
 {
@@ -1971,6 +1980,7 @@ nsHTMLEditor::RemoveParagraphStyle()
 
   nsAutoSelectionReset selectionResetter(selection);
   nsAutoEditBatch beginBatching(this);
+
   nsCOMPtr<nsIEnumerator> enumerator;
   res = selection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
@@ -2019,6 +2029,7 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
   }
   return res;
 }
+*/
 
 NS_IMETHODIMP
 nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
@@ -2030,6 +2041,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpMakeList, nsIEditor::eNext);
   
   // pre-process
   res = GetSelection(getter_AddRefs(selection));
@@ -2119,6 +2131,7 @@ nsHTMLEditor::RemoveList(const nsString& aListType)
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpRemoveList, nsIEditor::eNext);
   
   // pre-process
   res = GetSelection(getter_AddRefs(selection));
@@ -2148,6 +2161,7 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
   PRBool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpMakeBasicBlock, nsIEditor::eNext);
   
   // pre-process
   res = GetSelection(getter_AddRefs(selection));
@@ -2221,7 +2235,6 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
   return res;
 }
 
-// TODO: Implement "outdent"
 NS_IMETHODIMP
 nsHTMLEditor::Indent(const nsString& aIndent)
 {
@@ -2229,8 +2242,15 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   PRBool cancel, handled;
-
+  PRInt32 theAction = nsHTMLEditRules::kIndent;
+  PRInt32 opID = kOpIndent;
+  if (aIndent == "outdent")
+  {
+    theAction = nsHTMLEditRules::kOutdent;
+    opID = kOpOutdent;
+  }
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
   
   // pre-process
   nsCOMPtr<nsIDOMSelection> selection;
@@ -2238,9 +2258,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
 
-  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kIndent);
-  if (aIndent == "outdent")
-    ruleInfo.action = nsHTMLEditRules::kOutdent;
+  nsTextRulesInfo ruleInfo(theAction);
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
   
@@ -2310,6 +2328,8 @@ NS_IMETHODIMP
 nsHTMLEditor::Align(const nsString& aAlignType)
 {
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpAlign, nsIEditor::eNext);
+
   nsCOMPtr<nsIDOMNode> node;
   PRBool cancel, handled;
   
@@ -3435,7 +3455,7 @@ NS_IMETHODIMP nsHTMLEditor::Cut()
 
   res = Copy();
   if (NS_SUCCEEDED(res))
-    res = DeleteSelection(eDoNothing);
+    res = DeleteSelection(eNone);
   return res;
 }
 
@@ -4116,6 +4136,34 @@ void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, 
   }
   // XXX: we lose the return value here. Set a flag in the editor?
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark --- nsEditor overrides ---
+#pragma mark -
+#endif
+
+
+/** All editor operations which alter the doc should be prefaced
+ *  with a call to StartOperation, naming the action and direction */
+NS_IMETHODIMP
+nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+{
+  if (mRules) return mRules->BeforeEdit(opID, aDirection);
+  return NS_OK;
+}
+
+
+/** All editor operations which alter the doc should be followed
+ *  with a call to EndOperation, naming the action and direction */
+NS_IMETHODIMP
+nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+{
+  if (mRules) return mRules->AfterEdit(opID, aDirection);
+  return NS_OK;
+}
+
 
 
 #ifdef XP_MAC
@@ -4862,6 +4910,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
   return res;
 }
 
+/*
 NS_IMETHODIMP 
 nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange, 
                                      nsString &aParentTag,
@@ -4901,7 +4950,7 @@ nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange,
 
   return res;
 }
-
+*/
 
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParagraphStyleFromRange(nsIDOMRange *aRange)
@@ -5339,7 +5388,7 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
   result = selection->GetIsCollapsed(&collapsed);
   if (NS_SUCCEEDED(result) && !collapsed) 
   {
-    result = DeleteSelection(nsIEditor::eDoNothing);
+    result = DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(result)) {
       return result;
     }

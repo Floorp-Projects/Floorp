@@ -52,7 +52,6 @@ static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
-
 enum
 {
   kLonely = 0,
@@ -118,6 +117,70 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   return res;
 }
 
+
+NS_IMETHODIMP
+nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+{
+  if (mLockRulesSniffing) return NS_OK;
+  
+  nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
+  
+  if (!mActionNesting)
+  {
+    mDocChangeRange = nsnull;  // clear out our accounting of what changed
+  }
+  mActionNesting++;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+{
+  if (mLockRulesSniffing) return NS_OK;
+
+  nsAutoLockRulesSniffing lockIt(this);
+
+  NS_PRECONDITION(mActionNesting>0, "bad action nesting!");
+  nsresult res = NS_OK;
+  if (!--mActionNesting)
+  {
+    if (action == nsEditor::kOpIgnore) return NS_OK;
+    
+    nsCOMPtr<nsIDOMSelection>selection;
+    nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    
+    if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
+    {
+      // expand the "changed doc range" as needed
+      res = PromoteRange(mDocChangeRange, action);
+      if (NS_FAILED(res)) return res;
+
+      // add in any needed <br>s, and remove any unneeded ones.
+      res = AdjustSpecialBreaks();
+      if (NS_FAILED(res)) return res;
+      // adjust whitespace for insert text and delete actions
+      if ((action == nsEditor::kOpInsertText) || (action == nsEditor::kOpDeleteSelection))
+      {
+        res = AdjustWhitespace(selection);
+        if (NS_FAILED(res)) return res;
+      }
+      // clean up any empty nodes in the selection
+      res = RemoveEmptyNodes();
+      if (NS_FAILED(res)) return res;
+    }
+    
+    // adjust selection
+    res = AdjustSelection(selection, aDirection);
+    if (NS_FAILED(res)) return res;
+    // detect empty doc
+    res = CreateBogusNodeIfNeeded(selection);
+  }
+  return res;
+}
+
+
 NS_IMETHODIMP 
 nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, 
@@ -132,8 +195,6 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
 
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
-
-  mDocChangeRange = nsnull;  // clear out our accounting of what changed
     
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
@@ -181,53 +242,8 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
   nsresult res;
     
-  switch (info->action)
-  {
-    case kUndo:
-      mDocChangeRange = nsnull;  // clear out our accounting of what changed
-      res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
-      if (NS_FAILED(res)) return res;
-      return AdjustSelection(aSelection,info->collapsedAction);
-    case kRedo:
-      mDocChangeRange = nsnull;  // clear out our accounting of what changed
-      res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
-      if (NS_FAILED(res)) return res;
-      return AdjustSelection(aSelection,info->collapsedAction);
-  }
-
-  // for other than undo and redo:
-
-  if (mDocChangeRange)
-  {
-    // expand the "changed doc range" as needed
-    res = PromoteRange(mDocChangeRange, info->action);
-    if (NS_FAILED(res)) return res;
-
-    // add in any needed <br>s, and remove any unneeded ones.
-    res = AdjustSpecialBreaks();
-    if (NS_FAILED(res)) return res;
-    // adjust whitespace for insert text and delete actions
-    if ((aInfo->action == kInsertText) || (aInfo->action == kDeleteSelection))
-    {
-      res = AdjustWhitespace(aSelection);
-      if (NS_FAILED(res)) return res;
-    }
-    // clean up any empty nodes in the selection
-    res = RemoveEmptyNodes();
-    if (NS_FAILED(res)) return res;
-  }
-  
-  // do default:
-  if (aInfo->action != kInsertBreak)  // nsTextEditRules::DidInsertBreak() not usable by html rules
-  {
-    res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
-    if (NS_FAILED(res)) return res;
-  }
-  // adjust selection
-  res = AdjustSelection(aSelection,info->collapsedAction);
-  if (NS_FAILED(res)) return res;
-  // detect empty doc
-  res = CreateBogusNodeIfNeeded(aSelection);
+  // pass thru to nsTextEditRules:
+  res = nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
   return res;
 }
   
@@ -276,7 +292,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
-    res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+    res = mEditor->DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(res)) return res;
   }
 
@@ -450,7 +466,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
-    res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+    res = mEditor->DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(res)) return res;
   }
   
@@ -589,7 +605,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
 
 nsresult
 nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
-                                     nsIEditor::ESelectionCollapseDirection aAction, 
+                                     nsIEditor::EDirection aAction, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
 {
@@ -629,7 +645,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
       if (NS_FAILED(res)) return res;
     
       // at beginning of text node and backspaced?
-      if (!offset && (aAction == nsIEditor::eDeletePrevious))
+      if (!offset && (aAction == nsIEditor::ePrevious))
       {
         nsCOMPtr<nsIDOMNode> priorNode;
         res = GetPriorHTMLNode(node, &priorNode);
@@ -727,7 +743,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
     
       // at end of text node and deleted?
       if ((offset == (PRInt32)strLength)
-          && (aAction == nsIEditor::eDeleteNext))
+          && (aAction == nsIEditor::eNext))
       {
         nsCOMPtr<nsIDOMNode> nextNode;
         res = GetNextHTMLNode(node, &nextNode);
@@ -828,9 +844,9 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
     {
       nsCOMPtr<nsIDOMNode> nodeToDelete;
       
-      if (aAction == nsIEditor::eDeletePrevious)
+      if (aAction == nsIEditor::ePrevious)
         res = GetPriorHTMLNode(node, offset, &nodeToDelete);
-      else if (aAction == nsIEditor::eDeleteNext)
+      else if (aAction == nsIEditor::eNext)
         res = GetNextHTMLNode(node, offset, &nodeToDelete);
       else
         return NS_OK;
@@ -844,7 +860,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         PRUint32 selPoint = 0;
         nsCOMPtr<nsIDOMCharacterData>nodeAsText;
         nodeAsText = do_QueryInterface(nodeToDelete);
-        if (aAction == nsIEditor::eDeletePrevious)
+        if (aAction == nsIEditor::ePrevious)
           nodeAsText->GetLength(&selPoint);
         res = aSelection->Collapse(nodeToDelete,selPoint);
         return res;
@@ -3053,7 +3069,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
       
       // now attempt to adjust selection to a text node.
       // if we fail, then that means we need toinsert a break
-      res = AdjustSelection(aSelection, nsIEditor::eDeleteNext);
+      res = AdjustSelection(aSelection, nsIEditor::eNext);
       if (NS_FAILED(res)) return res;
 	  // get the selection location
 	  nsCOMPtr<nsIDOMNode> selNode;
@@ -3410,6 +3426,10 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     // now we need to insert a br.  
     nsCOMPtr<nsIDOMNode> brNode;
     res = mEditor->CreateBR(*aOutMergeParent, *aOutMergeOffset, &brNode);
+    if (NS_FAILED(res)) return res;
+    res = nsEditor::GetNodeLocation(brNode, aOutMergeParent, aOutMergeOffset);
+    if (NS_FAILED(res)) return res;
+    (*aOutMergeOffset)++;
     return res;
   }
   else if (IsList(aNodeLeft) || mEditor->IsTextNode(aNodeLeft))
@@ -3587,7 +3607,7 @@ nsHTMLEditRules::AdjustWhitespace(nsIDOMSelection *aSelection)
     node = do_QueryInterface(content);
     if (!node) return NS_ERROR_FAILURE;
     
-    if (nsEditor::IsTextNode(node)) 
+    if (nsEditor::IsTextNode(node) && mEditor->IsEditable(node)) 
     {
       isupports = do_QueryInterface(node);
       arrayOfNodes->AppendElement(isupports);
@@ -3614,7 +3634,7 @@ nsHTMLEditRules::AdjustWhitespace(nsIDOMSelection *aSelection)
 
 
 nsresult 
-nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction)
+nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction)
 {
   if (!aSelection) return NS_ERROR_NULL_POINTER;
   
@@ -3689,11 +3709,51 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::ESelect
     }
   }
   
-  // we aren't in a textnode: look for a nearby text node, in the right direction.
-  if (aAction == nsIEditor::eDeletePrevious)
-    res = GetPriorHTMLNode(selNode, selOffset, &nearNode);
+  // we aren't in a textnode: look for a nearby text node.
+  // prefer the correct direction.
+  res = FindNearTextNode(selNode, selOffset, aAction, &nearNode);
+  if (NS_FAILED(res)) return res;
+  // did we suceed in getting back a node?
+  nsIEditor::EDirection dir;
+  if (!nearNode)
+  {
+    // if not try again in other direction
+    dir = nsIEditor::eNext;
+    if (aAction == nsIEditor::eNext) dir = nsIEditor::ePrevious;
+    res = FindNearTextNode(selNode, selOffset, dir, &nearNode);
+    if (NS_FAILED(res)) return res;
+  }
   else
-    res = GetNextHTMLNode(selNode, selOffset, &nearNode);
+  {
+    dir = aAction;
+  }
+  // is the nearnode a text node?
+  textNode = do_QueryInterface(nearNode);
+  if (!textNode) return NS_ERROR_UNEXPECTED;
+  PRInt32 offset = 0;
+  // put selection in right place:
+  if (dir == nsIEditor::ePrevious)
+    textNode->GetLength((PRUint32*)&offset);
+  res = aSelection->Collapse(nearNode,offset);
+  if (NS_FAILED(res)) return res;
+  return res;
+}
+
+nsresult
+nsHTMLEditRules::FindNearTextNode(nsIDOMNode *aSelNode, 
+                                  PRInt32 aSelOffset, 
+                                  nsIEditor::EDirection aDirection,
+                                  nsCOMPtr<nsIDOMNode> *outTextNode)
+{
+  if (!aSelNode || !outTextNode) return NS_ERROR_NULL_POINTER;
+  *outTextNode = nsnull;
+  nsresult res = NS_OK;
+  
+  nsCOMPtr<nsIDOMNode> nearNode;
+  if (aDirection == nsIEditor::ePrevious)
+    res = GetPriorHTMLNode(aSelNode, aSelOffset, &nearNode);
+  else
+    res = GetNextHTMLNode(aSelNode, aSelOffset, &nearNode);
   if (NS_FAILED(res)) return res;
     
   // if there is no node then punt
@@ -3701,24 +3761,16 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::ESelect
     
   // is nearNode also a descendant of same block?
   nsCOMPtr<nsIDOMNode> block, nearBlock;
-  if (mEditor->IsBlockNode(selNode)) block = selNode;
-  else block = mEditor->GetBlockNodeParent(selNode);
+  if (mEditor->IsBlockNode(aSelNode)) block = aSelNode;
+  else block = mEditor->GetBlockNodeParent(aSelNode);
   if (mEditor->IsBlockNode(nearNode)) nearBlock = nearNode;
   else nearBlock = mEditor->GetBlockNodeParent(nearNode);
   
   if (block != nearBlock) return NS_OK; // punt - we dont want to jump across a block  
  
   // is the nearnode a text node?
-  textNode = do_QueryInterface(nearNode);
-  if (textNode)
-  {
-    PRInt32 offset = 0;
-    // put selection in right place:
-    if (aAction == nsIEditor::eDeletePrevious)
-      textNode->GetLength((PRUint32*)&offset);
-    res = aSelection->Collapse(nearNode,offset);
-    if (NS_FAILED(res)) return res;
-  }
+  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(nearNode);
+  if (textNode) *outTextNode = nearNode;
   return res;
 }
 
@@ -4281,6 +4333,39 @@ nsHTMLEditListener::DidDeleteText(nsIDOMCharacterData *aTextNode,
   return res;  
 }
 
+NS_IMETHODIMP
+nsHTMLEditListener::WillDeleteSelection(nsIDOMSelection *aSelection)
+{
+  nsCOMPtr<nsIDOMRange> range;
+  // get the (collapsed) selection location
+  nsCOMPtr<nsIDOMNode> selNode;
+  PRInt32 selOffset;
+  // construct a range to represent start and end of inNode
+  nsresult res = nsComponentManager::CreateInstance(kRangeCID,
+                                                    nsnull,
+                                                    nsIDOMRange::GetIID(),
+                                                    getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  res = range->SetStart(selNode, selOffset);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->GetEndNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  res = range->SetEnd(selNode, selOffset);
+  if (NS_FAILED(res)) return res;
+  if (range)
+  {
+    res = mRules->UpdateDocChangeRange(range);
+  }
+  return res;  
+}
+
+NS_IMETHODIMP
+nsHTMLEditListener::DidDeleteSelection(nsIDOMSelection *aSelection)
+{
+  return NS_OK;
+}
 
 nsresult 
 nsHTMLEditListener::MakeRangeFromNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMRange> *outRange)

@@ -24,9 +24,9 @@
 #define nsTSDNotifier_h__
 
 #include "nsCOMPtr.h"
+#include "nsIEditActionListener.h"
 
 class nsTextServicesDocument;
-class nsIEditActioinListener;
 
 class nsTSDNotifier : public nsIEditActionListener
 {
@@ -80,6 +80,8 @@ public:
   NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
   NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
+  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection);
+  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection);
 };
 
 #endif // nsTSDNotifier_h__

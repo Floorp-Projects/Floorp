@@ -625,7 +625,7 @@ nsEditorShell::DeleteCharForward()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteNext);
+  nsresult rv = editor->DeleteSelection(nsIEditor::eNext);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -635,7 +635,7 @@ nsEditorShell::DeleteCharBackward()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eDeletePrevious);
+  nsresult rv = editor->DeleteSelection(nsIEditor::ePrevious);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -645,7 +645,7 @@ nsEditorShell::DeleteWordForward()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteNextWord);
+  nsresult rv = editor->DeleteSelection(nsIEditor::eNextWord);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -655,7 +655,7 @@ nsEditorShell::DeleteWordBackward()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eDeletePreviousWord);
+  nsresult rv = editor->DeleteSelection(nsIEditor::ePreviousWord);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -665,7 +665,7 @@ nsEditorShell::DeleteToEndOfLine()
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_NOT_INITIALIZED;
-  nsresult rv = editor->DeleteSelection(nsIEditor::eDeleteToEndOfLine);
+  nsresult rv = editor->DeleteSelection(nsIEditor::eToEndOfLine);
   ScrollSelectionIntoView();
   return rv;
 }
@@ -2038,18 +2038,18 @@ NS_IMETHODIMP
 nsEditorShell::DeleteSelection(PRInt32 action)
 {  
   nsresult  err = NS_NOINTERFACE;
-  nsIEditor::ESelectionCollapseDirection selectionAction;
+  nsIEditor::EDirection selectionAction;
 
   switch(action)
   {
     case 1:
-      selectionAction = nsIEditor::eDeleteNext;
+      selectionAction = nsIEditor::eNext;
       break;
     case 2:
-      selectionAction = nsIEditor::eDeletePrevious;
+      selectionAction = nsIEditor::ePrevious;
       break;
     default:
-      selectionAction = nsIEditor::eDoNothing;
+      selectionAction = nsIEditor::eNone;
       break;
   }
 

@@ -171,13 +171,13 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         return NS_ERROR_BASE; // consumed
       if (nsIDOMKeyEvent::DOM_VK_BACK_SPACE==keyCode) 
       {
-        mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
+        mEditor->DeleteSelection(nsIEditor::ePrevious);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
       if (nsIDOMKeyEvent::DOM_VK_DELETE==keyCode)
       {
-        mEditor->DeleteSelection(nsIEditor::eDeleteNext);
+        mEditor->DeleteSelection(nsIEditor::eNext);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   

@@ -52,13 +52,13 @@ public:
 
   /* An enum used to describe how to collpase a non-collapsed selection */
   typedef enum {
-    eDoNothing,
-    eDeleteNext,
-    eDeletePrevious,
-    eDeleteNextWord,
-    eDeletePreviousWord,
-    eDeleteToEndOfLine
-  } ESelectionCollapseDirection;
+    eNone,
+    eNext,
+    ePrevious,
+    eNextWord,
+    ePreviousWord,
+    eToEndOfLine
+  } EDirection;
 
 
   /**
@@ -112,7 +112,7 @@ public:
    * @param aDir  if eLTR, delete to the right (for example, the DEL key)
    *              if eRTL, delete to the left (for example, the BACKSPACE key)
    */
-  NS_IMETHOD DeleteSelection(ESelectionCollapseDirection aAction)=0;
+  NS_IMETHOD DeleteSelection(EDirection aAction)=0;
 
 
   /* ------------ Document info and file methods -------------- */

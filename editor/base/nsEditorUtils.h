@@ -31,6 +31,8 @@
 #include "nsIEditor.h"
 #include "nsIAtom.h"
 
+#include "nsEditor.h"
+
 class nsAutoEditBatch
 {
   private:
@@ -85,6 +87,25 @@ class nsAutoSelectionReset
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
 };
+
+/***************************************************************************
+ * stack based helper class for StartOperation()/EndOperation() sandwich
+ */
+class nsAutoRules
+{
+  public:
+  
+  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
+         mEd(ed), mAction(action), mDirection(aDirection)
+                {if (mEd) mEd->StartOperation(mAction, mDirection);}
+  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection);}
+  
+  protected:
+  nsEditor *mEd;
+  PRInt32 mAction;
+  nsIEditor::EDirection mDirection;
+};
+
 
 
 #endif // nsEditorUtils_h__
