@@ -302,23 +302,29 @@ END of Deprecated -->
   </menu>
   <menu accesskey="s" value="&searchMenu.label;">
     <menupopup>
-      <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();"/>
-      <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
+      <menuitem value="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" oncommand="BrowserFind();"/>
+      <menuitem value="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" oncommand="BrowserFindAgain();"/>
       <menuseparator />
-      <menuitem value="&searchBookmarksHistoryCmd.label;" 
-        oncommand="OpenSearch('find', true, null);"/>
-      <menuitem value="&searchInternetCmd.label;"
-        oncommand="OpenSearch('internet', true, null);"/>
-      <menuitem value="&searchAllMailCmd.label;" 
-        oncommand="OpenSearch('mail', true, null);"/>
-      <menuitem value="&searchAddressbookCmd.label;"
-        oncommand="OpenSearch('addressbook', true, null);"/>
+      <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="OpenSearch('find', true, null);"/>
+      <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="RevealSearchPanel();"/>
+      <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" oncommand="OpenSearch('mail', true, null);"/>
+      <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" oncommand="OpenSearch('addressbook', true, null);"/>
       <menuseparator />
-      <menuitem value="&searchComputerCmd.label;" 
-        oncommand="BrowserReload();"/>
+      <menu value="&searchBusinessMenu.label;" accesskey="&searchBusinessMenu.accesskey;">
+        <menupopup>
+          <menuitem value="&searchYellowPages.label;" accesskey="&searchYellowPages.accesskey;" oncommand="window.content.location.href = 'http://home.netscape.com/netcenter/yellowpages.html';"/>
+          <menuitem value="&searchStockQuote.label;" accesskey="&searchStockQuote.accesskey;" oncommand="window.content.location.href = 'http://personalfinance.netscape.com/finance/';"/>
+        </menupopup>
+      </menu>
+      <menuitem value="&searchMaps.label;" accesskey="&searchMaps.accesskey;" oncommand="window.content.location.href = 'http://clients.mapquest.com/netscape/mqcustomconnect?link=form';"/>
+      <menuitem value="&searchPeople.label;" accesskey="&searchPeople.accesskey;" oncommand="window.content.location.href = 'http://home.netscape.com/netcenter/whitepages.html';"/>
+      <menuitem value="&searchReferenceDesk.label;" accesskey="&searchReferenceDesk.accesskey;" oncommand="window.content.location.href = 'http://webcenters.netscape.com/webcenters/research/netscape/reference.adp';"/>
+      <menuitem value="&searchShopping.label;" accesskey="&searchShopping.accesskey;" oncommand="window.content.location.href = 'http://shopping.search.aol.com/';"/>
+      <menuseparator/>
+      <menuitem value="&searchInternetKeywords.label;" accesskey="&searchInternetKeywords.accesskey;" oncommand="window.content.location.href = 'http://home.netscape.com/escapes/keywords/';"/>
     </menupopup>
   </menu>
-  
+
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
 	  <menupopup>
 		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
