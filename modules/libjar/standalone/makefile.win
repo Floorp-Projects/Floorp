@@ -60,6 +60,7 @@ depend::
 
 clobber::
   $(RM) nsZipArchive.cpp
+  $(RM) *.h
 
 clobber_all:: clobber
   $(RM) $(DIST)\lib\jar_s.lib
