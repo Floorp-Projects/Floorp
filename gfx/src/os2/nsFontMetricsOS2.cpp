@@ -68,7 +68,6 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 nsVoidArray  *nsFontMetricsOS2::gGlobalFonts = nsnull;
 PRBool        nsFontMetricsOS2::gSubstituteVectorFonts = PR_TRUE;
 PLHashTable  *nsFontMetricsOS2::gFamilyNames = nsnull;
-nscoord       nsFontMetricsOS2::gDPI = 0;
 long          nsFontMetricsOS2::gSystemRes = 0;
 int           nsFontMetricsOS2::gCachedIndex = 0;
 nsICollation *nsFontMetricsOS2::gCollation = nsnull;
@@ -249,30 +248,11 @@ nsFontOS2::DrawString( HPS aPS, nsDrawingSurfaceOS2* aSurface,
 /**********************************************************
     nsFontMetricsOS2
  **********************************************************/    
-int PR_CALLBACK
-prefChanged(const char *aPref, void *aClosure)
-{
-  nsresult rv;
-
-  if( PL_strcmp(aPref, "browser.display.screen_resolution") == 0 )
-  {
-    PRInt32 dpi;
-    rv = gPref->GetIntPref( aPref, &dpi );
-    if( NS_SUCCEEDED(rv) && dpi != 0)
-      nsFontMetricsOS2::gDPI = dpi;
-    else
-      nsFontMetricsOS2::gDPI = nsFontMetricsOS2::gSystemRes;
-  }
-
-  return 0;
-}
 
 static void
 FreeGlobals(void)
 {
   gInitialized = 0;
-
-  gPref->UnregisterCallback( "browser.display.screen_resolution", prefChanged, NULL );
 
 #ifdef WINCODE
   NS_IF_RELEASE(gCharsetManager);
@@ -423,25 +403,6 @@ InitGlobals(void)
     }
   }
 
-  // Set prefVal the value of the pref "browser.display.screen_resolution"
-  // When a new profile is created, the pref is set to 0.  This tells the code
-  // to default to font resolution of the screen (96 or 120)
-  nsresult res;
-  PRInt32 prefVal = -1;
-
-  res = gPref->GetIntPref( "browser.display.screen_resolution", &prefVal );
-  if (NS_FAILED(res))
-    prefVal = 0;
-
-  gPref->RegisterCallback( "browser.display.screen_resolution", prefChanged, NULL );
-
-  if (prefVal == 0)
-  {
-    prefVal = nsFontMetricsOS2::gSystemRes;
-  }
-
-  nsFontMetricsOS2::gDPI = prefVal;
-
   //register an observer to take care of cleanup
   gFontCleanupObserver = new nsFontCleanupObserver();
   NS_ASSERTION(gFontCleanupObserver, "failed to create observer");
@@ -568,7 +529,7 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
      // points size is less than the minimum or more than the maximum point
      // size available for Tms Rmn and Helv.
     if( gSubstituteVectorFonts &&
-        (points > 18 || points < 8 || (gDPI != 96 && gDPI != 120)) &&
+        (points > 18 || points < 8) &&
         GetVectorSubstitute( aPS, fattrs->szFacename, alias ))
     {
       PL_strcpy( fattrs->szFacename, alias );
@@ -650,11 +611,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
   float app2dev, fHeight;
   mDeviceContext->GetAppUnitsToDevUnits( app2dev );
 
-  if( !mDeviceContext->mPrintDC ) /* if not printing */
-    if( fattrs->fsFontUse == 0 )    /* if image font */
-      fHeight = points * gDPI / 72;
-    else
-      fHeight = mFont.size * app2dev * gDPI / nsFontMetricsOS2::gSystemRes;
+  /* if image font and not printing */
+  if ((fattrs->fsFontUse == 0) && (!mDeviceContext->mPrintDC))
+    fHeight = NSIntPointsToTwips(points) * app2dev;
   else
     fHeight = mFont.size * app2dev;
 

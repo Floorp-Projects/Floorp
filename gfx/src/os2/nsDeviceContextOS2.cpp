@@ -35,6 +35,7 @@
 #include "nsHashTable.h" // For CreateFontAliasTable()
 
 #include "nsGfxDefs.h"
+#include "nsIPref.h"
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
@@ -43,6 +44,7 @@
 static PRBool gIsWarp4 = NOT_SETUP;
 
 PRUint32 nsDeviceContextOS2::sNumberOfScreens = 0;
+nscoord nsDeviceContextOS2::mDpi = 120;
 
 nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()
@@ -81,8 +83,14 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
   {
     GFX (::GpiDestroyPS (mPrintPS), FALSE);
     ::DevCloseDC(mPrintDC);
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefs->UnregisterCallback("browser.display.screen_resolution",
+                                prefChanged, (void *)this);
+    }
   }
-
   NS_IF_RELEASE(mSpec);
 }
 
@@ -91,6 +99,35 @@ nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
   mWidget = aWidget;
 
   CommonInit(::WinOpenWindowDC((HWND)aWidget));
+
+  static int initialized = 0;
+  PRInt32 prefVal = -1;
+  if (!initialized) {
+    initialized = 1;
+
+    // Set prefVal the value of the preference
+    // "browser.display.screen_resolution"
+    // or -1 if we can't get it.
+    // If it's negative, we pretend it's not set.
+    // If it's 0, it means force use of the operating system's logical
+    // resolution.
+    // If it's positive, we use it as the logical resolution
+    nsresult res;
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
+    if (NS_SUCCEEDED(res) && prefs) {
+      res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
+      if (NS_FAILED(res)) {
+        prefVal = -1;
+      }
+      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
+                              (void *)this);
+    }
+
+    SetDPI(prefVal);
+  } else {
+    SetDPI(mDpi); // to setup p2t and t2p
+  }
 
   return NS_OK;
 }
@@ -118,6 +155,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 #endif
 
   CommonInit( mPrintDC);
+
+  SetDPI(0);
 
   GetTwipsToDevUnits( newscale);
 
@@ -157,10 +196,6 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   LONG alArray[CAPS_DEVICE_POLYSET_POINTS];
 
   GFX (::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray), FALSE);
-
-  mTwipsToPixels = ((float)alArray [CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
-
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
 #ifdef COLOR_256
@@ -563,6 +598,55 @@ NS_IMETHODIMP nsDeviceContextOS2::GetDepth(PRUint32& aDepth)
 {
   aDepth = mDepth;
   return NS_OK;
+}
+
+nsresult
+nsDeviceContextOS2::SetDPI(PRInt32 aPrefDPI)
+{
+  // Set OSVal to what the operating system thinks the logical resolution is.
+  long OSVal;
+  HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
+  HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+  GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &OSVal), FALSE);
+  ::WinReleasePS(ps);
+
+  if ((aPrefDPI == 0) || (mPrintDC)) {
+    // If the pref is 0 or we are printing force use of OS value
+    mDpi = OSVal;
+  } else if (aPrefDPI > 0) {
+    // If there's a valid pref value for the logical resolution,
+    // use it.
+    mDpi = aPrefDPI;
+  } else {
+    // if we couldn't get the pref or it's negative then use 120
+    mDpi = 120;
+  }
+
+  int pt2t = 72;
+
+  // make p2t a nice round number - this prevents rounding problems
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
+
+  // XXX need to reflow all documents
+  return NS_OK;
+}
+
+int prefChanged(const char *aPref, void *aClosure)
+{
+  nsDeviceContextOS2 *context = (nsDeviceContextOS2*)aClosure;
+  nsresult rv;
+  
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) {
+    PRInt32 dpi;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    rv = prefs->GetIntPref(aPref, &dpi);
+    if (NS_SUCCEEDED(rv))
+      context->SetDPI(dpi);
+
+  }
+  
+  return 0;
 }
 
 #ifdef COLOR_256
