@@ -30,7 +30,6 @@
 @import url("chrome://communicator/skin/button.css");
 @import url("chrome://communicator/skin/formatting.css");
 @import url("chrome://communicator/skin/menubutton.css");
-@import url("chrome://communicator/skin/prefpanels.css");
 @import url("chrome://communicator/skin/toolbar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -64,14 +63,3 @@
 .down[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
-
-/* ::::: File icons (32x32 and 16x16) ::::: */
-
-.file-icon-large {
-  list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
-}
-
-.file-icon-small {
-  list-style-image: url("chrome://communicator/skin/icons/content-small.gif");
-}
-

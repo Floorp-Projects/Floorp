@@ -61,12 +61,10 @@
   <popupset id="popupset"/>
   
   <!-- bookmarks string bundle -->
-  <stringbundleset id="stringbundleset"/>
+  <stringbundleset id="bookmarksStringBundles"/>
   
   <!-- bookmarks & edit commands -->
-  <commands id="commands"/>
-  
-  <broadcasterset id="broadcasterset"/>
+  <commandset id="bookmarksItems"/>
   
   <box id="panel-bar" class="toolbar">
     <button class="button-toolbar" label="&command.addBookmark.label;"

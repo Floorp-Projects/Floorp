@@ -60,7 +60,7 @@
 
   </script>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
            
   <iframe id="maintext" class="output-container" type="content" flex="1"/>
 

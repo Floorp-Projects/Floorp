@@ -50,7 +50,7 @@ Rights Reserved.
         persist="width height screenX screenY sizemode"
         windowtype="mail:3pane">
 
-<stringbundleset id="stringbundleset">
+<stringbundleset id="mailStringBundles">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
 </stringbundleset>
@@ -73,8 +73,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
 
-<commands id="commands">
-
+<commandset id="mailCommands">
   <commandset id="mailFileMenuItems"/>
   <commandset id="mailViewMenuItems"/>
   <commandset id="mailEditMenuItems"/>
@@ -90,11 +89,16 @@ Rights Reserved.
         commandupdater="true"
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
-</commands>
+  <commandset id="tasksKeys"/>
+  <command id="toggleSidebar"/>
+</commandset>
 
-<broadcasterset id="broadcasterset"/>
+<broadcasterset id="mailBroadcasters"/>
 
-<keyset id="keyset"/>
+<keyset id="mailKeys">
+  <key id="showHideSidebar"/>
+  <keyset id="tasksKeys"/>
+</keyset>
 
 <popupset>
 

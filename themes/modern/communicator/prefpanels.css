@@ -54,3 +54,9 @@
   list-style-image: url("chrome://messenger/skin/icons/smiley/smile.gif");
 }
 
+/* ::::: File icon (32x32) ::::: */
+
+.file-icon-large {
+  list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
+}
+

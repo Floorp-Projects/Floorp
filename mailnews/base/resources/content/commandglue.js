@@ -800,7 +800,7 @@ function Redo()
 function MsgToggleWorkOffline()
 {
   var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}", "nsIIOService");
-  var broadcaster = document.getElementById("Communicator:WorkMode");
+  // var command = document.getElementById("Communicator:WorkMode");
   // this is just code for my testing purposes, and doesn't have the proper UI, as in the offline spec.
   // we could use the account manager, or add a new service, the offline manager.
   // what the heck, might as well bite the bullet and add a new service.

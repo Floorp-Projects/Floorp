@@ -45,7 +45,7 @@ Rights Reserved.
         persist="width height screenX screenY sizemode"
         windowtype="mail:messageWindow">
 
-  <stringbundleset id="stringbundleset">
+  <stringbundleset id="mailStringBundles">
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
@@ -67,7 +67,7 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
-  <commands id="commands">
+  <commandset id="mailCommands">
     <commandset id="mailFileMenuItems"/>
     <commandset id="mailViewMenuItems"/>
     <commandset id="mailEditMenuItems"/>
@@ -75,12 +75,13 @@ Rights Reserved.
     <commandset id="mailGoMenuItems"/>
     <commandset id="mailMessageMenuItems"/>
     <commandset id="mailToolbarItems"/>
-  </commands>
+    <commandset id="commandKeys"/>
+  </commandset>
 
-  <stringbundleset id="stringbundleset"/>
-
-  <broadcasterset id="broadcasterset"/>
-  <keyset id="keyset"/>
+  <broadcasterset id="mailBroadcasters"/>
+  <keyset id="mailKeys">
+    <keyset id="tasksKeys"/>
+  </keyset>
 
   <popupset>
     <popup id="emailAddressPopup" popupanchor="bottomleft">

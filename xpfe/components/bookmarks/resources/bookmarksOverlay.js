@@ -254,7 +254,7 @@ BookmarksUIElement.prototype = {
   // Perform a command based on a UI event. XXX - work to do here. 
   preExecCommand: function (aEvent)
   {
-    var commandID = aEvent.target.getAttribute("command");
+    var commandID = aEvent.target.getAttribute("cmd");
     if (!commandID) return;
     goDoCommand("cmd_" + commandID.substring(NC_NS_CMD.length));
   },

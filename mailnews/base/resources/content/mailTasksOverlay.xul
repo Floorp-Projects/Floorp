@@ -48,23 +48,23 @@
   ]]>
   </script>         
 
-  <keyset id="keyset">
-    <key id="key_mail"  key="&messengerCmd.commandkey;" observes="Tasks:Mail" modifiers="accel"/>
+  <keyset id="tasksKeys">
+    <key id="key_mail"  key="&messengerCmd.commandkey;" command="Tasks:Mail" modifiers="accel"/>
   </keyset>
 
 
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="Tasks:Mail" label="&messengerCmd.label;" oncommand="toMessengerWindow();"/>
-  </broadcasterset>
+  <commandset id="tasksCommands">
+    <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
+  </commandset>
   
 
   <box id="taskButtons">
-    <button class="button-toolbar-4 taskbutton" id="mini-mail" onclick="toMessengerWindow()" 
+    <button class="button-toolbar-4 taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
   </box>
   
   <menupopup id="taskPopup">
-    <menuitem position="2" accesskey="&messengerCmd.accesskey;" key="key_mail" observes="Tasks:Mail"/>
+    <menuitem position="2" accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail"/>
   </menupopup>
   
 </overlay>         

@@ -19,3 +19,12 @@
   {
     list-style-image : url("chrome://messenger/skin/smile.gif");
   }
+
+
+/**
+ * File icon (32x32)
+ **/
+.file-icon-large
+  {
+    list-style-image      : url("chrome://communicator/skin/content-large.gif");
+  }

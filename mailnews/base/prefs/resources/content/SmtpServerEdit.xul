@@ -39,7 +39,7 @@
 >
 
 <script language="javascript" src="SmtpServerEdit.js"/>
-<keyset id="keyset"/>
+<keyset id="dialogKeys"/>
 <box id="smtpServerEditor"/>
 <separator/>
 <box id="okCancelButtonsRight"/>

@@ -31,7 +31,7 @@ Rights Reserved.
     height="400" width="500" class="color-dialog"
     onload="onLoad();">
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <!-- XXX: strres.js is included so that WizardManager.js will work -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

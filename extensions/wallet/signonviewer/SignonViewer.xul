@@ -42,7 +42,7 @@
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
            
   <tabcontrol flex="1" orient="vertical">
     <tabbox orient="horizontal">

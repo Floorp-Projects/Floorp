@@ -23,14 +23,14 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="cookieWindow"
+<window xmlns:html="http://www.w3.org/1999/xhtml" id="cookieWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        align="vertical"
+        orient="vertical"
         onload="init();">
 
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>

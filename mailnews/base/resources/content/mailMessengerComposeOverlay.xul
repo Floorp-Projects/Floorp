@@ -8,8 +8,8 @@
 
   <!-- messengercompose specific UI items -->
   <menupopup id="menu_NewPopup">
-    <menuitem id="menu_newMessage" key="key_newMessage" observes="cmd_newMessage" position="2"/>
-    <menuitem id="menu_newCard"      observes="cmd_newCard" position="3"/>
+    <menuitem id="menu_newMessage" position="2"/>
+    <menuitem id="menu_newCard" position="3"/>
   </menupopup>
 
 </overlay>

@@ -48,11 +48,10 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 <script type="application/x-javascript" src="chrome://global/content/console.js"/>
 
 <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
-
-<broadcasterset id="broadcasterset">
-  <broadcaster id="cmd_copy"/>
-  <broadcaster id="cmd_close" oncommand="window.close()"/>
-  <broadcaster id="cmd_quit"/>
+<commandset id="tasksCommands"/>
+<command id="cmd_copy"/>
+<command id="cmd_close" oncommand="window.close()"/>
+<command id="cmd_quit"/>
 
   <broadcaster id="Console:clear" label="&clear.label;" oncommand="clearConsole();"/>
   
@@ -71,7 +70,6 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
                oncommand="toggleToolbar(this);"
                type="checkbox" checked="true" 
                _toolbar="ToolbarEval"/>
-</broadcasterset>
 
 <broadcasterset id="ModeBroadcasters">
   <broadcaster id="Console:modeAll" label="&all.label;" 
@@ -84,7 +82,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
                oncommand="changeMode('Messages');"/>
 </broadcasterset>
 
-<keyset>
+<keyset id="tasksKeys">
   <key id="key_copy"/>
   <key id="key_close"/>
   <key id="key_quit"/>

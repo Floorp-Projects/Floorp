@@ -66,7 +66,7 @@
 <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
-<commands id="commands">
+<commandset id="composeCommands">
   <commandset id="msgComposeCommandUpdate"
     commandupdater="true"
     events="create, focus,tree-select"
@@ -85,9 +85,11 @@
   <commandset id="composerStyleMenuItems"/>
   <commandset id="composerTableMenuItems"/>
   <commandset id="composerListMenuItems"/>
-</commands>
+  <commandset id="tasksCommands"/>
+  <command id="cmd_quit"/>
+</commandset>
 
-<broadcasterset id="broadcasterset">
+<broadcasterset id="composeBroadcasters">
   <!-- File Menu -->
   <broadcaster id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
   <broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
@@ -102,14 +104,12 @@
   <broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
 <!--NYI <broadcaster id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
   <broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
-  <broadcaster id="cmd_quit"/>
 
   <!-- Edit Menu -->
   <!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
   <!--broadcaster id="cmd_find"/-->
   <!--broadcaster id="cmd_findNext"/-->
   <broadcaster id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
-  <broadcaster id="cmd_preferences" oncommand="goDoCommand('cmd_preferences')"/>
 
   <!-- View Menu -->
   <broadcaster id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
@@ -192,7 +192,7 @@
 </popupset>
 <popupset id="aTooltipSet"/>
 
-<keyset id="keyset">
+<keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
   <key id="key_close"/>
@@ -289,7 +289,7 @@
           <menuitem label="&replaceCmd.label;" observes="cmd_replace"/>
           <menuseparator/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
-          <menuitem id="menu_preferences" observes="cmd_preferences"/>
+          <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
         </menupopup>
       </menu>
       <menu id="menu_View">

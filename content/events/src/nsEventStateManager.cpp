@@ -1386,9 +1386,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
     {
-      ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-
       SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
+      ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
       nsCOMPtr<nsIPresShell> shell;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){

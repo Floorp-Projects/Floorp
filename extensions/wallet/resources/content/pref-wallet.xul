@@ -20,7 +20,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -28,10 +28,10 @@
 <!ENTITY % prefWalletDTD SYSTEM "chrome://wallet/locale/pref-wallet.dtd" >
 %prefWalletDTD;
 ]>
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
+<window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        orient="vertical" title="&window.title;"
+        orient="vertical"
         onload="parent.initPanel('chrome://wallet/content/pref-wallet.xul');">
 
   <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>

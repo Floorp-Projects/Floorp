@@ -71,7 +71,7 @@
   <popupset id="aTooltipSet" />
   <popupset id="editorContentContextSet"/>
 
-  <commands id="commands">
+  <commandset id="tasksCommands">
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
@@ -84,7 +84,8 @@
     <commandset id="composerStyleMenuItems"/>
     <commandset id="composerTableMenuItems"/>
     <commandset id="composerListMenuItems"/>
-  </commands>
+    <command id="toggleSidebar"/>
+  </commandset>
 
   <!-- Use this when we abandon the default startup page -->
   <!-- broadcaster id="args" value="about:blank"/ -->
@@ -95,13 +96,16 @@
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('html')"/>
 -->
-  <!-- command nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
     <broadcaster id="Editor:Throbber" busy="false"/>
+    <broadcaster id="Communicator:WorkMode"/>
   </broadcasterset>
 
   <!-- keys are appended from the overlay -->
-  <keyset id="keyset"/>
+  <keyset id="editorKeys">
+    <keyset id="tasksKeys"/>
+    <key id="showHideSidebar"/>
+  </keyset>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
   <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed">

@@ -3,7 +3,7 @@
 <!-- retrieve generic commands -->
 <?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailNavigatorOverlay.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailNavigatorOverlay.dtd" >
 
 <overlay id="mailNavigatorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -33,20 +33,20 @@
   </script>         
 
   <!-- navigator specific commands -->
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="cmd_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
-    <broadcaster id="Browser:SendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
-  </broadcasterset>
+  <commandset id="tasksCommands">
+    <command id="cmd_sendPage" oncommand="sendPage();"/>
+    <command id="Browser:SendLink" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
+  </commandset>
          
   <!-- navigator specific UI items -->
   <menupopup id="menu_NewPopup">
-    <menuitem id="menu_newCard" insertafter="menu_newNavigator" observes="cmd_newCard" position="3"/>
-    <menuitem id="menu_newMessage" insertafter="menu_newNavigator" key="key_newMessage" observes="cmd_newMessage" position="2"/>
+    <menuitem id="menu_newCard" position="3"/>
+    <menuitem id="menu_newMessage" position="2"/>
   </menupopup>
 
   <menupopup id="menu_FilePopup">
-    <menuitem id="menu_sendPage" observes="cmd_sendPage" position="11"/>
-    <menuitem id="menu_sendLink" observes="Browser:SendLink" position="12"/>
+    <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage" position="11"/>
+    <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink" position="12"/>
   </menupopup>
   
 </overlay>

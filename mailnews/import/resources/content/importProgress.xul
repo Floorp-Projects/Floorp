@@ -34,7 +34,7 @@ Rights Reserved.
 
   <script type="application/x-javascript" src="chrome://messenger/content/importProgress.js"/>
 
-	<keyset id="keyset"/>
+	<keyset id="dialogKeys"/>
 
 	<text class="header" id="progressTitle" value="Title"/>
 	

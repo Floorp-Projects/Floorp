@@ -74,6 +74,6 @@ Contributor(s):
 
   <!-- Places to overlay common dialog buttons and keyset -->
   <box id="okCancelButtons"/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
 </window>

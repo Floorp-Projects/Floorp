@@ -37,7 +37,7 @@ Contributor(s):
   <stringbundle id="bundle_news" src="chrome://messenger/locale/news.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/downloadheaders.js" />
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   
   <html class="header" style="width: 25em; max-width: 25em;" id="newsgroupLabel"/> 
   <html style="width: 25em; max-width: 25em;" id="info"/>

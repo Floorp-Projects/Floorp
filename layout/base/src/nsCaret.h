@@ -66,6 +66,7 @@ class nsCaret : public nsICaret,
 		NS_IMETHOD 		EraseCaret();
 
     NS_IMETHOD    SetCaretWidth(nscoord aPixels);
+    void    SetVisibilityDuringSelection(PRBool aVisibility);
 
     //nsISelectionListener interface
     NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
@@ -102,7 +103,7 @@ protected:
     PRPackedBool          mVisible;           // is the caret blinking
     PRPackedBool          mDrawn;             // this should be mutable
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
-    PRPackedBool          mShowWhenSelection; // show when text is selected
+    PRPackedBool          mShowDuringSelection; // show when text is selected
     
     nsRect                mCaretRect;         // the last caret rect
     nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.

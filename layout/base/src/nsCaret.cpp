@@ -77,7 +77,7 @@ nsCaret::nsCaret()
 , mVisible(PR_FALSE)
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
-, mShowWhenSelection(PR_FALSE)
+, mShowDuringSelection(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
 , mLastContentOffset(0)
@@ -109,8 +109,8 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
       mCaretTwipsWidth = (nscoord)tempInt;
     if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_CaretBlinkTime, tempInt)))
       mBlinkRate = (PRUint32)tempInt;
-    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_ShowCaretWhenSelection, tempInt)))
-      mShowWhenSelection = tempInt ? PR_TRUE : PR_FALSE;
+    if (NS_SUCCEEDED(touchyFeely->GetMetric(nsILookAndFeel::eMetric_ShowCaretDuringSelection, tempInt)))
+      mShowDuringSelection = tempInt ? PR_TRUE : PR_FALSE;
     
     NS_RELEASE(touchyFeely);
   }
@@ -474,7 +474,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
   
   PRBool isCollapsed = PR_FALSE;
   domSelection->GetIsCollapsed(&isCollapsed);
-  if (!mShowWhenSelection && !isCollapsed) return PR_FALSE;
+  if (!mShowDuringSelection && !isCollapsed) return PR_FALSE;
 
   // start and end parent should be the same since we are collapsed
   nsCOMPtr<nsIDOMNode>  focusNode;
@@ -846,7 +846,7 @@ PRBool nsCaret::MustDrawCaret()
   if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
     return PR_FALSE;
 
-  if (mShowWhenSelection)
+  if (mShowDuringSelection)
     return PR_TRUE;      // show the caret even in selections
 
   return isCollapsed;
@@ -1061,4 +1061,8 @@ NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
     mCaretTwipsWidth = -1;
   }
   return NS_OK;
+}
+
+void nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) {
+  mShowDuringSelection = aVisibility;
 }

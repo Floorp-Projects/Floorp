@@ -31,7 +31,6 @@
  * XXX - until load is supported in chrome, you also need to include 
  *       these files:
  *       chrome://global/content/nsJSSupportsUtils.js
- *       chrome://global/content/nsJSComponentManager.js
  *       chrome://global/content/nsTransferable.js
  **/
 

@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-applications.xul -->
 
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
-<!ENTITY window.title                   "Advanced">
 <!ENTITY lHeader                        "Helper Applications">
 <!ENTITY descript                       "Specify which application should handle each file type">
 <!ENTITY fileTypes.label                "File types:">

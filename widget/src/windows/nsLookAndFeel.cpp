@@ -268,7 +268,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_MultiLineCaretWidth:
         aMetric = 2;
         break;
-    case eMetric_ShowCaretWhenSelection:
+    case eMetric_ShowCaretDuringSelection:
         aMetric = 1;
         break;
     case eMetric_SubmenuDelay:

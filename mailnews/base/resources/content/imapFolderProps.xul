@@ -38,7 +38,7 @@
   <script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script language="JavaScript" src="chrome://messenger/content/folderProps.js"></script>
 
-<keyset id="keyset"/>  
+<keyset id="dialogKeys"/>  
   
 <tabcontrol orient="vertical">
   <tabbox>

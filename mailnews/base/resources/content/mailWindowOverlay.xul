@@ -43,8 +43,9 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script src="chrome://messenger/content/commandglue.js"/>
 
-<stringbundleset id="stringbundleset">
+<stringbundleset id="mailStringBundles">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_viewZoom"/>
 </stringbundleset>
 
 <commandset id="mailFileMenuItems"
@@ -76,6 +77,12 @@ Rights Reserved.
     <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
 </commandset>
 
+<commandset id="mailCommands">
+  <command id="cmd_newNavigator"/>
+  <command id="cmd_newEditor"/>
+  <command id="cmd_quit"/>
+  <!-- <command id="cmd_pageSetup"/>-->
+</commandset>
 <commandset id="mailViewMenuItems"
             commandupdater="true"
             events="create-menu-view"
@@ -185,17 +192,13 @@ Rights Reserved.
   <command id="button_file"/>
 </commandset>
 
-<broadcasterset id="broadcasterset">
+<broadcasterset id="mailBroadcasters">
   <!-- File Menu -->
-  <broadcaster id="cmd_newNavigator"/>
-  <broadcaster id="cmd_newEditor"/>
-  <broadcaster id="cmd_quit"/>
-  <broadcaster id="cmd_pageSetup"/>
-
+  <broadcaster id="Communicator:WorkMode"/>
   <!-- Edit Menu -->
 </broadcasterset>
 
-<keyset id="keyset">
+<keyset id="mailKeys">
     <key id="space" key=" " oncommand="SpaceHit()"/>
 
 	<!-- File Menu -->
@@ -237,7 +240,7 @@ Rights Reserved.
              modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
-
+  <keyset id="viewZoomKeys"/>
   <!-- Tab Keys -->
         <key id="tabpaneCounterClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('counter-clockwise');"
              modifiers="shift"/>

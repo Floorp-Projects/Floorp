@@ -36,7 +36,7 @@ Rights Reserved.
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <!-- field list -->
   <box id="fieldList-box" align="vertical">

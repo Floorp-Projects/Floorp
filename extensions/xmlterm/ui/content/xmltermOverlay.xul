@@ -10,19 +10,20 @@
 
 <script type="application/x-javascript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
 
-<keyset id="keyset">
+<keyset id="tasksKeys">
   <key id="key_xmlterm"  key="&xmltermCmd.commandkey;"
-       observes="Tasks:xmlterm" modifiers="accel"/>
+       command="Tasks:xmlterm" modifiers="accel"/>
 </keyset>
 
-<broadcasterset id="broadcasterset">
-  <broadcaster id="Tasks:xmlterm" value="&xmltermCmd.label;" oncommand="toXMLterm();"/>
-</broadcasterset>
+<commandset id="tasksCommands">
+  <command id="Tasks:xmlterm"  oncommand="toXMLterm();"/>
+</commandset>
 
 <menupopup id="taskPopup">
-	<menuitem accesskey="&xmltermCmd.accesskey;" key="key_xmlterm"
-        position="6"
-        observes="Tasks:xmlterm"/>
+  <menuitem label="&xmltermCmd.label;" accesskey="&xmltermCmd.accesskey;"
+            key="key_xmlterm"
+            position="6"
+            command="Tasks:xmlterm"/>
 </menupopup>
 
 </overlay>

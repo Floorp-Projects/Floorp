@@ -251,24 +251,24 @@
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
-          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
+          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
           <xul:menuseparator/>
-          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
+          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
             controller.doCommand('cmd_cut');"/>
-          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
+          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
             controller.doCommand('cmd_copy');"/>
-          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
+          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
             controller.doCommand('cmd_paste');"/>
-          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
+          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
             controller.doCommand('cmd_delete');"/>
            <xul:menuseparator/>
-          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
+          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
             controller.doCommand('cmd_selectAll');"/>
         </xul:popup>
@@ -316,7 +316,7 @@
           <![CDATA[
             var children = popupNode.childNodes;
             for (var i = 0; i < children.length; i++) {              
-              var command = children[i].getAttribute("command");
+              var command = children[i].getAttribute("cmd");
               if (command) {
                 var controller = document.commandDispatcher.getControllerForCommand(command);
                 var enabled = controller.isCommandEnabled(command);
@@ -387,24 +387,24 @@
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
-          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
+          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
           <xul:menuseparator/>
-          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
+          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
             controller.doCommand('cmd_cut');"/>
-          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
+          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
             controller.doCommand('cmd_copy');"/>
-          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
+          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
             controller.doCommand('cmd_paste');"/>
-          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
+          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
             controller.doCommand('cmd_delete');"/>
            <xul:menuseparator/>
-          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
+          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
             controller.doCommand('cmd_selectAll');"/>
         </xul:popup>

@@ -39,7 +39,7 @@ Rights Reserved.
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/importDialog.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   
   <box class="box-header" id="header"
        title="&importTitle.label;"

@@ -35,7 +35,7 @@ Rights Reserved.
         
 <script language="JavaScript" src="chrome://messenger/content/addressbook/abAddressBookNameDialog.js"/>
 
-	<keyset id="keyset"/>
+	<keyset id="dialogKeys"/>
 
 	<box orient="vertical" style="width:36em; min-height:12em">
 		

@@ -21,7 +21,7 @@
 /////////////////////////////////////////////////////////////////////
 // If we want to do any special processing for each email address
 // we show in the msg header view overlay, we can isolate it in this file.
-// It is included by msgHdrViewOverlay.
+// (Remember to include it in msgHdrViewOverlay.xul)
 //////////////////////////////////////////////////////////////////////
 
 // AddExtraAddressProcessing --> If you want to add any extra

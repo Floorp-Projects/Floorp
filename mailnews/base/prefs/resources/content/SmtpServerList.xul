@@ -41,7 +41,7 @@
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <script language="javascript" src="SmtpServerList.js"/>
 
-<keyset id="keyset"/>
+<keyset id="dialogKeys"/>
 
 <html flex="1">&smtpListDesc.label;</html>
 

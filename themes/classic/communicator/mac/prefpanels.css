@@ -6,13 +6,20 @@
 }
 
 /******* Themes ****************/
+#skinsTree 
+  {
+    height                  : 80px;
+  }  
 
-#skinsTabcontrol {
-	margin		: 5px 5px 0px 5px;
-}
-
-  
 .smileface
   {
     list-style-image : url("chrome://messenger/skin/smile.gif");
+  }
+  
+/**
+ * File icon (32x32)
+ **/
+.file-icon-large
+  {
+    list-style-image      : url("chrome://communicator/skin/content-large.gif");
   }

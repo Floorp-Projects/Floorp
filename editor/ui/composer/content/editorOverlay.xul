@@ -33,34 +33,13 @@
 <script type="application/x-javascript" src="chrome://editor/content/editorOverlay.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 
-  <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
-
-  <key id="pastequotationkb"  key="&editpastequotation.keybinding;"   observes="cmd_pasteQuote"  modifiers="accel, shift"/>
-  <key id="findkb"            key="&editfind.keybinding;"            observes="cmd_find"  modifiers="accel"/>
-  <key id="findnextkb"        key="&editfindnext.keybinding;"        observes="cmd_findNext"  modifiers="accel"/>
-  <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel"/>
-
-  <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
-  <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
-  <key id="underlinekb"    key="&styleunderline.keybinding;"  observes="cmd_underline" modifiers="accel"/>
-
-  <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel, shift"/>
-  <key id="increaseindentkb"  key="&formatindent.keybinding;"  observes="cmd_indent"  modifiers="accel"/>
-  <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
-
-  <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="shift, accel"/>
-  <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="shift, accel"/>
-  <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="shift, accel"/>
-  <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="shift, accel"/>
-
-  <keyset id="keyset">
-
+  <keyset id="editorKeys">
     <!-- defined in globalOverlay -->
     <key id="key_newNavigator"/>
     <key id="key_newBlankPage"/>
 
     <key id="openeditorkb"   key="&fileopen.keybinding;"   observes="cmd_open"  modifiers="accel"/>
-    <key id="openremoteeditorkb"  key="&fileopenremote.keybinding;"  observes="cmd_openRemote"  modifiers="accel"/>
+    <key id="openremoteeditorkb"  key="&fileopenremote.keybinding;"  observes="cmd_openRemote"  modifiers="accel,shift"/>
     <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save" modifiers="accel"/>
     <key id="closekb"        key="&fileclose.keybinding;"  observes="cmd_close"  modifiers="accel"/>
     <key id="printkb"        key="&fileprint.keybinding;"  observes="cmd_print"  modifiers="accel"/>
@@ -70,26 +49,25 @@
     <key id="key_cut"/>
     <key id="key_copy"/>
     <key id="key_paste"/>
-    <key id="pastequotationkb"/>
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="findkb"/>
-    <key id="findnextkb"/>
-    <key id="checkspellingkb"/>
-    
-    <key id="boldkb"/>
-    <key id="italickb"/>
-    <key id="underlinekb"/>
+    <key id="pastequotationkb"  key="&editpastequotation.keybinding;"   observes="cmd_pasteQuote"  modifiers="accel, shift"/>
+    <key id="findkb"            key="&editfind.keybinding;"            observes="cmd_find"  modifiers="accel"/>
+    <key id="findnextkb"        key="&editfindnext.keybinding;"        observes="cmd_findNext"  modifiers="accel"/>
+    <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel"/>
 
-    <key id="fontfixedwidthkb"/>
-    <key id="increaseindentkb"/>
-    <key id="decreaseindentkb"/>
+    <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
+    <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
+    <key id="underlinekb"    key="&styleunderline.keybinding;"  observes="cmd_underline" modifiers="accel"/>
 
-    <key id="removestyleskb"/>
-    <key id="removelinkskb"/>
+    <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel, shift"/>
+    <key id="increaseindentkb"  key="&formatindent.keybinding;"  observes="cmd_indent"  modifiers="accel"/>
+    <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
-    <key id="decreasefontsizekb"/>
-    <key id="increasefontsizekb"/>
+    <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="shift, accel"/>
+    <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="shift, accel"/>
+    <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="shift, accel"/>
+    <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="shift, accel"/>
   </keyset>
 
   <!-- commands updated when the editor gets created -->

@@ -23,6 +23,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -34,11 +35,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&editType.label;"
         onload="Startup();">
-
-  <stringbundle id="bundle_prefApplications"
-                src="chrome://communicator/locale/pref/pref-applications.properties"/>
+    <stringbundle id="bundle_prefApplications"
+                  src="chrome://communicator/locale/pref/pref-applications.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var gExtensionLabel   = null;
@@ -158,8 +157,8 @@
           var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
           var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
           dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-          var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
-                                                                    "nsICommonDialogs");
+          var commonDialogService = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
+                                              .getService(Components.interfaces.nsICommonDialogs);
           var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
           if (!replace)
             window.close();
@@ -231,7 +230,7 @@
   ]]>
   </script>
   
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
   
   <box autostretch="never">
     <image id="largeIcon" class="file-icon-large" style="width: 32px; height: 32px;"/>

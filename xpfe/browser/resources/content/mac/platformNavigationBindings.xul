@@ -3,14 +3,14 @@
 <overlay id="platformNavigationBindings"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <keyset id="keyset">
+  <keyset id="navigationKeys">
     <!-- proper arrow key navigation, 4.xP -->
-    <key id="goBackKb"  keycode="VK_LEFT" observes="Browser:Back" modifiers="accel"/>
-    <key id="goForwardKb"  keycode="VK_RIGHT" observes="Browser:Forward" modifiers="accel"/>
-    <key id="goBackKbMac"  key="[" observes="Browser:Back" modifiers="accel"/>
-    <key id="goForwardKbMac"  key="]" observes="Browser:Forward" modifiers="accel"/>
-    <key id="stopMac"  key="." oncommand="BrowserStop();" modifiers="accel"/>
-    <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="meta"/>
+    <key id="goBackKb"  keycode="VK_LEFT" observes="canGoBack" modifiers="accel"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" observes="canGoForward" modifiers="accel"/>
+    <key key="[" observes="canGoBack" modifiers="accel"/>
+    <key key="]" observes="canGoForward" modifiers="accel"/>
+    <key key="." oncommand="BrowserStop();" modifiers="accel"/>
+    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="meta"/>
   </keyset>  
 
 </overlay>

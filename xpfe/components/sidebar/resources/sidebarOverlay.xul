@@ -27,12 +27,9 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="toggleSidebar" oncommand="SidebarShowHide();"/>
-  </broadcasterset>
-  <keyset id="keyset">
-    <key id="showHideSidebar" keycode="VK_F9" observes="toggleSidebar"/>
-  </keyset>
+  <command id="toggleSidebar" oncommand="SidebarShowHide();"/>
+  <key id="showHideSidebar" keycode="VK_F9" command="toggleSidebar"/>
+
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" orient="vertical" persist="hidden width collapsed">
     <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
@@ -158,7 +155,7 @@
     <menuitem id="sidebar-menu" type="checkbox"
       label="&sidebarCmd.label;"
       accesskey="&sidebarCmd.accesskey;"
-      observes="toggleSidebar"
+      command="toggleSidebar"
       key="showHideSidebar"
       position="2"/>
   </menupopup>

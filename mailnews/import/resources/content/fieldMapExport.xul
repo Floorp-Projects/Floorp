@@ -39,7 +39,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/fieldMapExport.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box align="horizontal">
   

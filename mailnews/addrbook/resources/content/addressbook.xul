@@ -55,45 +55,47 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 <script language="JavaScript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
-<commands id="commands">
+<commandset id="tasksCommands">
   <commandset id="CommandUpdate_AddressBook"
         commandupdater="true"
         events="focus,tree-select"
         oncommandupdate="CommandUpdate_AddressBook()"/>
   
   <commandset id="globalEditMenuItems"/>
-</commands>
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_newEditor"/>
+    <command id="cmd_PrintCard" oncommand="AbPrintCard()"/>
+    <command id="cmd_quit"/>
+    <command id="cmd_close" oncommand="AbClose()"/>
+    <command id="cmd_CardProperties" oncommand="AbEditCard();"/>
+    <command id='cmd_selectAll'/>
+    <command id="toggleSidebar"/>
+</commandset>
 
-<broadcasterset id="broadcasterset">
+<broadcasterset id="abBroadcasters">
   <!-- File Menu -->
-  <broadcaster id="cmd_newNavigator"/>
-  <broadcaster id="cmd_newEditor"/>
-  <broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
-  <broadcaster id="cmd_close" oncommand="AbClose()"/>
-  <broadcaster id="cmd_quit"/>
+
   <!-- Edit Menu -->
   <broadcaster id="cmd_delete"
          valueAddressBook="&deleteAbCmd.label;"
          valueCard="&deleteCardCmd.label;"
          valueCards="&deleteCardsCmd.label;"/>
-  <broadcaster id="cmd_CardProperties" oncommand="AbEditCard();"/>
-  <broadcaster id='button_delete'/>
-  <broadcaster id='cmd_selectAll'/>
-  <broadcaster id="cmd_preferences"/>
-
   <broadcaster id="broadcaster-throbber" busy="false"/>
+  <broadcaster id="button_delete" disabled="true"/>
+  <broadcaster id="Communicator:WorkMode"/>
 </broadcasterset>
 
-<keyset id="keyset">
+<keyset id="tasksKeys">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
-  <key id="key_PrintCard"  key="&printCardViewCmd.key;" observes="cmd_PrintCard"  modifiers="accel"/>
+  <key id="key_PrintCard"  key="&printCardViewCmd.key;" command="cmd_PrintCard"  modifiers="accel"/>
   <key id="key_close"/>
   <key id="key_quit"/>
   <!-- Edit Menu -->
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-  <key id="key_CardProperties" key="&cardPropertiesCmd.key;" observes="cmd_CardProperties" modifiers="accel"/>
+  <key id="showHideSidebar"/>
+  <key id="key_CardProperties" key="&cardPropertiesCmd.key;" command="cmd_CardProperties" modifiers="accel"/>
 </keyset>
 
 <popupset id="aTooltipSet"/>
@@ -117,21 +119,21 @@ Rights Reserved.
 				<menuseparator/>
         <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
 				<menuseparator/>
-        <menuitem label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" observes="cmd_PrintCard"/>
+        <menuitem label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" command="cmd_PrintCard"/>
 				<menuseparator/>
 			</menupopup>
 		</menu>
 		
 		<menu id="menu_Edit">
 		  <menupopup>
-			<menuitem id="menu_delete"/>
+			<menuitem id="menu_delete" observes="button_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
       <menuitem label="&cardPropertiesCmd.label;"
 			          accesskey="&cardPropertiesCmd.accesskey;"
 				  key="key_CardProperties"
-				  observes="cmd_CardProperties"/>
+          command="cmd_CardProperties"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
 		  </menupopup>
@@ -209,7 +211,7 @@ Rights Reserved.
             	<toolbarseparator class="toolbarseparator-primary"/>
         <button class="button-toolbar-2 top" orient="vertical" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
         <button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+        <button class="button-toolbar-2 top" orient="vertical" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
 				<box orient="vertical" flex="100%">
 					<spring flex="1"/> 

@@ -2871,7 +2871,6 @@ static PRBool IsEventPseudo(nsIAtom* aAtom)
 static PRBool IsLinkPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::linkPseudo == aAtom) || 
-                 (nsCSSAtoms::outOfDatePseudo == aAtom) || 
                  (nsCSSAtoms::visitedPseudo == aAtom));
 }
 
@@ -2967,7 +2966,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
   
   if ((localTrue == result) &&
       (nsnull != aSelector->mPseudoClassList)) {  // test for pseudo class match
-    // first-child, root, lang, active, focus, hover, link, outOfDate, visited
+    // first-child, root, lang, active, focus, hover, link, visited...
     // XXX disabled, enabled, selected, selection
     nsAtomList* pseudoClass = aSelector->mPseudoClassList;
 
@@ -3060,9 +3059,6 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           if ((localFalse != result) && (aTestState)) {
             if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
               result = PRBool(localTrue == (eLinkState_Unvisited == data.mLinkState));
-            }
-            else if (nsCSSAtoms::outOfDatePseudo == pseudoClass->mAtom) {
-              result = PRBool(localTrue == (eLinkState_OutOfDate == data.mLinkState));
             }
             else if (nsCSSAtoms::visitedPseudo == pseudoClass->mAtom) {
               result = PRBool(localTrue == (eLinkState_Visited == data.mLinkState));
@@ -3698,7 +3694,6 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSAtoms::focusPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::linkPseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::outOfDatePseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::selectionPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::visitedPseudo)) {
       return PR_TRUE;

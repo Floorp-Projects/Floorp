@@ -10,20 +10,21 @@
 
 <script type="application/x-javascript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
 
-<keyset id="keyset">
-  <key id="key_irc"  key="&ircCmd.commandkey;" observes="Tasks:IRC" modifiers="accel"/>
+<keyset id="tasksKeys">
+  <key id="key_irc"  key="&ircCmd.commandkey;" command="Tasks:IRC" modifiers="accel"/>
 </keyset>
 
-<broadcasterset id="broadcasterset">
-  <broadcaster id="Tasks:IRC" label="&ircCmd.label;" oncommand="toIRC();"/>
-</broadcasterset>
+<commandset id="tasksCommands">
+  <command id="Tasks:IRC" oncommand="toIRC();"/>
+</commandset>
 
 <menupopup id="taskPopup">
   <menuitem
         position="7"
+        label="&ircCmd.label;"
         accesskey="&ircCmd.accesskey;"
         key="key_irc"
-        observes="Tasks:IRC"/>
+        command="Tasks:IRC"/>
 </menupopup>
 
 </overlay>

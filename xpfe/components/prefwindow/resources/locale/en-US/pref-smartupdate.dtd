@@ -1,5 +1,4 @@
 <!--LOCALIZATION NOTE : FILE UI for Software Updates prefs -->
-<!ENTITY title.label                          "Software Installation">
 <!ENTITY lHeader                              "Software Installation">
 <!ENTITY smartTitle.label                     "Manage Software Installations and Updates">
 <!ENTITY enableSU.label                       "Enable software installation. (You will be prompted for each update.)">

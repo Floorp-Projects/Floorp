@@ -36,7 +36,7 @@ Rights Reserved.
 
   <!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <grid flex="1">
     <columns>

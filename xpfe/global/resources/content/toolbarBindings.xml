@@ -62,7 +62,7 @@ Contributor(s):
         <![CDATA[
           var toolbox = this.returnNode("toolbox");
           var toolbar = this.returnNode("toolbar", "menubar");
-          if (this.collapsed) 
+          if (this.collapsed)
             toolbox.expandToolbar(this.id);
           else
             toolbox.collapseToolbar(toolbar);
@@ -208,6 +208,7 @@ Contributor(s):
       </xul:box>
     </content>
     <implementation>
+      <property name="grippy" readonly="true" onget="return document.getAnonymousNodes(this)[0];"/>
       <method name="findNodeByAttribute">
         <parameter name="aAttribute"/>
         <parameter name="aValue"/>

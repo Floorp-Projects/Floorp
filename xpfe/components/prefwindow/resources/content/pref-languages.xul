@@ -27,7 +27,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="color-dialog"
-  title="&languages.customize.window.title;" 
   onload="Init();" orient="vertical">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>

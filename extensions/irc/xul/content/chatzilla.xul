@@ -51,12 +51,12 @@
 <script src="chrome://chatzilla/content/handlers.js"/>
 <script src="chrome://chatzilla/content/rdf.js"/>
 
-<broadcasterset id="broadcasterset">
-  <broadcaster id="cmd_close" oncommand="window.close();"/>
-  <broadcaster id="cmd_quit"/>
-</broadcasterset>
+<commandset id="tasksCommands">
+  <command id="cmd_close" oncommand="window.close();"/>
+  <command id="cmd_quit"/>
+</commandset>
 
-<keyset id="keyset">
+<keyset id="tasksKeys">
   <key id="key_close"/>
   <key id="key_quit"/>
 </keyset>

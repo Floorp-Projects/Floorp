@@ -38,7 +38,7 @@ Rights Reserved.
 
   <stringbundleset id="stringbundleset"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box orient="horizontal" autostretch="never" valign="center">
     <text for="abPopup" value="&addToAddressBook.label;"/>

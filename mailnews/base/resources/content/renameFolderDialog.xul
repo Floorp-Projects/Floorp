@@ -40,7 +40,7 @@
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/renameFolderDialog.js"/>
 
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box align="vertical">
 

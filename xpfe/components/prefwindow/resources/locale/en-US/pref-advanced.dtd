@@ -1,7 +1,5 @@
 
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
-<!ENTITY window.title                 "Advanced">
-
 <!ENTITY lHeader                      "Advanced">
 
 <!ENTITY advancedTitle.label          "Enable features that help interpret web pages">

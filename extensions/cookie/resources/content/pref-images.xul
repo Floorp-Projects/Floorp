@@ -22,7 +22,7 @@
      Peter Annema <disttsc@bart.nl>
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -31,10 +31,10 @@
 %prefImagesDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="imagesWindow"
+<window xmlns:html="http://www.w3.org/1999/xhtml" id="imagesWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        align="vertical"
+        orient="vertical"
         onload="init();">
           
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>

@@ -32,7 +32,7 @@ Rights Reserved.
 
   <stringbundleset id="stringbundleset"/>
 
-	<keyset id="keyset"/>
+	<keyset id="dialogKeys"/>
 
 	<box id="editcard"/>
 	

@@ -68,24 +68,23 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
-  <commands id="commands"/>
+  <commandset id="tasksCommands">
+    <commandset id="bookmarksItems"/>
   
-  <broadcasterset id="broadcasterset">
-    <!-- File Menu -->
-    <broadcaster id="cmd_newNavigator"/>
-    <broadcaster id="cmd_newEditor"/>
-    <broadcaster id="cmd_close" oncommand="close()"/>
-    <broadcaster id="cmd_quit"/>
+     <!-- File Menu -->
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_newEditor"/>
+    <command id="cmd_close" oncommand="close()"/>
+    <command id="cmd_quit"/>
     <!-- Edit Menu -->
-    <broadcaster id="cmd_undo"/>
-    <broadcaster id="cmd_preferences"/>
-  </broadcasterset>
+    <command id="cmd_undo"/>
+  </commandset>
 
   <popupset id="popupset"/>
 
-  <stringbundleset id="stringbundleset"/>
+  <stringbundleset id="bookmarksStringBundles"/>
   
-  <keyset id="keyset">
+  <keyset id="tasksKeys">
     <!-- File Menu -->
     <key id="key_newNavigator"/>
     <key id="key_newEditor"/>
@@ -144,7 +143,7 @@
                 template="file-bookmarks-template">
             <menupopup oncreate="fileButton.createPopupHeader(event);"/>
           </menu>
-          <menuseparator/>pp
+          <menuseparator/>
           <menuitem observes="cmd_find" key="bm_key_find"
                     label="&menuitem.find.label;" 
                     accesskey="&menuitem.find.accesskey;"/>

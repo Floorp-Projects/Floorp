@@ -28,8 +28,8 @@
 // 0.8, and the API has been modified. DO NOT MODIFY THIS FILE without
 // approval from ben@netscape.com, otherwise your changes will be lost.
 
-var gRDFService = nsJSComponentManager.getService("@mozilla.org/rdf/rdf-service;1",
-                                                  "nsIRDFService");
+var gRDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                            .getService(Components.interfaces.nsIRDFService);
 
 function _RDF(aType)
   {
@@ -303,8 +303,8 @@ var homeButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-      var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
-                                "nsICommonDialogs");
+      var commonDialogService = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
+                                           .getService(Components.interfaces.nsICommonDialogs);
       var pressedVal = { };
       var promptTitle = gNavigatorBundle.getString("droponhometitle");
       var promptMsg   = gNavigatorBundle.getString("droponhomemsg");

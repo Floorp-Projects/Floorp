@@ -43,7 +43,7 @@
 
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="keyset"/>
+  <keyset id="dialogKeys"/>
 
   <box orient="vertical" style="min-width: 20em">
     <titledbox orient="vertical"><label id="linkTextCaption" align="left"/>

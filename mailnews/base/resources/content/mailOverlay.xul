@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
-
 <overlay id="mailOverlay.xul"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -36,12 +35,13 @@
   </script>
          
   <!-- generic commands -->  
-  <broadcasterset id="broadcasterset">
-    <broadcaster id="cmd_newMessage" label="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" oncommand="goOpenNewMessage();"/>
-    <broadcaster id="cmd_newCard" label="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" oncommand="goNewCardDialog(0)"/>
-  </broadcasterset>
-
-  <keyset id="keyset">
-    <key id="key_newMessage"   key="&newMessageCmd.key;" observes="cmd_newMessage" modifiers="accel"/>
+  <commandset id="tasksCommands">
+    <command id="cmd_newMessage" oncommand="goOpenNewMessage();"/>
+    <command id="cmd_newCard" oncommand="goNewCardDialog(0)"/>
+  </commandset>
+  <menuitem id="menu_newCard" label="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" command="cmd_newCard"/>
+  <menuitem id="menu_newMessage" label="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" key="key_newMessage" command="cmd_newMessage"/>
+  <keyset id="tasksKeys">
+    <key id="key_newMessage"   key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
   </keyset>
 </overlay>
