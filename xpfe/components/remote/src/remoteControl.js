@@ -22,7 +22,7 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var remoteControlProgID		   = "component://netscape/browser/remote-browser-control"
+var remoteControlProgID	= "component://netscape/browser/remote-browser-control";
 
 var nsIRemoteBrowserControl = Components.interfaces.nsIRemoteBrowserControl;
 
@@ -35,27 +35,32 @@ function BrowserRemoteControl() {
 var browserRemoteControl = {
     openURL: function(aURL, newWindow)
     {
-        dump("openURL(" + aURL + "," + newWindow + "\n");
-    }
+        dump("openURL(" + aURL + "," + newWindow + ")\n");
+        return;
+    },
     
     openFile: function(aURL)
     {
-        dump("openFile(" + aURL+ "\n");
-    }
+        dump("openFile(" + aURL + ")\n");
+        return;
+    },
 
     saveAs: function(aURL)
     {
-        dump("saveAs(" + aURL + "\n");
-    }
+        dump("saveAs(" + aURL + ")\n");
+        return;
+    },
 
     mailto: function(mailToList)
     {
-        dump("mailto(" + mailToList + "\n");
-    }
+        dump("mailto(" + mailToList + ")\n");
+        return;
+    },
 
-    addBookmark(aURL, aTitle)
+    addBookmark: function(aURL, aTitle)
     {
-        dump("addBookmark(" + aURL + "," + aTitle + "\n");
+        dump("addBookmark(" + aURL + "," + aTitle + ")\n");
+        return;
     }
 };
 
@@ -64,7 +69,7 @@ var module = {
         dump("registerSelf for remoteControl\n");
         compMgr.registerComponentWithType(this.myCID,
                                           "Browser Remote Control",
-                                          remoteControlProgID
+                                          remoteControlProgID,
                                           fileSpec, location, true, true, 
                                           type);
     },

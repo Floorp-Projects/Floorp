@@ -29,7 +29,6 @@
 [scriptable, uuid(048afcc8-1dd2-11b2-bd86-a45b24375deb)]
 interface nsIRemoteBrowserControl : nsISupports
 {
-
     /* 
        If aURL is null, a dialog will ask for the url to open.  
        Setting newWindow to true will create a new window.
