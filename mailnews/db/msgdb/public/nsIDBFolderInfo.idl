@@ -44,7 +44,6 @@
 %}
 
 [scriptable, uuid(5cb11c00-cb8b-11d2-8d67-00805f8a6617)]
-
 interface  nsIDBFolderInfo : nsISupports {
   attribute long Flags;
   long  OrFlags(in long flags);
@@ -53,7 +52,6 @@ interface  nsIDBFolderInfo : nsISupports {
   attribute nsMsgKey HighWater;
   attribute nsMsgKey ExpiredMark;
   attribute unsigned long FolderSize;
-  attribute nsMsgKey LastMessageLoaded;
   attribute unsigned long FolderDate;
   void ChangeNumNewMessages(in long delta);
   void ChangeNumMessages(in long delta);

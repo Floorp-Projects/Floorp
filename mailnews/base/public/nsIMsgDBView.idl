@@ -290,6 +290,8 @@ interface nsIMsgDBView : nsISupports
     readonly attribute nsMsgViewIndex currentlyDisplayedMessage; 
 
     // used by "go to folder" feature
+	// and "remember last selected message" feature
+	// if key is not found, we don't select.
     void selectMsgByKey(in nsMsgKey key);
 
     // we'll suppress displaying messages if the message pane is collapsed
@@ -306,6 +308,8 @@ interface nsIMsgDBView : nsISupports
     readonly attribute boolean supportsThreading;
 
     attribute nsIMsgSearchSession searchSession;
+
+	nsMsgViewIndex findIndexFromKey(in nsMsgKey aMsgKey, in boolean aExpand);
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic

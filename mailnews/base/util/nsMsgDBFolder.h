@@ -123,7 +123,8 @@ public:
   NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
   NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
   NS_IMETHOD CallFilterPlugins(nsIMsgWindow *aMsgWindow);
-
+  NS_IMETHOD GetLastMessageLoaded(nsMsgKey *aMsgKey);
+  NS_IMETHOD SetLastMessageLoaded(nsMsgKey aMsgKey);
 
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
@@ -160,6 +161,7 @@ protected:
   PRBool mAddListener;
   PRBool mNewMessages;
   PRBool mGettingNewMessages;
+  nsMsgKey mLastMessageLoaded;
 
   nsCOMPtr <nsIMsgDBHdr> m_offlineHeader;
   PRInt32 m_numOfflineMsgLines;

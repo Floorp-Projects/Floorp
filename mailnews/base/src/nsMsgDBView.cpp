@@ -929,6 +929,11 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgKey aMsgKey)
       NS_ENSURE_SUCCESS(rv,rv);
 
       mCommandUpdater->DisplayMessageChanged(m_folder, subject, keywords);
+
+      if (m_folder) {
+        rv = m_folder->SetLastMessageLoaded(aMsgKey);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
     } // if view position is valid
   } // if we have an updater
   return NS_OK;
@@ -5221,7 +5226,7 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
 
 
 NS_IMETHODIMP 
-nsMsgDBView::GetCurrentlyDisplayedMessage (nsMsgViewIndex *currentlyDisplayedMessage)
+nsMsgDBView::GetCurrentlyDisplayedMessage(nsMsgViewIndex *currentlyDisplayedMessage)
 {
   NS_ENSURE_ARG_POINTER(currentlyDisplayedMessage);
   *currentlyDisplayedMessage = FindViewIndex(m_currentlyDisplayedMsgKey);
@@ -5444,6 +5449,10 @@ NS_IMETHODIMP nsMsgDBView::IsSorted(PRBool *_retval)
 
 NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
 {
+  NS_ASSERTION(aKey != nsMsgKey_None, "bad key");
+  if (aKey == nsMsgKey_None)
+    return NS_OK;
+
   // use SaveAndClearSelection()
   // and RestoreSelection() so that we'll clear the current selection
   // but pass in a different key array so that we'll
@@ -5457,6 +5466,9 @@ NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
   nsMsgKeyArray keyArray;
   keyArray.Add(aKey);
 
+  // if the key was not found
+  // (this can happen with "remember last selected message")
+  // nothing will be selected
   rv = RestoreSelection(&keyArray);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
@@ -5522,6 +5534,15 @@ nsMsgDBView::GetSupportsThreading(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::FindIndexFromKey(nsMsgKey aMsgKey, PRBool aExpand, nsMsgViewIndex *aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aIndex);
+
+  *aIndex = FindKey(aMsgKey, aExpand);
   return NS_OK;
 }
  

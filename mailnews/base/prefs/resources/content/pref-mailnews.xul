@@ -40,8 +40,8 @@ Contributor(s):
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
                        "fileButton", "nextButton",
-                       "printButton", "stopButton", "junkMailButton"];
-                       //"mailRememberLastMsg"
+                       "printButton", "stopButton", 
+                       "mailRememberLastMsg", "junkMailButton"];
   ]]>
   </script>
   
@@ -56,13 +56,12 @@ Contributor(s):
 
     <hbox align="start" id="mapi"/>
 
-<!-- not ready yet
     <hbox align="center">
       <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
                 prefstring="mailnews.remember_selected_message"
                 accesskey="&rememberLastMsg.accesskey;" />
     </hbox>
--->    
+
     <separator class="thin"/>
     
   </groupbox>

@@ -20,6 +20,10 @@
 
 /* This is where functions related to the standalone message window are kept */
 
+// from MailNewsTypes.h
+const nsMsgKey_None = 0xFFFFFFFF;
+const nsMsgViewIndex_None = 0xFFFFFFFF;
+
 /* globals for a particular window */
 
 var compositeDataSourceContractID        = datasourceContractIDPrefix + "composite-datasource";
@@ -184,9 +188,6 @@ nsMsgDBViewCommandUpdater.prototype =
   }
 }
 
-// from MailNewsTypes.h
-const nsMsgKey_None = 0xFFFFFFFF;
-
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
 	var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -198,7 +199,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	{
     gDBView.onDeleteCompleted(true);
     gCurrentMessageIsDeleted = false;
-    if (gNextMessageViewIndexAfterDelete != nsMsgKey_None) 
+    if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
       if (nextMstKey != nsMsgKey_None) {

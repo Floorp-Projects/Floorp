@@ -59,7 +59,6 @@ static const char *	kNumVisibleMessagesColumnName = "numVisMsgs";
 static const char *	kNumMessagesColumnName ="numMsgs";
 static const char *	kNumNewMessagesColumnName = "numNewMsgs";
 static const char *	kFlagsColumnName = "flags";
-static const char *	kLastMessageLoadedColumnName = "lastMsgLoaded";
 static const char *	kFolderSizeColumnName = "folderSize";
 static const char *	kExpungedBytesColumnName = "expungedBytes";
 static const char *	kFolderDateColumnName = "folderDate";
@@ -166,7 +165,6 @@ nsDBFolderInfo::QueryInterface(REFNSIID iid, void** result)
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
     :     m_flags(0),
-          m_lastMessageLoaded(0),
           m_expiredMark(0),
           m_numVisibleMessagesColumnToken(0),
           m_expiredMarkColumnToken(0)
@@ -376,7 +374,6 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 		store->StringToToken(env,  kNumMessagesColumnName, &m_numMessagesColumnToken);
 		store->StringToToken(env,  kNumNewMessagesColumnName, &m_numNewMessagesColumnToken);
 		store->StringToToken(env,  kFlagsColumnName, &m_flagsColumnToken);
-		store->StringToToken(env,  kLastMessageLoadedColumnName, &m_lastMessageLoadedColumnToken);
 		store->StringToToken(env,  kFolderSizeColumnName, &m_folderSizeColumnToken);
 		store->StringToToken(env,  kExpungedBytesColumnName, &m_expungedBytesColumnToken);
 		store->StringToToken(env,  kFolderDateColumnName, &m_folderDateColumnToken);
@@ -676,20 +673,6 @@ NS_IMETHODIMP nsDBFolderInfo::SetImapUidValidity(PRInt32 uidValidity)
 {
 	m_ImapUidValidity = uidValidity;
 	return SetUint32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
-}
-
-
-
-NS_IMETHODIMP nsDBFolderInfo::GetLastMessageLoaded(nsMsgKey *lastLoaded) 
-{
-	*lastLoaded = m_lastMessageLoaded;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsDBFolderInfo::SetLastMessageLoaded(nsMsgKey lastLoaded) 
-{
-	m_lastMessageLoaded = lastLoaded;
-	return SetUint32PropertyWithToken(m_lastMessageLoadedColumnToken, m_lastMessageLoaded);
 }
 
 PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)

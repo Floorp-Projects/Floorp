@@ -89,7 +89,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMsgDBFolder, nsMsgFolder,
 
 
 nsMsgDBFolder::nsMsgDBFolder(void)
-: mAddListener(PR_TRUE), mNewMessages(PR_FALSE), mGettingNewMessages(PR_FALSE)
+: mAddListener(PR_TRUE), mNewMessages(PR_FALSE), mGettingNewMessages(PR_FALSE), mLastMessageLoaded(nsMsgKey_None)
 {
   if (mInstanceCount++ <=0) {
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
@@ -1829,3 +1829,17 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
     return rv;
 }
 
+NS_IMETHODIMP
+nsMsgDBFolder::GetLastMessageLoaded(nsMsgKey *aMsgKey) 
+{
+  NS_ENSURE_ARG_POINTER(aMsgKey);
+  *aMsgKey = mLastMessageLoaded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::SetLastMessageLoaded(nsMsgKey aMsgKey)
+{
+  mLastMessageLoaded = aMsgKey;
+  return NS_OK;
+}

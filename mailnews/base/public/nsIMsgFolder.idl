@@ -419,4 +419,6 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   string getStringProperty(in string propertyName);
   void setStringProperty(in string propertyName, in string propertyValue);
 
+  /* does not persist across sessions */
+  attribute nsMsgKey lastMessageLoaded;
 };

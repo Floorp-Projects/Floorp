@@ -27,8 +27,9 @@
 /* This is where functions related to the 3 pane window are kept */
 
 // from MailNewsTypes.h
+const nsMsgKey_None = 0xFFFFFFFF;
 const nsMsgViewIndex_None = 0xFFFFFFFF;
-
+const kMailCheckOncePrefName = "mail.startup.enabledMailCheckOnce";
 
 var gFolderTree; 
 var gMessagePane;
@@ -52,7 +53,7 @@ var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
-var gStartMsgKey = -1;
+var gStartMsgKey = nsMsgKey_None;
 var gSearchEmailAddress = null;
 var gRightMouseButtonDown = false;
 // Global var to keep track of which row in the thread pane has been selected
@@ -71,6 +72,23 @@ var gHaveLoadedMessage;
 var gDisplayStartupPage = false;
 
 var gNotifyDefaultInboxLoadedOnStartup = false;
+
+function SelectAndScrollToKey(aMsgKey)
+{
+  // select the desired message
+  // if the key isn't found, we won't select anything
+  gDBView.selectMsgByKey(aMsgKey);
+  
+  // is there a selection?
+  // if not, bail out.
+  var indicies = GetSelectedIndices(gDBView);
+  if (!indicies || !indicies.length)
+    return false;
+
+  // now scroll to it
+  EnsureRowInThreadTreeIsVisible(indicies[0]);
+  return true;
+}
 
 // the folderListener object
 var folderListener = {
@@ -152,16 +170,11 @@ var folderListener = {
 
                  LoadCurrentlyDisplayedMessage();  //used for rename folder msg loading after folder is loaded.
 
-                 if (gStartMsgKey != -1) { 
-                   // select the desired message
-                   gDBView.selectMsgByKey(gStartMsgKey);
-                   gStartMsgKey = -1;
-
-                   // now scroll to it
-                   var indicies = GetSelectedIndices(gDBView);
-                   EnsureRowInThreadTreeIsVisible(indicies[0]);
-                   scrolled = true;
+                 if (gStartMsgKey != nsMsgKey_None) {
+                   scrolled = SelectAndScrollToKey(gStartMsgKey);
+                   gStartMsgKey = nsMsgKey_None;
                  }
+
                  if (gNextMessageAfterLoad) {
                    var type = gNextMessageAfterLoad;
                    gNextMessageAfterLoad = null;
@@ -173,7 +186,16 @@ var folderListener = {
              }
              if (uri == gCurrentLoadingFolderURI) {
                gCurrentLoadingFolderURI = "";
-               //Now let's select the first new message if there is one
+
+               if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
+                 var lastMessageLoaded = msgFolder.lastMessageLoaded;
+                 
+                 if (lastMessageLoaded != nsMsgKey_None) {
+                   scrolled = SelectAndScrollToKey(lastMessageLoaded);
+                 }
+               }
+
+               // Now let's select the first new message if there is one
                if (!scrolled) {
                  // if we didn't just scroll, scroll to the first new message
                  // don't select it though
@@ -618,7 +640,7 @@ function OnLoadMessenger()
   else
   {
     gStartFolderUri = null;
-    gStartMsgKey = -1;
+    gStartMsgKey = nsMsgKey_None;
     gSearchEmailAddress = null;
   }
 
@@ -698,8 +720,6 @@ function loadStartFolder(initialUri)
     var defaultServer = null;
     var startFolderResource = null;
     var isLoginAtStartUpEnabled = false;
-    var enabledNewMailCheckOnce = false;
-    var mailCheckOncePref = "mail.startup.enabledMailCheckOnce";
 
     //First get default account
     try
@@ -715,14 +735,12 @@ function loadStartFolder(initialUri)
 
             startFolderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 
-            enabledNewMailCheckOnce = pref.getBoolPref(mailCheckOncePref);
-
             // Enable checknew mail once by turning checkmail pref 'on' to bring 
             // all users to one plane. This allows all users to go to Inbox. User can 
             // always go to server settings panel and turn off "Check for new mail at startup"
-            if (!enabledNewMailCheckOnce)
+            if (!pref.getBoolPref(kMailCheckOncePrefName))
             {
-                pref.setBoolPref(mailCheckOncePref, true);
+                pref.setBoolPref(kMailCheckOncePrefName, true);
                 defaultServer.loginAtStartUp = true;
             }
 

@@ -116,7 +116,6 @@ protected:
 
 	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
 									// configured for off-line use, use default retrieval, purge article/header options
-	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
 
 	PRUint16	m_version;			// for upgrading...
 	PRInt16		m_IMAPHierarchySeparator;	// imap path separator
@@ -148,7 +147,6 @@ protected:
 	mdb_token			m_numMessagesColumnToken;
 	mdb_token			m_numNewMessagesColumnToken;
 	mdb_token			m_flagsColumnToken;
-	mdb_token			m_lastMessageLoadedColumnToken;
 	mdb_token			m_folderSizeColumnToken;
 	mdb_token			m_expungedBytesColumnToken;
 	mdb_token			m_folderDateColumnToken;
