@@ -40,13 +40,13 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
-CRYPTO_LIBS = $(DIST)/lib/freebl.lib 
+CRYPTO_LIB = $(DIST)/lib/freebl.lib 
 
 ifdef MOZILLA_SECURITY_BUILD
-CRYPTO_LIBS += $(DIST)/lib/crypto.lib
+CRYPTO_LIB = $(DIST)/lib/crypto.lib
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIBS += $(DIST)/lib/bsafe41.lib
+CRYPTO_LIB = $(DIST)/lib/bsafe41.lib
 endif
 
 #	$(DIST)/lib/dbm.lib 
@@ -54,7 +54,7 @@ endif
 EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/softoken.lib \
-	$(CRYPTO_LIBS) \
+	$(CRYPTO_LIB) \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
@@ -71,19 +71,19 @@ else
 #
 ifneq ($(OS_ARCH), OSF1)
 
-CRYPTO_LIBS = $(DIST)/lib/libfreebl.$(LIB_SUFFIX) 
+CRYPTO_LIB = $(DIST)/lib/libfreebl.$(LIB_SUFFIX) 
 
 ifdef MOZILLA_SECURITY_BUILD
-CRYPTO_LIBS += $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+CRYPTO_LIB = $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIBS += $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+CRYPTO_LIB = $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
 endif
 
 EXTRA_LIBS += \
 	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
-	$(CRYPTO_LIBS) \
+	$(CRYPTO_LIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/libplc4.$(LIB_SUFFIX) \
 	$(DIST)/lib/libplds4.$(LIB_SUFFIX) \
