@@ -19,14 +19,45 @@
 #include "nsDBFolderInfo.h"
 #include "nsMsgDatabase.h"
 
-const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
-const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
+static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
+static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
 struct mdbOid gDBFolderInfoOID;
+static const char *	kNumVisibleMessagesColumnName = "numVisMsgs";
+static const char *	kNumMessagesColumnName ="numMsgs";
+static const char *	kNumNewMessagesColumnName = "numNewMsgs";
+static const char *	kFlagsColumnName = "flags";
+static const char *	kLastMessageLoadedColumnName = "lastMsgLoaded";
+static const char *	kFolderSizeColumnName = "folderSize";
+static const char *	kExpungedBytesColumnName = "expungedBytes";
+static const char *	kFolderDateColumnName = "folderDate";
+static const char *	kHighWaterMessageKeyColumnName = "highWaterKey";
+
+static const char *	kImapUidValidityColumnName = "UIDValidity";
+static const char *	kTotalPendingMessagesColumnName = "totPendingMsgs";
+static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
+static const char * kMailboxNameColumnName = "mailboxName";
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 {
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
+	m_version = 0;			// for upgrading...
+	m_sortType = 0;			// the last sort type open on this db.
+	m_csid = 0;				// default csid for these messages
+	m_IMAPHierarchySeparator = 0;	// imap path separator
+	m_sortOrder = 0;		// the last sort order (up or down
+	// mail only (for now)
+	m_folderSize = 0;
+	m_expungedBytes = 0;	// sum of size of deleted messages in folder
+	m_folderDate = 0;
+	m_highWaterMessageKey = 0;
+	
+	// IMAP only
+	m_ImapUidValidity = 0;
+	m_TotalPendingMessages =0;
+	m_UnreadPendingMessages = 0;
+
+	m_mdbTokensInitialized = FALSE;
 
 	if (mdb)
 	{
@@ -44,6 +75,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 				gDBFolderInfoOID.mOid_Id = 1;
 			}
 		}
+		InitMDBInfo();
 	}
 }
 
@@ -121,14 +153,45 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 	return ret;
 }
 
+nsresult nsDBFolderInfo::InitMDBInfo()
+{
+	nsresult ret = NS_OK;
+	if (!m_mdbTokensInitialized && m_mdb && m_mdb->GetStore())
+	{
+		mdbStore *store = m_mdb->GetStore();
+		mdbEnv	*env = m_mdb->GetEnv();
+
+		store->StringToToken(env,  kNumVisibleMessagesColumnName, &m_numVisibleMessagesColumnToken);
+		store->StringToToken(env,  kNumMessagesColumnName, &m_numMessagesColumnToken);
+		store->StringToToken(env,  kNumNewMessagesColumnName, &m_numNewMessagesColumnToken);
+		store->StringToToken(env,  kFlagsColumnName, &m_flagsColumnToken);
+		store->StringToToken(env,  kLastMessageLoadedColumnName, &m_lastMessageLoadedColumnToken);
+		store->StringToToken(env,  kFolderSizeColumnName, &m_folderSizeColumnToken);
+		store->StringToToken(env,  kExpungedBytesColumnName, &m_expungedBytesColumnToken);
+		store->StringToToken(env,  kFolderDateColumnName, &m_folderDateColumnToken);
+
+		store->StringToToken(env,  kHighWaterMessageKeyColumnName, &m_highWaterMessageKeyColumnToken);
+		store->StringToToken(env,  kMailboxNameColumnName, &m_mailboxNameColumnToken);
+
+		store->StringToToken(env,  kImapUidValidityColumnName, &m_imapUidValidityColumnToken);
+		store->StringToToken(env,  kTotalPendingMessagesColumnName, &m_totalPendingMessagesColumnToken);
+		store->StringToToken(env,  kUnreadPendingMessagesColumnName, &m_unreadPendingMessagesColumnToken);
+		m_mdbTokensInitialized  = PR_TRUE;
+	}
+	return ret;
+}
+
 void nsDBFolderInfo::SetHighWater(MessageKey highWater, PRBool force /* = FALSE */)
 {
-
+	if (force || m_highWaterMessageKey < highWater)
+	{
+		m_highWaterMessageKey = highWater;
+	}
 }
 
 MessageKey	nsDBFolderInfo::GetHighWater() 
 {
-	return m_articleNumHighWater;
+	return m_highWaterMessageKey;
 }
 
 void nsDBFolderInfo::SetExpiredMark(MessageKey expiredKey)
@@ -161,10 +224,12 @@ void nsDBFolderInfo::RemoveLateredAt(PRInt32 laterIndex)
 
 void nsDBFolderInfo::SetMailboxName(const char *newBoxName)
 {
+	m_mailboxName = newBoxName;
 }
 
 void nsDBFolderInfo::GetMailboxName(nsString &boxName)
 {
+	boxName = m_mailboxName;
 }
 
 void nsDBFolderInfo::SetViewType(PRInt32 viewType)
@@ -186,17 +251,41 @@ void nsDBFolderInfo::GetSortInfo(nsMsgSortType *type, nsMsgSortOrder *orde)
 
 PRInt32	nsDBFolderInfo::ChangeNumNewMessages(PRInt32 delta)
 {
-	return 0;
+	m_numNewMessages += delta;
+	if (m_numNewMessages < 0)
+	{
+#ifdef DEBUG_bienvenu1
+		XP_ASSERT(FALSE);
+#endif
+		m_numNewMessages = 0;
+	}
+	return m_numNewMessages;
 }
 
 PRInt32	nsDBFolderInfo::ChangeNumMessages(PRInt32 delta)
 {
-	return 0;
+	m_numMessages += delta;
+	if (m_numMessages < 0)
+	{
+#ifdef DEBUG_bienvenu
+		XP_ASSERT(FALSE);
+#endif
+		m_numMessages = 0;
+	}
+	return m_numMessages;
 }
 
 PRInt32	nsDBFolderInfo::ChangeNumVisibleMessages(PRInt32 delta)
 {
-	return 0;
+	m_numVisibleMessages += delta;
+	if (m_numVisibleMessages < 0)
+	{
+#ifdef DEBUG_bienvenu
+		XP_ASSERT(FALSE);
+#endif
+		m_numVisibleMessages = 0;
+	}
+	return m_numVisibleMessages;
 }
 
 PRInt32	nsDBFolderInfo::GetNumNewMessages() 
@@ -216,24 +305,30 @@ PRInt32	nsDBFolderInfo::GetNumVisibleMessages()
 
 PRInt32	nsDBFolderInfo::GetFlags()
 {
-	return 0;
+	return m_flags;
 }
 
 void nsDBFolderInfo::SetFlags(PRInt32 flags)
 {
+	if (m_flags != flags)
+	{
+		m_flags = flags; 
+	}
 }
 
 void nsDBFolderInfo::OrFlags(PRInt32 flags)
 {
+	m_flags |= flags;
 }
 
 void nsDBFolderInfo::AndFlags(PRInt32 flags)
 {
+	m_flags &= flags;
 }
 
 PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 {
-	return PR_FALSE;
+	return (m_flags & flags) != 0;
 }
 
 PRInt16	nsDBFolderInfo::GetCSID() 
@@ -284,7 +379,7 @@ PRInt32	nsDBFolderInfo::GetImapUidValidity()
 
 void nsDBFolderInfo::SetImapUidValidity(PRInt32 uidValidity) 
 {
-	m_ImapUidValidity=uidValidity;
+	m_ImapUidValidity = uidValidity;
 }
 
 MessageKey nsDBFolderInfo::GetLastMessageLoaded() 
@@ -299,8 +394,33 @@ void nsDBFolderInfo::SetLastMessageLoaded(MessageKey lastLoaded)
 
 	// get arbitrary property, aka row cell value.
 
-nsresult nsDBFolderInfo::GetProperty(const char *propertyName, nsString &resultProperty)
+nsresult	nsDBFolderInfo::GetProperty(const char *propertyName, nsString &resultProperty)
 {
-	return NS_OK;
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = m_mdb->RowCellColumnTonsString(m_mdbRow, property_token, resultProperty);
+
+	return err;
 }
+
+nsresult	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &propertyStr)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+	{
+		struct mdbYarn yarn;
+
+		yarn.mYarn_Grow = NULL;
+		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, m_mdb->nsStringToYarn(&yarn, &propertyStr));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+	}
+	return err;
+}
+
 

@@ -469,6 +469,25 @@ nsresult	nsMsgDatabase::ListDone(ListContext *pContext)
 	return err;
 }
 
+nsresult nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
+{
+	nsresult	err = NS_OK;
+	mdbTableRowCursor *rowCursor;
+	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+	while (err == NS_OK)
+	{
+		mdbOid outOid;
+		mdb_pos	outPos;
+
+		err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
+		if (outPos < 0)	// is this right?
+			break;
+		if (err == NS_OK)
+			outputKeys.Add(outOid.mOid_Id);
+	}
+	return err;
+}
+
 nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
 {
 	nsresult	err = NS_OK;
@@ -532,23 +551,25 @@ nsresult nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdr
 {
 	nsresult	err = NS_OK;
 
-	err = HdrCellColumnTonsString(msgHdr, m_subjectColumnToken, hdrStruct.m_subject);
-	err = HdrCellColumnTonsString(msgHdr, m_senderColumnToken, hdrStruct.m_author);
-	err = HdrCellColumnTonsString(msgHdr, m_messageIdColumnToken, hdrStruct.m_messageId);
-	err = HdrCellColumnTonsString(msgHdr, m_referencesColumnToken, hdrStruct.m_references);
-	err = HdrCellColumnTonsString(msgHdr, m_recipientsColumnToken, hdrStruct.m_recipients);
-	err = HdrCellColumnToUInt32(msgHdr, m_messageSizeColumnToken, &hdrStruct.m_messageSize);
-	hdrStruct.m_messageKey = msgHdr->GetMessageKey();
+	if (nsMsgHdr)
+	{
+		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_subjectColumnToken, hdrStruct.m_subject);
+		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_senderColumnToken, hdrStruct.m_author);
+		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_messageIdColumnToken, hdrStruct.m_messageId);
+		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_referencesColumnToken, hdrStruct.m_references);
+		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_recipientsColumnToken, hdrStruct.m_recipients);
+		err = RowCellColumnToUInt32(msgHdr->GetMDBRow(), m_messageSizeColumnToken, &hdrStruct.m_messageSize);
+		hdrStruct.m_messageKey = msgHdr->GetMessageKey();
+	}
 	return err;
 }
 
-nsresult nsMsgDatabase::HdrCellColumnTonsString(nsMsgHdr *msgHdr, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnTonsString(mdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult	err = NS_OK;
-	mdbRow *hdrRow = msgHdr->GetMDBRow();
 	mdbCell	*hdrCell;
 
-	err = hdrRow->GetCell(GetEnv(), m_subjectColumnToken, &hdrCell);
+	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
 	if (err == NS_OK)
 	{
 		struct mdbYarn yarn;
@@ -558,13 +579,12 @@ nsresult nsMsgDatabase::HdrCellColumnTonsString(nsMsgHdr *msgHdr, mdb_token colu
 	return err;
 }
 
-nsresult nsMsgDatabase::HdrCellColumnToUInt32(nsMsgHdr *msgHdr, mdb_token columnToken, PRUint32 *uint32Result)
+nsresult nsMsgDatabase::RowCellColumnToUInt32(mdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result)
 {
 	nsresult	err = NS_OK;
 	mdbCell	*hdrCell;
-	mdbRow *hdrRow = msgHdr->GetMDBRow();
 
-	err = hdrRow->GetCell(GetEnv(), m_subjectColumnToken, &hdrCell);
+	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
 	if (err == NS_OK)
 	{
 		struct mdbYarn yarn;
@@ -601,5 +621,15 @@ nsresult nsMsgDatabase::HdrCellColumnToUInt32(nsMsgHdr *msgHdr, mdb_token column
 {
 	char *endPtr;
 	*i = XP_STRTOUL((char *) yarn->mYarn_Buf, &endPtr, yarn->mYarn_Fill); 
+}
+
+nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = TRUE */)
+{
+	// setting the version to -1 ought to make it pretty invalid.
+	if (!valid)
+		m_dbFolderInfo->SetVersion(-1);
+
+	// for default db (and news), there's no nothing to set to make it it valid
+	return NS_OK;
 }
 

@@ -42,13 +42,12 @@ class nsDBFolderInfo
 public:
 	nsDBFolderInfo(nsMsgDatabase *mdb);
 	virtual ~nsDBFolderInfo();
-	nsrefcnt	AddRef(void);                                       
-    nsrefcnt	Release(void);
+	nsrefcnt			AddRef(void);                                       
+    nsrefcnt			Release(void);
 
 	// create the appropriate table and row in a new db.
-	nsresult	AddToNewMDB();
-	// initialize from appropriate table and row in existing db.
-	nsresult	InitFromExistingDB();
+	nsresult			AddToNewMDB();
+	// accessor methods.
 	void				SetHighWater(MessageKey highWater, PRBool force = FALSE) ;
 	MessageKey			GetHighWater() ;
 	void				SetExpiredMark(MessageKey expiredKey);
@@ -90,10 +89,13 @@ public:
 	PRInt32				GetImapUidValidity() ;
 	void				SetImapUidValidity(PRInt32 uidValidity) ;
 
+	void				SetVersion(PRUint16 version) {m_version = version;}
+
 	MessageKey			GetLastMessageLoaded();
 	void				SetLastMessageLoaded(MessageKey lastLoaded);
-	// get arbitrary property, aka row cell value.
+	// get and set arbitrary property, aka row cell value.
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
+	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
 
 	PRUint16	m_version;			// for upgrading...
 	PRInt32		m_sortType;			// the last sort type open on this db.
@@ -102,17 +104,16 @@ public:
 	PRInt8		m_sortOrder;		// the last sort order (up or down
 	// mail only (for now)
 	PRInt32		m_folderSize;
-	PRInt32		m_expunged_bytes;	// sum of size of deleted messages in folder
+	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
 	time_t		m_folderDate;
+	MessageKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
 	
 	// IMAP only
-	PRInt32		m_LastMessageUID;
 	PRInt32		m_ImapUidValidity;
 	PRInt32		m_TotalPendingMessages;
 	PRInt32		m_UnreadPendingMessages;
 
 	// news only (for now)
-	MessageKey  m_articleNumHighWater;	// largest article number whose header we've seen
 	MessageKey	m_expiredMark;		// Highest invalid article number in group - for expiring
 	PRInt32		m_viewType;			// for news, the last view type open on this db.	
 
@@ -121,6 +122,10 @@ public:
 protected:
 	nsrefcnt mRefCnt;                                                         
 	
+	// initialize from appropriate table and row in existing db.
+	nsresult			InitFromExistingDB();
+	nsresult			InitMDBInfo();
+
 	nsString	m_mailboxName;		// name presented to the user, will match imap server name
 	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
 	PRInt32		m_numNewMessages;
@@ -134,8 +139,26 @@ protected:
 	nsMsgDatabase		*m_mdb;
 	mdbTable			*m_mdbTable;	// singleton table in db
 	mdbRow				*m_mdbRow;	// singleton row in table;
+
+	PRBool				m_mdbTokensInitialized;
+
 	mdb_token			m_rowScopeToken;
 	mdb_token			m_tableKindToken;
+	// tokens for the pre-set columns - we cache these for speed, which may be silly
+	mdb_token			m_mailboxNameColumnToken;
+	mdb_token			m_numVisibleMessagesColumnToken;
+	mdb_token			m_numMessagesColumnToken;
+	mdb_token			m_numNewMessagesColumnToken;
+	mdb_token			m_flagsColumnToken;
+	mdb_token			m_lastMessageLoadedColumnToken;
+	mdb_token			m_folderSizeColumnToken;
+	mdb_token			m_expungedBytesColumnToken;
+	mdb_token			m_folderDateColumnToken;
+	mdb_token			m_highWaterMessageKeyColumnToken;
+
+	mdb_token			m_imapUidValidityColumnToken;
+	mdb_token			m_totalPendingMessagesColumnToken;
+	mdb_token			m_unreadPendingMessagesColumnToken;
 
 };
 

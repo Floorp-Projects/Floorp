@@ -114,6 +114,11 @@ public:
 
 	virtual nsresult	DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator);
 
+	// used mainly to force the timestamp of a local mail folder db to
+	// match the time stamp of the corresponding berkeley mail folder,
+	// but also useful to tell the summary to mark itself invalid
+	virtual nsresult	SetSummaryValid(PRBool valid = TRUE);
+
 	static mdbFactory		*GetMDBFactory();
 	nsDBFolderInfo *GetDBFolderInfo() {return m_dbFolderInfo;}
 	mdbEnv		*GetEnv() {return m_mdbEnv;}
@@ -122,8 +127,8 @@ public:
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
 
 	//helper function to fill in nsStrings from hdr row cell contents.
-	nsresult				HdrCellColumnTonsString(nsMsgHdr *msgHdr, mdb_token columnToken, nsString &resultStr);
-	nsresult				HdrCellColumnToUInt32(nsMsgHdr *msgHdr, mdb_token columnToken, PRUint32 *uint32Result);
+	nsresult				RowCellColumnTonsString(mdbRow *row, mdb_token columnToken, nsString &resultStr);
+	nsresult				RowCellColumnToUInt32(mdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);

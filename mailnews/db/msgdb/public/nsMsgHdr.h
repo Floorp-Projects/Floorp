@@ -39,6 +39,7 @@ public:
 	nsrefcnt	AddRef(void);                                       
     nsrefcnt	Release(void);   
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
+	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
 	uint16		GetNumReferences();
 	nsresult	GetStringReference(PRInt32 refNum, nsString &resultReference);
 	time_t		GetDate();

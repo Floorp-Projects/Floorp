@@ -141,6 +141,12 @@ nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
 nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
+	m_folderFile = PR_Open(m_dbName, PR_RDWR, 0);
+	ret = nsMsgDatabase::DeleteMessages(messageKeys, instigator);
+	if (m_folderFile)
+		PR_Close(m_folderFile);
+	m_folderFile = NULL;
+	SetFolderInfoValid(m_dbName, 0, 0);
 	return ret;
 }
 

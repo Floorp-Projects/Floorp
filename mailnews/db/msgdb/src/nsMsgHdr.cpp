@@ -80,8 +80,32 @@ MessageKey  nsMsgHdr::GetMessageKey()
 nsresult	nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
 {
 	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+		err = m_mdb->RowCellColumnTonsString(GetMDBRow(), property_token, resultProperty);
+
 	return err;
 }
+
+nsresult	nsMsgHdr::SetProperty(const char *propertyName, nsString &propertyStr)
+{
+	nsresult err = NS_OK;
+	mdb_token	property_token;
+
+	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+	{
+		struct mdbYarn yarn;
+
+		yarn.mYarn_Grow = NULL;
+		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, m_mdb->nsStringToYarn(&yarn, &propertyStr));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+	}
+	return err;
+}
+
 
 uint16		nsMsgHdr::GetNumReferences()
 {
