@@ -48,9 +48,8 @@ dnl unset d
 
 dnl Build optimized by default
 dnl ========================================================
-OPTIMIZE_CFLAGS="${OPTIMIZE_CFLAGS=-O}"
-CFLAGS="${CFLAGS}"
-CXXFLAGS="${CXXFLAGS}"
+CFLAGS="${CFLAGS=-O}"
+CXXFLAGS="${CXXFLAGS=-O}"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
@@ -634,7 +633,7 @@ MOZ_ARG_DISABLE_BOOL(asserts,
 
 MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug          Enable debug symbols],
-  [ MOZ_DEBUG=1 OPTIMIZE_CFLAGS="-g" ],
+  [ MOZ_DEBUG=1 CFLAGS="$CFLAGS -g" ],
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
@@ -1180,7 +1179,6 @@ dnl ========================================================
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$WARNINGS_CFLAGS \
-	$OPTIMIZE_CFLAGS \
 	$GPROF_CFLAGS \
 	$DEPEND_CFLAGS \
 	$CFLAGS`
