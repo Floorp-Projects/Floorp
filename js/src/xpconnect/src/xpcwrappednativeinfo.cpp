@@ -666,6 +666,21 @@ out:
     return set;
 }
 
+// static 
+void 
+XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
+{
+    XPCJSRuntime* rt;
+    ClassInfo2NativeSetMap* map;
+    
+    if(nsnull != (rt = nsXPConnect::GetRuntime()) && 
+       nsnull != (map = rt->GetClassInfo2NativeSetMap()))
+    {   // scoped lock
+        XPCAutoLock lock(rt->GetMapLock());
+        map->Remove(classInfo);
+    }
+}
+
 // static
 XPCNativeSet*
 XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx,

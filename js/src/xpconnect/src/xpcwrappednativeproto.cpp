@@ -74,6 +74,10 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 #ifdef DEBUG
     PR_AtomicDecrement(&gDEBUG_LiveProtoCount);
 #endif
+    
+    // Note that our weak ref to mScope is not to be trusted at this point.
+
+    XPCNativeSet::ClearCacheEntryForClassInfo(mClassInfo);
 
     delete mScriptableInfo;
 }
