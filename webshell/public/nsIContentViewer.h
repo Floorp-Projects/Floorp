@@ -72,6 +72,10 @@ public:
   NS_IMETHOD Hide(void) = 0;
 
   NS_IMETHOD Print(void) = 0;
+
+  NS_IMETHOD SetEnableRendering(PRBool aOn) = 0;
+
+  NS_IMETHOD GetEnableRendering(PRBool* aResult) = 0;
 };
 
 #endif /* nsIContentViewer_h___ */
