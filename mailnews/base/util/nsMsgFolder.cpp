@@ -753,9 +753,9 @@ nsMsgFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  //Checking folder flag to see if it is the "Unsent Messages" or "Inbox"
+  //Checking folder flag to see if it is the "Unsent Messages"
   //and if so return FALSE
-  if ((mFlags & MSG_FOLDER_FLAG_QUEUE) || (mFlags & MSG_FOLDER_FLAG_INBOX))
+  if (mFlags & MSG_FOLDER_FLAG_QUEUE)
   {
 	  *aResult = PR_FALSE;
 	  return NS_OK;
