@@ -33,3 +33,4 @@ typedef struct unixprdata {
 	FILE *stream;		    /* File or Printer */
 } UnixPrData;
 
+void UnixPrDialog(UnixPrData *prData);
