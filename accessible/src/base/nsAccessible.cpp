@@ -97,7 +97,8 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsString.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // IFrame Helpers
 #include "nsIDocShell.h"
@@ -111,8 +112,6 @@
 #include "nsIFrameDebug.h"
 #include "nsIDOMCharacterData.h"
 #endif
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 //#define DEBUG_LEAKS
 
@@ -533,12 +532,12 @@ NS_IMETHODIMP nsAccessible::GetAccKeyboardShortcut(nsAString& _retval)
     if (accesskey.IsEmpty())
       return NS_OK;
 
-    if (gGeneralAccesskeyModifier == -1) {  // Need to initialize cached global accesskey pref
+    if (gGeneralAccesskeyModifier == -1) {
+      // Need to initialize cached global accesskey pref
       gGeneralAccesskeyModifier = 0;
-      nsresult result;
-      nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID, &result));
-      if (NS_SUCCEEDED(result) && prefService)
-        prefService->GetIntPref("ui.key.generalAccessKey", &gGeneralAccesskeyModifier);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefBranch)
+        prefBranch->GetIntPref("ui.key.generalAccessKey", &gGeneralAccesskeyModifier);
     }
     nsAutoString propertyKey;
     switch (gGeneralAccesskeyModifier) {
