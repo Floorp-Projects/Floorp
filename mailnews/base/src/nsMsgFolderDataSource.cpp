@@ -793,6 +793,20 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIMsgWindow> window;
+
+  // callers can pass in the msgWindow as the last element of the arguments
+  // array. If they do, we'll use that as the msg window for progress, etc.
+  if (aArguments)
+  {
+    PRUint32 numArgs;
+    aArguments->Count(&numArgs);
+    if (numArgs > 1)
+      window = do_QueryElementAt(aArguments, numArgs - 1);
+  }
+  if (!window)
+    window = mWindow;
+
   // XXX need to handle batching of command applied to all sources
 
   PRUint32 cnt = 0;
@@ -808,37 +822,37 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     {
       if ((aCommand == kNC_Delete))
       {
-        rv = DoDeleteFromFolder(folder, aArguments, mWindow, PR_FALSE);
+        rv = DoDeleteFromFolder(folder, aArguments, window, PR_FALSE);
       }
       if ((aCommand == kNC_ReallyDelete))
       {
-        rv = DoDeleteFromFolder(folder, aArguments, mWindow, PR_TRUE);
+        rv = DoDeleteFromFolder(folder, aArguments, window, PR_TRUE);
       }
       else if((aCommand == kNC_NewFolder)) 
       {
-        rv = DoNewFolder(folder, aArguments);
+        rv = DoNewFolder(folder, aArguments, window);
       }
       else if((aCommand == kNC_GetNewMessages))
       {
         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(aArguments, i, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = server->GetNewMessages(folder, mWindow, nsnull);
+        rv = server->GetNewMessages(folder, window, nsnull);
       }
       else if((aCommand == kNC_Copy))
       {
-        rv = DoCopyToFolder(folder, aArguments, mWindow, PR_FALSE);
+        rv = DoCopyToFolder(folder, aArguments, window, PR_FALSE);
       }
       else if((aCommand == kNC_Move))
       {
-        rv = DoCopyToFolder(folder, aArguments, mWindow, PR_TRUE);
+        rv = DoCopyToFolder(folder, aArguments, window, PR_TRUE);
       }
       else if((aCommand == kNC_CopyFolder))
       {
-        rv = DoFolderCopyToFolder(folder, aArguments, mWindow, PR_FALSE);
+        rv = DoFolderCopyToFolder(folder, aArguments, window, PR_FALSE);
       }
       else if((aCommand == kNC_MoveFolder))
       {
-        rv = DoFolderCopyToFolder(folder, aArguments, mWindow, PR_TRUE);
+        rv = DoFolderCopyToFolder(folder, aArguments, window, PR_TRUE);
       }
       else if((aCommand == kNC_MarkAllMessagesRead))
       {
@@ -846,15 +860,15 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_Compact))
       {
-        rv = folder->Compact(nsnull, mWindow);
+        rv = folder->Compact(nsnull, window);
       }
       else if ((aCommand == kNC_CompactAll))
       {
-        rv = folder->CompactAll(nsnull, mWindow, nsnull, PR_TRUE, nsnull);
+        rv = folder->CompactAll(nsnull, window, nsnull, PR_TRUE, nsnull);
       }
       else if ((aCommand == kNC_EmptyTrash))
       {
-          rv = folder->EmptyTrash(mWindow, nsnull);
+          rv = folder->EmptyTrash(window, nsnull);
       }
       else if ((aCommand == kNC_Rename))
       {
@@ -864,7 +878,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
           nsXPIDLString name;
           literal->GetValue(getter_Copies(name));
 
-          rv = folder->Rename(name.get(),mWindow);
+          rv = folder->Rename(name.get(), window);
         }
       }
     }
@@ -2087,7 +2101,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
   return rv;
 }
 
-nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
+nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments, nsIMsgWindow *window)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFLiteral> literal = do_QueryElementAt(arguments, 0, &rv);
@@ -2096,7 +2110,7 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
     nsXPIDLString name;
     literal->GetValue(getter_Copies(name));
     
-    rv = folder->CreateSubfolder(name,mWindow);
+    rv = folder->CreateSubfolder(name, window);
     
   }
   return rv;

@@ -188,8 +188,8 @@ protected:
   nsresult DoFolderCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
 						  nsIMsgWindow *msgWindow, PRBool isMoveFolder);
 
-  nsresult DoNewFolder(nsIMsgFolder *folder,
-							  nsISupportsArray *arguments);
+  nsresult DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments, 
+                        nsIMsgWindow *window);
 
   nsresult DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
   nsresult DoFolderUnassert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
