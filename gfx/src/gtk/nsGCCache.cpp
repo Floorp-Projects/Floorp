@@ -66,6 +66,8 @@ nsGCCache::~nsGCCache()
 {
   PRCList *head;
 
+  ReportStats();
+
   while (!PR_CLIST_IS_EMPTY(&GCCache)) {
     head = PR_LIST_HEAD(&GCCache);
     if (head == &GCCache)

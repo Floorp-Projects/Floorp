@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
   gdk.height = ns.height; \
   PR_END_MACRO
 
-static nsGCCache *gcCache = new nsGCCache();
+static nsGCCache gcCache;
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
@@ -505,10 +505,10 @@ void nsRenderingContextGTK::UpdateGC()
     mClipRegion->GetNativeRegion((void*&)rgn);
   }
 
-  mGC = gcCache->GetClipGC(mSurface->GetDrawable(), 
-                           &values,
-                           valuesMask,
-                           rgn);
+  mGC = gcCache.GetClipGC(mSurface->GetDrawable(), 
+                          &values,
+                          valuesMask,
+                          rgn);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
