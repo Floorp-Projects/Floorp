@@ -25,7 +25,30 @@ USE_3PANE 	= 1
 
 LIBRARY_NAME	= xfe2
 
-REQUIRES	= nspr layer js jtools applet security img util parse layout hook pref java libfont ldap lay style xfeicons rdf xpcom plug
+REQUIRES	=\
+			XfeWidgets \
+			Microline \
+			nspr \
+			layer \
+			js \
+			jtools \
+			applet \
+			security \
+			img \
+			util \
+			parse \
+			layout \
+			hook \
+			pref \
+			java \
+			libfont \
+			ldap \
+			lay \
+			style \
+			xfeicons \
+			rdf \
+			xpcom \
+			plug
 
 CPPSRCS		= \
 		  plugin.cpp \
@@ -266,7 +289,7 @@ CSRCS		= commands.c
 
 include $(DEPTH)/config/rules.mk
 
-INCLUDES	+= -I$(OBJDIR) -I.. -I../Microline3.0 -I../XfeWidgets -I../DtWidgets -I$(DEPTH)/modules/libreg/include
+INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include
 
 #ifndef MOZ_LITE
 #CFLAGS		+= -DEDITOR
