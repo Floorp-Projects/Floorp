@@ -46,8 +46,6 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
 
-#include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsILocaleService.h"
 #include "plevent.h"
