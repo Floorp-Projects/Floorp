@@ -22,6 +22,6 @@
 DEPTH=..\..
 MODULE=profile
 
-DIRS=locale content skin
+DIRS=locale content 
 
 include <$(DEPTH)\config\rules.mak>
