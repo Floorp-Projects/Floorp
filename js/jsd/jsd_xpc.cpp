@@ -466,7 +466,7 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
     gJsds->Pause(nsnull);
-    do {
+    while (gDeadScripts) {
         ds = gDeadScripts;
         
         if (hook)
@@ -483,16 +483,20 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
         /* get next deleted script */
         gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
                                            PR_NEXT_LINK(&ds->links));
+        if (gDeadScripts == ds) {
+            /* last script in the list */
+            gDeadScripts = nsnull;
+        }
+        
         /* take ourselves out of the circular list */
         PR_REMOVE_LINK(&ds->links);
         /* addref came from the FromPtr call in jsds_ScriptHookProc */
         NS_RELEASE(ds->script);
         /* free the struct! */
         PR_Free(ds);
-    } while (&gDeadScripts->links != &ds->links);
-    /* keep going until we catch up with our tail */
+    }
+
     gJsds->UnPause(nsnull);
-    gDeadScripts = 0;
 }
 
 JS_STATIC_DLL_CALLBACK (JSBool)
