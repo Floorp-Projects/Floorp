@@ -9,6 +9,7 @@
 #include "windows.h"
 #endif
 #include "nslog.h"
+#undef PR_LOG
 
 NS_IMPL_LOG(stopwatchLog)
 #define PRINTF NS_LOG_PRINTF(stopwatchLog)
