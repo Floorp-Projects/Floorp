@@ -94,5 +94,6 @@
 #define HEADER_PARM_TYPE					          "TYPE"
 
 #define HEADER_X_MOZILLA_PART_URL           "X-Mozilla-PartURL"
+#define HEADER_X_MOZILLA_IDENTITY_KEY       "X-Identity-Key"
 
 #endif /* nsMailHeaders_h_ */

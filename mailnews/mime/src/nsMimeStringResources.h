@@ -61,5 +61,6 @@
 #define	MIME_MSG_USER_WROTE                                  1033
 #define	MIME_MSG_NO_HEADERS                                  1034
 #define	MIME_MSG_SHOW_ATTACHMENT_PANE                                  1035
+#define	MIME_MSG_NOT_DOWNLOADED                                       1036
 
 #endif /* _NAME_OF_THIS_HEADER_FILE__ */

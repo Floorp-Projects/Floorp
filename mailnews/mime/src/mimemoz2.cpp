@@ -59,6 +59,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsIMIMEService.h"
+#include "nsIImapUrl.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -141,7 +142,6 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   char  *tmpURL = nsnull;
   char  *id = nsnull;
   char  *id_imap = nsnull;
-  //PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
 
   id = mime_part_address (obj);
   if (obj->options->missing_parts)
@@ -162,6 +162,16 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
       // if this is an IMAP part. 
       tmpURL = mime_set_url_imap_part(url, id_imap, id);
       rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
+
+      // If we get here, we should really add some type of string
+      // onto the name to show its not downloaded
+      nsString  tName(tmp->real_name);
+      
+      char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
+      tName.Append(" ");
+      tName.Append(msgString);
+      PR_FREEIF(tmp->real_name);
+      tmp->real_name = tName.ToNewCString();
     }
     else
     {
@@ -265,6 +275,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
   MimeContainer         *cobj = (MimeContainer *) aChild;
   nsMsgAttachmentData   *tmp = nsnull;
   PRBool                isAlternativeOrRelated;
+  PRBool                isIMAPPart = PR_FALSE;
 
   if ( (!aChild) || (!cobj->children) )
     return NS_OK;
@@ -296,7 +307,10 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     char *urlSpec = nsnull;
     if (imappart)
+    {
+      isIMAPPart = PR_TRUE;
       urlSpec = mime_set_url_imap_part(aMessageURL, imappart, part);
+    }
     else
       urlSpec = mime_set_url_part(aMessageURL, part, PR_TRUE);
   
@@ -363,6 +377,19 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     // Now, do the right thing with the name!
     ValidateRealName(tmp, child->headers);
+
+    if (isIMAPPart)
+    {
+      // If we get here, we should really add some type of string
+      // onto the name to show its not downloaded
+      nsString  tName(tmp->real_name);
+      
+      char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
+      tName.Append(" ");
+      tName.Append(msgString);
+      PR_FREEIF(tmp->real_name);
+      tmp->real_name = tName.ToNewCString();
+    }
   }
 
   return NS_OK;
@@ -1192,6 +1219,28 @@ mime_bridge_create_display_stream(
     nsServiceManager::ReleaseService(kPrefCID, msd->options->prefs);
     PR_FREEIF(msd);
     return nsnull;
+  }
+
+  //
+  // Ok, now check to see if this is a display operation for a MIME Parts on Demand
+  // enabled call.
+  //
+  if (aChannel)
+  {
+    nsCOMPtr<nsIURI> aUri;
+	  if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(aUri))))
+    {
+      nsCOMPtr<nsIImapUrl> imapURL = do_QueryInterface(aUri);
+      if (imapURL)
+      {
+        nsImapContentModifiedType   cModified;
+        if (NS_SUCCEEDED(imapURL->GetContentModified(&cModified)))
+        {
+          if ( cModified != nsImapContentModifiedTypes::IMAP_CONTENT_NOT_MODIFIED )
+            msd->options->missing_parts = PR_TRUE;
+        }
+      }
+    }
   }
 
   //
