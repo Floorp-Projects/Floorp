@@ -128,9 +128,9 @@ nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLStyleElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type, eSetAttrNotify_Restart)
+NS_IMPL_BOOL_ATTR(nsHTMLStyleElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
+NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLStyleElement::StringToAttribute(nsIAtom* aAttribute,

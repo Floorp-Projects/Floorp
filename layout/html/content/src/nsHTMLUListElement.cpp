@@ -128,8 +128,8 @@ nsHTMLUListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLUListElement, Compact, compact, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLUListElement, Type, type, eSetAttrNotify_Reflow)
+NS_IMPL_BOOL_ATTR(nsHTMLUListElement, Compact, compact)
+NS_IMPL_STRING_ATTR(nsHTMLUListElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,

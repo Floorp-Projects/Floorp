@@ -128,10 +128,10 @@ nsHTMLMetaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content)
+NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv)
+NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
 
 NS_IMETHODIMP
 nsHTMLMetaElement::StringToAttribute(nsIAtom* aAttribute,

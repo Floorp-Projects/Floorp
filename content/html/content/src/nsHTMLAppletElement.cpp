@@ -142,17 +142,17 @@ nsHTMLAppletElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Alt, alt, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Archive, archive, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Code, code, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, CodeBase, codebase, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Height, height, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Hspace, hspace, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Vspace, vspace, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Alt, alt)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Archive, archive)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Code, code)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, CodeBase, codebase)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Height, height)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Hspace, hspace)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Vspace, vspace)
+NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLAppletElement::StringToAttribute(nsIAtom* aAttribute,

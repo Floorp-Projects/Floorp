@@ -126,9 +126,9 @@ nsHTMLBaseFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Color, color, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Face, face, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Color, color)
+NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Face, face)
+NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
 
 NS_IMETHODIMP
 nsHTMLBaseFontElement::StringToAttribute(nsIAtom* aAttribute,

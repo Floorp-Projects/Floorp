@@ -124,8 +124,8 @@ nsHTMLBaseElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Href, href, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Href, href)
+NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLBaseElement::StringToAttribute(nsIAtom* aAttribute,

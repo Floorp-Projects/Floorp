@@ -134,12 +134,12 @@ nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, ch, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, choff, eSetAttrNotify_Reflow)
-NS_IMPL_INT_ATTR(nsHTMLTableColGroupElement, Span, span, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, VAlign, valign, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, ch)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, choff)
+NS_IMPL_INT_ATTR(nsHTMLTableColGroupElement, Span, span)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, VAlign, valign)
+NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLTableColGroupElement::StringToAttribute(nsIAtom* aAttribute,

@@ -148,16 +148,16 @@ nsHTMLIFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, FrameBorder, frameborder, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Height, height, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, LongDesc, longdesc, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginHeight, marginheight, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginWidth, marginwidth, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Src, src, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, FrameBorder, frameborder)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Height, height)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, LongDesc, longdesc)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginHeight, marginheight)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, MarginWidth, marginwidth)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Src, src)
+NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,

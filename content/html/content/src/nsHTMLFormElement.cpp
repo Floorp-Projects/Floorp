@@ -261,11 +261,11 @@ nsHTMLFormElement::SetName(const nsString& aValue)
   return mInner.SetAttribute(nsHTMLAtoms::name, aValue, PR_TRUE);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()

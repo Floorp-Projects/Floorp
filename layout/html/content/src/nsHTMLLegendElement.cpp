@@ -149,8 +149,8 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey)
+NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align)
 
 // this contains center, because IE4 does
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {

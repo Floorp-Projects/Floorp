@@ -124,8 +124,8 @@ nsHTMLDelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLDelElement, Cite, cite, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLDelElement, DateTime, datetime, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLDelElement, Cite, cite)
+NS_IMPL_STRING_ATTR(nsHTMLDelElement, DateTime, datetime)
 
 NS_IMETHODIMP
 nsHTMLDelElement::StringToAttribute(nsIAtom* aAttribute,

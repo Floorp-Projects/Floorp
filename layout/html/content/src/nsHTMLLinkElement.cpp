@@ -138,15 +138,15 @@ nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLLinkElement, Disabled, disabled, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Href, href, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Media, media, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type, eSetAttrNotify_Restart)
+NS_IMPL_BOOL_ATTR(nsHTMLLinkElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Href, href)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Media, media)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
+NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLLinkElement::StringToAttribute(nsIAtom* aAttribute,

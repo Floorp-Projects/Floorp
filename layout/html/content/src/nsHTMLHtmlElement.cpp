@@ -128,7 +128,7 @@ nsHTMLHtmlElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version)
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::StringToAttribute(nsIAtom* aAttribute,

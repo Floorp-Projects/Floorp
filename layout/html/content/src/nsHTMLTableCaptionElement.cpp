@@ -123,7 +123,7 @@ nsHTMLTableCaptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
 
 static nsGenericHTMLElement::EnumTable kTableCaptionAlignTable[] = {
   { "left",  NS_STYLE_TEXT_ALIGN_LEFT },

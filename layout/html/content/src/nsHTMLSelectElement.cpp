@@ -304,13 +304,13 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
   }
 }
 
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value, eSetAttrNotify_Render)
-NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, Size, size, eSetAttrNotify_Render)
-NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex, eSetAttrNotify_Render)
+NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
+NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value)
+NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled)
+NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple)
+NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name)
+NS_IMPL_INT_ATTR(nsHTMLSelectElement, Size, size)
+NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::Blur() // XXX not tested

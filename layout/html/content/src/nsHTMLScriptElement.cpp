@@ -163,7 +163,7 @@ NS_IMETHODIMP
 nsHTMLScriptElement::SetHtmlFor(const nsString& aValue)
 {
   // XXX write me
-//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
+//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
@@ -179,14 +179,14 @@ NS_IMETHODIMP
 nsHTMLScriptElement::SetEvent(const nsString& aValue)
 {
   // XXX write me
-//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
+//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Charset, charset, eSetAttrNotify_None)
-NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Src, src, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Charset, charset)
+NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
+NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Src, src)
+NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLScriptElement::StringToAttribute(nsIAtom* aAttribute,

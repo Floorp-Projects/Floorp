@@ -122,7 +122,7 @@ nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLQuoteElement, Cite, cite, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLQuoteElement, Cite, cite)
 
 NS_IMETHODIMP
 nsHTMLQuoteElement::StringToAttribute(nsIAtom* aAttribute,

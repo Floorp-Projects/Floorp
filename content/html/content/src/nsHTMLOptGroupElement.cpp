@@ -124,8 +124,8 @@ nsHTMLOptGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLOptGroupElement, Disabled, disabled, eSetAttrNotify_Render)
-NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label, eSetAttrNotify_None)
+NS_IMPL_BOOL_ATTR(nsHTMLOptGroupElement, Disabled, disabled)
+NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label)
 
 NS_IMETHODIMP
 nsHTMLOptGroupElement::StringToAttribute(nsIAtom* aAttribute,

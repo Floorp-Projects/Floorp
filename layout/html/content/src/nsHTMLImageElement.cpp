@@ -167,19 +167,19 @@ nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, LowSrc, lowsrc, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Height, height, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace, eSetAttrNotify_Reflow)
-NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Src, src, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, LowSrc, lowsrc)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Height, height)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace)
+NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Src, src)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,

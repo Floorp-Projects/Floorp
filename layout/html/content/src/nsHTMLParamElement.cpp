@@ -128,10 +128,10 @@ nsHTMLParamElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLParamElement, Name, name, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLParamElement, Type, type, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLParamElement, Value, value, eSetAttrNotify_Restart)
-NS_IMPL_STRING_ATTR(nsHTMLParamElement, ValueType, valuetype, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLParamElement, Name, name)
+NS_IMPL_STRING_ATTR(nsHTMLParamElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLParamElement, Value, value)
+NS_IMPL_STRING_ATTR(nsHTMLParamElement, ValueType, valuetype)
 
 NS_IMETHODIMP
 nsHTMLParamElement::StringToAttribute(nsIAtom* aAttribute,

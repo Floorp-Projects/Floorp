@@ -122,7 +122,7 @@ nsHTMLHeadElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLHeadElement, Profile, profile, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLHeadElement, Profile, profile)
 
 NS_IMETHODIMP
 nsHTMLHeadElement::StringToAttribute(nsIAtom* aAttribute,

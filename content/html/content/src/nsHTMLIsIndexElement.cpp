@@ -131,7 +131,7 @@ nsHTMLIsIndexElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt)
 
 NS_IMETHODIMP
 nsHTMLIsIndexElement::StringToAttribute(nsIAtom* aAttribute,

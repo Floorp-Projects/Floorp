@@ -129,7 +129,7 @@ nsHTMLHRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align)
 
 #ifdef DEBUG_SET_ATTR
 NS_IMETHODIMP
@@ -145,19 +145,19 @@ nsHTMLHRElement::SetNoShade(PRBool aValue)
 {
   nsAutoString empty;
   if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
+    return mInner.SetAttr(nsHTMLAtoms::noshade, empty);
   }
   else {
-    mInner.UnsetAttr(nsHTMLAtoms::noshade, eSetAttrNotify_Render);
+    mInner.UnsetAttr(nsHTMLAtoms::noshade);
     return NS_OK;
   }
 }
 #else
-NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade, eSetAttrNotify_Render)
+NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
 #endif
 
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
+NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
 
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
