@@ -64,11 +64,83 @@ ipcReleaseMessageObserver(nsHashKey *aKey, void *aData, void* aClosure)
     return PR_TRUE;
 }
 
+//----------------------------------------------------------------------------
+// ipcClientQuery
+//----------------------------------------------------------------------------
+
+class ipcClientQuery
+{
+public:
+    ipcClientQuery(PRUint32 cID, ipcIClientQueryHandler *handler)
+        : mNext(nsnull)
+        , mQueryID(++gLastQueryID)
+        , mClientID(cID)
+        , mHandler(handler)
+        { }
+
+    static PRUint32 gLastQueryID;
+
+    void SetClientID(PRUint32 cID) { mClientID = cID; }
+
+    void OnQueryComplete(const ipcmMessageClientInfo *msg);
+    void OnQueryFailed(nsresult reason);
+
+    PRUint32 QueryID()    { return mQueryID; }
+    PRBool   IsCanceled() { return mHandler == nsnull; }
+
+    ipcClientQuery                  *mNext;
+private:
+    PRUint32                         mQueryID;
+    PRUint32                         mClientID;
+    nsCOMPtr<ipcIClientQueryHandler> mHandler;
+};
+
+PRUint32 ipcClientQuery::gLastQueryID = 0;
+
+void
+ipcClientQuery::OnQueryComplete(const ipcmMessageClientInfo *msg)
+{
+    NS_ASSERTION(mHandler, "no handler");
+
+    PRUint32 nameCount = msg->NameCount();
+    PRUint32 targetCount = msg->TargetCount();
+    PRUint32 i;
+
+    const char **names = (const char **) malloc(nameCount * sizeof(char *));
+    const char *lastName = NULL;
+    for (i = 0; i < nameCount; ++i) {
+        lastName = msg->NextName(lastName);
+        names[i] = lastName;
+    }
+
+    const nsID **targets = (const nsID **) malloc(targetCount * sizeof(nsID *));
+    const nsID *lastTarget = NULL;
+    for (i = 0; i < targetCount; ++i) {
+        lastTarget = msg->NextTarget(lastTarget);
+        targets[i] = lastTarget;
+    }
+
+    mHandler->OnQueryComplete(mQueryID,
+                              mClientID,
+                              names, nameCount,
+                              targets, targetCount);
+
+    free(names);
+    free(targets);
+}
+
+void
+ipcClientQuery::OnQueryFailed(nsresult status)
+{
+    NS_ASSERTION(mHandler, "no handler");
+
+    mHandler->OnQueryFailed(mQueryID, status);
+    mHandler = nsnull;
+}
+
 //-----------------------------------------------------------------------------
 // ipcService
 //-----------------------------------------------------------------------------
-
-PRUint32 ipcService::gLastReqToken = 0;
 
 ipcService::ipcService()
     : mTransport(nsnull)
@@ -133,17 +205,19 @@ ipcService::OnIPCMClientID(const ipcmMessageClientID *msg)
         return;
     }
 
+    PRUint32 cID = msg->ClientID();
+
     //
     // (1) store client ID in query
     // (2) move query to end of queue
     // (3) issue CLIENT_INFO request
     //
-    query->mID = msg->ClientID();
+    query->SetClientID(cID);
 
     mQueryQ.RemoveFirst();
     mQueryQ.Append(query);
 
-    mTransport->SendMsg(new ipcmMessageQueryClientInfo(query->mID));
+    mTransport->SendMsg(new ipcmMessageQueryClientInfo(cID));
 }
 
 void
@@ -157,39 +231,16 @@ ipcService::OnIPCMClientInfo(const ipcmMessageClientInfo *msg)
         return;
     }
 
-    PRUint32 nameCount = msg->NameCount();
-    PRUint32 targetCount = msg->TargetCount();
-    PRUint32 i;
-
-    const char **names = (const char **) calloc(nameCount, sizeof(char *));
-    const char *lastName = NULL;
-    for (i = 0; i < nameCount; ++i) {
-        lastName = msg->NextName(lastName);
-        names[i] = lastName;
-    }
-
-    const nsID **targets = (const nsID **) calloc(targetCount, sizeof(nsID *));
-    const nsID *lastTarget = NULL;
-    for (i = 0; i < targetCount; ++i) {
-        lastTarget = msg->NextTarget(lastTarget);
-        targets[i] = lastTarget;
-    }
-
-    query->mObserver->OnClientInfo(query->mReqToken,
-                                   query->mID,
-                                   names, nameCount,
-                                   targets, targetCount);
+    if (!query->IsCanceled())
+        query->OnQueryComplete(msg);
 
     mQueryQ.DeleteFirst();
-
-    free(names);
-    free(targets);
 }
 
 void
 ipcService::OnIPCMError(const ipcmMessageError *msg)
 {
-    LOG(("ipcService::OnIPCMError\n"));
+    LOG(("ipcService::OnIPCMError [reason=0x%08x]\n", msg->Reason()));
 
     ipcClientQuery *query = mQueryQ.First();
     if (!query) {
@@ -197,8 +248,8 @@ ipcService::OnIPCMError(const ipcmMessageError *msg)
         return;
     }
 
-    query->mObserver->OnClientDown(query->mReqToken,
-                                   query->mID);
+    if (!query->IsCanceled())
+        query->OnQueryFailed(NS_ERROR_FAILURE);
 
     mQueryQ.DeleteFirst();
 }
@@ -251,8 +302,8 @@ ipcService::RemoveClientName(const nsACString &name)
 
 NS_IMETHODIMP
 ipcService::QueryClientByName(const nsACString &name,
-                              ipcIClientObserver *observer,
-                              PRUint32 *token)
+                              ipcIClientQueryHandler *handler,
+                              PRUint32 *queryID)
 {
     if (!mTransport)
         return NS_ERROR_NOT_AVAILABLE;
@@ -268,23 +319,51 @@ ipcService::QueryClientByName(const nsACString &name,
     rv = mTransport->SendMsg(msg);
     if (NS_FAILED(rv)) return rv;
 
-    //
-    // now queue up the observer and generate a token.
-    //
-    ipcClientQuery *query = new ipcClientQuery();
-    query->mName = name;
-    query->mReqToken = *token = ++gLastReqToken;
-    query->mObserver = observer;
+    ipcClientQuery *query = new ipcClientQuery(0, handler);
+    if (queryID)
+        *queryID = query->QueryID();
     mQueryQ.Append(query);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 ipcService::QueryClientByID(PRUint32 clientID,
-                            ipcIClientObserver *observer,
-                            PRUint32 *token)
+                            ipcIClientQueryHandler *handler,
+                            PRUint32 *queryID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mTransport)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    ipcMessage *msg;
+
+    msg = new ipcmMessageQueryClientInfo(clientID);
+    if (!msg)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    
+    rv = mTransport->SendMsg(msg);
+    if (NS_FAILED(rv)) return rv;
+
+    ipcClientQuery *query = new ipcClientQuery(clientID, handler);
+    if (queryID)
+        *queryID = query->QueryID();
+    mQueryQ.Append(query);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ipcService::CancelQuery(PRUint32 queryID)
+{
+    ipcClientQuery *query = mQueryQ.First();
+    while (query) {
+        if (query->QueryID() == queryID) {
+            query->OnQueryFailed(NS_ERROR_ABORT);
+            break;
+        }
+        query = query->mNext;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -379,7 +458,7 @@ ipcService::OnConnectionLost()
     //
     while (mQueryQ.First()) {
         ipcClientQuery *query = mQueryQ.First();
-        query->mObserver->OnClientDown(query->mReqToken, query->mID);
+        query->OnQueryFailed(NS_ERROR_ABORT);
         mQueryQ.DeleteFirst();
     }
 

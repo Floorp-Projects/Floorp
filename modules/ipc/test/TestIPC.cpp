@@ -109,42 +109,33 @@ myIpcMessageObserver::OnMessageAvailable(const nsID &target, const PRUint8 *data
 
 //-----------------------------------------------------------------------------
 
-class myIpcClientObserver : public ipcIClientObserver
+class myIpcClientQueryHandler : public ipcIClientQueryHandler
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_IPCICLIENTOBSERVER
+    NS_DECL_IPCICLIENTQUERYHANDLER
 
-    myIpcClientObserver() { NS_INIT_ISUPPORTS(); }
+    myIpcClientQueryHandler() { NS_INIT_ISUPPORTS(); }
 };
 
-NS_IMPL_ISUPPORTS1(myIpcClientObserver, ipcIClientObserver)
+NS_IMPL_ISUPPORTS1(myIpcClientQueryHandler, ipcIClientQueryHandler)
 
 NS_IMETHODIMP
-myIpcClientObserver::OnClientUp(PRUint32 aReqToken,
-                                PRUint32 aClientID)
+myIpcClientQueryHandler::OnQueryFailed(PRUint32 aQueryID, nsresult aReason)
 {
-    printf("*** got client up [token=%u clientID=%u]\n", aReqToken, aClientID);
+    printf("*** query failed [queryID=%u reason=0x%08x]\n", aQueryID, aReason);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-myIpcClientObserver::OnClientDown(PRUint32 aReqToken,
-                                  PRUint32 aClientID)
+myIpcClientQueryHandler::OnQueryComplete(PRUint32 aQueryID,
+                                         PRUint32 aClientID,
+                                         const char **aNames,
+                                         PRUint32 aNameCount,
+                                         const nsID **aTargets,
+                                         PRUint32 aTargetCount)
 {
-    printf("*** got client down [token=%u clientID=%u]\n", aReqToken, aClientID);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-myIpcClientObserver::OnClientInfo(PRUint32 aReqToken,
-                                  PRUint32 aClientID,
-                                  const char **aNames,
-                                  PRUint32 aNameCount,
-                                  const nsID **aTargets,
-                                  PRUint32 aTargetCount)
-{
-    printf("*** got client info [token=%u clientID=%u]\n", aReqToken, aClientID);
+    printf("*** query complete [queryID=%u clientID=%u]\n", aQueryID, aClientID);
 
     PRUint32 i;
     printf("***  names:\n");
@@ -277,9 +268,9 @@ int main(int argc, char **argv)
                 "60 this is a really long message.\n";
         SendMsg(ipcServ, 0, kTestTargetID, data, strlen(data)+1);
 
-        PRUint32 reqToken;
-        nsCOMPtr<ipcIClientObserver> obs(new myIpcClientObserver());
-        ipcServ->QueryClientByName(NS_LITERAL_CSTRING("foopy"), obs, &reqToken);
+        PRUint32 queryID;
+        nsCOMPtr<ipcIClientQueryHandler> handler(new myIpcClientQueryHandler());
+        ipcServ->QueryClientByName(NS_LITERAL_CSTRING("foopy"), handler, &queryID);
 
         while (gKeepRunning)
             gEventQ->ProcessPendingEvents();
