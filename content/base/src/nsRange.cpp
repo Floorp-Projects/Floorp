@@ -1487,7 +1487,7 @@ nsresult nsRange::ToString(nsString& aReturn)
     return NS_OK;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_range
       printf("Range dump: -----------------------\n");
 #endif /* DEBUG */
     
@@ -1498,7 +1498,7 @@ nsresult nsRange::ToString(nsString& aReturn)
     
     if (textNode)
     {
-#ifdef DEBUG
+#ifdef DEBUG_range
       // If debug, dump it:
       nsCOMPtr<nsIContent> cN (do_QueryInterface(mStartParent));
       if (cN) cN->List(stdout);
@@ -1528,7 +1528,7 @@ nsresult nsRange::ToString(nsString& aReturn)
   iter->CurrentNode(getter_AddRefs(cN));
   while (cN && (NS_COMFALSE == iter->IsDone()))
   {
-#ifdef DEBUG
+#ifdef DEBUG_range
     // If debug, dump it:
     cN->List(stdout);
 #endif /* DEBUG */
@@ -1562,7 +1562,7 @@ nsresult nsRange::ToString(nsString& aReturn)
     iter->CurrentNode(getter_AddRefs(cN));
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_range
   printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
   return NS_OK;
