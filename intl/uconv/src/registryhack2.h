@@ -17,29 +17,53 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  mDecSize           = 11;
+  mDecSize           = 20;
   mDecArray          = new ConverterInfo [mDecSize];
 
   mDecArray[0].mCID  = &kLatin1ToUnicodeCID;
-  mDecArray[1].mCID  = &kSJIS2UnicodeCID;
+  mDecArray[1].mCID  = &kISO88592ToUnicodeCID;
   mDecArray[2].mCID  = &kISO88597ToUnicodeCID;
-  mDecArray[3].mCID  = &kCP1253ToUnicodeCID;
-  mDecArray[4].mCID  = &kISO2022JPToUnicodeCID;
-  mDecArray[5].mCID  = &kEUCJPToUnicodeCID;
-  mDecArray[6].mCID  = &kUTF8ToUnicodeCID;
-  mDecArray[7].mCID  = &kBIG5ToUnicodeCID;
-  mDecArray[8].mCID  = &kEUCTWToUnicodeCID;
-  mDecArray[9].mCID  = &kGB2312ToUnicodeCID;
-  mDecArray[10].mCID  = &kEUCKRToUnicodeCID;
+  mDecArray[3].mCID  = &kISO88599ToUnicodeCID;
+  mDecArray[4].mCID  = &kCP1250ToUnicodeCID;
+  mDecArray[5].mCID  = &kCP1252ToUnicodeCID;
+  mDecArray[6].mCID  = &kCP1253ToUnicodeCID;
+  mDecArray[7].mCID  = &kCP1254ToUnicodeCID;
+  mDecArray[8].mCID  = &kMacRomanToUnicodeCID;
+  mDecArray[9].mCID  = &kMacCEToUnicodeCID;
+  mDecArray[10].mCID  = &kMacGreekToUnicodeCID;
+  mDecArray[11].mCID  = &kMacTurkishToUnicodeCID;
+  mDecArray[12].mCID  = &kUTF8ToUnicodeCID;
+
+  mDecArray[13].mCID  = &kSJIS2UnicodeCID;
+  mDecArray[14].mCID  = &kISO2022JPToUnicodeCID;
+  mDecArray[15].mCID  = &kEUCJPToUnicodeCID;
+
+  mDecArray[16].mCID  = &kBIG5ToUnicodeCID;
+  mDecArray[17].mCID  = &kEUCTWToUnicodeCID;
+  mDecArray[18].mCID  = &kGB2312ToUnicodeCID;
+  mDecArray[19].mCID  = &kEUCKRToUnicodeCID;
   
-  mEncSize           = 8;
+  mEncSize           = 19;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToLatin1CID;
-  mEncArray[1].mCID  = &kUnicodeToUTF8CID;
-  mEncArray[2].mCID  = &kUnicodeToSJISCID;
-  mEncArray[3].mCID  = &kUnicodeToEUCJPCID;
-  mEncArray[4].mCID  = &kUnicodeToBIG5CID;
-  mEncArray[5].mCID  = &kUnicodeToEUCTWCID;
-  mEncArray[6].mCID  = &kUnicodeToGB2312CID;
-  mEncArray[7].mCID  = &kUnicodeToEUCKRCID;
+  mEncArray[1].mCID  = &kUnicodeToISO88592CID;
+  mEncArray[2].mCID  = &kUnicodeToISO88597CID;
+  mEncArray[3].mCID  = &kUnicodeToISO88599CID;
+  mEncArray[4].mCID  = &kUnicodeToCP1250CID;
+  mEncArray[5].mCID  = &kUnicodeToCP1252CID;
+  mEncArray[6].mCID  = &kUnicodeToCP1253CID;
+  mEncArray[7].mCID  = &kUnicodeToCP1254CID;
+  mEncArray[8].mCID  = &kUnicodeToMacRomanCID;
+  mEncArray[9].mCID  = &kUnicodeToMacCECID;
+  mEncArray[10].mCID  = &kUnicodeToMacGreekCID;
+  mEncArray[11].mCID  = &kUnicodeToMacTurkishCID;
+  mEncArray[12].mCID  = &kUnicodeToUTF8CID;
+
+  mEncArray[13].mCID  = &kUnicodeToSJISCID;
+  mEncArray[14].mCID  = &kUnicodeToEUCJPCID;
+
+  mEncArray[15].mCID  = &kUnicodeToBIG5CID;
+  mEncArray[16].mCID  = &kUnicodeToEUCTWCID;
+  mEncArray[17].mCID  = &kUnicodeToGB2312CID;
+  mEncArray[18].mCID  = &kUnicodeToEUCKRCID;
