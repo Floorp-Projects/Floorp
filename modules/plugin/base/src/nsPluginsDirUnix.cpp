@@ -51,6 +51,7 @@
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
+#include "nsObsoleteModuleLoading.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
