@@ -69,8 +69,8 @@ insert into components (value, program, initialowner, initialqacontact, descript
 insert into components (value, program, initialowner, initialqacontact, description) values ("Address Book", "MailNews", "putterman@netscape.com", "lchiang@netscape.com", "Names, email addresses, phone numbers, etc.");
 insert into components (value, program, initialowner, initialqacontact, description) values ("Front End", "MailNews", "phil@netscape.com", "lchiang@netscape.com", "Three pane view, sidebar contents, toolbars, dialogs, etc.");
 insert into components (value, program, initialowner, initialqacontact, description) values ("Back End", "MailNews", "phil@netscape.com", "lchiang@netscape.com", "RDF data sources and application logic for local mail, news, IMAP and LDAP");
-insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "MailNews", "nhotta@netscape.com", "momoi@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Localization", "MailNews", "rchen@netscape.com", "momoi@netscape.com");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Internationalization", "MailNews", "nhotta@netscape.com", "momoi@netscape.com", "Internationalization is the process of designing and developing a software product to function in multiple locales. This process involves identifying the locales that must be supported, designing features which support those locales, and writing code that functions equally well in any of the supported locales.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Localization", "MailNews", "rchen@netscape.com", "momoi@netscape.com", "Localization is the process of adapting software for a specific international market; this process includes translating the user interface, resizing dialog boxes, replacing icons and other culturally sensitive graphics (if necessary), customizing features (if necessary), and testing the localized product to ensure that the program still works.");
 
 
 
@@ -117,8 +117,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("XP Miscellany", "Mozilla", "brendan@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("XP Utilities", "Mozilla", "rickg@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Zlib", "Mozilla", "pnunn@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "Mozilla", "ftang@netscape.com", "teruko@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Localization", "Mozilla", "rchen@netscape.com", "teruko@netscape.com");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Internationalization", "Mozilla", "ftang@netscape.com", "teruko@netscape.com", "Internationalization is the process of designing and developing a software product to function in multiple locales. This process involves identifying the locales that must be supported, designing features which support those locales, and writing code that functions equally well in any of the supported locales.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Localization", "Mozilla", "rchen@netscape.com", "teruko@netscape.com", "Localization is the process of adapting software for a specific international market; this process includes translating the user interface, resizing dialog boxes, replacing icons and other culturally sensitive graphics (if necessary), customizing features (if necessary), and testing the localized product to ensure that the program still works.");
 
 
 
@@ -153,8 +153,8 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("XPCOM", "NGLayout", "scullin@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("xpidl", "NGLayout", "shaver@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "NGLayout", "ftang@netscape.com", "teruko@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Localization", "NGLayout", "rchen@netscape.com", "teruko@netscape.com");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Internationalization", "NGLayout", "ftang@netscape.com", "teruko@netscape.com", "Internationalization is the process of designing and developing a software product to function in multiple locales. This process involves identifying the locales that must be supported, designing features which support those locales, and writing code that functions equally well in any of the supported locales.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Localization", "NGLayout", "rchen@netscape.com", "teruko@netscape.com", "Localization is the process of adapting software for a specific international market; this process includes translating the user interface, resizing dialog boxes, replacing icons and other culturally sensitive graphics (if necessary), customizing features (if necessary), and testing the localized product to ensure that the program still works.");
 
 
 insert into components (value, program, initialowner, initialqacontact, description) values ("Bonsai", "Webtools", "terry@mozilla.org", "", 'Web based <a href="http://www.mozilla.org/bonsai.html">Tree control system</a> for watching the up-to-the-minute goings-on in a CVS repository');
