@@ -113,7 +113,7 @@ extern char *XP_GetString(int i);
  * to stay here indefinitely.  Mac is completely broken and should use
  * mozilla/include/xp_qsort.h, mozilla/lib/xp/xp_qsort.c.
  */
-#if defined(XP_MAC)
+#if defined(XP_MAC_NEVER)
 extern void XP_QSORT(void *, size_t, size_t,
                      int (*)(const void *, const void *));
 #endif /* XP_MAC */
