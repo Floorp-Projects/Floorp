@@ -71,7 +71,8 @@ function onLoadViewPartialSource()
   // disable menu items that don't work since the selection is munged and
   // the editor doesn't work for MathML
   document.getElementById('cmd_savePage').setAttribute('disabled', 'true');
-  document.getElementById('cmd_editPage').setAttribute('disabled', 'true');
+  // we don't support yet external editor
+  //document.getElementById('cmd_editPage').setAttribute('disabled', 'true');
 
   if (window.arguments[3] == 'selection')
     viewPartialSourceForSelection(window.arguments[2]);
