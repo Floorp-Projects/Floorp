@@ -258,18 +258,22 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
             {     
                 data = *(char **)data;
                 size_t length = 0;
-                if (type == nsXPTType::T_WCHAR_STR) {
-                    length = nsCRT::strlen((const PRUnichar*)data);
-                    PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR length=%d\n",length));
-                    length *= 2;
-                    length +=2;
-                    for (unsigned int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
-                        char c = ((char*)data)[i];
-                        PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                if (data != NULL) {
+                    if (type == nsXPTType::T_WCHAR_STR) {
+                        length = nsCRT::strlen((const PRUnichar*)data);
+                        PR_LOG(log, PR_LOG_DEBUG,
+                               ("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR length=%d\n",length));
+                        length *= 2;
+                        length +=2;
+                        for (unsigned int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
+                            char c = ((char*)data)[i];
+                            PR_LOG(log, PR_LOG_DEBUG, 
+                                   ("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                        }
+                    } else {
+                        length = nsCRT::strlen((const char*)data);                
+                        length+=1;
                     }
-                } else {
-                    length = nsCRT::strlen((const char*)data);                
-                    length+=1;
                 }
                 m->WriteString(data,length);
                 break;

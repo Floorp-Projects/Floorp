@@ -38,12 +38,12 @@ int UnMarshaler::ReadSimple(void *ptr, bcXPType type) {
 }
 int UnMarshaler::ReadString(void *ptr, size_t *size, bcIAllocator * allocator) {
     size_t length;
+    *(char**)ptr = NULL;
     in->read((char*)size,sizeof(size_t));
-    *(char**)ptr = (char *)allocator->Alloc(*size * type2size(bc_T_CHAR));
     if (*size) {
+        *(char**)ptr = (char *)allocator->Alloc(*size * type2size(bc_T_CHAR));
         in->read(*(char**)ptr,*size * type2size(bc_T_CHAR));
     }
-
     if (*size == 1) {
         if (!(*(char**)ptr)[0]) {
             *size = 0;

@@ -97,7 +97,7 @@ public class bcJavaSample implements bcIJavaSample {
         for (int i = 0; i < array.length; i++) {
             System.out.println("--[java]bcJavaSample.test4 valueArray["+i+"] = "+array[i]);
         }
-        String[] returnArray = {"4","3","2","1"};
+        String[] returnArray = {"4","3","2",null};
         valueArray[0] = returnArray;
     }
     /* void test5 (in nsIComponentManager cm); */

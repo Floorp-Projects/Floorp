@@ -43,6 +43,9 @@ int Marshaler::WriteString(void *ptr, size_t size) {
         && ptr) {
         size = 1;
     }
+    if (!ptr) {
+        size = 0;
+    }
     out->write((const char*)&size, sizeof(size_t));
     if (size) {
         out->write((const char*)ptr,type2size(bc_T_CHAR)*size);

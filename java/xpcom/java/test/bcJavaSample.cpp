@@ -146,7 +146,7 @@ void test() {
     }
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
-#if 1
+#if 0
     test->Test1(1000);
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
@@ -157,6 +157,7 @@ void test() {
     test->QueryInterface(NS_GET_IID(bcIJavaSample),(void**)&test1);
     int intArray[] = {1,2,3};
     test->Test3(3, intArray);
+#endif
     {
         char ** valueArray = (char **)malloc(sizeof(char*)*4);
         valueArray[0] = "hi";
@@ -169,6 +170,7 @@ void test() {
             printf("valueArray2[%d]=%s\n",i,(*valueArray2)[i]);
         }
     }
+#if 0
     {
         
         nsIComponentManager* cm;
@@ -183,14 +185,18 @@ void test() {
         }
         printf("--[c++] bcJavaSample after test->Test5(cm)\n");
     }
+
     {
         const char ** valueArray = (const char **)malloc(sizeof(char*)*4);
         valueArray[0] = "hi";
         valueArray[1] = "there";
         valueArray[2] = "a";
-        valueArray[3] = "b";
+        //valueArray[3] = "b";
+
+        valueArray[3] = NULL;
         test->Test6(4,valueArray);
     }
+
     {
         printf("--[c++]about to test7\n");
         PRUint32 count; 
@@ -201,7 +207,7 @@ void test() {
         }
         printf("--[c++]end of test7\n");
     }
-#endif
+
     {
         printf("--[c++]about to test8\n");
         
@@ -215,6 +221,7 @@ void test() {
         test->Test9(&cidParam);
         printf("--[c++]end of test9\n");
     }
+#endif
     printf("--BlackConnect test end\n");
 }
 

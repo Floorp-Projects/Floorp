@@ -521,20 +521,24 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 size_t size;
                 jstring data = NULL;
                 if (um) {
-                    um->ReadString(&data,&size,allocator);
-                    {
-                        for (int i = 0; i < size && type == bc_T_WCHAR_STR; i++) {
-                            char c = ((char*)data)[i];
-                            PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::UnMarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                    char *str;
+                    um->ReadString(&str,&size,allocator);
+                    if (str != NULL) {
+                        {
+                            for (int i = 0; i < size && type == bc_T_WCHAR_STR; i++) {
+                                char c = ((char*)data)[i];
+                                PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::UnMarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                            }
                         }
+                        if (type == bc_T_CHAR_STR) {
+                            data = env->NewStringUTF((const char*)str);
+                        } else {
+                            size-=2; size/=2;
+                            data = env->NewString((const jchar*)str,size);
+                        }
+                        allocator->Free(str);
+                        EXCEPTION_CHECKING(env);
                     }
-                    if (type == bc_T_CHAR_STR) {
-                        data = env->NewStringUTF((const char*)data);
-                    } else {
-                        size-=2; size/=2;
-                        data = env->NewString((const jchar*)data,size);
-                    }
-                    EXCEPTION_CHECKING(env);
                 }
                 if ( ! isOut
                      && (modifier == none) ) {
