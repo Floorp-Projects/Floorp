@@ -65,6 +65,14 @@ RESNAME=plds.rc
 OS_LIBS = user32.lib
 endif # WINNT
 
+ifeq ($(OS_ARCH), AIX)
+ifeq ($(CLASSIC_NSPR),1)
+OS_LIBS = -lc
+else
+OS_LIBS = -lc_r
+endif
+endif
+
 EXTRA_LIBS = $(LIBNSPR)
 
 # On NCR and SCOOS, we can't link with extra libraries when

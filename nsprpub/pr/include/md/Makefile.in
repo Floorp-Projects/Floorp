@@ -41,12 +41,10 @@ VPATH		= @srcdir@
 include $(MOD_DEPTH)/config/autoconf.mk
 
 HEADERS = $(wildcard $(srcdir)/*.h)
-CONFIGS = $(wildcard $(srcdir)/*.cfg)
 
 include $(topsrcdir)/config/rules.mk
 
 export:: $(MDCPUCFG_H)
-	$(INSTALL) -m 444 $(CONFIGS) $(dist_includedir)/md
 	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
 ifneq ($(OS_ARCH),OpenVMS)
 	mv -f $(dist_includedir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
@@ -60,7 +58,7 @@ endif
 real_install::
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
 	cp $(srcdir)/$(MDCPUCFG_H) $(DESTDIR)$(includedir)/prcpucfg.h
-	$(NSINSTALL) -t -m 644 $(CONFIGS) $(HEADERS) $(DESTDIR)$(includedir)/md
+	$(NSINSTALL) -t -m 644 $(HEADERS) $(DESTDIR)$(includedir)/md
 
 release:: export
 	@echo "Copying machine-dependent prcpucfg.h"
@@ -72,4 +70,4 @@ release:: export
 		rm -rf $(RELEASE_INCLUDE_DIR); \
 		$(NSINSTALL) -D $(RELEASE_INCLUDE_DIR);\
 	fi
-	cp $(MDCPUCFG_H) $(RELEASE_INCLUDE_DIR)/prcpucfg.h
+	cp $(srcdir)/$(MDCPUCFG_H) $(RELEASE_INCLUDE_DIR)/prcpucfg.h

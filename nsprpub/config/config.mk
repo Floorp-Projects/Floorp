@@ -139,7 +139,7 @@ endif
 
 # RELEASE_DIR is ns/dist/<module name>
 
-RELEASE_DIR = $(NSDEPTH)/dist/release/$(MOD_NAME)
+RELEASE_DIR = $(MOD_DEPTH)/dist/release/$(MOD_NAME)
 
 RELEASE_INCLUDE_DIR = $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/include
 RELEASE_BIN_DIR = $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/bin
