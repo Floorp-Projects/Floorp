@@ -31,6 +31,10 @@ MODULE		= webshell_tests
 EXPORTS		= \
 		nsIXPBaseWindow.h \
 		nsIWindowListener.h \
+		nsIButton.h \
+		nsILabel.h \
+        	nsICheckButton.h \
+        	nsITextWidget.h	\
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
