@@ -420,11 +420,15 @@ PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name) {
 }
 
 SECStatus
-PK11_GetModInfo(SECMODModule *mod,CK_INFO *info) {
+PK11_GetModInfo(SECMODModule *mod,CK_INFO *info)
+{
     CK_RV crv;
 
     if (mod->functionList == NULL) return SECFailure;
     crv = PK11_GETTAB(mod)->C_GetInfo(info);
+    if (crv != CKR_OK) {
+	PORT_SetError(PK11_MapError(crv));
+    }	
     return (crv == CKR_OK) ? SECSuccess : SECFailure;
 }
 
