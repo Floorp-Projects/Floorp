@@ -96,28 +96,111 @@ num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
+/* See ECMA 15.1.2.2 */
 static JSBool
 num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    jsint base;
-    jschar *ep;
-    jsdouble d;
-
+    jsint radix;
+    const jschar *chars, *start;
+    jsdouble sum;
+    intN negative, digit, newDigit;
+    jschar c;
+    jschar digitMax = '9';
+    jschar lowerCaseBound = 'a';
+    jschar upperCaseBound = 'A';
+    
     str = js_ValueToString(cx, argv[0]);
     if (!str)
 	return JS_FALSE;
+    chars = str->chars;
+    while (JS_ISSPACE(*chars) && *chars != 0)
+        chars++;
+
+    if ((negative = (*chars == '-')) || *chars == '+')
+        chars++;
+
     if (argc > 1) {
-	if (!js_ValueToECMAInt32(cx, argv[1], &base))
+	if (!js_ValueToECMAInt32(cx, argv[1], &radix))
 	    return JS_FALSE;
     } else {
-	base = 0;
+        radix = 0;
     }
-    if (!js_strtol(str->chars, &ep, base, &d)) {
-	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+
+    if (radix != 0) {
+        /* Some explicit radix was supplied */
+        if (radix < 2 || radix > 36) {
+            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+            return JS_TRUE;
+        } else {
+            if (radix == 16 && *chars == '0' &&
+                (*(chars + 1) == 'X' || *(chars + 1) == 'x'))
+                /* If radix is 16, ignore hex prefix. */
+                chars += 2;
+        }
     } else {
-	if (!js_NewNumberValue(cx, d, rval))
-	    return JS_FALSE;
+        /* No radix supplied, or some radix that evaluated to 0. */ 
+        if (*chars == '0') {
+            /* It's either hex or octal; only increment char if str isn't '0' */
+            if ((*(chars + 1) != 0) &&
+                (*(++chars) == 'X' || *chars == 'x'))  /* Hex */
+            {
+                chars++;
+                radix = 16;
+            } else { /* Octal */
+                radix = 8;
+            }
+        } else {
+            radix = 10; /* Default to decimal. */
+        }
+    }
+
+    /* Done with the preliminaries; find some prefix of the string that's
+     * a number in the given radix.  XXX might want to farm this out to
+     * a utility function, to share with the lexer's handling of
+     * literal constants.
+     */
+    start = chars; /* Mark - if string is empty, we return NaN. */
+    if (radix < 10) {
+        digitMax = (char) ('0' + radix - 1);
+    } else {
+        digitMax = '9';
+    }
+    if (radix > 10) {
+        lowerCaseBound = (char) ('a' + radix - 10);
+        upperCaseBound = (char) ('A' + radix - 10);
+    } else {
+        lowerCaseBound = 'a';
+        upperCaseBound = 'A';
+    }
+    digit = 0; /* how many digits have we seen? (if radix == 10) */
+    sum = 0;
+    while ((c = *chars) != 0) {
+        if ('0' <= c && c <= digitMax)
+            newDigit = c - '0';
+        else if ('a' <= c && c < lowerCaseBound)
+            newDigit = c - 'a' + 10;
+        else if ('A' <= c && c < upperCaseBound)
+            newDigit = c - 'A' + 10;
+        else
+            break;
+        /* ECMA: 'But if R is 10 and Z contains more than 20 significant
+         * digits, every digit after the 20th may be replaced by a 0...'
+         * I'm not sure if doing this way is actually an improvement.
+         * XXX this may bear closer examination......
+         */
+        if (radix == 10 && ++digit > 20)
+            sum = sum*radix;
+        else
+            sum = sum*radix + newDigit;
+        chars++;
+    }
+
+    if (chars == start) {
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    } else {
+        if (!js_NewNumberValue(cx, (negative ? -sum : sum), rval))
+            return JS_FALSE;
     }
     return JS_TRUE;
 }
