@@ -44,6 +44,9 @@
 <!ENTITY tree.header.name.label           "Name">
 <!ENTITY tree.header.url.label            "URL">
 <!ENTITY tree.header.shortcut.label       "Shortcut URL">
+<!ENTITY tree.header.addedon.label       "Added On">
+<!ENTITY tree.header.lastmod.label       "Last Modified">
+<!ENTITY tree.header.lastvisit.label     "Last Visit">
 <!ENTITY tree.header.description.label  "Description">
 <!ENTITY bookmarksWindowTitle.label	"Bookmarks">
 ]>
@@ -51,6 +54,7 @@
 <xul:window title="&bookmarksWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="500" height="400">
 
@@ -93,7 +97,8 @@
 
 <tree  id="bookmarksTree" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
-       ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
+       onclick="return DoSingleClick(event, event.target);"
+       ondblclick="return OpenURL(event,event.target.parentNode.parentNode.parentNode);"
        style="height:100%;">
 
   <template>
@@ -123,6 +128,16 @@
            <treecell>
              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
            </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" align="right" style="list-style-image: none;" />
+           </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" align="right" style="list-style-image: none;" />
+           </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" align="right" style="list-style-image: none;" />
+           </treecell>
+
          </treerow>
        </treeitem>
      </rule>
@@ -132,6 +147,9 @@
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
   <treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
+  <treecol id="LastVisitColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+  <treecol id="AddedOnColumn" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
+  <treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
   <treehead>
     <treerow>
@@ -151,6 +169,19 @@
 	<xul:observes element="DescriptionColumn" attribute="sortActive"/>
 	<xul:observes element="DescriptionColumn" attribute="sortDirection"/>
       &tree.header.description.label;</treecell>
+      <treecell onclick="return doSort('LastVisitColumn');">
+	<xul:observes element="LastVisitColumn" attribute="sortActive"/>
+	<xul:observes element="LastVisitColumn" attribute="sortDirection"/>
+      &tree.header.lastvisit.label;</treecell>
+      <treecell onclick="return doSort('AddedOnColumn');">
+	<xul:observes element="AddedOnColumn" attribute="sortActive"/>
+	<xul:observes element="AddedOnColumn" attribute="sortDirection"/>
+      &tree.header.addedon.label;</treecell>
+      <treecell onclick="return doSort('LastModColumn');">
+	<xul:observes element="LastModColumn" attribute="sortActive"/>
+	<xul:observes element="LastModColumn" attribute="sortDirection"/>
+      &tree.header.lastmod.label;</treecell>
+
     </treerow>
   </treehead>
 
@@ -158,4 +189,3 @@
 </tree>
 
 </xul:window>
-
