@@ -35,6 +35,7 @@ XPIDLSRCS =		    \
         nsIBaseStream.idl   \
         nsIInputStream.idl  \
         nsIOutputStream.idl \
+        nsIBufferInputStream.idl \
 	$(NULL)
 
 CPPSRCS =			     \
