@@ -1,6 +1,0 @@
-#
-# Configuration file for using the libIDL library in GNOME applications
-#
-LIBIDL_INCLUDEDIR="@LIBIDL_INCLUDEDIR@"
-LIBIDL_LIBDIR="@LIBIDL_LIBDIR@"
-LIBIDL_LIBS="@LIBIDL_LIBS@"
