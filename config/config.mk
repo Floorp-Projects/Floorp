@@ -588,6 +588,10 @@ XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(CYGWIN_WRAPPER) $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
+# Java macros
+JAVA_IDL_COMPILE = $(CYGWIN_WRAPPER) $(DIST)/bin/java_xpidl$(BIN_SUFFIX)
+JAVA_DIST_DIR = $(DIST)/java
+
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
 
 INCLUDES	= $(LOCAL_INCLUDES) $(REQ_INCLUDES) -I$(PUBLIC) -I$(DIST)/include $(OS_INCLUDES)

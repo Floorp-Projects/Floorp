@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE 		= progressDlg
 XPIDL_MODULE 	= progressDlg
 
+JAVA_XPIDLSRCS = \
+		nsIProgressDialog.idl \
+		$(NULL)
+
 XPIDLSRCS = 	\
 		nsIProgressDialog.idl \
 		$(NULL)

@@ -87,6 +87,10 @@ SDK_XPIDLSRCS = \
 		nsIGlobalHistory.idl \
 		$(NULL)
 
+JAVA_XPIDLSRCS = \
+		nsIWebNavigation.idl \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
 		nsCDefaultURIFixup.idl		\

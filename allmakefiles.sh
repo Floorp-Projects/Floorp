@@ -1323,6 +1323,13 @@ for extension in $MOZ_EXTENSIONS; do
         inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_inspector"
             ;;
+        java ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/java/Makefile
+            extensions/java/xpcom/Makefile
+            extensions/java/xpcom/build/Makefile
+            extensions/java/xpcom/tests/Makefile
+            extensions/java/xpcom/tools/xpidl/Makefile
+            " ;;
         typeaheadfind ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_typeaheadfind"
             ;;
