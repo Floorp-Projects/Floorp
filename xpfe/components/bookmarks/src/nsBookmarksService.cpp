@@ -3604,6 +3604,9 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
 		nsCOMPtr<nsIRDFResource>	aSource = do_QueryInterface(aSrc);
 		if (!aSource)	continue;
 
+        // if folder is already marked, nothing left to do
+        if (aSource.get() == newSource)   return(NS_OK);
+
 		if (NS_FAILED(rv = mInner->Unassert(aSource, kNC_FolderType, objType)))
 			continue;
 	}
