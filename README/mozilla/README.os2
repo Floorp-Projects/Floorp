@@ -12,7 +12,7 @@ installation instructions for the OS/2 build of Mozilla.
 
 For more info on Mozilla, see http://www.mozilla.org. For more info on the OS/2
 port see http://www.mozilla.org/ports/os2. To submit bugs or other feedback
-check out Bugzilla at http://bugzilla.mozilla.org for links to known bugs,
+check out Bugzilla at https://bugzilla.mozilla.org for links to known bugs,
 bug-writing guidelines, and more. You can also get help with Bugzilla by
 pointing your IRC client to #mozillazine at irc.mozilla.org, OS/2 specific
 problems are discussed in #warpzilla and in the newsgroup 
@@ -42,10 +42,10 @@ problems and installation issues with Mozilla.
 ================================================================================
 
 *All Platforms
-   To view and use the new streamlined "Modern" theme, your display monitor
-   should be set to display thousands of colors. For users who cannot set
-   their displays to use more than 256 colors, Mozilla.org recommends using
-   the "Classic" theme for Mozilla.
+   To view and use the "Modern" theme, your display monitor should be set to
+   display thousands of colors. For users who cannot set their displays to use
+   more than 256 colors, Mozilla.org recommends using the "Classic" theme for
+   Mozilla.
 
    To select the Modern theme after you have installed Mozilla, from the
    Navigator browser, open the View menu, and then open then open the Apply
@@ -54,7 +54,7 @@ problems and installation issues with Mozilla.
 *OS/2
    - This release requires updated C runtime DLLs (libc-0.5.1) from
         http://www.innotek.de/products/gccos2/download/gccos2download_e.html
-     in order to run. By the default the installation routine places them in
+     in order to run. By default the installation routine places them in
      \OS2\DLL on your bootdrive, but you can put them in the same directory as
      Mozilla's executable, or somewhere else in your LIBPATH. The Mozilla 
      installer will not install the C runtime DLLs for you but requires them to
@@ -110,7 +110,7 @@ OS/2 Installation Instructions
 
    To install Mozilla by downloading the Mozilla installer, follow these steps:
 
-     1. Click the the "Installer" link on the site you're downloading Mozilla
+     1. Click the "Installer" link on the site you're downloading Mozilla
      from to download the installer file to your machine. This file is typically
      called mozilla-os2-*-installer.exe where the "*" is replaced by the Mozilla
      version.
@@ -130,7 +130,7 @@ OS/2 Installation Instructions
    To install Mozilla by downloading the .zip file and installing manually,
    follow these steps:
 
-     1. Click the the "Zip" link on the site you're downloading Mozilla from to
+     1. Click the "Zip" link on the site you're downloading Mozilla from to
      download the ZIP package to your machine. This file is typically called 
      mozilla-os2-*.zip where the "*" is replaced by the Mozilla version.
 
@@ -199,8 +199,28 @@ Config.sys or in a script or using a program object as listed above. If you add
 
    set MOZILLA_HOME=f:\Data
 
-the user profile(s) will be created in "f:\Data\Mozilla\Profiles". Find more
-information on this topic and other tips on
+the user profile(s) will be created in "f:\Data\Mozilla\Profiles".
+
+
+Other important environment variables
+-------------------------------------
+
+There are a few enviroment variables that can be used to control special
+behavior of Mozilla on OS/2:
+
+- set NSPR_OS2_NO_HIRES_TIMER=1
+  This causes Mozilla not to use OS/2's high resolution timer. Set this if other
+  applications using the high resolution timer (multimedia apps) act strangely.
+
+- set MOZILLA_USE_EXTENDED_FT2LIB=T
+  If you have the Innotek Font Engine installed this variable enables special
+  functions in Mozilla to handle unicode characters.
+
+- set MOZ_NO_REMOTE=1
+  Use this to run two instances of Mozilla simultaneously (e.g. debug and
+  optimized version).
+
+Find more information on this topic and other tips on
    http://www.os2bbs.com/os2news/Warpzilla.html
 
 
