@@ -434,9 +434,10 @@ il_get_container(IL_GroupContext *img_cx,
     ic = il_find_in_cache(img_cx->display_type, hash, image_url,
                           background_color, req_depth, req_width, req_height);
 
-
     if (ic) { 
        
+	ILTRACE(2,("il:  il_get_container: found ic=0x%08x in cache for url %s\n", ic, image_url));
+
         /* This ic is being destroyed. Need a new one */
         if ((ic->state == IC_ABORT_PENDING))
             ic = NULL;
@@ -450,6 +451,7 @@ il_get_container(IL_GroupContext *img_cx,
         /*    could result in incorrect behavior.                        */
 
             else if(cache_reload_policy == DONT_USE_IMG_CACHE){
+		ILTRACE(2,("il:  il_get_container: DONT_USE_IMG_CACHE ic=0x%08x discarding\n", ic)); 
             /* Don't use old copy and purge it from cache.*/
             if (!ic->is_in_use) {
                 il_removefromcache(ic);

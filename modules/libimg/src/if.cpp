@@ -51,7 +51,11 @@ PR_END_EXTERN_C
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
 
+#if defined( DEBUG )
+int il_debug=100;
+#else
 int il_debug=0;
+#endif
 
 /* Global list of image group contexts. */
 static IL_GroupContext *il_global_img_cx_list = NULL;
