@@ -151,7 +151,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   } 
   else if (aAttribute == nsHTMLAtoms::frameborder) {

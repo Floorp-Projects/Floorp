@@ -209,7 +209,7 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, aResult)) {
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

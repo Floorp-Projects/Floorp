@@ -600,7 +600,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::link) ||
       (aAttribute == nsHTMLAtoms::alink) ||
       (aAttribute == nsHTMLAtoms::vlink)) {
-    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   if ((aAttribute == nsHTMLAtoms::marginwidth) ||
