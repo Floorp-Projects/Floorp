@@ -190,6 +190,7 @@ modern.jar:
   skin/modern/global/filepicker/dir-open.gif                       (global/filepicker/dir-open.gif)
   skin/modern/global/filepicker/folder-up.gif                      (global/filepicker/folder-up.gif)
   skin/modern/global/filepicker/folder-home.gif                    (global/filepicker/folder-home.gif)
+  skin/modern/global/filepicker/folder-new.gif                     (global/filepicker/folder-new.gif)
   skin/modern/global/icons/alert-error.gif                         (global/icons/alert-error.gif)
   skin/modern/global/icons/alert-exclam.gif                        (global/icons/alert-exclam.gif)
   skin/modern/global/icons/alert-message.gif                       (global/icons/alert-message.gif)

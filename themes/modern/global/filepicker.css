@@ -88,3 +88,8 @@ treechildren:-moz-tree-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/folder-home.gif");
   max-width: 36px;
 }
+
+.new-dir-button {
+  list-style-image: url("chrome://global/skin/filepicker/folder-new.gif");
+  max-width: 36px;
+}
