@@ -201,6 +201,11 @@ nsTreeRowFrame::Reflow(nsIPresContext*          aPresContext,
   i++;
   printf("Full row reflow! Number %d\n", i);
 */
+  if (mState & NS_FRAME_FIRST_REFLOW) {
+    // Newly inserted frame
+    ((nsHTMLReflowState&)aReflowState).reason = eReflowReason_Initial;
+  }
+
   return nsTableRowFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
