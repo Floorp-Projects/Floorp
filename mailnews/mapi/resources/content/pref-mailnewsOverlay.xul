@@ -38,6 +38,7 @@ Contributor(s):
 <hbox autostretch="never" id="mapi">
   <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
             accesskey="&enableMapi.accesskey;" 
-            oncommand="onEnableMapi();"/>
+            oncommand="onEnableMapi();"
+            startupFunc="registerCallback();"/>
 </hbox>
 </overlay> 

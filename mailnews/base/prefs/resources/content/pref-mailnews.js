@@ -1,15 +1,14 @@
-function Init()
+function Startup()
 {
-  parent.initPanel('chrome://messenger/content/pref-mailnews.xul');
-  var initFunc;
+  var startupFunc;
   try {
-    initFunc = document.getElementById("mailnewsEnableMapi").getAttribute('initFunc');
+    startupFunc = document.getElementById("mailnewsEnableMapi").getAttribute('startupFunc');
   }
   catch (ex) {
-    initFunc = null;
+    startupFunc = null;
   }
-  if (initFunc)
-    eval(initFunc);
+  if (startupFunc)
+    eval(startupFunc);
 }
 
 function setColorWell(menu) 
