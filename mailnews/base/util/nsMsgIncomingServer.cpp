@@ -227,6 +227,8 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, RememberPassword, "remember_password");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, LocalPath, "directory")
+
 
 /* what was this called in 4.x? */
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");

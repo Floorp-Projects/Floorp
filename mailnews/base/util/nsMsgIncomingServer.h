@@ -68,6 +68,9 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetDownloadOnBiff(PRBool *aDownloadOnBiff);
   NS_IMETHOD SetDownloadOnBiff(PRBool aDownloadOnBiff);
 
+  NS_IMETHOD GetLocalPath(char * *aLocalPath);
+  NS_IMETHOD SetLocalPath(char * aLocalPath);
+  
 private:
   nsIPref *m_prefs;
   char *m_serverKey;
