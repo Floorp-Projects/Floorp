@@ -176,8 +176,7 @@ nsresult
 nsGenericXMLElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
   aNameSpacePrefix = mNameSpacePrefix;
-  
-  NS_IF_ADDREF(mNameSpacePrefix);
+  NS_IF_ADDREF(aNameSpacePrefix);
 
   return NS_OK;
 }
@@ -214,8 +213,7 @@ nsresult
 nsGenericXMLElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 {
   aNameSpace = mNameSpace;
-
-  NS_IF_ADDREF(mNameSpace);
+  NS_IF_ADDREF(aNameSpace);
 
   return NS_OK;  
 }

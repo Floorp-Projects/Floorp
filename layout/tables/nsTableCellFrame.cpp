@@ -38,7 +38,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsVoidArray.h"
-#include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
@@ -48,7 +47,6 @@
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 
-NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 

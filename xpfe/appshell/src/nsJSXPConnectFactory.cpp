@@ -28,7 +28,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMXPConnectFactory.h"
 
@@ -36,8 +35,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIXPConnectFactoryIID, NS_IDOMXPCONNECTFACTORY_IID);
-NS_DEF_PTR(nsIDOMXPConnectFactory);
-
 
 /***********************************************************************/
 //

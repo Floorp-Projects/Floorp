@@ -30,7 +30,6 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIView.h"
-#include "nsIPtr.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
@@ -40,9 +39,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
-
-NS_DEF_PTR(nsIStyleContext);
-NS_DEF_PTR(nsIContent);
 
 /* ----------- nsTableRowGroupFrame ---------- */
 

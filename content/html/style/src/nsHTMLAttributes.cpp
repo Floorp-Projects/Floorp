@@ -1314,8 +1314,8 @@ HTMLAttributesImpl::GetAttributeCount(PRInt32& aCount) const
 NS_IMETHODIMP
 HTMLAttributesImpl::GetID(nsIAtom*& aResult) const
 {
-  NS_IF_ADDREF(mID);
   aResult = mID;
+  NS_IF_ADDREF(aResult);
   return NS_OK;
 }
 

@@ -47,7 +47,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsIPtr.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -74,14 +73,6 @@ static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
 static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-
-NS_DEF_PTR(nsIHTMLContent);
-NS_DEF_PTR(nsIContent);
-NS_DEF_PTR(nsIStyleRule);
-NS_DEF_PTR(nsICSSStyleRule);
-NS_DEF_PTR(nsIURI);
-NS_DEF_PTR(nsISupportsArray);
-NS_DEF_PTR(nsICSSStyleSheet);
 
 // ----------------------
 // Rule hash key
@@ -1424,8 +1415,8 @@ CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
 {
-  NS_IF_ADDREF(mParent);
   aParent = mParent;
+  NS_IF_ADDREF(aParent);
   return NS_OK;
 }
 

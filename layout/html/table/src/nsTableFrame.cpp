@@ -45,7 +45,6 @@
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
-#include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -60,9 +59,6 @@
 #include "nsISizeOfHandler.h"
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
-
-NS_DEF_PTR(nsIStyleContext);
-NS_DEF_PTR(nsIContent);
 
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);

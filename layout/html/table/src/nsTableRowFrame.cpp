@@ -31,7 +31,6 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"
-#include "nsIPtr.h"
 #include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
@@ -44,8 +43,6 @@
 #include "nsIHTMLTableCellElement.h"
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 // end includes for style optimizations that require real content knowledge
-
-NS_DEF_PTR(nsIStyleContext);
 
 
 /* ----------- nsTableRowpFrame ---------- */

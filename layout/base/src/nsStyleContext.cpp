@@ -1847,8 +1847,9 @@ void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
 
 nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
 {
-  NS_IF_ADDREF(mRules);
-  return mRules;
+  nsISupportsArray* result = mRules;
+  NS_IF_ADDREF(result);
+  return result;
 }
 
 PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
