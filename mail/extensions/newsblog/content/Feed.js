@@ -250,6 +250,10 @@ Feed.prototype.parseAsRSS2 = function() {
                              || itemNode.getElementsByTagName("date")[0])
                 || item.date;
 
+    var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
+    if (content)
+      item.content = content;
+
     this.itemsToStore[i] = item;
   }
   
