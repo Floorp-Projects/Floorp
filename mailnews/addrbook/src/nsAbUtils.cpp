@@ -182,7 +182,7 @@ struct closureStruct
  * into the associated position of the key and
  * value arrays
  */
-static PRBool enumerateEntries(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PRBool) enumerateEntries(nsHashKey *aKey, void *aData, void* closure)
 {
     closureStruct* s  = NS_REINTERPRET_CAST(closureStruct*, closure);
     nsCStringKey* key = NS_REINTERPRET_CAST(nsCStringKey*, aKey);

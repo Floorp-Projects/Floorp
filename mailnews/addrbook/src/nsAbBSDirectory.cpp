@@ -400,7 +400,7 @@ struct GetDirectories
 		DIR_Server* mServer;
 };
 
-PRBool GetDirectories_getDirectory (nsHashKey *aKey, void *aData, void* closure)
+PRBool PR_CALLBACK GetDirectories_getDirectory (nsHashKey *aKey, void *aData, void* closure)
 {
 	GetDirectories* getDirectories = (GetDirectories* )closure;
 
