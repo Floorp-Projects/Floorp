@@ -927,6 +927,7 @@ titledbutton.push[disabled="true"]:active {
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
+        padding: 2px;
 	text-decoration: none;
 }
 
