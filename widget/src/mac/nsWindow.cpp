@@ -19,6 +19,8 @@
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
+#include "nsCOMPtr.h"
+
 
 NS_IMPL_ADDREF(ChildWindow)
 NS_IMPL_RELEASE(ChildWindow)
@@ -756,29 +758,38 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	EndDraw();
 
 	// recursively draw the children
-	nsIEnumerator* children = GetChildren();
+	nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
 	if (children)
 	{
-		nsWindow* child;
 		children->First();
+		nsCOMPtr<nsISupports> child;
 		do
 		{
-			if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))
+			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
 			{
-				nsRect childBounds;
-				child->GetBounds(childBounds);
+				nsCOMPtr<nsIWidget> childWidget ( child );
+				if ( childWidget ) {
+					nsRect childBounds;
+					childWidget->GetBounds(childBounds);
 
-				// redraw only the intersection of the child rect and the update rect
-				nsRect intersection;
-				if (intersection.IntersectRect(aRect, childBounds))
-				{
-					intersection.MoveBy(-childBounds.x, -childBounds.y);
-					child->UpdateWidget(intersection, aContext);
-				}
-          	}
+					// redraw only the intersection of the child rect and the update rect
+					nsRect intersection;
+					if (intersection.IntersectRect(aRect, childBounds))
+					{
+						intersection.MoveBy(-childBounds.x, -childBounds.y);
+						
+						// this is an ugly ugly hack, but it appears that we are making
+						// an assumption about the implementation of this nsIWidget to 
+						// be a nsWindow. Don't blame me for this, I'm just the messenger.
+						// (pinkerton).
+						nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
+						if ( weHopeThisIsAWindow )
+							weHopeThisIsAWindow->UpdateWidget(intersection, aContext);
+					}
+	          	}
+			}
 		}
 		while (NS_SUCCEEDED(children->Next()));			
-		delete children;
 	}
 }
 
@@ -814,25 +825,33 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	EndDraw();
 
 	// scroll the children
-	nsIEnumerator* children = GetChildren();
+	nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
 	if (children)
 	{
-		nsWindow* child;
 		children->First();
 		do
 		{
-			if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child))) {
-				nsRect bounds;
-				child->GetBounds(bounds);
-				bounds.x += aDx;
-				bounds.y += aDy;
-				child->SetBounds(bounds);
-
-				child->Scroll(aDx, aDy, &bounds);
+			nsCOMPtr<nsISupports> child;
+			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) ) {
+				nsCOMPtr<nsIWidget> childWidget ( child );
+				if ( childWidget ) {	
+					// this is an ugly ugly hack, but it appears that we are making
+					// an assumption about the implementation of this nsIWidget to 
+					// be a nsWindow. Don't blame me for this, I'm just the messenger.
+					// (pinkerton).
+					nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
+					if ( weHopeThisIsAWindow ) {
+						nsRect bounds;
+						weHopeThisIsAWindow->GetBounds(bounds);
+						bounds.x += aDx;
+						bounds.y += aDy;
+						weHopeThisIsAWindow->SetBounds(bounds);
+						weHopeThisIsAWindow->Scroll(aDx, aDy, &bounds);
+					}
+				}
           	}
 		}
 		while (NS_SUCCEEDED(children->Next()));			
-		delete children;
 	}
 	return NS_OK;
 }
@@ -1094,30 +1113,38 @@ PRBool nsWindow::PointInWidget(Point aThePoint)
 //-------------------------------------------------------------------------
 nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 {
-		nsWindow*	widgetHit;
+	nsWindow*	widgetHit;
 
 	if (PointInWidget(aThePoint))
 	{
 		widgetHit = this;
-		nsIEnumerator* children = GetChildren();
+		nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
 		if (children)
 		{
 			children->First();
-			nsWindow* child;
 			do
 			{
-        if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))
-        {
-				  nsWindow* deeperHit = child->FindWidgetHit(aThePoint);
-				  if (deeperHit)
-				  {
-					  widgetHit = deeperHit;
-					  break;
-				  }
-        }
-			}
-      while (NS_SUCCEEDED(children->Next()));
-			delete children;
+				nsCOMPtr<nsISupports> child;
+				if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
+				{
+					nsCOMPtr<nsIWidget> childWidget ( child );
+					if ( childWidget ) {	
+						// this is an ugly ugly hack, but it appears that we are making
+						// an assumption about the implementation of this nsIWidget to 
+						// be a nsWindow. Don't blame me for this, I'm just the messenger.
+						// (pinkerton).
+						nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
+						if ( weHopeThisIsAWindow ) {
+							nsWindow* deeperHit = weHopeThisIsAWindow->FindWidgetHit(aThePoint);
+							if (deeperHit)
+							{
+								widgetHit = deeperHit;
+								break;
+							}
+						}
+					}
+				}
+			} while (NS_SUCCEEDED(children->Next()));
 		}
 	}
 	else
