@@ -50,6 +50,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 static NS_DEFINE_CID(kMsgQuoteListenerCID, NS_MSGQUOTELISTENER_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 
 NS_IMPL_ISUPPORTS2(nsMsgQuoteListener, nsIMimeStreamConverterListener, nsIMsgQuoteListener)
@@ -170,7 +171,15 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   nsXPIDLCString urlSpec;
   aURL->GetSpec(getter_Copies(urlSpec));
   nsCAutoString modifiedUrlSpec(urlSpec);
-  if (quoteHeaders)
+
+  PRBool bAutoQuote = PR_TRUE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
+
+  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
+    modifiedUrlSpec += "?header=only";
+  else if (quoteHeaders)
       modifiedUrlSpec += "?header=quote";
   else
       modifiedUrlSpec += "?header=quotebody";
