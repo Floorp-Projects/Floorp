@@ -3830,10 +3830,10 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
       event.widget = nsnull;
       event.message = NS_FORM_CHANGE;
       event.flags = NS_EVENT_FLAG_INIT;
-      event.isShift = false;
-      event.isControl = false;
-      event.isAlt = false;
-      event.isMeta = false;
+      event.isShift = PR_FALSE;
+      event.isControl = PR_FALSE;
+      event.isAlt = PR_FALSE;
+      event.isMeta = PR_FALSE;
 
       // Have the content handle the event.
       mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
