@@ -447,7 +447,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     const nsXPTParamInfo& arg_param = method->GetParam(argnum);
     const nsXPTType& arg_type = arg_param.GetType();
 
-    // XXX require PRUint32 here - need to require in compiler too!
+    // The xpidl compiler ensures this. We reaffirm it for safety.
     if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
         return JS_FALSE;
 
@@ -606,7 +606,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     obj = thisObj = wrapper->GetJSObject();
 
-    // XXX ASSUMES that retval is last arg.
+    // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = info->GetParamCount();
     argc = paramCount -
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);

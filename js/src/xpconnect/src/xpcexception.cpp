@@ -136,8 +136,8 @@ nsXPCException::nsXPCException()
       mLocation(nsnull),
       mData(nsnull),
       mFilename(nsnull),
-      mColumnNumber(0),
       mLineNumber(0),
+      mColumnNumber(0),
       mInner(nsnull),
       mInitialized(PR_FALSE)
 {

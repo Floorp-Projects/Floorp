@@ -483,14 +483,6 @@ XPC_WN_OnlyIWrite_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval 
     if(ccx.GetResolveName() == idval)
         return JS_TRUE;
 
-    // No, we use shared setters, so this should not matter
-    // (modulo the engine resolve bugs brendan is helping with!)
-/*
-    if(ccx.GetInterface() && ccx.GetMember() &&
-       ccx.GetMember()->IsWritableAttribute())
-        return JS_TRUE;
-*/
-
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
 

@@ -85,7 +85,9 @@ HashNativeKey(JSDHashTable *table, const void *key)
     if(!Set)
     {
         NS_ASSERTION(Addition, "bad key");
-        h ^= (JSHashNumber) Addition;
+        // This would be an XOR like below. 
+        // But "0 ^ x == x". So it does not matter.
+        h = (JSHashNumber) Addition >> 2;
     }
     else
     {
@@ -97,15 +99,15 @@ HashNativeKey(JSDHashTable *table, const void *key)
             for(PRUint16 i = 0; i < count; i++)
             {
                 if(i == Position)
-                    h ^= (JSHashNumber) Addition;
+                    h ^= (JSHashNumber) Addition >> 2;
                 else
-                    h ^= (JSHashNumber) *(Current++);
+                    h ^= (JSHashNumber) *(Current++) >> 2;
             }
         }
         else
         {
             for(PRUint16 i = 0; i < count; i++)
-                h ^= (JSHashNumber) *(Current++);
+                h ^= (JSHashNumber) *(Current++) >> 2;
         }
     }
 

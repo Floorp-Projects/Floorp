@@ -545,6 +545,11 @@ interface nsIXPConnect : nsISupports
                                  in nsISupports  aCOMObj);
 
     void clearAllWrappedNativeSecurityPolicies();
+
+    nsIXPConnectJSObjectHolder
+    getWrappedNativePrototype(in JSContextPtr aJSContext,
+                              in JSObjectPtr  aScope,
+                              in nsIClassInfo aClassInfo);
 };
 
 

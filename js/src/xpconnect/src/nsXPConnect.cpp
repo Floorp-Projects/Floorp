@@ -855,6 +855,41 @@ nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
     return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies(ccx);
 }
 
+/* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
+NS_IMETHODIMP 
+nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 
+                                       JSObject * aScope, 
+                                       nsIClassInfo *aClassInfo, 
+                                       nsIXPConnectJSObjectHolder **_retval)
+{
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    XPCWrappedNativeScope* scope =
+        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
+    if(!scope)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    XPCNativeScriptableCreateInfo sciProto;
+    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, &sciProto);
+
+    XPCWrappedNativeProto* proto =
+        XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, 
+                                            &sciProto, JS_FALSE);
+    if(!proto)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    nsIXPConnectJSObjectHolder* holder;
+    *_retval = holder = XPCJSObjectHolder::newHolder(ccx, 
+                                                     proto->GetJSProtoObject());
+    if(!holder)
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    NS_ADDREF(holder);
+    return NS_OK;
+}
+
 /* void debugDump (in short depth); */
 NS_IMETHODIMP
 nsXPConnect::DebugDump(PRInt16 depth)

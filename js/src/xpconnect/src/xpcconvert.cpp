@@ -975,7 +975,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
                                nsISupports* data,
                                nsIException** exceptn)
 {
-    static const char format[] = "%s [%s::%s]";
+    static const char format[] = "\'%s\' when calling method: [%s::%s]";
     const char * msg = message;
     char* sz = nsnull;
 

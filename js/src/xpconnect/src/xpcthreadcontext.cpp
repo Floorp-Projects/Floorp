@@ -124,38 +124,36 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
     if(!mSafeJSContext)
     {
         JSRuntime *rt;
-        nsCOMPtr<nsIJSRuntimeService> rtsvc =
-            do_GetService(XPC_RUNTIME_CONTRACTID);
-        if(rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)) && rt)
+        XPCJSRuntime* xpcrt;
+
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+        nsCOMPtr<nsIXPConnect> xpcholder(NS_STATIC_CAST(nsIXPConnect*, xpc));
+
+        if(xpc && (xpcrt = xpc->GetRuntime()) && (rt = xpcrt->GetJSRuntime()))
         {
-            nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-            if(xpc)
+            mSafeJSContext = JS_NewContext(rt, 8192);
+            if(mSafeJSContext)
             {
-                mSafeJSContext = JS_NewContext(rt, 8192);
-                if(mSafeJSContext)
+                // scoped JS Request
+                AutoJSRequestWithNoCallContext req(mSafeJSContext);
+                JSObject *glob;
+                glob = JS_NewObject(mSafeJSContext, &global_class, NULL, NULL);
+                if(!glob || NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
                 {
-                    // scoped JS Request
-                    AutoJSRequestWithNoCallContext req(mSafeJSContext);
-                    JSObject *glob;
-                    glob = JS_NewObject(mSafeJSContext, &global_class, NULL, NULL);
-                    if(!glob ||
-                       NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
-                    {
-                        // Explicitly end the request since we are about to kill
-                        // the JSContext that 'req' will try to use when it
-                        // goes out of scope.
-                        req.EndRequest();
-                        JS_DestroyContext(mSafeJSContext);
-                        mSafeJSContext = nsnull;
-                    }
-                    // Save it off so we can destroy it later, even if
-                    // mSafeJSContext has been set to another context
-                    // via SetSafeJSContext.  If we don't get here,
-                    // then mSafeJSContext must have been set via
-                    // SetSafeJSContext, and we're not responsible for
-                    // destroying the passed-in context.
-                    mOwnSafeJSContext = mSafeJSContext;
+                    // Explicitly end the request since we are about to kill
+                    // the JSContext that 'req' will try to use when it
+                    // goes out of scope.
+                    req.EndRequest();
+                    JS_DestroyContext(mSafeJSContext);
+                    mSafeJSContext = nsnull;
                 }
+                // Save it off so we can destroy it later, even if
+                // mSafeJSContext has been set to another context
+                // via SetSafeJSContext.  If we don't get here,
+                // then mSafeJSContext must have been set via
+                // SetSafeJSContext, and we're not responsible for
+                // destroying the passed-in context.
+                mOwnSafeJSContext = mSafeJSContext;
             }
         }
     }
