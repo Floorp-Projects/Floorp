@@ -20,7 +20,7 @@
 #   Johnny Stenback <jst@netscape.com> (original author)
 #
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -46,8 +46,6 @@ EXPORTS		=			\
 		nsString.h		\
 		nsString2.h		\
 		$(NULL)			
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

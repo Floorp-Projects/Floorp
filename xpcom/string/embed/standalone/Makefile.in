@@ -35,7 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -60,14 +60,14 @@ STRING_LCSRCS   = \
 		nsASingleFragmentString.cpp  \
 		$(NULL)
 
-STRING_CSRCS    := $(addprefix $(topsrcdir)/string/src/, $(STRING_LCSRCS))
+STRING_CSRCS    := $(addprefix $(srcdir)/../../src/, $(STRING_LCSRCS))
 
 
 EMBED_STRING_LCSRCS = \
 		nsEmbedString.cpp \
 		$(NULL)
 
-EMBED_STRING_CSRCS    := $(addprefix $(topsrcdir)/string/embed/, $(EMBED_STRING_LCSRCS))
+EMBED_STRING_CSRCS    := $(addprefix $(srcdir)/../, $(EMBED_STRING_LCSRCS))
 
 CPPSRCS		= \
 		$(STRING_LCSRCS)             \
