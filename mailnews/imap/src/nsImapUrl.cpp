@@ -59,6 +59,7 @@ nsImapUrl::nsImapUrl()
     m_port = IMAP_PORT;
     m_spec = nsnull;
     m_search = nsnull;
+	m_file = nsnull;
 	
 	m_imapLog = nsnull;
     m_imapMailFolder = nsnull;
@@ -97,6 +98,7 @@ nsImapUrl::~nsImapUrl()
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
     PR_FREEIF(m_search);
+	PR_FREEIF(m_file);
 	PR_FREEIF(m_listOfMessageIds);
 
 }
@@ -470,6 +472,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
     PR_FREEIF(m_search);
+	PR_FREEIF(m_file);
     m_port = IMAP_PORT;
 
 	// mscott -> eventually we'll replace all of this duplicate host and port parsing code with a url parser
@@ -570,7 +573,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
             cp = PL_strchr(cp, '/');
             m_port = strtol(cp0, (char **)nsnull, 10);
         }
-		imapPartOfUrl = cp;
+		imapPartOfUrl = cp + 1; // #### probably not quite right - should check for "/"??
         cp = PL_strchr(cp, '?');
         if (cp)
         {
@@ -580,6 +583,8 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
             PL_strcpy(m_search, cp);
         }
 	}
+
+	m_file = PL_strdup(imapPartOfUrl);
 
 	ParseImapPart(imapPartOfUrl);
     delete [] cSpec;
@@ -601,6 +606,9 @@ void nsImapUrl::ReconstructSpec(void)
     PRInt32 plen = PL_strlen(m_protocol) + PL_strlen(m_host) +
         PL_strlen(portBuffer) + 4;
 
+	if (m_file)
+		plen += 1 + PL_strlen(m_file);
+
     if (m_search)
         plen += 1 + PL_strlen(m_search);
 
@@ -608,6 +616,11 @@ void nsImapUrl::ReconstructSpec(void)
     PR_snprintf(m_spec, plen, "%s://%s%s", 
                 m_protocol, ((nsnull != m_host) ? m_host : ""), portBuffer);
 
+	if (m_file)
+	{
+		PL_strcat(m_spec, "/");
+		PL_strcat(m_spec, m_file);
+	}
     if (m_search) 
 	{
         PL_strcat(m_spec, "?");
@@ -1394,14 +1407,15 @@ char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldCh
 
 void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 {
-	*resultingCanonicalPath = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+	char *resultPath = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nil, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
 	
-	if (!*resultingCanonicalPath)
+	if (!resultPath)
 	{
 		m_validUrl = PR_FALSE;
 		return;
 	}
 
+	*resultingCanonicalPath = PL_strdup(resultPath);
 	// The delimiter will be set for a given URL, but will not be statically available
 	// from an arbitrary URL.  It is the creator's responsibility to fill in the correct
 	// delimiter from the folder's namespace when creating the URL.

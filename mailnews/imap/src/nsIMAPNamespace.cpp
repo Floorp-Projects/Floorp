@@ -128,8 +128,8 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetDefaultNamespaceOfType(EIMAPNamespaceTy
 {
 	nsIMAPNamespace *rv = 0, *firstOfType = 0;
 
-	int nodeIndex = 1, count = m_NamespaceList.Count();
-	for (nodeIndex= 1; nodeIndex <= count && !rv; nodeIndex++)
+	int nodeIndex = 0, count = m_NamespaceList.Count();
+	for (nodeIndex= 0; nodeIndex < count && !rv; nodeIndex++)
 	{
 		nsIMAPNamespace *ns = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);
 		if (ns->GetType() == type)
@@ -183,8 +183,8 @@ void nsIMAPNamespaceList::ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBo
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex)
 {
 	int total = GetNumberOfNamespaces();
-	NS_ASSERTION(nodeIndex >= 1 && nodeIndex <= total, "invalid IMAP namespace node index");
-	if (nodeIndex < 1) nodeIndex = 1;
+	NS_ASSERTION(nodeIndex >= 0 && nodeIndex < total, "invalid IMAP namespace node index");
+	if (nodeIndex < 0) nodeIndex = 0;
 	if (nodeIndex > total) nodeIndex = total;
 
 	return 	(nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);

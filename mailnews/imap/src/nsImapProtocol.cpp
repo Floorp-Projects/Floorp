@@ -206,6 +206,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_noopCount = 0;
 	m_promoteNoopToCheckCount = 0;
 	m_mailToFetch = PR_FALSE;
+	m_fetchMsgListIsNew = PR_FALSE;
 
 	m_checkForNewMailDownloadsHeaders = PR_TRUE;	// this should be on by default
     m_hierarchyNameState = kNoOperationInProgress;

@@ -136,6 +136,7 @@ protected:
     char		*m_host;
 	PRUint32	 m_port;
 	char		*m_search;
+	char		*m_file;
 	char		*m_errorMessage;
 	char		*m_listOfMessageIds;
 
