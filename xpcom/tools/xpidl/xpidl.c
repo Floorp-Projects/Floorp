@@ -108,7 +108,9 @@ main(int argc, char *argv[])
             }
             basename = argv[i + 1];
             i++;
+            break;
           default:
+            fprintf(stderr, "unknown option %s\n", argv[i]);
             xpidl_usage(argc, argv);
             return 1;
         }
