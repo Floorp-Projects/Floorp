@@ -1712,26 +1712,25 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsAutoString newSRC;
     aChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
 
-    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
 
-    if (mLoads[0].mRequest)
+    if (mLoads[0].mRequest) {
+      PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
       mLoads[0].mRequest->GetImageStatus(&loadStatus);
 
-    if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-      if (mLoads[0].mRequest) {
+      if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
         mFailureReplace = PR_FALSE; // don't cause a CantRenderReplacedElement call
         mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
         mLoads[0].mRequest = nsnull;
       }
-
-      mCanSendLoadEvent = PR_TRUE;
     }
+
+    mCanSendLoadEvent = PR_TRUE;
 
     if (mLoads[1].mRequest) {
       mLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
       mLoads[1].mRequest = nsnull;
     }
-    
+
     nsCOMPtr<imgIRequest> req(do_CreateInstance("@mozilla.org/image/request;1"));
     if (!mLoads[0].mRequest) {
       mLoads[0].mRequest = req;
