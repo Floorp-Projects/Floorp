@@ -403,7 +403,7 @@ nsXPCOMStringDetector::~nsXPCOMStringDetector()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
-MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,nsICharsetDetector::GetIID(), nsICharsetDetector)
+MY_NS_IMPL_ISUPPORTS(nsXPCOMStringDetector,nsIStringCharsetDetector::GetIID(), nsICharsetDetector)
 //----------------------------------------------------------
 void nsXPCOMStringDetector::Report(const char* charset)
 {
@@ -473,39 +473,49 @@ NS_IMETHODIMP nsXPCOMDetectorFactory::CreateInstance(
 
   *aResult = NULL;
 
-  nsISupports *inst = nsnull;
+  nsXPCOMDetector *inst1 = nsnull;
+  nsXPCOMStringDetector *inst2 = nsnull;
  
   if (mCID.Equals(kJAPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
-  } else if (mCID.Equals(kJAStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
+      inst1 = new nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
   } else if (mCID.Equals(kKOPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
-  } else if (mCID.Equals(kKOStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
+      inst1 = new nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
   } else if (mCID.Equals(kZHCNPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
-  } else if (mCID.Equals(kZHCNStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
+      inst1 = new nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
   } else if (mCID.Equals(kZHTWPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
-  } else if (mCID.Equals(kZHTWStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
+      inst1 = new nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
   } else if (mCID.Equals(kZHPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
-  } else if (mCID.Equals(kZHStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
+      inst1 = new nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
   } else if (mCID.Equals(kCJKPSMDetectorCID)) {
-      inst = new nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
+      inst1 = new nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
+  } else if (mCID.Equals(kJAStringPSMDetectorCID)) {
+      inst2 = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
+  } else if (mCID.Equals(kKOStringPSMDetectorCID)) {
+      inst2 = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
+  } else if (mCID.Equals(kZHCNStringPSMDetectorCID)) {
+      inst2 = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
+  } else if (mCID.Equals(kZHTWStringPSMDetectorCID)) {
+      inst2 = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
+  } else if (mCID.Equals(kZHStringPSMDetectorCID)) {
+      inst2 = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
   } else if (mCID.Equals(kCJKStringPSMDetectorCID)) {
-      inst = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
+      inst2 = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
   }
-  if(NULL == inst) {
+  if((NULL == inst1) && (NULL == inst2)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
+  nsresult res = NS_OK;
+
+  if(inst1)
+     res =inst1->QueryInterface(aIID, aResult);
+  else
+     res =inst2->QueryInterface(aIID, aResult);
+
   if(NS_FAILED(res)) {
-     delete inst;
+     if(inst1)
+       delete inst1;
+     if(inst2)
+       delete inst2;
   }
 
   return res;
