@@ -54,7 +54,5 @@ pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\""
 pref("print.print_command", "print");
 pref("print.print_color", false);
 
-pref("security.enable_java", false);
-
 pref("browser.cache.disk.capacity", 4000);
 
