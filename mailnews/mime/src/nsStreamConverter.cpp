@@ -297,7 +297,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       else if (ptr8)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
+        mOutputFormat = nsCRT::strdup("text/plain");
         *aNewType = nsMimeOutput::nsMimeMessageSource;
       }
     }
@@ -437,7 +437,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
       PR_FREEIF(mOutputFormat);
       PR_FREEIF(mOverrideFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = nsCRT::strdup("text/plain");
       mOverrideFormat = nsCRT::strdup("raw");
       break;
       
