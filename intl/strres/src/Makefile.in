@@ -33,6 +33,10 @@ include $(topsrcdir)/config/config.mk
 
 TARGET = $(LIBARY)
 
+EXTRA_DSO_LDOPTS =\
+				-L$(DIST)/lib -lneckoutil_s \
+				$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 test:

@@ -107,6 +107,7 @@ EXTRA_DSO_LDOPTS =\
 		-L$(DIST)/lib \
 		-lexpat_s \
 		-lxmltok_s \
+		-lneckoutil_s \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

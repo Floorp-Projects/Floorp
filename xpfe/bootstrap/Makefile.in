@@ -72,7 +72,6 @@ LIBS		+= \
 		$(TIMER_LIBS) \
 		-lmozreg \
 		-lraptorwebwidget \
-		-lraptorhtmlpars \
 		-ljsdom \
 		-ljsurl \
 		-lsecfree \
