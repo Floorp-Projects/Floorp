@@ -139,6 +139,7 @@ PRBool
 nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
 {
   const char *src = locale_string;
+  char modifier[MAX_EXTRA_LEN+1];
   char *dest;
   int dest_space, len;
 
@@ -171,7 +172,7 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
     return(PR_TRUE);
   }
 
-  if ((*src != '_') && (*src != '-') && (*src != '.')) {
+  if ((*src != '_') && (*src != '-') && (*src != '.') && (*src != '@')) {
     NS_ASSERTION(isalpha(*src), "language code too long");
     NS_ASSERTION(!isalpha(*src), "unexpected language/country separator");
     *language = '\0';
@@ -203,7 +204,7 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
     return(PR_TRUE);
   }
 
-  if (*src != '.') {
+  if ((*src != '.') && (*src != '@')) {
     NS_ASSERTION(isalpha(*src), "country code too long");
     NS_ASSERTION(!isalpha(*src), "unexpected country/extra separator");
     *language = '\0';
@@ -214,20 +215,22 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
   //
   // handle the extra part
   //
-  src++;  // move past the extra part separator
-  dest = extra;
-  dest_space = MAX_EXTRA_LEN;
-  while ((*src) && (dest_space--)) {
-    *dest++ = *src++;
-  }
-  *dest = '\0';
-  len = dest - extra;
-  if (len < 1) {
-    NS_ASSERTION(len > 0, "found country/extra separator but no extra code");
-    *language = '\0';
-    *country = '\0';
-    *extra = '\0';
-    return(PR_FALSE);
+  if (*src == '.') { 
+    src++;  // move past the extra part separator
+    dest = extra;
+    dest_space = MAX_EXTRA_LEN;
+    while ((*src) && (*src != '@') && (dest_space--)) {
+      *dest++ = *src++;
+    }
+    *dest = '\0';
+    len = dest - extra;
+    if (len < 1) {
+      NS_ASSERTION(len > 0, "found country/extra separator but no extra code");
+      *language = '\0';
+      *country = '\0';
+      *extra = '\0';
+      return(PR_FALSE);
+    }
   }
 
   // check if all done
@@ -235,7 +238,36 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
     return(PR_TRUE);
   }
 
-  NS_ASSERTION(*src == '\0', "extra code too long");
+  //
+  // handle the modifier part
+  //
+  
+  if (*src == '@') { 
+    src++;  // move past the modifier separator
+    NS_ASSERTION(strcmp("euro",src) != 0, "found non euro modifier");
+    dest = modifier;
+    dest_space = MAX_EXTRA_LEN;
+    while ((*src) && (dest_space--)) {
+      *dest++ = *src++;
+    }
+    *dest = '\0';
+    len = dest - modifier;
+    if (len < 1) {
+      NS_ASSERTION(len > 0, "found modifier separator but no modifier code");
+      *language = '\0';
+      *country = '\0';
+      *extra = '\0';
+      *modifier = '\0';
+      return(PR_FALSE);
+    }
+  }
+
+  // check if all done
+  if (*src == '\0') {
+    return(PR_TRUE);
+  }
+
+  NS_ASSERTION(*src == '\0', "extra/modifier code too long");
   *language = '\0';
   *country = '\0';
   *extra = '\0';
