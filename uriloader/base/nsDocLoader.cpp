@@ -408,12 +408,8 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
     mIsLoadingDocument = PR_FALSE;
 
-    m_LoadingDocsList = nsnull;
 #ifdef NECKO
     m_LoadAttrib = nsIChannel::LOAD_NORMAL;
-    mLoadGroup = nsnull;
-#else
-    m_LoadAttrib = nsnull;
 #endif
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
