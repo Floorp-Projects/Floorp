@@ -93,6 +93,6 @@ interface NSDocument {
                                                           in DOMString nameSpace)
                                                           raises(DOMException);
 	 Range                     createRange();
-	 void                      load(in DOMString url,
-							        in DOMString mimeType);
+	 void                      load(in DOMString url);
 };
+
