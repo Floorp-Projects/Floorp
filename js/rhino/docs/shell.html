@@ -81,6 +81,20 @@ print([<i>expr</i> ...])</h4>
 converts the result to a string, and prints it.</blockquote>
 
 <h4>
+readFile(<i>path</i> [, <i>characterCoding</i>)</h4>
+
+<blockquote>Read given file and convert its bytes to a string using the
+specified character coding or default character coding if explicit coding
+argument is not given.</blockquote>
+
+<h4>
+readUrl(<i>url</i> [, <i>characterCoding</i>)</h4>
+
+<blockquote>Open an input connection to the given string url, read all its 
+bytes and convert them to a string using the specified character coding or
+default character coding if explicit coding argument is not given.</blockquote>
+
+<h4>
 runCommand(<i>commandName</i>, [<i>arg</i>, ...] [<i>options</i>])</h4>
 
 <blockquote>Execute the specified command with the given argument and options

@@ -41,6 +41,7 @@
 package org.mozilla.javascript.tools.shell;
 
 import java.io.*;
+import java.net.*;
 import java.lang.reflect.*;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.ToolErrorReporter;
@@ -62,14 +63,13 @@ public class Global extends ImporterTopLevel {
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand",
-                           "seal", "readFile" };
+                           "seal", "readFile", "readUrl" };
         try {
             defineFunctionProperties(names, Global.class,
                                      ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
             throw new Error();  // shouldn't occur.
         }
-        defineProperty(privateName, this, ScriptableObject.DONTENUM);
 
         // Set up "environment" in the global scope to provide access to the
         // System environment variables.
@@ -230,6 +230,12 @@ public class Global extends ImporterTopLevel {
     {
         if (args.length == 0) {
             throw reportRuntimeError("msg.expected.string.arg");
+        }
+        Object arg0 = args[0];
+        if (arg0 instanceof Wrapper) {
+            Object wrapped = ((Wrapper)arg0).unwrap();
+            if (wrapped instanceof Class)
+                return (Class)wrapped;
         }
         String className = Context.toString(args[0]);
         try {
@@ -511,16 +517,16 @@ public class Global extends ImporterTopLevel {
 
     /**
      * The readFile reads the given file context and convert it to a string
-     * using the specified encoding or default encoding if explicit encoding
-     * argument is not given.
+     * using the specified character coding or default character coding if
+     * explicit coding argument is not given.
      * <p>
      * Usage:
      * <pre>
      * readFile(filePath)
-     * readFile(filePath, encoding)
+     * readFile(filePath, charCoding)
      * </pre>
      * The first form converts file's context to string using the default
-     * encoding.
+     * character coding.
      */
     public static Object readFile(Context cx, Scriptable thisObj, Object[] args,
                                   Function funObj)
@@ -530,12 +536,42 @@ public class Global extends ImporterTopLevel {
             throw reportRuntimeError("msg.shell.readFile.bad.args");
         }
         String path = ScriptRuntime.toString(args[0]);
-        String encoding = null;
+        String charCoding = null;
         if (args.length >= 2) {
-            encoding = ScriptRuntime.toString(args[1]);
+            charCoding = ScriptRuntime.toString(args[1]);
         }
 
-        return readFile(path, encoding);
+        return readUrl(path, charCoding, true);
+    }
+
+    /**
+     * The readUrl opens connection to the given URL, read all its data
+     * and converts them to a string
+     * using the specified character coding or default character coding if
+     * explicit coding argument is not given.
+     * <p>
+     * Usage:
+     * <pre>
+     * readUrl(url)
+     * readUrl(url, charCoding)
+     * </pre>
+     * The first form converts file's context to string using the default
+     * charCoding.
+     */
+    public static Object readUrl(Context cx, Scriptable thisObj, Object[] args,
+                                 Function funObj)
+        throws IOException
+    {
+        if (args.length == 0) {
+            throw reportRuntimeError("msg.shell.readUrl.bad.args");
+        }
+        String url = ScriptRuntime.toString(args[0]);
+        String charCoding = null;
+        if (args.length >= 2) {
+            charCoding = ScriptRuntime.toString(args[1]);
+        }
+
+        return readUrl(url, charCoding, false);
     }
 
     public InputStream getIn() {
@@ -562,12 +598,10 @@ public class Global extends ImporterTopLevel {
         errStream = err;
     }
 
-    static final String privateName = "org.mozilla.javascript.tools.shell.Global private";
-
     public static Global getInstance(Scriptable scope) {
-        Object v = ScriptableObject.getProperty(scope,privateName);
-        if (v instanceof Global)
-            return (Global) v;
+        GlobalScope global = GlobalScope.get(scope);
+        if (global instanceof Global)
+            return (Global)global;
         return null;
     }
 
@@ -758,31 +792,86 @@ public class Global extends ImporterTopLevel {
         return os;
     }
 
-    private static String readFile(String filePath, String encoding)
+    private static String readUrl(String filePath, String charCoding,
+                                  boolean urlIsFile)
         throws IOException
     {
-        File f = new File(filePath);
-
-        long llength = f.length();
-        int length = (int)llength;
-        if (length != llength)
-            throw new IOException("Too big file size: "+llength);
-
-        if (length == 0) { return ""; }
-
-        FileInputStream fis = new FileInputStream(f);
+        int chunkLength;
+        InputStream is = null;
         try {
-            Reader r;
-            if (encoding == null) {
-                r = new InputStreamReader(fis);
+            if (!urlIsFile) {
+                URL urlObj = new URL(filePath);
+                URLConnection uc = urlObj.openConnection();
+                is = uc.getInputStream();
+                chunkLength = uc.getContentLength();
+                if (chunkLength <= 0)
+                    chunkLength = 1024;
+                if (charCoding == null) {
+                    String type = uc.getContentType();
+                    if (type != null) {
+                        charCoding = getCharCodingFromType(type);
+                    }
+                }
             } else {
-                r = new InputStreamReader(fis, encoding);
+                File f = new File(filePath);
+
+                long length = f.length();
+                chunkLength = (int)length;
+                if (chunkLength != length)
+                    throw new IOException("Too big file size: "+length);
+
+                if (chunkLength == 0) { return ""; }
+
+                is = new FileInputStream(f);
             }
-            return readReader(r, length);
+
+            Reader r;
+            if (charCoding == null) {
+                r = new InputStreamReader(is);
+            } else {
+                r = new InputStreamReader(is, charCoding);
+            }
+            return readReader(r, chunkLength);
 
         } finally {
-            fis.close();
+            if (is != null)
+                is.close();
         }
+    }
+
+    private static String getCharCodingFromType(String type)
+    {
+        int i = type.indexOf(';');
+        if (i >= 0) {
+            int end = type.length();
+            ++i;
+            while (i != end && type.charAt(i) <= ' ') {
+                ++i;
+            }
+            String charset = "charset";
+            if (charset.regionMatches(true, 0, type, i, charset.length()))
+            {
+                i += charset.length();
+                while (i != end && type.charAt(i) <= ' ') {
+                    ++i;
+                }
+                if (i != end && type.charAt(i) == '=') {
+                    ++i;
+                    while (i != end && type.charAt(i) <= ' ') {
+                        ++i;
+                    }
+                    if (i != end) {
+                        // i is at the start of non-empty
+                        // charCoding spec
+                        while (type.charAt(end -1) <= ' ') {
+                            --end;
+                        }
+                        return type.substring(i, end);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static String readReader(Reader reader)
