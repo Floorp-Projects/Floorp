@@ -449,20 +449,24 @@ public:
   }
 
   NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
-      PRUint32 readCount = 0;
-      while (mIndex < mSize && aCount > 0) {
-          *aBuf = mBuffer[mIndex];
-          aBuf++;
-          mIndex++;
-          readCount++;
-          aCount--;
-      }
+      PRUint32 readCount = PR_MIN(aCount, (mSize-mIndex));
+      
+      nsCRT::memcpy(aBuf, mBuffer+mIndex, readCount);
+      mIndex += readCount;
+
       *aReadCount = readCount;
+
       return NS_OK;
   }
 
   NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRUint32 readCount = PR_MIN(count, (mSize-mIndex));
+    
+    *_retval = 0;
+    nsresult rv = writer (this, closure, mBuffer+mIndex, mIndex, readCount, _retval);
+    mIndex += *_retval;
+    
+    return rv;
   }
 
   NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {

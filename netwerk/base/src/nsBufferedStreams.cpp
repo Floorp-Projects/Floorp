@@ -209,10 +209,27 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *result)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    *result = 0;
+    while (count > 0) {
+        PRUint32 amt = PR_MIN(count, mFillPoint - mCursor);
+        if (amt > 0) {
+            PRUint32 read = 0;
+            rv = writer (this, closure, mBuffer + mCursor, mCursor,
+                         amt, &read);
+            if (NS_FAILED(rv)) break;
+            *result += read;
+            count -= read;
+            mCursor += read;
+        }
+        else {
+            rv = Fill();
+            if (NS_FAILED(rv)) break;
+        }
+    }
+    return (*result > 0 || rv == NS_BASE_STREAM_CLOSED) ? NS_OK : rv;
 }
 
 NS_IMETHODIMP

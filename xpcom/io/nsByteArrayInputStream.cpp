@@ -82,10 +82,30 @@ nsByteArrayInputStream::Read (char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
 }
 
 NS_IMETHODIMP 
-nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * aClosure, PRUint32 aCount, PRUint32 *aNumRead)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    if (aNumRead == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    if (_nbytes == 0)
+        return NS_ERROR_FAILURE;
+
+    if (aCount == 0 || _pos == _nbytes)
+        *aNumRead = 0;
+    else {
+        NS_ASSERTION (_buffer != NULL, "Stream buffer has been released - there's an ownership problem somewhere!");
+        PRUint32 readCount = PR_MIN(aCount, (_nbytes - _pos));
+        if (_buffer == NULL)
+            *aNumRead = 0;
+        else 
+            rv = writer (this, aClosure, &_buffer[_pos], 
+                         _pos, readCount, aNumRead);
+        
+        _pos += *aNumRead;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP 
