@@ -119,6 +119,8 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
+  NS_IMETHOD ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyleRule **_retval); 
+
   NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 
                              const nsAReadableString & aAttribute, 
                              const nsAReadableString & aValue);
@@ -754,6 +756,5 @@ friend class nsTextEditRules;
 friend class nsWSRunObject;
 
 };
-
 #endif //nsHTMLEditor_h__
 
