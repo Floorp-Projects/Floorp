@@ -60,6 +60,7 @@
 #include "nsIDOMWindow.h"
 #include "nsITypeAheadFind.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsArray.h"
 
 #define TYPEAHEADFIND_BUNDLE_URL "chrome://typeaheadfind/locale/typeaheadfind.properties"
 
@@ -82,6 +83,7 @@ public:
 
   NS_DECL_ISUPPORTS  // This macro expands into declaration of nsISupports interface
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSITYPEAHEADFIND
 
   // ----- nsIDOMEventListener --------------------------
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -131,7 +133,6 @@ protected:
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
   void GetSelection(nsIPresShell *aPresShell,   // If aCurrentNode is nsnull, gets selection for document
                     nsIDOMNode *aCurrentNode, nsISelectionController **aSelCon, nsISelection **aDomSel);
-  void CancelFind();
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
                          nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
   nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
@@ -178,4 +179,7 @@ protected:
   nsCOMPtr<nsISelectionController> mFocusedDocSelCon;
   nsCOMPtr<nsIDOMWindow> mFocusedWindow;
   nsCOMPtr<nsIWeakReference> mFocusedWeakShell;
+
+  // The windows where type ahead find does not start automatically as the user types
+  nsCOMPtr<nsISupportsArray> mManualFindWindows;
 };

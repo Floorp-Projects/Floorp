@@ -55,7 +55,13 @@ interface nsIDOMEvent;
 [uuid(AD1C62CC-72F4-4c5b-BE78-503854F9E0D8)]
 interface nsITypeAheadFind : nsISupports
 {
-  void handleEvent(in nsIDOMEvent event);
+  readonly attribute boolean isActive;   // Is type ahead find mode currently on
+
+  void startNewFind(in nsIDOMWindow aWindow, in boolean aLinksOnly);
+  void cancelFind(); // Cancel type ahead find mode
+
+  void setAutoStart(in nsIDOMWindow aWindow, in boolean aAutoStartOn);
+  boolean getAutoStart(in nsIDOMWindow aWindow);  
 };
 
 
