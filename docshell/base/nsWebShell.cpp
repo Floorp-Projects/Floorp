@@ -1211,7 +1211,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   }
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
-  aChild->SetDefaultCharacterSet(mDefaultCharacterSet); 
+  aChild->SetDefaultCharacterSet(mDefaultCharacterSet.GetUnicode()); 
   NS_ADDREF(aChild);
 
   return NS_OK;
