@@ -42,11 +42,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIObserver;
-interface nsISimpleEnumerator;
 interface nsIURI;
 
-[scriptable, uuid(2e14fec9-e8e9-44cc-8c86-c8673c2383cc)]
+[scriptable, uuid(3210a6aa-b464-4f57-9335-b22815567cf1)]
 interface nsIPopupWindowManager : nsISupports {
 
   /**
@@ -57,12 +55,6 @@ interface nsIPopupWindowManager : nsISupports {
   const PRUint32 ALLOW_POPUP_WITH_PREJUDICE = 3;
 
   /**
-   * The manager's default permission can be ALLOW_POPUP (a blacklist)
-   * or DENY_POPUP (a whitelist).
-   */
-  attribute PRUint32 defaultPermission;
-
-  /**
    * Test whether a website has permission to show a popup window.
    * @param   uri is the URI to be tested
    * @return  one of the enumerated permission actions defined above
@@ -71,10 +63,5 @@ interface nsIPopupWindowManager : nsISupports {
 };
 
 %{ C++
-// {2e14fec9-e8e9-44cc-8c86-c8673c2383cc}
-#define NS_POPUPWINDOWMANAGER_IID \
-{ 0x2e14fec9, 0xe8e9, 0x44cc, { 0x8c, 0x86, 0xc8, 0x67, 0x3c, 0x23, 0x83,0xcc }}
 #define NS_POPUPWINDOWMANAGER_CONTRACTID "@mozilla.org/PopupWindowManager;1"
-
-#define PPM_CHANGE_NOTIFICATION "popup-perm-change"
 %}
