@@ -1062,38 +1062,10 @@ nsMsgAccountManager::upgradePrefs()
 nsresult
 nsMsgAccountManager::SetPasswordForServer(nsIMsgIncomingServer * server)
 {
-  PRBool retval = PR_FALSE;
-  nsString password;
-
-#ifdef PROMPTPASSWORDWORKS 
-  nsresult rv;
-  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
-  if (NS_FAILED(rv)) return rv;
-
-  if (dialog) {
-    nsCAutoString message;
-
-    nsXPIDLCString thisHostname;
-    rv = server->GetHostName(getter_Copies(thisHostname));
-    if (NS_FAILED(rv)) return rv;
-    
-    message = "We can't migrate 4.5 prefs yet.  Enter password for the server at ";
-    message += thisHostname;
-    message += ".  Keep in mind, it will be stored in the clear in your prefs50.js file";
-    
-    dialog->PromptPassword(message, password, &retval);
-  }
-#endif /* PROMPTPASSWORDWORKS */
-
-  if (retval) {
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("password = %s\n", password.GetBuffer());
-#endif
-    server->SetPassword((char *)(password.GetBuffer()));        
-  }
-  else {
-    server->SetPassword("enter your clear text password here");
-  }
+  if (!server) return NS_ERROR_NULL_POINTER;
+  
+  // we do this because we can't handle 4.x passwords in 5.0 yet
+  server->SetPassword("enter your clear text password here");
   
   return NS_OK;
 }
