@@ -316,7 +316,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          else
          {
             // To format the starting time of the event
-            var eventStartTime = new Date( calendarEventDisplay.event.start ) ;
+            var eventStartTime = new Date( calendarEventDisplay.event.start.getTime() ) ;
             var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime( eventStartTime );
             // display as "12:15 titleevent"
             eventBoxText.setAttribute( "value",  StartFormattedTime+' '+calendarEventDisplay.event.title);
