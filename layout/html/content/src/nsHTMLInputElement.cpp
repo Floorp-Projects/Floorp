@@ -705,8 +705,8 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    // XXX commented out - redundant 
-    // formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    // XXX commented out - redundant. cps: Turns out to be important
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
 
