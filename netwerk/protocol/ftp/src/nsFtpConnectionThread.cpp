@@ -85,8 +85,6 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
 
-#define NS_ERROR_IGNORE_NOTIFICATION 0x80000666
-
 class DataRequestForwarder : public nsIFTPChannel, 
                              public nsIStreamListener,
                              public nsIResumableChannel,
@@ -292,8 +290,6 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x, mRetrying=%d]\n", this, statusCode, mRetrying)); 
 
-    if (statusCode == NS_ERROR_IGNORE_NOTIFICATION)
-        return NS_OK;
     if (mRetrying) {
         mRetrying = PR_FALSE;
         return NS_OK;
@@ -1633,42 +1629,6 @@ nsFtpState::R_stor() {
 
     if (mResponseCode/100 == 1) {
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
-        
-        // Close the read pipe since we are going to be writing data.
-        if (mDPipeRequest) {
-            mDPipeRequest->Cancel(NS_ERROR_IGNORE_NOTIFICATION);
-            mDPipeRequest = 0;
-        }
-
-        nsresult rv;
-
-        // nsIUploadChannel requires the upload stream to support ReadSegments.
-        // therefore, we can open an unbuffered socket output stream.
-        nsCOMPtr<nsIOutputStream> output;
-        rv = mDPipe->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                      getter_AddRefs(output));
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        // perform the data copy on the socket transport thread.  we do this
-        // because "output" is a socket output stream, so the result is that
-        // all work will be done on the socket transport thread.
-        nsCOMPtr<nsIEventTarget> stEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-        
-        nsCOMPtr<nsIAsyncStreamCopier> copier;
-        rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
-                                     mWriteStream,
-                                     output,
-                                     stEventTarget,
-                                     PR_TRUE,   // mWriteStream is buffered
-                                     PR_FALSE); // output is NOT buffered
-        if (NS_FAILED(rv)) return FTP_ERROR;
-    
-        rv = copier->AsyncCopy(mDRequestForwarder, nsnull);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
-        // hold a reference to the copier so we can cancel it if necessary.
-        mDPipeRequest = copier;
         return FTP_READ_BUF;
     }
 
@@ -1868,6 +1828,45 @@ nsFtpState::R_pasv() {
             return FTP_ERROR;
         }
 
+        if (mAction == PUT) {
+            NS_ASSERTION(!mRETRFailed, "Failed before uploading");
+            mDRequestForwarder->Uploading(PR_TRUE, mWriteCount);
+
+            // nsIUploadChannel requires the upload stream to support ReadSegments.
+            // therefore, we can open an unbuffered socket output stream.
+            nsCOMPtr<nsIOutputStream> output;
+            rv = mDPipe->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                          getter_AddRefs(output));
+            if (NS_FAILED(rv)) return FTP_ERROR;
+
+            // perform the data copy on the socket transport thread.  we do this
+            // because "output" is a socket output stream, so the result is that
+            // all work will be done on the socket transport thread.
+            nsCOMPtr<nsIEventTarget> stEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+            
+            nsCOMPtr<nsIAsyncStreamCopier> copier;
+            rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
+                                         mWriteStream,
+                                         output,
+                                         stEventTarget,
+                                         PR_TRUE,   // mWriteStream is buffered
+                                         PR_FALSE); // output is NOT buffered
+            if (NS_FAILED(rv)) return FTP_ERROR;
+        
+            rv = copier->AsyncCopy(mDRequestForwarder, nsnull);
+            if (NS_FAILED(rv)) return FTP_ERROR;
+
+            // hold a reference to the copier so we can cancel it if necessary.
+            mDPipeRequest = copier;
+
+            return FTP_S_STOR;
+        }
+
+        //
+        // else, we are reading from the data connection...
+        //
+
         // open a buffered, asynchronous socket input stream
         nsCOMPtr<nsIInputStream> input;
         rv = mDPipe->OpenInputStream(0,
@@ -1895,12 +1894,6 @@ nsFtpState::R_pasv() {
 
         // hold a reference to the input stream pump so we can cancel it.
         mDPipeRequest = pump;
-        
-        if (mAction == PUT) {
-            NS_ASSERTION(!mRETRFailed, "Failed before uploading");
-            mDRequestForwarder->Uploading(PR_TRUE, mWriteCount);
-            return FTP_S_STOR;
-        }
 
         // Suspend the read
         // If we don't do this, then the remote server could close the
