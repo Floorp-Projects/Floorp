@@ -1654,6 +1654,9 @@ public:
 		mType = aPluginTag->mMimeTypeArray[aMimeTypeIndex];
 	}
 	
+	virtual ~DOMMimeTypeImpl() {
+	}
+
 	NS_METHOD GetDescription(nsString& aDescription)
 	{
 		aDescription = mDescription;
@@ -1696,6 +1699,9 @@ public:
 		NS_INIT_ISUPPORTS();
 	}
 	
+	virtual ~DOMPluginImpl() {
+	}
+
 	NS_METHOD GetDescription(nsString& aDescription)
 	{
 		aDescription = mPluginTag.mDescription;
