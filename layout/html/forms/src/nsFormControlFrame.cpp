@@ -310,6 +310,22 @@ nsFormControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 }
 
 void 
+nsFormControlFrame::SetColors()
+{
+  if (mWidget) {
+    const nsStyleColor* color = nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+    if (nsnull != color) {
+      mWidget->SetBackgroundColor(color->mBackgroundColor);
+    } else {
+      mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+    }
+    const nsStyleColor* myColor =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    mWidget->SetForegroundColor(myColor->mColor);
+  }
+}
+
+void 
 nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
 {
 }
@@ -549,11 +565,25 @@ void nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
   }
 }
 
+void
+GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
+{
+  nsCompatibility mode;
+  aPresContext.GetCompatibilityMode(mode);
+  if (eCompatibility_Standard == mode) {
+    char1 = 'm';
+    char2 = 'a';
+  } else {
+    char1 = '%';
+    char2 = '%';
+  }
+}
+
 nscoord 
 nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame* aFrame,
                                 const nsString& aString, nsSize& aSize)
 {
-  nsFont font = aPresContext.GetDefaultFixedFont();
+  nsFont font(aPresContext.GetDefaultFixedFont());
   aFrame->GetFont(&aPresContext, font);
   //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
@@ -565,14 +595,17 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
   fontMet->GetWidth(aString, aSize.width);
   fontMet->GetHeight(aSize.height);
 
-  nscoord charWidth;
-  fontMet->GetWidth("W", charWidth);
+  char char1, char2;
+  GetRepChars(aPresContext, char1, char2);
+  nscoord char1Width, char2Width;
+  fontMet->GetWidth(char1, char1Width);
+  fontMet->GetWidth(char2, char2Width);
 
   NS_RELEASE(fontMet);
   NS_RELEASE(fontCache);
   NS_RELEASE(deviceContext);
 
-  return charWidth;
+  return ((char1Width + char2Width) / 2) + 1;
 }
   
 nscoord
@@ -580,10 +613,13 @@ nsFormControlFrame::GetTextSize(nsIPresContext& aPresContext, nsFormControlFrame
                                 PRInt32 aNumChars, nsSize& aSize)
 {
   nsAutoString val;
-  //char repChar = (kBackwardMode == aFrame->GetMode()) ? '%' : 'e';
-  char repChar = '%';
-  for (int i = 0; i < aNumChars; i++) {
-    val += repChar;  
+  char char1, char2;
+  GetRepChars(aPresContext, char1, char2);  
+  for (int i = 0; i < aNumChars; i+=2) {
+    val += char1;  
+  }
+  for (i = 1; i < aNumChars; i+=2) {
+    val += char2;  
   }
   return GetTextSize(aPresContext, aFrame, val, aSize);
 }
@@ -629,15 +665,13 @@ nsFormControlFrame::CalculateSize (nsIPresContext* aPresContext, nsFormControlFr
   // determine the width
   nscoord adjSize;
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
+    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
     if (aSpec.mColSizeAttrInPixels) {
-      adjSize = (colAttr.GetPixelValue() > 0) ? colAttr.GetPixelValue() : 15;
-      aBounds.width = NSIntPixelsToTwips(adjSize, p2t);
+      col = (col <= 0) ? 15 : col; 
+      aBounds.width = NSIntPixelsToTwips(col, p2t);
     }
     else {
-      PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-      if (col <= 0) {
-        col = 1;
-      }
+      col = (col <= 0) ? 1 : col;
       charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds);
       aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
     }
@@ -730,6 +764,14 @@ NS_IMETHODIMP
 nsFormControlFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(mode);
+
+  if (eCompatibility_Standard == mode) {
+    aFont = styleFont->mFont;
+    return NS_OK;
+  }
 
   PRInt32 type;
   GetType(&type);

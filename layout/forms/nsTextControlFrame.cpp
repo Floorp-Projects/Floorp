@@ -173,6 +173,9 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    nsReflowMetrics& aDesiredLayoutSize,
                                    nsSize& aDesiredWidgetSize)
 {
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(mode);
+
   // get the css size and let the frame use or override it
   nsSize styleSize;
   GetStyleSize(*aPresContext, aReflowState, styleSize);
@@ -188,8 +191,9 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSize(&width)) {
       width = 20;
     }
-    // Nav Quirk!!
-    width += 1;
+    if (eCompatibility_NavQuirks == mode) {
+      width += 1;
+    }
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
@@ -273,9 +277,10 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
   PRInt32 type;
   GetType(&type);
 
-  const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
-	mWidget->SetFont(fontStyle->mFixedFont);
-  mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+  nsFont font(aPresContext->GetDefaultFixedFont()); 
+  GetFont(aPresContext, font);
+  mWidget->SetFont(font);
+  SetColors();
 
   PRUint32 ignore;
   

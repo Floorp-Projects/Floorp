@@ -351,31 +351,11 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
     NS_ASSERTION(PR_FALSE, "invalid widget");
     return;
   }
-  mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
 
-  const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
-      (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
-    nsFont  widgetFont(styleFont->mFixedFont);
-    widgetFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
-    widgetFont.size = styleFont->mFont.size;    // normal font size
-    if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
-      widgetFont.name = "Arial";  // XXX windows specific font
-    }
-    mWidget->SetFont(widgetFont);
-  } else {
-    // use arial, scaled down one HTML size
-    // italics, decoration & variant(?) get used
-    nsFont  widgetFont(styleFont->mFont);
-    widgetFont.name = "Arial";  // XXX windows specific font
-    widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
-    const nsFont& normal = aPresContext->GetDefaultFont();
-    PRInt32 scaler = aPresContext->GetFontScaler();
-    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-    PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size, scaleFactor);
-    widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
-    mWidget->SetFont(widgetFont);
-  }
+  nsFont font(aPresContext->GetDefaultFixedFont()); 
+  GetFont(aPresContext, font);
+  mWidget->SetFont(font);
+  SetColors();
 
   // add the options 
   if (!mOptionsAdded) {

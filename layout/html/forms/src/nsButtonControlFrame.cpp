@@ -356,50 +356,25 @@ nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
 
  	nsIButton* button = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIButtonIID,(void**)&button))) {
-    if (NS_FORM_BROWSE != type) {  // browse button always uses default
-      const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-      if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
-          (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
-        nsFont  widgetFont(styleFont->mFixedFont);
-        widgetFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
-        widgetFont.size = styleFont->mFont.size;    // normal font size
-        if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
-          widgetFont.name = "Arial";  // XXX windows specific font
-        }
-        mWidget->SetFont(widgetFont);
-      }
-      else {
-        // use arial, scaled down one HTML size
-        // italics, decoration & variant(?) get used
-        nsFont  widgetFont(styleFont->mFont);
-        widgetFont.name = "Arial";  // XXX windows specific font
-        widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
-        const nsFont& normal = aPresContext->GetDefaultFont();
-        PRInt32 scaler = aPresContext->GetFontScaler();
-        float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size, scaleFactor);
-        widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
-        mWidget->SetFont(widgetFont);
-      }
-    }
-  } 
-  else {
-    NS_ASSERTION(0, "no widget in button control");
-  }
+    nsFont font(aPresContext->GetDefaultFixedFont()); 
+    GetFont(aPresContext, font);
+    mWidget->SetFont(font);
+    SetColors();
 
-  nsString value;
-  nsresult result = GetValue(&value);
+    nsString value;
+    nsresult result = GetValue(&value);
   
-  if (button != nsnull) {
-	  if (NS_CONTENT_ATTR_HAS_VALUE == result) {  
-	    button->SetLabel(value);
-	  } else {
-	    nsAutoString label;
-	    GetDefaultLabel(label);
-	    button->SetLabel(label);
+    if (button != nsnull) {
+	    if (NS_CONTENT_ATTR_HAS_VALUE == result) {  
+	      button->SetLabel(value);
+	    } else {
+	      nsAutoString label;
+	      GetDefaultLabel(label);
+	      button->SetLabel(label);
+	    }
 	  }
-	}
-  NS_IF_RELEASE(button);
+    NS_RELEASE(button);
+  }
 }
 
 const nsIID&
