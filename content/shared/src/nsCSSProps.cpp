@@ -145,6 +145,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_treeview,               NS_THEME_TREEVIEW,
   eCSSKeyword_treeitem,               NS_THEME_TREEVIEW_TREEITEM,
   eCSSKeyword_treetwisty,             NS_THEME_TREEVIEW_TWISTY,
+  eCSSKeyword_treetwistyopen,         NS_THEME_TREEVIEW_TWISTY_OPEN,
   eCSSKeyword_treeline,               NS_THEME_TREEVIEW_LINE,
   eCSSKeyword_treeheader,             NS_THEME_TREEVIEW_HEADER,
   eCSSKeyword_treeheadercell,         NS_THEME_TREEVIEW_HEADER_CELL,
@@ -185,6 +186,10 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_sliderthumbtick,        NS_THEME_SLIDER_TICK,
   eCSSKeyword_checkboxcontainer,      NS_THEME_CHECKBOX_CONTAINER,
   eCSSKeyword_radiocontainer,         NS_THEME_RADIO_CONTAINER,
+  eCSSKeyword_window,                 NS_THEME_WINDOW,
+  eCSSKeyword_dialog,                 NS_THEME_DIALOG,
+  eCSSKeyword_menu,                   NS_THEME_MENU,
+  eCSSKeyword_menubar,                NS_THEME_MENUBAR,
   -1,-1
 };
 

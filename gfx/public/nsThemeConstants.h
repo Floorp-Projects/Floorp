@@ -71,6 +71,9 @@
 // The sort arrow for a header.
 #define NS_THEME_TREEVIEW_HEADER_SORTARROW                 47
 
+// Open tree widget twisty
+#define NS_THEME_TREEVIEW_TWISTY_OPEN                    48
+
 // A horizontal progress bar.
 #define NS_THEME_PROGRESSBAR                               51
 
@@ -165,3 +168,11 @@
 // radio buttons work.
 #define NS_THEME_CHECKBOX_CONTAINER                        200
 #define NS_THEME_RADIO_CONTAINER                           201
+
+// Window and dialog backgrounds
+#define NS_THEME_WINDOW                                    250
+#define NS_THEME_DIALOG                                    251
+
+// Menu and Menu Bar backgrounds
+#define NS_THEME_MENU                                      260
+#define NS_THEME_MENUBAR                                   261
