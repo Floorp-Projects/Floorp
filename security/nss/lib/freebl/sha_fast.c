@@ -43,8 +43,8 @@
 struct SHA1ContextStr {
   PRUint32 H[5];		/* 5 state variables */
   PRUint32 W[80];		/* input buffer, plus 64 words */
+  PRUint32 sizeHi,sizeLo;	/* 64-bit count of hashed bytes. */
   int      lenW;		/* bytes of data in input buffer */
-  PRUint32 sizeHi,sizeLo;
 };
 
 
@@ -89,24 +89,44 @@ SHA1_Begin(SHA1Context *ctx)
 void 
 SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len) 
 {
+  register unsigned int lenW = ctx->lenW;
+  register unsigned int togo;
+
+  if (!len)
+    return;
+
+  /* accumulate the byte count. */
+  ctx->sizeLo += len;
+  ctx->sizeHi += (ctx->sizeLo < len);
+
   /*
    *  Read the data into W and process blocks as they get full
-   *
-   *  NOTE: The shifts can be eliminated on big-endian machines, since 
-   *      the byte-to-word transformation can be done with a copy.  In 
-   *      assembly language on 80486+ computers, the BSWAP instruction 
-   *      can be used.
    */
-  ctx->sizeLo += 8*len;
-  ctx->sizeHi += (ctx->sizeLo < 8*len) + (len >> 29);
-  while (len--) {
-    ctx->W[ctx->lenW / 4] <<= 8;
-    ctx->W[ctx->lenW / 4] |= *(dataIn++);
-    if (((++ctx->lenW) & 63) == 0) {
+  if (lenW > 0) {
+    togo = 64 - lenW;
+    if (len < togo)
+      togo = len;
+    memcpy((unsigned char *)ctx->W + lenW, dataIn, togo);
+    len    -= togo;
+    dataIn += togo;
+    lenW    = (lenW + togo) & 63;
+    if (!lenW) {
       shaCompress(ctx);
-      ctx->lenW = 0;
     }
   }
+  togo = 64;
+  while (len >= togo) {
+    memcpy((unsigned char *)ctx->W, dataIn, togo);
+    dataIn += togo;
+    len    -= togo;
+    shaCompress(ctx);
+  }
+  if (len) {
+    memcpy((unsigned char *)ctx->W, dataIn, len);
+    lenW  = len;
+  }
+  ctx->lenW = lenW;
+
 }
 
 
@@ -131,6 +151,10 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
    */
   sizeHi = ctx->sizeHi;
   sizeLo = ctx->sizeLo;
+  /* Convert size{Hi,Lo} from bytes to bits. */
+  sizeHi = (sizeHi << 3) + (sizeLo >> 29);
+  sizeLo <<= 3;
+
   length_pad[0] = (unsigned char)(sizeHi >> 24);
   length_pad[1] = (unsigned char)(sizeHi >> 16);
   length_pad[2] = (unsigned char)(sizeHi >>  8);
@@ -146,6 +170,7 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
   /*
    *  Output hash
    */
+#if defined(IS_LITTLE_ENDIAN)
   for (i = 0; i < SHA1_LENGTH/4; i++) {
     register unsigned long w   = ctx->H[i];
     hashout[0] = ((unsigned char)(w >> 24));
@@ -154,6 +179,9 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
     hashout[3] = ((unsigned char)(w      ));
     hashout += 4;
   }
+#else
+  memcpy(hashout, ctx->H, SHA1_LENGTH);
+#endif
   *pDigestLen = SHA1_LENGTH;
 
   /*
@@ -170,6 +198,18 @@ shaCompress(SHA1Context *ctx)
 {
   int t;
   register unsigned long A,B,C,D,E;
+
+#if defined(IS_LITTLE_ENDIAN)
+#define MSK 0x00FF00FF
+
+  for (t = 0; t <= 15; t++) {
+    /* This is ctx->W[t] = htonl( ctx->W[t] ); */
+    A = ctx->W[t];
+    A = (A << 16) | (A >> 16);
+    A = (A & MSK) << 8 | (A >> 8) & MSK;
+    ctx->W[t] = A;
+  }
+#endif
 
   /*
    *  This can be moved into the main code block below, but doing
@@ -357,7 +397,7 @@ SHA1_TraceState(SHA1Context *ctx)
     unsigned char buf[64 * 4];
 
     SSL_TRC(99, ("%d: SSL: SHA1 state: %08x %08x %08x %08x %08x", SSL_GETPID(), 
-	         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]));
+	         ctx->H[0], ctx->H[1], ctx->H[2], ctx->H[3], ctx->H[4]));
 
     len = (int)(ctx->lenW);
     remainder = len % 4;
@@ -365,7 +405,7 @@ SHA1_TraceState(SHA1Context *ctx)
     	fixWord = len - remainder;
     for (i = 0; i < len; i++) {
 	if (0 == (i % 4)) {
-	    W = ctx->w[i / 4];
+	    W = ctx->W[i / 4];
 	    if (i == fixWord) {
 	        W <<= 8 * (4 - remainder);
 	    }
