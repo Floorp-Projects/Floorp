@@ -12,7 +12,7 @@
         chrome:displayName="Document Inspector"
         chrome:author="Joe Hewitt"
         chrome:name="inspector"
-        chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"
+#expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:skinVersion="1.5">
   </RDF:Description>
 
@@ -24,14 +24,12 @@
     <RDF:li resource="chrome://inspector/content/popupOverlay.xul"/>
   </RDF:Seq>
 
-  <!-- mozilla/mail Overlays -->
-
+  <!-- mozilla/browser Overlays -->
   <RDF:Seq about="chrome://browser/content/browser.xul">
     <RDF:li>chrome://inspector/content/tasksOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <!-- Inspector Overlays -->
-
   <RDF:Seq about="chrome://inspector/content/commandOverlay.xul">
     <RDF:li>chrome://inspector/content/viewers/dom/commandOverlay.xul</RDF:li>
     <RDF:li>chrome://inspector/content/viewers/styleRules/commandOverlay.xul</RDF:li>
