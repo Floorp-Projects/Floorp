@@ -75,7 +75,7 @@ nsITextAreaWidget *textWidgetInstance = NULL;
 nsITextWidget     *passwordText  = NULL;
 
 nsIComboBox   *comboBox      = NULL;
-nsIListBox    *listBox       = NULL;
+nsIListBox    *gListBox       = NULL;
 nsIListBox    *gMultiListBox = NULL;
 
 nsIWidget     *movingWidget  = NULL;
@@ -258,9 +258,9 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
 
   int i;
   for (i=0;i<(int)listBox->GetItemCount();i++) {
-    nsAutoString buf;
-    listBox->GetItemAt(buf, i);
-    char * str = buf.ToNewCString();
+    nsAutoString buf2;
+    listBox->GetItemAt(buf2, i);
+    char * str = buf2.ToNewCString();
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
@@ -273,9 +273,9 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
   fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)listBox->FindItem(item4string, 0))); fflush(fd);
 
   for (i=0;i<(int)listBox->GetItemCount();i++) {
-    nsAutoString buf;
-    listBox->GetItemAt(buf, i);
-    char * str = buf.ToNewCString();
+    nsAutoString buf2;
+    listBox->GetItemAt(buf2, i);
+    char * str = buf2.ToNewCString();
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
@@ -393,9 +393,9 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   }
 
   for (i=0;i<(int)multi->GetItemCount();i++) {
-    nsAutoString buf;
-    multi->GetItemAt(buf, i);
-    char * str = buf.ToNewCString();
+    nsAutoString buf2;
+    multi->GetItemAt(buf2, i);
+    char * str = buf2.ToNewCString();
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
@@ -408,9 +408,9 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   fprintf(fd, "\nTesting RemoveItemAt\n\tTest: [%s]\n", eval(-1 == (int)multi->FindItem(item4string, (PRInt32)0))); fflush(fd);
 
   for (i=0;i<(int)multi->GetItemCount();i++) {
-    nsAutoString buf;
-    multi->GetItemAt(buf, i);
-    char * str = buf.ToNewCString();
+    nsAutoString buf2;
+    multi->GetItemAt(buf2, i);
+    char * str = buf2.ToNewCString();
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
@@ -471,7 +471,7 @@ nsITooltipWidget* createTooltipWindow(nsIWidget * aWin,
   nsIWidget* toolTipWidget;
   if (NS_OK == tooltip->QueryInterface(kIWidgetIID,(void**)&toolTipWidget))
   {
-    nsIButton *toolTipButton = createSimpleButton(toolTipWidget, "tooltip",5, 5, 80, 0);
+    /*nsIButton *toolTipButton =*/ createSimpleButton(toolTipWidget, "tooltip",5, 5, 80, 0);
     NS_RELEASE(toolTipWidget);
   }
   return tooltip;
@@ -551,10 +551,10 @@ nsEventStatus PR_CALLBACK ListBoxTestHandleEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus   result = nsEventStatus_eIgnore;
   nsIListWidget*  widget = nsnull;
-  if (listBox != nsnull && NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+  if (gListBox != nsnull && NS_OK == gListBox->QueryInterface(kIListWidgetIID,(void**)&widget))
   {
     result = GenericListHandleEvent(aEvent, "ListBox", widget);
-    NS_RELEASE(listBox);
+    NS_RELEASE(gListBox);
   }
   return result;
 }
@@ -583,12 +583,11 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
     if (!strcmp(title, kSetSelection)) {
       gMultiListBox->Deselect();
 
-      PRInt32 inxs[] = {0,2,4};
       PRInt32 len = 3;
 
       int i;
       for (i=0;i<len;i++) {
-        gMultiListBox->SelectItem(2);//inxs[i]);
+        gMultiListBox->SelectItem(2);
       }
       fprintf(gFD, "\tTested SelectItem()\n");
       str.Append(" should show 'List Item 0,2,5'");
@@ -596,7 +595,6 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
       gFailedMsg = "Multi-List::SelectItem";
     } else if (!strcmp(title, kSetSelectedIndices)) {
       PRInt32 inxs[] = {0,2,4};
-      PRInt32 len = 3;
       gMultiListBox->SetSelectedIndices(inxs, 3);
     } else if (!strcmp(title, kRemoveSelection)) {
       nsString item2("Multi List Item 2");
@@ -904,12 +902,12 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
           NS_ShowWidget(tooltipWindow,PR_FALSE);
           break;
         
-        case NS_MOVE:
+        case NS_MOVE: {
             char str[256];
             sprintf(str, "Moved window to %d,%d", aEvent->point.x, aEvent->point.y);
             statusText->SetText(str,actualSize);
             break;
-
+        }
         case NS_MOUSE_LEFT_DOUBLECLICK:
             statusText->SetText("Left button double click",actualSize);
             break;
@@ -919,11 +917,13 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             break;
 
         case NS_MOUSE_ENTER:
-            if (DEBUG_MOUSE) printf("NS_MOUSE_ENTER 0x%X\n", aEvent->widget);
+            if (DEBUG_MOUSE) printf("NS_MOUSE_ENTER 0x%X\n", 
+                                    (unsigned int)aEvent->widget);
             break;
 
         case NS_MOUSE_EXIT:
-            if (DEBUG_MOUSE) printf("NS_MOUSE_EXIT 0x%X\n", aEvent->widget);
+            if (DEBUG_MOUSE) printf("NS_MOUSE_EXIT 0x%X\n",
+                                    (unsigned int)aEvent->widget);
             break;
 
         case NS_MOUSE_MOVE:
@@ -936,7 +936,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             for (i=0;i<gNumRadioBtns;i++) {
               nsIWidget * win;
               if (NS_OK == gRadioBtns[i]->QueryInterface(kIWidgetIID, (void**)&win)) {
-                printf("%d  0x%x  0x%x\n", i, win, aEvent->widget);
+                printf("%d  0x%x  0x%x\n", i, 
+                       (unsigned int)win,
+                       (unsigned int)aEvent->widget);
                 if (win == aEvent->widget) {
                   gRadioBtns[i]->SetState(PR_TRUE);
                 } else {
@@ -1164,10 +1166,10 @@ nsEventStatus PR_CALLBACK DoSelfTests(nsGUIEvent *aEvent)
 
   textSelfTest(gFD, "Password Text", passwordText);
   
-	if (listBox)
+	if (gListBox)
 	{
 	  nsIListWidget* widget;
-	  if (NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+	  if (NS_OK == gListBox->QueryInterface(kIListWidgetIID,(void**)&widget))
 	  {
 	    listSelfTest(gFD, "ListBox", widget);
 	    NS_RELEASE(widget);
@@ -1527,14 +1529,14 @@ nsresult WidgetTest(int *argc, char **argv)
     y = saveY;
     x = saveX;
     rect.SetRect(x, y, 150, 100);  
-    nsComponentManager::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
-    if (listBox)
+    nsComponentManager::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&gListBox);
+    if (gListBox)
     {
-	    NS_CreateListBox(window,listBox,rect,HandleEvent);
+	    NS_CreateListBox(window,gListBox,rect,HandleEvent);
 	    for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
 	      sprintf(str, "%s %d", "List Item", i);
 	      nsString listStr1(str);
-	      listBox->AddItemAt(listStr1, i);
+	      gListBox->AddItemAt(listStr1, i);
 	    }
     }
 

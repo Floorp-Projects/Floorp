@@ -50,36 +50,15 @@ static char* GetFileName(const char* pathname)
 static PRUint32 CalculateVariantCount(char* mimeTypes)
 {
         PRUint32 variants = 0;
-        char* index = mimeTypes;
-        while (*index)
+        char* ptr = mimeTypes;
+        while (*ptr)
         {
-                if (*index == ';')
+                if (*ptr == ';')
                         variants++;
 
-                ++index; 
+                ++ptr; 
         }
         return variants;
-}
-
-static char** MakeStringArray(PRUint32 variants, char* data)
-{
-        char** buffer = NULL;
-        char* index = data;
-        PRUint32 count = 0;
- 
-        buffer = (char **)PR_Malloc(variants * sizeof(char *));
-        buffer[count++] = index;
- 
-        while (*index && count<variants)
-        {
-                if (*index == '|')
-                {
-                  buffer[count++] = index + 1;
-                  *index = 0;
-                }
-                ++index; 
-        }
-        return buffer;  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -149,7 +128,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         pLibrary = outLibrary = PR_LoadLibrary(path);
 
 #ifdef NS_DEBUG
-        printf("LoadPlugin() %s returned %lx\n",path,pLibrary);
+        printf("LoadPlugin() %s returned %lx\n",path,(unsigned long)pLibrary);
 #endif
 
         return NS_OK;
@@ -170,7 +149,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     UNIX_Plugin_GetMIMEDescription procedure = nsnull;
     mimedescr=(char *)"";
 
-    if(procedure = (UNIX_Plugin_GetMIMEDescription)PR_FindSymbol(pLibrary,"NP_GetMIMEDescription")) {
+    if((procedure = (UNIX_Plugin_GetMIMEDescription)PR_FindSymbol(pLibrary,"NP_GetMIMEDescription")) != 0) {
         mimedescr = procedure();
     } else {
 #ifdef NS_DEBUG
@@ -182,7 +161,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	info.fName = GetFileName(path);
 
 #ifdef NS_DEBUG
-    printf("GetMIMEDescription() %lx returned \"%s\"\n",procedure,mimedescr);
+    printf("GetMIMEDescription() %lx returned \"%s\"\n",
+           (unsigned long)procedure, mimedescr);
 #endif
 
     // copy string
@@ -200,8 +180,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     for(i=0;i<num && *start;i++) {
         // search start of next token (separator is ';')
 
-        if(i+1<num) {
-            if(nexttoc=PL_strchr(start, ';'))
+        if(i+1 < num) {
+            if((nexttoc=PL_strchr(start, ';')) != 0)
                 *nexttoc++=0;
             else
                 nexttoc=start+strlen(start);

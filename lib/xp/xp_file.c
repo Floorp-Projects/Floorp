@@ -224,6 +224,8 @@ extern XP_Bool XP_FileNameContainsBadChars (const char *name)
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 
+#include <unistd.h>		/* for fsync & getpid */
+
 /* This is just like fclose(), except that it does fflush() and fsync() first,
    to ensure that the bits have made it to the disk before we return.
  */
@@ -263,8 +265,6 @@ int XP_FileClose(XP_File file)
 XP_END_PROTOS
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-
-#include <unistd.h>		/* for getpid */
 
 #ifdef TRACE
 #define Debug 1
@@ -482,12 +482,12 @@ int XP_FileTruncate(const char* name, XP_FileType type, int32 length)
  */
 int XP_FileWrite (const void* source, int32 count, XP_File file)
 {
-    int32		realCount;
+    uint32		realCount;
 
     if ( count < 0 )
         realCount = XP_STRLEN( source );
     else
-        realCount = count;
+        realCount = (uint32)count;
 
 	return( fwrite( source, 1, realCount, file ) );
 }
@@ -1146,7 +1146,6 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
          sprintf(buf, "%.900s/%s", conf_dir, policyFN);
          break;
      }
-#endif /* MOZ_SECURITY */
 
 	case xpSecurityModule:
      	{
@@ -1163,6 +1162,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
     	HG06196
 	break;
 	}
+#endif /* MOZ_SECURITY */
 
 	case xpPKCS12File:
 	  /* Convert /a/b/c/foo to /a/b/c/foo.p12 (note leading dot) */

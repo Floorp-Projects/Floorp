@@ -403,7 +403,6 @@ type_declaration(TreeState *state)
      */
     IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec;
     IDL_tree dcls = IDL_TYPE_DCL(state->tree).dcls;
-    IDL_tree complex = NULL;
 
     /* XXX: check for illegal types */
 

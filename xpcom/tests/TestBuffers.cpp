@@ -223,18 +223,18 @@ TestSearch(const char* delim, PRUint32 segDataSize)
     rv = NS_NewBuffer(&buffer, segSize, bufSize, nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NewBuffer failed");
 
-    PRUint32 i, amt;
+    PRUint32 i, j, amt;
     PRUint32 delimLen = nsCRT::strlen(delim);
     for (i = 0; i < bufDataSize; i++) {
         // first fill the buffer
-        for (PRUint32 j = 0; j < i; j++) {
+        for (j = 0; j < i; j++) {
             rv = buffer->Write("-", 1, &amt);
             NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
         }
         rv = buffer->Write(delim, delimLen, &amt);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Write failed");
         if (i + amt < bufDataSize) {
-            for (PRUint32 j = i + amt; j < bufDataSize; j++) {
+            for (j = i + amt; j < bufDataSize; j++) {
                 rv = buffer->Write("+", 1, &amt);
                 NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
             }

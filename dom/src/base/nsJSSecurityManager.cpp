@@ -2248,7 +2248,6 @@ PRInt32
 nsJSSecurityManager::CheckForPrivilege(JSContext *cx, char *prop_name, int priv_code)
 {
   char *tmp_prop_name;
-  JSBool priv = JS_TRUE;
 
   if(prop_name == NULL) {
     return SCRIPT_SECURITY_NO_ACCESS;
