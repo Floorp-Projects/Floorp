@@ -2319,15 +2319,42 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
         nsCOMPtr<nsIDOMNode> node = do_QueryInterface(elementPtr);
         res = DeleteNode(node);
         if (NS_FAILED(res)) return res;
-        // Should we delete this???
-        //delete elementPtr;
       }
     }
+    // Cleanup selection: remove ranges where cells were deleted
+    nsCOMPtr<nsISelection> selection;
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    if (!selection) return NS_ERROR_FAILURE;
+
+    PRInt32 rangeCount;
+    res = selection->GetRangeCount(&rangeCount);
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMRange> range;
+    PRInt32 i;
+    for (i = 0; i < rangeCount; i++)
+    {
+      res = selection->GetRangeAt(i, getter_AddRefs(range));
+      if (NS_FAILED(res)) return res;
+      if (!range) return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDOMElement> deletedCell;
+      res = GetCellFromRange(range, getter_AddRefs(deletedCell));
+      if (!deletedCell)
+      {
+        selection->RemoveRange(range);
+        rangeCount--;
+        i--;
+      }
+    }
+
     // Set spans for the cell everthing merged into
     res = SetRowSpan(firstCell, lastRowIndex-firstRowIndex+1);
     if (NS_FAILED(res)) return res;
     res = SetColSpan(firstCell, lastColIndex-firstColIndex+1);
     if (NS_FAILED(res)) return res;
+    
     
     // But check if we merged multiple rows - rowspan shouldn't be > 1
     PRInt32 newRowCount;
@@ -2397,7 +2424,6 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
     res = SetColSpan(targetCell, actualColSpan+actualColSpan2);
     if (NS_FAILED(res)) return res;
   }
-
   return res;
 }
 
