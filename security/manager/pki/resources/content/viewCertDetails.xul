@@ -28,12 +28,12 @@
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<box class="box-padded" id="general_info" orient="vertical">
-  <box id="verify_info_box" orient="vertical" >
+<vbox class="box-padded" id="general_info">
+  <vbox id="verify_info_box" >
     <text class="header" id="verified"/>
-  </box>
+  </vbox>
   <separator class="groove" />
-  <box orient="vertical" flex="1">
+  <vbox flex="1">
     <grid> 
       <columns>
         <column />
@@ -115,6 +115,6 @@
         </row>
       </rows>
     </grid>
-  </box>
-</box>
+  </vbox>
+</vbox>
 </overlay>

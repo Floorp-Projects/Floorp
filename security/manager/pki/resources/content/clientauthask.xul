@@ -36,25 +36,25 @@
 <script src="pippki.js" />
 <script src="clientauthask.js" />
 
-<box orient="vertical" style="margin: 5px;" flex="1">
-    <titledbox orient="vertical">
+<vbox style="margin: 5px;" flex="1">
+    <groupbox orient="vertical">
     <html>&clientAuthAsk.message1;</html>
     <html id="hostname" />
     <html id="organization" />
     <html id="issuer" />
-    </titledbox>
-    <titledbox orient="vertical">
+    </groupbox>
+    <groupbox orient="vertical">
     <html>&clientAuthAsk.message2;</html>
     <menulist id="nicknames">
         <menupopup/>
     </menulist>
-    </titledbox>
+    </groupbox>
   <separator />
-  <box>
+  <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
-  </box>
-</box>
+  </hbox>
+</vbox>
 </window>

@@ -50,7 +50,7 @@
   </columns>
   <rows>
     <row>
-      <box flex="1"> <!-- List of devices -->
+      <hbox flex="1"> <!-- List of devices -->
         <tree id="device_tree" rows="12" multiple="false"
               onselect="enableButtons();" debug="false" 
               flex="1" style="min-width:15em">
@@ -66,8 +66,8 @@
           </treehead>
           <treechildren id="device_list"/>
         </tree>
-      </box> <!-- / List of devices -->
-      <box flex="1"> <!-- Device status -->
+      </hbox> <!-- / List of devices -->
+      <hbox flex="1"> <!-- Device status -->
         <tree id="info_tree" debug="false" rows="12" multiple="false" 
               class="list" flex="1" style="min-width:10em">
           <treecolgroup> 
@@ -84,7 +84,7 @@
           </treehead>
           <treechildren id="info_list"/>
         </tree>
-      </box> <!-- / Device status -->
+      </hbox> <!-- / Device status -->
       <vbox> <!-- Buttons for manipulating devices -->
         <button id="login_button" 
                 label="&devmgr.button.login.label;"
@@ -105,7 +105,7 @@
       </vbox> <!-- / Buttons for manipulating devices -->
     </row>
     <row>
-      <box>
+      <hbox>
         <button id="help_button" 
                 label="&help.label;" 
                 orient="horizontal" class="normal"
@@ -114,7 +114,7 @@
                 label="&ok.label;" 
                 orient="horizontal" class="normal" 
                 onclick="window.close();"/> 
-      </box>
+      </hbox>
     </row>
   </rows>
 </grid>
