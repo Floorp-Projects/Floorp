@@ -75,10 +75,6 @@
 #include "nsIFrameManager.h"
 #include "nsStyleUtil.h"
 
-// helper function for dealing with placeholder for positioned/floated table
-static void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder);
-
-static const PRInt32 kColumnWidthIncrement=10;
 
 
 /********************************************************************************
@@ -1034,7 +1030,6 @@ nsTableFrame::AppendCell(nsIPresContext&   aPresContext,
                          nsTableCellFrame& aCellFrame,
                          PRInt32           aRowIndex)
 {
-  PRInt32 colIndex = 0;
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
@@ -1741,7 +1736,6 @@ ProcessRowInserted(nsIPresContext* aPresContext,
             rgFrame->GetRect(rgRect);
             rowFrame->GetRect(rowRect);
 
-            nscoord tableY = damageRect.y;
             damageRect.y += rgRect.y + rowRect.y; 
             damageRect.height = aNewHeight - damageRect.y;
 
@@ -2641,15 +2635,8 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
     InsertColGroups(*aPresContext, startColIndex, aFrameList, lastFrame);
     SetNeedStrategyInit(PR_TRUE);
   } else if (IsRowGroup(display->mDisplay)) {
-    // get the starting row index of the new rows and insert them into the table
-    nsTableRowGroupFrame* prevRowGroup = (nsTableRowGroupFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableRowGroupFrame);
     nsFrameList newList(aFrameList);
     nsIFrame* lastSibling = newList.LastChild();
-    //if (prevRowGroup) {
-    //  PRInt32 numRows;
-    //  prevRowGroup->GetRowCount(numRows);
-    //  rowIndex = prevRowGroup->GetStartRowIndex() + numRows;
-    //}
     // Insert the frames in the sibling chain
     mFrames.InsertFrame(nsnull, aPrevFrame, aFrameList);
 
@@ -3232,10 +3219,6 @@ nsTableFrame::ReflowChildren(nsIPresContext*     aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
 
-  nsMargin collapseBorder;
-  nsMargin padding(0,0,0,0);
-  GET_PIXELS_TO_TWIPS(aPresContext, p2t);
-
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   nsTableRowGroupFrame *thead, *tfoot;
@@ -3571,10 +3554,8 @@ nsTableFrame::DistributeHeightToRows(nsIPresContext*          aPresContext,
 
   nscoord cellSpacingY = GetCellSpacingY();
 
-  nscoord sumOfRowHeights = 0;
   nsMargin borderPadding = GetChildAreaOffset(*aPresContext, &aReflowState);
-  nscoord rowGroupYPos = borderPadding.top + cellSpacingY;
-
+  
   nsVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
@@ -4869,7 +4850,6 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
         aCellInfo.cell->GetParent((nsIFrame**)&aCellInfo.topRow); if (!aCellInfo.topRow) ABORT0();
         aCellInfo.rowIndex = aCellInfo.topRow->GetRowIndex();
       }
-      PRInt32 rgRowIndex = aCellInfo.rowIndex - mRowGroupStart;
       aCellInfo.colSpan = mTableFrame.GetEffectiveColSpan(*aCellInfo.cell, aCellMap); 
       aCellInfo.rowSpan = mTableFrame.GetEffectiveRowSpan(*aCellInfo.cell, aCellMap);
     }
@@ -5791,9 +5771,6 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
   }
   GET_TWIPS_TO_PIXELS(&aPresContext, t2p);
 
-  const nsStyleBorder* tableStyle =
-    (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-
   // vertical borders indexed in x-direction (cols)
   BCCellBorders lastVerBorders(damageArea.width + 1, damageArea.x); if (!lastVerBorders.borders) ABORT0();
   BCCellBorder  lastTopBorder, lastBottomBorder;
@@ -5811,7 +5788,6 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
   nscoord   smallHalf, largeHalf;
   BCCorners topCorners(damageArea.width + 1, damageArea.x); if (!topCorners.corners) ABORT0();
   BCCorners bottomCorners(damageArea.width + 1, damageArea.x); if (!bottomCorners.corners) ABORT0();
-  nsTableRowFrame* prevRow = nsnull;
 
   BCMapCellIterator iter(*this, damageArea);
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
@@ -5901,7 +5877,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         propData->mLeftBorderWidth = 0;
         tableBorderReset[NS_SIDE_LEFT] = PR_TRUE;
       }
-      nsTableRowFrame* rowFrame;
+      nsTableRowFrame* rowFrame = nsnull;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         CalcDominateBorder(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_LEFT, 
@@ -5934,7 +5910,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         propData->mRightBorderWidth = 0;
         tableBorderReset[NS_SIDE_RIGHT] = PR_TRUE;
       }
-      nsTableRowFrame* rowFrame;
+      nsTableRowFrame* rowFrame = nsnull;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
         CalcDominateBorder(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_RIGHT, 
@@ -7370,24 +7346,6 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 		result = cellMap->ColIsSpannedInto(aColIndex);
   }
   return result;
-}
-
-void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder)
-{
-  NS_ASSERTION(aPlaceholder, "null placeholder argument is illegal");
-  if (aPlaceholder) {
-    *aPlaceholder = nsnull;
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext.GetShell(getter_AddRefs(shell));
-    if(shell) {
-      nsCOMPtr<nsIFrameManager> frameManager;
-      shell->GetFrameManager(getter_AddRefs(frameManager));
-      if (frameManager) {
-        frameManager->GetPlaceholderFrameFor(&aFrame,
-                                             aPlaceholder);
-      }
-    }
-  }
 }
 
 // Destructor function for nscoord properties
