@@ -11,7 +11,7 @@
 content/messenger,                                   msg/content/messenger
 content/messenger-mapi,                              msg/content/messenger-mapi
 content/messenger-mdn,                               msg/content/messenger-mdn
-content/mesenger-region,                             msg/content/messenger-region
+content/messenger-region,                            msg/content/messenger-region
 content/messenger-smime,                             msg/content/messenger-smime
 content/messenger-views,                             msg/content/messenger-views
 content/messenger/messengercompose,                  msg/content/messenger/messengercompose
