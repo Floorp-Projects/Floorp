@@ -101,7 +101,7 @@
   </treecolgroup>
 
   <treehead>
-    <treerow id="headRow" onclick="return TriStateColumnSort(event.target.id)">
+    <treerow id="headRow" onclick="if (event.target.getAttribute('observes')) TriStateColumnSort(event.target.getAttribute('observes'));">
       <treecell class="treecell-header sortDirectionIndicator"
         label="&tree.header.name.label;"
         observes="Name" />
