@@ -128,6 +128,7 @@ nsProxyAutoConfig.prototype = {
             ProxySandBox.myIP = "127.0.0.1";
         }
         ProxySandBox.dnsResolve = dnsResolve;
+        ProxySandBox.alert = proxyAlert;
         LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
         this.done = true;
     },
@@ -135,6 +136,16 @@ nsProxyAutoConfig.prototype = {
     onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {
         var ins = new this.sis(inStream);
         pac += ins.read(count);
+    }
+}
+
+function proxyAlert(msg) {
+    try {
+        var cns = Components.classes["@mozilla.org/consoleservice;1"]
+                            .getService(Components.interfaces.nsIConsoleService);
+        cns.logStringMessage("PAC-alert: "+msg);
+    } catch (e) {
+        dump("PAC: proxyAlert ERROR: "+e+"\n");
     }
 }
 
