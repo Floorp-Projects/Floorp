@@ -29,7 +29,7 @@
 static NS_DEFINE_IID(kXPConnectIID, NS_IXPCONNECT_IID);
 NS_IMPL_ISUPPORTS(nsXPConnect, kXPConnectIID)
 
-const char* XPC_COMPONENTS_STR = "Components";
+const char XPC_COMPONENTS_STR[] = "Components";
 
 nsXPConnect* nsXPConnect::mSelf = NULL;
 

@@ -25,7 +25,7 @@ XPCNativeMemberDescriptor::XPCNativeMemberDescriptor()
     : invokeFuncObj(NULL), id(0), index(0), index2(0), flags(0) {}
 /***************************************************************************/
 
-const char* XPC_VAL_STR = "value";
+const char XPC_VAL_STR[] = "value";
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
