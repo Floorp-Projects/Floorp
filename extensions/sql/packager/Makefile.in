@@ -5,14 +5,14 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS 		= win
-else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		= mac
-else
-DIRS 		= unix
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
+
+XPI_FILE = sql-$(shell date +%Y%m%d)-$(OS_ARCH).xpi
+
+xpi:
+	zip -j $(DIST)/$(XPI_FILE) $(srcdir)/install.js
+	cd $(DIST); zip -r $(XPI_FILE) \
+	bin/components/sql.xpt \
+	bin/components/sqlpgsql.xpt \
+	bin/components/$(LIB_PREFIX)sql$(DLL_SUFFIX) \
+	bin/chrome/sql.jar
