@@ -615,24 +615,34 @@ static NSArray* sToolbarDefaults = nil;
     // stagger window from last browser, if there is one. we can't just use autoposition
     // because it doesn't work on multiple monitors (radar bug 2972893). |getFrontmostBrowserWindow|
     // only gets fully chromed windows, so this will do the right thing for popups (yay!).
+    const int kWindowStaggerOffset = 15;
     NSWindow* lastBrowser = [[NSApp delegate] getFrontmostBrowserWindow];
     if ( lastBrowser != [self window] ) {
-      NSRect lastBrowserFrame = [lastBrowser frame];
-      NSPoint topLeft = NSMakePoint(NSMinX(lastBrowserFrame), NSMaxY(lastBrowserFrame));
-      topLeft.x += 15; topLeft.y -= 15;
-      [[self window] setFrameTopLeftPoint:topLeft];
-      
-      // check if this new topLeft will overlap the dock or go off the screen, if so,
-      // force to 0,0 of the current monitor. We test this by unioning the window rect
-      // with the visible screen rect (excluding dock). If the result isn't the same
-      // as the screen rect, the window juts out somewhere and needs to be repositioned.
-      NSRect newBrowserFrame = [[self window] frame];
       NSRect screenRect = [[lastBrowser screen] visibleFrame];
-      NSRect unionRect = NSUnionRect(newBrowserFrame, screenRect);
-      if ( !NSEqualRects(unionRect, screenRect) ) {
-        topLeft = NSMakePoint(NSMinX(screenRect), NSMaxY(screenRect));
-        [[self window] setFrameTopLeftPoint:topLeft];
+      NSRect testBrowserFrame = [lastBrowser frame];
+      NSPoint previousOrigin = testBrowserFrame.origin;
+      testBrowserFrame.origin.x += kWindowStaggerOffset;
+      testBrowserFrame.origin.y -= kWindowStaggerOffset;
+      
+      // check if this new window position would overlap the dock or go off the screen. We test
+      // this by ensuring that it is contained by the  visible screen rect (excluding dock). If
+      // not, the window juts out somewhere and needs to be repositioned.
+      if ( !NSContainsRect(screenRect, testBrowserFrame) ) {
+        // if a normal cascade fails, try shifting horizontally and reseting vertically
+        testBrowserFrame.origin.y = NSMaxY(screenRect) - testBrowserFrame.size.height;
+        if ( !NSContainsRect(screenRect, testBrowserFrame) ) {
+          // if shifting right also fails, try shifting vertically and reseting horizontally instead
+          testBrowserFrame.origin.x = NSMinX(screenRect);
+          testBrowserFrame.origin.y = previousOrigin.y - kWindowStaggerOffset;
+          if ( !NSContainsRect(screenRect, testBrowserFrame) ) {
+            // if all else fails, give up and reset to the upper left corner
+            testBrowserFrame.origin.x = NSMinX(screenRect);
+            testBrowserFrame.origin.y = NSMaxY(screenRect) - testBrowserFrame.size.height;
+          }
+        }
       }
+      // actually move the window
+      [[self window] setFrameOrigin: testBrowserFrame.origin];
     }
 }
 
