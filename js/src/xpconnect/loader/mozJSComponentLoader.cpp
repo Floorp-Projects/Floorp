@@ -17,7 +17,7 @@
  * Contributors:
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   John Bandhauer <jband@netscape.com>
- *   IBM Corporation
+ *   IBM Corp.
  *   Robert Ginda <rginda@netscape.com>
  */
 
@@ -86,7 +86,7 @@ const char kObserverServiceContractID[] = NS_OBSERVERSERVICE_CONTRACTID;
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 #endif
 
-static JSBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSBool)
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -110,7 +110,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSBool)
 Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #ifdef DEBUG
@@ -275,7 +275,7 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
     return rv;
 }
 
-static void PR_CALLBACK
+JS_STATIC_DLL_CALLBACK(void)
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
     nsresult rv;

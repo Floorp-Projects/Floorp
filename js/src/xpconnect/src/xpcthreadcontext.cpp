@@ -356,7 +356,7 @@ xpcPerThreadData::SetSafeJSContext(JSContext *cx)
     return NS_OK;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+PR_STATIC_CALLBACK(void)
 xpc_ThreadDataDtorCB(void* ptr)
 {
     xpcPerThreadData* data = (xpcPerThreadData*) ptr;
