@@ -310,7 +310,8 @@ public:
 
   ~nsService() {
     if (mService) {       // mService could be null if the constructor fails
-      nsresult rv = nsServiceManager::ReleaseService(mCID, mService);
+      nsresult rv = NS_OK;
+      rv = nsServiceManager::ReleaseService(mCID, mService);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
     }
   }
