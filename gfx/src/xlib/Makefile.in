@@ -122,5 +122,7 @@ INCLUDES	+= \
 		-I$(srcdir)/.. \
 		$(NULL)
 
+ifdef MOZ_ENABLE_XPRINT
 export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS))
 	$(INSTALL) $^ .
+endif
