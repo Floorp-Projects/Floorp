@@ -64,11 +64,15 @@ class nsEditorAppCore : public nsBaseAppCore,
 		NS_IMETHOD    SetTextProperty(const nsString& aAttr);
 		NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);
 		NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
+		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
+		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
+		NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);
+		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
+
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
     NS_IMETHOD    Back();
-		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
-		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
+
     NS_IMETHOD    Forward();
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);
