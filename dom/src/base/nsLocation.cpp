@@ -65,7 +65,7 @@
 #include "nsDOMError.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
-
+#include "nsIProtocolHandler.h"
 
 static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
@@ -199,6 +199,63 @@ LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   return NS_OK;
 }
+
+// Walk up the docshell hierarchy and find a usable base URI. Basically 
+// anything that would allow a relative uri.
+
+nsresult
+LocationImpl::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI ** aUsableURI)
+{
+  if (!aBaseURI || !aParent)
+    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aUsableURI);
+    
+  *aUsableURI = nsnull;
+  nsresult rv = NS_OK;    
+  nsCOMPtr<nsIDocShell> parentDS = aParent;
+  nsCOMPtr<nsIURI> baseURI = aBaseURI;
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+
+  while(NS_SUCCEEDED(rv) && baseURI && ioService) {
+    // Check if the current base uri supports relative uris.
+    // We make this check by looking at the protocol flags of
+    // the protocol handler. If the protocol flags has URI_NORELATIVE,
+    // it means that the base uri does not support relative uris.
+    nsCAutoString scheme;
+    baseURI->GetScheme(scheme);
+    nsCOMPtr<nsIProtocolHandler> protocolHandler;
+    // Get the protocol handler for the base uri.
+    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(protocolHandler));
+    if (!protocolHandler)
+      return NS_ERROR_FAILURE;
+    PRUint32 pFlags; // Is there a default value for the protocol flags?
+    protocolHandler->GetProtocolFlags(&pFlags);
+    if (!(pFlags & nsIProtocolHandler::URI_NORELATIVE)) {
+      *aUsableURI = baseURI;
+      NS_ADDREF(*aUsableURI);
+      return NS_OK;
+    }
+
+    // Get the same type parent docshell
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem(do_QueryInterface(parentDS));
+    if (!docShellAsTreeItem)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDocShellTreeItem> parentDSTreeItem;
+    docShellAsTreeItem->GetSameTypeParent(getter_AddRefs(parentDSTreeItem));      
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(parentDSTreeItem));
+
+    // Get the parent docshell's uri
+    if (webNav) {
+      rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+      parentDS = do_QueryInterface(parentDSTreeItem);
+    }
+    else
+      return NS_ERROR_FAILURE;
+  }  // while 
+
+    return rv;
+}
+
 
 nsresult
 LocationImpl::GetURI(nsIURI** aURI)
@@ -475,13 +532,18 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
                               nsIURI* aBase, PRBool aReplace)
 {
   nsresult result;
-  nsCOMPtr<nsIURI> newUri;
+  nsCOMPtr<nsIURI> newUri, baseURI;
+
+  // Make sure the base url is something that will be useful. 
+  result = FindUsableBaseURI(aBase,  mDocShell, getter_AddRefs(baseURI));
+  if (!baseURI)
+    return NS_ERROR_FAILURE;
 
   nsCAutoString docCharset;
   if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), aBase);
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), baseURI);
   else
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, aBase);
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, baseURI);
 
   if (newUri && mDocShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;

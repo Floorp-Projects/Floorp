@@ -486,6 +486,7 @@ protected:
   nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
 
   nsresult CheckURL(nsIURI *url, nsIDocShellLoadInfo** aLoadInfo);
+  nsresult FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI ** aUsableURI);
 
   nsIDocShell *mDocShell; // Weak Reference
 };
