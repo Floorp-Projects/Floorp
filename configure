@@ -11085,9 +11085,9 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   QT_LIB=-lqt-mt
 else
   echo "$ac_t""no" 1>&6
+{ echo "configure: error: Cannot find QT libraries." 1>&2; exit 1; }
 fi
 
-    
 fi
 
     LDFLAGS=$_SAVE_LDFLAGS

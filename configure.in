@@ -3152,8 +3152,8 @@ then
     AC_LANG_SAVE
     AC_LANG_CPLUSPLUS
     AC_CHECK_LIB(qt, main, QT_LIB=-lqt,
-      AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt)
-    )
+        AC_CHECK_LIB(qt-mt, main, QT_LIB=-lqt-mt,
+            AC_MSG_ERROR([Cannot find QT libraries.])))
     LDFLAGS=$_SAVE_LDFLAGS
     QT_LIBS="-L/usr/X11R6/lib $QT_LDFLAGS $QT_LIB -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
