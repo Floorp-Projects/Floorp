@@ -72,19 +72,11 @@ public:
   NS_IMETHOD LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool aAugmentFlag,
                           nsIXBLBinding** aBinding, PRBool* aResolveStyle) = 0;
 
-  // This function clears out the bindings on a given content node.
-  NS_IMETHOD FlushStyleBindings(nsIContent* aContent) = 0;
-
-  // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult) = 0;
-
   // Indicates whether or not a binding is fully loaded.
   NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady) = 0;
 
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
-
-  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult)=0;
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
   NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
@@ -95,8 +87,6 @@ public:
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement)=0;
   NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement)=0;
   
-   // Helper method for loading an XML doc.
-  NS_IMETHOD FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult) = 0;
 };
 
 #endif // nsIXBLService_h__
