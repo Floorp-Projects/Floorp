@@ -442,7 +442,9 @@ PICS_RStoURL(PICS_RatingsStruct *rs, char *cur_page_url)
         {
 
             char *add;
-            char *escaped_name = NET_Escape(rating_value->name, URL_PATH);
+            char *escaped_name = NET_Escape(
+                                     illegal_to_underscore(rating_value->name),
+                                     URL_PATH);
 
             if(!escaped_name)
             {
