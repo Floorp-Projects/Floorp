@@ -32,6 +32,26 @@
 }
 static NS_DEFINE_CID(kMultiMixedConverterCID,          NS_MULTIMIXEDCONVERTER_CID);
 
+// The nsMultiMixedConv stream converter converts a stream of type "multipart/x-mixed-replace"
+// to it's subparts. There was some debate as to whether or not the functionality desired
+// when HTTP confronted this type required a stream converter. After all, this type really
+// prompts various viewer related actions rather than stream conversion. There simply needs
+// to be a piece in place that can strip out the multiple parts of a stream of this type, and 
+// "display" them accordingly.
+//
+// With that said, this "stream converter" spends more time packaging up the sub parts of the
+// main stream and sending them off the destination stream listener, than doing any real
+// stream parsing/converting.
+//
+// WARNING: This converter requires that it's destination stream listener be able to handle
+//   multiple OnStartRequest(), OnDataAvailable(), and OnStopRequest() call combinations.
+//   Each series represents the beginning, data production, and ending phase of each sub-
+//   part of the original stream.
+//
+// NOTE: this MIME-type is used by HTTP, *not* SMTP, or IMAP.
+//
+// NOTE: For reference, a general description of how this MIME type should be handled via
+//   HTTP, see http://home.netscape.com/assist/net_sites/pushpull.html
 
 class nsMultiMixedConv : public nsIStreamConverter {
 public:
@@ -39,22 +59,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamConverter methods
-    NS_IMETHOD Convert(nsIInputStream *aFromStream,
-                       const PRUnichar *aFromType,
-                       const PRUnichar *aToType, 
-                       nsISupports *aCtxt, nsIInputStream **_retval);
-
-    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, 
-                                nsIStreamListener *aListener, nsISupports *aCtxt);
+    NS_DECL_NSISTREAMCONVERTER
 
     // nsIStreamListener methods
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, 
-                               nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+    NS_DECL_NSISTREAMLISTENER
 
     // nsIStreamObserver methods
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                             nsresult status, const PRUnichar *errorMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
     // nsMultiMixedConv methods
     nsMultiMixedConv();
@@ -63,6 +74,7 @@ public:
     nsresult SendData(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt);
     nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
 
+    // For factory creation.
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
         nsresult rv;
