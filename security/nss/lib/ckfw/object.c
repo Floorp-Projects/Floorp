@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.8 $ $Date: 2002/03/29 07:34:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.9 $ $Date: 2002/03/29 18:53:15 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -673,18 +673,7 @@ nssCKFWObject_GetAttribute
     PR_ASSERT(fwObject->mdObject->FreeAttribute);
     if (fwObject->mdObject->FreeAttribute) {
       *pError = fwObject->mdObject->FreeAttribute(&mdItem);
-    } else {
-      /* bad, bad module : it allocated an attribute
-      but does not know how to free it. a memory leak will result
-      There is no way to prevent the leak, though . But report an
-      error so it doesn't go unnoticed on opt builds. On dbg we
-      assert above for the FreeAttribute function */
-      if (rv) {
-        nss_ZFreeIf(rv);
-      }
-      *pError = CKR_HOST_MEMORY;
     }
-
   }
 
  done:
