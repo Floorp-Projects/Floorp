@@ -105,8 +105,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  // see if we have to draw a selection frame around this container
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return NS_OK;
 }
 
 /**
@@ -166,8 +165,7 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
   aFrame->GetView(aPresContext, &view);
   if (view) {
     // Verify that the current parent view is what we think it is
-    nsIView*  parentView;
-
+    //nsIView*  parentView;
     //NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
 
     // Change the parent view.
