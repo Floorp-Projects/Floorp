@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.37 2003/06/18 00:38:11 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.38 2003/06/26 01:56:32 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1169,13 +1169,6 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena);
 
 int
 CERT_GetNamesLength(CERTGeneralName *names);
-
-CERTCertificate *
-CERT_CompareNameSpace(CERTCertificate  *cert,
-		      CERTGeneralName  *namesList,
-		      SECItem          *namesListIndex,
-		      PRArenaPool      *arena,
-		      CERTCertDBHandle *handle);
 
 SECStatus 
 CERT_EncodeSubjectKeyID(PRArenaPool *arena, char *value, int len, SECItem *encodedValue);

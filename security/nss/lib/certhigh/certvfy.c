@@ -665,8 +665,8 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRArenaPool *arena = NULL;
     CERTGeneralName *namesList = NULL;
     CERTGeneralName *subjectNameList = NULL;
-    SECItem *namesIndex = NULL;
-    int namesIndexLen = 10;
+    CERTCertificate **certsList      = NULL;
+    int certsListLen = 16;
     int namesCount = 0;
 
     cbd_FortezzaType last_type = cbd_None;
@@ -738,30 +738,31 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	goto loser;
     }
 
-    namesIndex = (SECItem *) PORT_ZAlloc(sizeof(SECItem) * namesIndexLen);
-    if (namesIndex == NULL) {
+    certsList = PORT_ZNewArray(CERTCertificate *, certsListLen);
+    if (certsList == NULL)
 	goto loser;
-    }
 
     for ( count = 0; count < CERT_MAX_CERT_CHAIN; count++ ) {
 	int subjectNameListLen;
 	int i;
 
-	/* Construct a list of names for the current and all previous certifcates 
-	   to be verified against the name constraints extension of the issuer
-	   certificate. */
-	subjectNameList = CERT_GetCertificateNames(subjectCert, arena);
+	/* Construct a list of names for the current and all previous 
+	 * certifcates to be verified against the name constraints extension 
+	 * of the issuer certificate. 
+	 */
+	subjectNameList    = CERT_GetCertificateNames(subjectCert, arena);
 	subjectNameListLen = CERT_GetNamesLength(subjectNameList);
-	for (i = 0; i < subjectNameListLen; i++) {
-	    if (namesIndexLen <= namesCount + i) {
-		namesIndexLen = namesIndexLen * 2;
-		namesIndex = (SECItem *) PORT_Realloc(namesIndex, namesIndexLen * 
-						       sizeof(SECItem));
-		if (namesIndex == NULL) {
-		    goto loser;
-		}
+	if (certsListLen <= namesCount + subjectNameListLen) {
+	    certsListLen = (namesCount + subjectNameListLen) * 2;
+	    certsList = 
+	        (CERTCertificate **)PORT_Realloc(certsList, 
+		                     certsListLen * sizeof(CERTCertificate *));
+	    if (certsList == NULL) {
+		goto loser;
 	    }
-	    rv = SECITEM_CopyItem(arena, &(namesIndex[namesCount + i]), &(subjectCert->derSubject));
+	}
+	for (i = 0; i < subjectNameListLen; i++) {
+	    certsList[namesCount + i] = subjectCert;
 	}
 	namesCount += subjectNameListLen;
 	namesList = cert_CombineNamesLists(namesList, subjectNameList);
@@ -946,12 +947,12 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
 	    LOG_ERROR_OR_EXIT(log,issuerCert,count+1,requiredCAKeyUsage);
 	}
-	/* make sure that the entire chain is within the name space of the current issuer
-	 * certificate.
-	 */
-
-	badCert = CERT_CompareNameSpace(issuerCert, namesList, namesIndex, arena, handle);
-	if (badCert != NULL) {
+	/* make sure that the entire chain is within the name space of the 
+	** current issuer certificate.
+	*/
+	rv = CERT_CompareNameSpace(issuerCert, namesList, certsList, 
+	                           arena, &badCert);
+	if (rv != SECSuccess || badCert != NULL) {
 	    PORT_SetError(SEC_ERROR_CERT_NOT_IN_NAME_SPACE);
             LOG_ERROR_OR_EXIT(log, badCert, count + 1, 0);
 	    goto loser;
@@ -975,8 +976,8 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 loser:
     rv = SECFailure;
 done:
-    if (namesIndex != NULL) {
-	PORT_Free(namesIndex);
+    if (certsList != NULL) {
+	PORT_Free(certsList);
     }
     if ( issuerCert ) {
 	CERT_DestroyCertificate(issuerCert);
