@@ -480,15 +480,17 @@ var treeView =
    isEditable : function(){return true;},
    isSeparator : function(){return false;},
    getImageSrc : function(){return false;},
-   cycleHeader : function(col)
-   {
+   cycleHeader : function(col, element) // element parameter used in Moz1.7-
+   {                                    // not in Moz1.8+
       //dump( "\nin cycle header" );
       var sortActive;
       var treeCols;
    
-      this.selectedColumn = col.id;
-      sortActive = col.element.getAttribute("sortActive");
-      this.sortDirection = col.element.getAttribute("sortDirection");
+      // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+      this.selectedColumn = col.id || col;  
+      if (!element) element = col.element;  // in Moz1.8+, get element from col
+      sortActive = element.getAttribute("sortActive");
+      this.sortDirection = element.getAttribute("sortDirection");
    
       if (sortActive != "true")
       {
@@ -513,8 +515,8 @@ var treeView =
             this.sortDirection = "descending";
          }
       }
-      col.element.setAttribute("sortActive", sortActive);
-      col.element.setAttribute("sortDirection", this.sortDirection);
+      element.setAttribute("sortActive", sortActive);
+      element.setAttribute("sortDirection", this.sortDirection);
       //dump( "\nabout to sort events "+gEventArray.length );
       gEventArray.sort( sortEvents );
       //dump( "\nSORTED!");
