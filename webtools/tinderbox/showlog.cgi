@@ -317,10 +317,7 @@ sub output_log_line {
   }
 
   if ($has_error) {
-    if ($last_was_error) {
-      $logline .= "     ";
-    }
-    else {
+    unless ($last_was_error) {
       $logline .= "<a name=\"err$next_err\"></a>";
       $next_err++;
       $logline .= "<a href=\"#err$next_err\">NEXT</a> ";
@@ -330,11 +327,10 @@ sub output_log_line {
     $last_was_error = 1;
   }
   elsif ($has_warning) {
-    $logline .= "     ";
-    $logline .= "<font color=000080>$line</font>";
+    $logline = "<font color=000080>$line</font>";
   }
   else {
-    $logline .= "     $line";
+    $logline = $line;
     $last_was_error = 0;
   }
 
