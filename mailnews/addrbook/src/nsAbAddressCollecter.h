@@ -42,6 +42,7 @@ public:
 	nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
 protected:
 	nsCOMPtr <nsIAddrDatabase> m_historyAB;
+	nsCOMPtr <nsIAbDirectory> m_historyDirectory;
 
 };
 

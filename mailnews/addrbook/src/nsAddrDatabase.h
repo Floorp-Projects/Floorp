@@ -87,7 +87,7 @@ public:
 	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
 	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
 
-	NS_IMETHOD GetCardForEmailAddress(const char *emailAddress, nsIAbCard **card);
+	NS_IMETHOD GetCardForEmailAddress(nsIAbDirectory *directory, const char *emailAddress, nsIAbCard **card);
 
 	NS_IMETHOD SetAnonymousStringAttribute(const char *attrname, const char *value);
 	NS_IMETHOD GetAnonymousStringAttribute(const char *attrname, char** value);

@@ -2269,11 +2269,13 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 }
 
 
-NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(const char *emailAddress, nsIAbCard **cardResult)
+NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, const char *emailAddress, nsIAbCard **cardResult)
 {
 	nsresult rv = NS_OK;
 	if (!cardResult)
 		return NS_ERROR_NULL_POINTER;
+
+	m_dbDirectory = directory;
 
 	mdbYarn	emailAddressYarn;
 
