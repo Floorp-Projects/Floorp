@@ -32,10 +32,7 @@ EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/US
 EXPORT_RESOURCE_FILES = \
 		$(NULL)
 
-# only for unix, and even then, not all unix vendors
-# will want this.  don't make this Makefile.in 
-# or movemail.rdf part of the build for everyone by default
-ifneq (,$(filter AIX,$(OS_ARCH)))
+ifdef MOZ_MOVEMAIL
 EXPORT_RESOURCE_FILES += movemail.rdf
 endif
 
@@ -49,3 +46,4 @@ libs::
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR_L10N)
 endif
+
