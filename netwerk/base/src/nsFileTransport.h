@@ -28,6 +28,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
+#include "nsIProgressEventSink.h"
 
 class nsIEventSinkGetter;
 class nsIBaseStream;
@@ -43,7 +44,6 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSITRANSPORT
     NS_DECL_NSIPIPEOBSERVER
-    NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSIRUNNABLE
 
     nsFileTransport();
@@ -54,7 +54,12 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* verb, nsIEventSinkGetter* getter);
+    nsresult Init(nsFileSpec& spec, 
+                  const char* command,
+                  nsIEventSinkGetter* getter);
+    nsresult Init(nsIInputStream* fromStream, 
+                  const char* command,
+                  nsIEventSinkGetter* getter);
 
     void Process(void);
 
@@ -62,34 +67,37 @@ public:
         QUIESCENT,
         START_READ,
         READING,
+        END_READ,
         START_WRITE,
         WRITING,
-        ENDING
+        END_WRITE
     };
 
 protected:
-    nsresult CreateFileTransportFromFileSpec(nsFileSpec& spec, nsITransport** result);
+    nsCOMPtr<nsIProgressEventSink>      mProgress;
+    nsFileSpec                          mSpec;
 
-protected:
-    nsIEventSinkGetter*         mGetter;        // XXX it seems wrong keeping this -- used by GetParent
-    nsIStreamListener*          mListener;
-    nsIEventQueue*              mEventQueue;
-
-    nsFileSpec                  mSpec;
-
-    nsISupports*                mContext;
-    State                       mState;
-    PRBool                      mSuspended;
-    PRMonitor*                  mMonitor;
+    nsCOMPtr<nsISupports>               mContext;
+    State                               mState;
+    PRBool                              mSuspended;
+    PRMonitor*                          mMonitor;
 
     // state variables:
-    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/Writing
-    nsIBufferInputStream*       mBufferInputStream;
-    nsIBufferOutputStream*      mBufferOutputStream;
-    nsresult                    mStatus;
-    PRUint32                    mSourceOffset;
-    PRUint32                    mAmount;
-    PRBool                      mReadFixedAmount;  // if user wants to only read a fixed number of bytes set this flag
+    nsresult                            mStatus;
+    PRUint32                            mOffset;
+    PRInt32                             mAmount;
+    PRUint32                            mTotalAmount;
+
+    // reading state varialbles:
+    nsCOMPtr<nsIStreamListener>         mListener;
+    nsCOMPtr<nsIInputStream>            mSource;
+    nsCOMPtr<nsIBufferInputStream>      mBufferInputStream;
+    nsCOMPtr<nsIBufferOutputStream>     mBufferOutputStream;
+
+    // writing state variables:
+    nsCOMPtr<nsIStreamObserver>         mObserver;
+    nsCOMPtr<nsIOutputStream>           mSink;
+    char*                               mBuffer;
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)

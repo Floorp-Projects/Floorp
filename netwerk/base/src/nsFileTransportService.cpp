@@ -59,9 +59,9 @@ nsFileTransportService::~nsFileTransportService()
     NS_IF_RELEASE(mSuspended);
 }
 
-NS_IMPL_ISUPPORTS(nsFileTransportService, NS_GET_IID(nsISupports));
+NS_IMPL_ISUPPORTS(nsFileTransportService, NS_GET_IID(nsFileTransportService));
 
-NS_METHOD
+NS_IMETHODIMP
 nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     if (aOuter)
@@ -81,10 +81,56 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP
+nsFileTransportService::CreateTransport(nsFileSpec& spec,
+                                        const char* command,
+                                        nsIEventSinkGetter* getter,
+                                        nsITransport** result)
+{
+    nsresult rv;
+    nsFileTransport* trans = new nsFileTransport();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(trans);
+    rv = trans->Init(spec, command, getter);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(trans);
+        return rv;
+    }
+    *result = trans;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
+                                                  const char *command,
+                                                  nsIEventSinkGetter *getter,
+                                                  nsITransport** result)
+{
+    nsresult rv;
+    nsFileTransport* trans = new nsFileTransport();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(trans);
+    rv = trans->Init(fromStream, command, getter);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(trans);
+        return rv;
+    }
+    *result = trans;
+    return NS_OK;
+}
+
 nsresult
 nsFileTransportService::ProcessPendingRequests(void)
 {
     return mPool->ProcessPendingRequests();
+}
+
+nsresult
+nsFileTransportService::Shutdown(void)
+{
+    return mPool->Shutdown();
 }
 
 nsresult

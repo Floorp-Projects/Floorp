@@ -28,15 +28,6 @@ class nsIThreadPool;
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  1//4
 
-// {25029490-F132-11d2-9588-00805F369F95}
-#define NS_FileTransportService_CID                   \
-{ /* fbc81170-1f69-11d3-9344-00104ba0fd40 */         \
-    0xfbc81170,                                      \
-    0x1f69,                                          \
-    0x11d3,                                          \
-    {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
 class nsFileTransportService : public nsIFileTransportService
 {
 public:
