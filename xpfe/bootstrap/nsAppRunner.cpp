@@ -781,6 +781,25 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     }
   }
 
+  // Create and register a directory service provider
+  nsAppFileLocationProvider* appFileLocProvider;
+  appFileLocProvider = new nsAppFileLocationProvider;
+  if (!appFileLocProvider) {
+    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+  if (!directoryService) {
+    NS_ASSERTION(PR_FALSE, "failed to get directory service");
+    return rv;
+  }
+  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
+  rv = directoryService->RegisterProvider(appFileLocProvider);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
+    return rv;
+  }
+
   //----------------------------------------------------------------
   // XPInstall needs to clean up after any updates that couldn't
   // be completed because components were in use. This must be done
@@ -823,25 +842,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
 
   // Start up the core services:
-  
-  // Create and register a directory service provider
-  nsAppFileLocationProvider* appFileLocProvider;
-  appFileLocProvider = new nsAppFileLocationProvider;
-  if (!appFileLocProvider) {
-    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
-  if (!directoryService) {
-    NS_ASSERTION(PR_FALSE, "failed to get directory service");
-    return rv;
-  }
-  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
-  rv = directoryService->RegisterProvider(appFileLocProvider);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
-    return rv;
-  }
   
   // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
