@@ -73,7 +73,7 @@ nsStatusBarBiffManager::nsStatusBarBiffManager()
 
 nsStatusBarBiffManager::~nsStatusBarBiffManager()
 {
-    NS_RELEASE(kBiffStateAtom);
+    NS_IF_RELEASE(kBiffStateAtom);
 }
 
 #define PREF_PLAY_SOUND_ON_NEW_MAIL      "mail.biff.play_sound"
