@@ -1,5 +1,3 @@
-MOZ_SRC = c:\m\source_1.4
-
 WXDIR  = $(WXWIN)
 MOZDIR = $(MOZ_SRC)\mozilla
 MOZSDK = $(MOZDIR)\dist
@@ -43,6 +41,7 @@ MOZINC = \
   -I$(MOZSDK)\include\profile \
   -I$(MOZSDK)\include\webbrwsr \
   -I$(MOZSDK)\include\embed_base \
+  -I$(MOZSDK)\include\embedstring \
   -I$(MOZSDK)\include\windowwatcher \
   -I$(MOZSDK)\include\composer \
   -I$(MOZSDK)\include\commandhandler \
@@ -55,16 +54,16 @@ MOZLIBS = \
   $(NULL)
 #  $(MOZSDK)\lib\xpcomglue_s.lib \
 
-MOZDEFS = \
-  -DXPCOM_GLUE \
+#  -DXPCOM_GLUE \
+EXTRAFLAGS = \
+  -DXP_WIN \
+  -DXP_WIN32 \
   $(NULL)
 
 EXTRALIBS = $(WXDIR)\lib\wxxrc$(LIBEXT).lib $(MOZLIBS)
 EXTRAINC = -I$(WXDIR)\contrib\include $(MOZINC)
 
 !include $(WXDIR)\src\makeprog.vc
-
-# CPPFLAGS = $(CPPFLAGS) $(MOZDEFS)
 
 all:
     -copy $(PROGRAM).exe $(MOZDIR)\dist\bin
