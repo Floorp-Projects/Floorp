@@ -134,9 +134,9 @@ private:
     PRBool   IsLSDate(char *aCStr);
 
     // date conversion/parsing methods
-    PRTime   ConvertUNIXDate(char *aCStr);
-    PRTime   ConvertVMSDate(char *aCStr);
-    PRTime   ConvertDOSDate(char *aCStr);
+    PRBool   ConvertUNIXDate(char *aCStr, PRTime& outDate);
+    PRBool   ConvertVMSDate(char *aCStr, PRTime& outDate);
+    PRBool   ConvertDOSDate(char *aCStr, PRTime& outDate);
 
     // line parsing methods
     nsresult ParseLSLine(char *aLine, indexEntry *aEntry);
