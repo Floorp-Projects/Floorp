@@ -33,13 +33,21 @@
 typedef int (*PrefChangedFunc) (const char *, void *); 
 #endif /* PREFAPI_H */
 
-// {A22AD7B0-CA86-11d1-A9A4-00805F8A7AC4}
-NS_DECLARE_ID(kIPrefIID, 
-  0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
+#define NS_IPREF_IID                                   \
+  { /* {a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4} */       \
+    0xa22ad7b0,                                        \
+    0xca86,                                            \
+    0x11d1,                                            \
+    { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
+  }
 
-// {DC26E0E0-CA94-11d1-A9A4-00805F8A7AC4}
-NS_DECLARE_ID(kPrefCID, 
-  0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
+#define NS_PREF_CID                                    \
+  { /* {dc26e0e0-ca94-11d1-a9a4-00805f8a7ac4} */       \
+    0xdc26e0e0,                                        \
+    0xca94,                                            \
+    0x11d1,                                            \
+    { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
+  }
 
 /*
  * Return values
@@ -49,6 +57,9 @@ NS_DECLARE_ID(kPrefCID,
 
 class nsIPref: public nsISupports {
 public:
+
+  static const nsIID& GetIID(void) { static nsIID iid = NS_IPREF_IID; return iid; }
+
   // Initialize/shutdown
   NS_IMETHOD Startup(char *filename) = 0;
   NS_IMETHOD Shutdown() = 0;

@@ -18,7 +18,6 @@
 
 #include "pratom.h"
 #include "prefapi.h"
-#define NS_IMPL_IDS
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIPref.h"
@@ -28,6 +27,9 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -560,7 +562,7 @@ class nsPrefFactory: public nsIFactory {
   };
 };
 
-NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 
 NS_IMPL_ISUPPORTS(nsPrefFactory, kFactoryIID);
 
