@@ -149,6 +149,9 @@ public:
 
     virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID);
 
+    NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
+    NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
+
     virtual nsresult CreateShell(nsIPresContext* aContext,
                                  nsIViewManager* aViewManager,
                                  nsIStyleSet* aStyleSet,
@@ -177,6 +180,8 @@ public:
     virtual PRInt32 GetNumberOfStyleSheets();
 
     virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
+
+    virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
 
     virtual void AddStyleSheet(nsIStyleSheet* aSheet);
 
@@ -759,6 +764,19 @@ RDFDocumentImpl::SetDocumentCharacterSet(nsCharSetID aCharSetID)
     mCharSetID = aCharSetID;
 }
 
+NS_IMETHODIMP
+RDFDocumentImpl::GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFDocumentImpl:: SetHeaderData(nsIAtom* aheaderField, const nsString& aData)
+{
+  return NS_OK;
+}
+
+
 nsresult 
 RDFDocumentImpl::CreateShell(nsIPresContext* aContext,
                              nsIViewManager* aViewManager,
@@ -880,6 +898,12 @@ RDFDocumentImpl::GetStyleSheetAt(PRInt32 aIndex)
     return sheet;
 }
 
+PRInt32 
+RDFDocumentImpl::GetIndexOfStyleSheet(nsIStyleSheet* aSheet)
+{
+  return mStyleSheets.IndexOf(aSheet);
+}
+
 void 
 RDFDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
 {
@@ -903,7 +927,7 @@ RDFDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
             nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[index]);
             nsIStyleSet* set = shell->GetStyleSet();
             if (nsnull != set) {
-                set->InsertDocStyleSheetBefore(aSheet, nsnull); // put it first
+                set->AddDocStyleSheet(aSheet, this);
                 NS_RELEASE(set);
             }
         }
@@ -936,7 +960,7 @@ RDFDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                     set->RemoveDocStyleSheet(aSheet);
                 }
                 else {
-                    set->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it first
+                    set->AddDocStyleSheet(aSheet, this);  // put it first
                 }
                 NS_RELEASE(set);
             }
