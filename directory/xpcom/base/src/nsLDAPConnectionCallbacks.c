@@ -18,6 +18,8 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *                 Leif Hedstrom <leif@netscape.com>
+ *                 Mark C. Smith <mcs@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -48,6 +50,7 @@ struct nsLDAPLderrno {
 
 static PRUintn kLDAPErrnoData = 0;
 struct ldap_thread_fns kLDAPThreadFuncs;
+struct ldap_extra_thread_fns kLDAPExtraThreadFuncs;
 
 /**
  * initialize the thread-specific data for this thread (if necessary)
@@ -180,6 +183,18 @@ nsLDAPGetErrno( void )
    return errno;
 }
 
+
+/*
+ * This function will be used by the C-SDK to get the thread ID. We
+ * need this to avoid calling into the locking function multiple
+ * times on the same lock.
+ */
+static void *
+nsLDAPGetThreadID( void )
+{
+    return( (void *)PR_GetCurrentThread());
+}
+
 int
 nsLDAPThreadFuncsInit(LDAP *aLDAP)
 {
@@ -199,6 +214,13 @@ nsLDAPThreadFuncsInit(LDAP *aLDAP)
     if (ldap_set_option(aLDAP, LDAP_OPT_THREAD_FN_PTRS, 
                         (void *)&kLDAPThreadFuncs) != 0) {
         return 0;
+    }
+
+    /* set extended thread function pointers */
+    kLDAPExtraThreadFuncs.ltf_threadid_fn = nsLDAPGetThreadID;
+    if ( ldap_set_option(aLDAP, LDAP_OPT_EXTRA_THREAD_FN_PTRS,
+                         (void *)&kLDAPExtraThreadFuncs ) != 0 ) {
+		return 0;
     }
 
     return 1;
