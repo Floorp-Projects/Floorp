@@ -4120,6 +4120,41 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
                                        PRInt32         aNewIndexInContainer)
 {
+#ifdef INCLUDE_XUL
+  if (aContainer) {
+    nsCOMPtr<nsIAtom> tag;
+    aContainer->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == nsXULAtoms::treechildren ||
+        tag.get() == nsXULAtoms::treeitem)) {
+      // Walk up to the outermost tree row group frame and tell it that
+      // content was added.
+      nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+      nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+      while (parent) {
+        aContainer->GetParent(*getter_AddRefs(parent));
+        parent->GetTag(*getter_AddRefs(tag));
+        if (tag.get() == nsXULAtoms::tree)
+          break;
+        child = parent;
+      }
+
+      if (parent) {
+        // We found it.  Get the primary frame.
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
+
+        // Convert to a tree row group frame.
+        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+        if (treeRowGroup->IsLazy()) {
+          treeRowGroup->OnContentAdded(*aPresContext);
+          return NS_OK;
+        }
+      }
+    }
+  }
+#endif // INCLUDE_XUL
+
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, aContainer);
@@ -4133,20 +4168,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         parentFrame = nextInFlow;
       }
     }
-
-#ifdef INCLUDE_XUL
-    nsCOMPtr<nsIAtom> tag;
-    aContainer->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::treechildren ||
-        tag.get() == nsXULAtoms::treeitem) {
-      // Convert to a tree row group frame.
-      nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-      if (treeRowGroup->IsLazy() && !treeRowGroup->IsFull()) {
-        treeRowGroup->OnContentAdded(*aPresContext);
-        return NS_OK;
-      }
-    }
-#endif // INCLUDE_XUL
 
     // Create some new frames
     PRInt32                 count;
@@ -4316,6 +4337,41 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aIndexInContainer)
 {
+#ifdef INCLUDE_XUL
+  if (aContainer) {
+    nsCOMPtr<nsIAtom> tag;
+    aContainer->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == nsXULAtoms::treechildren ||
+        tag.get() == nsXULAtoms::treeitem)) {
+      // Walk up to the outermost tree row group frame and tell it that
+      // content was added.
+      nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+      nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+      while (parent) {
+        aContainer->GetParent(*getter_AddRefs(parent));
+        parent->GetTag(*getter_AddRefs(tag));
+        if (tag.get() == nsXULAtoms::tree)
+          break;
+        child = parent;
+      }
+
+      if (parent) {
+        // We found it.  Get the primary frame.
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
+
+        // Convert to a tree row group frame.
+        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+        if (treeRowGroup->IsLazy()) {
+          treeRowGroup->OnContentAdded(*aPresContext);
+          return NS_OK;
+        }
+      }
+    }
+  }
+#endif // INCLUDE_XUL
+
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsresult rv = NS_OK;
@@ -4383,21 +4439,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
     // Construct a new frame
     if (nsnull != parentFrame) {
-
-#ifdef INCLUDE_XUL
-      nsCOMPtr<nsIAtom> tag;
-      aContainer->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::treechildren ||
-          tag.get() == nsXULAtoms::treeitem) {
-        // Convert to a tree row group frame.
-        nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
-        if (treeRowGroup->IsLazy()) {
-          treeRowGroup->OnContentAdded(*aPresContext);
-          return NS_OK;
-        }
-      }
-#endif // INCLUDE_XUL
-
       nsFrameItems            frameItems;
       nsFrameConstructorState state(mFixedContainingBlock,
                                     GetAbsoluteContainingBlock(aPresContext, parentFrame),
@@ -4603,14 +4644,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   nsIFrame* childFrame;
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
-  if (childFrame) {
-
 #ifdef INCLUDE_XUL
-    if (aContainer) {
-      nsCOMPtr<nsIAtom> tag;
-      aContainer->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::treechildren ||
-          tag.get() == nsXULAtoms::treeitem) {
+  if (aContainer) {
+    nsCOMPtr<nsIAtom> tag;
+    aContainer->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::treechildren ||
+        tag.get() == nsXULAtoms::treeitem) {
+      if (childFrame) {
         // Convert to a tree row group frame.
         nsIFrame* parentFrame;
         childFrame->GetParent(&parentFrame);
@@ -4620,8 +4660,40 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           return NS_OK;
         }
       }
+      else {
+        // Ensure that we notify the outermost row group that the item
+        // has been removed (so that we can update the scrollbar state).
+        // Walk up to the outermost tree row group frame and tell it that
+        // content was removed.
+        nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+        nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+        while (parent) {
+          aContainer->GetParent(*getter_AddRefs(parent));
+          parent->GetTag(*getter_AddRefs(tag));
+          if (tag.get() == nsXULAtoms::tree)
+            break;
+          child = parent;
+        }
+
+        if (parent) {
+          // We found it.  Get the primary frame.
+          nsCOMPtr<nsIPresShell> shell;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, child);
+
+          // Convert to a tree row group frame.
+          nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
+          if (treeRowGroup->IsLazy()) {
+            treeRowGroup->OnContentRemoved(*aPresContext, nsnull);
+            return NS_OK;
+          }
+        }
+      }
     }
+  }
 #endif // INCLUDE_XUL
+
+  if (childFrame) {
 
     // Walk the frame subtree deleting any out-of-flow frames, and
     // remove the mapping from content objects to frames
