@@ -120,6 +120,8 @@ public:
     mGeneratingSubmit(PR_FALSE),
     mGeneratingReset(PR_FALSE),
     mIsSubmitting(PR_FALSE),
+    mInSubmitClick(PR_FALSE),
+    mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull) { }
 
 
@@ -161,6 +163,10 @@ public:
                          nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
   NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnumerator);
+  NS_IMETHOD OnSubmitClickBegin();
+  NS_IMETHOD OnSubmitClickEnd();
+  NS_IMETHOD FlushPendingSubmission();
+  NS_IMETHOD ForgetPendingSubmission();
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -228,12 +234,32 @@ protected:
   //
   //
   /**
-   * Actually perform the submit (called by DoSubmitOrReset)
+   * Attempt to submit (submission might be deferred) 
+   * (called by DoSubmitOrReset)
    *
    * @param aPresContext the presentation context
    * @param aEvent the DOM event that was passed to us for the submit
    */
   nsresult DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent);
+
+  /**
+   * Prepare the submission object (called by DoSubmit)
+   *
+   * @param aPresContext the presentation context
+   * @param aFormSubmission the submission object
+   * @param aEvent the DOM event that was passed to us for the submit
+   */
+  nsresult BuildSubmission(nsIPresContext* aPresContext, 
+                           nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+                           nsEvent* aEvent);
+  /**
+   * Perform the submission (called by DoSubmit and FlushPendingSubmission)
+   *
+   * @param aPresContext the presentation context
+   * @param aFormSubmission the submission object
+   */
+  nsresult SubmitSubmission(nsIPresContext* aPresContext, 
+                            nsIFormSubmission* aFormSubmission);
   /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
    * their data pumped into the FormSubmitter.
@@ -271,6 +297,11 @@ protected:
   PRPackedBool mGeneratingReset;
   /** Whether we are submitting currently */
   PRPackedBool mIsSubmitting;
+  /** Whether the submission was triggered by an Image or Submit*/
+  PRPackedBool mInSubmitClick;
+
+  /** The pending submission object */
+  nsCOMPtr<nsIFormSubmission> mPendingSubmission;
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */
@@ -522,6 +553,13 @@ nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            const nsAString& aValue, PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::action || aName == nsHTMLAtoms::target) {
+    if (mPendingSubmission) {
+      // aha, there is a pending submission that means we're in
+      // the script and we need to flush it. let's tell it
+      // that the event was ignored to force the flush.
+      // the second argument is not playing a role at all.
+      FlushPendingSubmission();
+    }
     ForgetCurrentSubmission();
   }
   return nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
@@ -790,7 +828,7 @@ nsHTMLFormElement::DoReset()
     ForgetCurrentSubmission();                                                \
     return rv;                                                                \
   }
-  
+
 nsresult
 nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
 {
@@ -805,6 +843,44 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
   mIsSubmitting = PR_TRUE;
   NS_ASSERTION(!mWebProgress && !mSubmittingRequest, "Web progress / submitting request should not exist here!");
 
+  nsCOMPtr<nsIFormSubmission> submission;
+   
+  //
+  // prepare the submission object
+  //
+  BuildSubmission(aPresContext, submission, aEvent); 
+  
+  if(mInSubmitClick) { 
+    // we are in the onclick event handler so we have to
+    // defer this submission. let's remember it and return
+    // without submitting
+    mPendingSubmission = submission;
+    // ensure reentrancy
+    mIsSubmitting = PR_FALSE;
+    return NS_OK; 
+  } 
+  
+  // 
+  // perform the submission
+  //
+  SubmitSubmission(aPresContext, submission); 
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFormElement::BuildSubmission(nsIPresContext* aPresContext, 
+                                   nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+                                   nsEvent* aEvent)
+{
+  if (mPendingSubmission) {
+    // aha, we have a pending submission that was not flushed
+    // (this happens when form.submit() is called twice for example)
+    // we have to delete it and build a new one since values
+    // might have changed inbetween (we emulate IE here, that's all)
+    mPendingSubmission = nsnull;
+  }
+
   // Get the originating frame (failure is non-fatal)
   nsIContent *originatingElement = nsnull;
   if (aEvent) {
@@ -813,20 +889,28 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
     }
   }
 
+  nsresult rv;
+
   //
   // Get the submission object
   //
-  nsCOMPtr<nsIFormSubmission> submission;
-  nsresult rv = GetSubmissionFromForm(this, aPresContext,
-                                      getter_AddRefs(submission));
+  rv = GetSubmissionFromForm(this, aPresContext, getter_AddRefs(aFormSubmission));
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   //
   // Dump the data into the submission object
   //
-  rv = WalkFormElements(submission, originatingElement);
+  rv = WalkFormElements(aFormSubmission, originatingElement);
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFormElement::SubmitSubmission(nsIPresContext* aPresContext, 
+                                    nsIFormSubmission* aFormSubmission)
+{
+  nsresult rv;
   //
   // Get the action and target
   //
@@ -870,9 +954,9 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
   // Submit
   //
   nsCOMPtr<nsIDocShell> docShell;
-  rv = submission->SubmitTo(actionURI, target, this, aPresContext,
-                            getter_AddRefs(docShell),
-                            getter_AddRefs(mSubmittingRequest));
+  rv = aFormSubmission->SubmitTo(actionURI, target, this, aPresContext,
+                                 getter_AddRefs(docShell),
+                                 getter_AddRefs(mSubmittingRequest));
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   // Even if the submit succeeds, it's possible for there to be no docshell
@@ -896,7 +980,6 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
 
   return rv;
 }
-
 
 nsresult
 nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
@@ -1224,6 +1307,46 @@ nsHTMLFormElement::ResolveName(const nsAString& aName,
   return mControls->GetNamedObject(aName, aResult);
 }
 
+NS_IMETHODIMP
+nsHTMLFormElement::OnSubmitClickBegin()
+{
+  mInSubmitClick = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::OnSubmitClickEnd()
+{
+  mInSubmitClick = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::FlushPendingSubmission()
+{
+  if (!mPendingSubmission) {
+    return NS_OK;
+  }
+
+  //
+  // preform the submission with the stored pending submission
+  //
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
+  SubmitSubmission(presContext, mPendingSubmission);
+
+  // now delete the pending submission object
+  mPendingSubmission = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::ForgetPendingSubmission()
+{
+  // just delete the pending submission
+  mPendingSubmission = nsnull;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetEncoding(nsAString& aEncoding)
