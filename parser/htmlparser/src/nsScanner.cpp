@@ -181,7 +181,7 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
 }
 
 
-nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , PRInt32 aSource) {
+nsresult nsScanner::SetDocumentCharset(const nsAString& aCharset , PRInt32 aSource) {
 
   nsresult res = NS_OK;
 

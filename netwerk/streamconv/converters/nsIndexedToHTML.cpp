@@ -238,11 +238,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), buffer);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputData), buffer);
     if (NS_FAILED(rv)) return rv;
-
-    inputData = do_QueryInterface(inputDataSup);
 
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, buffer.Length());
@@ -257,12 +254,9 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     buffer.Assign(NS_LITERAL_STRING("</table><hr></body></html>\n"));
     
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
     
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), buffer);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputData), buffer);
     if (NS_FAILED(rv)) return rv;
-    
-    inputData = do_QueryInterface(inputDataSup);
     
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, buffer.Length());
@@ -384,14 +378,12 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     }
     
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
-    nsresult rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup),
+
+    nsresult rv = NS_NewStringInputStream(getter_AddRefs(inputData),
                                           pushBuffer);
     
     if (NS_FAILED(rv))
         return rv;
-    
-    inputData = do_QueryInterface(inputDataSup);
     
     rv = mListener->OnDataAvailable(aRequest, 
                                     aCtxt,

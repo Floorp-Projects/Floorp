@@ -51,18 +51,13 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     nsIChannel* channel;
-    nsISupports* s;
-    rv = NS_NewCStringInputStream(&s, nsCAutoString(kBlankPage));
-    if (NS_FAILED(rv)) return rv;
-    nsIInputStream* in;
 
-    rv = CallQueryInterface(s, &in);
-    NS_RELEASE(s);
+    nsCOMPtr<nsIInputStream> in;
+    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString(kBlankPage));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in, "text/html", 
                                   nsCRT::strlen(kBlankPage));
-    NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

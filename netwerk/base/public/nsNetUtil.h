@@ -273,11 +273,7 @@ NS_NewPostDataStream(nsIInputStream **result,
     }
 
     // otherwise, create a string stream for the data
-    nsCOMPtr<nsISupports> sup;
-    rv = NS_NewCStringInputStream(getter_AddRefs(sup), nsCAutoString(data));
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(sup, result);
+    return NS_NewCStringInputStream(result, nsDependentCString(data));
 }
 
 inline nsresult

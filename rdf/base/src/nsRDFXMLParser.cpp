@@ -80,8 +80,8 @@ nsRDFXMLParser::ParseAsync(nsIRDFDataSource* aSink, nsIURI* aBaseURI, nsIStreamL
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
-    parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
+    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+                               kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
     rv = parser->Parse(aBaseURI);
@@ -111,8 +111,8 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
-    parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
+    parser->SetDocumentCharset(NS_LITERAL_STRING("UTF-8"),
+                               kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
     rv = parser->Parse(aBaseURI);
@@ -124,12 +124,8 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
     if (! listener)
         return NS_ERROR_FAILURE;
 
-    nsString copy(aString); // XXX sucks, but I ain't touchin' nsIStringStream!
-
-    nsCOMPtr<nsISupports> isupports;
-    rv = NS_NewStringInputStream(getter_AddRefs(isupports), copy);
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(isupports, &rv);
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewStringInputStream(getter_AddRefs(stream), aString);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;

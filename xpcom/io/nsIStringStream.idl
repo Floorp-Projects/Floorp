@@ -103,15 +103,15 @@ interface nsIStringInputStream : nsISupports
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewStringInputStream(
-    nsISupports** aStreamResult,
-    const nsString& aStringToRead);
+    nsIInputStream** aStreamResult,
+    const nsAString& aStringToRead);
     // Factory method to get an nsInputStream from a string.  Result will implement all the
     // file stream interfaces in nsIFileStream.h
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewCStringInputStream(
-    nsISupports** aStreamResult,
-    const nsCString& aStringToRead);
+    nsIInputStream** aStreamResult,
+    const nsACString& aStringToRead);
     // Factory method to get an nsInputStream from a cstring.  Result will implement all the
     // file stream interfaces in nsIFileStream.h
 

@@ -85,11 +85,9 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), mBuffer);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputData), mBuffer);
     if (NS_FAILED(rv)) return rv;
 
-    inputData = do_QueryInterface(inputDataSup);
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
     if (NS_FAILED(rv)) return rv;
@@ -113,12 +111,9 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     mBuffer.Append(NS_LITERAL_STRING("\n</body></html>"));    
     
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
 
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), mBuffer);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputData), mBuffer);
     if (NS_FAILED(rv)) return rv;
-
-    inputData = do_QueryInterface(inputDataSup);
 
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, mBuffer.Length());
@@ -186,14 +181,12 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 
         if (!pushBuffer.IsEmpty()) {
             nsCOMPtr<nsIInputStream> inputData;
-            nsCOMPtr<nsISupports>    inputDataSup;
-            rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), pushBuffer);
+
+            rv = NS_NewStringInputStream(getter_AddRefs(inputData), pushBuffer);
             if (NS_FAILED(rv)) {
                 nsMemory::Free(buffer);
                 return rv;
             }
-
-            inputData = do_QueryInterface(inputDataSup);
 
             rv = mListener->OnDataAvailable(request, aContext,
                                             inputData, 0, pushBuffer.Length());

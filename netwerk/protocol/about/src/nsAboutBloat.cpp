@@ -86,29 +86,21 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (clear) {
         nsTraceRefcnt::ResetStatistics();
 
-        nsCOMPtr<nsISupports> s;
         const char* msg = "Bloat statistics cleared.";
-        rv = NS_NewCStringInputStream(getter_AddRefs(s), nsCAutoString(msg));
+        rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
 
         size = nsCRT::strlen(msg);
-
-        inStr = do_QueryInterface(s, &rv);
-        if (NS_FAILED(rv)) return rv;
     }
     else if (leaks) {
         // dump the current set of leaks.
         GC_gcollect();
     	
-        nsCOMPtr<nsISupports> s;
         const char* msg = "Memory leaks dumped.";
-        rv = NS_NewCStringInputStream(getter_AddRefs(s), nsCAutoString(msg));
+        rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
 
         size = nsCRT::strlen(msg);
-
-        inStr = do_QueryInterface(s, &rv);
-        if (NS_FAILED(rv)) return rv;
     }
     else {
         nsCOMPtr<nsIFile> file;
