@@ -18,6 +18,8 @@
 
 #include "nsMacMessagePump.h"
 #include "nsWindow.h"
+#include "nsTextWidget.h"
+#include "nsWidgetsCID.h"
 #include <LPeriodical.h>
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
@@ -25,14 +27,16 @@
 nsWindow* nsMacMessagePump::gCurrentWindow = nsnull;   
 nsWindow* nsMacMessagePump::gGrabWindow = nsnull;			// need this for grabmouse
 
+static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
+
 
 //==============================================================
 
-nsMacMessagePump::nsMacMessagePump(nsMacMessenger *aTheMessageProc)
+nsMacMessagePump::nsMacMessagePump(nsToolkit	*aToolkit)
 {
 
-	mMessenger = aTheMessageProc;
 	mRunning = PR_FALSE;
+	mToolkit = aToolkit;
 
 }
 
@@ -150,10 +154,7 @@ unsigned char	evtype;
 				}		
 			}
 			
-		  if(mMessenger)
-			stillrunning = mMessenger->IsRunning();
-
-	      LPeriodical::DevoteTimeToRepeaters(theevent);
+	  	LPeriodical::DevoteTimeToRepeaters(theevent);
 		}
 
     //if (mDispatchListener)
@@ -280,6 +281,7 @@ nsMouseEvent	mouseevent;
 					thewindow->DispatchMouseEvent(mouseevent);
 					gGrabWindow = (nsWindow*)thewindow;		// grab is in effect
 					this->SetCurrentWindow(thewindow);
+					mToolkit->SetFocus(thewindow);
 					}
 				break;
 			case inDrag:
@@ -572,8 +574,12 @@ nsMouseEvent	mouseevent;
 void 
 nsMacMessagePump::DoKey(EventRecord *aTheEvent)
 {
-char				ch;
-WindowPtr		whichwindow;
+char					ch;
+PRInt16				thechar;
+WindowPtr			whichwindow;
+nsWindow			*thewidget;
+nsKeyEvent 		keyEvent;
+nsTextWidget	*widget;
 
 	ch = (char)(aTheEvent->message & charCodeMask);
 	if(aTheEvent->modifiers&cmdKey)
@@ -586,6 +592,29 @@ WindowPtr		whichwindow;
 		if(whichwindow)
 			{
 			// generate a keydown event for the widget
+			thewidget = mToolkit->GetFocus();
+			if(thewidget != nsnull)
+				{
+				keyEvent.message = NS_KEY_DOWN;
+			  keyEvent.keyCode   = 1;
+			  keyEvent.time      = 0; 
+			  keyEvent.isShift   = PR_FALSE; 
+			  keyEvent.isControl = PR_FALSE;
+			  keyEvent.isAlt     = PR_FALSE;
+			  keyEvent.eventStructType = NS_KEY_EVENT;
+			  
+			  thechar = aTheEvent->message&charCodeMask;
+			  
+			  if (!thewidget->DispatchEvent(&keyEvent))
+			  	{
+			  	// if this is a nsTextWidget
+			  	if (NS_OK == thewidget->QueryInterface(kITEXTWIDGETIID, (void**) &widget) )
+			  		widget->PrimitiveKeyDown(thechar,0);
+			  	}
+			  
+			  //((nsWindow*)thewidget)->OnKey(NS_KEY_DOWN, 1, &keyEvent);
+				//thewidget->kdsjfkj()
+				}
 			}
 		}
 }
