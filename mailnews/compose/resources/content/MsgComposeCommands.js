@@ -453,7 +453,7 @@ function CommandUpdate_MsgCompose()
   //File Menu
 //  goUpdateCommand("cmd_attachFile");
 //  goUpdateCommand("cmd_attachPage");
-//  goUpdateCommand("cmd_close");
+    goUpdateCommand("cmd_close");
 //  goUpdateCommand("cmd_saveDefault");
 //  goUpdateCommand("cmd_saveAsFile");
 //  goUpdateCommand("cmd_saveAsDraft");
@@ -462,8 +462,8 @@ function CommandUpdate_MsgCompose()
 //  goUpdateCommand("cmd_sendNow");
 //  goUpdateCommand("cmd_sendLater");
 //  goUpdateCommand("cmd_printSetup");
-//  goUpdateCommand("cmd_print");
-//  goUpdateCommand("cmd_quit");
+    goUpdateCommand("cmd_print");
+    goUpdateCommand("cmd_quit");
 
   //Edit Menu
   goUpdateCommand("cmd_pasteQuote");
