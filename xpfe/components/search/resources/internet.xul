@@ -14,7 +14,30 @@
 
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
-		<titledbutton value="&words.label;" />
+
+	<titledbutton value="&search.label;" />
+
+	<template id="categoryTemplate">
+		<rule iscontainer="true">
+			<html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#title" />
+		</rule>
+	
+		<rule>
+			<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#category" >
+				<text value="rdf:http://home.netscape.com/NC-rdf#title" />
+			</html:option>
+		</rule>
+	</template>
+
+	<html:select id="categoryList" template="categoryTemplate" ref="NC:SearchCategoryRoot" datasources="rdf:null"
+		sortResource="http://home.netscape.com/NC-rdf#title" sortDirection="ascending"
+		onchange="return chooseCategory(this)" >
+
+		<html:option value="NC:SearchEngineRoot" >&allengines.label;</html:option>
+
+	</html:select>
+
+		<titledbutton value="&for.label;" />
 		<html:input id="searchtext" size="20" onkeyup="if (event.which == 13) { doSearch(); }" />
 		<html:button onclick="return doSearch();">&search.button.label;</html:button>
 		<spring align="horizontal" flex="100%" />

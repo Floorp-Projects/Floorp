@@ -60,6 +60,27 @@ function loadPage()
 		dump("\nloadPage(): Exception.\n");
 	}
 
+	var categoryList = document.getElementById("categoryList");
+	if (categoryList)
+	{
+//		var internetSearch = Components.classes["component://netscape/browser/internetsearch-service"].getService();
+		var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+		if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+		if (internetSearch)
+		{
+			var catDS = internetSearch.GetCategoryDataSource();
+			if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+			if (catDS)
+			{
+				categoryList.database.AddDataSource(catDS);
+				
+				// force contents to rebuild
+				var ref = categoryList.getAttribute("ref");
+				if (ref)	categoryList.setAttribute("ref", ref);
+			}
+		}
+	}
+
 	// check and see if we need to do an automatic search
 	if (window.parent)
 	{
@@ -390,6 +411,25 @@ function saveSearch()
 
 	var searchTitle = "Search: '" + gText + "' using " + gSites;
 	if (bmks)	bmks.AddBookmark(searchURL, searchTitle);
+
+	return(true);
+}
+
+
+
+function chooseCategory(x)
+{
+	var val = x.options[x.selectedIndex].getAttribute("id");
+	if (val)	val = "NC:SearchCategory?category=" + val;
+	else		val = "NC:SearchEngineRoot";
+
+	dump("You have chosen the category: " + val + "\n");
+
+	var treeNode = document.getElementById("searchengines");
+	if (!treeNode)	return(false);
+	treeNode.setAttribute("ref", val);
+
+	dump("Set that as the ref attribute on the tree.\n");
 
 	return(true);
 }
