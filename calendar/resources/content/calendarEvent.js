@@ -131,7 +131,7 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
 
 
 
-CalendarEventDataSource.InitService = function( root )
+CalendarEventDataSource.InitService = function calEvent_InitService( root )
 {
     return new CalendarEventDataSource( null, root.getUserPath() );
 }
@@ -156,7 +156,7 @@ CalendarEventDataSource.debug = function( str )
 *   Called at start up after all services have been inited. 
 */
 
-CalendarEventDataSource.prototype.onServiceStartup = function( root )
+CalendarEventDataSource.prototype.onServiceStartup = function calEvent_onServiceStartup( root )
 {
 }
 
@@ -173,7 +173,7 @@ CalendarEventDataSource.prototype.onServiceStartup = function( root )
 *   of the title field, A LOT remains to be done.. 
 */
 
-CalendarEventDataSource.prototype.search = function( searchText, fieldName )
+CalendarEventDataSource.prototype.search = function calEvent_search( searchText, fieldName )
 {
    searchText = searchText.toLowerCase();
    
@@ -230,7 +230,7 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
    return searchEventTable;
 }
 
-CalendarEventDataSource.prototype.searchBySql = function( Query )
+CalendarEventDataSource.prototype.searchBySql = function calEvent_searchBySql( Query )
 {
    var eventDisplays = new Array();
 
@@ -258,7 +258,7 @@ CalendarEventDataSource.prototype.searchBySql = function( Query )
 */
 
 
-CalendarEventDataSource.prototype.getEventsForDay = function( date )
+CalendarEventDataSource.prototype.getEventsForDay = function calEvent_getEventsForDay( date )
 {
    var eventDisplays =  new Array();
 
@@ -299,7 +299,7 @@ CalendarEventDataSource.prototype.getEventsForDay = function( date )
 */
 
 
-CalendarEventDataSource.prototype.getEventsForWeek = function( date )
+CalendarEventDataSource.prototype.getEventsForWeek = function calEvent_getEventsForWeek( date )
 {
    var eventDisplays =  new Array();
 
@@ -338,7 +338,7 @@ CalendarEventDataSource.prototype.getEventsForWeek = function( date )
 *      array    - of events for the month
 */
 
-CalendarEventDataSource.prototype.getEventsForMonth = function( date )
+CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEventsForMonth( date )
 {
    var eventDisplays =  new Array();
 
@@ -376,7 +376,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
 * RETURN
 *      array    - of the next "EventsToGet" events
 */
-CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
+CalendarEventDataSource.prototype.getNextEvents = function calEvent_getNextEvents( EventsToGet )
 {
    var eventDisplays =  new Array();
    
@@ -406,7 +406,7 @@ CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
 }
 
 
-CalendarEventDataSource.prototype.getCurrentEvents = function( )
+CalendarEventDataSource.prototype.getCurrentEvents = function calEvent_getCurrentEvents( )
 {
    if( this.onlyFutureEvents == true )
    {
@@ -427,7 +427,7 @@ CalendarEventDataSource.prototype.getCurrentEvents = function( )
 *      array    - of ALL events
 */
 
-CalendarEventDataSource.prototype.getAllEvents = function( )
+CalendarEventDataSource.prototype.getAllEvents = function calEvent_getAllEvents( )
 {
    // clone the array in case the caller messes with it
    
@@ -446,7 +446,7 @@ CalendarEventDataSource.prototype.getAllEvents = function( )
    return eventArray;
 }
 
-CalendarEventDataSource.prototype.getEventsForRange = function( StartDate, EndDate )
+CalendarEventDataSource.prototype.getEventsForRange = function calEvent_getEventsForRange( StartDate, EndDate )
 {
    dump( "\n->get events from "+StartDate+"\n"+EndDate );
    var eventList = this.gICalLib.getFirstEventsForRange( StartDate, EndDate );
@@ -464,13 +464,7 @@ CalendarEventDataSource.prototype.getEventsForRange = function( StartDate, EndDa
    return eventArray;
 }
 
-CalendarEventDataSource.prototype.getEventsWithAlarms = function()
-{
-   //return( this.searchBySql( "SELECT * FROM VEVENT WHERE VALARM.DTSTART" ) );
-}
-
-
-CalendarEventDataSource.prototype.getAllFutureEvents = function()
+CalendarEventDataSource.prototype.getAllFutureEvents = function calEvent_getAllFutureEvents()
 {
    var Today = new Date();
 
@@ -494,7 +488,7 @@ CalendarEventDataSource.prototype.getAllFutureEvents = function()
    return eventArray;
 }
 
-CalendarEventDataSource.prototype.getICalLib = function()
+CalendarEventDataSource.prototype.getICalLib = function calEvent_getICalLib()
 {
    return this.gICalLib;
 }
@@ -507,7 +501,7 @@ CalendarEventDataSource.prototype.getICalLib = function()
 *      new event, not SAVED yet, use addEvent to save it.
 */
 
-CalendarEventDataSource.prototype.makeNewEvent = function( date )
+CalendarEventDataSource.prototype.makeNewEvent = function calEvent_makeNewEvent( date )
 {
    var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
    var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
@@ -522,7 +516,7 @@ CalendarEventDataSource.prototype.makeNewEvent = function( date )
 
 
 /* TO DO STUFF */
-CalendarEventDataSource.prototype.getAllToDos = function()
+CalendarEventDataSource.prototype.getAllToDos = function calEvent_getAllToDos()
 {
    var eventList = this.gICalLib.getAllTodos( );
    
@@ -546,7 +540,7 @@ CalendarEventDataSource.prototype.getAllToDos = function()
 *   Used to sort todo table by date
 */
 
-CalendarEventDataSource.prototype.orderToDosByDueDate = function( toDoA, toDoB )
+CalendarEventDataSource.prototype.orderToDosByDueDate = function calEvent_orderToDosByDueDate( toDoA, toDoB )
 {
    if( ( toDoA.due.getTime() - toDoB.due.getTime() ) == 0 ) 
    {
@@ -563,7 +557,7 @@ CalendarEventDataSource.prototype.orderToDosByDueDate = function( toDoA, toDoB )
 *   Used to sort events table by date
 */
 
-CalendarEventDataSource.prototype.orderEventsByDisplayDate = function( eventA, eventB )
+CalendarEventDataSource.prototype.orderEventsByDisplayDate = function calEvent_orderEventsByDisplayDate( eventA, eventB )
 {
     /*
     return( eventA.event.start.getTime() - eventB.event.start.getTime() );
@@ -579,7 +573,7 @@ CalendarEventDataSource.prototype.orderEventsByDisplayDate = function( eventA, e
 *   Used to sort events table by date
 */
 
-CalendarEventDataSource.prototype.orderRawEventsByDate = function( eventA, eventB )
+CalendarEventDataSource.prototype.orderRawEventsByDate = function calEvent_orderRawEventsByDate( eventA, eventB )
 {
     return( getNextOrPreviousRecurrence( eventA ).getTime() - getNextOrPreviousRecurrence( eventB ).getTime() );
 }
@@ -621,7 +615,7 @@ ALARM RELATED CODE
 
 ******************************************************************************************************
 *******************************************************************************************************/
-CalendarEventDataSource.prototype.prepareAlarms = function( )
+CalendarEventDataSource.prototype.prepareAlarms = function calEvent_prepareAlarms( )
 {
     this.alarmObserver =  new CalendarAlarmObserver( this );
     
@@ -637,7 +631,7 @@ function CalendarAlarmObserver( calendarService )
     this.calendarService = calendarService;
 }
 
-CalendarAlarmObserver.prototype.firePendingAlarms = function( observer )
+CalendarAlarmObserver.prototype.firePendingAlarms = function calAlarm_firePendingAlarms( observer )
 {
     this.addToPending = false;
     
@@ -680,7 +674,7 @@ CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
 }
 
 
-CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
+CalendarAlarmObserver.prototype.onAlarm = function calAlarm_onAlarm( calendarEvent )
 {
     dump( "caEvent.alarmWentOff is "+ calendarEvent );
     
@@ -695,7 +689,7 @@ CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
     }
 }
 
-CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
+CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calendarEvent )
 {
    dump( "Fire alarm "+ calendarEvent );
    
