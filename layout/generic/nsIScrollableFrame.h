@@ -65,14 +65,14 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
   /**
-   * Set the view that we are scrolling within the scrolling view. 
+   * Set the frame that we are scrolling within the scrolling frame.
    */
   NS_IMETHOD SetScrolledFrame(nsIPresContext* aPresContext, 
                               nsIFrame *aScrolledFrame) = 0;
 
   /**
-   * Get the view that we are scrolling within the scrollable frame. 
-   * @result child view
+   * Get the frame that we are scrolling within the scrollable frame.
+   * @result child frame
    */
   NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
@@ -99,8 +99,8 @@ public:
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
 
   /**
-  * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
-  */
+   * Gets the vertical width and horizontal height of the scrollbars.
+   */
   NS_IMETHOD GetScrollbarSizes(nsIPresContext* aPresContext, 
                                nscoord *aVbarWidth, 
                                nscoord *aHbarHeight) const = 0;
