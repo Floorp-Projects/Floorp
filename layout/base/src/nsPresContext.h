@@ -27,36 +27,45 @@ class nsIImageGroup;
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext {
 public:
+  // nsISupports methods
   NS_DECL_ISUPPORTS
 
+  // nsIPresContext methods
   virtual void SetShell(nsIPresShell* aShell);
   virtual nsIPresShell* GetShell();
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
                                                   nsIFrame* aParentFrame);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
-  virtual nsIImage* LoadImage(const nsString&, nsIFrame* aForFrame);
-  virtual void StopLoadImage(nsIFrame* aForFrame);
-
+  NS_IMETHOD LoadImage(const nsString& aURL,
+                       nsIFrame* aForFrame,
+                       PRInt32& aImageStatus,
+                       nsImageError& aError,
+                       nsSize& aImageSize,
+                       nsIImage*& aImage);
+  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
-
   NS_IMETHOD GetContainer(nsISupports** aResult);
-
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHander);
-
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
-
   virtual nsRect GetVisibleArea();
   virtual void SetVisibleArea(const nsRect& r);
-
   virtual float GetPixelsToTwips() const;
   virtual float GetTwipsToPixels() const;
-
   virtual nsIDeviceContext* GetDeviceContext() const;
+
+  // nsPresContext methods
+  virtual void BeginLoadImageUpdate();
+
+  virtual void ImageUpdate(nsIFrame* aFrame);
+
+  virtual void EndLoadImageUpdate();
 
 protected:
   nsPresContext();
   virtual ~nsPresContext();
+
+  virtual void ProcessLoadImageUpdates();
 
   nsIPresShell*     mShell;
   nsRect            mVisibleArea;
@@ -66,12 +75,9 @@ protected:
   nsISupports*      mContainer;
   nsFont            mDefaultFont;
 
-  nsVoidArray       mImageLoaders;/* XXX temporary */
-
-private:
-  // Not supported and not implemented
-  nsPresContext(const nsPresContext&);
-  nsPresContext& operator=(const nsPresContext&);
+  nsVoidArray       mImageLoaders;
+  nsVoidArray       mPendingImageUpdates;
+  PRInt32           mImageUpdates;
 };
 
 #endif /* nsPresContext_h___ */
