@@ -1,0 +1,7 @@
+messenger.jar:
++ content/messenger/about-credits.png             (about-credits.png)
++ content/messenger/about-thunderbird.png         (about-thunderbird.png)
++ content/messenger/thunderbird-wizard-badge.png  (thunderbird-wizard-badge.png)
+  
+en-US.jar:
++ locale/en-US/messenger/thunderbird-watermark.png (thunderbird-watermark.png)

@@ -19,22 +19,9 @@ MAIL_APP_FILES = \
 	mozicon50.xpm \
 	$(NULL)
 
-MAIL_CONTENT_FILES = \
-	about-credits.png \
-	about-thunderbird.png \
-	$(NULL)
-
 export::
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(addprefix $(srcdir)/, $(MAIL_APP_FILES)) $(DIST)/branding/
-	if [ ! -d $(DEPTH)/mail/base/content ] ; then \
-		mkdir $(DEPTH)/mail/base/content; \
-	fi
-	cp $(addprefix $(srcdir)/, $(MAIL_CONTENT_FILES)) $(DEPTH)/mail/base/content
-	if [ ! -d $(DEPTH)/mail/base/locale ] ; then \
-		mkdir $(DEPTH)/mail/base/locale; \
-	fi
-	cp $(addprefix $(srcdir)/, thunderbird-watermark.png) $(DEPTH)/mail/base/locale
 	if [ ! -d $(DEPTH)/mail/app/icons ] ; then \
 		mkdir $(DEPTH)/mail/app/icons; \
 	fi
