@@ -37,9 +37,9 @@
 }
 
 toolbarpaletteitem {
-  border-left: 2px solid transparent !important;
+  border-left: 2px solid transparent;
 }
 
 toolbarpaletteitem[dragactive] {
-  border-left: 2px solid black !important;
+  border-left: 2px solid black;
 }

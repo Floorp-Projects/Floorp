@@ -158,6 +158,16 @@ var dropObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
   {
     var newButtonId = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+    var toolbar = document.getElementById("cloneToolbar");
+    
+    // Don't allow duplicates.
+    var toolbarItem = toolbar.firstChild;
+    while (toolbarItem) {
+      if (toolbarItem.id == newButtonId)
+        return;
+      toolbarItem = toolbarItem.nextSibling;
+    }
+ 
     var palette = window.opener.document.getElementById("nav-bar").palette;
     var paletteItem = palette.firstChild;
     while (paletteItem) {
@@ -170,7 +180,6 @@ var dropObserver = {
       return;
 
     paletteItem = paletteItem.cloneNode(paletteItem);
-    var toolbar = document.getElementById("cloneToolbar");
     toolbar.insertBefore(paletteItem, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
