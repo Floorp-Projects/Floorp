@@ -84,5 +84,6 @@ ifeq ($(OS_ARCH), WINNT)
 else
 	gmake import IMPORTS=nlslayer/m14 RELEASE_TREE=/h/tortoise/export/share/builds/components
 endif
+	cd ui;gmake
 	gmake
 
