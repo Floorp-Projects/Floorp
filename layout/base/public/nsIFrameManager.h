@@ -146,6 +146,10 @@ public:
                                    PRInt32 aMinChange,
                                    PRInt32& aTopLevelChange) = 0;
 
+  // Determine whether an attribute affects style
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects) = 0;
+
   /**
    * Capture/restore frame state for the frame subtree rooted at aFrame.
    * aState is the document state storage object onto which each frame 

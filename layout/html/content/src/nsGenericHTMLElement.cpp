@@ -1280,12 +1280,22 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       return result;
     }
 
+    // don't do any update if old == new
+    nsAutoString strValue;
+    result = GetAttribute(aNameSpaceID, aAttribute, strValue);
+    if ((NS_CONTENT_ATTR_NOT_THERE != result) && aValue.Equals(strValue)) {
+      NS_RELEASE(htmlContent);
+      return NS_OK;
+    }
+
     if (aNotify && (nsnull != mDocument)) {
       mDocument->BeginUpdate();
     }
+
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
     htmlContent->GetMappedAttributeImpact(aAttribute, impact);
+
     if (nsnull != mDocument) {  // set attr via style sheet
       nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
       if (nsnull != sheet) {

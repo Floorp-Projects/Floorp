@@ -654,6 +654,10 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
+  // If changing the given attribute cannot affect style context, aAffects
+  // will be PR_FALSE on return.
+  NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
+                                   PRBool &aAffects);
 private: 
   // These are not supported and are not implemented! 
   HTMLStyleSheetImpl(const HTMLStyleSheetImpl& aCopy); 
@@ -1506,6 +1510,16 @@ void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   // that's it
 }
 
+NS_IMETHODIMP
+HTMLStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,
+                                          nsIContent *aContent,
+                                          PRBool &aAffects)
+{
+  // XXX we should be checking to see if this is an href on an <A> being
+  // XXX tweaked, in which case we really want to restyle
+  aAffects = PR_FALSE;
+  return NS_OK;
+}
 
 // XXX For convenience and backwards compatibility
 NS_HTML nsresult

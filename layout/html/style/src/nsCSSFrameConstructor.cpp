@@ -9539,9 +9539,24 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       changeList.AppendChange(primaryFrame, aContent, maxHint);
       nsCOMPtr<nsIFrameManager> frameManager;
       shell->GetFrameManager(getter_AddRefs(frameManager));
-      frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame, 
-                                          aNameSpaceID, aAttribute,
-                                          changeList, aHint, maxHint);
+
+      PRBool affects;
+      frameManager->AttributeAffectsStyle(aAttribute, aContent, affects);
+      if (affects) {
+#ifdef DEBUG_shaver
+        fputc('+', stderr);
+#endif
+        // there is an effect, so compute it
+        frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame, 
+                                            aNameSpaceID, aAttribute,
+                                            changeList, aHint, maxHint);
+      } else {
+#ifdef DEBUG_shaver
+        fputc('-', stderr);
+#endif
+        // let this frame update itself, but don't walk the whole frame tree
+        maxHint = NS_STYLE_HINT_VISUAL;
+      }
 
       switch (maxHint) {  // maxHint is hint for primary only
         case NS_STYLE_HINT_RECONSTRUCT_ALL:
