@@ -2548,10 +2548,19 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
         (mState & TEXT_OPTIMIZE_RESIZE) &&
         !aMetrics.maxElementSize &&
         (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
-        ((wrapping && (maxWidth >= realWidth)) || (prevColumn == column))) {
+        ((wrapping && (maxWidth >= realWidth)) ||
+         (!wrapping && (prevColumn == column)))) {
       // We can skip measuring of text and use the value from our
       // previous reflow
       measureText = PR_FALSE;
+#ifdef NOISY_REFLOW
+      printf("  => measureText=%s wrapping=%s skipWhitespace=%s",
+             measureText ? "yes" : "no",
+             wrapping ? "yes" : "no",
+             skipWhitespace ? "yes" : "no");
+      printf(" realWidth=%d maxWidth=%d\n",
+             realWidth, maxWidth);
+#endif
     }
   }
 
