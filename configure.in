@@ -2359,6 +2359,7 @@ AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep rint)
 AC_CHECK_FUNCS(nl_langinfo)
 
+AC_LANG_CPLUSPLUS
 AC_CACHE_CHECK(
     [for gnu_get_libc_version()],
     ac_cv_func_gnu_get_libc_version,
@@ -2376,6 +2377,7 @@ AC_CACHE_CHECK(
 if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
     AC_DEFINE(HAVE_GNU_GET_LIBC_VERSION)
 fi
+AC_LANG_C
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
