@@ -57,6 +57,11 @@
 #include "nsIWindowListener.h"
 #include "nsIBaseWindow.h"
 
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsXPIDLString.h"
+
 
 #if defined(WIN32)
 #include <strstrea.h>
@@ -225,12 +230,14 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
     return rv;
   }
   r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                       r.x, r.y, r.width, r.height,
-                       aAllowPlugins, PR_FALSE);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  docShell->SetAllowPlugins(aAllowPlugins);
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mWebShell));
+
+  rv = docShellWin->InitWindow(nsnull, mWindow, r.x, r.y, r.width, r.height);
+  docShellWin->Create();
   mWebShell->SetContainer((nsIWebShellContainer*) this);
-  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
-  webShellWin->SetVisibility(PR_TRUE);
+  docShellWin->SetVisibility(PR_TRUE);
 
   // Now lay it all out
   Layout(r.width, r.height);
@@ -422,9 +429,10 @@ nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName,
 
   nsCOMPtr<nsIWebShell> webShell;
   GetWebShell(*getter_AddRefs(webShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webShell));
   if (webShell) {
-    const PRUnichar *name;
-    if (NS_SUCCEEDED(webShell->GetName(&name))) {
+    nsXPIDLString name;
+    if (NS_SUCCEEDED(docShellAsItem->GetName(getter_Copies(name)))) {
       if (aNameStr.Equals(name)) {
         aResult = webShell;
         NS_ADDREF(aResult);
@@ -432,8 +440,12 @@ nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName,
       }
     }      
 
-    if (NS_OK == webShell->FindChildWithName(aName, aResult)) {
-      if (nsnull != aResult) {
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(webShell));
+    nsCOMPtr<nsIDocShellTreeItem> result;
+    if (NS_OK == docShellAsNode->FindChildWithName(aName, PR_TRUE, PR_FALSE,
+      nsnull, getter_AddRefs(result))) {
+      if (result) {
+        CallQueryInterface(result, &aResult);
         return NS_OK;
       }
     }
@@ -558,9 +570,10 @@ NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
   aPresShell = nsnull;
 
   nsIPresShell* shell = nsnull;
-  if (nsnull != mWebShell) {
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  if (docShell) {
     nsIContentViewer* cv = nsnull;
-    mWebShell->GetContentViewer(&cv);
+    docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
