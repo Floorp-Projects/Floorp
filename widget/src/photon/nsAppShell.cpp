@@ -118,13 +118,14 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 // Enter a message handler loop
 //
 //-------------------------------------------------------------------------
+
 static int event_processor_callback(int fd, void *data, unsigned mode)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::event_processor_callback fd=<%d> data=<%p> mode=<%d>\n", fd, data, mode));
-
-  nsIEventQueue *eventQueue = (nsIEventQueue*)data;
-  if (eventQueue)
-    eventQueue->ProcessPendingEvents();
+	
+	nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+	if (eventQueue)
+	   eventQueue->ProcessPendingEvents();
 
   return Pt_CONTINUE;
 }
@@ -294,8 +295,8 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;  
 
-  PtProcessEvent();
-
+	PtProcessEvent();
+	PtFlush();
   return NS_OK;
 }
 
@@ -325,12 +326,12 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
 
     /* only add if we arn't already in the table */
     if (!PL_HashTableLookup(sQueueHashTable, (void *)(key))) {
-      int tag;
+      PRInt32 tag;
       tag = our_photon_input_add(aQueue->GetEventQueueSelectFD(),
                               event_processor_callback,
                               aQueue);
       if (tag >= 0) {
-        PL_HashTableAdd(sQueueHashTable, (void *)(key), (void *)(tag));
+        PL_HashTableAdd(sQueueHashTable, (void *)(key), (void *)(key));
       }
     }
     /* bump up the count */
