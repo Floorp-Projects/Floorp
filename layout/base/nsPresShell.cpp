@@ -371,9 +371,11 @@ protected:
   // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
   // pointers for weak (ie, non owning) references. If you add any members to this
   // class, please make the ownership explicit (pinkerton, scc).
-  
-  nsIDocument* mDocument;         // [WEAK] docViewer owns it so I don't have to
-  nsIPresContext* mPresContext;   // [WEAK] docViewer owns it so I don't have to
+
+  // these are the same Document and PresContext owned by the DocViewer.
+  // we must share ownership.
+  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsIPresContext> mPresContext;
   nsCOMPtr<nsIStyleSet> mStyleSet;
   nsIFrame* mRootFrame;
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
@@ -567,18 +569,18 @@ PresShell::Init(nsIDocument* aDocument,
       (nsnull == aViewManager)) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (nsnull != mDocument) {
+  if (mDocument) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  mDocument = aDocument;
+  mDocument = dont_QueryInterface(aDocument);
   mViewManager = aViewManager;
 
   //doesn't add a ref since we own it... MMP
   mViewManager->SetViewObserver((nsIViewObserver *)this);
 
   // Bind the context to the presentation shell.
-  mPresContext = aPresContext;
+  mPresContext = dont_QueryInterface(aPresContext);
   aPresContext->SetShell(this);
 
   mStyleSet = dont_QueryInterface(aStyleSet);
@@ -662,7 +664,7 @@ PresShell::GetDocument(nsIDocument** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mDocument;
-  NS_IF_ADDREF(mDocument);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -674,7 +676,7 @@ PresShell::GetPresContext(nsIPresContext** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mPresContext;
-  NS_IF_ADDREF(mPresContext);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -732,7 +734,7 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
 NS_IMETHODIMP
 PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
-  if ((nsnull != mDocument) && mStyleSet) {
+  if (mDocument && mStyleSet) {
     PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
     nsAutoString textHtml("text/html");
@@ -764,7 +766,7 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 NS_IMETHODIMP
 PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
     nsAutoString textHtml("text/html");
@@ -803,7 +805,7 @@ PresShell::GetSelection(nsIDOMSelection **aSelection)
 NS_IMETHODIMP
 PresShell::BeginObservingDocument()
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     mDocument->AddObserver(this);
   }
   return NS_OK;
@@ -813,7 +815,7 @@ PresShell::BeginObservingDocument()
 NS_IMETHODIMP
 PresShell::EndObservingDocument()
 {
-  if (nsnull != mDocument) {
+  if (mDocument) {
     mDocument->RemoveObserver(this);
   }
   if (mSelection){
@@ -838,12 +840,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   SuspendCaret();
   EnterReflowLock();
 
-  if (nsnull != mPresContext) {
+  if (mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
     mPresContext->SetVisibleArea(r);
   }
 
-  if (nsnull != mDocument) {
+  if (mDocument) {
     root = mDocument->GetRootContent();
   }
 
@@ -907,7 +909,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   SuspendCaret();
   EnterReflowLock();
 
-  if (nsnull != mPresContext) {
+  if (mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
     mPresContext->SetVisibleArea(r);
   }
