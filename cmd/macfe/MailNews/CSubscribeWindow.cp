@@ -541,7 +541,7 @@ void CSubscribeWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 			if (mList)
 				mList->SubscribeCancel();
 			else
-				DoClose();
+				AttemptClose();
 			break;
 
 		case paneID_OkButton:
@@ -558,7 +558,7 @@ void CSubscribeWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 				mList->SubscribeCommit();
 			}
 			else
-				DoClose();
+				AttemptClose();
 			break;
 	}
 }

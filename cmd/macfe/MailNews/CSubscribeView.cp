@@ -284,7 +284,7 @@ void CSubscribeView::CloseParentWindow()
 	CSubscribeWindow * myWindow = 
 		dynamic_cast<CSubscribeWindow*>(LWindow::FetchWindowObject(GetMacPort()));
 	if (myWindow)
-		myWindow->DoClose();
+		myWindow->AttemptClose();
 }
 
 
