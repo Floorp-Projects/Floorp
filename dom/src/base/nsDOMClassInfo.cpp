@@ -4504,7 +4504,7 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     doc->AddReference(content, wrapper);
   }
 
-  return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
