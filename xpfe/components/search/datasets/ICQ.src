@@ -1,9 +1,9 @@
-# ICQ Search - Sherlock Plug-in for Navigator 6.0 Beta 1
+# ICQ Search - Sherlock Plug-in for Navigator 6.0
 # Copyright (c)2000 Netscape Communications Corp.
 
 <SEARCH
-	NAME="ICQ"
-	DESCRIPTION= "ICQ Web Search"
+	NAME="ICQ Search"
+	DESCRIPTION= "ICQ Search"
 	METHOD="GET"
 	ACTION="http://search.icq.com/dirsearch.adp"
 >
