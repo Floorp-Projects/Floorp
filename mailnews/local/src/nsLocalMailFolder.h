@@ -47,6 +47,7 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsMsgTxn> undoMsgTxn;
   nsCOMPtr<nsIMessage> message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> parseMsgState;
+  nsCOMPtr<nsISupports> clientSupport; // save Draft/Template listener support
   
   nsIMsgMessageService* messageService;
   PRBool isMove;
@@ -120,7 +121,7 @@ public:
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsITransactionManager* txnMgr);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
-                             PRBool isDraft, nsISupports* aSupport,
+                             PRBool isDraft, nsISupports* clientSupport,
                              nsITransactionManager* txnMgr);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();

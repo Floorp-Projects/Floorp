@@ -1313,7 +1313,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
                                       msgToReplace, PRBool isDraft,
-                                      nsISupports* aSupport,
+                                      nsISupports* clientSupport,
                                       nsITransactionManager* txnMgr)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
@@ -1338,6 +1338,8 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
 
   rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE);
   if (NS_FAILED(rv)) goto done;
+  if (clientSupport)
+    mCopyState->clientSupport = do_QueryInterface(clientSupport, &rv);
 
   parseMsgState = new nsParseMailMessageState();
   if (parseMsgState)
