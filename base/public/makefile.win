@@ -31,6 +31,7 @@ EXPORTS =                       \
         nsIFileStream.h         \
         nsIString.h             \
         nsIStringStream.h       \
+        nsIThread.h             \
         nsSpecialSystemDirectory.h \
         $(NULL)
 
