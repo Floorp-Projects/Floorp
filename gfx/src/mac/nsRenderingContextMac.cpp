@@ -1002,9 +1002,12 @@ RGBColor			rgbblack = {0x0000,0x0000,0x0000};
 RGBColor			rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
 Rect					srcrect,dstrect;
 
-
 	::SetRect(&srcrect,0,0,aBounds.width,aBounds.height);
 	::SetRect(&dstrect,0,0,aBounds.width,aBounds.height);
+
+	::SetPort(mFrontBuffer);
+	::SetEmptyRgn(mFrontBuffer->clipRgn);
+	::CopyRgn(mRenderingSurface->clipRgn, mFrontBuffer->clipRgn);
 
 	destpix = *((CGrafPtr)mFrontBuffer)->portPixMap;
 
