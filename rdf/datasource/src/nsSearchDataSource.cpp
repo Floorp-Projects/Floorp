@@ -342,8 +342,6 @@ SearchDataSource::SearchDataSource(void)
 
 SearchDataSource::~SearchDataSource (void)
 {
-	gRDFService->UnregisterDataSource(this);
-
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_SearchRoot);

@@ -214,8 +214,6 @@ FindDataSource::FindDataSource(void)
 
 FindDataSource::~FindDataSource (void)
 {
-	gRDFService->UnregisterDataSource(this);
-
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_Child);

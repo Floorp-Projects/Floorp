@@ -269,8 +269,6 @@ FileSystemDataSource::FileSystemDataSource(void)
 
 FileSystemDataSource::~FileSystemDataSource (void)
 {
-    gRDFService->UnregisterDataSource(this);
-
     if (--gRefCnt == 0) {
         NS_RELEASE(kNC_FileSystemRoot);
         NS_RELEASE(kNC_Child);

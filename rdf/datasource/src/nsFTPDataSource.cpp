@@ -313,8 +313,6 @@ FTPDataSource::FTPDataSource(void)
 
 FTPDataSource::~FTPDataSource (void)
 {
-	gRDFService->UnregisterDataSource(this);
-
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_Child);
