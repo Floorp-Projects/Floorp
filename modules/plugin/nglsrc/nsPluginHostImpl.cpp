@@ -2818,7 +2818,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIPluginInstance *instance = nsnull;
-  nsCOMPtr<nsIPluginTagInfo2> pti2 = nsnull;
+  nsCOMPtr<nsIPluginTagInfo2> pti2;
   nsPluginTagType tagType;
   PRBool isJavaEnabled = PR_TRUE;
   
@@ -2866,7 +2866,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK)
   {
 #ifdef NS_DEBUG
-      printf("InstantiateEmbededPlugin find stopped\n");
+    printf("InstantiateEmbededPlugin find stopped\n");
 #endif
 
 	  aOwner->GetInstance(instance);
@@ -2937,38 +2937,52 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(rv == NS_ERROR_FAILURE)
 	  return rv;
 
-   // if we are here then we have loaded a plugin for this mimetype
-   // and it could be the Default plugin
+  // if we are here then we have loaded a plugin for this mimetype
+  // and it could be the Default plugin
   
-    nsPluginWindow    *window = nsnull;
+  nsPluginWindow    *window = nsnull;
 
-    //we got a plugin built, now stream
-    aOwner->GetWindow(window);
+  //we got a plugin built, now stream
+  aOwner->GetWindow(window);
 
-    if (nsnull != instance)
-    {
-      instance->Start();
-      aOwner->CreateWidget();
+  if (nsnull != instance)
+  {
+    instance->Start();
+    aOwner->CreateWidget();
 
-      // If we've got a native window, the let the plugin know about it.
-      if (window->window)
-        instance->SetWindow(window);
+    // If we've got a native window, the let the plugin know about it.
+    if (window->window)
+      instance->SetWindow(window);
 
-      // don't make an initial steam if it's a java applet
-      if(!aMimeType || 
-         (PL_strcasecmp(aMimeType, "application/x-java-vm") != 0 && 
-          PL_strcasecmp(aMimeType, "application/x-java-applet") != 0))
-        rv = NewEmbededPluginStream(aURL, nsnull, instance);
+    // create an initial stream with data 
+    // don't make the stream if it's a java applet or we don't have SRC or DATA attribute
+    PRBool applet = (PL_strcasecmp(aMimeType, "application/x-java-vm") == 0 || 
+                     PL_strcasecmp(aMimeType, "application/x-java-applet") == 0);
 
-      // notify Java DOM component 
-      nsresult res;
-      nsCOMPtr<nsIPluginInstanceOwner> javaDOM = 
-               do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
-      if (NS_SUCCEEDED(res) && javaDOM)
-        javaDOM->SetInstance(instance);
+    PRBool havedata = PR_FALSE;
 
-      NS_RELEASE(instance);
+    nsCOMPtr<nsIPluginTagInfo> pti(do_QueryInterface(aOwner, &rv));
+  
+    if(pti) {
+      const char *value;
+      if(tagType == nsPluginTagType_Embed)
+        havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
+      if(tagType == nsPluginTagType_Object)
+        havedata = NS_SUCCEEDED(pti->GetAttribute("DATA", &value));
     }
+
+    if(havedata && !applet)
+      rv = NewEmbededPluginStream(aURL, nsnull, instance);
+
+    // notify Java DOM component 
+    nsresult res;
+    nsCOMPtr<nsIPluginInstanceOwner> javaDOM = 
+             do_GetService("@mozilla.org/blackwood/java-dom;1", &res);
+    if (NS_SUCCEEDED(res) && javaDOM)
+      javaDOM->SetInstance(instance);
+
+    NS_RELEASE(instance);
+  }
 
 #ifdef NS_DEBUG
   printf("InstantiateEmbededPlugin.. returning\n");
