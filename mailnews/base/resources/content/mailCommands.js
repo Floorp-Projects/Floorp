@@ -655,4 +655,5 @@ function deleteJunkInFolder()
   // to the message selected before we did all this, if it was not junk?
   SetNextMessageAfterDelete();  
   view.doCommand(nsMsgViewCommandType.deleteMsg);
+  treeSelection.clearSelection();
 }
