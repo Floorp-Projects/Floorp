@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  mozldap \
+		  intl \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
