@@ -210,7 +210,14 @@ function onReplace()
   // Transfer dialog contents to the find service.
   saveFindData();
 
-  gEditor.insertText(gReplaceDialog.replaceInput.value);
+  // nsPlaintextEditor::InsertText fails if the string is empty,
+  // so make that a special case:
+  var replStr = gReplaceDialog.replaceInput.value;
+  if (replStr == "")
+    gEditor.deleteSelection(0);
+  else
+    gEditor.insertText(replStr);
+
   return true;
 }
 
@@ -264,7 +271,14 @@ function onReplaceAll()
   {
     gEditor.selection.removeAllRanges();
     gEditor.selection.addRange(foundRange);
-    gEditor.insertText(repStr);
+
+    // nsPlaintextEditor::InsertText fails if the string is empty,
+    // so make that a special case:
+    if (repStr == "")
+      gEditor.deleteSelection(0);
+    else
+      gEditor.insertText(repStr);
+
     selection = gEditor.selection;
     if (selection.rangeCount <= 0) {
       return;
@@ -300,7 +314,14 @@ function onReplaceAll()
   {
     gEditor.selection.removeAllRanges();
     gEditor.selection.addRange(foundRange);
-    gEditor.insertText(repStr);
+
+    // nsPlaintextEditor::InsertText fails if the string is empty,
+    // so make that a special case:
+    if (repStr == "")
+      gEditor.deleteSelection(0);
+    else
+      gEditor.insertText(repStr);
+
     selection = gEditor.selection;
     if (selection.rangeCount <= 0) {
       return;
@@ -315,7 +336,7 @@ function doEnabling()
   var repStr = gReplaceDialog.replaceInput.value;
   gReplaceDialog.enabled = findStr;
   gReplaceDialog.findNext.disabled = !findStr;
-  gReplaceDialog.replace.disabled = (!findStr || !repStr);
-  gReplaceDialog.replaceAndFind.disabled = (!findStr || !repStr);
-  gReplaceDialog.replaceAll.disabled = (!findStr || !repStr);
+  gReplaceDialog.replace.disabled = !findStr;
+  gReplaceDialog.replaceAndFind.disabled = !findStr;
+  gReplaceDialog.replaceAll.disabled = !findStr;
 }
