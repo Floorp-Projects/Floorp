@@ -1161,6 +1161,7 @@ js/src/fdlibm/Makefile
 js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
 js/src/xpcom/Makefile
+js/src/xpconnect/Makefile
 layout/Makefile
 layout/base/Makefile
 layout/base/public/Makefile
@@ -1331,6 +1332,7 @@ xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile
 xpfe/AppCores/src/Makefile
 xpfe/AppCores/xul/Makefile
+xpfe/AppCores/idl/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile
 xpfe/browser/src/Makefile
@@ -1396,6 +1398,13 @@ mailnews/compose/src/Makefile
 mailnews/compose/tests/Makefile
 mailnews/compose/tests/smtp/Makefile
 mailnews/compose/tests/compose/Makefile
+mailnews/ui/Makefile
+mailnews/ui/messenger/Makefile
+mailnews/ui/messenger/public/Makefile
+mailnews/ui/messenger/src/Makefile
+mailnews/ui/messenger/resources/Makefile
+mailnews/ui/compose/Makefile
+mailnews/ui/ab/Makefile
 mailnews/public/Makefile
 "
 
