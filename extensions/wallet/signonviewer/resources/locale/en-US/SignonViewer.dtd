@@ -1,16 +1,1 @@
-
-<!ENTITY      windowtitle.label               "Signon Viewer">
-<!ENTITY      tab.signonsstored.label         "Signons Saved">
-<!ENTITY      tab.signonsnotstored.label      "Signons Never Saved">
-<!ENTITY      tab.nopreview.label             "Forms never Previewed">
-<!ENTITY      tab.nocapture.label             "Forms never Saved">
-
-<!ENTITY      spiel.signonsstored.label       "Browser has saved login information for the following sites:">
-<!ENTITY      spiel.signonsnotstored.label    "Browser will never save login information for the following sites:">
-<!ENTITY      spiel.nopreview.label           "Browser will never preview forms from the following sites before pre-filling them for you:">
-<!ENTITY      spiel.nocapture.label           "Browser will never ask to save forms from the following sites:">
-
-<!ENTITY      treehead.site.label             "Site">
-<!ENTITY      treehead.username.label         "Username">
-<!ENTITY      remove.label                    "Remove">
-<!ENTITY      removeall.label                 "Remove All">
+Dummy placeholder until these directories are hooked up correctly.
