@@ -74,7 +74,6 @@ function Init()
   all_panels.setAttribute('ref', all_panels_resource);
   debug("Init: reset current panels ref, "+sidebarObj.resource);
   current_panels.setAttribute('ref', sidebarObj.resource);
-
   save_initial_panels();
   enable_buttons_for_current_panels();
 }
@@ -102,6 +101,12 @@ function get_attr(registry,service,attr_name) {
 
 function SelectChangeForOtherPanels(event, target)
 { 
+  enable_buttons_for_other_panels();
+}
+
+function ClickOnOtherPanels(event, target)
+{ 
+  debug("SelectChangeForOtherPanels(...)");
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
   current_panels.clearItemSelection();
@@ -122,7 +127,6 @@ function SelectChangeForOtherPanels(event, target)
       target.setAttribute('open', 'true');
     }
   }
-  enable_buttons_for_other_panels();
 }
 
 function add_datasource_to_other_panels(link) {
@@ -379,9 +383,17 @@ function Save()
 
   // Create a "container" wrapper around the current panels to
   // manipulate the RDF:Seq more easily.
+  var panel_list = sidebarObj.datasource.GetTarget(RDF.GetResource(sidebarObj.resource), RDF.GetResource(NC+"panel-list"), true);
+  if (panel_list) {
+    panel_list.QueryInterface(Components.interfaces.nsIRDFResource);
+  } else {
+    // Datasource is busted. Start over.
+    debug("Sidebar datasource is busted\n");
+  }
+
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-  container.Init(sidebarObj.datasource, RDF.GetResource(sidebarObj.resource));
+  container.Init(sidebarObj.datasource, panel_list);
 
   // Remove all the current panels from the datasource.
   var current_panels = container.GetElements();
@@ -487,11 +499,13 @@ function enable_buttons_for_other_panels()
   var num_selected = 0;
   // Only count non-folders as selected for button enabling
   for (var ii=0; ii<all_panels.selectedItems.length; ii++) {
+    debug("counting selected items...");
     var node = all_panels.selectedItems[ii];
     if (node.getAttribute('container') != 'true') {
       num_selected++;
     }
   }
+  debug("num_selected="+num_selected);
   if (num_selected > 0) {
     add_button.removeAttribute('disabled');
     preview_button.removeAttribute('disabled');
@@ -567,14 +581,41 @@ function persist_dialog_dimensions() {
   win.setAttribute( "width", w );
 }
 
-function dump_attributes(node) {
-  var attributes = node.attributes
+//*==================================================
+// Handy debug routines
+//==================================================
+function dump_attributes(node,depth) {
+  var attributes = node.attributes;
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
 
   if (!attributes || attributes.length == 0) {
-    debug("no attributes\n")
+    debug(indent.substr(indent.length - depth*2) + "no attributes");
   }
   for (var ii=0; ii < attributes.length; ii++) {
-    var attr = attributes.item(ii)
-    debug("attr "+ii+": "+ attr.name +"="+attr.value)
+    var attr = attributes.item(ii);
+    debug(indent.substr(indent.length - depth*2) + attr.name +"="+attr.value);
   }
 }
+
+function dump_tree(node) {
+  dump_tree_recur(node, 0, 0);
+}
+
+function dump_tree_recur(node, depth, index) {
+  if (!node) {
+    debug("dump_tree: node is null");
+  }
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+  debug(indent.substr(indent.length - depth*2) + index + " " + node.nodeName);
+  if (node.nodeName != "#text") {
+    //debug(" id="+node.getAttribute('id'));
+    dump_attributes(node, depth);
+  }
+  var kids = node.childNodes;
+  for (var ii=0; ii < kids.length; ii++) {
+    dump_tree_recur(kids[ii], depth + 1, ii);
+  }
+}
+//==================================================
+// end of handy debug routines
+//==================================================*/

@@ -22,27 +22,28 @@
   --> 
 
 <!DOCTYPE RDF SYSTEM "chrome://communicator/locale/sidebar/local-panels.dtd" >
-<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:NC="http://home.netscape.com/NC-rdf#">
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:nc="http://home.netscape.com/NC-rdf#">
 
-  <RDF:Seq about="urn:sidebar:master-panel-list">
-    <RDF:li>
-       <RDF:Description about="urn:sidebar:panel:whats-related">
-         <NC:title>&sidebar.whats-related.label;</NC:title>
-         <NC:content>chrome://communicator/content/related/related-panel.xul</NC:content>
-       </RDF:Description>
-    </RDF:li>
-    <RDF:li>
-       <RDF:Description about="urn:sidebar:panel:search">
-         <NC:title>&sidebar.search.label;</NC:title>
-         <NC:content>chrome://communicator/content/search/search-panel.xul</NC:content>
-       </RDF:Description>
-    </RDF:li>
-    <RDF:li>
-       <RDF:Description about="urn:sidebar:panel:bookmarks">
-         <NC:title>&sidebar.bookmarks.label;</NC:title>
-         <NC:content>chrome://communicator/content/bookmarks/bm-panel.xul</NC:content>
-       </RDF:Description>
-    </RDF:li>
-  </RDF:Seq>
-</RDF:RDF>
+  <rdf:Description about="urn:sidebar:master-panel-list">
+    <nc:panel-list>
+      <rdf:Seq>
+        <rdf:li resource="urn:sidebar:panel:whats-related"/>
+        <rdf:li resource="urn:sidebar:panel:search"/>
+        <rdf:li resource="urn:sidebar:panel:bookmarks"/>
+      </rdf:Seq>
+    </nc:panel-list>
+  </rdf:Description>
+  <rdf:Description about="urn:sidebar:panel:whats-related">
+    <nc:title>&sidebar.whats-related.label;</nc:title>
+    <nc:content>chrome://communicator/content/related/related-panel.xul</nc:content>
+  </rdf:Description>
+  <rdf:Description about="urn:sidebar:panel:search">
+    <nc:title>&sidebar.search.label;</nc:title>
+    <nc:content>chrome://communicator/content/search/search-panel.xul</nc:content>
+  </rdf:Description>
+  <rdf:Description about="urn:sidebar:panel:bookmarks">
+    <nc:title>&sidebar.bookmarks.label;</nc:title>
+    <nc:content>chrome://communicator/content/bookmarks/bm-panel.xul</nc:content>
+  </rdf:Description>
+</rdf:RDF>
