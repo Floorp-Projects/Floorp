@@ -59,7 +59,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsITimelineService.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULWindow.h"
@@ -892,9 +891,10 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     if (!appShell)
       return NS_ERROR_FAILURE;
     
-    appShell->CreateTopLevelWindow(0, 0, PR_FALSE, PR_FALSE,
-      aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
-      nsIAppShellService::SIZE_TO_CONTENT, mAppShell, getter_AddRefs(newWindow));
+    appShell->CreateTopLevelWindow(0, 0, aChromeFlags,
+                                   nsIAppShellService::SIZE_TO_CONTENT,
+                                   nsIAppShellService::SIZE_TO_CONTENT,
+                                   mAppShell, getter_AddRefs(newWindow));
   }
 
   // if anybody gave us anything to work with, use it

@@ -48,16 +48,13 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(70c04d53-150f-450b-9106-387487a3c031)]
+[scriptable, uuid(93a28ba2-7e22-11d9-9b6f-000a95d535fa)]
 interface nsIAppShellService : nsISupports
 {
   /**
-   * Create a window.
+   * Create a window, which will be initially invisible.
    * @param aParent the parent window.  Can be null.
    * @param aUrl the contents of the new window.
-   * @param aShowWindow the window remains invisible if PR_FALSE.
-   * @param aLoadDefaultPage controls whether the window should try to
-   *                         load a default content page on its own.
    * @param aChromeMask chrome flags affecting the kind of OS border
    *                    given to the window. see nsIBrowserWindow for
    *                    bit/flag definitions.
@@ -76,18 +73,10 @@ interface nsIAppShellService : nsISupports
   const long SIZE_TO_CONTENT = -1;
   nsIXULWindow createTopLevelWindow(in nsIXULWindow aParent,
                                     in nsIURI aUrl, 
-                                    in boolean aShowWindow, 
-                                    in boolean aLoadDefaultPage,
                                     in PRUint32 aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight,
                                     in nsIAppShell aAppShell);
-
-  /**
-   * Close a window.
-   * @param aWindow a window.
-   */
-  void closeTopLevelWindow(in nsIXULWindow aWindow);
 
   [noscript]
   void createHiddenWindow(in nsIAppShell aAppShell);

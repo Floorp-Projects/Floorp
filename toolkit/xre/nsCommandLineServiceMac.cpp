@@ -53,7 +53,6 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
-#include "nsIWebShellWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

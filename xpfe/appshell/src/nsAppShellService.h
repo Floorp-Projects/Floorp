@@ -42,8 +42,9 @@
 #include "nsIObserver.h"
 
 //Interfaces Needed
-#include "nsIXULWindow.h"
+#include "nsWebShellWindow.h"
 #include "nsStringFwd.h"
+#include "nsAutoPtr.h"
 
 // {0099907D-123C-4853-A46A-43098B5FB68C}
 #define NS_APPSHELLSERVICE_CID \
@@ -62,18 +63,17 @@ public:
 protected:
   ~nsAppShellService();
 
-  NS_IMETHOD JustCreateTopWindow(nsIXULWindow *aParent,
-                                 nsIURI *aUrl, 
-                                 PRBool aShowWindow, PRBool aLoadDefaultPage,
-                                 PRUint32 aChromeMask,
-                                 PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
-                                 nsIXULWindow **aResult);
+  nsresult JustCreateTopWindow(nsIXULWindow *aParent,
+                               nsIURI *aUrl, 
+                               PRUint32 aChromeMask,
+                               PRInt32 aInitialWidth, PRInt32 aInitialHeight,
+                               PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
+                               nsWebShellWindow **aResult);
   PRUint32 CalculateWindowZLevel(nsIXULWindow *aParent, PRUint32 aChromeMask);
   nsresult SetXPConnectSafeContext();
   nsresult ClearXPConnectSafeContext();
 
-  nsCOMPtr<nsIXULWindow>      mHiddenWindow;
+  nsRefPtr<nsWebShellWindow>  mHiddenWindow;
   PRPackedBool                mXPCOMShuttingDown;
   PRUint16                    mModalWindowCount;
 };

@@ -57,7 +57,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
 #include "nsIEnumerator.h"
@@ -170,50 +169,43 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
 
   nsCOMPtr<nsIURI> url;
   rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIXULWindow> newWindow;
-    rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        chromeMask, initialWidth, initialHeight,
-                        PR_TRUE, aAppShell, getter_AddRefs(newWindow));
-    if (NS_SUCCEEDED(rv)) {
-      mHiddenWindow = newWindow;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsWebShellWindow> newWindow;
+  rv = JustCreateTopWindow(nsnull, url,
+                           chromeMask, initialWidth, initialHeight,
+                           PR_TRUE, aAppShell, getter_AddRefs(newWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mHiddenWindow.swap(newWindow);
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-      // hide the hidden window by launching it into outer space. This
-      // way, we can keep it visible and let the OS send it activates
-      // to keep menus happy. This will cause it to show up in window
-      // lists under osx, but I think that's ok.
-      nsCOMPtr<nsIBaseWindow> base ( do_QueryInterface(newWindow) );
-      if ( base ) {
-        base->SetPosition ( -32000, -32000 );
-        base->SetVisibility ( PR_TRUE );
-      }
+  // hide the hidden window by launching it into outer space. This
+  // way, we can keep it visible and let the OS send it activates
+  // to keep menus happy. This will cause it to show up in window
+  // lists under osx, but I think that's ok.
+  mHiddenWindow->SetPosition ( -32000, -32000 );
+  mHiddenWindow->SetVisibility ( PR_TRUE );
 #endif
-      
-      // Set XPConnect's fallback JSContext (used for JS Components)
-      // to the DOM JSContext for this thread, so that DOM-to-XPConnect
-      // conversions get the JSContext private magic they need to
-      // succeed.
-      SetXPConnectSafeContext();
 
-      // RegisterTopLevelWindow(newWindow); -- Mac only
-    }
-  }
-  NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
-  return(rv);
+  // Set XPConnect's fallback JSContext (used for JS Components)
+  // to the DOM JSContext for this thread, so that DOM-to-XPConnect
+  // conversions get the JSContext private magic they need to
+  // succeed.
+  SetXPConnectSafeContext();
+
+  // RegisterTopLevelWindow(newWindow); -- Mac only
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAppShellService::DestroyHiddenWindow()
 {
   if (mHiddenWindow) {
-    nsCOMPtr<nsIWebShellWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-    NS_ASSERTION(hiddenWin, "Hidden window is not nsIWebShellWindow!");
-    if (hiddenWin) {
-      ClearXPConnectSafeContext();
-      hiddenWin->Close();
-    }
+    ClearXPConnectSafeContext();
+    mHiddenWindow->Destroy();
+
     mHiddenWindow = nsnull;
   }
 
@@ -225,19 +217,22 @@ nsAppShellService::DestroyHiddenWindow()
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
-                                  nsIURI *aUrl, 
-                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
-                                  PRUint32 aChromeMask,
-                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                  nsIAppShell* aAppShell,
-                                  nsIXULWindow **aResult)
+                                        nsIURI *aUrl, 
+                                        PRUint32 aChromeMask,
+                                        PRInt32 aInitialWidth,
+                                        PRInt32 aInitialHeight,
+                                        nsIAppShell* aAppShell,
+                                        nsIXULWindow **aResult)
 
 {
   nsresult rv;
 
-  rv = JustCreateTopWindow(aParent, aUrl, aShowWindow, aLoadDefaultPage,
-                                 aChromeMask, aInitialWidth, aInitialHeight,
-                                 PR_FALSE, aAppShell, aResult);
+  nsWebShellWindow *newWindow = nsnull;
+  rv = JustCreateTopWindow(aParent, aUrl,
+                           aChromeMask, aInitialWidth, aInitialHeight,
+                           PR_FALSE, aAppShell, &newWindow);  // addrefs
+
+  *aResult = newWindow; // transfer ref
 
   if (NS_SUCCEEDED(rv)) {
     // the addref resulting from this is the owning addref for this window
@@ -287,112 +282,92 @@ nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
 /*
  * Just do the window-making part of CreateTopLevelWindow
  */
-NS_IMETHODIMP
+nsresult
 nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
-                                 nsIURI *aUrl, 
-                                 PRBool aShowWindow, PRBool aLoadDefaultPage,
-                                 PRUint32 aChromeMask,
-                                 PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 PRBool aIsHiddenWindow, nsIAppShell* aAppShell,
-                                 nsIXULWindow **aResult)
+                                       nsIURI *aUrl, 
+                                       PRUint32 aChromeMask,
+                                       PRInt32 aInitialWidth,
+                                       PRInt32 aInitialHeight,
+                                       PRBool aIsHiddenWindow,
+                                       nsIAppShell* aAppShell,
+                                       nsWebShellWindow **aResult)
 {
-  nsresult rv;
-  nsWebShellWindow* window;
-  PRBool intrinsicallySized;
-
   *aResult = nsnull;
-  intrinsicallySized = PR_FALSE;
-  window = new nsWebShellWindow();
-  // Bump count to one so it doesn't die on us while doing init.
-  nsCOMPtr<nsIXULWindow> tempRef(window); 
-  if (!window)
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  else {
-    nsWidgetInitData widgetInitData;
 
-    if (aIsHiddenWindow)
-      widgetInitData.mWindowType = eWindowType_invisible;
-    else
-      widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG ?
-                                    eWindowType_dialog : eWindowType_toplevel;
+  nsRefPtr<nsWebShellWindow> window = new nsWebShellWindow();
+  NS_ENSURE_TRUE(window, NS_ERROR_OUT_OF_MEMORY);
 
-    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)
-      widgetInitData.mWindowType = eWindowType_popup;
+  nsWidgetInitData widgetInitData;
+
+  if (aIsHiddenWindow)
+    widgetInitData.mWindowType = eWindowType_invisible;
+  else
+    widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG ?
+      eWindowType_dialog : eWindowType_toplevel;
+
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)
+    widgetInitData.mWindowType = eWindowType_popup;
 
 #ifdef XP_MACOSX
-    // Mac OS X sheet support
-    PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                         nsIWebBrowserChrome::CHROME_MODAL;
-    if (aParent && ((aChromeMask & sheetMask) == sheetMask))
-    {
-        widgetInitData.mWindowType = eWindowType_sheet;
-    }
+  // Mac OS X sheet support
+  PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+    nsIWebBrowserChrome::CHROME_MODAL;
+  if (aParent && ((aChromeMask & sheetMask) == sheetMask))
+    widgetInitData.mWindowType = eWindowType_sheet;
 #endif
 
-    widgetInitData.mContentType = eContentTypeUI;                
-    // note default chrome overrides other OS chrome settings, but
-    // not internal chrome
-    if (aChromeMask & nsIWebBrowserChrome::CHROME_DEFAULT)
-      widgetInitData.mBorderStyle = eBorderStyle_default;
-    else if ((aChromeMask & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
-      widgetInitData.mBorderStyle = eBorderStyle_all;
-    else {
-      widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00
-      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_BORDERS)
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_border);
-      if (aChromeMask & nsIWebBrowserChrome::CHROME_TITLEBAR)
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
-      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
-      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh);
-        // only resizable windows get the maximize button (but not dialogs)
-        if (!(aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG))
-          widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_maximize);
-      }
-      // all windows (except dialogs) get minimize buttons and the system menu
+  widgetInitData.mContentType = eContentTypeUI;                
+
+  // note default chrome overrides other OS chrome settings, but
+  // not internal chrome
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_DEFAULT)
+    widgetInitData.mBorderStyle = eBorderStyle_default;
+  else if ((aChromeMask & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
+    widgetInitData.mBorderStyle = eBorderStyle_all;
+  else {
+    widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_BORDERS)
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_border);
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_TITLEBAR)
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh);
+      // only resizable windows get the maximize button (but not dialogs)
       if (!(aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG))
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize | eBorderStyle_menu);
-      // but anyone can explicitly ask for a minimize button
-      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_MIN) {
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize );
-      }  
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_maximize);
     }
-
-    if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||
-        aInitialHeight == nsIAppShellService::SIZE_TO_CONTENT) {
-      aInitialWidth = 1;
-      aInitialHeight = 1;
-      intrinsicallySized = PR_TRUE;
-      window->SetIntrinsicallySized(PR_TRUE);
-    }
-
-    rv = window->Initialize(aParent, aAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage,
-                            aInitialWidth, aInitialHeight, aIsHiddenWindow, widgetInitData);
-      
-    if (NS_SUCCEEDED(rv)) {
-
-      // this does the AddRef of the return value
-      rv = CallQueryInterface(NS_STATIC_CAST(nsIWebShellWindow*, window), aResult);
-      if (aParent)
-        aParent->AddChildWindow(*aResult);
-    }
-
-    if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
-      window->Center(aParent, aParent ? PR_FALSE : PR_TRUE, PR_FALSE);
+    // all windows (except dialogs) get minimize buttons and the system menu
+    if (!(aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG))
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize | eBorderStyle_menu);
+    // but anyone can explicitly ask for a minimize button
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_MIN) {
+      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize );
+    }  
   }
 
+  if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||
+      aInitialHeight == nsIAppShellService::SIZE_TO_CONTENT) {
+    aInitialWidth = 1;
+    aInitialHeight = 1;
+    window->SetIntrinsicallySized(PR_TRUE);
+  }
+
+  nsresult rv = window->Initialize(aParent, aAppShell, aUrl,
+                                   aInitialWidth, aInitialHeight,
+                                   aIsHiddenWindow, widgetInitData);
+      
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  window.swap(*aResult); // transfer reference
+  if (aParent)
+    aParent->AddChildWindow(*aResult);
+
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
+    rv = (*aResult)->Center(aParent, aParent ? PR_FALSE : PR_TRUE, PR_FALSE);
+
   return rv;
-}
-
-
-NS_IMETHODIMP
-nsAppShellService::CloseTopLevelWindow(nsIXULWindow* aWindow)
-{
-   nsCOMPtr<nsIWebShellWindow> webShellWin(do_QueryInterface(aWindow));
-   NS_ENSURE_TRUE(webShellWin, NS_ERROR_FAILURE);
-   return webShellWin->Close();
 }
 
 NS_IMETHODIMP
@@ -522,7 +497,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
        - notify the caller not to release the AppShellService after
          unregistering the window
          (we don't want to be deleted twice consecutively to
-         mHiddenWindow->Close() in our destructor)
+         mHiddenWindow->Destroy() in our destructor)
     */
     return NS_ERROR_FAILURE;
   }
@@ -567,10 +542,9 @@ nsAppShellService::Observe(nsISupports* aSubject, const char *aTopic,
   NS_ASSERTION(!strcmp(aTopic, "xpcom-shutdown"), "Unexpected observer topic!");
 
   mXPCOMShuttingDown = PR_TRUE;
-  nsCOMPtr<nsIWebShellWindow> hiddenWin (do_QueryInterface(mHiddenWindow));
-  if (hiddenWin) {
+  if (mHiddenWindow) {
     ClearXPConnectSafeContext();
-    hiddenWin->Close();
+    mHiddenWindow->Destroy();
   }
 
   return NS_OK;

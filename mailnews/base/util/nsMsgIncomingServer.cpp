@@ -62,7 +62,6 @@
 #include "nsIMsgMailSession.h"
 #include "nsIPrefService.h"
 #include "nsIDocShell.h"
-#include "nsIWebShellWindow.h"
 #include "nsIAuthPrompt.h"
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"
