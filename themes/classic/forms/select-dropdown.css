@@ -58,6 +58,7 @@ xul|*.select-label-box {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 1px;
+  border: 1px solid transparent;
 }
 
 xul|*.select-dropmarker {
@@ -68,6 +69,40 @@ xul|*.select-dropmarker {
   border: 2px solid;
   background-color: -moz-Dialog;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+xul|*.select-dropmarker,
+select[disabled="true"]:hover:active > xul|*.select-dropmarker {
+  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+  padding: 1px;
+}
+
+select[disable="true"] > xul|*.select-dropmarker {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+}
+
+select:hover:active > xul|*.select-dropmarker {
+  -moz-border-top-colors: ThreeDShadow ThreeDFace;
+  -moz-border-right-colors: ThreeDShadow ThreeDFace;
+  -moz-border-bottom-colors: ThreeDShadow ThreeDFace;
+  -moz-border-left-colors: ThreeDShadow ThreeDFace;
+  padding: 2px 0px 0px 2px;
+}
+
+select:focus > xul|*.select-label-box {
+  border: 1px dotted #F5DB95;
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+/* ..... disabled state ..... */
+ 
+select[disabled="true"] {
+  background-color: -moz-Dialog;
+  color: GrayText;
 }
 
 option:hover {
