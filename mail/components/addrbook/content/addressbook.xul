@@ -542,13 +542,12 @@
   </toolbox>
 
   <!-- The main address book three pane -->
-  <hbox flex="1">
+  <hbox id="abContent" flex="1">
     <vbox id="dirTreeBox" persist="width collapsed">
-      <hbox id="abDirTreeHeaderContainer">
-      <sidebarheader id="abDirTreeHeader" align="center" flex="1">
+      <hbox id="abDirTreeHeader" align="center">
         <label id="abDirTreeHeader-title" value="&dirTreeHeader.label;"/>
-      </sidebarheader>
       </hbox>
+
       <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
       <tree id="dirTree" class="abDirectory plain" seltype="single" minwidth="150" flex="1" persist="width"
             datasources="rdf:addressdirectory" ref="moz-abdirectory://"

@@ -1003,10 +1003,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 /* ..... folder pane adjustments ..... */
 
-#folderPaneHeaderContainer {
-  background-color: transparent;
-}
-
 #folderPaneHeader {
   height: 29px;
   border-bottom: none;

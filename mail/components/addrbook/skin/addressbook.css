@@ -238,16 +238,22 @@ toolbar[iconsize="small"] #button-abdelete[disabled] {
   -moz-image-region: rect(32px 96px 48px 80px) !important;
 }
 
-/* ::::: directory pane adjustments ::::: */
-
-#abDirTreeHeaderContainer {
-  border-top: 1px solid ThreeDHighlight; 
+#abContent {
+  -moz-appearance: toolbox;
+  background-color: -moz-Dialog;
 }
+
+/* ::::: directory pane adjustments ::::: */
 
 #abDirTreeHeader {
   height: 29px;
   border-bottom: none;
-  border-top: none;
+  background-color: transparent;
+  border-top: 1px solid ThreeDHighlight;
+}
+
+#abDirTreeHeader-title {
+  padding-left: 4px;
 }
 
 /* ::::: directory pane icons ::::: */
@@ -281,6 +287,7 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   border-left: none;
   border-right: none;
   border-bottom: none;
+  background-color: transparent;
 }
 
 #results-splitter {
@@ -379,4 +386,5 @@ html|p {
 #searchBox {
   border-top: 1px solid ThreeDHighlight;
   height: 30px;
+  background-color: transparent;
 }
