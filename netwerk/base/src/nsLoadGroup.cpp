@@ -54,8 +54,8 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
-    : mLoadFlags(LOAD_NORMAL)
-    , mForegroundCount(0)
+    : mForegroundCount(0)
+    , mLoadFlags(LOAD_NORMAL)
     , mRequests(nsnull)
     , mStatus(NS_OK)
 {
@@ -377,6 +377,11 @@ NS_IMETHODIMP
 nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
 {
     mDefaultLoadRequest = aRequest;
+    // Inherit the group load flags from the default load request
+    if (mDefaultLoadRequest)
+        mDefaultLoadRequest->GetLoadFlags(&mLoadFlags);
+    else
+        mLoadFlags = LOAD_NORMAL;
     return NS_OK;
 }
 
@@ -550,35 +555,14 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
         return rv;
 
     oldFlags = flags;
-    //
-    // Inherit the group cache validation policy
-    //
-    if ( !((nsIRequest::VALIDATE_NEVER | 
-            nsIRequest::VALIDATE_ALWAYS | 
-            nsIRequest::VALIDATE_ONCE_PER_SESSION) & flags) ) {
-        flags |= (nsIRequest::VALIDATE_NEVER |
-                  nsIRequest::VALIDATE_ALWAYS |
-                  nsIRequest::VALIDATE_ONCE_PER_SESSION) & mLoadFlags;
-    }
-    //
-    // Inherit the group reload policy
-    //
-    if (!(nsIRequest::FORCE_VALIDATION & flags))
-        flags |= (nsIRequest::FORCE_VALIDATION & mLoadFlags);
-    if (!(nsIRequest::FORCE_RELOAD & flags))
-        flags |= (nsIRequest::FORCE_RELOAD & mLoadFlags);
 
-    //
-    // Inherit the group persistent cache policy
-    //
-    if (!(nsIRequest::INHIBIT_PERSISTENT_CACHING & flags))
-        flags |= (nsIRequest::INHIBIT_PERSISTENT_CACHING & mLoadFlags);
-
-    //
-    // Inherit the group loading policy
-    //
-    if (!(nsIRequest::LOAD_BACKGROUND & flags))
-        flags |= (nsIRequest::LOAD_BACKGROUND & mLoadFlags);
+    // Inherit the following bits...
+    flags |= (mLoadFlags & (LOAD_BACKGROUND |
+                            LOAD_BYPASS_CACHE |
+                            LOAD_FROM_CACHE |
+                            VALIDATE_ALWAYS |
+                            VALIDATE_ONCE_PER_SESSION |
+                            VALIDATE_NEVER));
 
     if (flags != oldFlags)
         rv = aRequest->SetLoadFlags(flags);

@@ -90,6 +90,8 @@ public:
     nsresult            GetDateValue(PRUint32 *, PRBool *isAvail);
     nsresult            GetLastModifiedValue(PRUint32 *, PRBool *isAvail);
     nsresult            GetExpiresValue(PRUint32 *, PRBool *isAvail);
+    nsresult            ComputeFreshnessLifetime(PRUint32 *);
+    nsresult            ComputeCurrentAge(PRUint32 now, PRUint32 requestTime, PRUint32 *result);
 #endif
     nsresult            GetMaxAge(PRUint32 *, PRBool *isAvail);
 

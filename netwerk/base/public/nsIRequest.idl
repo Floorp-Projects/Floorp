@@ -81,12 +81,14 @@ interface nsIRequest : nsISupports
     attribute nsILoadGroup loadGroup;
 
     /**
-     * Accesses the load flags for this request.
+     * Accesses the load flags for this request.  Bits 0-15 are defined (or
+     * reserved) by nsIRequest.  When added to a load group, this request's
+     * load flags are merged with the load flags of the load group.
      */
     attribute nsLoadFlags loadFlags;
 
     /**************************************************************************
-     * Below are the various load flags which may be or'd together.
+     * Listed below are the various load flags which may be or'd together.
      */
 
     /**
@@ -96,67 +98,70 @@ interface nsIRequest : nsISupports
 
     /** 
      * Don't deliver status notifications to the nsIProgressEventSink, or keep 
-     * this load from completing the nsILoadGroup it may belong to:
+     * this load from completing the nsILoadGroup it may belong to.
      */
     const unsigned long LOAD_BACKGROUND = 1 << 0; 
 
     /**************************************************************************
-     * For requests that are channels, the following flags may apply.
+     * The following flags control the flow of data into the cache.
      */
 
     /**
-     * Used exclusively by the uriloader and docshell to indicate whether or
-     * not this request corresponds to the toplevel document.
+     * This flag prevents caching of any kind.  It does not, however, prevent
+     * cached content from being used to satisfy this request.
      */
-    const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
+    const unsigned long INHIBIT_CACHING = 1 << 7;
 
-    /** 
-     * If the end consumer for this load has been retargeted after discovering 
-     * it's content, this flag will be set:
-     */
-    const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 2;
-
-	/**
-	 * This flag is used to tell the webshell not to cancel the load in cases
-	 * when the request is receiving multipart/replace document
-	 */
-	const unsigned long LOAD_REPLACE = 1 << 3;
-
-    /**************************************************************************
-     * The following flags control caching behavior.  With the exception of
-     * INHIBIT_PERSISTENT_CACHING, they are all mutually exclusive.
-     */
-
-    /*
-     * Don't store data in the disk cache.  This can be used to preserve
-     * privacy, e.g. so that no https transactions are recorded, or to avoid
-     * caching a stream to disk that is already stored in a local file,
-     * e.g. the mailbox: protocol.
+    /**
+     * This flag prevents caching on disk (or other persistent media), which
+     * may be needed to preserve privacy.  For HTTPS, this flag is set auto-
+     * matically.
      */
     const unsigned long INHIBIT_PERSISTENT_CACHING = 1 << 8;
 
-    /**
-     * Force an end-to-end download of content data from the origin server (and
-     * any intervening proxies that sit between it and the client), e.g. this
-     * flag is used for a shift-reload.
+    /**************************************************************************
+     * The following flags control what happens when the cache contains data
+     * that could perhaps satisfy this request.  They are listed in descending
+     * order of precidence.
      */
-    const unsigned long FORCE_RELOAD = 1 << 9;
 
     /**
-     * Force revalidation with server (or proxy) to verify that cached content
-     * is up-to-date, e.g. by comparing last-modified date on server with that
-     * of the cached version.  This flag is used when the reload button is
-     * pressed.
+     * Force an end-to-end download of content data from the origin server.
+     * This flag is used for a shift-reload.
      */
-    const unsigned long FORCE_VALIDATION = 1 << 10;
+    const unsigned long LOAD_BYPASS_CACHE = 1 << 9;
 
     /**
-     * When cache data is potentially out of date, it can be revalidated with
-     * the origin server to see if the content needs to be reloaded.  The
-     * following three flags control how often this validation occurs.
-     * These flags are commonly used for "normal" loading.
+     * Load from the cache, bypassing protocol specific validation logic.  This
+     * flag is used when browsing via history.  It is not recommended for normal
+     * browsing as it may likely violate reasonable assumptions made by the 
+     * server and confuse users.
      */
-    const unsigned long VALIDATE_NEVER             = 1 << 11;
-    const unsigned long VALIDATE_ALWAYS            = 1 << 12;
-    const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 13;
+    const unsigned long LOAD_FROM_CACHE   = 1 << 10;
+
+    /**
+     * The following flags control the frequency of cached content validation
+     * when neither LOAD_BYPASS_CACHE or LOAD_FROM_CACHE are set.  By default,
+     * cached content is automatically validated if necessary before reuse.
+     * 
+     * VALIDATE_ALWAYS forces validation of any cached content independent of
+     * its expiration time.
+     * 
+     * VALIDATE_NEVER disables validation of expired content.
+     *
+     * VALIDATE_ONCE_PER_SESSION disables validation of expired content, 
+     * provided it has already been validated (at least once) since the start 
+     * of this session.
+     *
+     * NOTE TO IMPLEMENTORS:
+     *   These flags are intended for normal browsing, and they should therefore
+     *   not apply to content that must be validated before each use.  Consider,
+     *   for example, a HTTP response with a "Cache-control: no-cache" header.
+     *   According to RFC2616, this response must be validated before it can
+     *   be taken from a cache.  Breaking this requirement could result in 
+     *   incorrect and potentially unpleasant side-effects.
+     */
+    const unsigned long VALIDATE_ALWAYS           = 1 << 11;
+    const unsigned long VALIDATE_NEVER            = 1 << 12;
+    const unsigned long VALIDATE_ONCE_PER_SESSION = 1 << 13;
 };

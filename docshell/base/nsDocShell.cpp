@@ -2847,7 +2847,7 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 
       // Mark the channel as being a document URI...
       aOpenedChannel->GetLoadFlags(&loadFlags);
-      loadFlags |= nsIRequest::LOAD_DOCUMENT_URI;
+      loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
 
       aOpenedChannel->SetLoadFlags(loadFlags);
 
@@ -3592,34 +3592,32 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
    // Mark the channel as being a document URI...
    nsLoadFlags loadFlags = 0;
    (void)aChannel->GetLoadFlags(&loadFlags);
-   loadFlags |= nsIRequest::LOAD_DOCUMENT_URI;
+   loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
   
-    // "View source" always wants VALIDATE_NEVER.
+    // "View source" always wants the currently cached content.
     if ( mViewMode == viewSource ) {
-        loadFlags |= nsIRequest::VALIDATE_NEVER;
+        loadFlags |= nsIRequest::LOAD_FROM_CACHE;
     } else {
         // Load attributes depend on load type...
       	switch ( mLoadType )
       	{
       	 case LOAD_HISTORY:
-      	 		loadFlags |= nsIRequest::VALIDATE_NEVER;
+                loadFlags |= nsIRequest::LOAD_FROM_CACHE;
       	 		break;
       	 		
       	 case LOAD_RELOAD_NORMAL:
-      	 			loadFlags |= nsIRequest::FORCE_VALIDATION;
+                loadFlags |= nsIRequest::VALIDATE_ALWAYS;
       	 		break;
       	 		
       	 case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-      	 		loadFlags |= nsIRequest::FORCE_RELOAD;
-      	 		break;
       	 case LOAD_REFRESH:
-      	 		loadFlags |= nsIRequest::FORCE_RELOAD;
+      	 		loadFlags |= nsIRequest::LOAD_BYPASS_CACHE;
       	 		break;
          case LOAD_NORMAL:
          case LOAD_LINK:
-    		   // Set cache checking flags
-    		   if ( mPrefs )
-    		   {
+                // Set cache checking flags
+    		    if ( mPrefs )
+    		    {
     		   		PRInt32 prefSetting;
     		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
     		   		{
@@ -3636,8 +3634,8 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
     		   					break;
     		   			}
     		   		}
-    			   }
-    			break;
+                }
+                break;
        }
     }
    
@@ -3974,7 +3972,7 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
     // overrides it. Until OnRedirect() gets settles out, let us do this.
     nsLoadFlags loadFlags = 0;
     aChannel->GetLoadFlags(&loadFlags);
-    if (loadFlags & nsIRequest::LOAD_REPLACE)
+    if (loadFlags & nsIChannel::LOAD_REPLACE)
         aChannel->GetURI(getter_AddRefs(uri));
     else
         aChannel->GetOriginalURI(getter_AddRefs(uri));

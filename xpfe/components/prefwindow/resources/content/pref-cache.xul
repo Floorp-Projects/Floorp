@@ -91,8 +91,9 @@
       <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" autostretch="never"
                   pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
                   prefattribute="value">
-        <radio group="browserCacheCheckDocFrequency" value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
         <radio group="browserCacheCheckDocFrequency" value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
+        <radio group="browserCacheCheckDocFrequency" value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
+        <radio group="browserCacheCheckDocFrequency" value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
         <radio group="browserCacheCheckDocFrequency" value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
       </radiogroup>
     </box>

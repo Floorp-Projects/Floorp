@@ -312,12 +312,6 @@ nsHTTPRequest::SetOverrideRequestSpec(const char *aSpec)
 }
 
 nsresult
-nsHTTPRequest::GetOverrideRequestSpec(char **aSpec)
-{
-    return DupString(aSpec, mRequestSpec);
-}
-
-nsresult
 nsHTTPRequest::formHeaders(PRUint32 capabilities)
 {
     if (mHeadersFormed)
@@ -352,24 +346,23 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
     PRUint32 loadFlags;
     mConnection->GetLoadFlags(&loadFlags);
     
-    if (loadFlags & 
-            (nsIRequest::FORCE_VALIDATION | nsIRequest::FORCE_RELOAD)) {
+    if (loadFlags & LOAD_BYPASS_CACHE) {
         // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
         // no proxy is configured since we might be talking with a transparent
         // proxy, i.e. one that operates at the network level.  See bug #14772
         SetHeader(nsHTTPAtoms::Pragma, "no-cache");
-    }
-
-    if (loadFlags & nsIRequest::FORCE_RELOAD) {
         // If doing a reload, force end-to-end 
         SetHeader(nsHTTPAtoms::Cache_Control, "no-cache");
     }
-    else if (loadFlags & nsIRequest::FORCE_VALIDATION) {
+    // XXX it should be sufficient to just validate with the immediate host.
+#if 0
+    else if (loadFlags & VALIDATE_ALWAYS) {
         // A "max-age=0" cache-control directive forces each cache along the
         // path to the origin server to revalidate its own entry, if any, with
         // the next cache or server.
         SetHeader(nsHTTPAtoms::Cache_Control, "max-age=0");
     }
+#endif
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
     // MIME based content negotiation has died.
