@@ -74,6 +74,7 @@
 #include "nsLayoutCID.h"
 #include "nsGfxCIID.h"
 #include "nsIImageManager.h"
+#include "nsIBindingManager.h"
 #include "prio.h"
 
 static char kChromePrefix[] = "chrome://";
@@ -1043,6 +1044,11 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 	nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
 	if (!document)
 	  return NS_OK;
+
+  // Annihilate all XBL bindings.
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  document->GetBindingManager(getter_AddRefs(bindingManager));
+  bindingManager->FlushChromeBindings();
 
   nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(domDocument);
   if (xulDoc) {

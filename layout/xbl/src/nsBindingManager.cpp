@@ -178,7 +178,8 @@ public:
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
-  
+  NS_IMETHOD FlushChromeBindings();
+
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
@@ -252,8 +253,13 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding )
     mBindingTable = new nsSupportsHashtable;
 
   nsISupportsKey key(aContent);
+
+  nsCOMPtr<nsISupports> old = getter_AddRefs(mBindingTable->Get(&key));
+  if (old && aBinding)
+    NS_ERROR("Binding already installed!");
+
   if (aBinding) {
-    mBindingTable->Put (&key, aBinding);
+    mBindingTable->Put(&key, aBinding);
   }
   else
     mBindingTable->Remove(&key);
@@ -393,7 +399,7 @@ nsBindingManager::ProcessAttachedQueue()
   for (PRUint32 i = 0; i < count; i++) {
     nsCOMPtr<nsIXBLBinding> binding;
     mAttachedQueue->GetElementAt(0, getter_AddRefs(binding));
-	mAttachedQueue->RemoveElementAt(0);
+    mAttachedQueue->RemoveElementAt(0);
     binding->ExecuteAttachedHandler();
   }
 
@@ -465,6 +471,23 @@ nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
   nsCStringKey key(aURL);
   mLoadingDocTable->Remove(&key);
 
+  return NS_OK;
+}
+
+PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLBinding* binding = (nsIXBLBinding*)aData;
+  nsCAutoString docURI;
+  binding->GetDocURI(docURI);
+  if (!docURI.CompareWithConversion("chrome", PR_FALSE, 6))
+    binding->MarkForDeath();
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsBindingManager::FlushChromeBindings()
+{
+  mBindingTable->Enumerate(MarkForDeath);
   return NS_OK;
 }
 
