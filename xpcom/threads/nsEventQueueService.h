@@ -39,9 +39,9 @@
 #define nsEventQueueService_h__
 
 #include "nsIEventQueueService.h"
-#include "nsHashtable.h"
-
-class nsIEventQueue;
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
+#include "nsIEventQueue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,8 +67,8 @@ private:
   NS_IMETHOD MakeNewQueue(PRThread* thread, PRBool aNative, nsIEventQueue **aQueue);
   inline nsresult GetYoungestEventQueue(nsIEventQueue *queue, nsIEventQueue **aResult);
 
-  nsSupportsHashtable mEventQTable;
-  PRMonitor           *mEventQMonitor;
+  nsInterfaceHashtable<nsVoidPtrHashKey, nsIEventQueue> mEventQTable;
+  PRMonitor *mEventQMonitor;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
