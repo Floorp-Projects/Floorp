@@ -168,7 +168,7 @@ namespace ICG {
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
 
-        TypedRegister grabRegister(const StringAtom& name, const JSType *type) 
+        TypedRegister grabRegister(const StringAtom& name, JSType *type) 
         {
             TypedRegister result(getRegister(), type); 
             (*variableList)[name] = result; 
@@ -176,7 +176,7 @@ namespace ICG {
             return result;
         }
 
-        const JSType *findType(const StringAtom& typeName);
+        JSType *findType(const StringAtom& typeName);
     
     public:
         ICodeGenerator(World *world, JSScope *global);
@@ -253,6 +253,11 @@ namespace ICG {
         void setElement(TypedRegister base, TypedRegister index, TypedRegister value);
         TypedRegister elementInc(TypedRegister base, TypedRegister index);
         TypedRegister elementDec(TypedRegister base, TypedRegister index);
+
+        TypedRegister getSlot(TypedRegister base, uint32 slot);
+        void setSlot(TypedRegister base, uint32 slot, TypedRegister value);
+        TypedRegister slotInc(TypedRegister base, uint32 slot);
+        TypedRegister slotDec(TypedRegister base, uint32 slot);
 
         TypedRegister varInc(TypedRegister var);
         TypedRegister varDec(TypedRegister var);
