@@ -61,7 +61,7 @@ nsDocShell::nsDocShell() :
   mMarginWidth(0), 
   mMarginHeight(0)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsDocShell::~nsDocShell()
@@ -81,18 +81,18 @@ nsDocShell::~nsDocShell()
 }
 
 NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID, 
-	void** ppv)
+  void** ppv)
 {
-	NS_ENSURE_ARG_POINTER(ppv);
-	NS_ENSURE_NO_AGGREGATION(aOuter);
+  NS_ENSURE_ARG_POINTER(ppv);
+  NS_ENSURE_NO_AGGREGATION(aOuter);
 
-	nsDocShell* docShell = new  nsDocShell();
-	NS_ENSURE_TRUE(docShell, NS_ERROR_OUT_OF_MEMORY);
+  nsDocShell* docShell = new  nsDocShell();
+  NS_ENSURE_TRUE(docShell, NS_ERROR_OUT_OF_MEMORY);
 
-	NS_ADDREF(docShell);
-	nsresult rv = docShell->QueryInterface(aIID, ppv);
-	NS_RELEASE(docShell);  
-	return rv;
+  NS_ADDREF(docShell);
+  nsresult rv = docShell->QueryInterface(aIID, ppv);
+  NS_RELEASE(docShell);  
+  return rv;
 }
 
 //*****************************************************************************
@@ -655,11 +655,11 @@ NS_IMETHODIMP nsDocShell::Create()
    // Use mBaseInitInfo to do create
    // Then delete mBaseInitInfo
    //XXX First Check
-	/*
-	Tells the window that intialization and setup is complete.  When this is
-	called the window can actually create itself based on the setup
-	information handed to it.
-	*/
+  /*
+  Tells the window that intialization and setup is complete.  When this is
+  called the window can actually create itself based on the setup
+  information handed to it.
+  */
    return NS_ERROR_FAILURE;
 }
 
@@ -814,11 +814,11 @@ NS_IMETHODIMP nsDocShell::Repaint(PRBool aForce)
 {
    
    //XXX First Check
-	/** 
-	 * Tell the window to repaint itself
-	 * @param aForce - if true, repaint immediately
-	 *                 if false, the window may defer repainting as it sees fit.
-	 */
+  /** 
+   * Tell the window to repaint itself
+   * @param aForce - if true, repaint immediately
+   *                 if false, the window may defer repainting as it sees fit.
+   */
 
    /* XXX Implement Tell our view to repaint
 
@@ -826,15 +826,15 @@ NS_IMETHODIMP nsDocShell::Repaint(PRBool aForce)
     mWindow->Invalidate(aForce);
   }
 
-	nsresult rv;
-	nsCOMPtr<nsIViewManager> viewManager;
-	rv = GetViewManager(getter_AddRefs(viewManager));
+  nsresult rv;
+  nsCOMPtr<nsIViewManager> viewManager;
+  rv = GetViewManager(getter_AddRefs(viewManager));
   if (NS_FAILED(rv)) { return rv; }
   if (!viewManager) { return NS_ERROR_NULL_POINTER; }
 
   //XXX: what about aForce?
-	rv = viewManager->UpdateAllViews(0);
-	return rv;
+  rv = viewManager->UpdateAllViews(0);
+  return rv;
 
    */
    return NS_ERROR_FAILURE;
@@ -941,9 +941,9 @@ NS_IMETHODIMP nsDocShell::GetMainWidget(nsIWidget** mainWidget)
 NS_IMETHODIMP nsDocShell::SetFocus()
 {
    //XXX First Check
-	/**
-	* Give the window focus.
-	*/
+  /**
+  * Give the window focus.
+  */
 
    /* XXX implement
 
@@ -1132,14 +1132,14 @@ NS_IMETHODIMP nsDocShell::SetScrollRange(PRInt32 scrollOrientation,
    PRInt32 minPos, PRInt32 maxPos)
 {
    //XXX First Check
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
+  /*
+  Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
+  something less than the current thumb position, curPos is set = to maxPos.
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
+  @return NS_OK - Setting or Getting completed successfully.
+        NS_ERROR_INVALID_ARG - returned when curPos is not within the
+          minPos and maxPos.
+  */
    return NS_ERROR_FAILURE;
 }
 
@@ -1147,14 +1147,14 @@ NS_IMETHODIMP nsDocShell::SetScrollRangeEx(PRInt32 minHorizontalPos,
    PRInt32 maxHorizontalPos, PRInt32 minVerticalPos, PRInt32 maxVerticalPos)
 {
    //XXX First Check
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
+  /*
+  Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
+  something less than the current thumb position, curPos is set = to maxPos.
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
+  @return NS_OK - Setting or Getting completed successfully.
+        NS_ERROR_INVALID_ARG - returned when curPos is not within the
+          minPos and maxPos.
+  */
    return NS_ERROR_FAILURE;
 }
 
@@ -1274,8 +1274,8 @@ NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
    NS_ENSURE_ARG_POINTER(aGlobal);
    NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
 
-   *aGlobal = mScriptContext->GetGlobalObject();
-   NS_IF_ADDREF(*aGlobal);
+   *aGlobal = mScriptContext->GetGlobalObject(); // this returns an addrefed object..
+   // NS_IF_ADDREF(*aGlobal);
    return NS_OK;
 }
 
@@ -1544,14 +1544,20 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
 
    nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
    // Now create an instance of the content viewer
-   // eventually content viewer is going to have to understand nsURILoadCommands...
-   // until that time, pass in "view" as the string command
-   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance("view", aOpenedChannel,
+   nsXPIDLCString strCommand;
+   // go to the uri loader and ask it to convert the uri load command into a old
+   // world style string
+   nsresult rv = NS_OK;
+   NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
+   if (NS_SUCCEEDED(rv))
+    NS_ENSURE_SUCCESS(pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand)), NS_ERROR_FAILURE);
+   
+   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(strCommand, aOpenedChannel,
       loadGroup, aContentType, NS_STATIC_CAST(nsIContentViewerContainer*, this),
       nsnull /*XXXQ Need ExtraInfo???*/,
       aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
 
-   return NS_OK;
+   return rv;
 }
 
 NS_IMETHODIMP
