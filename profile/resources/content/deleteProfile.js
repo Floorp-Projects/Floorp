@@ -16,11 +16,7 @@ function Startup()
     Button2.setAttribute( "value", "Delete Files Yah" );
     cancelButton.setAttribute( "value", "Cancel Yah" );
   }
-
-  okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
-  Button2.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
-  Button2.setAttribute( "style", "display: inherit;" );
-  cancelButton.setAttribute( "class", ( cancelButton.getAttribute("class") + " padded" ) );
+  Button2.removeAttribute("collapsed");
 }
 
 function onDeleteFiles()
