@@ -60,19 +60,12 @@
 #include "nsIWindowlessPlugInstPeer.h"
 #include "LiveConnectNativeMethods.h"
 #include "CSecureEnv.h"
-#include "EventFilter.h"
 
 #include <Resources.h>
 
-extern nsIPlugin* thePlugin;
-
+nsIPluginManager* thePluginManager = NULL;
 nsIPluginManager2* thePluginManager2 = NULL;
 nsIMemory* theMemoryAllocator = NULL;
-
-#pragma export on
-nsIPluginManager* thePluginManager = NULL;
-nsIPlugin* thePlugin = NULL;
-#pragma export off
 
 FSSpec thePluginSpec;
 short thePluginRefnum = -1;
@@ -163,7 +156,7 @@ pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 	if (initBlock->fragLocator.where == kDataForkCFragLocator) {
 		thePluginSpec = *initBlock->fragLocator.u.onDisk.fileSpec;
 	
-		// is it always the case that the plugin's resource file is open now?
+		// Open plugin's resource fork for read-only access.
 		thePluginRefnum = ::FSpOpenResFile(&thePluginSpec, fsRdPerm);
 	}
 	
@@ -172,11 +165,6 @@ pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 
 pascal void MRJPlugin__terminate()
 {
-#ifdef MRJPLUGIN_4X	
-	// Make sure the event filters are removed.
-	RemoveEventFilters();
-#endif
-
 #if !TARGET_CARBON
     // last ditch release of the memory allocator.
     if (theMemoryAllocator != NULL) {
@@ -184,6 +172,13 @@ pascal void MRJPlugin__terminate()
         theMemoryAllocator = NULL;
     }
 #endif
+
+    // Close plugin's resource fork.
+    // If we don't, Mac OS X 10.1 crashes.
+    if (thePluginRefnum != -1) {
+        ::CloseResFile(thePluginRefnum);
+        thePluginRefnum = -1;
+    }
 
 	__terminate();
 }
@@ -205,15 +200,10 @@ MRJPlugin::MRJPlugin()
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(NULL)
 {
-    // make this singleton instance visible.
-    ::thePlugin = this;
 }
 
 MRJPlugin::~MRJPlugin()
 {
-	// make sure the plugin is no longer visible.
-	::thePlugin = NULL;
-
 	// Release the console.
 	if (mConsole != NULL) {
 		mConsole->Release();
