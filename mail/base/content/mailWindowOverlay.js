@@ -2095,9 +2095,18 @@ function HandleJunkStatusChanged(folder)
         var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
         if (changedJunkStatus && sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
         {
+          var folder = GetLoadedMsgFolder();
+          var moveJunkMail = (folder && folder.server && folder.server.spamSettings) ? folder.server.spamSettings.manualMark : false;
+
+          var junkScore = msgHdr.getStringProperty("junkscore"); 
+          var isJunk = ((junkScore != "") && (junkScore != "0"));
+
           // we used to only reload the message if we were toggling the message to NOT JUNK from junk
           // but it can be useful to see the HTML in the message get converted to sanitized form when a message
           // is marked as junk.
+          // Furthermore, if we are about to move the message that was just marked as junk, 
+          // then don't bother reloading it.
+          if (!(isJunk && moveJunkMail)) 
           MsgReload();
         }
       }
