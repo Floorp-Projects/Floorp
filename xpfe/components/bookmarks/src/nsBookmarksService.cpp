@@ -17,9 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Original Author(s):
  *   Robert John Churchill    <rjc@netscape.com>
  *   Chris Waterson           <waterson@netscape.com>
+ *
+ * Contributor(s): 
  *   Pierre Phaneuf           <pp@ludusdesign.com>
  */
 
@@ -1965,8 +1967,10 @@ nsresult
 nsBookmarksService::getLocaleString(const char *key, nsString &str)
 {
 	PRUnichar	*keyUni = nsnull;
-	nsAutoString	keyStr; keyStr.AssignWithConversion(key);
-	nsresult	rv;
+	nsAutoString	keyStr;
+	keyStr.AssignWithConversion(key);
+
+	nsresult	rv = NS_RDF_NO_VALUE;
 	if (mBundle && (NS_SUCCEEDED(rv = mBundle->GetStringFromName(keyStr.GetUnicode(), &keyUni)))
 		&& (keyUni))
 	{
