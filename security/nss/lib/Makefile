@@ -80,10 +80,10 @@ export::
 	    $(NSINSTALL) -D crypto; \
 	    for file in $(FILES) ; do \
 		if test -f $$file; then \
-		    $(NSINSTALL) -m 444 $$file crypto; \
+		    $(INSTALL) -m 444 $$file crypto; \
 		fi; \
 	    done;  \
-	    $(NSINSTALL) -m 444 freebl/sha_fast.c crypto; \
-	    $(NSINSTALL) -m 444 freebl/sha_fast.h crypto; \
+	    $(INSTALL) -m 444 freebl/sha_fast.c crypto; \
+	    $(INSTALL) -m 444 freebl/sha_fast.h crypto; \
 	fi
 endif
