@@ -174,7 +174,7 @@ class nsIParser : public nsISupports {
      *  @param   aCommand -- ptrs to string that contains command
      *  @return	 nada
      */
-    NS_IMETHOD_(void) GetCommand(nsString& aCommand)=0;
+    NS_IMETHOD_(void) GetCommand(nsCString& aCommand)=0;
     NS_IMETHOD_(void) SetCommand(const char* aCommand)=0;
     NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand)=0;
 

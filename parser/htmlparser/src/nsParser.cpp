@@ -431,7 +431,7 @@ NS_IMETHODIMP_(void) nsParser::SetParserFilter(nsIParserFilter * aFilter)
 }
 
 
-NS_IMETHODIMP_(void) nsParser::GetCommand(nsString& aCommand)
+NS_IMETHODIMP_(void) nsParser::GetCommand(nsCString& aCommand)
 {
   aCommand = mCommandStr;  
 }
@@ -446,13 +446,13 @@ NS_IMETHODIMP_(void) nsParser::GetCommand(nsString& aCommand)
  */
 NS_IMETHODIMP_(void) nsParser::SetCommand(const char* aCommand)
 {
-  nsCAutoString theCommand(aCommand);
-  if(theCommand.Equals(kViewSourceCommand))
+  mCommandStr.Assign(aCommand);
+  if(mCommandStr.Equals(kViewSourceCommand))
     mCommand=eViewSource;
-  else if(theCommand.Equals(kViewFragmentCommand))
+  else if(mCommandStr.Equals(kViewFragmentCommand))
     mCommand=eViewFragment;
-  else mCommand=eViewNormal;
-  mCommandStr.AssignWithConversion(aCommand);
+  else
+    mCommand=eViewNormal;
 }
 
 /**
