@@ -1090,6 +1090,8 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
+  NS_IMETHOD GetAuthorStyleDisabled(PRBool* aStyleDisabled);
+  NS_IMETHOD SetAuthorStyleDisabled(PRBool aStyleDisabled);
   NS_IMETHOD ReconstructStyleData();
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
@@ -2121,6 +2123,23 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::SetAuthorStyleDisabled(PRBool aStyleDisabled)
+{
+  if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
+    nsresult rv = mStyleSet->SetAuthorStyleDisabled(aStyleDisabled);
+    if (NS_FAILED(rv)) return rv;
+    return ReconstructStyleData();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::GetAuthorStyleDisabled(PRBool* aStyleDisabled)
+{
+  *aStyleDisabled = mStyleSet->GetAuthorStyleDisabled();
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 PresShell::EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType/*=0xFF*/)

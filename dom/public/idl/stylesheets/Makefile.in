@@ -48,6 +48,7 @@ GRE_MODULE	= 1
 
 SDK_XPIDLSRCS =                                 \
 	nsIDOMDocumentStyle.idl			\
+	nsIDOMNSDocumentStyle.idl		\
 	nsIDOMMediaList.idl			\
 	nsIDOMStyleSheet.idl			\
 	nsIDOMStyleSheetList.idl		\

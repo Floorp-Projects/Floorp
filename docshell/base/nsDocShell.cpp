@@ -2125,7 +2125,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (!childAsDocShell)
         return NS_OK;
 
-    // charset and zoom will be inherited in SetupNewViewer()
+    // charset, style-disabling, and zoom will be inherited in SetupNewViewer()
 
     // Now take this document's charset and set the parentCharset field of the 
     // child's DocumentCharsetInfo to it. We'll later use that field, in the 
@@ -4726,6 +4726,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     PRInt32 hintCharsetSource;
     nsCAutoString prevDocCharset;
     float textZoom;
+    PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
 
@@ -4763,6 +4764,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetTextZoom(&textZoom),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetAuthorStyleDisabled(&styleDisabled),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetPrevDocCharacterSet(prevDocCharset),
@@ -4893,6 +4897,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetTextZoom(textZoom),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetAuthorStyleDisabled(styleDisabled),
                           NS_ERROR_FAILURE);
     }
 

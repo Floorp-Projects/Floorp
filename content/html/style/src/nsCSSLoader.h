@@ -219,6 +219,7 @@ public:
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aCompatMode);
   NS_IMETHOD SetPreferredSheet(const nsAString& aTitle);
+  NS_IMETHOD GetPreferredSheet(nsAString& aTitle);
 
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
                           nsICSSParser** aParser);
