@@ -60,8 +60,8 @@
 #define JS_HAS_SHARP_VARS       0       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   0       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR		0	/* has XDR API and object methods */
-#define JS_HAS_EXCEPTIONS	0	/* has exception handling */
+#define JS_HAS_XDR              0       /* has XDR API and object methods */
+#define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
@@ -71,7 +71,9 @@
 #define JS_HAS_ERROR_EXCEPTIONS 0       /* has error object hierarchy */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
-#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems. */
+#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
+#define JS_HAS_DFLT_MSG_STRINGS 0       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   0       /* numbers have formatting methods */
 
 #elif JS_VERSION == 110
 
@@ -110,8 +112,8 @@
 #define JS_HAS_SHARP_VARS       0       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   0       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR		0	/* has XDR API and object methods */
-#define JS_HAS_EXCEPTIONS	0	/* has exception handling */
+#define JS_HAS_XDR              0       /* has XDR API and object methods */
+#define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
@@ -121,7 +123,9 @@
 #define JS_HAS_ERROR_EXCEPTIONS 0       /* has error object hierarchy */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
-#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems. */
+#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
+#define JS_HAS_DFLT_MSG_STRINGS 0       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   0       /* numbers have formatting methods */
 
 #elif JS_VERSION == 120
 
@@ -160,8 +164,8 @@
 #define JS_HAS_SHARP_VARS       0       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   0       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR		0	/* has XDR API and object methods */
-#define JS_HAS_EXCEPTIONS	0	/* has exception handling */
+#define JS_HAS_XDR              0       /* has XDR API and object methods */
+#define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
@@ -171,7 +175,9 @@
 #define JS_HAS_ERROR_EXCEPTIONS 0       /* has error object hierarchy */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
-#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems. */
+#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
+#define JS_HAS_DFLT_MSG_STRINGS 0       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   0       /* numbers have formatting methods */
 
 #elif JS_VERSION == 130
 
@@ -210,8 +216,8 @@
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   1       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR		1	/* has XDR API and object methods */
-#define JS_HAS_EXCEPTIONS	0	/* has exception handling */
+#define JS_HAS_XDR              1       /* has XDR API and object methods */
+#define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
@@ -221,7 +227,9 @@
 #define JS_HAS_ERROR_EXCEPTIONS 0       /* has error object hierarchy */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
-#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems. */
+#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
+#define JS_HAS_DFLT_MSG_STRINGS 0       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   0       /* numbers have formatting methods */
 
 #elif JS_VERSION == 140
 
@@ -260,8 +268,8 @@
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   1       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR		1	/* has XDR API and object methods */
-#define JS_HAS_EXCEPTIONS	1	/* has exception handling */
+#define JS_HAS_XDR              1       /* has XDR API and object methods */
+#define JS_HAS_EXCEPTIONS       1       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_IN_OPERATOR      1       /* has in operator ('p' in {p:1}) */
@@ -271,9 +279,9 @@
 #define JS_HAS_ERROR_EXCEPTIONS 0       /* rt errors reflected as exceptions */
 #define JS_HAS_CATCH_GUARD      0       /* has exception handling catch guard */
 #define JS_HAS_NEW_OBJ_METHODS  0       /* has Object.prototype query methods */
-#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems. */
-
+#define JS_HAS_SPARSE_ARRAYS    0       /* array methods preserve empty elems */
 #define JS_HAS_DFLT_MSG_STRINGS 1       /* provides English error messages */
+#define JS_HAS_NUMBER_FORMATS   1       /* numbers have formatting methods */
 
 #else
 
