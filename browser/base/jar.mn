@@ -1,7 +1,5 @@
 browser.jar:
         content/browser/contents.rdf                  (content/contents.rdf)
-        content/browser/pageInfo.js                   (content/pageInfo.js)
-        content/browser/pageInfo.xul                  (content/pageInfo.xul)
         content/browser/browser.xul                   (content/browser.xul)
         content/browser/browser.js                    (content/browser.js)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
