@@ -206,7 +206,7 @@ sub get_netaddr {
     my ($ipaddr) = @_;
 
     # Check for a valid IPv4 addr which we know how to parse
-    if ($ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+    if (!$ipaddr || $ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
         return undef;
     }
 

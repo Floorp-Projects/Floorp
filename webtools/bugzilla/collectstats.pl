@@ -53,6 +53,23 @@ foreach (@myproducts) {
 
 &calculate_dupes();
 
+# Generate a static RDF file containing the default view of the duplicates data.
+open(CGI, "REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
+  || die "can't fork duplicates.cgi: $!";
+open(RDF, ">data/duplicates.tmp")
+  || die "can't write to data/duplicates.tmp: $!";
+my $headers_done = 0;
+while (<CGI>) {
+  print RDF if $headers_done;
+  $headers_done = 1 if $_ eq "\n";
+}
+close CGI;
+close RDF;
+if (-s "data/duplicates.tmp") {
+    rename("data/duplicates.rdf", "data/duplicates-old.rdf");
+    rename("data/duplicates.tmp", "data/duplicates.rdf");
+}
+
 sub check_data_dir {
     my $dir = shift;
 

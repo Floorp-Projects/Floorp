@@ -837,8 +837,12 @@ END
     open HTACCESS, ">data/.htaccess";
     print HTACCESS <<'END';
 # nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
 deny from all
+<Files duplicates.rdf>
+  allow from all
+</Files>
 END
     close HTACCESS;
     chmod $fileperm, "data/.htaccess";
