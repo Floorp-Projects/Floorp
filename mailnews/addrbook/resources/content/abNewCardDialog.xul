@@ -32,7 +32,6 @@ Rights Reserved.
 		title="&editcardWindow.title;"
 		onload="OnLoadNewCard()"
 		class="dialog"
-		width="400" height="600"
 		style="padding:0px"
 		align="vertical">
 

@@ -209,25 +209,25 @@ void
 nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
 {
      // largest preferred size
-    if (aInfo.prefSize.width > aChildInfo.prefSize.width)
-      aChildInfo.prefSize.width = aInfo.prefSize.width;
+    if (aChildInfo.prefSize.width > aInfo.prefSize.width)
+      aInfo.prefSize.width = aChildInfo.prefSize.width;
 
-    if (aInfo.prefSize.height > aChildInfo.prefSize.height)
-      aChildInfo.prefSize.height = aInfo.prefSize.height;
+    if (aChildInfo.prefSize.height > aInfo.prefSize.height)
+      aInfo.prefSize.height = aChildInfo.prefSize.height;
 
     // largest min size
-    if (aInfo.minSize.width > aChildInfo.minSize.width)
-      aChildInfo.minSize.width = aInfo.minSize.width;
+    if (aChildInfo.minSize.width > aInfo.minSize.width)
+      aInfo.minSize.width = aChildInfo.minSize.width;
 
-    if (aInfo.minSize.height > aChildInfo.minSize.height)
-      aChildInfo.minSize.height = aInfo.minSize.height;
+    if (aChildInfo.minSize.height > aInfo.minSize.height)
+      aInfo.minSize.height = aChildInfo.minSize.height;
 
     // smallest max size
-    if (aInfo.maxSize.width < aChildInfo.maxSize.width)
-      aChildInfo.maxSize.width = aInfo.maxSize.width;
+    if (aChildInfo.maxSize.width < aInfo.maxSize.width)
+      aInfo.maxSize.width = aChildInfo.maxSize.width;
 
-    if (aInfo.maxSize.height < aChildInfo.maxSize.height)
-      aChildInfo.maxSize.height = aInfo.maxSize.height;
+    if (aChildInfo.maxSize.height < aInfo.maxSize.height)
+      aInfo.maxSize.height = aChildInfo.maxSize.height;
 }
 
 NS_IMETHODIMP

@@ -32,7 +32,8 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIBox.h"
 #include "nsISpaceManager.h"
-class nsBoxFrameImpl;
+class nsBoxFrameInner;
+class nsBoxDebugInner;
 
 class nsHTMLReflowCommand;
 
@@ -58,11 +59,16 @@ class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 public:
 
   friend nsresult NS_NewBoxFrame(nsIFrame** aNewFrame, PRUint32 aFlags = 0);
+  // gets the rect inside our border and debug border. If you wish to paint inside a box
+  // call this method to get the rect so you don't draw on the debug border or outer border.
+  virtual void GetInnerRect(nsRect& aInner);
+
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+                             nsIFrame**     aFrame);
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
- // NS_IMETHOD IsDebug(PRBool& aIsDebug);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
 
@@ -118,6 +124,14 @@ public:
   virtual void GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize);
   virtual void SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc);
 
+  // Paint one child frame
+  virtual void PaintChild(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsIFrame*            aFrame,
+                             nsFramePaintLayer    aWhichLayer);
+
+
 protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
@@ -159,9 +173,9 @@ protected:
 
 private: 
   
-    friend class nsBoxFrameImpl;
-    nsBoxFrameImpl* mImpl;
-
+    friend class nsBoxFrameInner;
+    friend class nsBoxDebugInner;
+    nsBoxFrameInner* mInner;
 }; // class nsBoxFrame
 
 

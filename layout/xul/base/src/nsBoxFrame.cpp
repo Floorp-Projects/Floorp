@@ -41,6 +41,11 @@
 #include "nsIPresShell.h"
 #include "nsGenericHTMLElement.h"
 #include "nsFrameNavigator.h"
+#include "nsCSSRendering.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMUIEvent.h"
+#include "nsIScrollableView.h"
 
 #define CONSTANT float(0.0)
 #define DEBUG_REFLOW 0
@@ -49,33 +54,85 @@
 #define DEBUG_BORDER_SIZE 2
 #define COIL_SIZE 8
 
-class nsBoxFrameImpl
+/**
+ * Only created when the box is in debug mode
+ */
+class nsBoxDebugInner: public nsIDOMMouseMotionListener
 {
 public:
 
-  void DrawHorizontalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize);
-  void DrawVerticalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize);
-  void DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize);
-  void AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset);
+  nsBoxDebugInner(nsBoxFrame* aThis)
+  {
+    mOuter = aThis;
+    mRefCnt = 0;
+  }
+
+
+   NS_DECL_ISUPPORTS
+
+public:
+    nsCOMPtr<nsIStyleContext> mHorizontalDebugStyle;
+    nsCOMPtr<nsIStyleContext> mVerticalDebugStyle;
+    nsBoxFrame* mOuter;
+
+    float mP2t;
+    static nsIFrame* mDebugChild;
+    void GetValue(const nsSize& a, const nsSize& b, char* value);
+    void GetValue(float a, float b, char* value);
+    void DrawSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
+    void PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+    void DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
+    void FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height);
+
+    void AddListener();
+    void RemoveListener();
+
+    virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+    virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+};
+
+/**
+ * The boxes private implementation
+ */
+class nsBoxFrameInner
+{
+public:
+  nsBoxFrameInner(nsBoxFrame* aThis)
+  {
+    mOuter = aThis;
+  }
+
+  ~nsBoxFrameInner()
+  {
+      if (mDebugInner) {
+          mDebugInner->RemoveListener();
+          mDebugInner = nsnull;
+      }
+  }
+
+  void GetDebugInset(nsMargin& inset);
   void CollapseChild(nsIFrame* frame);
   void AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox);
+  void UpdatePseudoElements(nsIPresContext& aPresContext);
 
-    // XXX for the moment we can only handle 100 children.
+  // XXX for the moment we can only handle 100 children.
     // Should use a dynamic array.
     nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
     PRUint32 mFlags;
+    nsBoxFrame* mOuter;
+    nsCOMPtr<nsBoxDebugInner> mDebugInner;
 
   //  PRBool mIsDebug;
 };
 
-/*
-NS_IMETHODIMP
-nsBoxFrame::IsDebug(PRBool& aIsDebug)
-{
-  aIsDebug = mImpl->mIsDebug;
-  return NS_OK;
-}
-*/
+nsIFrame* nsBoxDebugInner::mDebugChild = nsnull;
+
+static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+
+NS_IMPL_ISUPPORTS1(nsBoxDebugInner, nsIDOMMouseMotionListener)
+
 
 nsresult
 NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
@@ -95,17 +152,16 @@ NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
 
 nsBoxFrame::nsBoxFrame(PRUint32 aFlags)
 {
-  mImpl = new nsBoxFrameImpl();
+  mInner = new nsBoxFrameInner(this);
 
   // if not otherwise specified boxes by default are horizontal.
   mHorizontal = PR_TRUE;
-  mImpl->mFlags = aFlags;
- // mImpl->mIsDebug = PR_FALSE;
+  mInner->mFlags = aFlags;
 }
 
 nsBoxFrame::~nsBoxFrame()
 {
-  delete mImpl;
+  delete mInner;
 }
 
 /**
@@ -129,9 +185,31 @@ nsBoxFrame::Init(nsIPresContext&  aPresContext,
     mHorizontal = PR_TRUE;
 
   nsSpaceManager* spaceManager = new nsSpaceManager(this);
-  mImpl->mSpaceManager = spaceManager;
+  mInner->mSpaceManager = spaceManager;
+  mInner->UpdatePseudoElements(aPresContext);
 
   return rv;
+}
+
+void
+nsBoxFrame::GetInnerRect(nsRect& aInner)
+{
+    const nsStyleSpacing* spacing;
+
+    nsresult rv = GetStyleData(eStyleStruct_Spacing,
+                   (const nsStyleStruct*&) spacing);
+
+    nsMargin border(0,0,0,0);
+    spacing->GetBorderPadding(border);
+
+    aInner = mRect;
+    aInner.x = 0;
+    aInner.y = 0;
+    aInner.Deflate(border);
+
+    border.SizeTo(0,0,0,0);
+    mInner->GetDebugInset(border);
+    aInner.Deflate(border);
 }
 
 /** 
@@ -225,7 +303,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
 {
   aSize.clear();
 
-  // see if the frame implements IBox interface
+  // see if the frame Innerements IBox interface
   
   // since frames are not refCounted, don't use nsCOMPtr with them
   //nsCOMPtr<nsIBox> ibox = do_QueryInterface(aFrame);
@@ -310,18 +388,18 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
 {
 
 #if DEBUG_REFLOW
-  if (NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags) 
+  if (NS_BLOCK_DOCUMENT_ROOT & mInner->mFlags) 
     printf("---------------- Begin Reflow ---------------\n");
 #endif
 
   /*
   // see if we are debug
-    mImpl->mIsDebug = PR_FALSE;
+    mInner->mIsDebug = PR_FALSE;
     nsString value;
 
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value))
     {
-      mImpl->mIsDebug = PR_TRUE;
+      mInner->mIsDebug = PR_TRUE;
     } else {
       // if our parent is debug we are too
       nsIFrame* parent = nsnull;
@@ -329,20 +407,20 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
       if (parent) {
         nsIBox* ibox;
         if (NS_SUCCEEDED(parent->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
-           ibox->IsDebug(mImpl->mIsDebug); 
+           ibox->IsDebug(mInner->mIsDebug); 
         }
       }
     } 
     */
 
   // If we have a space manager, then set it in the reflow state
-  if (mImpl->mSpaceManager) {
+  if (mInner->mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-    reflowState.mSpaceManager = mImpl->mSpaceManager;
+    reflowState.mSpaceManager = mInner->mSpaceManager;
 
     // Clear the spacemanager's regions.
-    mImpl->mSpaceManager->ClearRegions();
+    mInner->mSpaceManager->ClearRegions();
   }
 
   //--------------------------------------------------------------------
@@ -406,7 +484,9 @@ printf("\n");
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
-  mImpl->AddInDebugInset(aPresContext, mHorizontal, inset);
+  nsMargin debugInset(0,0,0,0);
+  mInner->GetDebugInset(debugInset);
+  inset += debugInset;
 
   rect.Deflate(inset);
 
@@ -462,7 +542,7 @@ printf("\n");
   damageArea.width = aDesiredSize.width;
 
   /*
-   if ((NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags)) {
+   if ((NS_BLOCK_DOCUMENT_ROOT & mInner->mFlags)) {
      printf("----- Reflow --------\n");
      char* type;
      switch(aReflowState.reason) {
@@ -728,7 +808,7 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
 
 
 void 
-nsBoxFrameImpl::CollapseChild(nsIFrame* frame)
+nsBoxFrameInner::CollapseChild(nsIFrame* frame)
 {
     nsRect rect(0,0,0,0);
     frame->GetRect(rect);
@@ -780,7 +860,7 @@ nsBoxFrame::PlaceChildren(nsRect& boxRect)
 
     // make collapsed children not show up
     if (mSprings[count].collapsed) {
-      mImpl->CollapseChild(childFrame);
+      mInner->CollapseChild(childFrame);
     } else {
       const nsStyleSpacing* spacing;
       rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -912,7 +992,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         // the current font size. But if you then flow the hr with a computed height of what was returned the
         // hr will be stretched out to fit. So basically the hr lays itself out differently depending 
         // on if you use intrinsic or or computed size. So to fix this we follow this policy. If any child
-        // does not implement nsIBox then we set this flag. Then on a flow if we decide to flow at the preferred width
+        // does not Innerement nsIBox then we set this flag. Then on a flow if we decide to flow at the preferred width
         // we flow it with a intrinsic width. This goes for height as well.
         if (aInfo.prefWidthIntrinsic && size.width == aInfo.prefSize.width) 
            size.width = NS_INTRINSICSIZE;
@@ -1252,194 +1332,6 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
         }
 }
 
-/*
-void
-nsBoxFrameImpl::AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox)
-{
-  printf("------- AdjustChildren------\n");
-
-  nsIFrame* childFrame;
-  
-  aBox->FirstChild(nsnull, &childFrame); 
-  nscoord total = nsFrameNavigator::CountFrames(aBox);
-  nscoord count = 0;
-  while (nsnull != childFrame) 
-  {
-
-    nscoord pref = GET_WIDTH_FOR(aBox, mSprings[count].prefSize);
-    nscoord c    = GET_WIDTH_FOR(aBox, mSprings[count].calculatedSize);
-    nsresult rv;
-
-    // if the preferred size changes
-    if (pref != c) { 
-//      nsRect r;
-//      childFrame->GetRect(r);
-     
-      pref = c;
-      const nsStyleSpacing* spacing;
-      rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                    (const nsStyleStruct*&) spacing);
-
-      NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
-
-      nsMargin margin(0,0,0,0);
-      spacing->GetMargin(margin);
-      nsMargin border(0,0,0,0);
-      spacing->GetBorderPadding(border);
-      margin += border;
-
-      nsIAtom* attribute;
-
-      if (aBox->mHorizontal) {
-        pref -= (margin.left + margin.right);
-        attribute = nsHTMLAtoms::width;
-      //  childFrame->SizeTo(pref, r.height);
-      } else {
-        pref -= (margin.top + margin.bottom);
-        attribute = nsHTMLAtoms::height;
-      //  childFrame->SizeTo(r.width, pref);
-      }
-
-      float p2t;
-      aPresContext.GetScaledPixelsToTwips(&p2t);
-      nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-      aBox->mSprings[count].needsRecalc = PR_TRUE;
-      nsCOMPtr<nsIContent> content;
-      childFrame->GetContent(getter_AddRefs(content));
-
-      // set its preferred size.
-      char ch[50];
-      sprintf(ch,"%d",pref/onePixel);
-      printf("index=%d, pref=%s\n", count, ch);
-      content->SetAttribute(kNameSpaceID_None, attribute, ch, PR_FALSE));
-  }
-
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    count++;
-  }
-
-}
-
-
-void
-nsBoxFrame::ResizeChildTo(nsIPresContext& aPresContext, 
-                          nscoord aChildIndex, 
-                          nscoord& aDiff, 
-                          PRInt32* aChildrenBefore, 
-                          PRInt32* aChildrenAfter, 
-                          PRInt32 aChildrenBeforeCount, 
-                          PRInt32 aChildrenAfterCount, 
-                          PRBool aBounded)
-{ 
-  nscoord spaceLeft = 0;
-  int i;
-  for (i=0; i < aChildrenBeforeCount; i++) {
-    PRInt32 index = aChildrenBefore[i];
-   
-    nscoord min1         = GET_WIDTH(mSprings[index].minSize);
-    nscoord max1         = GET_WIDTH(mSprings[index].maxSize);
-    nscoord& c1          = GET_WIDTH(mSprings[index].calculatedSize);
-
-    // figure our how much space to add or remove
-    if (c1 + aDiff < min1) {
-     spaceLeft = aDiff + (c1 - min1);
-     c1 = min1;
-    } else if (c1 + aDiff > max1) {
-     spaceLeft = aDiff + (max1 - c1);
-     c1 = max1;
-    } else {
-     spaceLeft = 0;
-     c1 += aDiff;
-    }
-
-    // there is not space left? We are done
-    if (spaceLeft == 0)
-       break;
-  }
-
-  // if there is any space left over remove it from the dif we were originally given
-  aDiff -= spaceLeft;
-  spaceLeft = 0;
-
-  for (i=0; i < aChildrenAfterCount; i++) {
-    PRInt32 index = aChildrenAfter[i];
-
-    nscoord min2         = GET_WIDTH(mSprings[index].minSize);
-    nscoord max2         = GET_WIDTH(mSprings[index].maxSize);
-    nscoord& c2          = GET_WIDTH(mSprings[index].calculatedSize);
- 
-    // see how much space we can take or give
-    if (c2 - aDiff < min2) {
-     spaceLeft = aDiff - (c2 - min2);
-     c2 = min2;
-    } else if (c2 - aDiff > max2) {
-     spaceLeft = aDiff - (max2 - c2);
-     c2 = max2;
-    } else {
-      spaceLeft = 0;
-      c2 -= aDiff;
-    }
-
-    // there is not space left? We are done
-    if (spaceLeft == 0)
-       break;
-  }
- 
-  // if we have space that could not be allocated. Then put the space back.
-  if (spaceLeft != 0) {
-    if (!aBounded) {
-      nscoord diff = -spaceLeft;
-      spaceLeft = 0;
-
-      for (i=0; i < aChildrenBeforeCount; i++) {
-		  PRInt32 index = aChildrenBefore[i];
-   
-		  nscoord min1         = GET_WIDTH(mSprings[index].minSize);
-		  nscoord max1         = GET_WIDTH(mSprings[index].maxSize);
-		  nscoord& c1          = GET_WIDTH(mSprings[index].calculatedSize);
-
-		  // figure our how much space to add or remove
-		  if (c1 + diff < min1) {
-		   spaceLeft = diff + (c1 - min1);
-		   c1 = min1;
-		  } else if (c1 + diff > max1) {
-		   spaceLeft = diff + (max1 - c1);
-		   c1 = max1;
-		  } else {
-			spaceLeft = 0;
-			c1 += diff;
-		  }
-
-		  // there is no space left? We are done
-		  if (spaceLeft == 0)
-			 break;
-      }
-	  aDiff += diff;
-    } else {
-      spaceLeft = 0;
-    }
-  }
-
-  printf("Spaceleft=%d\n",spaceLeft);
-
-  nsIFrame* splitter = nsFrameNavigator::GetChildAt(this, aChildIndex);
-
-  nsRect r;
-  splitter->GetRect(r);
-
-  if (mHorizontal) 
-      splitter->MoveTo(r.x + aDiff, r.y);
-  else
-      splitter->MoveTo(r.x, r.y + aDiff);
-      
-  
-  mImpl->AdjustChildren(aPresContext, this);  
-  Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_TRUE);
-
-}
-*/
 
 void 
 nsBoxFrame::GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize)
@@ -1634,7 +1526,9 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
-  mImpl->AddInDebugInset(aPresContext, mHorizontal, inset);
+  nsMargin debugInset(0,0,0,0);
+  mInner->GetDebugInset(debugInset);
+  inset += debugInset;
 
   nsSize in(inset.left+inset.right,inset.top+inset.bottom);
   aSize.minSize += in;
@@ -1719,84 +1613,131 @@ nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
   // if we are visible then tell our superclass to paint
   nsresult r = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
-/*
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 
-    if (mImpl->mIsDebug) {
-      
-            const nsStyleSpacing* spacing;
-        nsresult rv = GetStyleData(eStyleStruct_Spacing,
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+        if (mInner->mDebugInner) {
+            mInner->mDebugInner->PaintSprings(aPresContext, aRenderingContext, aDirtyRect);
+        }
+  }
+ 
+
+  return r;
+}
+
+// Paint one child frame
+void
+nsBoxFrame::PaintChild(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsIFrame*            aFrame,
+                             nsFramePaintLayer    aWhichLayer)
+{
+      const nsStyleDisplay* disp;
+      aFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+
+      // if collapsed don't paint the child.
+      if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+         return;
+
+      nsHTMLContainerFrame::PaintChild(aPresContext, aRenderingContext, aDirtyRect, aFrame, aWhichLayer);
+}
+
+void 
+nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect)
+{
+    
+        // remove our border
+        const nsStyleSpacing* spacing;
+        nsresult rv = mOuter->GetStyleData(eStyleStruct_Spacing,
                        (const nsStyleStruct*&) spacing);
 
         nsMargin border(0,0,0,0);
         spacing->GetBorderPadding(border);
-  
+
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-        nscolor color;
-        if (mHorizontal) {
-          color = NS_RGB(0,0,255);
+
+        nsIStyleContext* debugStyle;
+        if (mOuter->mHorizontal)
+            debugStyle = mHorizontalDebugStyle;
+        else
+            debugStyle = mVerticalDebugStyle;
+
+        const nsStyleSpacing* debugSpacing =
+        (const nsStyleSpacing*)debugStyle->GetStyleData(eStyleStruct_Spacing);
+        const nsStyleColor* debugColor =
+        (const nsStyleColor*)debugStyle->GetStyleData(eStyleStruct_Color);
+
+        nsRect inner(0,0,mOuter->mRect.width, mOuter->mRect.height);
+        inner.Deflate(border);
+
+        // paint our debug border
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mOuter,
+                                    aDirtyRect, inner, *debugSpacing, debugStyle, 0);
+
+        // get the debug border dimensions
+        nsMargin debugBorder(0,0,0,0);
+        debugSpacing->GetBorderPadding(debugBorder);
+
+
+        // paint the springs.
+        nscoord x, y, borderSize, springSize;
+        
+
+        aRenderingContext.SetColor(debugColor->mColor);
+        
+
+        if (mOuter->mHorizontal) 
+        {
+            x = inner.x;
+            y = inner.y + onePixel;
+            x += debugBorder.left;
+            springSize = debugBorder.top - onePixel*2;
         } else {
-          color = NS_RGB(255,0,0);
+            x = inner.y;
+            y = inner.x + onePixel;
+            x += debugBorder.top;
+            springSize = debugBorder.left - onePixel*2;
         }
-        nscoord springSize = NSIntPixelsToTwips(DEBUG_SPRING_SIZE, p2t);
-        nscoord borderSize = NSIntPixelsToTwips(DEBUG_BORDER_SIZE, p2t);
 
-        aRenderingContext.SetColor(color);
+        for (int i=0; i < mOuter->mSpringCount; i++) {
+            nsSize& size = mOuter->mSprings[i].calculatedSize;
+            if (!mOuter->mSprings[i].collapsed) {
+                if (mOuter->mHorizontal) 
+                    borderSize = size.width;
+                else 
+                    borderSize = size.height;
 
-        int x = border.left;
-        int y = border.right;
-        aRenderingContext.FillRect(mRect.width - border.right - borderSize, 
-                                   border.top, 
-                                   borderSize, mRect.height - border.bottom - border.top);
-        aRenderingContext.FillRect(border.left, mRect.height - border.bottom - borderSize, mRect.width - border.left - border.right, borderSize);
-
-        if (mHorizontal) {
-
-          aRenderingContext.FillRect(border.left, border.top, mRect.width - border.left - border.right, springSize);
-          aRenderingContext.FillRect(border.left, border.right, borderSize, mRect.height - border.top - border.bottom);
-  
-          for (int i=0; i < mSpringCount; i++) {
-                nsSize& size = mSprings[i].calculatedSize;
-                mImpl->DrawHorizontalSpring(aPresContext, aRenderingContext, x, y, size.width, springSize);
-                x += size.width;
-          }
-
-        } else {
-          aRenderingContext.FillRect(border.left, border.right, springSize, mRect.height - border.top - border.bottom);
-          aRenderingContext.FillRect(border.left, border.top, mRect.width - border.left - border.right, borderSize);
-
-          for (int i=0; i < mSpringCount; i++) {
-                nsSize& size = mSprings[i].calculatedSize;
-                mImpl->DrawVerticalSpring(aPresContext, aRenderingContext, x, y, size.height, springSize);
-                y += size.height;
-          }
+                DrawSpring(aPresContext, aRenderingContext, mOuter->mSprings[i].flex, x, y, borderSize, springSize);
+                x += borderSize;
+            }
         }
-    }
-  }
-  */
+}
 
-   // paint the draw area
-  /*
-#if DEBUG_REDRAW
-  if (NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags)  {
-     PRBool result = PR_FALSE;
-     nsRect rect(0,0,0,0);
-     aRenderingContext.GetClipRect(rect, result);
-     if (result) {
-       aRenderingContext.SetColor(NS_RGB(255,0,0));
-       aRenderingContext.DrawRect(rect);
-     }
-  }
-#endif
-*/
-  return r;
-  }
+void
+nsBoxDebugInner::DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
+{
+    if (mOuter->mHorizontal)
+       aRenderingContext.DrawLine(x1,y1,x2,y2);
+    else
+       aRenderingContext.DrawLine(y1,x1,y2,x2);
+}
+
+void
+nsBoxDebugInner::FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height)
+{
+    if (mOuter->mHorizontal)
+       aRenderingContext.FillRect(x,y,width,height);
+    else
+       aRenderingContext.FillRect(y,x,height,width);
+}
 
 void 
-nsBoxFrameImpl::DrawHorizontalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize)
+nsBoxDebugInner::DrawSpring(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
 {
+        PRBool h = mOuter->mHorizontal;
+    
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
@@ -1816,96 +1757,75 @@ nsBoxFrameImpl::DrawHorizontalSpring( nsIPresContext& aPresContext, nsIRendering
 
         int halfCoilSize = coilSize/2;
 
-        for (int i=0; i < coils; i++)
-        {
-               //aRenderingContext.SetColor(NS_RGB(0,0,0));
-               aRenderingContext.SetColor(NS_RGB(255,255,255));
-               aRenderingContext.DrawLine(offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
-               //aRenderingContext.SetColor(NS_RGB(255,255,255));
-               aRenderingContext.DrawLine(offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
+        if (flex == 0.0) {
+            DrawLine(aRenderingContext, x,y + springSize/2, x + size, y + springSize/2);
+        } else {
+            for (int i=0; i < coils; i++)
+            {
+                   DrawLine(aRenderingContext, offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
+                   DrawLine(aRenderingContext, offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
 
-               offset += coilSize;
+                   offset += coilSize;
+            }
         }
 
-        aRenderingContext.SetColor(NS_RGB(255,255,255));
-        aRenderingContext.FillRect(x + size - springSize/2, y, springSize/2, springSize);
-        aRenderingContext.FillRect(x, y, springSize/2, springSize);
+        FillRect(aRenderingContext, x + size - springSize/2, y, springSize/2, springSize);
+        FillRect(aRenderingContext, x, y, springSize/2, springSize);
 
         //DrawKnob(aPresContext, aRenderingContext, x + size - springSize, y, springSize);
-    }
-
-void 
-nsBoxFrameImpl::DrawVerticalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize)
-{
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-       // if we do draw the coils
-        int distance = 0;
-        int center = 0;
-        int offset = 0;
-        int coilSize = COIL_SIZE*onePixel;
-        int halfSpring = springSize/2;
-
-        distance = size;
-        center = x + halfSpring;
-        offset = y;
-
-        int coils = distance/coilSize;
-
-        int halfCoilSize = coilSize/2;
-
-        for (int i=0; i < coils; i++)
-        {
-           aRenderingContext.SetColor(NS_RGB(255,255,255));
-           //aRenderingContext.SetColor(NS_RGB(0,0,0));
-           aRenderingContext.DrawLine(center+halfSpring, offset, center-halfSpring, offset+halfCoilSize);
-           //aRenderingContext.SetColor(NS_RGB(255,255,255));
-           aRenderingContext.DrawLine(center-halfSpring, offset+halfCoilSize, center+halfSpring, offset+coilSize);
-
-           offset += coilSize;
-        }
-
-       // DrawKnob(aPresContext, aRenderingContext, x, y + size - springSize, springSize);
-        aRenderingContext.SetColor(NS_RGB(255,255,255));
-        aRenderingContext.FillRect(x, y, springSize, springSize/2);
-        aRenderingContext.FillRect(x, y + size - springSize/2, springSize, springSize/2);
-    }
-
-void
-nsBoxFrameImpl::DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize)
-{
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-       //aRenderingContext.SetColor(NS_RGB(0,0,0));
-      // aRenderingContext.FillRect(x - 1*onePixel ,y - 1*onePixel, springSize, springSize);
-
-       aRenderingContext.SetColor(NS_RGB(255,255,255));
-       aRenderingContext.FillRect(x,y, springSize,springSize);
 }
 
 void
-nsBoxFrameImpl::AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset)
+nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext) 
 {
-  /*
-  if (mIsDebug) {
-     float p2t;
-     aPresContext.GetScaledPixelsToTwips(&p2t);
-     nscoord spring = NSIntPixelsToTwips(DEBUG_SPRING_SIZE, p2t);
-     nscoord border = NSIntPixelsToTwips(DEBUG_BORDER_SIZE, p2t);
+    nsCOMPtr<nsIStyleContext> hs;
+    nsCOMPtr<nsIStyleContext> vs;
 
-     if (!aIsHorizontal)
-        inset.left += spring;
-     else
-        inset.top += spring;
+	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
+	aPresContext.ProbePseudoStyleContextFor(mOuter->mContent, atom, mOuter->mStyleContext,
+										  PR_FALSE,
+										  getter_AddRefs(hs));
 
-     inset.right += border;
-     inset.bottom += border;
-  }
-  */
+  	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
+	aPresContext.ProbePseudoStyleContextFor(mOuter->mContent, atom, mOuter->mStyleContext,
+										  PR_FALSE,
+										  getter_AddRefs(vs));
+
+    if (hs && vs) {
+        if (!mDebugInner) {
+            mDebugInner = new nsBoxDebugInner(mOuter);
+            mDebugInner->AddListener();
+        }
+        mDebugInner->mHorizontalDebugStyle = hs;
+        mDebugInner->mVerticalDebugStyle = vs;
+        aPresContext.GetScaledPixelsToTwips(&mDebugInner->mP2t);
+    } else {
+        if (mDebugInner) 
+        {
+            mDebugInner->RemoveListener();
+            mDebugInner = nsnull;
+        }
+    }
+}
+
+void
+nsBoxFrameInner::GetDebugInset(nsMargin& inset)
+{
+    inset.SizeTo(0,0,0,0);
+
+    if (mDebugInner) 
+    {
+        nsIStyleContext* style;
+        if (mOuter->mHorizontal)
+            style = mDebugInner->mHorizontalDebugStyle;
+        else
+            style = mDebugInner->mVerticalDebugStyle;
+
+        const nsStyleSpacing* debugSpacing =
+        (const nsStyleSpacing*)style->GetStyleData(eStyleStruct_Spacing);
+
+        debugSpacing->GetBorderPadding(inset);
+    }
 }
 
 NS_IMETHODIMP nsBoxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -1978,4 +1898,242 @@ nsCalculatedBoxInfo::clear()
 
     sizeValid = PR_FALSE;
 }
+
+
+
+NS_IMETHODIMP  
+nsBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                             nsIFrame**     aFrame)
+{   
+    nsresult rv = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+    return rv;
+}
+
+void
+nsBoxDebugInner::GetValue(const nsSize& a, const nsSize& b, char* ch) 
+{
+    char width[100];
+    char height[100];
+    
+    if (a.width == NS_INTRINSICSIZE)
+        sprintf(width,"%s","INF");
+    else 
+        sprintf(width,"%d", nscoord(a.width/mP2t));
+    
+    if (a.height == NS_INTRINSICSIZE)
+        sprintf(height,"%s","INF");
+    else 
+        sprintf(height,"%d", nscoord(a.height/mP2t));
+    
+
+    sprintf(ch, "(%s%s, %s%s)", width, (b.width != NS_INTRINSICSIZE ? "[CSS]" : ""),
+                    height, (b.height != NS_INTRINSICSIZE ? "[CSS]" : ""));
+
+}
+
+void
+nsBoxDebugInner::GetValue(float a, float b, char* ch) 
+{
+    sprintf(ch, "(%f)", a);             
+}
+
+void
+nsBoxDebugInner::AddListener()
+{
+  nsCOMPtr<nsIContent> content;
+  mOuter->GetContent(getter_AddRefs(content));
+
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+
+  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), kIDOMMouseMotionListenerIID);
+}
+
+void
+nsBoxDebugInner::RemoveListener()
+{
+  nsCOMPtr<nsIContent> content;
+  mOuter->GetContent(getter_AddRefs(content));
+
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+
+  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),kIDOMMouseMotionListenerIID);
+}
+
+nsresult
+nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
+{
+
+          nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
+
+          PRInt32 xPx = 0;
+          PRInt32 yPx = 0;
+          uiEvent->GetClientX(&xPx);
+          uiEvent->GetClientY(&yPx);
+              
+           nscoord onePixel = NSIntPixelsToTwips(1, mP2t);
+           nscoord x = xPx*onePixel;
+           nscoord y = yPx*onePixel;
+
+           // get it into our coordintate system by subtracting our parents offsets.
+           nsIFrame* parent = mOuter;
+           while(parent != nsnull)
+           {
+              // if we hit a scrollable view make sure we take into account
+              // how much we are scrolled.
+              nsIScrollableView* scrollingView;
+              nsIView*           view;
+              parent->GetView(&view);
+              if (view) {
+                nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+                if (NS_SUCCEEDED(result)) {
+                    nscoord xoff = 0;
+                    nscoord yoff = 0;
+                    scrollingView->GetScrollPosition(xoff, yoff);
+                    x += xoff;
+                    y += yoff;         
+                }
+              }
+       
+             nsRect r;
+             parent->GetRect(r);
+             x -= r.x;
+             y -= r.y;
+             parent->GetParent(&parent);
+           }
+
+        int count = 0;
+        nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
+        while (nsnull != childFrame) 
+        {    
+            nsRect r(0,0,0,0);
+            childFrame->GetRect(r);
+
+            // if we are not in the child. But in the spring above the child.
+            if (!r.Contains(x,y) && ((mOuter->mHorizontal && x >= r.x && x < r.x + r.width) ||
+                (!mOuter->mHorizontal && y >= r.y && y < r.y + r.height))) {
+
+                    // found it but we already showed it.
+                    if (mDebugChild == childFrame)
+                        return NS_OK;
+
+                    printf("-------box info---------\n");
+                    nsFrame::ListTag(stdout, childFrame);
+                    printf("\n");
+
+                    mDebugChild = childFrame;
+                    nsCalculatedBoxInfo aSize;
+                    aSize.prefSize.width = NS_INTRINSICSIZE;
+                    aSize.prefSize.height = NS_INTRINSICSIZE;
+
+                    aSize.minSize.width = NS_INTRINSICSIZE;
+                    aSize.minSize.height = NS_INTRINSICSIZE;
+
+                    aSize.maxSize.width = NS_INTRINSICSIZE;
+                    aSize.maxSize.height = NS_INTRINSICSIZE;
+
+                    aSize.calculatedSize.width = NS_INTRINSICSIZE;
+                    aSize.calculatedSize.height = NS_INTRINSICSIZE;
+
+                    aSize.flex = -1.0;
+
+                  // add in the css min, max, pref
+                    const nsStylePosition* position;
+                    nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
+                                  (const nsStyleStruct*&) position);
+
+                    // see if the width or height was specifically set
+                    if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
+                        aSize.prefSize.width = position->mWidth.GetCoordValue();
+                    }
+
+                    if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
+                        aSize.prefSize.height = position->mHeight.GetCoordValue();     
+                    }
+    
+                    // same for min size. Unfortunately min size is always set to 0. So for now
+                    // we will assume 0 means not set.
+                    if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+                        nscoord min = position->mMinWidth.GetCoordValue();
+                        if (min != 0)
+                           aSize.minSize.width = min;
+                    }
+
+                    if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
+                        nscoord min = position->mMinHeight.GetCoordValue();
+                        if (min != 0)
+                           aSize.minSize.height = min;
+                    }
+
+                    // and max
+                    if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
+                        nscoord max = position->mMaxWidth.GetCoordValue();
+                        aSize.maxSize.width = max;
+                    }
+
+                    if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
+                        nscoord max = position->mMaxHeight.GetCoordValue();
+                        aSize.maxSize.height = max;
+                    }
+
+                    // get the flexibility
+                    nsCOMPtr<nsIContent> content;
+                    childFrame->GetContent(getter_AddRefs(content));
+
+                    PRInt32 error;
+                    nsAutoString value;
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
+                    {
+                        value.Trim("%");
+                        // convert to a percent.
+                        aSize.flex = value.ToFloat(&error)/float(100.0);
+                    }
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
+                    {
+                        nsHTMLValue aResult;
+                        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
+                        aSize.prefSize.width = NSIntPixelsToTwips(aResult.GetPixelValue(), mP2t);
+                    }
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
+                    {
+                        nsHTMLValue aResult;
+                        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
+                        aSize.prefSize.height = NSIntPixelsToTwips(aResult.GetPixelValue(), mP2t);
+                    }
+
+                    char min[100];
+                    char pref[100];
+                    char max[100];
+                    char calc[100];
+                    char flex[100];
+
+                    GetValue(mOuter->mSprings[count].minSize,  aSize.minSize, min);
+                    GetValue(mOuter->mSprings[count].prefSize, aSize.prefSize, pref);
+                    GetValue(mOuter->mSprings[count].maxSize, aSize.maxSize, max);
+                    GetValue(mOuter->mSprings[count].calculatedSize,  aSize.calculatedSize, calc);
+                    GetValue(mOuter->mSprings[count].flex,  aSize.flex, flex);
+
+
+                    printf("min%s, pref%s, max%s, actual%s, flex=%s\n", 
+                        min,
+                        pref,
+                        max,
+                        calc,
+                        flex
+                    );
+                    return NS_OK;
+                }
+          
+          nsresult rv = childFrame->GetNextSibling(&childFrame);
+          NS_ASSERTION(rv == NS_OK,"failed to get next child");
+          count++;
+        }
+
+       // mDebugChild = nsnull;
+
+        return NS_OK;
+}
+
 

@@ -348,7 +348,7 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
   //Add extra ref since loop will free one.
   NS_ADDREF(parent);
   nsIWidget* tmp;
-  while (rootWidget != parent) {
+  while (rootWidget != parent && nsnull != parent) {
     parent->GetBounds(bounds);
     offset.x += bounds.x;
     tmp = parent;
@@ -391,7 +391,7 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
   //Add extra ref since loop will free one.
   NS_ADDREF(parent);
   nsIWidget* tmp;
-  while (rootWidget != parent) {
+  while (rootWidget != parent && nsnull != parent) {
     parent->GetBounds(bounds);
     offset.y += bounds.y;
     tmp = parent;

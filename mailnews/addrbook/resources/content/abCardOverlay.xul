@@ -43,7 +43,7 @@ Rights Reserved.
 			<!-- ** Name Tab ** -->
 			<box index="name" align="vertical" flex="100%">
 				
-				<html:fieldset style="width:100%">
+				<html:fieldset flex="100%">
 					<html:legend align="left">
 						<html:div style="font-weight: bold">&Name.box;</html:div>
 					</html:legend>
@@ -72,7 +72,7 @@ Rights Reserved.
 					</box>
 				</html:fieldset>
 
-				<html:fieldset style="width:100%">
+				<html:fieldset flex="100%">
 					<html:legend align="left">
 						<html:div style="font-weight: bold">&Internet.box;</html:div>
 					</html:legend>
@@ -95,7 +95,7 @@ Rights Reserved.
 					</box>
 				</html:fieldset>
 
-				<html:fieldset style="width:100%">
+				<html:fieldset flex="100%">
 					<html:legend align="left">
 						<html:div style="font-weight: bold">&Phones.box;</html:div>
 					</html:legend>
@@ -133,7 +133,7 @@ Rights Reserved.
 			<!-- ** Address Tab ** -->
 			<box index="address" align="vertical" flex="100%">
 				
-				<html:fieldset style="width:100%">
+				<html:fieldset flex="100%">
 					<html:legend align="left">
 						<html:div style="font-weight: bold">&Home.box;</html:div>
 					</html:legend>
