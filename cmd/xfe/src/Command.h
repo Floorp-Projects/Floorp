@@ -128,32 +128,34 @@ public:
 	CommandType getId() { return m_id; };
 	char*       getName();
 
-	XP_Bool     isDynamic();
-	XP_Bool     isSlow();
+	virtual XP_Bool     isDynamic();
+	virtual XP_Bool     isSlow();
+
+	virtual XP_Bool     isViewCommand();
 
 	//    Call these from a View.
-	XP_Bool     isEnabled(XFE_View* view, XFE_CommandInfo*);
-	XP_Bool     isSelected(XFE_View*, XFE_CommandInfo*);
-	XP_Bool     isDeterminate(XFE_View*, XFE_CommandInfo*);
+	virtual XP_Bool     isEnabled(XFE_View* view, XFE_CommandInfo*);
+	virtual XP_Bool     isSelected(XFE_View*, XFE_CommandInfo*);
+	virtual XP_Bool     isDeterminate(XFE_View*, XFE_CommandInfo*);
 
-	XFE_CommandParameters* getParameters(XFE_View*);
-	int         getParameterIndex(XFE_View*);
-	void        setParameterIndex(XFE_View*, unsigned);
-	char*       getLabel(XFE_View*, XFE_CommandInfo*);
-	char*       getTipString(XFE_View*, XFE_CommandInfo*);
-	char*       getDocString(XFE_View*, XFE_CommandInfo*);
+	virtual XFE_CommandParameters* getParameters(XFE_View*);
+	virtual int         getParameterIndex(XFE_View*);
+	virtual void        setParameterIndex(XFE_View*, unsigned);
+	virtual char*       getLabel(XFE_View*, XFE_CommandInfo*);
+	virtual char*       getTipString(XFE_View*, XFE_CommandInfo*);
+	virtual char*       getDocString(XFE_View*, XFE_CommandInfo*);
 
 	//    Call these from a Frame.
-	XP_Bool     isEnabled(XFE_Frame*, XFE_CommandInfo*);
-	XP_Bool     isSelected(XFE_Frame*, XFE_CommandInfo*);
-	XP_Bool     isDeterminate(XFE_Frame*, XFE_CommandInfo*);
+	virtual XP_Bool     isEnabled(XFE_Frame*, XFE_CommandInfo*);
+	virtual XP_Bool     isSelected(XFE_Frame*, XFE_CommandInfo*);
+	virtual XP_Bool     isDeterminate(XFE_Frame*, XFE_CommandInfo*);
 
 	XFE_CommandParameters* getParameters(XFE_Frame*);
-	int         getParameterIndex(XFE_Frame*);
-	void        setParameterIndex(XFE_Frame*, unsigned);
-	char*       getLabel(XFE_Frame*, XFE_CommandInfo*);
-	char*       getTipString(XFE_Frame*, XFE_CommandInfo*);
-	char*       getDocString(XFE_Frame*, XFE_CommandInfo*);
+	virtual int         getParameterIndex(XFE_Frame*);
+	virtual void        setParameterIndex(XFE_Frame*, unsigned);
+	virtual char*       getLabel(XFE_Frame*, XFE_CommandInfo*);
+	virtual char*       getTipString(XFE_Frame*, XFE_CommandInfo*);
+	virtual char*       getDocString(XFE_Frame*, XFE_CommandInfo*);
 
 protected:	
 	XFE_Command(CommandType id);
@@ -165,19 +167,23 @@ private:
 class XFE_ViewCommand : public XFE_Command
 {
 public:
+	virtual XP_Bool     isViewCommand();
+
 	//    These will forward to the view.
-	XP_Bool     isEnabled(XFE_Frame* view, XFE_CommandInfo*);
-	XP_Bool     isSelected(XFE_Frame*, XFE_CommandInfo*);
-	XP_Bool     isDeterminate(XFE_Frame*, XFE_CommandInfo*);
+	virtual XP_Bool     isEnabled(XFE_Frame* view, XFE_CommandInfo*);
+	virtual XP_Bool     isSelected(XFE_Frame*, XFE_CommandInfo*);
+	virtual XP_Bool     isDeterminate(XFE_Frame*, XFE_CommandInfo*);
 
-	XFE_CommandParameters* getParameters(XFE_Frame*);
-	int         getParameterIndex(XFE_Frame*);
-	void        setParameterIndex(XFE_Frame*, unsigned);
-	char*       getLabel(XFE_Frame*, XFE_CommandInfo*);
-	char*       getTipString(XFE_Frame*, XFE_CommandInfo*);
-	char*       getDocString(XFE_Frame*, XFE_CommandInfo*);
+	virtual XFE_CommandParameters* getParameters(XFE_Frame*);
+	virtual int         getParameterIndex(XFE_Frame*);
+	virtual void        setParameterIndex(XFE_Frame*, unsigned);
+	virtual char*       getLabel(XFE_Frame*, XFE_CommandInfo*);
+	virtual char*       getTipString(XFE_Frame*, XFE_CommandInfo*);
+	virtual char*       getDocString(XFE_Frame*, XFE_CommandInfo*);
 
-	void        doCommand(XFE_Frame* view, XFE_CommandInfo*);
+	virtual void        doCommand(XFE_Frame* view, XFE_CommandInfo*);
+
+	void        setView(XFE_View* view) { m_view = view; };
 
 protected:
 	XFE_View *m_view;
@@ -195,18 +201,18 @@ class XFE_FrameCommand : public XFE_Command
 {
 public:
 	//    These will forward to your Frame dual.
-	XP_Bool     isEnabled(XFE_View* view, XFE_CommandInfo*);
-	XP_Bool     isSelected(XFE_View*, XFE_CommandInfo*);
-	XP_Bool     isDeterminate(XFE_View*, XFE_CommandInfo*);
+	virtual XP_Bool     isEnabled(XFE_View* view, XFE_CommandInfo*);
+	virtual XP_Bool     isSelected(XFE_View*, XFE_CommandInfo*);
+	virtual XP_Bool     isDeterminate(XFE_View*, XFE_CommandInfo*);
 
-	XFE_CommandParameters* getParameters(XFE_View*);
-	int         getParameterIndex(XFE_View*);
-	void        setParameterIndex(XFE_View*, unsigned);
-	char*       getLabel(XFE_View*, XFE_CommandInfo*);
-	char*       getTipString(XFE_View*, XFE_CommandInfo*);
-	char*       getDocString(XFE_View*, XFE_CommandInfo*);
+	virtual XFE_CommandParameters* getParameters(XFE_View*);
+	virtual int         getParameterIndex(XFE_View*);
+	virtual void        setParameterIndex(XFE_View*, unsigned);
+	virtual char*       getLabel(XFE_View*, XFE_CommandInfo*);
+	virtual char*       getTipString(XFE_View*, XFE_CommandInfo*);
+	virtual char*       getDocString(XFE_View*, XFE_CommandInfo*);
 
-	void        doCommand(XFE_View* view, XFE_CommandInfo*);
+	virtual void        doCommand(XFE_View* view, XFE_CommandInfo*);
 
 protected:
 	XFE_FrameCommand(CommandType id) : XFE_Command(id) { };
@@ -243,7 +249,7 @@ class XFE_ObjectIsCommand : public XFE_ViewCommand
 public:
 	XFE_ObjectIsCommand(XFE_View *view = NULL);
 
-	        void  doCommand(XFE_View* view, XFE_CommandInfo* info);
+	virtual void  doCommand(XFE_View* view, XFE_CommandInfo* info);
 	virtual char* getObjectType(XFE_View*) = 0;
 };
 
