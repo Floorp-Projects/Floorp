@@ -610,6 +610,8 @@ function setupCopiesAndFoldersServer(account, accountIsDeferred)
 {
   try {
     var server = account.incomingServer;
+    if (server.type == "rss")
+      return false;
     var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
     // For this server, do we default the folder prefs to this server, or to the "Local Folders" server
     // If it's deferred, we use the local folders account.
