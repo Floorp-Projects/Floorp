@@ -2964,7 +2964,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #endif
 
   // Align the frame
-  ir.VerticalAlignFrames(aLine->mBounds);
+  nscoord maxAscent, maxDescent;
+  ir.VerticalAlignFrames(aLine->mBounds, maxAscent, maxDescent);
   ir.HorizontalAlignFrames(aLine->mBounds);
   ir.RelativePositionFrames();
 
@@ -3200,6 +3201,10 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     }
 #endif
     NS_ASSERTION(0 != aLine->mChildCount, "bad push");
+
+    // Let inline reflow know that some frames are no longer part of
+    // its state.
+    aState.mInlineReflow->ChangeFrameCount(aLine->mChildCount);
   }
   return NS_OK;
 }
@@ -3297,7 +3302,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // Align the children. This also determines the actual height and
   // width of the line.
   nsInlineReflow& ir = *aState.mInlineReflow;
-  ir.VerticalAlignFrames(aLine->mBounds);
+  nscoord maxAscent, maxDescent;
+  ir.VerticalAlignFrames(aLine->mBounds, maxAscent, maxDescent);
   ir.HorizontalAlignFrames(aLine->mBounds);
   ir.RelativePositionFrames();
 
@@ -3396,7 +3402,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         metrics.width;
       // XXX This calculation is wrong, especially if
       // vertical-alignment occurs on the line!
-      nscoord y = aState.mBorderPadding.top + ir.GetMaxAscent() -
+      nscoord y = aState.mBorderPadding.top + maxAscent -
         metrics.ascent + topMargin;
       mBullet->SetRect(nsRect(x, y, metrics.width, metrics.height));
     }
