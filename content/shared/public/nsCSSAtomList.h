@@ -83,8 +83,8 @@ CSS_ATOM(hoverPseudo, ":hover")
 CSS_ATOM(langPseudo, ":lang")
 CSS_ATOM(linkPseudo, ":link")
 
-CSS_ATOM(mozGCWrapperBlock, ":-moz-gc-wrapper-block");
-CSS_ATOM(mozGCWrapperInline, ":-moz-gc-wrapper-inline");
+CSS_ATOM(mozGCWrapperBlock, ":-moz-gc-wrapper-block")
+CSS_ATOM(mozGCWrapperInline, ":-moz-gc-wrapper-inline")
 
 CSS_ATOM(notPseudo, ":not")
 
