@@ -321,6 +321,7 @@ const char *const JS::Token::kindNames[kindsEnd] = {
 	"import",			// Import
 	"in",				// In
 	"instanceof",		// Instanceof
+	"interface",		// Interface
 	"native",			// Native
 	"new",				// New
 	"null",				// Null
@@ -459,6 +460,7 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
 	0,						// Import
 	0,						// In
 	0,						// Instanceof
+	followAttr,				// Interface
 	followAttr,				// Native
 	0,						// New
 	0,						// Null
@@ -1199,6 +1201,7 @@ const int32 caseIndent = basicIndent/2;	// Indentation before a case or default 
 const int32 varIndent = 2;				// Indentation of var or const statement bindings
 const int32 subexpressionIndent = 4;	// Size of one level of expression indentation
 const int32 functionHeaderIndent = 9;	// Indentation of function signature
+const int32 namespaceHeaderIndent = 4;	// Indentation of class, interface, or namespace header
 
 
 static const char functionPrefixNames[3][5] = {"", "get ", "set "};
@@ -1280,6 +1283,35 @@ void JS::FunctionDefinition::print(PrettyPrinter &f, bool isConstructor, const A
 		body->printBlock(f, loose);
 	} else
 		StmtNode::printSemi(f, noSemi);
+}
+
+
+// Print a comma-separated ExprList on to f.  Since a method can't be called on nil, the list
+// has at least one element.
+void JS::ExprList::printCommaList(PrettyPrinter &f) const
+{
+	PrettyPrinter::Block b(f);
+	const ExprList *list = this;
+	while (true) {
+		f << list->expr;
+		list = list->next;
+		if (!list)
+			break;
+		f << ',';
+		f.fillBreak(1);
+	}
+}
+
+
+// If list is nil, do nothing.  Otherwise, emit a linear line break of size 1, the name, a space, and the
+// contents of list separated by commas.
+void JS::ExprList::printOptionalCommaList(PrettyPrinter &f, const char *name, const ExprList *list)
+{
+	if (list) {
+		f.linearBreak(1);
+		f << name << ' ';
+		list->printCommaList(f);
+	}
 }
 
 
@@ -1879,6 +1911,50 @@ void JS::FunctionStmtNode::print(PrettyPrinter &f, bool noSemi) const
 	function.print(f, hasKind(Constructor), this, noSemi);
 }
 
+void JS::NamespaceStmtNode::print(PrettyPrinter &f, bool noSemi) const
+{
+	printAttributes(f);
+	ASSERT(hasKind(Namespace));
+
+	PrettyPrinter::Block b(f, namespaceHeaderIndent);
+	f << "namespace ";
+	f << name;
+	ExprList::printOptionalCommaList(f, "extends", supers);
+	printSemi(f, noSemi);
+}
+
+void JS::ClassStmtNode::print(PrettyPrinter &f, bool noSemi) const
+{
+	printAttributes(f);
+	ASSERT(hasKind(Class) || hasKind(Interface));
+
+	{
+		PrettyPrinter::Block b(f, namespaceHeaderIndent);
+		const char *keyword;
+		const char *superlistKeyword;
+		if (hasKind(Class)) {
+			keyword = "class ";
+			superlistKeyword = "implements";
+		} else {
+			keyword = "interface ";
+			superlistKeyword = "extends";
+		}
+		f << keyword;
+		f << name;
+		if (superclass) {
+			f.linearBreak(1);
+			f << "extends ";
+			f << superclass;
+		}
+		ExprList::printOptionalCommaList(f, superlistKeyword, supers);
+	}
+	if (body) {
+		f.requiredBreak();
+		body->printBlock(f, true);
+	} else
+		printSemi(f, noSemi);
+}
+
 
 //
 // Parser
@@ -2169,7 +2245,7 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 			if (!(f->function.name = makeIdentifierExpression(t2)))
 				lexer.unget();
 			parseFunctionSignature(f->function);
-			f->function.body = parseBlockStatement(require(true, Token::openBrace).getPos(), 0);
+			f->function.body = parseBody(0);
 			e = f;
 		}
 		break;
@@ -2466,6 +2542,7 @@ const JS::Parser::BinaryOperatorInfo JS::Parser::tokenBinaryOperatorInfos[Token:
 	{ExprNode::none, pExpression, pNone},						// Token::Import
 	{ExprNode::In, pRelational, pRelational},					// Token::In
 	{ExprNode::Instanceof, pRelational, pRelational},			// Token::Instanceof
+	{ExprNode::none, pExpression, pNone},						// Token::Interface
 	{ExprNode::none, pExpression, pNone},						// Token::Native
 	{ExprNode::none, pExpression, pNone},						// Token::New
 	{ExprNode::none, pExpression, pNone},						// Token::Null
@@ -2589,6 +2666,21 @@ JS::ExprNode *JS::Parser::parseParenthesizedExpression()
 }
 
 
+// Parse and return a TypeExpression.  If noIn is false, allow the in operator.
+//
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+// After parseTypeExpression finishes, the next token might have been peeked with preferRegExp set to true.
+JS::ExprNode *JS::Parser::parseTypeExpression(bool noIn)
+{
+	ExprNode *type = parseNonAssignmentExpression(noIn);
+	if (lexer.peek(false).hasKind(Token::divideEquals))
+		syntaxError("'/=' not allowed here", 0);
+	lexer.redesignate(true);	// Safe: a '/' would have been interpreted as an operator, so it can't be the next token;
+								// a '/=' was outlawed by the check above.
+	return type;
+}
+
+
 // Parse a TypedIdentifier.  Return the identifier's name.
 // If a type was provided, set type to it; otherwise, set type to nil.
 // After parseTypedIdentifier finishes, the next token might have been peeked with preferRegExp set to false.
@@ -2606,22 +2698,33 @@ const JS::StringAtom &JS::Parser::parseTypedIdentifier(ExprNode *&type)
 }
 
 
-// If the next token is ':', eat it and parse and return the following TypeExpression.  Otherwise return nil.
+// If the next token has the given kind, eat it and parse and return the following TypeExpression;
+// otherwise return nil.
 // If noIn is false, allow the in operator.
 //
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 // After parseTypeBinding finishes, the next token might have been peeked with preferRegExp set to true.
-JS::ExprNode *JS::Parser::parseTypeBinding(bool noIn)
+JS::ExprNode *JS::Parser::parseTypeBinding(Token::Kind kind, bool noIn)
 {
 	ExprNode *type = 0;
-	if (lexer.eat(true, Token::colon)) {
-		type = parseNonAssignmentExpression(noIn);
-		if (lexer.peek(false).hasKind(Token::divideEquals))
-			syntaxError("'/=' not allowed here", 0);
-		lexer.redesignate(true);	// Safe: a '/' would have been interpreted as an operator, so it can't be the next token;
-									// a '/=' was outlawed by the check above.
-	}
+	if (lexer.eat(true, kind))
+		type = parseTypeExpression(noIn);
 	return type;
+}
+
+
+// If the next token has the given kind, eat it and parse and return the following TypeExpressionList;
+// otherwise return nil.
+//
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+// After parseTypeListBinding finishes, the next token might have been peeked with preferRegExp set to true.
+JS::ExprList *JS::Parser::parseTypeListBinding(Token::Kind kind)
+{
+	NodeQueue<ExprList> types;
+	if (lexer.eat(true, kind))
+		do types += new(arena) ExprList(parseTypeExpression(false));
+		while (lexer.eat(true, Token::comma));
+	return types.first;
 }
 
 
@@ -2645,7 +2748,7 @@ JS::VariableBinding *JS::Parser::parseVariableBinding(bool noQualifiers, bool no
 	} else
 		name = parseQualifiedIdentifier(t, true);
 	
-	ExprNode *type = parseTypeBinding(noIn);
+	ExprNode *type = parseTypeBinding(Token::colon, noIn);
 	
 	ExprNode *initializer = 0;
 	if (lexer.eat(true, Token::assignment)) {
@@ -2720,7 +2823,7 @@ void JS::Parser::parseFunctionSignature(FunctionDefinition &fd)
 	fd.parameters = parameters.first;
 	fd.optParameters = optParameters;
 	fd.restParameter = restParameter;
-	fd.resultType = parseTypeBinding(false);
+	fd.resultType = parseTypeBinding(Token::colon, false);
 }
 
 
@@ -2759,12 +2862,25 @@ JS::StmtNode *JS::Parser::parseBlock(bool inSwitch, bool noCloseBrace)
 }
 
 
-// Parse a list of statements ending with a '}'.  Return these statements as a BlockStmtNode
-// with the given attributes.  The opening '{' has already been read.
-// pos is the position of the beginning of the statement (its first attribute if it has attributes).
-JS::BlockStmtNode *JS::Parser::parseBlockStatement(uint32 pos, IdentifierList *attributes)
+// Parse an optional block of statements beginning with a '{' and ending with a '}'.
+// Return these statements as a BlockStmtNode.
+// If semicolonState is nil, the block is required; otherwise, the block is optional and if it is
+// omitted, *semicolonState is set to semiInsertable.
+//
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+// After parseBody finishes, the next token might have been peeked with preferRegExp set to true.
+JS::BlockStmtNode *JS::Parser::parseBody(SemicolonState *semicolonState)
 {
-	return new(arena) BlockStmtNode(pos, StmtNode::block, attributes, parseBlock(false, false));
+	const Token *tBrace = lexer.eat(true, Token::openBrace);
+	if (tBrace) {
+		uint32 pos = tBrace->getPos();
+		return new(arena) BlockStmtNode(pos, StmtNode::block, 0, parseBlock(false, false));
+	} else {
+		if (!semicolonState)
+			syntaxError("'{' expected", 0);
+		*semicolonState = semiInsertable;
+		return 0;
+	}
 }
 
 
@@ -2788,7 +2904,7 @@ JS::StmtNode *JS::Parser::parseAttributeStatement(uint32 pos, IdentifierList *at
 
 	switch (t.getKind()) {
 	  case Token::openBrace:
-		return parseBlockStatement(pos, attributes);
+		return new(arena) BlockStmtNode(pos, StmtNode::block, attributes, parseBlock(false, false));
 
 	  case Token::Const:
 		sKind = StmtNode::Const;
@@ -2821,14 +2937,35 @@ JS::StmtNode *JS::Parser::parseAttributeStatement(uint32 pos, IdentifierList *at
 			} else
 				parseFunctionName(f->function);
 			parseFunctionSignature(f->function);
-			const Token *t3 = lexer.eat(true, Token::openBrace);
-			if (t3)
-				f->function.body = parseBlockStatement(t3->getPos(), 0);
-			else {
-				f->function.body = 0;
-				semicolonState = semiInsertable;
-			}
+			f->function.body = parseBody(&semicolonState);
 			return f;
+		}
+
+	  case Token::Interface:
+		sKind = StmtNode::Interface;
+		goto classOrInterface;
+	  case Token::Class:
+		sKind = StmtNode::Class;
+	  classOrInterface:
+		{
+			ExprNode *name = parseQualifiedIdentifier(lexer.get(true), true);
+			ExprNode *superclass = 0;
+			if (sKind == StmtNode::Class)
+				superclass = parseTypeBinding(Token::Extends, false);
+			ExprList *superinterfaces = parseTypeListBinding(sKind == StmtNode::Class ? Token::Implements : Token::Extends);
+			BlockStmtNode *body = parseBody(superclass || superinterfaces ? 0 : &semicolonState);
+			return new(arena) ClassStmtNode(pos, sKind, attributes, name, superclass, superinterfaces, body);
+		}
+
+	  case Token::Namespace:
+		{
+			const Token &t2 = lexer.get(false);
+			ExprNode *name;
+			if (lineBreakBefore(t2) || !(name = makeIdentifierExpression(t2)))
+				syntaxError("Namespace name expected");
+			ExprList *supernamespaces = parseTypeListBinding(Token::Extends);
+			semicolonState = semiInsertable;
+			return new(arena) NamespaceStmtNode(pos, StmtNode::Namespace, attributes, name, supernamespaces);
 		}
 
 	  default:
@@ -3024,6 +3161,7 @@ JS::StmtNode *JS::Parser::parseStatement(bool topLevel, bool inSwitch, Semicolon
 		break;
 	
 	  case Token::Constructor:
+	  case Token::Namespace:
 		t2 = &lexer.peek(false);
 		if (lineBreakBefore(*t2) || !t2->hasIdentifierKind())
 			goto makeExpression;
@@ -3031,6 +3169,8 @@ JS::StmtNode *JS::Parser::parseStatement(bool topLevel, bool inSwitch, Semicolon
 	  case Token::Const:
 	  case Token::Var:
 	  case Token::Function:
+	  case Token::Class:
+	  case Token::Interface:
 		s = parseAttributeStatement(pos, 0, t, false, semicolonState);
 		break;
 	
