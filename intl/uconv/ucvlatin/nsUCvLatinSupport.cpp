@@ -30,6 +30,10 @@ nsEncoderSupport::nsEncoderSupport()
   mBufferCapacity = 16;
   mBuffer = new char[mBufferCapacity];
 
+  mErrBehavior = kOnError_Signal;
+  mErrChar = 0;
+  mErrEncoder = NULL;
+
   Reset();
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -38,6 +42,7 @@ nsEncoderSupport::nsEncoderSupport()
 nsEncoderSupport::~nsEncoderSupport() 
 {
   delete [] mBuffer;
+  NS_IF_RELEASE(mErrEncoder);
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
@@ -210,7 +215,7 @@ NS_IMETHODIMP nsEncoderSupport::Finish(char * aDest, PRInt32 * aDestLength)
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
 
-  PRInt32 bcr, bcw; // byte counts for read & write;
+  PRInt32 bcw; // byte count for write;
   nsresult res;
 
   res = FlushBuffer(&dest, destEnd);
@@ -250,8 +255,14 @@ NS_IMETHODIMP nsEncoderSupport::SetOutputErrorBehavior(
                                 nsIUnicharEncoder * aEncoder, 
                                 PRUnichar aChar)
 {
-  mErrBehavior = aBehavior;
+  if ((aBehavior == kOnError_CallBack) && (aEncoder == NULL)) 
+    return NS_ERROR_NULL_POINTER;
+
+  NS_IF_RELEASE(aEncoder);
   mErrEncoder = aEncoder;
+  NS_IF_ADDREF(aEncoder);
+
+  mErrBehavior = aBehavior;
   mErrChar = aChar;
   return NS_OK;
 }
