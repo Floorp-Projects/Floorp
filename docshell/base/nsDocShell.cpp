@@ -3115,19 +3115,13 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     }
 
 
-    // Update SessionHistory too with Title. Otherwise entry for current page
-    // has previous page's title.
-    if (mSessionHistory) {
-        PRInt32 index = -1;
-        mSessionHistory->GetIndex(&index);
-        nsCOMPtr<nsIHistoryEntry> hEntry;
-        mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
-                                         getter_AddRefs(hEntry));
-        if (hEntry) {
-          nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
-          if (shEntry)
-            shEntry->SetTitle(mTitle.get());
-        }
+    // Update SessionHistory with the document's title. If the
+    // page was loaded from history or the page bypassed history,
+    // there is no need to update the title. There is no need to
+    // go to mSessionHistory to update the title. Setting it in mOSHE 
+    // would suffice. 
+    if (mOSHE && (mLoadType != LOAD_BYPASS_HISTORY) && (mLoadType != LOAD_HISTORY)) {        
+        mOSHE->SetTitle(mTitle.get());    
     }
 
 
