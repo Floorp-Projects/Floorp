@@ -34,6 +34,10 @@
 #
 include $(CORE_DEPTH)/coreconf/HP-UX.mk
 
+ifdef USE_LONG_LONGS
+USE_HYBRID = 1
+endif
+
 ifndef NS_USE_GCC
     CCC                 = /opt/aCC/bin/aCC -ext
     ifeq ($(USE_64), 1)
@@ -41,7 +45,7 @@ ifndef NS_USE_GCC
 # Next line replaced by generic name handling in arch.mk
 #	COMPILER_TAG    = _64
     else
-	ifdef USE_LONG_LONGS
+	ifdef USE_HYBRID
 	    OS_CFLAGS 	+= -Aa +e +DA2.0 +DS2.0 
 	else
 	    OS_CFLAGS   += +DAportable +DS1.1
@@ -53,4 +57,9 @@ endif
 
 OS_CFLAGS += -DHPUX11 
 OS_LIBS   += -lpthread -lm -lrt
+#ifeq ($(USE_64), 1)
+#OS_LIBS   += -ldl
+#else
+#OS_LIBS   += -ldld
+#endif
 HPUX11	= 1

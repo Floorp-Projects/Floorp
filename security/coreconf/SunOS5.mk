@@ -39,7 +39,11 @@ ifeq ($(USE_64), 1)
 	ARCHFLAG=-xarch=v9
 	LD=/usr/ccs/bin/ld
 else
+  ifdef USE_HYBRID
+	ARCHFLAG=-xarch=v8plus
+  else
 	ARCHFLAG=-xarch=v8
+  endif
 endif
 
 #
