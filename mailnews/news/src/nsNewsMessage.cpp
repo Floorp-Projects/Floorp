@@ -37,7 +37,7 @@ nsNewsMessage::~nsNewsMessage(void)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsNewsMessage, nsMessage, nsIMessage)
+NS_IMPL_ISUPPORTS_INHERITED(nsNewsMessage, nsMessage, nsIDBMessage)
 
 NS_IMETHODIMP nsNewsMessage::GetMsgFolder(nsIMsgFolder **folder)
 {

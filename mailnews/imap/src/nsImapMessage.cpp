@@ -37,7 +37,7 @@ nsImapMessage::~nsImapMessage(void)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsImapMessage, nsMessage, nsIMessage)
+NS_IMPL_ISUPPORTS_INHERITED(nsImapMessage, nsMessage, nsIDBMessage)
 
 NS_IMETHODIMP nsImapMessage::GetMsgFolder(nsIMsgFolder **folder)
 {
