@@ -85,14 +85,14 @@
 #
 
 ifndef COMPILER_TAG
-    ifneq ($(DEFAULT_COMPILER), $(notdir $(CC)))
+    ifneq ($(DEFAULT_COMPILER), $(notdir $(firstword $(CC))))
 #
 # Temporary define for the Client; to be removed when binary release is used
 #
 	ifdef MOZILLA_CLIENT
 	    COMPILER_TAG =
 	else
-	    COMPILER_TAG = _$(notdir $(CC))
+	    COMPILER_TAG = _$(notdir $(firstword $(CC)))
 	endif
     else
 	COMPILER_TAG =
