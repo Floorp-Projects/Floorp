@@ -1855,11 +1855,11 @@ static int PR_CALLBACK CompareKey (const void *v1, const void *v2, void *)
 /* static */nsresult
 nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds)
 {
-    nsresult rv = NS_OK;
-  PRInt32 startSequence = -1;
-    if (numKeys > 0)
-        startSequence = keys[0];
-  PRInt32 curSequenceEnd = startSequence;
+  nsresult rv = NS_OK;
+  PRUint32 startSequence; // no need to init; we won't use it unless numKeys > 0
+  if (numKeys > 0)
+    startSequence = keys[0];
+  PRUint32 curSequenceEnd = startSequence;
   PRUint32 total = numKeys;
   // sort keys and then generate ranges instead of singletons!
   NS_QuickSort(keys, numKeys, sizeof(nsMsgKey), CompareKey, nsnull);
@@ -1895,7 +1895,7 @@ nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsC
         msgIds += ',';
     }
   }
-    return rv;
+  return rv;
 }
 
 nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db)

@@ -121,50 +121,50 @@ public:
   // set this to false if you don't want to alert the user to server 
   // error messages
   void SetReportingErrors(PRBool reportThem) { fReportingErrors=reportThem;}
-	PRBool GetReportingErrors() { return fReportingErrors; }
+  PRBool GetReportingErrors() { return fReportingErrors; }
 
-	PRUint32 GetCapabilityFlag() { return fCapabilityFlag; }
-	void   SetCapabilityFlag(PRUint32 capability) {fCapabilityFlag = capability;}
-	PRBool ServerHasIMAP4Rev1Capability() { return ((fCapabilityFlag & kIMAP4rev1Capability) != 0); }
-	PRBool ServerHasACLCapability() { return ((fCapabilityFlag & kACLCapability) != 0); }
-	PRBool ServerHasNamespaceCapability() { return ((fCapabilityFlag & kNamespaceCapability) != 0); }
-	PRBool ServerIsNetscape3xServer() { return fServerIsNetscape3xServer; }
-	PRBool ServerHasServerInfo() {return ((fCapabilityFlag & kXServerInfoCapability) != 0); }
-	PRBool ServerIsAOLServer() {return ((fCapabilityFlag & kAOLImapCapability) != 0); }
-    void SetFetchingFlags(PRBool aFetchFlags) { fFetchingAllFlags = aFetchFlags;}
-	void ResetCapabilityFlag() ;
+  PRUint32 GetCapabilityFlag() { return fCapabilityFlag; }
+  void   SetCapabilityFlag(PRUint32 capability) {fCapabilityFlag = capability;}
+  PRBool ServerHasIMAP4Rev1Capability() { return ((fCapabilityFlag & kIMAP4rev1Capability) != 0); }
+  PRBool ServerHasACLCapability() { return ((fCapabilityFlag & kACLCapability) != 0); }
+  PRBool ServerHasNamespaceCapability() { return ((fCapabilityFlag & kNamespaceCapability) != 0); }
+  PRBool ServerIsNetscape3xServer() { return fServerIsNetscape3xServer; }
+  PRBool ServerHasServerInfo() {return ((fCapabilityFlag & kXServerInfoCapability) != 0); }
+  PRBool ServerIsAOLServer() {return ((fCapabilityFlag & kAOLImapCapability) != 0); }
+  void SetFetchingFlags(PRBool aFetchFlags) { fFetchingAllFlags = aFetchFlags;}
+  void ResetCapabilityFlag() ;
 
-	const char *GetMailAccountUrl() { return fMailAccountUrl; }
-	const char *GetXSenderInfo() { return fXSenderInfo; }
-	void FreeXSenderInfo() { PR_FREEIF(fXSenderInfo); }
-	const char *GetManageListsUrl() { return fManageListsUrl; }
-	const char *GetManageFiltersUrl() {return fManageFiltersUrl;}
-	const char *GetManageFolderUrl() {return fFolderAdminUrl;}
+  const char *GetMailAccountUrl() { return fMailAccountUrl; }
+  const char *GetXSenderInfo() { return fXSenderInfo; }
+  void FreeXSenderInfo() { PR_FREEIF(fXSenderInfo); }
+  const char *GetManageListsUrl() { return fManageListsUrl; }
+  const char *GetManageFiltersUrl() {return fManageFiltersUrl;}
+  const char *GetManageFolderUrl() {return fFolderAdminUrl;}
 
 
   // Call this when adding a pipelined command to the session
   void IncrementNumberOfTaggedResponsesExpected(const char *newExpectedTag);
     
-	// Interrupt a Fetch, without really Interrupting (through netlib)
-	PRBool GetLastFetchChunkReceived(); 
-	void ClearLastFetchChunkReceived(); 
-	virtual PRUint16	SupportsUserFlags() { return fSupportsUserDefinedFlags; };
+  // Interrupt a Fetch, without really Interrupting (through netlib)
+  PRBool GetLastFetchChunkReceived(); 
+  void ClearLastFetchChunkReceived(); 
+  virtual PRUint16	SupportsUserFlags() { return fSupportsUserDefinedFlags; };
   virtual PRUint16  SettablePermanentFlags() { return fSettablePermanentFlags;};
-	void SetFlagState(nsIImapFlagAndUidState *state);
+  void SetFlagState(nsIImapFlagAndUidState *state);
 
-	PRBool GetDownloadingHeaders();
-	PRBool GetFillingInShell();
-	void	UseCachedShell(nsIMAPBodyShell *cachedShell);
+  PRBool GetDownloadingHeaders();
+  PRBool GetFillingInShell();
+  void	UseCachedShell(nsIMAPBodyShell *cachedShell);
   void SetHostSessionList(nsIImapHostSessionList *aHostSession);
-	nsIImapHostSessionList *GetHostSessionList();
+  nsIImapHostSessionList *GetHostSessionList();
   char           *fCRAMDigest;    // the digest returned by the server in response to authenticate using CRAM-MD5...
 
 protected:
   virtual void    flags();
-	virtual void	envelope_data();
-	virtual void	xaolenvelope_data();
-	virtual void	parse_address(nsCAutoString &addressLine);
-	virtual void	internal_date();
+  virtual void	  envelope_data();
+  virtual void	  xaolenvelope_data();
+  virtual void	  parse_address(nsCAutoString &addressLine);
+  virtual void	  internal_date();
   virtual nsresult BeginMessageDownload(const char *content_type);
 
   virtual void    response_data();
@@ -172,6 +172,7 @@ protected:
   virtual void    resp_cond_state();
   virtual void    text_mime2();
   virtual void    text();
+  virtual void    parse_folder_flags();
   virtual void    language_data();
   virtual void    cramResponse_data();
   virtual void    resp_text_code();
@@ -182,18 +183,18 @@ protected:
   virtual void    mailbox_data();
   virtual void    numeric_mailbox_data();
   virtual void    capability_data();
-	virtual void	  xserverinfo_data();
-	virtual void	  xmailboxinfo_data();
-	virtual void	  namespace_data();
-	virtual void	  myrights_data();
-	virtual void	  acl_data();
-	virtual void	  bodystructure_data();
-	virtual void	  mime_data();
-	virtual void	  mime_part_data();
-	virtual void	  mime_header_data();
+  virtual void	  xserverinfo_data();
+  virtual void	  xmailboxinfo_data();
+  virtual void	  namespace_data();
+  virtual void	  myrights_data();
+  virtual void	  acl_data();
+  virtual void	  bodystructure_data();
+  virtual void	  mime_data();
+  virtual void	  mime_part_data();
+  virtual void	  mime_header_data();
   virtual void    msg_fetch();
   virtual void    msg_obsolete();
-	virtual void	  msg_fetch_headers(const char *partNum);
+  virtual void	  msg_fetch_headers(const char *partNum);
   virtual void    msg_fetch_content(PRBool chunk, PRInt32 origin, const char *content_type);
   virtual PRBool	msg_fetch_quoted(PRBool chunk, PRInt32 origin);
   virtual PRBool	msg_fetch_literal(PRBool chunk, PRInt32 origin);
@@ -206,26 +207,35 @@ protected:
                                              const char *currentCommand);
   virtual void		PostProcessEndOfLine();
 
-	// Overridden from the nsIMAPGenericParser, to retrieve the next line
-	// from the open socket.
-	virtual PRBool		GetNextLineForParser(char **nextLine);
-	virtual void    end_of_line();
-	// overriden to do logging
-  virtual void        SetSyntaxError(PRBool error);
+  // Overridden from the nsIMAPGenericParser, to retrieve the next line
+  // from the open socket.
+  virtual PRBool  GetNextLineForParser(char **nextLine);
+  virtual void    end_of_line();
+  // overriden to do logging
+  virtual void    SetSyntaxError(PRBool error);
 
 private:
-  PRBool    fProcessingTaggedResponse;
-  PRBool    fCurrentCommandFailed;
-  PRBool    fReportingErrors;
+  PRPackedBool    fProcessingTaggedResponse;
+  PRPackedBool    fCurrentCommandFailed;
+  PRPackedBool    fReportingErrors;
   
   
-  PRBool    fCurrentFolderReadOnly;
-  PRBool    fCurrentLineContainedFlagInfo;
+  PRPackedBool    fCurrentFolderReadOnly;
+  PRPackedBool    fCurrentLineContainedFlagInfo;
+  PRPackedBool    fFetchingAllFlags;
+  PRPackedBool    fWaitingForMoreClientInput;
+  // when issuing a fetch command, are we fetching everything or just a part?
+  PRPackedBool    fFetchEverythingRFC822;
+  // Is the server a Netscape 3.x Messaging Server?
+  PRPackedBool	  fServerIsNetscape3xServer;
+  PRPackedBool    fDownloadingHeaders;
+  PRPackedBool    fCurrentCommandIsSingleMessageFetch;
+  PRPackedBool    fGotPermanentFlags;
   imapMessageFlagsType	  fSavedFlagInfo;
 
 
-	PRUint16					  fSupportsUserDefinedFlags;
-  PRUint16            fSettablePermanentFlags;
+  PRUint16  fSupportsUserDefinedFlags;
+  PRUint16  fSettablePermanentFlags;
 
   PRInt32           fFolderUIDValidity;
   PRInt32           fNumberOfUnseenMessages;
@@ -234,56 +244,46 @@ private:
   PRUint32          fCurrentResponseUID;
   PRUint32          fHighestRecordedUID;
   PRInt32           fSizeOfMostRecentMessage;
-	PRInt32					  fTotalDownloadSize;
-    PRBool fFetchingAllFlags;
+  PRInt32           fTotalDownloadSize;
     
-  int						  fNumberOfTaggedResponsesExpected;
+  int               fNumberOfTaggedResponsesExpected;
 
-  char                     *fCurrentCommandTag;
+  char              *fCurrentCommandTag;
 
-  nsCString					 fZeroLengthMessageUidString;
+  nsCString         fZeroLengthMessageUidString;
 
-  char                     *fSelectedMailboxName;
+  char              *fSelectedMailboxName;
 
   nsImapSearchResultSequence    *fSearchResults;
 
   nsCOMPtr <nsIImapFlagAndUidState> fFlagState;		// NOT owned by us, it's a copy, do not destroy
 
   eIMAPstate               fIMAPstate;
-	PRBool					 fWaitingForMoreClientInput;
 
-	PRUint32					  fCapabilityFlag; 
-	char					 *fMailAccountUrl;
-	char					 *fNetscapeServerVersionString;
-	char					 *fXSenderInfo; /* changed per message download */
-	char					 *fLastAlert;	/* used to avoid displaying the same alert over and over */
-	char					 *fManageListsUrl;
-	char					 *fManageFiltersUrl;
-	char					 *fFolderAdminUrl;
-	
-	// used for index->uid mapping
-	PRBool fCurrentCommandIsSingleMessageFetch;
-	PRInt32	fUidOfSingleMessageFetch;
-	PRInt32	fFetchResponseIndex;
+  PRUint32      fCapabilityFlag; 
+  char          *fMailAccountUrl;
+  char          *fNetscapeServerVersionString;
+  char          *fXSenderInfo; /* changed per message download */
+  char          *fLastAlert;	/* used to avoid displaying the same alert over and over */
+  char          *fManageListsUrl;
+  char          *fManageFiltersUrl;
+  char          *fFolderAdminUrl;
+  
+  PRInt32	fUidOfSingleMessageFetch;
+  PRInt32	fFetchResponseIndex;
 
-	// used for aborting a fetch stream when we're pseudo-Interrupted
-	PRBool fDownloadingHeaders;
-	PRInt32 numberOfCharsInThisChunk;
-	PRInt32 charsReadSoFar;
-	PRBool fLastChunk;
-  // when issuing a fetch command, are we fetching everything or just a part?
-  PRBool fFetchEverythingRFC822;
+  // used for aborting a fetch stream when we're pseudo-Interrupted
+  PRInt32 numberOfCharsInThisChunk;
+  PRInt32 charsReadSoFar;
+  PRBool fLastChunk;
 
-	// Is the server a Netscape 3.x Messaging Server?
-	PRBool	fServerIsNetscape3xServer;
+  // points to the current body shell, if any
+  nsIMAPBodyShell         *m_shell;
 
-	// points to the current body shell, if any
-	nsIMAPBodyShell			*m_shell;
-
-	// The connection object
+  // The connection object
   nsImapProtocol &fServerConnection;
 
-	nsIImapHostSessionList *fHostSessionList;
+  nsIImapHostSessionList *fHostSessionList;
   nsMsgKeyArray fCopyResponseKeyArray;
 };
 

@@ -56,8 +56,8 @@
 
 extern PRLogModuleInfo* IMAP;
 
-nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProtocolConnection) :
-	nsIMAPGenericParser(),
+nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProtocolConnection) 
+                            : nsIMAPGenericParser(),
     fReportingErrors(PR_TRUE),
     fCurrentFolderReadOnly(PR_FALSE),
     fCurrentLineContainedFlagInfo(PR_FALSE),
@@ -69,42 +69,43 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fCurrentCommandTag(nsnull),
     fSelectedMailboxName(nsnull),
     fIMAPstate(kNonAuthenticated),
-	  fLastChunk(PR_FALSE),
+    fLastChunk(PR_FALSE),
     fFetchEverythingRFC822(PR_FALSE),
-	  fServerIsNetscape3xServer(PR_FALSE),
+    fServerIsNetscape3xServer(PR_FALSE),
     m_shell(nsnull),
-	fServerConnection(imapProtocolConnection),
-	fHostSessionList(nsnull)
+    fServerConnection(imapProtocolConnection),
+    fHostSessionList(nsnull)
 {
-	fSearchResults = nsImapSearchResultSequence::CreateSearchResultSequence();
-	fMailAccountUrl = nsnull;
-	fManageFiltersUrl = nsnull;
-	fManageListsUrl = nsnull;
-	fFolderAdminUrl = nsnull;
-	fNetscapeServerVersionString = nsnull;
-	fXSenderInfo = nsnull;
-	fSupportsUserDefinedFlags = 0;
-	fSettablePermanentFlags = 0;
-	fCapabilityFlag = kCapabilityUndefined; 
-	fLastAlert = nsnull;
-	fDownloadingHeaders = PR_FALSE;
-	fFolderUIDValidity = 0;
+  fSearchResults = nsImapSearchResultSequence::CreateSearchResultSequence();
+  fMailAccountUrl = nsnull;
+  fManageFiltersUrl = nsnull;
+  fManageListsUrl = nsnull;
+  fFolderAdminUrl = nsnull;
+  fNetscapeServerVersionString = nsnull;
+  fXSenderInfo = nsnull;
+  fSupportsUserDefinedFlags = 0;
+  fSettablePermanentFlags = 0;
+  fCapabilityFlag = kCapabilityUndefined; 
+  fLastAlert = nsnull;
+  fDownloadingHeaders = PR_FALSE;
+  fGotPermanentFlags = PR_FALSE;
+  fFolderUIDValidity = 0;
   fCRAMDigest = nsnull;
 }
 
 nsImapServerResponseParser::~nsImapServerResponseParser()
 {
-	PR_FREEIF( fCurrentCommandTag );
-	delete fSearchResults; 
-	PR_FREEIF( fMailAccountUrl );
-	PR_FREEIF( fFolderAdminUrl );
-	PR_FREEIF( fNetscapeServerVersionString );
-	PR_FREEIF( fXSenderInfo );
-	PR_FREEIF( fLastAlert );
-	PR_FREEIF( fManageListsUrl );
-	PR_FREEIF( fManageFiltersUrl );
-	PR_FREEIF( fSelectedMailboxName );
-  PR_FREEIF(fCRAMDigest);
+  PR_Free( fCurrentCommandTag );
+  delete fSearchResults; 
+  PR_Free( fMailAccountUrl );
+  PR_Free( fFolderAdminUrl );
+  PR_Free( fNetscapeServerVersionString );
+  PR_Free( fXSenderInfo );
+  PR_Free( fLastAlert );
+  PR_Free( fManageListsUrl );
+  PR_Free( fManageFiltersUrl );
+  PR_Free( fSelectedMailboxName );
+  PR_Free(fCRAMDigest);
 
   NS_IF_RELEASE (fHostSessionList);
   fCopyResponseKeyArray.RemoveAll();
@@ -163,7 +164,7 @@ PRInt32 nsImapServerResponseParser::SizeOfMostRecentMessage()
 void nsImapServerResponseParser::IncrementNumberOfTaggedResponsesExpected(const char *newExpectedTag)
 {
 	fNumberOfTaggedResponsesExpected++;
-	PR_FREEIF( fCurrentCommandTag );
+	PR_Free( fCurrentCommandTag );
 	fCurrentCommandTag = PL_strdup(newExpectedTag);
 	if (!fCurrentCommandTag)
 		HandleMemoryFailure();
@@ -204,7 +205,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 		char *commandToken       = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
 		if (tagToken)
 		{
-			PR_FREEIF( fCurrentCommandTag );
+			PR_Free( fCurrentCommandTag );
 			fCurrentCommandTag = PL_strdup(tagToken);
 			if (!fCurrentCommandTag)
 				HandleMemoryFailure();
@@ -280,7 +281,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 	else if (!fServerConnection.DeathSignalReceived())
 		HandleMemoryFailure();
 
-	PR_FREEIF(copyCurrentCommand);
+	PR_Free(copyCurrentCommand);
 }
 
 void nsImapServerResponseParser::HandleMemoryFailure()
@@ -309,7 +310,7 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
         { // ill formed select command
             openQuote = PL_strstr(currentCommand, " ");
         }
-		PR_FREEIF( fSelectedMailboxName);
+		PR_Free( fSelectedMailboxName);
 		fSelectedMailboxName = PL_strdup(openQuote + 1);
 		if (fSelectedMailboxName)
 		{
@@ -440,7 +441,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 
 			fServerConnection.GetCurrentUrl()->GetImapPartToFetch(&imapPart);
 			m_shell->Generate(imapPart);
-			PR_FREEIF(imapPart);
+			PR_Free(imapPart);
 
 			if ((navCon && navCon->GetPseudoInterrupted())
 				|| fServerConnection.DeathSignalReceived())
@@ -522,226 +523,226 @@ the possibilities based on the first letter of the token.
 */
 void nsImapServerResponseParser::response_data()
 {
-	fNextToken = GetNextToken();
-	
-	if (ContinueParse())
-	{
-		switch (toupper(fNextToken[0]))
-		{
-		case 'O':			// OK
-			if (toupper(fNextToken[1]) == 'K')
-				resp_cond_state();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'N':			// NO
-			if (toupper(fNextToken[1]) == 'O')
-				resp_cond_state();
-			else if (!PL_strcasecmp(fNextToken, "NAMESPACE"))
-				namespace_data();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'B':			// BAD
-			if (!PL_strcasecmp(fNextToken, "BAD"))
-				resp_cond_state();
-			else if (!PL_strcasecmp(fNextToken, "BYE"))
-				resp_cond_bye();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'F':
-			if (!PL_strcasecmp(fNextToken, "FLAGS"))
-				mailbox_data();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'P':
-			if (PL_strcasecmp(fNextToken, "PERMANENTFLAGS"))
-				mailbox_data();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'L':
-			if (!PL_strcasecmp(fNextToken, "LIST")  || !PL_strcasecmp(fNextToken, "LSUB"))
-				mailbox_data();
-			else if (!PL_strcasecmp(fNextToken, "LANGUAGE"))
+  fNextToken = GetNextToken();
+  
+  if (ContinueParse())
+  {
+    switch (toupper(fNextToken[0]))
+    {
+    case 'O':			// OK
+      if (toupper(fNextToken[1]) == 'K')
+        resp_cond_state();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'N':			// NO
+      if (toupper(fNextToken[1]) == 'O')
+        resp_cond_state();
+      else if (!PL_strcasecmp(fNextToken, "NAMESPACE"))
+        namespace_data();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'B':			// BAD
+      if (!PL_strcasecmp(fNextToken, "BAD"))
+        resp_cond_state();
+      else if (!PL_strcasecmp(fNextToken, "BYE"))
+        resp_cond_bye();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'F':
+      if (!PL_strcasecmp(fNextToken, "FLAGS"))
+        mailbox_data();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'P':
+      if (PL_strcasecmp(fNextToken, "PERMANENTFLAGS"))
+        mailbox_data();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'L':
+      if (!PL_strcasecmp(fNextToken, "LIST")  || !PL_strcasecmp(fNextToken, "LSUB"))
+        mailbox_data();
+      else if (!PL_strcasecmp(fNextToken, "LANGUAGE"))
         language_data();
       else
         SetSyntaxError(PR_TRUE);
-			break;
-		case 'M':
-			if (!PL_strcasecmp(fNextToken, "MAILBOX"))
-				mailbox_data();
-			else if (!PL_strcasecmp(fNextToken, "MYRIGHTS"))
-				myrights_data();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'S':
-			if (!PL_strcasecmp(fNextToken, "SEARCH"))
-				mailbox_data();
-			else if (!PL_strcasecmp(fNextToken, "STATUS"))
-			{
-				PRBool gotMailboxName = PR_FALSE;
-				while (	ContinueParse() &&
-						!at_end_of_line() )
-				{
-					fNextToken = GetNextToken();
-					if (!fNextToken)
-						break;
-
-					if (!gotMailboxName)	// if we haven't got the mailbox name, get it
-					{
-						// this couldn't be more bogus, but I don't know how to parse the status response.
-						// I need to find the next open parenthesis, and it looks like folder names with
-						// parentheses are quoted...but not ones with spaces...
-						fCurrentTokenPlaceHolder = PL_strchr(fCurrentTokenPlaceHolder, '(');
-
-						gotMailboxName = PR_TRUE;
-						continue;
-					}
-
-					if (*fNextToken == '(') fNextToken++;
-					if (!PL_strcasecmp(fNextToken, "UIDNEXT"))
-					{
-						fNextToken = GetNextToken();
-						if (fNextToken)
-						{
-							fCurrentResponseUID = atoi(fNextToken);
-							// if this token ends in ')', then it is the last token
-							// else we advance
-							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
-								fNextToken += strlen(fNextToken) - 1;
-						}
-					}
-					else if (!PL_strcasecmp(fNextToken, "MESSAGES"))
-					{
-						fNextToken = GetNextToken();
-						if (fNextToken)
-						{
-							fNumberOfExistingMessages = atoi(fNextToken);
-							// if this token ends in ')', then it is the last token
-							// else we advance
-							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
-								fNextToken += strlen(fNextToken) - 1;
-						}
-					}
-					else if (!PL_strcasecmp(fNextToken, "UNSEEN"))
-					{
-						fNextToken = GetNextToken();
-						if (fNextToken)
-						{
-							fNumberOfUnseenMessages = atoi(fNextToken);
-							// if this token ends in ')', then it is the last token
-							// else we advance
-							if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
-								fNextToken += strlen(fNextToken) - 1;
-						}
-					}
-					else if (*fNextToken == ')')
-						break;
-					else if (!at_end_of_line())
-						SetSyntaxError(PR_TRUE);
-				} 
-			} else SetSyntaxError(PR_TRUE);
-			break;
-		case 'C':
-			if (!PL_strcasecmp(fNextToken, "CAPABILITY"))
-				capability_data();
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'V':
-			if (!PL_strcasecmp(fNextToken, "VERSION"))
-			{
-				// figure out the version of the Netscape server here
-				PR_FREEIF(fNetscapeServerVersionString);
-				fNextToken = GetNextToken();
-				if (! fNextToken) 
-					SetSyntaxError(PR_TRUE);
-				else
-				{
-					fNetscapeServerVersionString = CreateAstring();
-					fNextToken = GetNextToken();
-					if (fNetscapeServerVersionString)
-					{
-						fServerIsNetscape3xServer = (*fNetscapeServerVersionString == '3');
-					}
-				}
-				skip_to_CRLF();
-			}
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'A':
-			if (!PL_strcasecmp(fNextToken, "ACL"))
-			{
-				acl_data();
-			}
-			else if (!PL_strcasecmp(fNextToken, "ACCOUNT-URL"))
-			{
-				PR_FREEIF(fMailAccountUrl);
-				fNextToken = GetNextToken();
-				if (! fNextToken) 
-					SetSyntaxError(PR_TRUE);
-				else
-				{
-					fMailAccountUrl = CreateAstring();
-					fNextToken = GetNextToken();
-				}
-			} 
-			else SetSyntaxError(PR_TRUE);
-			break;
-		case 'X':
-			if (!PL_strcasecmp(fNextToken, "XSERVERINFO"))
-				xserverinfo_data();
-			else if (!PL_strcasecmp(fNextToken, "XMAILBOXINFO"))
-				xmailboxinfo_data();
+      break;
+    case 'M':
+      if (!PL_strcasecmp(fNextToken, "MAILBOX"))
+        mailbox_data();
+      else if (!PL_strcasecmp(fNextToken, "MYRIGHTS"))
+        myrights_data();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'S':
+      if (!PL_strcasecmp(fNextToken, "SEARCH"))
+        mailbox_data();
+      else if (!PL_strcasecmp(fNextToken, "STATUS"))
+      {
+        PRBool gotMailboxName = PR_FALSE;
+        while (	ContinueParse() &&
+          !at_end_of_line() )
+        {
+          fNextToken = GetNextToken();
+          if (!fNextToken)
+            break;
+          
+          if (!gotMailboxName)	// if we haven't got the mailbox name, get it
+          {
+            // this couldn't be more bogus, but I don't know how to parse the status response.
+            // I need to find the next open parenthesis, and it looks like folder names with
+            // parentheses are quoted...but not ones with spaces...
+            fCurrentTokenPlaceHolder = PL_strchr(fCurrentTokenPlaceHolder, '(');
+            
+            gotMailboxName = PR_TRUE;
+            continue;
+          }
+          
+          if (*fNextToken == '(') fNextToken++;
+          if (!PL_strcasecmp(fNextToken, "UIDNEXT"))
+          {
+            fNextToken = GetNextToken();
+            if (fNextToken)
+            {
+              fCurrentResponseUID = atoi(fNextToken);
+              // if this token ends in ')', then it is the last token
+              // else we advance
+              if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+                fNextToken += strlen(fNextToken) - 1;
+            }
+          }
+          else if (!PL_strcasecmp(fNextToken, "MESSAGES"))
+          {
+            fNextToken = GetNextToken();
+            if (fNextToken)
+            {
+              fNumberOfExistingMessages = atoi(fNextToken);
+              // if this token ends in ')', then it is the last token
+              // else we advance
+              if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+                fNextToken += strlen(fNextToken) - 1;
+            }
+          }
+          else if (!PL_strcasecmp(fNextToken, "UNSEEN"))
+          {
+            fNextToken = GetNextToken();
+            if (fNextToken)
+            {
+              fNumberOfUnseenMessages = atoi(fNextToken);
+              // if this token ends in ')', then it is the last token
+              // else we advance
+              if ( *(fNextToken + strlen(fNextToken) - 1) == ')')
+                fNextToken += strlen(fNextToken) - 1;
+            }
+          }
+          else if (*fNextToken == ')')
+            break;
+          else if (!at_end_of_line())
+            SetSyntaxError(PR_TRUE);
+        } 
+      } else SetSyntaxError(PR_TRUE);
+      break;
+    case 'C':
+      if (!PL_strcasecmp(fNextToken, "CAPABILITY"))
+        capability_data();
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'V':
+      if (!PL_strcasecmp(fNextToken, "VERSION"))
+      {
+        // figure out the version of the Netscape server here
+        PR_FREEIF(fNetscapeServerVersionString);
+        fNextToken = GetNextToken();
+        if (! fNextToken) 
+          SetSyntaxError(PR_TRUE);
+        else
+        {
+          fNetscapeServerVersionString = CreateAstring();
+          fNextToken = GetNextToken();
+          if (fNetscapeServerVersionString)
+          {
+            fServerIsNetscape3xServer = (*fNetscapeServerVersionString == '3');
+          }
+        }
+        skip_to_CRLF();
+      }
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'A':
+      if (!PL_strcasecmp(fNextToken, "ACL"))
+      {
+        acl_data();
+      }
+      else if (!PL_strcasecmp(fNextToken, "ACCOUNT-URL"))
+      {
+        PR_FREEIF(fMailAccountUrl);
+        fNextToken = GetNextToken();
+        if (! fNextToken) 
+          SetSyntaxError(PR_TRUE);
+        else
+        {
+          fMailAccountUrl = CreateAstring();
+          fNextToken = GetNextToken();
+        }
+      } 
+      else SetSyntaxError(PR_TRUE);
+      break;
+    case 'X':
+      if (!PL_strcasecmp(fNextToken, "XSERVERINFO"))
+        xserverinfo_data();
+      else if (!PL_strcasecmp(fNextToken, "XMAILBOXINFO"))
+        xmailboxinfo_data();
       else if (!PL_strcasecmp(fNextToken, "XAOL-OPTION"))
-				skip_to_CRLF();
-			else 
-                        {
-                          // check if custom command
-                          nsXPIDLCString customCommand;
-                          fServerConnection.GetCurrentUrl()->GetCommand(getter_Copies(customCommand));
-                          if (customCommand.Equals(fNextToken))
-                          {
-                            nsCAutoString customCommandResponse;
-	                    while (Connected() && !at_end_of_line())
-                            {
-		              fNextToken = GetNextToken();
-                              customCommandResponse.Append(fNextToken);
-                              customCommandResponse.Append(" ");
-                            }
-                            fServerConnection.GetCurrentUrl()->SetCustomCommandResult(customCommandResponse.get());
-                          }
-                          else
-			    SetSyntaxError(PR_TRUE);
-                        }
-			break;
-		default:
-			if (IsNumericString(fNextToken))
-				numeric_mailbox_data();
-			else
-				SetSyntaxError(PR_TRUE);
-			break;
-		}
-		
-		if (ContinueParse())
-		{
-			PostProcessEndOfLine();
-			end_of_line();
-		}
-	}
+        skip_to_CRLF();
+      else 
+      {
+        // check if custom command
+        nsXPIDLCString customCommand;
+        fServerConnection.GetCurrentUrl()->GetCommand(getter_Copies(customCommand));
+        if (customCommand.Equals(fNextToken))
+        {
+          nsCAutoString customCommandResponse;
+          while (Connected() && !at_end_of_line())
+          {
+            fNextToken = GetNextToken();
+            customCommandResponse.Append(fNextToken);
+            customCommandResponse.Append(" ");
+          }
+          fServerConnection.GetCurrentUrl()->SetCustomCommandResult(customCommandResponse.get());
+        }
+        else
+          SetSyntaxError(PR_TRUE);
+      }
+      break;
+    default:
+      if (IsNumericString(fNextToken))
+        numeric_mailbox_data();
+      else
+        SetSyntaxError(PR_TRUE);
+      break;
+    }
+    
+    if (ContinueParse())
+    {
+      PostProcessEndOfLine();
+      end_of_line();
+    }
+  }
 }
 
 
 void nsImapServerResponseParser::PostProcessEndOfLine()
 {
-	// for now we only have to do one thing here
-	// a fetch response to a 'uid store' command might return the flags
-	// before it returns the uid of the message.  So we need both before
-	// we report the new flag info to the front end
-	
-	// also check and be sure that there was a UID in the current response
-	if (fCurrentLineContainedFlagInfo && CurrentResponseUID())
-	{
-		fCurrentLineContainedFlagInfo = PR_FALSE;
-		fServerConnection.NotifyMessageFlags(fSavedFlagInfo, CurrentResponseUID());
-	}
+  // for now we only have to do one thing here
+  // a fetch response to a 'uid store' command might return the flags
+  // before it returns the uid of the message.  So we need both before
+  // we report the new flag info to the front end
+  
+  // also check and be sure that there was a UID in the current response
+  if (fCurrentLineContainedFlagInfo && CurrentResponseUID())
+  {
+    fCurrentLineContainedFlagInfo = PR_FALSE;
+    fServerConnection.NotifyMessageFlags(fSavedFlagInfo, CurrentResponseUID());
+  }
 }
 
 
@@ -763,29 +764,35 @@ This production was changed to accomodate predictive parsing
 */
 void nsImapServerResponseParser::mailbox_data()
 {
-	if (!PL_strcasecmp(fNextToken, "FLAGS")) {
-		skip_to_CRLF();
-	}
-	else if (!PL_strcasecmp(fNextToken, "LIST"))
-	{
-		fNextToken = GetNextToken();
-		if (ContinueParse())
-			mailbox_list(PR_FALSE);
-	}
-	else if (!PL_strcasecmp(fNextToken, "LSUB"))
-	{
-		fNextToken = GetNextToken();
-		if (ContinueParse())
-			mailbox_list(PR_TRUE);
-	}
-	else if (!PL_strcasecmp(fNextToken, "MAILBOX"))
-		skip_to_CRLF();
-	else if (!PL_strcasecmp(fNextToken, "SEARCH"))
-	{
-		fSearchResults->AddSearchResultLine(fCurrentLine);
-		fServerConnection.NotifySearchHit(fCurrentLine);
-		skip_to_CRLF();
-	}
+  if (!PL_strcasecmp(fNextToken, "FLAGS")) 
+  {
+    // this handles the case where we got the permanent flags response
+    // before the flags response, in which case, we want to ignore thes flags.
+    if (fGotPermanentFlags)
+      skip_to_CRLF();
+    else
+      parse_folder_flags();
+  }
+  else if (!PL_strcasecmp(fNextToken, "LIST"))
+  {
+    fNextToken = GetNextToken();
+    if (ContinueParse())
+      mailbox_list(PR_FALSE);
+  }
+  else if (!PL_strcasecmp(fNextToken, "LSUB"))
+  {
+    fNextToken = GetNextToken();
+    if (ContinueParse())
+      mailbox_list(PR_TRUE);
+  }
+  else if (!PL_strcasecmp(fNextToken, "MAILBOX"))
+    skip_to_CRLF();
+  else if (!PL_strcasecmp(fNextToken, "SEARCH"))
+  {
+    fSearchResults->AddSearchResultLine(fCurrentLine);
+    fServerConnection.NotifySearchHit(fCurrentLine);
+    skip_to_CRLF();
+  }
 }
 
 /*
@@ -1430,66 +1437,66 @@ void nsImapServerResponseParser::xaolenvelope_data()
 
 void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
 {
-	if (!nsCRT::strcmp(fNextToken, "NIL"))
-		return;
-	PRBool firstAddress = PR_TRUE;
-	// should really look at chars here
-	NS_ASSERTION(*fNextToken == '(', "address should start with '('");
-	fNextToken++; // eat the next '('
-	while (ContinueParse() && *fNextToken == '(')
-	{
-		NS_ASSERTION(*fNextToken == '(', "address should start with '('");
-		fNextToken++; // eat the next '('
-
-		if (!firstAddress)
-			addressLine += ", ";
-
-		firstAddress = PR_FALSE;
-		char *personalName = CreateNilString();
-		fNextToken = GetNextToken();
-		char *atDomainList = CreateNilString();
-		if (ContinueParse())
-		{
-			fNextToken = GetNextToken();
-			char *mailboxName = CreateNilString();
-			if (ContinueParse())
-			{
-				fNextToken = GetNextToken();
-				char *hostName = CreateNilString();
-				// our tokenizer doesn't handle "NIL)" quite like we
-				// expect, so we need to check specially for this.
-				if (hostName || *fNextToken != ')')
-					fNextToken = GetNextToken();	// skip hostName
-				addressLine += mailboxName;
-				if (hostName)
-				{
-					addressLine += '@';
-					addressLine += hostName;
+  if (!nsCRT::strcmp(fNextToken, "NIL"))
+    return;
+  PRBool firstAddress = PR_TRUE;
+  // should really look at chars here
+  NS_ASSERTION(*fNextToken == '(', "address should start with '('");
+  fNextToken++; // eat the next '('
+  while (ContinueParse() && *fNextToken == '(')
+  {
+    NS_ASSERTION(*fNextToken == '(', "address should start with '('");
+    fNextToken++; // eat the next '('
+    
+    if (!firstAddress)
+      addressLine += ", ";
+    
+    firstAddress = PR_FALSE;
+    char *personalName = CreateNilString();
+    fNextToken = GetNextToken();
+    char *atDomainList = CreateNilString();
+    if (ContinueParse())
+    {
+      fNextToken = GetNextToken();
+      char *mailboxName = CreateNilString();
+      if (ContinueParse())
+      {
+        fNextToken = GetNextToken();
+        char *hostName = CreateNilString();
+        // our tokenizer doesn't handle "NIL)" quite like we
+        // expect, so we need to check specially for this.
+        if (hostName || *fNextToken != ')')
+          fNextToken = GetNextToken();	// skip hostName
+        addressLine += mailboxName;
+        if (hostName)
+        {
+          addressLine += '@';
+          addressLine += hostName;
           nsCRT::free(hostName);
-				}
-				if (personalName)
-				{
-					addressLine += " (";
-					addressLine += personalName;
-					addressLine += ')';
-				}
-			}
-		}
-    PR_FREEIF(personalName);
-    PR_FREEIF(atDomainList);
-
-		if (*fNextToken == ')')
-			fNextToken++;
+        }
+        if (personalName)
+        {
+          addressLine += " (";
+          addressLine += personalName;
+          addressLine += ')';
+        }
+      }
+    }
+    PR_Free(personalName);
+    PR_Free(atDomainList);
+    
+    if (*fNextToken == ')')
+      fNextToken++;
     // if the next token isn't a ')' for the address term,
     // then we must have another address pair left....so get the next
     // token and continue parsing in this loop...
     if ( *fNextToken == '\0' )
       fNextToken = GetNextToken();
-
-	}
-	if (*fNextToken == ')')
-		fNextToken++;
-//	fNextToken = GetNextToken();	// skip "))"
+    
+  }
+  if (*fNextToken == ')')
+    fNextToken++;
+  //	fNextToken = GetNextToken();	// skip "))"
 }
 
 void nsImapServerResponseParser::internal_date()
@@ -1677,7 +1684,7 @@ void nsImapServerResponseParser::resp_text()
 */
 void nsImapServerResponseParser::text_mime2()
 {
-	skip_to_CRLF();
+  skip_to_CRLF();
 }
 
 /*
@@ -1686,10 +1693,42 @@ void nsImapServerResponseParser::text_mime2()
 */
 void nsImapServerResponseParser::text()
 {
-	skip_to_CRLF();
+  skip_to_CRLF();
 }
 
+void nsImapServerResponseParser::parse_folder_flags()
+{
+  do 
+  {
+    fNextToken = GetNextToken();
+    if (*fNextToken == '(')
+      fNextToken++;
+    if (!PL_strncasecmp(fNextToken, "$MDNSent", 8))
+      fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
+    else if (!PL_strncasecmp(fNextToken, "$Forwarded", 10))
+      fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\Seen", 5))
+      fSettablePermanentFlags |= kImapMsgSeenFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\Answered", 9))
+      fSettablePermanentFlags |= kImapMsgAnsweredFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\Flagged", 8))
+      fSettablePermanentFlags |= kImapMsgFlaggedFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\Deleted", 8))
+      fSettablePermanentFlags |= kImapMsgDeletedFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\Draft", 6))
+      fSettablePermanentFlags |= kImapMsgDraftFlag;
+    else if (!PL_strncasecmp(fNextToken, "\\*", 2))
+    {
+      fSupportsUserDefinedFlags |= kImapMsgSupportUserFlag;
+      fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;
+      fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
+      fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
+    }
+  } while (!at_end_of_line() && ContinueParse());
 
+  if (fFlagState)
+    fFlagState->SetSupportedUserFlags(fSupportsUserDefinedFlags);
+}
 /*
  resp_text_code  ::= "ALERT" / "PARSE" /
                               "PERMANENTFLAGS" SPACE "(" #(flag / "\*") ")" /
@@ -1713,184 +1752,141 @@ void nsImapServerResponseParser::text()
 */
 void nsImapServerResponseParser::resp_text_code()
 {
-	// this is a special case way of advancing the token
-	// strtok won't break up "[ALERT]" into separate tokens
-	if (strlen(fNextToken) > 1)
-		fNextToken++;
-	else 
-		fNextToken = GetNextToken();
-	
-	if (ContinueParse())
-	{
-		if (!PL_strcasecmp(fNextToken,"ALERT]"))
-		{
-			char *alertMsg = fCurrentTokenPlaceHolder;	// advance past ALERT]
-			if (alertMsg && *alertMsg && (!fLastAlert || PL_strcmp(fNextToken, fLastAlert)))
-			{
-				fServerConnection.AlertUserEvent(alertMsg);
-				PR_FREEIF(fLastAlert);
-				fLastAlert = PL_strdup(alertMsg);
-			}
-			fNextToken = GetNextToken();
-		}
-		else if (!PL_strcasecmp(fNextToken,"PARSE]"))
-		{
-			// do nothing for now
-			fNextToken = GetNextToken();
-		}
-		else if (!PL_strcasecmp(fNextToken,"NETSCAPE]"))
-		{
-			skip_to_CRLF();
-		}
-		else if (!PL_strcasecmp(fNextToken,"PERMANENTFLAGS"))
-		{
-			// do nothing but eat tokens until we see the ] or CRLF
-			// we should see the ] but we don't want to go into an
-			// endless loop if the CRLF is not there
-
-			fSupportsUserDefinedFlags = 0;		// assume no unless told
-			do {
-				fNextToken = GetNextToken();
-				if (*fNextToken == '(') fNextToken++;
-				if (!PL_strncasecmp(fNextToken, "$MDNSent", 8))
-				{
-					fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "$Forwarded", 10))
-				{
-					fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\Seen", 5))
-				{
-					fSettablePermanentFlags |= kImapMsgSeenFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\Answered", 9))
-				{
-					fSettablePermanentFlags |= kImapMsgAnsweredFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\Flagged", 8))
-				{
-					fSettablePermanentFlags |= kImapMsgFlaggedFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\Deleted", 8))
-				{
-					fSettablePermanentFlags |= kImapMsgDeletedFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\Draft", 6))
-				{
-					fSettablePermanentFlags |= kImapMsgDraftFlag;
-				}
-				else if (!PL_strncasecmp(fNextToken, "\\*", 2))
-				{
-					 fSupportsUserDefinedFlags |= kImapMsgSupportUserFlag;
-					 fSupportsUserDefinedFlags |= kImapMsgSupportForwardedFlag;
-					 fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
-                                         fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
-				}
-			} while (!at_end_of_line() && ContinueParse());
-			if (fFlagState)
-				fFlagState->SetSupportedUserFlags(fSupportsUserDefinedFlags);
-
-		}
-		else if (!PL_strcasecmp(fNextToken,"READ-ONLY]"))
-		{
-			fCurrentFolderReadOnly = PR_TRUE;
-			fNextToken = GetNextToken();
-		}
-		else if (!PL_strcasecmp(fNextToken,"READ-WRITE]"))
-		{
-			fCurrentFolderReadOnly = PR_FALSE;
-			fNextToken = GetNextToken();
-		}
-		else if (!PL_strcasecmp(fNextToken,"TRYCREATE]"))
-		{
-			// do nothing for now
-			fNextToken = GetNextToken();
-		}
-		else if (!PL_strcasecmp(fNextToken,"UIDVALIDITY"))
-		{
-			fNextToken = GetNextToken();
-			if (ContinueParse())
-			{
-				fFolderUIDValidity = atoi(fNextToken);
-				fHighestRecordedUID = 0;
-				fNextToken = GetNextToken();
-			}
-		}
-		else if (!PL_strcasecmp(fNextToken,"UNSEEN"))
-		{
-			fNextToken = GetNextToken();
-			if (ContinueParse())
-			{
-				fNumberOfUnseenMessages = atoi(fNextToken);
-				fNextToken = GetNextToken();
-			}
-		}
-		else if (!PL_strcasecmp(fNextToken, "APPENDUID"))
-		{
-			fNextToken = GetNextToken();
-			if (ContinueParse())
-			{
-                // ** jt -- the returned uidvalidity is the destination folder
-                // uidvalidity; don't use it for current folder
-				// fFolderUIDValidity = atoi(fNextToken);
-				// fHighestRecordedUID = 0; ??? this should be wrong
-				fNextToken = GetNextToken();
-				if (ContinueParse())
-				{
-					fCurrentResponseUID = atoi(fNextToken);
-					fNextToken = GetNextToken();
-				}
-			}
-		}
-        else if (!PL_strcasecmp(fNextToken, "COPYUID"))
+  // this is a special case way of advancing the token
+  // strtok won't break up "[ALERT]" into separate tokens
+  if (strlen(fNextToken) > 1)
+    fNextToken++;
+  else 
+    fNextToken = GetNextToken();
+  
+  if (ContinueParse())
+  {
+    if (!PL_strcasecmp(fNextToken,"ALERT]"))
+    {
+      char *alertMsg = fCurrentTokenPlaceHolder;	// advance past ALERT]
+      if (alertMsg && *alertMsg && (!fLastAlert || PL_strcmp(fNextToken, fLastAlert)))
+      {
+        fServerConnection.AlertUserEvent(alertMsg);
+        PR_Free(fLastAlert);
+        fLastAlert = PL_strdup(alertMsg);
+      }
+      fNextToken = GetNextToken();
+    }
+    else if (!PL_strcasecmp(fNextToken,"PARSE]"))
+    {
+      // do nothing for now
+      fNextToken = GetNextToken();
+    }
+    else if (!PL_strcasecmp(fNextToken,"NETSCAPE]"))
+    {
+      skip_to_CRLF();
+    }
+    else if (!PL_strcasecmp(fNextToken,"PERMANENTFLAGS"))
+    {
+      fSupportsUserDefinedFlags = 0;		// assume no unless told
+      fSettablePermanentFlags = 0;            // assume none, unless told otherwise.
+      parse_folder_flags();
+      fGotPermanentFlags = PR_TRUE;
+    }
+    else if (!PL_strcasecmp(fNextToken,"READ-ONLY]"))
+    {
+      fCurrentFolderReadOnly = PR_TRUE;
+      fNextToken = GetNextToken();
+    }
+    else if (!PL_strcasecmp(fNextToken,"READ-WRITE]"))
+    {
+      fCurrentFolderReadOnly = PR_FALSE;
+      fNextToken = GetNextToken();
+    }
+    else if (!PL_strcasecmp(fNextToken,"TRYCREATE]"))
+    {
+      // do nothing for now
+      fNextToken = GetNextToken();
+    }
+    else if (!PL_strcasecmp(fNextToken,"UIDVALIDITY"))
+    {
+      fNextToken = GetNextToken();
+      if (ContinueParse())
+      {
+        fFolderUIDValidity = atoi(fNextToken);
+        fHighestRecordedUID = 0;
+        fNextToken = GetNextToken();
+      }
+    }
+    else if (!PL_strcasecmp(fNextToken,"UNSEEN"))
+    {
+      fNextToken = GetNextToken();
+      if (ContinueParse())
+      {
+        fNumberOfUnseenMessages = atoi(fNextToken);
+        fNextToken = GetNextToken();
+      }
+    }
+    else if (!PL_strcasecmp(fNextToken, "APPENDUID"))
+    {
+      fNextToken = GetNextToken();
+      if (ContinueParse())
+      {
+        // ** jt -- the returned uidvalidity is the destination folder
+        // uidvalidity; don't use it for current folder
+        // fFolderUIDValidity = atoi(fNextToken);
+        // fHighestRecordedUID = 0; ??? this should be wrong
+        fNextToken = GetNextToken();
+        if (ContinueParse())
         {
-			fNextToken = GetNextToken();
-			if (ContinueParse())
-			{
-                // ** jt -- destination folder uidvalidity
-				// fFolderUIDValidity = atoi(fNextToken);
-                // original message set; ignore it
-				fNextToken = GetNextToken();
-				if (ContinueParse())
-				{
-                    // the resulting message set; should be in the form of
-                    // either uid or uid1:uid2
-					fNextToken = GetNextToken();
-                    // clear copy response uid
-                    fCopyResponseKeyArray.RemoveAll();
-                    PRUint32 startKey = atoi(fNextToken);
-                    fCopyResponseKeyArray.Add(startKey);
-                    char *colon = PL_strchr(fNextToken, ':');
-                    if (colon)
-                    {
-                        PRUint32 endKey= atoi(colon+1);
-                        NS_ASSERTION (endKey > startKey, 
-                                      "Oops ... invalid message set");
-                        for (startKey++; startKey <= endKey; startKey++)
-                            fCopyResponseKeyArray.Add(startKey);
-                    }
-                    fServerConnection.SetCopyResponseUid(
-                        &fCopyResponseKeyArray, fNextToken);
-				}
-                if (ContinueParse())
-                {
-                    fNextToken = GetNextToken();
-                }
-			}
+          fCurrentResponseUID = atoi(fNextToken);
+          fNextToken = GetNextToken();
         }
-		else 	// just text
-		{
-			// do nothing but eat tokens until we see the ] or CRLF
-			// we should see the ] but we don't want to go into an
-			// endless loop if the CRLF is not there
-			do {
-				fNextToken = GetNextToken();
-			} while (!PL_strcasestr(fNextToken, "]") && 
-			         !at_end_of_line() &&
-			         ContinueParse());
-		}
-	}
+      }
+    }
+    else if (!PL_strcasecmp(fNextToken, "COPYUID"))
+    {
+      fNextToken = GetNextToken();
+      if (ContinueParse())
+      {
+        // ** jt -- destination folder uidvalidity
+        // fFolderUIDValidity = atoi(fNextToken);
+        // original message set; ignore it
+        fNextToken = GetNextToken();
+        if (ContinueParse())
+        {
+          // the resulting message set; should be in the form of
+          // either uid or uid1:uid2
+          fNextToken = GetNextToken();
+          // clear copy response uid
+          fCopyResponseKeyArray.RemoveAll();
+          PRUint32 startKey = atoi(fNextToken);
+          fCopyResponseKeyArray.Add(startKey);
+          char *colon = PL_strchr(fNextToken, ':');
+          if (colon)
+          {
+            PRUint32 endKey= atoi(colon+1);
+            NS_ASSERTION (endKey > startKey, 
+              "Oops ... invalid message set");
+            for (startKey++; startKey <= endKey; startKey++)
+              fCopyResponseKeyArray.Add(startKey);
+          }
+          fServerConnection.SetCopyResponseUid(
+            &fCopyResponseKeyArray, fNextToken);
+        }
+        if (ContinueParse())
+        {
+          fNextToken = GetNextToken();
+        }
+      }
+    }
+    else 	// just text
+    {
+      // do nothing but eat tokens until we see the ] or CRLF
+      // we should see the ] but we don't want to go into an
+      // endless loop if the CRLF is not there
+      do {
+        fNextToken = GetNextToken();
+      } while (!PL_strcasestr(fNextToken, "]") && 
+        !at_end_of_line() &&
+        ContinueParse());
+    }
+        }
 }
 
 /*
@@ -2253,7 +2249,7 @@ void nsImapServerResponseParser::namespace_data()
 							SetSyntaxError(PR_TRUE);
 						}
 					}
-					PR_FREEIF(namespacePrefix);
+					PR_Free(namespacePrefix);
 				}
 			}
 		}
@@ -2560,11 +2556,8 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 			if (lastCRLFwasCRCRLF && (*fCurrentLine == nsCRT::CR))
 			{
 				char *usableCurrentLine = PL_strdup(fCurrentLine + 1);
-				PR_FREEIF(fCurrentLine);
-				if (usableCurrentLine)
-					fCurrentLine = usableCurrentLine;
-				else
-					fCurrentLine = 0;
+				PR_Free(fCurrentLine);
+				fCurrentLine = usableCurrentLine;
 			}
 
 			if (ContinueParse())
