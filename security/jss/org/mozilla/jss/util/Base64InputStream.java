@@ -79,8 +79,10 @@ public class Base64InputStream extends FilterInputStream {
     // as opposed to whitespace.
     private int prev, savedPrev;
 
-    // state is the current state of our state machine. The states are 1-4,
-    // indicating which character of the current 4-character block we
+    // state is the current state of our state machine. The states are 1-5.
+    // State 5 represents end-of-file, which occurs when we read the last
+    // character from the input stream, or a base64 padding character ('=').
+    // States 1-4 indicate which character of the current 4-character block we
     // are looking for. After state 4 we wrap back to state 1. The state
     // is not advanced when we read an insignificant character (such as
     // whitespace).
@@ -113,9 +115,11 @@ public class Base64InputStream extends FilterInputStream {
               case 1:
                 if( cur == -1 ) {
                     // end of file
+                    state = 5;
                     return -1;
                 }
                 if( cur == '=' ) {
+                    state = 5;
                     throw new IOException("Invalid pad character");
                 }
                 if( table[cur] != -1 ) {
@@ -125,9 +129,11 @@ public class Base64InputStream extends FilterInputStream {
                 break;
               case 2:
                 if( cur == -1 ) {
+                    state = 5;
                     throw new EOFException("Unexpected end-of-file");
                 }
                 if( cur == '=' ) {
+                    state = 5;
                     throw new IOException("Invalid pad character");
                 }
                 if( table[cur] != -1 ) {
@@ -139,10 +145,12 @@ public class Base64InputStream extends FilterInputStream {
                 break;
               case 3:
                 if( cur == -1 ) {
+                    state = 5;
                     throw new EOFException("Unexpected end-of-file");
                 }
                 if( cur == '=' ) {
                     // pad character
+                    state = 5;
                     return -1;
                 }
                 if( table[cur] != -1 ) {
@@ -154,10 +162,12 @@ public class Base64InputStream extends FilterInputStream {
                 break;
               case 4:
                 if( cur == -1 ) {
+                    state = 5;
                     throw new EOFException("Unexpected end-of-file");
                 }
                 if( cur == '=' ) {
                     // pad character
+                    state = 5;
                     return -1;
                 }
                 if( table[cur] != -1 ) {
@@ -166,6 +176,10 @@ public class Base64InputStream extends FilterInputStream {
                     done = true;
                 }
                 break;
+              case 5:
+                // end of file
+                return -1;
+                //break;
               default:
                 Assert._assert(false);
                 break;
