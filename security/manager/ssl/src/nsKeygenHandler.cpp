@@ -207,6 +207,41 @@ nsKeygenFormProcessor::GetSlot(PRUint32 aMechanism, PK11SlotInfo** aSlot)
   return GetSlotWithMechanism(aMechanism,m_ctx,aSlot);
 }
 
+
+PRUint32 MapGenMechToAlgoMech(PRUint32 mechanism)
+{
+    PRUint32 searchMech;
+
+    /* We are interested in slots based on the ability to perform
+       a given algorithm, not on their ability to generate keys usable
+       by that algorithm. Therefore, map keygen-specific mechanism tags
+       to tags for the corresponding crypto algorthm. */
+    switch(mechanism)
+    {
+    case CKM_RSA_PKCS_KEY_PAIR_GEN:
+        searchMech = CKM_RSA_PKCS;
+        break;
+    case CKM_DSA_KEY_PAIR_GEN:
+        searchMech = CKM_DSA;
+        break;
+    case CKM_RC4_KEY_GEN:
+        searchMech = CKM_RC4;
+        break;
+    case CKM_DH_PKCS_KEY_PAIR_GEN:
+        searchMech = CKM_DH_PKCS_DERIVE; /* ### mwelch  is this right? */
+        break;
+    case CKM_DES_KEY_GEN:
+        /* What do we do about DES keygen? Right now, we're just using
+           DES_KEY_GEN to look for tokens, because otherwise we'll have
+           to search the token list three times. */
+    default:
+        searchMech = mechanism;
+        break;
+    }
+    return searchMech;
+}
+
+
 nsresult
 GetSlotWithMechanism(PRUint32 aMechanism, 
                      nsIInterfaceRequestor *m_ctx,
@@ -224,7 +259,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
     *aSlot = nsnull;
 
     // Get the slot
-    slotList = PK11_GetAllTokens(aMechanism, 
+    slotList = PK11_GetAllTokens(MapGenMechToAlgoMech(aMechanism), 
                                 PR_TRUE, PR_TRUE, m_ctx);
     if (!slotList || !slotList->head) {
         rv = NS_ERROR_FAILURE;
