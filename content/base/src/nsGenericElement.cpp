@@ -1297,7 +1297,6 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     // Now pass on absolute url to the click handler
     if (aClick) {
       // Check that this page is allowed to load this URI.
-      nsresult rv;
       NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                       NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       nsIURI *absURI = nsnull;
