@@ -63,10 +63,15 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFi
 		return NS_ERROR_NULL_POINTER;
 
 	nsMsgFilter *filter = new nsMsgFilter;
+    NS_ENSURE_TRUE(filter, NS_ERROR_OUT_OF_MEMORY);
+    
 	*aFilter = filter;
-	if (filter)
-		filter->SetFilterName(name);
-	return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*aFilter);
+    
+    filter->SetFilterName(name);
+    filter->SetFilterList(this);
+    
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilterList::SetLoggingEnabled(PRBool enable)
