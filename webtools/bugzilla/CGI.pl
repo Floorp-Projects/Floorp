@@ -300,7 +300,7 @@ sub CheckPosInt($) {
     my ($number) = @_;              # the fieldname to check
 
     if ( $number !~ /^[1-9][0-9]*$/ ) {
-        print "Received string \"$number\" when postive integer expected; ";
+        print "Received string \"$number\" when positive integer expected; ";
         print Param("browserbugmessage");
         PutFooter();
         exit 0;
