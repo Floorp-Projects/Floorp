@@ -32,12 +32,23 @@
 [scriptable, uuid(F15398A0-8018-11d3-AF70-00A024FFC08C)]
 interface nsIWebBrowserSetup : nsISupports
 {
-	const unsigned long SETUP_ALLOW_PLUGINS         = 1;
-	const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
-    const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
-    const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
- 
-    const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
+   const unsigned long SETUP_ALLOW_PLUGINS         = 1;
+   const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
+   const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
+   const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
+
+   /**
+    * SETUP_ALLOW_IMAGES enables/disables image loading for a given webBrowser
+    * window. If you disable the images, load a page, then enable the images,
+    * the page will *not* automatically load the images for the previously
+    * loaded page. This flag controls the state of a webBrowser at load time 
+    * and does not automatcially re-load a page when the state is toggled. 
+    * Reloading must be done by hand, or by walking through the DOM tree and 
+    * re-setting the src attributes.
+    */
+   const unsigned long SETUP_ALLOW_IMAGES          = 5;
+   const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
 	void setProperty(in unsigned long aId, in unsigned long aValue);
 };
+
