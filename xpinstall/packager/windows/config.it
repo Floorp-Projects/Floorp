@@ -74,6 +74,14 @@ Decrypt HKey=TRUE
 Contains Filename=FALSE
 Verify Existance=
 
+; This section checks for legacy files.
+; If the file(s), indicated by the Filename= key, is found to have a version of less than the value
+; indicated by the Version= key, then display the string in the Message= key.
+[Legacy Check0]
+Filename=[SETUP PATH]\mozilla.exe
+Version=6.0.0.0
+Message=Setup has detected an old version of Netscape in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to chose a different path?
+
 [Dialog Welcome]
 Show Dialog=TRUE
 Title=Welcome
