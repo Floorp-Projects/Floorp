@@ -738,7 +738,7 @@ function createCalendar()
         return calendar;
 
     var uri = null;
-    if (caltype == "caldav") {
+    if (caltype == "caldav" || caltype == "ics") {
         var uriString = getCharPref(prefobj, "default-calendar.uri", null);
         uri = makeURL(uriString);
     } else if (caltype == "storage") {
