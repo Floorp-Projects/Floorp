@@ -1059,10 +1059,6 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         }
       }
     }
-
-    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-    if (imeEditor)
-      imeEditor->NotifyIMEOnFocus();
   }
   return NS_OK;
 }
@@ -1081,10 +1077,8 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
     // when imeEditor exists, call ForceCompositionEnd() to tell
     // the input focus is leaving first
     nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-    if (imeEditor) {
+    if (imeEditor)
       imeEditor->ForceCompositionEnd();
-      imeEditor->NotifyIMEOnBlur();
-    }
 
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)

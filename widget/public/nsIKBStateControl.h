@@ -62,28 +62,8 @@ class nsIKBStateControl : public nsISupports {
     NS_IMETHOD ResetInputState()=0;
 
     /*
-     * Following methods relates to IME 'Opened'/'Closed' state.
-     * 'Opened' means the user can input any character. I.e., users can input Japanese  
-     * and other characters. The user can change the state to 'Closed'.
-     * 'Closed' means the user can input ASCII characters only. This is the same as a
-     * non-IME environment. The user can change the state to 'Opened'.
-     * For more information is here.
-     * http://bugzilla.mozilla.org/show_bug.cgi?id=16940#c48
+     * This method is called in the init stage of a password field
      */
-
-    /*
-     * Set the state to 'Opened' or 'Closed'.
-     * If aState is TRUE, IME open state is set to 'Opened'.
-     * If aState is FALSE, set to 'Closed'.
-     */
-    NS_IMETHOD SetIMEOpenState(PRBool aState) = 0;
-
-    /*
-     * Get IME is 'Opened' or 'Closed'.
-     * If IME is 'Opened', aState is set PR_TRUE.
-     * If IME is 'Closed', aState is set PR_FALSE.
-     */
-    NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
 
 };
 
