@@ -56,7 +56,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
     if (NS_FAILED(rv)) return rv;
 
     // Check for a previous registration
-    //PR_Lock(mLock);
+    PR_Lock(mLock);
     mEntries->Count(&cnt);
     for (PRUint32 i = 0; i < cnt; i++) {
         nsINetModRegEntry* curEntry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
@@ -73,7 +73,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
     }
 
     mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI));
-    //PR_Unlock(mLock);
+    PR_Unlock(mLock);
     NS_RELEASE(newEntryI);
     return NS_OK;
 }
@@ -81,7 +81,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
 NS_IMETHODIMP
 nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, const nsCID * aCID) {
 
-    //PR_Lock(mLock);
+    PR_Lock(mLock);
     nsresult rv;
     PRUint32 cnt;
 
@@ -107,7 +107,7 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue,
         }
         NS_RELEASE(curEntry); // ditch our ref to it
     }
-    //PR_Unlock(mLock);
+    PR_Unlock(mLock);
     NS_RELEASE(tmpEntryI);
     return NS_OK;
 }
@@ -181,7 +181,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 nsNetModuleMgr::nsNetModuleMgr() {
     NS_INIT_REFCNT();
     NS_NewISupportsArray(&mEntries);
-    //mLock    = PR_NewLock();
+    mLock    = PR_NewLock();
 }
 
 nsNetModuleMgr::~nsNetModuleMgr() {
@@ -189,7 +189,7 @@ nsNetModuleMgr::~nsNetModuleMgr() {
         mEntries->EnumerateForwards(DeleteEntry, nsnull);
         NS_RELEASE(mEntries);
     }
-    //PR_DestroyLock(mLock);
+    PR_DestroyLock(mLock);
 }
 
 NS_METHOD
