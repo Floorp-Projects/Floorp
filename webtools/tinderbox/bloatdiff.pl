@@ -48,9 +48,18 @@ sub leaksDelta {
     local $oldLeaks = $oldMap{$key}{leaked};
     local $newLeaks = $newMap{$key}{leaked};
     local $percentLeaks = 0;
-    if (defined($oldLeaks) && $oldLeaks != 0) {
-        $percentLeaks = ($newLeaks - $oldLeaks) / $oldLeaks * 100;
+    if (defined($oldLeaks)) {
+        if ($oldLeaks == 0) {
+            if ($newLeaks != 0) {
+                # there weren't any leaks before, but now there are!
+                $percentLeaks = 9999999.99;
+            }
+        }
+        else {
+            $percentLeaks = ($newLeaks - $oldLeaks) / $oldLeaks * 100;
+        }
     }
+    # else we had no record of this class before
     return ($newLeaks, $percentLeaks);
 }
     
@@ -58,20 +67,23 @@ sub leaksDelta {
 
 sub bloatDelta {
     local ($key) = @_;
-    local $oldSize = $oldMap{$key}{size};
-    if (!defined($oldSize)) {
-        $oldSize = 0;
-    }
-    local $oldTotal = $oldMap{$key}{objTotal};
-    if (!defined($oldTotal)) {
-        $oldTotal = 0;
-    }
-    local $oldBloat = $oldTotal * $oldSize;
     local $newBloat = $newMap{$key}{objTotal} * $newMap{$key}{size};
     local $percentBloat = 0;
-    if (defined($oldBloat) && $oldBloat != 0) {
-        $percentBloat = ($newBloat - $oldBloat) / $oldBloat * 100;
+    local $oldSize = $oldMap{$key}{size};
+    if (defined($oldSize)) {
+        local $oldTotal = $oldMap{$key}{objTotal} || 0;
+        local $oldBloat = $oldTotal * $oldSize;
+        if ($oldBloat == 0) {
+            if ($newBloat != 0) {
+                # this class wasn't used before, but now it is
+                $percentBloat = 9999999.99;
+            }
+        }
+        else {
+            $percentBloat = ($newBloat - $oldBloat) / $oldBloat * 100;
+        }
     }
+    # else we had no record of this class before
     return ($newBloat, $percentBloat);
 }
 
