@@ -684,6 +684,7 @@ base/src/Makefile
 base/src/unix/Makefile
 base/tests/Makefile
 caps/Makefile
+caps/public/Makefile
 caps/include/Makefile
 caps/src/Makefile
 cmd/Makefile
@@ -796,10 +797,6 @@ modules/progress/Makefile
 modules/progress/public/Makefile
 modules/progress/src/Makefile
 modules/rdf/Makefile
-modules/rdf/classes/Makefile
-modules/rdf/classes/netscape/Makefile
-modules/rdf/classes/netscape/rdf/Makefile
-modules/rdf/classes/netscape/rdf/core/Makefile
 modules/rdf/include/Makefile
 modules/rdf/src/Makefile
 modules/schedulr/Makefile
