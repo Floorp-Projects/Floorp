@@ -1350,16 +1350,18 @@ nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 	return NS_OK;
 }
 
-#ifndef NECKO
 NS_IMETHODIMP
+#ifndef NECKO
 nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
+#else
+nsBrowserAppCore::Reload(nsIWebShell * aPrev, PRUint32 aType)
+#endif // NECKO
 {
 
 	if (mSHistory)
 		mSHistory->Reload(aPrev, aType);
 	return NS_OK;
 }
-#endif  /* NECKO */
 
 NS_IMETHODIMP
 nsBrowserAppCore::add(nsIWebShell * aWebShell)
