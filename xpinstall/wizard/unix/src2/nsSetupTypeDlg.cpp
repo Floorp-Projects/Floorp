@@ -858,8 +858,9 @@ nsSetupTypeDlg::DeleteOldInst()
     GtkWidget *label = NULL;
     GtkWidget *deleteBtn = NULL; /* delete button */
     GtkWidget *cancelBtn = NULL; /* cancel button */
-    char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL, *msgEndPtr = NULL;
+    char *msgPtr = NULL, *msgChunkPtr = NULL, *msgEndPtr = NULL;
     char msgChunk[MAXCHARS+1];
+    char msg[MAXPATHLEN+512];
     nsLegacyCheck *currLC = NULL;
 
     currLC = sLegacyChecks;
@@ -889,7 +890,7 @@ nsSetupTypeDlg::DeleteOldInst()
           gtk_signal_connect(GTK_OBJECT(cancelBtn), "clicked",
                          GTK_SIGNAL_FUNC(DeleteInstCancel), sDelInstDlg);
 
-          msg = currLC->GetMessage();
+          snprintf(msg, sizeof(msg), currLC->GetMessage(), gCtx->opt->mDestination);
           msgPtr = msg;
           msgEndPtr = msg + strlen(msg);
           // wrap message at MAXCHARS colums (or last space inside MAXCHARS)
