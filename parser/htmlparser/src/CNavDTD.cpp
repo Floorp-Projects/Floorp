@@ -1804,6 +1804,7 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
 
     eHTMLTokenTypes theTokenType=(eHTMLTokenTypes)theNextToken->GetTokenType();
 
+    theTempStr.Truncate();
     if((eHTMLTag_textarea==theNodeTag) && (eToken_entity==theTokenType)) {
       ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(theTempStr);
     }
