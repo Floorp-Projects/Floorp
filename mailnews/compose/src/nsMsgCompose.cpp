@@ -2582,6 +2582,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
 
   nsAutoString sigEncoding;
   sigEncoding.AssignWithConversion(nsMsgI18NParseMetaCharset(&fSpec));
+  PRBool removeSigCharset = !sigEncoding.IsEmpty() && m_composeHTML;
 
   //default to platform encoding for signature files w/o meta charset
   if (sigEncoding.IsEmpty())
@@ -2590,12 +2591,17 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   if (NS_FAILED(ConvertToUnicode(sigEncoding, readBuf, sigData)))
     sigData.AssignWithConversion(readBuf);
 
-  nsAutoString msgEncoding;
-  msgEncoding.AssignWithConversion(m_compFields->GetCharacterSet());
+  //remove sig meta charset to allow user charset override during composition
+  if (removeSigCharset)
+  {
+    nsAutoString metaCharset;
+    metaCharset.Assign(NS_LITERAL_STRING("charset="));
+    metaCharset.Append(sigEncoding);
+    PRInt32 metaCharsetOffset = sigData.Find(metaCharset,true,0,-1);
 
-  //change signature meta charset to the message charset, since they're gonna be co-mingled
-  if (!sigEncoding.Equals(msgEncoding))
-    sigData.ReplaceSubstring(sigEncoding, msgEncoding);
+    if (metaCharsetOffset != kNotFound)
+      nsStr::Delete(sigData, metaCharsetOffset, metaCharset.Length());
+  }
 
   PR_FREEIF(readBuf);
   return NS_OK;
