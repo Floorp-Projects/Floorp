@@ -2381,6 +2381,9 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
         kid = kid->pn_kid;
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
+#if JS_HAS_LVALUE_RETURN
+        (kid->pn_type != TOK_LP || kid->pn_op != JSOP_CALL) &&
+#endif
         kid->pn_type != TOK_LB) {
         js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_OPERAND, name);
@@ -2418,6 +2421,10 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         break;
 
       case TOK_LB:
+#if JS_HAS_LVALUE_RETURN
+      case TOK_LP:
+        kid->pn_op = JSOP_SETCALL;
+#endif
         op = (tt == TOK_INC)
              ? (preorder ? JSOP_INCELEM : JSOP_ELEMINC)
              : (preorder ? JSOP_DECELEM : JSOP_ELEMDEC);
