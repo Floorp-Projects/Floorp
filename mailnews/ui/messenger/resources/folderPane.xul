@@ -19,7 +19,7 @@
   </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-    <treeitem rdf:id="mailbox:/" open="true">
+    <treeitem id="mailbox:/" open="true">
       <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</treecell>
       <treecell></treecell>
       <treecell></treecell>
