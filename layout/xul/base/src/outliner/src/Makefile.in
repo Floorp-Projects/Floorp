@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkxuloutliner_s
-REQUIRES	= xpcom string dom widget timer js locale caps view xultmpl rdf
+REQUIRES	= xpcom string dom widget timer js locale caps view xultmpl rdf necko
 
 CPPSRCS	= \
  nsOutlinerBodyFrame.cpp \
