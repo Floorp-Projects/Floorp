@@ -5446,8 +5446,14 @@ nsXULDocument::AddChromeOverlays()
         if (!uri)
             return NS_OK;
 
-        mUnloadedOverlays->AppendElement(uri);
-
+        // See if this package is enabled/disabled.  If it
+        // is disabled, we shouldn't append this element to
+        // the unloaded overlay list.
+        PRBool allowed = PR_TRUE;
+        reg->IsOverlayAllowed(uri, &allowed);
+        if (allowed)
+          mUnloadedOverlays->AppendElement(uri);
+        
         oe->HasMoreElements(&moreElements);
     }
 
