@@ -202,7 +202,8 @@ sub EmitFormElements ($$$$$)
 
 sub PutTrailer (@)
 {
-    my (@links) = ("Back to the <A HREF=\"./\">index</A>", @_);
+    my (@links) = ("Back to the <A HREF=\"index.html\">index</A>",
+        "<A HREF=\"editusers.cgi?action=add\">Add a new user</A>", @_);
 
     my $count = $#links;
     my $num = 0;
