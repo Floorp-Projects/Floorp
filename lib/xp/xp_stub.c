@@ -31,10 +31,12 @@ NOT_NULL (const char *x)
 #endif
 
 
+#ifdef DEBUG
 void XP_AssertAtLine( char *pFileName, int iLine )
 {
     PR_Assert("XP Assert", pFileName, iLine);
 }
+#endif
 
 /* XP_GetString
  *
