@@ -79,7 +79,9 @@
 
 #include "nsXPIDLString.h"
 
-#include "nsIWalletService.h"
+#include "nsIObserverService.h"
+#include "nsNetUtil.h"
+#include "nsIAuthPrompt.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsINntpUrl.h"
@@ -100,7 +102,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 // ###tw  This really ought to be the most
@@ -1270,37 +1271,39 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
 
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
 {
-    nsresult rv;
-    nsCOMPtr<nsIWalletService> walletservice = 
-             do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+        rv = SetGroupUsername(nsnull);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = SetGroupUsername(nsnull);
-    if (NS_FAILED(rv)) return rv;
+        nsXPIDLCString signonURL;
+        rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+        if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString signonURL;
-    rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = walletservice->SI_RemoveUser((const char *)signonURL, nsnull);
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), signonURL);
+        rv = os->NotifyObservers(uri, "login-failed", nsnull);
+    }
     return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
 {
-    nsresult rv;
-    nsCOMPtr<nsIWalletService> walletservice = 
-             do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+        rv = SetGroupPassword(nsnull);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = SetGroupPassword(nsnull);
-    if (NS_FAILED(rv)) return rv;
+        nsXPIDLCString signonURL;
+        rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+        if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString signonURL;
-    rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = walletservice->SI_RemoveUser((const char *)signonURL, nsnull);
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), signonURL);
+        rv = os->NotifyObservers(uri, "login-failed", nsnull);
+    }
     return rv;
 }
 

@@ -63,7 +63,8 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIAuthPrompt.h"
-#include "nsIWalletService.h"
+#include "nsIObserverService.h"
+#include "nsNetUtil.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 
@@ -80,7 +81,6 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 #define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
@@ -771,37 +771,39 @@ nsMsgIncomingServer::StorePassword()
     rv = GetPassword(getter_Copies(pwd));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIWalletService> walletservice = 
-             do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+        nsXPIDLCString serverSpec;
+        rv = GetServerURI(getter_Copies(serverSpec));
+        if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), serverSpec);
 
-    nsAutoString password; password.AssignWithConversion((const char *)pwd);
-    rv = walletservice->SI_StorePassword((const char *)serverUri, nsnull, password.get());
+        rv = os->NotifyObservers(uri, "login-succeeded", PromiseFlatString(NS_ConvertUTF8toUCS2(pwd)).get());
+    }
+
     return rv;
 }
 
 NS_IMETHODIMP
 nsMsgIncomingServer::ForgetPassword()
 {
-    nsresult rv;
-    nsCOMPtr<nsIWalletService> walletservice = 
-             do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
 
-    
-    nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+        nsXPIDLCString serverSpec;
+        rv = GetServerURI(getter_Copies(serverSpec));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), serverSpec);
+
+        rv = os->NotifyObservers(uri, "login-failed", nsnull);
+    }
 
     rv = SetPassword("");
-    if (NS_FAILED(rv)) return rv;
-    
-    
-    rv = walletservice->SI_RemoveUser((const char *)serverUri, nsnull);
     return rv;
 }
 
