@@ -18,18 +18,20 @@
       </xul:vbox>
           
       <xul:hbox class="dialog-button-box" anonid="buttons"
-                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient"
 #ifdef XP_UNIX
+                >
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
-        <xul:spacer flex="1"/>
+        <xul:spacer anonid="spacer" flex="1"/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
         <xul:button dlgtype="accept" class="dialog-button"/>
 #else
+                pack="end">
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
-        <xul:spacer flex="1"/>
+        <xul:spacer anonid="spacer" flex="1" hidden="true"/>
         <xul:button dlgtype="accept" class="dialog-button"/>
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
@@ -237,6 +239,13 @@
             // hide/show the buttons we want
             for (dlgtype in buttons) 
               buttons[dlgtype].hidden = !shown[dlgtype];
+
+#ifdef XP_WIN
+#           show the spacer on Windows only when the extra2 button is present
+            var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
+            spacer.setAttribute("flex", shown["extra2"]?"1":"0");
+#endif
+
           }
         ]]>
         </body>
