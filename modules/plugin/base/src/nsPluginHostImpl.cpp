@@ -259,101 +259,13 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
-void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt);
 nsresult PostPluginUnloadEvent(PRLibrary * aLibrary);
-
-/**
- * Used in DisplayNoDefaultPlugindialog to prevent showing the dialog twice
- * for the same mimetype.
- */
-
-static nsHashtable *mimeTypesSeen = nsnull;
-
-/**
- * placeholder value for mimeTypesSeen hashtable
- */
-
-static const char *hashValue = "value";
-
-/**
- * Default number of entries in the mimeTypesSeen hashtable
- */ 
-#define NS_MIME_TYPES_HASH_NUM (20)
 
 static nsActivePluginList *gActivePluginList;
 
 #ifdef CALL_SAFETY_ON
 PRBool gSkipPluginSafeCalls = PR_FALSE;
 #endif
-
-////////////////////////////////////////////////////////////////////////
-void DisplayNoDefaultPluginDialog(const char *mimeType, nsIPrompt *prompt)
-{
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-
-  if (!prefs || !prompt)
-    return;
-
-  PRBool displayDialogPrefValue = PR_FALSE;
-  rv = prefs->GetBoolPref("plugin.display_plugin_downloader_dialog", &displayDialogPrefValue);
-  // if the pref is false, don't display the dialog
-  if (NS_SUCCEEDED(rv) && !displayDialogPrefValue)
-      return;
-
-  if (nsnull == mimeTypesSeen) {
-    mimeTypesSeen = new nsHashtable(NS_MIME_TYPES_HASH_NUM);
-  }
-  if ((mimeTypesSeen != nsnull) && (mimeType != nsnull)) {
-    nsCStringKey key(mimeType);
-    // if we've seen this mimetype before
-    if (mimeTypesSeen->Get(&key)) {
-      // don't display the dialog
-      return;
-    }
-    else {
-      mimeTypesSeen->Put(&key, (void *) hashValue);
-    }
-  }
-
-  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIStringBundle> bundle;
-    if (NS_SUCCEEDED(strings->CreateBundle(PLUGIN_PROPERTIES_URL, getter_AddRefs(bundle)))) {
-      nsCOMPtr<nsIStringBundle> regionalBundle;
-      if (NS_SUCCEEDED(strings->CreateBundle(PLUGIN_REGIONAL_URL, getter_AddRefs(regionalBundle)))) {
-        nsXPIDLString titleUni, messageUni, checkboxMessageUni;
-        if (NS_SUCCEEDED(bundle->GetStringFromName(
-              NS_LITERAL_STRING("noDefaultPluginTitle").get(),
-                getter_Copies(titleUni))) &&
-            NS_SUCCEEDED(bundle->GetStringFromName(
-              NS_LITERAL_STRING("noDefaultPluginCheckboxMessage").get(),
-                getter_Copies(checkboxMessageUni))) &&
-            NS_SUCCEEDED(regionalBundle->GetStringFromName(
-              NS_LITERAL_STRING("noDefaultPluginMessage").get(),
-                getter_Copies(messageUni)))
-           ) 
-        {
-          PRBool checkboxState = PR_FALSE;
-          PRInt32 buttonPressed;
-          rv = prompt->ConfirmEx(titleUni, messageUni,
-                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
-                         nsnull, nsnull, nsnull,
-                         checkboxMessageUni, &checkboxState, &buttonPressed);
-
-          // if the user checked the checkbox, make it so the dialog doesn't
-          // display again.
-          if (NS_SUCCEEDED(rv) && checkboxState) {
-            prefs->SetBoolPref("plugin.display_plugin_downloader_dialog",
-                       !checkboxState);
-          }
-        }
-      }
-    }
-  }
-
-  return;
-}
 
 ////////////////////////////////////////////////////////////////////////
 // flat file reg funcs
@@ -3513,18 +3425,11 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     if(nsPluginTagType_Object == tagType && !bHasPluginURL)
       return rv;
 
-    nsresult result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
-
-    if(NS_SUCCEEDED(result))
-      result = aOwner->GetInstance(instance);
-
-    if(NS_FAILED(result)) {
-      nsCOMPtr<nsIPrompt> prompt;
-      GetPrompt(aOwner, getter_AddRefs(prompt));
-      if(prompt)
-        DisplayNoDefaultPluginDialog(aMimeType, prompt);
+    if(NS_FAILED(SetUpDefaultPluginInstance(aMimeType, aURL, aOwner)))
       return NS_ERROR_FAILURE;
-    }
+
+    if(NS_FAILED(aOwner->GetInstance(instance)))
+      return NS_ERROR_FAILURE;
 
     rv = NS_OK;
   }
