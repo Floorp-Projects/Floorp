@@ -27,6 +27,9 @@ public:
     nsRDFTreeColumn(const nsString& name);
     virtual ~nsRDFTreeColumn(void);
 
+    void SetVisibility(PRBool visible);
+    PRBool IsVisible(void) const;
+
     ////////////////////////////////////////////////////////////////////////
     // nsISupports interface
 
@@ -49,6 +52,7 @@ private:
     PRUint32          mWidth;
     nsColumnSortState mSortState;
     double            mDesiredPercentage;
+    PRBool            mVisible;
 
     static const PRUint32 kDefaultWidth;
 };

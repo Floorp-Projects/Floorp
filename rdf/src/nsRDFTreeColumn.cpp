@@ -87,3 +87,18 @@ nsRDFTreeColumn::SetPixelWidth(PRUint32 newWidth)
 }
 
 
+////////////////////////////////////////////////////////////////////////
+
+void
+nsRDFTreeColumn::SetVisibility(PRBool visible)
+{
+    mVisible = visible;
+}
+
+
+PRBool
+nsRDFTreeColumn::IsVisible(void) const
+{
+    return mVisible;
+}
+
