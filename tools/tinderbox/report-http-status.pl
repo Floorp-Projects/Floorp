@@ -10,9 +10,10 @@
 # of this script read/write the same data.
 my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";
 
+my $graph_server = "tegu.mozilla.org";
 
 # Send data to graph server via HTTP.
-require "$script_dir/reportdata2.pl";
+require "$script_dir/reportdata.pl";
 
 use Sys::Hostname;  # for ::hostname()
 
@@ -130,7 +131,7 @@ sub is_http_alive() {
     }
   }
 
-  ReportData::send_results_to_server("tegu.mozilla.org", 
+  ReportData::send_results_to_server($graph_server,
                                      "$alive_time",
                                      ::hostname(),
                                      "http_alive", 
