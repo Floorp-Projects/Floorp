@@ -1705,7 +1705,31 @@ public:
         result=OpenContext(aNode,aTag,aContext,aSink);
         break;
 
+      case eHTMLTag_newline:
+      case eHTMLTag_whitespace:
+      case eHTMLTag_comment:
+        break;
+
+
       default:
+        CElement* theBody=GetElement(eHTMLTag_body);
+        if(theBody) {
+          CElement *theChildElement=GetElement(aTag);
+          if(theBody->CanContain(theChildElement,aContext)) {
+            //let's auto open the body            
+            
+            CToken* theToken=new CStartToken(eHTMLTag_body);
+            nsCParserNode* theNode=new nsCParserNode(theToken,0,0);
+
+            result=HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
+
+            if(NS_SUCCEEDED(result)) {
+              if(eHTMLTag_body==aContext->Last()) {
+                result=theBody->HandleStartToken(aNode,aTag,aContext,aSink);
+              }
+            }
+          }
+        }
         //for now, let's drop other elements onto the floor.
         break;
     }//switch
