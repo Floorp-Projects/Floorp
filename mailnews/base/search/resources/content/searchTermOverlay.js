@@ -319,7 +319,7 @@ function removeSearchRow(index)
     // need to remove row from tree, so walk upwards from the
     // searchattribute to find the first <treeitem>
     var treeItemRow = searchTermObj.searchattribute;
-    dump("removeSearchRow: " + treeItemRow + "\n");
+    //dump("removeSearchRow: " + treeItemRow + "\n");
     while (treeItemRow) {
         if (treeItemRow.localName == "treeitem") break;
         treeItemRow = treeItemRow.parentNode;
