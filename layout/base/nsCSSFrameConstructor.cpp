@@ -79,6 +79,9 @@
 
 #include "nsGfxTextControlFrame.h"
 
+#include "nsIServiceManager.h"
+#include "nsIXBLService.h"
+
 #undef NOISY_FIRST_LETTER
 
 #ifdef MOZ_MATHML
@@ -3734,16 +3737,47 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
-/*
   nsCOMPtr<nsIStyleContext> styleContext;
   aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
 
   const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
       styleContext->GetStyleData(eStyleStruct_UserInterface);
 
-  if (ui->mBehavior != "")
-    printf("The behavior is not the empty string!\n");
-*/
+  if (ui->mBehavior != "") {
+    // Get the XBL loader.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXBLService, xblService, "components://netscape/xbl", &rv);
+    if (!xblService)
+      return rv;
+
+    // Load the bindings.
+    xblService->LoadBindings(aParent, ui->mBehavior);
+  
+    // Retrieve the anonymous content that we should build.
+    nsCOMPtr<nsISupportsArray> anonymousItems;
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems));
+    
+    if (!anonymousItems)
+      return NS_OK;
+
+    // Build the frames for the anonymous content.
+    PRUint32 count = 0;
+    anonymousItems->Count(&count);
+
+    for (PRUint32 i=0; i < count; i++)
+    {
+      // get our child's content and set its parent to our content
+      nsCOMPtr<nsISupports> node;
+      anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+      nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+      
+      // create the frame and attach it to our frame
+      ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
+    }
+
+    return NS_OK;
+  }
 
    // only these tags types can have anonymous content. We do this check for performance
   // reasons. If we did a query interface on every tag it would be very inefficient.
