@@ -330,6 +330,12 @@ public:
                              nsIDocument* aDocument,
                              nsIURI** aResult);
 
+  // Form Helper Routines
+  static nsIContent* FindFormParentContent(nsIContent* aParent);
+
+  static nsresult FindAndSetFormParent(nsIContent* aParent,
+                                       nsIFormControl* aControl);
+
   // See if the content object is in a document that has nav-quirks
   // mode enabled.
   static PRBool InNavQuirksMode(nsIDocument* aDoc);

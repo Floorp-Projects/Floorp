@@ -997,11 +997,9 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return result;
 }
 
-static nsresult
-FindFormParent(nsIContent* aParent,
-               nsIFormControl* aControl)
+nsIContent*
+nsGenericHTMLElement::FindFormParentContent(nsIContent* aParent)
 {
-  nsresult result = NS_OK;
   nsCOMPtr<nsIAtom> tag;
   nsCOMPtr<nsIContent> parent(aParent);
 
@@ -1014,19 +1012,30 @@ FindFormParent(nsIContent* aParent,
     // If the current ancestor is a form, set it as our form
     if ((tag.get() == nsHTMLAtoms::form) &&
         (kNameSpaceID_HTML == nameSpaceID)) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form(do_QueryInterface(parent));
-
-      if (form) {
-        result = aControl->SetForm(form);
-      }
-
-      break;
+      nsIContent * content = parent.get();
+      NS_IF_ADDREF(content);
+      return content;
     }
 
     nsIContent *tmp = parent;
     tmp->GetParent(*getter_AddRefs(parent));
   }
 
+  return nsnull;
+}
+
+nsresult
+nsGenericHTMLElement::FindAndSetFormParent(nsIContent* aParent,
+                                    nsIFormControl* aControl)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIContent> formParent(getter_AddRefs(FindFormParentContent(aParent)));
+  if (formParent) {
+    nsCOMPtr<nsIDOMHTMLFormElement> form(do_QueryInterface(formParent));
+    if (form) {
+      result = aControl->SetForm(form);
+    }
+  }
   return result;
 }
 
@@ -3682,7 +3691,7 @@ nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
     // search. In this case, someone (possibly the content sink) has
     // already set the form for us.
 
-    rv = FindFormParent(aParent, this);
+    rv = FindAndSetFormParent(aParent, this);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -3706,7 +3715,7 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
     PRInt32 index;
     mParent->IndexOf(this, index);
     if (-1 != index) {
-      rv = FindFormParent(mParent, this);
+      rv = FindAndSetFormParent(mParent, this);
     }
   }
 
@@ -3829,7 +3838,7 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   // So this is a last stab effort to get the form before somebody 
   // uses the radiobutton. Bug 62799
   if (mForm == nsnull) {
-    FindFormParent(mParent, this); // ignore returned result
+    FindAndSetFormParent(mParent, this); // ignore returned result
   }
 
   if (mForm) {
@@ -3853,7 +3862,7 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
   // search. In this case, someone (possibly the content sink) has
   // already set the form for us.
   else if (mDocument && aParent && (mParent || !mForm)) {
-    rv = FindFormParent(aParent, this);
+    rv = FindAndSetFormParent(aParent, this);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -3877,7 +3886,7 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
     PRInt32 index;
     mParent->IndexOf(this, index);
     if (-1 != index) {
-      rv = FindFormParent(mParent, this);
+      rv = FindAndSetFormParent(mParent, this);
     }
   }
 
