@@ -1775,7 +1775,7 @@ function AttachPage()
 {
     if (promptService)
     {
-        var result = {value:""};
+        var result = {value:"http://"};
         if (promptService.prompt(
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
