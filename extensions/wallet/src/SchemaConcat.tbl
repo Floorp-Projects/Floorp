@@ -79,13 +79,6 @@ BillTo.Name.Middle
 BillTo.Name.Last
 BillTo.Name.Suffix
 
-Joint.Name
-Joint.Name.Prefix
-Joint.Name.First
-Joint.Name.Middle
-Joint.Name.Last
-Joint.Name.Suffix
-
 Home.PostalCode
 Home.PostalCode.Prefix
 Home.PostalCode.Suffix
@@ -103,13 +96,6 @@ ShipTo.PostalCode
 Home.PostalCode
 ShipTo.PostalCode.Prefix
 ShipTo.PostalCode.Suffix
-
-Home.PostalCode
-Business.PostalCode
-
-Home.PostalCode
-Business.PostalCode.Prefix
-Business.PostalCode.Suffix
 
 BillTo.PostalCode
 BillTo.PostalCode.Prefix
@@ -146,35 +132,6 @@ BillTo.PostalCode
 ShipTo.PostalCode
 BillTo.PostalCode.Prefix
 BillTo.PostalCode.Suffix
-
-Business.PostalCode
-Business.PostalCode.Prefix
-Business.PostalCode.Suffix
-
-Business.PostalCode
-Home.PostalCode
-
-Business.PostalCode
-Home.PostalCode.Prefix
-Home.PostalCode.Suffix
-
-Business.PostalCode
-BillTo.PostalCode
-
-Business.PostalCode
-BillTo.PostalCode.Prefix
-BillTo.PostalCode.Suffix
-
-Business.PostalCode
-ShipTo.PostalCode
-
-Business.PostalCode
-ShipTo.PostalCode.Prefix
-ShipTo.PostalCode.Suffix
-
-Joint.PostalCode
-Joint.PostalCode.Prefix
-Joint.PostalCode.Suffix
 
 Home.Phone
 Home.Phone.LocCode
@@ -219,26 +176,6 @@ Home.Phone
 ShipTo.Phone.LocCode
 ShipTo.Phone.Number.Prefix
 ShipTo.Phone.Number.Suffix
-
-Home.Phone
-Business.Phone
-
-Home.Phone.Number
-Business.Phone.Number
-
-Home.Phone
-Business.Phone.LocCode
-Business.Phone.Number.Prefix
-Business.Phone.Number.Suffix
-
-Home.Phone.Number
-Business.Phone.Number.Prefix
-Business.Phone.Number.Suffix
-
-Home.Phone
-Business.Phone.LocCode
-Business.Phone.Number.Prefix
-Business.Phone.Number.Suffix
 
 BillTo.Phone
 BillTo.Phone.LocCode
@@ -318,69 +255,6 @@ ShipTo.Phone.Number
 BillTo.Phone.Number.Prefix
 BillTo.Phone.Number.Suffix
 
-Business.Phone
-Business.Phone.LocCode
-Business.Phone.Number.Prefix
-Business.Phone.Number.Suffix
-
-Business.Phone.Number
-Business.Phone.Number.Prefix
-Business.Phone.Number.Suffix
-
-Business.Phone
-Home.Phone
-
-Business.Phone.Number
-Home.Phone.Number
-
-Business.Phone
-Home.Phone.LocCode
-Home.Phone.Number.Prefix
-Home.Phone.Number.Suffix
-
-Business.Phone.Number
-Home.Phone.Number.Prefix
-Home.Phone.Number.Suffix
-
-Business.Phone
-BillTo.Phone
-
-Business.Phone.Number
-BillTo.Phone.Number
-
-Business.Phone
-BillTo.Phone.LocCode
-BillTo.Phone.Number.Prefix
-BillTo.Phone.Number.Suffix
-
-Business.Phone.Number
-BillTo.Phone.Number.Prefix
-BillTo.Phone.Number.Suffix
-
-Business.Phone
-ShipTo.Phone
-
-Business.Phone.Number
-ShipTo.Phone.Number
-
-Business.Phone
-ShipTo.Phone.LocCode
-ShipTo.Phone.Number.Prefix
-ShipTo.Phone.Number.Suffix
-
-Business.Phone.Number
-ShipTo.Phone.Number.Prefix
-ShipTo.Phone.Number.Suffix
-
-Joint.Phone
-Joint.Phone.LocCode
-Joint.Phone.Number.Prefix
-Joint.Phone.Number.Suffix
-
-Joint.Phone.Number
-Joint.Phone.Number.Prefix
-Joint.Phone.Number.Suffix
-
 Home.AltPhone
 Home.AltPhone.LocCode
 Home.AltPhone.Number.Prefix
@@ -419,21 +293,6 @@ ShipTo.AltPhone.Number.Suffix
 Home.AltPhone.Number
 ShipTo.AltPhone.Number.Prefix
 ShipTo.AltPhone.Number.Suffix
-
-Home.AltPhone
-Business.AltPhone
-
-Home.AltPhone.Number
-Business.AltPhone.Number
-
-Home.AltPhone
-Business.AltPhone.LocCode
-Business.AltPhone.Number.Prefix
-Business.AltPhone.Number.Suffix
-
-Home.AltPhone.Number
-Business.AltPhone.Number.Prefix
-Business.AltPhone.Number.Suffix
 
 BillTo.AltPhone
 BillTo.AltPhone.LocCode
@@ -513,69 +372,6 @@ ShipTo.AltPhone.Number
 BillTo.AltPhone.Number.Prefix
 BillTo.AltPhone.Number.Suffix
 
-Business.AltPhone
-Business.AltPhone.LocCode
-Business.AltPhone.Number.Prefix
-Business.AltPhone.Number.Suffix
-
-Business.AltPhone.Number
-Business.AltPhone.Number.Prefix
-Business.AltPhone.Number.Suffix
-
-Business.AltPhone
-Home.AltPhone
-
-Business.AltPhone.Number
-Home.AltPhone.Number
-
-Business.AltPhone
-Home.AltPhone.LocCode
-Home.AltPhone.Number.Prefix
-Home.AltPhone.Number.Suffix
-
-Busines.AltPhone.Number
-Home.AltPhone.Number.Prefix
-Home.AltPhone.Number.Suffix
-
-Business.AltPhone
-BillTo.AltPhone
-
-Business.AltPhone.Number
-BillTo.AltPhone.Number
-
-Business.AltPhone
-BillTo.AltPhone.LocCode
-BillTo.AltPhone.Number.Prefix
-BillTo.AltPhone.Number.Suffix
-
-Busines.AltPhone.Number
-BillTo.AltPhone.Number.Prefix
-BillTo.AltPhone.Number.Suffix
-
-Business.AltPhone
-ShipTo.AltPhone
-
-Business.AltPhone.Number
-ShipTo.AltPhone.Number
-
-Business.AltPhone
-ShipTo.AltPhone.LocCode
-ShipTo.AltPhone.Number.Prefix
-ShipTo.AltPhone.Number.Suffix
-
-Busines.AltPhone.Number
-ShipTo.AltPhone.Number.Prefix
-ShipTo.AltPhone.Number.Suffix
-
-Joint.AltPhone
-Joint.AltPhone.LocCode
-Joint.AltPhone.Number.Prefix
-Joint.AltPhone.Number.Suffix
-
-Joint.AltPhone.Number
-Joint.AltPhone.Number.Prefix
-Joint.AltPhone.Number.Suffix
-
 Home.Fax
 Home.Fax.LocCode
 Home.Fax.Number.Prefix
@@ -614,21 +410,6 @@ ShipTo.Fax.Number.Suffix
 Home.Fax.Number
 ShipTo.Fax.Number.Prefix
 ShipTo.Fax.Number.Suffix
-
-Home.Fax
-Business.Fax
-
-Home.Fax.Number
-Business.Fax.Number
-
-Home.Fax
-Business.Fax.LocCode
-Business.Fax.Number.Prefix
-Business.Fax.Number.Suffix
-
-Home.Fax.Number
-Business.Fax.Number.Prefix
-Business.Fax.Number.Suffix
 
 BillTo.Fax
 BillTo.Fax.LocCode
@@ -707,69 +488,6 @@ BillTo.Fax.Number.Suffix
 ShipTo.Fax.Number
 BillTo.Fax.Number.Prefix
 BillTo.Fax.Number.Suffix
-
-Business.Fax
-Business.Fax.LocCode
-Business.Fax.Number.Prefix
-Business.Fax.Number.Suffix
-
-Business.Fax.Number
-Business.Fax.Number.Prefix
-Business.Fax.Number.Suffix
-
-Business.Fax
-Home.Fax
-
-Business.Fax.Number
-Home.Fax.Number
-
-Business.Fax
-Home.Fax.LocCode
-Home.Fax.Number.Prefix
-Home.Fax.Number.Suffix
-
-Business.Fax.Number
-Home.Fax.Number.Prefix
-Home.Fax.Number.Suffix
-
-Business.Fax
-BillTo.Fax
-
-Business.Fax.Number
-BillTo.Fax.Number
-
-Business.Fax
-BillTo.Fax.LocCode
-BillTo.Fax.Number.Prefix
-BillTo.Fax.Number.Suffix
-
-Business.Fax.Number
-BillTo.Fax.Number.Prefix
-BillTo.Fax.Number.Suffix
-
-Business.Fax
-ShipTo.Fax
-
-Business.Fax.Number
-ShipTo.Fax.Number
-
-Business.Fax
-ShipTo.Fax.LocCode
-ShipTo.Fax.Number.Prefix
-ShipTo.Fax.Number.Suffix
-
-Business.Fax.Number
-ShipTo.Fax.Number.Prefix
-ShipTo.Fax.Number.Suffix
-
-Joint.Fax
-Joint.Fax.LocCode
-Joint.Fax.Number.Prefix
-Joint.Fax.Number.Suffix
-
-Joint.Fax.Number
-Joint.Fax.Number.Prefix
-Joint.Fax.Number.Suffix
 
 Home.Mobile
 Home.Mobile.LocCode
@@ -809,21 +527,6 @@ ShipTo.Mobile.Number.Suffix
 Home.Mobile.Number
 ShipTo.Mobile.Number.Prefix
 ShipTo.Mobile.Number.Suffix
-
-Home.Mobile
-Business.Mobile
-
-Home.Mobile.Number
-Business.Mobile.Number
-
-Home.Mobile
-Business.Mobile.LocCode
-Business.Mobile.Number.Prefix
-Business.Mobile.Number.Suffix
-
-Home.Mobile.Number
-Business.Mobile.Number.Prefix
-Business.Mobile.Number.Suffix
 
 BillTo.Mobile
 BillTo.Mobile.LocCode
@@ -903,69 +606,6 @@ ShipTo.Mobile.Number
 BillTo.Mobile.Number.Prefix
 BillTo.Mobile.Number.Suffix
 
-Business.Mobile
-Business.Mobile.LocCode
-Business.Mobile.Number.Prefix
-Business.Mobile.Number.Suffix
-
-Business.Mobile.Number
-Business.Mobile.Number.Prefix
-Business.Mobile.Number.Suffix
-
-Business.Mobile
-Home.Mobile
-
-Business.Mobile.Number
-Home.Mobile.Number
-
-Business.Mobile
-Home.Mobile.LocCode
-Home.Mobile.Number.Prefix
-Home.Mobile.Number.Suffix
-
-Business.Mobile.Number
-Home.Mobile.Number.Prefix
-Home.Mobile.Number.Suffix
-
-Business.Mobile
-BillTo.Mobile
-
-Business.Mobile.Number
-BillTo.Mobile.Number
-
-Business.Mobile
-BillTo.Mobile.LocCode
-BillTo.Mobile.Number.Prefix
-BillTo.Mobile.Number.Suffix
-
-Business.Mobile.Number
-BillTo.Mobile.Number.Prefix
-BillTo.Mobile.Number.Suffix
-
-Business.Mobile
-BillTo.Mobile
-
-Business.Mobile.Number
-BillTo.Mobile.Number
-
-Business.Mobile
-BillTo.Mobile.LocCode
-BillTo.Mobile.Number.Prefix
-BillTo.Mobile.Number.Suffix
-
-Business.Mobile.Number
-BillTo.Mobile.Number.Prefix
-BillTo.Mobile.Number.Suffix
-
-Joint.Mobile
-Joint.Mobile.LocCode
-Joint.Mobile.Number.Prefix
-Joint.Mobile.Number.Suffix
-
-Joint.Mobile.Number
-Joint.Mobile.Number.Prefix
-Joint.Mobile.Number.Suffix
-
 Home.Pager
 Home.Pager.LocCode
 Home.Pager.Number.Prefix
@@ -1004,21 +644,6 @@ ShipTo.Pager.Number.Suffix
 Home.Pager.Number
 ShipTo.Pager.Number.Prefix
 ShipTo.Pager.Number.Suffix
-
-Home.Pager
-Business.Pager
-
-Home.Pager.Number
-Business.Pager.Number
-
-Home.Pager
-Business.Pager.LocCode
-Business.Pager.Number.Prefix
-Business.Pager.Number.Suffix
-
-Home.Pager.Number
-Business.Pager.Number.Prefix
-Business.Pager.Number.Suffix
 
 BillTo.Pager
 BillTo.Pager.LocCode
@@ -1097,69 +722,6 @@ BillTo.Pager.Number.Suffix
 ShipTo.Pager.Number
 BillTo.Pager.Number.Prefix
 BillTo.Pager.Number.Suffix
-
-Business.Pager
-Business.Pager.LocCode
-Business.Pager.Number.Prefix
-Business.Pager.Number.Suffix
-
-Business.Pager.Number
-Business.Pager.Number.Prefix
-Business.Pager.Number.Suffix
-
-Business.Pager
-Home.Pager
-
-Business.Pager.Number
-Home.Pager.Number
-
-Business.Pager
-Home.Pager.LocCode
-Home.Pager.Number.Prefix
-Home.Pager.Number.Suffix
-
-Business.Pager.Number
-Home.Pager.Number.Prefix
-Home.Pager.Number.Suffix
-
-Business.Pager
-BillTo.Pager
-
-Business.Pager.Number
-BillTo.Pager.Number
-
-Business.Pager
-BillTo.Pager.LocCode
-BillTo.Pager.Number.Prefix
-BillTo.Pager.Number.Suffix
-
-Business.Pager.Number
-BillTo.Pager.Number.Prefix
-BillTo.Pager.Number.Suffix
-
-Business.Pager
-ShipTo.Pager
-
-Business.Pager.Number
-ShipTo.Pager.Number
-
-Business.Pager
-ShipTo.Pager.LocCode
-ShipTo.Pager.Number.Prefix
-ShipTo.Pager.Number.Suffix
-
-Business.Pager.Number
-ShipTo.Pager.Number.Prefix
-ShipTo.Pager.Number.Suffix
-
-Joint.Pager
-Joint.Pager.LocCode
-Joint.Pager.Number.Prefix
-Joint.Pager.Number.Suffix
-
-Joint.Pager.Number
-Joint.Pager.Number.Prefix
-Joint.Pager.Number.Suffix
 
 Card.ExpDate
 Card.ExpDate.Month
@@ -1170,31 +732,16 @@ SocSec.Prefix
 SocSec.Middle
 SocSec.Suffix
 
-Joint.SocSec
-Joint.SocSec.Prefix
-Joint.SocSec.Middle
-Joint.SocSec.Suffix
-
 Bdate
 Bdate.Month
 Bdate.Day
 Bdate.Year
-
-Joint.Bdate
-Joint.Bdate.Month
-Joint.Bdate.Day
-Joint.Bdate.Year
 
 Anniv
 Anniv.Month
 Anniv.Day
 Anniv.Year
 
-Joint.Anniv
-Joint.Anniv.Month
-Joint.Anniv.Day
-Joint.Anniv.Year
-
 Name.Prefix
 BillTo.Name.Prefix
 
@@ -1209,9 +756,6 @@ BillTo.Name.Last
 
 Name.Suffix
 BillTo.Name.Suffix
-
-Nickname
-BillTo.Nickname
 
 Home.Street.Line1
 BillTo.Street.Line1
@@ -1237,8 +781,8 @@ BillTo.PostalCode.Prefix
 Home.PostalCode.Suffix
 BillTo.PostalCode.Suffix
 
-Home.Phone.IntCode
-BillTo.Phone.IntCode
+Home.Country
+BillTo.Country
 
 Home.Phone.LocCode
 BillTo.Phone.LocCode
@@ -1252,9 +796,6 @@ BillTo.Phone.Number.Suffix
 Home.Phone.Extension
 BillTo.Phone.Extension
 
-Home.AltPhone.IntCode
-BillTo.AltPhone.IntCode
-
 Home.AltPhone.LocCode
 BillTo.AltPhone.LocCode
 
@@ -1267,9 +808,6 @@ BillTo.AltPhone.Number.Suffix
 Home.AltPhone.Extension
 BillTo.AltPhone.Extension
 
-Home.Fax.IntCode
-BillTo.Fax.IntCode
-
 Home.Fax.LocCode
 BillTo.Fax.LocCode
 
@@ -1279,9 +817,6 @@ BillTo.Fax.Number.Prefix
 Home.Fax.Number.Suffix
 BillTo.Fax.Number.Suffix
 
-Home.Mobile.IntCode
-BillTo.Mobile.IntCode
-
 Home.Mobile.LocCode
 BillTo.Mobile.LocCode
 
@@ -1290,9 +825,6 @@ BillTo.Mobile.Number.Prefix
 
 Home.Mobile.Number.Suffix
 BillTo.Mobile.Number.Suffix
-
-Home.Pager.IntCode
-BillTo.Pager.IntCode
 
 Home.Pager.LocCode
 BillTo.Pager.LocCode
@@ -1324,9 +856,6 @@ ShipTo.Name.Last
 Name.Suffix
 ShipTo.Name.Suffix
 
-Nickname
-ShipTo.Nickname
-
 Home.Street.Line1
 ShipTo.Street.Line1
 
@@ -1351,8 +880,8 @@ ShipTo.PostalCode.Prefix
 Home.PostalCode.Suffix
 ShipTo.PostalCode.Suffix
 
-Home.Phone.IntCode
-ShipTo.Phone.IntCode
+Home.Country
+ShipTo.Country
 
 Home.Phone.LocCode
 ShipTo.Phone.LocCode
@@ -1366,9 +895,6 @@ ShipTo.Phone.Number.Suffix
 Home.Phone.Extension
 ShipTo.Phone.Extension
 
-Home.AltPhone.IntCode
-ShipTo.AltPhone.IntCode
-
 Home.AltPhone.LocCode
 ShipTo.AltPhone.LocCode
 
@@ -1381,9 +907,6 @@ ShipTo.AltPhone.Number.Suffix
 Home.AltPhone.Extension
 ShipTo.AltPhone.Extension
 
-Home.Fax.IntCode
-ShipTo.Fax.IntCode
-
 Home.Fax.LocCode
 ShipTo.Fax.LocCode
 
@@ -1393,9 +916,6 @@ ShipTo.Fax.Number.Prefix
 Home.Fax.Number.Suffix
 ShipTo.Fax.Number.Suffix
 
-Home.Mobile.IntCode
-ShipTo.Mobile.IntCode
-
 Home.Mobile.LocCode
 ShipTo.Mobile.LocCode
 
@@ -1404,9 +924,6 @@ ShipTo.Mobile.Number.Prefix
 
 Home.Mobile.Number.Suffix
 ShipTo.Mobile.Number.Suffix
-
-Home.Pager.IntCode
-ShipTo.Pager.IntCode
 
 Home.Pager.LocCode
 ShipTo.Pager.LocCode
@@ -1423,102 +940,6 @@ ShipTo.Email
 Home.URI
 ShipTo.URI
 
-Home.Street.Line1
-Business.Street.Line1
-
-Home.Street.Line2
-Business.Street.Line2
-
-Home.Street.Line3
-Business.Street.Line3
-
-Home.City
-Business.City
-
-Home.State
-Business.State
-
-Home.Prov
-Business.Prov
-
-Home.PostalCode.Prefix
-Business.PostalCode.Prefix
-
-Home.PostalCode.Suffix
-Business.PostalCode.Suffix
-
-Home.Phone.IntCode
-Business.Phone.IntCode
-
-Home.Phone.LocCode
-Business.Phone.LocCode
-
-Home.Phone.Number.Prefix
-Business.Phone.Number.Prefix
-
-Home.Phone.Number.Suffix
-Business.Phone.Number.Suffix
-
-Home.Phone.Extension
-Business.Phone.Extension
-
-Home.AltPhone.IntCode
-Business.AltPhone.IntCode
-
-Home.AltPhone.LocCode
-Business.AltPhone.LocCode
-
-Home.AltPhone.Number.Prefix
-Business.AltPhone.Number.Prefix
-
-Home.AltPhone.Number.Suffix
-Business.AltPhone.Number.Suffix
-
-Home.AltPhone.Extension
-Business.AltPhone.Extension
-
-Home.Fax.IntCode
-Business.Fax.IntCode
-
-Home.Fax.LocCode
-Business.Fax.LocCode
-
-Home.Fax.Number.Prefix
-Business.Fax.Number.Prefix
-
-Home.Fax.Number.Suffix
-Business.Fax.Number.Suffix
-
-Home.Mobile.IntCode
-Business.Mobile.IntCode
-
-Home.Mobile.LocCode
-Business.Mobile.LocCode
-
-Home.Mobile.Number.Prefix
-Business.Mobile.Number.Prefix
-
-Home.Mobile.Number.Suffix
-Business.Mobile.Number.Suffix
-
-Home.Pager.IntCode
-Business.Pager.IntCode
-
-Home.Pager.LocCode
-Business.Pager.LocCode
-
-Home.Pager.Number.Prefix
-Business.Pager.Number.Prefix
-
-Home.Pager.Number.Suffix
-Business.Pager.Number.Suffix
-
-Home.Email
-Business.Email
-
-Home.URI
-Business.URI
-
 BillTo.Name.Prefix
 Name.Prefix
 
@@ -1533,12 +954,6 @@ Name.Last
 
 BillTo.Name.Suffix
 Name.Suffix
-
-BillTo.CompanyName
-Business.CompanyName
-
-BillTo.Nickname
-Nickname
 
 BillTo.Street.Line1
 Home.Street.Line1
@@ -1564,8 +979,8 @@ Home.PostalCode.Prefix
 BillTo.PostalCode.Suffix
 Home.PostalCode.Suffix
 
-BillTo.Phone.IntCode
-Home.Phone.IntCode
+BillTo.Country
+Home.Country
 
 BillTo.Phone.LocCode
 Home.Phone.LocCode
@@ -1579,9 +994,6 @@ Home.Phone.Number.Suffix
 BillTo.Phone.Extension
 Home.Phone.Extension
 
-BillTo.AltPhone.IntCode
-Home.AltPhone.IntCode
-
 BillTo.AltPhone.LocCode
 Home.AltPhone.LocCode
 
@@ -1594,9 +1006,6 @@ Home.AltPhone.Number.Suffix
 BillTo.AltPhone.Extension
 Home.AltPhone.Extension
 
-BillTo.Fax.IntCode
-Home.Fax.IntCode
-
 BillTo.Fax.LocCode
 Home.Fax.LocCode
 
@@ -1606,9 +1015,6 @@ Home.Fax.Number.Prefix
 BillTo.Fax.Number.Suffix
 Home.Fax.Number.Suffix
 
-BillTo.Mobile.IntCode
-Home.Mobile.IntCode
-
 BillTo.Mobile.LocCode
 Home.Mobile.LocCode
 
@@ -1617,9 +1023,6 @@ Home.Mobile.Number.Prefix
 
 BillTo.Mobile.Number.Suffix
 Home.Mobile.Number.Suffix
-
-BillTo.Pager.IntCode
-Home.Pager.IntCode
 
 BillTo.Pager.LocCode
 Home.Pager.LocCode
@@ -1651,12 +1054,6 @@ ShipTo.Name.Last
 BillTo.Name.Suffix
 ShipTo.Name.Suffix
 
-BillTo.CompanyName
-ShipTo.CompanyName
-
-BillTo.Nickname
-ShipTo.Nickname
-
 BillTo.Street.Line1
 ShipTo.Street.Line1
 
@@ -1681,8 +1078,8 @@ ShipTo.PostalCode.Prefix
 BillTo.PostalCode.Suffix
 ShipTo.PostalCode.Suffix
 
-BillTo.Phone.IntCode
-ShipTo.Phone.IntCode
+BillTo.Country
+ShipTo.Country
 
 BillTo.Phone.LocCode
 ShipTo.Phone.LocCode
@@ -1696,9 +1093,6 @@ ShipTo.Phone.Number.Suffix
 BillTo.Phone.Extension
 ShipTo.Phone.Extension
 
-BillTo.AltPhone.IntCode
-ShipTo.AltPhone.IntCode
-
 BillTo.AltPhone.LocCode
 ShipTo.AltPhone.LocCode
 
@@ -1711,9 +1105,6 @@ ShipTo.AltPhone.Number.Suffix
 BillTo.AltPhone.Extension
 ShipTo.AltPhone.Extension
 
-BillTo.Fax.IntCode
-ShipTo.Fax.IntCode
-
 BillTo.Fax.LocCode
 ShipTo.Fax.LocCode
 
@@ -1723,9 +1114,6 @@ ShipTo.Fax.Number.Prefix
 BillTo.Fax.Number.Suffix
 ShipTo.Fax.Number.Suffix
 
-BillTo.Mobile.IntCode
-ShipTo.Mobile.IntCode
-
 BillTo.Mobile.LocCode
 ShipTo.Mobile.LocCode
 
@@ -1734,9 +1122,6 @@ ShipTo.Mobile.Number.Prefix
 
 BillTo.Mobile.Number.Suffix
 ShipTo.Mobile.Number.Suffix
-
-BillTo.Pager.IntCode
-ShipTo.Pager.IntCode
 
 BillTo.Pager.LocCode
 ShipTo.Pager.LocCode
@@ -1768,12 +1153,6 @@ Name.Last
 ShipTo.Name.Suffix
 Name.Suffix
 
-ShipTo.CompanyName
-Business.CompanyName
-
-ShipTo.Nickname
-Nickname
-
 ShipTo.Street.Line1
 Home.Street.Line1
 
@@ -1798,8 +1177,8 @@ Home.PostalCode.Prefix
 ShipTo.PostalCode.Suffix
 Home.PostalCode.Suffix
 
-ShipTo.Phone.IntCode
-Home.Phone.IntCode
+ShipTo.Country
+Home.Country
 
 ShipTo.Phone.LocCode
 Home.Phone.LocCode
@@ -1813,9 +1192,6 @@ Home.Phone.Number.Suffix
 ShipTo.Phone.Extension
 Home.Phone.Extension
 
-ShipTo.AltPhone.IntCode
-Home.AltPhone.IntCode
-
 ShipTo.AltPhone.LocCode
 Home.AltPhone.LocCode
 
@@ -1828,9 +1204,6 @@ Home.AltPhone.Number.Suffix
 ShipTo.AltPhone.Extension
 Home.AltPhone.Extension
 
-ShipTo.Fax.IntCode
-Home.Fax.IntCode
-
 ShipTo.Fax.LocCode
 Home.Fax.LocCode
 
@@ -1840,9 +1213,6 @@ Home.Fax.Number.Prefix
 ShipTo.Fax.Number.Suffix
 Home.Fax.Number.Suffix
 
-ShipTo.Mobile.IntCode
-Home.Mobile.IntCode
-
 ShipTo.Mobile.LocCode
 Home.Mobile.LocCode
 
@@ -1851,9 +1221,6 @@ Home.Mobile.Number.Prefix
 
 ShipTo.Mobile.Number.Suffix
 Home.Mobile.Number.Suffix
-
-ShipTo.Pager.IntCode
-Home.Pager.IntCode
 
 ShipTo.Pager.LocCode
 Home.Pager.LocCode
@@ -1885,12 +1252,6 @@ BillTo.Name.Last
 ShipTo.Name.Suffix
 BillTo.Name.Suffix
 
-ShipTo.CompanyName
-BillTo.CompanyName
-
-ShipTo.Nickname
-BillTo.Nickname
-
 ShipTo.Street.Line1
 BillTo.Street.Line1
 
@@ -1915,8 +1276,8 @@ BillTo.PostalCode.Prefix
 ShipTo.PostalCode.Suffix
 BillTo.PostalCode.Suffix
 
-ShipTo.Phone.IntCode
-BillTo.Phone.IntCode
+ShipTo.Country
+BillTo.Country
 
 ShipTo.Phone.LocCode
 BillTo.Phone.LocCode
@@ -1930,9 +1291,6 @@ BillTo.Phone.Number.Suffix
 ShipTo.Phone.Extension
 BillTo.Phone.Extension
 
-ShipTo.AltPhone.IntCode
-BillTo.AltPhone.IntCode
-
 ShipTo.AltPhone.LocCode
 BillTo.AltPhone.LocCode
 
@@ -1945,9 +1303,6 @@ BillTo.AltPhone.Number.Suffix
 ShipTo.AltPhone.Extension
 BillTo.AltPhone.Extension
 
-ShipTo.Fax.IntCode
-BillTo.Fax.IntCode
-
 ShipTo.Fax.LocCode
 BillTo.Fax.LocCode
 
@@ -1957,9 +1312,6 @@ BillTo.Fax.Number.Prefix
 ShipTo.Fax.Number.Suffix
 BillTo.Fax.Number.Suffix
 
-ShipTo.Mobile.IntCode
-BillTo.Mobile.IntCode
-
 ShipTo.Mobile.LocCode
 BillTo.Mobile.LocCode
 
@@ -1968,9 +1320,6 @@ BillTo.Mobile.Number.Prefix
 
 ShipTo.Mobile.Number.Suffix
 BillTo.Mobile.Number.Suffix
-
-ShipTo.Pager.IntCode
-BillTo.Pager.IntCode
 
 ShipTo.Pager.LocCode
 BillTo.Pager.LocCode
@@ -1986,292 +1335,4 @@ BillTo.Email
 
 ShipTo.URI
 BillTo.URI
-
-Business.Street.Line1
-Home.Street.Line1
-
-Business.Street.Line2
-Home.Street.Line2
-
-Business.Street.Line3
-Home.Street.Line3
-
-Business.City
-Home.City
-
-Business.State
-Home.State
-
-Business.Prov
-Home.Prov
-
-Business.PostalCode.Prefix
-Home.PostalCode.Prefix
-
-Business.PostalCode.Suffix
-Home.PostalCode.Suffix
-
-Business.Phone.IntCode
-Home.Phone.IntCode
-
-Business.Phone.LocCode
-Home.Phone.LocCode
-
-Business.Phone.Number.Prefix
-Home.Phone.Number.Prefix
-
-Business.Phone.Number.Suffix
-Home.Phone.Number.Suffix
-
-Business.Phone.Extension
-Home.Phone.Extension
-
-Business.AltPhone.IntCode
-Home.AltPhone.IntCode
-
-Business.AltPhone.LocCode
-Home.AltPhone.LocCode
-
-Business.AltPhone.Number.Prefix
-Home.AltPhone.Number.Prefix
-
-Business.AltPhone.Number.Suffix
-Home.AltPhone.Number.Suffix
-
-Business.AltPhone.Extension
-Home.AltPhone.Extension
-
-Business.Fax.IntCode
-Home.Fax.IntCode
-
-Business.Fax.LocCode
-Home.Fax.LocCode
-
-Business.Fax.Number.Prefix
-Home.Fax.Number.Prefix
-
-Business.Fax.Number.Suffix
-Home.Fax.Number.Suffix
-
-Business.Mobile.IntCode
-Home.Mobile.IntCode
-
-Business.Mobile.LocCode
-Home.Mobile.LocCode
-
-Business.Mobile.Number.Prefix
-Home.Mobile.Number.Prefix
-
-Business.Mobile.Number.Suffix
-Home.Mobile.Number.Suffix
-
-Business.Pager.IntCode
-Home.Pager.IntCode
-
-Business.Pager.LocCode
-Home.Pager.LocCode
-
-Business.Pager.Number.Prefix
-Home.Pager.Number.Prefix
-
-Business.Pager.Number.Suffix
-Home.Pager.Number.Suffix
-
-Business.Email
-Home.Email
-
-Business.URI
-Home.URI
-
-Business.Street.Line1
-BillTo.Street.Line1
-
-Business.Street.Line2
-BillTo.Street.Line2
-
-Business.Street.Line3
-BillTo.Street.Line3
-
-Business.City
-BillTo.City
-
-Business.State
-BillTo.State
-
-Business.Prov
-BillTo.Prov
-
-Business.PostalCode.Prefix
-BillTo.PostalCode.Prefix
-
-Business.PostalCode.Suffix
-BillTo.PostalCode.Suffix
-
-Business.Phone.IntCode
-BillTo.Phone.IntCode
-
-Business.Phone.LocCode
-BillTo.Phone.LocCode
-
-Business.Phone.Number.Prefix
-BillTo.Phone.Number.Prefix
-
-Business.Phone.Number.Suffix
-BillTo.Phone.Number.Suffix
-
-Business.Phone.Extension
-BillTo.Phone.Extension
-
-Business.AltPhone.IntCode
-BillTo.AltPhone.IntCode
-
-Business.AltPhone.LocCode
-BillTo.AltPhone.LocCode
-
-Business.AltPhone.Number.Prefix
-BillTo.AltPhone.Number.Prefix
-
-Business.AltPhone.Number.Suffix
-BillTo.AltPhone.Number.Suffix
-
-Business.AltPhone.Extension
-BillTo.AltPhone.Extension
-
-Business.Fax.IntCode
-BillTo.Fax.IntCode
-
-Business.Fax.LocCode
-BillTo.Fax.LocCode
-
-Business.Fax.Number.Prefix
-BillTo.Fax.Number.Prefix
-
-Business.Fax.Number.Suffix
-BillTo.Fax.Number.Suffix
-
-Business.Mobile.IntCode
-BillTo.Mobile.IntCode
-
-Business.Mobile.LocCode
-BillTo.Mobile.LocCode
-
-Business.Mobile.Number.Prefix
-BillTo.Mobile.Number.Prefix
-
-Business.Mobile.Number.Suffix
-BillTo.Mobile.Number.Suffix
-
-Business.Pager.IntCode
-BillTo.Pager.IntCode
-
-Business.Pager.LocCode
-BillTo.Pager.LocCode
-
-Business.Pager.Number.Prefix
-BillTo.Pager.Number.Prefix
-
-Business.Pager.Number.Suffix
-BillTo.Pager.Number.Suffix
-
-Business.Email
-BillTo.Email
-
-Business.URI
-BillTo.URI
-
-Business.Street.Line1
-ShipTo.Street.Line1
-
-Business.Street.Line2
-ShipTo.Street.Line2
-
-Business.Street.Line3
-ShipTo.Street.Line3
-
-Business.City
-ShipTo.City
-
-Business.State
-ShipTo.State
-
-Business.Prov
-ShipTo.Prov
-
-Business.PostalCode.Prefix
-ShipTo.PostalCode.Prefix
-
-Business.PostalCode.Suffix
-ShipTo.PostalCode.Suffix
-
-Business.Phone.IntCode
-ShipTo.Phone.IntCode
-
-Business.Phone.LocCode
-ShipTo.Phone.LocCode
-
-Business.Phone.Number.Prefix
-ShipTo.Phone.Number.Prefix
-
-Business.Phone.Number.Suffix
-ShipTo.Phone.Number.Suffix
-
-Business.Phone.Extension
-ShipTo.Phone.Extension
-
-Business.AltPhone.IntCode
-ShipTo.AltPhone.IntCode
-
-Business.AltPhone.LocCode
-ShipTo.AltPhone.LocCode
-
-Business.AltPhone.Number.Prefix
-ShipTo.AltPhone.Number.Prefix
-
-Business.AltPhone.Number.Suffix
-ShipTo.AltPhone.Number.Suffix
-
-Business.AltPhone.Extension
-ShipTo.AltPhone.Extension
-
-Business.Fax.IntCode
-ShipTo.Fax.IntCode
-
-Business.Fax.LocCode
-ShipTo.Fax.LocCode
-
-Business.Fax.Number.Prefix
-ShipTo.Fax.Number.Prefix
-
-Business.Fax.Number.Suffix
-ShipTo.Fax.Number.Suffix
-
-Business.Mobile.IntCode
-ShipTo.Mobile.IntCode
-
-Business.Mobile.LocCode
-ShipTo.Mobile.LocCode
-
-Business.Mobile.Number.Prefix
-ShipTo.Mobile.Number.Prefix
-
-Business.Mobile.Number.Suffix
-ShipTo.Mobile.Number.Suffix
-
-Business.Pager.IntCode
-ShipTo.Pager.IntCode
-
-Business.Pager.LocCode
-ShipTo.Pager.LocCode
-
-Business.Pager.Number.Prefix
-ShipTo.Pager.Number.Prefix
-
-Business.Pager.Number.Suffix
-ShipTo.Pager.Number.Suffix
-
-Business.Email
-ShipTo.Email
-
-Business.URI
-ShipTo.URI
 

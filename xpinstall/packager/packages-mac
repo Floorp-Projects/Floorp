@@ -194,8 +194,10 @@ viewer:res:language.properties
 viewer:res:entityTables:*
 viewer:defaults:wallet:SchemaConcat.tbl
 viewer:defaults:wallet:FieldSchema.tbl
-viewer:defaults:wallet:URLFieldSchema.tbl
 viewer:defaults:wallet:DistinguishedSchema.tbl
+viewer:defaults:wallet:SchemaStrings.tbl
+viewer:defaults:wallet:PositionalSchema.tbl
+viewer:defaults:wallet:StateSchema.tbl
 viewer:res:html:*
 viewer:res:html.css
 viewer:res:quirk.css

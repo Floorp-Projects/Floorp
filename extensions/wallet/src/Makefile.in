@@ -42,8 +42,10 @@ CPPSRCS		= \
 DEFAULTS_FILES	= \
 		$(srcdir)/DistinguishedSchema.tbl \
 		$(srcdir)/FieldSchema.tbl \
-		$(srcdir)/URLFieldSchema.tbl \
 		$(srcdir)/SchemaConcat.tbl \
+		$(srcdir)/SchemaStrings.tbl \
+		$(srcdir)/PositionalSchema.tbl \
+		$(srcdir)/StateSchema.tbl \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

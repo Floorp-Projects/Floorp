@@ -1,4 +1,6 @@
 FieldSchema.tbl
-URLFieldSchema.tbl
 SchemaConcat.tbl
 DistinguishedSchema.tbl
+SchemaStrings.tbl
+PositionalSchema.tbl
+StateSchema.tbl
