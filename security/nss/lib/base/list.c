@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.6 $ $Date: 2001/11/08 00:14:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.7 $ $Date: 2001/11/16 19:36:43 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -320,7 +320,6 @@ nssListIterator_Start(nssListIterator *iter)
 {
     NSSLIST_LOCK_IF(iter->list);
     if (iter->list->count == 0) {
-	NSSLIST_UNLOCK_IF(iter->list);
 	return NULL;
     }
     iter->current = iter->list->head;
