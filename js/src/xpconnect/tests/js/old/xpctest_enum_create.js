@@ -140,7 +140,7 @@ var contractIDsTo_NOT_Create = [
 // fixed    "@mozilla.org/addressbook/directoryproperty;1",  // fails to init refcount
 
 // fixed    "@mozilla.org/rdf/datasource;1?name=local-store", //NS_NewLocalStore calls stuff that asserts
-// fixed    "@mozilla.org/rdf/datasource;1?name=?name=xpinstall-update-notifier", //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
+// fixed    "@mozilla.org/rdf/datasource;1?name=xpinstall-update-notifier", //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
 // fixed    "@mozilla.org/rdf/xul-template-builder;1",    //RDFXMLDataSourceImpl::Refresh does CreateInstance of parser but fails to check the result (I think I've seen this elsewhere)
 
 // fixed    "@mozilla.org/rdf/xul-content-sink;1", // nsXULContentSink.cpp, XULContentSinkImpl::XULContentSinkImpl needs to init mNameSpaceManager
@@ -164,15 +164,15 @@ var contractIDsTo_NOT_Create = [
 
 
 /* BUG 11512 */    "@mozilla.org/rdf/datasource;1?name=files", // FileSystemDataSource::~FileSystemDataSource calls gRDFService->UnregisterDataSource(this); even though it was not registered
-/* BUG 11512 */    "@mozilla.org/rdf/datasource;1?name=?name=find", // FindDataSource::~FindDataSource calls gRDFService->UnregisterDataSource(this) even if it was not actaully registered.
+/* BUG 11512 */    "@mozilla.org/rdf/datasource;1?name=find", // FindDataSource::~FindDataSource calls gRDFService->UnregisterDataSource(this) even if it was not actaully registered.
 
-/* BUG 11514 */    "@mozilla.org/rdf/datasource;1?name=?name=msgaccounts", // nsMsgAccountDataSource::QueryInterface is COMPLETELY <censor>screwed</censor> up
+/* BUG 11514 */    "@mozilla.org/rdf/datasource;1?name=msgaccounts", // nsMsgAccountDataSource::QueryInterface is COMPLETELY <censor>screwed</censor> up
 
 /* BUG 11516 */    "@mozilla.org/rdf/xul-sort-service;1",  // XULSortServiceImpl releases itself in its own destructor!
 
 /* BUG 11570 */    "componment://netscape/intl/charsetconvertermanager", // another case where CreateInstance returned NS_OK, but the instance pointer was null!
 
-/* BUG 11571 */    "@mozilla.org/rdf/datasource;1?name=?name=mail-messageview", // nsMessageViewDataSource::RemoveDataSource uses mDataSource without checking for validity
+/* BUG 11571 */    "@mozilla.org/rdf/datasource;1?name=mail-messageview", // nsMessageViewDataSource::RemoveDataSource uses mDataSource without checking for validity
 
 
 /* BUG 11575 */    "@mozilla.org/rdf/resource-factory;1",  // calling a property - trying to copy a null value in nsRDFResource::GetValue
