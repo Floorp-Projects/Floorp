@@ -1536,17 +1536,21 @@ class CalculateUTF8Length
     public:
       typedef nsACString::char_type value_type;
 
-    CalculateUTF8Length() : mLength(0) { }
+    CalculateUTF8Length() : mLength(0), mErrorEncountered(PR_FALSE) { }
 
     size_t Length() const { return mLength; }
 
     PRUint32 write( const value_type* start, PRUint32 N )
       {
+          // ignore any further requests
+        if ( mErrorEncountered )
+            return N;
+
         // algorithm assumes utf8 units won't
         // be spread across fragments
         const value_type* p = start;
         const value_type* end = start + N;
-        for ( ; p != end /* && *p */; ++mLength )
+        for ( ; p < end /* && *p */; ++mLength )
           {
             if ( UTF8traits::isASCII(*p) )
                 p += 1;
@@ -1562,15 +1566,22 @@ class CalculateUTF8Length
                 p += 6;
             else
               {
-                NS_ERROR("not a UTF-8 string");
                 break;
               }
+          }
+        if ( p != end )
+          {
+            NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
+            mErrorEncountered = PR_TRUE;
+            mLength = 0;
+            return N;
           }
         return p - start;
       }
 
     private:
       size_t mLength;
+      PRBool mErrorEncountered;
   };
 
 class ConvertUTF8toUCS2
@@ -1635,7 +1646,7 @@ class ConvertUTF8toUCS2
               }
             else
               {
-                NS_ERROR("not a UTF8 string");
+                NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
                 break;
               }
 
@@ -1704,18 +1715,21 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
 
   PRUint32 count = calculator.Length();
 
-  // Grow the buffer if we need to.
-  SetCapacity(count);
-    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
-    //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
+  if (count) {
 
-  // All ready? Time to convert
+    // Grow the buffer if we need to.
+    SetCapacity(count);
+      // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+      //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
 
-  ConvertUTF8toUCS2 converter(mUStr);
-  copy_string(aCString.BeginReading(start), aCString.EndReading(end), converter);
-  mLength = converter.Length();
-  if (mCapacity)
-    mUStr[mLength] = '\0'; // null terminate
+    // All ready? Time to convert
+
+    ConvertUTF8toUCS2 converter(mUStr);
+    copy_string(aCString.BeginReading(start), aCString.EndReading(end), converter);
+    mLength = converter.Length();
+    if (mCapacity)
+      mUStr[mLength] = '\0'; // null terminate
+  }
 
   NS_ASSERTION(count == mLength, "calculator calculated incorrect length");
 }
