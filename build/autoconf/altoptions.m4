@@ -101,7 +101,7 @@ elif test -f myconfig.sh; then
    MOZ_MYCONFIG=myconfig.sh
    . $_load_myconfig
 elif test -f $_topsrcdir/myconfig.sh; then
-   MOZ_MYCONFIG=$_topscrdir/myconfig.sh
+   MOZ_MYCONFIG=$_topsrcdir/myconfig.sh
    . $_load_myconfig
 fi])
 
