@@ -36,6 +36,7 @@
 #include "nsISupportsArray.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 //----------------------------------------------------------------------
 //
@@ -73,6 +74,7 @@ protected:
   virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult) = 0;
 };
 
+typedef PRBool (*rowMatchCallback)(nsIMdbRow *aRow, void *closure);
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -107,6 +109,10 @@ public:
 
   nsGlobalHistory(void);
   virtual ~nsGlobalHistory();
+
+  // these must be public so that the callbacks can call them
+  PRBool matchExpiration(nsIMdbRow *row, PRInt64* expirationDate);
+
 protected:
 
 
@@ -125,7 +131,9 @@ protected:
   nsresult CloseDB();
   nsresult Commit(eCommitType commitType);
   nsresult ExpireEntries(PRBool notify);
-
+  nsresult RemoveMatchingRows(rowMatchCallback aMatchFunc,
+                              void *aClosure, PRBool notify);
+  
   PRBool IsURLInHistory(nsIRDFResource* aResource);
 
   // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
@@ -151,10 +159,14 @@ protected:
                                 const char *aReferrerURL,
                                 PRInt64 aDate);
 
-  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64 aValue);
-  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
+
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableString& aResult);
+
+  nsresult FindUrl(const char *aURL, nsIMdbRow **aResult);
   
   nsCOMPtr<nsISupportsArray> mObservers;
 
