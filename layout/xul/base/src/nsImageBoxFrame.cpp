@@ -332,7 +332,6 @@ nsImageBoxFrame::UpdateImage()
   if (mImageRequest) {
     mImageRequest->Cancel(NS_ERROR_FAILURE);
     mImageRequest = nsnull;
-    mIntrinsicSize.SizeTo(0, 0);
   }
 
   // get the new image src
@@ -369,6 +368,11 @@ nsImageBoxFrame::UpdateImage()
         styleRequest->Clone(mListener, getter_AddRefs(mImageRequest));
       }
     }
+  }
+
+  if (!mImageRequest) {
+    // We have no image, so size to 0
+    mIntrinsicSize.SizeTo(0, 0);
   }
 }
 
@@ -610,11 +614,19 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
                                             nsresult aStatus,
                                             const PRUnichar *statusArg)
 {
+  // XXXbz this is firing DOM events possibly from inside style resolution!
+  // See the nsImageLoadingContent code for how this should be done
+  // asynchronously.
   if (NS_SUCCEEDED(aStatus))
-    // Fire an onerror DOM event.
+    // Fire an onload DOM event.
     FireDOMEvent(mContent, NS_IMAGE_LOAD);
-  else // Fire an onload DOM event.
+  else {
+    // Fire an onerror DOM event.
+    mIntrinsicSize.SizeTo(0, 0);
+    nsBoxLayoutState state(GetPresContext());
+    MarkDirty(state);
     FireDOMEvent(mContent, NS_IMAGE_ERROR);
+  }
 
   return NS_OK;
 }
