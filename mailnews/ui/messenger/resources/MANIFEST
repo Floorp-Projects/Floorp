@@ -41,3 +41,12 @@ reply.gif
 forward.gif
 trash.gif
 newsHost.gif
+AccountManager.xul
+AccountManager.js
+accounttree.xul
+am-main.xul
+am-server.xul
+am-server-top.xul
+am-server-pop3.xul
+am-copies.xul
+SearchDialog.xul
