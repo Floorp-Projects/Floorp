@@ -83,7 +83,7 @@ endif
 # but save the version to allow multiple versions of the same base
 # platform to be built in the same tree.
 #
-ifneq (,$(filter FreeBSD HP-UX IRIX Linux OSF1 SunOS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD HP-UX IRIX Linux NetBSD OSF1 SunOS,$(OS_ARCH)))
 OS_VERS		:= $(suffix $(OS_RELEASE))
 OS_RELEASE	:= $(basename $(OS_RELEASE))
 OS_VERSION	:= $(shell echo $(OS_VERS) | sed 's/-.*//')
@@ -380,6 +380,14 @@ STATIC_JAVA	= yes
 else
 MOZILLA_CLIENT	= 1
 DEFINES		+= -DMOZILLA_CLIENT
+endif
+
+ifdef MOZ_SINGLESIGNON
+DEFINES		+= -DSingleSignon
+endif
+
+ifdef MOZ_COOKIEMANAGE
+DEFINES		+= -DCookieManagement
 endif
 
 ifdef MOZ_LITE
