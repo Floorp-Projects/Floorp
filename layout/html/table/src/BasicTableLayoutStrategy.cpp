@@ -131,7 +131,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  //mTableFrame->Dump(PR_TRUE, PR_FALSE);
+  mTableFrame->Dump(PR_TRUE, PR_FALSE);
   ContinuingFrameCheck();
   if (!aTableStyle) {
     NS_ASSERTION(aTableStyle, "bad style arg");
@@ -1250,10 +1250,9 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
 // from AssignPreliminarColumnWidths and AssignPercentageColumnWidths. For now, pessimistic
 // assumptions are made
 PRBool BasicTableLayoutStrategy::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                                           const nsTableCellFrame& aCellFrame,
-                                                           PRBool                  aConsiderMinWidth) const
+                                                           const nsTableCellFrame& aCellFrame) const
 {
-  if (aConsiderMinWidth || !mTableFrame) 
+  if (!mTableFrame) 
     return PR_TRUE;
 
   const nsStylePosition* cellPosition;
@@ -1381,7 +1380,7 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
     minChanged = PR_FALSE;
   }
   if (minChanged) {
-    return PR_TRUE; // XXX add cases where table has coord width and cell is constrained
+    return PR_FALSE; // XXX add cases where table has coord width and cell is constrained
   }
 
   PRBool desChanged = PR_FALSE;
@@ -1396,26 +1395,26 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
         (colFrame->GetWidth(MIN_PRO) > 0)) {
       if ((colFrame->GetWidth(PCT_ADJ) > 0) && (colFrame->GetWidth(PCT) <= 0)) {
         if (desChanged) {
-          return PR_TRUE; // XXX add cases where table has coord width
+          return PR_FALSE; // XXX add cases where table has coord width
         }
       }
       if ((colFrame->GetWidth(FIX_ADJ) > 0) && (colFrame->GetWidth(FIX) <= 0)) {
         if (desChanged) {
-          return PR_TRUE; // its unfortunate that the balancing algorithms cause this
+          return PR_FALSE; // its unfortunate that the balancing algorithms cause this
                           // XXX add cases where table has coord width
         }
       }
     }
     else { // the column width is not constrained
       if (desChanged) {
-        return PR_TRUE;
+        return PR_FALSE;
       }
     }
   }
   else {
-    return PR_TRUE; // XXX this needs a lot of cases
+    return PR_FALSE; // XXX this needs a lot of cases
   }
-  return PR_FALSE;
+  return PR_TRUE;
 }
   
 PRBool BasicTableLayoutStrategy::IsColumnInList(const PRInt32 colIndex, 

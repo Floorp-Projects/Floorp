@@ -78,8 +78,7 @@ public:
 
   // see nsTableFrame::ColumnsCanBeInvalidatedBy
   virtual PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                           const nsTableCellFrame& aCellFrame,
-                                           PRBool                  aConsiderMinWidth = PR_FALSE) const = 0;
+                                           const nsTableCellFrame& aCellFrame) const = 0;
 
   // see nsTableFrame::ColumnsCanBeInvalidatedBy
   virtual PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,

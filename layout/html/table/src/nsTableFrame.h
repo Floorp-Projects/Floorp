@@ -679,8 +679,7 @@ public:
   // changes to aCellFrame's min width is considered (however, if considered, 
   // the function will always return PR_TRUE if the layout strategy is Basic).
   PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                   const nsTableCellFrame& aCellFrame,
-                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+                                   const nsTableCellFrame& aCellFrame) const;
 
   // Returns PR_TRUE if potential width changes to aCellFrame could require the 
   // columns to be rebalanced. This method can be used after an incremental reflow
@@ -692,15 +691,13 @@ public:
                                    PRBool                  aConsiderMinWidth = PR_FALSE) const;
 
   // Returns PR_TRUE if changes to aCellFrame's pass1 min and desired (max) sizes
-  // could require the columns to be rebalanced. This method can be used after a 
+  // don't require the columns to be rebalanced. This method can be used after a 
   // pass1 reflow of aCellFrame to determine if the columns need rebalancing. 
   // aPrevCellMin and aPrevCellDes are the values aCellFrame had before the last 
   // pass1 reflow.
   PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
                             nscoord                 aPrevCellMin,
                             nscoord                 aPrevCellDes) const;
-  
-  nscoord GetColumnConstraint(nscoord aColIndex) const;
   
   virtual void InvalidateFirstPassCache();
 
