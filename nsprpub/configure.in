@@ -1113,7 +1113,7 @@ case "$target" in
                 DLL_LIBS='$(GLOWDIR)/glowcode.lib'
             fi
             OBJDIR_TAG=_DBG
-            LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
+            LDFLAGS="-DEBUG -DEBUGTYPE:CV"
             if test -n "$PROFILE"; then
                 LDFLAGS="$LDFLAGS -PROFILE -MAP"
                 DLLFLAGS="$DLLFLAGS -PROFILE -MAP"
@@ -1122,6 +1122,9 @@ case "$target" in
         
         if test "$OS_TARGET" = "WINNT"; then
             CFLAGS="$CFLAGS -GT"
+            if test "$CPU_ARCH" = "x86"; then
+                CFLAGS="$CFLAGS -G5"
+            fi
             LIBNSPR='$(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
             LIBPLC='$(dist_libdir)/libplc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
         else
@@ -1135,9 +1138,6 @@ case "$target" in
     fi
 
     if test "$OS_TARGET" = "WINNT"; then
-        if test "$CPU_ARCH" = "x86"; then
-            CFLAGS="$CFLAGS -G5"
-        fi
         AC_DEFINE(WINNT)
     else
         AC_DEFINE(WIN95)
