@@ -147,10 +147,10 @@ struct StyleBlob {
 struct StyleFontBlob : public nsStyleFont, public StyleBlob {
   StyleFontBlob(const nsFont& aVariableFont, const nsFont& aFixedFont)
   : nsStyleFont(aVariableFont, aFixedFont)
-  {}
+                               { MOZ_COUNT_CTOR(StyleFontBlob); }
 
-  StyleFontBlob(void) {}
-  virtual ~StyleFontBlob(void) {}
+  StyleFontBlob(void)          { MOZ_COUNT_CTOR(StyleFontBlob); }
+  virtual ~StyleFontBlob(void) { MOZ_COUNT_DTOR(StyleFontBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -261,8 +261,8 @@ PRUint32 StyleFontBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleColorBlob: public nsStyleColor, public StyleBlob {
-  StyleColorBlob(void)  { }
-  virtual ~StyleColorBlob(void) {}
+  StyleColorBlob(void)          { MOZ_COUNT_CTOR(StyleColorBlob); }
+  virtual ~StyleColorBlob(void) { MOZ_COUNT_DTOR(StyleColorBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -402,8 +402,8 @@ PRUint32 StyleColorBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleMarginBlob: public nsStyleMargin, public StyleBlob {
-  StyleMarginBlob(void) {}
-  virtual ~StyleMarginBlob(void) {}
+  StyleMarginBlob(void)          { MOZ_COUNT_CTOR(StyleMarginBlob); }
+  virtual ~StyleMarginBlob(void) { MOZ_COUNT_DTOR(StyleMarginBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -486,8 +486,8 @@ PRUint32 StyleMarginBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StylePaddingBlob: public nsStylePadding, public StyleBlob {
-  StylePaddingBlob(void) {}
-  virtual ~StylePaddingBlob(void) {}
+  StylePaddingBlob(void)          { MOZ_COUNT_CTOR(StylePaddingBlob); }
+  virtual ~StylePaddingBlob(void) { MOZ_COUNT_DTOR(StylePaddingBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -572,8 +572,8 @@ PRUint32 StylePaddingBlob::ComputeCRC32(PRUint32 aCrc) const
 struct StyleBorderBlob: public nsStyleBorder, public StyleBlob {
   StyleBorderBlob(void)
     : mWidthsInitialized(PR_FALSE)
-  {}
-  virtual ~StyleBorderBlob(void) {}
+                                 { MOZ_COUNT_CTOR(StyleBorderBlob); }
+  virtual ~StyleBorderBlob(void) { MOZ_COUNT_DTOR(StyleBorderBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -762,8 +762,8 @@ PRUint32 StyleBorderBlob::ComputeCRC32(PRUint32 aCrc) const
 struct StyleOutlineBlob: public nsStyleOutline, public StyleBlob {
   StyleOutlineBlob(void)
     : mWidthsInitialized(PR_FALSE)
-  {}
-  virtual ~StyleOutlineBlob(void) {}
+                                  { MOZ_COUNT_CTOR(StyleOutlineBlob); }
+  virtual ~StyleOutlineBlob(void) { MOZ_COUNT_DTOR(StyleOutlineBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -873,8 +873,8 @@ PRUint32 StyleOutlineBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleListBlob: public nsStyleList, public StyleBlob {
-  StyleListBlob(void) {}
-  virtual ~StyleListBlob(void) {}
+  StyleListBlob(void)          { MOZ_COUNT_CTOR(StyleListBlob); }
+  virtual ~StyleListBlob(void) { MOZ_COUNT_DTOR(StyleListBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -958,8 +958,8 @@ PRUint32 StyleListBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StylePositionBlob: public nsStylePosition, public StyleBlob {
-  StylePositionBlob(void) {}
-  virtual ~StylePositionBlob(void) {}
+  StylePositionBlob(void)          { MOZ_COUNT_CTOR(StylePositionBlob); }
+  virtual ~StylePositionBlob(void) { MOZ_COUNT_DTOR(StylePositionBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1050,8 +1050,8 @@ PRUint32 StylePositionBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleTextBlob: public nsStyleText, public StyleBlob {
-  StyleTextBlob(void) {}
-  virtual ~StyleTextBlob(void) {}
+  StyleTextBlob(void)          { MOZ_COUNT_CTOR(StyleTextBlob); }
+  virtual ~StyleTextBlob(void) { MOZ_COUNT_DTOR(StyleTextBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1173,8 +1173,8 @@ PRUint32 StyleTextBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleDisplayBlob: public nsStyleDisplay, public StyleBlob {
-  StyleDisplayBlob(void) {}
-  virtual ~StyleDisplayBlob(void) {}
+  StyleDisplayBlob(void)          { MOZ_COUNT_CTOR(StyleDisplayBlob); }
+  virtual ~StyleDisplayBlob(void) { MOZ_COUNT_DTOR(StyleDisplayBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1326,7 +1326,7 @@ PRUint32 StyleDisplayBlob::ComputeCRC32(PRUint32 aCrc) const
 //
 struct StyleTableBlob: public nsStyleTable, public StyleBlob {
   StyleTableBlob(void);
-  virtual ~StyleTableBlob(void) {};
+  virtual ~StyleTableBlob(void) { MOZ_COUNT_DTOR(StyleTableBlob); };
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1342,6 +1342,7 @@ private:  // These are not allowed
 
 StyleTableBlob::StyleTableBlob()
 { 
+  MOZ_COUNT_CTOR(StyleTableBlob);
   ResetFrom(nsnull, nsnull);
 }
 
@@ -1445,8 +1446,8 @@ PRUint32 StyleTableBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleContentBlob: public nsStyleContent, public StyleBlob {
-  StyleContentBlob(void) {};
-  virtual ~StyleContentBlob(void) {};
+  StyleContentBlob(void)          { MOZ_COUNT_CTOR(StyleContentBlob); };
+  virtual ~StyleContentBlob(void) { MOZ_COUNT_DTOR(StyleContentBlob); };
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1639,8 +1640,8 @@ PRUint32 StyleContentBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleUserInterfaceBlob: public nsStyleUserInterface, public StyleBlob {
-  StyleUserInterfaceBlob(void)  {}
-  virtual ~StyleUserInterfaceBlob(void)  {}
+  StyleUserInterfaceBlob(void)           { MOZ_COUNT_CTOR(StyleUserInterfaceBlob); }
+  virtual ~StyleUserInterfaceBlob(void)  { MOZ_COUNT_DTOR(StyleUserInterfaceBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1757,8 +1758,8 @@ PRUint32 StyleUserInterfaceBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StylePrintBlob: public nsStylePrint, public StyleBlob {
-  StylePrintBlob(void) {}
-  virtual ~StylePrintBlob(void) {}
+  StylePrintBlob(void)          { MOZ_COUNT_CTOR(StylePrintBlob); }
+  virtual ~StylePrintBlob(void) { MOZ_COUNT_DTOR(StylePrintBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
@@ -1877,8 +1878,8 @@ PRUint32 StylePrintBlob::ComputeCRC32(PRUint32 aCrc) const
 //------------------------------------------------------------------------------
 //
 struct StyleXULBlob: public nsStyleXUL, public StyleBlob {
-  StyleXULBlob() {}
-  virtual ~StyleXULBlob() {}
+  StyleXULBlob()          { MOZ_COUNT_CTOR(StyleXULBlob); }
+  virtual ~StyleXULBlob() { MOZ_COUNT_DTOR(StyleXULBlob); }
 
   virtual void ResetFrom(const nsStyleStruct* aParent, nsIPresContext* aPresContext);
   virtual void SetFrom(const nsStyleStruct* aSource);
