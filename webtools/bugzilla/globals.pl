@@ -666,6 +666,7 @@ sub DBNameToIdAndCheck {
         print "Yikes; couldn't create user $name.  Please report problem to " .
             Param("maintainer") ."\n";
     } else {
+        print "\n";  # http://bugzilla.mozilla.org/show_bug.cgi?id=80045
         print "The name <TT>$name</TT> is not a valid username.  Either you\n";
         print "misspelled it, or the person has not registered for a\n";
         print "Bugzilla account.\n";
