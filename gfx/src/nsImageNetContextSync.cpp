@@ -53,10 +53,13 @@ public:
 			                      NET_ReloadMethod aReloadMethod);
 
   virtual PRBool IsLocalFileURL(char* aAddress);
-
+#ifdef NU_CACHE
+  virtual PRBool IsURLInCache(ilIURL* aUrl);
+#else /* NU_CACHE */
   virtual PRBool IsURLInMemCache(ilIURL* aUrl);
 
   virtual PRBool IsURLInDiskCache(ilIURL* aUrl);
+#endif /* NU_CACHE */
 
   virtual int GetURL(ilIURL*          aUrl,
                      NET_ReloadMethod aLoadMethod,
@@ -128,6 +131,13 @@ ImageNetContextSyncImpl::IsLocalFileURL(char *aAddress)
   }
 }
 
+#ifdef NU_CACHE
+PRBool 
+ImageNetContextSyncImpl::IsURLInCache(ilIURL *aUrl)
+{
+  return PR_TRUE;
+}
+#else /* NU_CACHE */
 PRBool 
 ImageNetContextSyncImpl::IsURLInMemCache(ilIURL *aUrl)
 {
@@ -139,6 +149,7 @@ ImageNetContextSyncImpl::IsURLInDiskCache(ilIURL *aUrl)
 {
   return PR_FALSE;
 }
+#endif /* NU_CACHE */
 
 int 
 ImageNetContextSyncImpl::GetURL(ilIURL*          aURL, 
