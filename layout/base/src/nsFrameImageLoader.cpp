@@ -179,12 +179,16 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
 
   // Start image load request
   char* cp = aURL.ToNewCString();
+
+
   mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor,
                                    desiredWidth, desiredHeight, 0);
+
   nsCRT::free(cp);
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
@@ -403,12 +407,25 @@ nsFrameImageLoader::GetIntrinsicSize(nsSize& aResult)
     PRUint32  width, height;
     float     p2t;
 
-    mImageRequest->GetNaturalDimensions(&width, &height);
     mPresContext->GetScaledPixelsToTwips(&p2t);
     aResult.width = NSIntPixelsToTwips(width, p2t);
     aResult.height = NSIntPixelsToTwips(height, p2t);
   } else {
     aResult.SizeTo(0, 0);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameImageLoader::GetNaturalImageSize(PRUint32* naturalWidth, 
+                                        PRUint32 *naturalHeight)
+{
+  if(mImage){  
+    *naturalWidth = mImage->GetNaturalWidth();
+    *naturalHeight = mImage->GetNaturalHeight();
+  }else{
+    *naturalWidth = 0;
+    *naturalHeight = 0;
   }
   return NS_OK;
 }
