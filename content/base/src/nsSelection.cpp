@@ -1290,7 +1290,7 @@ GetCellParent(nsIDOMNode *aDomNode)
     while(current)
     {
       tag = GetTag(current);
-      if (tag == nsHTMLAtoms::td)
+      if (tag == nsHTMLAtoms::td || tag == nsHTMLAtoms::th)
         return current;
       if (NS_FAILED(ParentOffset(current,getter_AddRefs(parent),&childOffset)) || !parent)
         return 0;
@@ -3111,7 +3111,8 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
 
 static PRBool IsCell(nsIContent *aContent)
 {
-  return (aContent->Tag() == nsHTMLAtoms::td &&
+  return ((aContent->Tag() == nsHTMLAtoms::td ||
+           aContent->Tag() == nsHTMLAtoms::th) &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
@@ -5961,7 +5962,8 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           dirtystart = PR_TRUE;
           cellMode = PR_FALSE;
         }
-        else if (atom == nsHTMLAtoms::td) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsHTMLAtoms::td ||
+                 atom == nsHTMLAtoms::th) //you are in "cell" mode put selection to end of cell
         {
           cellMode = PR_TRUE;
           result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
@@ -6002,7 +6004,8 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
           else
             found = PR_FALSE; //didnt find the right cell yet
         }
-        else if (atom == nsHTMLAtoms::td) //you are in "cell" mode put selection to end of cell
+        else if (atom == nsHTMLAtoms::td ||
+                 atom == nsHTMLAtoms::th) //you are in "cell" mode put selection to end of cell
         {
           result = ParentOffset(tempNode, getter_AddRefs(endNode), &endOffset);
           if (NS_FAILED(result))
