@@ -809,6 +809,12 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       NS_ADDREF_THIS();
       return NS_OK;
       }
+   else if (aIID.Equals(NS_GET_IID(nsIURIContentListener)))
+   {
+      *aInstancePtr = NS_STATIC_CAST(nsIURIContentListener*, this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+   }
    else if(mPluginManager) //XXX this seems a little wrong. MMP
       return mPluginManager->QueryInterface(aIID, aInstancePtr);
 
@@ -1965,7 +1971,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
               rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
               // Go to the anchor in the current document
               rv = presShell->GoToAnchor(nsAutoString(ref));            
-		      mProcessedEndDocumentLoad = PR_FALSE;
+		          mProcessedEndDocumentLoad = PR_FALSE;
               // Set the URL & referrer if the anchor was successfully visited
               if (NS_SUCCEEDED(rv)) {
                   mURL = urlSpec;
@@ -2009,7 +2015,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
   // Stop loading the current document (if any...).  This call may result in
   // firing an EndLoadURL notification for the old document...
-  StopBeforeRequestingURL();
+  if (aKickOffLoad)
+    StopBeforeRequestingURL();
   
 
   // Tell web-shell-container we are loading a new url
@@ -2132,7 +2139,7 @@ nsWebShell::DoContent(const char * aContentType,
   // however since we can't retarget yet, we were basically canceling our very
   // own load group!!! So the request would get canceled out from under us...
   // after retargeting we may be able to safely call DoLoadURL. 
-  // DoLoadURL(aUri, aCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+  DoLoadURL(aUri, aCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
   return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
                                         aCommand,
                                         this,
