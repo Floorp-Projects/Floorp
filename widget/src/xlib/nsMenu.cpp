@@ -93,6 +93,16 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
   return NS_OK;
 }
 
+NS_METHOD nsMenu::GetEnabled(PRBool* aIsEnabled)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::IsHelpMenu(PRBool* aIsHelpMenu)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 {
   return NS_OK;

@@ -73,6 +73,8 @@ public:
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
+  NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
+  NS_IMETHOD IsHelpMenu(PRBool* aIsHelp);
 
   //
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
