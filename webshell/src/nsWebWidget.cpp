@@ -297,8 +297,12 @@ nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
   }
 
   // Now make the shell for the document
-  mPresShell = aDocument->CreateShell(mPresContext, mViewManager, styleSet);
+  rv = aDocument->CreateShell(mPresContext, mViewManager, styleSet,
+                              &mPresShell);
   NS_RELEASE(styleSet);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   // Now that we have a presentation shell trigger a reflow so we
   // create a frame model
@@ -412,9 +416,11 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec)
   }
 
   // Create presentation shell
-  mPresShell = doc->CreateShell(mPresContext, mViewManager, styleSet);/* XXX bad api */
-  if (nsnull == mPresShell) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  rv = doc->CreateShell(mPresContext, mViewManager, styleSet, &mPresShell);
+  NS_RELEASE(styleSet);
+  if (NS_OK != rv) {
+    NS_RELEASE(doc);
+    return rv;
   }
 
   // Setup view manager's window
@@ -430,7 +436,6 @@ NS_IMETHODIMP WebWidgetImpl::LoadURL(const nsString& aURLSpec)
   // Now load the document
   doc->LoadURL(url);
 
-  NS_RELEASE(styleSet);
   NS_RELEASE(doc);
 
   ForceRefresh();/* XXX temporary */
