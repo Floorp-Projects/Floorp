@@ -75,17 +75,23 @@ protected:
 class nsMacNSPREventQueueHandler : public Repeater
 {
 public:
-	nsMacNSPREventQueueHandler();
-	virtual			~nsMacNSPREventQueueHandler();
+									nsMacNSPREventQueueHandler();
+	virtual					~nsMacNSPREventQueueHandler();
 
 	virtual	void		StartPumping();
 	virtual	PRBool	StopPumping();
 
 	// Repeater interface
-	virtual	void	RepeatAction(const EventRecord& inMacEvent);
+	virtual	void		RepeatAction(const EventRecord& inMacEvent);
+
+protected:
+
+	void						ProcessPLEventQueue();
 	
 protected:
+
 	nsrefcnt								mRefCnt;
+
 };
 
 
