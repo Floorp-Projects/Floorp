@@ -82,6 +82,10 @@ DEFAULT_GMAKE_FLAGS += USE_DEBUG_RTL=1
 endif
 endif
 endif # WINNT
+# OS_CFLAGS needs to be passed on down.
+ifeq ($(OS_ARCH),OpenVMS)
+DEFAULT_GMAKE_FLAGS += XCFLAGS="$(OS_CFLAGS)"
+endif
 
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
