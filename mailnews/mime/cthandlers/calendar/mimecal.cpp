@@ -136,6 +136,7 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
   }
   XP_MEMCPY(clazz->buffer + clazz->bufferlen, line, length);
   clazz->bufferlen += length;
+  return 0;
 }
 
 static int
