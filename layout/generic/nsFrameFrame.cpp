@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Travis Bogard <travis@netscape.com> 
+ *    Håkan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -249,7 +250,7 @@ public:
   NS_IMETHOD GetParentContent(nsIContent*& aContent);
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
-  PRInt32 GetScrolling(nsIContent* aContent, PRBool aStandardMode);
+  PRInt32 GetScrolling(nsIContent* aContent);
   nsFrameborder GetFrameBorder(PRBool aStandardMode);
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
@@ -732,31 +733,33 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
   return PR_FALSE;
 }
 
-PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
+PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent)
 {
   PRInt32 returnValue = -1;
   nsresult rv = NS_OK;
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
+
   if (NS_SUCCEEDED(rv) && content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value)) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        PRInt32 intValue;
-        intValue = value.GetIntValue();
-        if (!aStandardMode) {
-          if ((NS_STYLE_FRAME_ON == intValue) || (NS_STYLE_FRAME_SCROLL == intValue)) {
+        switch (value.GetIntValue()) {
+          case NS_STYLE_FRAME_ON:
+          case NS_STYLE_FRAME_SCROLL:
+          case NS_STYLE_FRAME_YES:
             returnValue = NS_STYLE_OVERFLOW_SCROLL;
-          } else if ((NS_STYLE_FRAME_OFF == intValue) || (NS_STYLE_FRAME_NOSCROLL == intValue)) {
+            break;
+
+          case NS_STYLE_FRAME_OFF:
+          case NS_STYLE_FRAME_NOSCROLL:
+          case NS_STYLE_FRAME_NO:
             returnValue = NS_STYLE_OVERFLOW_HIDDEN;
-          }
-        } else {
-          if (NS_STYLE_FRAME_YES == intValue) {
-            returnValue = NS_STYLE_OVERFLOW_SCROLL;
-          } else if (NS_STYLE_FRAME_NO == intValue) {
-            returnValue = NS_STYLE_OVERFLOW_HIDDEN;
-          } else if (NS_STYLE_FRAME_AUTO == intValue) {
+            break;
+        
+          case NS_STYLE_FRAME_AUTO:
+          default:
             returnValue = NS_STYLE_OVERFLOW_AUTO;
-          }
+            break;
         }
       }      
     }
@@ -766,7 +769,6 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStanda
     GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
     if (display->mOverflow)
       returnValue = display->mOverflow;
-
   }
   return returnValue;
 }
@@ -1042,17 +1044,16 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   docShell->SetMarginWidth(GetMarginWidth(aPresContext, parentContent));
   docShell->SetMarginHeight(GetMarginHeight(aPresContext, parentContent));
-  nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+
   // Current and initial scrolling is set so that all succeeding docs
   // will use the scrolling value set here, regardless if scrolling is
   // set by viewing a particular document (e.g. XUL turns off scrolling)
   nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(mSubShell));
   if (scrollableContainer) {
     scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-      GetScrolling(parentContent, mode));
+      GetScrolling(parentContent));
     scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-      GetScrolling(parentContent, mode));
+      GetScrolling(parentContent));
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mSubShell));
