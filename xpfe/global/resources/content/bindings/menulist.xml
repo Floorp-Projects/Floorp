@@ -25,7 +25,7 @@
       <handler event="command" phase="capturing"
         action="if (event.originalTarget.localName == 'menuitem') this.selectedItem = event.originalTarget;"/>
         
-      <handler event="create">
+      <handler event="popupshowing">
         <![CDATA[
           if (event.target.parentNode == this && this.selectedItem) {
             // Not ready for auto-setting the active child in hierarchies yet.
@@ -326,7 +326,7 @@
       ]]>
       </handler>
 
-      <handler event="create">
+      <handler event="popupshowing">
         <![CDATA[
           // BUG in Classic skin: doesn't shift focus when popup is opened
           //   so force it to inputField here

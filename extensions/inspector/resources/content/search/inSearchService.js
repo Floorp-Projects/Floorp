@@ -238,7 +238,7 @@ inSearchService.prototype =
     var mod = this.mCurrentModule;
     if (mod) {
       var menu = this.mContextMenu;
-      menu.addEventListener("create", inSearchService_onCreatePopup, true);
+      menu.addEventListener("popupshowing", inSearchService_onCreatePopup, true);
       mod.installContextMenu(menu, this.mCMInsertPt, this.mCMInsert);
     }
   },
@@ -249,7 +249,7 @@ inSearchService.prototype =
     if (mod) {
       // remove the createion listener
       var menu = this.mContextMenu;
-      menu.removeEventListener("create", inSearchService_onCreatePopup, true);
+      menu.removeEventListener("popupshowing", inSearchService_onCreatePopup, true);
       mod.uninstallContextMenu(menu, this.mCMInsertPt, this.mCMInsert);
     }
   },
@@ -400,4 +400,3 @@ inSearchServiceLoadObserver.prototype = {
   },
   */
 
-  

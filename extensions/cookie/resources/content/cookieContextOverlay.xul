@@ -99,7 +99,7 @@
 
       addContextMenuItemListeners : function (aEvent) {
         var contextPopup = document.getElementById("contentAreaContextSet");
-        contextPopup.addEventListener("create", cookieContextMenu.initImageBlocking, false);
+        contextPopup.addEventListener("popupshowing", cookieContextMenu.initImageBlocking, false);
       }
     }
 

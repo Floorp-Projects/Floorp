@@ -492,7 +492,7 @@
       ]]>
       </handler>
       <!-- clean up, release the mouse, etc -->
-      <handler event="destroy">
+      <handler event="popuphiding">
       <![CDATA[
         dump("*** destroy: releasing mouse\n");
         this.cleanUp(event);
