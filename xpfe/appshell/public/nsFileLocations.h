@@ -42,26 +42,31 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
     public:
 		enum Type
 		{
-		    App_DirectoryBase              =     0
-		,   App_PrefsDirectory30           =     1
-		,   App_PrefsDirectory40           =     2
-		,   App_PrefsDirectory50           =     3
+		    // Use a big offset, so that values passed to nsIFileLocator can share the
+		    // same range as the type nsSpecialSystemDirectory::SystemDirectories.
+		    
+		    // Who has not wished one could have inheritance for enumerated types?
+		    
+		    App_DirectoryBase              = 0x00010000
+		,   App_PrefsDirectory30           = App_DirectoryBase + 1 
+		,   App_PrefsDirectory40           = App_DirectoryBase + 2
+		,   App_PrefsDirectory50           = App_DirectoryBase + 3
 
-		,   App_UserProfileDirectory30     =    10
-		,   App_UserProfileDirectory40     =    11
-		,   App_UserProfileDirectory50     =    12
+		,   App_UserProfileDirectory30     = App_DirectoryBase + 10
+		,   App_UserProfileDirectory40     = App_DirectoryBase + 11
+		,   App_UserProfileDirectory50     = App_DirectoryBase + 12
 
-		,   App_FileBase                   =  1000
-		,   App_PreferencesFile30          =  1001
-		,   App_PreferencesFile40          =  1002
-		,   App_PreferencesFile50          =  1003
+		,   App_FileBase                   = App_DirectoryBase + 1000
+		,   App_PreferencesFile30          = App_DirectoryBase + 1001
+		,   App_PreferencesFile40          = App_DirectoryBase + 1002
+		,   App_PreferencesFile50          = App_DirectoryBase + 1003
 
-		,   App_BookmarksFile30            =  1010
-		,   App_BookmarksFile40            =  1011
-		,   App_BookmarksFile50            =  1012
+		,   App_BookmarksFile30            = App_DirectoryBase + 1010
+		,   App_BookmarksFile40            = App_DirectoryBase + 1011
+		,   App_BookmarksFile50            = App_DirectoryBase + 1012
 
-		,	App_Registry40                 =  1020
-		,   App_Registry50                 =  1021
+		,	App_Registry40                 = App_DirectoryBase + 1020
+		,   App_Registry50                 = App_DirectoryBase + 1021
 		};
                     //nsSpecialFileSpec();
                     nsSpecialFileSpec(Type aType);        
