@@ -29,6 +29,7 @@ use Moz;
 
 $DEBUG = 1;
 $ALIAS_SYM_FILES = 0;
+$CLOBBER_LIBS = 0;
 
 $pull{all} = 0;
 $pull{lizard} = 0;

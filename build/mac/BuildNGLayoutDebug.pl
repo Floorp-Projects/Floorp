@@ -28,6 +28,8 @@ use Moz;
 # configuration variables
 $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
+$CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
+							# building each project
 
 $pull{all} = 0;
 $pull{lizard} = 0;

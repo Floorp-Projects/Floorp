@@ -329,6 +329,12 @@ sub BuildOneProject($$$$$)
 	my($project_dir) = $project_path;
 	$project_dir =~ s/:[^:]+$/:/;			# chop off leaf name
 
+	if ($main::CLOBBER_LIBS)
+	{
+		unlink "$project_dir$target_name";				# it's OK if these fail
+		unlink "$project_dir$target_name.xSYM";
+	}
+	
 	if ($toc_file ne "")
 	{
 		ReconcileProject("$project_path", "$project_dir$toc_file");
