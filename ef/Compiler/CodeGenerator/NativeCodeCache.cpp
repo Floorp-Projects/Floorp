@@ -366,6 +366,8 @@ static void printFrame(Method *method)
 
     Frame::printWithArgs(UT_LOG_MODULE(StackWalker), (Uint8*)(frame.getBase()), method);
 	UT_LOG(StackWalker, PR_LOG_ALWAYS, ("\n"));
+
+    UT_LOG_MODULE(StackWalker).flushLogFile();
 }
 
 #endif	// DEBUG_LOG
