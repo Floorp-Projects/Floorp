@@ -32,6 +32,7 @@
 #include "plugin_inst.h"
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
+#include "nsIPref.h"
 
 extern "C" int MK_OUT_OF_MEMORY;
 extern "C" int MK_MSG_NO_HEADERS;
@@ -1098,18 +1099,6 @@ MimeHeaders_write_subject_header (MimeHeaders *hdrs, const char *name,
   return status;
 }
 
-/* rhp: Changes for the short header display */
-static PRBool   shortHdrPrefStatus = 0;  /* 0: First time. */
-                                         /* 1: Cache is not valid. */
-                                         /* 2: Cache is valid. */
-                                         /* rhp: for new header wrap functionality */
-int PR_CALLBACK
-ShortHeaderPrefsChangeCallback(const char* prefname, void* data)
-{
-  shortHdrPrefStatus = 1;       /* Invalidates our cached stuff. */
-  return PREF_NOERROR;
-}
-
 static int
 MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 									const char *contents,
@@ -1118,6 +1107,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 {
 //  static PRInt32       nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
   static int32 nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
+  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
 
   int status = 0;
   PRInt32 contents_length;
@@ -1168,18 +1158,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
   status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
   if (status < 0) goto FAIL;
 
-  /***** rhp: Changes for the short header feature *******/
-  if (shortHdrPrefStatus != 2)
-  {
-    if (shortHdrPrefStatus == 0) 
-    {
-      PREF_RegisterCallback("mailnews.", &ShortHeaderPrefsChangeCallback, NULL);
-    }
-
-    PREF_GetIntPref("mailnews.max_header_display_length", &nHeaderDisplayLen);
-    shortHdrPrefStatus = 2;
-  }
-  /***** rhp: Changes for the short header feature *******/
+  // Short header pref
+  if (pref)
+    pref->GetIntPref("mailnews.max_header_display_length", &nHeaderDisplayLen);
 
   {
   int        headerCount = 0;
@@ -1879,7 +1860,7 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
 int
 MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)
 {
-  int status;
+  int status = 0;
   int i;
   PRBool wrote_any_p = PR_FALSE;
 
@@ -1987,9 +1968,9 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     ****************************************/
 
     if (attachment)
-      mimeEmitter->AddAttachmentField(name, c2);
+      status = mimeEmitter->AddAttachmentField(name, c2);
     else
-      mimeEmitter->AddHeaderField(name, c2);
+      status = mimeEmitter->AddHeaderField(name, c2);
 
     PR_Free(name);
     PR_Free(c2);
@@ -2159,6 +2140,7 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 static int
 MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 {
+  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
   int status;
   char *from = 0, *name = 0, *id = 0;
   const char *fmt = 0;
@@ -2204,9 +2186,12 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   if (status < 0) return status;
 
   if (opt->nice_html_only_p) {
-	int32 nReplyWithExtraLines = 0, eReplyOnTop = 0;
-	PREF_GetIntPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
-	PREF_GetIntPref("mailnews.reply_on_top", &eReplyOnTop);
+	XP_Bool nReplyWithExtraLines = 0, eReplyOnTop = 0;
+	if (pref)
+  {
+    pref->GetBoolPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
+	  pref->GetBoolPref("mailnews.reply_on_top", &eReplyOnTop);
+  }
 	if (nReplyWithExtraLines && eReplyOnTop == 1) {
 	  for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--) {
 		status = MimeHeaders_write(opt, "<BR>", 4);
@@ -2450,22 +2435,6 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBo
   return status;
 }
 
-/* Returns PR_TRUE if we should show colored tags on attachments.
-   Useful for IMAP MIME parts on demand, because it shows a different
-   color for undownloaded parts. */
-static PRBool
-MimeHeaders_getShowAttachmentColors()
-{
-	static int32 gotPref = PR_FALSE;
-	static int32 showColors = PR_FALSE;
-	if (!gotPref)
-	{
-		PREF_GetIntPref("mailnews.color_tag_attachments", &showColors);
-		gotPref = PR_TRUE;
-	}
-	return showColors;
-}
-
 /* 
  * This routine now drives the emitter by printing all of the 
  * attachment headers.
@@ -2482,11 +2451,11 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
   int status = 0;
 
   nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(opt);
-  mimeEmitter->StartAttachment();
-
-  mimeEmitter->AddAttachmentField("X-URL", lname_url);
+  mimeEmitter->StartAttachment(lname, content_type, lname_url);
 
   status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
+  mimeEmitter->AddAttachmentField(HEADER_X_MOZILLA_PART_URL, lname_url);
+
   mimeEmitter->EndAttachment();
 
   if (status < 0) 

@@ -777,7 +777,6 @@ MimeMultipartRelated_parse_eof (MimeObject *obj, PRBool abort_p)
 	   the HTML.  We let it go through all the normal mechanisms (which
 	   includes content-encoding handling), and intercept the output data to do
 	   translation of the tags.  Whee. */
-
 	MimeMultipartRelated *relobj = (MimeMultipartRelated *) obj;
 	int status = 0;
 	MimeObject *body;

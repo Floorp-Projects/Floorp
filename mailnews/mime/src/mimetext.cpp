@@ -55,54 +55,55 @@ static int
 MimeInlineText_initialize (MimeObject *obj)
 {
   MimeInlineText *text = (MimeInlineText *) obj;
-
+  
   /* This is an abstract class; it shouldn't be directly instanciated. */
   PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeInlineTextClass);
-
+  
   /* Figure out an appropriate charset for this object.
-   */
+  */
   if (!text->charset && obj->headers)
-	{
-	  if (obj->options && obj->options->override_charset)
-		{
-		  text->charset = PL_strdup(obj->options->override_charset);
-		}
-	  else
-		{
-		  char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE,
-									  PR_FALSE, PR_FALSE);
-		  if (ct)
-			{
-			  text->charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
-			  PR_Free(ct);
-			}
+  {
+    if (obj->options && obj->options->override_charset)
+    {
+      text->charset = PL_strdup(obj->options->override_charset);
+    }
+    else
+    {
+      char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE,
+        PR_FALSE, PR_FALSE);
+      if (ct)
+      {
+        text->charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+        PR_Free(ct);
+      }
+      
+      if (!text->charset)
+      {
+      /* If we didn't find "Content-Type: ...; charset=XX" then look
+      for "X-Sun-Charset: XX" instead.  (Maybe this should be done
+      in MimeSunAttachmentClass, but it's harder there than here.)
+        */
+        text->charset = MimeHeaders_get (obj->headers,
+                                          HEADER_X_SUN_CHARSET,
+                                          PR_FALSE, PR_FALSE);
+      }
+      
+      if (!text->charset)
+      {
+        if (obj->options && obj->options->default_charset)
+          text->charset = PL_strdup(obj->options->default_charset);
 
-		  if (!text->charset)
-			{
-			  /* If we didn't find "Content-Type: ...; charset=XX" then look
-				 for "X-Sun-Charset: XX" instead.  (Maybe this should be done
-				 in MimeSunAttachmentClass, but it's harder there than here.)
-			   */
-			  text->charset = MimeHeaders_get (obj->headers,
-											   HEADER_X_SUN_CHARSET,
-											   PR_FALSE, PR_FALSE);
-			}
-
-		  if (!text->charset)
-			{
-			  if (obj->options && obj->options->default_charset)
-				text->charset = PL_strdup(obj->options->default_charset);
-			  /* Do not label US-ASCII if the app default charset is multibyte.
-				 Perhaps US-ASCII label should be removed for all cases.
-			   */
-			  else if (MULTIBYTE & INTL_DefaultDocCharSetID(0))
-				  ;
-			  else
-				text->charset = PL_strdup("US-ASCII");
-			}
-		}
-	}
-
+          /* Do not label US-ASCII if the app default charset is multibyte.
+          Perhaps US-ASCII label should be removed for all cases.
+        */
+        else if (MULTIBYTE & INTL_DefaultDocCharSetID(0))
+          ;
+        else
+          text->charset = PL_strdup("US-ASCII");
+      }
+    }
+  }
+  
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
 

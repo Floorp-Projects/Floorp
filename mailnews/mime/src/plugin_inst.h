@@ -41,7 +41,7 @@ public:
 
     // from nsINetPluginInstance
     NS_IMETHOD    Initialize(nsINetOStream* out_stream, const char *stream_name);
-    NS_IMETHOD    GetMIMEOutput(const char* *result);
+    NS_IMETHOD    GetMIMEOutput(const char* *result,  const char *stream_name);
     NS_IMETHOD    Start(void);
     NS_IMETHOD    Stop(void);
     NS_IMETHOD    Destroy(void);
@@ -63,7 +63,7 @@ public:
     // MimePluginInstance specific methods:
     ////////////////////////////////////////////////////////////////////////////
     NS_IMETHOD    InternalCleanup(void);
-
+    NS_IMETHOD    DetermineOutputFormat(const char *url);
 
     // Counter variable
     PRInt32         mTotalRead;
@@ -71,6 +71,11 @@ public:
     nsINetOStream   *mOutStream;
     void            *mBridgeStream;
     nsIMimeEmitter  *mEmitter;
+
+    // Type of output, entire message, header only, body only
+    char            *mOutputFormat;
+    PRBool          mWrapperOutput;  /* Should we output the frame split message display */
+    char            *mURL;
 };
 
 /* this function will be used by the factory to generate an class access object....*/

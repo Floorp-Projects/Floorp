@@ -91,14 +91,3 @@ MSG_GetMessagePaneCallbacks(MSG_Pane* messagepane,
     return NULL;
     /* return CastMessagePane(messagepane)->GetMessagePaneCallbacks(closure); */
 }
-
-extern "C" nsMIMESession *
-MIME_MessageConverter2 (int format_out, void *closure, URL_Struct *url, MWContext *context);
-
-nsMIMESession *
-MIME_MessageConverter (int format_out, void *closure,
-                       URL_Struct *url, MWContext *context)
-{
-  return MIME_MessageConverter2 (format_out, closure, url, context);
-}
-

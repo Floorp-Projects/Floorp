@@ -35,6 +35,9 @@ extern "C" {
   
 #include "net.h"
 #include "mimei.h"
+#include "nsIPref.h"
+
+#define     MIME_PREFS_FILE   "prefs.js"
 
 typedef struct _nsMIMESession nsMIMESession;
 
@@ -53,8 +56,8 @@ typedef void
 typedef void 
 (*MKSessionAbortFunc) (nsMIMESession *stream, int status);
 
-  /* streamclass function */
-  struct _nsMIMESession {
+/* streamclass function */
+struct _nsMIMESession {
 
     char      * name;          /* Just for diagnostics */
 
@@ -101,11 +104,8 @@ struct mime_stream_data {           /* This struct is the state we pass around
   PRInt16             lastcsid;     /* csid corresponding to above. */
   PRInt16             outcsid;      /* csid passed to EDT_PasteQuoteINTL */
   nsIMimeEmitter      *output_emitter; /* Output emitter engine for libmime */
-#ifdef DEBUG_rhp
-  PRFileDesc          *logit;        /* Temp file to put generated HTML into. */
-#endif
+  nsIPref             *prefs;       /* Connnection to prefs service manager */
 };
-
 
 ////////////////////////////////////////////////////////////////
 // Bridge routines for legacy mime code
@@ -126,7 +126,10 @@ extern "C" void           mime_display_stream_complete (nsMIMESession *stream);
 extern "C" void           mime_display_stream_abort (nsMIMESession *stream, int status);
 
 // To get the mime emitter...
-extern "C" nsIMimeEmitter  *GetMimeEmitter(MimeDisplayOptions *opt);
+extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);
+
+/* To Get the connnection to prefs service manager */
+extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
 
 #ifdef __cplusplus
 }

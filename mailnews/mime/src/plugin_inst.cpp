@@ -17,6 +17,9 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include "plstr.h"
+#include "prmem.h"
+#include "prprf.h"
 #include "mimemoz2.h"
 #include "plugin_inst.h"
 #include "nsIMimeEmitter.h"
@@ -30,6 +33,10 @@
 #undef Bool
 #endif
 
+//
+// This should be passed in somehow, but for now, lets just 
+// hardcode this stuff.
+//
 static NS_DEFINE_IID(kINetPluginInstanceIID,  NS_INETPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kINetOStreamIID,         NS_INETOSTREAM_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -68,7 +75,7 @@ MimePluginInstance::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   
   // Always NULL result, in case of failure   
   *aInstancePtr = NULL;   
-  
+
   if (aIID.Equals(kINetPluginInstanceIID))
     *aInstancePtr = (void*) this; 
   else if (aIID.Equals(kISupportsIID))
@@ -96,32 +103,84 @@ MimePluginInstance::MimePluginInstance(void)
   mOutStream = NULL;
   mBridgeStream = NULL;
   mTotalRead = 0;
+  mOutputFormat = PL_strdup("text/html");
+  mEmitter = NULL;
+  mWrapperOutput = PR_FALSE;
 }
 
 MimePluginInstance::~MimePluginInstance(void)
 {
 }
 
-static NS_DEFINE_IID(kMimeEmitterCID, NS_MIME_EMITTER_CID);
+static NS_DEFINE_IID(kMimeHTMLEmitterCID, NS_HTML_MIME_EMITTER_CID);
+static NS_DEFINE_IID(kMimeXMLEmitterCID, NS_XML_MIME_EMITTER_CID);
+
+NS_METHOD
+MimePluginInstance::DetermineOutputFormat(const char *url)
+{
+  // For now, we need to see what we are outputting...headers, body or all of it. 
+  //
+  char *part   = PL_strcasestr(url, "?part=");
+  char *header = PL_strcasestr(url, "?header=");
+  char *ptr;
+
+  if (!part)
+  {
+    if (header)
+    {
+      ptr = PL_strcasestr ("only", (header+PL_strlen("?header=")));
+      if (ptr)
+      {
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = PL_strdup("text/xml");
+      }
+    }
+    else
+    {
+      mWrapperOutput = PR_TRUE;
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = PL_strdup("text/html");
+    }
+  }
+  else
+  {
+    PR_FREEIF(mOutputFormat);
+    mOutputFormat = PL_strdup("text/html");
+  }
+
+  return NS_OK;
+}
 
 NS_METHOD
 MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
 {
   int         format_out = FO_NGLAYOUT;
-
-  mOutStream = stream;
+  nsresult    res;
 
   // I really think there needs to be a way to handle multiple output formats
   // We will need to find an emitter in the repository that supports the appropriate
-  // output format. 
-  nsresult res = nsRepository::CreateInstance(kMimeEmitterCID, 
-                                  NULL, nsIMimeEmitter::GetIID(), 
-                                  (void **) &mEmitter); 
+  // output format.
+  //
+  mOutStream = stream;
+  if (PL_strcmp(mOutputFormat, "text/xml") == 0)
+  {
+    res = nsRepository::CreateInstance(kMimeXMLEmitterCID, 
+                                       NULL, nsIMimeEmitter::GetIID(), 
+                                       (void **) &mEmitter); 
+  }
+  else
+  {
+    res = nsRepository::CreateInstance(kMimeHTMLEmitterCID, 
+                                       NULL, nsIMimeEmitter::GetIID(), 
+                                       (void **) &mEmitter); 
+  }
+
   if ((NS_OK != res) || (!mEmitter))
   {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  mEmitter->Initialize(stream);
   mBridgeStream = mime_bridge_create_stream(this, mEmitter, stream_name, format_out);
   if (!mBridgeStream)
   {
@@ -129,7 +188,6 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mEmitter->Initialize(stream);
   return NS_OK;
 }
 
@@ -140,10 +198,11 @@ MimePluginInstance::Destroy(void)
 }
 
 NS_METHOD
-MimePluginInstance::GetMIMEOutput(const char* *result)
+MimePluginInstance::GetMIMEOutput(const char* *result, const char *url)
 {
-//  *result = "image/jpeg";
-  *result = "text/html";
+  mURL = PL_strdup(url);
+  DetermineOutputFormat(url);
+  *result = mOutputFormat;
   return NS_OK;
 }
 
@@ -201,6 +260,8 @@ nsresult MimePluginInstance::InternalCleanup(void)
   if (mEmitter)
     mEmitter->Release();
 
+  PR_FREEIF(mOutputFormat);
+  PR_FREEIF(mURL);
   mime_bridge_destroy_stream(mBridgeStream);
 
   Close();
@@ -238,6 +299,26 @@ nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aCount,
   nsresult        rc;
 	nsINetOStream   *stream = mOutStream;
 
+  // If this is the first time through and we are supposed to be 
+  // outputting the wrapper two pane URL, then do it now.
+  if (mWrapperOutput)
+  {
+    PRUint32    written;
+    char        outBuf[1024];
+char *output = "\
+<HTML>\
+<FRAMESET ROWS=\"30%,70%\">\
+<FRAME NAME=messageHeader SRC=\"%s?header=only\">\
+<FRAME NAME=messageBody SRC=\"%s?header=none\">\
+</FRAMESET>\
+</HTML>";
+
+    sprintf(outBuf, output, mURL, mURL);
+    mEmitter->Write(outBuf, PL_strlen(outBuf), &written);
+    mTotalRead += written;
+    return -1;
+  }
+
   if (!stream)
     return NS_ERROR_FAILURE;
 
@@ -247,4 +328,3 @@ nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aCount,
   *aWriteCount = aCount;
   return rc;
 }
-

@@ -63,6 +63,8 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "mimecth.h"
+#include "nsIPref.h"
+#include "mimemoz2.h"
 
 /* ==========================================================================
    Allocation and destruction
@@ -623,11 +625,13 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   char *content_disposition = 0;
   MimeObject *obj = 0;
   char *override_content_type = 0;
-  static int32 reverse_lookup = PR_FALSE, got_lookup_pref = PR_FALSE;
+  static XP_Bool reverse_lookup = PR_FALSE, got_lookup_pref = PR_FALSE;
 
   if (!got_lookup_pref)
   {
-	  PREF_GetIntPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
+    nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager
+
+	  pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
 	  got_lookup_pref = PR_TRUE;
   }
 

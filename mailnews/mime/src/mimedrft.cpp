@@ -29,6 +29,8 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prio.h"
+#include "nsIPref.h"
+
 
 #define HEADER_NNTP_POSTING_HOST             "NNTP-Posting-Host"
 #define MIME_HEADER_TABLE "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>"

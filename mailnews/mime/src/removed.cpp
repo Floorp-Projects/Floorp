@@ -221,3 +221,24 @@ mimehdrs.cpp
   PR_FREEIF(type_desc);
   MimeHeaders_compact (hdrs);
   return status;
+
+
+
+
+
+/* Returns PR_TRUE if we should show colored tags on attachments.
+   Useful for IMAP MIME parts on demand, because it shows a different
+   color for undownloaded parts. */
+static PRBool
+MimeHeaders_getShowAttachmentColors()
+{
+	static int32 gotPref = PR_FALSE;
+	static int32 showColors = PR_FALSE;
+	if (!gotPref)
+	{
+		PREF_GetIntPref("mailnews.color_tag_attachments", &showColors);
+		gotPref = PR_TRUE;
+	}
+	return showColors;
+}
+

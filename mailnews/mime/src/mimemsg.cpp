@@ -384,6 +384,38 @@ HG09091
 	 start its parser going. */
   status = body->clazz->parse_begin(body);
   if (status < 0) return status;
+
+  // Now notify the emitter if this is the outer most message, unless
+  // it is a part that is not the head of the message. If it's a part, 
+  // we need to figure out the content type/charset of the part
+  //
+  PRBool outer_p = !obj->headers;	/* is this the outermost message? */
+  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(obj->options);
+
+  // No emitter, no point.
+  if (!mimeEmitter)
+    return -1;
+
+  if (
+      (outer_p) &&
+      ( obj->options->part_to_load == NULL )
+     )
+  {
+    char  *charset = NULL;
+    char  *ct = MimeHeaders_get (msg->hdrs, HEADER_CONTENT_TYPE,
+									                PR_FALSE, PR_FALSE);
+		if (ct)
+      charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
+
+    char  *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
+									                  PR_FALSE, PR_FALSE);
+
+    mimeEmitter->StartBody((obj->options->headers == MimeHeadersNone), msgID);
+    PR_FREEIF(msgID);
+    PR_FREEIF(ct);
+    PR_FREEIF(charset);
+  }
+
   return 0;
 }
 
@@ -402,6 +434,22 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
   if (status < 0) return status;
 
   outer_p = !obj->headers;	/* is this the outermost message? */
+
+  // Once we get to the end of parsing the message, we will notify
+  // the emitter that we are done the the body.
+  nsIMimeEmitter   *mimeEmitter = GetMimeEmitter(obj->options);
+  // No emitter, no point.
+  if (!mimeEmitter)
+    return -1;
+
+  // Mark the end of the mail body if we are actually emitting the
+  // body of the message (i.e. not Header ONLY)
+  if ( 
+      (outer_p) &&
+      ( obj->options && (obj->options->part_to_load == NULL) ) &&
+      (obj->options->headers != MimeHeadersOnly)
+     )
+    mimeEmitter->EndBody();
 
   if (outer_p &&
 	  obj->options &&
@@ -517,7 +565,14 @@ MimeMessage_write_headers_html (MimeObject *obj)
 	}
 
   // Start the header parsing by the emitter
-  mimeEmitter->StartHeader( (obj == obj->options->state->root) );
+  char *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,
+									                  PR_FALSE, PR_FALSE);
+  mimeEmitter->StartHeader( 
+                            (obj == obj->options->state->root), 
+                            (obj->options->headers == MimeHeadersOnly),
+                            msgID
+                          );
+  PR_FREEIF(msgID);
 
 #ifdef MOZ_SECURITY
     HG00919 
