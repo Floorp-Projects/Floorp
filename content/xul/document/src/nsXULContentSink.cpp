@@ -1082,9 +1082,9 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
   NS_NAMED_LITERAL_STRING(name, "xmlns");
   NS_NAMED_LITERAL_STRING(value, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
-  const PRUnichar* atts[] = {name.get(), value.get(), nsnull};;
+  const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
     
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, 0);
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 2, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
