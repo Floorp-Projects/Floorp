@@ -58,15 +58,12 @@ ifdef XFE_WIDGETS_BUILD_UNUSED
 XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
 
 UNUSED_CSRCS	= \
-				Chrome.c \
 				ComboBox.c \
 				FancyBox.c \
 				FontChooser.c \
 				$(NULL)
 
 UNUSED_EXPORTS	= \
-				Chrome.h \
-				ChromeP.h \
 				ComboBox.h \
 				ComboBoxP.h \
 				FancyBox.h \
@@ -88,6 +85,7 @@ CSRCS			= \
 				CallProcs.c \
 				Cascade.c \
 				ChildrenUtil.c \
+				Chrome.c \
 				Converters.c \
 				Cursor.c \
 				DashBoard.c \
@@ -142,6 +140,8 @@ EXPORTS			= \
 				Cascade.h \
 				CascadeP.h \
 				ChildrenUtil.h \
+				Chrome.h \
+				ChromeP.h \
 				Converters.h \
 				DashBoard.h \
 				DashBoardP.h \
