@@ -104,7 +104,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/toolkit/components/startup/src \
 	$(NULL)
 else
-LOCAL_INCLUDEs += -I$(topsrcdir)/xpfe/components/startup/src
+LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/components/startup/src
 endif
 
 include $(topsrcdir)/config/rules.mk
