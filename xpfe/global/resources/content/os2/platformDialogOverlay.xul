@@ -1,0 +1,27 @@
+<?xml version="1.0"?> 
+<!-- OS/2 version of platformDialogOverlay.xul -->
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/platformDialogOverlay.dtd">
+
+
+
+<overlay id="platformDialogOverlay"
+		 xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <box id="okCancelButtons" align="horizontal">
+		<spring flex="1"/>
+    <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
+    <button class="dialog" id="Button2" value="&cancelButton.label;" style="display:none;" onclick="doButton2()"/>	
+    <button class="dialog" id="Button3" value="&cancelButton.label;" style="display:none;" onclick="doButton3()"/>	
+    <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
+    <spring flex="1"/>
+  </box>
+	
+	<keyset id="keyset">
+		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
+		<key keycode="VK_RETURN" oncommand="doOKButton()"/>
+		<key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
+	</keyset>
+
+</overlay>		

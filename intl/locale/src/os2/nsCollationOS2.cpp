@@ -72,6 +72,10 @@ nsresult nsCollationOS2::GetSortKeyLen( const nsCollationStrength  aStrength,
    if( !aOutLen)
       return NS_ERROR_NULL_POINTER;
 
+   // XXXX M15 LAUNCH HACK: TODO: track down why we get here before Initialize has been called...OS2TODO 
+   if (!mLocaleObject)
+     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar*)L"", &mLocaleObject);
+
    size_t num_elems = UniStrxfrm( mLocaleObject, nsnull,
                                   aStringIn.GetUnicode(), 0);
 

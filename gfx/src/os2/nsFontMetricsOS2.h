@@ -32,6 +32,8 @@
 
 #include "nsIFontMetrics.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"      //HCT-M15 
 
 class nsIRenderingContext;
 class nsDeviceContextOS2;
@@ -59,7 +61,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
    NS_DECL_ISUPPORTS
 
-   NS_IMETHOD Init( const nsFont& aFont, nsIDeviceContext *aContext);
+   NS_IMETHOD Init( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext *aContext);
    NS_IMETHOD Destroy();
 
    // Metrics
@@ -75,9 +77,8 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetMaxDescent( nscoord &aDescent);
    NS_IMETHOD  GetMaxAdvance( nscoord &aAdvance);
    NS_IMETHOD  GetFont( const nsFont *&aFont);
-//   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
+   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
-//   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
 
    // for drawing text
    PRUint32 GetDevMaxAscender() const { return mDevMaxAscent; }
@@ -105,6 +106,9 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mContext;    // sigh.. broken broken broken XP interfaces...
+
+   nsCOMPtr<nsIAtom>   mLangGroup;
+
 };
 
 #endif

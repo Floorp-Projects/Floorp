@@ -71,6 +71,8 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    NS_IMETHOD GetShortcutChar(nsString &aText);
    NS_IMETHOD SetModifiers(PRUint8 aModifiers);
    NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
+   NS_IMETHOD SetMenuItemType(EMenuItemType aIsCheckbox);
+   NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
 
    // nsIMenuListener interface
    nsEventStatus MenuSelected( const nsMenuEvent &aMenuEvent);
@@ -97,6 +99,7 @@ class nsMenuItem : public nsIMenuItem, public nsIMenuListener
    nsString         mCmdString;    // JS command
    nsIDOMElement   *mDOMElement;   // dom element for item
    nsIWebShell     *mWebShell;
+   EMenuItemType    mMenuType;
 };
 
 #endif

@@ -290,10 +290,11 @@ nsresult nsMenuItem::DoCommand()
    // code copied from windows
    nsresult rv = NS_ERROR_FAILURE;
   
+#if 0  // XXXXX FIXME no longer works due to WebShell changes
    nsCOMPtr<nsIContentViewer> contentViewer;
    NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
       NS_ERROR_FAILURE);
- 
+
    nsCOMPtr<nsIDocumentViewer> docViewer;
    docViewer = do_QueryInterface(contentViewer);
    if (!docViewer) {
@@ -306,7 +307,7 @@ nsresult nsMenuItem::DoCommand()
        NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
        return rv;
    }
- 
+
    nsEventStatus status = nsEventStatus_eIgnore;
    nsMouseEvent event;
    event.eventStructType = NS_MOUSE_EVENT;
@@ -320,7 +321,8 @@ nsresult nsMenuItem::DoCommand()
    }
 
    rv = contentNode->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
- 
+#endif
+  
    return rv;
 }
 
@@ -418,5 +420,17 @@ nsresult nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
 
 nsresult nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
 {
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetMenuItemType(EMenuItemType aType)
+{
+  mMenuType = aType;
+  return NS_OK;
+}
+
+nsresult nsMenuItem::GetMenuItemType(EMenuItemType *aType)
+{
+  *aType = mMenuType;
   return NS_OK;
 }
