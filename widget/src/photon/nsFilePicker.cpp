@@ -82,7 +82,7 @@ nsFilePicker::nsFilePicker()
           cond &&
           NS_SUCCEEDED(displayDirectory->IsDirectory(&cond)) &&
           cond)
-        mDisplayDirectory = displayDirectory
+        mDisplayDirectory = displayDirectory;
     }
   }
 }
