@@ -35,6 +35,7 @@ OBJS =                                     \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
     .\$(OBJDIR)\WebShellContainer.obj  \
+	.\$(OBJDIR)\ControlSite.obj        \
 	$(NULL)
 
 LINCS=  \
@@ -83,6 +84,7 @@ MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
+ControlSite.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 clobber::
