@@ -67,7 +67,7 @@ nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 :nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
  mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), 
  mContentChain(nsnull), mLinkupFrame(nsnull), mShouldHaveScrollbar(PR_FALSE),
- mRowGroupHeight(0)
+ mRowGroupHeight(0), mRowCount(0), mCurrentIndex(0)
 { }
 
 // Destructor
@@ -413,6 +413,8 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
+  mCurrentIndex = aNewIndex;
+
   //printf("The position changed! The new index is: %d\n", aNewIndex);
  
   if (mContentChain) {
@@ -655,14 +657,13 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     if (!mScrollbar)
       CreateScrollbar(aPresContext);
 
-    PRInt32 rowCount = 0;
-    ComputeVisibleRowCount(rowCount, mContent); // XXX This sucks! Needs to be cheap!
+    ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
     // Set the maxpos of the scrollbar.
     nsCOMPtr<nsIContent> scrollbarContent;
     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
 
-    rowCount--;
+    PRInt32 rowCount = mRowCount-1;
     if (rowCount < 0)
       rowCount = 0;
 
@@ -1093,19 +1094,51 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext& aPresContext)
 }
 
 void
-nsTreeRowGroupFrame::IndexOfCell(nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex)
+nsTreeRowGroupFrame::IndexOfCell(nsIPresContext& aPresContext,
+                                 nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex)
 {
+  // Get the index of our parent row.
+  nsCOMPtr<nsIContent> row;
+  aCellContent->GetParent(*getter_AddRefs(row));
+  IndexOfRow(aPresContext, row, aRowIndex);
+  if (aRowIndex == -1)
+    return;
+
+  // To determine the column index, just ask what our indexOf is.
+  row->IndexOf(aCellContent, aColIndex);
 }
   
 void
-nsTreeRowGroupFrame::IndexOfRow(nsIContent* aRowContent, PRInt32& aRowIndex)
+nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
+                                nsIContent* aRowContent, PRInt32& aRowIndex)
 {
+  // Use GetPrimaryFrameFor to retrieve the frame.
+  // This crawls only the frame tree, and will be much faster for the case
+  // where the frame is onscreen.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
 
+  nsIFrame* result = nsnull;
+  shell->GetPrimaryFrameFor(aRowContent, &result);
+
+  if (result) {
+    // We found a frame. This is good news. It means we can look at our row
+    // index and just adjust based on our current offset index.
+    nsTableRowFrame* row = (nsTableRowFrame*)result;
+    PRInt32 screenRowIndex = row->GetRowIndex();
+    aRowIndex = screenRowIndex + mCurrentIndex;
+  }
+  else {
+    // We didn't find a frame.  This mean we have no choice but to crawl
+    // the row group.
+  }
 }
 
 PRBool
 nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 {
+  if (aRowIndex >= 0 && aRowIndex < mRowCount)
+    return PR_TRUE;
   return PR_FALSE;
 }
 
@@ -1119,6 +1152,23 @@ void
 nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, 
                                          nsTreeCellFrame** aResult)
 {
+  // The screen index = (aRowIndex - mCurrentIndex)
+  PRInt32 screenIndex = aRowIndex - mCurrentIndex;
 
+  // Get the table frame.
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+
+  nsTableCellFrame* cellFrame;
+
+  nsCellMap * cellMap = tableFrame->GetCellMap();
+  CellData* cellData = cellMap->GetCellAt(screenIndex, aColIndex);
+  nsRect cellRect;
+  if (cellData) {
+    cellFrame = cellData->mOrigCell;
+    if (cellFrame) { // the cell originates at (rowX, colX)
+      *aResult = (nsTreeCellFrame*)cellFrame; // XXX I am evil.
+    }
+  }
 }
 

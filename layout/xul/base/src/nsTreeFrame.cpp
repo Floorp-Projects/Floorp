@@ -168,19 +168,19 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
         nsCOMPtr<nsIDOMNode> node;
         cellNodeList->Item(0, getter_AddRefs(node));
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        treeRowGroup->IndexOfCell(content, rowIndex, cellIndex);
+        treeRowGroup->IndexOfCell(aPresContext, content, rowIndex, cellIndex);
       }
       else if (cellLength == 0 && itemLength != 0) {
         nsCOMPtr<nsIDOMNode> node;
         itemNodeList->Item(0, getter_AddRefs(node));
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        treeRowGroup->IndexOfRow(content, rowIndex);
+        treeRowGroup->IndexOfRow(aPresContext, content, rowIndex);
       }
       else if (cellLength != 0 && itemLength != 0) {
         nsCOMPtr<nsIDOMNode> node;
         cellNodeList->Item(0, getter_AddRefs(node));
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        treeRowGroup->IndexOfCell(content, rowIndex, cellIndex);
+        treeRowGroup->IndexOfCell(aPresContext, content, rowIndex, cellIndex);
       }
       
       // We now have a valid row and cell index for the current selection.  Based on the

@@ -119,11 +119,12 @@ public:
 
   // Tells you the row and index of a cell (given only the content node).
   // This method is expensive.
-  void IndexOfCell(nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex);
+  void IndexOfCell(nsIPresContext& aPresContext, nsIContent* aCellContent, 
+                   PRInt32& aRowIndex, PRInt32& aColIndex);
   
   // Tells you the row index of a row (given only the content node).
   // This method is expensive.
-  void IndexOfRow(nsIContent* aRowContent, PRInt32& aRowIndex);
+  void IndexOfRow(nsIPresContext& aPresContext, nsIContent* aRowContent, PRInt32& aRowIndex);
 
   // Whether or not the row is valid. This is a cheap method, since the total row count
   // is cached.
@@ -137,6 +138,8 @@ public:
   // cheap.  It should not cause frames to be built, so this should only be called when the
   // cell is onscreen (use EnsureRowIsVisible to guarantee this).
   void GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, nsTreeCellFrame** aResult);
+
+  PRInt32 GetVisibleRowCount() { return mRowCount; };
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
@@ -155,5 +158,8 @@ protected: // Data Members
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
 
   nscoord mRowGroupHeight; // The height of the row group.
+
+  PRInt32 mCurrentIndex; // Our current scrolled index.
+  PRInt32 mRowCount; // The current number of visible rows.
 
 }; // class nsTreeRowGroupFrame
