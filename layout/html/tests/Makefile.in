@@ -72,7 +72,7 @@ LIBS		= \
 		-lxpcom \
 		-lxp \
 		-ljsurl \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NET_LIBS) \
 		$(ZLIB_LIBS) \

@@ -91,7 +91,7 @@ LIBS		+= \
 		-lmozjs \
 		-lxp \
 		-lxpcom \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(ZLIB_LIBS) \
 		$(LOST_SYM_LIBS) \

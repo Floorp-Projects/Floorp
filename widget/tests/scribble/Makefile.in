@@ -56,7 +56,7 @@ LIBS		= \
 		-lmozjs \
 		-lwidgetsupport_s \
 		-lraptorgfx \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(NET_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

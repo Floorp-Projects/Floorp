@@ -33,7 +33,7 @@ LIBS = \
 	-limg	\
 	-lmozutil	\
 	-lmsgbaseutil \
-	$(TIMER_LIBS) \
+	$(MOZ_TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \

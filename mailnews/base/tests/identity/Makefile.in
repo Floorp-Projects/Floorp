@@ -30,7 +30,7 @@ LIBS		= \
 		-L$(DIST)/bin \
 		-lxpcom \
 		-lmozjs \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

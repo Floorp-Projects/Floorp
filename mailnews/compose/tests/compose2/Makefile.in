@@ -39,7 +39,7 @@ LIBS		= \
 		-lnetcnvts \
 		-lnetwork \
 		-lnetlib \
-		$(TIMER_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
 		-lpwcac \
 		-lmozdbm \
