@@ -63,11 +63,13 @@ nsresult DeleteElementTxn::Do(void)
 
 #ifdef NS_DEBUG
   // begin debug output
-  nsCOMPtr<nsIDOMElement> element(mElement);
+  nsCOMPtr<nsIDOMElement> element;
+  element = do_QueryInterface(mElement, &result);
   nsAutoString elementTag="text node";
   if (element)
     element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement(mParent);
+  nsCOMPtr<nsIDOMElement> parentElement;
+  parentElement = do_QueryInterface(mParent, &result);
   nsAutoString parentElementTag="text node";
   if (parentElement)
     parentElement->GetTagName(parentElementTag);

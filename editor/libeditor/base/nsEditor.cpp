@@ -747,7 +747,7 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   {
     result = NS_ERROR_UNEXPECTED; 
     nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = selection;
+    enumerator = do_QueryInterface(selection,&result);
     if (enumerator)
     {
       enumerator->First(); 
@@ -766,7 +766,8 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
           if ((NS_SUCCEEDED(result)) && (node))
           {
             result = NS_ERROR_UNEXPECTED; 
-            nsCOMPtr<nsIDOMCharacterData> nodeAsText(node);
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText;
+            nodeAsText = do_QueryInterface(node,&result);
             if (nodeAsText)
             {
               PRInt32 offset;
@@ -783,8 +784,6 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
       }
     }
   }
-  else
-    result = NS_ERROR_NULL_POINTER;
 
   return result;
 }
@@ -938,7 +937,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
   if ((NS_SUCCEEDED(result)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = selection;
+    enumerator = do_QueryInterface(selection,&result);
     if (enumerator)
     {
       for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
@@ -970,8 +969,6 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
       }
     }
   }
-  else
-    result = NS_ERROR_NULL_POINTER;
 
   // if we didn't build the transaction correctly, destroy the out-param transaction so we don't leak it.
   if (NS_FAILED(result))
@@ -997,10 +994,16 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
 
   // get the node and offset of the insertion point
   nsresult result = aRange->GetStartParent(getter_AddRefs(node));
-  aRange->GetStartOffset(&offset);
+  if (NS_FAILED(result))
+    return result;
+  result = aRange->GetStartOffset(&offset);
+  if (NS_FAILED(result))
+    return result;
 
   // determine if the insertion point is at the beginning, middle, or end of the node
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText(node);
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText;
+  nodeAsText = do_QueryInterface(node, &result);
+
   if (nodeAsText)
   {
     PRUint32 count;
@@ -1031,7 +1034,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     if ((NS_SUCCEEDED(result)) && priorNode)
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
-      nsCOMPtr<nsIDOMCharacterData> priorNodeAsText(priorNode);
+      nsCOMPtr<nsIDOMCharacterData> priorNodeAsText;
+      priorNodeAsText = do_QueryInterface(priorNode, &result);
       if (priorNodeAsText)
       {
         PRUint32 length=0;
@@ -1067,7 +1071,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     if ((NS_SUCCEEDED(result)) && nextNode)
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
-      nsCOMPtr<nsIDOMCharacterData> nextNodeAsText(nextNode);
+      nsCOMPtr<nsIDOMCharacterData> nextNodeAsText;
+      nextNodeAsText = do_QueryInterface(nextNode,&result);
       if (nextNodeAsText)
       {
         PRUint32 length=0;
