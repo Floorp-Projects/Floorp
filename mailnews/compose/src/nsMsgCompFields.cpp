@@ -100,7 +100,7 @@ nsMsgCompFields::~nsMsgCompFields()
 }
 
 
-nsresult nsMsgCompFields::Copy(const nsIMsgCompFields* pMsgCompFields)
+nsresult nsMsgCompFields::Copy(nsIMsgCompFields* pMsgCompFields)
 {
 	nsMsgCompFields * pFields = (nsMsgCompFields*)pMsgCompFields;
 
@@ -125,7 +125,7 @@ nsresult nsMsgCompFields::Copy(const nsIMsgCompFields* pMsgCompFields)
 
 
 
-nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetHeader(PRInt32 header, char *value, PRInt32 *_retval)
 {
     int status = 0;
 
@@ -225,7 +225,7 @@ PRBool nsMsgCompFields::GetBoolHeader(PRInt32 header)
 	return m_boolHeaders[header];
 }
 
-nsresult nsMsgCompFields::SetFrom(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetFrom(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_FROM_HEADER_MASK, value, _retval);
 }
@@ -235,7 +235,7 @@ nsresult nsMsgCompFields::GetFrom(char **_retval)
 	return GetHeader(MSG_FROM_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetReplyTo(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetReplyTo(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_REPLY_TO_HEADER_MASK, value, _retval);
 }
@@ -245,7 +245,7 @@ nsresult nsMsgCompFields::GetReplyTo(char **_retval)
 	return GetHeader(MSG_REPLY_TO_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetTo(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetTo(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_TO_HEADER_MASK, value, _retval);
 }
@@ -255,7 +255,7 @@ nsresult nsMsgCompFields::GetTo(char **_retval)
 	return GetHeader(MSG_TO_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetCc(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetCc(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_CC_HEADER_MASK, value, _retval);
 }
@@ -265,7 +265,7 @@ nsresult nsMsgCompFields::GetCc(char **_retval)
 	return GetHeader(MSG_CC_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetBcc(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetBcc(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_BCC_HEADER_MASK, value, _retval);
 }
@@ -275,7 +275,7 @@ nsresult nsMsgCompFields::GetBcc(char **_retval)
 	return GetHeader(MSG_BCC_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetFcc(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetFcc(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_NEWS_FCC_HEADER_MASK, value, _retval);
 }
@@ -285,7 +285,7 @@ nsresult nsMsgCompFields::GetFcc(char **_retval)
 	return GetHeader(MSG_NEWS_FCC_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetNewsFcc(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetNewsFcc(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_NEWS_FCC_HEADER_MASK, value, _retval);
 }
@@ -295,7 +295,7 @@ nsresult nsMsgCompFields::GetNewsFcc(char **_retval)
 	return GetHeader(MSG_NEWS_FCC_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetNewsBcc(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetNewsBcc(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_NEWS_BCC_HEADER_MASK, value, _retval);
 }
@@ -305,7 +305,7 @@ nsresult nsMsgCompFields::GetNewsBcc(char **_retval)
 	return GetHeader(MSG_NEWS_BCC_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetNewsgroups(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetNewsgroups(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_NEWSGROUPS_HEADER_MASK, value, _retval);
 }
@@ -315,7 +315,7 @@ nsresult nsMsgCompFields::GetNewsgroups(char **_retval)
 	return GetHeader(MSG_NEWSGROUPS_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetFollowupTo(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetFollowupTo(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_FOLLOWUP_TO_HEADER_MASK, value, _retval);
 }
@@ -325,7 +325,7 @@ nsresult nsMsgCompFields::GetFollowupTo(char **_retval)
 	return GetHeader(MSG_FOLLOWUP_TO_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetSubject(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetSubject(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_SUBJECT_HEADER_MASK, value, _retval);
 }
@@ -335,7 +335,7 @@ nsresult nsMsgCompFields::GetSubject(char **_retval)
 	return GetHeader(MSG_SUBJECT_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetAttachments(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetAttachments(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_ATTACHMENTS_HEADER_MASK, value, _retval);
 }
@@ -345,7 +345,7 @@ nsresult nsMsgCompFields::GetAttachments(char **_retval)
 	return GetHeader(MSG_ATTACHMENTS_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetOrganization(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetOrganization(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_ORGANIZATION_HEADER_MASK, value, _retval);
 }
@@ -355,7 +355,7 @@ nsresult nsMsgCompFields::GetOrganization(char **_retval)
 	return GetHeader(MSG_ORGANIZATION_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetReferences(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetReferences(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_REFERENCES_HEADER_MASK, value, _retval);
 }
@@ -365,7 +365,7 @@ nsresult nsMsgCompFields::GetReferences(char **_retval)
 	return GetHeader(MSG_REFERENCES_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetOtherRandomHeaders(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetOtherRandomHeaders(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_OTHERRANDOMHEADERS_HEADER_MASK, value, _retval);
 }
@@ -375,7 +375,7 @@ nsresult nsMsgCompFields::GetOtherRandomHeaders(char **_retval)
 	return GetHeader(MSG_OTHERRANDOMHEADERS_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetNewspostUrl(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetNewspostUrl(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_NEWSPOSTURL_HEADER_MASK, value, _retval);
 }
@@ -385,7 +385,7 @@ nsresult nsMsgCompFields::GetNewspostUrl(char **_retval)
 	return GetHeader(MSG_NEWSPOSTURL_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetDefaultBody(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetDefaultBody(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_DEFAULTBODY_HEADER_MASK, value, _retval);
 }
@@ -395,7 +395,7 @@ nsresult nsMsgCompFields::GetDefaultBody(char **_retval)
 	return GetHeader(MSG_DEFAULTBODY_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetPriority(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetPriority(char *value, PRInt32 *_retval)
 {
 	return SetHeader(nsMsgPriority_HEADER_MASK, value, _retval);
 }
@@ -405,7 +405,7 @@ nsresult nsMsgCompFields::GetPriority(char **_retval)
 	return GetHeader(nsMsgPriority_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetMessageEncoding(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetMessageEncoding(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_MESSAGE_ENCODING_HEADER_MASK, value, _retval);
 }
@@ -415,7 +415,7 @@ nsresult nsMsgCompFields::GetMessageEncoding(char **_retval)
 	return GetHeader(MSG_MESSAGE_ENCODING_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetCharacterSet(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetCharacterSet(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_CHARACTER_SET_HEADER_MASK, value, _retval);
 }
@@ -425,7 +425,7 @@ nsresult nsMsgCompFields::GetCharacterSet(char **_retval)
 	return GetHeader(MSG_CHARACTER_SET_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetMessageId(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetMessageId(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_MESSAGE_ID_HEADER_MASK, value, _retval);
 }
@@ -435,7 +435,7 @@ nsresult nsMsgCompFields::GetMessageId(char **_retval)
 	return GetHeader(MSG_MESSAGE_ID_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetHTMLPart(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetHTMLPart(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_HTML_PART_HEADER_MASK, value, _retval);
 }
@@ -445,7 +445,7 @@ nsresult nsMsgCompFields::GetHTMLPart(char **_retval)
 	return GetHeader(MSG_HTML_PART_HEADER_MASK, _retval);
 }
 
-nsresult nsMsgCompFields::SetTemplateName(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetTemplateName(char *value, PRInt32 *_retval)
 {
 	return SetHeader(MSG_X_TEMPLATE_HEADER_MASK, value, _retval);
 }
@@ -541,7 +541,7 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 	return status;
 }
 
-nsresult nsMsgCompFields::SetBody(const char *value, PRInt32 *_retval)
+nsresult nsMsgCompFields::SetBody(char *value, PRInt32 *_retval)
 {
 	long retval = 0;
 
@@ -571,7 +571,7 @@ const char* nsMsgCompFields::GetBody()
 }
 
 
-PRInt16 nsMsgCompFields::AppendBody(const char* value)
+PRInt16 nsMsgCompFields::AppendBody(char* value)
 {
     if (!value || !*value)
 		return 0;

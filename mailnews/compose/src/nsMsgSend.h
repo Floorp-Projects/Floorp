@@ -80,7 +80,7 @@ public:
 	/* this is just for testing purpose, must be removed before shipping */
 	NS_IMETHOD Test() {printf("nsMsgSend: Test Succesfull\n"); return NS_OK;}
 
-	NS_IMETHOD SendMessage(const nsIMsgCompFields *fields);
+	NS_IMETHOD SendMessage(nsIMsgCompFields *fields);
 
   static void	StartMessageDelivery(MSG_Pane *pane,
 									 void      *fe_data,

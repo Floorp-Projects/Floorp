@@ -38,7 +38,9 @@ char *				XP_StripLine (char *) {return NULL;}
 XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
 int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
 int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
-const char *				XP_AppVersion = "5.0a0";
+
+char *				XP_AppVersion = "5.0a0";
+
 XP_BEGIN_PROTOS int					XP_LocalZoneOffset() {return -480;} XP_END_PROTOS
 Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 

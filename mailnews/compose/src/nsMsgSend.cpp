@@ -339,7 +339,7 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::IID());
 
-nsresult nsMsgSendMimeDeliveryState::SendMessage(const nsIMsgCompFields *fields)
+nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields)
 {
 	const char* pBody;
 	PRInt32 nBodyLength;
@@ -2234,7 +2234,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		m_html_filename = WH_TempName (xpFileToPost, "nsmail");
 		if (!m_html_filename) goto FAILMEM;
 
-		nsFilePath aPath(m_html_filename);
+		nsFileSpec aPath(m_html_filename);
 		nsOutputFileStream tmpfile(aPath);
 		if (! tmpfile.is_open()) {
 			status = MK_UNABLE_TO_OPEN_TMP_FILE;
@@ -2248,7 +2248,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		  }
 		  goto FAIL;
 	  }
-	  tmpfile.close();
+
 	  if (tmpfile.failed()) goto FAIL;
 
 	  m_plaintext = new MSG_DeliverMimeAttachment;
@@ -2288,7 +2288,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		goto FAILMEM;
 
 	{
-		nsFilePath msgPath(m_msg_file_name);
+		nsFileSpec msgPath(m_msg_file_name);
 		m_msg_file = new nsOutputFileStream(msgPath);
 	}
 	if (! m_msg_file->is_open()) {
@@ -2641,7 +2641,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	if (m_msg_file)
 	{
 		/* If we don't do this check...ZERO length files can be sent */
-		m_msg_file->close();
 		if (m_msg_file->failed())
 		{
 			status = MK_MIME_ERROR_WRITING_FILE;
@@ -4400,7 +4399,7 @@ nsMsgSendMimeDeliveryState::Init(
   pStr = fields->GetMessageId();
   if (pStr)
 	{
-	  m_fields->SetMessageId(pStr, NULL);
+	  m_fields->SetMessageId((char *) pStr, NULL);
 	  /* Don't bother checking for out of memory; if it fails, then we'll just
 		 let the server generate the message-id, and suffer with the
 		 possibility of duplicate messages.*/
@@ -4440,8 +4439,8 @@ nsMsgSendMimeDeliveryState::Init(
 	HJ41792
   }
 
-  m_fields->SetNewspostUrl(fields->GetNewspostUrl(), NULL);
-  m_fields->SetDefaultBody(fields->GetDefaultBody(), NULL);
+  m_fields->SetNewspostUrl((char *) fields->GetNewspostUrl(), NULL);
+  m_fields->SetDefaultBody((char *) fields->GetDefaultBody(), NULL);
   StrAllocCopy (m_attachment1_type, attachment1_type);
   StrAllocCopy (m_attachment1_encoding, "8bit");
 
@@ -4462,11 +4461,11 @@ nsMsgSendMimeDeliveryState::Init(
 
   pStr = fields->GetOtherRandomHeaders();
   if (pStr)
-	m_fields->SetOtherRandomHeaders(pStr, NULL);
+	m_fields->SetOtherRandomHeaders((char *) pStr, NULL);
 
   pStr = fields->GetPriority();
   if (pStr)
-	m_fields->SetPriority(pStr, NULL);
+	m_fields->SetPriority((char *) pStr, NULL);
 
   int i, j = (int) MSG_LAST_BOOL_HEADER_MASK;
   for (i = 0; i < j; i++) {
@@ -4720,7 +4719,6 @@ void nsMsgSendMimeDeliveryState::Clear()
 
   if (m_msg_file)
 	{
-	  m_msg_file->close();
 	  delete m_msg_file;
 	  m_msg_file = 0;
 	  NS_ASSERTION (m_msg_file_name, "null file name");

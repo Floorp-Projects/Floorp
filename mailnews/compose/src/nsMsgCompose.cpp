@@ -2400,7 +2400,7 @@ PRInt32 nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
 
 	PR_ASSERT(header != MSG_ATTACHMENTS_HEADER_MASK); // "Don't use this fuction for setting the attachment!");
 	ClearCompositionMessageID();
-	m_fields->SetHeader(header, value, &retVal);
+	m_fields->SetHeader(header, (char *) value, &retVal);
 
 	return retVal;
 }
@@ -2440,7 +2440,7 @@ const char* nsMsgCompose::GetCompBody()
 
 int nsMsgCompose::SetCompBody(const char* value)
 {
-	return m_fields->SetBody(value, NULL);
+	return m_fields->SetBody((char *) value, NULL);
 }
 
 #if 0 //JFD
