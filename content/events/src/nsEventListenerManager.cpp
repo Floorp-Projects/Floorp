@@ -51,6 +51,10 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsDOMPropEnums.h"
+#include "nsDOMError.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -574,6 +578,33 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
                                                              nsIAtom *aName,
                                                              REFNSIID aIID)
 {
+  // Check that we have access to set an event listener. Prevents snooping attacks across 
+  // domains by setting onkeypress handlers, for instance.
+  // You'd think it'd work just to get the JSContext from aContext, but that's actually the
+  // JSContext whose private object parents the object in aScriptObjectOwner.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                  &rv);
+  if (NS_FAILED(rv))
+      return rv;
+  JSContext *cx;
+  if (NS_FAILED(stack->Peek(&cx)))
+      return nsnull;
+  JSObject *jsobj;
+  if (NS_FAILED(rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&jsobj)))
+    return rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv))
+      return rv;
+  PRBool ok;
+  if (NS_FAILED(rv = securityManager->CheckScriptAccess(cx, jsobj,
+                  NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER, PR_TRUE, &ok)))
+  {
+    return rv;
+  }
+  if (!ok)
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
   return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, PR_FALSE);
 }
 

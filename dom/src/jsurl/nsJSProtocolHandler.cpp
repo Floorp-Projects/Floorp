@@ -232,7 +232,11 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
     if (!principal) {
-        // No scripts currently executing; get principal from referrer of link
+      // No scripts currently executing; get principal from referrer of link
+      nsCOMPtr<nsIURI> referringUri;
+      if (originalURI) {
+        referringUri = originalURI;
+      } else {
         nsCOMPtr<nsIWebShell> webShell;
         webShell = do_QueryInterface(globalOwner);
         if (!webShell)
@@ -241,11 +245,12 @@ nsJSProtocolHandler::NewChannel(const char* verb,
         if (NS_FAILED(webShell->GetURL(&url)))
           return NS_ERROR_FAILURE;
         nsString urlStr(url);
-        nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), urlStr, nsnull)))
+        
+        if (NS_FAILED(NS_NewURI(getter_AddRefs(referringUri), urlStr, nsnull)))
           return NS_ERROR_FAILURE;
-        if (NS_FAILED(securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal))))
-          return NS_ERROR_FAILURE;
+      }
+      if (NS_FAILED(securityManager->GetCodebasePrincipal(referringUri, getter_AddRefs(principal))))
+        return NS_ERROR_FAILURE;
     }
 
 

@@ -30,6 +30,8 @@
 #include "nsDOMPropEnums.h"
 #include "nsCOMPtr.h"
 
+class nsIPref;
+
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
@@ -50,8 +52,6 @@ public:
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
     
-    nsObjectHashtable *mOriginToPolicyMap;
-
 private:
     void
     LookupPrincipal(nsCOMPtr<nsIPrincipal>* aPrincipal);
@@ -67,10 +67,11 @@ private:
                      PRBool* result);
     PRInt32 
     GetSecurityLevel(nsIPrincipal *principal, nsDOMProp domProp, 
-                     PRBool isWrite, char **capability);
+                     PRBool isWrite, nsCString &capability);
 
     NS_IMETHOD
-    GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, char **result);
+    GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, 
+                nsCString &result);
 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);
@@ -87,6 +88,8 @@ private:
     static int
     JSEnabledPrefChanged(const char *pref, void *data);
 
+    nsObjectHashtable *mOriginToPolicyMap;
+    nsIPref *mPrefs;
     nsIPrincipal *mSystemPrincipal;
     nsSupportsHashtable *mPrincipals;
     PRBool mIsJavaScriptEnabled;

@@ -2138,7 +2138,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         } 
         
         err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                                   delay32, NS_PRIORITY_LOWEST);
+                                   delay32);
         if (NS_OK != err) {
           NS_RELEASE(temp);
           NS_RELEASE(tempContext);
@@ -2298,7 +2298,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   } 
   
   err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                             (PRInt32)interval, NS_PRIORITY_LOWEST);
+                             (PRInt32)interval);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;
@@ -2992,7 +2992,8 @@ GlobalWindowImpl::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
     nsString mPropName;
     nsAutoString mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName.GetUnicode(), 2);
+    if (mPropName.Length() > 2)
+      mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
       return CheckForEventListener(aContext, mPropName);
     }
