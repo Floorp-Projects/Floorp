@@ -54,7 +54,11 @@ LINCS=	\
 !if defined(NGEDITOR)
   -I$(PUBLIC)\editor \
 !endif
-  -I$(PUBLIC)\pref
+  -I$(PUBLIC)\pref \
+ifdef MOZ_FULLCIRCLE
+  -I$(PUBLIC)\fullsoft \
+endif
+  $(NULL)
 
 MYLIBS=                         \
  $(DIST)\lib\raptorbase.lib     \
@@ -73,6 +77,9 @@ MYLIBS=                         \
  $(DIST)\lib\ender.lib          \
 !endif
  comdlg32.lib                   \
+ifdef MOZ_FULLCIRCLE
+ $(DIST)\lib\fullsoft.lib \
+endif
  $(NULL)
 
 LLIBS= $(MYLIBS)                \
