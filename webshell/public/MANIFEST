@@ -12,7 +12,6 @@ nsIDocumentLoaderObserver.h
 nsILinkHandler.h
 nsIModalWindowSupport.h
 nsIRefreshURI.h
-nsIThrobber.h
 nsIUrlDispatcher.h
 nsIWebShell.h
 nsIWebShellServices.h
