@@ -465,9 +465,12 @@ var BookmarksCommand = {
     if (!aTargetBrowser)
       return;
     for (var i=0; i<aSelection.length; ++i) {
-      if (aSelection.type[i] == "Bookmark")
+      if (aTargetBrowser == "properties")
+        openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
+                   "", "centerscreen,chrome,resizable=no", aSelection.item[i].Value);
+      else if (aSelection.type[i] == "Bookmark")
         this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
-      else if (aSelection.type[i] == "FolderGroup")
+      else if (aSelection.type[i] == "FolderGroup" || aSelection.type[i] == "Folder")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
     }
   },
@@ -498,10 +501,6 @@ var BookmarksCommand = {
     case "window":
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       break;
-    case "properties":
-      openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
-         "", "centerscreen,chrome,resizable=no", url);
-
     }
   },
 
@@ -539,11 +538,6 @@ var BookmarksCommand = {
     }
   },
 
-  showProperties: function (aSelection) 
-  {
-    this.openBookmark(aSelection, "properties");
-  },
-
   findBookmark: function ()
   {
     openDialog("chrome://browser/content/bookmarks/findBookmark.xul",
@@ -558,7 +552,7 @@ var BookmarksCommand = {
     var selection = BookmarksUtils.getSelectionFromResource(rFolder);
     var ok        = BookmarksUtils.insertSelection("newfolder", selection, aTarget);
     if (ok)
-      this.showProperties(selection);
+      this.openBookmark(selection, "properties");
   },
 
   createNewSeparator: function (aTarget)
@@ -796,7 +790,7 @@ var BookmarksController = {
       break;
     case "cmd_bm_rename":
     case "cmd_bm_properties":
-      BookmarksCommand.showProperties(aSelection);
+      BookmarksCommand.openBookmark(aSelection, "properties");
       break;
     case "cmd_bm_find":
       BookmarksCommand.findBookmark();
