@@ -60,7 +60,7 @@ public class NativeJavaTopPackage
     // note that this is ok even if the package isn't present.
     private static final String commonPackages = ""
                                                  +"java.lang;"
-                                                 +"java.lang.reflect"
+                                                 +"java.lang.reflect;"
                                                  +"java.io;"
                                                  +"java.math;"
                                                  +"java.net;"
