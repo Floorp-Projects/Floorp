@@ -526,6 +526,22 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
 
+  nsPluginEvent pluginEvent;
+
+  switch (aMsg)//~~~
+  {
+    case NS_GOTFOCUS:
+      pluginEvent.event = WM_SETFOCUS;
+      break;
+    case NS_LOSTFOCUS:
+      pluginEvent.event = WM_KILLFOCUS;
+      break;
+    default:
+      break;
+  }
+
+  event.nativeMsg = (void *)&pluginEvent;
+
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
   return result;
