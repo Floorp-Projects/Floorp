@@ -58,7 +58,7 @@ function calendarUnifinderInit( )
          {
             var SearchTree = document.getElementById( UnifinderTreeName );
             
-            SearchTree.treeBoxObject.selection.select( -1 );
+            SearchTree.treeBoxObject.selection.clearSelection( );
             
             if( EventSelectionArray.length > 0 )
             {
@@ -68,13 +68,12 @@ function calendarUnifinderInit( )
                   
                   SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
 
-                  SearchTree.treeBoxObject.selection.select( RowToScrollTo );
+                  SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
                }
             }
          }
+         
          gCalendarEventTreeClicked = false;
-
-         SearchTree.focus();
       }
    }
       
@@ -188,7 +187,6 @@ function formatUnifinderEventTime( time )
 
 function unifinderRefresh()
 {
-   //gEventSource.onlyFutureEvents = (document.getElementById( 'unifinder-future-events' ).getAttribute( "checked" ) == "true" );
    eventTable = getEventTable();
 
    unifinderSearchKeyPress( document.getElementById( 'unifinder-search-field' ), null );
@@ -489,7 +487,7 @@ function unifinderDoFilterEvents( event )
 */
 
 function setUnifinderEventTreeItem( treeItem, calendarEvent )
-   {
+{
       treeItem.calendarEvent = calendarEvent;
       treeItem.setAttribute( "eventId", calendarEvent.id );
       treeItem.setAttribute( "calendarevent", "true" );
@@ -768,5 +766,4 @@ function getPreviewText( calendarEvent )
 
    return ( HolderBox );
 }
-
 
