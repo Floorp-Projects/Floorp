@@ -280,25 +280,18 @@ my $classhtmlvarstart = "";
 my $classhtmlvar = "";
 my $dbh = Bugzilla->dbh;
 
-if (Param('useclassification') && (defined $classification)) {
-   $classhtmlvar = "&classification=" . url_quote($classification);
-   $classhtmlvarstart = "?classification=" . url_quote($classification);
-}
-
-if (Param('useclassification') && (defined $classification)) {
-    $localtrailer .= ", <A HREF=\"editproducts.cgi" . $classhtmlvarstart . "\">edit</A> in this classification";
-}
-
 #
 # product = '' -> Show nice list of classifications (if
 # classifications enabled)
 #
 
 if (Param('useclassification')) {
-    unless ($classification) {
-
-        my $dbh = Bugzilla->dbh;
-
+    if ($classification) {
+        $classhtmlvar = "&classification=" . url_quote($classification);
+        $classhtmlvarstart = "?classification=" . url_quote($classification);
+        $localtrailer .= ", <A HREF=\"editproducts.cgi" . $classhtmlvarstart . "\">edit</A> in this classification";    
+    }
+    elsif (!$product) {
         my $query = 
             "SELECT classifications.name, classifications.description,
                     COUNT(classification_id) AS product_count
@@ -323,10 +316,11 @@ if (Param('useclassification')) {
 
 
 #
-# action='' -> Show nice list of products
+# action = '' -> Show a nice list of products, unless a product
+#                is already specified (then edit it)
 #
 
-unless ($action) {
+if (!$action && !$product) {
 
     if (Param('useclassification')) {
         CheckClassificationNew($classification);
@@ -861,17 +855,30 @@ if ($action eq 'delete') {
 
 
 #
-# action='edit' -> present the edit products from
+# action='edit' -> present the 'edit product' form
+# If a product is given with no action associated with it, then edit it.
 #
 # (next action would be 'update')
 #
 
-if ($action eq 'edit') {
+if ($action eq 'edit' || (!$action && $product)) {
     PutHeader("Edit product");
     CheckProduct($product);
     my $classification_id=1;
     if (Param('useclassification')) {
-        CheckClassificationProduct($classification,$product);
+        # If a product has been given with no classification associated
+        # with it, take this information from the DB
+        if ($classification) {
+            CheckClassificationProduct($classification, $product);
+        } else {
+            trick_taint($product);
+            $classification =
+                $dbh->selectrow_array("SELECT classifications.name
+                                       FROM products, classifications
+                                       WHERE products.name = ?
+                                       AND classifications.id = products.classification_id",
+                                       undef, $product);
+        }
         $classification_id = get_classification_id($classification);
     }
 
