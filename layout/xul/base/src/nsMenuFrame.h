@@ -115,6 +115,7 @@ public:
   void ToggleMenuState();
   void SelectMenu(PRBool aActivateFlag);
   void OpenMenu(PRBool aActivateFlag);
+  void ActivateMenu(PRBool aActivateFlag);
 
   PRBool IsMenu();
   

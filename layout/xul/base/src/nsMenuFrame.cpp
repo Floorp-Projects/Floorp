@@ -239,9 +239,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
            mMenuParent) {
-    // The menu item was invoked and can now be dismissed.
     // Execute the execute event handler.
-    mMenuParent->DismissChain();
     Execute();
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
@@ -353,6 +351,21 @@ void nsMenuFrame::MarkAsGenerated()
   }
 }
 
+void
+nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
+{
+  // Activate the menu without opening it.
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+
+  // We've got some children for real.
+  if (child) {
+    if (aActivateFlag)
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    else child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  }
+}  
+
 void 
 nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
 {
@@ -377,13 +390,8 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
-    nsCOMPtr<nsIContent> child;
-    GetMenuChildrenElement(getter_AddRefs(child));
-
-    if (child) {
-      // We've got some children for real.
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-      
+    ActivateMenu(PR_TRUE);
+    if (menuPopup) {
       // Tell the menu bar we're active.
       mMenuParent->SetActive(PR_TRUE);
 
@@ -396,8 +404,6 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     }
 
     mMenuOpen = PR_TRUE;
-    //if (menuPopup)
-    //  menuPopup->CaptureMouseEvents(PR_TRUE);
   }
   else {
     // Close the menu. 
@@ -408,16 +414,12 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
-    nsCOMPtr<nsIContent> child;
-    GetMenuChildrenElement(getter_AddRefs(child));
-
     // Make sure we clear out our own items.
     if (menuPopup)
       menuPopup->SetCurrentMenuItem(nsnull);
 
-    if (child)
-      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-   
+    ActivateMenu(PR_FALSE);
+
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
     domElement->RemoveAttribute("open");
 
@@ -587,9 +589,6 @@ nsMenuFrame::Enter()
   if (!mMenuOpen) {
     // The enter key press applies to us.
     if (!IsMenu() && mMenuParent) {
-      // Close up the parent.
-      mMenuParent->DismissChain();
-
       // Execute our event handler
       Execute();
     }
@@ -921,11 +920,19 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 void
 nsMenuFrame::Execute()
 {
+  // First hide all of the open menus.
+  if (mMenuParent)
+    mMenuParent->HideChain();
+
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
   mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
+  // Now properly close them all up.
+  if (mMenuParent)
+    mMenuParent->DismissChain();
 }
 
 PRBool

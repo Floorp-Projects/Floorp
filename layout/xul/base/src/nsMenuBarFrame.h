@@ -51,7 +51,11 @@ public:
 
   NS_IMETHOD IsActive() { return mIsActive; };
 
+  // Closes up the chain of open cascaded menus.
   NS_IMETHOD DismissChain();
+
+  // Hides the chain of cascaded menus without closing them up.
+  NS_IMETHOD HideChain();
 
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
