@@ -60,7 +60,9 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+typedef bool (ReadPublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval);
 typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
 typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
 typedef bool (BracketRead)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
@@ -631,8 +633,10 @@ public:
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
 
-    Read *read;    
+    Read *read;
+    ReadPublic *readPublic;
     Write *write;
+    WritePublic *readWrite;
     DeleteProperty *deleteProperty;
     BracketRead *bracketRead;    
     BracketWrite *bracketWrite;
@@ -1134,6 +1138,7 @@ public:
 
 
     JS2Class *objectType(js2val obj);
+    JS2Class *objectType(JS2Object *obj);
     bool hasType(js2val objVal, JS2Class *c);
     bool relaxedHasType(js2val objVal, JS2Class *c);
 
@@ -1151,7 +1156,7 @@ public:
     LocalMember *findLocalMember(JS2Object *container, Multiname *multiname, Access access);
     js2val getSuperObject(JS2Object *obj);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
-    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access)
+    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access);
     InstanceMember *findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
     InstanceBinding *findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
 
@@ -1161,7 +1166,7 @@ public:
 
     void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
     void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
-            { QualifiedName qName(publicNamespace, qName); createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); }
+            { QualifiedName qName(publicNamespace, name); createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); }
 
 
 

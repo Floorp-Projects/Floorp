@@ -61,8 +61,8 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
     LookupKind lookup(false, JS2VAL_NULL);
     uint32 length = 0;
     js2val result;
-    meta->mn1->name = meta->engine->length_StringAtom;
-    if (meta->readDynamicProperty(obj, meta->mn1, &lookup, RunPhase, &result))
+    JS2Class *c = meta->objectType(obj);
+    if (c->readPublic(meta, obj, c, meta->engine->length_StringAtom, &lookup, RunPhase, &result))
         length = toUInt32(meta->toInteger(result));
     return length;
 }

@@ -3346,11 +3346,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Global Object ***/
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
-        writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
-        writeDynamicProperty(glob, new Multiname(&world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
-        writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
+        createDynamicProperty(glob, engine->undefined_StringAtom, JS2VAL_UNDEFINED, ReadAccess, true, false);
+        createDynamicProperty(glob, &world.identifiers["NaN"], engine->nanValue, ReadAccess, true, false);
+        createDynamicProperty(glob, &world.identifiers["Infinity"], engine->posInfValue, ReadAccess, true, false);
         // XXX add 'version()' 
-        writeDynamicProperty(glob, new Multiname(&world.identifiers["version"], publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
+        createDynamicProperty(glob, &world.identifiers["version"], INT_TO_JS2VAL(0), ReadAccess, true, false);
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
         addGlobalObjectFunction("eval", GlobalObject_eval, 1);
@@ -3381,8 +3381,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
-        objectClass->prototype->writeProperty(this, engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), 0);
-        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(0), DynamicPropertyValue::READONLY);
+        createDynamicProperty(objectClass->prototype, engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
+        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
@@ -3449,27 +3449,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     }
 
-    // objectType(o) returns an OBJECT o's most specific type.
-    JS2Class *JS2Metadata::objectType(js2val objVal)
+    JS2Class *JS2Metadata::objectType(JS2Object *obj)
     {
-        if (JS2VAL_IS_VOID(objVal))
-            return undefinedClass;
-        if (JS2VAL_IS_NULL(objVal))
-            return nullClass;
-        if (JS2VAL_IS_BOOLEAN(objVal))
-            return booleanClass;
-        if (JS2VAL_IS_NUMBER(objVal))
-            return numberClass;
-        if (JS2VAL_IS_STRING(objVal)) {
-            if (JS2VAL_TO_STRING(objVal)->length() == 1)
-                return stringClass; // XXX characterClass; Need the connection from class Character to
-                                    // class String - i.e. access to all the functions in 'String.prototype' - 
-                                    // but (some of) those routines depened on being called on a StringInstance...
-            else 
-                return stringClass;
-        }
-        ASSERT(JS2VAL_IS_OBJECT(objVal));
-        JS2Object *obj = JS2VAL_TO_OBJECT(objVal);
         switch (obj->kind) {
         case AttributeObjectKind:
             return attributeClass;
@@ -3494,6 +3475,29 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             ASSERT(false);
             return NULL;
         }
+    }
+
+    // objectType(o) returns an OBJECT o's most specific type.
+    JS2Class *JS2Metadata::objectType(js2val objVal)
+    {
+        if (JS2VAL_IS_VOID(objVal))
+            return undefinedClass;
+        if (JS2VAL_IS_NULL(objVal))
+            return nullClass;
+        if (JS2VAL_IS_BOOLEAN(objVal))
+            return booleanClass;
+        if (JS2VAL_IS_NUMBER(objVal))
+            return numberClass;
+        if (JS2VAL_IS_STRING(objVal)) {
+            if (JS2VAL_TO_STRING(objVal)->length() == 1)
+                return stringClass; // XXX characterClass; Need the connection from class Character to
+                                    // class String - i.e. access to all the functions in 'String.prototype' - 
+                                    // but (some of) those routines depened on being called on a StringInstance...
+            else 
+                return stringClass;
+        }
+        ASSERT(JS2VAL_IS_OBJECT(objVal));
+        return objectType(JS2VAL_TO_OBJECT(objVal));
     }
 
 
@@ -3821,6 +3825,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
+    bool defaultReadPublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval)
+    {
+        // XXX could speed up by pushing knowledge of single namespace?
+        Multiname mn(name, meta->publicNamespace);
+        return defaultReadProperty(meta, base, limit, &mn, lookupKind, phase, rval);
+    }
+
     bool defaultBracketRead(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
     {
         LookupKind lookup(false, JS2VAL_NULL);
@@ -3876,6 +3887,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             NOT_REACHED("bad member kind");
             return false;
         }
+    }
+
+    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
+    {
+        // XXX could speed up by pushing knowledge of single namespace?
+        Multiname mn(name, meta->publicNamespace);
+        return defaultWriteProperty(meta, base, limit, &mn, lookupKind, createIfMissing, newValue);
     }
 
     bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue)
@@ -4104,7 +4122,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
                     defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-                    writeDynamicProperty(callInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+                    createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                     pf++;
                 }
             }
@@ -4113,31 +4131,22 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     
         // Add "constructor" as a dynamic property of the prototype
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
+        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), construct, env);
-        writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers["constructor"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+        createDynamicProperty(builtinClass->prototype, &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
     
         pf = protoFunctions;
         if (pf) {
             while (pf->name) {
                 SimpleInstance *callInst = new SimpleInstance(functionClass);
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
-    /*
-    XXX not prototype object function properties, like ECMA3
-            writeDynamicProperty(dateClass->prototype, new Multiname(world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-    */
-    /*
-    XXX not static members, since those can't be accessed from the instance
-              Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
-              defineLocalMember(&env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-    */
                 InstanceMember *m = new InstanceMethod(callInst);
                 defineInstanceMember(builtinClass, &cxt, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
 
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->fWrap = callInst->fWrap;
-                writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-                fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT);
+                createDynamicProperty(builtinClass->prototype, &world.identifiers[pf->name], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, true);
+                createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                 pf++;
             }
         }
@@ -4167,6 +4176,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             call(NULL),
             construct(JS2Engine::defaultConstructor),
             read(defaultReadProperty),
+            readPublic(defaultReadPublicProperty),
             write(defaultWriteProperty),
             bracketRead(defaultBracketReadProperty),
             bracketWrite(defaultBracketReadProperty),
