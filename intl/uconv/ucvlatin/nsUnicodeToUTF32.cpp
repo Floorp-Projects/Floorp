@@ -194,7 +194,7 @@ static nsresult FinishCommon(char * aDest,
 //----------------------------------------------------------------------
 // Class nsUnicodeToUTF32 [implementation]
 
-NS_IMPL_ISUPPORTS1(nsUnicodeToUTF32, nsIUnicodeEncoder);
+NS_IMPL_ISUPPORTS1(nsUnicodeToUTF32, nsIUnicodeEncoder)
 
 
 //----------------------------------------------------------------------

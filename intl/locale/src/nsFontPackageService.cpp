@@ -60,7 +60,7 @@ static PRInt8 mZHCNState = eInit;
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFontPackageService, 
    nsIFontPackageService,
-   nsIFontPackageProxy);
+   nsIFontPackageProxy)
 
 /* from nsIFontPackageSercice.h */
 nsFontPackageService::nsFontPackageService() : mHandler(nsnull)

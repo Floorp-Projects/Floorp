@@ -273,8 +273,8 @@ void nsEUCSampler::CalFreq()
 }
 
 //----------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector);
-NS_IMPL_ISUPPORTS1(nsXPCOMStringDetector, nsIStringCharsetDetector);
+NS_IMPL_ISUPPORTS1(nsXPCOMDetector, nsICharsetDetector)
+NS_IMPL_ISUPPORTS1(nsXPCOMStringDetector, nsIStringCharsetDetector)
 nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier* const * aVerifierSet, nsEUCStatistics* const * aStatisticsSet)
 {
   mClassRunSampler = (nsnull != aStatisticsSet);

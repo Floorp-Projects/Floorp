@@ -56,8 +56,8 @@
 typedef char byte;
 
 // XPCOM stuff
-NS_IMPL_ADDREF(nsUnicodeToX11Johab);
-NS_IMPL_RELEASE(nsUnicodeToX11Johab);
+NS_IMPL_ADDREF(nsUnicodeToX11Johab)
+NS_IMPL_RELEASE(nsUnicodeToX11Johab)
 nsresult nsUnicodeToX11Johab::QueryInterface(REFNSIID aIID,
                                           void** aInstancePtr)
 {

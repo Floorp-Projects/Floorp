@@ -164,7 +164,7 @@ nsTTFontEncoderInfo FEI_windows_1252 = {
 //
 ///////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsFreeType2, nsIFreeType2);
+NS_IMPL_ISUPPORTS1(nsFreeType2, nsIFreeType2)
 
 //
 // Since the Freetype2 library may not be available on the user's

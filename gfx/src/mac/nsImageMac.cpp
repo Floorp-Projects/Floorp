@@ -133,7 +133,7 @@ nsImageMac::~nsImageMac()
     
 }
 
-NS_IMPL_ISUPPORTS2(nsImageMac, nsIImage, nsIImageMac);
+NS_IMPL_ISUPPORTS2(nsImageMac, nsIImage, nsIImageMac)
 
 /** ---------------------------------------------------
  *  See documentation in nsImageMac.h

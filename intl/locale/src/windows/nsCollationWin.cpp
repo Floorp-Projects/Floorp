@@ -51,7 +51,7 @@
 #include <windows.h>
 #undef CompareString
 
-NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation);
+NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation)
 
 
 nsCollationWin::nsCollationWin() 

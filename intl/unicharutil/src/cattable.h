@@ -1508,5 +1508,5 @@ static PRUint8 GetCat(PRUnichar u)
         return 4; 
 
     return 0; // UNDEFINE 
-};
+}
 // total data size = 1988

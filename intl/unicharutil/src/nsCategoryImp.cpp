@@ -43,7 +43,7 @@
 #include "nsCategoryImp.h"
 #include "cattable.h"
 
-NS_IMPL_ISUPPORTS1(nsCategoryImp, nsIUGenCategory);
+NS_IMPL_ISUPPORTS1(nsCategoryImp, nsIUGenCategory)
 
 
 nsCategoryImp::nsCategoryImp()

@@ -123,7 +123,7 @@ inline unsigned char mac_sort_tbl_search(const unsigned char ch, const unsigned 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS1(nsCollationMac, nsICollation);
+NS_IMPL_ISUPPORTS1(nsCollationMac, nsICollation)
 
 
 nsCollationMac::nsCollationMac() 

@@ -336,7 +336,7 @@ nsJISx4501LineBreaker::~nsJISx4501LineBreaker()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsJISx4501LineBreaker, nsILineBreaker);
+NS_IMPL_ISUPPORTS1(nsJISx4501LineBreaker, nsILineBreaker)
 
 #define U_PERIOD ((PRUnichar) '.')
 #define U_COMMA ((PRUnichar) ',')

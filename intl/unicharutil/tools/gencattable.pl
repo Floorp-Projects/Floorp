@@ -276,7 +276,7 @@ foreach $s ( sort(@special) ) {
 
 
 
-printf OUT "    return 0; // UNDEFINE \n};\n";
+printf OUT "    return 0; // UNDEFINE \n}\n";
 
 printf OUT "// total data size = $totaldata\n";
 #$total = 0;

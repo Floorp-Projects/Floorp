@@ -120,8 +120,8 @@ NS_IMETHODIMP nsDrawingSurfaceMac::QueryInterface(REFNSIID aIID, void** aInstanc
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsDrawingSurfaceMac);
-NS_IMPL_RELEASE(nsDrawingSurfaceMac);
+NS_IMPL_ADDREF(nsDrawingSurfaceMac)
+NS_IMPL_RELEASE(nsDrawingSurfaceMac)
 
 #pragma mark-
 

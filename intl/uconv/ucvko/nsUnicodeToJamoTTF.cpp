@@ -159,7 +159,7 @@ static nsresult     ScanDecomposeSyllable (PRUnichar *aIn, PRInt32* aLength,
 //----------------------------------------------------------------------
 // Class nsUnicodeToJamoTTF [implementation]
   
-NS_IMPL_ISUPPORTS2(nsUnicodeToJamoTTF, nsIUnicodeEncoder, nsICharRepresentable);
+NS_IMPL_ISUPPORTS2(nsUnicodeToJamoTTF, nsIUnicodeEncoder, nsICharRepresentable)
 
 NS_IMETHODIMP 
 nsUnicodeToJamoTTF::SetOutputErrorBehavior(PRInt32 aBehavior, 

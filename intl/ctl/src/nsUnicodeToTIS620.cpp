@@ -36,8 +36,8 @@
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 // XPCOM stuff
-NS_IMPL_ADDREF(nsUnicodeToTIS620);
-NS_IMPL_RELEASE(nsUnicodeToTIS620);
+NS_IMPL_ADDREF(nsUnicodeToTIS620)
+NS_IMPL_RELEASE(nsUnicodeToTIS620)
 
 PRInt32
 nsUnicodeToTIS620::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList) 

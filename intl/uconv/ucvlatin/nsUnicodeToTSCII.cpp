@@ -56,7 +56,7 @@
 //----------------------------------------------------------------------
 // Class nsUnicodeToTSCII [implementation]
   
-NS_IMPL_ISUPPORTS2(nsUnicodeToTSCII, nsIUnicodeEncoder, nsICharRepresentable);
+NS_IMPL_ISUPPORTS2(nsUnicodeToTSCII, nsIUnicodeEncoder, nsICharRepresentable)
 
 /* 
  * During UCS-4 to TSCII conversion, mState contains 

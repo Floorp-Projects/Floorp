@@ -58,7 +58,7 @@
 #include "nsLocaleConstructors.h"
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner)
 
 static NS_METHOD
 AddCategoryEntry(const char* category,
@@ -408,4 +408,4 @@ static nsModuleComponentInfo components[] =
 };
 
 
-NS_IMPL_NSGETMODULE(nsI18nModule, components);
+NS_IMPL_NSGETMODULE(nsI18nModule, components)

@@ -262,7 +262,7 @@ const PRUnichar * aSrc, PRInt32 aSrcLength,
 {
   *aDestLength = aSrcLength;
   return NS_OK;
-};
+}
 
 NS_IMETHODIMP nsUnicodeToLangBoxArabic16::Finish(
       char * aDest, PRInt32 * aDestLength)
