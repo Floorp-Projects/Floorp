@@ -390,7 +390,9 @@ nsBrowserAppCore::WalletSafeFillin()
   shell = nsnull;
   nsCOMPtr<nsIWebShell> webcontent; 
   mWebShell->FindChildWithName(nsAutoString("content"), *getter_AddRefs(webcontent));
-  shell = GetPresShellFor(webcontent);
+  nsCOMPtr<nsIWebShell> webcontent2; 
+  webcontent->ChildAt(1, (nsIWebShell*&)webcontent2); 
+  shell = GetPresShellFor(webcontent2);
 
   nsIWalletService *walletservice;
   nsresult res;
