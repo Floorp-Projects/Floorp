@@ -611,8 +611,73 @@ void DumpVersion(char *appname)
 	printf("%s: version info\n", appname);
 }
 
+#ifdef DEBUG_ramiro
+#define CRAWL_STACK_ON_SIGSEGV
+#endif // DEBUG_ramiro
+
+#ifdef CRAWL_STACK_ON_SIGSEGV
+
+#include <signal.h>
+#include <unistd.h>
+#include "nsTraceRefcnt.h"
+
+extern "C" char * strsignal(int);
+
+static char _progname[1024] = "huh?";
+
+void
+ah_crap_handler(int signum)
+{
+  PR_CurrentThread();
+
+  printf("prog = %s\npid = %d\nsignal = %s\n",
+         _progname,
+         getpid(),
+         strsignal(signum));
+  
+  char stack[4096];
+  
+  nsTraceRefcnt::WalkTheStack(stack, sizeof(stack));
+  
+  // Convert all spaces between symbols to newlines for readability
+  char * needle  = "+0x";
+  char * haystack  = stack;
+  char * sp = NULL;
+  
+  while((sp = strstr(haystack,needle)))
+  {
+    char * ws = strchr(sp,' ');
+
+    if (ws)
+    {
+      *ws = '\n';
+
+      haystack = ws + 1;
+    }
+  }
+
+  printf("stack = %s\n\n",stack);
+
+  printf("Sleeping for 5 minutes.\n");
+  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+         _progname,
+         getpid());
+
+  sleep(300);
+
+  printf("Done sleeping...\n");
+} 
+#endif // CRAWL_STACK_ON_SIGSEGV
+
 int main(int argc, char* argv[])
 {
+#ifdef CRAWL_STACK_ON_SIGSEGV
+  strcpy(_progname,argv[0]);
+  signal(SIGSEGV, ah_crap_handler);
+  signal(SIGILL, ah_crap_handler);
+  signal(SIGABRT, ah_crap_handler);
+#endif // CRAWL_STACK_ON_SIGSEGV
+
   nsresult rv;
 
   /* -help and -version should return quick */
