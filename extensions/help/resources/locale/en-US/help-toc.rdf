@@ -231,7 +231,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
   <rdf:Description about="#nav-doc">
     <nc:subheadings>
       <rdf:Seq>
@@ -303,7 +302,7 @@
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc"	nc:name="Using Netscape Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc"	nc:name="Using Mozilla Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -311,7 +310,7 @@
   <rdf:Description about="#mail-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-start"	nc:name="Getting Started with Netscape Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-start"	nc:name="Getting Started with Mozilla Mail" nc:link="chrome://help/locale/mail_help.html" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -621,7 +620,7 @@
   <rdf:Description about="#mail-doc-address">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Netscape Mail Address Books" nc:link="chrome://help/locale/mail_help.html#about_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mozilla Mail Address Books" nc:link="chrome://help/locale/mail_help.html#about_address_books" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1019,7 +1018,7 @@
  <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Customizing Netscape 6"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-doc" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1232,7 +1231,7 @@
 <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Netscape Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Mozilla Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1619,7 +1618,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
 <rdf:Description about="#using-help-certs">
     <nc:subheadings>
       <rdf:Seq>
@@ -1670,7 +1668,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
 <rdf:Description about="#using-help-certs">
     <nc:subheadings>
       <rdf:Seq>
@@ -1711,7 +1708,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
 <rdf:Description about="#using-help-certs-validation">
     <nc:subheadings>
       <rdf:Seq>
@@ -1721,8 +1717,6 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-
-
 
 <!-- DIALOG BOX HELP CONTENT STARTS-->
 
@@ -1792,7 +1786,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
 <!-- NAVIGATOR SETTINGS CONTENT -->
 
 
@@ -1856,7 +1849,6 @@
     </nc:subheadings>
   </rdf:Description>
 
-
 <!-- COMPOSER SETTINGS CONTENT -->
 
 <rdf:Description about="#prefs-help">
@@ -1878,9 +1870,6 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-
-
-
 
 <!-- MAIL & NEWSGROUPS SETTINGS CONTENT -->
 
