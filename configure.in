@@ -387,7 +387,6 @@ AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
-if test -z "$SKIP_PATH_CHECKS"; then
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
@@ -396,7 +395,7 @@ AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
-AC_CHECK_PROGS(PERL, $PERL perl5 perl )
+AC_PATH_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
@@ -435,7 +434,15 @@ if test -z "$XARGS" || test "$XARGS" = ":"; then
 fi
 
 dnl Be sure the make we use is GNU make.
-AC_PATH_PROGS(MAKE, gmake make, :)
+dnl on win32, gmake.exe is the generally the wrong version
+case "$target_os" in
+cygwin*|mingw*|mks*|msvc*)
+    AC_PATH_PROGS(MAKE, $MAKE make gmake, :)
+    ;;
+*)
+    AC_PATH_PROGS(MAKE, $MAKE gmake make, :)
+    ;;
+esac
 _make_try=`$MAKE --version 2>/dev/null | grep GNU`
 if test ! "$_make_try"
 then
@@ -458,6 +465,7 @@ if test "$_MAKE_MAJOR_VERSION" -lt "$MAKE_MAJOR_VERSION" || \
         "$_MAKE_MINOR_VERSION" -lt "$MAKE_MINOR_VERSION"; then
    AC_MSG_ERROR([GNU Make $MAKE_VERSION or higher is required to build Mozilla.])
 fi
+AC_SUBST(MAKE)
 
 AC_PATH_XTRA
 
@@ -467,8 +475,6 @@ if test "$no_x" != "yes"; then
 fi
 
 XCFLAGS="$X_CFLAGS"
-
-fi # SKIP_PATH_CHECKS
 
 dnl ========================================================
 dnl set the defaults first
@@ -972,9 +978,6 @@ case "$target" in
         _pwd=`pwd`
          CYGWIN_WRAPPER="sh ${_pwd}/${srcdir}/build/cygwin-wrapper"
     fi
-    if test -z "$PERL"; then
-        PERL=perl
-    fi
     _WIN32_PERL=$PERL
     if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
         PERL="${CYGWIN_WRAPPER} -up ${PERL}"
@@ -984,6 +987,9 @@ case "$target" in
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
     RC='$(CYGWIN_WRAPPER) rc.exe'
+    # certain versions of cygwin's makedepend barf on the 
+    # #include <string> vs -I./dist/include/string issue so don't use it
+    SYSTEM_MAKEDEPEND=
     if test -n "$GNU_CC"; then
         CC="$CC -mno-cygwin"
         CXX="$CXX -mno-cygwin"
