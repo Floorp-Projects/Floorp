@@ -802,11 +802,13 @@ static REGERR nr_Lock(REGFILE *reg)
         /* lock the object */
         PR_Lock( reg->lock );
 
+#if NOCACHE_HDR
         /* try to refresh header info */
         status = nr_ReadHdr(reg);
         if ( status != REGERR_OK ) {
             PR_Unlock( reg->lock );
         }
+#endif
     }
 
     return status;
