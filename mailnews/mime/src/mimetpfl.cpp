@@ -296,25 +296,23 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     PRUnichar* wresult = nsnull;
     nsresult rv = NS_OK;
 
+    // we should modify scantxt to take a char * instead of a unicode string so we can
+    // reduce the number of string copying going on.
+  
     rv = conv->ScanTXT(strline.GetUnicode(),obj->options->whattodo, &wresult);
 
     if (NS_FAILED(rv))
       return -1;
 
     //XXX I18N Converting PRUnichar* to char*
-    nsAutoString strresult(wresult);
-    char* cresult = strresult.ToNewCString();
-    Recycle(wresult);
-    if (!cresult)
-      return -1;
-
+    // avoid an extra string copy by using nsSubsumeStr, this transfers ownership of
+    // wresult to strresult so don't try to free wresult later.
+    nsString strresult(nsSubsumeStr(wresult, PR_TRUE /* assume ownership */, nsCRT::strlen(wresult)));
     PRInt32   copyLen = strresult.Length();
-    if (copyLen > (obj->obuffer_size - 10))
-      copyLen = obj->obuffer_size - 10;
 
-    nsCRT::memcpy(templine, cresult, copyLen);
-    obj->obuffer[copyLen] = '\0';
-    Recycle(cresult);
+    // avoid yet another extra string copy of the line by using .ToCString which will
+    // convert and copy directly into the buffer we have already allocated.
+    strresult.ToCString(templine, buffersizeneeded - 10); 
   }
   else
   {
