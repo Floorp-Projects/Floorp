@@ -20,14 +20,28 @@
              prefstring="mail.server.%serverkey%.name"/>
   </hbox>
 
-  <separator/>
+  <separator class="thin"/>
 
-  <label value="&localPath.label;" control="server.localPath"
-         accesskey="&localPath.accesskey;"/>
-  <hbox align="center">
-    <textbox readonly="true" wsm_persist="true" flex="1" id="server.localPath" datatype="nsIFileSpec"
-             prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
-    <button id="browseForLocalFolder" label="&browseFolder.label;" filepickertitle="&localFolderPicker.label;"
-            accesskey="&browseFolder.accesskey;" oncommand="BrowseForLocalFolders()"/>
-  </hbox>
+  <groupbox>
+    <caption label="&messageStorage.label;"/>
+
+    <vbox align="start">
+      <checkbox wsm_persist="true" id="server.emptyTrashOnExit"
+                label="&emptyTrashOnExit.label;"
+                accesskey="&emptyTrashOnExit.accesskey;"
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
+    </vbox>
+
+    <separator class="thin"/>
+
+    <label value="&localPath.label;" control="server.localPath"
+           accesskey="&localPath.accesskey;"/>
+    <hbox align="center">
+      <textbox readonly="true" wsm_persist="true" flex="1" id="server.localPath" datatype="nsIFileSpec"
+               prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
+      <button id="browseForLocalFolder" label="&browseFolder.label;" filepickertitle="&localFolderPicker.label;"
+              accesskey="&browseFolder.accesskey;" oncommand="BrowseForLocalFolders()"/>
+    </hbox>
+  </groupbox>
 </page>
