@@ -26,6 +26,13 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
+#ifndef DEBUG
+// XXX adding mLastUsedDirectory and code for handling last used folder on File Open/Save
+// caused crashes in DEBUG builds on some machines - see comments for bug 177720 
+// works well on "normal" builds
+#define FILEPICKER_SAVE_LAST_DIR 1
+#endif
+
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
@@ -88,6 +95,10 @@ protected:
 	nsCOMPtr<nsILocalFile>        mDisplayDirectory;
 	PRInt16                       mSelectedType;
 	nsCOMPtr <nsISupportsArray>   mFiles;
+
+#ifdef FILEPICKER_SAVE_LAST_DIR
+	static char                      mLastUsedDirectory[];
+#endif
 };
 
 class nsFilePanelBeOS : public BLooper, public BFilePanel
