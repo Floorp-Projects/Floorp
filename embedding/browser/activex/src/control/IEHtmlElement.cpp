@@ -83,7 +83,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::setAttribute(BSTR strAttributeName, VA
 
 	// Get the name from the BSTR
 	USES_CONVERSION;
-	nsString szName = OLE2W(strAttributeName);
+	nsString szName(OLE2W(strAttributeName));
 
 	// Get the value from the variant
 	CComVariant vValue;
@@ -91,7 +91,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::setAttribute(BSTR strAttributeName, VA
 	{
 		return E_INVALIDARG;
 	}
-	nsString szValue = OLE2W(vValue.bstrVal);
+	nsString szValue(OLE2W(vValue.bstrVal));
 
 	nsIDOMElement *pIDOMElement = nsnull;
 	if (FAILED(GetDOMElement(&pIDOMElement)))
@@ -120,7 +120,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::getAttribute(BSTR strAttributeName, LO
 
 	// Get the name from the BSTR
 	USES_CONVERSION;
-	nsString szName = OLE2W(strAttributeName);
+	nsString szName(OLE2W(strAttributeName));
 
 	nsIDOMElement *pIDOMElement = nsnull;
 	if (FAILED(GetDOMElement(&pIDOMElement)))
@@ -168,7 +168,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::removeAttribute(BSTR strAttributeName,
 
 	// Get the name from the BSTR
 	USES_CONVERSION;
-	nsString szName = OLE2W(strAttributeName);
+	nsString szName(OLE2W(strAttributeName));
 
 	// Remove the attribute
 	nsresult nr = pIDOMElement->RemoveAttribute(szName);
