@@ -89,6 +89,8 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
     {nsMsgSearchAttrib::To,			"to"},
     {nsMsgSearchAttrib::CC,			"cc"},
     {nsMsgSearchAttrib::ToOrCC,		"to or cc"},
+    {nsMsgSearchAttrib::AgeInDays,   "age in days"},
+    {nsMsgSearchAttrib::Label,       "label"},
     {nsMsgSearchAttrib::SenderInAddressBook,		"from in ab"}
 };
 
@@ -213,6 +215,8 @@ nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 	{nsMsgSearchOp::EndsWith,	"ends with"},
     {nsMsgSearchOp::IsInAB,	 "is in ab"},
     {nsMsgSearchOp::IsntInAB,	"isn't in ab"},
+    {nsMsgSearchOp::IsGreaterThan, "is greater than"},
+    {nsMsgSearchOp::IsLessThan, "is less than"}
 };
 
 nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)
@@ -428,6 +432,16 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 			outputStr += dateBuf;
 			break;
 		}
+        case nsMsgSearchAttrib::AgeInDays:
+        {
+            outputStr.AppendInt(m_value.u.age);
+            break;
+        }
+        case nsMsgSearchAttrib::Label:
+        {
+            outputStr.AppendInt(m_value.u.label);
+            break;
+        }
 		case nsMsgSearchAttrib::MsgStatus:
 		{
 			nsCAutoString status;
@@ -519,6 +533,12 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 		case nsMsgSearchAttrib::Priority:
 			NS_MsgGetPriorityFromString(inStream, &m_value.u.priority);
 			break;
+        case nsMsgSearchAttrib::AgeInDays:
+            m_value.u.age = atoi(inStream);
+            break;
+        case nsMsgSearchAttrib::Label:
+            m_value.u.label = atoi(inStream);
+            break;
 		default:
 			NS_ASSERTION(PR_FALSE, "invalid attribute parsing search term value");
 			break;
