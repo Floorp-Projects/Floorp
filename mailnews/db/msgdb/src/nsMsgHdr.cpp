@@ -20,6 +20,11 @@
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 NS_IMPL_ADDREF(nsMsgHdr)
 NS_IMPL_RELEASE(nsMsgHdr)
 
@@ -31,7 +36,7 @@ nsMsgHdr::QueryInterface(REFNSIID iid, void** result)
 
 	*result = nsnull;
     if(iid.Equals(nsIMessage::IID()) ||
-       iid.Equals(::nsISupports::IID())) {
+       iid.Equals(kISupportsIID)) {
 		*result = NS_STATIC_CAST(nsIMessage*, this);
 		AddRef();
 		return NS_OK;
