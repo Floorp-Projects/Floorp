@@ -315,8 +315,8 @@ random_init(JSRuntime *rt)
     rt->rngInitialized = JS_TRUE;
 
     /* rt->rngMultiplier = 0x5DEECE66DL */
-    JSLL_ISHL(tmp, 0x5D, 32);
-    JSLL_UI2L(tmp2, 0xEECE66DL);
+    JSLL_ISHL(tmp, 0x5, 32);
+    JSLL_UI2L(tmp2, 0xDEECE66DL);
     JSLL_OR(rt->rngMultiplier, tmp, tmp2);
 
     /* rt->rngAddend = 0xBL */
@@ -327,8 +327,8 @@ random_init(JSRuntime *rt)
     JSLL_SHL(tmp2, tmp, 48);
     JSLL_SUB(rt->rngMask, tmp2, tmp);
 
-    /* rt->rngDscale = (jsdouble)(1L << 54) */
-    JSLL_SHL(tmp2, tmp, 54);
+    /* rt->rngDscale = (jsdouble)(1L << 53) */
+    JSLL_SHL(tmp2, tmp, 53);
     JSLL_L2D(rt->rngDscale, tmp2);
 
     /* Finally, set the seed from current time. */
@@ -356,7 +356,7 @@ random_nextDouble(JSRuntime *rt)
     int64 tmp, tmp2;
     jsdouble d;
 
-    JSLL_ISHL(tmp, random_next(rt, 27), 27);
+    JSLL_ISHL(tmp, random_next(rt, 26), 27);
     JSLL_UI2L(tmp2, random_next(rt, 27));
     JSLL_ADD(tmp, tmp, tmp2);
     JSLL_L2D(d, tmp);
