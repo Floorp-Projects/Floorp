@@ -23,7 +23,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=rdfdomds
-LIBRARY_NAME=rdfdomds
 IS_COMPONENT=1
 
 SAMPLES_DIR = $(DIST)/bin/res/samples/rdf
