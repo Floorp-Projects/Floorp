@@ -364,7 +364,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		} else
 			mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
-		short			wDefProcID;
+		short			wDefProcID = kWindowDocumentProc;
 		Boolean		goAwayFlag;
 		short			hOffset;
 		short			vOffset;
@@ -534,7 +534,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     ::SetWindowClass(mWindowPtr, kModalWindowClass);
   
   // Setup the live window resizing
-  if ( mWindowType == eWindowType_toplevel ) {
+  if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
     const UInt32 kWindowLiveResizeAttribute = (1L << 28);     // BAD!!! our headers don't yet support this
 
     ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
