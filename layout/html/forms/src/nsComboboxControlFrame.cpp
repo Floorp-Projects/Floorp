@@ -1091,7 +1091,10 @@ nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
     NS_RELEASE(listFrame);
   }
   // If we added the first option, we might need to select it.
-  MakeSureSomethingIsSelected(aPresContext);
+  // We should call MakeSureSomethingIsSelected here, but since it
+  // it changes selection, which currently causes a reframe, and thus
+  // deletes the frame out from under the caller, causing a crash. (Bug 17995)
+  // XXX BAD MakeSureSomethingIsSelected(aPresContext);
   return rv;
 }
   
