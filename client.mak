@@ -326,6 +326,8 @@ clobber_xpconnect:
 	nmake -f makefile.win clobber_all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js
 	nmake -f makefile.win clobber_all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src\xpconnect
+	nmake -f makefile.win clobber_all
 
 clobber_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
@@ -346,6 +348,8 @@ depend_xpconnect:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
 	nmake -f makefile.win depend
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
+	nmake -f makefile.win depend
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src\xpconnect
 	nmake -f makefile.win depend
 
 build_nspr: 
@@ -368,6 +372,8 @@ build_xpconnect: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
 	nmake -f makefile.win install
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
+	nmake -f makefile.win all
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src\xpconnect
 	nmake -f makefile.win all
 
 build_seamonkey:
