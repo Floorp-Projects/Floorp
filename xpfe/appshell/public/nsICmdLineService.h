@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsICmdLineervice_h__
+#ifndef nsICmdLineService_h__
 #define nsICmdLineService_h__
 
 #include "nsISupports.h"
