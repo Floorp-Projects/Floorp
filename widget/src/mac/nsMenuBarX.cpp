@@ -1005,6 +1005,8 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
   // FIXME: Should probably figure out how to init this with the actual
   // pressed keys, but this is a big old edge case anyway. -dwh
   event.isShift = event.isControl = event.isAlt = event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = null;
 
   // See if we have a command element.  If so, we execute on the
   // command instead of on our content element.
