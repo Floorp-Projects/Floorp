@@ -383,16 +383,6 @@ NS_IMETHODIMP nsMailtoUrl::Equals(nsIURI *other, PRBool *_retval)
 	return m_baseURL->Equals(other, _retval);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetURLParser(nsIURLParser * *aURLParser)
-{
-	return m_baseURL->GetURLParser(aURLParser);
-}
-
-NS_IMETHODIMP nsMailtoUrl::SetURLParser(nsIURLParser * aURLParser)
-{
-	return m_baseURL->SetURLParser(aURLParser);
-}
-
 NS_IMETHODIMP nsMailtoUrl::Clone(nsIURI **_retval)
 {
 	return m_baseURL->Clone(_retval);

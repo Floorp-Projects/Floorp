@@ -380,16 +380,6 @@ NS_IMETHODIMP nsAddbookUrl::Equals(nsIURI *other, PRBool *_retval)
 	return m_baseURL->Equals(other, _retval);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetURLParser(nsIURLParser * *aURLParser)
-{
-	return m_baseURL->GetURLParser(aURLParser);
-}
-
-NS_IMETHODIMP nsAddbookUrl::SetURLParser(nsIURLParser * aURLParser)
-{
-	return m_baseURL->SetURLParser(aURLParser);
-}
-
 NS_IMETHODIMP nsAddbookUrl::Clone(nsIURI **_retval)
 {
 	return m_baseURL->Clone(_retval);

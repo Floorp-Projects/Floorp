@@ -226,18 +226,6 @@ nsSimpleURI::SetPath(const char* path)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetURLParser(nsIURLParser* *result)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetURLParser(nsIURLParser* URLParser)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 {
     PRBool eq = PR_FALSE;

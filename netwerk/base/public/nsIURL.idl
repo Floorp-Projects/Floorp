@@ -114,7 +114,7 @@ interface nsIURL : nsIURI
     attribute string fileExtension;
 };
 
-%{C++
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Protocol writers can obtain a default nsIURL implementation by calling the
@@ -123,6 +123,21 @@ interface nsIURL : nsIURI
  * instance from the component manager, the Init routine must be called on it
  * to initialize it from the user's URL spec. 
  */
+
+[scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]
+interface nsIStandardURL : nsISupports
+{
+    const unsigned long URLTYPE_STANDARD        = 1;
+    const unsigned long URLTYPE_AUTHORITY       = 2;
+    const unsigned long URLTYPE_NO_AUTHORITY    = 3;
+
+    void init(in unsigned long urlType,
+              in long defaultPort,
+              in string initialSpec,
+              in nsIURI initialBaseURI);
+};
+
+%{C++
 
 #define NS_STANDARDURL_CID                           \
 { /* de9472d0-8034-11d3-9399-00104ba0fd40 */         \

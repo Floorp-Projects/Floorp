@@ -402,16 +402,6 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(const char * aPath)
 	return m_baseURL->SetPath(aPath);
 }
 
-NS_IMETHODIMP nsMsgMailNewsUrl::GetURLParser(nsIURLParser * *aURLParser)
-{
-	return m_baseURL->GetURLParser(aURLParser);
-}
-
-NS_IMETHODIMP nsMsgMailNewsUrl::SetURLParser(nsIURLParser* aURLParser)
-{
-	return m_baseURL->SetURLParser(aURLParser);
-}
-
 NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
 {
 	return m_baseURL->Equals(other, _retval);

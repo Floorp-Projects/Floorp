@@ -1751,7 +1751,7 @@ nsSocketTransport::GetOriginalURI(nsIURI* *aURL)
 
 
   nsresult rv;
-  rv = CallQueryInterface(url, aURL);
+  rv = CallQueryInterface((nsIURL*)url, aURL);
 
   return rv;
 }

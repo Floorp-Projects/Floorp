@@ -355,7 +355,7 @@ nsXMLMIMEDataSource::Serialize() {
 			return rv;
 		buffer+=kExtensions;
 		buffer+="=\"";
-		for ( PRInt32 i = 0; i<(count-1); i++ )
+		for ( PRUint32 i = 0; i<(count-1); i++ )
 		{
 			buffer+=extensions[i];
 			buffer+=",";
