@@ -39,6 +39,9 @@ struct _GtkMozArea
   GtkWidget widget;
   GdkSuperWin *superwin;
   gboolean     toplevel_focus;
+
+  /* store away the toplevel window */
+  GdkWindow *toplevel_window;
 };
   
 struct _GtkMozAreaClass
