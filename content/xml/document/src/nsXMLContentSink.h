@@ -45,7 +45,7 @@
 #include "nsWeakReference.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIStreamLoader.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsICSSLoaderObserver.h"
@@ -56,6 +56,7 @@
 #include "nsSupportsArray.h"
 #include "nsIExpatSink.h"
 #include "nsIDocumentTransformer.h"
+#include "nsCOMPtr.h"
 #include "nsIDocShell.h"
 
 class nsICSSStyleSheet;
@@ -141,11 +142,11 @@ protected:
   static void SplitXMLName(const nsAString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
-  nsINameSpace*    PopNameSpaces();
+  already_AddRefed<nsINameSpace> PopNameSpaces();
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
-  nsIContent* PopContent();
+  already_AddRefed<nsIContent> PopContent();
 
 
   nsresult ProcessBASETag(nsIContent* aContent);
@@ -179,11 +180,10 @@ protected:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsIParser*       mParser;
   nsIContent*      mDocElement;
-  nsAutoVoidArray* mNameSpaceStack;
   PRUnichar*       mText;
   nsICSSLoader*    mCSSLoader;  
 
-  nsSupportsArray mScriptElements;
+  nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
   XMLContentSinkState mState;
 
   nsString mRef; // ScrollTo #ref
@@ -201,9 +201,10 @@ protected:
   PRPackedBool mPrettyPrintHasFactoredElements;
   PRPackedBool mHasProcessedBase;
 
-  nsCOMPtr<nsISupportsArray>          mContentStack;
-  nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;
-  nsCOMPtr<nsIDocumentTransformer>    mXSLTProcessor;
+  nsCOMArray<nsIContent>           mContentStack;
+  nsCOMArray<nsINameSpace>         mNameSpaceStack;
+  nsCOMPtr<nsINodeInfoManager>     mNodeInfoManager;
+  nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
 };
 
 #endif // nsXMLContentSink_h__

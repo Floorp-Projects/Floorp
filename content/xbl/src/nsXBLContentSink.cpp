@@ -445,7 +445,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
 void 
 nsXBLContentSink::ConstructBinding()
 {
-  nsCOMPtr<nsIContent> binding = getter_AddRefs(GetCurrentContent());
+  nsCOMPtr<nsIContent> binding = GetCurrentContent();
   nsAutoString id;
   binding->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
   nsCAutoString cid; cid.AssignWithConversion(id);
