@@ -34,6 +34,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsProxiedService.h"
+#include "nsICacheVisitor.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -178,7 +179,20 @@ nsCacheService::CreateSession(const char *          clientID,
 /* void visitEntries (in nsICacheVisitor visitor); */
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsAutoLock cacheService(mCacheServiceLock);
+     
+    // XXX record the fact that a visitation is in progress, i.e. keep
+    // list of visitors in progress.
+    
+    nsresult rv = mMemoryDevice->Visit(visitor);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDiskDevice->Visit(visitor);
+    if (NS_FAILED(rv)) return rv;
+    
+    // XXX notify any shutdown process that visitation is complete for THIS visitor.
+
+    return NS_OK;
 }
 
 
