@@ -25,11 +25,6 @@ class nsString;
 { 0x2d97fbf0, 0x93b5, 0x11d1,        \
   {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
-#define NS_IB2UCONVERTER_IID  \
-{ 0x35e40290, 0x93b5, 0x11d1, \
-  {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
-
-
 /** Abstract unicode character input stream
  *  @see nsIInputStream
  */
@@ -52,21 +47,6 @@ extern NS_BASE nsresult
   NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
                                  nsString* aString);
 
-/// Abstract interface for converting from bytes to unicode characters
-class nsIB2UConverter : public nsISupports {
-public:
-  /** aDstLen is updated to indicate how much data was translated into
-   * aDst; aSrcLen is updated to indicate how much data was used in
-   * the source buffer.
-   */
-  NS_IMETHOD Convert(PRUnichar* aDst,
-                     PRUint32 aDstOffset,
-                     PRUint32& aDstLen,
-                     const char* aSrc,
-                     PRUint32 aSrcOffset,
-                     PRUint32& aSrcLen) = 0;
-};
-
 /** Create a new nsUnicharInputStream that provides a converter for the
  * byte input stream aStreamToWrap. If no converter can be found then
  * nsnull is returned and the error code is set to
@@ -78,14 +58,5 @@ extern NS_BASE nsresult
                         nsIInputStream* aStreamToWrap,
                         PRInt32 aBufferSize = 0,
                         nsString* aCharSet = nsnull);
-
-/** Create a new nsB2UConverter for the given character set. When given
- * nsnull, the converter for iso-latin1 to unicode is provided. If no
- * converter can be found, nsnull is returned.
- */
-extern NS_BASE nsresult
-  NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
-                     nsISupports* aOuter,
-                     nsString* aCharSet = nsnull);
 
 #endif /* nsUnicharInputStream_h___ */
