@@ -177,6 +177,10 @@ if (!defined $::query_branch) {
 }
 $::query_branchtype = $::FORM{'branchtype'};
 
+if ($::query_branch eq 'HEAD' && 
+    ($::query_branchtype eq 'match' || $::query_branchtype eq 'regexp')) {
+    $::query_branch_head = 1 ;
+}
 
 #
 # tags
@@ -623,12 +627,22 @@ sub query_to_english {
         $english .= "to file " . html_quote($::query_file) . " ";
     }
 
-    if( ! ($::query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
-        if($::query_branch eq '' ){
+    if (!$::query_branch_head) {
+        if ($::query_branch eq '') {
             $english .= "on all branches ";
-        }
-        else {
-            $english .= "on branch <i>" . html_quote($::query_branch) . "</i> ";
+        } else {
+            if ($::query_branchtype eq 'notregexp') {
+                if ($::query_branch eq 'HEAD') {
+                    $english .= "not on ";
+                } else {
+                    $english .= "not like ";
+                }
+            } elsif ($::query_branchtype eq 'regexp') {
+                $english .= "like ";
+            } else {
+                $english .= "on ";
+            }
+            $english .= "branch <i>" . html_quote($::query_branch) . "</i> ";
         }
     }
 

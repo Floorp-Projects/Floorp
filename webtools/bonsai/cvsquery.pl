@@ -107,10 +107,6 @@ sub query_checkins {
         $mod_map{$i} = $NOT_LOCAL;
     }
 
-    if( $::query_branch =~ /^[ ]*HEAD[ ]*$/i ){
-        $::query_branch_head = 1;
-    }
-
     $begin_tag = "";
     $end_tag = "";
 
@@ -149,8 +145,11 @@ sub query_checkins {
             $qstring .=
                 " and branches.branch regexp $q";
         } elsif ($::query_branchtype eq 'notregexp') {
-            $qstring .=
-                " and not (branches.branch regexp $q) ";
+            if ($::query_branch eq 'HEAD') {
+                $qstring .= " and branches.branch != ''";
+            } else {
+                $qstring .= " and not (branches.branch regexp $q) ";
+            }
         } else {
             $qstring .=
                 " and (branches.branch = $q or branches.branch = ";
