@@ -53,6 +53,42 @@ static PRLogModuleInfo *gRequestObserverProxyLog;
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 //-----------------------------------------------------------------------------
+// ProxyRelease
+//-----------------------------------------------------------------------------
+
+static void *PR_CALLBACK
+ProxyRelease_EventHandlerFunc(PLEvent *ev)
+{
+    nsIRequestObserver *obs =
+        NS_STATIC_CAST(nsIRequestObserver *, PL_GetEventOwner(ev));
+    NS_RELEASE(obs);
+    return nsnull;
+}
+
+static void PR_CALLBACK
+ProxyRelease_EventCleanupFunc(PLEvent *ev)
+{
+    delete ev;
+}
+
+static void
+ProxyRelease(nsIEventQueue *eventQ, nsIRequestObserver *obs)
+{
+    PLEvent *ev = new PLEvent;
+    if (!ev) {
+        NS_ERROR("failed to allocate PLEvent");
+        return;
+    }
+
+    PL_InitEvent(ev, (void *) obs,
+            ProxyRelease_EventHandlerFunc,
+            ProxyRelease_EventCleanupFunc);
+
+    PRStatus rv = eventQ->PostEvent(ev);
+    NS_ASSERTION(rv == PR_SUCCESS, "PostEvent failed");
+}
+
+//-----------------------------------------------------------------------------
 // nsARequestObserverEvent internal class...
 //-----------------------------------------------------------------------------
 
@@ -176,6 +212,23 @@ public:
         (void) observer->OnStopRequest(mRequest, mContext, status);
     }
 };
+
+//-----------------------------------------------------------------------------
+// nsRequestObserverProxy <public>
+//-----------------------------------------------------------------------------
+
+nsRequestObserverProxy::~nsRequestObserverProxy()
+{
+    if (mObserver) {
+        // order is crucial here... we must be careful to clear mObserver
+        // before posting the proxy release event.  otherwise, we'd risk
+        // releasing the object on this thread.
+        nsIRequestObserver *obs = mObserver;
+        NS_ADDREF(obs);
+        mObserver = 0;
+        ProxyRelease(mEventQ, obs);
+    }
+}
 
 //-----------------------------------------------------------------------------
 // nsRequestObserverProxy::nsISupports implementation...
