@@ -525,13 +525,6 @@ void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         col++;
       }
 
-      // Strip trailing whitespace
-      if (s != s0) {
-        if (s[-1] == ' ') {
-          s--;
-        }
-      }
-
       // Get Selection Object
       nsIPresShell     * shell     = aPresContext.GetShell();
       nsIDocument      * doc       = shell->GetDocument();
@@ -600,13 +593,6 @@ void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
           *s++ = ' ';
         } else {
           *s++ = ch;
-        }
-      }
-
-      // Strip trailing whitespace
-      if (s != s0) {
-        if (s[-1] == ' ') {
-          s--;
         }
       }
 
@@ -988,6 +974,9 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   aDesiredSize.height = fm->GetHeight();
   aDesiredSize.ascent = fm->GetMaxAscent();
   aDesiredSize.descent = fm->GetMaxDescent();
+  if ((nsnull != aLineState) && aLineState->mNoWrap) {
+    maxWordWidth = x;
+  }
   if (nsnull != aMaxElementSize) {
     aMaxElementSize->width = maxWordWidth;
     aMaxElementSize->height = fm->GetHeight();
