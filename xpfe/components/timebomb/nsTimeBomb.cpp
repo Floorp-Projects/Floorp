@@ -146,8 +146,10 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
     
     if (NS_SUCCEEDED(rv) && val)
     {
+#ifdef DEBUG
         printf("********  Expired version  ********\n");
-        DisplayURI("chrome://timebomb/content/expireText.xul", PR_TRUE);
+#endif
+        DisplayURI("chrome://timebomb/content/expireText.xul", PR_FALSE);
         *expired = PR_TRUE;
         return NS_OK;
     }
@@ -156,8 +158,10 @@ nsTimeBomb::CheckWithUI(PRBool *expired)
     
     if (NS_SUCCEEDED(rv) && val)
     {
+#ifdef DEBUG
         printf("********  ABOUT TO EXPIRE  ********\n");
-        DisplayURI("chrome://timebomb/content/warnText.xul", PR_TRUE);
+#endif
+        DisplayURI("chrome://timebomb/content/warnText.xul", PR_FALSE);
     }
 
     return NS_OK;
@@ -351,14 +355,14 @@ nsTimeBomb::GetTimebombURL(char* *url)
     if (!mPrefs) return NS_ERROR_NULL_POINTER;
     
     char* string;
-    nsresult rv = mPrefs->CopyCharPref("timebomb.update_url", &string);
+    nsresult rv = mPrefs->CopyCharPref("timebomb.timebombURL", &string);
     if (NS_SUCCEEDED(rv))
     {
         *url = (char*)nsAllocator::Clone(string, (strlen(string)+1)*sizeof(char));
         
         PL_strfree(string);
 
-        if(*url)
+        if(*url == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         return NS_OK;
     }
