@@ -253,6 +253,9 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
 
 void NS_StartupLocalFile()
 {
+#ifdef XP_WIN
+  CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
+#endif
 }
 
 void NS_ShutdownLocalFile()
@@ -260,6 +263,11 @@ void NS_ShutdownLocalFile()
 #ifndef XPCOM_STANDALONE
   nsFSStringConversion::CleanUp();
 #endif /* XPCOM_STANDALONE */
+
+#ifdef XP_WIN
+  CoUninitialize();
+#endif
+
 }
 
 // Unicode interface Wrapper
