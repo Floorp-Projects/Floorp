@@ -236,8 +236,8 @@ private:
   nsCOMPtr<nsISupports> mValue;
 };
 
-DECL_DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, const nsACString&)
-DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, const nsACString&)
+DECL_DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, nsACString&)
+DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, nsACString&)
 
 //
 // Generic pldhash table stuff for mapping one nsISupports to another
