@@ -1,5 +1,0 @@
-# Mozilla User Preferences
-// This is a generated file!
-pref("security.checkxpconnect", true);
-pref("security.policy.default.htmldocument.cookie", "sameOrigin");
-
