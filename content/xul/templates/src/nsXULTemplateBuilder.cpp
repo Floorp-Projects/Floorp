@@ -43,6 +43,10 @@
     variables, or if we want to use the mRule member of a Match. Which
     is right? Is there redundancy here?
 
+  . MatchSet has extra information about the "best match" and "last
+    match" that really seems like it should be a part of
+    ConflictSet::ClusterEntry.
+
   To turn on logging for this module, set:
 
     NSPR_LOG_MODULES nsXULTemplateBuilder:5
@@ -998,7 +1002,7 @@ public:
     PRBool Contains(const Match& aMatch) const {
         return Find(aMatch) != Last(); }
 
-    Match* FindMatchWithHighestPriority();
+    Match* FindMatchWithHighestPriority() const;
 
     const Match* GetLastMatch() const { return mLastMatch; }
     void SetLastMatch(const Match* aMatch) { mLastMatch = aMatch; }
@@ -1008,7 +1012,7 @@ public:
     Iterator Add(nsFixedSizeAllocator& aPool, Match* aMatch) {
         return Insert(aPool, Last(), aMatch); }
 
-    nsresult CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool);
+    nsresult CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool) const;
 
     void Clear();
 
@@ -1089,11 +1093,11 @@ MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
 
 
 nsresult
-MatchSet::CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool)
+MatchSet::CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool) const
 {
     aMatchSet.Clear();
-    for (MatchSet::Iterator match = First(); match != Last(); ++match)
-        aMatchSet.Add(aPool, match.operator->());
+    for (MatchSet::ConstIterator match = First(); match != Last(); ++match)
+        aMatchSet.Add(aPool, NS_CONST_CAST(Match*, match.operator->()));
 
     return NS_OK;
 }
@@ -1145,16 +1149,16 @@ MatchSet::Find(const Match& aMatch)
 }
 
 Match*
-MatchSet::FindMatchWithHighestPriority()
+MatchSet::FindMatchWithHighestPriority() const
 {
     // Find the rule with the "highest priority"; i.e., the rule with
     // the lowest value for GetPriority().
     Match* result = nsnull;
     PRInt32 max = ~(1 << 31); // XXXwaterson portable?
-    for (Iterator match = First(); match != Last(); ++match) {
+    for (ConstIterator match = First(); match != Last(); ++match) {
         PRInt32 priority = match->mRule->GetPriority();
         if (priority < max) {
-            result = match.operator->();
+            result = NS_CONST_CAST(Match*, match.operator->());
             max = priority;
         }
     }
@@ -1501,11 +1505,9 @@ public:
     /**
      * Add a match to the conflict set.
      * @param aMatch the match to add to the conflict set
-     * @param aDidAddKey an out parameter, set to PR_TRUE if the addition
-     *   caused a new cluster key to be created in the conflict set
      * @return NS_OK if no errors occurred
      */
-    nsresult Add(Match* aMatch, PRBool* aDidAddKey);
+    nsresult Add(Match* aMatch);
 
     /**
      * Given a cluster key, which is a container-member pair, return the
@@ -1516,7 +1518,7 @@ public:
      * @param aMatchSet the set of matches that are currently active
      *   for the key.
      */
-    void GetMatchesForClusterKey(const ClusterKey& aKey, MatchSet** aMatchSet);
+    void GetMatchesForClusterKey(const ClusterKey& aKey, const MatchSet** aMatchSet);
 
     /**
      * Given a "source" in the RDF graph, return the set of matches
@@ -1524,8 +1526,18 @@ public:
      * @param aSource an RDF resource that is a "source" in the graph.
      * @param aMatchSet the set of matches that depend on aSource.
      */
-    void GetMatchesWithBindingDependency(nsIRDFResource* aSource, MatchSet** aMatchSet);
+    void GetMatchesWithBindingDependency(nsIRDFResource* aSource, const MatchSet** aMatchSet);
 
+    /**
+     * Remove a memory element from the conflict set. This may
+     * potentially retract matches that depended on the memory
+     * element, as well as trigger previously masked matches that are
+     * now "revealed".
+     * @param aMemoryElement the memory element that is being removed.
+     * @param aNewMatches new matches that have been revealed.
+     * @param aRetractedMatches matches whose validity depended
+     *   on aMemoryElement and have been retracted.
+     */
     void Remove(const MemoryElement& aMemoryElement,
                 MatchSet& aNewMatches,
                 MatchSet& aRetractedMatches);
@@ -1653,9 +1665,11 @@ protected:
     static PRIntn PR_CALLBACK CompareMemoryElements(const void* aLeft, const void* aRight);
 
 
-    // Maps a MemoryElement to the Match objects whose bindings it
-    // participates in. This makes it possible to efficiently update a
-    // match when a binding changes.
+    /**
+     * Maps a MemoryElement to the Match objects whose bindings it
+     * participates in. This makes it possible to efficiently update a
+     * match when a binding changes.
+     */
     PLHashTable* mBindingDependencies;
 
     class BindingEntry {
@@ -1788,12 +1802,10 @@ ConflictSet::Destroy()
 }
 
 nsresult
-ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
+ConflictSet::Add(Match* aMatch)
 {
     // Add a match to the conflict set. This involves adding it to
     // the cluster table, the support table, and the binding table.
-
-    *aDidAddKey = PR_FALSE;
 
     // add the match to a table indexed by instantiation key
     {
@@ -1826,7 +1838,6 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
 
         if (! set->Contains(*aMatch)) {
             set->Add(mPool, aMatch);
-            *aDidAddKey = PR_TRUE;
         }
     }
 
@@ -1873,18 +1884,18 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
 
 
 void
-ConflictSet::GetMatchesForClusterKey(const ClusterKey& aKey, MatchSet** aMatchSet)
+ConflictSet::GetMatchesForClusterKey(const ClusterKey& aKey, const MatchSet** aMatchSet)
 {
     // Retrieve all the matches in a cluster
-    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mClusters, &aKey));
+    *aMatchSet = NS_STATIC_CAST(const MatchSet*, PL_HashTableLookup(mClusters, &aKey));
 }
 
 
 void
-ConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource, MatchSet** aMatchSet)
+ConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource, const MatchSet** aMatchSet)
 {
     // Retrieve all the matches whose bindings depend on the specified resource
-    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
+    *aMatchSet = NS_STATIC_CAST(const MatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
 }
 
 
@@ -2280,16 +2291,13 @@ InstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClo
 
         mRule->InitBindings(mConflictSet, match);
 
-        PRBool didAddKey;
-        mConflictSet.Add(match, &didAddKey);
+        mConflictSet.Add(match);
 
         // Give back our "local" reference. The conflict set will have
         // taken what it needs.
         match->Release();
 
-        if (didAddKey) {
-            newkeys->Add(ClusterKey(*inst, mRule));
-        }
+        newkeys->Add(ClusterKey(*inst, mRule));
     }
     
     return NS_OK;
@@ -4579,7 +4587,7 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
     // to track those?
     ClusterKeySet::ConstIterator last = aNewKeys.Last();
     for (ClusterKeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
-        MatchSet* matches;
+        const MatchSet* matches;
         mConflictSet.GetMatchesForClusterKey(*key, &matches);
 
         NS_ASSERTION(matches != nsnull, "no matched rules for new key");
@@ -4656,15 +4664,10 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
                 BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
                                          VALUE_TO_IRDFRESOURCE(key->mMemberValue),
                                          PR_TRUE, bestmatch, nsnull, nsnull);
+            }
 
-                // Remember the best match as the new "last" match
-                matches->SetLastMatch(bestmatch);
-            }
-            else {
-                // If we *don't* build the content, then pretend we
-                // never saw this match.
-                matches->Remove(bestmatch);
-            }
+            // Remember the best match as the new "last" match
+            NS_CONST_CAST(MatchSet*, matches)->SetLastMatch(bestmatch);
         }
     }
 
@@ -5694,7 +5697,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 
     // Get all the matches whose assignments are currently supported
     // by aSource and aProperty: we'll need to recompute them.
-    MatchSet* matches;
+    const MatchSet* matches;
     mConflictSet.GetMatchesWithBindingDependency(aSource, &matches);
     if (! matches || matches->Empty())
         return NS_OK;
@@ -6135,7 +6138,7 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
     // Iterate through newly added keys to determine which rules fired
     ClusterKeySet::ConstIterator last = newkeys.Last();
     for (ClusterKeySet::ConstIterator key = newkeys.First(); key != last; ++key) {
-        MatchSet* matches;
+        const MatchSet* matches;
         mConflictSet.GetMatchesForClusterKey(*key, &matches);
 
         if (! matches)
@@ -6158,7 +6161,7 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
                                  aContainer, aNewIndexInContainer);
 
         // Remember this as the "last" match
-        matches->SetLastMatch(match);
+        NS_CONST_CAST(MatchSet*, matches)->SetLastMatch(match);
     }
 
     return NS_OK;
