@@ -127,12 +127,9 @@
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
     <!-- Bookmarks Menu -->
-    <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
-             oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
-    <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;" accesskey="&addCurPageAsCmd.accesskey;" 
-             oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, true);"/>
-    <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
-             oncommand="BrowserEditBookmarks();" />
+    <command id="Browser:AddBookmark" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
+    <command id="Browser:AddBookmarkAs" oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, true);"/>
+    <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();" />
   
     <!-- Go Menu -->  
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
@@ -189,8 +186,8 @@
         <menuseparator/>
         <menuitem id="menu_selectAll"/>
         <menuseparator/>
-        <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-        <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+        <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+        <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
@@ -281,10 +278,12 @@
         </rule>
       </template>
       <menupopup>
-        <!-- for some reason these don't work as command="" -->
-        <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
-        <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-        <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
+        <menuitem label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;"
+                  key="addBookmarkKb"   command="Browser:AddBookmark"/>
+        <menuitem label="&addCurPageAsCmd.label;" accesskey="&addCurPageAsCmd.accesskey;"
+                  key="addBookmarkAsKb" command="Browser:AddBookmarkAs"/>
+        <menuitem label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;"
+                  key="manBookmarkKb"   command="Browser:ManageBookmark"/>
         <menuseparator/>
       </menupopup>
     </menu>
