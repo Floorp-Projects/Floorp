@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsISupports.idl"
 
 native int(int);
@@ -115,7 +114,3 @@ interface nsIAppShell : nsISupports
   void Exit();
 
 };
-
-#endif // nsIAppShell_h__
-
-
