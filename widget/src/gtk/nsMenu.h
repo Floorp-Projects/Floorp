@@ -104,7 +104,7 @@ protected:
   nsIMenuBar *mMenuBarParent;
   nsIMenuListener * mListener;
   
-  bool mConstructCalled;
+  PRBool mConstructCalled;
   nsIDOMNode    * mDOMNode;
   nsIWebShell   * mWebShell;
   nsIDOMElement * mDOMElement;

@@ -85,7 +85,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMenuParent    = nsnull;
   mMenuBarParent = nsnull;
   mListener      = nsnull;
-  mConstructCalled = false;
+  mConstructCalled = PR_FALSE;
   
   mDOMNode       = nsnull;
   mWebShell      = nsnull;
@@ -486,7 +486,7 @@ nsEventStatus nsMenu::MenuConstruct(
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   g_print("nsMenu::MenuDestruct called \n");
-  mConstructCalled = false;
+  mConstructCalled = PR_FALSE;
   RemoveAll();
   return nsEventStatus_eIgnore;
 }
