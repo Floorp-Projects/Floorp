@@ -35,41 +35,11 @@ $pull{netlib} = 0;
 $pull{nglayout} = 0;
 $pull{mac} = 0;
 
-$build{all} = 0;
+$build{all} = 1;
 $build{dist} = 0;
 $build{common}= 0;
 $build{nglayout}= 0;
 
-
-#
-# UI
-#
-
-@choices = ("pull_all", "build_all", "pull_and_build_all");
-
-  while (GetFrontProcess	() !=  GetCurrentProcess())
-  {
-	   SetFrontProcess( GetCurrentProcess() );
-  }
-	@pick = MacPerl::Pick("What would you like to do?", @choices);
-	$pull{all} = 0;
-	$build{all} = 1;
-	foreach $i (@pick)
-	{
-		if ($i eq "pull_all")
-		{
-			$pull{all} = 1;
-		}
-		elsif ($i eq "build_all")
-		{
-			$build{all} = 1;
-		}
-			elsif ($i eq "pull_and_build_all")
-		{
-			$build{all} = 1;
-			$pull{all} = 1;
-		}
-	}
 
 if ($pull{all})
 {
@@ -90,7 +60,6 @@ if ($build{all})
 # you should not have to edit anything bellow
 
 chdir("::::");
-$MOZ_SRC = cwd();
 
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
@@ -98,14 +67,8 @@ Moz::StopForErrors();
 #OpenErrorLog("::NGLayoutBuildLog");
 OpenErrorLog(":::Mozilla.BuildLog");		# Tinderbox requires that name
 
-if ($pull{all}) { 
-   Checkout();
-}
-
-chdir($MOZ_SRC);
 BuildDist();
 
-chdir($MOZ_SRC);
 BuildProjects();
 
 print "Build layout complete\n";
