@@ -3531,8 +3531,7 @@ nsTableFrame::DistributeHeightToRows(nsIPresContext*          aPresContext,
   nscoord cellSpacingY = GetCellSpacingY();
 
   nscoord sumOfRowHeights = 0;
-  nsMargin borderPadding;
-  GetChildAreaOffset(*aPresContext, &aReflowState);
+  nsMargin borderPadding = GetChildAreaOffset(*aPresContext, &aReflowState);
   nscoord rowGroupYPos = borderPadding.top + cellSpacingY;
 
   nsVoidArray rowGroups;
@@ -7519,7 +7518,7 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
       } else if (aCreateIfNecessary) {
         // The property isn't set yet, so allocate a new value, set the property,
         // and return the newly allocated value
-        void* value;
+        void* value = nsnull;
         NSFMPropertyDtorFunc dtorFunc;
         if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
           value = new nsPoint(0, 0);
