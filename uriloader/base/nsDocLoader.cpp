@@ -944,7 +944,6 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
     loadType = nsURLLoadNormal;
   }
   if (nsURLLoadBackground != loadType) {
-    printf("In nsDocLoader::LoadDocument initializing mForegroundURLs to 1\n");
     mForegroundURLs = 1;
   }
   mTotalURLs = 1;
