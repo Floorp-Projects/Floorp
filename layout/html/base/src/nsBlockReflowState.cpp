@@ -4670,18 +4670,8 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
 #endif
   nsresult rv = AddFrames(aPresContext, aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
-    // Generate reflow command to reflow the dirty lines
-    nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::ReflowDirty,
-                                 nsnull);
-    if (NS_SUCCEEDED(rv)) {
-      if (nsnull != aListName) {
-        reflowCmd->SetChildListName(aListName);
-      }
-      aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
   }
   return rv;
 }
@@ -4715,18 +4705,8 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
 #endif
   nsresult rv = AddFrames(aPresContext, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
-    // Generate reflow command to reflow the dirty lines
-    nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::ReflowDirty,
-                                 nsnull);
-    if (NS_SUCCEEDED(rv)) {
-      if (nsnull != aListName) {
-        reflowCmd->SetChildListName(aListName);
-      }
-      aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);
   }
   return rv;
 }
@@ -4889,18 +4869,8 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    // Generate reflow command to reflow the dirty lines
-    nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::ReflowDirty,
-                                 nsnull);
-    if (NS_SUCCEEDED(rv)) {
-      if (nsnull != aListName) {
-        reflowCmd->SetChildListName(aListName);
-      }
-      aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
+    // Ask the parent frame to reflow me.
+    ReflowDirtyChild(&aPresShell, nsnull);  
   }
   return rv;
 }
