@@ -422,9 +422,7 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 		short newControlType = (aIsPassword ? kControlEditTextPasswordProc : kControlEditTextProc);
 		SetControlType(newControlType);
 		
-		StartDraw();
 		theResult = CreateOrReplaceMacControl(newControlType);
-		EndDraw();
 	}
 	return theResult;
 }
@@ -445,9 +443,7 @@ NS_METHOD  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 		short newControlType = (aReadOnlyFlag ? kControlStaticTextProc : kControlEditTextProc);
 		SetControlType(newControlType);
 
-		StartDraw();
 		theResult = CreateOrReplaceMacControl(newControlType);
-		EndDraw();
 	}
 	return theResult;
 }
