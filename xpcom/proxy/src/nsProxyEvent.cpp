@@ -30,6 +30,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
+#include "nsIAtom.h"  //hack!
+
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
 static void* EventHandler(PLEvent *self);
@@ -220,6 +222,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     
 }
 
+// ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
 nsresult
 nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
@@ -255,10 +259,9 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                 continue;
 
             nsISupports *aProxyObject;
+            nsISupports *aIdentificationObject;
 
-			// ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
-            static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-            rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
+            rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
         
             if (NS_FAILED(rv))
             {
@@ -348,6 +351,24 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
 
                         }
 
+                        /* This is a hack until we can do some lookup 
+                           in the register to find the threading model
+                           of an object.  right now, nsIAtom should be
+                           treated as a free threaded object since layout
+                           does evil things like compare pointer for direct
+                           equality.  Again, this will go away when we can 
+                           use co-classes to find the ClassID.  Then look in
+                           the register for the thread model
+                        */
+
+                        if (NS_SUCCEEDED( rv ) && iid && iid->Equals(NS_GET_IID(nsIAtom)))
+                        {
+                            nsAllocator::Free((void*)iid);
+                            NS_RELEASE(manager);
+                            continue;
+                        }
+                
+
                         if ( NS_SUCCEEDED( rv ) )
                         {
                                 rv = manager->GetProxyObject(eventQ, 
@@ -394,9 +415,16 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
             nsProxyEventObject* replaceInterface = ((nsProxyEventObject*)params[i].val.p);
             if (replaceInterface)
             {
-                nsISupports* realObject = replaceInterface->GetRealObject();
-                replaceInterface->Release();   
-                (params[i].val.p)  = ((void*)realObject);  
+                // ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+                nsISupports *aIdentificationObject;
+                rv = replaceInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
+        
+                if (NS_SUCCEEDED(rv))
+                {
+                    nsISupports* realObject = replaceInterface->GetRealObject();
+                    replaceInterface->Release();   
+                    (params[i].val.p)  = ((void*)realObject);  
+                }
             }
         }
     }
