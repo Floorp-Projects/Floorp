@@ -183,12 +183,12 @@ PRBool nsDll::Load(void)
         while (token!=nsnull)
         {
             nsCStringKey key(token);
-            if (m_loader.mLoadedDependentLibs->Get(&key)) {
+            if (m_loader->mLoadedDependentLibs.Get(&key)) {
                 token = nsCRT::strtok(newStr, " ", &newStr);
                 continue;
             }
 
-            m_loader.mLoadedDependentLibs->Put(&key, (void*)1);
+            m_loader->mLoadedDependentLibs.Put(&key, (void*)1);
 
             nsXPIDLCString libpath;
             file->SetNativeLeafName(nsDependentCString(token));
