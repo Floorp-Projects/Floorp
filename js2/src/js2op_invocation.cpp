@@ -78,20 +78,21 @@
                             protoObj = JS2VAL_TO_OBJECT(protoVal);
                         }
 
-                        ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                        runtimeFrame->instantiate(meta->env);
-                        PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
-                        baseVal = OBJECT_TO_JS2VAL(pInst);
-                        runtimeFrame->thisObject = baseVal;
-                        runtimeFrame->assignArguments(base(argCount), argCount);
-                        if (!fWrap->code)
-                            jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
-                        meta->env->addFrame(runtimeFrame);
                         if (fWrap->code) {  // native code, pass pointer to argument base
                             a = fWrap->code(meta, a, base(argCount), argCount);
                             meta->env->removeTopFrame();
                             pop(argCount + 1);
                             push(a);
+                        }
+                        else {
+                            ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                            runtimeFrame->instantiate(meta->env);
+                            PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
+                            baseVal = OBJECT_TO_JS2VAL(pInst);
+                            runtimeFrame->thisObject = baseVal;
+                            runtimeFrame->assignArguments(base(argCount), argCount);
+                            jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
+                            meta->env->addFrame(runtimeFrame);
                         }
                     }
                     else
@@ -134,20 +135,20 @@
                     }
                 }
 
-                ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                runtimeFrame->instantiate(meta->env);
-                runtimeFrame->thisObject = a;
-//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                // XXX
-                runtimeFrame->assignArguments(base(argCount), argCount);
-                if (!fWrap->code)
-                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
-                meta->env->addFrame(runtimeFrame);
-                if (fWrap->code) {  // native code, pass pointer to argument base
+                if (fWrap->code) {  // native code
                     a = fWrap->code(meta, a, base(argCount), argCount);
-                    meta->env->removeTopFrame();
                     pop(argCount + 2);
                     push(a);
+                }
+                else {
+                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                    runtimeFrame->instantiate(meta->env);
+                    runtimeFrame->thisObject = a;
+    //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                    // XXX
+                    runtimeFrame->assignArguments(base(argCount), argCount);
+                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    meta->env->addFrame(runtimeFrame);
                 }
             }
             else
@@ -155,21 +156,22 @@
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
                 SimpleInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
-                ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                runtimeFrame->instantiate(meta->env);
-                runtimeFrame->thisObject = mc->thisObject;
-//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                if (!fWrap->code)
-                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
-                meta->env->addFrame(meta->objectType(mc->thisObject));
-                meta->env->addFrame(runtimeFrame);
+
                 if (fWrap->code) {
                     a = fWrap->code(meta, mc->thisObject, base(argCount), argCount);
-                    meta->env->removeTopFrame();
-                    meta->env->removeTopFrame();
                     pop(argCount + 2);
                     push(a);
                 }
+                else {
+                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                    runtimeFrame->instantiate(meta->env);
+                    runtimeFrame->thisObject = mc->thisObject;
+//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                    jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
+                    meta->env->addFrame(meta->objectType(mc->thisObject));
+                    meta->env->addFrame(runtimeFrame);
+                }
+
             }
             else
             if (fObj->kind == ClassKind) {

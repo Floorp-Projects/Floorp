@@ -188,6 +188,12 @@ size_t JS::LineReader::readLine(string &str)
     crWasLast = false;
 
     str.resize(0);
+#ifdef XP_UNIX
+    char line[256];
+    if (fgets(line, sizeof line, file) == NULL)
+        return 0;
+    str = line;
+#else    
     while ((ch = getc(in)) != EOF) {
         if (ch == '\n') {
             if (!str.size() && oldCRWasLast)
@@ -202,7 +208,7 @@ size_t JS::LineReader::readLine(string &str)
         }
         str += static_cast<char>(ch);
     }
-
+#endif
     return str.size();
 }
 

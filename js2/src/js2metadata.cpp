@@ -493,6 +493,8 @@ namespace MetaData {
                         if (vb->type)
                             ValidateTypeExpression(cxt, env, vb->type);
                         vb->member = NULL;
+                        if (vb->initializer)
+                            ValidateExpression(cxt, env, vb->initializer);
 
                         if (!cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
                                             || (regionalFrame->kind == ParameterKind))
@@ -1654,6 +1656,13 @@ namespace MetaData {
                 }
             }
             break;
+        case ExprNode::comma:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                ValidateExpression(cxt, env, b->op1);
+                ValidateExpression(cxt, env, b->op2);
+            }
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         } // switch (p->getKind())
@@ -2249,6 +2258,13 @@ doUnary:
                 }
                 bCon->emitOp(eNew, p->pos, -(argCount + 1) + 1);    // pop argCount args, the type/function, and push a result
                 bCon->addShort(argCount);
+            }
+            break;
+        case ExprNode::comma:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                SetupExprNode(env, phase, b->op1, exprType);
+                SetupExprNode(env, phase, b->op2, exprType);
             }
             break;
         default:
