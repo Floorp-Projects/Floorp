@@ -183,6 +183,7 @@
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>

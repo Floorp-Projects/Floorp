@@ -40,7 +40,6 @@
 
 <?xml-stylesheet href="chrome://calendar/skin/overlay.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE overlay 
