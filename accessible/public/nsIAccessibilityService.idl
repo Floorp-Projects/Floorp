@@ -56,8 +56,10 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULColorPickerAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULColorPickerTileAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULComboboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULGroupboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULListboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenubarAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenuitemAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenupopupAccessible(in nsIDOMNode aNode);
@@ -65,6 +67,12 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULProgressMeterAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULRadioButtonAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULRadioGroupAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULSelectOptionAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULSelectListAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTabAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTabBoxAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTabPanelsAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTabsAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
 
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);

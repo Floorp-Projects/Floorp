@@ -53,6 +53,8 @@ CPPSRCS = \
   nsXULColorPickerAccessible.cpp \
   nsXULFormControlAccessible.cpp \
   nsXULMenuAccessible.cpp \
+  nsXULSelectAccessible.cpp \
+  nsXULTabAccessible.cpp \
   nsXULTextAccessible.cpp \
   $(NULL)
 

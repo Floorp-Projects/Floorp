@@ -36,34 +36,34 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef __nsHTMLSelectAccessible_h__
-#define __nsHTMLSelectAccessible_h__
+#ifndef __nsXULSelectAccessible_h__
+#define __nsXULSelectAccessible_h__
 
 #include "nsCOMPtr.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIDOMNode.h"
 #include "nsIWeakReference.h"
 #include "nsSelectAccessible.h"
+#include "nsXULMenuAccessible.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
   *  widgets, some of which are shared between the two. This file contains 
-  *  all of the widgets for both of the Selects, for HTML only. Some of them
+  *  all of the widgets for both of the Selects, for XUL only. Some of them
   *  extend classes from nsSelectAccessible.cpp, which contains base classes 
   *  that are also extended by the XUL Select Accessibility support.
   *
   *  Listbox:
-  *     - nsHTMLListboxAccessible
-  *        - nsHTMLSelectListAccessible
-  *           - nsHTMLSelectOptionAccessible
+  *     - nsXULListboxAccessible
+  *        - nsXULSelectListAccessible
+  *           - nsXULSelectOptionAccessible
   *
   *  Comboboxes:
-  *     - nsHTMLComboboxAccessible
-  *        - nsHTMLComboboxTextFieldAccessible
-  *        - nsHTMLComboboxButtonAccessible
-  *        - nsHTMLComboboxWindowAccessible
-  *           - nsHTMLSelectListAccessible
-  *              - nsHTMLSelectOptionAccessible(s)
+  *     - nsXULComboboxAccessible      <menulist />
+  *        - nsHTMLTextFieldAccessible
+  *        - nsXULComboboxButtonAccessible    
+  *         - nsXULSelectListAccessible      <menupopup />
+  *            - nsXULSelectOptionAccessible(s)   <menuitem />
   */
 
 /** ------------------------------------------------------ */
@@ -73,37 +73,33 @@
 /*
  * The list that contains all the options in the select.
  */
-class nsHTMLSelectListAccessible : public nsSelectListAccessible
+class nsXULSelectListAccessible : public nsAccessible
 {
 public:
   
-  nsHTMLSelectListAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLSelectListAccessible() {}
+  nsXULSelectListAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULSelectListAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-
 };
 
 /*
  * Options inside the select, contained within the list
  */
-class nsHTMLSelectOptionAccessible : public nsSelectOptionAccessible
+class nsXULSelectOptionAccessible : public nsXULMenuitemAccessible
 {
 public:
   
-  nsHTMLSelectOptionAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLSelectOptionAccessible() {}
+  nsXULSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULSelectOptionAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
   static nsresult GetFocusedOptionNode(nsIWeakReference *aPresShell, nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
-
 };
 
 /** ------------------------------------------------------ */
@@ -111,22 +107,20 @@ public:
 /** ------------------------------------------------------ */
 
 /*
- * A class the represents the HTML Listbox widget.
+ * A class the represents the XUL Listbox widget.
  */
-class nsHTMLListboxAccessible : public nsListboxAccessible,
-                                public nsIAccessibleSelectable  
+class nsXULListboxAccessible : public nsListboxAccessible,
+                               public nsIAccessibleSelectable  
 {
 public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLESELECTABLE
   
-  nsHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLListboxAccessible() {}
+  nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULListboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
 
 };
@@ -136,74 +130,36 @@ public:
 /** ------------------------------------------------------ */
 
 /*
- * A class the represents the HTML Combobox widget.
+ * A class the represents the XUL Combobox widget.
  */
-class nsHTMLComboboxAccessible : public nsComboboxAccessible
+class nsXULComboboxAccessible : public nsComboboxAccessible
 {
 public:
 
-  nsHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLComboboxAccessible() {}
+  nsXULComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
-
 };
 
 /*
  * A class the represents the text field in the Select to the left
  *     of the drop down button
  */
-class nsHTMLComboboxTextFieldAccessible  : public nsComboboxTextFieldAccessible
-{
-public:
-  
-  nsHTMLComboboxTextFieldAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLComboboxTextFieldAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-
-};
-
 /**
   * A class that represents the button inside the Select to the
   *     right of the text field
   */
-class nsHTMLComboboxButtonAccessible  : public nsComboboxButtonAccessible
+class nsXULComboboxButtonAccessible  : public nsComboboxButtonAccessible
 {
 public:
 
-  nsHTMLComboboxButtonAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLComboboxButtonAccessible() {}
+  nsXULComboboxButtonAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULComboboxButtonAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
-
 };
 
-/*
- * A class that represents the window that lives to the right
- * of the drop down button inside the Select. This is the window
- * that is made visible when the button is pressed.
- */
-class nsHTMLComboboxWindowAccessible : public nsComboboxWindowAccessible
-{
-public:
-
-  nsHTMLComboboxWindowAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsHTMLComboboxWindowAccessible() {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-
-};
-
-
-#endif
+#endif //__nsXULSelectAccessible_h__

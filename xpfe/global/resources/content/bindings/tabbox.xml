@@ -14,7 +14,16 @@
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content orient="vertical"/>
 
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULTabBoxAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+
       <property name="handleCtrlTab">
         <setter>
         <![CDATA[
@@ -131,7 +140,7 @@
 
   <binding id="tabs" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIDOMXULSelectControlElement">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <constructor>
       <![CDATA[
         // first and last tabs need to be able to have unique styles
@@ -154,6 +163,15 @@
       ]]>
       </constructor>
       
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULTabsAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -303,7 +321,16 @@
   
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULTabPanelsAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -355,7 +382,16 @@
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULTabAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+
       <property name="label">
         <getter>
           return this.getAttribute("label");
