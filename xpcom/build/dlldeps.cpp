@@ -84,9 +84,8 @@
 #ifdef DEBUG
 #include "pure.h"
 #endif
-#include "nsInterfaceHashtable.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsTHashtable.h"
 #include "pldhash.h"
 #include "nsVariant.h"
 #include "nsEscape.h"
@@ -111,6 +110,8 @@ void XXXNeverCalled()
     NS_NewInputStreamReadyEvent(NULL, NULL, NULL);
     NS_NewOutputStreamReadyEvent(NULL, NULL, NULL);
     NS_AsyncCopy(NULL, NULL, PR_TRUE, PR_TRUE, 0, 0, NULL);
+    PL_DHashStubEnumRemove(nsnull, nsnull, nsnull, nsnull);
+    nsIDHashKey::HashKey(nsID());
     nsFixedSizeAllocator a;
     nsRecyclingAllocator recyclingAllocator(2);
     a.Init(0, 0, 0, 0, 0);
@@ -141,8 +142,6 @@ void XXXNeverCalled()
     nsCWeakReferent(0);
     NS_GetWeakReference(NULL);
     nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
-    nsInterfaceHashtable<nsStringHashKey,nsISupports>();
-    nsDataHashtable<nsUint32HashKey,PRInt32>();
     NS_NewByteArrayInputStream(NULL, NULL, 0);
     NS_NewStorageStream(0,0, nsnull);
     nsString foo;

@@ -74,14 +74,9 @@ public:
   PRBool Get(KeyType aKey, UserDataType* pData) const;
 };
 
-/*
- * this class doesn't have any predefined instances; implementations are
- * included here
- */
-
-#ifndef nsTHashtableImpl_h__
-#include "nsTHashtableImpl.h"
-#endif
+//
+// nsClassHashtable definitions
+//
 
 template<class KeyClass,class T>
 PRBool

@@ -40,10 +40,7 @@
 
 #include "nscore.h"
 #include "pldhash.h"
-
-#ifdef _MSC_VER
-#pragma warning( disable: 4231 ) // 'extern template' nonstandard C++ extension
-#endif
+#include "nsDebug.h"
 
 /**
  * a base class for templated hashtables.
@@ -225,17 +222,186 @@ protected:
 };
 
 // helper function for Reset()
-PLDHashOperator PL_DHashStubEnumRemove(PLDHashTable    *table,
-                                       PLDHashEntryHdr *entry,
-                                       PRUint32         ordinal,
-                                       void            *userArg);
+PR_EXTERN(PLDHashOperator)
+PL_DHashStubEnumRemove(PLDHashTable    *table,
+                       PLDHashEntryHdr *entry,
+                       PRUint32         ordinal,
+                       void            *userArg);
 
-/**
- * if we can't declare external linkage for templates, we need to include the
- * implementation header.
- */
-#ifndef HAVE_CPP_EXTERN_INSTANTIATION
-#include "nsTHashtableImpl.h"
-#endif
+
+//
+// template definitions
+//
+
+template<class EntryType>
+nsTHashtable<EntryType>::nsTHashtable()
+{
+  // entrySize is our "I'm initialized" indicator
+  mTable.entrySize = 0;
+}
+
+template<class EntryType>
+nsTHashtable<EntryType>::~nsTHashtable()
+{
+  if (mTable.entrySize)
+    PL_DHashTableFinish(&mTable);
+}
+
+template<class EntryType>
+PRBool
+nsTHashtable<EntryType>::Init(PRUint32 initSize)
+{
+  if (mTable.entrySize)
+  {
+    NS_ERROR("nsTHashtable::Init() should not be called twice.");
+    return PR_FALSE;
+  }
+  
+  if (!PL_DHashTableInit(&mTable, &sOps, nsnull, sizeof(EntryType), initSize))
+  {
+    // if failed, reset "flag"
+    mTable.entrySize = 0;
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+template<class EntryType>
+EntryType*
+nsTHashtable<EntryType>::GetEntry(KeyTypePointer aKey) const
+{
+  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+  
+  return NS_REINTERPRET_CAST(EntryType*,
+                             PL_DHashTableOperate(
+                               NS_CONST_CAST(PLDHashTable*,&mTable),
+                               aKey,
+                               PL_DHASH_LOOKUP));
+}
+
+template<class EntryType>
+EntryType*
+nsTHashtable<EntryType>::PutEntry(KeyTypePointer aKey)
+{
+  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+  return (EntryType*) PL_DHashTableOperate(&mTable, aKey, PL_DHASH_ADD);
+}
+
+template<class EntryType>
+void
+nsTHashtable<EntryType>::RemoveEntry(KeyTypePointer aKey)
+{
+  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+  PL_DHashTableOperate(&mTable, aKey, PL_DHASH_REMOVE);
+
+  return;
+}
+
+template<class EntryType>
+PRUint32
+nsTHashtable<EntryType>::EnumerateEntries(Enumerator enumFunc, void* userArg)
+{
+  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+  s_EnumArgs args = { enumFunc, userArg };
+  
+  return PL_DHashTableEnumerate(&mTable, s_EnumStub, &args);
+}
+
+template<class EntryType>
+void
+nsTHashtable<EntryType>::Clear()
+{
+  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+  PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nsnull);
+}
+
+// static definitions
+
+template<class EntryType>
+PLDHashTableOps
+nsTHashtable<EntryType>::sOps =
+{
+  ::PL_DHashAllocTable,
+  ::PL_DHashFreeTable,
+  s_GetKey,
+  s_HashKey,
+  s_MatchEntry,
+  EntryType::AllowMemMove() ? ::PL_DHashMoveEntryStub : s_CopyEntry,
+  s_ClearEntry,
+  ::PL_DHashFinalizeStub,
+  s_InitEntry
+};
+
+template<class EntryType>
+const void*
+nsTHashtable<EntryType>::s_GetKey(PLDHashTable    *table,
+                                  PLDHashEntryHdr *entry)
+{
+  return ((EntryType*) entry)->GetKeyPointer();
+}
+
+template<class EntryType>
+PLDHashNumber
+nsTHashtable<EntryType>::s_HashKey(PLDHashTable  *table,
+                                   const void    *key)
+{
+  return EntryType::HashKey(NS_REINTERPRET_CAST(const KeyTypePointer, key));
+}
+
+template<class EntryType>
+PRBool
+nsTHashtable<EntryType>::s_MatchEntry(PLDHashTable          *table,
+                                      const PLDHashEntryHdr *entry,
+                                      const void            *key)
+{
+  return ((const EntryType*) entry)->KeyEquals(
+    NS_REINTERPRET_CAST(const KeyTypePointer, key));
+}
+
+template<class EntryType>
+void
+nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable          *table,
+                                     const PLDHashEntryHdr *from,
+                                     PLDHashEntryHdr       *to)
+{
+  new(to) EntryType(* NS_REINTERPRET_CAST(const EntryType*,from));
+
+  NS_CONST_CAST(EntryType*,NS_REINTERPRET_CAST(const EntryType*,from))->~EntryType();
+}
+
+template<class EntryType>
+void
+nsTHashtable<EntryType>::s_ClearEntry(PLDHashTable    *table,
+                                      PLDHashEntryHdr *entry)
+{
+  NS_REINTERPRET_CAST(EntryType*,entry)->~EntryType();
+}
+
+template<class EntryType>
+void
+nsTHashtable<EntryType>::s_InitEntry(PLDHashTable    *table,
+                                     PLDHashEntryHdr *entry,
+                                     const void      *key)
+{
+  new(entry) EntryType(NS_REINTERPRET_CAST(KeyTypePointer,key));
+}
+
+template<class EntryType>
+PLDHashOperator
+nsTHashtable<EntryType>::s_EnumStub(PLDHashTable    *table,
+                                    PLDHashEntryHdr *entry,
+                                    PRUint32         number,
+                                    void            *arg)
+{
+  // dereferences the function-pointer to the user's enumeration function
+  return (* NS_REINTERPRET_CAST(s_EnumArgs*,arg)->userFunc)(
+    NS_REINTERPRET_CAST(EntryType*,entry),
+    NS_REINTERPRET_CAST(s_EnumArgs*,arg)->userArg);
+}
 
 #endif // nsTHashtable_h__
