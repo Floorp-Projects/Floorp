@@ -246,7 +246,6 @@ ifeq ($(OS_ARCH), IRIX)
     ASFILES   = os_Irix.s
 endif
 
-
 ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)
     ASFILES = os_BSD_386_2.s
 endif
