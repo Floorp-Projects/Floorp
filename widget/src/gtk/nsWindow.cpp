@@ -1764,6 +1764,8 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
   // hide
   else
   {
+    gdk_window_hide(mSuperWin->bin_window);
+    gdk_window_hide(mSuperWin->shell_window);
     // hide toplevel first so that things don't disapear from the screen one by one
 
     // are we a toplevel window?
@@ -1773,7 +1775,6 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
       gtk_widget_hide(mMozArea);
       gtk_widget_unmap(mShell);
     } 
-
    
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
@@ -1947,6 +1948,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
+      gdk_window_hide(mSuperWin->bin_window);
       gdk_window_hide(mSuperWin->shell_window);
     }
   }
