@@ -137,7 +137,7 @@ public:
 
     nsresult Init(nsDocLoaderImpl* aDocLoader,
                   const char *aCommand, 
-                  nsIContentViewerContainer* aContainer,
+                  nsISupports* aContainer,
                   nsISupports* aExtraInfo);
 
     NS_DECL_ISUPPORTS
@@ -158,9 +158,9 @@ protected:
 
 protected:
     char*               m_Command;
-    nsIContentViewerContainer* m_Container;
-    nsISupports*        m_ExtraInfo;
-    nsIStreamListener*  m_NextStream;
+    nsCOMPtr<nsISupports>  m_Container;
+    nsCOMPtr<nsISupports>  m_ExtraInfo;
+    nsCOMPtr<nsIStreamListener> m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
 };
 
@@ -190,7 +190,7 @@ public:
     // nsIDocumentLoader interface
     NS_IMETHOD LoadDocument(nsIURI * aUri, 
                             const char *aCommand,
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -211,8 +211,8 @@ public:
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
 
-    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
-    NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult);
+    NS_IMETHOD SetContainer(nsISupports* aContainer);
+    NS_IMETHOD GetContainer(nsISupports** aResult);
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
 	NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
@@ -254,7 +254,7 @@ public:
     nsresult CreateContentViewer(const char *aCommand,
                                  nsIChannel* channel,
                                  const char* aContentType, 
-                                 nsIContentViewerContainer* aContainer,
+                                 nsISupports* aContainer,
                                  nsISupports* aExtraInfo,
                                  nsIStreamListener** aDocListener,
                                  nsIContentViewer** aDocViewer);
@@ -274,7 +274,7 @@ protected:
   
     nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
-    nsIContentViewerContainer* mContainer;          // [WEAK] it owns me!
+    nsISupports* mContainer;          // [WEAK] it owns me!
 
     nsDocLoaderImpl*  mParent;                      // [OWNER] but upside down ownership model
                                                     //  needs to be fixed***
@@ -426,7 +426,7 @@ nsresult
 nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
                                      nsIChannel* channel,
                                      const char* aContentType, 
-                                     nsIContentViewerContainer* aContainer,
+                                     nsISupports* aContainer,
                                      nsISupports* aExtraInfo,
                                      nsIStreamListener** aDocListenerResult,
                                      nsIContentViewer** aDocViewerResult)
@@ -452,11 +452,13 @@ nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
         return rv;
     }
 
+    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
+
     // Now create an instance of the content viewer
     rv = factory->CreateInstance(aCommand, 
                                  channel, mLoadGroup,
                                  aContentType,
-                                 aContainer,
+                                 container,
                                  aExtraInfo, aDocListenerResult,
                                  aDocViewerResult);
     NS_RELEASE(factory);
@@ -466,7 +468,7 @@ nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(nsIURI * aUri, 
                               const char* aCommand,
-                              nsIContentViewerContainer* aContainer,
+                              nsISupports* aContainer,
                               nsIInputStream* aPostDataStream,
                               nsISupports* aExtraInfo,
                               nsLoadFlags aType,
@@ -611,7 +613,7 @@ nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::SetContainer(nsIContentViewerContainer* aContainer)
+nsDocLoaderImpl::SetContainer(nsISupports* aContainer)
 {
   // This is a weak reference...
   mContainer = aContainer;
@@ -620,17 +622,14 @@ nsDocLoaderImpl::SetContainer(nsIContentViewerContainer* aContainer)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::GetContainer(nsIContentViewerContainer** aResult)
+nsDocLoaderImpl::GetContainer(nsISupports** aResult)
 {
-  nsresult rv = NS_OK;
+   NS_ENSURE_ARG_POINTER(aResult);
 
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    *aResult = mContainer;
-    NS_IF_ADDREF(*aResult);
-  }
-  return rv;
+   *aResult = mContainer;
+   NS_IF_ADDREF(*aResult);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -957,29 +956,23 @@ nsDocumentBindInfo::nsDocumentBindInfo()
     NS_INIT_REFCNT();
 
     m_Command = nsnull;
-    m_Container = nsnull;
-    m_ExtraInfo = nsnull;
-    m_NextStream = nsnull;
     m_DocLoader = nsnull;
 }
 
 nsresult
 nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
                          const char *aCommand, 
-                         nsIContentViewerContainer* aContainer,
+                         nsISupports* aContainer,
                          nsISupports* aExtraInfo)
 {
-    m_NextStream = nsnull;
     m_Command    = (nsnull != aCommand) ? PL_strdup(aCommand) : nsnull;
 
     m_DocLoader = aDocLoader;
     NS_ADDREF(m_DocLoader);
 
-    m_Container = aContainer;
-    NS_IF_ADDREF(m_Container);
+    m_Container = aContainer;  // This does an addref
 
-    m_ExtraInfo = aExtraInfo;
-    NS_IF_ADDREF(m_ExtraInfo);
+    m_ExtraInfo = aExtraInfo;  // This does an addref
 
     return NS_OK;
 }
@@ -992,9 +985,6 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
     m_Command = nsnull;
 
     NS_RELEASE   (m_DocLoader);
-    NS_IF_RELEASE(m_NextStream);
-    NS_IF_RELEASE(m_Container);
-    NS_IF_RELEASE(m_ExtraInfo);
 }
 
 /*
@@ -1138,7 +1128,7 @@ nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
                                                   aContentType, 
                                                   m_Container,
                                                   m_ExtraInfo,
-                                                  &m_NextStream, 
+                                                  getter_AddRefs(m_NextStream), 
                                                   &viewer);
         } else {
             rv = NS_ERROR_NULL_POINTER;
@@ -1146,9 +1136,11 @@ nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 
         if (NS_FAILED(rv)) {
             printf("DocLoaderFactory: Unable to create ContentViewer for command=%s, content-type=%s\n", m_Command ? m_Command : "(null)", aContentType);
-            if ( m_Container ) {
+            nsCOMPtr<nsIContentViewerContainer> 
+               cvContainer(do_QueryInterface(m_Container));
+            if ( cvContainer ) {
                 // Give content container a chance to do something with this URL.
-                rv = m_Container->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, channel, aContentType, m_Command );
+                rv = cvContainer->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, channel, aContentType, m_Command );
             }
             // Stop the binding.
             // This crashes on Unix/Mac... Stop();
@@ -1158,10 +1150,12 @@ nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
         /*
          * Give the document container the new viewer...
          */
-        if (m_Container) {
+        nsCOMPtr<nsIContentViewerContainer> 
+                                 cvContainer(do_QueryInterface(m_Container));
+        if (cvContainer) {
             viewer->SetContainer(m_Container);
 
-            rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
+            rv = cvContainer->Embed(viewer, m_Command, m_ExtraInfo);
             if (NS_FAILED(rv)) {
                 goto done;
             }
@@ -1213,11 +1207,9 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIChannel* channel, nsISupports *
         * Currently this can happen if javascript loads a new URL 
         * (via nsIWebShell::LoadURL) during the parse phase... 
         */
-        nsIStreamListener* listener = m_NextStream;
+        nsCOMPtr<nsIStreamListener> listener(m_NextStream);
 
-        NS_ADDREF(listener);
         rv = listener->OnDataAvailable(channel, ctxt, aStream, sourceOffset, aLength);
-        NS_RELEASE(listener);
     } else {
       rv = NS_BINDING_FAILED;
     }
@@ -1261,7 +1253,7 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ct
         rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
     }
 
-    NS_IF_RELEASE(m_NextStream);
+    m_NextStream = nsnull;  // Release our stream we are holding
 
     return rv;
 }

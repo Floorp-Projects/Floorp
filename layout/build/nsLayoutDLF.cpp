@@ -36,6 +36,7 @@
 #include "nsIXULContentSink.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
+#include "nsIContentViewerContainer.h"
 
 // Factory code for creating variations on html documents
 
@@ -120,12 +121,12 @@ public:
                             nsIChannel* aChannel,
                             nsILoadGroup* aLoadGroup,
                             const char* aContentType, 
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsISupports* aExtraInfo,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer);
 
-  NS_IMETHOD CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
                                        nsIDocument* aDocument,
                                        const char *aCommand,
                                        nsIContentViewer** aDocViewerResult);
@@ -134,7 +135,7 @@ public:
   NS_METHOD CreateInstance(nsIInputStream& aInputStream,
                            const char* aContentType,
                            const char* aCommand,
-                           nsIContentViewerContainer* aContainer,
+                           nsISupports* aContainer,
                            nsISupports* aExtraInfo,
                            nsIContentViewer** aDocViewer);
 
@@ -143,7 +144,7 @@ public:
   nsresult CreateDocument(const char* aCommand,
                           nsIChannel* aChannel,
                           nsILoadGroup* aLoadGroup,
-                          nsIContentViewerContainer* aContainer,
+                          nsISupports* aContainer,
                           const nsCID& aDocumentCID,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aDocViewer);
@@ -152,14 +153,14 @@ public:
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
                              const char* aContentType,
-                             nsIContentViewerContainer* aContainer,
+                             nsISupports* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer);
 
   nsresult CreateXULDocumentFromStream(nsIInputStream& aXULStream,
                                        const char* aCommand,
-                                       nsIContentViewerContainer* aContainer,
+                                       nsISupports* aContainer,
                                        nsISupports* aExtraInfo,
                                        nsIContentViewer** aDocViewer);
 
@@ -225,7 +226,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
                             nsIChannel* aChannel,
                             nsILoadGroup* aLoadGroup,
                             const char* aContentType, 
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsISupports* aExtraInfo,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer)
@@ -293,7 +294,7 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
 
 
 NS_IMETHODIMP
-nsLayoutDLF::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+nsLayoutDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                        nsIDocument* aDocument,
                                        const char *aCommand,
                                        nsIContentViewer** aDocViewerResult)
@@ -321,7 +322,7 @@ nsresult
 nsLayoutDLF::CreateDocument(const char* aCommand,
                             nsIChannel* aChannel,
                             nsILoadGroup* aLoadGroup,
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             const nsCID& aDocumentCID,
                             nsIStreamListener** aDocListener,
                             nsIContentViewer** aDocViewer)
@@ -360,7 +361,8 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
-    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
+    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
+    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, container, aDocListener);
     if (NS_FAILED(rv))
       break;
 
@@ -377,7 +379,7 @@ NS_IMETHODIMP
 nsLayoutDLF::CreateInstance(nsIInputStream& aInputStream,
                             const char* aContentType,
                             const char* aCommand,
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsISupports* aExtraInfo,
                             nsIContentViewer** aDocViewer)
 
@@ -429,7 +431,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                const char* aContentType,
-                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aContainer,
                                nsISupports* aExtraInfo,
                                nsIStreamListener** aDocListener,
                                nsIContentViewer** aDocViewer)
@@ -451,7 +453,8 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
    * An nsIStreamListener connected to the parser is returned in
    * aDocListener.
    */
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
+  nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, container, aDocListener);
   if (NS_SUCCEEDED(rv)) {
     /*
      * Bind the document to the Content Viewer...
@@ -467,7 +470,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
 nsresult
 nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
                                          const char* aCommand,
-                                         nsIContentViewerContainer* aContainer,
+                                         nsISupports* aContainer,
                                          nsISupports* aExtraInfo,
                                          nsIContentViewer** aDocViewer)
 {
@@ -490,7 +493,8 @@ nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
     if ( NS_FAILED(status) )
       break;
 
-    status = loader->LoadFromStream(aXULStream, aContainer, aCommand);
+    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
+    status = loader->LoadFromStream(aXULStream, container, aCommand);
   }
   while (0);
 
