@@ -3795,7 +3795,6 @@ PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
     // first see if we have an XML element
     nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
     if (xml) {
-      static nsCOMPtr<nsIAtom> kTypeAtom = getter_AddRefs(NS_NewAtom("type"));  // NOTE: this should be in an atom table but isn't
       nsAutoString strSimple;
       strSimple.AssignWithConversion("simple");
 
@@ -3804,7 +3803,7 @@ PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
       if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
         // see if it is type=simple (we don't deal with other types)
         nsAutoString val;
-        attrState = aContent->GetAttribute(kNameSpaceID_XLink, kTypeAtom, val);
+        attrState = aContent->GetAttribute(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
         if (val == strSimple) {
           rv = PR_TRUE;
         }
