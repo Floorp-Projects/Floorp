@@ -83,7 +83,7 @@ public:
                           nsXPTCMiniVariant* params);
 
     
-    static nsProxyEventObject* GetNewOrUsedProxy(PLEventQueue *destQueue,
+    static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                                  ProxyType proxyType,
                                                  nsISupports *aObj,
                                                  REFNSIID aIID);
@@ -103,7 +103,7 @@ public:
 
 private:
     nsProxyEventObject();   // not implemented
-    nsProxyEventObject(PLEventQueue *destQueue,
+    nsProxyEventObject(nsIEventQueue *destQueue,
                        ProxyType proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
@@ -131,13 +131,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROXYEVENT_MANAGER_IID);
     
-    NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
+    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
                               ProxyType proxyType,
                               void** aProxyObject);
     
-    NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
+    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID, 

@@ -36,7 +36,7 @@
 
 
 nsProxyEventObject* 
-nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
+nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                       ProxyType proxyType, 
                                       nsISupports *aObj,
                                       REFNSIID aIID)
@@ -147,7 +147,7 @@ return_wrapper:
 
 
 
-nsProxyEventObject::nsProxyEventObject(PLEventQueue *destQueue,
+nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
                                        ProxyType proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,

@@ -201,9 +201,7 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 
     if (rv == NS_OK)
     {
-        PLEventQueue* aEventQueue;
-
-        self->GetQueue()->GetPLEventQueue(&aEventQueue);
+        nsIEventQueue* aEventQueue = self->GetQueue();
 
         if (aEventQueue != nsnull)
         {

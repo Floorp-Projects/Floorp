@@ -22,10 +22,10 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIEventQueue.h"
 
 #include "nsHashtable.h"
 
-#include "plevent.h"
 #include "xptcall.h"    // defines nsXPTCVariant
 
 #include "nsProxyEvent.h"
@@ -87,13 +87,13 @@ class nsIProxyObjectManager : public nsISupports
 {
 public:
 
-    NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
+    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
                               ProxyType proxyType,
                               void** aProxyObject) = 0;
     
-    NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
+    NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID,

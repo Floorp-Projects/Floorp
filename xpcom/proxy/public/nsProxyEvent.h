@@ -71,8 +71,8 @@ class nsProxyObject : public nsISupports
         NS_DECL_ISUPPORTS
 
                             nsProxyObject();
-                            nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject);
-                            nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
+                            nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, nsISupports *realObject);
+                            nsProxyObject(nsIEventQueue *destQueue, ProxyType proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
         
         virtual             ~nsProxyObject();
 
@@ -131,14 +131,14 @@ private:
 
 #define NS_DECL_PROXY(_class, _interface) \
 public: \
-  _class(PLEventQueue *, _interface *); \
+  _class(nsIEventQueue *, _interface *); \
 private: \
   nsProxyObject mProxyObject;\
 public:
 
 
 #define NS_IMPL_PROXY(_class, _interface)\
-_class::_class(PLEventQueue *eventQueue, _interface *realObject) \
+_class::_class(nsIEventQueue *eventQueue, _interface *realObject) \
 : mProxyObject(eventQueue, realObject) \
 {\
 }\
