@@ -5924,8 +5924,7 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
     return rv;
 
   rv = uri->GetSpec(&spec);
-  if (NS_FAILED(rv)) 
-  {
+  if (NS_FAILED(rv)) {
     nsCRT::free(spec);
     return rv;
   }
@@ -5946,21 +5945,35 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage").get(), 
                                  &message);
-  if (NS_FAILED(rv))
-  {
+  if (NS_FAILED(rv)) {
     nsMemory::Free((void *)title);
     return rv;
   }
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage").get(), 
                                  &checkboxMessage);
-  if (NS_FAILED(rv))
-  {
+  if (NS_FAILED(rv)) {
     nsMemory::Free((void *)title);
     nsMemory::Free((void *)message);
     return rv;
   }
                                
-  rv = prompt->ConfirmEx(title, message,
+  // add plugin name to the message
+  char * pluginname = nsnull;
+  for (nsPluginTag * tag = mPlugins; tag; tag = tag->mNext) {
+    if (tag->mLibrary == aLibrary) {
+      if (tag->mName)
+        pluginname = tag->mName;
+      else
+        pluginname = tag->mFileName;
+    }
+  }
+
+  nsAutoString msg;
+  msg.AssignWithConversion(pluginname);
+  msg.Append(NS_LITERAL_STRING("\n\n"));
+  msg.Append(message);
+
+  rv = prompt->ConfirmEx(title, msg.get(),
                          nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
                          nsnull, nsnull, nsnull,
                          checkboxMessage, &checkboxState, &buttonPressed);
