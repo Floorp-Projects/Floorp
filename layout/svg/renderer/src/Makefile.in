@@ -51,4 +51,8 @@ ifdef MOZ_SVG_RENDERER_LIBART
 DIRS		+= libart
 endif
 
+ifdef MOZ_SVG_RENDERER_CAIRO
+DIRS		+= cairo
+endif
+
 include $(topsrcdir)/config/rules.mk

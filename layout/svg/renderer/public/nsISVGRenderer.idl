@@ -158,4 +158,10 @@ interface nsISVGRenderer : nsISupports
 #define NS_SVG_RENDERER_GDIPLUS_CID \
 { 0xd260f971, 0xdb9d, 0x425b, { 0x8c, 0x9b, 0x4e, 0xb9, 0x60, 0x5c, 0xe3, 0x5d } }
 
+#define NS_SVG_RENDERER_CAIRO_CONTRACTID NS_SVG_RENDERER_CONTRACTID_PREFIX "CAIRO"
+
+// {9f0fa438-1b1a-4a1b-a28d-91460542276e}
+#define NS_SVG_RENDERER_CAIRO_CID \
+{ 0x9f0fa438, 0x1b1a, 0x4a1b, { 0xa2, 0x8d, 0x91, 0x46, 0x05, 0x42, 0x27, 0x6e } }
+
 %}

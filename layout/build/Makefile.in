@@ -138,6 +138,11 @@ SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
+ifdef MOZ_SVG_RENDERER_CAIRO
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
+                $(NSNULL)
+endif
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -151,11 +156,16 @@ EXTRA_DSO_LDOPTS = \
 ifdef MOZ_SVG_RENDERER_LIBART
 EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS) \
 		    $(NULL)
+endif
+
+ifdef MOZ_SVG_RENDERER_CAIRO
+EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
+		    $(NULL)
+endif
 
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    $(NULL)
-endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
