@@ -33,7 +33,6 @@
 #include "nsICharsetDetector.h"
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
-#include "nsObjectArray.h"
 #include "prmem.h"
 
 // just for CIDs
@@ -45,20 +44,6 @@ static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
-
-//----------------------------------------------------------------------------
-// Class nsConverterInfo [declaration]
-
-// XXX give up these internal data structs and create&return the lists on the fly
-class nsConverterInfo : public nsObject
-{
-public: 
-  nsString *    mName;
-  nsCID         mCID;
-
-  nsConverterInfo();
-  ~nsConverterInfo();
-};
 
 //----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [declaration]
@@ -78,18 +63,8 @@ nsICharsetConverterManager2
 
 private:
 
-  nsObjectArray mDecoderArray;
-  nsObjectArray mEncoderArray;
   nsIStringBundle * mDataBundle;
   nsIStringBundle * mTitleBundle;
-
-  /**
-   * Takes charset information from Registry and puts it into those arrays.
-   */
-  void FillInfoArrays();
-
-  nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
-      PRInt32 * aCount);
 
   nsresult LoadExtensibleBundle(const char * aRegistryKey, 
       nsIStringBundle ** aResult);
@@ -100,19 +75,11 @@ private:
   static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
       char * aRegistryPath);
 
-  nsresult GetBundleValue(nsIStringBundle * aBundle, nsString * aName, 
-      nsString * aProp, nsString ** aResult);
-
-  nsresult GetBundleValue(nsIStringBundle * aBundle, nsString * aName, 
-      nsString * aProp, nsIAtom ** aResult);
-
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     nsString * aProp, PRUnichar ** aResult);
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     nsString * aProp, nsIAtom ** aResult);
-
-  nsresult GetRegistryEnumeration(char * aRegistryKey, nsStringArray * aArray);
 
   nsresult GetRegistryEnumeration(char * aRegistryKey, char * aAddPrefix,
     nsISupportsArray ** aArray);
@@ -204,19 +171,6 @@ NS_IMETHODIMP NS_RegisterConverterManagerData()
 }
 
 //----------------------------------------------------------------------------
-// Class nsConverterInfo [implementation]
-
-nsConverterInfo::nsConverterInfo()
-{
-  mName = NULL;
-}
-
-nsConverterInfo::~nsConverterInfo()
-{
-  if (mName != NULL) delete mName;
-}
-
-//----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
@@ -228,8 +182,6 @@ nsCharsetConverterManager::nsCharsetConverterManager()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-
-  FillInfoArrays();
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
@@ -300,133 +252,6 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   return NS_OK;
 }
 
-// XXX rethink the registry structure(tree) for these converters
-// The idea is to have two trees:
-// .../uconv/decoder/(CID/name)
-// .../uconv/encoder/(CID/name)
-// XXX take the registry strings out and make them macros
-void nsCharsetConverterManager::FillInfoArrays() 
-{
-  nsresult res = NS_OK;
-  nsIEnumerator * components = NULL;
-  nsIRegistry * registry = NULL;
-  nsRegistryKey uconvKey, key;
-  PRBool regOpen = PR_FALSE;
-
-  // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
-  if (NS_FAILED(res)) goto done;
-
-  // open registry if necessary
-  registry->IsOpen(&regOpen);
-  if (!regOpen) {
-    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(res)) goto done;
-  }
-
-  // get subtree
-  res = registry->GetSubtree(nsIRegistry::Common,  
-    "software/netscape/intl/uconv", &uconvKey);
-  if (NS_FAILED(res)) goto done;
-
-  // enumerate subtrees
-  res = registry->EnumerateSubtrees(uconvKey, &components);
-  if (NS_FAILED(res)) goto done;
-  res = components->First();
-  if (NS_FAILED(res)) goto done;
-
-  while (NS_OK != components->IsDone()) {
-    nsISupports * base = NULL;
-    nsIRegistryNode * node = NULL;
-    char * name = NULL;
-    char * src = NULL;
-    char * dest = NULL;
-    nsConverterInfo * ci = NULL;
-
-    res = components->CurrentItem(&base);
-    if (NS_FAILED(res)) goto done1;
-
-    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
-    if (NS_FAILED(res)) goto done1;
-
-    res = node->GetNameUTF8(&name);
-    if (NS_FAILED(res)) goto done1;
-
-    ci = new nsConverterInfo();
-    if (ci == NULL) goto done1;
-    if (!(ci->mCID.Parse(name))) goto done1;
-
-    res = node->GetKey(&key);
-    if (NS_FAILED(res)) goto done1;
-
-    res = registry->GetStringUTF8(key, "source", &src);
-    if (NS_FAILED(res)) goto done1;
-
-    res = registry->GetStringUTF8(key, "destination", &dest);
-    if (NS_FAILED(res)) goto done1;
-
-    // XXX do an alias resolution here instead
-    if (!strcmp(src, "Unicode")) {
-      ci->mName = new nsString;
-      ci->mName->AssignWithConversion(dest);
-      ci->mName->ToLowerCase();
-      mEncoderArray.AddObject(ci);
-    } else if (!strcmp(dest, "Unicode")) {
-      ci->mName = new nsString;
-      ci->mName->AssignWithConversion(src);
-      ci->mName->ToLowerCase();
-      mDecoderArray.AddObject(ci);
-    } else goto done1;
-
-    ci = NULL;
-
-done1:
-    NS_IF_RELEASE(base);
-    NS_IF_RELEASE(node);
-
-    if (name != NULL) nsCRT::free(name);
-    if (src != NULL) nsCRT::free(src);
-    if (dest != NULL) nsCRT::free(dest);
-    if (ci != NULL) delete ci;
-
-    res = components->Next();
-    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
-  }
-
-  // finish and clean up
-done:
-  if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
-  }
-
-  NS_IF_RELEASE(components);
-}
-
-nsresult nsCharsetConverterManager::GetConverterList(
-                                    nsObjectArray * aArray,
-                                    nsString *** aResult,
-                                    PRInt32 * aCount)
-{
-  *aResult = NULL;
-  *aCount = 0;
-
-  PRInt32 size = aArray->GetUsage();
-  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
-  if ((size == 0) || (array == NULL)) return NS_OK;
-
-  *aResult = new nsString * [size];
-  if (*aResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
-
-  *aCount = size;
-  for (PRInt32 i=0;i<size;i++) (*aResult)[i] = array[i]->mName;
-
-  return NS_OK;
-
-  // XXX also create new Strings here, as opposed to just providing pointers 
-  // to the existing ones
-}
-
 nsresult nsCharsetConverterManager::LoadExtensibleBundle(
                                     const char* aRegistryKey, 
                                     nsIStringBundle ** aResult)
@@ -446,44 +271,6 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
   res = sbServ->CreateExtensibleBundle(aRegistryKey, locale, aResult);
   if (NS_FAILED(res)) return res;
 
-  return res;
-}
-
-nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   nsString * aName, 
-                                                   nsString * aProp, 
-                                                   nsString ** aResult)
-{
-  nsresult res = NS_OK;
-
-  nsString key(*aName);
-  if (aProp != NULL) key.Append(*aProp); // yes, this parameter may be NULL
-
-  PRUnichar * value = NULL;
-  res = aBundle->GetStringFromName(key.GetUnicode(), &value);
-  if (NS_FAILED(res)) return res;
-
-  *aResult = new nsString(value);
-  PR_Free(value);
-  return res;
-}
-
-nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   nsString * aName, 
-                                                   nsString * aProp, 
-                                                   nsIAtom ** aResult)
-{
-  nsresult res = NS_OK;
-
-  nsString key(*aName);
-  if (aProp != NULL) key.Append(*aProp); // yes, this parameter may be NULL
-
-  PRUnichar * value = NULL;
-  res = aBundle->GetStringFromName(key.GetUnicode(), &value);
-  if (NS_FAILED(res)) return res;
-
-  *aResult =  NS_NewAtom(value);
-  PR_Free(value);
   return res;
 }
 
@@ -520,85 +307,6 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   PR_Free(value);
 
   return NS_OK;
-}
-
-nsresult nsCharsetConverterManager::GetRegistryEnumeration(
-                                    char * aRegistryKey, 
-                                    nsStringArray * aArray)
-{
-  nsresult res = NS_OK;
-  nsIEnumerator * components = NULL;
-  nsIRegistry * registry = NULL;
-  nsRegistryKey key;
-  PRBool regOpen = PR_FALSE;
-
-  // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
-    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
-  if (NS_FAILED(res)) goto done;
-
-  // open registry if necessary
-  registry->IsOpen(&regOpen);
-  if (!regOpen) {
-    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(res)) goto done;
-  }
-
-  // get subtree
-  res = registry->GetSubtree(nsIRegistry::Common, aRegistryKey, &key);
-  if (NS_FAILED(res)) goto done;
-
-  // enumerate subtrees
-  res = registry->EnumerateSubtrees(key, &components);
-  if (NS_FAILED(res)) goto done;
-  res = components->First();
-  if (NS_FAILED(res)) goto done;
-
-  while (NS_OK != components->IsDone()) {
-    nsISupports * base = NULL;
-    nsIRegistryNode * node = NULL;
-    char * name = NULL;
-    nsString * s = NULL;
-
-    res = components->CurrentItem(&base);
-    if (NS_FAILED(res)) goto done1;
-
-    res = base->QueryInterface(kRegistryNodeIID, (void**)&node);
-    if (NS_FAILED(res)) goto done1;
-
-    res = node->GetNameUTF8(&name);
-    if (NS_FAILED(res)) goto done1;
-
-      // STRING USE WARNING: this use should be looked at.  Why does |s| have to be allocated?
-      //  Couldn't it just be an |nsAutoString| on the stack?
-    s = new nsString;
-    s->AssignWithConversion("charsetDetector.");
-    if (s == NULL) {
-      res = NS_ERROR_OUT_OF_MEMORY;
-      goto done1;
-    }
-    s->AppendWithConversion(name);
-    aArray->AppendString(*s);
-
-done1:
-    NS_IF_RELEASE(base);
-    NS_IF_RELEASE(node);
-
-    if (name != NULL) nsCRT::free(name);
-    if (s != NULL) delete s;
-
-    res = components->Next();
-    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
-  }
-
-  // finish and clean up
-done:
-  if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
-  }
-
-  NS_IF_RELEASE(components);
-  return res;
 }
 
 nsresult nsCharsetConverterManager::GetRegistryEnumeration(
@@ -821,93 +529,61 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
 NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(nsString *** aResult, 
                                                         PRInt32 * aCount)
 {
-  return GetConverterList(&mDecoderArray, aResult, aCount);
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(nsString *** aResult, 
                                                         PRInt32 * aCount)
 {
-  return GetConverterList(&mEncoderArray, aResult, aCount);
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(
                                          nsStringArray * aArray)
 {
-  return GetRegistryEnumeration(NS_CHARSET_DETECTOR_REG_BASE, aArray);
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(nsString * aCharset, 
                                                         nsString * aProp, 
                                                         nsString ** aResult)
 {
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  nsresult res = NS_OK;
-
-  if (mDataBundle == NULL) {
-    res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
-    if (NS_FAILED(res)) return res;
-  }
-
-  res = GetBundleValue(mDataBundle, aCharset, aProp, aResult);
-  return res;
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(nsString * aCharset, 
                                                          nsString ** aResult)
 {
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  nsresult res = NS_OK;
-  nsAutoString prop; prop.AssignWithConversion(".title");
-
-  if (mTitleBundle == NULL) {
-    res = LoadExtensibleBundle(NS_TITLE_BUNDLE_REGISTRY_KEY, &mTitleBundle);
-    if (NS_FAILED(res)) return res;
-  }
-
-  res = GetBundleValue(mTitleBundle, aCharset, &prop, aResult);
-  return res;
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
                                          nsString * aCharset, 
                                          nsIAtom ** aResult)
 {
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  nsresult res = NS_OK;;
-  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
-
-  if (mDataBundle == NULL) {
-    res = LoadExtensibleBundle(NS_DATA_BUNDLE_REGISTRY_KEY, &mDataBundle);
-    if (NS_FAILED(res)) return res;
-  }
-
-  res = GetBundleValue(mDataBundle, aCharset, &prop, aResult);
-  return res;
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetMIMEMailCharset(
                                          nsString * aCharset, 
                                          nsString ** aResult)
 {
-  nsAutoString prop; prop.AssignWithConversion(".MIMEMailCharset");
-  return GetCharsetData(aCharset, &prop, aResult);
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetMIMEHeaderEncodingMethod(
                                          nsString * aCharset, 
                                          nsString ** aResult)
 {
-  nsAutoString prop; prop.AssignWithConversion(".MIMEHeaderEncodingMethod");
-  return GetCharsetData(aCharset, &prop, aResult);
+  // XXX deprecated
+  return NS_ERROR_UNEXPECTED;
 }
 
 //----------------------------------------------------------------------------
