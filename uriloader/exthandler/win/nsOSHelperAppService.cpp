@@ -65,7 +65,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
 
   // (1) ask the base class if they have a mime info object for this content type...
-  rv = GetMIMEInfoForMimeType(aMimeContentType, getter_AddRefs(mimeInfo));
+  rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
   if (mimeInfo)
   {
     nsXPIDLCString mimefileExt;
@@ -102,60 +102,10 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
 
   if (!fileExtension.IsEmpty())
   {
-     HKEY hKey;
-     LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtension, 0, KEY_QUERY_VALUE, &hKey);
-     if (err == ERROR_SUCCESS)
-     {
-        LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
-        LPBYTE pFileDescription = GetValueBytes(hKey, "");
-
-        // create a new mime info object and initialize it if we don't have one already...
-        if (!mimeInfo)
-        {
-          mimeInfo = do_CreateInstance(NS_MIMEINFO_CONTRACTID);
-          if (mimeInfo)
-          {
-            mimeInfo->SetMIMEType((char *) pBytes);
-            // if the file extension includes the '.' then we don't want to include that when we append
-            // it to the mime info object.
-            const char * ext = fileExtension.GetBuffer();
-            if (ext && *ext == '.' && (ext+1))
-              mimeInfo->AppendExtension(ext+1);
-            else
-              mimeInfo->AppendExtension(fileExtension);
-
-            mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-
-            // the following is just a test for right now...I'll find something useful out of the registry
-            // or just stuff the file executable here...
-            nsAutoString description;
-            description.AssignWithConversion((char *) pFileDescription);
-
-            PRInt32 pos = description.FindChar('.', PR_TRUE);
-            if (pos > 0) 
-              description.Truncate(pos); 
-            // the format of the description usually looks like appname.version.something.
-            // for now, let's try to make it pretty and just show you the appname.
-
-            mimeInfo->SetApplicationDescription(description.GetUnicode());
-          }
-        }
-
-        delete [] pBytes;
-        delete [] pFileDescription;
-
-        // close the key
-       ::RegCloseKey(hKey);
-
-     } // if we got an entry out of the registry...
-
+    GetFromExtension(fileExtension, aMIMEInfo);
      // this is the ONLY code path which leads to success where we should set our return variables...
-     *aMIMEInfo = mimeInfo;
-     NS_IF_ADDREF(*aMIMEInfo);
-
      *aFileExtension = fileExtension.ToNewCString();
-
-  } // if we have a file extension
+  } // if we got an entry out of the registry...
 
   return rv;
 }
@@ -344,6 +294,103 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   }
   else
     rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// nsIMIMEService method over-rides used to gather information from the windows registry for
+// various mime types. 
+////////////////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) 
+{
+  // first, see if the base class already has an entry....
+  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, _retval);
+  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
+  if (!aFileExt || *aFileExt == '\0') return NS_ERROR_FAILURE;
+
+  rv = NS_OK;
+
+  // windows registry assumes your file extension is going to include the '.'.
+  // so make sure it's there...
+  nsCAutoString fileExtToUse;
+  if (aFileExt && aFileExt[0] != '.')
+    fileExtToUse = '.';
+
+  fileExtToUse.Append(aFileExt);
+
+  // o.t. try to get an entry from the windows registry.
+   HKEY hKey;
+   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse, 0, KEY_QUERY_VALUE, &hKey);
+   if (err == ERROR_SUCCESS)
+   {
+      LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
+      LPBYTE pFileDescription = GetValueBytes(hKey, "");
+
+      nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+      if (mimeInfo && pBytes)
+      {
+        mimeInfo->SetMIMEType((char *) pBytes);
+        // if the file extension includes the '.' then we don't want to include that when we append
+        // it to the mime info object.
+        if (aFileExt && *aFileExt == '.' && (aFileExt+1))
+          mimeInfo->AppendExtension(aFileExt+1);
+        else
+          mimeInfo->AppendExtension(aFileExt);
+
+        mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
+        // the following is just a test for right now...I'll find something useful out of the registry
+        // or just stuff the file executable here...
+        nsAutoString description;
+        description.AssignWithConversion((char *) pFileDescription);
+
+        PRInt32 pos = description.FindChar('.', PR_TRUE);
+        if (pos > 0) 
+          description.Truncate(pos); 
+        // the format of the description usually looks like appname.version.something.
+        // for now, let's try to make it pretty and just show you the appname.
+
+        mimeInfo->SetApplicationDescription(description.GetUnicode());
+
+        // if we got here, then set our return variable and be sure to add this new mime Info object to the hash
+        // table so we don't hit the registry the next time we look up this content type.
+        *_retval = mimeInfo;
+        NS_ADDREF(*_retval);
+        AddMimeInfoToCache(mimeInfo);
+      }
+      else
+        rv = NS_ERROR_FAILURE; // we failed to really find an entry in the registry
+
+      delete [] pBytes;
+      delete [] pFileDescription;
+
+      // close the key
+     ::RegCloseKey(hKey);
+   }
+
+   // we failed to find a mime type.
+   if (!*_retval) rv = NS_ERROR_FAILURE;
+    
+   return rv;
+}
+
+NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo ** _retval) 
+{
+  // first, see if the base class already has an entry....
+  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
+  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
+
+  // we currently don't know anything about this content type....
+  // the windows registry is indexed by file extension not content type....so all we can do is try
+  // to see if netscape has registered this extension...
+  nsCAutoString fileExtension;
+  GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
+
+  if (!fileExtension.IsEmpty())
+    return GetFromExtension(fileExtension, _retval);
+  else
+   rv = NS_ERROR_FAILURE;
 
   return rv;
 }
