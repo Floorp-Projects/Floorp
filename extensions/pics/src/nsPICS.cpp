@@ -59,11 +59,6 @@
 #include "nsString.h"
 #include <stdio.h>
 
-static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID); 
-static NS_DEFINE_IID(kIPICSIID,                   NS_IPICS_IID);
-static NS_DEFINE_IID(kPICSCID,                    NS_PICS_CID);
-
-static NS_DEFINE_IID(kIPrefIID,                   NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static NS_DEFINE_IID(kDocLoaderServiceCID,        NS_DOCUMENTLOADER_SERVICE_CID);
@@ -235,25 +230,6 @@ static nsPICS* gPICS = nsnull; // The one-and-only PICSService
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Module implementation
-class nsPICSModule : public nsIModule
-{
-public:
-    nsPICSModule();
-    virtual ~nsPICSModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mFactory;
-};
 
 StateRet_t 
 TargetCallback(CSLabel_t *pCSLabel,
@@ -284,7 +260,7 @@ TargetCallback(CSLabel_t *pCSLabel,
     }
   } else if(target ==  CSLLTC_RATING) {
     PICS_RatingsStruct *rating_struct = cd->rs;
-    LabelOptions_t * lo = CSLabel_getLabelOptions(pCSLabel);
+    // LabelOptions_t * lo = CSLabel_getLabelOptions(pCSLabel);
 
     ratingstr = CSLabel_getRatingStr(pCSLabel);
     ratingname =  CSLabel_getRatingName(pCSLabel);
@@ -349,9 +325,7 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 // nsPICS Implementation
 
 
-//NS_IMPL_ISUPPORTS(nsPICS, kIPICSIID);
-NS_IMPL_ADDREF(nsPICS)                       \
-NS_IMPL_RELEASE(nsPICS) 
+NS_IMPL_ISUPPORTS2(nsPICS, nsIPICS, nsIDocumentLoaderObserver)
 
 NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS)
 {
@@ -386,32 +360,6 @@ nsPICS::~nsPICS(void)
   if(mWebShellServicesURLTable)
     delete mWebShellServicesURLTable;
   gPICS = nsnull;
-}
-
-NS_IMETHODIMP nsPICS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-
-  if( NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aInstancePtr = NULL;
-
-  if( aIID.Equals ( kIPICSIID )) {
-    *aInstancePtr = (void*) ((nsIPICS*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
-    *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) (this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
 }
 
 nsresult nsPICS::GetPICS(nsIPICS** aPICS)
@@ -1490,202 +1438,24 @@ CreateNewPICS(nsISupports* aOuter, REFNSIID aIID, void **aResult)
     return rv;                                                       
 }
 
+////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the objects
+//
+// NOTE: This creates an instance of objects by using the default constructor
+//
+// NS_GENERIC_FACTORY_CONSTRUCTOR(nsPICS)
 
-//----------------------------------------------------------------------
-
-nsPICSModule::nsPICSModule()
-    : mInitialized(PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsPICSModule::~nsPICSModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS(nsPICSModule, NS_GET_IID(nsIModule))
-
-// Perform our one-time intialization for this module
-nsresult
-nsPICSModule::Initialize()
-{
-    if (mInitialized) {
-        return NS_OK;
-    }
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-nsPICSModule::Shutdown()
-{
-    // Release the factory object
-    mFactory = nsnull;
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-nsPICSModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-    nsresult rv;
-
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    if (!mInitialized) {
-        rv = Initialize();
-        if (NS_FAILED(rv)) {
-            // Initialization failed! yikes!
-            return rv;
-        }
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsCOMPtr<nsIGenericFactory> fact;
-    if (aClass.Equals(kPICSCID)) {
-        if (!mFactory) {
-            // Create and save away the factory object for creating
-            // new instances of PICS. This way if we are called
-            // again for the factory, we won't need to create a new
-            // one.
-            rv = NS_NewGenericFactory(getter_AddRefs(mFactory),
-                                      CreateNewPICS);
-        }
-        fact = mFactory;
-    }
-    else {
-        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsPICSModule: unable to create factory for %s\n", cs);
-        nsCRT::free(cs);
-#endif
-    }
-
-    if (fact) {
-        rv = fact->QueryInterface(aIID, r_classObj);
-    }
-
-    return rv;
-}
-
-//----------------------------------------
-
-struct Components {
-    const char* mDescription;
-    const nsID* mCID;
-    const char* mProgID;
+////////////////////////////////////////////////////////////////////////
+// Define a table of CIDs implemented by this module along with other
+// information like the function to create an instance, progid, and
+// class name.
+//
+static nsModuleComponentInfo components[] = {
+    { "PICS", NS_PICS_CID, NS_PICS_PROGID, CreateNewPICS, },
 };
 
-// The list of components we register
-static Components gComponents[] = {
-    { "PICS", &kPICSCID,
-      NS_PICS_PROGID, },
-};
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
-
-NS_IMETHODIMP
-nsPICSModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
-                             const char* registryLocation,
-                             const char* componentType)
-{
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    printf("*** Registering PICS components\n");
-#endif
-
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsPICSModule: unable to register %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-            break;
-        }
-        cp++;
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsPICSModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
-                               const char* registryLocation)
-{
-#ifdef DEBUG
-    printf("*** Unregistering PICS components\n");
-#endif
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsPICSModule: unable to unregister %s component => %x\n",
-                   cp->mDescription, rv);
-#endif
-        }
-        cp++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPICSModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsPICSModule *gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
-                                          nsIModule** return_cobj)
-{
-    nsresult rv = NS_OK;
-
-    NS_ENSURE_ARG_POINTER(return_cobj);
-    NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
-
-    // Create and initialize the module instance
-    nsPICSModule *m = new nsPICSModule();
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    gModule = m;                  // WARNING: Weak Reference
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Implement the NSGetModule() exported function for your module
+// and the entire implementation of the module object.
+//
+NS_IMPL_NSGETMODULE("nsPICSModule", components)
