@@ -146,6 +146,9 @@ struct SEC_PKCS12DecoderContextStr {
     PRInt32     allocated;    /* total buffer size allocated */
     PRInt32     currentpos;   /* position counter */
     SECPKCS12TargetTokenCAs tokenCAs;
+    sec_PKCS12SafeBag **keyList;/* used by ...IterateNext() */
+    unsigned int iteration;
+    SEC_PKCS12DecoderItem decitem;
 };
 
 
@@ -1233,6 +1236,13 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
     p12dcx->dClose = dClose;
     p12dcx->dRead = dRead;
     p12dcx->dArg = dArg;
+    
+    p12dcx->keyList = NULL;
+    p12dcx->decitem.type = 0;
+    p12dcx->decitem.der = NULL;
+    p12dcx->decitem.hasKey = PR_FALSE;
+    p12dcx->decitem.friendlyName = NULL;
+    p12dcx->iteration = 0;
 
     return p12dcx;
 
@@ -1522,6 +1532,13 @@ SEC_PKCS12DecoderFinish(SEC_PKCS12DecoderContext *p12dcx)
     if(p12dcx->hmacDcx) {
 	SEC_ASN1DecoderFinish(p12dcx->hmacDcx);
 	p12dcx->hmacDcx = NULL;
+    }
+    
+    if (p12dcx->decitem.type != 0 && p12dcx->decitem.der != NULL) {
+        SECITEM_FreeItem(p12dcx->decitem.der, PR_TRUE);
+    }
+    if (p12dcx->decitem.friendlyName != NULL) {
+        SECITEM_FreeItem(p12dcx->decitem.friendlyName, PR_TRUE);
     }
 
     if(p12dcx->slot) {
@@ -2906,6 +2923,132 @@ SEC_PKCS12DecoderImportBags(SEC_PKCS12DecoderContext *p12dcx)
     }
 
     return sec_pkcs12_install_bags(p12dcx->safeBags, p12dcx->wincx);
+}
+
+PRBool
+sec_pkcs12_bagHasKey(SEC_PKCS12DecoderContext *p12dcx, sec_PKCS12SafeBag *bag)
+{
+    int i;
+    SECItem *keyId;
+    SECItem *certKeyId;
+
+    certKeyId = sec_pkcs12_get_attribute_value(bag, SEC_OID_PKCS9_LOCAL_KEY_ID);
+    if (certKeyId == NULL) {
+        return PR_FALSE;
+    }
+            
+    for (i=0; p12dcx->keyList && p12dcx->keyList[i]; i++) {
+        keyId = sec_pkcs12_get_attribute_value(p12dcx->keyList[i],
+                                                SEC_OID_PKCS9_LOCAL_KEY_ID);
+        if(!keyId) {
+            continue;
+        }
+        if(SECITEM_CompareItem(certKeyId, keyId) == SECEqual) {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
+SECItem *
+sec_pkcs12_get_friendlyName(sec_PKCS12SafeBag *bag)
+{
+    SECItem *friendlyName;
+    SECItem *tempnm;
+    
+    tempnm = sec_pkcs12_get_attribute_value(bag, SEC_OID_PKCS9_FRIENDLY_NAME);
+    friendlyName = (SECItem *)PORT_ZAlloc(sizeof(SECItem));
+    if (friendlyName) {
+        if (!sec_pkcs12_convert_item_to_unicode(NULL, friendlyName,
+                                   tempnm, PR_TRUE, PR_FALSE, PR_FALSE)) {
+            SECITEM_FreeItem(friendlyName, PR_TRUE);
+            friendlyName = NULL;
+        }
+    }
+    return friendlyName;
+}
+
+/* Following two functions provide access to selected portions of the safe bags.
+ * Iteration is implemented per decoder context and may be accessed after
+ * SEC_PKCS12DecoderVerify() returns success.
+ * When ...DecoderIterateNext() returns SUCCESS a decoder item has been returned
+ * where item.type is always set; item.friendlyName is set if it is non-null;
+ * item.der, item.hasKey are set only for SEC_OID_PKCS12_V1_CERT_BAG_ID items.
+ * ...DecoderIterateNext() returns FAILURE when the list is exhausted or when
+ * arguments are invalid; PORT_GetError() is 0 at end-of-list.
+ * Caller has read-only access to decoder items. Any SECItems generated are
+ * owned by the decoder context and are freed by ...DecoderFinish().
+ */
+SECStatus
+SEC_PKCS12DecoderIterateInit(SEC_PKCS12DecoderContext *p12dcx)
+{
+    if(!p12dcx || p12dcx->error) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    p12dcx->iteration = 0;
+    return SECSuccess;
+}
+
+SECStatus
+SEC_PKCS12DecoderIterateNext(SEC_PKCS12DecoderContext *p12dcx,
+                             const SEC_PKCS12DecoderItem **ipp)
+{
+    sec_PKCS12SafeBag *bag;
+    SECItem *tempnm;
+    
+    if(!p12dcx || p12dcx->error) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    if (p12dcx->decitem.type != 0 && p12dcx->decitem.der != NULL) {
+        SECITEM_FreeItem(p12dcx->decitem.der, PR_TRUE);
+    }
+    if (p12dcx->decitem.friendlyName != NULL) {
+        SECITEM_FreeItem(p12dcx->decitem.friendlyName, PR_TRUE);
+    }
+    p12dcx->decitem.type = 0;
+    p12dcx->decitem.der = NULL;
+    p12dcx->decitem.friendlyName = NULL;
+    p12dcx->decitem.hasKey = PR_FALSE;
+    *ipp = NULL;
+    if (p12dcx->keyList == NULL) {
+        p12dcx->keyList = sec_pkcs12_get_key_bags(p12dcx->safeBags);
+    }
+
+    
+    for (; p12dcx->iteration < p12dcx->safeBagCount; p12dcx->iteration++) {
+        bag = p12dcx->safeBags[p12dcx->iteration];
+ 	if(bag == NULL || bag->problem) {
+            continue;
+        }
+        p12dcx->decitem.type = SECOID_FindOIDTag(&(bag->safeBagType));
+        switch(p12dcx->decitem.type) {
+            case SEC_OID_PKCS12_V1_CERT_BAG_ID:
+                p12dcx->decitem.der = sec_pkcs12_get_der_cert(bag);
+                p12dcx->decitem.friendlyName = sec_pkcs12_get_friendlyName(bag);
+                p12dcx->decitem.hasKey = sec_pkcs12_bagHasKey(p12dcx, bag);
+                break;
+            case SEC_OID_PKCS12_V1_KEY_BAG_ID:
+            case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
+                p12dcx->decitem.friendlyName = sec_pkcs12_get_friendlyName(bag);
+                break;
+            default:
+                /* return these even though we don't expect them */
+                break;
+            case SEC_OID_UNKNOWN:
+                /* ignore these */
+                continue;
+        }
+        *ipp = &p12dcx->decitem;
+        p12dcx->iteration++;
+        break;  /* end for() */
+    }
+    
+    PORT_SetError(0);       /* end-of-list is SECFailure with no PORT error */
+    return ((p12dcx->decitem.type == 0) ? SECFailure : SECSuccess);
 }
 
 static SECStatus

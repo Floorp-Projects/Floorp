@@ -80,6 +80,7 @@ typedef int (PR_CALLBACK *digestIOFn)(void *arg, unsigned char *buf,
 typedef struct SEC_PKCS12ExportContextStr SEC_PKCS12ExportContext;
 typedef struct SEC_PKCS12SafeInfoStr SEC_PKCS12SafeInfo;
 typedef struct SEC_PKCS12DecoderContextStr SEC_PKCS12DecoderContext;
+typedef struct SEC_PKCS12DecoderItemStr SEC_PKCS12DecoderItem;
 
 struct sec_PKCS12PasswordModeInfo {
     SECItem	*password;
@@ -92,6 +93,14 @@ struct sec_PKCS12PublicKeyModeInfo {
     SECOidTag	algorithm;
     int keySize;
 };
+
+struct SEC_PKCS12DecoderItemStr {
+    SECItem *der;
+    SECOidTag type;
+    PRBool hasKey;
+    SECItem *friendlyName;      /* UTF-8 string */
+};
+    
 
 SEC_BEGIN_PROTOS
 
@@ -186,6 +195,13 @@ SEC_PKCS12DecoderImportBags(SEC_PKCS12DecoderContext *p12dcx);
 
 CERTCertList *
 SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx);
+
+SECStatus
+SEC_PKCS12DecoderIterateInit(SEC_PKCS12DecoderContext *p12dcx);
+
+SECStatus
+SEC_PKCS12DecoderIterateNext(SEC_PKCS12DecoderContext *p12dcx,
+                             const SEC_PKCS12DecoderItem **ipp);
 
 SEC_END_PROTOS
 

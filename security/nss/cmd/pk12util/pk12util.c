@@ -59,6 +59,9 @@ Usage(char *progName)
 				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
     FPS "\t\t [-v]\n");
+    FPS "Usage:	 %s -l listfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
+				 progName);
+    FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
     FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
     FPS "\t\t [-v]\n");
@@ -686,6 +689,140 @@ loser:
     return;
 }
 
+
+PRIntn
+P12U_ListPKCS12File(char *in_file, PK11SlotInfo *slot,
+			secuPWData *slotPw, secuPWData *p12FilePw)
+{
+    p12uContext *p12cxt = NULL;
+    SEC_PKCS12DecoderContext *p12dcx = NULL;
+    SECItem *pwitem = NULL, uniPwitem = { 0 };
+    SECItem p12file = { 0 };
+    SECStatus rv = SECFailure;
+    PRBool swapUnicode = PR_FALSE;
+    const SEC_PKCS12DecoderItem *dip;
+
+    int error;
+
+#ifdef IS_LITTLE_ENDIAN
+    swapUnicode = PR_TRUE;
+#endif
+
+    p12cxt = p12u_InitContext(PR_TRUE, in_file);
+    if(!p12cxt) {
+	SECU_PrintError(progName,"File Open failed: %s", in_file);
+	pk12uErrno = PK12UERR_INIT_FILE;
+	goto loser;
+    }
+
+    /* get the password */
+    pwitem = P12U_GetP12FilePassword(PR_FALSE, p12FilePw);
+    if (!pwitem) {
+	pk12uErrno = PK12UERR_USER_CANCELLED;
+	goto loser;
+    }
+
+    if(P12U_UnicodeConversion(NULL, &uniPwitem, pwitem, PR_TRUE,
+			      swapUnicode) != SECSuccess) {
+	SECU_PrintError(progName,"Unicode conversion failed");
+	pk12uErrno = PK12UERR_UNICODECONV;
+	goto loser;
+    }
+
+    /* init the decoder context */
+    p12dcx = SEC_PKCS12DecoderStart(&uniPwitem, slot, slotPw,
+				    NULL, NULL, NULL, NULL, NULL);
+    if(!p12dcx) {
+	SECU_PrintError(progName,"PKCS12 decoder start failed");
+	pk12uErrno = PK12UERR_PK12DECODESTART;
+	goto loser;
+    }
+
+    /* read the item */
+    rv = SECU_FileToItem(&p12file, p12cxt->file);
+    PR_Close(p12cxt->file);
+    p12cxt->file = NULL;
+    
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName,"Failed to read from import file");
+	goto loser;
+    }
+
+    rv = SEC_PKCS12DecoderUpdate(p12dcx, p12file.data, p12file.len);
+    if(rv != SECSuccess) {
+	error = PR_GetError();
+	if(error == SEC_ERROR_DECRYPTION_DISALLOWED) {
+	    PR_SetError(error, 0);
+	    goto loser;
+	}
+	SECU_PrintError(progName,"PKCS12 decoding failed");
+	pk12uErrno = PK12UERR_DECODE;
+    }
+
+    /* does the blob authenticate properly? */
+    if(SEC_PKCS12DecoderVerify(p12dcx) != SECSuccess) {
+	SECU_PrintError(progName,"PKCS12 decode not verified");
+	pk12uErrno = PK12UERR_DECODEVERIFY;
+        rv = SECFailure;
+    }
+    else if (SEC_PKCS12DecoderIterateInit(p12dcx) != SECSuccess) {
+	SECU_PrintError(progName,"PKCS12 decode iterate bags failed");
+	pk12uErrno = PK12UERR_DECODEIMPTBAGS;
+        rv = SECFailure;
+    }
+    else {
+        while (SEC_PKCS12DecoderIterateNext(p12dcx, &dip) == SECSuccess) {
+            switch (dip->type) {
+                case SEC_OID_PKCS12_V1_CERT_BAG_ID:
+                    printf("Certificate");
+                    if (SECU_PrintSignedData(stdout, dip->der,
+                            (dip->hasKey) ? "(has private key)" : "",
+                             0, SECU_PrintCertificate) != 0) {
+                        SECU_PrintError(progName,"PKCS12 print cert bag failed");
+                    }
+                    if (dip->friendlyName != NULL) {
+                        printf("    Friendly Name: %s\n\n",
+                                dip->friendlyName->data);
+                    }
+                    break;
+                case SEC_OID_PKCS12_V1_KEY_BAG_ID:
+                case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
+                    printf("Key");
+                    if (dip->type == SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID)
+                        printf("(shrouded)");
+                    printf(":\n");
+                    if (dip->friendlyName != NULL) {
+                        printf("    Friendly Name: %s\n\n",
+                                dip->friendlyName->data);
+                    }
+                    break;
+                default:
+                    printf("unknown bag type(%d): %s\n\n", dip->type,
+                            SECOID_FindOIDTagDescription(dip->type));
+                    break;
+            }
+        }
+        rv = SECSuccess;
+    }
+
+loser:
+    
+    if (p12dcx) {
+	SEC_PKCS12DecoderFinish(p12dcx);
+    }
+    p12u_DestroyContext(&p12cxt, PR_FALSE);
+
+    if (uniPwitem.data) {
+	SECITEM_ZfreeItem(&uniPwitem, PR_FALSE);
+    }
+
+    if (pwitem) {
+	SECITEM_ZfreeItem(pwitem, PR_TRUE);
+    }
+
+    return rv;
+}
+
 static void
 p12u_EnableAllCiphers()
 {
@@ -699,13 +836,18 @@ p12u_EnableAllCiphers()
 }
 
 static PRUintn
-P12U_Init(char *dir, char *dbprefix)
+P12U_Init(char *dir, char *dbprefix, PRBool listonly)
 {
     SECStatus rv;
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    rv = NSS_Initialize(dir,dbprefix,dbprefix,"secmod.db",0);
+    if (listonly && NSS_NoDB_Init("") == SECSuccess) {
+        rv = SECSuccess;
+    }
+    else {
+        rv = NSS_Initialize(dir,dbprefix,dbprefix,"secmod.db",0);
+    }
     if (rv != SECSuccess) {
     	SECU_PrintPRandOSError(progName);
         exit(-1);
@@ -726,6 +868,7 @@ enum {
     opt_Import,
     opt_SlotPWFile,
     opt_SlotPW,
+    opt_List,
     opt_Nickname,
     opt_Export,
     opt_P12FilePWFile,
@@ -741,6 +884,7 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Import	       */ 'i', PR_TRUE,	 0, PR_FALSE },
     { /* opt_SlotPWFile	       */ 'k', PR_TRUE,	 0, PR_FALSE },
     { /* opt_SlotPW	       */ 'K', PR_TRUE,	 0, PR_FALSE },
+    { /* opt_List              */ 'l', PR_TRUE,  0, PR_FALSE },
     { /* opt_Nickname	       */ 'n', PR_TRUE,	 0, PR_FALSE },
     { /* opt_Export	       */ 'o', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePWFile     */ 'w', PR_TRUE,	 0, PR_FALSE },
@@ -778,8 +922,9 @@ main(int argc, char **argv)
 
     pk12_debugging = pk12util.options[opt_Debug].activated;
 
-    if (pk12util.options[opt_Import].activated +
-	pk12util.options[opt_Export].activated != 1) {
+    if ((pk12util.options[opt_Import].activated +
+	pk12util.options[opt_Export].activated +
+        pk12util.options[opt_List].activated) != 1) {
 	Usage(progName);
     }
 
@@ -789,7 +934,10 @@ main(int argc, char **argv)
     }
 
     slotname = SECU_GetOptionArg(&pk12util, opt_TokenName);
-    import_file = SECU_GetOptionArg(&pk12util, opt_Import);
+
+    import_file = (pk12util.options[opt_List].activated) ?
+                    SECU_GetOptionArg(&pk12util, opt_List) :
+                    SECU_GetOptionArg(&pk12util, opt_Import);
     export_file = SECU_GetOptionArg(&pk12util, opt_Export);
 
     if (pk12util.options[opt_P12FilePWFile].activated) {
@@ -818,7 +966,8 @@ main(int argc, char **argv)
     if (pk12util.options[opt_DBPrefix].activated) {
     	dbprefix = pk12util.options[opt_DBPrefix].arg;
     }
-    P12U_Init(SECU_ConfigDirectory(NULL),dbprefix);
+    P12U_Init(SECU_ConfigDirectory(NULL), dbprefix,
+                pk12util.options[opt_List].activated);
 
     if (!slotname || PL_strcmp(slotname, "internal") == 0)
 	slot = PK11_GetInternalKeySlot();
@@ -832,14 +981,16 @@ main(int argc, char **argv)
     }
 
     if (pk12util.options[opt_Import].activated) {
-
-	if ((ret = P12U_ImportPKCS12Object(import_file, slot, &slotPw,
-					   &p12FilePw)) != 0)
-	    goto done;
+	P12U_ImportPKCS12Object(import_file, slot, &slotPw,
+					   &p12FilePw);
 
     } else if (pk12util.options[opt_Export].activated) {
 	P12U_ExportPKCS12Object(pk12util.options[opt_Nickname].arg,
 				export_file, slot, &slotPw, &p12FilePw);
+        
+    } else if (pk12util.options[opt_List].activated) {
+	P12U_ListPKCS12File(import_file, slot, &slotPw, &p12FilePw);
+                                           
     } else {
 	Usage(progName);
 	pk12uErrno = PK12UERR_USAGE;
