@@ -86,6 +86,9 @@ struct bitFields {
     PRUint32 red;
     PRUint32 green;
     PRUint32 blue;
+    PRInt8 redshift;
+    PRInt8 greenshift;
+    PRInt8 blueshift;
 };
 
 #define DOCOPY(dest, src) nsCRT::memcpy(dest, src, sizeof(dest))
@@ -159,6 +162,8 @@ private:
 
     PRUint32 mNumColors;
     colorTable *mColors;
+
+    bitFields mBitFields;
 
     PRUint8 *mRow; // Holds one raw line of the image
     PRUint32 mRowBytes; // How many bytes of the row were already received
