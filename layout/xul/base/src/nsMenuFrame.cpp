@@ -67,7 +67,7 @@ nsMenuFrame::FirstChild(nsIAtom*   aListName,
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsBoxFrame::FirstChild(aListName, aFirstChild);
+    nsAreaFrame::FirstChild(aListName, aFirstChild);
   }
   return NS_OK;
 }
@@ -81,7 +81,7 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if (nsLayoutAtoms::popupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
-    rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;
 }
@@ -102,7 +102,7 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     return NS_OK;
   }
-  return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
+  return nsAreaFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
 NS_IMETHODIMP
@@ -110,5 +110,5 @@ nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DeleteFrames(aPresContext);
-  return nsBoxFrame::DeleteFrame(aPresContext);
+  return nsAreaFrame::DeleteFrame(aPresContext);
 }
