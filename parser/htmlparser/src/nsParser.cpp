@@ -612,10 +612,12 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
   mDTDVerification=aVerifyEnabled;
   mStreamListenerState=eOnStart;  
 
+#ifdef rickgdebug
   {
-    fstream out("c:/temp/out.file",ios::trunc);
+    fstream out("c:/temp/parseout.file",ios::trunc);
     aSourceBuffer.DebugDump(out);
   }
+#endif
 
   nsresult result=NS_OK;
   if(0<aSourceBuffer.Length()){
