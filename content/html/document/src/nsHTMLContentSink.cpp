@@ -71,6 +71,7 @@
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
 #include "nsHTMLIIDs.h"
+#include "nsTextFragment.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -1112,8 +1113,34 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
           nsCOMPtr<nsIContent> txtContent(do_QueryInterface(textNodeContent));
           content->AppendChildTo(txtContent, PR_FALSE);
           NS_RELEASE(text);
-
         }
+      } else {
+        // This strips out all "\n" from the content text of a option element
+        // this is for content inside the <option> element that has a return in it
+        // I hate to have to check every option but I don't know how else to
+        // get this job done.
+        nsIContent * txtContent;
+        content->ChildAt(0, txtContent);
+        nsITextContent* text = nsnull;
+        if (NS_OK == txtContent->QueryInterface(kITextContentIID, (void**) &text)) {
+          const nsTextFragment * frag;
+          PRInt32 status;
+          text->GetText(frag, status);
+          nsAutoString str;
+          if (frag->Is2b()) {
+            str.SetString(frag->Get2b(), frag->GetLength());
+          } else {
+            str.SetString(frag->Get1b(), frag->GetLength());
+          }
+
+          PRUnichar retChar = '\n';
+          if (-1 != str.FindChar(retChar)) {
+            str.StripChar(retChar);
+            text->SetText((const PRUnichar*)str.GetUnicode(), (PRInt32)str.Length(), PR_FALSE);
+          }
+          NS_RELEASE(text);
+        }
+        NS_RELEASE(txtContent);
       }
     }
   case eHTMLTag_form:
