@@ -1199,18 +1199,96 @@ function isNoTextSelected( event ) {
     return "true";
 }
 
-// Set various context menu attributes based on the state of the world
-// (to be enhanced RSN to modify the menu based on the type of content
-// element that's contextuated).
+// Takes JS expression and dumps "expr="+expr+"\n"
+function dumpExpr( expr ) {
+    dump( expr+"="+eval(expr)+"\n" );
+}
+
+// Function to display contextual info.
+function dumpContext() {
+    dumpExpr( "        contextTarget.element" );
+    dumpExpr( "contextTarget.element.tagName" );
+    dumpExpr( "        contextTarget.onImage" );
+    dumpExpr( "       contextTarget.imageSrc" );
+    dumpExpr( "         contextTarget.onLink" );
+    dumpExpr( "       contextTarget.linkHref" );
+    dumpExpr( "        contextTarget.inFrame" );
+    dumpExpr( "      contextTarget.frameHref" );
+    dumpExpr( "     contextTarget.hasBGImage" );
+    dumpExpr( "     contextTarget.bgImageSrc" );
+}
+
+// Remember what was clicked on and gather info about it.
+var contextTarget;
+function BrowserSetContextTarget( node ) {
+    // Initialize contextual info.
+    contextTarget = new Object;
+    contextTarget.onImage    = false;
+    contextTarget.onLink     = false;
+    contextTarget.inFrame    = false;
+    contextTarget.hasBGImage = false;
+
+    // Remember the element that was clicked.
+    contextTarget.element = node;
+
+    // See if the user clicked on an image.
+    if ( contextTarget.element.nodeType == 1
+         &&
+         contextTarget.element.tagName.toUpperCase() == "IMG" ) {
+        // Record that.
+        contextTarget.onImage = true;
+        contextTarget.imageSrc  = contextTarget.element.getAttribute( "SRC" );
+    }
+
+    // See if the user clicked in a frame.
+    if ( contextTarget.element.ownerDocument != window.content.document ) {
+        contextTarget.inFrame = true;
+        contextTarget.frameHref = contextTarget.element.ownerDocument.location.href;
+    }
+
+    // Bubble out, looking for link.
+    var elem = contextTarget.element;
+    while ( elem ) {
+        // Test for element types of interest.
+        if ( elem.nodeType == 1 && elem.tagName.toUpperCase() == "A" ) {
+            // Clicked on a link.
+            contextTarget.onLink = true;
+            contextTarget.linkHref = elem.getAttribute( "HREF" );
+            break;
+        }
+        elem = elem.parentNode;
+    }
+dumpContext();    
+}
+
+// Set various context menu attributes based on the state of the world.
 function BrowserSetupContextMenu( menu, event ) {
-    // Open link depends on whether we're on a link.
-    setContextMenuItemAttr( "context-openlink", "disabled", isNotOnLink( event ) );
+    // Get context.
+    BrowserSetContextTarget(document.popupNode);
 
-    // Edit link depends on whether wel're on a link.
-    setContextMenuItemAttr( "context-editlink", "disabled", isNotOnLink( event ) );
+    //-------------------------------------------------------------------------
 
-    // Open frame depends on whether we're in a frame.
-    setContextMenuItemAttr( "context-openframe", "disabled", isNotInFrame( event ) );
+    var needSep = false;
+
+    // Remove open/edit link if not applicable.
+    if ( !contextTarget.onLink ) {
+        menu.removeChild( document.getElementById( "context-openlink" ) );
+        menu.removeChild( document.getElementById( "context-editlink" ) );
+    } else {
+        needSep = true;
+    }
+
+    // Remove open frame if not applicable.
+    if ( !contextTarget.inFrame ) {
+        menu.removeChild( document.getElementById( "context-openframe" ) );
+    } else {
+        needSep = true;
+    }
+
+    if ( !needSep ) {
+        // Remove separator.
+        menu.removeChild( document.getElementById( "context-sep-open" ) );
+    }
 
     //-------------------------------------------------------------------------
 
@@ -1230,39 +1308,51 @@ function BrowserSetupContextMenu( menu, event ) {
     // View source is always OK.
 
     // View frame source depends on whether we're in a frame.
-    setContextMenuItemAttr( "context-viewframesource", "disabled", isNotInFrame( event ) );
+    if ( !contextTarget.inFrame ) {
+        menu.removeChild( document.getElementById( "context-viewframesource" ) );
+    }
 
     // View Info don't work no way no how.
-    setContextMenuItemAttr( "context-viewinfo", "disabled", "true" );
+    menu.removeChild( document.getElementById( "context-viewinfo" ) );
 
-    // View Frame Info depends on whether we're in a frame.
-    setContextMenuItemAttr( "context-viewframeinfo", "disabled", isNotInFrame( event ) );
+    // View Frame Info isn't working, either.
+    menu.removeChild( document.getElementById( "context-viewframeinfo" ) );
 
-    // View Image needs content element detection.
-    setContextMenuItemAttr( "context-viewimage", "disabled", isNotOnImage( event ) );
+    // View Image depends on whether an image was clicked on.
+    if ( !contextTarget.onImage ) {
+        menu.removeChild( document.getElementById( "context-viewimage" ) );
+    }
 
     //-------------------------------------------------------------------------
 
     // Add bookmark always OK.
 
     // Send Page not working yet.
-    setContextMenuItemAttr( "context-sendpage", "disabled", "true" );
+    menu.removeChild( document.getElementById( "context-sendpage" ) );
 
     //-------------------------------------------------------------------------
 
     // Save page is always OK.
 
     // Save frame as depends on whether we're in a frame.
-    setContextMenuItemAttr( "context-saveframe", "disabled", isNotInFrame( event ) );
+    if ( !contextTarget.inFrame ) {
+        menu.removeChild( document.getElementById( "context-saveframe" ) );
+    }
 
     // Save link depends on whether we're in a link.
-    setContextMenuItemAttr( "context-savelink", "disabled", isNotOnLink( event ) );
+    if ( !contextTarget.onLink ) {
+        menu.removeChild( document.getElementById( "context-savelink" ) );
+    }
 
     // Save background image depends on whether there is one.
-    setContextMenuItemAttr( "context-savebgimage", "disabled", isNotOnBGImage( event ) );
+    if ( !contextTarget.hasBGImage ) {
+        menu.removeChild( document.getElementById( "context-savebgimage" ) );
+    }
 
-    // Save image not working yet.
-    setContextMenuItemAttr( "context-saveimage", "disabled", "true" );
+    // Save image depends on whether there is one.
+    if ( !contextTarget.onImage ) {
+        menu.removeChild( document.getElementById( "context-saveimage" ) );
+    }
 
     //-------------------------------------------------------------------------
 
@@ -1272,10 +1362,14 @@ function BrowserSetupContextMenu( menu, event ) {
     setContextMenuItemAttr( "context-copy", "disabled", isNoTextSelected() );
 
     // Copy link location depends on whether we're on a link.
-    setContextMenuItemAttr( "context-copylink", "disabled", isNotOnLink( event ) );
+    if ( !contextTarget.onLink ) {
+        menu.removeChild( document.getElementById( "context-copylink" ) );
+    }
 
-    // Copy image location depends on whether we're on a link.
-    setContextMenuItemAttr( "context-copyimage", "disabled", isNotOnImage( event ) );
+    // Copy image location depends on whether we're on an image.
+    if ( !contextTarget.onImage ) {
+        menu.removeChild( document.getElementById( "context-copyimage" ) );
+    }
 }
 
 // Temporary workaround for DOM api not yet implemented.
