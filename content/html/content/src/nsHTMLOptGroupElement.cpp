@@ -197,7 +197,7 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
   rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   nsIFrame* formFrame = nsnull;
 
-  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame) && formFrame))
+  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame)) && formFrame)
   {
     const nsStyleUserInterface* uiStyle;
     formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct *&)uiStyle);
