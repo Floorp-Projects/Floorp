@@ -38,7 +38,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsImapMessage.h"
 #include "nsIWebShell.h"
-
+#include "nsIMAPHostSessionList.h"
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -51,7 +51,7 @@ static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-
+static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 ////////////////////////////////////////////////////////////////////////////////
 // for temp message hack
 #ifdef XP_UNIX
@@ -133,6 +133,10 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
 	}
+	else if (aIID.Equals(nsIFolder::GetIID()))
+	{
+		   *aInstancePtr = NS_STATIC_CAST(nsIFolder*, this);
+	}
 	else if (aIID.Equals(nsIImapMailFolderSink::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIImapMailFolderSink*, this);
@@ -148,6 +152,10 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 	else if (aIID.Equals(nsIImapMiscellaneousSink::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIImapMiscellaneousSink*, this);
+	}
+	else if (aIID.Equals(nsIUrlListener::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener *, this);
 	}
 
 	if(*aInstancePtr)
@@ -456,8 +464,8 @@ nsImapMailFolder::FindAndSelectFolder(nsISupports* aElement,
 
 NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 {
+    nsresult rv = NS_ERROR_NULL_POINTER;
 	PRBool selectFolder = PR_FALSE;
-    nsresult rv;
 	if (result)
 		*result = nsnull;
 
@@ -492,13 +500,16 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
         }
         rv = NS_ERROR_NULL_POINTER;
     }
-    if (selectFolder)
+    else if (selectFolder)
     {
         rv = GetDatabase();
 
-
-		if (NS_SUCCEEDED(rv))
+		// don't run select if we're already running a url/select...
+		if (NS_SUCCEEDED(rv) && !m_urlRunning)
+		{
 			rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+			m_urlRunning = PR_TRUE;
+		}
 
         if(NS_SUCCEEDED(rv))
         {
@@ -515,8 +526,10 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
         else
             return rv;
     }
+	else
+		rv = NS_ERROR_NULL_POINTER;
 
-    m_urlRunning = PR_TRUE;
+    nsServiceManager::ReleaseService(kCImapService, imapService);
 	return rv;
 }
 
@@ -550,7 +563,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	path += folderName;
 	path.MakeUnique();
 
-	nsOutputFileStream outputStream(path);	
+//	nsOutputFileStream outputStream(path);	
    
 	// Create an empty database for this mail folder, set its name from the user  
 	nsIMsgDatabase * mailDBFactory = nsnull;
@@ -878,6 +891,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		nsresult rv = NS_OK;
         nsIMsgFolder *child = nsnull;
         nsAutoString folderName = aSpec->allocatedPathName;
+		nsString leafName;
 	    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
 		if(NS_FAILED(rv))
@@ -894,9 +908,12 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		{
 			uri.Append('/');
 			nsAutoString parentName(folderName);
+			parentName.Left(leafName, leafPos);
 			parentName.Truncate(leafPos);
 			uri.Append(parentName);
 		}
+		else
+			leafName = folderName;
 
 		char* uriStr = uri.ToNewCString();
 		if (uriStr == nsnull) 
@@ -913,8 +930,8 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		{
 			nsImapMailFolder *imapParent = nsnull;
 			imapParent = NS_STATIC_CAST(nsImapMailFolder*, folder);
-			rv = imapParent->AddSubfolder(folderName, &child);
-			NS_IF_RELEASE(child);
+			rv = imapParent->CreateSubfolder(nsAutoCString(leafName));
+//			NS_IF_RELEASE(child);
 			NS_IF_RELEASE(folder);
 		}
     }

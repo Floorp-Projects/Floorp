@@ -193,15 +193,10 @@ NS_IMETHODIMP nsImapUrl::GetServer(nsIMsgIncomingServer **aServer)
 		// server. 
 		if (!m_server)
 		{
-			nsIMsgMailSession * session = nsnull;
-			rv = nsServiceManager::GetService(kMsgMailSessionCID, nsIMsgMailSession::GetIID(),
-										 (nsISupports **) &session);
+			NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
 			if (NS_SUCCEEDED(rv) && session)
-			{
 				// store the server in m_server so we don't have to do this again.
 				rv = session->GetCurrentServer(&m_server);
-				nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
-			}
 		}
 
 		// if we were given a server then use it. 
