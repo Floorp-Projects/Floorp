@@ -501,6 +501,13 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsFTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFTPChannel::SetContentLength(PRInt32 aLength) {
     nsAutoLock lock(mLock);

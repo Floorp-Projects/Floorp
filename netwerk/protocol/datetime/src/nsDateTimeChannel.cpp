@@ -303,6 +303,12 @@ nsDateTimeChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDateTimeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 
 // nsIStreamObserver methods
 NS_IMETHODIMP

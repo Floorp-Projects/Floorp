@@ -53,7 +53,7 @@
 #include "nsIProxy.h"
 #include "nsMimeTypes.h"
 #include "nsIPrompt.h"
-
+#include "nsISocketTransport.h"
 // FIXME - Temporary include.  Delete this when cache is enabled on all platforms
 #include "nsIPref.h"
 
@@ -105,7 +105,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mProxy(0),
     mProxyPort(-1),
     mBufferSegmentSize(bufferSegmentSize),
-    mBufferMaxSize(bufferMaxSize)
+    mBufferMaxSize(bufferMaxSize),
+    mTransport(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -1091,7 +1092,6 @@ nsHTTPChannel::Open(void)
     // Set up a new request observer and a response listener and pass 
     // to the transport
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIChannel> transport;
 
     // If this is the first time, then add the channel to its load group
     if (mState == HS_IDLE) {
@@ -1128,7 +1128,7 @@ nsHTTPChannel::Open(void)
 
     rv = mHandler->RequestTransport(mURI, this, 
                                     mBufferSegmentSize, mBufferMaxSize, 
-                                    getter_AddRefs(transport));
+                                    getter_AddRefs(mTransport));
 
     if (NS_ERROR_BUSY == rv) {
         mState = HS_WAITING_FOR_OPEN;
@@ -1139,13 +1139,13 @@ nsHTTPChannel::Open(void)
       (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
       return rv;
     }
-
+    
     // pass ourself in to act as a proxy for progress callbacks
-    rv = transport->SetNotificationCallbacks(this);
+    rv = mTransport->SetNotificationCallbacks(this);
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
       (void) ResponseCompleted(mResponseDataListener, rv, nsnull);
-      (void) ReleaseTransport(transport);
+      (void) ReleaseTransport(mTransport);
       return rv;
     }
 
@@ -1183,7 +1183,7 @@ nsHTTPChannel::Open(void)
         rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
 
-    mRequest->SetTransport(transport);
+    mRequest->SetTransport(mTransport);
 
     // if using proxy...
     nsXPIDLCString requestSpec;
@@ -1996,4 +1996,19 @@ nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
         return NS_ERROR_NULL_POINTER;
     *aUsingProxy = (mProxy && *mProxy);
     return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    
+    if (!aSecurityInfo)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!mTransport)
+        return NS_OK;
+    
+    return mTransport->GetSecurityInfo(aSecurityInfo);
 }

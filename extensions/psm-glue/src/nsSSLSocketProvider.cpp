@@ -71,9 +71,8 @@ nsSSLSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsSSLSocketProvider::NewSocket(const char *hostName, PRFileDesc **_result)
+nsSSLSocketProvider::NewSocket(const char *hostName, PRFileDesc **_result, nsISupports **securityInfo)
 {
-  *_result = nsSSLIOLayerNewSocket(hostName);
-
-  return (nsnull == *_result) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
+  nsresult rv = nsSSLIOLayerNewSocket(hostName, _result, securityInfo);
+  return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

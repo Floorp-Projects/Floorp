@@ -284,6 +284,12 @@ NS_IMETHODIMP nsMailtoChannel::SetNotificationCallbacks(nsIInterfaceRequestor* a
 	return NS_OK;       // don't fail when trying to set this
 }
 
+NS_IMETHODIMP 
+nsMailtoChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI * *aURI)
 {

@@ -586,6 +586,12 @@ nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsJARChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 

@@ -520,6 +520,13 @@ nsDiskCacheRecordChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotif
       return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP 
+nsDiskCacheRecordChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 ////////////////////////////////////////////////////////////////////////////////

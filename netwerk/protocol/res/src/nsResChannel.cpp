@@ -562,6 +562,13 @@ nsResChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsResChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamListener methods:
 ////////////////////////////////////////////////////////////////////////////////

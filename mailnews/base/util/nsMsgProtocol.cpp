@@ -437,6 +437,14 @@ nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
 	return NS_OK;       // don't fail when trying to set this
 }
 
+
+NS_IMETHODIMP 
+nsMsgProtocol::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////

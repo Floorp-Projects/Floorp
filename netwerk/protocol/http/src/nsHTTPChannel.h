@@ -148,7 +148,9 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
 
     nsCOMPtr<nsISupports>               mOwner;
-
+    
+    nsCOMPtr<nsIChannel>                mTransport;               
+    
     // Cache-related members
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
     nsHTTPResponse*                     mCachedResponse;

@@ -6622,3 +6622,10 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
 {
   return NS_OK;       // don't fail when trying to set this
 }
+
+NS_IMETHODIMP 
+nsImapMockChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}

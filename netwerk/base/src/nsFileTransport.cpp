@@ -1279,4 +1279,11 @@ nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCa
     return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsFileTransport::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////

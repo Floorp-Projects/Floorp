@@ -341,6 +341,12 @@ nsFingerChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCa
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsFingerChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}
 
 // nsIStreamObserver methods
 NS_IMETHODIMP

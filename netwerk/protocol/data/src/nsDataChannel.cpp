@@ -431,3 +431,9 @@ nsDataChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDataChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    *aSecurityInfo = nsnull;
+    return NS_OK;
+}

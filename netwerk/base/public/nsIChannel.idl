@@ -211,6 +211,12 @@ interface nsIChannel : nsIRequest
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 
+    /** 
+     * Any security information about this channel.  This can be null.
+     */
+
+    readonly attribute nsISupports securityInfo;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
