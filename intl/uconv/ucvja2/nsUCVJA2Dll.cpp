@@ -183,7 +183,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     rv = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-    if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
+    if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
   }
 
   done:
@@ -206,7 +206,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
   for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     rv = compMgr->UnregisterFactory(*(g_FactoryData[i].mCID), path);
-    if(NS_FAILED(rv)) return rv;
+    if(NS_FAILED(rv)) goto done;
   }
 
   done:
