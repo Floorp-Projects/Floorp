@@ -145,6 +145,30 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   return result;
 }
 
+/** helper method to get the col span of this frame's content (which must be a cell) */
+PRInt32 nsTableCellFrame::GetColSpan()
+{
+  PRInt32 result = 0;
+  nsTableCell *cellContent = (nsTableCell *)mContent;
+  if (nsnull!=cellContent)
+  {
+    result = cellContent->GetColSpan();
+  }
+  return result;
+}
+
+/** helper method to get the col index of this frame's content (which must be a cell) */
+PRInt32 nsTableCellFrame::GetColIndex()
+{
+  PRInt32 result = 0;
+  nsTableCell *cellContent = (nsTableCell *)mContent;
+  if (nsnull!=cellContent)
+  {
+    result = cellContent->GetColIndex();
+  }
+  return result;
+}
+
 void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
 {
   // Do we have a prev-in-flow?
@@ -229,6 +253,8 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
 
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
+  if (availSize.height < 0)
+    availSize.height = 1;
   nsSize maxKidElementSize;
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::ResizeReflow calling ReflowChild with availSize=%d,%d\n",

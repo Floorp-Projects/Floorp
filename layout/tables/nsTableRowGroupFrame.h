@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
+#include "nsIAtom.h"
 
 struct RowGroupReflowState;
 struct nsStyleMolecule;
@@ -90,6 +91,15 @@ public:
                                    nsIFrame*       aParent,
                                    nsIFrame*&      aContinuingFrame);
 
+  /** returns the type of the mapped row group content in aType.
+    * caller MUST call release on the returned object if it is not null.
+    *
+    * @param  aType out param filled with the type of the mapped content, or null if none.
+    *
+    * @return NS_OK
+    */ 
+  NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
+
 protected:
 
   /** protected constructor.
@@ -148,6 +158,9 @@ protected:
   ReflowStatus  ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                        RowGroupReflowState& aState,
                                        nsSize*              aMaxElementSize);
+
+private:
+  nsIAtom *mType;
 
 };
 
