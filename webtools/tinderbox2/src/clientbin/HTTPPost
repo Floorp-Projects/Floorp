@@ -13,8 +13,8 @@
 #    * Subject: HTTP POST: parameters "empty" when using ModPerl::Registry (okay when using ModPerl:PerlRun)...
 #    * Date: Thu, 14 Aug 2003 11:38:50 -0700
 
-# $Revision: 1.1 $ 
-# $Date: 2003/12/23 12:50:36 $ 
+# $Revision: 1.2 $ 
+# $Date: 2004/07/10 14:47:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/HTTPPost,v $ 
 # $Name:  $ 
@@ -69,7 +69,8 @@ This program performs a HTTP Post operation of the contents of STDIN
 to the URL supplied by the first argument.
 
 This program can be used to send tinderbox logs to the tinderbox
-server, replacing sendmail.
+server, replacing sendmail. For this to work the processmail script must 
+be located in a cgi directory.
 
 Errors are logged to the logfile: $ERROR_LOG
 
@@ -84,6 +85,8 @@ EOF
 
 
 sub post {
+    my ($postUrl) = @_;
+
     # read all of STDIN into a string
     undef $/;
     my $data = <STDIN>;
@@ -114,8 +117,6 @@ sub post {
   set_static_vars();
   get_env();
 
-  my $postUrl = $ARGV[0];
-
   if (
       (!($ARGV[0])) ||
       ($ARGV[0] =~ m/-?\?/) ||
@@ -124,7 +125,9 @@ sub post {
       usage();
   }
 
-  post();
+  my $postUrl = $ARGV[0];
+
+  post($postUrl);
   
   exit 0;
 }
