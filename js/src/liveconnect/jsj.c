@@ -161,6 +161,7 @@ jfieldID njJSException_wrappedException;        /* netscape.javascript.JSExcepti
             return JS_FALSE;                                                 \
         }                                                                    \
         class = (*jEnv)->NewGlobalRef(jEnv, _##class);                       \
+        (*jEnv)->DeleteLocalRef(jEnv, _##class);                             \
     }
 
 /* Obtain a methodID reference to a Java method or constructor */
@@ -451,6 +452,8 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
 
         jsjava_vm->java_vm = java_vm;
         jsjava_vm->main_thread_env = jEnv;
+    } else {
+        jsjava_vm->init_args = initargs;
     }
        
 #ifdef JSJ_THREADSAFE
@@ -472,24 +475,21 @@ static JSBool
 jsj_ConnectToJavaVM(JSJavaVM *jsjava_vm)
 {
     if (!jsjava_vm->java_vm) {
-        SystemJavaVM* java_vm;
-        JNIEnv *jEnv;
         JSBool ok;
         JS_ASSERT(JSJ_callbacks->create_java_vm);
         JS_ASSERT(JSJ_callbacks->destroy_java_vm);
 
-        ok = JSJ_callbacks->create_java_vm(&java_vm, &jEnv, NULL);
-        if (!ok || java_vm == NULL) {
+        ok = JSJ_callbacks->create_java_vm(&jsjava_vm->java_vm, &jsjava_vm->main_thread_env, jsjava_vm->init_args);
+        if (!ok || jsjava_vm->java_vm == NULL) {
             jsj_LogError("Failed to create Java VM\n");
             return JS_FALSE;
         }
 
         /* Remember that we created the VM so that we know to destroy it later */
         jsjava_vm->jsj_created_java_vm = JS_TRUE;
-
-        jsjava_vm->java_vm = java_vm;
-        jsjava_vm->main_thread_env = jEnv;
-
+    }
+    
+    if (!jsjava_vm->jsj_inited_java_vm) {
         /*
          * JVM initialization for netscape.javascript.JSObject is performed
          * independently of the other classes that are initialized in
@@ -497,11 +497,11 @@ jsj_ConnectToJavaVM(JSJavaVM *jsjava_vm)
          * of failure, LiveConnect is still operative, but only when calling
          * from JS to Java and not vice-versa.
          */
-        init_netscape_java_classes(jsjava_vm, jEnv);
+        init_netscape_java_classes(jsjava_vm, jsjava_vm->main_thread_env);
 
         /* Load the Java classes, and the method and field descriptors required for
            Java reflection. */
-        if (!init_java_VM_reflection(jsjava_vm, jEnv) || 
+        if (!init_java_VM_reflection(jsjava_vm, jsjava_vm->main_thread_env) || 
             !jsj_InitJavaObjReflectionsTable()) {
             jsj_LogError("LiveConnect was unable to reflect one or more components of the Java runtime.\nGo to http://bugzilla.mozilla.org/show_bug.cgi?id=5369 for details.\n");
             /* This function crashes when called from here.
@@ -510,6 +510,8 @@ jsj_ConnectToJavaVM(JSJavaVM *jsjava_vm)
                JSJ_DisconnectFromJavaVM(jsjava_vm); */
             return JS_FALSE;
         }
+        
+        jsjava_vm->jsj_inited_java_vm = JS_TRUE;
     }
 
     return JS_TRUE;
@@ -863,3 +865,14 @@ JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp)
 }
 
 
+JS_EXPORT_API(JSBool)
+JSJ_ConvertJSValueToJavaObject(JSContext *cx, jsval v, jobject *vp)
+{
+    if (JSVAL_IS_OBJECT(v)) {
+        JSObject *js_obj = JSVAL_TO_OBJECT(v);
+        JavaObjectWrapper *java_wrapper = JS_GetPrivate(cx, js_obj);
+        *vp = java_wrapper->java_obj;
+        return JS_TRUE;
+    }
+    return JS_FALSE;
+}
