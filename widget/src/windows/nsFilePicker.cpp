@@ -450,7 +450,12 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
         // This format enables the Explorer-style dialog boxes
         // to return long file names that include spaces. 
         char *current = fileBuffer;
-        const char *dirName = current;
+
+        nsCAutoString dirName(current);
+        // sometimes dirName contains a trailing slash
+        // and sometimes it doesn't.
+        if (current[dirName.Length() - 1] != '\\')
+          dirName += '\\';
 
         while (current && *current && *(current + strlen(current) + 1)) {
           current = current + strlen(current) + 1;
@@ -458,8 +463,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
           nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
           NS_ENSURE_SUCCESS(rv,rv);
 
-          // dirName contains a trailing slash
-          rv = file->InitWithNativePath(nsDependentCString(dirName) + nsDependentCString(current));
+          rv = file->InitWithNativePath(dirName + nsDependentCString(current));
           NS_ENSURE_SUCCESS(rv,rv);
            
           rv = mFiles->AppendElement(file);
