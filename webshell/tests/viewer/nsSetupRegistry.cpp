@@ -42,6 +42,7 @@
 #endif
 #include "nsIPluginManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
 #include "nsUCvLatinCID.h"
 #include "nsUCVJACID.h"
 // #include "nsUCVJA2CID.h"
@@ -325,6 +326,8 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kSJIS2UnicodeCID,         UCVJA_DLL, PR_FALSE, PR_FALSE);
   // nsRepository::RegisterFactory(kEUCJPToUnicodeCID,       UCVJA2_DLL, PR_FALSE, PR_FALSE);
   // nsRepository::RegisterFactory(kISO2022JPToUnicodeCID,   UCVJA2_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kPlatformCharsetCID,      UCONV_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kStringBundleServiceCID,  STRRES_DLL, PR_FALSE, PR_FALSE);
 
