@@ -453,6 +453,9 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
 
   NS_ASSERTION(aDestBreaks != eLinebreakAny, "Invalid parameter");
 
+  // nothing to do
+  if (ioString.Length() == 0) return NS_OK;
+  
   // we can't go messing with data we don't own
   if (!ioString.mOwnsBuffer) return NS_ERROR_UNEXPECTED;
   
