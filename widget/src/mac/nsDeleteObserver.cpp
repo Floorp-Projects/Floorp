@@ -42,7 +42,7 @@ nsDeleteObserved::~nsDeleteObserved()
 	if (mDeleteObserverArray)
 	{
 		// notify observers of the delete
-		for (PRInt32 i = 0; i < mDeleteObserverArray->Count(); i ++)
+		for (PRInt32 i = mDeleteObserverArray->Count() - 1; i >= 0; --i)
 		{
 			nsDeleteObserver* deleteObserver = static_cast<nsDeleteObserver*>(mDeleteObserverArray->ElementAt(i));
 			if (deleteObserver)
