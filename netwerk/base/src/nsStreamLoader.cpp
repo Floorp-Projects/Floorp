@@ -128,9 +128,7 @@ NS_IMETHODIMP
 nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                               nsresult aStatus)
 {
-  // if the request has been redirected, then we'll get another pair
-  // of OnStartRequest/OnStopRequest from the new request.
-  if ((aStatus != NS_BINDING_REDIRECTED) && mObserver) {
+  if (mObserver) {
     // provide nsIStreamLoader::request during call to OnStreamComplete
     mRequest = request;
     mObserver->OnStreamComplete(this, mContext, aStatus, 

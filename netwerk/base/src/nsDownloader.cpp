@@ -128,11 +128,6 @@ NS_IMETHODIMP
 nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                               nsresult aStatus)
 {
-  // if the request has been redirected, then we'll get another pair
-  // of OnStartRequest/OnStopRequest from the new request.
-  if (aStatus == NS_BINDING_REDIRECTED)
-    return NS_OK;
-
   nsCOMPtr<nsIFile> file;
   if (NS_SUCCEEDED(aStatus))
   {

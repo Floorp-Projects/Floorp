@@ -414,13 +414,7 @@ nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
   // the url....
 
   if (NS_FAILED(aStatus))
-  {
-    //... but we must ignore abort message caused by a redirection!
-    if (aStatus == NS_BINDING_REDIRECTED)
-        return NS_OK;
-
     OnStopRequest(aRequest, nsnull, aStatus);
-  }
 
   return NS_OK;
 }

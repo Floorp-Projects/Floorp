@@ -345,7 +345,7 @@ nsHttpChannel::AsyncRedirect_EventCleanupFunc(PLEvent *ev)
 void
 nsHttpChannel::HandleAsyncRedirect()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     LOG(("nsHttpChannel::HandleAsyncRedirect [this=%p]\n", this));
 
@@ -354,24 +354,18 @@ nsHttpChannel::HandleAsyncRedirect()
     // in processing the redirect.
     if (NS_SUCCEEDED(mStatus)) {
         rv = ProcessRedirection(mResponseHead->Status());
-        if (NS_SUCCEEDED(rv))
-            rv = NS_BINDING_REDIRECTED;
-        mStatus = rv;
+        if (NS_FAILED(rv))
+            mStatus = rv;
     }
 
-    mListener->OnStartRequest(this, mListenerContext);
-
-    // close the cache entry... no need to destroy it.
-    CloseCacheEntry(NS_OK);
+    // close the cache entry... blow it away if we couldn't process
+    // the redirect for some reason.
+    CloseCacheEntry(rv);
 
     mIsPending = PR_FALSE;
-    mListener->OnStopRequest(this, mListenerContext, mStatus);
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, mStatus);
-
-    mListener = 0;
-    mListenerContext = 0;
 }
 
 nsresult
@@ -1229,13 +1223,16 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
-    // close down this transaction (null if processing a cached redirect)
-    if (mTransaction) {
-        mStatus = NS_BINDING_REDIRECTED;
-        mTransaction->Cancel(NS_BINDING_REDIRECTED);
-        mListener->OnStartRequest(this, mListenerContext);
-    }
+    // set redirect status
+    mStatus = NS_BINDING_REDIRECTED;
 
+    // close down this transaction (null if processing a cached redirect)
+    if (mTransaction)
+        mTransaction->Cancel(NS_BINDING_REDIRECTED);
+    
+    // disconnect from our listener
+    mListener = 0;
+    mListenerContext = 0;
     return NS_OK;
 }
 
