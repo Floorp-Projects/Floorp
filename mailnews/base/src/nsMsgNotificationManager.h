@@ -34,13 +34,8 @@ public:
 	virtual ~nsMsgNotificationManager();
 
 	NS_DECL_ISUPPORTS
-
+    NS_DECL_NSIFOLDERLISTENER
 	nsresult Init();
-	//nsIFolderListener 
-	NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
-	NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
-	NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *oldValue, const char *newValue);
-	NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldFlag, PRUint32 newFlag);
 
 protected:
 	nsresult AddNewMailNotification(nsIMsgFolder *folder);

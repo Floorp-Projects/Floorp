@@ -40,12 +40,7 @@ public:
 	virtual ~nsMsgBiffManager();
 
 	NS_DECL_ISUPPORTS
-
-	//nsIBiffManager implementation
-	NS_IMETHOD AddServerBiff(nsIMsgIncomingServer *server);
-	NS_IMETHOD RemoveServerBiff(nsIMsgIncomingServer *server);
-	NS_IMETHOD ForceBiff(nsIMsgIncomingServer *server);
-	NS_IMETHOD ForceBiffAll();
+    NS_DECL_NSIMSGBIFFMANAGER
 
 	//nsITimerCallback implementation
 	virtual void Notify(nsITimer *timer);

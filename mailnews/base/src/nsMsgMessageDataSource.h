@@ -42,7 +42,7 @@ private:
 public:
   
 	NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_NSIFOLDERLISTENER
 	nsMsgMessageDataSource(void);
 	virtual ~nsMsgMessageDataSource (void);
 	virtual nsresult Init();
@@ -107,18 +107,6 @@ public:
 					   nsIRDFResource*   aCommand,
 					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
-	//nsIFolderListener
-	NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
-
-	NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
-
-	NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
-									const char *oldValue, const char *newValue);
-
-	NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property,
-									   PRUint32 oldFlag, PRUint32 newFlag);
-
-	// caching frequently used resources
 protected:
 
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);

@@ -31,18 +31,7 @@ public:
 	virtual ~nsMsgFolderCacheElement();
 
 	NS_DECL_ISUPPORTS
-
-	//nsMsgFolderCacheElement
-
-	NS_IMETHOD GetStringProperty(const char *propertyName, char **result);
-	NS_IMETHOD GetInt32Property(const char *propertyName, PRInt32 *result);
-	NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
-	NS_IMETHOD SetInt32Property(const char *propertyName, PRInt32 propertyValue);
-
-  /* readonly attribute string URI; */
-	NS_IMETHOD GetURI(char * *aURI);
-
-	NS_IMETHOD SetURI(char *aURI);
+    NS_DECL_NSIMSGFOLDERCACHEELEMENT
 
 	void		SetMDBRow(nsIMdbRow	*row);
 	void		SetOwningCache(nsMsgFolderCache *owningCache);

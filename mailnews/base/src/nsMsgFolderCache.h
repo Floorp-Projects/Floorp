@@ -41,13 +41,7 @@ public:
 	NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
   
 	NS_DECL_ISUPPORTS
-
-	//nsMsgFolderCache
-	NS_IMETHOD Init(nsIFileSpec *dbFileSpec);
-	NS_IMETHOD GetCacheElement(const char *uri, PRBool createIfMissing, 
-								nsIMsgFolderCacheElement **result);
-	NS_IMETHOD Close();
-
+    NS_DECL_NSIMSGFOLDERCACHE
 
 protected:
 	static PRBool FindCacheElementByURI(nsISupports *aElement, void *data);

@@ -40,6 +40,7 @@ private:
 public:
   
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIFOLDERLISTENER
 
   nsMsgFolderDataSource(void);
   virtual ~nsMsgFolderDataSource (void);
@@ -104,18 +105,6 @@ public:
   NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                        nsIRDFResource*   aCommand,
                        nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
-  NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
-
-  NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
-
-  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
-									const char *oldValue, const char *newValue);
-
-  NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property,
-									   PRUint32 oldFlag, PRUint32 newFlag);
-
-  // caching frequently used resources
 protected:
 
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource, nsIRDFResource *propertyResource,

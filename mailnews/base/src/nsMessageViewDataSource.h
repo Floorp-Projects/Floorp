@@ -45,122 +45,14 @@ private:
 public:
   
 	NS_DECL_ISUPPORTS
-
+  NS_DECL_NSIRDFDATASOURCE
+  NS_DECL_NSIRDFCOMPOSITEDATASOURCE
+  NS_DECL_NSIRDFOBSERVER
+  NS_DECL_NSIMESSAGEVIEW
+  NS_DECL_NSIMSGWINDOWDATA
 	nsMessageViewDataSource(void);
 	virtual ~nsMessageViewDataSource (void);
   virtual nsresult Init();
-
-
-	// nsIRDFDataSource methods
-	NS_IMETHOD GetURI(char* *uri);
-
-	NS_IMETHOD GetSource(nsIRDFResource* property,
-					   nsIRDFNode* target,
-					   PRBool tv,
-					   nsIRDFResource** source /* out */);
-
-	NS_IMETHOD GetTarget(nsIRDFResource* source,
-					   nsIRDFResource* property,
-					   PRBool tv,
-					   nsIRDFNode** target);
-
-	NS_IMETHOD GetSources(nsIRDFResource* property,
-						nsIRDFNode* target,
-						PRBool tv,
-						nsISimpleEnumerator** sources);
-
-	NS_IMETHOD GetTargets(nsIRDFResource* source,
-						nsIRDFResource* property,    
-						PRBool tv,
-						nsISimpleEnumerator** targets);
-
-	NS_IMETHOD Assert(nsIRDFResource* source,
-					nsIRDFResource* property, 
-					nsIRDFNode* target,
-					PRBool tv);
-
-	NS_IMETHOD Unassert(nsIRDFResource* source,
-					  nsIRDFResource* property,
-					  nsIRDFNode* target);
-
-	NS_IMETHOD Change(nsIRDFResource* aSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aOldTarget,
-                    nsIRDFNode* aNewTarget);
-
-	NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                  nsIRDFResource* aNewSource,
-                  nsIRDFResource* aProperty,
-                  nsIRDFNode* aTarget);
-
-	NS_IMETHOD HasAssertion(nsIRDFResource* source,
-						  nsIRDFResource* property,
-						  nsIRDFNode* target,
-						  PRBool tv,
-						  PRBool* hasAssertion);
-
-	NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-	NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
-	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-						 nsISimpleEnumerator** labels);
-
-	NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-						  nsISimpleEnumerator** labels); 
-
-	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
-
-	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-							nsIEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-							nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-
-	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-							  nsIRDFResource*   aCommand,
-							  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-							  PRBool* aResult);
-
-	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-					   nsIRDFResource*   aCommand,
-					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
-
-	//nsIRDFCompositeDataSource
-	NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
-
-	NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
-
-	//nsIRDFObserver
-	NS_IMETHOD OnAssert(nsIRDFResource* subject,
-						nsIRDFResource* predicate,
-						nsIRDFNode* object);
-
-	NS_IMETHOD OnUnassert(nsIRDFResource* subject,
-                          nsIRDFResource* predicate,
-                          nsIRDFNode* object);
-
-    NS_IMETHOD OnChange(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aOldTarget,
-                        nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
-                      nsIRDFResource* aNewSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
-	//nsIMessageView
-	NS_IMETHOD SetShowAll();
-	NS_IMETHOD SetShowUnread();
-	NS_IMETHOD SetShowRead();
-	NS_IMETHOD SetShowWatched();
-	NS_IMETHOD SetShowThreads(PRBool showThreads);
-
-	 //nsIMsgWindowData interface
-	NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback);
-	NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback);
-	NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTransactionManager);
-	NS_IMETHOD SetTransactionManager(nsITransactionManager * aTransactionManager);
 
 protected:
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property, nsIRDFNode **target);

@@ -39,7 +39,8 @@ public:
 	virtual ~nsMessage(void);
 
 	NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_NSIMESSAGE
+  NS_DECL_NSIDBMESSAGE
 	//nsIMsgHdr
 	NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
     NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr);
@@ -99,13 +100,6 @@ public:
     NS_IMETHOD GetPriority(nsMsgPriority *result);
     NS_IMETHOD GetThreadParent(nsMsgKey *result);
     NS_IMETHOD SetThreadParent(nsMsgKey inKey);
-
-	//nsIMessage
-	NS_IMETHOD GetMsgFolder(nsIMsgFolder **folder);
-	NS_IMETHOD SetMsgFolder(nsIMsgFolder *folder);
-
-	NS_IMETHOD SetMsgDBHdr(nsIMsgDBHdr *hdr);
-	NS_IMETHOD GetMsgDBHdr(nsIMsgDBHdr **hdr);
 
 protected:
 	nsIMsgFolder *mFolder;

@@ -42,44 +42,8 @@ public:
 	nsMsgMailNewsUrl();
 
 	NS_DECL_ISUPPORTS
-
-	// nsIMsgMailNewsUrl support
-
-	///////////////////////////////////////////////////////////////////////////////
-	// The idea is to allow the "application" (the part of the code which wants to 
-	// run a url in order to perform some action) to register itself as a listener
-	// on url. As a url listener, the app will be informed when the url begins to run
-	// and when the url is finished. 
-	////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
-	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
-
-	/////////////////////////////////////////////////////////////////////////////// 
-	// Getters and Setters for the nsMsgMailNewsUrl specific info....
-	///////////////////////////////////////////////////////////////////////////////
-
-	NS_IMETHOD SetErrorMessage (const char * errorMessage);
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage);
-
-	NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback);
-	NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback);
-
-	// This is just a stub implementation. It is the responsibility of derived
-	// url classes to over-ride this method.
-	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aIncomingServer);
-
-	// if you really want to know what the current state of the url is (running or not
-	// running) you should look into becoming a urlListener...
-	NS_IMETHOD SetUrlState(PRBool runningUrl, nsresult aStatusCode);
-	NS_IMETHOD GetUrlState(PRBool *runningUrl);
-
-	//////////////////////////////////////////////////////////////////////////////////
-	// nsIURI support
+    NS_DECL_NSIMSGMAILNEWSURL
     NS_DECL_NSIURI
-
-	//////////////////////////////////////////////////////////////////////////////////
-	// nsIURL support
     NS_DECL_NSIURL
 
 protected:

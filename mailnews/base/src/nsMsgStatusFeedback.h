@@ -32,14 +32,8 @@ public:
 	virtual ~nsMsgStatusFeedback();
 
 	NS_DECL_ISUPPORTS
-  
-	// nsIMsgStatusFeedback
-	NS_IMETHOD ShowStatusString(const PRUnichar *status);
-	NS_IMETHOD StartMeteors();
-	NS_IMETHOD StopMeteors();
-	NS_IMETHOD ShowProgress(PRInt32 percent);
-	NS_IMETHOD SetWebShell(nsIWebShell *shell,  nsIDOMWindow  *mWindow);
-
+    NS_DECL_NSIMSGSTATUSFEEDBACK
+    
 	// nsIDocumntLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus, nsIDocumentLoaderObserver* aObserver);

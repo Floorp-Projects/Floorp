@@ -42,18 +42,10 @@ typedef enum {
 class nsUrlListenerManager : public nsIUrlListenerManager {
 public:
 	NS_DECL_ISUPPORTS
-	nsUrlListenerManager();
+	NS_DECL_NSIURLLISTENERMANAGER
+    nsUrlListenerManager();
 	virtual ~nsUrlListenerManager();
-
-	// nsIUrlListenerManager interface support
-
-	 NS_IMETHOD RegisterListener(nsIUrlListener * aUrlListener);
-	 NS_IMETHOD UnRegisterListener(nsIUrlListener * aUrlListener);
-
-	 // These functions turn around and broadcast the notifications to all url listeners...
-	 NS_IMETHOD OnStartRunningUrl(nsIMsgMailNewsUrl * aUrl);
-	 NS_IMETHOD OnStopRunningUrl(nsIMsgMailNewsUrl * aUrl, nsresult aExitCode);
-
+    
 protected:
 	nsVoidArray * m_listeners;
 

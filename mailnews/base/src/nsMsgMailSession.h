@@ -44,24 +44,8 @@ public:
 	virtual ~nsMsgMailSession();
 
 	NS_DECL_ISUPPORTS
-	
-	// nsIMsgMailSession support
-	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity);
-    NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer **aServer);
-    NS_IMETHOD GetAccountManager(nsIMsgAccountManager* *aAM);
+	NS_DECL_NSIMSGMAILSESSION
 
-	NS_IMETHOD AddFolderListener(nsIFolderListener *listener);
-	NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener);
-	NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, const char *property, const char* oldValue, const char* newValue);
-	NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldValue,
-												   PRUint32 newValue);
-	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item);
-	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item);
-
-	NS_IMETHOD GetFolderCache(nsIMsgFolderCache **aFolderCache);
-
-	NS_IMETHOD SetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback *aMsgStatusFeedback);
-	NS_IMETHOD GetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback **aMsgStatusFeedback);
 	nsresult Init();
 protected:
   nsIMsgAccountManager *m_accountManager;

@@ -38,7 +38,8 @@ class NS_MSG_BASE nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener
 public: 
 	nsMsgDBFolder(void);
 	virtual ~nsMsgDBFolder(void);
-
+  NS_DECL_NSIDBCHANGELISTENER
+  
 	NS_IMETHOD GetThreads(nsISimpleEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
@@ -46,17 +47,6 @@ public:
 	NS_IMETHOD SetCharset(PRUnichar * aCharset);
 
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
-
-	//nsIDBChangeListener
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
-                         nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, 
-                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, 
-                        nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
-						nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
 
 	NS_DECL_ISUPPORTS_INHERITED
 

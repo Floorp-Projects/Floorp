@@ -38,18 +38,8 @@ public:
 	virtual ~nsMsgProtocol();
 
 	NS_DECL_ISUPPORTS
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIStreamListener interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-	
-	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
-	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End of nsIStreamListenerSupport
-	////////////////////////////////////////////////////////////////////////////////////////
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 

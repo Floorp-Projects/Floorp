@@ -33,14 +33,8 @@ public:
 	virtual ~nsCopyMessageStreamListener();
 
 	NS_DECL_ISUPPORTS
-
-	//nsICopyMessageStreamListener
-	NS_IMETHOD Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData);
-
-    // nsIStreamObserver
+    NS_DECL_NSICOPYMESSAGESTREAMLISTENER
     NS_DECL_NSISTREAMOBSERVER
-
-    // nsIStreamListener
     NS_DECL_NSISTREAMLISTENER
 
 protected:

@@ -39,16 +39,12 @@ public:
 	virtual ~nsMsgFilterService();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGFILTERSERVICE
 /* clients call OpenFilterList to get a handle to a FilterList, of existing nsMsgFilter *.
 	These are manipulated by the front end as a result of user interaction
    with dialog boxes. To apply the new list call MSG_CloseFilterList.
 
 */
-	NS_IMETHOD OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **filterList);
-	NS_IMETHOD CloseFilterList(nsIMsgFilterList *filterList);
-	NS_IMETHOD	SaveFilterList(nsIMsgFilterList *filterList, nsFileSpec *filterFile);	/* save without deleting */
-	NS_IMETHOD CancelFilterList(nsIMsgFilterList *filterList);
-
 };
 
 #endif  // _nsMsgFilterService_H_
