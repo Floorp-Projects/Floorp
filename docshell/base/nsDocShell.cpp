@@ -856,9 +856,27 @@ NS_IMETHODIMP nsDocShell::Reload()
 
 NS_IMETHODIMP nsDocShell::Stop()
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   if(mContentViewer)
+      mContentViewer->Stop();
+
+   if(mContentListener->mLoadCookie)
+      {
+      nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
+      if(uriLoader)
+         uriLoader->Stop(mContentListener->mLoadCookie);
+      }
+
+   PRInt32 n;
+   PRInt32 count = mChildren.Count();
+   for(n = 0; n < count; n++)
+      {
+      nsIDocShellTreeItem* shell = (nsIDocShellTreeItem*)mChildren.ElementAt(n);
+      nsCOMPtr<nsIWebNavigation> shellAsNav(do_QueryInterface(shell));
+      if(shellAsNav)
+         shellAsNav->Stop();
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetDocument(nsIDOMDocument* aDocument,
