@@ -138,9 +138,9 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
 
 class UTF8InputStream : public nsIUnicharInputStream {
 public:
-  UTF8InputStream(nsIInputStream* aStream,
-                  PRUint32 aBufSize);
+  UTF8InputStream();
   virtual ~UTF8InputStream();
+  nsresult Init(nsIInputStream* aStream, PRUint32 aBufSize);
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD Read(PRUnichar* aBuf,
@@ -163,22 +163,29 @@ protected:
   PRUint32 mUnicharDataLength;
 };
 
-UTF8InputStream::UTF8InputStream(nsIInputStream* aStream,
-                                 PRUint32 aBufferSize) :
-  mInput(aStream)
+UTF8InputStream::UTF8InputStream() :
+  mByteDataOffset(0),
+  mUnicharDataOffset(0),
+  mUnicharDataLength(0)
 {
   NS_INIT_ISUPPORTS();
+}
+
+nsresult 
+UTF8InputStream::Init(nsIInputStream* aStream, PRUint32 aBufferSize)
+{
   if (aBufferSize == 0) {
     aBufferSize = 8192;
   }
 
-  // XXX what if these fail?
-  NS_NewByteBuffer(getter_AddRefs(mByteData), nsnull, aBufferSize);
-  NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nsnull, aBufferSize);
+  nsresult rv = NS_NewByteBuffer(getter_AddRefs(mByteData), nsnull, aBufferSize);
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nsnull, aBufferSize);
+  if (NS_FAILED(rv)) return rv;
 
-  mByteDataOffset = 0;
-  mUnicharDataOffset = 0;
-  mUnicharDataLength = 0;
+  mInput = aStream;
+
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(UTF8InputStream,nsIUnicharInputStream)
@@ -314,12 +321,15 @@ NS_NewUTF8ConverterStream(nsIUnicharInputStream** aInstancePtrResult,
                           PRInt32 aBufferSize)
 {
   // Create converter input stream
-  UTF8InputStream* it =
-    new UTF8InputStream(aStreamToWrap, aBufferSize);
-  
+  UTF8InputStream* it = new UTF8InputStream();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  nsresult rv = it->Init(aStreamToWrap, aBufferSize);
+  if (NS_FAILED(rv))
+    return rv;
+
   return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream), 
                             (void **) aInstancePtrResult);
 }
