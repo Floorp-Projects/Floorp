@@ -197,12 +197,6 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 
     rv = self->CallMethod(0, mi, var);
 
-    // if we are going to return another interface,
-    // lets make sure that we increment the wrapper.
-
-    if (NS_SUCCEEDED(rv))
-        NS_ADDREF(self);
-    
     return rv;
 }
 
