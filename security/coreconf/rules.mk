@@ -368,13 +368,13 @@ endif
 
 $(MAPFILE): $(LIBRARY_NAME).def
 ifeq ($(OS_ARCH),SunOS)
-	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' | sed -e 's,;;,,' > $@
+	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' | sed -e 's; DATA ;;' | sed -e 's,;;,,' > $@
 endif
 ifeq ($(OS_ARCH),Linux)
-	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' > $@
+	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' | sed -e 's; DATA ;;' | sed -e 's,;;,,' > $@
 endif
 ifeq ($(OS_ARCH),AIX)
-	grep -v ';+' $(LIBRARY_NAME).def| sed -e 's,;,,g' > $@
+	grep -v ';+' $(LIBRARY_NAME).def| sed -e 's,;,,g' | sed -e 's; DATA ;;' > $@
 endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
