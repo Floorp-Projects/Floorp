@@ -107,21 +107,9 @@ YesToAll=Y&es to all
 ;Process Name=psm.exe
 ;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot might be necessary.  Setup will then be able to continue.
 
-[Restore Desktop Integration Associations]
-.gif=TRUE
-.htm=TRUE
-.html=TRUE
-.jpeg=TRUE
-.jpg=TRUE
-.png=TRUE
-.xml=TRUE
-.xul=TRUE
-
-[Restore Desktop Integration Protocols]
-chrome=TRUE
-ftp=TRUE
-http=TRUE
-https=TRUE
+; This section attempts to restore/undo the desktop integration performed by the browser/mail
+[Restore Desktop Integration]
+Enabled=TRUE
 
 [Messages]
 ERROR_DLL_LOAD=Could not load %s
