@@ -61,9 +61,10 @@ LIBIDL_VERSION=0.6.3
 
 dnl Set various checks
 dnl ========================================================
-MISSING_X=
+MISSING_FULLCIRCLE=
 MISSING_MOTIF=
-MISSING_GTK=
+MISSING_NSPR=
+MISSING_X=
 
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
@@ -466,12 +467,12 @@ fi
 	if test "$MOTIF_REQUIRES_XPM" = "True"; then
 	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
 		TK_LIBS="-lXpm $TK_LIBS", 
-		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
+		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
 	fi
 	if test "$MOTIF_VERSION" = "2.1"; then
 	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
 		TK_LIBS="-lXp $TK_LIBS",
-		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
+		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
 	fi
 	TK_LIBS="$XLDFLAGS $TK_LIBS"
 	LDFLAGS="$_SAVE_LDFLAGS"
@@ -508,13 +509,13 @@ fi
     	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    TK_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MOTIF_DYNAMIC_FLAGS $MISSING_MOTIF"], 
+	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_DYNAMIC_FLAGS"], 
 	    $MOTIF_DYNAMIC_PATHS $TK_LIBS $XLIBS)
 	LDFLAGS="$_SAVE_LDFLAGS"
     else
     	AC_CHECK_LIB(Xm, XmStringCreate, 
 	    TK_LIBS="$MOTIF_STATIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MOTIF_STATIC_FLAGS $MISSING_MOTIF"], 
+	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_STATIC_FLAGS"], 
 	    $TK_LIBS $XLIBS)
     fi
 
@@ -920,10 +921,7 @@ dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
 dnl part of the mozilla build, will install its headers and libs in
 dnl the same place as mozilla.
 dnl
-if test "$MISSING_NSPR"; then
-
-dnl   AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
-
+if test ! -z "$MISSING_NSPR"; then
    echo
    echo "*** NSPR was not detected in your system.  This is not a problem."
    echo "*** I will use the one in the current source tree instead. "
@@ -1706,8 +1704,8 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if test "$MISSING_FULLCIRCLE"; then
-    AC_MSG_ERROR([Could not find FullCircle Library]);
+if test ! -z "$MISSING_FULLCIRCLE"; then
+    AC_MSG_ERROR([Could not find FullCircle library]);
 fi
 
 fi
@@ -1795,15 +1793,11 @@ fi
 
 dnl Check for missing components
 if test "$no_x" != "yes"; then
-if test "$MISSING_X"; then
+if test ! -z "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
-if test "$MISSING_GTK"; then
-   AC_MSG_ERROR([ Could not link sample program with the following gtk libraries: $MISSING_GTK ])
-fi
-
-if test "$MISSING_MOTIF"; then
+if test ! -z "$MISSING_MOTIF"; then
    AC_MSG_ERROR([ Could not find the following Motif libraries: $MISSING_MOTIF ]);
 fi
 fi # $no_x
