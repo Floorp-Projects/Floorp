@@ -135,10 +135,10 @@ protected:
   NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
   PRBool GetAccessible();
   NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
-  GetSiblings(nsIDOMNode *aOneOfTheSiblings);
-  GetKids(nsIDOMNode *aParent);
+  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
+  void GetKids(nsIDOMNode *aParent);
 
-  ClearState();
+  void ClearState();
   NS_IMETHOD PushState();
   NS_IMETHOD PopState();
 
@@ -205,7 +205,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFullTreeParentNode(nsIDOMNode *aChildNo
   return NS_ERROR_FAILURE;
 }
 
-nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
+void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aParentNode));
 
@@ -218,7 +218,7 @@ nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
   }
 }
 
-nsAccessibleTreeWalker::GetSiblings(nsIDOMNode *aOneOfTheSiblings)
+void nsAccessibleTreeWalker::GetSiblings(nsIDOMNode *aOneOfTheSiblings)
 {
   nsCOMPtr<nsIDOMNode> node;
 
@@ -263,7 +263,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::PopState()
   return NS_ERROR_FAILURE;
 }
 
-nsAccessibleTreeWalker::ClearState()
+void nsAccessibleTreeWalker::ClearState()
 {
   mState.siblingList = nsnull;
   mState.accessible = nsnull;
