@@ -8873,7 +8873,7 @@ fi
 
 if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS -Wno-long-long"
+     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
      echo $ac_n "checking whether compiler supports -Wno-long-long""... $ac_c" 1>&6
 echo "configure:8879: checking whether compiler supports -Wno-long-long" >&5
      cat > conftest.$ac_ext <<EOF
@@ -8886,8 +8886,8 @@ return(0);
 EOF
 if { (eval echo configure:8888: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
-   _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long"
+   _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
 	  result="yes" 
 else
   echo "configure: failed program was:" >&5
