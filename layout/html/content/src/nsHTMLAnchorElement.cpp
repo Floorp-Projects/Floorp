@@ -1,0 +1,295 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
+#include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsIPresContext.h"
+
+#include "nsIEventStateManager.h"
+#include "nsDOMEvent.h"
+
+static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
+
+class nsHTMLAnchorElement : public nsIDOMHTMLAnchorElement,
+                            public nsIScriptObjectOwner,
+                            public nsIDOMEventReceiver,
+                            public nsIHTMLContent
+{
+public:
+  nsHTMLAnchorElement(nsIAtom* aTag);
+  ~nsHTMLAnchorElement();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMNode
+  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+
+  // nsIDOMElement
+  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+
+  // nsIDOMHTMLElement
+  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+
+  // nsIDOMHTMLAnchorElement
+  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
+  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
+  NS_IMETHOD GetCharset(nsString& aCharset);
+  NS_IMETHOD SetCharset(const nsString& aCharset);
+  NS_IMETHOD GetCoords(nsString& aCoords);
+  NS_IMETHOD SetCoords(const nsString& aCoords);
+  NS_IMETHOD GetHref(nsString& aHref);
+  NS_IMETHOD SetHref(const nsString& aHref);
+  NS_IMETHOD GetHreflang(nsString& aHreflang);
+  NS_IMETHOD SetHreflang(const nsString& aHreflang);
+  NS_IMETHOD GetName(nsString& aName);
+  NS_IMETHOD SetName(const nsString& aName);
+  NS_IMETHOD GetRel(nsString& aRel);
+  NS_IMETHOD SetRel(const nsString& aRel);
+  NS_IMETHOD GetRev(nsString& aRev);
+  NS_IMETHOD SetRev(const nsString& aRev);
+  NS_IMETHOD GetShape(nsString& aShape);
+  NS_IMETHOD SetShape(const nsString& aShape);
+  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  NS_IMETHOD GetTarget(nsString& aTarget);
+  NS_IMETHOD SetTarget(const nsString& aTarget);
+  NS_IMETHOD GetType(nsString& aType);
+  NS_IMETHOD SetType(const nsString& aType);
+  NS_IMETHOD Blur();
+  NS_IMETHOD Focus();
+
+  // nsIScriptObjectOwner
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+
+  // nsIDOMEventReceiver
+  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+
+  // nsIContent
+  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+
+  // nsIHTMLContent
+  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+
+protected:
+  nsHTMLGenericContainerContent mInner;
+};
+
+nsresult
+NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsIHTMLContent* it = new nsHTMLAnchorElement(aTag);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+}
+
+nsHTMLAnchorElement::nsHTMLAnchorElement(nsIAtom* aTag)
+{
+  NS_INIT_REFCNT();
+  mInner.Init(this, aTag);
+}
+
+nsHTMLAnchorElement::~nsHTMLAnchorElement()
+{
+}
+
+NS_IMPL_ADDREF(nsHTMLAnchorElement)
+
+NS_IMPL_RELEASE(nsHTMLAnchorElement)
+
+nsresult
+nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
+  if (aIID.Equals(kIDOMHTMLAnchorElementIID)) {
+    nsIDOMHTMLAnchorElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    mRefCnt++;
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult
+nsHTMLAnchorElement::CloneNode(nsIDOMNode** aReturn)
+{
+  nsHTMLAnchorElement* it = new nsHTMLAnchorElement(mInner.mTag);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mInner.CopyInnerTo(this, &it->mInner);
+  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+}
+
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Href, href, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Hreflang, hreflang, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape, eSetAttrNotify_None)
+NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type, eSetAttrNotify_None)
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::Blur()
+{
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::Focus()
+{
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
+                                       const nsString& aValue,
+                                       nsHTMLValue& aResult)
+{
+  if (aAttribute == nsHTMLAtoms::tabindex) {
+    nsHTMLGenericContent::ParseValue(aValue, 0, 32767, aResult,
+                                     eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::AttributeToString(nsIAtom* aAttribute,
+                                       nsHTMLValue& aValue,
+                                       nsString& aResult) const
+{
+  return mInner.AttributeToString(aAttribute, aValue, aResult);
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::MapAttributesInto(nsIStyleContext* aContext,
+                                       nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus& aEventStatus)
+{
+  // Try script event handlers first
+  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                       aFlags, aEventStatus);
+
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
+    switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      {
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->SetActiveLink(this);
+          NS_RELEASE(stateManager);
+        }
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      {
+        nsIEventStateManager *stateManager;
+        nsIContent *activeLink;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->GetActiveLink(&activeLink);
+          NS_RELEASE(stateManager);
+        }
+
+        if (activeLink == this) {
+          nsEventStatus status;
+          nsMouseEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            nsAutoString base, href, target;
+            GetAttribute(nsString(NS_HTML_BASE_HREF), base);
+            GetAttribute(nsString("href"), href);
+            GetAttribute(nsString("target"), target);
+            if (target.Length() == 0) {
+              GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+            }
+            mInner.TriggerLink(aPresContext, base, href, target, PR_TRUE);
+            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          }
+        }
+      }
+      break;
+
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      // XXX Bring up a contextual menu provided by the application
+      break;
+
+    case NS_MOUSE_ENTER:
+      //mouse enter doesn't work yet.  Use move until then.
+      {
+        nsAutoString base, href, target;
+        GetAttribute(nsString(NS_HTML_BASE_HREF), base);
+        GetAttribute(nsString("href"), href);
+        GetAttribute(nsString("target"), target);
+        if (target.Length() == 0) {
+          GetAttribute(nsString(NS_HTML_BASE_TARGET), target);
+        }
+        mInner.TriggerLink(aPresContext, base, href, target, PR_FALSE);
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+      }
+      break;
+
+      // XXX this doesn't seem to do anything yet
+    case NS_MOUSE_EXIT:
+      {
+        nsAutoString empty;
+        mInner.TriggerLink(aPresContext, empty, empty, empty, PR_FALSE);
+        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+      }
+      break;
+
+    default:
+      break;
+    }
+  }
+  return ret;
+}
