@@ -80,7 +80,6 @@
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
@@ -220,6 +219,7 @@ nsDOMStyleSheetCollection::QueryInterface(REFNSIID aIID, void** aInstancePtrResu
     return NS_ERROR_NULL_POINTER;
   }
 
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kIDOMStyleSheetCollectionIID)) {
     nsIDOMStyleSheetCollection *tmp = this;
     *aInstancePtrResult = (void*) tmp;
@@ -417,6 +417,7 @@ NS_IMPL_RELEASE(nsDOMImplementation)
 nsresult 
 nsDOMImplementation::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
