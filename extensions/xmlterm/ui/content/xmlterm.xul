@@ -34,6 +34,6 @@
   <script src="chrome://xmlterm/content/XMLTermChrome.js"></script>
 
   <iframe id="content-frame" type="content" name="content"
-          src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>
+          src="telnet:xmlterm" flex="100%"/>
 
 </window>
