@@ -58,9 +58,11 @@ class nsGCCache
   GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);
   
 private:
+  void ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask flags);
   PRCList GCCache;
   PRCList GCFreeList;
   void free_cache_entry(PRCList *clist);
+  void move_cache_entry(PRCList *clist);
   static GdkRegion * gdk_region_copy(GdkRegion *region);
   static GdkRegion *copyRegion;
   void ReportStats();
