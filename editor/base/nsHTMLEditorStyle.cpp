@@ -911,10 +911,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
 
     // either non-collapsed selection or no cached value: do it the hard way
     nsCOMPtr<nsIContentIterator> iter;
-    result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                NS_GET_IID(nsIContentIterator), 
-                                                getter_AddRefs(iter));
-    if (NS_FAILED(result)) return result;
+    iter = do_CreateInstance(kCContentIteratorCID);
     if (!iter) return NS_ERROR_NULL_POINTER;
 
     iter->Init(range);
@@ -926,8 +923,15 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
       //if (gNoisy) { printf("  checking node %p\n", content.get()); }
       nsCOMPtr<nsIDOMCharacterData>text;
       text = do_QueryInterface(content);
+      
       PRBool skipNode = PR_FALSE;
-      if (text)
+      
+      // just ignore any non-editable nodes
+      if (text && !IsEditable(text))
+      {
+        skipNode = PR_TRUE;
+      }
+      else if (text)
       {
         if (!isCollapsed && first && firstNodeInRange)
         {
