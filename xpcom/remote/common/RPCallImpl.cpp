@@ -263,7 +263,7 @@ NS_IMETHODIMP RPCallImpl::Demarshal(void *  data, PRUint32  _size) {
         params[i].Init(*value,type);
 	if (isOut) {
             params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
-            params[i].ptr = params[i].val.p = *value.val.p;
+            params[i].ptr = params[i].val.p = value->val.p;
         }
     }
     return NS_OK;
