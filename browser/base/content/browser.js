@@ -3899,7 +3899,7 @@ function handleLinkClick(event, href, linkNode)
       }
       
       if (event.altKey) {
-        saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
+        saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true, true);
         return true;
       }
  
