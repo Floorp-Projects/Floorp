@@ -17,6 +17,7 @@
  */
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIContent.h"
 #include "nsILinkHandler.h"
 #include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
@@ -34,24 +35,9 @@
 #include "nsIURL.h"
 #include "nsString.h"
 
-static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
+#define NOISY
 
-#if 0
-// XXX this code needs to move far away from here
-static nsIImageManager* gImageManager = nsnull;
-static void InitImageLibrary()
-{
-  // Initialize image library
-  if (NS_OK == NS_NewImageManager(&gImageManager)) {
-    if (NS_OK == gImageManager->Init()) {
-      gImageManager->SetCacheSize(1024*1024);
-      return;
-    }
-  }
-  printf("can't initialize image library\n");
-}
-// XXX end code with no home...
-#endif
+static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
 class ImageLoader :  public nsIImageRequestObserver {
 public:
@@ -70,13 +56,25 @@ public:
     return mImage;
   }
 
-  PRInt32 FrameCount();
+  PRBool GetImageSize(nsSize& aSize) {
+    if ((mSize.width > 0) && (mSize.height > 0)) {
+      aSize = mSize;
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  PRInt32 FrameCount() const {
+    return mFrames.Count();
+  }
 
   PRBool RemoveFrame(nsIFrame* aFrame);
 
   void AddFrame(nsIFrame* aFrame);
 
-  void UpdateFrames();
+  void DamageRepairFrames();
+
+  void ReflowFrames();
 
   virtual void Notify(nsIImageRequest *aImageRequest,
                       nsIImage *aImage,
@@ -93,20 +91,19 @@ public:
   nsIImage* mImage;
   nsIImageRequest* mImageRequest;
   nsIImageGroup* mImageGroup;
-
-  PRInt32 mWidth, mHeight;              // in pixels
+  nsSize mSize;              // Note: in pixels
+  nsImageError mError;
 };
 
 ImageLoader::ImageLoader(nsPresContext* aCX, nsIImageGroup* aGroup,
                          nsIFrame* aFrame)
+  : mSize(-1, -1)
 {
   mCX = aCX;
   AddFrame(aFrame);
   mImage = nsnull;
   mImageRequest = nsnull;
   mImageGroup = aGroup; NS_ADDREF(aGroup);
-  mWidth = -1;
-  mHeight = -1;
 }
 
 ImageLoader::~ImageLoader()
@@ -117,7 +114,8 @@ ImageLoader::~ImageLoader()
   }
 }
 
-void ImageLoader::LoadImage(const nsString& aURL)
+void
+ImageLoader::LoadImage(const nsString& aURL)
 {
   if (nsnull == mImage) {
     // Save url
@@ -137,19 +135,21 @@ static NS_DEFINE_IID(kIImageRequestObserver, NS_IIMAGEREQUESTOBSERVER_IID);
 NS_IMPL_ISUPPORTS(ImageLoader, kIImageRequestObserver);
 
 static PRBool gXXXInstalledColorMap;
-void ImageLoader::Notify(nsIImageRequest *aImageRequest,
-                         nsIImage *aImage,
-                         nsImageNotification aNotificationType,
-                         PRInt32 aParam1, PRInt32 aParam2,
-                         void *aParam3)
+void
+ImageLoader::Notify(nsIImageRequest *aImageRequest,
+                    nsIImage *aImage,
+                    nsImageNotification aNotificationType,
+                    PRInt32 aParam1, PRInt32 aParam2,
+                    void *aParam3)
 {
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
 #ifdef NOISY
     printf("Image:%d x %d\n", aParam1, aParam2);
 #endif
-    mWidth = aParam1;
-    mHeight = aParam2;
+    mSize.width = aParam1;
+    mSize.height = aParam2;
+    ReflowFrames();
     break;
 
   case nsImageNotification_kPixmapUpdate:
@@ -159,21 +159,27 @@ void ImageLoader::Notify(nsIImageRequest *aImageRequest,
       mImage = aImage;
       NS_ADDREF(aImage);
     }
-    UpdateFrames();
+    DamageRepairFrames();
+    break;
   }
 }
 
-PRInt32 ImageLoader::FrameCount()
+void
+ImageLoader::NotifyError(nsIImageRequest *aImageRequest,
+                         nsImageError aErrorType)
 {
-  return mFrames.Count();
+  mError = aErrorType;
+  DamageRepairFrames();
 }
 
-PRBool ImageLoader::RemoveFrame(nsIFrame* aFrame)
+PRBool
+ImageLoader::RemoveFrame(nsIFrame* aFrame)
 {
   return mFrames.RemoveElement(aFrame);
 }
 
-void ImageLoader::AddFrame(nsIFrame* aFrame)
+void
+ImageLoader::AddFrame(nsIFrame* aFrame)
 {
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {
@@ -185,15 +191,18 @@ void ImageLoader::AddFrame(nsIFrame* aFrame)
   mFrames.AppendElement(aFrame);
 }
 
-void ImageLoader::UpdateFrames()
+void
+ImageLoader::DamageRepairFrames()
 {
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {
     nsIFrame* frame = (nsIFrame*) mFrames.ElementAt(i);
 
-    // XXX installed colormap should be presentation-context/window state
+    // XXX this should be done somewhere else, like when the window
+    // is created or something???
+    // XXX maybe there should be a seperate notification service for
+    // colormap events?
     nsIWidget* window;
-     
     frame->GetWindow(window);
     if (!gXXXInstalledColorMap && mImage) {
       nsColorMap* cmap = mImage->GetColorMap();
@@ -206,9 +215,8 @@ void ImageLoader::UpdateFrames()
     // Determine damaged area and tell view manager to redraw it
     nsPoint offset;
     nsRect bounds;
-    frame->GetRect(bounds);
     nsIView* view;
-     
+    frame->GetRect(bounds);
     frame->GetOffsetFromView(offset, view);
     nsIViewManager* vm = view->GetViewManager();
     bounds.x = offset.x;
@@ -219,10 +227,16 @@ void ImageLoader::UpdateFrames()
   }
 }
 
-void ImageLoader::NotifyError(nsIImageRequest *aImageRequest,
-                              nsImageError aErrorType)
+void
+ImageLoader::ReflowFrames()
 {
-  printf("XXX image error: %d\n", aErrorType);
+  PRInt32 i, n = mFrames.Count();
+  mCX->BeginLoadImageUpdate();
+  for (i = 0; i < n; i++) {
+    nsIFrame* frame = (nsIFrame*) mFrames.ElementAt(i);
+    mCX->ImageUpdate(frame);
+  }
+  mCX->EndLoadImageUpdate();
 }
 
 //----------------------------------------------------------------------
@@ -241,6 +255,7 @@ nsPresContext::nsPresContext()
   mImageGroup = nsnull;
   mLinkHandler = nsnull;
   mContainer = nsnull;
+  mImageUpdates = 0;
 }
 
 nsPresContext::~nsPresContext()
@@ -269,12 +284,14 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mContainer);
 }
 
-nsrefcnt nsPresContext::AddRef(void)
+nsrefcnt
+nsPresContext::AddRef(void)
 {
   return ++mRefCnt;
 }
 
-nsrefcnt nsPresContext::Release(void)
+nsrefcnt
+nsPresContext::Release(void)
 {
   NS_PRECONDITION(0 != mRefCnt, "bad refcnt");
   if (--mRefCnt == 0) {
@@ -288,16 +305,16 @@ NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
 
 // Note: We don't hold a reference on the shell; it has a reference to
 // us
-void nsPresContext::SetShell(nsIPresShell* aShell)
+void
+nsPresContext::SetShell(nsIPresShell* aShell)
 {
   mShell = aShell;
 }
 
-nsIPresShell* nsPresContext::GetShell()
+nsIPresShell*
+nsPresContext::GetShell()
 {
-  if (nsnull != mShell) {
-    NS_ADDREF(mShell);
-  }
+  NS_IF_ADDREF(mShell);
   return mShell;
 }
 
@@ -316,70 +333,85 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
   return result;
 }
 
-nsIFontMetrics* nsPresContext::GetMetricsFor(const nsFont& aFont)
+nsIFontMetrics*
+nsPresContext::GetMetricsFor(const nsFont& aFont)
 {
   if (nsnull != mDeviceContext)
     return mDeviceContext->GetMetricsFor(aFont);
-
   return nsnull;
 }
 
-const nsFont& nsPresContext::GetDefaultFont(void)
+const nsFont&
+nsPresContext::GetDefaultFont(void)
 {
   return mDefaultFont;
 }
 
-nsRect nsPresContext::GetVisibleArea()
+nsRect
+nsPresContext::GetVisibleArea()
 {
   return mVisibleArea;
 }
 
-void nsPresContext::SetVisibleArea(const nsRect& r)
+void
+nsPresContext::SetVisibleArea(const nsRect& r)
 {
   mVisibleArea = r;
 }
 
-float nsPresContext::GetPixelsToTwips() const
+float
+nsPresContext::GetPixelsToTwips() const
 {
-  if (nsnull != mDeviceContext)
+  if (nsnull != mDeviceContext) {
     return mDeviceContext->GetDevUnitsToAppUnits();
-
+  }
   return 1.0f;
 }
 
-float nsPresContext::GetTwipsToPixels() const
+float
+nsPresContext::GetTwipsToPixels() const
 {
-  if (nsnull != mDeviceContext)
+  if (nsnull != mDeviceContext) {
     return mDeviceContext->GetAppUnitsToDevUnits();
-
+  }
   return 1.0f;
 }
 
-nsIDeviceContext * nsPresContext::GetDeviceContext() const
+nsIDeviceContext*
+nsPresContext::GetDeviceContext() const
 {
   NS_IF_ADDREF(mDeviceContext);
   return mDeviceContext;
 }
 
-nsIImage* nsPresContext::LoadImage(const nsString& aURL, nsIFrame* aForFrame)
+NS_METHOD
+nsPresContext::LoadImage(const nsString& aURL,
+                         nsIFrame* aForFrame,
+                         PRInt32& aLoadImageStatus,
+                         nsImageError& aError,
+                         nsSize& aImageSize,
+                         nsIImage*& aImage)
 {
+  aLoadImageStatus = 0;
+  nsresult rv;
   if (nsnull == mImageGroup) {
-    // XXX this is bad; if we allow for subwindows that have different
-    // rendering context's this won't work
+    // Create image group
+    rv = NS_NewImageGroup(&mImageGroup);
+    if (NS_OK != rv) {
+      return rv;
+    }
+
+    // Initialize the image group
     nsIWidget* window;
-     
     aForFrame->GetWindow(window);
     nsIRenderingContext* drawCtx = window->GetRenderingContext();
     drawCtx->Scale(mDeviceContext->GetAppUnitsToDevUnits(),
                    mDeviceContext->GetAppUnitsToDevUnits());
-    if ((NS_OK != NS_NewImageGroup(&mImageGroup)) ||
-        (NS_OK != mImageGroup->Init(drawCtx))) {
-      // XXX what to do?
-      printf("XXX: can't get image group created\n");
-      NS_RELEASE(drawCtx);
-      return nsnull;
-    }
+    rv = mImageGroup->Init(drawCtx);
     NS_RELEASE(drawCtx);
+    if (NS_OK != rv) {
+      return rv;
+    }
   }
 
   // Get absolute version of the url
@@ -387,38 +419,54 @@ nsIImage* nsPresContext::LoadImage(const nsString& aURL, nsIFrame* aForFrame)
   nsIURL* docURL = doc->GetDocumentURL();
   char* spec = aURL.ToNewCString();
   nsIURL* url;
-  nsresult rv = NS_NewURL(&url, docURL, spec);
+  rv = NS_NewURL(&url, docURL, spec);
   delete spec;
   NS_RELEASE(docURL);
   NS_RELEASE(doc);
   if (NS_OK != rv) {
-    // XXX lost error
-    return nsnull;
+    return rv;
   }
   nsAutoString absURL;
   url->ToString(absURL);
   NS_RELEASE(url);
 
-  PRInt32 n = mImageLoaders.Count();
-  for (PRInt32 i = 0; i < n; i++) {
-    ImageLoader* loader = (ImageLoader*) mImageLoaders.ElementAt(i);
+  // Lookup image request in our loaders array
+  PRInt32 i, n = mImageLoaders.Count();
+  ImageLoader* loader;
+  for (i = 0; i < n; i++) {
+    loader = (ImageLoader*) mImageLoaders.ElementAt(i);
     if (absURL.Equals(loader->GetURL())) {
       loader->AddFrame(aForFrame);
-      return loader->GetImage();
+      goto done;
     }
   }
 
-  ImageLoader* loader = new ImageLoader(this, mImageGroup, aForFrame);
+  // We haven't seen that image before. Create a new loader and
+  // start it going.
+  loader = new ImageLoader(this, mImageGroup, aForFrame);
+  if (nsnull == loader) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   mImageLoaders.AppendElement(loader);
-
   loader->LoadImage(absURL);
-  return loader->GetImage();
+
+done:
+  aLoadImageStatus = 0;
+  if (loader->GetImageSize(aImageSize)) {
+    aLoadImageStatus |= NS_LOAD_IMAGE_STATUS_SIZE;
+  }
+  aImage = loader->GetImage();
+  if (nsnull != aImage) {
+    aLoadImageStatus |= NS_LOAD_IMAGE_STATUS_BITS;
+  }
+  return NS_OK;
 }
 
-void nsPresContext::StopLoadImage(nsIFrame* aForFrame)
+NS_METHOD
+nsPresContext::StopLoadImage(nsIFrame* aForFrame)
 {
-  PRInt32 n = mImageLoaders.Count();
-  for (PRInt32 i = 0; i < n;) {
+  PRInt32 i, n = mImageLoaders.Count();
+  for (i = 0; i < n;) {
     ImageLoader* loader = (ImageLoader*) mImageLoaders.ElementAt(i);
     if (loader->RemoveFrame(aForFrame)) {
       if (0 == loader->FrameCount()) {
@@ -430,9 +478,52 @@ void nsPresContext::StopLoadImage(nsIFrame* aForFrame)
     }
     i++;
   }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
+void
+nsPresContext::BeginLoadImageUpdate()
+{
+  ++mImageUpdates;
+}
+
+void
+nsPresContext::ImageUpdate(nsIFrame* aFrame)
+{
+  nsIContent* content;
+  aFrame->GetContent(content);
+  mPendingImageUpdates.AppendElement(content);
+  if (0 == mImageUpdates) {
+    ProcessLoadImageUpdates();
+  }
+}
+
+void
+nsPresContext::EndLoadImageUpdate()
+{
+  if (--mImageUpdates == 0) {
+    ProcessLoadImageUpdates();
+  }
+}
+
+void
+nsPresContext::ProcessLoadImageUpdates()
+{
+  PRInt32 i, n = mPendingImageUpdates.Count();
+  mShell->EnterReflowLock();
+  mShell->BeginUpdate();
+  for (i = 0; i < n; i++) {
+    nsIContent* content = (nsIContent*) mPendingImageUpdates.ElementAt(i);
+    mShell->ContentChanged(content, nsnull);
+    NS_RELEASE(content);
+  }
+  mPendingImageUpdates.Clear();
+  mShell->EndUpdate();
+  mShell->ExitReflowLock();
+}
+
+NS_IMETHODIMP
+nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
 { // XXX should probably be a WEAK reference
   NS_IF_RELEASE(mLinkHandler);
   mLinkHandler = aHandler;
@@ -440,7 +531,8 @@ NS_IMETHODIMP nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
+NS_IMETHODIMP
+nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -451,7 +543,8 @@ NS_IMETHODIMP nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPresContext::SetContainer(nsISupports* aHandler)
+NS_IMETHODIMP
+nsPresContext::SetContainer(nsISupports* aHandler)
 { // XXX should most likely be a WEAK reference
   NS_IF_RELEASE(mContainer);
   mContainer = aHandler;
@@ -459,7 +552,8 @@ NS_IMETHODIMP nsPresContext::SetContainer(nsISupports* aHandler)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPresContext::GetContainer(nsISupports** aResult)
+NS_IMETHODIMP
+nsPresContext::GetContainer(nsISupports** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
