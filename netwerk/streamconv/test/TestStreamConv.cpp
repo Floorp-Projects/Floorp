@@ -126,7 +126,7 @@ main(int argc, char* argv[])
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
     if (NS_FAILED(rv)) return rv;

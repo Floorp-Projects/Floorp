@@ -207,7 +207,7 @@ main(int argc, char* argv[])
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
 
-  eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+  eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
   // Create the Socket transport service...
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);

@@ -1019,7 +1019,7 @@ public:
       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, nsIProxyObjectManager::GetCID(), &rv);
       if(NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIAppShellService> appShellProxy;
-      rv = pIProxyObjectManager->GetProxyObject(nsnull, nsIAppShellService::GetIID(), 
+      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, nsIAppShellService::GetIID(), 
                                                 appShellServ, PROXY_ASYNC | PROXY_ALWAYS,
                                                 getter_AddRefs(appShellProxy));
 

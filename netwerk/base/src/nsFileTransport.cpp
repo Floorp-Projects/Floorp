@@ -556,7 +556,7 @@ nsFileTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(observer, "need to supply an nsIStreamObserver");
-    rv = serv->NewAsyncStreamObserver(observer, nsnull, getter_AddRefs(mOpenObserver));
+    rv = serv->NewAsyncStreamObserver(observer, NS_CURRENT_EVENTQ, getter_AddRefs(mOpenObserver));
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(mOpenContext == nsnull, "context not released");
@@ -648,7 +648,7 @@ nsFileTransport::AsyncWrite(nsIInputStream *fromStream,
     if (NS_FAILED(rv)) return rv;
 
     if (observer) {
-        rv = serv->NewAsyncStreamObserver(observer, nsnull, getter_AddRefs(mObserver));
+        rv = serv->NewAsyncStreamObserver(observer, NS_CURRENT_EVENTQ, getter_AddRefs(mObserver));
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1148,8 +1148,8 @@ nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCa
         NS_WITH_SERVICE(nsIProxyObjectManager,
                         proxyMgr, kProxyObjectManagerCID, &rv);
         if (NS_FAILED(rv)) return rv;
-
-        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
+        
+        rv = proxyMgr->GetProxyObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
                                       NS_GET_IID(nsIProgressEventSink),
                                       sink,
                                       PROXY_ASYNC | PROXY_ALWAYS,

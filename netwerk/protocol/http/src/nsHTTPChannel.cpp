@@ -978,7 +978,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
       if(NS_FAILED(rv))
         return rv;
       nsINetPrompt* proxyprompter = NULL;
-      rv = pIProxyObjectManager->GetProxyObject(nsnull,
+      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
               nsINetPrompt::GetIID(), 
               prompter, PROXY_SYNC,
               (void**)&proxyprompter);

@@ -1519,7 +1519,7 @@ nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
   // Create a marshalling open observer to receive notifications...
   if (NS_SUCCEEDED(rv)) {
     rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
-                                   nsnull, observer);
+                                   NS_CURRENT_EVENTQ, observer);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1580,7 +1580,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   // Create a marshalling stream listener to receive notifications...
   if (NS_SUCCEEDED(rv)) {
     rv = NS_NewAsyncStreamListener(getter_AddRefs(mReadListener),
-                                   nsnull, aListener);
+                                   NS_CURRENT_EVENTQ, aListener);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1633,7 +1633,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     // Create a marshalling stream observer to receive notifications...
     if (aObserver) {
       rv = NS_NewAsyncStreamObserver(getter_AddRefs(mWriteObserver), 
-                                     nsnull, aObserver);
+                                     NS_CURRENT_EVENTQ, aObserver);
     }
 
     mWriteCount = writeCount;
@@ -1853,7 +1853,7 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
                       proxyMgr, kProxyObjectManagerCID, &rv);
       if (NS_SUCCEEDED(rv))
       {
-        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
+        rv = proxyMgr->GetProxyObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
                                       NS_GET_IID(nsIProgressEventSink),
                                       sink,
                                       PROXY_ASYNC | PROXY_ALWAYS,

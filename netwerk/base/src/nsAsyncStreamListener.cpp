@@ -58,20 +58,13 @@ public:
 
     nsresult Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ) {
         mReceiver = aObserver;
-        if (aEventQ) {
-            mEventQueue = aEventQ;
-        }
-        else {
-            nsresult rv;
-            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIEventQueue> eventQueue;
-            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
-                                                    getter_AddRefs(mEventQueue));
-            if (NS_FAILED(rv)) return rv;
-        }
-        return NS_OK;
+        
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) 
+            return rv;
+        
+        rv = eventQService->ResolveEventQueue(aEventQ, getter_AddRefs(mEventQueue));
+        return rv;
     }
 
     nsISupports* GetReceiver()      { return mReceiver.get(); }

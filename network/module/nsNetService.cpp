@@ -393,7 +393,7 @@ nsresult nsNetlibService::OpenStream(nsIURI *aUrl,
 
 #if defined(NETLIB_THREAD)
     if (nsnull != mEventQService) {
-      mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+      mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &evQueue);
     }
     if (nsnull == evQueue) {
       return NS_FALSE;
@@ -545,7 +545,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURI *aUrl,
     if (NULL != aUrl) {
 #if defined(NETLIB_THREAD)
         if (nsnull != mEventQService) {
-          mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+          mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &evQueue);
         }
         if (nsnull == evQueue) {
           goto loser;

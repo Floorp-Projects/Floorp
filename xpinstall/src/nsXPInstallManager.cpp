@@ -224,7 +224,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
                 NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
-                    rv = pmgr->GetProxyObject( 0, nsIXPIProgressDlg::GetIID(),
+                    rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIXPIProgressDlg::GetIID(),
                             mDlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
 
                 }

@@ -685,7 +685,7 @@ void DocumentViewerImpl::Notify(nsIImageGroup *aImageGroup,
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
     if (NS_FAILED(rv)) return;
 
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                             getter_AddRefs(eventQ));
     if (NS_FAILED(rv)) return;
 

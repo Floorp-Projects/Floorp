@@ -77,7 +77,7 @@ void Pump_PLEvents(nsIEventQueueService * eventQService);
 void Pump_PLEvents(nsIEventQueueService * eventQService)
 {
 	nsIEventQueue* eventQ = nsnull;
-  eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
 
   while ( gKeepRunning ) {
 #ifdef WIN32

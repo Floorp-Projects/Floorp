@@ -573,8 +573,7 @@ nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
         NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(),
-                                                getter_AddRefs(eventQueue));
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQueue));
         if (NS_FAILED(rv)) return rv;
 
         rv = NS_NewAsyncStreamObserver(getter_AddRefs(mObserver),

@@ -665,7 +665,7 @@ main(int argc, char* argv[])
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
 #if 0 // Jud sez 
     // fire up an instance of the cookie manager.

@@ -960,7 +960,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), &mThreadEventQueue);
+  rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, &mThreadEventQueue);
   if (NS_FAILED(rv)) return rv;
 
   //XXX make sure plugins have started up. this really needs to

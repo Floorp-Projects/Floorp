@@ -361,7 +361,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 
 
   nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
 
@@ -451,7 +451,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 
 
   nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
 

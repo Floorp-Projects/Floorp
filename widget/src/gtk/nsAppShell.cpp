@@ -371,7 +371,7 @@ NS_IMETHODIMP nsAppShell::Run()
 #endif /* DEBUG */
 
   //Get the event queue for the thread.
-  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &EQueue);
 
   // If a queue already present use it.
   if (EQueue)
@@ -384,7 +384,7 @@ NS_IMETHODIMP nsAppShell::Run()
     return rv;
   }
   //Get the event queue for the thread
-  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &EQueue);
   if (NS_OK != rv) {
     NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
     return rv;

@@ -330,7 +330,7 @@ void nsSocketTransport::Initialize()
 					     (nsISupports **)&mEventQService);
 
 	if (nsnull != mEventQService) 
-		mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &m_evQueue);
+		mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &m_evQueue);
 }
 
 nsSocketTransport::~nsSocketTransport()
