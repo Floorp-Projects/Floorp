@@ -77,18 +77,56 @@
     background: #00f;
   }
 
-  table.tree {
+  table {
     margin: auto;
   }
 
-  table.tree td {
-    text-align: center;
+  table.box {
+    border-collapse: collapse;
+	border: 2px solid black;
+	-moz-box-sizing: border-box;
+	width:98%;
+	height:96%;
+  }
+
+  row {
+    border: 2px solid black;
+  }
+  row.title {
+    border: hidden;
+  }
+
+  table td {
+    text-align: left;
     empty-cells: hide;
+  }
+
+  table td.box {
+    height:100%;
+	border: 2px solid black;
+  }
+
+  table td.title {
+    border-top: hidden;
+    border-right: hidden;
+    border-left: hidden;
+	font-size: .5em;
+  }
+
+  table td.title2 {
+    border-bottom: hidden;
+    border-right: hidden;
+    border-left: hidden;
+	font-size: .5em;
   }
 
   table.tree tr:not(.arrows) td {
     font-family: monospace;
     border: 0.1em solid;
+  }
+
+  span.html {
+    color:purple;
   }
 
   </style>
@@ -97,6 +135,7 @@
 
 <div class="slide" id="s0">
   <div class="nav">
+    <a href="#s25">&lt;</a>
     <a href="#s1">&gt;</a>
   </div>
   <table style="margin: auto"><tr><td>
@@ -119,9 +158,8 @@
     <li>Review of reflow</li>
     <li>Table frames</li>
     <li>Table reflow</li> 
-    <li>Intro to paganated reflow</li>
-    <li>Table paganated reflow</li>
-    <li>Areas not covered</li>
+    <li>Intro to paginated reflow</li>
+    <li>Table paginated reflow</li>
   </ul>
 </div>
 
@@ -263,7 +301,7 @@
 	  on the table, row groups, rows, cells the preferred and max element sizes of the cells 
 	  (from the pass 1 reflow), and considers colspans</li> 
       <li>Pass 2 - cell widths are constrained by the column widths (heights are only 
-	  constrained in paganated mode).</li> 
+	  constrained in paginated mode).</li> 
       <li>The row group figures out the row heights given the its style height constraints
 	  its rows and cells and the actual heights of its rows and cells from the pass 2 reflow</li> 
       <li>If the table has a style height, it allocates extra height to its row groups, rows and cells.</li> 
@@ -278,7 +316,65 @@
     <a href="#s8">&lt;</a>
     <a href="#s10">&gt;</a>
   </div>
-  <h1>Table Reflow</h1>
+  <h1>Table Reflow Example</h1>
+  <table width=100%>
+   <tr>
+    <td width=100%>
+	 <pre style="font-size:.6em;">
+tblO 030176CC r=0 a=8940,UC c=0,0 cnt=429
+  tbl 030178C4 r=0 a=8940,UC c=4470,UC cnt=430
+   rowG 03017A7C r=0 a=UC,UC c=UC,UC cnt=431 
+    row 03017C08 r=0 a=UC,UC c=UC,UC cnt=432
+     cell 03017DA8 r=0 a=UC,UC c=UC,UC cnt=433
+      block 03017E08 r=0 a=UC,UC c=UC,UC cnt=434
+      block 03017E08 d=870,300 me=480
+     cell 03017DA8 d=930,360 me=540
+     cell 0301A8CC r=0 a=UC,UC c=UC,UC cnt=436
+      block 0301A92C r=0 a=UC,UC c=UC,UC cnt=437
+      block 0301A92C d=1335,300 me=465
+     cell 0301A8CC d=1395,360 me=525
+    row 03017C08 d=UC,360
+   rowG 03017A7C d=UC,360
+   rowG 03017A7C r=2 a=4470,UC c=4470,UC cnt=442
+    row 03017C08 r=2 a=4470,UC c=4470,UC cnt=443
+     cell 03017DA8 r=2 a=1755,UC c=1695,UC cnt=444
+      block 03017E08 r=2 a=1695,UC c=1695,UC cnt=445
+      block 03017E08 d=1695,300
+     cell 03017DA8 d=1755,360
+     cell 0301A8CC r=2 a=2625,UC c=2565,UC cnt=446
+      block 0301A92C r=2 a=2565,UC c=2565,UC cnt=447
+      block 0301A92C d=2565,300
+     cell 0301A8CC d=2625,360
+    row 03017C08 d=4470,360
+   rowG 03017A7C d=4470,360
+  tbl 030178C4 d=4500,450
+ tblO 030176CC d=4500,450
+   </td>
+   <td>
+     <pre style="font-size:.7em;">
+&lt;<span class=html>table</span> width=300&gt;
+  &lt;<span class=html>tr</span>&gt;
+    &lt;<span class=html>td</span>&gt;foo&lt;<span class=html>/td</span>&gt;
+    &lt;<span class=html>td</span>&gt;bar zap&lt;<span class=html>/td</span>&gt;
+  &lt;<span class=html>/tr</span>&gt;
+&lt;<span class=html>/table</span>&gt;
+     </pre>
+	 <BR>
+	 <BR>
+	 <pre style="font-size:.7em;">
+Key:
+
+  r  = reflow reason, 
+       0 (initial),
+       2 (resize) 
+  a  = avail w, h
+  c  = computed w, h
+  d  = desired w, h
+  me = max elem w
+     <pre>
+	</td>
+  </tr>
+ </table>
 </div>
 
 <div class="slide" id="s10">
@@ -341,7 +437,7 @@
     <li>When there is a % height frame inside a cell without a computed height</li>
 	  <ul class=nested>
 	    <li>the frame will never get a chance to size based on the final cell height</li>
-        <li>in paganated mode when there is a height on the table, the table doesn't allocate
+        <li>in paginated mode when there is a height on the table, the table doesn't allocate
 		extra height to rows until after it does a pass 2 reflow and then it is too late</li>
 	  </ul>
 	</li>
@@ -355,7 +451,43 @@
     <a href="#s13">&lt;</a>
     <a href="#s15">&gt;</a>
   </div>
-  <h1>Special height reflow</h1>
+  <h1>Special Reflow Example</h1>
+  <table width=100%>
+   <tr>
+   <td>
+     <pre style="font-size:.7em;">
+&lt;<span class=html>table</span> border=2 width=300&gt;
+  &lt;<span class=html>tr</span>&gt;
+    &lt;<span class=html>td</span>&gt;
+      This cell's width is 
+      constrained by the 
+      table and image widths. 
+      Its exact height is 
+      hard to determine.
+    &lt;<span class=html>/td</span>&gt;
+    &lt;<span class=html>td</span>&gt;
+      &lt;<span class=html>img</span> src=raptor.jpg
+       width=200 height=100%>
+    &lt;<span class=html>/td</span>&gt;
+  &lt;<span class=html>/tr</span>&gt;
+&lt;<span class=html>/table</span>&gt;
+     </pre>
+   </td>
+    <td>
+	 <table border=2 width=300>
+      <tr>
+       <td style="font-size:.7em;">This cell's width is constrained 
+        by the table and image widths. Its height
+		is hard to determine. 
+       <td>
+       <img src="raptor.jpg" 
+      width=200 height=100%>
+    </td>
+   </tr>
+  </table>
+
+  </tr>
+ </table>
 </div>
 
 <div class="slide" id="s15">
@@ -412,7 +544,7 @@
     <a href="#s17">&lt;</a>
     <a href="#s19">&gt;</a>
   </div>
-  <h1>Intro to paganated reflow</h1>
+  <h1>Intro to paginated reflow</h1>
   <ul>
     <li>When a reflowee's available height is constrained, it may not fit and need to either 
 	split/continue on the next page, or start on the next page.</li>
@@ -431,7 +563,81 @@
     <a href="#s18">&lt;</a>
     <a href="#s20">&gt;</a>
   </div>
-  <h1>Intro to paganated reflow</h1>
+  <h1>Pagination Illustration</h1>
+  <table class=box style="height:500px">
+   <tr><td class="title">nsSimplePageSequence</td></tr>
+   <tr>
+    <td class=box>
+	 <table class=box style="height:40%;">
+	  <tr><td class=title>nsPageFrame</td></tr>
+	  <tr>
+	   <td class=box>
+	    <table class=box style="height:100%;">
+	     <tr><td class=title>nsPageContentFrame</td></tr>
+	     <tr>
+	      <td class=box style="border-bottom: hidden">
+	       <table class=box style="height:100%; border-bottom:hidden">
+	        <tr><td class=title>areaFrame (html)</td></tr>
+	        <tr>
+	         <td class=box>
+			  <table class=box style="height:100%; border-bottom:hidden">
+	           <tr><td class=title>blockFrame (body)</td></tr>
+	           <tr>
+	            <td class=box>
+			     <table class=box style="height:100%; border-bottom:hidden">
+	              <tr><td class=title>nsTableOuterFrame</td></tr>
+	              <tr>
+	               <td class=box></td>
+	              </tr>
+	             </table>
+				</td>
+	           </tr>
+	          </table>
+             </td>
+	        </tr>
+	       </table>
+	     </tr>
+	    </table>
+	   </td>
+	  </tr>
+	 </table>
+	 <BR>
+	 <table class=box style="height:40%;">
+	  <tr>
+	   <td class=box>
+	    <table class=box style="height:100%;">
+	     <tr>
+	      <td class=box style="border-top: hidden">
+	       <table class=box style="height:100%; border-top:hidden">
+	        <tr>
+	         <td class=box>
+			  <table class=box style="height:100%; border-top:hidden">
+	           <tr>
+	            <td class=box>
+			     <table class=box style="height:100%; border-top:hidden">
+	              <tr>
+	               <td class=box></td>
+	              </tr>
+	              <tr><td class=title2>nsTableOuterFrame</td></tr>
+	             </table>
+				</td>
+	           </tr>
+	           <tr><td class=title2>blockFrame (body)</td></tr>
+	          </table>
+             </td>
+	        </tr>
+	        <tr><td class=title2>areaFrame (html)</td></tr>
+	       </table>
+	     </tr>
+	     <tr><td class=title2>nsPageContentFrame continued</td></tr>
+	    </table>
+	   </td>
+	  </tr>
+	  <tr><td class=title2>nsPageFrame continued</td></tr>
+	 </table>
+	</td>
+   </tr>
+  </table>
 </div>
 
 <div class="slide" id="s20">
@@ -439,7 +645,7 @@
     <a href="#s19">&lt;</a>
     <a href="#s21">&gt;</a>
   </div>
-  <h1>Intro to paganated reflow</h1>
+  <h1>Intro to paginated reflow</h1>
   <ul>
     <li>The page sequence starts with one page and reflows it. If the page is incomplete then the page sequence
         creates a continuation for the page and sets it as the page's next sibling (it is also the page's 
@@ -455,7 +661,7 @@
     <a href="#s20">&lt;</a>
     <a href="#s22">&gt;</a>
   </div>
-  <h1>Intro to paganated reflow</h1>
+  <h1>Intro to paginated reflow</h1>
   <ul>
     <li>If the reflowee is incomplete, the reflower has the responsiblity to:
 	  <ul>
@@ -477,7 +683,7 @@
     <a href="#s21">&lt;</a>
     <a href="#s23">&gt;</a>
   </div>
-  <h1>Intro to paganated reflow</h1>
+  <h1>Intro to paginated reflow</h1>
   <ul>
     <li>Special assumptions
 	  <ul>
@@ -547,7 +753,7 @@
 <div class="slide" id="s25">
   <div class="nav">
     <a href="#s24">&lt;</a>
-    <a href="#s26">&gt;</a>
+    <a href="#s0">&gt;</a>
   </div>
   <h1>Table paginated reflow</h1>
   <ul>
@@ -568,215 +774,6 @@
   </ul>
 </div>
 
-<div class="slide" id="s26">
-  <div class="nav">
-    <a href="#s25">&lt;</a>
-    <a href="#s27">&gt;</a>
-  </div>
-  <h1>Managing style contexts</h1>
-
-  <ul>
-    <li>Style contexts must (in most cases) be created before frames are
-        constructed, to determine what frame to create.</li>
-    <li>Parent style context determines inheritance; it should
-        always be the content parent. [design flaw in frame/SC
-        relationship]</li>
-    <li>Three functions for creating style contexts on
-        <code>nsIStyleSet</code>, wrapped by similarly named ones on
-        <code>nsIPresContext</code>:
-     <ul>
-       <li><code>ResolveStyleContextFor</code>: For elements.</li>
-       <li><code>ResolvePseudoStyleContextFor</code>: for
-           pseudo-elements (<code>:first-letter</code>,
-           <code>:before</code>, etc.)</li>
-       <li><code>ResolveStyleContextForNonElement</code>: skips rule
-           matching and uses root rule node (text frame optimization)</li>
-     </ul>
-    </li>
-  </ul>
-</div>
-
-<div class="slide" id="s27">
-  <div class="nav">
-    <a href="#s26">&lt;</a>
-    <a href="#s28">&gt;</a>
-  </div>
-  <h1>Managing style contexts</h1>
-
-  <ul>
-    <li>Style context resolving functions will walk the rule processors
-        in <code>StyleSetImpl::FileRules</code>, find the correct rule
-        node, and find a current child of the parent (&ldquo;sibling
-        sharing&rdquo;) or create a new child.</li>
-    <li>Style context doesn't hold pointer to content, just rule
-        node.</li>
-  </ul>
-</div>
-
-<div class="slide" id="s28">
-  <div class="nav">
-    <a href="#s27">&lt;</a>
-    <a href="#s29">&gt;</a>
-  </div>
-  <h1>Dynamic changes to content</h1>
-
-  <ul>
-    <li><code>FrameManager::ReResolveStyleContext</code> destroys and
-        recreates style contexts for existing frames (rule node pointer
-        immutable).</li>
-    <li><code>ReResolveStyleContext</code> is messy because it needs to
-        create and parent style contexts correctly (sibling
-        sharing may not be the same) rather than just changing data.
-        [design flaw, again]</li>
-    <li>Any specially-parented style contexts (not along <em>frame</em>
-        parents, which need not be content parents) are reconstructed
-        using <code>nsIFrame::GetParentStyleContextFrame</code>.</li>
-    <li>Can return same style context due to sibling sharing unless
-        we're destroying the rule tree for a style sheet/rule
-        removal.</li>
-  </ul>
-</div>
-
-<div class="slide" id="s29">
-  <div class="nav">
-    <a href="#s28">&lt;</a>
-    <a href="#s30">&gt;</a>
-  </div>
-  <h1>Dynamic changes to content</h1>
-
-  <ul>
-    <li><code>ReResolveStyleContext</code> calculates differences
-        (repaint, reflow, reframe, etc.) between style old and new style
-        contexts and does appropriate cleanup</li>
-    <li>It uses <code>nsIStyleContext::CalcStyleDifference</code>, which
-        only computes differences for structs that have been
-        requested.  (I'll call this the data-struct-based hint
-        mechanism.)</li>
-    <li>Caller of <code>nsIFrameManager::ComputeStyleChangeFor</code>
-        processes the change list, which has been built to avoid
-        duplication.</li>
-    <li>We also have <code>ReParentStyleContext</code>, used in a few
-        places (usually during frame construction), but it's broken (has
-        many bugs that <code>ReResolveStyleContext</code> <em>used
-        to</em> have).</li>
-    </ul>
-</div>
-
-<div class="slide" id="s30">
-  <div class="nav">
-    <a href="#s29">&lt;</a>
-    <a href="#s31">&gt;</a>
-  </div>
-  <h1>Dynamic changes to content: optimizations</h1>
-
-  <ul>
-    <li>We optimize <em>attribute changes</em> by storing all the
-        attributes that have an effect on which rules match and only
-        doing a <code>ReResolveStyleContext</code> if the attribute has
-        an effect.  <code>nsIStyleSheet::AttributeAffectsStyle</code>
-        (should be on <code>nsIStyleRuleProcessor</code>).</li>
-    <li>We optimize <em>event state changes</em> (<code>:hover</code>,
-        <code>:active</code>, etc.) using
-        <code>nsIStyleRuleProcessor::HasStateDependentStyle</code>,
-        which is much more accurate.  The CSSRuleProcessor
-        implementation does a slightly modified form of selector
-        matching to implement it (includes matching on the middle of
-        selectors to catch <code>p:hover a</code>).</li>
-  </ul>
-</div>
-
-<div class="slide" id="s31">
-  <div class="nav">
-    <a href="#s30">&lt;</a>
-    <a href="#s32">&gt;</a>
-  </div>
-  <h1>Style attribute changes</h1>
-
-  <ul>
-    <li>We handle <code>style</code> attribute (&ldquo;inline
-        style&rdquo;) changes in a different
-        way from other changes to style rules.</li>
-    <li>As for other style changes, we have to &ldquo;walk&rdquo; the
-        rule tree and clear all the style data coming from the old
-        inline style <code>nsIStyleRule</code>, since there could be an
-        <code>!important</code> rule that overrides it, which would
-        allow dynamic changes to put the style attribute in multiple
-        places in the rule tree.  However, we maintain a hashtable just
-        for inline style rules so that we don't have to walk the whole
-        tree to find the nodes.</li>
-    <li><code>nsCSSFrameConstructor::AttributeChanged</code> only
-        reresolves style on the subtree of the element, just like other
-        <em>attribute</em> changes.</li>
-    <li>Different hint mechanism (from rule structs, not data structs)
-        could make <code>AttributeChanged</code> just go straight to a
-        framechange, instead.</li>
-    <li>Bugs due to failure to call
-        <code>nsIFrame::DidSetStyleContext</code>.</li>
-  </ul>
-</div>
-
-<div class="slide" id="s32">
-  <div class="nav">
-    <a href="#s31">&lt;</a>
-    <a href="#s33">&gt;</a>
-  </div>
-  <h1>Style sheet addition and removal</h1>
-
-  <ul>
-    <li>Handled in pres shell.</li>
-    <li><code>PresShell::ReconstructStyleData</code> calls
-        <code>FrameManager::ComputeStyleChangeFor</code>
-        (ReResolve) and then processes the framechange list.</li>
-    <li>Rebuilds rule tree if stylesheet was removed to avoid dangling
-        pointers (and perhaps aliasing that would cause problems).
-        Otherwise we'd have to walk rule tree and compare each rule node
-        to every rule in the sheet (<code>O(rules *
-        rule-nodes)</code>).</li>
-    <li>When rebuilding rule tree, we have to clear cached style
-        contexts from XUL menus and trees.</li>
-  </ul>
-</div>
-
-<div class="slide" id="s33">
-  <div class="nav">
-    <a href="#s32">&lt;</a>
-    <a href="#s34">&gt;</a>
-  </div>
-  <h1>Style rule changes</h1>
-
-  <ul>
-    <li>Handling of style rule changes is done in frame constructor
-        (called from style set, called from pres shell, which is a
-        document observer) and in the pres shell.  Code should be
-        merged.</li>
-    <li>Rule change applies the rule-struct hint as if the rule matched
-        the root element. (inefficient)  It does clearing of style data
-        (through <code>StyleSetImpl::ClearStyleData</code>) by walking
-        the rule tree and then the style context tree.
-        (could be handled by simultaneous clearing and
-        difference calculation of data (somewhat tricky))</li>
-    <li>Rule addition and removal just rebuild the entire world.  We
-        could at least do what we do for sheet addition/removal, or
-        slightly better, by searching the rule tree (only one rule this
-        time) instead of rebuilding it.</li>
-    <li><strong>Lots of room for optimization here.</strong> (but beware
-        <code>DidSetStyleContext</code>)</li>
-  </ul>
-</div>
-
-<div class="slide" id="s34">
-  <div class="nav">
-    <a href="#s33">&lt;</a>
-    <span style="background: white; color: white">&lt;</span>
-  </div>
-  <h1>The style system</h1>
-
-  <center>
-    Style sheets &amp; rules<br>&darr;<br>
-    Rule tree<br>&darr;<br>
-    Style context interface
-  </center>
-</div>
 
 </body>
 </html>
