@@ -95,7 +95,11 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
   (0x2665 == (c))   || \
   (0x2666 == (c))      \
   )
-
+#define SPECIAL_IN_SYMBOL_FONT(c) ( \
+  IN_RANGE(c, 0x2308, 0x230b) || \
+  (0x2329 == (c))   || \
+  (0x232a == (c))    \
+  )
 #define BAD_TEXT_ENCODING 0xFFFFFFFF
 
 //------------------------------------------------------------------------
@@ -260,6 +264,7 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
 	return PR_FALSE;
 }
 //------------------------------------------------------------------------
+static PRUnichar gSymbolReplacement[]={0xf8ee,0xf8f9,0xf8f0,0xf8fb,0x3008,0x3009};
 
 PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackGetWidth(
 	const PRUnichar *aCharPt, 
@@ -268,12 +273,24 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackGetWidth(
 	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
 	if (nsATSUIUtils::IsAvailable()  
-	    &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)))
+	    &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)||SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
 	{
 		mATSUIToolkit.PrepareToDraw(mPort, mContext );
-		nsresult res = mATSUIToolkit.GetWidth(aCharPt, oWidth, aSize, 
+		nsresult res;
+		if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) {
+			 short rep = 0;
+			 if((*aCharPt) > 0x230b)
+			 	rep = (*aCharPt) - 0x2325;
+			 else 
+			 	rep = (*aCharPt) - 0x2308;
+			 res = mATSUIToolkit.GetWidth(gSymbolReplacement+rep, oWidth, aSize, 
 													origFontNum, 
 													aBold, aItalic, aColor);
+		} else {
+			 res = mATSUIToolkit.GetWidth(aCharPt, oWidth, aSize, 
+													origFontNum, 
+													aBold, aItalic, aColor);
+		}
 		if(NS_SUCCEEDED(res))
 			return PR_TRUE;
 	}
@@ -289,12 +306,24 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
 	short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
 	if (nsATSUIUtils::IsAvailable()
-	   &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)))
+	   &&  (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) ||IN_SYMBOL_FONT(*aCharPt)||SPECIAL_IN_SYMBOL_FONT(*aCharPt)))
 	{
 		mATSUIToolkit.PrepareToDraw(mPort, mContext );
-		nsresult res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
+		nsresult res;
+		if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) {
+			 short rep = 0;
+			 if((*aCharPt) > 0x230b)
+			 	rep = (*aCharPt) - 0x2325;
+			 else 
+			 	rep = (*aCharPt) - 0x2308;
+			res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, x, y, oWidth, aSize, 
 													origFontNum, 
 													aBold, aItalic, aColor);
+		} else {
+			res = mATSUIToolkit.DrawString(aCharPt, x, y, oWidth, aSize, 
+													origFontNum, 
+													aBold, aItalic, aColor);
+		}
 		if(NS_SUCCEEDED(res))
 			return PR_TRUE;
 	}
