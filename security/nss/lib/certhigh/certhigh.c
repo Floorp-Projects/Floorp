@@ -44,7 +44,7 @@
 #include "nsspki.h"
 #include "pkit.h"
 #include "pkitm.h"
-#include "pkinss3hack.h"
+#include "pki3hack.h"
 
 /*
  * Find all user certificates that match the given criteria.
@@ -424,16 +424,9 @@ CERT_GetCertNicknames(CERTCertDBHandle *handle, int what, void *wincx)
     names->what = what;
     names->totallen = 0;
     
-    rv = SEC_TraversePermCerts(handle, CollectNicknames, (void *)names);
+    rv = PK11_TraverseSlotCerts(CollectNicknames, (void *)names, wincx);
     if ( rv ) {
 	goto loser;
-    }
-
-    if ( wincx != NULL ) {
-	rv = PK11_TraverseSlotCerts(CollectNicknames, (void *)names, wincx);
-	if ( rv ) {
-	    goto loser;
-	}
     }
 
     if ( names->numnicknames ) {
@@ -502,9 +495,7 @@ CollectDistNames( CERTCertificate *cert, SECItem *k, void *data)
 	trust = cert->trust;
 	
 	/* only collect names of CAs trusted for issuing SSL clients */
-	if ( ( trust->sslFlags &
-	      ( CERTDB_VALID_CA | CERTDB_TRUSTED_CLIENT_CA ) ) ==
-	       ( CERTDB_VALID_CA | CERTDB_TRUSTED_CLIENT_CA ) ) {
+	if (  trust->sslFlags &  CERTDB_TRUSTED_CLIENT_CA )  {
 	    saveit = PR_TRUE;
 	}
     }
@@ -568,7 +559,7 @@ CERT_GetSSLCACerts(CERTCertDBHandle *handle)
     names->names = NULL;
     
     /* collect the names from the database */
-    rv = SEC_TraversePermCerts(handle, CollectDistNames, (void *)names);
+    rv = PK11_TraverseSlotCerts(CollectDistNames, (void *)names, NULL);
     if ( rv ) {
 	goto loser;
     }
@@ -746,10 +737,12 @@ CERTSignedCrl * CERT_ImportCRL
 	    break;
 	}
 
+#ifdef FIXME
 	/* Do CRL validation and add to the dbase if this crl is more present then the one
 	   in the dbase, if one exists.
 	 */
 	crl = cert_DBInsertCRL (handle, url, newCrl, derCRL, type);
+#endif
 
     } while (0);
 
@@ -763,7 +756,6 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 {
     SECStatus rv;
     SECItem *derCert;
-    SECItem certKey;
     PRArenaPool *arena;
     CERTCertificate *cert = NULL;
     CERTCertificate *newcert = NULL;
@@ -785,22 +777,6 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
     while (numcerts--) {
 	derCert = certs;
 	certs++;
-	
-	/* get the key (issuer+cn) from the cert */
-	rv = CERT_KeyFromDERCert(arena, derCert, &certKey);
-	if ( rv != SECSuccess ) {
-	    goto loser;
-	}
-
-	/* same cert already exists in the database, don't need to do
-	 * anything more with it
-	 */
-	cert = CERT_FindCertByKey(handle, &certKey);
-	if ( cert ) {
-	    CERT_DestroyCertificate(cert);
-	    cert = NULL;
-	    continue;
-	}
 
 	/* decode my certificate */
 	newcert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
@@ -864,7 +840,7 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 	    }
 	}
 	
-	cert = CERT_NewTempCertificate(handle, derCert, NULL, PR_FALSE, PR_TRUE);
+	cert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
 	if ( cert == NULL ) {
 	    goto loser;
 	}
@@ -872,7 +848,10 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 	/* get a default nickname for it */
 	nickname = CERT_MakeCANickname(cert);
 
-	rv = CERT_AddTempCertToPerm(cert, nickname, &trust);
+	cert->trust = &trust;
+	rv = PK11_ImportCert(PK11_GetInternalKeySlot(), cert, 
+			CK_INVALID_HANDLE, nickname, PR_TRUE);
+
 	/* free the nickname */
 	if ( nickname ) {
 	    PORT_Free(nickname);

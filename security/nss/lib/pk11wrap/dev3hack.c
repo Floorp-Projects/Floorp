@@ -32,8 +32,12 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Date: 2001/11/05 17:18:48 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:15:05 $ $Name:  $";
 #endif /* DEBUG */
+
+#ifndef NSS_3_4_CODE
+#define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
 
 #ifndef PKIT_H
 #include "pkit.h"
@@ -43,9 +47,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Da
 #include "devt.h"
 #endif /* DEVT_H */
 
-#ifndef DEVM_H
-#include "devm.h"
-#endif /* DEVM_H */
+#include "dev3hack.h"
 
 #ifndef BASE_H
 #include "base.h"
@@ -158,6 +160,13 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
+}
+
+
+NSSTrustDomain *
+nssToken_GetTrustDomain(NSSToken *token)
+{
+    return token->trustDomain;
 }
 
 typedef enum {

@@ -1518,20 +1518,6 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
     PORT_Memset (trusts, 0, sizeof (trusts));
     out = (FILE *)data;
     
-    if ( cert->dbEntry ) {
-	name = cert->dbEntry->nickname;
-	if ( name == NULL ) {
-	    name = cert->emailAddr;
-	}
-	
-        trust = &cert->dbEntry->trust;
-	printflags(trusts, trust->sslFlags);
-	PORT_Strcat(trusts, ",");
-	printflags(trusts, trust->emailFlags);
-	PORT_Strcat(trusts, ",");
-	printflags(trusts, trust->objectSigningFlags);
-	fprintf(out, "%-60s %-5s\n", name, trusts);
-    } else {
 	name = cert->nickname;
 	if ( name == NULL ) {
 	    name = cert->emailAddr;
@@ -1548,7 +1534,6 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
 	    PORT_Memcpy(trusts,",,",3);
 	}
 	fprintf(out, "%-60s %-5s\n", name, trusts);
-    }
 
     return (SECSuccess);
 }

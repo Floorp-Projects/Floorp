@@ -35,20 +35,16 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.11 $ $Date: 2001/10/19 18:10:58 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.12 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
 #include "devt.h"
 #endif /* DEVT_H */
 
-#ifdef NSS_3_4_CODE
-#include "pkcs11t.h"
-#else
 #ifndef NSSCKT_H
 #include "nssckt.h"
 #endif /* NSSCKT_H */
-#endif /* NSS_3_4_CODE */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"

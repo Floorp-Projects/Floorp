@@ -34,7 +34,7 @@
 /*
  * Private header defining OCSP types.
  *
- * $Id: ocspti.h,v 1.1 2000/03/31 19:43:04 relyea%netscape.com Exp $
+ * $Id: ocspti.h,v 1.2 2001/11/08 00:14:45 relyea%netscape.com Exp $
  */
 
 #ifndef _OCSPTI_H_
@@ -194,6 +194,12 @@ struct CERTOCSPCertIDStr {
     SECItem issuerNameHash;		/* an OCTET STRING */
     SECItem issuerKeyHash;		/* an OCTET STRING */
     SECItem serialNumber;		/* an INTEGER */
+    SECItem issuerSHA1NameHash;		/* keep other hashes around when */
+    SECItem issuerMD5NameHash;              /* we have them */
+    SECItem issuerMD2NameHash;
+    SECItem issuerSHA1KeyHash;		/* keep other hashes around when */
+    SECItem issuerMD5KeyHash;              /* we have them */
+    SECItem issuerMD2KeyHash;
 };
 
 /*

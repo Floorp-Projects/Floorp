@@ -1,4 +1,4 @@
-/* 
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -31,22 +31,16 @@
  * GPL.
  */
 
-#ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: util.c,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:06:10 $ $Name:  $";
-#endif /* DEBUG */
-
-#ifndef DEVM_H
-#include "devm.h"
-#endif /* DEVM_H */
-
-NSS_IMPLEMENT PRUint32
-nssPKCS11StringLength(CK_CHAR *pkcs11Str, PRUint32 bufLen)
-{
-    PRInt32 i;
-    for (i = bufLen - 1; i>=0; ) {
-	if (pkcs11Str[i] != ' ') break;
-	--i;
-    }
-    return (PRUint32)(i + 1);
-}
-
+#include "seccomon.h"
+#ifdef XP_UNIX
+#include "unix_rand.c"
+#endif
+#ifdef XP_WIN
+#include "win_rand.c"
+#endif
+#ifdef XP_MAC
+#include "mac_rand.c"
+#endif
+#ifdef XP_OS2
+#include "os2_rand.c"
+#endif

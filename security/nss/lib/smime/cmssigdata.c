@@ -34,13 +34,13 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.12 2001/11/02 00:03:32 ddrinan%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.13 2001/11/08 00:15:27 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
 
 #include "cert.h"
-#include "cdbhdl.h"
+/*#include "cdbhdl.h"*/
 #include "secasn1.h"
 #include "secitem.h"
 #include "secoid.h"

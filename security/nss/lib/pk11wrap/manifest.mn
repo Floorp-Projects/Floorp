@@ -41,13 +41,14 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	secmodi.h \
-	secmodti.h \
+	pk11init.h \
+	dev3hack.h \
 	$(NULL)
 
 MODULE = security
 
 CSRCS = \
+	dev3hack.c \
 	pk11cert.c \
 	pk11err.c  \
 	pk11load.c \
@@ -60,6 +61,7 @@ CSRCS = \
 	pk11sdr.c \
 	pk11pqg.c \
 	pk11pk12.c \
+	pk11pbe.c \
 	$(NULL)
 
 REQUIRES = security dbm

@@ -162,8 +162,6 @@ struct PK11DefaultArrayEntryStr {
 #define CKM_FAKE_RANDOM       0x80000efeL
 #define CKM_INVALID_MECHANISM 0xffffffffL
 #define CKA_DIGEST            0x81000000L
-#define CK_INVALID_KEY 0
-#define CK_INVALID_SESSION 0
 
 /* Cryptographic module types */
 #define SECMOD_EXTERNAL	0	/* external module */
@@ -206,11 +204,11 @@ typedef PRBool (*PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
 /*
 ** Attributes
 */
-struct SECKEYPrivAttributeStr {
+struct SECKEYAttributeStr {
     SECItem attrType;
     SECItem **attrValue;
 };
-typedef struct SECKEYPrivAttributeStr SECKEYPrivAttribute;
+typedef struct SECKEYAttributeStr SECKEYAttribute;
 
 /*
 ** A PKCS#8 private key info object
@@ -220,10 +218,9 @@ struct SECKEYPrivateKeyInfoStr {
     SECItem version;
     SECAlgorithmID algorithm;
     SECItem privateKey;
-    SECKEYPrivAttribute **attributes;
+    SECKEYAttribute **attributes;
 };
 typedef struct SECKEYPrivateKeyInfoStr SECKEYPrivateKeyInfo;
-#define SEC_PRIVATE_KEY_INFO_VERSION		0	/* what we *create* */
 
 /*
 ** A PKCS#8 private key info object

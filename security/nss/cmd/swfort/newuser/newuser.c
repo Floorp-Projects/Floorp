@@ -40,7 +40,7 @@
 #include "blapi.h"	/* program calls low level functions directly!*/
 #include "pk11func.h"
 #include "secmod.h"
-#include "secmodi.h"
+/*#include "secmodi.h"*/
 #include "cert.h"
 #include "key.h"
 #include "swforti.h"
@@ -791,7 +791,8 @@ main(int argc, char **argv)
 	    }
 	    derCert.data = origCert;
 	    derCert.len = Cert_length(origCert, sizeof(origCert));
-	    cert = CERT_NewTempCertificate(certhandle,&derCert, NULL, 
+	    cert = 
+	(CERTCertificate *)CERT_NewTempCertificate(certhandle,&derCert, NULL, 
 							PR_FALSE, PR_TRUE);
 	    caCert.valid[i].cert = cert;
 	    if (cert == NULL) continue;

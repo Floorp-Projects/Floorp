@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.4 2001/09/20 21:05:48 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.5 2001/11/08 00:15:30 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -40,21 +40,14 @@
 #include "prinit.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "cert.h"
-#include "keylow.h"
-#include "keydbt.h"
-#include "ssl.h"
-#include "sslproto.h"
-#include "secmod.h"
-#include "secmodi.h"
-#include "secoid.h"
-#include "nss.h"
+#include "pcertt.h"
+#include "lowkeyi.h"
+#include "pcert.h"
+/*#include "secmodi.h" */
 #include "secrng.h"
 #include "cdbhdl.h"
-#include "pk11func.h"
+/*#include "pk11func.h" */
 #include "pkcs11i.h"
-
-static char *secmodname = NULL;  
 
 static char *
 pk11_certdb_name_cb(void *arg, int dbVersion)
@@ -109,77 +102,61 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
 #define CKR_KEYDB_FAILED	CKR_DEVICE_ERROR
 
 static CK_RV
-pk11_OpenCertDB(const char * configdir,  const char *prefix, PRBool readOnly)
+pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
+    					    NSSLOWCERTCertDBHandle **certdbPtr)
 {
-    CERTCertDBHandle *certdb;
-    CK_RV        crv = CKR_OK;
+    NSSLOWCERTCertDBHandle *certdb;
+    CK_RV        crv = CKR_CERTDB_FAILED;
     SECStatus    rv;
     char * name = NULL;
 
-    certdb = CERT_GetDefaultCertDB();
-    if (certdb)
-    	return CKR_OK;	/* idempotency */
+    if (prefix == NULL) {
+	prefix = "";
+    }
 
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);
     if (name == NULL) goto loser;
 
-    certdb = (CERTCertDBHandle*)PORT_ZAlloc(sizeof(CERTCertDBHandle));
+    certdb = (NSSLOWCERTCertDBHandle*)PORT_ZAlloc(sizeof(NSSLOWCERTCertDBHandle));
     if (certdb == NULL) 
     	goto loser;
 
 /* fix when we get the DB in */
-    rv = CERT_OpenCertDB(certdb, readOnly, pk11_certdb_name_cb, (void *)name);
-    if (rv == SECSuccess)
-	CERT_SetDefaultCertDB(certdb);
-    else {
-	PR_Free(certdb);
-loser: 
-	crv = CKR_CERTDB_FAILED;
+    rv = nsslowcert_OpenCertDB(certdb, readOnly, 
+				pk11_certdb_name_cb, (void *)name, PR_FALSE);
+    if (rv == SECSuccess) {
+	crv = CKR_OK;
+	*certdbPtr = certdb;
+	certdb = NULL;
     }
+loser: 
+    if (certdb) PR_Free(certdb);
     if (name) PORT_Free(name);
     return crv;
 }
 
 static CK_RV
-pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly)
+pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
+    						NSSLOWKEYDBHandle **keydbPtr)
 {
-    SECKEYKeyDBHandle *keydb;
+    NSSLOWKEYDBHandle *keydb;
     char * name = NULL;
 
-    keydb = SECKEY_GetDefaultKeyDB();
-    if (keydb)
-    	return SECSuccess;
+    if (prefix == NULL) {
+	prefix = "";
+    }
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
     if (name == NULL) 
 	return SECFailure;
-    keydb = SECKEY_OpenKeyDB(readOnly, pk11_keydb_name_cb, (void *)name);
+    keydb = nsslowkey_OpenKeyDB(readOnly, pk11_keydb_name_cb, (void *)name);
+    PORT_Free(name);
     if (keydb == NULL)
 	return CKR_KEYDB_FAILED;
-    SECKEY_SetDefaultKeyDB(keydb);
-    PORT_Free(name);
+    *keydbPtr = keydb;
 
     return CKR_OK;
 }
 
-static CERTCertDBHandle certhandle = { 0 };
-
-static PRBool isInitialized = PR_FALSE;
-
-static CK_RV 
-pk11_OpenVolatileCertDB() {
-      SECStatus rv = SECSuccess;
-      /* now we want to verify the signature */
-      /*  Initialize the cert code */
-      rv = CERT_OpenVolatileCertDB(&certhandle);
-      if (rv != SECSuccess) {
-	   return CKR_DEVICE_ERROR;
-      }
-      CERT_SetDefaultCertDB(&certhandle);
-      return CKR_OK;
-}
-
-/* forward declare so that a failure in the init case can shutdown */
-void pk11_Shutdown(void);
 
 /*
  * OK there are now lots of options here, lets go through them all:
@@ -200,71 +177,53 @@ void pk11_Shutdown(void);
  */
 CK_RV
 pk11_DBInit(const char *configdir, const char *certPrefix, 
-		const char *keyPrefix,
-		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
-					PRBool noModDB, PRBool forceOpen)
+	    const char *keyPrefix, PRBool readOnly, 
+	    PRBool noCertDB, PRBool noKeyDB, PRBool forceOpen,
+	    NSSLOWCERTCertDBHandle **certdbPtr, NSSLOWKEYDBHandle **keydbPtr)
 {
-    SECStatus rv      = SECFailure;
     CK_RV crv = CKR_OK;
 
-    if( isInitialized ) {
-	return CKR_OK;
-    }
 
-    rv = RNG_RNGInit();     	/* initialize random number generator */
-    if (rv != SECSuccess) {
-	crv = CKR_DEVICE_ERROR;
-	goto loser;
-    }
-    RNG_SystemInfoForRNG();
-
-    if (noCertDB) {
-	crv = pk11_OpenVolatileCertDB();
-	if (crv != CKR_OK) {
-	    goto loser;
-	}
-    } else {
-	crv = pk11_OpenCertDB(configdir, certPrefix, readOnly);
+    if (!noCertDB) {
+	crv = pk11_OpenCertDB(configdir, certPrefix, readOnly, certdbPtr);
 	if (crv != CKR_OK) {
 	    if (!forceOpen) goto loser;
-	    crv = pk11_OpenVolatileCertDB();
-	    if (crv != CKR_OK) {
-		goto loser;
-	    }
+	    crv = CKR_OK;
 	}
+    }
+    if (!noKeyDB) {
 
-	crv = pk11_OpenKeyDB(configdir, keyPrefix, readOnly);
+	crv = pk11_OpenKeyDB(configdir, keyPrefix, readOnly, keydbPtr);
 	if (crv != CKR_OK) {
 	    if (!forceOpen) goto loser;
+	    crv = CKR_OK;
 	}
     }
 
-    isInitialized = PR_TRUE;
 
 loser:
-    if (crv != CKR_OK) {
-	pk11_Shutdown();
-    }
     return crv;
 }
 
 
+#ifdef notdef
 void
 pk11_Shutdown(void)
 {
-    CERTCertDBHandle *certHandle;
-    SECKEYKeyDBHandle *keyHandle;
+    NSSLOWCERTCertDBHandle *certHandle;
+    NSSLOWKEYDBHandle *keyHandle;
 
     PR_FREEIF(secmodname);
-    certHandle = CERT_GetDefaultCertDB();
+    certHandle = nsslowcert_GetDefaultCertDB();
     if (certHandle)
-    	CERT_ClosePermCertDB(certHandle);
-    CERT_SetDefaultCertDB(NULL); 
+    	nsslowcert_ClosePermCertDB(certHandle);
+    nsslowcert_SetDefaultCertDB(NULL); 
 
-    keyHandle = SECKEY_GetDefaultKeyDB();
+    keyHandle = nsslowkey_GetDefaultKeyDB();
     if (keyHandle)
-    	SECKEY_CloseKeyDB(keyHandle);
-    SECKEY_SetDefaultKeyDB(NULL); 
+    	nsslowkey_CloseKeyDB(keyHandle);
+    nsslowkey_SetDefaultKeyDB(NULL); 
 
     isInitialized = PR_FALSE;
 }
+#endif

@@ -36,7 +36,7 @@
 #include "nspr.h"
 
 /* definitely required */
-#include "certdb.h"
+/*#include "certdb.h" */
 #include "key.h"
 #include "base64.h"
 

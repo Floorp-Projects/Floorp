@@ -34,8 +34,6 @@
 #ifndef _ALGHMAC_H_
 #define _ALGHMAC_H_
 
-#include "secoid.h"
-
 typedef struct HMACContextStr HMACContext;
 
 SEC_BEGIN_PROTOS
@@ -53,7 +51,7 @@ HMAC_Destroy(HMACContext *cx);
  * NULL is returned if an error occurs or the secret is > 64 bytes.
  */
 extern HMACContext *
-HMAC_Create(SECOidTag hash_alg, const unsigned char *secret, 
+HMAC_Create(const SECHashObject *hashObj, const unsigned char *secret, 
 	    unsigned int secret_len);
 
 /* reset HMAC for a fresh round */

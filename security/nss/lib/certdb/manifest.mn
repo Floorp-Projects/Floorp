@@ -42,28 +42,20 @@ PRIVATE_EXPORTS = \
 	genname.h \
 	xconst.h \
 	certxutl.h \
-	cdbhdl.h \
 	$(NULL)
 
 MODULE = security
 
-CERTINIT=certinit.c
-ifdef NSS_STAN_MODULE
-PCERTDB=stanpcertdb.c
 DEFINES=-DSTAN_CERT_DB
-else
-PCERTDB=pcertdb.c
-endif
 
 CSRCS = \
 	alg1485.c \
 	certdb.c \
 	certv3.c \
-	$(CERTINIT) \
 	certxutl.c \
 	crl.c \
 	genname.c \
-	$(PCERTDB) \
+	stanpcertdb.c \
 	polcyxtn.c \
 	secname.c \
 	xauthkid.c \

@@ -1,4 +1,6 @@
-/* 
+/*
+ * private.h - Private data structures for the software token library
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -29,43 +31,50 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- */
-
-/*
- * This file is in part derived from a file "pkcs11t.h" made available
- * by RSA Security at ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-11/pkcs11t.h
  *
- * Copyright (C) 1994-1999 RSA Security Inc. Licence to copy this document
- * is granted provided that it is identified as "RSA Security Inc. Public-Key
- * Cryptography Standards (PKCS)" in all material mentioning or referencing
- * this document.
+ * $Id: keydbi.h,v 1.2 2001/11/08 00:15:31 relyea%netscape.com Exp $
  */
 
-#ifndef NSSCKU_H
-#define NSSCKU_H
+#ifndef _KEYDBI_H_
+#define _KEYDBI_H_
 
-#ifdef DEBUG
-static const char NSSCKU_CVS_ID[] = "@(#) $RCSfile: nsscku.h,v $ $Revision: 1.2 $ $Date: 2000/04/03 21:58:34 $ $Name:  $";
-#endif /* DEBUG */
-
-#endif /* NSSCKU_H */
+#include "nspr.h"
+#include "seccomon.h"
+#include "mcom_db.h"
 
 /*
- * These platform-dependent packing rules are required by all PKCS#11
- * modules, to be binary compatible.  These rules have been placed in 
- * separate header files (nssckp.h to enable the packing, nsscku.h to 
- * disable) for consistancy.  These files can be included many times,
- * so the bodies should *NOT* be in the multiple-inclusion-preventing
- * #ifndef/#endif area above.
+ * Handle structure for open key databases
  */
+struct NSSLOWKEYDBHandleStr {
+    DB *db;
+    DB *updatedb;		/* used when updating an old version */
+    SECItem *global_salt;	/* password hashing salt for this db */
+    int version;		/* version of the database */
+    char *dbname;		/* name of the openned DB */
+    PRBool readOnly;		/* is the DB read only */
+};
 
 /*
- * WIN32 is defined (when appropriate) in NSPR's prcpucfg.h.
- */
+** Typedef for callback for traversing key database.
+**      "key" is the key used to index the data in the database (nickname)
+**      "data" is the key data
+**      "pdata" is the user's data 
+*/
+typedef SECStatus (* NSSLOWKEYTraverseKeysFunc)(DBT *key, DBT *data, void *pdata);
 
-#ifdef WIN32
-#pragma warning(disable:4103)
-#pragma pack(pop, cryptoki)
-#endif /* WIN32 */
 
-/* End of nsscku.h */
+SEC_BEGIN_PROTOS
+
+/*
+** Traverse the entire key database, and pass the nicknames and keys to a 
+** user supplied function.
+**      "f" is the user function to call for each key
+**      "udata" is the user's data, which is passed through to "f"
+*/
+extern SECStatus NSSLOWKEY_TraverseKeys(NSSLOWKEYDBHandle *handle, 
+				NSSLOWKEYTraverseKeysFunc f,
+				void *udata);
+
+SEC_END_PROTOS
+
+#endif /* _KEYDBI_H_ */

@@ -49,7 +49,7 @@
 #include "sechash.h"
 #include "cert.h"
 #include "secerr.h"
-#include "secpkcs5.h"
+/*#include "secpkcs5.h" */
 
 #define PAIRWISE_SECITEM_TYPE			siBuffer
 #define PAIRWISE_DIGEST_LENGTH			SHA1_LENGTH /* 160-bits */
@@ -225,7 +225,7 @@ PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, void *wincx)
     symKey->data.data = NULL;
     symKey->data.len = 0;
     symKey->owner = PR_TRUE;
-    symKey->objectID = CK_INVALID_KEY;
+    symKey->objectID = CK_INVALID_HANDLE;
     symKey->slot = slot;
     symKey->series = slot->series;
     symKey->cx = wincx;
@@ -253,7 +253,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     }
     PK11_USE_THREADS(PZ_Unlock(symKey->refLock);)
     if (destroy) {
-	if ((symKey->owner) && symKey->objectID != CK_INVALID_KEY) {
+	if ((symKey->owner) && symKey->objectID != CK_INVALID_HANDLE) {
 	    pk11_EnterKeyMonitor(symKey);
 	    (void) PK11_GETTAB(symKey->slot)->
 		C_DestroyObject(symKey->session, symKey->objectID);
@@ -301,7 +301,7 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
 {
     PK11SymKey *symKey;
 
-    if (keyID == CK_INVALID_KEY) {
+    if (keyID == CK_INVALID_HANDLE) {
 	return NULL;
     }
 
@@ -338,7 +338,7 @@ PK11_GetWrapKey(PK11SlotInfo *slot, int wrap, CK_MECHANISM_TYPE type,
     PK11SymKey *symKey = NULL;
 
     if (slot->series != series) return NULL;
-    if (slot->refKeys[wrap] == CK_INVALID_KEY) return NULL;
+    if (slot->refKeys[wrap] == CK_INVALID_HANDLE) return NULL;
     if (type == CKM_INVALID_MECHANISM) type = slot->wrapMechanism;
 
     symKey = PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive,
@@ -535,7 +535,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	/* what about fortezza??? */
 	default:
 	    PORT_SetError( SEC_ERROR_BAD_KEY );
-	    return CK_INVALID_KEY;
+	    return CK_INVALID_HANDLE;
 	}
 
 	templateCount = attrs - theTemplate;
@@ -547,7 +547,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
         rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION, theTemplate,
 				 	templateCount, isToken, &objectID);
 	if ( rv != SECSuccess) {
-	    return CK_INVALID_KEY;
+	    return CK_INVALID_HANDLE;
 	}
     }
 
@@ -588,7 +588,7 @@ PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *keyID,
     PORT_Assert(tsize <= sizeof(findTemp)/sizeof(CK_ATTRIBUTE));
 
     key_id = pk11_FindObjectByTemplate(slot,findTemp,tsize);
-    if (key_id == CK_INVALID_KEY) {
+    if (key_id == CK_INVALID_HANDLE) {
 	return NULL;
     }
     return PK11_SymKeyFromHandle(slot, NULL, PK11_OriginDerive, type, key_id,
@@ -1140,7 +1140,7 @@ PK11_CopyKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE srcObject)
     PK11_ExitSlotMonitor(slot);
     if (crv == CKR_OK) return destObject;
     PORT_SetError( PK11_MapError(crv) );
-    return CK_INVALID_KEY;
+    return CK_INVALID_HANDLE;
 }
 
 
@@ -1374,7 +1374,7 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
 	}
 
 	id = PK11_ImportPublicKey(slot,pubKey,PR_FALSE);
-	if (id == CK_INVALID_KEY) {
+	if (id == CK_INVALID_HANDLE) {
 	    PK11_FreeSlot(slot);
 	    return SECFailure;
 	}
@@ -1702,7 +1702,7 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	if (pubKey->pkcs11Slot) {
 	    PK11_FreeSlot(pubKey->pkcs11Slot);
 	    pubKey->pkcs11Slot = NULL;
-	    pubKey->pkcs11ID = CK_INVALID_KEY;
+	    pubKey->pkcs11ID = CK_INVALID_HANDLE;
 	}
      }
 
@@ -2491,7 +2491,7 @@ PK11_MakeKEAPubKey(unsigned char *keyData,int length)
 
     pubk->arena = arena;
     pubk->pkcs11Slot = 0;
-    pubk->pkcs11ID = CK_INVALID_KEY;
+    pubk->pkcs11ID = CK_INVALID_HANDLE;
     pubk->keyType = fortezzaKey;
     rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.KEAKey, &pkData);
     if (rv != SECSuccess) {
@@ -3226,7 +3226,7 @@ pk11_restoreContext(PK11Context *context,void *space, unsigned long savedLength)
 {
     CK_RV crv;
     CK_OBJECT_HANDLE objectID = (context->key) ? context->key->objectID:
-			CK_INVALID_KEY;
+			CK_INVALID_HANDLE;
 
     PORT_Assert(space != NULL);
     if (space == NULL) {
@@ -4096,24 +4096,21 @@ PK11_DestroyPBEParams(SECItem *params)
 SECAlgorithmID *
 PK11_CreatePBEAlgorithmID(SECOidTag algorithm, int iteration, SECItem *salt)
 {
-    SECAlgorithmID *algid;
-
+    SECAlgorithmID *algid = NULL;
+#ifdef notdef
     algid = SEC_PKCS5CreateAlgorithmID(algorithm, salt, iteration);
+#endif
     return algid;
 }
 
 PK11SymKey *
-PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
-	       					PRBool faulty3DES, void *wincx)
+PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *mech,
+			 SECItem *pwitem, PRBool faulty3DES, void *wincx)
 {
     /* pbe stuff */
     CK_PBE_PARAMS *pbe_params;
-    CK_MECHANISM_TYPE type;
-    SECItem *mech;
     PK11SymKey *symKey;
 
-    mech = PK11_ParamFromAlgid(algid);
-    type = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
     if(faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
 	type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
     }
@@ -4134,6 +4131,30 @@ PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
     symKey = PK11_KeyGen(slot, type, mech, 0, wincx);
 
     PORT_ZFree(pbe_params->pPassword, pwitem->len);
+    pbe_params->pPassword = NULL;
+    pbe_params->ulPasswordLen = 0;
+    return symKey;
+}
+
+PK11SymKey *
+PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
+	       					PRBool faulty3DES, void *wincx)
+{
+    /* pbe stuff */
+    CK_MECHANISM_TYPE type;
+    SECItem *mech;
+    PK11SymKey *symKey;
+
+    mech = PK11_ParamFromAlgid(algid);
+    type = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    if(faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
+	type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
+    }
+    if(mech == NULL) {
+	return NULL;
+    }
+    symKey = PK11_RawPBEKeyGen(slot, type, mech, pwitem, faulty3DES, wincx);
+
     SECITEM_ZfreeItem(mech, PR_TRUE);
     return symKey;
 }
@@ -4205,7 +4226,8 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 try_faulty_3des:
     pbe_param = PK11_ParamFromAlgid(&epki->algorithm);
 
-    key = PK11_PBEKeyGen(slot, &epki->algorithm, pwitem, faulty3DES, wincx);
+    key = PK11_RawPBEKeyGen(slot, mechanism, pbe_param, pwitem, 
+							faulty3DES, wincx);
     if((key == NULL) || (pbe_param == NULL)) {
 	rv = SECFailure;
 	goto done;
@@ -4372,7 +4394,9 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
 	goto loser;
     }
     epki->arena = arena;
+#ifdef notdef
     algid = SEC_PKCS5CreateAlgorithmID(algTag, NULL, iteration);
+#endif
     if(algid == NULL) {
 	rv = SECFailure;
 	goto loser;
@@ -4383,7 +4407,8 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
     pbeMech.mechanism = mechanism;
     pbeMech.pParameter = pbe_param->data;
     pbeMech.ulParameterLen = pbe_param->len;
-    key = PK11_PBEKeyGen(slot, algid, pwitem, PR_FALSE, wincx);
+    key = PK11_RawPBEKeyGen(slot, mechanism, pbe_param, pwitem, 
+							PR_FALSE, wincx);
 
     if((key == NULL) || (pbe_param == NULL)) {
 	rv = SECFailure;

@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.10 2001/10/19 18:05:37 ian.mcgreer%sun.com Exp $
+ * $Id: certt.h,v 1.11 2001/11/08 00:14:39 relyea%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -169,9 +169,6 @@ struct CERTPublicKeyAndChallengeStr {
     SECItem challenge;
 };
 
-typedef struct _certDBEntryCert certDBEntryCert;
-typedef struct _certDBEntryRevocation certDBEntryRevocation;
-
 struct CERTCertTrustStr {
     unsigned int sslFlags;
     unsigned int emailFlags;
@@ -215,7 +212,7 @@ struct CERTSubjectListStr {
     char *emailAddr;
     CERTSubjectNode *head;
     CERTSubjectNode *tail; /* do we need tail? */
-    struct _certDBEntrySubject *entry;
+    void *entry;
 };
 
 /*
@@ -275,7 +272,7 @@ struct CERTCertificateStr {
     PRBool istemp;
     char *nickname;
     char *dbnickname;
-    certDBEntryCert *dbEntry;		/* database entry struct */
+    void *dbEntry;		 /* database entry struct */
     CERTCertTrust *trust;
 
     /* the reference count is modified whenever someone looks up, dups
@@ -404,8 +401,10 @@ struct CERTCrlKeyStr {
 struct CERTSignedCrlStr {
     PRArenaPool *arena;
     CERTCrl crl;
-    certDBEntryRevocation *dbEntry;	/* database entry struct */
-    PRBool keep;			/* keep this crl in the cache for the  session*/
+    /*certDBEntryRevocation *dbEntry;	 database entry struct */
+    PK11SlotInfo *slot;
+    /* PRBool keep;		 keep this crl in the cache for the  session*/
+    CK_OBJECT_HANDLE pkcs11ID;
     PRBool isperm;
     PRBool istemp;
     int referenceCount;

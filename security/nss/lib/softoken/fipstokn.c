@@ -48,32 +48,11 @@
  */
 #include "seccomon.h"
 #include "softoken.h"
-#include "key.h"
+#include "lowkeyi.h"
+#include "pcert.h"
 #include "pkcs11.h"
 #include "pkcs11i.h"
 
-/* The next two strings must be exactly 64 characters long, with the
-   first 32 characters meaningful  */
-static char *slotDescription     = 
-	"Netscape Internal FIPS-140-1 Cryptographic Services             ";
-static char *privSlotDescription = 
-	"Netscape FIPS-140-1 User Private Key Services                   ";
-
-
-/*
- * Configuration utils
- */
-void
-PK11_ConfigureFIPS(char *slotdes, char *pslotdes) 
-{
-    if (slotdes && (PORT_Strlen(slotdes) == 65)) {
-	slotDescription = slotdes;
-    }
-    if (pslotdes && (PORT_Strlen(pslotdes) == 65)) {
-	privSlotDescription = pslotdes;
-    }
-    return;
-}
 
 /*
  * ******************** Password Utilities *******************************
@@ -170,30 +149,22 @@ CK_RV FC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList) {
 
 /* FC_Initialize initializes the PKCS #11 library. */
 CK_RV FC_Initialize(CK_VOID_PTR pReserved) {
-    CK_RV rv;
-    static PRBool init= PR_FALSE;
+    CK_RV crv;
 
-
-    rv = PK11_LowInitialize(pReserved);
-
-    if (rv == CKR_OK && !init) {
-	init = PR_TRUE;
-	rv = PK11_SlotInit(FIPS_SLOT_ID,PR_TRUE);
-	/* fall through to check below */
-    }
+    crv = nsc_CommonInitialize(pReserved, PR_TRUE);
 
     /* not an 'else' rv can be set by either PK11_LowInit or PK11_SlotInit*/
-    if (rv != CKR_OK) {
+    if (crv != CKR_OK) {
 	fatalError = PR_TRUE;
-	return rv;
+	return crv;
     }
 
     fatalError = PR_FALSE; /* any error has been reset */
 
-    rv = pk11_fipsPowerUpSelfTest();
-    if (rv != CKR_OK) {
+    crv = pk11_fipsPowerUpSelfTest();
+    if (crv != CKR_OK) {
 	fatalError = PR_TRUE;
-	return rv;
+	return crv;
     }
 
     return CKR_OK;
@@ -214,11 +185,7 @@ CK_RV  FC_GetInfo(CK_INFO_PTR pInfo) {
 /* FC_GetSlotList obtains a list of slots in the system. */
 CK_RV FC_GetSlotList(CK_BBOOL tokenPresent,
 	 		CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount) {
-    *pulCount = 1;
-    if (pSlotList != NULL) {
-	pSlotList[0] = FIPS_SLOT_ID;
-    }
-    return CKR_OK;
+    return NSC_GetSlotList(tokenPresent,pSlotList,pulCount);
 }
 	
 /* FC_GetSlotInfo obtains information about a particular slot in the system. */
@@ -226,16 +193,11 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 
     CK_RV crv;
 
-    if (slotID != FIPS_SLOT_ID) return CKR_SLOT_ID_INVALID;
-
-    /* Use NETSCAPE_SLOT_ID as a basis so that we get Library version number,
-     * not key_DB version number */
-    crv = NSC_GetSlotInfo(NETSCAPE_SLOT_ID,pInfo);
+    crv = NSC_GetSlotInfo(slotID,pInfo);
     if (crv != CKR_OK) {
 	return crv;
     }
 
-    PORT_Memcpy(pInfo->slotDescription,slotDescription,64);
     return CKR_OK;
 }
 
@@ -244,13 +206,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo) {
     CK_RV crv;
 
-    if (slotID != FIPS_SLOT_ID) return CKR_SLOT_ID_INVALID;
-
-    /* use PRIVATE_KEY_SLOT_ID so we get the correct 
-						Authentication information */
-    crv = NSC_GetTokenInfo(PRIVATE_KEY_SLOT_ID,pInfo);
+    crv = NSC_GetTokenInfo(slotID,pInfo);
     pInfo->flags |= CKF_RNG | CKF_LOGIN_REQUIRED;
-    /* yes virginia, FIPS can do random number generation:) */
     return crv;
 
 }
@@ -261,9 +218,9 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_GetMechanismList(CK_SLOT_ID slotID,
 	CK_MECHANISM_TYPE_PTR pMechanismList, CK_ULONG_PTR pusCount) {
     PK11_FIPSFATALCHECK();
-    if (slotID != FIPS_SLOT_ID) return CKR_SLOT_ID_INVALID;
+    if (slotID == FIPS_SLOT_ID) slotID = NETSCAPE_SLOT_ID;
     /* FIPS Slot supports all functions */
-    return NSC_GetMechanismList(NETSCAPE_SLOT_ID,pMechanismList,pusCount);
+    return NSC_GetMechanismList(slotID,pMechanismList,pusCount);
 }
 
 
@@ -272,9 +229,9 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type,
     					CK_MECHANISM_INFO_PTR pInfo) {
     PK11_FIPSFATALCHECK();
-    if (slotID != FIPS_SLOT_ID) return CKR_SLOT_ID_INVALID;
+    if (slotID == FIPS_SLOT_ID) slotID = NETSCAPE_SLOT_ID;
     /* FIPS Slot supports all functions */
-    return NSC_GetMechanismInfo(NETSCAPE_SLOT_ID,type,pInfo);
+    return NSC_GetMechanismInfo(slotID,type,pInfo);
 }
 
 

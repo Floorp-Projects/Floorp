@@ -37,7 +37,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.2 2001/01/07 08:13:04 nelsonb%netscape.com Exp $
+ * $Id: p7local.c,v 1.3 2001/11/08 00:15:16 relyea%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -47,7 +47,7 @@
 #include "secoid.h"
 #include "secitem.h"
 #include "pk11func.h"
-#include "secpkcs5.h"
+/*#include "secpkcs5.h" */
 #include "secerr.h"
 
 /*

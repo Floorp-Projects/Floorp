@@ -385,18 +385,24 @@ CONST_OID dhPublicKey[] 			= { ANSI_X942_ALGORITHM, 0x1 };
 
 CONST_OID aes128_ECB[] 				= { AES, 1 };
 CONST_OID aes128_CBC[] 				= { AES, 2 };
+#ifdef DEFINE_ALL_AES_CIPHERS
 CONST_OID aes128_OFB[] 				= { AES, 3 };
 CONST_OID aes128_CFB[] 				= { AES, 4 };
+#endif
 
 CONST_OID aes192_ECB[] 				= { AES, 21 };
 CONST_OID aes192_CBC[] 				= { AES, 22 };
+#ifdef DEFINE_ALL_AES_CIPHERS
 CONST_OID aes192_OFB[] 				= { AES, 23 };
 CONST_OID aes192_CFB[] 				= { AES, 24 };
+#endif
 
 CONST_OID aes256_ECB[] 				= { AES, 41 };
 CONST_OID aes256_CBC[] 				= { AES, 42 };
+#ifdef DEFINE_ALL_AES_CIPHERS
 CONST_OID aes256_OFB[] 				= { AES, 43 };
 CONST_OID aes256_CFB[] 				= { AES, 44 };
+#endif
 
 #define OI(x) { siDEROID, (unsigned char *)x, sizeof x }
 #ifndef SECOID_NO_STRINGS

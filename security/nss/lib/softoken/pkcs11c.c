@@ -53,20 +53,20 @@
 #include "blapi.h"
 #include "pkcs11.h"
 #include "pkcs11i.h"
-#include "keylow.h"
-#include "cert.h"
+#include "lowkeyi.h"
+#include "pcert.h"
 #include "sechash.h"
 #include "secder.h"
 #include "secdig.h"
-#include "secpkcs5.h"	/* We do PBE below */
+#include "lowpbe.h"	/* We do PBE below */
 #include "pkcs11t.h"
 #include "secoid.h"
 #include "alghmac.h"
 #include "softoken.h"
 #include "secasn1.h"
-#include "secmodi.h"
+/*#include "secmodi.h" */
 
-#include "certdb.h"
+#include "pcert.h"
 #include "ssl3prot.h" 	/* for SSL3_RANDOM_LENGTH */
 
 #define __PASTE(x,y)    x##y
@@ -102,9 +102,9 @@ static void pk11_Null(void *data, PRBool freeit)
  * other free routines to the destroy signature.
  */
 static void
-pk11_FreePrivKey(SECKEYLowPrivateKey *key, PRBool freeit)
+pk11_FreePrivKey(NSSLOWKEYPrivateKey *key, PRBool freeit)
 {
-    SECKEY_LowDestroyPrivateKey(key);
+    nsslowkey_DestroyPrivateKey(key);
 }
 
 static void
@@ -119,11 +119,6 @@ pk11_Space(void *data, PRBool freeit)
     PORT_Free(data);
 } 
 
-static void pk11_FreeSignInfo(PK11HashSignInfo *data, PRBool freeit)
-{
-    SECKEY_LowDestroyPrivateKey(data->key);
-    PORT_Free(data);
-} 
 
 /*
  * turn a CDMF key into a des key. CDMF is an old IBM scheme to export DES by
@@ -176,9 +171,9 @@ pk11_cdmf2des(unsigned char *cdmfkey, unsigned char *deskey)
 
 
 static CK_RV
-pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
+pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 		 CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE etype,
-		 PK11ContextType contextType);
+		 PK11ContextType contextType, PRBool isEncrypt);
 /*
  * Calculate a Lynx checksum for CKM_LYNX_WRAP mechanism.
  */
@@ -206,7 +201,8 @@ pk11_calcLynxChecksum(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hWrapKey,
 
     /* encrypt with key 1 */
 
-    crv = pk11_EncryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT);
+    crv = pk11_CryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT, 
+								PR_TRUE);
     if (crv != CKR_OK) return crv;
 
     crv = NSC_Encrypt(hSession,key,len,E,&Elen);
@@ -215,7 +211,8 @@ pk11_calcLynxChecksum(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hWrapKey,
     E[8] = (sum2 >> 8) & 0xff;
     E[9] = sum2 & 0xff;
 
-    crv = pk11_EncryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT);
+    crv = pk11_CryptInit(hSession,&mech,hWrapKey,CKA_WRAP, PK11_ENCRYPT, 
+								PR_TRUE);
     if (crv != CKR_OK) return crv;
 
     crv = NSC_Encrypt(hSession,&E[2],len,C,&Clen);
@@ -422,18 +419,19 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
     context->hashInfo = NULL;
     context->doPad = PR_FALSE;
     context->padDataLength = 0;
+    context->key = key;
 
     *contextPtr = context;
     return CKR_OK;
 }
 
-/* NSC_EncryptInit initializes an encryption operation. */
+/* NSC_CryptInit initializes an encryption/Decryption operation. */
 /* This function is used by NSC_EncryptInit and NSC_WrapKey. The only difference
  * in their uses if whether or not etype is CKA_ENCRYPT or CKA_WRAP */
 static CK_RV
-pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
+pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 		 CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE etype,
-		 PK11ContextType contextType)
+		 PK11ContextType contextType, PRBool isEncrypt)
 {
     PK11Session *session;
     PK11Object *key;
@@ -446,7 +444,6 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 #endif
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
-    SECKEYLowPublicKey *pubKey;
     unsigned effectiveKeyLength;
     unsigned char newdeskey[8];
     PRBool useNewKey=PR_FALSE;
@@ -456,7 +453,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
 
     crv = pk11_InitGeneric(session,&context,contextType,&key,hKey,&key_type,
-    						CKO_PUBLIC_KEY, etype);
+    			isEncrypt ?CKO_PUBLIC_KEY:CKO_PRIVATE_KEY, etype);
 						
     if (crv != CKR_OK) {
 	pk11_FreeSession(session);
@@ -472,14 +469,22 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    break;
 	}
 	context->multi = PR_FALSE;
-	pubKey = pk11_GetPubKey(key,CKK_RSA);
-	if (pubKey == NULL) {
+	context->cipherInfo =  isEncrypt ? 
+			(void *)pk11_GetPubKey(key,CKK_RSA) :
+					(void *)pk11_GetPrivKey(key,CKK_RSA);
+	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->cipherInfo = pubKey;
-	context->update = (PK11Cipher) (pMechanism->mechanism == CKM_RSA_X_509
-			? RSA_EncryptRaw : RSA_EncryptBlock);
+	if (isEncrypt) {
+	    context->update = (PK11Cipher) 
+		(pMechanism->mechanism == CKM_RSA_X_509
+					? RSA_EncryptRaw : RSA_EncryptBlock);
+	} else {
+	    context->update = (PK11Cipher) 
+		(pMechanism->mechanism == CKM_RSA_X_509
+					? RSA_DecryptRaw : RSA_DecryptBlock);
+	}
 	context->destroy = pk11_Null;
 	break;
     case CKM_RC2_CBC_PAD:
@@ -509,7 +514,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->update = (PK11Cipher) RC2_Encrypt;
+	context->update = (PK11Cipher) (isEncrypt ? RC2_Encrypt : RC2_Decrypt);
 	context->destroy = (PK11Destroy) RC2_DestroyContext;
 	break;
 #if NSS_SOFTOKEN_DOES_RC5
@@ -541,7 +546,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->update = (PK11Cipher) RC5_Encrypt;
+	context->update = (PK11Cipher) (isEncrypt ? RC5_Encrypt : RC5_Decrypt);
 	context->destroy = (PK11Destroy) RC5_DestroyContext;
 	break;
 #endif
@@ -563,7 +568,7 @@ pk11_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    crv = CKR_HOST_MEMORY;  /* WRONG !!! */
 	    break;
 	}
-	context->update = (PK11Cipher) RC4_Encrypt;
+	context->update = (PK11Cipher) (isEncrypt ? RC4_Encrypt : RC4_Decrypt);
 	context->destroy = (PK11Destroy) RC4_DestroyContext;
 	break;
     case CKM_CDMF_CBC_PAD:
@@ -630,13 +635,13 @@ finish_des:
 	}
 	context->cipherInfo = DES_CreateContext(
 		useNewKey ? newdeskey : (unsigned char*)att->attrib.pValue,
-		(unsigned char*)pMechanism->pParameter,t, PR_TRUE);
+		(unsigned char*)pMechanism->pParameter,t, isEncrypt);
 	pk11_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->update = (PK11Cipher) DES_Encrypt;
+	context->update = (PK11Cipher) (isEncrypt ? DES_Encrypt : DES_Decrypt);
 	context->destroy = (PK11Destroy) DES_DestroyContext;
 
 	break;
@@ -659,13 +664,13 @@ finish_des:
 	    (unsigned char*)att->attrib.pValue,
 	    (unsigned char*)pMechanism->pParameter,
 	    pMechanism->mechanism == CKM_AES_ECB ? NSS_AES : NSS_AES_CBC,
-	    PR_TRUE, att->attrib.ulValueLen, 16);
+	    isEncrypt, att->attrib.ulValueLen, 16);
 	pk11_FreeAttribute(att);
 	if (context->cipherInfo == NULL) {
 	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
-	context->update = (PK11Cipher) AES_Encrypt;
+	context->update = (PK11Cipher) (isEncrypt ? AES_Encrypt : AES_Decrypt);
 	context->destroy = (PK11Destroy) AES_DestroyContext;
 
 	break;
@@ -674,7 +679,6 @@ finish_des:
 	break;
     }
 
-    pk11_FreeObject(key);
     if (crv != CKR_OK) {
         pk11_FreeContext(context);
 	pk11_FreeSession(session);
@@ -689,8 +693,8 @@ finish_des:
 CK_RV NSC_EncryptInit(CK_SESSION_HANDLE hSession,
 		 CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
-    return pk11_EncryptInit(hSession, pMechanism, hKey, CKA_ENCRYPT, 
-							PK11_ENCRYPT);
+    return pk11_CryptInit(hSession, pMechanism, hKey, CKA_ENCRYPT, 
+						PK11_ENCRYPT, PR_TRUE);
 }
 
 /* NSC_EncryptUpdate continues a multiple-part encryption operation. */
@@ -846,258 +850,11 @@ CK_RV NSC_Encrypt (CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
  */
 
 /* NSC_DecryptInit initializes a decryption operation. */
-static CK_RV pk11_DecryptInit( CK_SESSION_HANDLE hSession,
-  CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey, CK_ATTRIBUTE_TYPE dtype,
-				PK11ContextType contextType)
-{
-    PK11Session *session;
-    PK11Object *key;
-    PK11Attribute *att;
-    PK11SessionContext *context;
-    CK_RC2_CBC_PARAMS *rc2_param;
-#if NSS_SOFTOKEN_DOES_RC5
-    CK_RC5_CBC_PARAMS *rc5_param;
-    SECItem rc5Key;
-#endif
-    CK_KEY_TYPE key_type;
-    CK_RV crv = CKR_OK;
-    unsigned effectiveKeyLength;
-    SECKEYLowPrivateKey *privKey;
-    unsigned char newdeskey[8];
-    PRBool useNewKey=PR_FALSE;
-    int t;
-
-    session = pk11_SessionFromHandle(hSession);
-    if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
-
-    crv = pk11_InitGeneric(session,&context,contextType,&key,hKey,&key_type,
-						CKO_PRIVATE_KEY,dtype);
-    if (crv != CKR_OK) {
-	pk11_FreeSession(session);
-	return crv;
-    }
-
-    /*
-     * now handle each mechanism
-     */
-    switch(pMechanism->mechanism) {
-    case CKM_RSA_PKCS:
-    case CKM_RSA_X_509:
-	if (key_type != CKK_RSA) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	context->multi = PR_FALSE;
-	privKey = pk11_GetPrivKey(key,CKK_RSA);
-	if (privKey == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->cipherInfo = privKey;
-	context->update = (PK11Cipher) (pMechanism->mechanism == CKM_RSA_X_509
-			? RSA_DecryptRaw : RSA_DecryptBlock);
-	context->destroy = (context->cipherInfo == key->objectInfo) ?
-		(PK11Destroy) pk11_Null : (PK11Destroy) pk11_FreePrivKey;
-	break;
-    case CKM_RC2_CBC_PAD:
-	context->doPad = PR_TRUE;
-	context->blockSize = 8;
-	/* fall thru */
-    case CKM_RC2_ECB:
-    case CKM_RC2_CBC:
-	if (key_type != CKK_RC2) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	att = pk11_FindAttribute(key,CKA_VALUE);
-	rc2_param = (CK_RC2_CBC_PARAMS *)pMechanism->pParameter;
-	effectiveKeyLength = (rc2_param->ulEffectiveBits+7)/8;
-	context->cipherInfo = RC2_CreateContext((unsigned char*)att->attrib.pValue,
-		att->attrib.ulValueLen, rc2_param->iv,
-		 pMechanism->mechanism == CKM_RC2_ECB ? NSS_RC2 :
-					 NSS_RC2_CBC, effectiveKeyLength);
-	pk11_FreeAttribute(att);
-	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->update = (PK11Cipher) RC2_Decrypt;
-	context->destroy = (PK11Destroy) RC2_DestroyContext;
-	break;
-#if NSS_SOFTOKEN_DOES_RC5
-    case CKM_RC5_CBC_PAD:
-	context->doPad = PR_TRUE;
-	/* fall thru */
-    case CKM_RC5_ECB:
-    case CKM_RC5_CBC:
-	if (key_type != CKK_RC5) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	att = pk11_FindAttribute(key,CKA_VALUE);
-	if (att == NULL) {
-	    crv = CKR_KEY_HANDLE_INVALID;
-	    break;
-	}
-	rc5_param = (CK_RC5_CBC_PARAMS *)pMechanism->pParameter;
-	if (context->doPad) {
-	   context->blockSize = rc5_param->ulWordsize*2;
-	}
-	rc5Key.data = (unsigned char*)att->attrib.pValue;
-	rc5Key.len = att->attrib.ulValueLen;
-	context->cipherInfo = RC5_CreateContext(&rc5Key,rc5_param->ulRounds,
-	   rc5_param->ulWordsize,rc5_param->pIv,
-		 pMechanism->mechanism == CKM_RC5_ECB ? NSS_RC5 : NSS_RC5_CBC);
-	pk11_FreeAttribute(att);
-	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->update = (PK11Cipher) RC5_Decrypt;
-	context->destroy = (PK11Destroy) RC5_DestroyContext;
-	break;
-#endif
-    case CKM_RC4:
-	if (key_type != CKK_RC4) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	att = pk11_FindAttribute(key,CKA_VALUE);
-	context->cipherInfo = 
-	    RC4_CreateContext((unsigned char*)att->attrib.pValue,
-			      att->attrib.ulValueLen);
-	pk11_FreeAttribute(att);
-	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->update = (PK11Cipher) RC4_Decrypt;
-	context->destroy = (PK11Destroy) RC4_DestroyContext;
-	break;
-    case CKM_CDMF_CBC_PAD:
-	context->doPad = PR_TRUE;
-	context->blockSize = 8;
-	/* fall thru */
-    case CKM_CDMF_ECB:
-    case CKM_CDMF_CBC:
-	if (key_type != CKK_CDMF) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	t = (pMechanism->mechanism == CKM_CDMF_ECB) ? NSS_DES : NSS_DES_CBC;
-	useNewKey = PR_TRUE;
-	if (crv != CKR_OK) break;
-	goto finish_des;
-    case CKM_DES_ECB:
-	if (key_type != CKK_DES) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	t = NSS_DES;
-	goto finish_des;
-    case CKM_DES_CBC_PAD:
-	context->doPad = PR_TRUE;
-	context->blockSize = 8;
-	/* fall thru */
-    case CKM_DES_CBC:
-	if (key_type != CKK_DES) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	t = NSS_DES_CBC;
-	goto finish_des;
-    case CKM_DES3_ECB:
-	if ((key_type != CKK_DES2) && (key_type != CKK_DES3)) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	t = NSS_DES_EDE3;
-	goto finish_des;
-    case CKM_DES3_CBC_PAD:
-	context->doPad = PR_TRUE;
-	context->blockSize = 8;
-	/* fall thru */
-    case CKM_DES3_CBC:
-	if ((key_type != CKK_DES2) && (key_type != CKK_DES3)) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	t = NSS_DES_EDE3_CBC;
-finish_des:
-	att = pk11_FindAttribute(key,CKA_VALUE);
-	if (att == NULL) {
-	    crv = CKR_KEY_HANDLE_INVALID;
-	    break;
-	}
-	if (useNewKey) {
-	    crv = pk11_cdmf2des((unsigned char*)att->attrib.pValue,newdeskey);
-	    if (crv != CKR_OK) {
-		pk11_FreeAttribute(att);
-		break;
-	     }
-	}
-	context->cipherInfo = DES_CreateContext(
-		useNewKey ? newdeskey : (unsigned char*)att->attrib.pValue,
-		(unsigned char*)pMechanism->pParameter,t, PR_FALSE);
-	pk11_FreeAttribute(att);
-	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->update = (PK11Cipher) DES_Decrypt;
-	context->destroy = (PK11Destroy) DES_DestroyContext;
-
-	break;
-    case CKM_AES_CBC_PAD:
-	context->doPad = PR_TRUE;
-	context->blockSize = 16;
-	/* fall thru */
-    case CKM_AES_ECB:
-    case CKM_AES_CBC:
-	if (key_type != CKK_AES) {
-	    crv = CKR_KEY_TYPE_INCONSISTENT;
-	    break;
-	}
-	att = pk11_FindAttribute(key,CKA_VALUE);
-	if (att == NULL) {
-	    crv = CKR_KEY_HANDLE_INVALID;
-	    break;
-	}
-	context->cipherInfo = AES_CreateContext(
-	    (unsigned char*)att->attrib.pValue,
-	    (unsigned char*)pMechanism->pParameter,
-	    pMechanism->mechanism == CKM_AES_ECB ? NSS_AES : NSS_AES_CBC,
-	    PR_FALSE, att->attrib.ulValueLen,16);
-	pk11_FreeAttribute(att);
-	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
-	    break;
-	}
-	context->update = (PK11Cipher) AES_Decrypt;
-	context->destroy = (PK11Destroy) AES_DestroyContext;
-
-	break;
-    default:
-	crv = CKR_MECHANISM_INVALID;
-	break;
-    }
-
-    pk11_FreeObject(key);
-    if (crv != CKR_OK) {
-        pk11_FreeContext(context);
-	pk11_FreeSession(session);
-	return crv;
-    }
-    pk11_SetContextByType(session, contextType, context);
-    pk11_FreeSession(session);
-    return CKR_OK;
-}
-
-/* NSC_DecryptInit initializes a decryption operation. */
 CK_RV NSC_DecryptInit( CK_SESSION_HANDLE hSession,
 			 CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
-    return pk11_DecryptInit(hSession,pMechanism,hKey,CKA_DECRYPT,PK11_DECRYPT);
+    return pk11_CryptInit(hSession, pMechanism, hKey, CKA_DECRYPT,
+						PK11_DECRYPT, PR_FALSE);
 }
 
 /* NSC_DecryptUpdate continues a multiple-part decryption operation. */
@@ -1448,17 +1205,19 @@ pk11_HMACCmp(CK_ULONG *copyLen,unsigned char *sig,unsigned int sigLen,
  * common HMAC initalization routine
  */
 static CK_RV
-pk11_doHMACInit(PK11SessionContext *context,SECOidTag oid,
+pk11_doHMACInit(PK11SessionContext *context,HASH_HashType hash,
 					PK11Object *key, CK_ULONG mac_size)
 {
     PK11Attribute *keyval;
     HMACContext *HMACcontext;
     CK_ULONG *intpointer;
+    const SECHashObject *hashObj = &SECRawHashObjects[hash];
 
     keyval = pk11_FindAttribute(key,CKA_VALUE);
     if (keyval == NULL) return CKR_KEY_SIZE_RANGE;
 
-    HMACcontext = HMAC_Create(oid, (const unsigned char*)keyval->attrib.pValue,
+    HMACcontext = HMAC_Create(hashObj, 
+		(const unsigned char*)keyval->attrib.pValue,
 						 keyval->attrib.ulValueLen);
     context->hashInfo = HMACcontext;
     context->multi = PR_TRUE;
@@ -1865,8 +1624,8 @@ pk11_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	return CKR_FUNCTION_NOT_SUPPORTED;
     }
 
-    crv = pk11_EncryptInit(hSession, &cbc_mechanism, hKey, keyUsage,
-								contextType);
+    crv = pk11_CryptInit(hSession, &cbc_mechanism, hKey, keyUsage,
+							contextType, PR_TRUE);
     if (crv != CKR_OK) return crv;
     crv = pk11_GetContext(hSession,&context,contextType,PR_TRUE,NULL);
 
@@ -1926,7 +1685,7 @@ nsc_DSA_Verify_Stub(void *ctx, void *sigBuf, unsigned int sigLen,
                                void *dataBuf, unsigned int dataLen)
 {
     SECItem signature, digest;
-    SECKEYLowPublicKey *key = (SECKEYLowPublicKey *)ctx;
+    NSSLOWKEYPublicKey *key = (NSSLOWKEYPublicKey *)ctx;
 
     signature.data = (unsigned char *)sigBuf;
     signature.len = sigLen;
@@ -1942,7 +1701,7 @@ nsc_DSA_Sign_Stub(void *ctx, void *sigBuf,
 {
     SECItem signature = { 0 }, digest;
     SECStatus rv;
-    SECKEYLowPrivateKey *key = (SECKEYLowPrivateKey *)ctx;
+    NSSLOWKEYPrivateKey *key = (NSSLOWKEYPrivateKey *)ctx;
 
     (void)SECITEM_AllocItem(NULL, &signature, maxSigLen);
     digest.data = (unsigned char *)dataBuf;
@@ -1984,7 +1743,7 @@ CK_RV NSC_SignInit(CK_SESSION_HANDLE hSession,
     PK11SessionContext *context;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
-    SECKEYLowPrivateKey *privKey;
+    NSSLOWKEYPrivateKey *privKey;
     PK11HashSignInfo *info = NULL;
 
     /* Block Cipher MACing Algorithms use a different Context init method..*/
@@ -2061,23 +1820,14 @@ finish_rsa:
 	/* OK, info is allocated only if we're doing hash and sign mechanism.
 	 * It's necessary to be able to set the correct OID in the final 
 	 * signature.
-	 * Second, what's special about privKey == key->objectInfo?
-	 * Well we don't 'cache' token versions
-	 * of private keys because (1) it's sensitive data, and (2) it never
-	 * gets destroyed. Instead we grab the key out of the database as
-	 * necessary, but now the key is our context, and we need to free
-	 * it when we are done. Non-token private keys will get freed when
-	 * the user destroys the session object (or the session the session
-	 * object lives in) */
+	 */
 	if (info) {
 	    info->key = privKey;
 	    context->cipherInfo = info;
-	    context->destroy = (privKey == key->objectInfo) ?
-		(PK11Destroy)pk11_Space:(PK11Destroy)pk11_FreeSignInfo;
+	    context->destroy = (PK11Destroy)pk11_Space;
 	} else {
 	    context->cipherInfo = privKey;
-	    context->destroy = (privKey == key->objectInfo) ?
-		(PK11Destroy)pk11_Null:(PK11Destroy)pk11_FreePrivKey;
+	    context->destroy = (PK11Destroy)pk11_Null;
 	}
 	break;
 
@@ -2103,25 +1853,25 @@ finish_rsa:
 
 	break;
     case CKM_MD2_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_MD2,key,
+	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_MD2_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_MD2,key,MD2_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,MD2_LENGTH);
 	break;
     case CKM_MD5_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_MD5,key,
+	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_MD5_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_MD5,key,MD5_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,MD5_LENGTH);
 	break;
     case CKM_SHA_1_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_SHA1,key,
+	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_SHA_1_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_SHA1,key,SHA1_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,SHA1_LENGTH);
 	break;
     case CKM_SSL3_MD5_MAC:
 	crv = pk11_doSSLMACInit(context,SEC_OID_MD5,key,
@@ -2139,9 +1889,8 @@ finish_rsa:
 	break;
     }
 
-    pk11_FreeObject(key);
     if (crv != CKR_OK) {
-        PORT_Free(context);
+        pk11_FreeContext(context);
 	pk11_FreeSession(session);
 	return crv;
     }
@@ -2363,7 +2112,7 @@ pk11_hashCheckSign(PK11HashVerifyInfo *info, unsigned char *sig,
 
     if (info->key == NULL) goto loser;
 
-    it.len = SECKEY_LowPublicModulusLen(info->key); 
+    it.len = nsslowkey_PublicModulusLen(info->key); 
     if (!it.len) goto loser;
 
     it.data = (unsigned char *) PORT_Alloc(it.len);
@@ -2407,7 +2156,7 @@ CK_RV NSC_VerifyInit(CK_SESSION_HANDLE hSession,
     PK11SessionContext *context;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
-    SECKEYLowPublicKey *pubKey;
+    NSSLOWKEYPublicKey *pubKey;
     PK11HashVerifyInfo *info = NULL;
 
     /* Block Cipher MACing Algorithms use a different Context init method..*/
@@ -2508,25 +2257,25 @@ finish_rsa:
 	break;
 
     case CKM_MD2_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_MD2,key,
+	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_MD2_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_MD2,key,MD2_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgMD2,key,MD2_LENGTH);
 	break;
     case CKM_MD5_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_MD5,key,
+	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_MD5_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_MD5,key,MD5_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgMD5,key,MD5_LENGTH);
 	break;
     case CKM_SHA_1_HMAC_GENERAL:
-	crv = pk11_doHMACInit(context,SEC_OID_SHA1,key,
+	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,
 				*(CK_ULONG *)pMechanism->pParameter);
 	break;
     case CKM_SHA_1_HMAC:
-	crv = pk11_doHMACInit(context,SEC_OID_SHA1,key,SHA1_LENGTH);
+	crv = pk11_doHMACInit(context,HASH_AlgSHA1,key,SHA1_LENGTH);
 	break;
     case CKM_SSL3_MD5_MAC:
 	crv = pk11_doSSLMACInit(context,SEC_OID_MD5,key,
@@ -2544,7 +2293,6 @@ finish_rsa:
 	break;
     }
 
-    pk11_FreeObject(key);
     if (crv != CKR_OK) {
         PORT_Free(context);
 	pk11_FreeSession(session);
@@ -2650,7 +2398,7 @@ CK_RV NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
     PK11SessionContext *context;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
-    SECKEYLowPublicKey *pubKey;
+    NSSLOWKEYPublicKey *pubKey;
 
     session = pk11_SessionFromHandle(hSession);
     if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -2686,7 +2434,6 @@ CK_RV NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
 	break;
     }
 
-    pk11_FreeObject(key);
     if (crv != CKR_OK) {
         PORT_Free(context);
 	pk11_FreeSession(session);
@@ -2755,105 +2502,50 @@ CK_RV NSC_GenerateRandom(CK_SESSION_HANDLE hSession,
  **************************** Key Functions:  ************************
  */
 
-CK_RV
-pk11_pbe_hmac_key_gen(CK_MECHANISM_PTR pMechanism, char *buf, 
-                      unsigned long *len, PRBool faultyPBE3DES)
-{
-    PBEBitGenContext *pbeCx;
-    SECItem pwd, salt, *key;
-    SECOidTag hashAlg;
-    unsigned long keylenbits;
-    CK_PBE_PARAMS *pbe_params = NULL;
-    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
-    pwd.data = (unsigned char *)pbe_params->pPassword;
-    pwd.len = (unsigned int)pbe_params->ulPasswordLen;
-    salt.data = (unsigned char *)pbe_params->pSalt;
-    salt.len = (unsigned int)pbe_params->ulSaltLen;
-    switch (pMechanism->mechanism) {
-    case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
-	hashAlg = SEC_OID_SHA1; keylenbits = 160; break;
-    case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
-	hashAlg = SEC_OID_MD5;  keylenbits = 128; break;
-    case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
-	hashAlg = SEC_OID_MD2;  keylenbits = 128; break;
-    default:
-	return CKR_MECHANISM_INVALID;
-    }
-    pbeCx = PBE_CreateContext(hashAlg, pbeBitGenIntegrityKey, &pwd,
-                              &salt, keylenbits, pbe_params->ulIteration);
-    key = PBE_GenerateBits(pbeCx);
-    PORT_Memcpy(buf, key->data, key->len);
-    *len = key->len;
-    PBE_DestroyContext(pbeCx);
-    SECITEM_ZfreeItem(key, PR_TRUE);
-    return CKR_OK;
-}
 
 /*
  * generate a password based encryption key. This code uses
- * PKCS5 to do the work. Note that it calls PBE_PK11ParamToAlgid, which is
- * a utility function in secpkcs5.c.  This function is used in here
- * and in PK11_ParamToAlgid.
+ * PKCS5 to do the work.
  */
-CK_RV
-pk11_pbe_key_gen(SECOidTag algtag,CK_MECHANISM_PTR pMechanism,
-				char *buf,CK_ULONG *key_length, PRBool faulty3DES)
+static CK_RV
+nsc_pbe_key_gen(NSSPKCS5PBEParameter *pkcs5_pbe, CK_MECHANISM_PTR pMechanism,
+			char *buf, CK_ULONG *key_length, PRBool faulty3DES)
 {
-    SECAlgorithmID algid;
-    SECItem *pbe_key = NULL, mech;
+    SECItem *pbe_key = NULL, iv, pwitem;
     CK_PBE_PARAMS *pbe_params = NULL;
-    SECStatus pbe_rv;
 
     *key_length = 0;
+    iv.data = NULL; iv.len = 0;
 
-    mech.data = (unsigned char *)pMechanism->pParameter;
-    mech.len = (unsigned int)pMechanism->ulParameterLen;
-
-    /* A common routine to map from Params to AlgIDs for PBE
-     * algorithms was created in secpkcs5.c.  This function is
-     * called both by PK11_ParamToAlgid and this function.
-     */
-    pbe_rv = PBE_PK11ParamToAlgid(algtag, &mech, NULL, &algid);
-    if (pbe_rv != SECSuccess) {
-	return CKR_DATA_INVALID;
-    }
     pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
-    mech.data = (unsigned char *)pbe_params->pPassword;
-    mech.len = (unsigned int)pbe_params->ulPasswordLen;
-    pbe_key = SEC_PKCS5GetKey(&algid, &mech, faulty3DES);
+
+    pwitem.data = (unsigned char *)pbe_params->pPassword;
+    pwitem.len = (unsigned int)pbe_params->ulPasswordLen;
+    pbe_key = nsspkcs5_ComputeKeyAndIV(pkcs5_pbe, &pwitem, &iv, faulty3DES);
     if (pbe_key == NULL) {
-	SECOID_DestroyAlgorithmID(&algid, PR_FALSE);
 	return CKR_HOST_MEMORY;
     }
+
     PORT_Memcpy(buf, pbe_key->data, pbe_key->len);
     *key_length = pbe_key->len;
     SECITEM_ZfreeItem(pbe_key, PR_TRUE);
     pbe_key = NULL;
 
-    if (pbe_params->pInitVector == NULL) {
-	pbe_key = SEC_PKCS5GetIV(&algid, &mech, faulty3DES);
-	if (pbe_key == NULL) {
-	    SECOID_DestroyAlgorithmID(&algid, PR_FALSE);
-	    SECITEM_ZfreeItem(pbe_key, PR_TRUE);
-	    return CKR_HOST_MEMORY;
-	}
+    if (iv.data && pbe_params->pInitVector == NULL) {
 	pbe_params->pInitVector = (CK_CHAR_PTR)PORT_ZAlloc(pbe_key->len);
 	if (pbe_params->pInitVector == NULL) {
-	    SECOID_DestroyAlgorithmID(&algid, PR_FALSE);
-	    SECITEM_ZfreeItem(pbe_key, PR_TRUE);
 	    return CKR_HOST_MEMORY;
 	}
-	PORT_Memcpy(pbe_params->pInitVector, pbe_key->data, pbe_key->len);
+	PORT_Memcpy(pbe_params->pInitVector, iv.data, iv.len);
     }
-    SECITEM_ZfreeItem(pbe_key, PR_TRUE);
-    SECOID_DestroyAlgorithmID(&algid, PR_FALSE);
     return CKR_OK;
 }
 
 
 static CK_RV
-nsc_SetupBulkKeyGen(CK_MECHANISM_TYPE mechanism,
-			CK_KEY_TYPE *key_type,CK_ULONG *key_length) {
+nsc_SetupBulkKeyGen(CK_MECHANISM_TYPE mechanism, CK_KEY_TYPE *key_type,
+							CK_ULONG *key_length)
+{
     CK_RV crv = CKR_OK;
 
     switch (mechanism) {
@@ -2904,81 +2596,111 @@ nsc_SetupBulkKeyGen(CK_MECHANISM_TYPE mechanism,
     return crv;
 }
 
-static CK_RV
-nsc_SetupPBEKeyGen(CK_MECHANISM_TYPE mechanism,SECOidTag *algtag,
-			CK_KEY_TYPE *key_type,CK_ULONG *key_length) {
-    CK_RV crv = CKR_OK;
+CK_RV
+nsc_SetupHMACKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter **pbe)
+{
+    SECItem  salt;
+    CK_PBE_PARAMS *pbe_params = NULL;
+    NSSPKCS5PBEParameter *params;
+    PRArenaPool *arena = NULL;
+    SECStatus rv;
 
-    switch (mechanism) {
-    case CKM_PBE_MD2_DES_CBC:
-	*algtag = SEC_OID_PKCS5_PBE_WITH_MD2_AND_DES_CBC;
+    *pbe = NULL;
+
+    arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
+    if (arena == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+
+    params = (NSSPKCS5PBEParameter *) PORT_ArenaZAlloc(arena,
+				sizeof(NSSPKCS5PBEParameter));
+    if (params == NULL) {
+	PORT_FreeArena(arena,PR_TRUE);
+	return CKR_HOST_MEMORY;
+    }
+
+    params->ivLen = 0;
+    params->pbeType = NSSPKCS5_PKCS12_V2;
+    params->hashType = HASH_AlgSHA1;
+    params->encAlg = SEC_OID_SHA1; /* any invalid value */
+    params->is2KeyDES = PR_FALSE;
+    params->keyID = pbeBitGenIntegrityKey;
+    params->iter = pbe_params->ulIteration;
+
+    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
+    salt.data = (unsigned char *)pbe_params->pSalt;
+    salt.len = (unsigned int)pbe_params->ulSaltLen;
+    rv = SECITEM_CopyItem(arena,&params->salt,&salt);
+    if (rv != SECSuccess) {
+	PORT_FreeArena(arena,PR_TRUE);
+	return CKR_HOST_MEMORY;
+    }
+    switch (pMechanism->mechanism) {
+    case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
+    case CKM_PBA_SHA1_WITH_SHA1_HMAC:
+	params->hashType = HASH_AlgSHA1; 
+	params->keyLen = 20;
+	break;
+    case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
+	params->hashType = HASH_AlgMD5; 
+	params->keyLen = 16;
+	break;
+    case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
+	params->hashType = HASH_AlgMD2; 
+	params->keyLen = 16;
+	break;
+    default:
+	PORT_FreeArena(arena,PR_TRUE);
+	return CKR_MECHANISM_INVALID;
+    }
+    *pbe = params;
+    return CKR_OK;
+}
+/* maybe this should be table driven? */
+static CK_RV
+nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
+							CK_KEY_TYPE *key_type)
+{
+    CK_RV crv = CKR_OK;
+    SECOidData *oid;
+    CK_PBE_PARAMS *pbe_params;
+    NSSPKCS5PBEParameter *params;
+    SECItem salt;
+
+    oid = SECOID_FindOIDByMechanism(pMechanism->mechanism);
+    if (oid == NULL) {
+	return CKR_MECHANISM_INVALID;
+    }
+
+    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
+    salt.data = (unsigned char *)pbe_params->pSalt;
+    salt.len = (unsigned int)pbe_params->ulSaltLen;
+
+    params=nsspkcs5_NewParam(oid->offset, &salt, pbe_params->ulIteration);
+    if (params == NULL) {
+	return CKR_MECHANISM_INVALID;
+    }
+
+
+    switch (params->encAlg) {
+    case SEC_OID_DES_CBC:
 	*key_type = CKK_DES;
 	break;
+    case SEC_OID_DES_EDE3_CBC:
+	*key_type = params->is2KeyDES ? CKK_DES2 : CKK_DES3;
     case CKM_PBE_MD5_DES_CBC:
-	*algtag = SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC;
 	*key_type = CKK_DES;
 	break;
-    case CKM_PBE_SHA1_RC4_40:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC4;
-	*key_length = 5;
+    case SEC_OID_RC2_CBC:
 	*key_type = CKK_RC4;
 	break;
-    case CKM_PBE_SHA1_RC4_128:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4;
-	*key_length = 16;
-	*key_type = CKK_RC4;
-	break;
-    case CKM_PBE_SHA1_RC2_40_CBC:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
-	*key_length = 5;
-	*key_type = CKK_RC2;
-	break;
-    case CKM_PBE_SHA1_RC2_128_CBC:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC;
-	*key_length = 16;
-	*key_type = CKK_RC2;
-	break;
-    case CKM_PBE_SHA1_DES3_EDE_CBC:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC;
-	*key_length = 24;
-	*key_type = CKK_DES3;
-	break;
-    case CKM_PBE_SHA1_DES2_EDE_CBC:
-	*algtag = SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC;
-	*key_length = 16;
-	*key_type = CKK_DES2;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
-	*algtag = SEC_OID_PKCS5_PBE_WITH_SHA1_AND_DES_CBC;
-	*key_type = CKK_DES;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
-    case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
-	*algtag = SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC;
-	*key_type = CKK_DES3;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
-	*algtag = SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
-	*key_type = CKK_RC2;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
-	*algtag = SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC;
-	*key_type = CKK_RC2;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
-	*algtag = SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC4;
-	*key_type = CKK_RC4;
-	break;
-    case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
-	*algtag = SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4;
+    case SEC_OID_RC4:
 	*key_type = CKK_RC4;
 	break;
     default:
-	PORT_Assert(0);
 	crv = CKR_MECHANISM_INVALID;
 	break;
     }
-
     return crv;
 }
 
@@ -2998,8 +2720,8 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     int i;
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
     char buf[MAX_KEY_LEN];
-    enum {pk11_pbe, pk11_pbe_hmac, pk11_ssl, pk11_bulk} key_gen_type;
-    SECOidTag algtag = SEC_OID_UNKNOWN;
+    enum {nsc_pbe, nsc_ssl, nsc_bulk} key_gen_type;
+    NSSPKCS5PBEParameter *pbe_param;
     SSL3RSAPreMasterSecret *rsa_pms;
     CK_VERSION *version;
     /* in very old versions of NSS, there were implementation errors with key 
@@ -3040,7 +2762,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     pk11_DeleteAttributeType(key,CKA_VALUE);
 
     /* Now Set up the parameters to generate the key (based on mechanism) */
-    key_gen_type = pk11_bulk; /* bulk key by default */
+    key_gen_type = nsc_bulk; /* bulk key by default */
     switch (pMechanism->mechanism) {
     case CKM_CDMF_KEY_GEN:
     case CKM_DES_KEY_GEN:
@@ -3059,16 +2781,18 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
 	key_type = CKK_GENERIC_SECRET;
 	key_length = 48;
-	key_gen_type = pk11_ssl;
+	key_gen_type = nsc_ssl;
 	break;
-    case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
-	faultyPBE3DES = PR_TRUE;
+    case CKM_PBA_SHA1_WITH_SHA1_HMAC:
     case CKM_NETSCAPE_PBE_SHA1_HMAC_KEY_GEN:
     case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
     case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
-	key_gen_type = pk11_pbe_hmac;
+	key_gen_type = nsc_pbe;
 	key_type = CKK_GENERIC_SECRET;
+	crv = nsc_SetupHMACKeyGen(pMechanism, &pbe_param);
 	break;
+    case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
+	faultyPBE3DES = PR_TRUE;
     case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
     case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
     case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
@@ -3083,9 +2807,8 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case CKM_PBE_SHA1_RC4_40:
     case CKM_PBE_MD5_DES_CBC:
     case CKM_PBE_MD2_DES_CBC:
-	key_gen_type = pk11_pbe;
-	crv = nsc_SetupPBEKeyGen(pMechanism->mechanism,&algtag,
-							&key_type,&key_length);
+	key_gen_type = nsc_pbe;
+	crv = nsc_SetupPBEKeyGen(pMechanism,&pbe_param, &key_type);
 	break;
     default:
 	crv = CKR_MECHANISM_INVALID;
@@ -3109,15 +2832,11 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
      * now to the actual key gen.
      */
     switch (key_gen_type) {
-    case pk11_pbe_hmac:
-	crv = pk11_pbe_hmac_key_gen(pMechanism, buf, &key_length,
-	                            faultyPBE3DES);
-	break;
-    case pk11_pbe:
-	crv = pk11_pbe_key_gen(algtag, pMechanism, buf, &key_length,
+    case nsc_pbe:
+	crv = nsc_pbe_key_gen(pbe_param, pMechanism, buf, &key_length,
 			       faultyPBE3DES);
 	break;
-    case pk11_ssl:
+    case nsc_ssl:
 	rsa_pms = (SSL3RSAPreMasterSecret *)buf;
 	version = (CK_VERSION *)pMechanism->pParameter;
 	rsa_pms->client_version[0] = version->major;
@@ -3125,7 +2844,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
         crv = 
 	    NSC_GenerateRandom(0,&rsa_pms->random[0], sizeof(rsa_pms->random));
 	break;
-    case pk11_bulk:
+    case nsc_bulk:
 	/* get the key, check for weak keys and repeat if found */
 	do {
             crv = NSC_GenerateRandom(0, (unsigned char *)buf, key_length);
@@ -3158,10 +2877,6 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
      */
     crv = pk11_handleObject(key,session);
     pk11_FreeSession(session);
-    if (crv != CKR_OK) {
-	pk11_FreeObject(key);
-	return crv;
-    }
     if (pk11_isTrue(key,CKA_SENSITIVE)) {
 	pk11_forceAttribute(key,CKA_ALWAYS_SENSITIVE,&cktrue,sizeof(CK_BBOOL));
     }
@@ -3170,7 +2885,8 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     }
 
     *phKey = key->handle;
-    return CKR_OK;
+    pk11_FreeObject(key);
+    return crv;
 }
 
 
@@ -3495,7 +3211,7 @@ dhgn_done:
     /*
      * handle the base object cleanup for the public Key
      */
-    crv = pk11_handleObject(publicKey,session);
+    crv = pk11_handleObject(privateKey,session);
     if (crv != CKR_OK) {
         pk11_FreeSession(session);
 	pk11_FreeObject(privateKey);
@@ -3508,11 +3224,12 @@ dhgn_done:
      * If we have any problems, we destroy the public Key we've
      * created and linked.
      */
-    crv = pk11_handleObject(privateKey,session);
+    crv = pk11_handleObject(publicKey,session);
     pk11_FreeSession(session);
     if (crv != CKR_OK) {
+	pk11_FreeObject(publicKey);
+	NSC_DestroyObject(hSession,privateKey->handle);
 	pk11_FreeObject(privateKey);
-	NSC_DestroyObject(hSession,publicKey->handle);
 	return crv;
     }
     if (pk11_isTrue(privateKey,CKA_SENSITIVE)) {
@@ -3533,14 +3250,16 @@ dhgn_done:
     }
     *phPrivateKey = privateKey->handle;
     *phPublicKey = publicKey->handle;
+    pk11_FreeObject(publicKey);
+    pk11_FreeObject(privateKey);
 
     return CKR_OK;
 }
 
 static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 {
-    SECKEYLowPrivateKey *lk = NULL;
-    PrivateKeyInfo *pki = NULL;
+    NSSLOWKEYPrivateKey *lk = NULL;
+    NSSLOWKEYPrivateKeyInfo *pki = NULL;
     PK11Attribute *attribute = NULL;
     PLArenaPool *arena = NULL;
     SECOidTag algorithm = SEC_OID_UNKNOWN;
@@ -3569,8 +3288,8 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 	goto loser;
     }
 
-    pki = (PrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
-						sizeof(PrivateKeyInfo));
+    pki = (NSSLOWKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
+					sizeof(NSSLOWKEYPrivateKeyInfo));
     if(!pki) {
 	rv = SECFailure;
 	goto loser;
@@ -3579,25 +3298,25 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 
     param = NULL;
     switch(lk->keyType) {
-	case lowRSAKey:
+	case NSSLOWKEYRSAKey:
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
-				       SECKEY_LowRSAPrivateKeyTemplate);
+				       nsslowkey_RSAPrivateKeyTemplate);
 	    algorithm = SEC_OID_PKCS1_RSA_ENCRYPTION;
 	    break;
-	case lowDSAKey:
+	case NSSLOWKEYDSAKey:
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
-				       SECKEY_LowDSAPrivateKeyExportTemplate);
+				       nsslowkey_DSAPrivateKeyExportTemplate);
 	    param = SEC_ASN1EncodeItem(NULL, NULL, &(lk->u.dsa.params),
-				       SECKEY_LowPQGParamsTemplate);
+				       nsslowkey_PQGParamsTemplate);
 	    algorithm = SEC_OID_ANSIX9_DSA_SIGNATURE;
 	    break;
-	case lowDHKey:
+	case NSSLOWKEYDHKey:
 	default:
 	    dummy = NULL;
 	    break;
     }
  
-    if(!dummy || ((lk->keyType == lowDSAKey) && !param)) {
+    if(!dummy || ((lk->keyType == NSSLOWKEYDSAKey) && !param)) {
 	goto loser;
     }
 
@@ -3609,14 +3328,14 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     }
 
     dummy = SEC_ASN1EncodeInteger(arena, &pki->version,
-				  SEC_PRIVATE_KEY_INFO_VERSION);
+				  NSSLOWKEY_PRIVATE_KEY_INFO_VERSION);
     if(!dummy) {
 	rv = SECFailure;
 	goto loser;
     }
 
     encodedKey = SEC_ASN1EncodeItem(NULL, NULL, pki, 
-				    SECKEY_PrivateKeyInfoTemplate);
+				    nsslowkey_PrivateKeyInfoTemplate);
 
 loser:
     if(arena) {
@@ -3624,7 +3343,7 @@ loser:
     }
 
     if(lk && (lk != key->objectInfo)) {
-	SECKEY_LowDestroyPrivateKey(lk);
+	nsslowkey_DestroyPrivateKey(lk);
     }
  
     if(param) {
@@ -3680,8 +3399,8 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 		len = *pulWrappedKeyLen;
 	    }
      
-	    crv = pk11_EncryptInit(hSession, pMechanism, hWrappingKey, 
-						CKA_WRAP, PK11_ENCRYPT);
+	    crv = pk11_CryptInit(hSession, pMechanism, hWrappingKey, 
+					CKA_WRAP, PK11_ENCRYPT, PR_TRUE);
 	    if (crv != CKR_OK) {
 		pk11_FreeAttribute(attribute);
 		break;
@@ -3712,8 +3431,8 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 		    break;
 		}
 
-		crv = pk11_EncryptInit(hSession, pMechanism, hWrappingKey,
-						CKA_WRAP, PK11_ENCRYPT);
+		crv = pk11_CryptInit(hSession, pMechanism, hWrappingKey,
+					CKA_WRAP, PK11_ENCRYPT, PR_TRUE);
 		if(crv != CKR_OK) {
 		    SECITEM_ZfreeItem(bpki, PR_TRUE);
 		    crv = CKR_KEY_TYPE_INCONSISTENT;
@@ -3747,8 +3466,8 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     const SEC_ASN1Template *keyTemplate, *paramTemplate;
     void *paramDest = NULL;
     PLArenaPool *arena;
-    SECKEYLowPrivateKey *lpk = NULL;
-    PrivateKeyInfo *pki = NULL;
+    NSSLOWKEYPrivateKey *lpk = NULL;
+    NSSLOWKEYPrivateKeyInfo *pki = NULL;
     SECItem *ck_id = NULL;
     CK_RV crv = CKR_KEY_TYPE_INCONSISTENT;
 
@@ -3757,21 +3476,21 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	return SECFailure;
     }
 
-    pki = (PrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
-						sizeof(PrivateKeyInfo));
+    pki = (NSSLOWKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
+					sizeof(NSSLOWKEYPrivateKeyInfo));
     if(!pki) {
 	PORT_FreeArena(arena, PR_TRUE);
 	return SECFailure;
     }
 
-    if(SEC_ASN1DecodeItem(arena, pki, SECKEY_PrivateKeyInfoTemplate, bpki) 
+    if(SEC_ASN1DecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, bpki) 
 				!= SECSuccess) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return SECFailure;
     }
 
-    lpk = (SECKEYLowPrivateKey *)PORT_ArenaZAlloc(arena,
-						  sizeof(SECKEYLowPrivateKey));
+    lpk = (NSSLOWKEYPrivateKey *)PORT_ArenaZAlloc(arena,
+						  sizeof(NSSLOWKEYPrivateKey));
     if(lpk == NULL) {
 	goto loser;
     }
@@ -3779,18 +3498,18 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 
     switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
 	case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	    keyTemplate = SECKEY_LowRSAPrivateKeyTemplate;
+	    keyTemplate = nsslowkey_RSAPrivateKeyTemplate;
 	    paramTemplate = NULL;
 	    paramDest = NULL;
-	    lpk->keyType = lowRSAKey;
+	    lpk->keyType = NSSLOWKEYRSAKey;
 	    break;
 	case SEC_OID_ANSIX9_DSA_SIGNATURE:
-	    keyTemplate = SECKEY_LowDSAPrivateKeyExportTemplate;
-	    paramTemplate = SECKEY_LowPQGParamsTemplate;
+	    keyTemplate = nsslowkey_DSAPrivateKeyExportTemplate;
+	    paramTemplate = nsslowkey_PQGParamsTemplate;
 	    paramDest = &(lpk->u.dsa.params);
-	    lpk->keyType = lowDSAKey;
+	    lpk->keyType = NSSLOWKEYDSAKey;
 	    break;
-	/* case lowDHKey: */
+	/* case NSSLOWKEYDHKey: */
 	default:
 	    keyTemplate = NULL;
 	    paramTemplate = NULL;
@@ -3818,7 +3537,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     rv = SECFailure;
 
     switch (lpk->keyType) {
-        case lowRSAKey:
+        case NSSLOWKEYRSAKey:
 	    keyType = CKK_RSA;
 	    if(pk11_hasAttribute(key, CKA_NETSCAPE_DB)) {
 		pk11_DeleteAttributeType(key, CKA_NETSCAPE_DB);
@@ -3862,7 +3581,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    crv = pk11_AddAttributeType(key, CKA_COEFFICIENT, 
 	     			pk11_item_expand(&lpk->u.rsa.coefficient));
 	    break;
-        case lowDSAKey:
+        case NSSLOWKEYDSAKey:
 	    keyType = CKK_DSA;
 	    crv = (pk11_hasAttribute(key, CKA_NETSCAPE_DB)) ? CKR_OK :
 						CKR_KEY_TYPE_INCONSISTENT;
@@ -3890,7 +3609,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    if(crv != CKR_OK) break;
 	    break;
 #ifdef notdef
-        case lowDHKey:
+        case NSSLOWKEYDHKey:
 	    template = dhTemplate;
 	    templateCount = sizeof(dhTemplate)/sizeof(CK_ATTRIBUTE);
 	    keyType = CKK_DH;
@@ -3908,7 +3627,7 @@ loser:
     }
 
     if(lpk) {
-	SECKEY_LowDestroyPrivateKey(lpk);
+	nsslowkey_DestroyPrivateKey(lpk);
     }
 
     if(crv != CKR_OK) {
@@ -3972,8 +3691,8 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
 	ulWrappedKeyLen -= 2; /* don't decrypt the checksum */
     }
 
-    crv = pk11_DecryptInit(hSession,pMechanism,hUnwrappingKey,CKA_UNWRAP,
-								PK11_DECRYPT);
+    crv = pk11_CryptInit(hSession,pMechanism,hUnwrappingKey,CKA_UNWRAP,
+							PK11_DECRYPT, PR_FALSE);
     if (crv != CKR_OK) {
 	pk11_FreeObject(key);
 	return pk11_mapWrap(crv);
@@ -4050,14 +3769,11 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
      * handle the base object stuff
      */
     crv = pk11_handleObject(key,session);
-    pk11_FreeSession(session);
-    if (crv != CKR_OK) {
-	pk11_FreeObject(key);
-	return crv;
-    }
-
     *phKey = key->handle;
-    return CKR_OK;
+    pk11_FreeSession(session);
+    pk11_FreeObject(key);
+
+    return crv;
 
 }
 
@@ -4080,10 +3796,10 @@ pk11_buildSSLKey(CK_SESSION_HANDLE hSession, PK11Object *baseKey,
     /*
      * now lets create an object to hang the attributes off of
      */
-    *keyHandle = CK_INVALID_KEY;
+    *keyHandle = CK_INVALID_HANDLE;
     key = pk11_NewObject(baseKey->slot); 
     if (key == NULL) return CKR_HOST_MEMORY;
-    key->wasDerived = PR_TRUE;
+    pk11_narrowToSessionObject(key)->wasDerived = PR_TRUE;
 
     crv = pk11_CopyObject(key,baseKey);
     if (crv != CKR_OK) goto loser;
@@ -4115,10 +3831,7 @@ pk11_buildSSLKey(CK_SESSION_HANDLE hSession, PK11Object *baseKey,
 
     crv = pk11_handleObject(key,session);
     pk11_FreeSession(session);
-    if (crv == CKR_OK) {
-	*keyHandle = key->handle;
-	return crv;
-    }
+    *keyHandle = key->handle;
 loser:
     if (key) pk11_FreeObject(key);
     return crv;
@@ -4131,16 +3844,16 @@ loser:
 static void
 pk11_freeSSLKeys(CK_SESSION_HANDLE session,
 				CK_SSL3_KEY_MAT_OUT *returnedMaterial ) {
-	if (returnedMaterial->hClientMacSecret != CK_INVALID_KEY) {
+	if (returnedMaterial->hClientMacSecret != CK_INVALID_HANDLE) {
 	   NSC_DestroyObject(session,returnedMaterial->hClientMacSecret);
 	}
-	if (returnedMaterial->hServerMacSecret != CK_INVALID_KEY) {
+	if (returnedMaterial->hServerMacSecret != CK_INVALID_HANDLE) {
 	   NSC_DestroyObject(session, returnedMaterial->hServerMacSecret);
 	}
-	if (returnedMaterial->hClientKey != CK_INVALID_KEY) {
+	if (returnedMaterial->hClientKey != CK_INVALID_HANDLE) {
 	   NSC_DestroyObject(session, returnedMaterial->hClientKey);
 	}
-	if (returnedMaterial->hServerKey != CK_INVALID_KEY) {
+	if (returnedMaterial->hServerKey != CK_INVALID_HANDLE) {
 	   NSC_DestroyObject(session, returnedMaterial->hServerKey);
 	}
 }
@@ -4233,7 +3946,7 @@ pk11_MapKeySize(CK_KEY_TYPE keyType) {
 
 /* TLS P_hash function */
 static SECStatus
-pk11_P_hash(SECOidTag alg, const SECItem *secret, const char *label, 
+pk11_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
 	SECItem *seed, SECItem *result)
 {
     unsigned char state[PHASH_STATE_MAX_LEN];
@@ -4244,6 +3957,7 @@ pk11_P_hash(SECOidTag alg, const SECItem *secret, const char *label,
     SECStatus status;
     HMACContext *cx;
     SECStatus rv = SECFailure;
+    const SECHashObject *hashObj = &SECRawHashObjects[hashType];
 
     PORT_Assert((secret != NULL) && (secret->data != NULL || !secret->len));
     PORT_Assert((seed != NULL) && (seed->data != NULL));
@@ -4255,7 +3969,7 @@ pk11_P_hash(SECOidTag alg, const SECItem *secret, const char *label,
     if (label != NULL)
 	label_len = PORT_Strlen(label);
 
-    cx = HMAC_Create(alg, secret->data, secret->len);
+    cx = HMAC_Create(hashObj, secret->data, secret->len);
     if (cx == NULL)
 	goto loser;
 
@@ -4330,11 +4044,11 @@ pk11_PRF(const SECItem *secret, const char *label, SECItem *seed,
 	goto loser;
     tmp.len = result->len;
 
-    status = pk11_P_hash(SEC_OID_MD5, &S1, label, seed, result);
+    status = pk11_P_hash(HASH_AlgMD5, &S1, label, seed, result);
     if (status != SECSuccess)
 	goto loser;
 
-    status = pk11_P_hash(SEC_OID_SHA1, &S2, label, seed, &tmp);
+    status = pk11_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp);
     if (status != SECSuccess)
 	goto loser;
 
@@ -4404,7 +4118,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     /*
      * now lets create an object to hang the attributes off of
      */
-    if (phKey) *phKey = CK_INVALID_KEY;
+    if (phKey) *phKey = CK_INVALID_HANDLE;
 
     key = pk11_NewObject(slot); /* fill in the handle later */
     if (key == NULL) {
@@ -4513,9 +4227,10 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	ssl3_master = (CK_SSL3_MASTER_KEY_DERIVE_PARAMS *)
 					pMechanism->pParameter;
 	if (ssl3_master->pVersion) {
+	    PK11SessionObject *sessKey = pk11_narrowToSessionObject(key);
 	    rsa_pms = (SSL3RSAPreMasterSecret *) att->attrib.pValue;
 	    /* don't leak more key material then necessary for SSL to work */
-	    if (key->wasDerived) {
+	    if ((sessKey == NULL) || sessKey->wasDerived) {
 		ssl3_master->pVersion->major = 0xff;
 		ssl3_master->pVersion->minor = 0xff;
 	    } else {
@@ -4652,10 +4367,10 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	 * clear out our returned keys so we can recover on failure
 	 */
 	ssl3_keys_out = ssl3_keys->pReturnedKeyMaterial;
-	ssl3_keys_out->hClientMacSecret = CK_INVALID_KEY;
-	ssl3_keys_out->hServerMacSecret = CK_INVALID_KEY;
-	ssl3_keys_out->hClientKey       = CK_INVALID_KEY;
-	ssl3_keys_out->hServerKey       = CK_INVALID_KEY;
+	ssl3_keys_out->hClientMacSecret = CK_INVALID_HANDLE;
+	ssl3_keys_out->hServerMacSecret = CK_INVALID_HANDLE;
+	ssl3_keys_out->hClientKey       = CK_INVALID_HANDLE;
+	ssl3_keys_out->hServerKey       = CK_INVALID_HANDLE;
 
 	/*
 	 * generate the key material: This looks amazingly similar to the
@@ -5222,8 +4937,10 @@ key_and_mac_derive_fail:
 
     /* link the key object into the list */
     if (key) {
+	PK11SessionObject *sessKey = pk11_narrowToSessionObject(key);
+	PORT_Assert(sessKey);
 	/* get the session */
-	key->wasDerived = PR_TRUE;
+	sessKey->wasDerived = PR_TRUE;
 	session = pk11_SessionFromHandle(hSession);
 	if (session == NULL) {
 	    pk11_FreeObject(key);
@@ -5232,10 +4949,7 @@ key_and_mac_derive_fail:
 
 	crv = pk11_handleObject(key,session);
 	pk11_FreeSession(session);
-	if (crv == CKR_OK) {
-	    *phKey = key->handle;
-	     return crv;
-	}
+	*phKey = key->handle;
 	pk11_FreeObject(key);
     }
     return crv;

@@ -35,7 +35,7 @@
 #include "p12plcy.h"
 #include "secoid.h"
 #include "secport.h"
-#include "secpkcs5.h" /* LOTS of PKCS5 calls below.  XXX EVIL. */
+/*#include "secpkcs5.h"  LOTS of PKCS5 calls below.  XXX EVIL. */
 
 #define PKCS12_NULL  0x0000
 

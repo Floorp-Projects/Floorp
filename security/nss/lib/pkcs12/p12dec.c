@@ -44,8 +44,8 @@
 #include "cert.h"
 #include "certdb.h"
 #include "p12plcy.h"
-#include "p12.h"
-#include "secpkcs5.h"
+#include "p12.h" 
+/*#include "secpkcs5.h" */
 
 /* PFX extraction and validation routines */
 

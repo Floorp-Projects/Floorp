@@ -1,4 +1,4 @@
-/*
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -30,46 +30,23 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#ifndef _KEYTLOW_H_
-#define _KEYTLOW_H_ 1
 
-#include "blapit.h"
+#ifdef DEBUG
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:53 $ $Name:  $";
+#endif /* DEBUG */
 
-typedef enum { 
-    lowNullKey = 0, 
-    lowRSAKey = 1, 
-    lowDSAKey = 2, 
-    lowDHKey = 4
-} LowKeyType;
+#ifndef DEVM_H
+#include "devm.h"
+#endif /* DEVM_H */
 
-/*
-** An RSA public key object.
-*/
-struct SECKEYLowPublicKeyStr {
-    PLArenaPool *arena;
-    LowKeyType keyType ;
-    union {
-        RSAPublicKey rsa;
-	DSAPublicKey dsa;
-	DHPublicKey  dh;
-    } u;
-};
-typedef struct SECKEYLowPublicKeyStr SECKEYLowPublicKey;
+NSS_IMPLEMENT PRUint32
+nssPKCS11StringLength(CK_CHAR *pkcs11Str, PRUint32 bufLen)
+{
+    PRInt32 i;
+    for (i = bufLen - 1; i>=0; ) {
+	if (pkcs11Str[i] != ' ') break;
+	--i;
+    }
+    return (PRUint32)(i + 1);
+}
 
-/*
-** Low Level private key object
-** This is only used by the raw Crypto engines (crypto), keydb (keydb),
-** and PKCS #11. Everyone else uses the high level key structure.
-*/
-struct SECKEYLowPrivateKeyStr {
-    PLArenaPool *arena;
-    LowKeyType keyType;
-    union {
-        RSAPrivateKey rsa;
-	DSAPrivateKey dsa;
-	DHPrivateKey  dh;
-    } u;
-};
-typedef struct SECKEYLowPrivateKeyStr SECKEYLowPrivateKey;
-
-#endif	/* _KEYTLOW_H_ */

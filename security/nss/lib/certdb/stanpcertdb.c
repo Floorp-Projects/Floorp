@@ -51,108 +51,15 @@
 #include "plhash.h"
 #include "pk11func.h" /* sigh */
 
-#include "cdbhdl.h"
-
 #ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
 #endif /* NSS_3_4_CODE */
 #include "nsspki.h"
 #include "pkit.h"
 #include "pkim.h"
-#include "pkinss3hack.h"
+#include "pki3hack.h"
 #include "ckhelper.h"
 #include "base.h"
-
-struct stan_cert_callback_str {
-    CERTCertCallback callback;
-    void *arg;
-};
-
-/* Translate from NSSCertificate to CERTCertificate, then pass the latter
- * to a callback.
- */
-static PRStatus convert_cert(NSSCertificate *c, void *arg)
-{
-    CERTCertificate *nss3cert;
-    SECStatus secrv;
-    struct stan_cert_callback_str *scba = (struct stan_cert_callback_str *)arg;
-    nss3cert = STAN_GetCERTCertificate(c);
-    if (!nss3cert) return PR_FAILURE;
-    secrv = (*scba->callback)(nss3cert, scba->arg);
-    CERT_DestroyCertificate(nss3cert);
-    return (secrv) ? PR_FAILURE : PR_SUCCESS;
-}
-
-struct stan_cert_der_callback_str {
-    SECStatus (* callback)(CERTCertificate *cert, SECItem *k, void *pdata);
-    void *arg;
-};
-
-/* Translate from NSSCertificate to CERTCertificate, then pass the latter
- * to a callback.
- */
-static PRStatus convert_cert_der(NSSCertificate *c, void *arg)
-{
-    CERTCertificate *nss3cert;
-    SECStatus secrv;
-    SECItem certKey;
-    struct stan_cert_der_callback_str *scdba = 
-                                     (struct stan_cert_der_callback_str *)arg;
-    nss3cert = STAN_GetCERTCertificate(c);
-    if (!nss3cert) return PR_FAILURE;
-    SECITEM_FROM_NSSITEM(&certKey, &c->encoding);
-    secrv = (*scdba->callback)(nss3cert, &certKey, scdba->arg);
-    CERT_DestroyCertificate(nss3cert);
-    return (secrv) ? PR_FAILURE : PR_SUCCESS;
-}
-
-
-SECStatus
-__CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle, 
-                                   SECItem *derSubject,
-                                   CERTCertCallback cb, void *cbarg)
-{
-    struct stan_cert_callback_str scba;
-    PRStatus nssrv;
-    NSSDER subject;
-    scba.callback = cb;
-    scba.arg = cbarg;
-    NSSITEM_FROM_SECITEM(&subject, derSubject);
-    nssrv = nssTrustDomain_TraverseCertificatesBySubject(handle,
-                                                         &subject,
-                                                         convert_cert,
-                                                         &scba);
-    return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
-}
-
-SECStatus
-CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle, SECItem *derSubject,
-				 CERTCertCallback cb, void *cbarg)
-{
-    return(__CERT_TraversePermCertsForSubject(handle, derSubject, cb, cbarg));
-}
-
-SECStatus
-__CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
-				    CERTCertCallback cb, void *cbarg)
-{
-    struct stan_cert_callback_str scba;
-    PRStatus nssrv;
-    scba.callback = cb;
-    scba.arg = cbarg;
-    nssrv = nssTrustDomain_TraverseCertificatesByNickname(handle,
-                                                          (NSSUTF8 *)nickname,
-                                                          convert_cert,
-                                                          &scba);
-    return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
-}
-
-SECStatus
-CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
-				  CERTCertCallback cb, void *cbarg)
-{
-    return(__CERT_TraversePermCertsForNickname(handle, nickname, cb, cbarg));
-}
 
 PRBool
 SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
@@ -169,33 +76,6 @@ SEC_DeletePermCertificate(CERTCertificate *cert)
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
     nssrv = NSSCertificate_DeleteStoredObject(c, NULL);
     return SECFailure;
-}
-
-SECStatus
-SEC_TraversePermCerts(CERTCertDBHandle *handle,
-		      SECStatus (* certfunc)(CERTCertificate *cert, SECItem *k,
-					    void *pdata),
-		      void *udata )
-{
-    struct stan_cert_der_callback_str scdba;
-    PRStatus nssrv;
-    scdba.callback = certfunc;
-    scdba.arg = udata;
-    nssrv = nssTrustDomain_TraverseCertificates(handle, 
-                                                convert_cert_der, &scdba);
-    return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
-}
-
-void
-__CERT_ClosePermCertDB(CERTCertDBHandle *handle)
-{
-    /* XXX do anything? */
-}
-
-void
-CERT_ClosePermCertDB(CERTCertDBHandle *handle)
-{
-    __CERT_ClosePermCertDB(handle);
 }
 
 SECStatus
@@ -227,12 +107,12 @@ SECStatus
 CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
 		    CERTCertTrust *trust)
 {
-    SECStatus ret;
-    CERT_LockDB(handle);
+    SECStatus rv = SECFailure;
+    PRStatus ret;
+
     CERT_LockCertTrust(cert);
     /* only set the trust on permanent certs */
     if ( cert->trust == NULL ) {
-	ret = SECFailure;
 	goto done;
     }
     if (PK11_IsReadOnly(cert->slot)) {
@@ -240,13 +120,13 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
 	/* XXX store it on a writeable token */
 	goto done;
     } else {
-	STAN_ChangeCertTrust(cert->nssCertificate, trust);
+	NSSCertificate *c = STAN_GetNSSCertificate(cert);
+	ret = STAN_ChangeCertTrust(c, trust);
+	rv = (ret == PR_SUCCESS) ? SECSuccess : SECFailure;
     }
-    ret = SECSuccess;
 done:
     CERT_UnlockCertTrust(cert);
-    CERT_UnlockDB(handle);
-    return(ret);
+    return rv;
 }
 
 SECStatus
@@ -254,9 +134,12 @@ CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
 {
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
+#ifdef notdef
     /* might as well keep these */
+    /* actually we shouldn't keep these! rjr */
     PORT_Assert(cert->istemp);
     PORT_Assert(!cert->isperm);
+#endif
     if (SEC_CertNicknameConflict(nickname, &cert->derSubject, cert->dbhandle)){
 	return SECFailure;
     }
@@ -275,20 +158,6 @@ CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     }
     */
     return SECFailure;
-}
-
-SECStatus
-CERT_OpenCertDBFilename(CERTCertDBHandle *handle, char *certdbname,
-			PRBool readOnly)
-{
-    /* XXX what to do here? */
-}
-
-/* only for jarver.c */
-SECStatus
-SEC_AddTempNickname(CERTCertDBHandle *handle, char *nickname,
-		    SECItem *subjectName)
-{
 }
 
 CERTCertificate *
@@ -329,10 +198,11 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	                          PORT_Strlen(cc->emailAddr));
     }
     c->trustDomain = handle;
+    cc->dbhandle = handle;
     nssTrustDomain_AddCertsToCache(handle, &c, 1);
     cc->istemp = 1;
     cc->isperm = 0;
-    /* XXX if !copyDER destroy it? */
+
     return cc;
 loser:
     nssArena_Destroy(arena);
@@ -348,26 +218,18 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 }
 
 /* maybe all the wincx's should be some const for internal token login? */
-
-CERTCertificate *
-CERT_FindCertByKey(CERTCertDBHandle *handle, SECItem *certKey)
-{
-}
-
-/*
- * Lookup a certificate in the databases without locking
- */
-CERTCertificate *
-CERT_FindCertByKeyNoLocking(CERTCertDBHandle *handle, SECItem *certKey)
-{
-    return(CERT_FindCertByKey(handle, certKey));
-}
-
 CERTCertificate *
 CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN)
 {
     PK11SlotInfo *slot;
-    return PK11_FindCertByIssuerAndSN(&slot, issuerAndSN, NULL);
+    CERTCertificate *cert;
+
+    cert = PK11_FindCertByIssuerAndSN(&slot,issuerAndSN,NULL);
+    if (slot) {
+        PK11_FreeSlot(slot);
+    }
+
+    return cert;
 }
 
 CERTCertificate *
@@ -383,10 +245,23 @@ CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
     return STAN_GetCERTCertificate(c);
 }
 
-/* this one is gonna be tough ... looks like traversal */
 CERTCertificate *
 CERT_FindCertByKeyID(CERTCertDBHandle *handle, SECItem *name, SECItem *keyID)
 {
+   CERTCertList *list =
+                        CERT_CreateSubjectCertList(NULL,handle,name,0,PR_FALSE);
+    CERTCertificate *cert = NULL;
+    CERTCertListNode *node = CERT_LIST_HEAD(list);
+
+    if (list == NULL) return NULL;
+
+    for (node = CERT_LIST_HEAD(list); node ; node = CERT_LIST_NEXT(node)) {
+        if (SECITEM_ItemsAreEqual(&cert->subjectKeyID, keyID) ) {
+            cert = CERT_DupCertificate(node->cert);
+            break;
+        }
+    }
+    return cert;
 }
 
 CERTCertificate *
@@ -468,12 +343,6 @@ loser:
     return NULL;
 }
 
-SECStatus
-CERT_DeleteTempCertificate(CERTCertificate *cert)
-{
-    /* remove from cache */
-}
-
 void
 CERT_DestroyCertificate(CERTCertificate *cert)
 {
@@ -488,7 +357,7 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	if ( ( refCount == 0 ) && !cert->keepSession ) {
 	    PRArenaPool *arena  = cert->arena;
 	    if ( cert->istemp ) {
-		CERT_DeleteTempCertificate(cert);
+		/* uncache the cert ? */
 	    }
 	    /* delete the NSSCertificate */
 	    /* zero cert before freeing. Any stale references to this cert
@@ -502,144 +371,7 @@ CERT_DestroyCertificate(CERTCertificate *cert)
     return;
 }
 
-SECStatus
-CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
-		      PRBool caOnly, char *nickname)
-{
-    SECStatus rv;
-    PRBool saveit;
-    CERTCertTrust trust;
-    CERTCertTrust tmptrust;
-    PRBool isCA;
-    unsigned int certtype;
-    PRBool freeNickname = PR_FALSE;
-    
-    isCA = CERT_IsCACert(cert, NULL);
-    if ( caOnly && ( !isCA ) ) {
-	return(SECSuccess);
-    }
-    
-    saveit = PR_TRUE;
-    
-    PORT_Memset((void *)&trust, 0, sizeof(trust));
-
-    certtype = cert->nsCertType;
-
-    /* if no CA bits in cert type, then set all CA bits */
-    if ( isCA && ( ! ( certtype & NS_CERT_TYPE_CA ) ) ) {
-	certtype |= NS_CERT_TYPE_CA;
-    }
-
-    /* if no app bits in cert type, then set all app bits */
-    if ( ( !isCA ) && ( ! ( certtype & NS_CERT_TYPE_APP ) ) ) {
-	certtype |= NS_CERT_TYPE_APP;
-    }
-
-    if ( isCA && !nickname ) {
-	nickname = CERT_MakeCANickname(cert);
-	if ( nickname != NULL ) {
-	    freeNickname = PR_TRUE;
-	}
-    }
-    
-    switch ( usage ) {
-      case certUsageEmailSigner:
-      case certUsageEmailRecipient:
-	if ( isCA ) {
-	    if ( certtype & NS_CERT_TYPE_EMAIL_CA ) {
-		trust.emailFlags = CERTDB_VALID_CA;
-	    }
-	} else {
-	    PORT_Assert(nickname == NULL);
-
-	    if ( cert->emailAddr == NULL ) {
-		saveit = PR_FALSE;
-	    }
-	    
-	    if ( certtype & NS_CERT_TYPE_EMAIL ) {
-		trust.emailFlags = CERTDB_VALID_PEER;
-		if ( ! ( cert->rawKeyUsage & KU_KEY_ENCIPHERMENT ) ) {
-		    /* don't save it if KeyEncipherment is not allowed */
-		    saveit = PR_FALSE;
-		}
-	    }
-	}
-	break;
-      case certUsageUserCertImport:
-	if ( isCA ) {
-	    if ( certtype & NS_CERT_TYPE_SSL_CA ) {
-		trust.sslFlags = CERTDB_VALID_CA;
-	    }
-	    
-	    if ( certtype & NS_CERT_TYPE_EMAIL_CA ) {
-		trust.emailFlags = CERTDB_VALID_CA;
-	    }
-	    
-	    if ( certtype & NS_CERT_TYPE_OBJECT_SIGNING_CA ) {
-		trust.objectSigningFlags = CERTDB_VALID_CA;
-	    }
-	    
-	} else {
-	    if ( certtype & NS_CERT_TYPE_SSL_CLIENT ) {
-		trust.sslFlags = CERTDB_VALID_PEER;
-	    }
-	    
-	    if ( certtype & NS_CERT_TYPE_EMAIL ) {
-		trust.emailFlags = CERTDB_VALID_PEER;
-	    }
-	    
-	    if ( certtype & NS_CERT_TYPE_OBJECT_SIGNING ) {
-		trust.objectSigningFlags = CERTDB_VALID_PEER;
-	    }
-	}
-	break;
-      case certUsageAnyCA:
-	trust.sslFlags = CERTDB_VALID_CA;
-	break;
-      case certUsageSSLCA:
-	trust.sslFlags = CERTDB_VALID_CA | 
-			CERTDB_TRUSTED_CA | CERTDB_TRUSTED_CLIENT_CA;
-	break;
-      default:	/* XXX added to quiet warnings; no other cases needed? */
-	break;
-    }
-
-    if ( saveit ) {
-	if ( cert->isperm ) {
-	    /* Cert already in the DB.  Just adjust flags */
-	    tmptrust = *cert->trust;
-	    tmptrust.sslFlags |= trust.sslFlags;
-	    tmptrust.emailFlags |= trust.emailFlags;
-	    tmptrust.objectSigningFlags |= trust.objectSigningFlags;
-	    
-	    rv = CERT_ChangeCertTrust(cert->dbhandle, cert,
-				      &tmptrust);
-	    if ( rv != SECSuccess ) {
-		goto loser;
-	    }
-	} else {
-	    /* Cert not already in the DB.  Add it */
-	    rv = CERT_AddTempCertToPerm(cert, nickname, &trust);
-	    if ( rv != SECSuccess ) {
-		goto loser;
-	    }
-	}
-    }
-
-    rv = SECSuccess;
-    goto done;
-
-loser:
-    rv = SECFailure;
-done:
-
-    if ( freeNickname ) {
-	PORT_Free(nickname);
-    }
-    
-    return(rv);
-}
-
+#ifdef notdef
 SECStatus
 CERT_ChangeCertTrustByUsage(CERTCertDBHandle *certdb,
 			    CERTCertificate *cert, SECCertUsage usage)
@@ -732,11 +464,13 @@ done:
 
     return(rv);
 }
+#endif
 
 int
 CERT_GetDBContentVersion(CERTCertDBHandle *handle)
 {
-    /* do anything? */
+    /* should read the DB content version from the pkcs #11 device */
+    return 0;
 }
 
 /*
@@ -749,649 +483,135 @@ SECStatus
 CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
 		      SECItem *profileTime)
 {
+    int64 oldtime;
+    int64 newtime;
+    SECStatus rv = SECFailure;
+    PRBool saveit;
+    char *emailAddr;
+    SECItem *oldProfile = NULL;
+    SECItem *oldProfileTime = NULL;
+    PK11SlotInfo *slot = NULL;
+    
+    emailAddr = cert->emailAddr;
+    
+    PORT_Assert(emailAddr);
+    if ( emailAddr == NULL ) {
+	goto loser;
+    }
+
+    saveit = PR_FALSE;
+   
+    oldProfile = PK11_FindSMimeProfile(&slot, emailAddr, &cert->derSubject, 
+							&oldProfileTime); 
+    
+    /* both profileTime and emailProfile have to exist or not exist */
+    if ( emailProfile == NULL ) {
+	profileTime = NULL;
+    } else if ( profileTime == NULL ) {
+	emailProfile = NULL;
+    }
+   
+    if ( oldProfileTime == NULL ) {
+	saveit = PR_TRUE;
+    } else {
+	/* there was already a profile for this email addr */
+	if ( profileTime ) {
+	    /* we have an old and new profile - save whichever is more recent*/
+	    if ( oldProfileTime->len == 0 ) {
+		/* always replace if old entry doesn't have a time */
+		oldtime = LL_MININT;
+	    } else {
+		rv = DER_UTCTimeToTime(&oldtime, oldProfileTime);
+		if ( rv != SECSuccess ) {
+		    goto loser;
+		}
+	    }
+	    
+	    rv = DER_UTCTimeToTime(&newtime, profileTime);
+	    if ( rv != SECSuccess ) {
+		goto loser;
+	    }
+	
+	    if ( LL_CMP(newtime, >, oldtime ) ) {
+		/* this is a newer profile, save it and cert */
+		saveit = PR_TRUE;
+	    }
+	} else {
+	    saveit = PR_TRUE;
+	}
+    }
+
+
+    if (saveit) {
+	rv = PK11_SaveSMimeProfile(slot, emailAddr, &cert->derSubject, 
+						emailProfile, profileTime);
+    } else {
+	rv = SECSuccess;
+    }
+
+loser:
+    if (oldProfile) {
+    	SECITEM_FreeItem(oldProfile,PR_TRUE);
+    }
+    if (oldProfileTime) {
+    	SECITEM_FreeItem(oldProfileTime,PR_TRUE);
+    }
+    
+    return(rv);
 }
 
 SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert)
 {
+    return 
+	PK11_FindSMimeProfile(NULL, cert->emailAddr, &cert->derSubject, NULL);
 }
 
 /*
- *
- * Manage CRL's
- *
+ * depricated functions that are now just stubs.
  */
-
-/* only for crlutil.c */
-CERTSignedCrl *
-SEC_FindCrlByKey(CERTCertDBHandle *handle, SECItem *crlKey, int type)
+/*
+ * Close the database
+ */
+void
+__CERT_ClosePermCertDB(CERTCertDBHandle *handle)
 {
-}
-
-CERTSignedCrl *
-SEC_FindCrlByName(CERTCertDBHandle *handle, SECItem *crlKey, int type)
-{
+    PORT_Assert("CERT_ClosePermCertDB is Depricated" == NULL);
+    return;
 }
 
 SECStatus
-SEC_DestroyCrl(CERTSignedCrl *crl)
+CERT_OpenCertDBFilename(CERTCertDBHandle *handle, char *certdbname,
+                        PRBool readOnly)
 {
+    PORT_Assert("CERT_OpenCertDBFilename is Depricated" == NULL);
+    return SECFailure;
 }
 
-CERTSignedCrl *
-cert_DBInsertCRL (CERTCertDBHandle *handle, char *url,
-		  CERTSignedCrl *newCrl, SECItem *derCrl, int type)
-{
-    CERTSignedCrl *oldCrl = NULL, *crl = NULL;
-    PRArenaPool *arena = NULL;
-    SECCertTimeValidity validity;
-    /*
-    certDBEntryType crlType = (type == SEC_CRL_TYPE) ?
-	 certDBEntryTypeRevocation : certDBEntryTypeKeyRevocation;
-	 */
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (arena == NULL) goto done;
-
-    validity = SEC_CheckCrlTimes(&newCrl->crl,PR_Now());
-    if ( validity == secCertTimeExpired) {
-	if (type == SEC_CRL_TYPE) {
-	    PORT_SetError(SEC_ERROR_CRL_EXPIRED);
-	} else {
-	    PORT_SetError(SEC_ERROR_KRL_EXPIRED);
-	}
-	goto done;
-    } else if (validity == secCertTimeNotValidYet) {
-	if (type == SEC_CRL_TYPE) {
-	    PORT_SetError(SEC_ERROR_CRL_NOT_YET_VALID);
-	} else {
-	    PORT_SetError(SEC_ERROR_KRL_NOT_YET_VALID);
-	}
-	goto done;
-    }
-
-    oldCrl = SEC_FindCrlByKey(handle, &newCrl->crl.derName, type);
-
-    /* if there is an old crl, make sure the one we are installing
-     * is newer. If not, exit out, otherwise delete the old crl.
-     */
-    if (oldCrl != NULL) {
-	if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
-
-	    if (type == SEC_CRL_TYPE) {
-		PORT_SetError(SEC_ERROR_OLD_CRL);
-	    } else {
-		PORT_SetError(SEC_ERROR_OLD_KRL);
-	    }
-
-	    goto done;
-	}
-
-	if ((SECITEM_CompareItem(&newCrl->crl.derName, 
-	        &oldCrl->crl.derName) != SECEqual) &&
-	    (type == SEC_KRL_TYPE) ) {
-	    
-	    PORT_SetError(SEC_ERROR_CKL_CONFLICT);
-	    goto done;
-	}
-
-	/* if we have a url in the database, use that one */
-	if (oldCrl->url) {
-	    int nnlen = PORT_Strlen(oldCrl->url) + 1;
-	    url  = (char *)PORT_ArenaAlloc(arena, nnlen);
-	    if ( url != NULL ) {
-	        PORT_Memcpy(url, oldCrl->url, nnlen);
-	    }
-	}
-
-
-	/* really destroy this crl */
-	/* first drum it out of the permanment Data base */
-	SEC_DeletePermCRL(oldCrl);
-	/* then get rid of our reference to it... */
-	SEC_DestroyCrl(oldCrl);
-	oldCrl = NULL;
-
-    }
-
-    /* Write the new entry into the data base */
-#ifdef KNOW_HOW_TO_WRITE_CRL_TO_TOKEN
-    entry = NewDBCrlEntry(derCrl, url, crlType, 0);
-    if (entry == NULL) goto done;
-
-    rv = WriteDBCrlEntry(handle, entry);
-    if (rv != SECSuccess) goto done;
-
-    crl = SEC_AddPermCrlToTemp(handle, entry);
-    if (crl) entry = NULL; /*crl->dbEntry now points to entry data */
-    crl->isperm = PR_TRUE;
-#endif /* KNOW_HOW_TO_WRITE_CRL_TO_TOKEN */
-
-done:
-    if (arena) PORT_FreeArena(arena, PR_FALSE);
-    if (oldCrl) SEC_DestroyCrl(oldCrl);
-
-    return crl;
-}
-
-
-/*
- * create a new CRL from DER material.
- *
- * The signature on this CRL must be checked before you
- * load it. ???
- */
-CERTSignedCrl *
-SEC_NewCrl(CERTCertDBHandle *handle, char *url, SECItem *derCrl, int type)
-{
-    CERTSignedCrl *newCrl = NULL, *crl = NULL;
-
-    /* make this decode dates! */
-    newCrl = CERT_DecodeDERCrl(NULL, derCrl, type);
-    if (newCrl == NULL) {
-	if (type == SEC_CRL_TYPE) {
-	    PORT_SetError(SEC_ERROR_CRL_INVALID);
-	} else {
-	    PORT_SetError(SEC_ERROR_KRL_INVALID);
-	}
-	goto done;
-    }
-
-    crl = cert_DBInsertCRL (handle, url, newCrl, derCrl, type);
-
-
-done:
-    if (newCrl) PORT_FreeArena(newCrl->arena, PR_FALSE);
-
-    return crl;
-}
-
-SECStatus
-SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type)
-{
-}
-
-SECStatus
-SEC_DeletePermCRL(CERTSignedCrl *crl)
-{
-}
-
-/*
- *
- * SPK Digest code, unmodified from pcertdb.c
- *
- */
-
-/*
- * The following is bunch of types and code to allow looking up a certificate
- * by a hash of its subject public key.  Because the words "hash" and "key"
- * are overloaded and thus terribly confusing, I tried to disambiguate things.
- * - Where I could, I used "digest" instead of "hash" when referring to
- *   hashing of the subject public key.  The PLHashTable interfaces and
- *   our own HASH_Foo interfaces had to be left as is, obviously.  The latter
- *   should be thought of as "digest" in this case.
- * - There are three keys in use here -- the subject public key, the key
- *   used to do a lookup in the PLHashTable, and the key used to do a lookup
- *   in the cert database.  As the latter is a fairly pervasive interface,
- *   I left it alone.  The other two uses I changed to "spk" or "SPK" when
- *   referring to the subject public key, and "index" when referring to the
- *   key into the PLHashTable.
- */
-
-typedef struct SPKDigestInfoStr {
-    PLHashTable *table;
-    PRBool permPopulated;
-} SPKDigestInfo;
-
-/*
- * Since the key hash information is "hidden" (in a void pointer in the handle)
- * these macros with the appropriate casts make it easy to get at the parts.
- */
-#define SPK_DIGEST_TABLE(handle)	\
-	(((SPKDigestInfo *)(handle->spkDigestInfo))->table)
-
-/*
-** Hash allocator ops for the SPKDigest hash table.  The rules are:
-**   + The index and value fields are "owned" by the hash table, and are
-**     freed when the table entry is deleted.
-**   + Replacing a value in the table is not allowed, since the caller can't
-**     tell whether the index field was used or not, resulting in a memory
-**     leak.  (This is a bug in the PL_Hash routines.
-*/
-static void * PR_CALLBACK
-spkAllocTable(void *pool, PRSize size)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-    return PR_MALLOC(size);
-}
-
-static void PR_CALLBACK
-spkFreeTable(void *pool, void *item)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-    PR_Free(item);
-}
-
-/* NOTE: the key argument here appears to be useless, since the RawAdd
- * routine in PL_Hash just uses the original anyway.
- */
-static PLHashEntry * PR_CALLBACK
-spkAllocEntry(void *pool, const void *key)
-{
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-    return PR_NEW(PLHashEntry);
-}
-
-static void PR_CALLBACK
-spkFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
-{
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-    SECItem *value = (SECItem *)he->value;
-    /* The flag should always be to free the whole entry.  Otherwise the
-     * index field gets leaked because the caller can't tell whether
-     * the "new" value (which is the same as the old) was used or not.
-     */
-    PORT_Assert(flag == HT_FREE_ENTRY);
-    /* We always free the value */
-    SECITEM_FreeItem(value, PR_TRUE);
-    if (flag == HT_FREE_ENTRY)
-    {
-        /* Comes from BTOA, is this the right free call? */
-        PORT_Free((char *)he->key);
-        PR_Free(he);
-    }
-}
-
-static PLHashAllocOps spkHashAllocOps = {
-    spkAllocTable, spkFreeTable,
-    spkAllocEntry, spkFreeEntry
-};
-
-/*
- * Create the key hash lookup table.  Note that the table, and the
- * structure which holds it and a little more information, is never freed.
- * This is because the temporary database is never actually closed out,
- * so there is no safe/obvious place to free the whole thing.
- *
- * The database must be locked already.
- */
-static SECStatus
-InitDBspkDigestInfo(CERTCertDBHandle *handle)
-{
-    SPKDigestInfo *spkDigestInfo;
-    PLHashTable *table;
-    PORT_Assert(handle != NULL);
-    PORT_Assert(handle->spkDigestInfo == NULL);
-    spkDigestInfo = PORT_ZAlloc(sizeof(SPKDigestInfo));
-    if ( spkDigestInfo == NULL ) {
-	return(SECFailure);
-    }
-    table = PL_NewHashTable(128, PL_HashString, PL_CompareStrings,
-			    (PLHashComparator) SECITEM_ItemsAreEqual,
-			    &spkHashAllocOps, NULL);
-    if ( table == NULL ) {
-	PORT_Free(spkDigestInfo);
-	return(SECFailure);
-    }
-    spkDigestInfo->table = table;
-    handle->spkDigestInfo = spkDigestInfo;
-    return(SECSuccess);
-}
-
-static const SECHashObject *
-OidTagToRawDigestObject(SECOidTag digestAlg)
-{
-    const SECHashObject *rawDigestObject;
-    switch (digestAlg) {
-      case SEC_OID_MD2:
-	rawDigestObject = &SECRawHashObjects[HASH_AlgMD2];
-	break;
-      case SEC_OID_MD5:
-	rawDigestObject = &SECRawHashObjects[HASH_AlgMD5];
-	break;
-      case SEC_OID_SHA1:
-	rawDigestObject = &SECRawHashObjects[HASH_AlgSHA1];
-	break;
-      default:
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-	rawDigestObject = NULL;
-	break;
-    }
-    return(rawDigestObject);
-}
-
-/*
- * Digest the cert's subject public key using the specified algorithm.
- * The necessary storage for the digest data is allocated.  If "fill" is
- * non-null, the data is put there, otherwise a SECItem is allocated.
- * Allocation from "arena" if it is non-null, heap otherwise.  Any problem
- * results in a NULL being returned (and an appropriate error set).
- */ 
 SECItem *
-CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
-			   SECOidTag digestAlg, SECItem *fill)
+SECKEY_HashPassword(char *pw, SECItem *salt)
 {
-    const SECHashObject *digestObject;
-    void *digestContext;
-    SECItem *result = NULL;
-    void *mark = NULL;
-    SECItem spk;
-    if ( arena != NULL ) {
-	mark = PORT_ArenaMark(arena);
-    }
-    /*
-     * This can end up being called before PKCS #11 is initialized,
-     * so we have to use the raw digest functions.
-     */
-    digestObject = OidTagToRawDigestObject(digestAlg);
-    if ( digestObject == NULL ) {
-	goto loser;
-    }
-    result = SECITEM_AllocItem(arena, fill, digestObject->length);
-    if ( result == NULL ) {
-	goto loser;
-    }
-    /*
-     * Copy just the length and data pointer (nothing needs to be freed)
-     * of the subject public key so we can convert the length from bits
-     * to bytes, which is what the digest function expects.
-     */
-    spk = cert->subjectPublicKeyInfo.subjectPublicKey;
-    DER_ConvertBitString(&spk);
-    /*
-     * Now digest the value, using the specified algorithm.
-     */
-    digestContext = digestObject->create();
-    if ( digestContext == NULL ) {
-	goto loser;
-    }
-    digestObject->begin(digestContext);
-    digestObject->update(digestContext, spk.data, spk.len);
-    digestObject->end(digestContext, result->data, &(result->len), result->len);
-    digestObject->destroy(digestContext, PR_TRUE);
-    if ( arena != NULL ) {
-	PORT_ArenaUnmark(arena, mark);
-    }
-    return(result);
-loser:
-    if ( arena != NULL ) {
-	PORT_ArenaRelease(arena, mark);
-    } else {
-	if ( result != NULL ) {
-	    SECITEM_FreeItem(result, (fill == NULL) ? PR_TRUE : PR_FALSE);
-	}
-    }
-    return(NULL);
-}
-
-/*
- * Return the index for the spk digest lookup table for "spkDigest".
- *
- * Caller is responsible for freeing the returned string.
- */
-static char *
-spkDigestIndexFromDigest(SECItem *spkDigest)
-{
-    return BTOA_ConvertItemToAscii(spkDigest);
-}
-
-/*
- * Return the index for the spk digest lookup table for this certificate,
- * based on the specified digest algorithm.
- *
- * Caller is responsible for freeing the returned string.
- */
-static char *
-spkDigestIndexFromCert(CERTCertificate *cert, SECOidTag digestAlg)
-{
-    SECItem *spkDigest;
-    char *index;
-    spkDigest = CERT_SPKDigestValueForCert(NULL, cert, digestAlg, NULL);
-    if ( spkDigest == NULL )
-	return(NULL);
-    index = spkDigestIndexFromDigest(spkDigest);
-    SECITEM_FreeItem(spkDigest, PR_TRUE);
-    return(index);
-}
-
-/*
- * Add the spk digest for the given cert to the spk digest table,
- * based on the given digest algorithm.
- *
- * If a cert for the same spk digest is already in the table, choose whichever
- * cert is "newer".  (The other cert cannot be found via spk digest.)
- *
- * The database must be locked already.
- * 
- * XXX Note that this implementation results in leaking the index value.
- * Fixing that did not seem worth the trouble, given we will only leak
- * once per cert.  This whole thing should be done differently in the
- * new rewrite (Stan), and then the problem will go away.
- */
-static SECStatus
-AddCertToSPKDigestTableForAlg(CERTCertDBHandle *handle, CERTCertificate *cert,
-			      SECItem *certDBKey, SECOidTag digestAlg)
-{
-    SECStatus rv = SECFailure;
-    SECItem *oldCertDBKey;
-    PRBool addit = PR_TRUE;
-    CERTCertificate *oldCert = NULL;
-    char *index = NULL;
-    PLHashTable *table;
-    /*
-     * After running some testing doing key hash lookups (like using OCSP),
-     * if these are never hit, they can probably be removed.
-     */
-    PORT_Assert(handle != NULL);
-    PORT_Assert(handle == cert->dbhandle);
-    PORT_Assert(handle->spkDigestInfo != NULL);
-    PORT_Assert((certDBKey == &cert->certKey)
-		|| (SECITEM_CompareItem(certDBKey,
-					&cert->certKey) == SECEqual));
-    table = SPK_DIGEST_TABLE(handle);
-    PORT_Assert(table != NULL);
-    index = spkDigestIndexFromCert(cert, digestAlg);
-    if ( index == NULL ) {
-	goto loser;
-    }
-    /*
-     * See if this cert's spk digest is already in the table.
-     */
-    oldCertDBKey = PL_HashTableLookup(table, index);
-    if ( oldCertDBKey != NULL ) {
-	/*
-	 * The spk digest *is* already in the table.  We need to find that
-	 * cert and see -- if it is the same, then we can just leave as is.
-	 * Otherwise we have to choose which cert we want represented;
-	 * in that case the best plan I can think of is to hang onto the
-	 * most recent one.
-	 */
-	oldCert = CERT_FindCertByKey(handle, oldCertDBKey);
-	if ( oldCert != NULL ) {
-	    if ( cert == oldCert ) {
-		/* They are the same cert, so we are done. */
-		addit = PR_FALSE;
-	    } else if ( CERT_IsNewer(cert, oldCert) ) {
-		if ( PL_HashTableRemove(table, index) != PR_TRUE ) {
-		    goto loser;
-		}
-	    } else {
-		/* oldCert is "newer", so we are done. */
-		addit = PR_FALSE;
-	    }
-	}
-    }
-    if ( addit ) {
-	certDBKey = SECITEM_DupItem(certDBKey);
-	if ( certDBKey == NULL ) {
-	    goto loser;
-	}
-	if ( PL_HashTableAdd(table, index, certDBKey) == NULL ) {
-	    SECITEM_FreeItem(certDBKey, PR_TRUE);
-	    PORT_SetError(SEC_ERROR_NO_MEMORY);
-	    goto loser;
-	}
-	index = NULL;				/* don't want to free it */
-    }
-    rv = SECSuccess;
-loser:
-    if ( index != NULL ) {
-	PORT_Free(index);
-    }
-    if ( oldCert != NULL ) {
-	CERT_DestroyCertificate(oldCert);
-    }
-    return(rv);
-}
-
-/*
- * Add the spk digest for the given cert to the spk digest table,
- * for all known digest algorithms.
- *
- * The database must be locked already, and the digest table already created.
- */
-static SECStatus
-AddCertToSPKDigestTableForAllAlgs(CERTCertDBHandle *handle,
-				  CERTCertificate *cert, SECItem *certDBKey)
-{
-    (void) AddCertToSPKDigestTableForAlg(handle, cert, certDBKey, SEC_OID_MD2);
-    (void) AddCertToSPKDigestTableForAlg(handle, cert, certDBKey, SEC_OID_MD5);
-    return AddCertToSPKDigestTableForAlg(handle, cert, certDBKey, SEC_OID_SHA1);
-}
-
-/*
- * Add the spk digest for the given cert to the spk digest table,
- * for all known digest algorithms.  This function is called while
- * traversing all of the certs in the permanent database -- since
- * that imposes some constraints on its arguments this routine is a
- * simple cover for the "real" interface.
- *
- * The database must be locked already, and the digest table already created.
- */
-static SECStatus
-AddCertToSPKDigestTableInTraversal(CERTCertificate *cert, SECItem *certDBKey,
-				   void *data)
-{
-    CERTCertDBHandle *handle = data;
-    return AddCertToSPKDigestTableForAllAlgs(handle, cert, certDBKey);
-}
-
-/*
- * Add the spk digests for the all permanent certs to the spk digest table,
- * for all known digest algorithms.
- *
- * This locks the database, and then checks to make sure that the work
- * actually needs to get done.
- *
- * If the spk digest table does not yet exist, it is created.
- */
-static SECStatus
-PopulateSPKDigestTable(CERTCertDBHandle *handle)
-{
-    SPKDigestInfo *spkDigestInfo;
-    SECStatus rv = SECSuccess;
-    CERT_LockDB(handle);
-    spkDigestInfo = handle->spkDigestInfo;
-    if ( spkDigestInfo == NULL ) {
-	rv = InitDBspkDigestInfo(handle);
-	if ( rv != SECSuccess ) {
-	    return(rv);
-	}
-	spkDigestInfo = handle->spkDigestInfo;
-	PORT_Assert(spkDigestInfo != NULL);
-    } else {
-	/*
-	 * Check to see if someone already did it; it is important to do
-	 * this after getting the lock.
-	 */
-	if ( spkDigestInfo->permPopulated == PR_TRUE ) {
-	    goto done;
-	}
-    }
-    rv = SEC_TraversePermCerts(handle, AddCertToSPKDigestTableInTraversal,
-				    handle);
-    if ( rv != SECSuccess ) {
-	goto done;
-    }
-    spkDigestInfo->permPopulated = PR_TRUE;
-done:
-    CERT_UnlockDB(handle);
-    return(rv);
-}
-
-/*
- * Lookup a certificate by a digest of a subject public key.  If it is
- * found, it is returned (and must then be destroyed by the caller).
- * NULL is returned otherwise -- if there was a problem performing the
- * lookup, an appropriate error is set (e.g. SEC_ERROR_NO_MEMORY);
- * if the cert simply was not found, the error is SEC_ERROR_UNKNOWN_CERT.
- *
- * If the lookup table has not yet been created or populated, do that first.
- */
-CERTCertificate *
-CERT_FindCertBySPKDigest(CERTCertDBHandle *handle, SECItem *spkDigest)
-{
-    SPKDigestInfo *spkDigestInfo;
-    char *index = NULL;
-    SECItem *certDBKey;
-    CERTCertificate *cert = NULL;
-    PORT_Assert(handle != NULL);
-    spkDigestInfo = handle->spkDigestInfo;
-    if ( spkDigestInfo == NULL || spkDigestInfo->permPopulated != PR_TRUE ) {
-	if ( PopulateSPKDigestTable(handle) != SECSuccess ) {
-	    goto loser;
-	}
-    }
-    index = spkDigestIndexFromDigest(spkDigest);
-    if ( index == NULL ) {
-	goto loser;
-    }
-    certDBKey = PL_HashTableLookup(SPK_DIGEST_TABLE(handle), index);
-    if ( certDBKey != NULL ) {
-	cert = CERT_FindCertByKey(handle, certDBKey);
-    }
-    if ( cert == NULL ) {
-	PORT_SetError(SEC_ERROR_UNKNOWN_CERT);
-    }
-loser:
-    if ( index != NULL ) {
-	PORT_Free(index);
-    }
-    return(cert);
-}
-
-/* XXX
- * XXX
- *
- * These are included for now to allow this to build, but will not be needed
- * once the softoken is below PKCS#11.
- */
-SECStatus
-CERT_AddPermNickname(CERTCertificate *cert, char *nickname)
-{
-}
-
-int
-CERT_NumPermCertsForSubject(CERTCertDBHandle *handle, SECItem *derSubject)
-{
-}
-
-int
-CERT_NumPermCertsForNickname(CERTCertDBHandle *handle, char *nickname)
-{
+    PORT_Assert("SECKEY_HashPassword is Depricated" == NULL);
+    return NULL;
 }
 
 SECStatus
-CERT_OpenCertDB(CERTCertDBHandle *handle, PRBool readOnly,
-		CERTDBNameFunc namecb, void *cbarg)
+__CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle,
+                                 SECItem *derSubject,
+                                 void *cb, void *cbarg)
 {
-    return SECSuccess;
+    PORT_Assert("CERT_TraversePermCertsForSubject is Depricated" == NULL);
+    return SECFailure;
 }
+
+
+SECStatus
+__CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
+                                  void *cb, void *cbarg)
+{
+    PORT_Assert("CERT_TraversePermCertsForNickname is Depricated" == NULL);
+    return SECFailure;
+}
+
+
+

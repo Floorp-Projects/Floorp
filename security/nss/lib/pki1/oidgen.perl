@@ -31,8 +31,9 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:22 $ $Name:  $';
-
+$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.2 $ $Date: 2001/11/08 00:15:25 $ $Name:  $';
+$cfile = shift;
+$hfile = shift;
 $count = -1;
 while(<>) {
   s/^((?:[^"#]+|"[^"]*")*)(\s*#.*$)/$1/;
@@ -60,7 +61,8 @@ while(<>) {
 }
 
 # dodump();
-doprint();
+
+doprint($cfile,$hfile);
 
 sub dodump {
 for( $i = 0; $i <= $count; $i++ ) {
@@ -73,8 +75,8 @@ for( $i = 0; $i <= $count; $i++ ) {
 }
 
 sub doprint {
-open(CFILE, ">oiddata.c") || die "Can't open oiddata.c: $!"; 
-open(HFILE, ">oiddata.h") || die "Can't open oiddata.h: $!";
+open(CFILE, "> $cfile") || die "Can't open $cfile: $!"; 
+open(HFILE, "> $hfile") || die "Can't open $hfile: $!";
 
 print CFILE <<EOD
 /* THIS IS A GENERATED FILE */

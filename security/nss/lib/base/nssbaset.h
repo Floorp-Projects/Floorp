@@ -35,7 +35,7 @@
 #define NSSBASET_H
 
 #ifdef DEBUG
-static const char NSSBASET_CVS_ID[] = "@(#) $RCSfile: nssbaset.h,v $ $Revision: 1.3 $ $Date: 2001/01/03 19:48:46 $ $Name:  $";
+static const char NSSBASET_CVS_ID[] = "@(#) $RCSfile: nssbaset.h,v $ $Revision: 1.4 $ $Date: 2001/11/08 00:14:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -138,7 +138,7 @@ typedef NSSItem NSSBitString;
  * Character strings encoded in UTF-8, as defined by RFC 2279.
  */
 
-typedef PRUint8 NSSUTF8;
+typedef char NSSUTF8;
 
 /*
  * NSSASCII7
@@ -146,7 +146,7 @@ typedef PRUint8 NSSUTF8;
  * Character strings guaranteed to be 7-bit ASCII.
  */
 
-typedef PRUint8 NSSASCII7;
+typedef char NSSASCII7;
 
 PR_END_EXTERN_C
 

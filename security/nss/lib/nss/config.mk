@@ -48,25 +48,15 @@ ifeq ($(OS_ARCH), WINNT)
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
-DLLFLAGS += -DEF:nss.def
-RES = $(OBJDIR)/nss.res
-RESNAME = nss.rc
+RES = $(OBJDIR)/$(LIBRARY_NAME).res
+RESNAME = $(LIBRARY_NAME).rc
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/freebl.lib
-CRYPTODIR=../freebl
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/crypto.lib
-	CRYPTODIR=../crypto
-endif
-
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/certhi.lib \
 	$(DIST)/lib/cryptohi.lib \
 	$(DIST)/lib/pk11wrap.lib \
 	$(DIST)/lib/certdb.lib \
-	$(DIST)/lib/softoken.lib \
-	$(CRYPTOLIB) \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/nsspki.lib \
 	$(DIST)/lib/nssdev.lib \
@@ -78,67 +68,37 @@ SHARED_LIBRARY_DIRS = \
 	../cryptohi \
 	../pk11wrap \
 	../certdb \
-	../softoken \
-	$(CRYPTODIR) \
 	../util \
 	../pki \
 	../dev \
 	../base \
 	$(NULL)
 
-EXTRA_LIBS += \
-	$(DIST)/lib/dbm.lib \
-	$(NULL)
-
-ifdef MOZILLA_BSAFE_BUILD
-	EXTRA_LIBS+=$(DIST)/lib/bsafe$(BSAFEVER).lib
-endif
-
 EXTRA_SHARED_LIBS += \
+	$(DIST)/lib/softokn3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
-
-# $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
-#OS_LIBS += \
-#	wsock32.lib \
-#	winmm.lib \
-#	$(NULL)
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
-CRYPTODIR=../freebl
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
-	CRYPTODIR=../crypto
-endif
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-	$(CRYPTOLIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/libnssdev.$(LIB_SUFFIX) \
 	$(DIST)/lib/libnssb.$(LIB_SUFFIX) \
 	$(NULL)
-EXTRA_LIBS += \
-	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-	$(NULL)
-ifdef MOZILLA_BSAFE_BUILD
-	EXTRA_LIBS+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
-endif
+
 SHARED_LIBRARY_DIRS = \
 	../certhigh \
 	../pk11wrap \
 	../cryptohi \
-	../softoken \
 	../certdb \
-	$(CRYPTODIR) \
 	../util \
 	../pki \
 	../dev \
@@ -149,49 +109,10 @@ SHARED_LIBRARY_DIRS = \
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib/ \
+	-lsoftokn3 \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
 endif
-
-ifeq ($(OS_ARCH),SunOS)
-MAPFILE = $(OBJDIR)/nssmap.sun
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -M $(MAPFILE)
-ifndef USE_64
-ifeq ($(CPU_ARCH),sparc)
-# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
-# dependencies (libfreebl_*.so) in the same directory where it resides.
-MKSHLIB += -R '$$ORIGIN'
-endif
-endif
-endif
-
-ifeq ($(OS_ARCH),AIX)
-MAPFILE = $(OBJDIR)/nssmap.aix
-ALL_TRASH += $(MAPFILE)
-EXPORT_RULES = -bexport:$(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-MAPFILE = $(OBJDIR)/nssmap.hp
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -c $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-MAPFILE = $(OBJDIR)/nssmap.osf
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -hidden -input $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),Linux)
-MAPFILE = $(OBJDIR)/nssmap.linux
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -Wl,--version-script,$(MAPFILE)
-endif
-
-
-	
 

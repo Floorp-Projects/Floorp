@@ -50,4 +50,4 @@ CSRCS = crlutil.c
 # PROGRAM	= ./$(OBJDIR)/crlutil.exe
 PROGRAM	= crlutil
 
-USE_STATIC_LIBS = 1
+#USE_STATIC_LIBS = 1

@@ -82,7 +82,7 @@ sec_CollectCertNamesAndTrust(CERTCertificate *cert, SECItem *unknown, void *arg)
     int i;
 
     i = pCertNames->numCerts;
-    name = cert->dbEntry->nickname ? cert->dbEntry->nickname : cert->emailAddr;
+    name = cert->nickname ? cert->nickname : cert->emailAddr;
 
     if (name)
 	pCertNames->nameAndTrustEntries[i].name = PORT_Strdup(name);

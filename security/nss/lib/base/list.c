@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.5 $ $Date: 2001/10/17 14:37:48 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.6 $ $Date: 2001/11/08 00:14:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -91,7 +91,10 @@ nsslist_get_matching_element(nssList *list, void *data)
 	    break;
 	}
 	link = &node->link;
-	if (link == PR_LIST_TAIL(&list->head->link)) break;
+	if (link == PR_LIST_TAIL(&list->head->link)) {
+	    node = NULL;
+	    break;
+	}
 	node = (nssListElement *)PR_NEXT_LINK(&node->link);
     }
     return node;

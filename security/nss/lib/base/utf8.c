@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 22:02:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.5 $ $Date: 2001/11/08 00:14:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -679,7 +679,7 @@ nssUTF8_CopyIntoFixedBuffer
 #endif /* NSSDEBUG */
 
   if( (NSSUTF8 *)NULL == string ) {
-    string = (unsigned char*) "";
+    string = (NSSUTF8 *) "";
   }
 
   stringSize = nssUTF8_Size(string, (PRStatus *)NULL);
@@ -699,7 +699,7 @@ nssUTF8_CopyIntoFixedBuffer
     }
 
     /* Too long.  We have to trim the last character */
-    for( bs; bs != 0; bs-- ) {
+    for( /*bs*/; bs != 0; bs-- ) {
       if( (buffer[bs-1] & 0xC0) != 0x80 ) {
         buffer[bs-1] = pad;
         break;

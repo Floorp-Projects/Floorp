@@ -16,7 +16,7 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s):
+ * Contributor(s): RSA Labs
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -35,6 +35,9 @@
  * is granted provided that it is identified as "RSA Security In.c Public-Key
  * Cryptography Standards (PKCS)" in all material mentioning or referencing
  * this document.
+ *
+ * The latest version of this header can be found at:
+ *    http://www.rsalabs.com/pkcs/pkcs-11/index.html
  */
 #ifndef _PKCS11_H_
 #define _PKCS11_H_ 1
@@ -312,13 +315,5 @@ struct CK_FUNCTION_LIST {
 #ifdef __cplusplus
 }
 #endif
-
-/* 
-** Functions called directly by applications to configure the FIPS token.
-*/
-extern void PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, 
-		char *ptokdes, char *slotdes, char *pslotdes, char *fslotdes, 
-		char *fpslotdes, int minPwd, int pwdRequired);
-extern void PK11_ConfigureFIPS(char *slotdes, char *pslotdes);
 
 #endif

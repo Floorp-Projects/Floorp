@@ -150,10 +150,11 @@ CK_PKCS11_FUNCTION_INFO(C_GetMechanismInfo)
 CK_PKCS11_FUNCTION_INFO(C_InitToken)
 #ifdef CK_NEED_ARG_LIST
 (
-  CK_SLOT_ID     slotID,    /* ID of the token's slot */
-  CK_CHAR_PTR    pPin,      /* the SO's initial PIN */
-  CK_ULONG       ulPinLen,  /* length in bytes of the PIN */
-  CK_CHAR_PTR    pLabel     /* 32-byte token label (blank padded) */
+/* pLabel changed from CK_CHAR_PTR to CK_UTF8CHAR_PTR for v2.10 */
+  CK_SLOT_ID         slotID,    /* ID of the token's slot */
+  CK_CHAR_PTR        pPin,      /* the SO's initial PIN */
+  CK_ULONG           ulPinLen,  /* length in bytes of the PIN */
+  CK_UTF8CHAR_PTR    pLabel     /* 32-byte token label (blank padded) */
 );
 #endif
 

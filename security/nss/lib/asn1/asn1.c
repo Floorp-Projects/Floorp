@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: asn1.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:54:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: asn1.c,v $ $Revision: 1.2 $ $Date: 2001/11/08 00:14:34 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -316,7 +316,7 @@ nssASN1Decoder_Update
   PRUint32 amount
 )
 {
-  PRStatus rv;
+  SECStatus rv;
 
 #ifdef DEBUG
   if( PR_SUCCESS != nssASN1Decoder_verify(decoder) ) {
@@ -332,7 +332,7 @@ nssASN1Decoder_Update
   rv = SEC_ASN1DecoderUpdate((SEC_ASN1DecoderContext *)decoder, 
                              (const char *)data,
                              (unsigned long)amount);
-  if( PR_SUCCESS != rv ) {
+  if( SECSuccess != rv ) {
     nss_SetError(PORT_GetError()); /* ugly */
     return PR_FAILURE;
   }
@@ -361,7 +361,8 @@ nssASN1Decoder_Finish
   nssASN1Decoder *decoder
 )
 {
-  PRStatus rv;
+  PRStatus rv = PR_SUCCESS;
+  SECStatus srv;
 
 #ifdef DEBUG
   if( PR_SUCCESS != nssASN1Decoder_verify(decoder) ) {
@@ -369,10 +370,11 @@ nssASN1Decoder_Finish
   }
 #endif /* DEBUG */
 
-  rv = SEC_ASN1DecoderFinish((SEC_ASN1DecoderContext *)decoder);
+  srv = SEC_ASN1DecoderFinish((SEC_ASN1DecoderContext *)decoder);
 
-  if( PR_SUCCESS != rv ) {
+  if( SECSuccess != srv ) {
     nss_SetError(PORT_GetError()); /* ugly */
+    rv = PR_FAILURE;
   }
 
 #ifdef DEBUG
@@ -763,7 +765,7 @@ nssASN1Encoder_Update
   PRUint32 length
 )
 {
-  PRStatus rv;
+  SECStatus rv;
 
 #ifdef DEBUG
   if( PR_SUCCESS != nssASN1Encoder_verify(encoder) ) {
@@ -778,7 +780,7 @@ nssASN1Encoder_Update
   rv = SEC_ASN1EncoderUpdate((SEC_ASN1EncoderContext *)encoder,
                              (const char *)data, 
                              (unsigned long)length);
-  if( PR_SUCCESS != rv ) {
+  if( SECSuccess != rv ) {
     nss_SetError(PORT_GetError()); /* ugly */
     return PR_FAILURE;
   }
@@ -1187,7 +1189,6 @@ nssASN1_EncodeItem
   NSSASN1EncodingType encoding
 )
 {
-  PLArenaPool *hack = (PLArenaPool *)arenaOpt;
   NSSDER *rv;
   PRUint32 len = 0;
   PRStatus status;

@@ -32,8 +32,10 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.5 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devmod.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
 #endif /* DEBUG */
+
+#include "nspr.h"
 
 #ifndef DEV_H
 #include "dev.h"
@@ -43,13 +45,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.5 $ $Date
 #include "devm.h"
 #endif /* DEVM_H */
 
-#ifdef NSS_3_4_CODE
-#include "pkcs11.h"
-#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
-#endif /* NSS_3_4_CODE */
 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
@@ -252,7 +250,7 @@ nssModule_Load
     CK_C_GetFunctionList ep;
     CK_RV ckrv;
     /* Use NSPR to load the library */
-    library = PR_LoadLibrary(mod->libraryPath);
+    library = PR_LoadLibrary((char *)mod->libraryPath);
     if (!library) {
 	/* what's the error to set? */
 	return PR_FAILURE;

@@ -34,7 +34,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.4 2001/09/20 21:37:16 relyea%netscape.com Exp $
+ * $Id: p7encode.c,v 1.5 2001/11/08 00:15:16 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -96,7 +96,6 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
     void *mark, *wincx;
     int i;
     PRArenaPool *arena = NULL;
-    unsigned char zero = 0;
 
     /* Get the context in case we need it below. */
     wincx = cinfo->pwfn_arg;
