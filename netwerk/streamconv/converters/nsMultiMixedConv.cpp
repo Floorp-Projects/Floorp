@@ -26,6 +26,7 @@
 #include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
+#include "nsXPIDLString.h"
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -78,16 +79,16 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     NS_ASSERTION(channel, "multimixed converter needs a channel");
 
     if (!mBoundaryCStr) {
-        char *bndry = nsnull, *delimiter = nsnull;
+        char *bndry = nsnull;
+        nsXPIDLCString delimiter;
 
         // ask the HTTP channel for the content-type and extract the boundary from it.
         nsCOMPtr<nsIHTTPChannel> httpChannel;
         rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), getter_AddRefs(httpChannel));
         if (NS_SUCCEEDED(rv)) {
-            char *bndry = nsnull, *delimiter = nsnull;
             nsIAtom *header = NS_NewAtom("content-type");
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
-            rv = httpChannel->GetResponseHeader(header, &delimiter);
+            rv = httpChannel->GetResponseHeader(header, getter_Copies(delimiter));
             NS_RELEASE(header);
             if (NS_FAILED(rv)) return rv;
 
@@ -107,7 +108,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             mBoundaryStrLen = boundaryString.Length();
         } else {
             // try asking the channel directly
-            rv = channel->GetContentType(&delimiter);
+            rv = channel->GetContentType(getter_Copies(delimiter));
             if (NS_FAILED(rv)) return rv;
 
             if (!delimiter) return NS_ERROR_FAILURE;
@@ -120,7 +121,6 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             bndry++; // move past the equals sign
 
             nsCString boundaryString(bndry);
-            nsAllocator::Free(delimiter);
             boundaryString.StripWhitespace();
             mBoundaryCStr = boundaryString.ToNewCString();
             if (!mBoundaryCStr) return NS_ERROR_OUT_OF_MEMORY;
