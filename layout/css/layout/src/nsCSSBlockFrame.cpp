@@ -276,7 +276,7 @@ protected:
 
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aFloatedFrame);
-  nsresult AddNewFrames(nsIPresContext* aPresContext, nsIFrame*);
+  nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
@@ -1010,7 +1010,7 @@ NS_IMETHODIMP
 nsCSSBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mHasBeenInitialized = PR_TRUE;
-  return AddNewFrames(&aPresContext, aChildList);
+  return AppendNewFrames(&aPresContext, aChildList);
 }
 
 NS_IMETHODIMP
@@ -1680,7 +1680,7 @@ nsCSSBlockFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsCSSBlockFrame::AddNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
+nsCSSBlockFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
 {
   // Get our last line and then get its last child
   nsIFrame* lastFrame;
@@ -1729,6 +1729,7 @@ nsCSSBlockFrame::AddNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
     if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
       // Create a placeholder frame that will serve as the anchor point.
       nsPlaceholderFrame* placeholder = CreatePlaceholderFrame(aPresContext, frame);
+
       // Remove the floated element from the flow, and replace it with the
       // placeholder frame
       if (nsnull != prevFrame) {
@@ -1860,7 +1861,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 
   // Add the new frames to the child list, and create new lines. Each
   // impacted line will be marked dirty
-  AddNewFrames(aState.mPresContext, firstAppendedFrame);
+  AppendNewFrames(aState.mPresContext, firstAppendedFrame);
 #endif
 
   // Generate text-run information

@@ -20,6 +20,7 @@
 
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
+#include "nsPlaceholderFrame.h"
 
 #include "nsHTMLIIDs.h"// XXX 
 #include "nsHTMLBase.h"// XXX rename to nsCSSBase?
@@ -142,6 +143,82 @@ nsCSSInlineFrame::GetSkipSides() const
   return skip;
 }
 
+nsPlaceholderFrame*
+nsCSSInlineFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                         nsIFrame*       aFloatedFrame)
+{
+  nsIContent* content;
+  aFloatedFrame->GetContent(content);
+
+  // XXX We should wrap the floated element in a BODY frame...
+  nsPlaceholderFrame* placeholder;
+  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
+  NS_IF_RELEASE(content);
+
+  // Let the placeholder share the same style context as the floated element
+  nsIStyleContext*  kidSC;
+  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
+  placeholder->SetStyleContext(aPresContext, kidSC);
+  NS_RELEASE(kidSC);
+  
+  return placeholder;
+}
+
+nsresult
+nsCSSInlineFrame::AppendNewFrames(nsIPresContext* aPresContext,
+                                  nsIFrame*       aNewFrame)
+{
+  nsIFrame* lastFrame;
+  if (nsnull == mFirstChild) {
+    lastFrame = nsnull;
+    mFirstChild = aNewFrame;
+  } else {
+    LastChild(lastFrame);
+    lastFrame->SetNextSibling(aNewFrame);
+  }
+  mChildCount += LengthOf(aNewFrame);
+
+  // Now walk the new frames and check if there are any elements that want
+  // to be floated
+  nsIFrame* prevFrame = lastFrame;
+  for (nsIFrame* frame = aNewFrame; nsnull != frame; frame->GetNextSibling(frame)) {
+    const nsStyleDisplay* display;
+    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+    // See if the element wants to be floated
+    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+      // Create a placeholder frame that will serve as the anchor point.
+      nsPlaceholderFrame* placeholder = CreatePlaceholderFrame(aPresContext, frame);
+
+      // Remove the floated element from the flow, and replace it with the
+      // placeholder frame
+      if (nsnull == prevFrame) {
+        mFirstChild = placeholder;
+      } else {
+        prevFrame->SetNextSibling(placeholder);
+      }
+      nsIFrame* nextSibling;
+      frame->GetNextSibling(nextSibling);
+      placeholder->SetNextSibling(nextSibling);
+      frame->SetNextSibling(nsnull);
+
+      frame = placeholder;
+    }
+
+    // Remember the previous frame
+    prevFrame = frame;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSInlineFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
+{
+  NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
+  return AppendNewFrames(&aPresContext, aChildList);  
+}
+
 NS_IMETHODIMP
 nsCSSInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
                                         nsIFrame*        aParent,
@@ -180,31 +257,6 @@ nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
   // Gather up children from the overflow lists
   DrainOverflowLists();
 
-  // Create new frames if necessary
-  if (NS_FRAME_FIRST_REFLOW & mState) {
-    if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
-        (0 == mChildCount)) {
-      rv = CreateNewFrames(aLineLayout.mPresContext);
-      if (NS_OK != rv) {
-        goto done;
-      }
-    }
-  }
-  else if (nsnull != aReflowCommand) {
-    nsIFrame* target;
-    aReflowCommand->GetTarget(target);
-    if (this == target) {
-      nsIReflowCommand::ReflowType type;
-      aReflowCommand->GetType(type);
-      if (nsIReflowCommand::FrameAppended == type) {
-        rv = CreateNewFrames(aLineLayout.mPresContext);
-        if (NS_OK != rv) {
-          goto done;
-        }
-      }
-    }
-  }
-
   // Ask each child frame for its text runs
   frame = mFirstChild;
   n = mChildCount;
@@ -225,7 +277,6 @@ nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
     frame->GetNextSibling(frame);
   }
 
- done:;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsCSSInlineFrame::FindTextRuns rv=%x [%d,%d,%c]",
       rv, mFirstContentOffset, mLastContentOffset,
@@ -402,19 +453,6 @@ nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
     return rv;
   }
 
-#if XXX
-  // Create any frames that need creating; note that they should have
-  // been created during FindTextRuns which should have been called
-  // before this, but we check anyway.
-  if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
-      (0 == mChildCount)) {
-    nsresult rv = CreateNewFrames(aState.mPresContext);
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
-#endif
-
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
   if (0 != mChildCount) {
     if (!ReflowMapped(aState, rs)) {
@@ -430,13 +468,12 @@ nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
 
-#if XXX
-  // Create any frames that need creating
-  nsresult rv = CreateNewFrames(aState.mPresContext);
-  if (NS_OK != rv) {
-    return rv;
-  }
-#endif
+  // Get the first of the newly appended frames
+  nsIFrame* firstAppendedFrame;
+  aState.reflowCommand->GetChildFrame(firstAppendedFrame);
+
+  // Add the new frames
+  AppendNewFrames(aState.mPresContext, firstAppendedFrame);
 
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
   if (0 != mChildCount) {
@@ -445,86 +482,6 @@ nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
     }
   }
   return rs;
-}
-
-nsresult
-nsCSSInlineFrame::CreateNewFrames(nsIPresContext* aPresContext)
-{
-  // reason: initial:     (a) null nif, pif: create frames
-  //                      (b) pullup: don't create frames
-  // reason: incremental: (a) append targetted at us => create frames
-
-  // Get the childPrevInFlow for our eventual first child if we are a
-  // continuation and we have no children and the last child in our
-  // prev-in-flow is incomplete. While we are at it, we also compute
-  // our kidContentIndex.
-  PRInt32 kidContentIndex;
-  nsIFrame* childPrevInFlow = nsnull;
-  nsIFrame* prevChild = nsnull;
-  if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
-    nsCSSInlineFrame* prev = (nsCSSInlineFrame*)mPrevInFlow;
-    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset,
-                 "bad prevInFlow");
-    kidContentIndex = prev->NextChildOffset();
-    if (!prev->mLastContentIsComplete) {
-      // Our prev-in-flow's last child is not complete
-      prev->LastChild(childPrevInFlow);
-    }
-  }
-  else {
-    kidContentIndex = NextChildOffset();
-    LastChild(prevChild);
-  }
-
-  nsresult rv;
-  PRInt32 lastContentIndex;
-  mContent->ChildCount(lastContentIndex);
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter nsCSSInlineFrame::CreateNewFrames: kidContentIndex=%d lastContentIndex=%d childPrevInFlow=%p",
-      kidContentIndex, lastContentIndex, childPrevInFlow));
-  while (kidContentIndex < lastContentIndex) {
-    nsIContent* kid;
-    mContent->ChildAt(kidContentIndex, kid);
-    if (nsnull == kid) {
-      // Our content container is bad
-      break;
-    }
-
-    // Create child
-    nsIFrame* child;
-    rv = nsHTMLBase::CreateFrame(aPresContext, this, kid, childPrevInFlow,
-                                 child);
-    NS_RELEASE(kid);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    if (nsnull == prevChild) {
-      mFirstChild = child;
-      mFirstContentOffset = kidContentIndex;
-    }
-    else {
-      prevChild->SetNextSibling(child);
-    }
-    mChildCount++;
-    kidContentIndex++;
-    childPrevInFlow = nsnull;
-    prevChild = child;
-    NS_FRAME_TRACE(NS_FRAME_TRACE_NEW_FRAMES,
-       ("nsCSSInlineFrame::CreateNewFrames: new-frame=%p prev-in-flow=%p",
-        child, childPrevInFlow));
-  }
-  if (kidContentIndex == 0) {
-    NS_ASSERTION(lastContentIndex == 0, "bad kid content index");
-    mLastContentOffset = 0;
-  } else {
-    mLastContentOffset = kidContentIndex - 1;
-  }
-  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
-  mLastContentIsComplete = PR_TRUE;
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsCSSInlineFrame::CreateNewFrames"));
-  return NS_OK;
 }
 
 nsInlineReflowStatus
