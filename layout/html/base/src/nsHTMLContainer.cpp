@@ -24,7 +24,6 @@
 #include "nsStyleConsts.h"
 #include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
-#include "nsListItemFrame.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
@@ -190,14 +189,14 @@ nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
   nsresult rv;
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
+  case NS_STYLE_DISPLAY_LIST_ITEM:
     rv = nsBlockFrame::NewFrame(&frame, this, aParentFrame);
     break;
+
   case NS_STYLE_DISPLAY_INLINE:
     rv = nsInlineFrame::NewFrame(&frame, this, aParentFrame);
     break;
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-    rv = nsListItemFrame::NewFrame(&frame, this, aParentFrame);
-    break;
+
   default:
     // Create an empty frame for holding content that is not being
     // reflowed.
