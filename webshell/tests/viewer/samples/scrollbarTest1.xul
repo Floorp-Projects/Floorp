@@ -9,12 +9,12 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 
 <hbox style="background-color: white; height: 100%; width: 100%">
     <!-- scroll bar -->
-	<scrollbar align="vertical"/>
+	<scrollbar orient="vertical"/>
 
     <spring style="width: 10px"/>
 
     <!-- scroll bar with NeXt button order-->
-	<scrollbar align="vertical">
+	<scrollbar orient="vertical">
 		<slider flex="100%"/>
 		<scrollbarbutton class="decrement"/>
 		<scrollbarbutton class="increment"/>
@@ -23,7 +23,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
     <spring style="width: 10px"/>
 
     <!-- fixed thumb and different increments -->
-    <scrollbar align="vertical" curpos="50" pageIncrement="20" increment="5" flex="100%">
+    <scrollbar orient="vertical" curpos="50" pageIncrement="20" increment="5" flex="100%">
 		<scrollbarbutton class="decrement"/>
 		<slider flex="100%">
 		   <thumb value="this is it" flex="0%"/>
@@ -34,7 +34,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
     <spring style="width: 10px"/>
 
    <!-- scrollbar with table in it -->
-   <scrollbar align="vertical" curpos="50" pageIncrement="20" increment="5" >
+   <scrollbar orient="vertical" curpos="50" pageIncrement="20" increment="5" >
 		<scrollbarbutton class="decrement"/>
 		<slider flex="100%">
 		   <html:button width="100%">
