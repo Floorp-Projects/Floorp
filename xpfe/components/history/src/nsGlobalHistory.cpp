@@ -1803,8 +1803,8 @@ nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
   if (mSelectColumn) {
     mdb_err err;
 
-    nsIMdbCell* cell;
-    err = mCurrent->GetCell(mEnv, mURLColumn, &cell);
+   nsMdbPtr<nsIMdbCell> cell(mEnv);
+    err = mCurrent->GetCell(mEnv, mURLColumn, getter_Acquires(cell));
     if (err != 0) return PR_FALSE;
 
     mdbYarn yarn;
@@ -1833,8 +1833,8 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 {
   mdb_err err;
 
-  nsIMdbCell* cell;
-  err = mCurrent->GetCell(mEnv, mURLColumn, &cell);
+   nsMdbPtr<nsIMdbCell> cell(mEnv);
+  err = mCurrent->GetCell(mEnv, mURLColumn, getter_Acquires(cell));
   if (err != 0) return NS_ERROR_FAILURE;
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -1855,9 +1855,6 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
     }
   }
   
-  if (cell)
-    cell->CutStrongRef(mEnv);
-
   return rv;
 }
 
