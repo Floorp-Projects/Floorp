@@ -388,7 +388,7 @@ nsHTTPRequest::formHeaders (PRUint32 capabilities)
 
 
 nsresult
-nsHTTPRequest::formBuffer (nsCString * requestBuffer)
+nsHTTPRequest::formBuffer (nsCString * requestBuffer, PRUint32 capabilities)
 {
     nsXPIDLCString autoBuffer;
     nsresult rv;
@@ -431,7 +431,8 @@ nsHTTPRequest::formBuffer (nsCString * requestBuffer)
             httpVersion = " HTTP/0.9"CRLF;
             break;
         case HTTP_ONE_ONE:
-            httpVersion = " HTTP/1.1"CRLF;
+            if (! (capabilities & NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::DONTALLOW_HTTP11)) )
+                httpVersion = " HTTP/1.1"CRLF;
     }
 
     requestBuffer -> Append (httpVersion);
@@ -617,7 +618,7 @@ nsHTTPPipelinedRequest::WriteRequest ()
     for (index = mTotalWritten - mTotalProcessed; index < count; index++)
     {
         req = (nsHTTPRequest *) mRequests -> ElementAt (index);
-        req -> formBuffer (&mRequestBuffer);
+        req -> formBuffer (&mRequestBuffer, mCapabilities);
         if (index == 0)
             mTransport -> SetNotificationCallbacks (req -> mConnection);
 
@@ -789,22 +790,29 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
             }
         }
 
-        // XXX/ruslan: we need to walk through all the requests !!!!!!!!!!!!!!
-
-        nsCOMPtr<nsIStreamListener> consumer;
-
-        req -> mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
-        if (consumer)
-            req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
-
-        // Notify the HTTPChannel that the request has finished
-
-        if (mTransport)
+        while (req)
         {
-            nsIChannel *p = mTransport;
-            mTransport = null_nsCOMPtr ();
+            nsCOMPtr<nsIStreamListener> consumer;
+            req -> mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
 
-            mHandler -> ReleaseTransport (p, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES);
+            if (consumer)
+                req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
+
+            // Notify the HTTPChannel that the request has finished
+
+            if (mTransport)
+            {
+                nsIChannel *p = mTransport;
+                mTransport = null_nsCOMPtr ();
+
+                mHandler -> ReleaseTransport (p, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES);
+            }
+
+            NS_IF_RELEASE (req);
+            req = nsnull;
+        
+            if (NS_SUCCEEDED (AdvanceToNextRequest ()))
+                GetCurrentRequest (&req);
         }
     }
  

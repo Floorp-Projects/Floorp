@@ -1413,3 +1413,33 @@ nsHTTPHandler::ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq)
 
     return NS_OK;
 }
+
+static BrokenServersTable brokenServers_well_known [] =
+{
+    { "Netscape-Enterprise 3.6", nsHTTPHandler::BAD_SERVERS_MATCH_EXACT , 0},   // 3.6 but not 3.6 SPx - keep-alive is broken
+    { "Apache 1.2"             , nsHTTPHandler::BAD_SERVERS_MATCH_ALL   , nsIHTTPProtocolHandler::DONTALLOW_HTTP11}  // chunk-encoding returns garbage sometimes
+};
+
+NS_IMETHODIMP
+nsHTTPHandler::Check4BrokenHTTPServers (const char * a_Server, PRUint32 * a_Capabilities)
+{
+    if (a_Capabilities == NULL)
+        return NS_ERROR_NULL_POINTER;
+    
+    for (int i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
+    {
+        BrokenServersTable *tP = &brokenServers_well_known[i];
+        if (tP -> matchFlags == BAD_SERVERS_MATCH_EXACT && !PL_strcmp (tP -> serverHeader, a_Server))
+        {
+            *a_Capabilities = tP -> capabilities;
+            break;
+        }
+        else
+        if (tP -> matchFlags == BAD_SERVERS_MATCH_ALL && !PL_strncmp (tP -> serverHeader, a_Server, strlen (tP -> serverHeader)))
+        {
+            *a_Capabilities = tP -> capabilities;
+            break;
+        }
+    }
+    return NS_OK;
+}

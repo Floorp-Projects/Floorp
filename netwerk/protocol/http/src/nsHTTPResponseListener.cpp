@@ -281,39 +281,45 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
     if (i_Length > 0)
         mDataReceived = PR_TRUE;
 
-    if (!mResponse)
+    while (!mHeadersDone)
     {
-        mResponse = new nsHTTPResponse ();
-        if (!mResponse) {
-            NS_ERROR("Failed to create the response object!");
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (!mResponse)
+        {
+            mResponse = new nsHTTPResponse ();
+            if (!mResponse)
+            {
+                NS_ERROR("Failed to create the response object!");
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            NS_ADDREF (mResponse);
+            mChannel -> SetResponse (mResponse);
         }
-        NS_ADDREF(mResponse);
-        mChannel->SetResponse(mResponse);
-    }
-    //
-    // Parse the status line and the response headers from the server
-    //
-    if (!mHeadersDone) {
+    
+        //
+        // Parse the status line and the response headers from the server
+        //
+
         //
         // Parse the status line from the server.  This is always the 
         // first line of the response...
         //
-        if (!mFirstLineParsed) {
+        if (!mFirstLineParsed)
+        {
             rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead);
             NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
 
-        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, 
+            ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
         //
         // Parse the response headers as long as there is more data and
         // the headers are not done...
         //
-        while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone) {
+        while (NS_SUCCEEDED(rv) && i_Length && !mHeadersDone)
+        {
             rv = ParseHTTPHeader(bufferInStream, i_Length, &actualBytesRead);
-            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
+            NS_ASSERTION (i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
 
@@ -326,15 +332,18 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         //
         // All the headers have been read.
         //
-        rv = FinishedResponseHeaders ();
-        if (NS_FAILED(rv)) return rv;
 
         if (mResponse)
         {
             PRUint32 statusCode = 0;
             mResponse -> GetStatus (&statusCode);
+
             if (statusCode == 304)  // no content
             {
+                rv = FinishedResponseHeaders ();
+                if (NS_FAILED (rv))
+                    return rv;
+
                 rv = mPipelinedRequest -> AdvanceToNextRequest ();
                 if (NS_FAILED (rv))
                 {
@@ -352,8 +361,30 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                    OnStartRequest (nsnull, nsnull);
                }
             }
-        }
-    }
+            else
+            if (statusCode == 100)  // Continue
+            {
+                mHeadersDone     = PR_FALSE;
+                mFirstLineParsed = PR_FALSE;
+                mHeaderBuffer.Truncate ();
+
+                mChannel -> SetResponse (nsnull);
+                NS_RELEASE (mResponse);
+
+                mResponse = nsnull;
+                mBytesReceived = 0;
+
+                PR_LOG (gHTTPLog, PR_LOG_DEBUG, 
+                    ("\tOnDataAvailable [this=%x]. (100) Continue\n", this));
+            }
+            else
+            {
+                rv = FinishedResponseHeaders ();
+                if (NS_FAILED (rv))
+                    return rv;
+            }
+        } /* mResponse */
+    } /* while (!mHeadersDone) */
 
     // At this point we've digested headers from the server and we're
     // onto the actual data. If this transaction was initiated without
@@ -455,17 +486,17 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                 if (mPipelinedRequest
                     && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
                 {
-                    nsresult rv = mPipelinedRequest -> AdvanceToNextRequest ();
+                    nsresult rv1 = mPipelinedRequest -> AdvanceToNextRequest ();
 
-                    if (NS_FAILED (rv))
+                    if (NS_FAILED (rv1))
                     {
                         mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
                         mPipelinedRequest = nsnull;
 
-                        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+                        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv1);
 
                         // XXX/ruslan: will be replaced with the new Cancel (code)
-                        if (NS_SUCCEEDED (rv))
+                        if (NS_SUCCEEDED (rv1))
 			    		    trans -> SetBytesExpected (0);
 
                     }
@@ -595,6 +626,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         if (status != 304 || !mChannel -> mCachedResponse)
         {
             mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
+
             mChannel -> mHTTPServerListener = 0;
         }
 
@@ -620,17 +652,26 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
                 if (ver == HTTP_ONE_ONE )
                 {
                     // ruslan: some older incorrect 1.1 servers may do this
-                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader,    "close"  ))
+                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcasecmp (connectionHeader,    "close"  ))
                         capabilities = 0;
                     else
+                    {
                         capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE|nsIHTTPProtocolHandler::ALLOW_PIPELINING);
+
+                        nsXPIDLCString serverHeader;
+                        rv = mResponse -> GetHeader (nsHTTPAtoms::Server, getter_Copies (serverHeader));
+
+                        if (NS_SUCCEEDED (rv))
+                            mHandler -> Check4BrokenHTTPServers (serverHeader, &capabilities);
+                    }
                 }
                 else
                 if (ver == HTTP_ONE_ZERO)
                 {
-                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader, "keep-alive"))
+                    if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcasecmp (connectionHeader, "keep-alive"))
                         capabilities = (usingProxy ? NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE));
                 }
+
             }
         }
 
@@ -654,7 +695,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
     NS_IF_RELEASE (mChannel );
     NS_IF_RELEASE (mResponse);
 
-    return rv;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -65,6 +65,14 @@ class nsHTTPChannel;
 #define DEFAULT_HTTP_CONNECT_TIMEOUT    30
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES  30
 
+
+typedef struct  BrokenServersTable_s
+        {
+            const char *serverHeader;
+            PRUint32    matchFlags;
+            PRUint32    capabilities;
+        }   BrokenServersTable;
+
 class   nsHTTPPipelinedRequest;
 class   nsIHTTPChannel;
 
@@ -113,6 +121,10 @@ public:
     nsresult    AddPipelinedRequest (nsHTTPPipelinedRequest *pReq);
     nsresult    GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req);
     nsresult    ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq);
+
+    enum BrokenServerMatchFlags {
+        BAD_SERVERS_MATCH_EXACT,    BAD_SERVERS_MATCH_ALL
+    };
 
 protected:
     virtual ~nsHTTPHandler();
@@ -167,7 +179,6 @@ private:
 
     PRUint32 getCapabilities (const char *host, PRInt32 port, PRUint32 cap);
     void     setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities);
-
 };
 
 #endif /* _nsHTTPHandler_h_ */
