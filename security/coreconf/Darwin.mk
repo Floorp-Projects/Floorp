@@ -57,7 +57,7 @@ endif
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Darwin dynamic libraries.
 
-OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -traditional-cpp -fno-common -pipe -DXP_MACOSX -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -traditional-cpp -fno-common -pipe -DDARWIN -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 ARCH		= darwin
 
