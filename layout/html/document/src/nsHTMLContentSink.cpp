@@ -653,7 +653,8 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
         }
         else {
           aString.Mid(theNCRStr,theAmpPos+1,theLen-theAmpPos-1);
-          theSemiPos=theLen;
+          PRInt32 theNewAmpPos=aString.FindChar('&',PR_FALSE,theAmpPos+1);
+          theSemiPos=(-1==theNewAmpPos) ? theLen+1 : theNewAmpPos-1;
         }
 
         theStartPos=theSemiPos+1;
@@ -674,9 +675,11 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
           default:
             if(nsCRT::IsAsciiAlpha(theChar)) {
               dtd->ConvertEntityToUnicode(theNCRStr, &theNCRValue);
-              theEntity=PRUnichar(theNCRValue);
+              if(-1!=theNCRValue) {
+                theEntity=PRUnichar(theNCRValue);
+              }
             }
-            else {
+            if(!theEntity) {
               //what looked like an entity is not really one.
               //so let's copy the ncrstring back to the output string
               aString.Mid(theNCRStr,theAmpPos,theSemiPos-theAmpPos+1);
