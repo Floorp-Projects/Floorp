@@ -167,7 +167,7 @@ sub GetClass{
   $g = $gcat{$hex};
   if($g ne "") {
     return $g;
-  } elsif (( 0x4e00 <= $u) && ( $u <= 0x9fa5 )  ) {
+  } elsif (( 0x3400 <= $u) && ( $u <= 0x9fa5 )  ) {
     return "Han";
   } elsif (( 0xac00 <= $u) && ( $u <= 0xd7a3 )  ) {
     return "Lo";
@@ -189,7 +189,7 @@ sub GetDClass{
   $g = $dcat{$hex};
   if($g ne "") {
     return $g;
-  } elsif (( 0x4e00 <= $u) && ( $u <= 0x9fa5 )  ) {
+  } elsif (( 0x3400 <= $u) && ( $u <= 0x9fa5 )  ) {
     return "Han";
   } elsif (( 0xac00 <= $u) && ( $u <= 0xd7a3 )  ) {
     return "L";
