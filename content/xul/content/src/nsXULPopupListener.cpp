@@ -55,6 +55,14 @@
 #include "nsIPopupSetBoxObject.h"
 #include "nsIMenuBoxObject.h"
 
+// for event firing in context menus
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIEventStateManager.h"
+
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
@@ -84,7 +92,7 @@ public:
 
     // nsIDOMMouseListener
     virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-    virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
     virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
     virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
@@ -106,6 +114,9 @@ protected:
     nsresult FindDocumentForNode(nsIDOMNode* inNode, nsIDOMXULDocument** outDoc) ;
 
 private:
+    nsresult PreLaunchPopup(nsIDOMEvent* aMouseEvent);
+    nsresult FireFocusOnTargetContent(nsIDOMNode* aTargetNode);
+
     // |mElement| is the node to which this listener is attached.
     nsIDOMElement* mElement;               // Weak ref. The element will go away first.
 
@@ -177,7 +188,35 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 // nsIDOMMouseListener
 
 nsresult
+XULPopupListenerImpl::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+// MacOS and Linux bring up context menus on mousedown, Windows on mouseup
+#ifdef XP_PC
+  if(popupType == eXULPopupType_context)
+    return PreLaunchPopup(aMouseEvent);
+  else 
+    return NS_OK;
+#else
+  return NS_OK;
+#endif
+}
+
+nsresult
 XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+// MacOS and Linux bring up context menus on mousedown, Windows on mouseup
+#ifndef XP_PC
+  return PreLaunchPopup(aMouseEvent);
+#else
+  if(popupType != eXULPopupType_context)
+    return PreLaunchPopup(aMouseEvent);
+  else
+    return NS_OK;
+#endif
+}
+
+nsresult
+XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
 {
   PRUint16 button;
 
@@ -242,7 +281,13 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       // Check for right mouse button down
       mouseEvent->GetButton(&button);
       if (button == 3) {
-        // Time to launch a context menu.
+        // Time to launch a context menu
+        
+        // If the context menu launches on mousedown,
+        // we have to fire focus on the content we clicked on
+#ifndef XP_PC
+        FireFocusOnTargetContent(targetNode);
+#endif
         LaunchPopup(aMouseEvent);
         aMouseEvent->PreventBubble();
         aMouseEvent->PreventDefault();
@@ -262,7 +307,62 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+nsresult
+XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  rv = aTargetNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  if(NS_SUCCEEDED(rv) && domDoc)
+  {
+    nsCOMPtr<nsIPresShell> shell;
+    nsCOMPtr<nsIPresContext> context;
+    nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
+    shell = getter_AddRefs(tempdoc->GetShellAt(0));  // Get nsIDOMElement for targetNode
+    shell->GetPresContext(getter_AddRefs(context));
+ 
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
+    nsIFrame* targetFrame;
+    shell->GetPrimaryFrameFor(content, &targetFrame);
+  
+    PRBool suppressBlur = PR_FALSE;
+    const nsStyleUserInterface* ui;
+    targetFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+    suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
 
+    nsCOMPtr<nsIDOMElement> element;
+    nsCOMPtr<nsIContent> newFocus = do_QueryInterface(content);
+
+    nsIFrame* currFrame = targetFrame;
+    // Look for the nearest enclosing focusable frame.
+    while (currFrame) {
+        const nsStyleUserInterface* ui;
+        currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+        if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
+            (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) 
+        {
+          currFrame->GetContent(getter_AddRefs(newFocus));
+          nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
+          if (domElement) {
+            element = domElement;
+            break;
+          }
+        }
+        currFrame->GetParent(&currFrame);
+    } 
+    nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
+    nsCOMPtr<nsIEventStateManager> esm;
+    context->GetEventStateManager(getter_AddRefs(esm));
+
+    if (focusableContent)
+      focusableContent->SetFocus(context);
+    else if (!suppressBlur)
+      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+
+    esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
+    return rv;
+  }
+}
 //
 // MouseMove
 //
