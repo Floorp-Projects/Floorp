@@ -162,7 +162,7 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
     }
   }
 
-  PRUnichar *key = aKey.ToNewUnicode();
+  const PRUnichar *key = aKey.GetUnicode();  // returns internal pointer (not a copy)
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
@@ -170,7 +170,10 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   if (he && aOldValue) {
     // XXX fix me
   }
-  PL_HashTableRawAdd(mTable, hep, hashValue, key, aNewValue.ToNewString());
+  // XXX Why add a new nsString object as the value? That causes an extra heap
+  // allocation, and we should just add a PRUnichar* like we do for the key...
+  PL_HashTableRawAdd(mTable, hep, hashValue, aKey.ToNewUnicode(),
+                     aNewValue.ToNewString());
 
   return NS_OK;
 }
@@ -194,7 +197,7 @@ nsProperties::Subclass(nsIProperties* aSubclass)
 NS_IMETHODIMP
 nsProperties::GetProperty(const nsString& aKey, nsString& aValue)
 {
-  PRUnichar *key = aKey;
+  const PRUnichar *key = aKey;
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashValue(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
