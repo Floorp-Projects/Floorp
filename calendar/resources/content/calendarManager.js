@@ -63,7 +63,6 @@ function calendarManager( CalendarWindow )
    this.addActiveCalendars();
 }
 
-
 calendarManager.prototype.addActiveCalendars = function calMan_addActiveCalendars()
 {
    for( var i = 0; i < this.calendars.length; i++ )
@@ -410,6 +409,56 @@ calendarManager.prototype.getDefaultServer = function calMan_getDefaultServer()
    return( this.calendars[0] );
 }
 
+/*
+** Checks if the URL is already in the list.
+** If so, it returns the calendar object.
+** Otherwise, returns false.
+*/
+
+calendarManager.prototype.isURLAlreadySubscribed = function calMan_isCalendarSubscribed( CalendarURL )
+{
+   CalendarURL = CalendarURL.replace( "webcal:", "http:" );
+
+   for( var i = 0; i < this.calendars.length; i++ )
+   {
+      if( this.calendars[i].remotePath == CalendarURL )
+      {
+         return( this.calendars[i] );
+      }
+   }
+   return( false );
+}
+
+/*
+** This function is called when clicking on a file with mime type "text/calendar"
+** It first checks to see if the calendar is already subscribed. If so, it disables all other calendars
+** and then adds that calendar.
+** If not, then it opens up the dialog for users to add the calendar to their subscribed list.
+*/
+
+calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( CalendarURL )
+{
+   var calendarSubscribed = this.isURLAlreadySubscribed( CalendarURL );
+
+   if( calendarSubscribed === false )
+   {
+      //not subscribed, prompt the user to do so.
+      var arrayForNames = CalendarURL.split( "/" );
+      var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
+      var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
+
+      this.launchAddCalendarDialog( CalendarName, CalendarURL );  
+   }
+   else
+   {
+      //calendarSubscribed is the subscribed calendar object.
+
+   }
+   
+
+      
+}
+
 
 function onResponseAndRefresh( )
 {
@@ -449,6 +498,8 @@ function switchCalendar( event )
 
    refreshEventTree( false );
 
+   refreshToDoTree( false );
+   
    gCalendarWindow.currentView.refreshEvents();
 }
 
@@ -460,6 +511,8 @@ function deleteCalendar( )
    gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
 
    refreshEventTree( false );
+
+   refreshToDoTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
 }
