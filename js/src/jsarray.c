@@ -390,7 +390,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         MAKE_BUSY(he);
     }
     sepstr = NULL;
-    seplen = sep->length;
+    seplen = JSSTRING_LENGTH(sep);
 
     v = JSVAL_NULL;
     for (index = 0; index < length; index++) {
