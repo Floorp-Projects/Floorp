@@ -2491,6 +2491,8 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
   nsCOMPtr<nsIUnicodeDecoder> decoder;
   nsAutoString charset;
 
+  aReturn.Truncate();
+
   nsCOMPtr<nsICharsetConverterManager>
     ccm(do_GetService(kCharsetConverterManagerCID));
   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
@@ -2516,7 +2518,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
     return result;
 
   // Need to copy to do the two-byte to one-byte deflation
-  char *inBuf = ToNewCString(aStr );
+  char *inBuf = ToNewCString(aStr);
   if (!inBuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2528,7 +2530,7 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
 
   // Get the expected length of the result string
   result = decoder->GetMaxLength(src, srcLen, &maxLength);
-  if (NS_FAILED(result)) {
+  if (NS_FAILED(result) || !maxLength) {
     nsMemory::Free(src);
     return result;
   }
