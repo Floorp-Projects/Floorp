@@ -657,8 +657,10 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 {
     // remove the old mouse listener for the old document
     if (mDomEventTarget) {
-        nsAutoString eType(L"mouseover");
-        mDomEventTarget->RemoveEventListener(eType, this, PR_FALSE);
+        nsCAutoString eType("mouseover");
+        PRUnichar *eTypeUni = eType.ToNewUnicode();
+        mDomEventTarget->RemoveEventListener(eTypeUni, this, PR_FALSE);
+        nsCRT::free(eTypeUni);
         mDomEventTarget = nsnull;
     }
 
@@ -688,7 +690,7 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
     }  
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::START_DOCUMENT_LOAD_EVENT_MASK], urlJStr);
+                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], urlJStr);
 
     if (urlJStr) {
         ::util_DeleteStringUTF(mInitContext->env, (jstring) urlJStr);
@@ -711,8 +713,11 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
                     do_QueryInterface(mInitContext->currentDocument);
                 // if successful
                 if (mDomEventTarget) {
-                    nsAutoString eType(L"mouseover");
-                    mDomEventTarget->AddEventListener(eType, this, PR_FALSE);
+                    nsCAutoString eType("mouseover");
+                    PRUnichar *eTypeUni = eType.ToNewUnicode();
+                    mDomEventTarget->AddEventListener(eTypeUni, this, 
+                                                      PR_FALSE);
+                    nsCRT::free(eTypeUni);
                 }
             }
         }
@@ -730,7 +735,7 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::END_DOCUMENT_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], nsnull);
 	return NS_OK; 
 } 
 
@@ -751,7 +756,7 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChanne
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::START_URL_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], nsnull);
     
 	return NS_OK; 
 } 
@@ -772,7 +777,7 @@ CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCha
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::PROGRESS_URL_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], nsnull);
 
 	return NS_OK;
 } 
@@ -804,7 +809,7 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
     
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
                          mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::STATUS_URL_LOAD_EVENT_MASK], 
+                         DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
                          (jobject) statusMessage);
     
     if (statusMessage) {
@@ -831,7 +836,7 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[CBrowserContainer::DOCUMENT_LOADER_EVENT_MASK_NAMES::END_URL_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
     
 	return NS_OK; 
 } 
@@ -856,7 +861,7 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_DOWN_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -874,7 +879,7 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_UP_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -896,7 +901,7 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_CLICK_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -919,7 +924,7 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_DOUBLE_CLICK_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -937,7 +942,7 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_OVER_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -955,7 +960,7 @@ CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
-                         DOMMouseListener_maskValues[CBrowserContainer::DOM_MOUSE_LISTENER_EVENT_MASK_NAMES::MOUSE_OUT_EVENT_MASK], 
+                         DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
 	return NS_OK; 
 }
@@ -1002,8 +1007,10 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
 NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 {
     if (mDomEventTarget) {
-        nsAutoString eType(L"mouseover");
-        mDomEventTarget->RemoveEventListener(eType, this, PR_FALSE);
+        nsCAutoString eType("mouseover");
+        PRUnichar *eTypeUni = eType.ToNewUnicode();
+        mDomEventTarget->RemoveEventListener(eTypeUni, this, PR_FALSE);
+        nsCRT::free(eTypeUni);
         mDomEventTarget = nsnull;
     }
     mMouseTarget = nsnull;
@@ -1185,7 +1192,7 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
     nsresult rv = NS_OK;
     nsString nodeInfo, nodeName, nodeValue; //, nodeDepth;
     jstring jNodeName, jNodeValue;
-    PRUint32 depth = -1;
+    PRUint32 depth = 0;
     CBrowserContainer *curThis = nsnull;
     const PRUint32 depthStrLen = 20;
     //    char depthStr[depthStrLen];
