@@ -398,12 +398,49 @@ static const struct mechanismList mechanisms[] = {
 static CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 
 static char *
-pk11_setStringName(const char *inString, char *buffer, int buffer_length) {
+pk11_setStringName(const char *inString, char *buffer, int buffer_length)
+{
     int full_length, string_length;
 
     full_length = buffer_length -1;
     string_length = PORT_Strlen(inString);
-    if (string_length > full_length) string_length = full_length;
+    /* 
+     *  shorten the string, respecting utf8 encoding
+     *  to do so, we work backward from the end 
+     *  bytes looking from the end are either:
+     *    - ascii [0x00,0x7f]
+     *    - the [2-n]th byte of a multibyte sequence 
+     *        [0x3F,0xBF], i.e, most significant 2 bits are '10'
+     *    - the first byte of a multibyte sequence [0xC0,0xFD],
+     *        i.e, most significant 2 bits are '11'
+     *
+     *    When the string is too long, we lop off any trailing '10' bytes,
+     *  if any. When these are all eliminated we lop off
+     *  one additional byte. Thus if we lopped any '10'
+     *  we'll be lopping a '11' byte (the first byte of the multibyte sequence),
+     *  otherwise we're lopping off an ascii character.
+     *
+     *    To test for '10' bytes, we first AND it with 
+     *  11000000 (0xc0) so that we get 10000000 (0x80) if and only if
+     *  the byte starts with 10. We test for equality.
+     */
+    while ( string_length > full_length ) {
+	/* need to shorten */
+	while ( string_length > 0 && 
+	      ((inString[string_length-1]&(char)0xc0) == (char)0x80)) {
+	    /* lop off '10' byte */
+	    string_length--;
+	}
+	/* 
+	 * test string_length in case bad data is received
+	 * and string consisted of all '10' bytes,
+	 * avoiding any infinite loop
+         */
+	if ( string_length ) {
+	    /* remove either '11' byte or an asci byte */
+	    string_length--;
+	}
+    }
     PORT_Memset(buffer,' ',full_length);
     buffer[full_length] = 0;
     PORT_Memcpy(buffer,inString,string_length);
