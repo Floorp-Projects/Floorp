@@ -69,6 +69,7 @@ public:
 #endif
                
 	virtual ~nsNNTPHost();
+    static void operator delete(void *);
     NS_DECL_ISUPPORTS
     // nsINNTPHost
     
