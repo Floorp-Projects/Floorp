@@ -455,6 +455,9 @@ LINK_LIBS= \
     $(DIST)\lib\marimurl.lib \
     $(DIST)\lib\remoturl.lib \
     $(DIST)\lib\netcache.lib \
+!ifdef NU_CACHE # TODO Remove later
+    $(DIST)\lib\cachelib.lib \
+!endif
     $(DIST)\lib\netcnvts.lib \
     $(DIST)\lib\mimetype.lib \
     $(DIST)\lib\netutil.lib \
