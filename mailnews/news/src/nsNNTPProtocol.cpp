@@ -26,6 +26,7 @@
  *   David Bienvenu <bienvenu@netscape.com>
  *   Jeff Tsai <jefft@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Håkan Waara <hwaara@chello.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -108,6 +109,7 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsINntpService.h"
 #include "nntpCore.h"
@@ -954,34 +956,31 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   NS_ENSURE_ARG_POINTER(aURL);
 
   nsXPIDLCString group;
-  char *commandSpecificData = nsnull;
+  nsXPIDLCString commandSpecificData;
   PRBool cancel = PR_FALSE;
   m_ContentType = "";
-  nsCOMPtr <nsINNTPNewsgroupPost> message;
   nsresult rv = NS_OK;
 
   m_runningURL = do_QueryInterface(aURL, &rv);
   if (NS_FAILED(rv)) return rv;
   m_runningURL->GetNewsAction(&m_newsAction);
 
-  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
-
   SetIsBusy(PR_TRUE);
 
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
 
-  rv = ParseURL(aURL, getter_Copies(group), &m_messageID, &commandSpecificData);
+  rv = ParseURL(aURL, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to parse news url");
   //if (NS_FAILED(rv)) return rv;
 
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) m_messageID = %s",this, m_messageID?m_messageID:"(null)"));
-  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group = %s",this,(const char *)group));
-  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) commandSpecificData = %s",this,commandSpecificData?commandSpecificData:"(null)"));
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group = %s",this,group.get()));
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) commandSpecificData = %s",this,commandSpecificData.get()?commandSpecificData.get():"(null)"));
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) m_key = %d",this,m_key));
  
   // for now, only support "news://host/message-id?cancel", and not "news://host/group#key?cancel"
-  if (m_messageID && commandSpecificData && !PL_strcmp(commandSpecificData, "?cancel")) {
+  if (m_messageID && !PL_strcmp(commandSpecificData.get(), "?cancel")) {
      // XXX todo, don't allow manual cancel urls.  only allow internal ones
      cancel = PR_TRUE;
   }
@@ -992,6 +991,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
      if and only if this message has a message to post
      Cancel messages are created later with a ?cancel URL
   */
+  nsCOMPtr <nsINNTPNewsgroupPost> message;
   rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
   if (NS_SUCCEEDED(rv) && message)
 	{
@@ -1002,23 +1002,23 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	if (m_messageID || (m_key != nsMsgKey_None))
 	{
 	  /* 
-         news_message://HOST/GROUP#key
-		 news://HOST/MESSAGE_ID
+    news_message://HOST/GROUP#key
+    news://HOST/MESSAGE_ID
 
-         not sure about these:
+    not sure about these:
 
-         news:MESSAGE_ID
-		 news:/GROUP/MESSAGE_ID (useless)
-		 news://HOST/GROUP/MESSAGE_ID (useless)
-	   */
+    news:MESSAGE_ID
+    news:/GROUP/MESSAGE_ID (useless)
+    news://HOST/GROUP/MESSAGE_ID (useless)
+    */
 	  if (cancel)
 		m_typeWanted = CANCEL_WANTED;
 	  else
 		m_typeWanted = ARTICLE_WANTED;
 	}
-  else if (commandSpecificData)
+  else if (!commandSpecificData.IsEmpty())
 	{
-	  if (PL_strstr (commandSpecificData, "?newgroups"))
+	  if (PL_strstr (commandSpecificData.get(), "?newgroups"))
 	    /* news://HOST/?newsgroups
 	        news:/GROUP/?newsgroups (useless)
 	        news:?newsgroups (default host)
@@ -1026,72 +1026,105 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	    m_typeWanted = NEW_GROUPS;
     else
 	  {
-		  if (PL_strstr(commandSpecificData, "?list-pretty"))
+		  if (PL_strstr(commandSpecificData.get(), "?list-pretty"))
 		  {
 			  m_typeWanted = PRETTY_NAMES_WANTED;
-			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+			  m_commandSpecificData = ToNewCString(commandSpecificData);
 		  }
-		  else if (PL_strstr(commandSpecificData, "?profile"))
+		  else if (PL_strstr(commandSpecificData.get(), "?profile"))
 		  {
 			  m_typeWanted = PROFILE_WANTED;
-			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+			  m_commandSpecificData = ToNewCString(commandSpecificData);
 		  }
-		  else if (PL_strstr(commandSpecificData, "?list-ids"))
+		  else if (PL_strstr(commandSpecificData.get(), "?list-ids"))
 		  {
 			  m_typeWanted = IDS_WANTED;
-			  m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+			  m_commandSpecificData = ToNewCString(commandSpecificData);
 
-              rv = m_nntpServer->FindGroup((const char *)group, getter_AddRefs(m_newsFolder));
+              rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
               if (!m_newsFolder) goto FAIL;
 		  }
 		  else
 		  {
               m_typeWanted = SEARCH_WANTED;
-              m_commandSpecificData = nsCRT::strdup(commandSpecificData);
+              m_commandSpecificData = ToNewCString(commandSpecificData);
               m_searchData = m_commandSpecificData;
               nsUnescape(m_searchData);
 
-              rv = m_nntpServer->FindGroup((const char *)group, getter_AddRefs(m_newsFolder));
+              rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
               if (!m_newsFolder) goto FAIL;
           }
 	  }
 	}
-  else if (group.get() && group.get()[0])
+  else if (!group.IsEmpty())
+  {
+    /* news:GROUP
+       news:/GROUP
+       news://HOST/GROUP
+     */
+    if (PL_strchr(group.get(),'*'))
+      m_typeWanted = LIST_WANTED;
+    else 
     {
-	  /* news:GROUP
-		 news:/GROUP
-		 news://HOST/GROUP
-	   */
-	  if (PL_strchr(group.get(),'*')) {
-		m_typeWanted = LIST_WANTED;
-	  }
-	  else {
-		NS_ASSERTION(m_nntpServer,"no nntp server");
-		if (m_nntpServer) {
-		    PRBool containsGroup = PR_TRUE;
-			rv = m_nntpServer->ContainsNewsgroup((const char *)group,&containsGroup);
-            if (NS_FAILED(rv)) goto FAIL;
+      if (m_nntpServer)
+      {
+        PRBool containsGroup = PR_TRUE;
+        rv = m_nntpServer->ContainsNewsgroup(group.get(),&containsGroup);
+        if (NS_FAILED(rv)) goto FAIL;
 
-			if (!containsGroup) {
-				rv = m_nntpServer->SubscribeToNewsgroup((const char *)group);
-                NS_ENSURE_SUCCESS(rv,rv);
-                if (NS_FAILED(rv)) goto FAIL;
-			}
+        if (!containsGroup) 
+        {
+          // We have the name of a newsgroup which we're not subscribed to,
+          // the next step is to ask the user whether we should subscribe to it.
 
-            // set m_newsFolder, either it was a group we had, or we've just subscribed to it
-            rv = m_nntpServer->FindGroup((const char *)group, getter_AddRefs(m_newsFolder));
-            if (!m_newsFolder) goto FAIL;
-		}
-		m_typeWanted = GROUP_WANTED;
-	  }
-	}
+          nsCOMPtr<nsIPrompt> dialog;
+
+          if (m_msgWindow)
+              m_msgWindow->GetPromptDialog(getter_AddRefs(dialog));
+
+          if (!dialog)
+          {
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+            wwatch->GetNewPrompter(nsnull, getter_AddRefs(dialog));
+          }
+
+          nsXPIDLString statusString, confirmText;
+          nsCOMPtr<nsIStringBundle> bundle;
+          nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+
+          bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+          const PRUnichar *formatStrings[1] = { NS_ConvertUTF8toUCS2(group).get() };
+
+          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("autoSubscribeText").get(),
+                                            formatStrings, 1,
+                                            getter_Copies(confirmText));
+
+          PRBool confirmResult = PR_FALSE;
+          rv = dialog->Confirm(nsnull, confirmText, &confirmResult);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (confirmResult)
+          {
+            rv = m_nntpServer->SubscribeToNewsgroup(group.get());
+            containsGroup = PR_TRUE;
+          }
+          else
+            return rv;
+        }
+
+        // If we have a group (since before, or just subscribed), set the m_newsFolder.
+        if (containsGroup)
+        {
+          rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+          if (!m_newsFolder) goto FAIL;
+        }
+      }
+      m_typeWanted = GROUP_WANTED;
+    }
+  }
   else
-	{
-	  /* news:
-	     news://HOST
-	   */
-	  m_typeWanted = READ_NEWS_RC;
-	}
+    // news: or news://HOST
+    m_typeWanted = READ_NEWS_RC;
 
   // if this connection comes from the cache, we need to initialize the
   // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
@@ -1114,23 +1147,20 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 #endif
 
 
- FAIL:
-  PR_FREEIF (commandSpecificData);
-
+  FAIL:
   if (NS_FAILED(rv))
   {
-	  AlertError(rv, nsnull);
-      return rv;
+    AlertError(rv, nsnull);
+    return rv;
   }
   else 
   {
-	  if (!m_socketIsOpen)
-	  {
-		  m_nextStateAfterResponse = m_nextState;
-		  m_nextState = NNTP_RESPONSE; 
-	  }
-
-	  rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
+    if (!m_socketIsOpen)
+    {
+      m_nextStateAfterResponse = m_nextState;
+      m_nextState = NNTP_RESPONSE; 
+    }
+    rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
   }
 
   return rv;
