@@ -20,6 +20,42 @@
 
 #include "xpt_xdr.h"
 #include "xpt_struct.h"
+#include <string.h>
+
+uint32
+XPT_SizeOfHeader(XPTHeader *header)
+{
+    XPTAnnotation *ann;
+    uint32 size = 16 /* magic */ +
+        1 /* major */ + 1 /* minor */ +
+        2 /* num_interfaces */ + 4 /* file_length */ +
+        4 /* interface_directory */ + 4 /* data_pool */;
+
+    /* XXX annotations */
+    
+    return size;
+}
+
+XPTHeader *
+XPT_NewHeader(uint32 num_interfaces)
+{
+    XPTHeader *header = PR_NEWZAP(XPTHeader);
+    if (!header)
+        return NULL;
+    memcpy(header->magic, XPT_MAGIC, 16);
+    header->major_version = XPT_MAJOR_VERSION;
+    header->minor_version = XPT_MINOR_VERSION;
+    header->num_interfaces = num_interfaces;
+    header->interface_directory = PR_CALLOC(num_interfaces *
+                                            sizeof(XPTInterfaceDirectoryEntry));
+    if (!header->interface_directory) {
+        PR_DELETE(header);
+        return NULL;
+    }
+    header->data_pool = 0;      /* XXX do we even need this struct any more? */
+    
+    return header;
+}
 
 PRBool
 XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
@@ -35,7 +71,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
         header = *headerp;
 
     if (mode == XPT_ENCODE) {
-        ide_offset = XPT_SizeOfHeader(); /* IDEs appear after annotations */
+        /* IDEs appear after header, including annotations */
+        ide_offset = XPT_SizeOfHeader(*headerp);
     }
 
     for (i = 0; i < 16; i++) {
@@ -45,45 +82,38 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     
     if(!XPT_Do8(cursor, &header->major_version) ||
        !XPT_Do8(cursor, &header->minor_version) ||
+       /* XXX check major for compat! */
        !XPT_Do16(cursor, &header->num_interfaces) ||
        !XPT_Do32(cursor, &header->file_length) ||
        !XPT_Do32(cursor, &ide_offset)) {
-        
         goto error;
     }
     
-    /*
-     * This sections a little hairy right now. We need to do
-     * XPT_DataOffset before writing but after reading.  
-     *
-     * if (mode == XPT_DECODE || 
-     *    XPT_DataOffset(cursor->state, &header->data_pool)) {
-     *    if(!XPT_Do32(cursor, &header->data_pool)) {
-     *        goto error;
-     *    }
-     * }
-     *
-     * if (mode == XPT_ENCODE || 
-     *    XPT_DataOffset(cursor->state, &header->data_pool)) {
-     *    XPT_DoAnnotations(annotations);
-     * }
-     */
+    if (mode == XPT_ENCODE)
+        XPT_DataOffset(cursor->state, &header->data_pool);
+    if (!XPT_Do32(cursor, &header->data_pool))
+        goto error;
+    if (mode == XPT_DECODE)
+        XPT_DataOffset(cursor->state, &header->data_pool);
 
     if (mode == XPT_DECODE) {
         header->interface_directory = 
             PR_CALLOC(header->num_interfaces * 
                       sizeof(XPTInterfaceDirectoryEntry));
-        /* shouldn't be necessary now, but maybe later */
-        XPT_SeekTo(cursor, ide_offset); 
+        if (!header->interface_directory)
+            goto error;
     }
+
+    /* XXX handle annotations */
+
+    /* shouldn't be necessary now, but maybe later */
+    XPT_SeekTo(cursor, ide_offset); 
 
     for (i = 0; i < header->num_interfaces; i++) {
         XPT_DoInterfaceDirectoryEntry(cursor,
                                       &header->interface_directory[i]);
     }
     
-    if (mode == XPT_DECODE)
-         
     for (i = 0; i < header->num_interfaces; i++) {
         if (!XPT_DoInterfaceDirectoryEntry(&cursor, 
                                            &header->interface_directory[i]))
@@ -94,6 +124,18 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 
     XPT_ERROR_HANDLE(header);    
 }   
+
+PRBool
+XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
+                                nsID *iid, char *name, char *namespace,
+                                XPTInterfaceDescriptor *descriptor)
+{
+    XPT_COPY_IID(ide->iid, *iid);
+    ide->name = strdup(name);
+    ide->namespace = strdup(namespace);
+    ide->interface_descriptor = descriptor;
+    return PR_TRUE;
+}
 
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
@@ -134,6 +176,47 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
     return PR_TRUE;
 
     XPT_ERROR_HANDLE(ide);    
+}
+
+PRBool
+XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
+                      uint32 num_interfaces, nsID *iid, uint32 *indexp)
+{
+    *indexp = 0;
+    return PR_TRUE;
+}
+
+XPTInterfaceDescriptor *
+XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
+                           uint32 num_constants)
+{
+    XPTInterfaceDescriptor *id = PR_NEWZAP(XPTInterfaceDescriptor);
+    if (!id)
+        return NULL;
+
+    if (num_methods) {
+        id->method_descriptors = PR_CALLOC(num_methods *
+                                           sizeof(XPTMethodDescriptor));
+        if (!id->method_descriptors)
+            goto free_id;
+        id->num_methods = num_methods;
+    }
+
+    if (num_constants) {
+        id->const_descriptors = PR_CALLOC(num_constants *
+                                          sizeof(XPTConstDescriptor));
+        if (!id->const_descriptors)
+            goto free_meth;
+        id->num_constants = num_constants;
+    }
+
+    return id;
+
+ free_meth:
+    PR_FREEIF(id->method_descriptors);
+ free_id:
+    PR_DELETE(id);
+    return NULL;
 }
 
 PRBool
@@ -183,6 +266,18 @@ XPT_DoInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor **idp)
 }
 
 PRBool
+XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
+                        XPTTypeDescriptor type, union XPTConstValue value)
+{
+    cd->name = strdup(name);
+    if (!cd->name)
+        return PR_FALSE;
+    XPT_COPY_TYPE(cd->type, type);
+    /* XXX copy value */
+    return PR_TRUE;
+}
+
+PRBool
 XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
 {
     XPTMode mode = cursor->state->mode;
@@ -199,7 +294,7 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
         goto error;
     }
 
-    switch(cd->type.prefix->tag) {
+    switch(cd->type.prefix.tag) {
     case TD_INT8:
         XPT_Do8(cursor, &cd->value.i8);
         break;
@@ -231,7 +326,7 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
         XPT_Do16(cursor, &cd->value.wch);
         break;
     case TD_PBSTR:
-        if (cd->type.prefix->is_pointer == 1) {
+        if (cd->type.prefix.is_pointer == 1) {
             XPT_DoString(cursor, &cd->value.string);
             break;
         }
@@ -243,6 +338,36 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
     return PR_TRUE;
 
     XPT_ERROR_HANDLE(cd);    
+}
+
+PRBool
+XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
+                         PRBool is_setter, PRBool is_varargs,
+                         PRBool is_constructor, PRBool is_hidden, char *name,
+                         uint8 num_args)
+{
+    meth->is_getter = is_getter;
+    meth->is_setter = is_setter;
+    meth->is_constructor = is_constructor;
+    meth->is_hidden = is_hidden;
+    meth->reserved = 0;
+    meth->name = strdup(name);
+    if (!name)
+        return PR_FALSE;
+    meth->num_args = num_args;
+    meth->params = PR_CALLOC(num_args * sizeof(XPTParamDescriptor));
+    if (!meth->params)
+        goto free_name;
+    meth->result = PR_NEWZAP(XPTParamDescriptor);
+    if (!meth->result)
+        goto free_params;
+    return PR_TRUE;
+
+ free_params:
+    PR_DELETE(meth->params);
+ free_name:
+    PR_DELETE(meth->name);
+    return PR_FALSE;
 }
 
 PRBool
@@ -284,6 +409,17 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor **mdp)
     return PR_TRUE;
     
     XPT_ERROR_HANDLE(md);    
+}
+
+PRBool
+XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRBool in, PRBool out,
+                        PRBool retval, XPTTypeDescriptor type)
+{
+    pd->in = in;
+    pd->out = out;
+    pd->retval = retval;
+    pd->reserved = 0;
+    XPT_COPY_TYPE(pd->type, type);
 }
 
 PRBool
@@ -352,11 +488,11 @@ XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
         goto error;
     }
     
-    if (td->prefix->tag == TD_INTERFACE_TYPE) {
+    if (td->prefix.tag == TD_INTERFACE_TYPE) {
         if (!XPT_Do32(cursor, &td->type.interface))
             goto error;
     } else {
-        if (td->prefix->tag == TD_INTERFACE_IS_TYPE) {
+        if (td->prefix.tag == TD_INTERFACE_IS_TYPE) {
             if (!XPT_Do8(cursor, &td->type.argnum))
                 goto error;
         }
@@ -365,6 +501,22 @@ XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
     return PR_TRUE;
     
     XPT_ERROR_HANDLE(td);    
+}
+
+XPTAnnotation *
+XPT_NewAnnotation(PRBool is_last, PRBool is_empty, XPTString *creator,
+                  XPTString *private_data)
+{
+    XPTAnnotation *ann = PR_NEWZAP(XPTAnnotation);
+    if (!ann)
+        return NULL;
+    ann->prefix.is_last = is_last;
+    ann->prefix.tag = is_empty ? 0 : 1;
+    if (!is_empty) {
+        ann->private.creator = creator;
+        ann->private.private_data = private_data;
+    }
+    return ann;
 }
 
 PRBool
@@ -427,7 +579,7 @@ XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
         goto error;
     }
     
-    if (a->prefix->tag == PRIVATE_ANNOTATION) {
+    if (a->prefix.tag == PRIVATE_ANNOTATION) {
         if (!XPT_DoPrivateAnnotation(cursor, &a->private)) {
             goto error;
         }
@@ -442,12 +594,6 @@ PRBool
 XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap) {
     return PR_FALSE;
 }
-
-int
-XPT_SizeOfHeader(XPTHeader *headerp)
-{
-    return 0;
-}    
 
 int
 XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *idp)

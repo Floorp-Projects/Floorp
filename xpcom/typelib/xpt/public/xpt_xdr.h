@@ -109,6 +109,9 @@ XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
 PRBool
 XPT_MakeCursor(XPTState *state, XPTPool pool, uint32 len, XPTCursor *cursor);
 
+PRBool
+XPT_SeekTo(XPTCursor *cursor, uint32 offset);
+
 void
 XPT_DestroyXDRState(XPTState *state);
 
@@ -164,7 +167,7 @@ XPT_SetDataOffset(XPTState *state, uint32 data_offset);
     if (mode == XPT_DECODE) {                                                 \
         *addrp = localp = PR_NEWZAP(XPTType);                                 \
         if (!localp ||                                                        \
-            !XPT_SetAddrForOffset(new_curs, localp))                          \
+            !XPT_SetAddrForOffset(&new_curs, localp))                         \
             return PR_FALSE;                                                  \
     } else {                                                                  \
         localp = *addrp;                                                      \
