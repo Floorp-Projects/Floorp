@@ -451,7 +451,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
   }
   if (gNoisy) {DebugDumpContent(); } // DEBUG
   //HACK TO DRAW CHANGES
-  HACKForceRedraw();
+  // HACKForceRedraw();
   //END HACK
   return result;
 }
@@ -796,7 +796,7 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   // BEGIN HACK!!!
-  HACKForceRedraw();
+  // HACKForceRedraw();
   // END HACK
 
   return result;
@@ -830,7 +830,7 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
     placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
 
   // BEGIN HACK!!!
-  HACKForceRedraw();
+  // HACKForceRedraw();
   // END HACK
   return result;
 }

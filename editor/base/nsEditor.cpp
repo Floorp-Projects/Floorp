@@ -749,21 +749,25 @@ NS_IMETHODIMP
 nsEditor::BeginTransaction()
 {
   NS_PRECONDITION(mUpdateCount>=0, "bad state");
+
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+  }
+
   if (nsnull!=mViewManager)
   {
     if (0==mUpdateCount)
       mViewManager->DisableRefresh();
     mUpdateCount++;
   }
+
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->BeginBatch();
   }
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->StartBatchChanges();
-  }
+
   return NS_OK;
 }
 
@@ -771,21 +775,28 @@ NS_IMETHODIMP
 nsEditor::EndTransaction()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
-  if (nsnull!=mViewManager)
-  {
-    mUpdateCount--;
-    if (0==mUpdateCount)
-      mViewManager->EnableRefresh();
-  }  
+
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->EndBatch();
   }
+
+  if (nsnull!=mViewManager)
+  {
+    mUpdateCount--;
+    if (0==mUpdateCount)
+    {
+      mViewManager->EnableRefresh();
+      HACKForceRedraw();
+    }
+  }  
+
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(selectionResult) && selection) {
     selection->EndBatchChanges();
   }
+
   return NS_OK;
 }
 
@@ -1320,7 +1331,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
-    HACKForceRedraw();
+    // HACKForceRedraw();
   }
   return result;
 }
@@ -3022,7 +3033,7 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
   mIMESelectionRange->SetEnd(node, offset);
 
   EndTransaction();
-  HACKForceRedraw();
+  // HACKForceRedraw();
   return result;
 }
 
