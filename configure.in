@@ -70,7 +70,6 @@ AC_ARG_ENABLE(random-options,
 		18) _new_args="$_new_args --disable-cookie-management" ;;
 		19) _new_args="$_new_args --disable-single-signon" ;;
 		20) _new_args="$_new_args --enable-strip-libs" ;;
-		21) _new_args="$_new_args --enable-strip-not-exported" ;;
 		22) _new_args="$_new_args --enable-cpp-rtti" ;;
 		23) _new_args="$_new_args --enable-cpp-excecpions" ;;
 		24) _new_args="$_new_args --disable-double-buffer" ;;
