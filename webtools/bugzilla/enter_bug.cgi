@@ -64,6 +64,7 @@ confirm_login() if (Param("usebuggroupsentry"));
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
+    quietly_check_login();
 
     my %products;
 
