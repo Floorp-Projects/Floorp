@@ -577,9 +577,7 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R)
+      || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
   nsKeyEvent kevent;
@@ -607,9 +605,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R)
+      || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
   win->AddRef();
@@ -646,9 +642,7 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R)
+      || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
   nsKeyEvent kevent;
@@ -672,9 +666,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R
-      || event->keyval == GDK_Alt_L
-      || event->keyval == GDK_Alt_R)
+      || event->keyval == GDK_Control_R)
     return PR_TRUE;
 
   nsKeyEvent kevent;
