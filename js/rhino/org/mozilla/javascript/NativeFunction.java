@@ -114,16 +114,20 @@ public class NativeFunction extends ScriptableObject implements Function {
         FlattenedObject flat = new FlattenedObject(this);
 
         Object protoProp = flat.getProperty("prototype");
-
-        try {
-            protoProp = ((FlattenedObject)protoProp).getObject();
-        } catch (ClassCastException e) {
-            Object[] args = { names[0] };
-            throw Context.reportRuntimeError(Context.getMessage
-                                     ("msg.instanceof.bad.prototype", args));
+        
+        if ((protoProp instanceof Scriptable) 
+                && (protoProp != Undefined.instance)) {
+            try {
+                protoProp = ((FlattenedObject)protoProp).getObject();
+                return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
+            } catch (ClassCastException e) { }
         }
+        Object[] args = { names[0] };
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "TypeError",
+                    ScriptRuntime.getMessage("msg.instanceof.bad.prototype", args),
+                    instance);
 
-        return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
     }
 
     /**
@@ -138,7 +142,9 @@ public class NativeFunction extends ScriptableObject implements Function {
 
     protected Scriptable getClassPrototype() {
         Object protoVal = get("prototype", this);
-        if (protoVal == null || !(protoVal instanceof Scriptable))
+        if (protoVal == null 
+                    || !(protoVal instanceof Scriptable)
+                    || (protoVal == Undefined.instance))
             protoVal = getClassPrototype(this, "Object");
         return (Scriptable) protoVal;
     }
