@@ -2033,7 +2033,7 @@ nsEditorShell::ShowSaveFilePicker(PRBool aDoSaveAsText, nsIURI *aDocumentURI,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditorShell::GetDocumentURI(nsIDOMDocument *aDoc, nsIURI **aDocumentURI)
 {
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
