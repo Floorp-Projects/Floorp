@@ -235,7 +235,7 @@ protected:
     
     // Global History
     nsresult ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool );
+    nsresult AddToGlobalHistory(nsIChannel* aChannel, nsIURI * aURI, PRBool aHidden);
 
     // Helper Routines
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,

@@ -117,6 +117,23 @@ interface nsIBrowserHistory : nsISupports
      */
 
     void markPageAsTyped(in string url);
+
+    /**
+     * outputReferrerURL
+     * Prints out referrer information for a url to a
+     * data file if browser.history.url.datacapture.mode is set
+     * to 1 or 2 (see the comment in nsGlobalHistory.cpp for
+     * more details).
+     *
+     * This method is a big hack and only temporary.  Please do NOT use
+     * it in your code.  It will be removed after the data
+     * collection phase of the project described in bug 182366 is
+     * over.
+     *
+     * @param aURL      a url in global history
+     * @param aReferrer the referrer url to aURL
+     */
+    void outputReferrerURL(in string aURL, in string aReferrer);
 };
 
 %{ C++
