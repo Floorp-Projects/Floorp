@@ -971,6 +971,12 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     // Find tag in tag table
     parserService->HTMLCaseSensitiveAtomTagToId(name, &id);
 
+    // XXX Temporary fix for
+    //     https://bugzilla.mozilla.org/show_bug.cgi?id=285166
+    if (id > NS_HTML_TAG_MAX) {
+        id = eHTMLTag_userdefined;
+    }
+
     result = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
                                PR_FALSE, PR_FALSE);
   }
@@ -978,7 +984,13 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     // Find tag in tag table
     parserService->HTMLAtomTagToId(name, &id);
 
-    // Revese map id to name to get the correct character case in
+    // XXX Temporary fix for
+    //     https://bugzilla.mozilla.org/show_bug.cgi?id=285166
+    if (id > NS_HTML_TAG_MAX) {
+        id = eHTMLTag_userdefined;
+    }
+
+    // Reverse map id to name to get the correct character case in
     // the tag name.
 
     nsCOMPtr<nsINodeInfo> kungFuDeathGrip;
