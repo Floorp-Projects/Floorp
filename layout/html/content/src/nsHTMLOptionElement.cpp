@@ -450,7 +450,15 @@ nsHTMLOptionElement::GetText(nsString& aText)
       rv = node->QueryInterface(kIDOMTextIID, (void**)&domText);
       if (NS_SUCCEEDED(rv) && domText) {
         rv = domText->GetData(aText);
-        aText.CompressWhitespace(PR_TRUE, PR_TRUE);
+        // the option could be all spaces, so compress the white space
+        // then make sure the length is greater than zero
+        if (aText.Length() > 0) { 
+          nsAutoString compressText = aText;
+          compressText.CompressWhitespace(PR_TRUE, PR_TRUE);
+          if (compressText.Length() != 0) {
+            aText = compressText;
+          }
+        }
         NS_RELEASE(domText);
         NS_RELEASE(node);
         break;
