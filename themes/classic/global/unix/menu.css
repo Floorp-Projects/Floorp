@@ -49,6 +49,12 @@ menupopup > menuitem, popup > menuitem
     margin                : 0px;
   }
 
+/* Don't display grayed items in the contextual popup menus */
+popup > menuitem[disabled="true"], popup > menu[disabled="true"] 
+  {
+  	display				  : none;
+  }
+
 menuseparator 
   {
     border-top            : 1px solid threedshadow;

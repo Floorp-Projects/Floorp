@@ -93,8 +93,18 @@
   
 .classic-dropmarker
   {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif");
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif");
   }  
+  
+.classic-dropmarker:hover
+  {
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on-hover.gif");
+  }    
+  
+.classic-dropmarker:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on-active.gif");
+  } 
   
 .classic-dropmarker[disabled="true"]
   {
