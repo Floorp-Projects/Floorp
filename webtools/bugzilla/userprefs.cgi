@@ -239,7 +239,7 @@ sub SaveEmail {
         $updateString .= 'ExcludeSelf~';
     }
     
-    foreach my $flag qw(FlagRequestee FlagRequester) {
+    foreach my $flag (qw(FlagRequestee FlagRequester)) {
         $updateString .= "~$flag~" . (defined($::FORM{$flag}) ? "on" : "");
     }
     
