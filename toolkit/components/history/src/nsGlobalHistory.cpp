@@ -670,15 +670,6 @@ nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLe
          aTopLevel ? ", toplevel" : "");
 #endif
 
-  // For notifying observers, later...
-  nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(URISpec, getter_AddRefs(url));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFDate> date;
-  rv = gRDFService->GetDateLiteral(aLastVisitDate, getter_AddRefs(date));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
 
@@ -690,61 +681,15 @@ nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLe
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
-    // Notify observers
-    
-    // visit date
-    nsCOMPtr<nsIRDFDate> oldDateLiteral;
-    rv = gRDFService->GetDateLiteral(oldDate, getter_AddRefs(oldDateLiteral));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = NotifyChange(url, kNC_Date, oldDateLiteral, date);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // visit count
-    nsCOMPtr<nsIRDFInt> oldCountLiteral;
-    rv = gRDFService->GetIntLiteral(oldCount, getter_AddRefs(oldCountLiteral));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIRDFInt> newCountLiteral;
-    rv = gRDFService->GetIntLiteral(oldCount+1,
-                                    getter_AddRefs(newCountLiteral));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = NotifyChange(url, kNC_VisitCount, oldCountLiteral, newCountLiteral);
-    NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef DEBUG_bsmedberg
     printf("Existing page succeeded.\n");
 #endif
   }
   else {
-    rv = AddNewPageToDatabase(URISpec.get(), aLastVisitDate, getter_AddRefs(row));
+    rv = AddNewPageToDatabase(aURI, aLastVisitDate, aRedirect, 
+                              aTopLevel, getter_AddRefs(row));
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddNewPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
-    
-    PRBool isJavascript;
-    rv = aURI->SchemeIs("javascript", &isJavascript);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (isJavascript || aRedirect || !aTopLevel) {
-      // if this is a JS url, or a redirected URI or in a frame, hide it in
-      // global history so that it doesn't show up in the autocomplete
-      // dropdown. AddExistingPageToDatabase has logic to override this
-      // behavior for URIs which were typed. See bug 197127 and bug 161531
-      // for details.
-      rv = SetRowValue(row, kToken_HiddenColumn, 1);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // Notify observers
-      rv = NotifyAssert(url, kNC_Date, date);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = NotifyAssert(kNC_HistoryRoot, kNC_child, url);
-      if (NS_FAILED(rv)) return rv;
-    
-      NotifyFindAssertions(url, row);
-    }
 
 #ifdef DEBUG_bsmedberg
     printf("New page succeeded.\n");
@@ -784,6 +729,10 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   nsresult rv;
   
   // if the page was typed, unhide it now because it's
+  nsCAutoString URISpec;
+  rv = GetRowValue(row, kToken_URLColumn, URISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // known to be valid
   if (HasCell(mEnv, row, kToken_TypedColumn))
     row->CutColumn(mEnv, kToken_HiddenColumn);
@@ -802,17 +751,53 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_VisitCountColumn, (*aOldCount) + 1);
 
+  // Notify observers
+  nsCOMPtr<nsIRDFResource> url;
+  rv = gRDFService->GetResource(URISpec, getter_AddRefs(url));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFDate> date;
+  rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // visit date
+  nsCOMPtr<nsIRDFDate> oldDateLiteral;
+  rv = gRDFService->GetDateLiteral(*aOldDate, getter_AddRefs(oldDateLiteral));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = NotifyChange(url, kNC_Date, oldDateLiteral, date);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // visit count
+  nsCOMPtr<nsIRDFInt> oldCountLiteral;
+  rv = gRDFService->GetIntLiteral(*aOldCount, getter_AddRefs(oldCountLiteral));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFInt> newCountLiteral;
+  rv = gRDFService->GetIntLiteral(*aOldCount+1,
+                                  getter_AddRefs(newCountLiteral));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NotifyChange(url, kNC_VisitCount, oldCountLiteral, newCountLiteral);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
 nsresult
-nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
-                                      PRInt64 aDate,
+nsGlobalHistory::AddNewPageToDatabase(nsIURI* aURI,
+                                      PRInt64 aDate, 
+                                      PRBool aRedirect,
+                                      PRBool aTopLevel,
                                       nsIMdbRow **aResult)
 {
   mdb_err err;
   
   NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_NOT_INITIALIZED);
+
+  nsCAutoString URISpec;
+  nsresult rv = aURI->GetSpec(URISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Create a new row
   mdbOid rowId;
@@ -828,14 +813,14 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   if (err != 0) return NS_ERROR_FAILURE;
 
   // Set the URL
-  SetRowValue(row, kToken_URLColumn, aURL);
+  SetRowValue(row, kToken_URLColumn, URISpec.get());
   
   // Set the date.
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
+  NS_NewURI(getter_AddRefs(uri), URISpec, nsnull, nsnull);
   nsCAutoString hostname;
   if (uri)
       uri->GetHost(hostname);
@@ -848,6 +833,38 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 
   *aResult = row;
   NS_ADDREF(*aResult);
+
+  PRBool isJavascript;
+  rv = aURI->SchemeIs("javascript", &isJavascript);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isJavascript || aRedirect || !aTopLevel) {
+    // if this is a JS url, or a redirected URI or in a frame, hide it in
+    // global history so that it doesn't show up in the autocomplete
+    // dropdown. AddExistingPageToDatabase has logic to override this
+    // behavior for URIs which were typed. See bug 197127 and bug 161531
+    // for details.
+    rv = SetRowValue(row, kToken_HiddenColumn, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    // Notify observers
+    nsCOMPtr<nsIRDFResource> url;
+    rv = gRDFService->GetResource(URISpec, getter_AddRefs(url));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRDFDate> date;
+    rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NotifyAssert(url, kNC_Date, date);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NotifyAssert(kNC_HistoryRoot, kNC_child, url);
+    if (NS_FAILED(rv)) return rv;
+  
+    NotifyFindAssertions(url, row);
+  }
 
   return NS_OK;
 }
@@ -1120,7 +1137,11 @@ nsGlobalHistory::RemovePage(const char *aURL)
   err = row->CutAllColumns(mEnv);
   NS_ASSERTION(err == 0, "couldn't cut all columns");
 
-  return NS_OK;
+  // Sigh. This is pretty bad - if the user selects a bunch of things then
+  // hits delete we'll be re-writing history over and over. Still, we will
+  // be whacking global history pretty hard after 1.0 so I don't feel too 
+  // bad.
+  return Commit(kCompressCommit);
 }
 
 NS_IMETHODIMP
@@ -1342,7 +1363,9 @@ nsGlobalHistory::MarkPageAsTyped(const char* aURL)
   nsCOMPtr<nsIMdbRow> row;
   nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv)) {
-    rv = AddNewPageToDatabase(aURL, GetNow(), getter_AddRefs(row));
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
+    rv = AddNewPageToDatabase(uri, GetNow(), PR_FALSE, PR_TRUE, getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't know if this is a valid URI yet. Hide it until it finishes
@@ -3366,6 +3389,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   GetFindUriPrefix(query, PR_TRUE, findUri);
   gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(kNC_HistoryByDateAndSite, kNC_child, childFindResource);
+  parentFindResource = childFindResource;
   
   query.terms.Clear();
 
@@ -3391,7 +3415,6 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   // 3) AgeInDays=<age>&groupby=Hostname ->
   //    AgeInDays=<age>&Hostname=<host>
   
-  parentFindResource=childFindResource; // AgeInDays=<age>&groupby=Hostname
 
   query.groupBy = 0;            // create AgeInDays=<age>&Hostname=<host>
   query.terms.AppendElement((void *)&ageterm);
