@@ -90,6 +90,9 @@ protected:
 
 public:
   HDC                   mDC;
+
+  static PRBool gRound;
+  static int    PrefChanged(const char* aPref, void* aClosure);
 };
 
 #endif /* nsDeviceContextWin_h___ */
