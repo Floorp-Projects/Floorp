@@ -1698,7 +1698,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame, content, aChangeList, aMinChange);
-        if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+        if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
           // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(aPresContext, newContext);
         }
@@ -1721,8 +1721,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement &&
             aAttribute &&
             (!(aMinChange &
-               (nsChangeHint_ReflowFrame | nsChangeHint_ReconstructFrame
-                | nsChangeHint_ReconstructDoc))) &&
+               (nsChangeHint_ReflowFrame | nsChangeHint_ReconstructFrame))) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
         }
@@ -1753,7 +1752,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           if (oldExtraContext != newExtraContext) {
             aMinChange = CaptureChange(oldExtraContext, newExtraContext, aFrame, 
                                        content, aChangeList, aMinChange);
-            if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+            if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
           }
@@ -1818,7 +1817,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     aResultChange = aMinChange;
 
-    if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.
       if (!pseudoTag && localContent &&
@@ -1844,7 +1843,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     
-    if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.
       if (!pseudoTag && localContent &&
@@ -1870,7 +1869,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
     }
     
-    if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+    if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       
       // There is no need to waste time crawling into a frame's children on a frame change.
       // The act of reconstructing frames will force new style contexts to be resolved on all
@@ -1964,7 +1963,7 @@ FrameManager::ComputeStyleChangeFor(nsIFrame* aFrame,
                             aChangeList, aTopLevelChange, frameChange);
       NS_UpdateHint(aTopLevelChange, frameChange);
 
-      if (aTopLevelChange & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) {
+      if (aTopLevelChange & nsChangeHint_ReconstructFrame) {
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.
