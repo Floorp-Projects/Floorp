@@ -16,8 +16,10 @@
  * Reserved.
  */
 
+#include <PP_Types.h>
 #include <UException.h>
 
+#include <new>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,16 +56,40 @@ void* Flush_Reallocate( void* item, size_t size )
 //##############################################################################
 //##############################################################################
 
+// needed because we are not compiling the relevant parts of New.cp
+nothrow_t nothrow; 
+
+void* operator new (size_t size, const std::nothrow_t& ) throw()
+{
+	return malloc( size );
+}
 
 
 void* operator new( size_t size )
 {
-	void* mem = Flush_Allocate( size, FALSE );
-	ThrowIfNil_( mem );
+	void* mem = operator new ( size, ::nothrow );
+//	ThrowIfNil_( mem );
 	return mem;
 }
 
 void operator delete( void* block )
 {
-	Flush_Free( block );
+	free( block );
 }
+
+
+void* operator new[]( size_t size )
+{
+	return operator new(size);
+}
+
+void* operator new[] (size_t size, const std::nothrow_t& nt ) throw()
+{
+	return operator new(size, nt);
+}
+
+void operator delete[]( void* block )
+{
+	operator delete(block);
+}
+
