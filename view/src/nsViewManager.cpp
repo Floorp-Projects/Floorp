@@ -270,7 +270,7 @@ void nsViewManager :: ResetScrolling(void)
   }
 }
 
-void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsRegion *region, PRUint32 aUpdateFlags)
+void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
 {
 }
 
@@ -354,7 +354,7 @@ void nsViewManager :: Composite()
   }
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, nsRegion *aRegion, PRUint32 aUpdateFlags)
+void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
   if (aRegion == nsnull)
   {

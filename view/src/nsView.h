@@ -57,7 +57,7 @@ public:
   virtual nsIViewManager * GetViewManager();
   virtual nsIWidget * GetWidget();
   virtual void Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags);
-  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags);
+  virtual void Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags);
   virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags);
   virtual void SetPosition(nscoord x, nscoord y);
   virtual void GetPosition(nscoord *x, nscoord *y);
