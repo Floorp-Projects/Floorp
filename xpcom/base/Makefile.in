@@ -61,7 +61,6 @@ EXPORTS		= \
 		nsError.h \
 		nsID.h \
 		nsIID.h \
-		nsIPtr.h \
 		nsISupportsBase.h \
 		nsISupportsImpl.h \
 		nsISupportsUtils.h \

@@ -2,7 +2,6 @@
 
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
-#include "nsIPtr.h"
 
 #ifdef __MWERKS__
 	#pragma exceptions off
@@ -14,12 +13,10 @@ NS_DEF_PTR(nsIDOMNode);
 		Windows:
 			nsCOMPtr							 13
 			raw										 36
-			nsIPtr								 43
 
 		Macintosh:
 			nsCOMPtr							 36 bytes		(1.0000)
 			raw										120					(3.3333)	i.e., 333.33% bigger than nsCOMPtr
-			nsIPtr								128					(3.5556)
 	*/
 
 class Test04_Raw
@@ -72,23 +69,4 @@ Test04_nsCOMPtr::SetNode( nsIDOMNode* newNode )
 		// m36, w13/13
 	{
 		mNode = newNode;
-	}
-
-
-
-class Test04_nsIPtr
-	{
-		public:
-			void /*nsresult*/ SetNode( nsIDOMNode* newNode );
-
-		private:
-			nsIDOMNodePtr mNode;
-	};
-
-void // nsresult
-Test04_nsIPtr::SetNode( nsIDOMNode* newNode )
-		// m128, w43
-	{
-		mNode = newNode;
-		mNode.IfAddRef();
 	}
