@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zconf.h,v 3.2 1999/08/26 00:10:18 briano%netscape.com Exp $ */
+/* $Id: zconf.h,v 3.3 1999/09/07 21:23:09 dveditz%netscape.com Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H
@@ -172,7 +172,9 @@ typedef uLong FAR uLongf;
    typedef Byte     *voidp;
 #endif
 
-#ifndef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT
+#include "prtypes.h"
+#else
 /* Compile with -DZLIB_DLL for Windows DLL support */
 #if (defined(_WINDOWS) || defined(WINDOWS)) && defined(ZLIB_DLL)
 #  include <windows.h>
@@ -180,8 +182,9 @@ typedef uLong FAR uLongf;
 #else
 #  define EXPORT
 #endif
-#else
-#include "prtypes.h"
-#endif
+
+#define PR_PUBLIC_API(type) type
+
+#endif /* MOZILLA_CLIENT */
 
 #endif /* _ZCONF_H */
