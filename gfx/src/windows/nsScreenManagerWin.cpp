@@ -229,7 +229,9 @@ nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   else
     *aNumberOfScreens = mNumberOfScreens = 1;
 
-  printf("****** number of sceens %ld\n", mNumberOfScreens);
+#ifdef DEBUG
+  printf("****** number of screens %ld\n", mNumberOfScreens);
+#endif
   return NS_OK;
   
 } // GetNumberOfScreens
