@@ -748,74 +748,84 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
-/**
- * Translate a background position style unit value to an absolute
- * pixel value.
- */
-static nscoord
-BackgroundPositionUnitToCoord(nscoord aUnit)
-{
-  return aUnit;
-}
-
-/**
- * Map the background position values into xoffset/yoffset values.
- * Return PR_TRUE if anything but zero was stored into aXOffset and
- * aYOffset.
- */
 static PRBool
-ComputeBackgroundOffsets(const nsStyleColor& aColor,
-                         nscoord aTileWidth, nscoord aTileHeight,
-                         nscoord aDX, nscoord aDY,
-                         nscoord& aXOffset, nscoord& aYOffset)
+ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
+                             const nsRect& aBounds,
+                             nscoord aTileWidth, nscoord aTileHeight,
+                             nsPoint& aResult)
 {
-  nscoord xPos = BackgroundPositionUnitToCoord(aColor.mBackgroundXPosition);
-  if (0 != xPos) {
-    // The position specifies an absolute coordinate where the image
-    // should be tiled from. The rendering code will (conceptually) be
-    // looping from the left edge of the frame's box to the right
-    // edge. Produce a delta to the starting coordinate that allows
-    // the image to be shifted appropriately.
-    if (xPos < 0) {
-      xPos = -xPos;
-      if (xPos < 0) {
+  nscoord x;
+  if (NS_STYLE_BG_X_POSITION_LENGTH & aColor.mBackgroundFlags) {
+    x = aColor.mBackgroundXPosition;
+  }
+  else {
+    nscoord t = aColor.mBackgroundXPosition;
+    if (0 == (NS_STYLE_BG_X_POSITION_PERCENT & aColor.mBackgroundFlags)) {
+      // XXX map enum to pct here
+      t = 0;
+    }
+    float pct = float(t) / 100.0f;
+    nscoord tilePos = nscoord(pct * aTileWidth);
+    nscoord boxPos = nscoord(pct * aBounds.width);
+    x = boxPos - tilePos;
+  }
+  if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
+    // When we are tiling in the x direction the loop will run from
+    // the left edge of the box to the right edge of the box. We need
+    // to adjust the starting coordinate to lie within the band being
+    // rendered.
+    if (x < 0) {
+      x = -x;
+      if (x < 0) {
         // Some joker gave us max-negative-integer.
-        xPos = 0;
+        x = 0;
       }
-      xPos %= aTileWidth;
-      xPos = -xPos;
+      x %= aTileWidth;
+      x = -x;
     }
     else {
-      xPos %= aTileWidth;
-      xPos = xPos - aTileWidth;
+      x %= aTileWidth;
+      x = x - aTileWidth;
     }
   }
+  aResult.x = x;
 
-  nscoord yPos = BackgroundPositionUnitToCoord(aColor.mBackgroundYPosition);
-  if (0 != yPos) {
-    // The position specifies an absolute coordinate where the image
-    // should be tiled from. The rendering code will (conceptually) be
-    // looping from the left edge of the frame's box to the right
-    // edge. Produce a delta to the starting coordinate that allows
-    // the image to be shifted appropriately.
-    if (yPos < 0) {
-      yPos = -yPos;
-      if (yPos < 0) {
+  nscoord y;
+  if (NS_STYLE_BG_Y_POSITION_LENGTH & aColor.mBackgroundFlags) {
+    y = aColor.mBackgroundYPosition;
+  }
+  else {
+    nscoord t = aColor.mBackgroundYPosition;
+    if (0 == (NS_STYLE_BG_Y_POSITION_PERCENT & aColor.mBackgroundFlags)) {
+      // XXX map enum to pct here
+      t = 0;
+    }
+    float pct = float(t) / 100.0f;
+    nscoord tilePos = nscoord(pct * aTileHeight);
+    nscoord boxPos = nscoord(pct * aBounds.height);
+    y = boxPos - tilePos;
+  }
+  if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
+    // When we are tiling in the y direction the loop will run from
+    // the top edge of the box to the bottom edge of the box. We need
+    // to adjust the starting coordinate to lie within the band being
+    // rendered.
+    if (y < 0) {
+      y = -y;
+      if (y < 0) {
         // Some joker gave us max-negative-integer.
-        yPos = 0;
+        y = 0;
       }
-      yPos %= aTileHeight;
-      yPos = -yPos;
+      y %= aTileHeight;
+      y = -y;
     }
     else {
-      yPos %= aTileHeight;
-      yPos = yPos - aTileHeight;
+      y %= aTileHeight;
+      y = y - aTileHeight;
     }
   }
-
-  aXOffset = xPos;
-  aYOffset = yPos;
-  return (xPos != 0) || (yPos != 0);
+  aResult.y = y;
+  return (0 != x) || (0 != y);
 }
 
 void
@@ -904,18 +914,22 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // When we have non-zero background position values, we have to
     // adjust how many tiles we draw (by at most one) and the starting
     // position from where the tiles are rendered.
-    nscoord xOffset, yOffset;
-    if (ComputeBackgroundOffsets(aColor, tileWidth, tileHeight, aDX, aDY,
-                                 xOffset, yOffset)) {
-      xCount++;
-      yCount++;
+    nsPoint anchor;
+    if (ComputeBackgroundAnchorPoint(aColor, aBounds, tileWidth, tileHeight,
+                                     anchor)) {
+      if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
+        xCount++;
+      }
+      if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
+        yCount++;
+      }
     }
 
     // Tile the background
     PRIntn y = PRIntn(aDirtyRect.y / tileHeight);
-    nscoord ypos = aBounds.y + y * tileHeight + yOffset;
+    nscoord ypos = aBounds.y + y * tileHeight + anchor.y;
     PRIntn xstart = PRIntn(aDirtyRect.x / tileWidth);
-    nscoord xpostart = aBounds.x + xstart * tileWidth + xOffset;
+    nscoord xpostart = aBounds.x + xstart * tileWidth + anchor.x;
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
     for (; y <= yCount; ++y, ypos += tileHeight) {
