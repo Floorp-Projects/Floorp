@@ -2453,6 +2453,27 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 
   nsAutoEditBatch beginBatching(this);
 
+  // Use transaction system for undo only if destination
+  //   is already in the document
+  PRBool destInBody = PR_TRUE;
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+  nsCOMPtr<nsIDOMNode> p = aDestNode;
+  while (p && p!= bodyNode)
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
+    {
+      destInBody = PR_FALSE;
+      break;
+    }
+    p = tmp;
+  }
+
   PRUint32 sourceCount;
   sourceAttributes->GetLength(&sourceCount);
   PRUint32 i, destCount;
@@ -2470,7 +2491,12 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
       {
         nsAutoString str;
         if (NS_SUCCEEDED(destAttribute->GetName(str)))
-          RemoveAttribute(destElement, str);
+        {
+          if (destInBody)
+            RemoveAttribute(destElement, str);
+          else
+            destElement->RemoveAttribute(str);
+        }
       }
     }
   }
@@ -2489,7 +2515,10 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
               !sourceAttrValue.IsEmpty())
           {
-            SetAttribute(destElement, sourceAttrName, sourceAttrValue);
+            if (destInBody)
+              SetAttribute(destElement, sourceAttrName, sourceAttrValue);
+            else
+              destElement->SetAttribute(sourceAttrName, sourceAttrValue);
           } else {
             // Do we ever get here?
 #if DEBUG_cmanske
