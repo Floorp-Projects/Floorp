@@ -710,7 +710,7 @@ RRT_HEADER:
 
   if (pOtherHdr && *pOtherHdr) {
     /* Assume they already have the right newlines and continuations
-     and so on. */
+     and so on.  for these headers, the PUSH_NEWLINE() happens in addressingWidgetOverlay.js */
     PUSH_STRING (pOtherHdr);
   }
 

@@ -168,7 +168,9 @@ function Recipients2CompFields(msgCompFields)
           case "addr_reply"       : addrReply += reply_Sep + recipient; reply_Sep = ",";      break; 
           case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";              break;
           case "addr_followup"    : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";  break;
-          case "addr_other"       : addrOther += awGetPopupElement(i).selectedItem.getAttribute("label") + " " + fieldValue + "\n";break;
+          // do CRLF, same as PUSH_NEWLINE() in nsMsgSend.h / nsMsgCompUtils.cpp
+          // see bug #195965
+          case "addr_other"       : addrOther += awGetPopupElement(i).selectedItem.getAttribute("label") + " " + fieldValue + "\r\n";break;
         }
       }
       i ++;
