@@ -14,7 +14,7 @@
       border-left         : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
-      background-color    : window;
+      background-color    : -moz-field;
       -moz-border-radius  : 50%;
       margin              : 2px 2px 0px 0px;
       width               : 12px;
