@@ -1008,7 +1008,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    // NB: We haven't subclassed yet, so callbacks to change mBounds won't
    //     have happened!
    mBounds = aRect;
-   mBounds.height = GetHeight( aRect.height);
+   mBounds.height = aRect.height;
 
    // Record passed in things
    mAppShell = aAppShell;
@@ -1193,7 +1193,7 @@ void nsWindow::NS2PM( POINTL &ptl)
 {
    ptl.y = GetClientHeight() - ptl.y - 1;
 #if 0
-   printf("+++++++++In NS2PM client height = %ld\n", GetClientHeight());
+   printf("+++++++++In NS2PM client height = %d\n", GetClientHeight());
 #endif
 }
 
@@ -1455,21 +1455,25 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
    {
       // need to keep top-left corner in the same place
       // work out real coords of top left
-      POINTL ptl= { aX, aY };
+      POINTL ptl = { aX, aY };
       NS2PM_PARENT( ptl);
       // work out real coords of bottom left
-      ptl.y -= GetHeight( h) - 1;
-      if( mParent)
+      ptl.y -= h - 1;
+      if( mParent && mWindowType != eWindowType_popup)
       {
          WinMapWindowPoints( mParent->mWnd, WinQueryWindow(mWnd, QW_PARENT), &ptl, 1);
       }
+      else if (mWindowType == eWindowType_popup ) {
+         // aX already gives the right position, just transform aY by hand:
+         ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - h - 1 - aY;
+      }
 
-      if( !SetWindowPos( 0, ptl.x, ptl.y, w, GetHeight(h), SWP_MOVE | SWP_SIZE))
+      if( !SetWindowPos( 0, ptl.x, ptl.y, w, h, SWP_MOVE | SWP_SIZE))
          if( aRepaint)
             Invalidate(PR_FALSE);
 
 #if DEBUG_sobotka
-   printf("+++++++++++Resized 0x%lx at %ld, %ld to %ld x %ld\n\n", mWnd, ptl.x, ptl.y, w, GetHeight(h));
+   printf("+++++++++++Resized 0x%lx at %ld, %ld to %d x %d (%d,%d)\n", mWnd, ptl.x, ptl.y, w, h, aX, aY);
 #endif
 
    }
