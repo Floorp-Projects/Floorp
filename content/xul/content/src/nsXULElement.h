@@ -527,7 +527,7 @@ protected:
          */
         PRWord                              mBits;
 
-#define LAZYSTATE_MASK  ((1 << LAZYSTATE_BITS) - 1)
+#define LAZYSTATE_MASK  ((PRWord(1) << LAZYSTATE_BITS) - 1)
 #define ATTRIBUTES_MASK (~LAZYSTATE_MASK)
 
         nsXULAttributes *
