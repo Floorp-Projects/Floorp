@@ -206,6 +206,7 @@ protected:
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
+  nsIHTMLContent* mHead;
 
   PRTime mLastUpdateTime;
   PRTime mUpdateDelta;
@@ -228,6 +229,7 @@ HTMLContentSink::HTMLContentSink()
  
 HTMLContentSink::~HTMLContentSink()
 {
+  NS_IF_RELEASE(mHead);
   NS_IF_RELEASE(mBody);
   NS_IF_RELEASE(mRoot);
   NS_IF_RELEASE(mDocument);
@@ -291,7 +293,18 @@ PRInt32 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenHead", aNode)
 
-  mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
+  if (nsnull == mHead) {
+    nsIAtom* atom = NS_NewAtom("HEAD");
+    nsresult rv = NS_NewHTMLHead(&mHead, atom);
+    if (NS_OK == rv) {
+      mRoot->InsertChildAt(mHead, 0, PR_FALSE);
+    }
+    NS_RELEASE(atom);
+  }
+
+  mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
+  mContainerStack[mStackPos] = mHead;
+  mStackPos++;
   return 0;
 }
 
