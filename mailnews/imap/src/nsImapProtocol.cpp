@@ -3802,7 +3802,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 			if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
 			{
 				PRInt32 srcLen = PL_strlen(aSourceString);
-				res = decoder->Length(aSourceString, 0, srcLen, &unicharLength);
+				res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
 				// temporary buffer to hold unicode string
 				unichars = new PRUnichar[unicharLength + 1];
 				if (unichars == nsnull) 
@@ -3877,7 +3877,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
 		if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
 		{
 			PRInt32 srcLen = PL_strlen(aSourceString);
-			res = decoder->Length(aSourceString, 0, srcLen, &unicharLength);
+			res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
 			// temporary buffer to hold unicode string
 			unichars = new PRUnichar[unicharLength + 1];
 			if (unichars == nsnull) 
