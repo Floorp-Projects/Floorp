@@ -867,7 +867,9 @@ dump("ONSELECTION CHANGED\n")
         <treecols anonid="treecols">
           <treecol id="Name" flex="1" primary="true" 
                    hideheader="true"
-                   persist="width hidden ordinal"/>
+                   persist="width hidden ordinal"
+                   sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                   sortActive="true" sortDirection="none"/>
         </treecols>
       </tree>
     </xbl:content>
