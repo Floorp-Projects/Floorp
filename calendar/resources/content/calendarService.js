@@ -39,7 +39,7 @@ const CLINE_SERVICE_CONTRACTID =
 const CLINE_SERVICE_CID =
     Components.ID("{65ef4b0b-d116-4b93-bf8a-84525992bf27}");
 const IRCCNT_HANDLER_CONTRACTID =
-    "@mozilla.org/uriloader/content-handler;1?type=x-application-webcal";
+    "@mozilla.org/uriloader/content-handler;1?type=text/calendar";
 const IRCCNT_HANDLER_CID =
     Components.ID("{9ebf4c8a-7770-40a6-aeed-e1738129535a}");
 const IRCPROT_HANDLER_CONTRACTID =
@@ -126,7 +126,8 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     if (w)
     {
         w.focus();
-        w.gCalendarWindow.calendarManager.launchAddCalendarDialog( "TestCalendar", channel.URI.spec );
+        
+        w.gCalendarWindow.calendarManager.checkCalendarURL( channel.URI.spec );
     }
     else
     {
@@ -137,8 +138,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
         var args = new Object ();
         args.url = channel.URI.spec;
 
-        w.openDialog("chrome://calendar/content/calendar.xul", "_blank",
-                     "chrome,menubar,toolbar,resizable,dialog=no", args);
+        w.open("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
     }
     
 }
@@ -229,7 +229,7 @@ function (iid) {
 
 /* nsIChannel */
 BogusChannel.prototype.loadAttributes = null;
-BogusChannel.prototype.contentType = "x-application-webcal";
+BogusChannel.prototype.contentType = "text/calendar";
 BogusChannel.prototype.contentLength = 0;
 BogusChannel.prototype.owner = null;
 BogusChannel.prototype.loadGroup = null;
@@ -299,7 +299,7 @@ function (compMgr, fileSpec, location, type)
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
 
-    dump("*** Registering x-application-webcal handler.\n");
+    dump("*** Registering text/calendar handler.\n");
     compMgr.registerFactoryLocation(IRCCNT_HANDLER_CID,
                                     "Webcal Content Handler",
                                     IRCCNT_HANDLER_CONTRACTID, 
@@ -314,7 +314,6 @@ function (compMgr, fileSpec, location, type)
                                     fileSpec, 
                                     location,
                                     type);
-
 }
 
 ChatzillaModule.unregisterSelf =
