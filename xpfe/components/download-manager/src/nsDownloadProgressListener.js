@@ -61,21 +61,17 @@ nsDownloadProgressListener.prototype = {
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
-        // we are done downloading...
-        // Indicate completion in status area.
-        var msg = getString( "completeMsg", this.doc );
-        msg = replaceInsert( msg, 1, formatSeconds( this.elapsed/1000, this.doc ) );
-        var aDownloadID = aDownloadItem.target.path;
+        var aDownloadID = aDownloadItem.target.persistentDescriptor;
         var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
-        var status = elt.nextSibling.nextSibling.nextSibling.nextSibling;
-        status.setAttribute("label", msg);
 
-        var progress = elt.nextSibling.firstChild;
-        // Put progress meter at 100%.
-        progress.setAttribute( "value", 100 );
-        progress.setAttribute( "mode", "normal" );
-        var percentMsg = getString( "percentMsg", this.doc );
-        percentMsg = replaceInsert( percentMsg, 1, 100 );
+        var progressCol = elt.nextSibling.firstChild;
+        progressCol.setAttribute("mode", "normal");
+        
+        var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
+        timeRemainingCol.setAttribute("label", "");
+        
+        var speedCol = timeRemaining.nextSibling.nextSibling;
+        speedCol.setAttribute("label", "");
       }
     },
 
@@ -103,7 +99,7 @@ nsDownloadProgressListener.prototype = {
       else
         rate = 0;
 
-      var aDownloadID = aDownloadItem.target.path;
+      var aDownloadID = aDownloadItem.target.persistentDescriptor;
       var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
       if (this.doc.getElementById("TimeElapsed").getAttribute("hidden") != "true") {
         elapsedCol = elt.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling;
@@ -112,7 +108,7 @@ nsDownloadProgressListener.prototype = {
       }
       // Calculate percentage.
       var percent;
-      var progress = elt.nextSibling.firstChild;
+      var progressCol = elt.nextSibling.firstChild;
       if ( aMaxTotalProgress > 0)
       {
         percent = Math.floor((overallProgress*100.0)/aMaxTotalProgress);
@@ -120,14 +116,14 @@ nsDownloadProgressListener.prototype = {
           percent = 100;
 
         // Advance progress meter.
-        progress.setAttribute( "value", percent );
+        progressCol.setAttribute( "value", percent );
       }
       else
       {
         percent = -1;
 
         // Progress meter should be barber-pole in this case.
-        progress.setAttribute( "mode", "undetermined" );
+        progressCol.setAttribute( "mode", "undetermined" );
       }
 
       // now that we've set the progress and the time, update # bytes downloaded...
@@ -179,14 +175,14 @@ nsDownloadProgressListener.prototype = {
       var progress = elt.nextSibling.nextSibling.nextSibling;
 
       // Update status msg.
-      var statusElt = progress.nextSibling;
-      statusElt.setAttribute("label", status);
+      var statusCol = progress.nextSibling;
+      statusCol.setAttribute("label", status);
 
-      var rateElt = statusElt.nextSibling;
-      rateElt.setAttribute("label", rateMsg);
+      var speedCol = statusCol.nextSibling;
+      speedCol.setAttribute("label", rateMsg);
       // Update percentage label on progress meter.      
-      if (this.doc.getElementById("ProgressText").getAttribute("hidden") != "true") {
-        var progressText = elt.firstChild.nextSibling.nextSibling;
+      if (this.doc.getElementById("ProgressPercent").getAttribute("hidden") != "true") {
+        var progressText = elt.nextSibling.nextSibling;
         if (percent < 0)
           progressText.setAttribute("label", "");
         else {
@@ -200,10 +196,10 @@ nsDownloadProgressListener.prototype = {
       {
         var rem = ( aMaxTotalProgress - aCurTotalProgress ) / rate;
         rem = parseInt( rem + .5 );
-        progress.setAttribute("label", formatSeconds( rem, this.doc ));
+        progressCol.setAttribute("label", formatSeconds( rem, this.doc ));
       }
       else
-        progress.setAttribute("label", getString( "unknownTime", this.doc ));
+        progressCol.setAttribute("label", getString( "unknownTime", this.doc ));
     },
     onLocationChange: function(aWebProgress, aRequest, aLocation, aDownloadItem)
     {

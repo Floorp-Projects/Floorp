@@ -25,6 +25,7 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://communicator/content/downloadmanager/downloadmanager.css"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -125,10 +126,10 @@
     <toolbar>
       <toolbarbutton command="cmd_properties"/>
       <toolbarbutton command="cmd_pause"/>
-      <toolbarseparator/>
+      <toolbarseparator class="toolbarseparator-standard"/>
       <toolbarbutton command="cmd_cancel"/>
       <toolbarbutton command="cmd_remove"/>
-      <toolbarseparator/>
+      <toolbarseparator class="toolbarseparator-standard"/>
       <toolbarbutton command="cmd_openfile"/>
       <toolbarbutton command="cmd_showinshell"/>
     </toolbar>
@@ -136,8 +137,9 @@
 
   <tree id="downloadView" ref="NC:DownloadsRoot"
         datasources="rdf:null"
-        multiple="true" flags="dont-test-empty"
-        ondblclick="openPropertiesDialog();"
+        seltype="multiple" flags="dont-test-empty"
+        ondblclick="return goDoCommand('cmd_properties');"
+        onselect="window.updateCommands('tree-select');"
         style="height: 0px; width: 0px;" flex="1">
 
     <treehead>
@@ -152,7 +154,7 @@
                   observes="Progress" />
         <treecell class="treecell-header sortDirectionIndicator"
                   label="&view.header.progresstext.label;"
-                  onclick="return TriStateColumnSort('ProgressText');"
+                  onclick="return TriStateColumnSort('ProgressPercent');"
                   observes="ProgressText" />
         <treecell class="treecell-header sortDirectionIndicator"
                   label="&view.header.timeremaining.label;"
@@ -192,9 +194,11 @@
                         src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
               <treecell>
-                <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
+                <downloadstatus state="rdf:http://home.netscape.com/NC-rdf#DownloadState"
+                                value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"
+                                statustext="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
               </treecell>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressText"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TransferRate"/>
@@ -219,10 +223,10 @@
                resource="http://home.netscape.com/NC-rdf#Progress"
                resource2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
-      <treecol id="ProgressText"  hidden="true"
+      <treecol id="ProgressPercent"  hidden="true"
                sortSeparators="true" width="4*" flex="4"
                persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#ProgressText"
+               resource="http://home.netscape.com/NC-rdf#ProgressPercent"
                resourc2="http://home.netscape.com/NC-rdf#Name"/>
       <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"

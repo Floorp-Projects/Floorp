@@ -64,10 +64,6 @@ function Startup()
   gDownloadView = document.getElementById("downloadView");
   gDownloadViewChildren = document.getElementById("downloadViewChildren");
   
-  // Select the first item in the view, if any. 
-  if (gDownloadViewChildren.hasChildNodes()) 
-    gDownloadView.selectItem(gDownloadViewChildren.firstChild);
-
   gDownloadView.controllers.appendController(downloadViewController);
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
@@ -76,6 +72,10 @@ function Startup()
   var ds = window.arguments[0];
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
+  gDownloadView.focus();
+  // Select the first item in the view, if any. 
+  if (gDownloadViewChildren.hasChildNodes()) 
+    gDownloadView.selectItem(gDownloadViewChildren.firstChild);
 }
 
 function openPropertiesDialog()
@@ -105,24 +105,28 @@ var downloadViewController = {
     var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel",
                 "cmd_openfile", "cmd_showinshell"];
     var selectionCount = gDownloadView.selectedItems.length;
+    if (!selectionCount) return false;
+
+    var isDownloading = gDownloadManager.getDownload(gDownloadView.selectedItems[0].id);
     switch (aCommand) {
     case "cmd_openfile":
     case "cmd_showinshell":
       if (selectionCount != 1)
         return false;
-      var file = getFileForItem(gDownloadView.selectedItems[0]);
-      return file.exists();
+      // some apps like kazaa/morpheus let you "preview" in-progress downloads because
+      // that's possible for movies and music. for now, just disable indiscriminately.
+      return !isDownloading && getFileForItem(gDownloadView.selectedItems[0]).exists();
     case "cmd_properties":
-      return selectionCount == 1;
+      return selectionCount == 1 && isDownloading;
     case "cmd_pause":
     case "cmd_cancel":
       // XXX check if selection is still in progress
       //     how to handle multiple selection?
-      return selectionCount > 0;
+      return isDownloading;
     case "cmd_remove":
       // XXX ensure selection isn't still in progress
       //     and how to handle multiple selection?
-      return selectionCount > 0;
+      return !isDownloading;
     case "cmd_selectAll":
       return gDownloadViewChildren.childNodes.length != selectionCount;
     default:
