@@ -39,6 +39,7 @@ class nsIDOMRange;
 { 0xb4bc9f63, 0xd9ba, 0x11d3,  \
 { 0x99, 0x38, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c } }
 
+
 class nsIContentIterator : public nsISupports {
 public:
 
@@ -93,6 +94,8 @@ public:
 
 };
 
+class nsIPresShell;
+
 class nsIGeneratedContentIterator : public nsISupports {
 public:
 
@@ -100,7 +103,9 @@ public:
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */
-  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIDOMRange* aRange, PRBool aSelectBefore, PRBool aSelectAfter)=0;
+  NS_IMETHOD Init(nsIPresShell *aShell, nsIDOMRange* aRange)=0;
+
+  NS_IMETHOD Init(nsIPresShell *aShell, nsIContent* aContent)=0;
 };
 
 
