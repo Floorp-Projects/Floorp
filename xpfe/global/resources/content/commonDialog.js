@@ -139,102 +139,54 @@ function commonDialogOnLoad()
 		var element = document.getElementById("checkboxLabel");
 		element.setAttribute("style","display: none;" );
 	}
-
 	// handle the edit fields
 //	dump("set editfields \n");
+	
+	
+	
+	var element = document.getElementById("dialog.password");
+	
+	element.value = param.GetString( 7 );
+	
+	element = document.getElementById("dialog.loginname");
+	element.value = param.GetString( 6 );
 	var numEditfields = param.GetInt( 3 );
 	switch( numEditfields )
 	{
 		case 2:
-			var element = document.getElementById("dialog.password2");
-			element.value = param.GetString( 7 );
-
-			var editMsg = param.GetString( 5 );
-        		if (editMsg) {
-				SetElementText("password2.text", editMsg ); 
-			}
-
-	 		var editfield1Password = param.GetInt( 4 );
-	 		if ( editfield1Password == 1 )
-			 {
-				var element = document.getElementById("dialog.password1");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("password1.text", editMsg1 ); 
-				}
-//		 	 	dump("hiding loginEditField");
-		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("style","display: none;" );
-				var element = document.getElementById("dialog.password1");
-				element.focus();
-			 }
-			 else
-			 {
-				var element = document.getElementById("dialog.loginname");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("login.text", editMsg1 ); 
-				}
-//		 	 	dump("hiding password1EditField");
-		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","display: none;" );
-				var element = document.getElementById("dialog.loginname");
-				element.focus();
-			 }
+			var element = document.getElementById("dialog.loginname");
+			element.focus();
 			break;
 	 	case 1:
 	 		var editfield1Password = param.GetInt( 4 );
 	 		if ( editfield1Password == 1 )
 		 	 {
-				var element = document.getElementById("dialog.password1");
-				element.value = param.GetString( 6 );
-
-//				var editMsg1 = param.GetString( 4 );
-//				if (editMsg1) {
-//					SetElementText("password1.text", editMsg1 ); 
-//				}
-				// Now hide the meaningless text
-				var element = document.getElementById("password1.text");
-				element.setAttribute("style", "display:none;"  );
-//		 	 	dump("hiding loginEditField and password2EditField");
+//		 	 	dump("hiding password");
 		 		var element = document.getElementById("loginEditField");
 				element.setAttribute("style","display: none;" );
-		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","display: none;" );
-				var element = document.getElementById("dialog.password1");
+				// Now hide the meanless text
+				var element = document.getElementById("password.text");
+				element.setAttribute("style", "display:none;"  );
+				var element = document.getElementById("dialog.password");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
 		 	 }
 		 	 else
 		 	 {
-				var element = document.getElementById("dialog.loginname");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("login.text", editMsg1 ); 
-				}
-				// Now hide the meaningless text
+//		 		dump("hiding password");
+		 		var element = document.getElementById("passwordEditfield");
+				element.setAttribute("style","display: none;" );
+				// Now hide the meanless text
 				var element = document.getElementById("login.text");
 				element.setAttribute("style", "display:none;"  );
-//		 		dump("hiding password1EditField and password2EditField");
-		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("style","display: none;" );
-		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("style","display: none;" );
-				var element = document.getElementById("dialog.loginname");
-//				dump("give keyboard focus to password edit field \n");
-				element.focus();
+				
 			}
 			break;
 	 	case 0:
-//	 		dump("hiding all editfields \n");
+//	 		dump("hide editfields \n");
 			var element = document.getElementById("editFields");
 			element.setAttribute("style","display: none;" );
+			
 			break;
 	}
 	
@@ -269,31 +221,13 @@ function commonDialogOnOK()
 {
 //	dump("commonDialogOnOK \n");
 	param.SetInt(0, 0 );
-	var element1, element2;
-	var numEditfields = param.GetInt( 3 );
-	if (numEditfields == 2) {
-		var editfield1Password = param.GetInt( 4 );
-		if ( editfield1Password == 1 ) {
-			element1 = document.getElementById("dialog.password1");
-		} else {
-			element1 = document.getElementById("dialog.loginname");
-		}
-		param.SetString( 6, element1.value );
-		element2 = document.getElementById("dialog.password2");
-		param.SetString( 7, element2.value );
-//			dump(" login name - "+ element1.value+ "\n");
-//			dump(" password - "+ element2.value+ "\n");
-	} else if (numEditfields == 1) {
-		var editfield1Password = param.GetInt( 4 );
-		if ( editfield1Password == 1 ) {
-			element1 = document.getElementById("dialog.password1");
-			param.SetString( 6, element1.value );
-		} else {
-			element1 = document.getElementById("dialog.loginname");
-			param.SetString( 6, element1.value );
-		}
-//			dump(" login name - "+ element2.value+ "\n");
-	}
+	var element = document.getElementById("dialog.loginname");
+	param.SetString( 6, element.value );
+//	dump(" login name - "+ element.value+ "\n");
+	
+	element = document.getElementById("dialog.password");
+	param.SetString( 7, element.value );
+//	dump(" password - "+ element.value+ "\n");
 	return true;
 }
 
