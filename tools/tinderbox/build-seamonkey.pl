@@ -6,14 +6,14 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.11 $ ';
+$Version = '$Revision: 1.12 $ ';
 
 
 sub PrintUsage {
   die "usage: $0 --depend --clobber --once --manual\n"
      ."          --classic --compress --example-config --noreport --notest\n"
      ."          --timestamp -tag TREETAG -t TREENAME\n"
-     ."          --configfile CONFIGFILENAME --version\n";
+     ."          --configfile CONFIGFILENAME --version --testonly\n";
 }
 
 &InitVars;
@@ -44,6 +44,7 @@ sub ParseArgs {
     $RunTest = 0       , next if $arg eq '--notest';
     $BuildOnce = 1     , next if $arg eq '--once';
     $UseTimeStamp = 1  , next if $arg eq '--timestamp';
+    $TestOnly = 1      , next if $arg eq '--testonly';
 
     if ($arg eq '-tag') {
       $BuildTag = shift @ARGV;
@@ -348,12 +349,11 @@ sub BuildIt {
   while (not $EarlyExit) {
     chdir $StartDir;
 
-    if (time - $LastTime < (60 * $BuildSleep)) {
+    if (!$TestOnly && (time - $LastTime < (60 * $BuildSleep))) {
       $SleepTime = (60 * $BuildSleep) - (time - $LastTime);
       print "\n\nSleeping $SleepTime seconds ...\n";
       sleep $SleepTime;
     }
-    
     $LastTime = time;
     
     if ($UseTimeStamp) {
@@ -404,24 +404,28 @@ sub BuildIt {
     mkdir $TopLevel, 0777;
     chdir $TopLevel || die "chdir($TopLevel): $!\n";
     
-    print "$CVS $CVSCO mozilla/client.mk\n";
-    print LOG "$CVS $CVSCO mozilla/client.mk\n";
-    open PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |" || die "open: $!\n";
-    while (<PULL>) {
-      print $_;
-      print LOG $_;
+    if (!$TestOnly) {
+      print "$CVS $CVSCO mozilla/client.mk\n";
+      print LOG "$CVS $CVSCO mozilla/client.mk\n";
+      open PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |" || die "open: $!\n";
+      while (<PULL>) {
+        print $_;
+        print LOG $_;
+      }
+      close PULL;
     }
-    close PULL;
     
     chdir $Topsrcdir || die "chdir $Topsrcdir: $!\n";
     
     # Let us delete the binaries before rebuilding
-    @felist = split /,/, $FE;
-    
-    foreach $fe (@felist) {            
-      if (&BinaryExists($fe)) {
-        print LOG "deleting existing binary\n";
-        &DeleteBinary($fe);
+    if (!$TestOnly) {
+      @felist = split /,/, $FE;
+      
+      foreach $fe (@felist) {            
+        if (&BinaryExists($fe)) {
+          print LOG "deleting existing binary\n";
+          &DeleteBinary($fe);
+        }
       }
     }
     
@@ -438,13 +442,15 @@ sub BuildIt {
       close MAKEDEPEND;
     } else {
       # Building clobber
-      print LOG "$Make -f client.mk checkout clean build 2>&1 |\n";
-      open MAKECLOBBER, "$Make -f client.mk checkout clean build 2>&1 |";
-      while (<MAKECLOBBER>) {
-        print $_;
-        print LOG $_;
+      if (!$TestOnly) {
+        print LOG "$Make -f client.mk checkout clean build 2>&1 |\n";
+        open MAKECLOBBER, "$Make -f client.mk checkout clean build 2>&1 |";
+        while (<MAKECLOBBER>) {
+          print $_;
+          print LOG $_;
+        }
+        close MAKECLOBBER;
       }
-      close MAKECLOBBER;
     }
     
     foreach $fe (@felist) {
@@ -452,6 +458,11 @@ sub BuildIt {
         if ($RunTest) {
           print LOG "export binary exists, build successful. Testing...\n";
           $BuildStatus = &RunSmokeTest($fe);
+          if ($BuildStatus == 0 && defined($BloatStats) && $BloatStats) {
+            $BuildStatusStr = 'success';
+            print LOG "export binary exists, build successful. Gathering bloat stats...\n";
+            $BuildStatus = &RunBloatTest($fe);
+          }
         } else {
           print LOG "export binary exists, build successful. Skipping test.\n";
           $BuildStatus = 0;
@@ -627,9 +638,10 @@ sub RunSmokeTest {
   # parent - wait $waittime seconds then check on child
   sleep $waittime;
   $status = waitpid($pid, WNOHANG());
+
   if ($status != 0) {
     print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
-    print LOG "----------- Output from apprunner --------------- \n";
+    print LOG "----------- failure output from apprunner for smoke tests --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
@@ -650,7 +662,7 @@ sub RunSmokeTest {
     $status = waitpid($pid, WNOHANG());
     last if $status != 0;
   }
-  print LOG "----------- Output from apprunner --------------- \n";
+  print LOG "----------- success output from apprunner for smoke tests --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
@@ -659,6 +671,84 @@ sub RunSmokeTest {
   close READRUNLOG;
   print LOG "--------------- End of Output -------------------- \n";
   return 0;
+}
+
+sub RunBloatTest {
+  my ($fe) = @_;
+  my $Binary;
+  my $status = 0;
+  $fe = 'x' unless defined $fe;
+
+  print "in runBloatTest\n";
+
+  $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
+  $ENV{MOZILLA_FIVE_HOME} = $ENV{LD_LIBRARY_PATH};
+
+  # Turn on ref counting to track leaks (bloaty tool).
+  $ENV{NSPR_LOG_MODULES} = "xpcomrefcnt:1";
+
+  $Binary = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
+  
+  print LOG "$Binary\n";
+  $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/apprunner";
+  $BinaryLog = $BuildDir . '/runlog';
+  
+  rename ($BinaryLog, "$BuildDir/runlog.prev");
+  
+  my $pid = fork;
+  unless ($pid) { # child
+    chdir $BinaryDir;
+    unlink $BinaryLog;
+    $SaveHome = $ENV{HOME};
+    $ENV{HOME} = $BinaryDir;
+    open STDOUT, ">$BinaryLog";
+    select STDOUT; $| = 1; # make STDOUT unbuffered
+    open STDERR,">&STDOUT";
+    select STDERR; $| = 1; # make STDERR unbuffered
+
+    $cmd = "$Binary -f bloaturls.txt";
+    exec ($cmd);
+
+    close STDOUT;
+    close STDERR;
+    $ENV{HOME} = $SaveHome;
+    die "Couldn't exec()";
+  }
+  
+  $status = waitpid($pid, 0);
+  print LOG "Client quit with status $status\n";
+  if ($status == 0) {
+    print LOG "$Binary has crashed or quit.  Turn the tree orange now.\n";
+    print LOG "----------- failure Output from apprunner for bloat stats --------------- \n";
+    open READRUNLOG, "$BinaryLog";
+    while (<READRUNLOG>) {
+      print $_;
+      print LOG $_;
+    }
+    close READRUNLOG;
+    print LOG "--------------- End of Output -------------------- \n";
+    return 333;
+  }
+
+  print LOG "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
+  open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/runlog.prev $BinaryLog |" or die "Unable to run bloatdiff.pl";
+  while (my $line = <DIFF>) {
+    print LOG $line;
+  }
+  close(DIFF);
+  print LOG "######################## END BLOAT STATISTICS\n</a>\n";
+  
+  print LOG "----------- success output from apprunner for bloat stats --------------- \n";
+  open READRUNLOG, "$BinaryLog";
+  while (<READRUNLOG>) {
+    print $_;
+    print LOG $_;
+  }
+  close READRUNLOG;
+  print LOG "--------------- End of Output -------------------- \n";
+  return 0;
+  
 }
 
 __END__
@@ -676,6 +766,7 @@ $ReportStatus = 1;  # Send results to server, or not
 $BuildOnce    = 0;  # Build once, don't send results to server
 $RunTest      = 1;  # Run the smoke test on successful build, or not
 $UseTimeStamp = 1;  # Use the CVS 'pull-by-timestamp' option, or not
+$TestOnly     = 0;  # Only run tests, don't pull/build
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake'; # Must be GNU make
