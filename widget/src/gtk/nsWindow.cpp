@@ -296,7 +296,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_POINTER_MOTION_MASK);
 
 
-  g_print("windowtype = %i\n", mWindowType);
   switch(mWindowType)
   {
   case eWindowType_dialog:
