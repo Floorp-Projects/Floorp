@@ -40,7 +40,9 @@
 #undef	HAVE_WEAK_MALLOC_SYMBOLS
 #define	HAVE_DLL
 #define USE_HPSHL
+#ifndef HAVE_STRERROR
 #define HAVE_STRERROR
+#endif
 
 #undef _PR_HAVE_ATOMIC_OPS
 
