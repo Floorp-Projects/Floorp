@@ -1,2 +1,3 @@
 calendar.jar:
-        skin/classic/browser/pref/Options.png                   (pref/Options.png)
+        skin/classic/calendar/pref/Options.png                   (pref/Options.png)
+        skin/classic/calendar/pref/pref.css                      (pref/pref.css)

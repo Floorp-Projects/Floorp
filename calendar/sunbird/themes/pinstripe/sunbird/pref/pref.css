@@ -1,0 +1,198 @@
+/*
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.org Code.
+#
+# The Initial Developer of the Original Code is
+# Doron Rosenberg.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@netscape.com> (Original Author)
+#   Kevin Gerich (webmail@kmgerich.com)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
+
+page {
+	font: menu;
+}
+
+page description {
+	font-size: 95%;
+}
+
+page button {
+	-moz-appearance: button-small;
+	font: message-box;
+}
+
+#pref-navigator {
+	font: menu !important;
+} 
+
+.listBox {
+  -moz-appearance: none;
+  margin: 2px 4px;
+  background: none;
+  border-top: 1px solid #A1A1A1;
+  border-right: 1px solid #C3C3C3;
+  border-bottom: 1px solid #DDDDDD;
+  border-left: 1px solid #C3C3C3;
+  background-color: #FFFFFF;
+}
+
+
+.buttonBox {
+  margin: 0px 5px 0px 0px !important;
+  -moz-border-left-colors: transparent;
+  -moz-border-bottom-colors: transparent;
+  -moz-border-top-colors: transparent;
+  background-color: transparent;
+}
+
+#prefsCategories {
+  -moz-border-right-colors: #A7A7A7;
+}
+
+.buttonBoxButton {
+  -moz-appearance: none;
+  border: none;
+  list-style-image: url("chrome://calendar/skin/pref/Options.png");
+  margin: 0px 0px;
+  padding: 6px 4px;
+  background-image: none;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  border-left: 1px solid transparent;
+  font: icon;
+}
+
+.buttonBoxButton > .button-box {
+  border: none !important;
+}
+
+.buttonBoxButton > .button-box > .button-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.buttonBoxButton[checked="true"] {
+  border: none;
+  background: url("chrome://global/skin/10pct_transparent_pixel.png") repeat;
+  border-top: 1px solid #A7A7A7;
+  border-bottom: 1px solid #A7A7A7;
+  border-left: 1px solid #A7A7A7;
+
+}
+
+#calendarGeneralButton   {-moz-image-region: rect(0px, 32px,  32px, 0px)}
+#calendarAlarmButton   {-moz-image-region: rect(0px, 64px,  32px, 32px)}
+#calendarPublishbutton  {-moz-image-region: rect(0px, 96px,  32px, 64px)}
+#calendarMiscaButton {-moz-image-region: rect(0px, 128px, 32px, 96px)}
+#calendarViewButton    {-moz-image-region: rect(0px, 160px, 32px, 128px)}
+#calendarTZButton       {-moz-image-region: rect(0px, 192px, 32px, 160px)}
+#calendarMiscbButton  {-moz-image-region: rect(0px, 224px, 32px, 192px)}
+
+.indent {
+  margin-left: 23px;
+  margin-right: 23px;
+}
+
+.uniWidthButton {
+  min-width: 8em;
+}
+
+/** Privacy Panel Expander Box **/
+#privacyCategories {
+  margin: 5px;
+  padding: 5px;
+}
+
+.settingsContainer {
+  padding: 3px 5px 5px 20px;
+}
+
+.expanderButton {
+  cursor: default;
+  -moz-appearance: treetwisty;
+  width: 10px; /* The image's width is 10 pixels */
+  font-weight: bold;
+  margin-top: -2px;
+}
+
+.expanderButton:hover:active,
+.expanderButton[open="true"]:hover:active  {
+  background: transparent;
+}
+
+expander {
+	border: 1px solid #a3a3a3;
+	margin: 0px 0px 3px 0px;
+}
+
+.expanderButton[open="true"]  {
+  -moz-appearance: treetwistyopen;
+}
+
+.header {
+	-moz-appearance: none !important;
+	margin: 6px;
+}
+
+/* Themes/Extensions Items */
+.themesLink {
+  margin-left: 5px;
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
+
+.themesLink:active {
+  color: red;
+}
+
+#previewImageContainer {
+  height: 93px;
+  padding: 1px;
+}
+
+#previewImage {
+  max-width: 355px;
+  min-width: 355px;
+  max-height: 85px;
+  min-height: 85px;
+}
+
+.extensionInfoArea {
+  background-color: -moz-Field !important;
+  height: 10em;
+}
+
+button  {
+  -moz-appearance: button-small;
+}

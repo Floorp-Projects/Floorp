@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/skin/pref/pref.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/pref/pref.css"?>
+<?xml-stylesheet href="chrome://calendar/skin/pref/pref.css"?>
 
 <!DOCTYPE window [
    <!ENTITY % prefDTD SYSTEM "chrome://browser/locale/pref/pref.dtd" >
@@ -90,13 +91,13 @@
 
   <hbox flex="1">
     <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
-      <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   url="calendarPref.xul"/>
-      <button id="catPrivacyButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.alarms.label;" url="alarmPrefs.xul"/>
-      <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.publish.label;"  url="publishPrefs.xul"/>
-      <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    url="pref-themes.xul"/>
-      <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       url="pref-extensions.xul"/>
-      <button id="catFontsButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.views.label;"     url="viewPrefs.xul"/>
-      <button id="catProxiesButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.timezone.label;"   url="timezonePrefs.xul"/>
+      <button id="calendarGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   url="calendarPref.xul"/>
+      <button id="calendarAlarmButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.alarms.label;" url="alarmPrefs.xul"/>
+      <button id="calendarPublishbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.publish.label;"  url="publishPrefs.xul"/>
+      <button id="calendarThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    url="pref-themes.xul"/>
+      <button id="calendarExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       url="pref-extensions.xul"/>
+      <button id="calendarViewButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.views.label;"     url="viewPrefs.xul"/>
+      <button id="calendarTZButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&calendar.timezone.label;"   url="timezonePrefs.xul"/>
     </vbox>
     
     <vbox flex="1">
