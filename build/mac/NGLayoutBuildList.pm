@@ -1314,7 +1314,7 @@ sub ProcessJarManifests()
     if ($main::build{extensions})
     {
       MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
-      MozJar::CreateJarFromManifest(":mozilla:extensions:cview:jar.mn", $chrome_dir, \%jars);
+      MozJar::CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
       # transformiix needs a jar.mn file
     }
     
