@@ -4493,6 +4493,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
 
+    void JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+    {
+        QualifiedName qName(publicNamespace, &world.identifiers[widenCString(name)]); 
+        createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
+    }
+
     void JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
         DEFINE_ROOTKEEPER(rk, name);
@@ -4894,21 +4900,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             delete lbe;
         }
         delete [] slots;
-    }
-
- /************************************************************************************
- *
- *  AlienInstance
- *
- ************************************************************************************/
-
-    bool AlienInstance::readProperty(Multiname *m, js2val *rval)
-    {
-        return false;
-    }
-
-    void AlienInstance::writeProperty(Multiname *m, js2val rval)
-    {
     }
 
 

@@ -788,12 +788,13 @@ public:
 
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
+    bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval);
+    bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
+    bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result);
+
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
-    virtual bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval);
     virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue);
     virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result);
-    virtual bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result);
     virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
     virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
     virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result);
@@ -841,14 +842,25 @@ public:
         : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
     
     virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)           { return false; }
-    virtual bool ReadPublic(JS2Metadata *meta, js2val *base, const String *name, Phase phase, js2val *rval)                         { return false; }
     virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)                           { return false; }
     virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
-    virtual bool WritePublic(JS2Metadata *meta, js2val base, const String *name, bool createIfMissing, js2val newValue)             { return false; }
     virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)                                     { return false; }
     virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)                       { return false; }
-    virtual bool DeletePublic(JS2Metadata *meta, js2val base, const String *name, bool *result)                                     { return false; }
     virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)                                       { return false; }
+};
+
+class JS2SpiderMonkeyClass : public JS2Class {
+public:
+    JS2SpiderMonkeyClass(const String *name)
+        : JS2Class(NULL, JS2VAL_VOID, NULL, false, true, name) { }
+
+    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
+    virtual bool BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval);
+    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
+    virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue);
+    virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result);
+    virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result);
+
 };
 
 class Package : public NonWithFrame {
@@ -1029,18 +1041,13 @@ public:
     virtual ~RegExpInstance()             { }
 };
 
-// A base class for objects from another world
-// to which read & write property calls are dispatched
-class AlienInstance : public JS2Object {
+class SpiderMonkeyInstance : public SimpleInstance {
 public:
-    AlienInstance(void *d) : JS2Object(AlienInstanceKind), uData(d) { }
+    SpiderMonkeyInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     void *uData;
 
-    virtual ~AlienInstance()    { }
-
-    bool readProperty(Multiname *m, js2val *rval);      // return true/false to signal whether the property is available
-    void writeProperty(Multiname *m, js2val rval);
+    virtual ~SpiderMonkeyInstance()    { }
 };
 
 // A helper class for 'for..in' statements
@@ -1482,6 +1489,7 @@ public:
     js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame);
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
+    void createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
     void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
     void createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
 
