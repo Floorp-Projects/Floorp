@@ -47,7 +47,7 @@
 #include "nsFontMetricsGTK.h"
 #include "nsIRenderingContext.h"
 #include "nsFreeType.h"
-#include "nsFontCatalog.h"
+#include "nsFT2FontCatalog.h"
 
 #ifdef DEBUG
 // set this to 1 to have the code draw the bounding boxes
@@ -211,19 +211,20 @@ protected:
 /* this simple record is used to model a given `installed' face */
 class nsFreeTypeFace {
 public:
-  nsFreeTypeFace(FontCatalogEntry_ *aFce);
+  nsFreeTypeFace(nsFontCatalogEntry *aFce);
   ~nsFreeTypeFace();
   static PRBool FreeFace(nsHashKey* aKey, void* aData, void* aClosure);
-  const char *GetFilename() { return nsFontCatalogGetFileName(mFce); }
+  const char *GetFilename() { return nsFT2FontCatalog::GetFileName(mFce); }
   int *GetEmbeddedBitmapHeights() { 
-                  return nsFontCatalogGetEmbeddedBitmapHeights(mFce); } ;
-  int GetFaceIndex() { return nsFontCatalogGetFaceIndex(mFce); }
-  int GetNumEmbeddedBitmaps() { return nsFontCatalogGetNumEmbeddedBitmaps(mFce); } ;
+                  return nsFT2FontCatalog::GetEmbeddedBitmapHeights(mFce); } ;
+  int GetFaceIndex() { return nsFT2FontCatalog::GetFaceIndex(mFce); }
+  int GetNumEmbeddedBitmaps() { 
+                  return nsFT2FontCatalog::GetNumEmbeddedBitmaps(mFce); } ;
   PRUint16 *GetCCMap();
 
 protected:
-  FontCatalogEntry_ *mFce;
-  PRUint16          *mCCMap;
+  nsFontCatalogEntry *mFce;
+  PRUint16           *mCCMap;
 
 };
 
@@ -241,9 +242,6 @@ public:
                             nsDrawingSurfaceGTK* aSurface, nscoord aX,
                             nscoord aY, const PRUnichar* aString,
                             PRUint32 aLength);
-#ifdef MOZ_MATHML
-  nsresult GetBoundingMetrics(const PRUnichar*, PRUint32, nsBoundingMetrics&);
-#endif
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -355,7 +353,7 @@ nsFreeType::FreeGlobals()
     (*nsFreeTypeFont::nsFT_Done_FreeType)(sFreeTypeLibrary);
     sFreeTypeLibrary = nsnull;
   }
-  nsFontCatalogFreeGlobals();
+  nsFT2FontCatalog::FreeGlobals();
   UnloadSharedLib();
   ClearFunctions();
   ClearGlobals();
@@ -377,7 +375,7 @@ nsFreeType::InitGlobals(void)
   if (!gFreeTypeFaces) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (!nsFontCatalogInitGlobals(nsFreeType::GetLibrary())) {
+  if (!nsFT2FontCatalog::InitGlobals(nsFreeType::GetLibrary())) {
     return NS_ERROR_FAILURE;
   }
   // setup the weighting table
@@ -476,7 +474,7 @@ nsFreeType::UnloadSharedLib()
 //
 ///////////////////////////////////////////////////////////////////////
 
-nsFreeTypeFace::nsFreeTypeFace(FontCatalogEntry_ *aFce)
+nsFreeTypeFace::nsFreeTypeFace(nsFontCatalogEntry *aFce)
 {
   mFce = aFce;
   mCCMap = nsnull;
@@ -501,7 +499,7 @@ PRUint16 *
 nsFreeTypeFace::GetCCMap()
 {
   if (!mCCMap) {
-    mCCMap = nsFontCatalogGetCCMap(mFce);
+    mCCMap = nsFT2FontCatalog::GetCCMap(mFce);
   }
   return mCCMap;
 }
@@ -625,10 +623,93 @@ nsFreeTypeFont::GetBoundingMetrics(const PRUnichar*   aString,
                                    PRUint32           aLength,
                                    nsBoundingMetrics& aBoundingMetrics)
 {
-  NS_ASSERTION(0, "need to code nsFreeTypeFont::GetBoundingMetrics");
-  return NS_ERROR_FAILURE;
+  return doGetBoundingMetrics(aString, aLength, 
+                              &aBoundingMetrics.leftBearing,
+                              &aBoundingMetrics.rightBearing,
+                              &aBoundingMetrics.ascent,
+                              &aBoundingMetrics.descent,
+                              &aBoundingMetrics.width);
 }
 #endif
+
+
+
+nsresult
+nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
+                                     PRInt32* aLeftBearing,
+                                     PRInt32* aRightBearing,
+                                     PRInt32* aAscent,
+                                     PRInt32* aDescent,
+                                     PRInt32* aWidth)
+{
+  *aLeftBearing = 0;
+  *aRightBearing = 0;
+  *aAscent = 0;
+  *aDescent = 0;
+
+  if (aLength < 1) {
+    return NS_ERROR_FAILURE;
+  }
+
+  FT_Pos pos = 0;
+  FT_BBox bbox;
+  // initialize to "uninitialized" values
+  bbox.xMin = bbox.yMin = 32000;
+  bbox.xMax = bbox.yMax = -32000;
+
+  // get the face/size from the FreeType cache
+  FT_Face face = getFTFace();
+  NS_ASSERTION(face, "failed to get face/size");
+  if (!face)
+    return NS_ERROR_FAILURE;
+
+  // get the text size
+  PRUint32 i;
+  for (i=0; i<aLength; i++) {
+    FT_UInt glyph_index;
+    FT_Glyph glyph;
+    FT_Error error;
+    FT_BBox glyph_bbox;
+    FT_Pos advance;
+    glyph_index = (*nsFreeTypeFont::nsFT_Get_Char_Index)(face, 
+                                  (FT_ULong)aString[i]);
+    NS_ASSERTION(glyph_index,"failed to get glyph");
+    if (glyph_index) {
+      error = (*nsFreeTypeFont::nsFTC_Image_Cache_Lookup)(
+                                   nsFreeType::GetImageCache(),
+                                   &mImageDesc, glyph_index, &glyph);
+      NS_ASSERTION(error==0,"error loading glyph");
+    }
+    if ((glyph_index) && (!error)) {
+      (*nsFreeTypeFont::nsFT_Glyph_Get_CBox)(glyph, ft_glyph_bbox_pixels, 
+                                             &glyph_bbox);
+      advance = FT_16_16_TO_REG(glyph->advance.x);
+    }
+    else {
+      // allocate space to draw an empty box in
+      GetFallbackGlyphMetrics(&glyph_bbox, face);
+      advance = glyph_bbox.xMax + 1;
+    }
+    bbox.xMin = MIN(pos+glyph_bbox.xMin, bbox.xMin);
+    bbox.xMax = MAX(pos+glyph_bbox.xMax, bbox.xMax);
+    bbox.yMin = MIN(glyph_bbox.yMin, bbox.yMin);
+    bbox.yMax = MAX(glyph_bbox.yMax, bbox.yMax);
+    pos += advance;
+  }
+  // this is different from the draw routine
+  // bbox.xMax = MAX(bbox.xMax, pos+1);
+
+  // check we got at least one size
+  if (bbox.xMin > bbox.xMax)
+    bbox.xMin = bbox.xMax = bbox.yMin = bbox.yMax = 0;
+
+  *aLeftBearing  = bbox.xMin;
+  *aRightBearing = bbox.xMax;
+  *aAscent       = bbox.yMax;
+  *aDescent      = bbox.yMin;
+  *aWidth        = pos;
+  return NS_OK;
+}
 
 GdkFont*
 nsFreeTypeFont::GetGDKFont()
@@ -693,7 +774,7 @@ PRUint32
 nsFreeTypeFont::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
                            PRUnichar* aDest, PRUint32 aDestLen)
 {
-  NS_ASSERTION(0, "should not be calling nsFreeTypeXImage::Convert");
+  NS_ASSERTION(0, "should not be calling nsFreeTypeFont::Convert");
   return 0;
 }
 
@@ -879,7 +960,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
                             nscoord aY, const PRUnichar* aString,
                             PRUint32 aLength)
 {
-  PRUint32 i;
+  //FREETYPE_FONT_PRINTF(("nsFreeTypeXImage::DrawString"));
 
 #if DEBUG_SHOW_GLYPH_BOX
   PRUint32 x, y;
@@ -892,70 +973,36 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     return 0;
   }
 
-  FT_UInt glyph_index;
-  FT_Glyph glyph;
-  FT_Pos pos = 0;
-  FT_Pos advance;
-  FT_Error error;
-  Display *dpy = GDK_DISPLAY();
-  FT_BBox glyph_bbox;
-
-  //FREETYPE_FONT_PRINTF(("nsFreeTypeXImage::DrawString"));
-  FT_BBox bbox;
-  // initialize to "empty" values
-  bbox.xMin = bbox.yMin = 32000;
-  bbox.xMax = bbox.yMax = -32000;
-
   // get the face/size from the FreeType cache
   FT_Face face = getFTFace();
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return 0;
 
-  // get the text size
-  for (i=0; i<aLength; i++) {
-    glyph_index = (*nsFreeTypeFont::nsFT_Get_Char_Index)(face, 
-                                  (FT_ULong)aString[i]);
-    NS_ASSERTION(glyph_index,"failed to get glyph");
-    if (glyph_index) {
-      error = (*nsFreeTypeFont::nsFTC_Image_Cache_Lookup)(
-                                   nsFreeType::GetImageCache(),
-                                   &mImageDesc, glyph_index, &glyph);
-      NS_ASSERTION(error==0,"error loading glyph");
-    }
-    if ((glyph_index) && (!error)) {
-      (*nsFreeTypeFont::nsFT_Glyph_Get_CBox)(glyph, ft_glyph_bbox_pixels, 
-                                             &glyph_bbox);
-      advance = FT_16_16_TO_REG(glyph->advance.x);
-    }
-    else {
-      // allocate space to draw an empty box in
-      GetFallbackGlyphMetrics(&glyph_bbox, face);
-      advance = glyph_bbox.xMax + 1;
-    }
-    bbox.xMin = MIN(pos+glyph_bbox.xMin, bbox.xMin);
-    bbox.xMax = MAX(pos+glyph_bbox.xMax, bbox.xMax);
-    bbox.yMin = MIN(glyph_bbox.yMin, bbox.yMin);
-    bbox.yMax = MAX(glyph_bbox.yMax, bbox.yMax);
-    pos += advance;
-  }
-  bbox.xMax = MAX(bbox.xMax, pos+1);
+  nsresult rslt;
+  PRInt32 leftBearing, rightBearing, ascent, descent, width;
+  rslt = doGetBoundingMetrics(aString, aLength, &leftBearing, &rightBearing, 
+                              &ascent, &descent, &width);
+  if (NS_FAILED(rslt))
+    return 0;
 
-  // check we got at least one size
-  if (bbox.xMin > bbox.xMax)
-    bbox.xMin = bbox.xMax = bbox.yMin = bbox.yMax = 0;
+  // make sure we bring down enough background for blending
+  rightBearing = MAX(rightBearing, width+1);
 
-  PRInt32 x_origin = MAX(0, -bbox.xMin); // offset in the ximage to the x origin
-  PRInt32 y_origin = bbox.yMax;          // offset in the ximage to the x origin
+  // offset in the ximage to the x origin
+  PRInt32 x_origin = MAX(0, -leftBearing);
+  // offset in the ximage to the x origin
+  PRInt32 y_origin = ascent;
   PRInt32 x_pos = x_origin;
 
-  int image_width  = x_origin + bbox.xMax;
-  int image_height = y_origin - MIN(bbox.yMin, 0);
+  int image_width  = x_origin + rightBearing;
+  int image_height = y_origin - MIN(descent, 0);
   if ((image_width<=0) || (image_height<=0)) {
     // if we do not have any pixels then no point in trying to draw
     // eg: the space char has 0 height
     return 0;
   }
+  Display *dpy = GDK_DISPLAY();
   Drawable win = GDK_WINDOW_XWINDOW(aSurface->GetDrawable());
   GC gc = GDK_GC_XGC(aContext->GetGC());
   XGCValues values;
@@ -971,7 +1018,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   XDrawLine(dpy, win, DefaultGC(dpy, 0), aX, aY-2, aX, aY+2);
   // show width
   XDrawLine(dpy, win, DefaultGC(dpy, 0), aX-x_origin,  aY-y_origin-2, 
-                                         aX+bbox.xMax, aY-y_origin-2);
+                                         aX+rightBearing, aY-y_origin-2);
 #endif
 
   //
@@ -986,10 +1033,10 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     // complain if the requested area is not completely off screen
     int win_width = DisplayWidth(dpy, screen);
     int win_height = DisplayHeight(dpy, screen);
-    if (((int)(aX-bbox.xMin+image_width) > 0)  // not hidden to left
-        && ((int)(aX-bbox.xMin) < win_width)   // not hidden to right
-        && ((int)(aY-bbox.yMax+image_height) > 0)// not hidden to top
-        && ((int)(aY-bbox.yMax) < win_height))   // not hidden to bottom
+    if (((int)(aX-leftBearing+image_width) > 0)  // not hidden to left
+        && ((int)(aX-leftBearing) < win_width)   // not hidden to right
+        && ((int)(aY-ascent+image_height) > 0)// not hidden to top
+        && ((int)(aY-ascent) < win_height))   // not hidden to bottom
     {
       NS_ASSERTION(sub_image, "failed to get the image");
     }
@@ -1008,14 +1055,19 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     if (x%4==0) (*blendPixelFunc)(sub_image, x_origin, x, black, 255/2);
   // y origin
   for (y=0; y<(unsigned int)image_width; y++)
-    if (y%4==0) (*blendPixelFunc)(sub_image, y, bbox.yMax-1, black, 255/2);
+    if (y%4==0) (*blendPixelFunc)(sub_image, y, ascent-1, black, 255/2);
 #endif
 
   //
   // Get aa glyphs and blend with background
   //
   blendGlyph blendGlyph = nsX11AlphaBlend::GetBlendGlyph();
+  PRUint32 i;
   for (i=0; i<aLength; i++) {
+    FT_UInt glyph_index;
+    FT_Glyph glyph;
+    FT_Error error;
+    FT_BBox glyph_bbox;
     glyph_index = (*nsFreeTypeFont::nsFT_Get_Char_Index)(face, 
                                                    (FT_ULong)aString[i]);
     if (glyph_index) {
@@ -1032,14 +1084,14 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
       GetFallbackGlyphMetrics(&glyph_bbox, face);
       int x, y, w = glyph_bbox.xMax, h = glyph_bbox.yMax;
       for (x=1; x<w; x++) {
-        XPutPixel(sub_image, x_pos+x, bbox.yMax-1,   values.foreground);
-        XPutPixel(sub_image, x_pos+x, bbox.yMax-h, values.foreground);
+        XPutPixel(sub_image, x_pos+x, ascent-1,   values.foreground);
+        XPutPixel(sub_image, x_pos+x, ascent-h, values.foreground);
       }
       for (y=1; y<h; y++) {
-        XPutPixel(sub_image, x_pos+1, bbox.yMax-y, values.foreground);
-        XPutPixel(sub_image, x_pos+w-1, bbox.yMax-y, values.foreground);
+        XPutPixel(sub_image, x_pos+1, ascent-y, values.foreground);
+        XPutPixel(sub_image, x_pos+w-1, ascent-y, values.foreground);
         x = (y*(w-2))/h;
-        XPutPixel(sub_image, x_pos+x+1, bbox.yMax-y,   values.foreground);
+        XPutPixel(sub_image, x_pos+x+1, ascent-y,   values.foreground);
       }
       x_pos += w + 1;
       continue;
@@ -1058,7 +1110,7 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     //
     // blend the aa-glyph onto the background
     //
-    NS_ASSERTION(bbox.yMax>=glyph_bbox.yMax,"glyph too tall");
+    NS_ASSERTION(ascent>=glyph_bbox.yMax,"glyph too tall");
     NS_ASSERTION(x_pos>=-aaglyph.GetLBearing(),"glyph extends too far to left");
     if (-aaglyph.GetLBearing() > x_pos)
       printf("x_pos=%d, aaglyph.GetLBearing()=%d\n", 
@@ -1069,23 +1121,23 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   // of the main area (negative LBearing)
   if (aaglyph.GetLBearing() < 0) {
     DEBUG_AADRAWBOX(sub_image, x_pos + aaglyph.GetLBearing(), 
-                    bbox.yMax-glyph_bbox.yMax, 
+                    ascent-glyph_bbox.yMax, 
                     -aaglyph.GetLBearing(), glyph_bbox.yMax, 255,0,0, 255/4);
   }
   // draw box around main glyph area
-  DEBUG_AADRAWBOX(sub_image, x_pos, bbox.yMax-glyph_bbox.yMax, 
+  DEBUG_AADRAWBOX(sub_image, x_pos, ascent-glyph_bbox.yMax, 
                   aaglyph.GetAdvance(), glyph_bbox.yMax, 0,255,0, 255/4);
   // draw box around part of glyph that extends to the right
   // of the main area (negative LBearing)
   if (aaglyph.GetRBearing() > (int)aaglyph.GetAdvance()) {
     DEBUG_AADRAWBOX(sub_image, x_pos + aaglyph.GetAdvance(), 
-                    bbox.yMax-glyph_bbox.yMax, 
+                    ascent-glyph_bbox.yMax, 
                     aaglyph.GetRBearing()-aaglyph.GetAdvance(), 
                     glyph_bbox.yMax, 0,0,255, 255/4);
   }
 #endif
     (*blendGlyph)(sub_image, &aaglyph, sLinearWeightTable, color,
-                  x_pos + aaglyph.GetLBearing(), bbox.yMax-glyph_bbox.yMax);
+                  x_pos + aaglyph.GetLBearing(), ascent-glyph_bbox.yMax);
 
     x_pos += aaglyph.GetAdvance();
   }
@@ -1093,23 +1145,12 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   //
   // Send it to the display
   //
-  XPutImage(dpy, win, gc, sub_image, 0, 0, aX-x_origin , aY-bbox.yMax,
+  XPutImage(dpy, win, gc, sub_image, 0, 0, aX-x_origin , aY-ascent,
             image_width, image_height);
   XDestroyImage(sub_image);
 
-  return pos;
+  return width;
 }
-
-#ifdef MOZ_MATHML
-nsresult
-nsFreeTypeXImage::GetBoundingMetrics(const PRUnichar*   aString,
-                                   PRUint32           aLength,
-                                   nsBoundingMetrics& aBoundingMetrics)
-{
-  NS_ASSERTION(0, "need to code nsFreeTypeXImage::GetBoundingMetrics");
-  return NS_ERROR_FAILURE;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -1152,11 +1193,11 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
 }
 
 nsFreeTypeFace *
-nsFreeTypeGetFaceID(FontCatalogEntry_ *aFce)
+nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce)
 {
-  nsCAutoString faceTag(nsFontCatalogGetFileName(aFce));
+  nsCAutoString faceTag(nsFT2FontCatalog::GetFileName(aFce));
   char buf[32];
-  sprintf(buf, ".%d", nsFontCatalogGetFaceIndex(aFce));
+  sprintf(buf, ".%d", nsFT2FontCatalog::GetFaceIndex(aFce));
   faceTag.Append(buf);
   nsCStringKey key(faceTag);
   nsFreeTypeFace *face = (nsFreeTypeFace *)gFreeTypeFaces->Get(&key);

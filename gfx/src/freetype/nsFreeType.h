@@ -41,15 +41,15 @@ public:
 #include FT_CACHE_H
 #include FT_CACHE_IMAGE_H
 #include FT_TRUETYPE_TABLES_H
+#include "nsFT2FontCatalog.h"
 
 typedef struct FT_FaceRec_*  FT_Face;
 typedef void (*blitGlyph) (XImage *, FT_BitmapGlyph, nscolor, int, int);
 typedef void (*blendPixel)(XImage *, int, int, nscolor, int);
 
 class nsFreeTypeFace;
-struct FontCatalogEntry_;
 
-nsFreeTypeFace * nsFreeTypeGetFaceID(FontCatalogEntry_ *aFce);
+nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
 void     nsFreeTypeGetFontNames(const char* aPattern, nsFontNodeArray* aNodes);
 
 //
@@ -119,6 +119,14 @@ public:
                                       PRUint32           aLength,
                                       nsBoundingMetrics& aBoundingMetrics);
 #endif
+  virtual nsresult doGetBoundingMetrics(const PRUnichar*   aString,
+                                        PRUint32 aLength,
+                                        PRInt32* aLeftBearing,
+                                        PRInt32* aRightBearing,
+                                        PRInt32* aAscent,
+                                        PRInt32* aDescent,
+                                        PRInt32* aWidth);
+
   virtual PRUint32 Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
                            PRUnichar* aDest, PRUint32 aDestLen);
 
