@@ -249,7 +249,10 @@ nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredSize.width = area.width;
     aDesiredSize.height= area.height;
   } else {
-    framesetParent->GetSizeOfChild(this, aDesiredSize);
+    nsSize size;
+    framesetParent->GetSizeOfChild(this, size);
+    aDesiredSize.width  = size.width;
+    aDesiredSize.height = size.height;
   } 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -272,7 +275,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   return parent;
 }
 
-void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsReflowMetrics& aSize, nsPoint& aCellIndex)
+void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize, nsPoint& aCellIndex)
 {
   PRInt32 row = aIndexInParent / mNumCols;
   PRInt32 col = aIndexInParent - (row * mNumCols); // remainder from dividing index by mNumCols
@@ -288,7 +291,7 @@ void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsReflowMetri
 
 
 void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild, 
-                                         nsReflowMetrics& aSize)
+                                         nsSize& aSize)
 {
   // Reflow only creates children frames for <frameset> and <frame> content.
   // this assumption is used here
@@ -311,6 +314,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
+  printf("frameset paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
@@ -332,8 +336,10 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
       return;
     }
   }
-  aNumSpecs = 1;  
-  *aSpecs = nsnull;
+  aNumSpecs = 1; 
+  *aSpecs = new nsFramesetSpec[1];
+  aSpecs[0]->mUnit  = eFramesetUnit_Free;
+  aSpecs[0]->mValue = 1;
 }
 
 /**
@@ -425,17 +431,17 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
 
-  if (mNumRows > 1) {
-    CalculateRowCol(&aPresContext, aReflowState.maxSize.width, mNumRows, mRowSpecs, mRowSizes);
-  }
-  if (mNumCols > 1) {
-    CalculateRowCol(&aPresContext, aReflowState.maxSize.height, mNumCols, mColSpecs, mColSizes);
-  }
+  nscoord width  = (aDesiredSize.width <= aReflowState.maxSize.width)
+    ? aDesiredSize.width : aReflowState.maxSize.width;
+  nscoord height = (aDesiredSize.height <= aReflowState.maxSize.height)
+    ? aDesiredSize.height : aReflowState.maxSize.height;
 
+  CalculateRowCol(&aPresContext, width, mNumCols, mColSpecs, mColSizes);
+  CalculateRowCol(&aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
 
   // create the children frames; skip those which aren't frameset or frame
-  mChildCount = 0;
   if (firstTime) {
+    mChildCount = 0;
     nsIFrame* lastFrame = nsnull;
     nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
     PRInt32 numChildren = content->ChildCount();
@@ -468,19 +474,20 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
   PRInt32 i       = 0;
   nsPoint offset(0,0);
   for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
-    nsReflowMetrics metrics(nsnull);
+    nsSize size;
     nsPoint cellIndex;
-    GetSizeOfChildAt(i, metrics, cellIndex);
+    GetSizeOfChildAt(i, size, cellIndex);
+    nsReflowState reflowState(child, aReflowState, size);
 
-    nsSize size(metrics.width, metrics.height);
-    nsReflowState childReflowState(child, aReflowState, size);
     child->WillReflow(aPresContext);
-    nsReflowMetrics ignore(nsnull);
-    aStatus = ReflowChild(mFirstChild, &aPresContext, ignore, childReflowState);
+    nsReflowMetrics metrics(nsnull);
+    metrics.width = size.width;
+    metrics.height= size.height;
+    aStatus = ReflowChild(child, &aPresContext, metrics, reflowState);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
     // Place and size the child
-    nsRect rect(offset.x, offset.y, metrics.width, metrics.height);
+    nsRect rect(offset.x, offset.y, size.width, size.height);
     child->SetRect(rect);
     child->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
