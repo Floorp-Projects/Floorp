@@ -328,6 +328,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
     case eCSSUnit_Auto:         aBuffer.Append("auto");     break;
     case eCSSUnit_Inherit:      aBuffer.Append("inherit");  break;
     case eCSSUnit_None:         aBuffer.Append("none");     break;
+    case eCSSUnit_Normal:       aBuffer.Append("normal");   break;
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:
     case eCSSUnit_Attr:
