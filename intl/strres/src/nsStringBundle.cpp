@@ -363,11 +363,6 @@ nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey,
     nsIRegistry::GetIID(), (nsISupports**)&registry);
   if (NS_FAILED(res)) goto done;
 
-  // open the registry
-  res = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(res)) goto done;
-
   // get subtree
   res = registry->GetSubtree(nsIRegistry::Common,  
     aRegistryKey, &uconvKey);
@@ -428,7 +423,6 @@ done1:
   // finish and clean up
 done:
   if (registry != NULL) {
-    registry->Close();
     nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
   if (sbServ != NULL) nsServiceManager::ReleaseService(
