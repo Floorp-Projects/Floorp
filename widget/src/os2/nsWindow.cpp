@@ -2421,19 +2421,24 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
         scrollEvent.isMeta = PR_FALSE;
         switch (SHORT2FROMMP(mp2)) {
           case SB_LINEUP:
-            scrollEvent.deltaLines = -1;
+            scrollEvent.isPageScroll = PR_FALSE;
+            scrollEvent.delta = -1;
             break;
           case SB_LINEDOWN:
-            scrollEvent.deltaLines = 1;
+            scrollEvent.isPageScroll = PR_FALSE;
+            scrollEvent.delta = 1;
             break;
           case SB_PAGEUP:
-            scrollEvent.deltaLines = -10; /* OS2TODO ??? */
+            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.delta = -1;
             break;
           case SB_PAGEDOWN:
-            scrollEvent.deltaLines = 10; /* OS2TODO ??? */
+            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.delta = 1;
             break;
           default:
-            scrollEvent.deltaLines = 0;
+            scrollEvent.isPageScroll = PR_FALSE;
+            scrollEvent.delta = 0;
             break;
         }
         DispatchWindowEvent(&scrollEvent);
@@ -2455,18 +2460,23 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
         scrollEvent.isMeta = PR_FALSE;
         switch (SHORT2FROMMP(mp2)) {
           case SB_LINELEFT:
-            scrollEvent.deltaColumns = -1;
+            scrollEvent.isPageScroll = PR_FALSE;
+            scrollEvent.delta = -1;
             break;
           case SB_LINERIGHT:
-            scrollEvent.deltaColumns = 1;
+            scrollEvent.isPageScroll = PR_FALSE;
+            scrollEvent.delta = 1;
             break;
           case SB_PAGELEFT:
-            scrollEvent.deltaColumns = -10; /* OS2TODO ??? */
+            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.delta = -1;
             break;
           case SB_PAGERIGHT:
-            scrollEvent.deltaColumns = 10; /* OS2TODO ??? */
+            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.deltaColumns = 1;
             break;
           default:
+            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.deltaColumns = 0;
             break;
         }

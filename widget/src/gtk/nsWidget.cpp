@@ -1935,10 +1935,11 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
     case 4:
     case 5:
+      scrollEvent.isPageScroll = PR_FALSE;
       if (aGdkButtonEvent->button == 4)
-        scrollEvent.deltaLines = -3;
+        scrollEvent.delta = -3;
       else
-        scrollEvent.deltaLines = 3;
+        scrollEvent.delta = 3;
 
       scrollEvent.message = NS_MOUSE_SCROLL;
       scrollEvent.widget = this;
