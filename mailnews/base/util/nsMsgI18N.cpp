@@ -273,7 +273,7 @@ char * nsMsgI18NGetDefaultMailCharset()
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
       char *prefValue;
-	  res = prefs->CopyCharPref("intl.character_set_name", &prefValue);
+	  res = prefs->CopyCharPref("mailnews.send_default_charset", &prefValue);
 	  
 	  if (NS_SUCCEEDED(res)) 
 	  {

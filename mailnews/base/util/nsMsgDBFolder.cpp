@@ -200,7 +200,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 		char *prefCharset = nsnull;
 		if (NS_SUCCEEDED(rv))
 		{
-			rv = prefs->CopyCharPref("intl.character_set_name", &prefCharset);
+			rv = prefs->CopyCharPref("mailnews.send_default_charset", &prefCharset);
 		}
   
 		nsAutoString prefCharsetStr;
