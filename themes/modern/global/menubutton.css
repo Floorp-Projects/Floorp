@@ -32,20 +32,20 @@
    ::::: */
 
 menubutton {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#menubutton-single");
   margin: 3px 5px 3px 5px;
-  border: 1px solid #000000;
-  font: menu;
 }
 
 menubutton[disabled="true"] {
-  border-color: #85959E;
   color: #85959E;
 }
 
-.menubutton-internal-box {
-  border: 1px outset #C2D0D0;
-  padding: 1px 2px 1px 2px;
-  vertical-align: middle;
+.menubutton-single-button {
+  margin: 0px;
+}
+
+.menubutton-single-dropmarker {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
 /* ::::: dual menubutton ::::::::::
@@ -67,5 +67,13 @@ menubutton[disabled="true"] {
 
 .menubutton-dual > menupopup {
   min-width: 0px;
+}
+
+/* ::::: plain menubutton ::::: */
+
+menubutton.plain {
+  margin: 0px !important;
+  border: none !important;
+  padding: 0px !important;
 }
 

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
@@ -31,23 +31,20 @@
 
 #sidebar-box {
   margin-top: 0px;
-  border-top: 1px solid #92ABC9;
-  border-right: 1px solid #000000;
+  border-top: 1px solid #C7D0D9;
+  background-color: #C7D0D9;
 }
 
-.sidebar-splitter {
-  border-left: none;
+#sidebar-title-box {
+  border-bottom: none;
 }
 
 /* ::::: sidebar header ::::: */
 
 .sidebarheader-main {
-  padding: 0px 0px 2px 18px;
-  background-color: #5C7794;
-  color: #FFFFFF;
-}
-
-.sidebarheader-main > .sidebar-header-text {
+  padding: 2px 0px 2px 16px;
+  background-color: #C7D0D9;
+  color: #000000;
   font-weight: bold;
 }
 
@@ -58,14 +55,16 @@
 /* ..... picker button ..... */
 
 #sidebar-panel-picker {
-  margin: 1px;
-  border: 1px solid #5C7794;
+  margin-right: 1px;
+  margin-top: 1px;
+  border: 1px solid transparent;
   padding: 2px;
-  color: #FFFFFF;
+  color: #3B414F;
+  -moz-border-radius: 0px;
 }
 
 #sidebar-panel-picker:hover {
-  border: 1px outset #5C7794;
+  border: 1px outset #94ACC1;
 }
 
 #sidebar-panel-picker[menuactive="true"],
@@ -78,8 +77,8 @@
 }
 
 #sidebar-panel-picker > .menubutton-internal-box > .menubutton-single-icon {
-  padding-left: 2px;
   list-style-image: url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
+  padding-left: 2px;
 }
 
 #sidebar-panel-picker > .menu-text {
@@ -108,96 +107,129 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 /* ::::: sidebar panel ::::: */
 
 .iframe-panel {
-  border-bottom: 1px solid #C1C8D5;
+  border-bottom: 1px solid #94ACC1;
 }
 
 /* ::::: sidebar tabs ::::: */
 
 /* ..... normal tabs ..... */
-
+ 
 .box-texttab {
   -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebar-tab");
-  border-bottom: 3px solid #5C7794;
-  background-color: #5C7794;
+  border-bottom: 3px solid #94ACC1;
+  min-height: 22px;
+  background-color: #94ACC1;
+  color: #3B414F;
+}
+   
+.sidebar-tab-leftcap {
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-lftcap.gif") no-repeat top;
+  width: 11px;
 }
 
-.box-texttab-left {
-  width: 15px;
-  min-height: 18px;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-lft.gif") no-repeat top;
+.sidebar-tab-text {
+  margin-top: 6px;
+}
+  
+.sidebar-tab-mid {
+  min-width: 100px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-mid.gif") repeat-x top;
 }
 
-.box-texttab-text-container {
-  padding-top: 4px;
-  background-color: #5C7794;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dark.gif") repeat-x;
-  color: #FFFFFF;
-  vertical-align: top !important;
+.sidebar-tab-rightcap {
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-ritcap.gif") no-repeat top;
+  width: 18px;
 }
 
-.box-texttab-right {
-  width: 30px;
-  min-height: 18px;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-rit.gif") no-repeat top;
+.sidebar-tab-right {
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-rit.gif") repeat-x top;
 }
 
-/* ..... top tab ..... */
+/* ..... active state ..... */
 
-.box-texttab[top-panel="true"] {
-  background-color: #5C7794;
+.box-texttab:hover:active > .sidebar-tab-leftcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-lftcap-act.gif");
+}
+
+ .box-texttab:hover:active > .sidebar-tab-mid {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-mid-act.gif");
+}
+
+ .box-texttab:hover:active > .sidebar-tab-rightcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-ritcap-act.gif");
 }
 
 /* ..... bottom tab ..... */
 
 .box-texttab[last-panel="true"] {
-  border-bottom: 7px solid #5C7794;
-}
+  border-bottom: 1px solid #1D1F26;
+  padding-bottom: 7px;
+  background-color: #94ACC1;
+} 
 
 .box-texttab[last-panel="true"][selected="true"] {
-  border-bottom: none;
-}
+  border-bottom-width: 3px;
+} 
 
 /* ..... selected tab ..... */
 
 .box-texttab[selected="true"] {
-  border-bottom: none;
-  min-height: 24px;
+  border-bottom: 2px solid black;
+  min-height: 23px;
+  background-color: #587B98;
+  color: #ffffff;
+}
+    
+.sidebar-tab-leftcap[selected="true"],
+.box-texttab:hover:active > .sidebar-tab-leftcap[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-lftcap.gif");
 }
 
-.box-texttab[selected="true"] > .box-texttab-left {
-  background: url("chrome://communicator/skin/sidebar/sbtab-lod-lft.gif") #C1C8D5 no-repeat top;
+.sidebar-tab-mid[selected="true"],
+.box-texttab:hover:active > .sidebar-tab-mid[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-mid.gif");
 }
 
-.box-texttab[selected="true"] > .box-texttab-text-container {
-  background: url("chrome://communicator/skin/sidebar/sbtab-light.gif") #C1C8D5 repeat-x;
-  color: #000000;
+.sidebar-tab-rightcap[selected="true"],
+.box-texttab:hover:active > .sidebar-tab-rightcap[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-ritcap.gif");
 }
 
-.box-texttab[selected="true"] > .box-texttab-right {
-  background: url("chrome://communicator/skin/sidebar/sbtab-lod-rit.gif") #C1C8D5 no-repeat top;
-}
+.sidebar-tab-right[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-rit.gif");
+}    
 
 /* ..... first tab after selected ..... */
 
 .box-texttab[first-panel-after-selected="true"] {
-  border-top: 1px solid #E7EBF7;
-  background-color: #C1C8D5;
+  min-height: 23px;
 }
 
-.box-texttab[first-panel-after-selected="true"]  > .box-texttab-left {
-  margin-top: 3px;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dol-lft.gif") #5C7794 no-repeat top;
+.sidebar-tab-leftcap[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-lftcap.gif");
 }
 
-.box-texttab[first-panel-after-selected="true"]
-    > .box-texttab-text-container
-{
-  border-top: 3px solid #C1C8D5;
-  background-color: #5C7794;
+.sidebar-tab-mid[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-mid.gif");
+}
+    
+.sidebar-tab-rightcap[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-ritcap.gif");
 }
 
-.box-texttab[first-panel-after-selected="true"]  > .box-texttab-right {
-  margin-top: 3px;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dol-rit.gif") #5C7794 no-repeat top;
+.sidebar-tab-right[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-rit.gif");
+}
+    
+.box-texttab:hover:active > .sidebar-tab-leftcap[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-lftcap-act.gif");
+}
+
+.box-texttab:hover:active > .sidebar-tab-mid[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-mid-act.gif");
+}
+    
+.box-texttab:hover:active > .sidebar-tab-rightcap[first-panel-after-selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-ritcap-act.gif");
 }
 

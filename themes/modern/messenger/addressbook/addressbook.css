@@ -35,108 +35,108 @@
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard.gif");
 }
 
-#button-newcard:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-hov.gif");
-}
-
-#button-newcard:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-act.gif");
-}
-
 #button-newcard[disabled="true"],
 #button-newcard[disabled="true"]:hover,
 #button-newcard[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-dis.gif");
+} 
+
+#button-newcard:hover {
+  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-hov.gif");
+} 
+
+#button-newcard:hover:active {
+  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-act.gif");
 }
 
 #button-newlist {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist.gif");
 }
 
-#button-newlist:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-hov.gif");
-}
-
-#button-newlist:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-act.gif");
-}
-
 #button-newlist[disabled="true"],
 #button-newlist[disabled="true"]:hover,
 #button-newlist[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-dis.gif");
+} 
+
+#button-newlist:hover {
+  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-hov.gif");
+} 
+
+#button-newlist:hover:active {
+  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-act.gif");
 }
 
 #button-editcard {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit.gif");
 }
 
+#button-editcard[disabled="true"],
+#button-editcard[disabled="true"]:hover,
+#button-editcard[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-dis.gif");
+} 
+
 #button-editcard:hover {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-hov.gif");
-}
+} 
 
 #button-editcard:hover:active {
   list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-act.gif");
 }
 
-#button-editcard[disabled="true"],
-#button-editcard[disabled="true"]:hover,
-#button-editcard[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-dis.gif");
-}
-
 #button-newmessage {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newmsgab.gif");
-}
-
-#button-newmessage:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newmsgab-hov.gif");
-}
-
-#button-newmessage:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newmsgab-act.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
 }
 
 #button-newmessage[disabled="true"],
 #button-newmessage[disabled="true"]:hover,
 #button-newmessage[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newmsgab-dis.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
+} 
+
+#button-newmessage:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
+} 
+
+#button-newmessage:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
 }
 
 #button-delete {
-  list-style-image: url("chrome://messenger/skin/btn1/trash.gif");
-}
-
-#button-delete:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-hov.gif");
-}
-
-#button-delete:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-act.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/delete.gif");
 }
 
 #button-delete[disabled="true"],
 #button-delete[disabled="true"]:hover,
 #button-delete[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-dis.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/delete-dis.gif");
+} 
+
+#button-delete:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/delete-hov.gif");
+} 
+
+#button-delete:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/delete-act.gif");
 }
 
 #button-stop {
   list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
 }
 
-#button-stop:hover {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
-}
-
-#button-stop:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
-}
-
 #button-stop[disabled="true"],
 #button-stop[disabled="true"]:hover,
 #button-stop[disabled="true"]:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
+} 
+
+#button-stop:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
+} 
+
+#button-stop:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
 }
 
 /* ::::: AB Directory tree ::::: */
@@ -156,32 +156,32 @@ tree.abResults treeitem > treerow > treecell.cardicon {
 /* ::::: Card View pane ::::: */
 
 #CardViewOuterBox {
-  border-left: 1px solid #63717B;
+  border-left: 1px solid #414B75;
 }
 
 #CardViewBox {
-  overflow: auto;
-  background-color: #EFEFEF;
+  -moz-user-focus: ignore;
   border-left: 1px solid #000000;
   min-width: 150px;
-  -moz-user-focus: ignore;
+  background-color: #EFEFEF;
+  overflow: auto;
 }
 
 #CardViewInnerBox {
   margin-top: 2px;
   margin-bottom: 2px;
-  padding-left: 8px;
   padding-right: 8px;
+  padding-left: 8px;
 }
 
 #CardTitle {
+  margin: 0px;
+  border-bottom: 2px solid black;
+  min-width: 120px;
   font-size: 150%;
   font-weight: bold;
-  border-bottom: 2px solid #000000;
-  min-width: 120px;
-  margin: 0px;
 }
-
+ 
 .cardViewGroup {
   margin-top: 8px;
   padding-bottom: 5px;
@@ -189,26 +189,25 @@ tree.abResults treeitem > treerow > treecell.cardicon {
 }
 
 .CardViewHeading {
-  padding: 1px;
-  padding-left: 5px;
   margin: 0px 0px 1px 0px;
-  background-color: #C2D0D0;
-  color: black;
-  font-weight: bold;
+  padding: 1px 1px 1px 5px;
   min-width: 30px;
+  background-color: #8E9EAA;
+  color: #ffffff;
+  font-weight: bold;
 }
 
 .CardViewText {
-  padding-left: 20px;
-  padding-right: 2px;
-  min-width: 30px;
   margin: 0px;
+  padding-right: 2px;
+  padding-left: 20px;
+  min-width: 30px;
 }
 
 html|a {
-  padding-left: 0px;
-  padding-right: 2px;
   border: none !important;
+  padding-right: 2px;
+  padding-left: 0px;
 }
 
 html|p {
@@ -217,28 +216,31 @@ html|p {
 
 /* ::::: border adjustments ::::: */
 
-tree {
+tree { 
   border-left: 1px solid transparent;
 }
 
-#sidebar-splitter {
-  border: none;
-}
-
-#sidebar-splitter > .splitter-internal-box {
-  border-right: none;
-}
-
-#results-splitter {
-  border-top: 1px solid #7B969C;
-}
-
-#results-splitter > .splitter-internal-box {
+#results-splitter > box {
   border-left: none;
 }
 
 #results-splitter[state="collapsed"] {
   border-bottom: none;
+}
+
+/* ..... status bar border ..... */
+
+.statusbar-internal-box-1 {
+  padding: 0px;
+}
+
+.statusbar-internal-box-2 {
+  border-top: 1px solid #A8B1CC !important;
+}
+
+.statusbar-internal-box-3 {
+  border-top: 1px solid #D4DDF8 !important;
+  padding: 1px 2px 1px 2px;
 }
 
 /* ::::: Card Edit dialog ::::: */
@@ -264,14 +266,14 @@ tree {
 /* ::::: Select Addresses dialog ::::: */
 
 #3PaneBox {
-  border-top: 1px solid #000000;
+  border-top: 1px solid #000000; 
   border-bottom: 1px solid #000000;
   border-left: 1px solid #000000;
 }
 
 #dirTreeBox {
   width: 180px;
-  height: 100%;
+  height: 100%; 
   background-color: #FFFFFF;
 }
 
@@ -290,15 +292,20 @@ tree {
 }
 
 #resultsTreeBox {
-  background-color: #FFFFFF;
+  background-color: #FFFFFF; 
   border-bottom: 1px solid #000000;
 }
 
+#resultsTree, #dirTree
+#resultsTree > .tree-container-treerows,
+#dirTree > .tree-container-treerows {
+  border: none;
+}
+
 #resultsTree {
-  height: 100px;
+  height: 100px; 
   min-width: 10px;
-  border-left: 1px solid #63717B;
-  border-top: 1px solid #63717B;
+  border-left: 1px solid #414B75;
 }
 
 #resultsTree > treerows {
@@ -311,8 +318,8 @@ tree {
 
 #addToBucketButtonBox {
   border-left: 1px solid #000000;
-  padding: 0.3em;
   min-width: 10px;
+  padding: 0.3em; 
 }
 
 #bucketBox {
@@ -320,9 +327,9 @@ tree {
 }
 
 #addressBucket {
-  border-left: 1px solid #63717B;
-  height: 100px;
+  border-left: 1px solid #414B75;
   min-width: 10px;
+  height: 100px; 
 }
 
 #addressBucket > treerows {
@@ -330,7 +337,7 @@ tree {
 }
 
 #rightColumnButtonBox {
-  padding: .5em;
+  padding: .5em; 
   padding-right: 0px;
 }
 

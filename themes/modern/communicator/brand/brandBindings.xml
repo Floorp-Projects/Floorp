@@ -1,19 +1,27 @@
 <?xml version="1.0"?>
 
-<bindings id="brandBindings"
+<bindings id="communicatorBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-   
+
   <binding id="throbber" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content>
-      <xul:spring class="throbber-groove-left"/>
-      <xul:box flex="1" class="throbber-middle" orient="vertical">
-        <xul:spring class="throbber-groove-top"/>
-        <xul:image flex="1" class="throbber-icon" inherits="src" autostretch="never"/>
-        <xul:spring class="throbber-groove-bottom"/>
-      </xul:box>
-      <xul:spring class="throbber-groove-right"/>
+  	<content>
+      <xul:image class="throbber-icon" inherits="src" autostretch="never"/>
     </content>
   </binding>
-  
+
+  <binding id="throbber-fancy" extends="chrome://global/content/xulBindings.xml#basetext">
+  	<content>
+      <xul:vbox class="throbber-internal-box" flex="1">
+       	<xul:spring class="throbber-groove-top"/>
+    	  <xul:hbox class="throbber-middle">
+      	  <xul:spring class="throbber-groove-left"/>
+    	  	<xul:image class="throbber-icon" inherits="src" autostretch="never"/>
+    	  	<xul:spring class="throbber-groove-right"/>
+    	  </xul:hbox>
+    	  <xul:spring class="throbber-groove-bottom"/>
+      </xul:vbox>
+    </content>
+  </binding>
+
 </bindings>

@@ -6,11 +6,12 @@
 
   <binding id="sidebar-tab" extends="xul:button">
     <content>
-      <xul:image class="box-texttab-left"/>
-      <xul:box class="box-texttab-text-container" autostretch="never" flex="1">
-        <xul:text class="box-texttab-text" inherits="value=label" crop="right"/>
+      <xul:image class="sidebar-tab-leftcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      <xul:box class="sidebar-tab-mid" inherits="selected,first-panel-after-selected,top-panel,last-panel">
+        <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
       </xul:box>
-      <xul:image class="box-texttab-right"/>
+      <xul:image class="sidebar-tab-rightcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      <xul:spring class="sidebar-tab-right" inherits="selected,first-panel-after-selected,top-panel,last-panel" flex="1"/>
     </content>
   </binding>
 

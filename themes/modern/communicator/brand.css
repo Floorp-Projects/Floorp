@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
+ *
  */
 
 /* ==== brand.css ===========================================================
@@ -31,39 +31,21 @@
   -moz-binding: url("chrome://communicator/skin/brand/brandBindings.xml#throbber");
   -moz-user-focus: ignore !important;
   cursor: pointer;
-  margin: 4px 1px 0px 8px;
-  border: none;
+  margin: 5px 12px 0px 0px;
+  border-top: 1px solid #B9BFC7;
+  border-right: 1px solid #A1AAB3;
+  border-bottom: 1px solid #DEE7EE;
+  border-left: 1px solid #A4ACB5;
   min-width: 0px;
-  list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
+  list-style-image: url("chrome://communicator/skin/brand/throbber25-single.gif");
 }
 
 #navigator-throbber[busy="true"] {
-  list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
+  list-style-image: url("chrome://communicator/skin/brand/throbber25-anim.gif");
 }
 
-.throbber-icon {
-  background-color: #637D94;
-}
-
-.throbber-groove-left {
-  width: 2px;
-  height: 36px;
-  background: url("chrome://communicator/skin/brand/throbber-groove-lft.gif") no-repeat;
-}
-
-.throbber-groove-right {
-  width: 2px;
-  height: 36px;
-  background: url("chrome://communicator/skin/brand/throbber-groove-rit.gif") no-repeat;
-}
-
-.throbber-groove-top {
-  height: 2px;
-  background: url("chrome://communicator/skin/brand/throbber-groove-top.gif") repeat-x;
-}
-
-.throbber-groove-bottom {
-  height: 2px;
-  background: url("chrome://communicator/skin/brand/throbber-groove-btm.gif") repeat-x;
-}
+#throbber-box,
+.throbber-internal-box {
+  vertical-align: top !important;
+}  
 

@@ -3,29 +3,32 @@
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-   
+
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
           tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
-      <xul:box class="toolbar-primary-image-left" orient="vertical">
-        <xul:spring class="toolbar-primary-image-left-top"/> 
-        <xul:spring class="toolbar-primary-image-left-mid" flex="1"/> 
-        <xul:spring class="toolbar-primary-image-left-btm"/> 
-      </xul:box>
-      <xul:box class="toolbar-primary-image-mid toolbar-holder" orient="vertical" flex="1"
-        inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
-        <xul:box class="toolbar-primary-image-mid-mid" flex="1" autostretch="never">
-          <children/>
-        </xul:box>
-        <xul:spring class="toolbar-primary-image-mid-btm"/>
-      </xul:box>
-      <xul:box class="toolbar-primary-image-right" orient="vertical">
-        <xul:spring class="toolbar-primary-image-right-top"/> 
-        <xul:spring class="toolbar-primary-image-right-mid" flex="1"/> 
-        <xul:spring class="toolbar-primary-image-right-btm"/> 
-      </xul:box>
+      <xul:hbox class="toolbar-holder" flex="1">
+        <xul:box class="toolbar-primary-icon"/>
+        <xul:stack class="toolbar-primary-mid" flex="1">
+          <xul:hbox class="toolbar-primary-mid-2" flex="1">
+            <xul:vbox class="toolbar-primary-mid-bg" flex="1">
+              <xul:spring class="toolbar-primary-mid-top" flex="1"/> 
+              <xul:spring class="toolbar-primary-mid-btm"/> 
+            </xul:vbox>
+            <xul:vbox class="toolbar-primary-right">
+              <xul:spring class="toolbar-primary-right-top"/> 
+              <xul:spring class="toolbar-primary-right-mid" flex="1"/> 
+              <xul:spring class="toolbar-primary-right-btm"/> 
+            </xul:vbox>
+          </xul:hbox>
+          <xul:box class="toolbar-primary-mid-fg"
+                   inherits="collapsed,last-toolbar,orient=tborient">
+            <children/>
+          </xul:box>
+        </xul:stack>
+      </xul:hbox>
     </content>
   </binding>
-  
+
 </bindings>

@@ -14,12 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *   Scott MacGregor (mscott@netscape.com)
- *   Joe Hewitt (hewitt@netscape.com)
+ *
  */
 
 /* ===== msgHdrViewOverlay.css ==========================================
@@ -40,7 +39,7 @@
 }
 
 .header-part1 {
-  background-color: #EEEEEE;
+  background-color: #C7D0D9;
   color: #000000;
 }
 
@@ -58,7 +57,12 @@
 
 /* ::::: msg header captions ::::: */
 
-.headerBox  {
+#collapsedHeaderView,
+#expandedHeaderView {
+  min-width: 1px;
+}
+
+.headerBox {
   overflow: hidden;
   min-width: 50px;
 }
@@ -78,14 +82,10 @@ html.subjectvalue {
   font-weight: bold;
 }
 
-text.subjectvalue {
-  font-weight: bold;
-}
-
 text.headerdisplayname {
   margin-right: .5em;
   margin-left: .5em;
-  min-height: 16px;
+  min-height: 18px;
   font-weight: bold;
 }
 
@@ -93,7 +93,6 @@ text.headerdisplayname {
 
 mail-emailaddress {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailaddress");
-  display: -moz-xul-inline-box;
 }
 
 .emailDisplayButton {
@@ -107,7 +106,6 @@ mail-emailaddress {
   text-align: right;
 }
 
-
 /* ::::: email address twisty ::::: */
 
 .showMoreAddressesButton {
@@ -118,33 +116,25 @@ mail-emailaddress {
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
-/* ::::: miscellaneous ::::: */
-
-.buttonTopSpacer {
-  height: .3em;
-}
-
-.buttonSpacer {
-  width: .5em;
-}
-
 /* ::::: view expand and collapse twisties  ::::: */
+
+.expandHeaderViewButton,
+.collapsedHeaderViewButton  {
+  margin: 2px .5em 0px .5em;
+}
 
 .expandHeaderViewButton {
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
-  margin-left: .5em;
-  margin-right: .5em;
 }
 
 .collapsedHeaderViewButton  {
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
-  margin-left: .5em;
 }
 
 /* ::::: collapsed view styles ::::: */
 
 .collapsedToggleHdrBox {
-   vertical-align: middle;
+  vertical-align: middle;
 }
 
 #collapsedAttachmentBox {
@@ -176,5 +166,16 @@ text.collapsedHeaderDisplayName {
 }
 
 [hide] {
-  visibility: hidden;
+  visibility: collapse;
 }
+
+/* ::::: miscellaneous ::::: */
+
+.buttonTopSpacer {
+  height: .3em;
+}
+
+.buttonSpacer {
+  width: .5em;
+}
+

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
@@ -37,43 +37,44 @@
 button {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
   -moz-user-focus: normal;
-  margin: 0px 2px;
+  margin: 3px;
   border: 2px solid transparent;
-  height: 24px;
-  min-width: 60px;
-  color: #1C1D1F;
-  font: message-box;
+  min-width: 5em;
+  color: #ffffff;
+  font: menu;
+}
+  
+.button-text-box {
+  padding: 3px 2px 3px 2px;
+  text-align: center;
+  vertical-align: middle;
 }
 
-.button-text-mid {
-  padding-right: 2px;
-}
-
+.button-text-mid,
 .button-icon-mid {
-  padding-right: 2px;
+  margin-right: 3px;
 }
 
-/* .......... focused state .......... */
+  /* .......... focused state .......... */
 
 button:focus {
-  border-color: #96A7BD;
-  -moz-border-radius: 7px;
+  border-color: #A5A8B1;
+  -moz-border-radius: 6px;
+}
+    
+button[default]:focus {
+  -moz-border-radius: 8px;
 }
 
-button:focus > .button-box-right,
-button:focus > .button-box-left {
-  background-color: #96A7BD;
-}
-
-/* .......... normal state .......... */
-
+  /* .......... normal state .......... */
+  
 .button-box-left {
-  width: 9px;
+  width: 6px;
 }
-
+    
 .button-left-top {
-  height: 9px;
   background: url("chrome://global/skin/button/btn-lft-top.gif") no-repeat;
+  height: 9px;
 }
 
 .button-left-mid {
@@ -81,41 +82,31 @@ button:focus > .button-box-left {
 }
 
 .button-left-btm {
-  height: 8px;
   background: url("chrome://global/skin/button/btn-lft-btm.gif") no-repeat;
+  height: 8px;
 }
 
 .button-box-mid {
-  background-color: #A5BABD;
+  background-color: #63656A;
 }
-
+  
 .button-mid-top {
-  height: 3px;
   background: url("chrome://global/skin/button/btn-mid-top.gif") repeat-x;
-}
-
-.button-mid-mid {
-  background: url("chrome://global/skin/button/btn-mid-mid.gif") repeat-x;
+  height: 9px;
 }
 
 .button-mid-btm {
-  height: 4px;
   background: url("chrome://global/skin/button/btn-mid-btm.gif") repeat-x;
-}
-
-.button-text-box {
-  padding: 1px 0px 1px 0px;
-  text-align: center;
-  vertical-align: middle;
+  height: 8px;
 }
 
 .button-box-right {
-  width: 9px;
+  width: 6px;
 }
-
+  
 .button-right-top {
-  height: 9px;
   background: url("chrome://global/skin/button/btn-rit-top.gif") no-repeat;
+  height: 9px;
 }
 
 .button-right-mid {
@@ -123,12 +114,16 @@ button:focus > .button-box-left {
 }
 
 .button-right-btm {
-  height: 8px;
   background: url("chrome://global/skin/button/btn-rit-btm.gif") no-repeat;
+  height: 8px;
 }
+  
+  /* .......... active state .......... */
 
-/* .......... active state .......... */
-
+button:hover:active {
+  color: #D0D0D0;
+}
+  
 button:hover:active > .button-box-left > .button-left-top {
   background-image: url("chrome://global/skin/button/btn-act-lft-top.gif");
 }
@@ -142,19 +137,14 @@ button:hover:active > .button-box-left > .button-left-btm {
 }
 
 button:hover:active > .button-stack > .button-box-mid {
-  background-color: #84969C;
+  background-color: #43454A;
 }
-
+  
 button:hover:active > .button-stack > .button-box-mid > .button-mid-top {
   background-image: url("chrome://global/skin/button/btn-act-mid-top.gif");
 }
 
-button:hover:active > .button-stack > .button-box-mid > .button-mid-mid {
-  background-image: url("chrome://global/skin/button/btn-act-mid-mid.gif");
-}
-
 button:hover:active > .button-stack > .button-text-box > .button-text-mid {
-  color: #ffffff;
 }
 
 button:hover:active > .button-stack > .button-box-mid > .button-mid-btm {
@@ -173,16 +163,12 @@ button:hover:active > .button-box-right > .button-right-btm {
   background-image: url("chrome://global/skin/button/btn-act-rit-btm.gif");
 }
 
-/* .......... disabled state .......... */
+  /* .......... disabled state .......... */
 
-button[disabled="true"] > .button-stack > .button-text-box
-    > .button-text-mid,
-button[disabled="true"]:hover > .button-stack > .button-text-box
-    > .button-text-mid,
-button[disabled="true"]:hover:active > .button-stack > .button-text-box
-    > .button-text-mid
-{
-  color: #7F8997;
+button[disabled="true"] > .button-stack > .button-text-box > .button-text-mid, 
+button[disabled="true"]:hover > .button-stack > .button-text-box > .button-text-mid, 
+button[disabled="true"]:hover:active > .button-stack > .button-text-box > .button-text-mid {
+  color: #A1A4B1;
 }
 
 button:hover:active > .button-box-left > .button-left-top[disabled="true"],
@@ -202,18 +188,12 @@ button:hover:active > .button-box-left > .button-left-btm[disabled="true"],
 
 button:hover:active > .button-stack > .button-box-mid[disabled="true"],
 .button-box-mid[disabled="true"] {
-  background-color: #ADBEC6;
+  background-color: #7C7F89;
 }
-
-button:hover:active > .button-stack > .button-box-mid
-  > .button-mid-top[disabled="true"],
+  
+button:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"],
 .button-mid-top[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-top.gif");
-}
-
-button:hover:active > .button-stack > .button-box-mid > .button-mid-mid[disabled="true"],
-.button-mid-mid[disabled="true"] {
-  background-image: url("chrome://global/skin/button/btn-dis-mid-mid.gif");
 }
 
 button:hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"],
@@ -235,16 +215,20 @@ button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
 .button-right-btm[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-btm.gif");
 }
+  
+  /* .......... default normal state .......... */
 
-/* .......... default normal state .......... */
-
-.button-box-left[default="true"] {
-  width: 10px;
+button[default="true"] {
+  margin: 2px;
 }
 
+.button-box-left[default="true"] {
+  width: 7px;
+}
+    
 .button-left-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-lft-top.gif");
-  height: 10px;
+  height: 9px;
 }
 
 .button-left-mid[default="true"] {
@@ -253,30 +237,26 @@ button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
 
 .button-left-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-lft-btm.gif");
-  height: 9px;
+  height: 10px;
 }
 
 .button-mid-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-mid-top.gif");
-  height: 4px;
-}
-
-.button-mid-mid[default="true"] {
-  background-image: url("chrome://global/skin/button/btn-def-mid-mid.gif");
+  height: 9px;
 }
 
 .button-mid-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-mid-btm.gif");
-  height: 5px;
+  height: 10px;
 }
 
 .button-box-right[default="true"] {
-  width: 10px;
+  width: 7px;
 }
-
+  
 .button-right-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-rit-top.gif");
-  height: 10px;
+  height: 9px;
 }
 
 .button-right-mid[default="true"] {
@@ -285,10 +265,10 @@ button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
 
 .button-right-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-rit-btm.gif");
-  height: 9px;
+  height: 10px;
 }
 
-/* .......... default active state .......... */
+  /* .......... default active state .......... */
 
 :hover:active > .button-box-left > .button-left-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-lft-top.gif");
@@ -302,21 +282,11 @@ button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
   background-image: url("chrome://global/skin/button/btn-def-act-lft-btm.gif");
 }
 
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-top[default="true"]
-{
+:hover:active > .button-stack > .button-box-mid > .button-mid-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-mid-top.gif");
 }
 
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-mid[default="true"]
-{
-  background-image: url("chrome://global/skin/button/btn-def-act-mid-mid.gif");
-}
-
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-btm[default="true"]
-{
+:hover:active > .button-stack > .button-box-mid > .button-mid-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-mid-btm.gif");
 }
 
@@ -331,88 +301,71 @@ button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
 :hover:active > .button-box-right > .button-right-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-rit-btm.gif");
 }
+  
+  /* .......... default disabled state (the same as normal disabled) .......... */
 
-/* .......... default disabled state (the same as normal disabled) .......... */
+button[default="true"][disabled="true"] {
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
 
-:hover:active > .button-box-left
-    > .button-left-top[disabled="true"][default="true"],
+:hover:active > .button-box-left > .button-left-top[disabled="true"][default="true"],
 .button-left-top[disabled="true"][default="true"] {
-  height: 9px;
   background-image: url("chrome://global/skin/button/btn-dis-lft-top.gif");
+  height: 9px;
 }
 
 .button-box-left[disabled="true"][default="true"] {
-  width: 9px;
+  width: 6px;
 }
 
-:hover:active > .button-box-left
-    > .button-left-top[disabled="true"][default="true"],
-.button-left-top[disabled="true"][default="true"] {
-  height: 9px;
-  background-image: url("chrome://global/skin/button/btn-dis-lft-top.gif");
-}
-
-:hover:active > .button-box-left
-    > .button-left-mid[disabled="true"][default="true"],
+:hover:active > .button-box-left > .button-left-mid[disabled="true"][default="true"],
 .button-left-mid[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-mid.gif");
 }
 
-:hover:active > .button-box-left
-    > .button-left-btm[disabled="true"][default="true"],
+:hover:active > .button-box-left > .button-left-btm[disabled="true"][default="true"],
 .button-left-btm[disabled="true"][default="true"] {
-  height: 8px;
   background-image: url("chrome://global/skin/button/btn-dis-lft-btm.gif");
+  height: 8px;
 }
 
-:hover:active > .button-stack
-    > .button-box-mid[disabled="true"][default="true"],
+:hover:active > .button-stack > .button-box-mid[disabled="true"][default="true"],
 .button-box-mid[disabled="true"][default="true"] {
-  background-color: #ADBEC6;
+  background-color: #7C7F89;
 }
 
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-top[disabled="true"][default="true"],
+:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
 .button-mid-top[disabled="true"][default="true"] {
-  height: 3px;
   background-image: url("chrome://global/skin/button/btn-dis-mid-top.gif");
+  height: 9px;
 }
 
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-mid[disabled="true"][default="true"],
-.button-mid-mid[disabled="true"][default="true"] {
-  background-image: url("chrome://global/skin/button/btn-dis-mid-mid.gif");
-}
-
-:hover:active > .button-stack > .button-box-mid
-    > .button-mid-btm[disabled="true"][default="true"],
+:hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
 .button-mid-btm[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-btm.gif");
-  height: 4px;
+  height: 8px;
 }
 
 .button-box-right[disabled="true"][default="true"] {
-  width: 9px;
+  width: 6px;
 }
 
-:hover:active > .button-box-right
-    > .button-right-top[disabled="true"][default="true"],
+:hover:active > .button-box-right > .button-right-top[disabled="true"][default="true"],
 .button-right-top[disabled="true"][default="true"] {
-  height: 9px;
   background-image: url("chrome://global/skin/button/btn-dis-rit-top.gif");
+  height: 9px;
 }
 
-:hover:active > .button-box-right
-    > .button-right-mid[disabled="true"][default="true"],
+:hover:active > .button-box-right > .button-right-mid[disabled="true"][default="true"],
 .button-right-mid[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-mid.gif");
 }
 
-:hover:active > .button-box-right
-    > .button-right-btm[disabled="true"][default="true"],
+:hover:active > .button-box-right > .button-right-btm[disabled="true"][default="true"],
 .button-right-btm[disabled="true"][default="true"] {
-  height: 8px;
   background-image: url("chrome://global/skin/button/btn-dis-rit-btm.gif");
+  height: 8px;
 }
 
 /* ::::: plain buttons ::::: */
@@ -445,10 +398,12 @@ button.plain > .button-internal-box > .button.icon:hover:active
 
 .reorder-up {
   min-width: 0px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
 .reorder-down {
   min-width: 0px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
 .reorder-up > .button-internal-box > .button-icon,
@@ -457,4 +412,3 @@ button.plain > .button-internal-box > .button.icon:hover:active
   margin: 0px;
   padding: 0px;
 }
-

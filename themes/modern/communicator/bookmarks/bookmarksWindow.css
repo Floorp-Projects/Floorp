@@ -23,6 +23,10 @@
  *
  */
 
+/* ===== bookmarksWindow.css ============================================
+  == Styles specific to the Bookmarks Manager window.
+  ======================================================================= */
+
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 
 #navprintplus {

@@ -30,53 +30,44 @@
 
 /* ::::: outliner rows ::::: */
 
-outliner:focus > outliner-bodybox
-{
+outliner:focus > outliner-bodybox {
   border: 1px solid black;
 }
 
-outliner > outliner-bodybox
-{
+outliner > outliner-bodybox {
   border: 1px solid transparent;
 }
 
-outlinerbody:-moz-outliner-cell-text(unread)
-{
+outlinerbody:-moz-outliner-cell-text(unread) {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-cell-text(offline)
-{
+outlinerbody:-moz-outliner-cell-text(offline) {
   font-style: italic;
 }
 
 /* on a collapsed thread, if the top level message is read, but the thread has
  * unread children, underline the text.  4.x mac did this, very slick 
  */
-outlinerbody:-moz-outliner-cell-text(container, closed, hasUnread, read)
-{
+outlinerbody:-moz-outliner-cell-text(container, closed, hasUnread, read) {
   text-decoration: underline;
 }
 
 /* ::::: priority colors ::::: */
 
-outlinerbody:-moz-outliner-cell-text(priority-highest)
-{
-  color:red;
+outlinerbody:-moz-outliner-cell-text(priority-highest) {
+  color: red;
 }
 
-outlinerbody:-moz-outliner-cell-text(priority-high)
-{
+outlinerbody:-moz-outliner-cell-text(priority-high) {
   color: rgb(128, 0, 0);
 }
 
-outlinerbody:-moz-outliner-cell-text(priority-lowest)
-{
+outlinerbody:-moz-outliner-cell-text(priority-lowest) {
   color: rgb(170, 170, 170);
 }
 
-outlinerbody:-moz-outliner-cell-text(priority-low)
-{
+outlinerbody:-moz-outliner-cell-text(priority-low) {
   color: rgb(85, 85, 85);
 }
 

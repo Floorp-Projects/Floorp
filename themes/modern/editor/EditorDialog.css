@@ -89,8 +89,6 @@
   min-width: 12em;
 }
 
-/* ::::: table properties dialog ::::: */
-
 #PreviousButton {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
 }
@@ -107,19 +105,8 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
-/* ::::: spelling dialog ::::: */
-
 #MisspelledWord {
   font-weight: bold;
-}
-
-#ReplaceWordInput {
-  min-width: 16em;
-  width: 16em;
-}
-
-.spell-check {
-  min-width: 9em;
 }
 
 /* ::::: spacers ::::: */
@@ -208,23 +195,23 @@ button.color-button {
 
 /* ::::: Image Properties dialog ::::: */
 
-.align-menu[value="top"] {
+.align-menu[data="top"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-top.gif") !important;
 }
 
-.align-menu[value="center"] {
+.align-menu[data="center"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-mid.gif") !important;
 }
 
-.align-menu[value="bottom"] {
+.align-menu[data="bottom"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-btm.gif") !important;
 }
 
-.align-menu[value="right"] {
+.align-menu[data="right"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-rit.gif") !important;
 }
 
-.align-menu[value="left"] {
+.align-menu[data="left"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-lft.gif") !important;
 }
 

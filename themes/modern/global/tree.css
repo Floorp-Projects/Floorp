@@ -32,20 +32,19 @@
 tree {
   border: none;
   border-spacing: 0px;
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: #ffffff;
 }
 
 tree.inset {
   margin: 2px 4px;
-  border-top: 1px solid #A8B5C6;
-  border-right: 1px solid #E2E8F0;
-  border-bottom: 1px solid #E2E8F0;
-  border-left: 1px solid #A8B5C6;
+  border-top: 1px solid #BEC3D3;
+  border-right: 1px solid #F8FAFE;
+  border-bottom: 1px solid #F8FAFE;
+  border-left: 1px solid #BEC3D3;
 }
 
 tree.inset > .tree-container-treerows {
-  border: 1px solid #757C8A;
+  border: 1px solid #5D616E;
 }
 
 /* ::::: treeitem ::::: */
@@ -62,19 +61,18 @@ treerow {
 }
 
 treeitem[selected="true"] > treerow {
-  background-color: #C2D0D0;
+  background-color: #D9E3E7;
   color: #000000;
 }
 
 tree:focus > treechildren treeitem[selected="true"] > treerow,
 treeitem[dd-dropon="true"] > treerow {
-  background-color: #486380;
+  background-color: #9499AC;
   color: #FFFFFF;
 }
 
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow,
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
-  border-color: #243140;
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow {
+  border-color: #787C8A;
 }
 
 treehead > treeitem > treerow,
@@ -84,12 +82,17 @@ treehead > treerow {
 
 /* :::::: treecell ::::: */
 
-treecell {
+treecell { 
   border-top: 1px solid transparent;
   border-bottom: 1px solid transparent;
   padding: 0px 0px 1px 2px;
   vertical-align: middle;
   white-space: nowrap;
+} 
+ 
+tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > treecell {
+  border-top-color: #787C8A;
+  border-bottom-color: #787C8A;
 }
 
 /* ::::: iconic treecell ::::: */
@@ -113,25 +116,25 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 
 .treecell-header,
 .treecell-inset-header,
-.treecell-header-image {
-  border-top: 1px solid #EDEDED !important;
-  border-right: 1px solid #6E7070 !important;
-  border-bottom: 1px solid #6E7070 !important;
-  border-left: 1px solid #EDEDED !important;
+.treecell-header-image { 
+  border-left: 1px solid #EEF0F3;
+  border-top: 1px solid #EEF0F3;
+  border-right: 1px solid #63676B;
+  border-bottom: 1px solid #63676B;
   padding: 0px;
-  background-color: #C2D0D0;
+  background-color: #C7D0D9;
   color: #000000;
 }
 
 .treecell-header-box,
 .treecell-header-image-box {
-  border-top: 1px solid #C2D0D0;
-  border-right: 1px solid #A4ACAC;
-  border-bottom: 1px solid #A4ACAC;
-  border-left: 1px solid #C2D0D0;
+  border-left: 1px solid #C7D0D9;
+  border-top: 1px solid #C7D0D9;
+  border-right: 1px solid #A5ABB0;
+  border-bottom: 1px solid #A5ABB0;
   vertical-align: middle;
-}
-
+}  
+  
 .treecell-header-box {
   padding: 0px 4px 0px 4px;
 }
@@ -143,7 +146,7 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 .treecell-header:hover:active,
 .treecell-header-image:hover:active,
 .treecell-inset-header:hover:active {
-  border: 1px solid #A4ACAC !important;
+  border: 1px solid #A5ABB0 !important;
 }
 
 .treecell-header:hover:active > .treecell-header-box,
@@ -160,6 +163,11 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
   padding: 1px 4px 0px 5px;
 }
 
+.treecell-header:hover:active > .treecell-header-box,
+.treecell-inset-header:hover:active > .treecell-header-box {
+  padding: 1px 4px 0px 5px;
+}
+
 .treecell-header-image:hover:active > .treecell-header-image-box {
   padding: 1px 1px 0px 2px;
 }
@@ -169,10 +177,10 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 }
 
 /* ::::: property list treecell ::::: */
-
+ 
 treecell.propertylist {
-  border-right: 1px solid #C2D0D0;
-  border-bottom: 1px solid #C2D0D0;
+  border-right: 1px solid #CCCCCC;
+  border-bottom: 1px solid #CCCCCC;
   padding-left: 5px;
 }
 
@@ -220,9 +228,9 @@ treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty
   list-style-image: none;
 }
 
-treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
   visibility: hidden;
-}
+}    
 
 /* ::::: sort direction indicator ::::: */
 
@@ -243,4 +251,3 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 .treecell-popup-icon {
   list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
 }
-

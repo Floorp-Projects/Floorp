@@ -37,7 +37,10 @@ progressmeter {
 }
 
 .progressmeter-progressbar {
-  border: 1px solid #293342;
+  border-top: 1px solid #606C8F;
+  border-right: 1px solid #D4DDF8;
+  border-bottom: 1px solid #D4DDF8;
+  border-left: 1px solid #606C8F;
   height: 9px;
   background: url("chrome://global/skin/progressmeter/progress-bg.gif") #8EA09F repeat-x top;
 }

@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
+ *
  */
 
 /* ===== radio.css ======================================================
@@ -32,84 +32,75 @@
 radiogroup {
   -moz-user-focus: ignore;
 }
-
+  
 /* ::::: radio ::::: */
 
 radio {
-  -moz-user-focus: normal !important;
-  margin: 0px 2px;
   border: 2px solid transparent;
+  margin: 0px 3px 0px 3px;
+  -moz-user-focus: normal !important;
 }
 
 /* ..... focused state ..... */
 
 radio:focus {
-  border-color: #96A7BD;
+  border-color: #A5A8B1;
   -moz-border-radius: 4px 5px 4px 5px;
 }
-
+  
 /* ..... disabled state ..... */
 
-radio[disabled="true"][label] > .internal-box > .checkbox-label {
-  color: #85959E;
+radio[disabled="true"][label] > .internal-box > html {
+  color: #999999;
 }
 
 /* ..... internal box ..... */
 
 radio > .internal-box {
-  -moz-user-focus: none;
+  -moz-user-focus: ignore;
 }
 
 radio > .internal-box > .checkmark-box {
   margin: 3px;
-  list-style-image: none;
 }
 
 /* ::::: radio icon and label ::::: */
 
-radio > .internal-box > .checkbox-icon {
-  list-style-image: inherit;
+radio[label] > .internal-box > html,
+radio.iconic > .internal-box > .icon {
+  margin: 0px 0px 0px 0px;
+  padding: 2px 2px 2px 0px;
 }
 
-radio[label] > .internal-box > .checkbox-label {
-  margin: 0px;
-  padding: 2px;
+radio.iconic > .internal-box > html {
+  margin-left: 2px;
 }
-
+    
 /* ::::: checkmark image ::::: */
 
-radio > .internal-box > .checkmark-box > .checkbox-check {
+radio > .internal-box > .checkmark-box > image {
   list-style-image: url("chrome://global/skin/radio/radio.gif");
 }
 
-radio:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+radio:hover:active > .internal-box > .checkmark-box > image {
   list-style-image: url("chrome://global/skin/radio/radio-act.gif");
 }
 
-radio[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-radio[disabled="true"]:hover:active > .internal-box > .checkmark-box
-    > .checkbox-check
-{
+radio[disabled="true"] > .internal-box > checkmark-box > image {
   list-style-image: url("chrome://global/skin/radio/radio-dis.gif");
 }
 
 /* ..... checked state ..... */
 
-radio[checked="true"] > .internal-box > .checkmark-box > .checkbox-check {
+radio[checked="true"] > .internal-box > .checkmark-box > image {
   list-style-image: url("chrome://global/skin/radio/radio-check.gif");
 }
-
-radio[checked="true"]:hover:active > .internal-box > .checkmark-box
-    > .checkbox-check
-{
-  list-style-image: url("chrome://global/skin/radio/radio-act-check.gif");
+  
+radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image {
+  list-style-image: url("chrome://global/skin/radio/radio-dis-check.gif.gif");
 }
 
-radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box
-    > .checkbox-check,
-radio[checked="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box
-    > .checkbox-check
-{
-  list-style-image: url("chrome://global/skin/radio/radio-dis-check.gif");
+radio[checked="true"]:hover:active > .internal-box > .checkmark-box > image {
+  list-style-image: url("chrome://global/skin/radio/radio-act-check.gif");  
 }
 

@@ -110,8 +110,6 @@
 }
 
 #printButton {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
-  margin: 3px 3px 1px 3px;
   list-style-image: url("chrome://communicator/skin/btn1/print.gif");
 }
 
@@ -529,103 +527,77 @@
   list-style-image: url("chrome://editor/skin/btn2/insert-table-hov.gif");
 }
 
-#text-align-left,
 #align-left-button {
   list-style-image: url("chrome://editor/skin/btn2/left.gif");
 }
 
-#text-align-left:hover,
 #align-left-button:hover {
   list-style-image: url("chrome://editor/skin/btn2/left-hov.gif");
 }
 
-#text-align-left[toggled="true"],
-#text-align-left:hover:active,
 #align-left-button[toggled="true"],
 #align-left-button:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/left-act.gif");
 }
 
-#text-align-left[disabled="true"],
-#text-align-left[disabled="true"]:hover:active,
 #align-left-button[disabled="true"],
 #align-left-button[disabled="true"]:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/left-dis.gif");
 }
 
-#text-align-center,
 #align-center-button {
   list-style-image: url("chrome://editor/skin/btn2/center.gif");
 }
 
-#text-align-center:hover,
 #align-center-button:hover {
   list-style-image: url("chrome://editor/skin/btn2/center-hov.gif");
 }
 
-#text-align-center[toggled="true"],
-#text-align-center:hover:active,
 #align-center-button[toggled="true"],
 #align-center-button:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/center-act.gif");
 }
 
-#text-align-center[disabled="true"],
-#text-align-center[disabled="true"]:hover:active,
 #align-center-button[disabled="true"],
 #align-center-button[disabled="true"]:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/center-dis.gif");
 }
 
-#text-align-right,
 #align-right-button {
   list-style-image: url("chrome://editor/skin/btn2/right.gif");
 }
 
-#text-align-right:hover,
 #align-right-button:hover {
   list-style-image: url("chrome://editor/skin/btn2/right-hov.gif");
 }
 
-#text-align-right[toggled="true"],
-#text-align-right:hover:active,
 #align-right-button[toggled="true"],
 #align-right-button:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/right-act.gif");
 }
 
-#text-align-right[disabled="true"],
-#text-align-right[disabled="true"]:hover:active,
 #align-right-button[disabled="true"],
 #align-right-button[disabled="true"]:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/right-dis.gif");
 }
 
-#text-align-justify,
 #align-justify-button {
   list-style-image: url("chrome://editor/skin/btn2/justify.gif");
 }
 
-#text-align-justify:hover,
 #align-justify-button:hover {
   list-style-image: url("chrome://editor/skin/btn2/justify-hov.gif");
 }
 
-#text-align-justify[toggled="true"],
-#text-align-justify:hover:active,
 #align-justify-button[toggled="true"],
 #align-justify-button:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/justify-act.gif");
 }
 
-#text-align-justify[disabled="true"],
-#text-align-justify[disabled="true"]:hover:active,
 #align-justify-button[disabled="true"],
 #align-justify-button[disabled="true"]:hover:active {
   list-style-image: url("chrome://editor/skin/btn2/justify-dis.gif");
 }
-
-
 
 #smileButtonMenu {
   list-style-image: url("chrome://editor/skin/btn2/smiley.gif");
@@ -647,39 +619,36 @@
 }
 
 .insert-smile > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/smile_n.gif); 
+  list-style-image:url("chrome://editor/skin/icons/smiley/smile_n.gif");
 }
 
 .insert-tongue > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/tongue_n.gif); 
+  list-style-image:url("chrome://editor/skin/icons/smiley/tongue_n.gif");
 }
 
 .insert-frown > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/frown_n.gif); 
- }
+  list-style-image:url("chrome://editor/skin/icons/smiley/frown_n.gif"); 
+}
 
 .insert-wink > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/wink_n.gif); 
- }
+  list-style-image:url("chrome://editor/skin/icons/smiley/wink_n.gif");
+}
 
 .insert-laughing > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/laughing_n.gif); 
- }
+  list-style-image:url("chrome://editor/skin/icons/smiley/laughing_n.gif"); 
+}
 
 .insert-embarrassed > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/embarrassed_n.gif); 
- }
-
+  list-style-image:url("chrome://editor/skin/icons/smiley/embarrassed_n.gif");
+}
 
 .insert-undecided > .menu-iconic-left {
   list-style-image:url(chrome://editor/skin/icons/smiley/undecided_n.gif); 
 }
 
 .smiley > .menu-iconic-left {
-
-    margin-right: 15px;
+  margin-right: 15px;
 }
-
 
 /* ::::: fg/bg color picker ::::: */
 

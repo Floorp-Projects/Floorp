@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
+ *
  */
 
 /* ===== messenger.css ==================================================
@@ -30,32 +30,36 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: primary toolbar icon ::::: */
+
+#msgToolbar > .toolbar-holder > .toolbar-primary-icon {
+  width: 77px;
+  background: url("chrome://messenger/skin/icons/prtb-mail-icon.gif") no-repeat top;
+}
+ 
 /* ::::: primary toolbar buttons ::::: */
 
+.button-toolbar-2 {
+  min-width: 52px;
+}
+
 #button-getmsg {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
-  margin: 3px 3px 1px 3px;
   list-style-image: url("chrome://messenger/skin/btn1/getmsg.gif");
 }
 
 #button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover,
-#button-getmsg[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-dis.gif");
-}
+} 
 
 #button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-hov.gif");
-}
+} 
 
-#button-getmsg > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/getmsg-act.gif");
-}
+} 
 
 #button-newmsg {
   list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
@@ -65,15 +69,15 @@
 #button-newmsg[disabled="true"]:hover,
 #button-newmsg[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
-}
+} 
 
 #button-newmsg:hover {
   list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
-}
+} 
 
 #button-newmsg:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
-}
+} 
 
 #button-reply {
   list-style-image: url("chrome://messenger/skin/btn1/reply.gif");
@@ -83,15 +87,15 @@
 #button-reply[disabled="true"]:hover,
 #button-reply[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/reply-dis.gif");
-}
+} 
 
 #button-reply:hover {
   list-style-image: url("chrome://messenger/skin/btn1/reply-hov.gif");
-}
+} 
 
 #button-reply:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/reply-act.gif");
-}
+} 
 
 #button-replyall {
   list-style-image: url("chrome://messenger/skin/btn1/replyall.gif");
@@ -101,15 +105,15 @@
 #button-replyall[disabled="true"]:hover,
 #button-replyall[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/replyall-dis.gif");
-}
+} 
 
 #button-replyall:hover {
   list-style-image: url("chrome://messenger/skin/btn1/replyall-hov.gif");
-}
+} 
 
 #button-replyall:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/replyall-act.gif");
-}
+} 
 
 #button-forward {
   list-style-image: url("chrome://messenger/skin/btn1/forward.gif");
@@ -119,34 +123,34 @@
 #button-forward[disabled="true"]:hover,
 #button-forward[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/forward-dis.gif");
-}
+} 
 
 #button-forward:hover {
   list-style-image: url("chrome://messenger/skin/btn1/forward-hov.gif");
-}
+} 
 
 #button-forward:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/forward-act.gif");
-}
+} 
 
 #button-file {
   list-style-image: url("chrome://messenger/skin/btn1/file.gif");
 }
 
+#button-file:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/file-hov.gif");
+} 
+
 #button-file[disabled="true"],
 #button-file[disabled="true"]:hover,
 #button-file[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/file-dis.gif");
-}
-
-#button-file:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/file-hov.gif");
-}
+} 
 
 #button-file:hover:active,
 #button-file[open="true"] {
   list-style-image: url("chrome://messenger/skin/btn1/file-act.gif");
-}
+} 
 
 #button-next {
   list-style-image: url("chrome://messenger/skin/btn1/next.gif");
@@ -156,69 +160,59 @@
 #button-next[disabled="true"]:hover,
 #button-next[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/next-dis.gif");
-}
+} 
 
 #button-next:hover {
   list-style-image: url("chrome://messenger/skin/btn1/next-hov.gif");
-}
+} 
 
 #button-next:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/next-act.gif");
-}
+} 
 
 #button-delete {
-  list-style-image: url("chrome://messenger/skin/btn1/trash.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/delete.gif");
 }
 
 #button-delete[disabled="true"],
 #button-delete[disabled="true"]:hover,
 #button-delete[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-dis.gif");
-}
+  list-style-image: url("chrome://messenger/skin/btn1/delete-dis.gif");
+} 
 
 #button-delete:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-hov.gif");
-}
+  list-style-image: url("chrome://messenger/skin/btn1/delete-hov.gif");
+} 
 
 #button-delete:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/trash-act.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/delete-act.gif");
 }
 
 #button-mark {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
-  margin: 3px 3px 1px 3px;
   list-style-image: url("chrome://messenger/skin/btn1/mark.gif");
 }
 
 #button-mark[disabled="true"],
-#button-mark[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover,
-#button-mark[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/mark-dis.gif");
-}
+} 
 
 #button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover {
   list-style-image: url("chrome://messenger/skin/btn1/mark-hov.gif");
-}
+} 
 
 #button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://messenger/skin/btn1/mark-act.gif");
-}
+} 
 
 #button-print {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
-  margin: 3px 3px 1px 3px;
   list-style-image: url("chrome://communicator/skin/btn1/print.gif");
 }
 
 #button-print[disabled="true"],
-#button-print[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover,
-#button-print[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-button:hover:active
-{
+#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
 }
 
@@ -238,11 +232,11 @@
 #button-stop[disabled="true"]:hover,
 #button-stop[disabled="true"]:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
-}
+} 
 
 #button-stop:hover {
   list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
-}
+} 
 
 #button-stop:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
@@ -381,21 +375,18 @@ searchterm {
 
 /* ..... status bar adjustments ..... */
 
-#status-bar {
-  border-left: 1px solid #63717B;
-  border-top: none;
+statusbar, #status-bar {
+  border-top: none !important;
+  border-left: 1px solid #414B75;
 }
 
-#status-bar > :first-child {
+.statusbar-internal-box-1 {
+  border-top: none !important;
   border-left: 1px solid #000000;
 }
 
-#subscribeWindow > statusbar {
-  color: #000000;
-}
-
 #subscribeWindow > statusbar,
-#subscribeWindow > statusbar > :first-child {
+#subscribeWindow > statusbar > .statusbar-internal-box-1 {
   border-left: none;
   background-color: transparent;
 }
@@ -403,7 +394,7 @@ searchterm {
 /* ..... splitter adjustments ..... */
 
 #sidebar-splitter {
-  border: none;
+  border-right: none;
 }
 
 #sidebar-splitter > .splitter-internal-box {
@@ -411,7 +402,7 @@ searchterm {
 }
 
 #threadpane-splitter,
-#threadpane-splitter > .splitter-internal-box {
+#threadpane-splitter > box {
   border-top: none;
   border-left: none;
   border-right: none;
@@ -422,56 +413,73 @@ searchterm {
   border-bottom: 1px solid #000000;
 }
 
-#threadpane-splitter[state="collapsed"] > .splitter-internal-box {
-  border-bottom: 1px solid #63717B;
+#threadpane-splitter[state="collapsed"] > box {
+  border-bottom: 1px solid #414B75;
 }
 
 .gray-vertical-splitter,
-.gray-vertical-splitter > .splitter-internal-box {
+.gray-vertical-splitter > box {
   border-right: none;
 }
 
-.gray-vertical-splitter > .splitter-internal-box {
+.gray-vertical-splitter > box {
   border-bottom: none;
 }
 
 #sidebar-panels-splitter,
-#sidebar-panels-splitter > .splitter-internal-box {
+#sidebar-panels-splitter > box {
   border-top: none;
 }
 
 /* ..... sidebar adjustments ..... */
 
+#sidebar-box {
+  border-top: none;
+}
+
 .sidebarheader-main {
-  border-bottom: 1px solid #000000;
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#treecell-header") !important;
+  border-bottom: 1px solid #63676B;
+  border-left: 1px solid #63676B;
+  padding: 0px;
+}
+
+.sidebarheader-main > .treecell-header-box {
+  border-left: 1px solid #EEF0F3;
+  border-top: 1px solid #EEF0F3;
+  padding: 2px 0px 2px 16px;
 }
 
 /* ..... tree adjustments ..... */
-
+ 
 #folderTree {
-  border-bottom: 1px solid #C6D3D6;
-  border-left: 1px solid #63717B;
-}
-
-#folderTree > .tree-container-treerows {
-  border-bottom: 1px solid #7B969C;
-  border-left: 1px solid #000000;
+  border-top: none;
+  border-right: none;
+  border-bottom: 1px solid #CACFDD;
+  border-left: none;
 }
 
 #threadOutliner {
-  border-top: 1px solid #63717B;
+  border-top: none;
   border-right: none;
-  border-bottom: 1px solid #C6D3D6;
-  border-left: 1px solid #63717B;
+  border-bottom: 1px solid #CACFDD;
+  border-left: 1px solid #A5ABB0;
   min-width: 1px;
 }
 
-#threadOutliner > outlinerrows {
-  border-left: 1px solid #000000;
-  border-bottom: 1px solid #7B969C;
+#threadOutliner > outlinerbody,
+#folderTree > outlinerrows {
+  border-top: none;
 }
 
 #threadOutliner > .outliner-columns {
+  border-left: 1px solid #000000;
+}
+
+#folderTree > .tree-container-treerows,
+#threadOutliner > outlinerrows {
+  border-right: none;
+  border-bottom: 1px solid #7B969C;
   border-left: 1px solid #000000;
 }
 
@@ -481,16 +489,16 @@ searchterm {
 }
 
 #folderTree:focus > treechildren,
-#threadOutliner:focus > outlinerrows > .outliner-bodybox{
+#threadOutliner:focus > outlinerrows > .outliner-bodybox {
   border: 1px solid black;
 }
 
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {
-  border-top: 1px solid #63717B;
-  border-left: 1px solid #63717B;
-  border-bottom: 1px solid #000000;
+  border-top: 1px solid #A5ABB0;
+  border-bottom: 1px solid #D4DDF8;
+  border-left: 1px solid #A5ABB0;
 }
 
 #msgHeaderView {
@@ -500,25 +508,23 @@ searchterm {
 }
 
 #messagepane {
+  border: 1px solid #FFFFFF;
   border-left: 1px solid #000000;
 }
 
-#messagepanebox[focusring="true"] {
-  border-top: 1px solid #000000;
-  border-bottom: 1px solid #000000;
-  border-left: 1px solid #000000;
+#messagepanebox[focusring="true"] > #messagepane {
+  border-color: #000000;
 }
 
 /* ..... account central adjustments ..... */
 
-#accountCentralBox
-{
-  border-left: 1px solid #63717B;
-  border-bottom: 1px solid #000000;
+#accountCentralBox {
+  border-bottom: 1px solid #D4DDF8;
+  border-left: 1px solid #A5ABB0;
 }
 
-[name="accountCentralPane"]
-{
+[name="accountCentralPane"] {
+  border-bottom: 1px solid #A8B1CC;
   border-left: 1px solid #000000;
 }
 
@@ -548,15 +554,17 @@ searchterm {
 /* ::::: miscellany :::::: */
 
 [hide] {
-  display: none;
-}
-
-dummy.usesMailWidgets {
-  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#dummy");
+   display: none;
 }
 
 spring.spacer {
   width: 5px;
   height: 5px;
+}
+
+/* ::::: move to content :::::: */
+
+dummy.usesMailWidgets {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#dummy");
 }
 

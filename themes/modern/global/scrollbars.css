@@ -31,7 +31,7 @@
 
 scrollbar {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#scrollbar");
-  -moz-user-focus: ignore;
+  -moz-user-focus: ignore; 
 }
 
 /* ::::: slider ::::: */
@@ -39,14 +39,15 @@ scrollbar {
 slider {
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  height: 15px;
+  height: 14px;
   background: url("chrome://global/skin/scrollbar/bar-hrz-mid.gif") repeat-x;
 }
 
 slider[align="vertical"] {
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  border: none;
+  border-top: 0px;
+  border-bottom: 0px;
   width: 14px;
   background: url("chrome://global/skin/scrollbar/bar-vrt-mid.gif") repeat-y;
 }
@@ -107,20 +108,20 @@ thumb[align="vertical"] {
 }
 
 .thumb-vert-spring-top {
-  width: 14px;
-  height: 3px;
   background: url("chrome://global/skin/scrollbar/thumb-vrt-top.gif") no-repeat;
+  height: 3px;
+  width: 14px;
 }
 
 .thumb-vert-box-middle {
-  width: 14px;
   background: url("chrome://global/skin/scrollbar/thumb-vrt-mid.gif") repeat-y;
+  width: 14px;
 }
 
 .thumb-vert-spring-bottom {
-  width: 14px;
-  height: 3px;
   background: url("chrome://global/skin/scrollbar/thumb-vrt-btm.gif") no-repeat;
+  height: 3px;
+  width: 14px;
 }
 
 .thumb-vert-grippy {
@@ -148,44 +149,44 @@ thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
+  cursor: default;
   -moz-user-focus: ignore;
   -moz-user-select: none;
-  cursor: default;
   vertical-align: bottom;
 }
 
 /* ..... increment .... */
 
 scrollbarbutton[type="increment"] {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-rit.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-rit.gif")
 }
 
 scrollbarbutton[type="increment"]:hover:active {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-rit-act.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-rit-act.gif")
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-dn.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-dn.gif")
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-dn-act.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-dn-act.gif")
 }
 
 /* ..... decrement .... */
 
 scrollbarbutton[type="decrement"] {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-lft.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-lft.gif")
 }
 
 scrollbarbutton[type="decrement"]:hover:active {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-lft-act.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-lft-act.gif")
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-up.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-up.gif")
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
-  list-style-image: url("chrome://global/skin/scrollbar/btn-up-act.gif")
+   list-style-image: url("chrome://global/skin/scrollbar/btn-up-act.gif")
 }

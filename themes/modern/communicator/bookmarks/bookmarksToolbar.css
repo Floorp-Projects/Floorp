@@ -23,7 +23,11 @@
  *
  */
 
-@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
+/* ===== bookmarksToolbar.css ===========================================
+  == Styles specific to bookmark items in a toolbar.
+  ======================================================================= */
+
+@import url("chrome://communicator/skin/bookmarks/bookmarks.css");
 
 /* ::::: bookmark toolbar buttons ::::: */
 
@@ -39,17 +43,32 @@
 .bookmark-item.button-toolbar:hover,
 .bookmark-item.button-toolbar:hover:active,
 .bookmark-item.button-toolbar[open="true"] {
-  background-color: transparent;
+  border: 1px solid transparent;
 }
 
 .bookmark-item.button-toolbar[container="true"] {
-  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single-ile");
 }
 
 .bookmark-item.button-toolbar[container="true"],
 .bookmark-item.button-toolbar[container="true"]:hover {
   cursor: default;
   text-decoration: none;
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single-ile");
 }
 
+/* make folders look like normal toolbar buttons */
+
+.bookmark-item.button-toolbar[container="true"]:hover {
+  border-top: 1px solid #D5DAE5;
+  border-right: 1px solid #7681A2;
+  border-bottom: 1px solid #7681A2;
+  border-left: 1px solid #D5DAE5;
+}
+
+.bookmark-item.button-toolbar[container="true"]:hover:active,
+.bookmark-item.button-toolbar[container="true"][open="true"] {
+  border-top: 1px solid #7681A2;
+  border-right: 1px solid #D5DAE5;
+  border-bottom: 1px solid #D5DAE5;
+  border-left: 1px solid #7681A2;
+}

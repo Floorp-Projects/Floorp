@@ -34,7 +34,7 @@
   margin-left: 44px;
   margin-right: 44px;
   width: 30em;
-}
+} 
 
 /* ::::: wizard buttons ::::: */
 
@@ -43,15 +43,14 @@
 }
 
 #wiz-back-button {
-  list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-left.gif");
 }
 #wiz-back-button[disabled] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-lft-dis.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-left-disabled.gif");
 }
 #wiz-next-button {
-  list-style-image: url("chrome://global/skin/arrow/arrow-rit.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-right.gif");
 }
 #wiz-next-button[disabled] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-rit-dis.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-right-disabled.gif");
 }
-
