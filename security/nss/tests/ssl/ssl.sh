@@ -195,6 +195,18 @@ echo "********************* SSL Cipher Coverage  ****************************"
 echo "<TABLE BORDER=1><TR><TH COLSPAN=3>SSL Cipher Coverage</TH></TR>" >> ${RESULTS}
 echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULTS}
 cd ${CLIENTDIR}
+
+# Launch the server
+echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss & "
+if [ ${fileout} -eq 1 ]; then
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss > ${SERVEROUTFILE} 2>&1 & 
+else
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -i ${SERVERPID} & 
+fi
+# wait until it's alive
+echo "tstclnt -p ${PORT} -h ${HOST} -q"
+tstclnt -p ${PORT} -h ${HOST} -q
+
  cat ${SSLCOV} | while read tls param testname
 do
     if [ $tls != "#" ]; then
@@ -207,13 +219,6 @@ do
 	if [ ${param} = "i" ]; then
 		sparam='-c i'
 	fi
-	echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} & "
-	if [ ${fileout} -eq 1 ]; then
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 & 
-	else
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} & 
-	fi
-	sleep 20
 
 	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
@@ -221,14 +226,15 @@ do
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 	fi
-	${KILL} `cat ${SERVERPID}`
-	wait `cat ${SERVERPID}`
-	if [ ${fileout} -eq 1 ]; then
-	   cat ${SERVEROUTFILE}
-	fi
-	${SLEEP}
     fi
 done 
+# now kill the server
+${KILL} `cat ${SERVERPID}`
+wait `cat ${SERVERPID}`
+if [ ${fileout} -eq 1 ]; then
+   cat ${SERVEROUTFILE}
+fi
+${SLEEP}
 
 echo "</TABLE><BR>" >> ${RESULTS}
 fi
