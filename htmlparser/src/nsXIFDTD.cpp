@@ -1366,7 +1366,7 @@ nsresult nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
 nsresult nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
   nsresult result=NS_OK;
-  nsAutoString tagName(NS_ConvertASCIItoUCS2(nsHTMLTags::GetStringValue(eHTMLTag_style)));
+  nsAutoString tagName; tagName.AssignWithConversion(nsHTMLTags::GetStringValue(eHTMLTag_style));
 
   mBuffer.AppendWithConversion("</");
   mBuffer.Append(tagName);
