@@ -62,6 +62,7 @@ nsFileTransport::nsFileTransport()
       mSuspended(PR_FALSE),
       mMonitor(nsnull),
       mStatus(NS_OK),
+      mLoadAttributes(LOAD_NORMAL),
       mOffset(0),
       mTotalAmount(-1),
       mTransferAmount(-1),
@@ -623,7 +624,8 @@ nsFileTransport::Process(void)
             }
         }
 
-        if (mProgress && mTransferAmount >= 0) {
+        if (mProgress && mTransferAmount >= 0 && 
+            !(mLoadAttributes & LOAD_BACKGROUND)) {
             nsresult rv = mProgress->OnProgress(this, mContext,
                                     mTotalAmount - mTransferAmount,
                                     mTotalAmount);
@@ -663,7 +665,7 @@ nsFileTransport::Process(void)
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStopRequest failure");
             mListener = null_nsCOMPtr();
         }
-        if (mProgress) {
+        if (mProgress && !(mLoadAttributes & LOAD_BACKGROUND)) {
             // XXX fix up this message for i18n
             nsAutoString msg;
             msg.AssignWithConversion("Read ");
@@ -773,7 +775,7 @@ nsFileTransport::Process(void)
 
         mTransferAmount -= writeAmt;
         mOffset += writeAmt;
-        if (mProgress) {
+        if (mProgress && !(mLoadAttributes & LOAD_BACKGROUND)) {
             (void)mProgress->OnProgress(this, mContext,
                                         mTotalAmount - mTransferAmount,
                                         mTotalAmount);
@@ -814,7 +816,7 @@ nsFileTransport::Process(void)
             (void)mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
             mObserver = null_nsCOMPtr();
         }
-        if (mProgress) {
+        if (mProgress && !(mLoadAttributes & LOAD_BACKGROUND)) {
             // XXX fix up this message for i18n
             nsAutoString msg;
             msg.AssignWithConversion("Wrote ");
@@ -927,14 +929,15 @@ nsFileTransport::SetURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsFileTransport::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    *aLoadAttributes = LOAD_NORMAL;
+    *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileTransport::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    return NS_OK;	// ignored for now
+    mLoadAttributes = aLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

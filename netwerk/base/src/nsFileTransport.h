@@ -115,6 +115,7 @@ protected:
     PRUint32                            mOffset;
     PRInt32                             mTotalAmount;
     PRInt32                             mTransferAmount;
+    nsLoadFlags                         mLoadAttributes;
 
     // reading state varialbles:
     nsCOMPtr<nsIStreamListener>         mListener;
