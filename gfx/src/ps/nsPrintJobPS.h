@@ -39,6 +39,7 @@
 #ifndef nsPrintJobPS_h__
 #define nsPrintJobPS_h__
 
+#include "nsCUPSShim.h"
 #include "nsDebug.h"
 #include "nsIDeviceContext.h"   // for NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED
 #include "nsILocalFile.h"
@@ -154,6 +155,23 @@ class nsPrintJobPipePS : public nsPrintJobFilePS {
         nsCString mPrinterName;
 };
 
+
+/* This class submits print jobs through CUPS. mDestHandle and
+ * mDestination point to a temporary file used to assemble the
+ * final print job.
+ */
+class nsPrintJobCUPS : public nsPrintJobFilePS {
+    public:
+        nsresult StartSubmission(FILE **aHandle);
+        nsresult FinishSubmission();
+
+    protected:
+        nsresult Init(nsIDeviceContextSpecPS *);
+
+    private:
+        nsCUPSShim mCups;
+        nsCString mPrinterName;
+};
 #endif  /* VMS */
 
 #endif /* nsPrintJobPS_h__ */

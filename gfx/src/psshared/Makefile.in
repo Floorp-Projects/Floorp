@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Ken Herron <kherron+mozilla@fmailbox.com>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -43,94 +43,25 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gfx
-LIBRARY_NAME	= gfxps
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsGfxPSModule
+LIBRARY_NAME	= gfxpsshar
+EXPORT_LIBRARY	= 1
 GRE_MODULE	= 1
-EXTRA_DSO_LIBS = mozutil_s
-REQUIRES	= xpcom \
+REQUIRES	= pref \
 		  string \
 		  widget \
-		  pref \
-		  caps \
-		  locale \
-		  uconv \
-		  view \
-		  necko \
-		  imglib2 \
-		  unicharutil \
+		  xpcom \
 		  $(NULL)
-EXTRA_DSO_LIBS += gkgfx
 
-CPPSRCS		= \
-		nsDeviceContextPS.cpp \
-		nsFontMetricsPS.cpp \
-		nsRenderingContextPS.cpp \
-		nsPostScriptObj.cpp \
-		nsAFMObject.cpp \
-		nsGfxFactoryPS.cpp \
-		nsTempfilePS.cpp \
-		nsPrintJobPS.cpp \
-		nsPrintJobFactoryPS.cpp \
-		$(NULL)
+PACKAGE_FILE	= psshared.pkg
 
-EXPORTS		= \
-		nsIDeviceContextPS.h \
-		nsGfxPSCID.h \
-		nsIDeviceContextSpecPS.h \
-		nsTempfilePS.h \
-		$(NULL)
+EXPORTS		= nsCUPSShim.h \
+		  nsPaperPS.h \
+		  nsPSPrinters.h\
+		  $(NULL)
 
-EXPORT_RESOURCE	= \
-		$(srcdir)/sample.unixpsfonts.properties
-
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		-lgfxshared_s \
-		-lgfxpsshar \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NULL)
-
-ifdef MOZ_ENABLE_XFT
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_XFT_LIBS) \
-		$(NULL)
-endif
-
-ifneq (,$(MOZ_ENABLE_FREETYPE2)$(MOZ_ENABLE_XFT))
-CPPSRCS		+= \
-		nsCidMap.cpp \
-		nsType1.cpp \
-		nsType8.cpp \
-		$(NULL)
-endif
+CPPSRCS		= nsCUPSShim.cpp \
+		  nsPaperPS.cpp \
+		  nsPSPrinters.cpp \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-CFLAGS		+= $(TK_CFLAGS)
-CXXFLAGS	+= $(TK_CFLAGS)
-
-LOCAL_INCLUDES = \
-		-I../.. \
-		-I$(srcdir)/.. \
-                 $(NULL)
-
-ifdef MOZ_ENABLE_XFT
-INCLUDES		+= $(MOZ_XFT_CFLAGS)
-LOCAL_INCLUDES	+= -I$(srcdir)/../shared
-else
-ifdef MOZ_ENABLE_FREETYPE2
-INCLUDES	+= $(FT2_CFLAGS)
-endif
-endif
-
-libs::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
-

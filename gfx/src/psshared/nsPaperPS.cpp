@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ex: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -13,10 +13,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is developed for mozilla. The tables of paper sizes
+ * and paper orientations are based on tables from nsPostScriptObj.h.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@fastmail.us>.
+ * Kenneth Herron <kherron@newsguy.com>.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,61 +37,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+ 
+#include "nsPaperPS.h"
+#include "plstr.h"
 
-#include "nsDebug.h"
-#include "nsPrintJobFactoryPS.h"
-#include "nsIDeviceContextSpecPS.h"
-#include "nsPrintJobPS.h"
-#include "nsPSPrinters.h"
+#define COUNTOF(x) (sizeof(x) / sizeof((x)[0]))
 
-/**
- * Construct a print job object for the given device context spec.
- *
- * @param aSpec     An nsIDeviceContextSpecPS object for the print
- *                  job in question.
- * @param aPrintJob A pointer to a print job object which will
- *                  handle the print job.
- * @return NS_OK if all is well, or a suitable error value.
- */
-
-nsresult
-nsPrintJobFactoryPS::CreatePrintJob(nsIDeviceContextSpecPS *aSpec,
-        nsIPrintJobPS* &aPrintJob)
+const nsPaperSizePS_ nsPaperSizePS::mList[] =
 {
-    NS_PRECONDITION(nsnull != aSpec, "aSpec is NULL");
+#define SIZE_MM(x)      (x)
+#define SIZE_INCH(x)    ((x) * 25.4)
+    { "A5",             SIZE_MM(148),   SIZE_MM(210),   PR_TRUE },
+    { "A4",             SIZE_MM(210),   SIZE_MM(297),   PR_TRUE },
+    { "A3",             SIZE_MM(297),   SIZE_MM(420),   PR_TRUE },
+    { "Letter",         SIZE_INCH(8.5), SIZE_INCH(11),  PR_FALSE },
+    { "Legal",          SIZE_INCH(8.5), SIZE_INCH(14),  PR_FALSE },
+    { "Executive",      SIZE_INCH(7.5), SIZE_INCH(10),  PR_FALSE },
+#undef SIZE_INCH
+#undef SIZE_MM
+};
 
-    nsIPrintJobPS *newPJ;
+const unsigned int nsPaperSizePS::mCount = COUNTOF(mList);
 
-    PRBool setting;
-    aSpec->GetIsPrintPreview(setting);
-    if (setting)
-        newPJ = new nsPrintJobPreviewPS();
-    else {
-        aSpec->GetToPrinter(setting);
-        if (!setting)
-            newPJ = new nsPrintJobFilePS();
-        else
-#ifdef VMS
-            newPJ = new nsPrintJobVMSCmdPS();
-#else
-        {
-            const char *printerName;
-            aSpec->GetPrinterName(&printerName);
-            if (nsPSPrinterList::kTypeCUPS == nsPSPrinterList::GetPrinterType(
-                        nsDependentCString(printerName)))
-                newPJ = new nsPrintJobCUPS();
-            else
-                newPJ = new nsPrintJobPipePS();
+PRBool
+nsPaperSizePS::Find(const char *aName)
+{
+    for (int i = mCount; i--; ) {
+        if (!PL_strcasecmp(aName, mList[i].name)) {
+            mCurrent = i;
+            return PR_TRUE;
         }
-#endif
     }
-    if (!newPJ)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = newPJ->Init(aSpec);
-    if (NS_FAILED(rv))
-        delete newPJ;
-    else
-        aPrintJob = newPJ;
-    return rv;
+    return PR_FALSE;
 }
