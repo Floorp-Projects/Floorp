@@ -49,7 +49,9 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-TagList  gInP={3,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_form}}; // P used to contain TABLE - Ref: Bug# 11229 - Removed TABLE to solve Bug# 24673
+// P used to contain TABLE [Ref: Bug# 11229], and ADDRESS.
+// Removed TABLE to solve Bug# 24673. Removed ADDRESS to solve 24885
+TagList  gInP={2,{eHTMLTag_span,eHTMLTag_form}}; 
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -88,13 +90,13 @@ TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
 TagList  gMapKids={1,{eHTMLTag_area}};
 TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-TagList  gTableKids={10,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
+TagList  gTableKids={9,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
                      eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
-                     eHTMLTag_map,eHTMLTag_script,eHTMLTag_input}};
+                     eHTMLTag_map,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
   
 TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
-TagList  gTRKids={6,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input}};
-TagList  gTBodyKids={3,{eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input}};
+TagList  gTRKids={5,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script}};// Removed INPUT - Ref. Bug 20087, 25382
+TagList  gTBodyKids={2,{eHTMLTag_tr,eHTMLTag_form}}; // Removed INPUT - Ref. Bug 20087, 25382
 TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 
 
@@ -134,6 +136,8 @@ TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 
 
+TagList  gBlockQuoteExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
+
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
 //*********************************************************************************************
@@ -160,7 +164,7 @@ void Initialize(eHTMLTags aTag,
                 TagList*  aAutocloseStart,    
                 TagList*  aAutocloseEnd,      
                 TagList*  aSynonymousTags,    
-                TagList*  aAutoCloseBlockers,  
+                TagList*  aExcludableParents,  
                 int       aParentBits,        
                 int       aInclusionBits, 
                 int       aExclusionBits,     
@@ -179,7 +183,7 @@ void Initialize(eHTMLTags aTag,
   gHTMLElements[aTag].mAutocloseStart=aAutocloseStart;
   gHTMLElements[aTag].mAutocloseEnd=aAutocloseEnd;
   gHTMLElements[aTag].mSynonymousTags=aSynonymousTags;
-  gHTMLElements[aTag].mAutoCloseBlockers=aAutoCloseBlockers;
+  gHTMLElements[aTag].mExcludableParents=aExcludableParents;
   gHTMLElements[aTag].mParentBits=aParentBits;
   gHTMLElements[aTag].mInclusionBits=aInclusionBits;
   gHTMLElements[aTag].mExclusionBits=aExclusionBits;
@@ -331,7 +335,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_blockquote,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ 0,0,0,&gBlockQuoteExcludableParents,
       /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
@@ -857,7 +861,7 @@ void InitializeElementTable(void) {
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kNone,	
       /*special props, prop-range*/       0, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_noscript);
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_object,
@@ -874,7 +878,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
       /*autoclose starttags and endtags*/ &gOLAutoClose, &gULCloseTags, 0,0,
       /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       0,kDefaultPropRange,   
       /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
 
     Initialize( 
@@ -1009,8 +1013,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*parent,incl,exclgroups*/          (kFlowEntity|kHeadContent), kNone, kNone,	 // Added kFlowEntity|kHeadContent & kNonContainer in
+      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,           // Ref. to Bug 25749
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1443,7 +1447,6 @@ PRBool nsHTMLElement::IsBlockParent(eHTMLTags aTag){
   return result;
 }
 
-
 /**
  * 
  * @update	gess 01/04/99
@@ -1861,6 +1864,11 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
         return PR_FALSE;
     }
 
+    if(gHTMLElements[aChild].mExcludableParents) {
+      TagList* theParents=gHTMLElements[aChild].mExcludableParents;
+      if(FindTagInSet(mTagID,theParents->mTags,theParents->mCount))
+        return PR_FALSE;
+    }
 
     if(gHTMLElements[aChild].IsBlockCloser(aChild)){
       if(nsHTMLElement::IsBlockParent(mTagID)){

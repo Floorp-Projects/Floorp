@@ -123,6 +123,7 @@ nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,PRBool aPlainText) :
   NS_INIT_REFCNT();
   mDoXMLEmptyTags=PR_FALSE;
   mPlainText=aPlainText;
+  mRecordTrailingContent=PR_FALSE;
 }
 
 
@@ -506,7 +507,13 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
        */
       if(NS_SUCCEEDED(result)) {
         
-        RecordTrailingContent((CStartToken*)aToken,aScanner);
+        //XXX - Find a better soution to record content
+        if(theTag==eHTMLTag_textarea && !mRecordTrailingContent) {
+          mRecordTrailingContent=PR_TRUE;
+        }
+          
+        if(mRecordTrailingContent) 
+          RecordTrailingContent((CStartToken*)aToken,aScanner);
         
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
           nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
@@ -550,6 +557,9 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   nsresult result=NS_OK;
   
   if(aToken) {
+    if(aToken->GetTypeID()==eHTMLTag_textarea && mRecordTrailingContent) {
+      mRecordTrailingContent=PR_FALSE;
+    }
     result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theRecycler);
   } //if

@@ -302,7 +302,8 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
 void CStartToken::GetSource(nsString& anOutputString){
   anOutputString="<";
   anOutputString+=mTextValue;
-  anOutputString+=mTrailingContent;
+  if(mTrailingContent.Length()>0)
+    anOutputString+=mTrailingContent;
 }
 
 /*
@@ -481,7 +482,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  static    const char* theTerminals="\n\r&<";
+  static nsString theTerminals("\n\r&<",4);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
@@ -831,47 +832,53 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           per spec (But then, neither does IE or Nav).
    *********************************************************/
 
-  aString="<!";
-  nsAutoString  theRightChars;
   PRInt32       theBestAltPos=kNotFound;
-  PRUint32      theStartOffset=0;
+  nsString&     theBuffer=aScanner.GetBuffer();
+  PRInt32       theStartOffset=aScanner.GetOffset();
+  PRInt32       theCurrOffset=theStartOffset;
 
   result=aScanner.GetChar(aChar);
   if(NS_OK==result) {
-    aString+=aChar;
     if(kMinus==aChar) {
       result=aScanner.GetChar(aChar);
       if(NS_OK==result) {
         if(kMinus==aChar) {
           //in this case, we're reading a long-form comment <-- xxx -->
-          aString+=aChar;
           
-          PRInt32 findpos=kNotFound;
-          while((kNotFound==findpos) && (NS_OK==result)) {
-            result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);          
-            if(NS_OK==result){
-              aChar=aString.CharAt(aString.Length()-3);
+          while((NS_OK==result)) {
+            theCurrOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,theCurrOffset);
+            if(theCurrOffset>kNotFound) {
+              theCurrOffset++;
+              aChar=theBuffer[theCurrOffset-3];
               if(kMinus==aChar) {
-                aChar=aString.CharAt(aString.Length()-2);
-                if(kMinus==aChar) return result; // We have found the dflt end comment delimiter ("-->")
+                aChar=theBuffer[theCurrOffset-2];
+                if(kMinus==aChar) {
+                  theStartOffset=theStartOffset-2; // Include "<!" also..
+                  theBuffer.Mid(aString,theStartOffset,theCurrOffset-theStartOffset);
+                  aScanner.Mark(theCurrOffset);
+                  return result; // We have found the dflt end comment delimiter ("-->")
+                }
               }
               if(kNotFound==theBestAltPos) {
                 // If we did not find the dflt then assume that '>' is the end comment
                 // until we find '-->'. Nav. Compatibility -- Ref: Bug# 24006
-                theBestAltPos=aString.Length();
-                theStartOffset=aScanner.GetOffset();
+                theBestAltPos=theCurrOffset;
               }
             }
+            else {
+              result=kEOF;
+            }
           } //while
-          if((kNotFound==findpos) && (!aScanner.IsIncremental())) {
+          if((kNotFound==theCurrOffset) && (!aScanner.IsIncremental())) {
             //if you're here, then we're in a special state. 
             //The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
             //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
             //If so, rewind just pass than, and use everything up to that point as your comment.
             //If not, the document has no end comment and should be treated as one big comment.
             if(kNotFound<theBestAltPos) {
-              aString.Truncate(theBestAltPos);
-              aScanner.Mark(theStartOffset);
+              theStartOffset=theStartOffset-2;// Include "<!" also..
+              theBuffer.Mid(aString,theStartOffset,theBestAltPos-theStartOffset);
+              aScanner.Mark(theBestAltPos);
               result=NS_OK;
             }
           }
@@ -1214,7 +1221,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  */
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
-  static const char* theTerminals="\b\t\n\r >";
+  static nsString theTerminals("\b\t\n\r >",6);
   nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_TRUE,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
@@ -1274,7 +1281,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       else {
           //If you're here, handle an unquoted key.
           //Don't forget to reduce entities inline!
-        static const char* theTerminals="\b\t\n\r \"<=>";
+        static nsString theTerminals("\b\t\n\r \"<=>",9);
         result=aScanner.ReadUntil(mTextKey,theTerminals,PR_TRUE,PR_FALSE);
       }
 

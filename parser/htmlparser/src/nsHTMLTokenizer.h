@@ -97,6 +97,7 @@ protected:
   PRBool  mDoXMLEmptyTags;
   PRInt32 mParseMode;
   PRBool  mPlainText;
+  PRBool  mRecordTrailingContent;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,PRBool aPlaintext);
