@@ -1147,8 +1147,3 @@ function isCommandEnabled(cmd)
 
 }
 
-function SetFocusAfterGoNextMessage()
-{
-  SetFocusThreadPane();
-}
-

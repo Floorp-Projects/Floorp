@@ -606,11 +606,11 @@ Rights Reserved.
         <menuitem id="context-selectall"
                   label="&selectAllCmd.label;"
                   accesskey="&selectAllCmd.accesskey;"
-                  command="cmd_selectAll"/>
+                  observes="cmd_selectAll"/>
         <menuitem id="context-copy"
                   label="&copyCmd.label;"
                   accesskey="&copyCmd.accesskey;"
-                  command="cmd_copy"/>
+                  observes="cmd_copy"/>
     <menuseparator id="messagePaneContext-sep-open"/>
     <menuitem id="messagePaneContext-replySender"
         label="&contextReplySender.label;"
