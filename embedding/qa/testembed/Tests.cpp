@@ -237,7 +237,7 @@ void CTests::OnTestsChangeUrl()
 		FormatAndPrintOutput("The url = ", theUrl, 2); 
 
 /*
-		char *uriSpec;
+		nsCAutoString uriString;
 		nsCOMPtr<nsIURI> pURI;
 		// GetcurrentURI() declared in nsIP3PUI.idl
 		// used with webNav obj in nsP3PObserverHTML.cpp, line 239
@@ -246,12 +246,12 @@ void CTests::OnTestsChangeUrl()
 		if(NS_FAILED(rv) || !pURI)
 			AfxMessageBox("Bad result for GetCurrentURI().");
 
-		rv = pURI->GetSpec(&uriSpec);
+		rv = pURI->GetSpec(uriString);
 		if (NS_FAILED(rv))
 			AfxMessageBox("Bad result for GetSpec().");
 
 		AfxMessageBox("Start URL validation test().");
-		if (strcmp(uriSpec, theUrl) == 0)
+		if (strcmp(uriString, theUrl) == 0)
 		{
 			QAOutput("Url loaded successfully. Test Passed.", 2);	
 		}

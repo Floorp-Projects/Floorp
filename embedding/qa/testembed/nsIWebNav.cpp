@@ -415,11 +415,11 @@ void CNsIWebNav::GetCurrentURITest()
    else
 	  RvTestResult(rv, "GetCurrentURI() test", 2);
 
-   char *uriSpec;
-   rv = theUri->GetSpec(&uriSpec);
+   nsCAutoString uriString;
+   rv = theUri->GetSpec(uriString);
    RvTestResult(rv, "nsIURI::GetSpec() for nsIWebNav test", 1);
 
-   FormatAndPrintOutput("the nsIWebNav uri = ", uriSpec, 2);
+   FormatAndPrintOutput("the nsIWebNav uri = ", uriString, 2);
 }
 
 void CNsIWebNav::GetSHTest()

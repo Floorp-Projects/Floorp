@@ -115,6 +115,7 @@ void CNsIRequest::RunIndividualTests(UINT nMenuID)
 		FormatAndPrintOutput("the uri spec = ", theSpec.get(), 2);
 
 		rv = NS_NewURI(getter_AddRefs(theURI), theSpec.get());
+
 		if (!theURI)
 		{
 		   QAOutput("We didn't get the URI. Test failed.", 1);
@@ -123,7 +124,7 @@ void CNsIRequest::RunIndividualTests(UINT nMenuID)
 		else
 		   RvTestResult(rv, "NS_NewURI", 1);
 
-		rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
 		if (!theChannel)
 		{
 		   QAOutput("We didn't get the Channel. Test failed.", 1);
@@ -218,7 +219,7 @@ void CNsIRequest::RunAllTests()
 		else
 		   RvTestResult(rv, "NS_NewURI", 1);
 
-		rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
 		if (!theChannel)
 		{
 		   QAOutput("We didn't get the Channel. Test failed.", 1);

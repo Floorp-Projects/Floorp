@@ -412,7 +412,7 @@ void CBrowserView::OnViewSource()
 
 	// Get the uri string associated with the nsIURI object
 	nsXPIDLCString uriString;
-	rv = currentURI->GetSpec(getter_Copies(uriString));
+	rv = currentURI->GetSpec(uriString);
 	if(NS_FAILED(rv))
 		return;
 
@@ -813,11 +813,10 @@ void CBrowserView::OnSaveLinkAs()
 
 	// Get the "path" portion (see nsIURI.h for more info
 	// on various parts of a URI)
-	nsXPIDLCString path;
-	linkURI->GetPath(getter_Copies(path));
+	nsCAutoString fileName;
+	linkURI->GetPath(fileName);
 
 	// The path may have the "/" char in it - strip those
-	nsCAutoString fileName(path);
 	fileName.StripChars("\\/");
 
 	// Now, use this file name in a File Save As dlg...
@@ -859,8 +858,8 @@ void CBrowserView::OnSaveImageAs()
 
 	// Get the "path" portion (see nsIURI.h for more info
 	// on various parts of a URI)
-	nsXPIDLCString path;
-	linkURI->GetPath(getter_Copies(path));
+	nsCAutoString path;
+	linkURI->GetPath(path);
 
 	// The path may have the "/" char in it - strip those
 	nsCAutoString fileName(path);
@@ -991,8 +990,8 @@ void CBrowserView::OnFilePrint()
 	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
       if(NS_SUCCEEDED(rv) || currentURI) 
       {
-	      nsXPIDLCString path;
-	      currentURI->GetPath(getter_Copies(path));
+	    nsCAutoString path;
+	    currentURI->GetPath(path);
         dlg.SetURI(path.get());
       }
       m_bCurrentlyPrinting = TRUE;
