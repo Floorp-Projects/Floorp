@@ -131,7 +131,9 @@ public:
 	
 	~stTSMCloser()
 	{
+#if !TARGET_CARBON	
 		(void)CloseTSMAwareApplication();
+#endif
 	}
 };
 #endif // XP_MAC

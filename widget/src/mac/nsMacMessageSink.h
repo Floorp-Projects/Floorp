@@ -27,6 +27,8 @@
 
 #include <map>
 
+using std::map;
+
 #include <Events.h>
 #include <Windows.h>
 

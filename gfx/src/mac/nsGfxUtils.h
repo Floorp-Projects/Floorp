@@ -35,10 +35,14 @@
  */
 inline PRBool CurrentPortIsWMPort()
 {
+#if TARGET_CARBON
+  return PR_FALSE;
+#else
   GrafPtr curPort;
   ::GetPort(&curPort);
   
   return (curPort == ::LMGetWMgrPort());
+#endif
 }
 
 
@@ -55,6 +59,15 @@ public:
 		if (mOldPort != newPort)
 			::SetPort(newPort);
 	}
+
+#if TARGET_CARBON
+	StPortSetter(WindowPtr newWindow)
+		: mNewPort(GetWindowPort(newWindow)), mOldPort(::GetQDGlobalsThePort())
+	{
+		if (mOldPort != mNewPort)
+			::SetPort(mNewPort);
+	}
+#endif    
 	
 	~StPortSetter()
 	{

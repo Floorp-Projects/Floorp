@@ -32,6 +32,7 @@
 #define TARGET_CARBON 0
 #if TARGET_CARBON
 #define PP_Target_Carbon 1
+#define OLDP2C 1
 #endif
 
 /* Some build-wide Mac-related defines */

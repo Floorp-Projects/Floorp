@@ -304,7 +304,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 		return NS_ERROR_UNEXPECTED;
 #endif
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && !TARGET_CARBON
 	// get the mainRD entry point
 	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(pluginTag->mLibrary, "mainRD");
 	if(pfnMain == NULL)
@@ -426,8 +426,10 @@ ns4xPlugin::Shutdown(void)
 	printf("shutting down plugin %08x\n",(int)this);
 #endif
 #ifdef XP_MAC
+#if !TARGET_CARBON
 	CallNPP_ShutdownProc(fShutdownEntry);
 	::CloseResFile(fPluginRefNum);
+#endif
 #else
     fShutdownEntry();
 #endif

@@ -50,7 +50,7 @@ ICInstance nsInternetConfig::GetInstance()
 {
 	if ( !sInstance )
 	{
-		ICError err;
+		OSStatus err;
 		if ((long)ICStart == kUnresolvedCFragSymbolAddress )
 			return sInstance;                          
                                                                                  
@@ -63,7 +63,9 @@ ICInstance nsInternetConfig::GetInstance()
 		}
 		else
 		{
+#if !TARGET_CARBON
 			::ICFindConfigFile( sInstance, 0 , nil );
+#endif
 			::ICGetSeed( sInstance, &sSeed );
 		}
 	}
@@ -108,7 +110,7 @@ nsresult nsInternetConfig::GetString( unsigned char* inKey, char** outString )
 	ICInstance instance = nsInternetConfig::GetInstance();
 	if ( instance )
 	{	
-		ICError err;
+		OSStatus err;
 		char buffer[256];
 		ICAttr junk;
 		long size = 256;

@@ -364,7 +364,7 @@ NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWrit
     // Calling PR_Write on stdout is sure suicide.
     if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
     {
-        cout.write(aBuf, aCount);
+        std::cout.write(aBuf, aCount);
         *aWriteCount = aCount;
         return NS_OK;
     }
@@ -452,7 +452,7 @@ NS_IMETHODIMP FileImpl::Flush()
 #ifdef XP_MAC
     if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
     {
-        cout.flush();
+        std::cout.flush();
         return NS_OK;
     }
 #endif

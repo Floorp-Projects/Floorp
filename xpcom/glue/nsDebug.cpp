@@ -104,7 +104,7 @@
 	      Str255 buffer;
 	      
 	      va_start(ap, format);
-	      buffer[0] = vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
+	      buffer[0] = std::vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
 	      va_end(ap);
 	      if (PL_strcasestr((char *)&buffer[1], "warning"))
 	 	      printf("еее%s\n", (char*)buffer + 1);

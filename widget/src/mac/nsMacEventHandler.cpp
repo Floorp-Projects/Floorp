@@ -1363,7 +1363,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 		// now look to see if we want to convert this to a double- or triple-click
 		const short kDoubleClickMoveThreshold	= 5;
 		
-		if (((aOSEvent.when - sLastMouseUp) < ::LMGetDoubleTime()) &&
+		if (((aOSEvent.when - sLastMouseUp) < ::GetDblTime()) &&
 				(((abs(aOSEvent.where.h - sLastWhere.h) < kDoubleClickMoveThreshold) &&
 				 	(abs(aOSEvent.where.v - sLastWhere.v) < kDoubleClickMoveThreshold))))
 		{		

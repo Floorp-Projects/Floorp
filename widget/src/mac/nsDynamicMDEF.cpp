@@ -257,11 +257,13 @@ pascal void nsDynamicMDEFMain(
   
   // Force a size message next time we draw this menu
   if(message == kMenuDrawMsg) {
+#if !TARGET_CARBON
     SInt8 state = ::HGetState((Handle)theMenu);
     HLock((Handle)theMenu);
     (**theMenu).menuWidth = -1;
     (**theMenu).menuHeight = -1;
     HSetState((Handle)theMenu, state);  
+#endif
   }
 }  
 
@@ -461,6 +463,7 @@ void nsCallSystemMDEF(
   Point hitPt, 
   short * whichItem) 
 {
+#if !TARGET_CARBON
   SInt8 state = ::HGetState(gSystemMDEFHandle);
   ::HLock(gSystemMDEFHandle);
 
@@ -476,7 +479,7 @@ void nsCallSystemMDEF(
 
   ::DisposeRoutineDescriptor(gmdefUPP);
   ::HSetState(gSystemMDEFHandle, state);
-
+#endif
   return;
 }
 

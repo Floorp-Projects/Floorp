@@ -68,7 +68,7 @@ AEGenericClass::AEGenericClass(DescType classType, DescType containerClass)
 AEGenericClass::~AEGenericClass()
 {
 	if (mItemFromContainerAccessor)
-		DisposeRoutineDescriptor(mItemFromContainerAccessor);
+		DisposeOSLAccessorUPP(mItemFromContainerAccessor);
 }
 
 #pragma mark -

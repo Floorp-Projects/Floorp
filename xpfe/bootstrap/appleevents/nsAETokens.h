@@ -63,37 +63,27 @@ typedef struct CoreTokenRecord CoreTokenRecord, *CoreTokenPtr, **CoreTokenHandle
 class AETokenDesc
 {
 public:
-						AETokenDesc(const AEDesc* token)	{ mToken = token; }
-						~AETokenDesc() {}
+						AETokenDesc(const AEDesc* token);
+						~AETokenDesc();
 
-	DescType				GetDispatchClass() const;
-	DescType 				GetObjectClass() const;
+	DescType			GetDispatchClass() const;
+	DescType 			GetObjectClass() const;
 	Boolean				UsePropertyCode() const;
-	DescType				GetPropertyCode() const;
+	DescType			GetPropertyCode() const;
 		
-	long					GetDocumentID() const;
+	long				GetDocumentID() const;
 	WindowPtr			GetWindowPtr() const;
-	TAEListIndex			GetElementNumber() const;
+	TAEListIndex		GetElementNumber() const;
 	
-	void					SetDispatchClass(DescType dispatchClass);
-	void					SetObjectClass(DescType objectClass);
-	void					SetPropertyCode(DescType propertyCode);
-	void					SetElementNumber(TAEListIndex number);
-	void					SetWindow(WindowPtr wind);
+	void				SetDispatchClass(DescType dispatchClass);
+	void				SetObjectClass(DescType objectClass);
+	void				SetPropertyCode(DescType propertyCode);
+	void				SetElementNumber(TAEListIndex number);
+	void				SetWindow(WindowPtr wind);
 	
 protected:
-	
-	CoreTokenHandle	GetTokenHandle() const
-					{
-						if (mToken->dataHandle && GetHandleSize(mToken->dataHandle) == sizeof(CoreTokenRecord))
-							return (CoreTokenHandle)mToken->dataHandle;
-						else
-							return nil;
-					}
-	
-	const AEDesc*		mToken;
+	CoreTokenRecord     mTokenData;
+	Boolean             mTokenValid;
 };
 
-
 #endif /* __AETOKENS__ */
-

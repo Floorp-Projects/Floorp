@@ -81,7 +81,7 @@ typedef struct PASResource
 
 
 
-#if PRAGMA_ALIGN_SUPPORTED
+#if PRAGMA_STRUCT_ALIGN
 #pragma options align=reset
 #endif
 

@@ -47,7 +47,7 @@ AEMozillaSuiteHandler::~AEMozillaSuiteHandler()
 	HandleMozillaSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AEMozillaSuiteHandler::HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AEMozillaSuiteHandler::HandleMozillaSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	OSErr		err = noErr;
 	

@@ -78,10 +78,15 @@ nsSplashScreenMac::Show()
 {
 	mDialog = ::GetNewDialog(rSplashDialog, nil, (WindowPtr)-1L);
 	if (!mDialog) return NS_ERROR_FAILURE;
-	
+
+#if TARGET_CARBON
+	::ShowWindow(GetDialogWindow(mDialog));
+	::SetPortDialogPort(mDialog);
+#else	
 	::ShowWindow(mDialog);
 	::SetPort(mDialog);
-	
+#endif
+
 	::DrawDialog(mDialog);    // we don't handle events for this dialog, so we
 	                          // need to draw explicitly. Yuck.
   return NS_OK;

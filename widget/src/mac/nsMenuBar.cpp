@@ -387,7 +387,7 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
           if(menuIDstring.EqualsWithConversion("menu_Help")) {
             nsMenuEvent event;
             MenuHandle handle;
-#ifndef RHAPSODY
+#if !(defined(RHAPSODY) || defined(TARGET_CARBON))
             ::HMGetHelpMenuHandle(&handle);
 #endif
             event.mCommand = (unsigned int) handle;

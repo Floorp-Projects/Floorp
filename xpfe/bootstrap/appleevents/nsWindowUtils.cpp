@@ -64,7 +64,11 @@ void GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen)
 //---------------------------------------------------------
 inline void GetWindowPortRect(WindowPtr wind, Rect *outRect)
 {
+#if OPAQUE_TOOLBOX_STRUCTS
+    ::GetPortBounds(GetWindowPort(wind), outRect);
+#else
 	*outRect = wind->portRect;
+#endif
 }
 
 /*----------------------------------------------------------------------------
@@ -86,7 +90,7 @@ void GetWindowGlobalBounds(WindowPtr wind, Rect* outBounds)
 	GrafPtr	curPort;
 	GetWindowPortRect(wind, outBounds);
 	GetPort(&curPort);
-	SetPort(wind);
+	SetPortWindowPort(wind);
 	LocalToGlobalRect(outBounds);
 	SetPort(curPort);
 }

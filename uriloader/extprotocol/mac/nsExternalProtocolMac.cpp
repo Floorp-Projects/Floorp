@@ -60,7 +60,9 @@ nsresult nsExternalProtocol::DefaultLaunch( nsIURI *pUri)
 
 	err = ICStart(&inst, 'MOSS');
 	if (err == noErr) {
+#if !TARGET_CARBON
 		err = ICFindConfigFile( inst, 0, nil);
+#endif
 		if (err == noErr) {
 			startSel = 0;
 			err = ICLaunchURL(inst, "\p", (char *)((const char *) uriStr), endSel, &startSel, &endSel);

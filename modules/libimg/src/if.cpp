@@ -836,7 +836,7 @@ il_size(il_container *ic)
 #define IL_SIZE_CHUNK   128
 #endif
 #ifdef XP_MAC
-#    if GENERATINGPOWERPC
+#    if TARGET_CPU_PPC
 #        define IL_PREFERRED_CHUNK 8192
 #        define IL_OFFSCREEN_CHUNK 128
 #    else   /* normal mac */

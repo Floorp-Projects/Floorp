@@ -50,18 +50,19 @@
 #ifndef nsMimeMapper_h__
 #define nsMimeMapper_h__
 
+#include <utility>
 #include <vector>
 #include <Types.h>
 #include "nsString.h"
 
+using std::pair;
 
 class nsMimeMapperMac 
 {
 public:
   enum { kMappingFlavor = 'MOZm' } ;
   
-  nsMimeMapperMac ( ) ;
-  nsMimeMapperMac ( const char* inMappings ) ;
+  nsMimeMapperMac ( const char* inMappings = nsnull ) ;
   ~nsMimeMapperMac ( ) ;
    
     // Converts from mime type (eg: text/plain) to MacOS type (eg: 'TEXT'). If

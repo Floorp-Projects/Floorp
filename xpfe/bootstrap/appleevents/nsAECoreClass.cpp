@@ -172,37 +172,37 @@ AECoreClass::AECoreClass(Boolean suspendEvents)
 AECoreClass::~AECoreClass()
 {
 	if (mSuspendEventHandlerUPP)
-		DisposeRoutineDescriptor(mSuspendEventHandlerUPP);
+		DisposeAEEventHandlerUPP(mSuspendEventHandlerUPP);
 
 	if (mStandardSuiteHandlerUPP)
-		DisposeRoutineDescriptor(mStandardSuiteHandlerUPP);
+		DisposeAEEventHandlerUPP(mStandardSuiteHandlerUPP);
 		
 	if (mRequiredSuiteHandlerUPP)
-		DisposeRoutineDescriptor(mRequiredSuiteHandlerUPP);
+		DisposeAEEventHandlerUPP(mRequiredSuiteHandlerUPP);
 			
 	if (mMozillaSuiteHandlerUPP)
-		DisposeRoutineDescriptor(mMozillaSuiteHandlerUPP);
+		DisposeAEEventHandlerUPP(mMozillaSuiteHandlerUPP);
 
 	if (mGetURLSuiteHandlerUPP)
-		DisposeRoutineDescriptor(mGetURLSuiteHandlerUPP);
+		DisposeAEEventHandlerUPP(mGetURLSuiteHandlerUPP);
 
 	if (mSpyGlassSuiteHandlerUPP)
-		DisposeRoutineDescriptor(mSpyGlassSuiteHandlerUPP);	
+		DisposeAEEventHandlerUPP(mSpyGlassSuiteHandlerUPP);	
 	
 	if (mCreateElementHandlerUPP)
-		DisposeRoutineDescriptor(mCreateElementHandlerUPP);
+		DisposeAEEventHandlerUPP(mCreateElementHandlerUPP);
 		
 	if (mPropertyFromListAccessor)
-		DisposeRoutineDescriptor(mPropertyFromListAccessor);
+		DisposeOSLAccessorUPP(mPropertyFromListAccessor);
 
 	if (mAnythingFromAppAccessor)
-		DisposeRoutineDescriptor(mAnythingFromAppAccessor);
+		DisposeOSLAccessorUPP(mAnythingFromAppAccessor);
 
 	if (mCountItemsCallback)
-		DisposeRoutineDescriptor(mCountItemsCallback);
+		DisposeOSLCountUPP(mCountItemsCallback);
 
 	if (mCompareItemsCallback)
-		DisposeRoutineDescriptor(mCompareItemsCallback);
+		DisposeOSLCompareUPP(mCompareItemsCallback);
 }
 
 #pragma mark -
@@ -212,7 +212,7 @@ AECoreClass::~AECoreClass()
 	HandleCoreSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleCoreSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleCoreSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		directParameter;
 	StAEDesc		token;
@@ -357,7 +357,7 @@ void AECoreClass::HandleCoreSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply
 	HandleRequiredSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleRequiredSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleRequiredSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc	token;
 	
@@ -376,7 +376,7 @@ void AECoreClass::HandleRequiredSuiteEvent(AppleEvent *appleEvent, AppleEvent *r
 	HandleCreateElementEvent 
 	
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleCreateElementEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleCreateElementEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	StAEDesc		token;
 	OSErr		err = noErr;
@@ -400,7 +400,7 @@ void AECoreClass::HandleCreateElementEvent(AppleEvent *appleEvent, AppleEvent *r
 	HandleEventSuspend 
 	
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleEventSuspend(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleEventSuspend(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	mSuspendedEvent = *appleEvent;
 	mReplyToSuspendedEvent = *reply;
@@ -484,7 +484,7 @@ void AECoreClass::GetAnythingFromApp(				DescType			desiredClass,
 
 ----------------------------------------------------------------------------*/
 
-pascal OSErr AECoreClass::SuspendEventHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::SuspendEventHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -519,7 +519,7 @@ pascal OSErr AECoreClass::SuspendEventHandler(AppleEvent *appleEvent, AppleEvent
 
 ----------------------------------------------------------------------------*/
 
-pascal OSErr AECoreClass::RequiredSuiteHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::RequiredSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -554,7 +554,7 @@ pascal OSErr AECoreClass::RequiredSuiteHandler(AppleEvent *appleEvent, AppleEven
 
 ----------------------------------------------------------------------------*/
 
-pascal OSErr AECoreClass::CoreSuiteHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::CoreSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -583,7 +583,7 @@ pascal OSErr AECoreClass::CoreSuiteHandler(AppleEvent *appleEvent, AppleEvent *r
 	
 ----------------------------------------------------------------------------*/
 
-pascal OSErr AECoreClass::CreateElementHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::CreateElementHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -613,7 +613,7 @@ pascal OSErr AECoreClass::CreateElementHandler(AppleEvent *appleEvent, AppleEven
 	MozillaSuiteHandler 
 	
 ----------------------------------------------------------------------------*/
-pascal OSErr AECoreClass::MozillaSuiteHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::MozillaSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -643,7 +643,7 @@ pascal OSErr AECoreClass::MozillaSuiteHandler(AppleEvent *appleEvent, AppleEvent
 	
 
 ----------------------------------------------------------------------------*/
-pascal OSErr AECoreClass::GetURLSuiteHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::GetURLSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -673,7 +673,7 @@ pascal OSErr AECoreClass::GetURLSuiteHandler(AppleEvent *appleEvent, AppleEvent 
 
 ----------------------------------------------------------------------------*/
 
-pascal OSErr AECoreClass::SpyglassSuiteHandler(AppleEvent *appleEvent, AppleEvent *reply, long refCon)
+pascal OSErr AECoreClass::SpyglassSuiteHandler(const AppleEvent *appleEvent, AppleEvent *reply, UInt32 refCon)
 {
 	AECoreClass*	coreClass = reinterpret_cast<AECoreClass *>(refCon);
 	OSErr		err = noErr;
@@ -705,7 +705,7 @@ pascal OSErr AECoreClass::SpyglassSuiteHandler(AppleEvent *appleEvent, AppleEven
 	
 	We probably want to handle events for this suite off to another class.
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleMozillaSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	mMozillaSuiteHandler.HandleMozillaSuiteEvent(appleEvent, reply);
 }
@@ -716,7 +716,7 @@ void AECoreClass::HandleMozillaSuiteEvent(AppleEvent *appleEvent, AppleEvent *re
 	
 	We probably want to handle events for this suite off to another class.
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleGetURLSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	mGetURLSuiteHandler.HandleGetURLSuiteEvent(appleEvent, reply);
 }
@@ -727,7 +727,7 @@ void AECoreClass::HandleGetURLSuiteEvent(AppleEvent *appleEvent, AppleEvent *rep
 	
 	We probably want to handle events for this suite off to another class.
 ----------------------------------------------------------------------------*/
-void AECoreClass::HandleSpyglassSuiteEvent(AppleEvent *appleEvent, AppleEvent *reply)
+void AECoreClass::HandleSpyglassSuiteEvent(const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	mSpyglassSuiteHandler.HandleSpyglassSuiteEvent(appleEvent, reply);
 }
@@ -1073,7 +1073,7 @@ void AECoreClass::InstallSuiteHandlers(Boolean suspendEvents)
 	HandleCoreSuiteEvent 
 	
 ----------------------------------------------------------------------------*/
-void AECoreClass::ResumeEventHandling(AppleEvent *appleEvent, AppleEvent *reply, Boolean dispatchEvent)
+void AECoreClass::ResumeEventHandling(const AppleEvent *appleEvent, AppleEvent *reply, Boolean dispatchEvent)
 {
 	InstallSuiteHandlers(false);
 
@@ -1083,8 +1083,3 @@ void AECoreClass::ResumeEventHandling(AppleEvent *appleEvent, AppleEvent *reply,
 	err = ::AEResumeTheCurrentEvent(appleEvent, reply, (AEEventHandlerUPP)(dispatchEvent ? kAEUseStandardDispatch : kAENoDispatch), (long)this);
 	ThrowIfOSErr(err);
 }
-
-
-
-
-

@@ -53,6 +53,8 @@
 #include <Folders.h>
 #include "macDirectoryCopy.h"
 
+#include <limits.h>
+
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
 {
@@ -301,14 +303,15 @@ static OSErr FindAppOnVolume (OSType sig, short vRefNum, FSSpec *file)
 
 static OSErr GetIndVolume(short index, short *vRefNum)
 {
-	ParamBlockRec pb;
+	HParamBlockRec pb;
+	Str63 volumeName;
 	OSErr err = noErr;
 	
 	pb.volumeParam.ioCompletion = nil;
-	pb.volumeParam.ioNamePtr = nil;
+	pb.volumeParam.ioNamePtr = volumeName;
 	pb.volumeParam.ioVolIndex = index;
 	
-	err = PBGetVInfoSync(&pb);
+	err = PBHGetVInfoSync(&pb);
 	
 	*vRefNum = pb.volumeParam.ioVRefNum;
 	return err;
@@ -2297,10 +2300,14 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
 		err = AECoerceDesc(&theEvent, typeAppParameters, &launchDesc);
 		if (err != noErr) return NS_ERROR_FAILURE;
 
-		::HLock(theEvent.dataHandle);
-		
 		launchThis.launchAppSpec = (FSSpecPtr)&appSpec;
-		launchThis.launchAppParameters = (AppParametersPtr)*launchDesc.dataHandle;
+#if TARGET_CARBON && ACCESSOR_CALLS_ARE_FUNCTIONS
+        ::AEGetDescData(&launchDesc, &launchThis.launchAppParameters, sizeof(launchThis.launchAppParameters));
+#else
+        // no need to lock this handle.
+        AppParameters appParameters = *(AppParametersPtr)*launchDesc.dataHandle;
+		launchThis.launchAppParameters = &appParameters;
+#endif
 		launchThis.launchBlockID = extendedBlock;
 		launchThis.launchEPBLength = extendedBlockLen;
 		launchThis.launchFileFlags = 0;

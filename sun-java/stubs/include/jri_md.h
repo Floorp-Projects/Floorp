@@ -119,7 +119,7 @@ extern "C" {
 #		if !__option(enumsalwaysint)
 #			error You need to define 'Enums Always Int' for your project.
 #		endif
-#		if defined(GENERATING68K) && !GENERATINGCFM 
+#		if defined(TARGET_CPU_68K) && !TARGET_RT_MAC_CFM 
 #			if !__option(fourbyteints) 
 #				error You need to define 'Struct Alignment: 68k' for your project.
 #			endif

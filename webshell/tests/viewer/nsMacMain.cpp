@@ -37,10 +37,8 @@
 #include <Dialogs.h>
 
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
-#if !TARGET_CARBON
 #include "nsILeakDetector.h"
 #include "macstdlibextras.h"
-#endif
 
 typedef		SInt32			MessageT;
 typedef   PRUint32    Uint32;
@@ -356,11 +354,9 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_DumpLeaks:
 					{
 						nsresult rv;
-#if !TARGET_CARBON
 						NS_WITH_SERVICE(nsILeakDetector, leakDetector, "component://netscape/xpcom/leakdetector", &rv)
 						if (NS_SUCCEEDED(rv))
 							leakDetector->DumpLeaks();
-#endif
 					}
 					break;
 				case cmd_GFXScrollBars:		xpID =VIEWER_GFX_SCROLLBARS_ON;	break;
@@ -431,9 +427,7 @@ static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, UInt32
 int main(int argc, char **argv)
 {
 	// Set up the toolbox and (if DEBUG) the console
-#if !TARGET_CARBON
 	InitializeMacToolbox();
-#endif
 
 	// Install an a Quit AppleEvent handler.
 	OSErr err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,

@@ -456,8 +456,8 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 	// copy the bits now
 	::CopyBits(
 #if TARGET_CARBON
-		  reinterpret_cast<BitMap*>(*::GetPortPixMap(srcPort)),
-		  reinterpret_cast<BitMap*>(*::GetPortPixMap(destPort)),
+          ::GetPortBitMapForCopyBits(srcPort),
+          ::GetPortBitMapForCopyBits(destPort),
 #else
 		  &srcPort->portBits,
 		  &destPort->portBits,

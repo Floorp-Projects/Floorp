@@ -164,7 +164,7 @@ AEWindowClass::AEWindowClass(DescType classType, TWindowKind windowKind)
 AEWindowClass::~AEWindowClass()
 {
 	if (mDocumentAccessor)
-		DisposeRoutineDescriptor(mDocumentAccessor);
+		DisposeOSLAccessorUPP(mDocumentAccessor);
 }
 
 #pragma mark -

@@ -213,7 +213,7 @@ AEDispatchHandler* AEDispatchTree::FindHandler(DescType handlerClass)
 	
 	*(DescType *)key = handlerClass;
 
-	(void)PatriciaSearch(mTree, key, &foundClass);
+	(void)PatriciaSearch(mTree, key, (void**)&foundClass);
 	
 	return foundClass;
 }

@@ -476,7 +476,7 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
       NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
     }
     else {
-    	::SetPort ( window );
+    	::SetPortWindowPort( window );
 
       // convert window bounds to global coordinates
       Point topLeft = { bounds.top, bounds.left };
@@ -487,7 +487,9 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
         
       // subtract out the height of title bar from the size
       StRegionFromPool structRgn;
-      ::GetWindowStructureRgn(window, structRgn);
+      // GetWindowRegion is available in 8.0 and beyond. Use it.
+      // ::GetWindowStructureRgn(window, structRgn);
+      ::GetWindowRegion(window, kWindowStructureRgn, structRgn);
       Rect structBox;
       ::GetRegionBounds ( structRgn, &structBox );
       PRInt32 wTitleHeight = topLeft.v - 1 - structBox.top;
@@ -773,12 +775,53 @@ void nsDeviceContextMac :: InitFontInfoList()
 		if (!gFontInfoList)
 			return;
 
-		short numFONDs = ::CountResources('FOND');
-#if !TARGET_CARBON
+#if TARGET_CARBON
+        // use the new Font Manager enumeration API.
+        FMFontFamilyIterator iter;
+        err = FMCreateFontFamilyIterator(NULL, NULL, kFMDefaultOptions, &iter);
+        if (err != noErr)
+            return;
+        
 		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
 															kTextEncodingDefaultVariant,
 													 		kTextEncodingDefaultFormat);
-#endif
+        // enumerate all fonts.
+        TECObjectRef converter = 0;
+        TextEncoding oldFontEncoding = 0;
+        FMFontFamily fontFamily;
+        while (FMGetNextFontFamily(&iter, &fontFamily) == noErr) {
+            Str255 fontName;
+            err = ::FMGetFontFamilyName(fontFamily, fontName);
+            if (err != noErr || fontName[0] == 0 || fontName[1] == '.' || fontName[1] == '%')
+                continue;
+            TextEncoding fontEncoding;
+            err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+            if (oldFontEncoding != fontEncoding) {
+                oldFontEncoding = fontEncoding;
+                if (converter)
+                    err = ::TECDisposeConverter(converter);
+                err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
+                if (err != noErr)
+                    continue;
+            }
+            // convert font name to UNICODE.
+			PRUnichar unicodeFontName[sizeof(fontName)];
+			ByteCount actualInputLength, actualOutputLength;
+			err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
+										(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
+			unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
+
+    		FontNameKey key(unicodeFontName);
+			gFontInfoList->Put(&key, (void*)fontFamily);
+        }
+        if (converter)
+            err = ::TECDisposeConverter(converter);
+        err = FMDisposeFontFamilyIterator(&iter);
+#else
+		short numFONDs = ::CountResources('FOND');
+		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
+															kTextEncodingDefaultVariant,
+													 		kTextEncodingDefaultFormat);
 		TECObjectRef converter = nil;
 		ScriptCode lastscript = smUninterp;
 		for (short i = 1; i <= numFONDs ; i++)
@@ -792,7 +835,6 @@ void nsDeviceContextMac :: InitFontInfoList()
 				::GetResInfo(fond, &fondID, &resType, fontName); 
 				if( (0 != fontName[0]) && ('.' != fontName[1]) && ('%' != fontName[1]))
 				{
-#if !TARGET_CARBON
 					ScriptCode script = ::FontToScript(fondID);
 					if (script != lastscript)
 					{
@@ -821,21 +863,13 @@ void nsDeviceContextMac :: InitFontInfoList()
 		        		FontNameKey key(unicodeFontName);
 						gFontInfoList->Put(&key, (void*)fondID);
 					}
-#else
-					// pinkerton - CreateTextEncoding() makes a carbon app exit. this is a smarmy hack
-					char buffer[500];
-					::BlockMoveData ( &fontName[1], buffer, *fontName );
-					buffer[*fontName] = NULL;
-	printf("font buffer is %s\n", buffer);
-		        	FontNameKey key(buffer);
-					gFontInfoList->Put(&key, (void*)fondID);				
-#endif
 					::ReleaseResource(fond);
 				}
 			}
 		}
 		if (converter)
 			err = ::TECDisposeConverter(converter);				
+#endif /* !TARGET_CARBON */
 	}
 }
 
@@ -850,17 +884,8 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
 	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
 	InitFontInfoList();
-#if TARGET_CARBON
-	char* fontNameC = aFontName.ToNewCString();
-	Str255 fontNamePascal;
-	fontNamePascal[0] = strlen(fontNameC);
-	::BlockMoveData ( fontNameC, &fontNamePascal[1], fontNamePascal[0] );
-	::GetFNum ( fontNamePascal, &aFontNum );
-	delete[] fontNameC;
-#else
     FontNameKey key(aFontName);
 	aFontNum = (short)gFontInfoList->Get(&key);
-#endif
 	return (aFontNum != 0) && (kFontIDSymbol != aFontNum);
 }
 

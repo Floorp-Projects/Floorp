@@ -1101,13 +1101,9 @@ NS_IMETHODIMP	nsWindow::Update()
 
 static Boolean control_key_down()
 {
-#if TARGET_CARBON
-  return PR_FALSE;
-#else
 	EventRecord event;
-	::OSEventAvail(0, &event);
+	::EventAvail(0, &event);
 	return (event.modifiers & controlKey) != 0;
-#endif
 }
 
 static long long microseconds()
@@ -1164,11 +1160,11 @@ OSStatus
 nsWindow :: CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
   NS_ASSERTION ( refCon, "You better pass a counter!" );
-  
   (*NS_REINTERPRET_CAST(long*, refCon))++;  // increment
+  return noErr;
 }
 
-#else
+#endif
 
 //
 // UpdateRect
@@ -1215,10 +1211,6 @@ nsWindow :: CountUpdateRect (Rect *inDirtyRect, void* inData)
   (*NS_REINTERPRET_CAST(long*, inData))++;  // increment
   
 } // CountUpdateRects
-
-
-#endif
-
 
 //-------------------------------------------------------------------------
 //	HandleUpdateEvent
@@ -1277,17 +1269,17 @@ nsresult nsWindow::HandleUpdateEvent()
 	  // Iterate over each rect in the region, sending a paint event for each. Carbon
 	  // has a routine for this, pre-carbon doesn't so we roll our own. If the region
 	  // is very complicated (more than 10 pieces), just use a bounding box.
-	  #if TARGET_CARBON
-	    long count = 0;
-	    QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, this );
-	    if ( count < 10 )
-	      QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sUpdateRectProc, this );
-	    else {
-	      Rect boundingBox;
-        ::GetRegionBounds(updateRgn, &boundingBox);
-        PaintUpdateRegionRects ( &boundingBox, this );
-      }
-	  #else
+#if TARGET_CARBON
+        long count = 0;
+        QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, &count );
+        if ( count > 0 && count < 10 )
+            QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sUpdateRectProc, this );
+        else {
+            Rect boundingBox;
+            ::GetRegionBounds(updateRgn, &boundingBox);
+            PaintUpdateRect ( &boundingBox, this );
+        }
+#else
 	    long count = 0;
 	    EachRegionRect ( updateRgn, CountUpdateRect, &count );
 	    if ( count < 10 )
