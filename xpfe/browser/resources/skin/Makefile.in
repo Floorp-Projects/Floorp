@@ -30,6 +30,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/navigator.css \
 	$(srcdir)/questionl.gif \
 	$(srcdir)/contentframe.css \
+	$(srcdir)/animthrob.gif \
+	$(srcdir)/animthrob_single.gif \
 	$(NULL)
 
 install:: 

@@ -19,16 +19,17 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSWER=$(DIST)\bin\chrome\navigator\skin\default
+DISTBROWSER=$(DIST)\bin\chrome\navigator\skin\default
 
 install::
-	$(MAKE_INSTALL) .\alertl.gif $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\errorl.gif $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\messagel.gif $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\navigator.css $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\questionl.gif $(DISTBROWSWER)
-	$(MAKE_INSTALL) .\contentframe.css $(DISTBROWSWER)
-
+	$(MAKE_INSTALL) .\alertl.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\errorl.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\messagel.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\navigator.css $(DISTBROWSER)
+	$(MAKE_INSTALL) .\questionl.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\contentframe.css $(DISTBROWSER)
+	$(MAKE_INSTALL) .\animthrob.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) .\animthrob_single.gif $(DISTBROWSER)
 clobber::
   rm -f $(DISTBROWSER)\alertl.gif
   rm -f $(DISTBROWSER)\errorl.gif
@@ -36,3 +37,5 @@ clobber::
   rm -f $(DISTBROWSER)\navigator.css
   rm -f $(DISTBROWSER)\questionl.gif
   rm -f $(DISTBROWSER)\contentframe.css
+  rm -f $(DISTBROWSER)\animthrob.gif
+  rm -f $(DISTBROWSER)\animthrob_single.gif
