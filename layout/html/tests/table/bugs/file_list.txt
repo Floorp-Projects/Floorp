@@ -22,6 +22,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug12268.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug12384.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1261.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1262.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug12709.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1271.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1296.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1302.html
