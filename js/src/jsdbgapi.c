@@ -795,8 +795,17 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 #if JS_HAS_CALL_OBJECT
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
-	getter == js_CallClass.getProperty) {
-	pd->flags |= JSPD_ARGUMENT;
+        getter == js_CallClass.getProperty) {
+        /*
+         * Property of a heavyweight function's variable object having the
+         * class-default getter.  It's either an argument if permanent, or a
+         * nested function if impermanent.  Local variables have a special
+         * getter (js_GetCallVariable, tested above) and setter, and not the
+         * class default.
+         */
+        pd->flags |= (sprop->attrs & JSPROP_PERMANENT)
+                     ? JSPD_ARGUMENT
+                     : JSPD_VARIABLE;
     }
 #endif /* JS_HAS_CALL_OBJECT */
     pd->spare = 0;
