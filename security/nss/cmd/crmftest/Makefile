@@ -97,7 +97,4 @@ ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 EXTRA_LIBS += $(LDDIST)/sectool.lib
 endif
 
-lame:
-	echo $(CPU_ARCH)
-
 include ../platrules.mk
