@@ -273,6 +273,10 @@ endif
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 endif
+ifdef XPC_IDISPATCH_SUPPORT
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) activex.js
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) nsAxSecurityPolicy.js
+endif
 
 $(SHARED_LIBRARY) : $(DEFFILE)
 

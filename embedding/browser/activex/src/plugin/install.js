@@ -3,130 +3,113 @@
 
 var SOFTWARE_NAME  = "ActiveX Plugin";
 var VERSION        = "1.0.0.3";
-
-var PLUGIN_FILE    = "npmozax.dll";
-var PLUGIN_SIZE    = 300;
-var COMPONENT_FILE = "nsIMozAxPlugin.xpt";
-var COMPONENT_SIZE = 2;
-var CLASS_FILE     = "MozAxPlugin.class";
-var CLASS_SIZE     = 2;
-
-var MSVCRT_FILE    = "msvcrt.dll";
-var MSVCRT_SIZE    = 400;
-var MSSTL_FILE     = "msvcp60.dll";
-var MSSTL_SIZE     = 300;
-
 var PLID_BASE      = "@mozilla.org/ActiveXPlugin";
 var PLID           = PLID_BASE + ",version=" + VERSION;
+
+var FLDR_COMPONENTS = getFolder("Components");
+var FLDR_PLUGINS   = getFolder("Plugins");
+var FLDR_PREFS     = getFolder("Program","defaults/pref");
+var FLDR_WINSYS    = getFolder("Win System");
+
+var PLUGIN         = new FileToInstall("npmozax.dll", 300, FLDR_PLUGINS);
+var XPT            = new FileToInstall("nsIMozAxPlugin.xpt", 2, FLDR_COMPONENTS);
+var SECURITYPOLICY = new FileToInstall("nsAxSecurityPolicy.js", 9, FLDR_COMPONENTS);
+var PREFS          = new FileToInstall("activex.js", 5, FLDR_PREFS);
+
+var MSVCRT         = new FileToInstall("msvcrt.dll", 400, FLDR_WINSYS);
+var MSSTL60        = new FileToInstall("msvcp60.dll", 300, FLDR_WINSYS);
+var MSSTL70        = new FileToInstall("msvcp70.dll", 300, FLDR_WINSYS);
+
+var filesToAdd     = new Array(PLUGIN, XPT, SECURITYPOLICY, PREFS);
+var sysFilesToAdd  = new Array(MSVCRT, MSSTL60, MSSTL70);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 // Invoke initInstall to start the installation
 err = initInstall(SOFTWARE_NAME, PLID, VERSION);
-if (err == -200)
+if (err == BAD_PACKAGE_NAME)
 {
     // HACK: Mozilla 1.1 has a busted PLID parser which doesn't like the equals sign
     PLID = PLID_BASE;
     err = initInstall(SOFTWARE_NAME, PLID, VERSION);
 }
-if (err != 0)
+if (err == SUCCESS)
+{
+    // Install plugin files
+    err = verifyDiskSpace(FLDR_PLUGINS, calcSpaceRequired(filesToAdd));
+    if (err == SUCCESS)
+    {
+        for (i = 0; i < filesToAdd.length; i++)
+        {
+            err = addFile(PLID, VERSION, filesToAdd[i].name, filesToAdd[i].path, null);
+            if (err != SUCCESS)
+            {
+                alert("Installation of " + filesToAdd[i].name + " failed. Error code " + err);
+                logComment("adding file " + filesToAdd[i].name + " failed. Errror code: " + err);
+                break;
+            }
+        }
+    }
+    else
+    {
+        logComment("Cancelling current browser install due to lack of space...");
+    }
+
+    // Install C runtime files
+    if (err == SUCCESS)
+    {
+        if (verifyDiskSpace(FLDR_WINSYS, calcSpaceRequired(sysFilesToAdd)) == SUCCESS)
+        {
+            // Install system dlls *only* if they do not exist.
+            //
+            // NOTE: Ignore problems installing these files, since all kinds
+            //       of stuff could cause this to fail and I really don't care
+            //       about dealing with email describing failed permissions,
+            //       locked files or whatnot.
+            for (i = 0; i < sysFilesToAdd.length; i++)
+            {
+                fileTemp   = sysFilesToAdd[i].path + sysFilesToAdd[i].name;
+                fileUrl = getFolder("file:///", fileTemp);
+                if (File.exists(fileUrl) == false)
+                {
+                    logComment("File not found: " + fileTemp);
+                    addFile("/Microsoft/Shared",
+                        VERSION,
+                        sysFilesToAdd[i].name, // dir name in jar to extract 
+                        sysFilesToAdd[i].path, // Where to put this file (Returned from getFolder) 
+                        "",                    // subdir name to create relative to fProgram
+                        WIN_SHARED_FILE);
+                    logComment("addFile() of " + sysFilesToAdd[i].name + " returned: " + err);
+                }
+                else
+                {
+                    logComment("File found: " + sysFilesToAdd[i].name );
+                }
+            }
+        }
+        else
+        {
+            logComment("Cancelling current browser install due to lack of space...");
+        }
+    }
+}
+else
 {
     logComment("Install failed at initInstall level with " + err);
-    cancelInstall(err);
 }
 
-var pluginFolder = getFolder("Plugins");
-var winsysFolder = getFolder("Win System");
-
-if (verifyDiskSpace(pluginFolder, PLUGIN_SIZE + COMPONENT_SIZE))
+if (err == SUCCESS)
 {
-    errBlock1 = addFile(PLID, VERSION, PLUGIN_FILE, pluginFolder, null);
-    if (errBlock1 != 0)
+    err = performInstall();
+    if (err == SUCCESS)
     {
-        alert("Installation of MozAxPlugin plug-in failed. Error code " + errBlock1);
-        logComment("adding file " + PLUGIN_FILE + " failed. Errror code: " + errBlock1);
-        cancelInstall(errBlock1);
-    }
-
-    errBlock1 = addFile (PLID, VERSION, COMPONENT_FILE, pluginFolder, null);
-    if (errBlock1 != 0)
-    {
-        alert("Installation of MozAxPlugin component failed. Error code " + errBlock1);
-        logComment("adding file " + COMPONENT_FILE + " failed. Error code: " + errBlock1);
-        cancelInstall(errBlock1);
-    }
-
-// TODO is there any point installing the 4.x LiveConnect class in an XPI file?
-//  errBlock1 = addFile(CLASS_FILE);
-//  if (errBlock1 != 0)
-//  {
-//      alert("Installation of MozAxPlugin liveconnect class failed. Error code " + errBlock1);
-//      logComment("adding file " + CLASS_FILE + " failed. Errror code: " + errBlock1);
-//      cancelInstall(errBlock1);
-//  }
-}
-else
-{
-    logComment("Cancelling current browser install due to lack of space...");
-    cancellInstall();
-}
-
-// TODO install in secondary location???
-
-// Install C runtime files
-if (verifyDiskSpace(pluginFolder, MSVCRT_SIZE + MSSTL_SIZE))
-{
-    // install msvcrt.dll *only* if it does not exist
-    // we don't care if addFile() fails (if the file does not exist in the archive)
-    // bacause it will still install
-
-    fileTemp   = winsysFolder + MSVCRT_FILE;
-    fileMsvcrt = getFolder("file:///", fileTemp);
-    if (File.exists(fileMsvcrt) == false)
-    {
-        logComment("File not found: " + fileMsvcrt);
-        addFile("/Microsoft/Shared",
-            VERSION,
-            MSVCRT_FILE,        // dir name in jar to extract 
-            winsysFolder,       // Where to put this file (Returned from getFolder) 
-            "",                 // subdir name to create relative to fProgram
-            WIN_SHARED_FILE);
-        logComment("addFile() of msvcrt.dll returned: " + err);
-    }
-    else
-    {
-        logComment("File found: " + fileMsvcrt);
-    }
-
-    // install msvcp60.dll
-    fileTemp  = winsysFolder + MSSTL_FILE;
-    fileMsstl = getFolder("file:///", fileTemp);
-    if (File.exists(fileMsstl) == false)
-    {
-        logComment("File not found: " + fileMsvcrt);
-        addFile("/Microsoft/Shared",
-            VERSION,
-            MSSTL_FILE,   // dir name in jar to extract 
-            winsysFolder, // Where to put this file (Returned from getFolder) 
-            "",           // subdir name to create relative to fProgram
-            WIN_SHARED_FILE);
-        logComment("addFile() of msvcp60.dll returned: " + err);
-    }
-    else
-    {
-        logComment("File found: " + fileMsstl);
+        alert("Installation performed successfully, you must restart the browser for the changes to take effect");
     }
 }
 else
-{
-    logComment("Cancelling current browser install due to lack of space...");
-    cancellInstall();
-}
-
-performInstall();
-
-
+    cancelInstall();
 
 /**
  * Function for preinstallation of plugin (FirstInstall).
@@ -140,22 +123,39 @@ performInstall();
  **/
 function verifyDiskSpace(dirPath, spaceRequired)
 {
-  var spaceAvailable;
+    var spaceAvailable;
 
-  // Get the available disk space on the given path
-  spaceAvailable = fileGetDiskSpaceAvailable(dirPath);
+    // Get the available disk space on the given path
+    spaceAvailable = fileGetDiskSpaceAvailable(dirPath);
+ 
+    // Convert the available disk space into kilobytes
+    spaceAvailable = parseInt(spaceAvailable / 1024);
 
-  // Convert the available disk space into kilobytes
-  spaceAvailable = parseInt(spaceAvailable / 1024);
+    // do the verification
+    if(spaceAvailable < spaceRequired)
+    {
+        logComment("Insufficient disk space: " + dirPath);
+        logComment("  required : " + spaceRequired + " K");
+        logComment("  available: " + spaceAvailable + " K");
+        return INSUFFICIENT_DISK_SPACE;
+    }
 
-  // do the verification
-  if(spaceAvailable < spaceRequired)
-  {
-    logComment("Insufficient disk space: " + dirPath);
-    logComment("  required : " + spaceRequired + " K");
-    logComment("  available: " + spaceAvailable + " K");
-    return(false);
-  }
+    return SUCCESS;
+}
 
-  return(true);
+function calcSpaceRequired(fileArray)
+{
+    var spaceRqd = 0;
+    for (i = 0; i < fileArray.length; i++)
+    {
+        spaceRqd += fileArray[i].size;
+    }
+    return spaceRqd;
+}
+
+function FileToInstall(fileName, fileSize, dirPath)
+{
+    this.name = fileName;
+    this.size = fileSize;
+    this.path = dirPath;
 }
