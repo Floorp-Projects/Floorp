@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.61 $ 
-# $Date: 2003/04/20 20:21:52 $ 
+# $Revision: 1.62 $ 
+# $Date: 2003/05/26 13:37:15 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -935,7 +935,6 @@ sub status_table_header {
                                "windowtxt"=>$txt,
                                "windowtitle" => $title,
                                "linktxt"=> $buildname,
-                               "windowheight" => (25 * $num_lines)+100,
                                "href"=>"",
                          );
 
