@@ -112,7 +112,7 @@ public:
     NS_IMETHOD            	EndResizingChildren(void);
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
-    virtual PRBool          DispatchEvent(nsGUIEvent* event);
+    NS_IMETHOD          		DispatchEvent(nsGUIEvent* event);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
     NS_IMETHOD            	OnDestroy();
