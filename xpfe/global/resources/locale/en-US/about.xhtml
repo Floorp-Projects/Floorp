@@ -28,6 +28,15 @@
   
 <html>
 <head>
+<script type="text/javascript">
+function htmlEscape(s)
+{
+   s = s.replace(/\&/g, "&amp;");
+   s = s.replace(/\>/g, "&gt;");
+   s = s.replace(/\</g, "&lt;");
+   return s;
+}
+</script>
 <title>About:</title>
 <style type="text/css">
 table {
@@ -58,11 +67,11 @@ h1 {
 <td>
 <h1>
 <a href="http://www.mozilla.org/releases/">Mozilla
-<script type="application/x-javascript">
-   document.write( navigator.userAgent.match(/rv:([^;)]+)/)[1] );
+<script type="text/javascript">
+   document.write(htmlEscape( navigator.userAgent.match(/rv:([^;)]+)/)[1] ));
 </script></a>
 </h1>
-<script type="text/javascript">document.write(navigator.userAgent);</script>
+<script type="text/javascript">document.write(htmlEscape(navigator.userAgent));</script>
 </td>
 
 </tr>
