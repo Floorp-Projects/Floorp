@@ -42,7 +42,7 @@ public interface PlugletManager2 extends PlugletManager {
      * <p>
      * @return <code>Boolean</code> returns <code>true</code> if the URL protocol is supported.
      */
-    public boolean supportsURLProtocol(String protocol);
+    public boolean isURLProtocolSupported(String protocol);
     /**
      * For a given URL, this method returns a <code>String</code> 
      * for the proxy information. 
