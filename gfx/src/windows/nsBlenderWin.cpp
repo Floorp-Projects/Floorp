@@ -136,8 +136,8 @@ nsColorMap          *colormap;
   srcloc.y = aSY;
   mSrcInfo.bmBits = mSrcBytes;
   mDstInfo.bmBits = mDstBytes;
-  maskloc.x = aSX;
-  maskloc.y = aSY;
+  maskloc.x = 0;
+  maskloc.y = 0;
   if(CalcAlphaMetrics(&mSrcInfo,&mDstInfo,&srcloc,NULL,&maskloc,aWidth,aHeight,&numlines,&numbytes,
                 &s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
     {
@@ -176,7 +176,7 @@ nsColorMap          *colormap;
         }
       else
         {
-          level = (PRInt32)(aSrcOpacity*100);
+        level = (PRInt32)(aSrcOpacity*100);
         this->Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
         }
       }
@@ -268,12 +268,11 @@ PRInt32   startx,starty;
     }
   else
     {
-    arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
-    srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
-    arect.IntersectRect(arect,srect);
+    //arect.SetRect(0,0,aDestInfo->bmWidth,aDestInfo->bmHeight);
+    //srect.SetRect(aMaskUL->x,aMaskUL->y,aWidth,aHeight);
+    //arect.IntersectRect(arect,srect);
 
-    //arect.SetRect(0, 0,aDestInfo->bmWidth, aDestInfo->bmHeight);
-    //x = y = 0;
+    arect.SetRect(0, 0,aDestInfo->bmWidth, aDestInfo->bmHeight);
     }
 
   srect.SetRect(aSrcUL->x, aSrcUL->y, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
@@ -287,7 +286,7 @@ PRInt32   startx,starty;
     *aNumlines = irect.height;
     startx = irect.x;
     starty = aDestInfo->bmHeight - (irect.y + irect.height);
-    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + (aDestInfo->bmBitsPixel * startx);
+    *aDImage = ((PRUint8*)aDestInfo->bmBits) + (starty * (*aDLSpan)) + ((aDestInfo->bmBitsPixel/8) * startx);
 
     // get the intersection relative to the source rectangle
     srect.SetRect(0, 0, aSrcInfo->bmWidth, aSrcInfo->bmHeight);
@@ -298,7 +297,7 @@ PRInt32   startx,starty;
     *aSLSpan = aSrcInfo->bmWidthBytes;
     startx = drect.x;
     starty = aSrcInfo->bmHeight - (drect.y + drect.height);
-    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + (aDestInfo->bmBitsPixel * startx);
+    *aSImage = ((PRUint8*)aSrcInfo->bmBits) + (starty * (*aSLSpan)) + ((aDestInfo->bmBitsPixel/8) * startx);
          
     doalpha = PR_TRUE;
 

@@ -342,7 +342,7 @@ PRBool nsImageWin::CalcAlphaMetrics(nsIImage *aTheImage,nsPoint *aULLocation,PRI
 {
 PRBool    doalpha = PR_FALSE;
 nsRect    arect,srect,drect,irect;
-PRInt32   startx,starty,x,y;
+PRInt32   startx,starty;
 PRUint8   *alphabits;
 
   if( IsOptimized() )
@@ -358,7 +358,6 @@ PRUint8   *alphabits;
   else
     {
     arect.SetRect(0, 0, this->GetWidth(), this->GetHeight());
-    x = y = 0;
     }
 
   srect.SetRect(aULLocation->x, aULLocation->y, aTheImage->GetWidth(), aTheImage->GetHeight());
