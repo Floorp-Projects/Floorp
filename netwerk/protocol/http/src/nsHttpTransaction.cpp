@@ -122,6 +122,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mResponseIsComplete(PR_FALSE)
     , mDidContentStart(PR_FALSE)
     , mNoContent(PR_FALSE)
+    , mSentData(PR_FALSE)
     , mReceivedData(PR_FALSE)
     , mStatusEventPending(PR_FALSE)
 {
@@ -343,7 +344,11 @@ nsHttpTransaction::ReadRequestSegment(nsIInputStream *stream,
                                       PRUint32 *countRead)
 {
     nsHttpTransaction *trans = (nsHttpTransaction *) closure;
-    return trans->mReader->OnReadSegment(buf, count, countRead);
+    nsresult rv = trans->mReader->OnReadSegment(buf, count, countRead);
+    if (NS_FAILED(rv)) return rv;
+
+    trans->mSentData = PR_TRUE;
+    return NS_OK;
 }
 
 nsresult
@@ -444,17 +449,24 @@ nsHttpTransaction::Close(nsresult reason)
     mConnected = PR_FALSE;
 
     //
-    // if the connection was reset or closed before we read any part of the
-    // response, and if the connection was being reused, then we can assume
-    // that we wrote to a stale connection and we must therefore repeat the
-    // request over a new connection.
+    // if the connection was reset or closed before we wrote any part of the
+    // request or if we wrote the request but didn't receive any part of the
+    // response and the connection was being reused, then we can (and really
+    // should) assume that we wrote to a stale connection and we must therefore
+    // repeat the request over a new connection.
     //
-    if (!mReceivedData && connReused && (reason == NS_ERROR_NET_RESET ||
-                                         reason == NS_OK)) {
-        // if restarting fails, then we must proceed to close the pipe,
-        // which will notify the channel that the transaction failed.
-        if (NS_SUCCEEDED(Restart()))
-            return;
+    // NOTE: the conditions under which we will automatically retry the HTTP
+    // request have to be carefully selected to avoid duplication of the
+    // request from the point-of-view of the server.  such duplication could
+    // have dire consequences including repeated purchases, etc.
+    //
+    if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
+        if (!mSentData || (!mReceivedData && connReused)) {
+            // if restarting fails, then we must proceed to close the pipe,
+            // which will notify the channel that the transaction failed.
+            if (NS_SUCCEEDED(Restart()))
+                return;
+        }
     }
 
     PRBool relConn = PR_TRUE;
