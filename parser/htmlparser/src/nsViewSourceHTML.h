@@ -76,6 +76,11 @@ private:
     nsresult WriteAttributes(PRInt32 attrCount);
     nsresult GenerateSummary();
     void StartNewPreBlock(void);
+    // Utility method for adding attributes to the nodes we generate
+    void AddAttrToNode(nsCParserStartNode& aNode,
+                       nsTokenAllocator* aAllocator,
+                       const nsAString& aAttrName,
+                       const nsAString& aAttrValue);
 
 protected:
 
