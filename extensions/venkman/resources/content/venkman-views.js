@@ -557,7 +557,10 @@ function lv_init ()
                   checkedif: "ValueRecord.prototype.showFunctions"}],
          ["toggle-ecmas",
                  {type: "checkbox",
-                  checkedif: "ValueRecord.prototype.showECMAProps"}]
+                  checkedif: "ValueRecord.prototype.showECMAProps"}],
+         ["toggle-constants",
+                 {type: "checkbox",
+                  checkedif: "ValueRecord.prototype.showConstants"}]
         ]
     };
 

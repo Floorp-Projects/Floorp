@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const __vnk_version        = "0.9.83";
-const __vnk_requiredLocale = "0.9.81";
+const __vnk_requiredLocale = "0.9.83";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 

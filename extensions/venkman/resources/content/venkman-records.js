@@ -43,10 +43,12 @@ function initRecords()
         [/* "real" commands */
          ["show-functions",  cmdShowFunctions,                     CMD_CONSOLE],
          ["show-ecmas",      cmdShowECMAs,                         CMD_CONSOLE],
+         ["show-constants",  cmdShowConstants,                     CMD_CONSOLE],
 
          /* aliases */
          ["toggle-functions",     "show-functions toggle",                   0],
-         ["toggle-ecmas",         "show-ecma toggle",                        0]
+         ["toggle-ecmas",         "show-ecma toggle",                        0],
+         ["toggle-constants",     "show-constants toggle",                   0]
         ];
 
     console.commandManager.defineCommands (cmdary);
@@ -78,6 +80,7 @@ function initRecords()
         [
          ["valueRecord.showFunctions", false],
          ["valueRecord.showECMAProps", false],
+         ["valueRecord.showConstants", false],
          ["valueRecord.brokenObjects", "^JavaPackage$"]
         ];
 
@@ -549,6 +552,19 @@ function cmdShowECMAs (e)
         dispatch("pref valueRecord.showECMAProps", { isInteractive: true });
 }
 
+function cmdShowConstants (e)
+{
+    if (e.toggle != null)
+    {
+        e.toggle = getToggle(e.toggle, ValueRecord.prototype.showConstants);
+        ValueRecord.prototype.showConstants = e.toggle;
+        console.prefs["valueRecord.showConstants"] = e.toggle;
+    }
+
+    if ("isInteractive" in e && e.isInteractive)
+        dispatch("pref valueRecord.showConstants", { isInteractive: true });
+}
+
 function ValueRecord (value, name, flags)
 {
     if (!(value instanceof jsdIValue))
@@ -586,6 +602,7 @@ function vr_getshare()
 
 ValueRecord.prototype.showFunctions = false;
 ValueRecord.prototype.showECMAProps = false;
+ValueRecord.prototype.showConstants = false;
 
 ValueRecord.prototype.getProperties =
 function vr_getprops (properties)
@@ -873,7 +890,8 @@ function vr_listprops ()
         
         if (!((":" + name) in propMap))
         {
-            if (this.showFunctions || prop.value.jsType != TYPE_FUNCTION)
+            if ((this.showFunctions || prop.value.jsType != TYPE_FUNCTION) && 
+                (this.showConstants || !(prop.flags & PROP_READONLY)))
             {
                 //dd ("localProps: adding " + name + ", " + prop);
                 propMap[":" + name] = { name: name, value: prop.value,
@@ -887,6 +905,8 @@ function vr_listprops ()
         }
         else
         {
+            if (!this.showConstants && (prop.flags & PROP_READONLY))
+                propMap[":" + name] = null;
             if (propMap[":" + name])
                 propMap[":" + name].flags = prop.flags;
         }
