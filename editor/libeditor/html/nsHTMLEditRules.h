@@ -213,6 +213,9 @@ protected:
   PRBool   IsVisBreak(nsIDOMNode *aNode);
   PRBool   IsEmptyInline(nsIDOMNode *aNode);
   PRBool   ListIsEmptyLine(nsISupportsArray *arrayOfNodes);
+  nsresult RemoveAlignmentInside(nsIDOMNode * aNode);
+  nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts);
+  nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode);
 
 // data members
 protected:

@@ -646,13 +646,13 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   //  in Format | Align submenu!
 
   // this routine assumes that alignment is done ONLY via divs
-  
+
   // default alignment is left
   if (!aMixed || !aAlign)
     return NS_ERROR_NULL_POINTER;
   *aMixed = PR_FALSE;
   *aAlign = nsIHTMLEditor::eLeft;
-  
+
   // get selection
   nsCOMPtr<nsISelection>selection;
   nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
@@ -660,15 +660,21 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
+  nsCOMPtr<nsIDOMElement> rootElem;
+  PRInt32 offset, rootOffset;
+  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
+  if (NS_FAILED(res)) return res;
+  res = nsEditor::GetNodeLocation(rootElem, address_of(parent), &rootOffset);
+  if (NS_FAILED(res)) return res;
   res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
-  
+
   // is the selection collapsed?
   PRBool bCollapsed;
   res = selection->GetIsCollapsed(&bCollapsed);
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIDOMNode> nodeToExamine;
+  nsCOMPtr<nsISupports> isupports;
   if (bCollapsed)
   {
     // if it is, we want to look at 'parent' and it's ancestors
@@ -680,21 +686,41 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
     // if we are in a text node, then that is the node of interest
     nodeToExamine = parent;
   }
-  else
+  else if (nsTextEditUtils::NodeIsType(parent,NS_LITERAL_STRING("html")) &&
+           offset == rootOffset)
   {
-    // otherwise we want to look at the first editable node after
-    // {parent,offset} and it's ancestors for divs with alignment on them
+    // if we have selected the body, let's look at the first editable node
     mHTMLEditor->GetNextNode(parent, offset, PR_TRUE, address_of(nodeToExamine));
   }
-  
+  else
+  {
+    nsCOMPtr<nsISupportsArray> arrayOfRanges;
+    res = GetPromotedRanges(selection, address_of(arrayOfRanges), kAlign);
+    if (NS_FAILED(res)) return res;
+
+    // use these ranges to contruct a list of nodes to act on.
+    nsCOMPtr<nsISupportsArray> arrayOfNodes;
+    res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kAlign);
+    if (NS_FAILED(res)) return res;                                 
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+    nodeToExamine = do_QueryInterface(isupports );
+  }
+
   if (!nodeToExamine) return NS_ERROR_NULL_POINTER;
-  
+
   // check up the ladder for divs with alignment
   nsCOMPtr<nsIDOMNode> temp = nodeToExamine;
   PRBool isFirstNodeToExamine = PR_TRUE;
   while (nodeToExamine)
   {
-    if (nsHTMLEditUtils::IsDiv(nodeToExamine))
+    if (!isFirstNodeToExamine && nsHTMLEditUtils::IsTable(nodeToExamine))
+    {
+      // the node to examine is a table and this is not the first node
+      // we examine; let's break here to materialize the 'inline-block'
+      // behaviour of html tables regarding to text alignment
+      return NS_OK;
+    }
+    if (nsHTMLEditUtils::SupportsAlignAttr(nodeToExamine))
     {
       // check for alignment
       nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(nodeToExamine);
@@ -717,12 +743,6 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
           return res;
         }
       }
-    }
-    if (!isFirstNodeToExamine && nsHTMLEditUtils::IsTable(nodeToExamine)) {
-      // the node to examine is a table and this is not the first node
-      // we examine; let's break here to materialize the 'inline-block'
-      // behaviour of html tables regarding to text alignment
-      return NS_OK;
     }
     isFirstNodeToExamine = PR_FALSE;
     res = nodeToExamine->GetParentNode(getter_AddRefs(temp));
@@ -3247,7 +3267,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
                            PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  
+
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
 
@@ -3255,7 +3275,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
-  
+
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
 
   // convert the selection ranges into "promoted" selection ranges:
@@ -3263,16 +3283,16 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   *aHandled = PR_TRUE;
-  
+
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
   res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kAlign);
   if (NS_FAILED(res)) return res;
-  
+
   // use these ranges to contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kAlign);
   if (NS_FAILED(res)) return res;                                 
-                                     
+
   // if we don't have any nodes, or we have only a single br, then we are
   // creating an empty alignment div.  We have to do some different things for these.
   PRBool emptyDiv = PR_FALSE;
@@ -3283,6 +3303,19 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   {
     nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(isupports ) );
+
+    if (nsHTMLEditUtils::SupportsAlignAttr(theNode))
+    {
+      // the node is a table element, an horiz rule, a paragraph, a div
+      // or a section header; in HTML 4, it can directly carry the ALIGN
+      // attribute and we don't need to make a div!
+      nsCOMPtr<nsIDOMElement> theElem = do_QueryInterface(theNode);
+      res = mHTMLEditor->SetAttribute(theElem, NS_LITERAL_STRING("align"), *alignType);
+      if (NS_FAILED(res)) return res;
+      RemoveAlignmentInside(theNode);
+      return NS_OK;
+    }
+
     if (nsTextEditUtils::IsBreak(theNode))
     {
       // The special case emptyDiv code (below) that consumes BRs can
@@ -3338,8 +3371,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     mNewBlock = theDiv;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(theDiv);
-    nsAutoString attr; attr.AssignWithConversion("align");
-    res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
+    res = mHTMLEditor->SetAttribute(divElem, NS_LITERAL_STRING("align"), *alignType);
     if (NS_FAILED(res)) return res;
     *aHandled = PR_TRUE;
     // put in a moz-br so that it won't get deleted
@@ -3352,14 +3384,14 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
 
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
-  
+
   nsVoidArray transitionList;
   res = MakeTransitionList(arrayOfNodes, &transitionList);
   if (NS_FAILED(res)) return res;                                 
 
   // Ok, now go through all the nodes and give them an align attrib or put them in a div, 
   // or whatever is appropriate.  Wohoo!
-  
+
   PRInt32 i;
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curDiv;
@@ -3371,9 +3403,11 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
-    
-    // if it's a div, don't nest it, just set the alignment
-    if (nsHTMLEditUtils::IsDiv(curNode))
+
+    // the node is a table element, an horiz rule, a paragraph, a div
+    // or a section header; in HTML 4, it can directly carry the ALIGN
+    // attribute and we don't need to nest it, just set the alignment
+    if (nsHTMLEditUtils::SupportsAlignAttr(curNode))
     {
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curNode);
       nsAutoString attr; attr.AssignWithConversion("align");
@@ -3381,9 +3415,10 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       // clear out curDiv so that we don't put nodes after this one into it
       curDiv = 0;
+      RemoveAlignmentInside(curNode);
       continue;
     }
-    
+
     // Skip insignificant formatting text nodes to prevent
     // unnecessary structure splitting!
     if (nsEditor::IsTextNode(curNode) &&
@@ -3391,11 +3426,10 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
         nsHTMLEditUtils::IsList(curParent)))
       continue;
 
-    // if it's a table element (but not a table) or a list item, or a list
+    // if it's a list item, or a list
     // inside a list, forget any "current" div, and instead put divs inside
     // the appropriate block (td, li, etc)
-    if ( (nsHTMLEditUtils::IsTableElement(curNode) && !nsHTMLEditUtils::IsTable(curNode))
-         || nsHTMLEditUtils::IsListItem(curNode)
+    if ( nsHTMLEditUtils::IsListItem(curNode)
          || (nsHTMLEditUtils::IsList(curNode) && nsHTMLEditUtils::IsList(curParent)))
     {
       res = AlignInnerBlocks(curNode, alignType);
@@ -3404,7 +3438,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       curDiv = 0;
       continue;
     }      
-    
+
     // need to make a div to put things in if we haven't already,
     // or if this node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i])
@@ -3423,7 +3457,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       // curDiv is now the correct thing to put curNode in
     }
-        
+
     // tuck the node into the end of the active div
     PRUint32 listLen;
     res = mHTMLEditor->GetLengthOfDOMNode(curDiv, listLen);
@@ -3904,7 +3938,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
         // as long as they are in one or the other it will work.
         
         // dont cross table cell boundaries
-        if (nsHTMLEditUtils::IsTableCell(parent)) break;
+        // if (nsHTMLEditUtils::IsTableCell(parent)) break;
         // special case for outdent: don't keep looking up 
         // if we have found a blockquote element to act on
         if ((actionID == kOutdent) && nsHTMLEditUtils::IsBlockquote(parent))
@@ -4210,8 +4244,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     {
       isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
-      if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node))
-          || (nsHTMLEditUtils::IsListItem(node)))
+      if (nsHTMLEditUtils::IsListItem(node))
       {
         (*outArrayOfNodes)->RemoveElementAt(i);
         res = GetInnerContent(node, *outArrayOfNodes);
@@ -6831,3 +6864,145 @@ nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection)
 {
   return NS_OK;
 }
+
+// Let's remove all alignment hints in the children of aNode; it can
+// be an ALIGN attribute (in case we just remove it) or a CENTER
+// element (here we have to remove the container and keep its
+// children). We break on tables and don't look at their children.
+nsresult
+nsHTMLEditRules::RemoveAlignmentInside(nsIDOMNode * aNode)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+
+  if (mHTMLEditor->IsTextNode(aNode) || nsHTMLEditUtils::IsTable(aNode)) return NS_OK;
+  nsresult res = NS_OK;
+
+  nsCOMPtr<nsIDOMNode> child,tmp;
+  aNode->GetFirstChild(getter_AddRefs(child));
+
+  while (child)
+  {
+    // get the next sibling right now because we could have to remove child
+    child->GetNextSibling(getter_AddRefs(tmp));
+    PRBool isBlock;
+    res = mHTMLEditor->NodeIsBlockStatic(child, &isBlock);
+    if (NS_FAILED(res)) return res;
+
+    if (isBlock)
+    {
+      // the current node is a block element
+      nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(child);
+      if (nsHTMLEditUtils::SupportsAlignAttr(child))
+      {
+        // remove the ALIGN attribute if this element can have it
+        res = mHTMLEditor->RemoveAttribute(curElem, NS_LITERAL_STRING("align"));
+        if (NS_FAILED(res)) return res;
+      }
+      if (!nsHTMLEditUtils::IsTable(child))
+      {
+        // unless this is a table, look at children
+        res = RemoveAlignmentInside(child);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    else if (nsTextEditUtils::NodeIsType(child, NS_LITERAL_STRING("center")))
+    {
+      // this is a CENTER element and we have to remove it
+      // first remove children's alignment
+      res = RemoveAlignmentInside(child);
+      if (NS_FAILED(res)) return res;
+
+      // we may have to insert BRs in first and last position of CENTER's children
+      // if the nodes before/after are not blocks and not BRs
+      res = MakeSureElemStartsOrEndsOnCR(child);
+      if (NS_FAILED(res)) return res;
+
+      res = mHTMLEditor->RemoveContainer(child);
+      if (NS_FAILED(res)) return res;
+    }
+    child = tmp;
+  }
+  return NS_OK;
+}
+
+// Let's insert a BR as first (resp. last) child of aNode if its
+// first (resp. last) child is not a block nor a BR, and if the
+// previous (resp. next) sibling is not a block nor a BR
+nsresult
+nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> child;
+  nsresult res;
+  if (aStarts)
+  {
+    res = aNode->GetFirstChild(getter_AddRefs(child));
+  }
+  else
+  {
+    res = aNode->GetLastChild(getter_AddRefs(child));
+  }
+  if (NS_FAILED(res)) return res;
+  if (!child) return NS_OK;
+  PRBool isChildBlock;
+  res = mHTMLEditor->NodeIsBlockStatic(child, &isChildBlock);
+  if (NS_FAILED(res)) return res;
+  if (!isChildBlock)
+  {
+    nsCOMPtr<nsIDOMNode> sibling;
+    if (aStarts)
+    {
+      res = mHTMLEditor->GetPriorHTMLSibling(aNode, address_of(sibling));
+    }
+    else
+    {
+      res = mHTMLEditor->GetNextHTMLSibling(aNode, address_of(sibling));
+    }
+    if (NS_FAILED(res)) return res;
+    PRBool foundCR = PR_FALSE;
+    if (sibling)
+    {
+      PRBool isBlock;
+      res = mHTMLEditor->NodeIsBlockStatic(sibling, &isBlock);
+      if (NS_FAILED(res)) return res;
+      if (isBlock || nsTextEditUtils::IsBreak(sibling))
+      {
+        foundCR = PR_TRUE;
+      }
+    }
+    else
+    {
+      foundCR = PR_TRUE;
+    }
+    if (!foundCR)
+    {
+      nsCOMPtr<nsIDOMNode> brNode;
+      PRInt32 offset = 0;
+      if (!aStarts)
+      {
+        nsCOMPtr<nsIDOMNodeList> childNodes;
+        res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+        if (NS_FAILED(res)) return res;
+        if (!childNodes) return NS_ERROR_NULL_POINTER;
+        PRUint32 childCount;
+        res = childNodes->GetLength(&childCount);
+        if (NS_FAILED(res)) return res;
+        offset = childCount;
+      }
+      res = mHTMLEditor->CreateBR(aNode, offset, address_of(brNode));
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)
+{
+  nsresult res = MakeSureElemStartsOrEndsOnCR(aNode, PR_FALSE);
+  if (NS_FAILED(res)) return res;
+  res = MakeSureElemStartsOrEndsOnCR(aNode, PR_TRUE);
+  return res;
+}
+

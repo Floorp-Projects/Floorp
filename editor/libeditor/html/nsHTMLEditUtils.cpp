@@ -431,3 +431,31 @@ nsHTMLEditUtils::IsLeafNode(nsIDOMNode *aNode)
   aNode->HasChildNodes(&hasChildren);
   return !hasChildren;
 }
+
+PRBool
+nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
+{
+  NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::SupportsAlignAttr");
+  nsAutoString tag;
+  nsEditor::GetTagString(aNode, tag);
+  tag.ToLowerCase();
+  if (tag.EqualsWithConversion("hr") ||
+      tag.EqualsWithConversion("table") ||
+      tag.EqualsWithConversion("tbody") ||
+      tag.EqualsWithConversion("tfoot") ||
+      tag.EqualsWithConversion("thead") ||
+      tag.EqualsWithConversion("tr") ||
+      tag.EqualsWithConversion("td") ||
+      tag.EqualsWithConversion("th") ||
+      tag.EqualsWithConversion("div") ||
+      tag.EqualsWithConversion("p") ||
+      tag.EqualsWithConversion("h1") ||
+      tag.EqualsWithConversion("h2") ||
+      tag.EqualsWithConversion("h3") ||
+      tag.EqualsWithConversion("h4") ||
+      tag.EqualsWithConversion("h5") ||
+      tag.EqualsWithConversion("h6")) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
