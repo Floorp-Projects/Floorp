@@ -262,7 +262,7 @@ public:
   }
 
   nsService(nsISupports* aServMgr, const char* aProgID, const nsIID& aIID, nsresult *rv)
-    : mCID(), mService(0)
+    : mService(0)
   {
     *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
     NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get CLSID.");
