@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <!-- calendars uuid -->
+    <em:id>{8e117890-a33f-424b-a2ea-deb272731365}</em:id>
+
+    <!-- Our current version -->
+    <em:version>0.8</em:version>
+
+    <em:targetApplication>
+      <Description>
+        <!-- Firefox -->
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>0.8</em:minVersion>
+        <em:maxVersion>0.9</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:name>Mozilla Calendar</em:name>
+    <em:description>A calendar client based on iCal standard</em:description>
+    <em:creator>OEone Corp. and Mozilla</em:creator>
+
+    <em:iconURL>chrome://calendar/content/sunbird_small.png</em:iconURL>
+    <em:homepageURL>http://www.mozilla.org/projects/calendar/</em:homepageURL>
+    <em:optionsURL>chrome://calendar/content/pref/prefBird.xul</em:optionsURL>
+    <em:aboutURL>chrome://calendar/content/about.xul</em:aboutURL>
+    
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar.jar">
+        <em:package>content/calendar/</em:package>
+        <em:locale>locale/en-US/calendar/</em:locale>
+        <em:skin>skin/classic/calendar/</em:skin>
+      </Description>
+    </em:file>
+
+
+  </Description>      
+</RDF>
