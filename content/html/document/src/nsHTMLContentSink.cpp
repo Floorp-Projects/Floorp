@@ -3921,7 +3921,7 @@ HTMLContentSink::StartLayout()
 }
 
 // Convert the ref from document charset to unicode.
-static nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset, nsString& aRefInUnicode)
+nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset, nsString& aRefInUnicode)
 {
   nsresult rv;
   
@@ -3962,6 +3962,8 @@ static nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRe
 void
 HTMLContentSink::ScrollToRef()
 {
+  // XXX Duplicate code in nsXMLContentSink.
+  // XXX Be sure to change both places if you make changes here.
   if (!mRef.IsEmpty()) {
     char* tmpstr = mRef.ToNewCString();
     if(! tmpstr)
