@@ -208,6 +208,9 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->outString,                            
                             aCancel,
                             aHandled);
+    case kInsertElement:  // i had thought this would be html rules only.  but we put pre elements
+                          // into plaintext mail when doing quoting for reply!  doh!
+      return WillInsert(aSelection, aCancel);
   }
   return NS_ERROR_FAILURE;
 }
