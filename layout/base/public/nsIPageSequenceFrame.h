@@ -48,63 +48,6 @@ class nsIPrintSettings;
 #define NS_IPAGESEQUENCEFRAME_IID \
  { 0xa6cf90d2, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-// IID for the nsIPrintStatusCallback interface
-// a6cf90d3-15b3-11d2-932e-00805f8add32
-#define NS_IPRINTSTATUSCALLBACK_IID \
- { 0xa6cf90d3, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-//----------------------------------------------------------------------
-
-/**
- * List of status codes that provide additional information about the
- * progress of the print operation.
- * @see   nsIPrintStatusCallback#OnProgress()
- */
-enum nsPrintStatus {
-  ePrintStatus_StartPage,   // beginning the specified page
-  ePrintStatus_EndPage      // finished with the specified page
-};
-
-/**
- * List of print error codes.
- * @see   nsIPrintStatusCallback##OnError()
- */
-enum nsPrintError {
-  ePrintError_Error,        // unspecified error
-  ePrintError_Abort,        // operation was aborted by the user
-  ePrintError_OutOfDisk,    // system is out of disk space
-  ePrintError_OutOfMemory   // system is out of memory
-};
-
-/**
- * The page sequence frame provides information on the print operation by
- * calling notification methods on the client's nsIPrintStatusCallback
- * interface.
- */
-class nsIPrintStatusCallback : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTSTATUSCALLBACK_IID)
-
-  /**
-   * Indicates the current progress of the print operation.
-   *
-   * @param   aPageNumber the number of the current page
-   * @param   aTotalPages the total number of pages
-   * @param   aStatusCode additional information regarding the progress
-   * @param   aContinuePrinting return PR_TRUE to continue printing and
-   *            PR_FALSE to cancel the printing operation
-   */
-  NS_IMETHOD  OnProgress(PRInt32       aPageNumber,
-                         PRInt32       aTotalPages,
-                         nsPrintStatus aStatusCode,
-                         PRBool&       aContinuePrinting) = 0;
-
-  /**
-   * Notification that an error has occured.
-   */
-  NS_IMETHOD  OnError(nsPrintError aErrorCode) = 0;
-};
-
 //----------------------------------------------------------------------
 
 /**
@@ -128,7 +71,6 @@ public:
    *          NS_ERROR_INVALID_ARG if printing a range of pages (not all pages)
    *            and the start page is greater than the total number of pages
    *          NS_ERROR_FAILURE if there is an error
-   * @see     nsIPrintStatusCallback#OnProgress()
    */
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
                         nsIPrintSettings* aPrintOptions,

@@ -561,23 +561,6 @@ nsSimplePageSequenceFrame::GetFrameName(nsAString& aResult) const
 
 //----------------------------------------------------------------------
 
-// Helper function that sends the progress notification. Returns PR_TRUE
-// if printing should continue and PR_FALSE otherwise
-static PRBool
-SendStatusNotification(nsIPrintStatusCallback* aStatusCallback,
-                       PRInt32                 aPageNumber,
-                       PRInt32                 aTotalPages,
-                       nsPrintStatus           aStatus)
-{
-  PRBool  ret = PR_TRUE;
-
-  if (nsnull != aStatusCallback) {
-    aStatusCallback->OnProgress(aPageNumber, aTotalPages, aStatus,ret);
-  }
-
-  return ret;
-}
-
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::SetOffsets(nscoord aStartOffset, nscoord aEndOffset)
 {
@@ -893,7 +876,6 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
     // currently this does not work for IFrames
     // I will soon improve this to work with IFrames 
     PRBool  continuePrinting = PR_TRUE;
-    nscoord selectionHeight  = mSelectionHeight;
     PRInt32 width, height;
     dc->GetDeviceSurfaceDimensions(width, height);
     nsRect clipRect(0, 0, width, height);
