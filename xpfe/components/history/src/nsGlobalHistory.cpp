@@ -579,7 +579,9 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     // update the database, and get the old info back
     PRInt64 oldDate;
     PRInt32 oldCount;
-    AddExistingPageToDatabase(row, aDate, &oldDate, &oldCount);
+    rv = AddExistingPageToDatabase(row, aDate, &oldDate, &oldCount);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
+    if (NS_FAILED(rv)) return rv;
     
     // Notify observers
     
@@ -606,7 +608,9 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
   }
   else {
-    AddNewPageToDatabase(aURL, aDate, getter_Acquires(row));
+    rv = AddNewPageToDatabase(aURL, aDate, getter_Acquires(row));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "AddNewPageToDatabase failed; see bug 88961");
+    if (NS_FAILED(rv)) return rv;
     
     // Notify observers
     rv = NotifyAssert(url, kNC_Date, date);
