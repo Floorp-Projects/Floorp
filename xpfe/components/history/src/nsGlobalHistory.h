@@ -102,6 +102,11 @@ struct matchHost_t;
 struct searchQuery;
 class searchTerm;
 
+// Number of prefixes used in the autocomplete sort comparison function
+#define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
+// Size of visit count boost to give to urls which are sites or paths
+#define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
+
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -215,6 +220,17 @@ protected:
   PRBool AutoCompleteCompare(nsAString& aHistoryURL, 
                              const nsAString& aUserURL,
                              AutocompleteExclude* aExclude);
+  PR_STATIC_CALLBACK(int)
+  AutoCompleteSortComparison(const void *v1, const void *v2, void *unused);
+
+  // AutoCompleteSortClosure - used to pass info into 
+  // AutoCompleteSortComparison from the NS_QuickSort() function
+  struct AutoCompleteSortClosure
+  {
+    nsGlobalHistory* history;
+    size_t prefixCount;
+    nsAFlatString* prefixes[AUTOCOMPLETE_PREFIX_LIST_COUNT];
+  };
 
   // caching of PR_Now() so we don't call it every time we do
   // a history query
@@ -434,7 +450,5 @@ protected:
   friend class AutoCompleteEnumerator;
 };
 
-int PR_CALLBACK 
-AutoCompleteSortComparison(const void *v1, const void *v2, void *unused);
 
 #endif // nsglobalhistory__h____

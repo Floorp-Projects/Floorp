@@ -24,6 +24,8 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Joe Hewitt <hewitt@netscape.com>
  *   Blake Ross <blaker@netscape.com>
+ *   Chris Sears <cbsears_sf@yahoo.com>
+ *   Michael Lowe <michael.lowe@bigfoot.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -3866,7 +3868,7 @@ nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsI
   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
 
   newItem->SetValue(NS_ConvertUTF8toUCS2(url.get()));
-  
+  newItem->SetParam(aRow);
   newItem->SetComment(comments.get());
 
   *aResult = newItem;
@@ -4056,9 +4058,32 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
     for (i = 0; i < count; ++i)
       items[i] = (nsIAutoCompleteItem*)array.ElementAt(i);
     
+    // Setup the structure we pass into the sort function,
+    // including a set of url prefixes to ignore.   These prefixes 
+    // must match with the logic in nsGlobalHistory::nsGlobalHistory().
+    NS_NAMED_LITERAL_STRING(prefixHWStr, "http://www.");
+    NS_NAMED_LITERAL_STRING(prefixHStr, "http://");
+    NS_NAMED_LITERAL_STRING(prefixHSWStr, "https://www.");
+    NS_NAMED_LITERAL_STRING(prefixHSStr, "https://");
+    NS_NAMED_LITERAL_STRING(prefixFFStr, "ftp://ftp.");
+    NS_NAMED_LITERAL_STRING(prefixFStr, "ftp://");
+
+    // note: the number of prefixes stored in the closure below 
+    // must match with the constant AUTOCOMPLETE_PREFIX_LIST_COUNT
+    AutoCompleteSortClosure closure;
+    closure.history = this;
+    closure.prefixCount = AUTOCOMPLETE_PREFIX_LIST_COUNT;
+    closure.prefixes[0] = NS_STATIC_CAST(nsAFlatString*, &prefixHWStr);
+    closure.prefixes[1] = NS_STATIC_CAST(nsAFlatString*, &prefixHStr);
+    closure.prefixes[2] = NS_STATIC_CAST(nsAFlatString*, &prefixHSWStr);
+    closure.prefixes[3] = NS_STATIC_CAST(nsAFlatString*, &prefixHSStr);
+    closure.prefixes[4] = NS_STATIC_CAST(nsAFlatString*, &prefixFFStr);
+    closure.prefixes[5] = NS_STATIC_CAST(nsAFlatString*, &prefixFStr);
+
     // sort it
     NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*),
-                 AutoCompleteSortComparison, nsnull);
+                 AutoCompleteSortComparison,
+                 NS_STATIC_CAST(void*, &closure));
   
     // place the sorted array into the autocomplete results
     for (i = 0; i < count; ++i) {
@@ -4171,15 +4196,126 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
 }
 
 int PR_CALLBACK 
-AutoCompleteSortComparison(const void *v1, const void *v2, void *unused) 
+nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
+                                            void *closureVoid) 
 {
+  //
+  // NOTE: The design and reasoning behind the following autocomplete 
+  // sort implementation is documented in bug 78270.
+  //
+
+  // cast our function parameters back into their real form
   nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
   nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
+  AutoCompleteSortClosure* closure = 
+      NS_STATIC_CAST(AutoCompleteSortClosure*, closureVoid);
 
-  nsAutoString s1;
-  item1->GetValue(s1);
-  nsAutoString s2;
-  item2->GetValue(s2);
-  return nsCRT::strcmp(s1.get(), s2.get());
+  // get history rows
+  nsCOMPtr<nsIMdbRow> row1, row2;
+  item1->GetParam(getter_AddRefs(row1));
+  item2->GetParam(getter_AddRefs(row2));
+
+  // get visit counts - we're ignoring all errors from GetRowValue(), 
+  // and relying on default values
+  PRInt32 item1visits = 0, item2visits = 0;
+  closure->history->GetRowValue(row1, 
+                                closure->history->kToken_VisitCountColumn, 
+                                &item1visits);
+  closure->history->GetRowValue(row2, 
+                                closure->history->kToken_VisitCountColumn, 
+                                &item2visits);
+
+  // get URLs
+  nsAutoString url1, url2;
+  item1->GetValue(url1);
+  item2->GetValue(url2);
+
+  // Favour websites and webpaths more than webpages by boosting 
+  // their visit counts.  This assumes that URLs have been normalized, 
+  // appending a trailing '/'.
+  // 
+  // We use addition to boost the visit count rather than multiplication 
+  // since we want URLs with large visit counts to remain pretty much 
+  // in raw visit count order - we assume the user has visited these urls
+  // often for a reason and there shouldn't be a problem with putting them 
+  // high in the autocomplete list regardless of whether they are sites/
+  // paths or pages.  However for URLs visited only a few times, sites 
+  // & paths should be presented before pages since they are generally 
+  // more likely to be visited again.
+  //
+  PRBool isPath1 = PR_FALSE, isPath2 = PR_FALSE;
+  if (!url1.IsEmpty())
+  {
+    // url is a site/path if it has a trailing slash
+    isPath1 = (url1.Last() == PRUnichar('/'));
+    if (isPath1)
+      item1visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
+  }
+  if (!url2.IsEmpty())
+  {
+    // url is a site/path if it has a trailing slash
+    isPath2 = (url2.Last() == PRUnichar('/'));
+    if (isPath2)
+      item2visits += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
+  }
+
+  // primary sort by visit count
+  if (item1visits != item2visits)
+  {
+    // return visit count comparison
+    return item2visits - item1visits;
+  }
+  else
+  {
+    // Favour websites and webpaths more than webpages
+    if (isPath1 && !isPath2) return -1; // url1 is a website/path, url2 isn't
+    if (!isPath1 && isPath2) return  1; // url1 isn't a website/path, url2 is
+
+    // We have two websites/paths.. ignore "http[s]://[www.]" & "ftp://[ftp.]"
+    // prefixes.  Find a starting position in the string, just past any of the 
+    // above prefixes.  Only check for the prefix once, in the far left of the 
+    // string - it is assumed there is no whitespace.
+    PRInt32 postPrefix1 = 0, postPrefix2 = 0;
+
+    size_t i;
+    // iterate through our prefixes looking for a match
+    for (i=0; i<closure->prefixCount; i++)
+    {
+      // Check if string is prefixed.  Note: the parameters of the Find() 
+      // method specify the url is searched at the 0th character and if there
+      // is no match the rest of the url is not searched.
+      if (url1.Find((*closure->prefixes[i]), 0, 1) == 0)
+      {
+        // found a match - record post prefix position
+        postPrefix1 = closure->prefixes[i]->Length();
+        // bail out of the for loop
+        break;
+      }
+    }
+
+    // iterate through our prefixes looking for a match
+    for (i=0; i<closure->prefixCount; i++)
+    {
+      // Check if string is prefixed.  Note: the parameters of the Find() 
+      // method specify the url is searched at the 0th character and if there
+      // is no match the rest of the url is not searched.
+      if (url2.Find((*closure->prefixes[i]), 0, 1) == 0)
+      {
+        // found a match - record post prefix position
+        postPrefix2 = closure->prefixes[i]->Length();
+        // bail out of the for loop
+        break;
+      }
+    }
+
+    // compare non-prefixed urls
+    PRInt32 ret = Compare(
+      Substring(url1, postPrefix1, url1.Length()),
+      Substring(url2, postPrefix2, url2.Length()));
+    if (ret != 0) return ret;
+
+    // sort http://xyz.com before http://www.xyz.com
+    return postPrefix1 - postPrefix2;
+  }
 }
 
