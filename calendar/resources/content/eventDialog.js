@@ -130,7 +130,7 @@ function loadCalendarEventDialog()
     var titleDataItem = null;
 
     if ("new" == args.mode)
-        title = document.getElementById("data-event-title-new").getAttribute("value");
+        var title = document.getElementById("data-event-title-new").getAttribute("value");
     else {
         title = document.getElementById("data-event-title-edit").getAttribute("value");
     }
