@@ -51,44 +51,7 @@
 #define XP_IS_SPACE(_ch) \
   (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
 
-// XXX image frame layout can be 100% decoupled from the content
-// object; all it needs are attributes to work properly
-
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-
-#if 0
-#define nsHTMLImageSuper nsHTMLTagContent
-class nsHTMLImage : public nsHTMLImageSuper, public nsIDOMHTMLImageElement {
-public:
-  nsHTMLImage(nsIAtom* aTag);
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
-                               nsString& aResult) const;
-
-  NS_FORWARD_IDOMNODE(nsHTMLImageSuper::)
-  NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper::)
-  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLImageSuper::)
-
-  NS_DECL_IDOMHTMLIMAGEELEMENT
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-
-protected:
-  virtual ~nsHTMLImage();
-  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
-
-  void TriggerReflow();
-};
-#endif
 
 #define ImageFrameSuper nsLeafFrame
 class ImageFrame : public ImageFrameSuper {
@@ -112,6 +75,10 @@ public:
                             nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
+  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute);
 
 protected:
   virtual ~ImageFrame();
@@ -964,4 +931,18 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
 
   return ImageFrameSuper::ContentChanged(aShell, aPresContext, aChild,
                                          aSubContent);
+}
+
+NS_IMETHODIMP
+ImageFrame::AttributeChanged(nsIPresShell* aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent* aChild,
+                             nsIAtom* aAttribute)
+{
+  nsresult rv = nsLeafFrame::AttributeChanged(aShell, aPresContext, aChild,
+                                              aAttribute);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  return NS_OK;
 }
