@@ -34,7 +34,7 @@
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 PRBool gDone = PR_FALSE;
 nsIEventQueue* gEventQ = nsnull;
