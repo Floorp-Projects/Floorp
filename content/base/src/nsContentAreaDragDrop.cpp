@@ -1051,8 +1051,6 @@ nsContentAreaDragDrop::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImag
   NS_ENSURE_ARG_POINTER(outImage);
   *outImage = nsnull;
 
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(inNode));
   if (!content) {
     return NS_ERROR_NOT_AVAILABLE;
