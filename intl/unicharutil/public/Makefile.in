@@ -31,6 +31,7 @@ EXPORTS		= \
 	nsIUGenDetailCategory.h \
 	nsUnicharUtilCIID.h \
 	nsHankakuToZenkakuCID.h \
+	nsArabicBasicLToPFormBVCID.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

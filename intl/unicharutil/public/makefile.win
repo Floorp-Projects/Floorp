@@ -25,6 +25,7 @@ EXPORTS = \
 	nsIUGenCategory.h \
 	nsIUGenDetailCategory.h \
 	nsHankakuToZenkakuCID.h \
+	nsArabicBasicLToPFormBVCID.h \
 	nsUnicharUtilCIID.h \
 	$(NULL)
 

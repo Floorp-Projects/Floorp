@@ -5,3 +5,4 @@ nsIUGenCategory.h
 nsIUGenDetailCategory.h
 nsUnicharUtilCIID.h
 nsHankakuToZenkakuCID.h
+nsArabicBasicLToPFormBVCID.h
