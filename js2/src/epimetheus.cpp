@@ -29,17 +29,14 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <list>
+#include <stack>
+#include <map>
 
 #include "world.h"
 #include "strings.h"
 #include "utilities.h"
 #include "js2value.h"
-
-#include <map>
-#include <algorithm>
-#include <list>
-#include <stack>
-
 #include "reader.h"
 #include "parser.h"
 #include "js2engine.h"

@@ -331,10 +331,12 @@ namespace MetaData {
                     fWrap->env->addFrame(objectType(thisValue));
                 fWrap->env->addFrame(runtimeFrame);
                 ParameterFrame *oldPFrame = engine->parameterFrame;
+                ValueList *oldPSlots = engine->parameterSlots;
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
                     engine->parameterFrame = runtimeFrame;
+                    engine->parameterSlots = runtimeFrame->frameSlots;
                     result = engine->interpret(RunPhase, bCon, fWrap->env);
                 }
                 catch (Exception &x) {
@@ -342,12 +344,14 @@ namespace MetaData {
                     restoreCompilationUnit(oldData);
                     fWrap->env->setTopFrame(oldTopFrame);
                     engine->parameterFrame = oldPFrame;
+                    engine->parameterSlots = oldPSlots;
                     throw x;
                 }
                 engine->pc = savePC;
                 restoreCompilationUnit(oldData);
                 fWrap->env->setTopFrame(oldTopFrame);
                 engine->parameterFrame = oldPFrame;
+                engine->parameterSlots = oldPSlots;
             }
         }
         return result;

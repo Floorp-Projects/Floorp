@@ -3593,7 +3593,7 @@ rescan:
                 return argv[0];
             // need to reset the environment to the one in operation when eval was called so
             // that eval code can affect the apppropriate scopes.
-            meta->engine->jsr(meta->engine->phase, NULL, meta->engine->sp - meta->engine->execStack, JS2VAL_VOID, meta->engine->activationStackTop[-1].env, NULL);
+            meta->engine->jsr(meta->engine->phase, NULL, meta->engine->sp - meta->engine->execStack, JS2VAL_VOID, meta->engine->activationStackTop[-1].env);
 //            meta->engine->localFrame = meta->engine->activationStackTop[-1].localFrame;
             js2val result = meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
             meta->engine->rts();
@@ -5311,16 +5311,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
             localBindings.insert(name, lbe);
         }
+        else {
+			if (argCount > slotCount)
+				slotCount = argCount;
+            if (slotCount)
+                frameSlots = new std::vector<js2val>(slotCount);
+        }
 
         for (i = 0; (i < argCount); i++) {
             if (i < slotCount) {
                 (*frameSlots)[i] = argBase[i];
             }
         }
-        while (i++ < length) {
-            if (i < slotCount) {
-				(*frameSlots)[i] = JS2VAL_UNDEFINED;
-			}
+        for ( ; (i < slotCount); i++) {
+			(*frameSlots)[i] = JS2VAL_UNDEFINED;
         }
         if (plural->buildArguments) {
             setLength(meta, argsObj, argCount);

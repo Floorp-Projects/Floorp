@@ -31,6 +31,11 @@
 * file under either the NPL or the GPL.
 */
 
+#include <vector>
+
+#include "systemtypes.h"
+#include "js2value.h"
+
 #include "numerics.h"
 #include "lexer.h"
 

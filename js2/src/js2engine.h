@@ -312,8 +312,9 @@ public:
         Frame *topFrame;
         NonWithFrame *localFrame;
         ParameterFrame *parameterFrame;
+        ValueList *parameterSlots;
     };
-    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env, ParameterFrame *pFrame);
+    void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
     void rts();
     ActivationFrame *activationStack;
@@ -364,6 +365,7 @@ public:
     NonWithFrame *packageFrame;
     ParameterFrame *parameterFrame;
     NonWithFrame *localFrame;
+    ValueList *parameterSlots;
 
     void pushHandler(uint8 *pc);
     void popHandler();

@@ -41,14 +41,11 @@
 #include <assert.h>
 #include <list>
 #include <stack>
+#include <map>
 
 #include "world.h"
 #include "utilities.h"
 #include "js2value.h"
-
-#include <map>
-#include <algorithm>
-
 #include "strings.h"
 #include "reader.h"
 #include "parser.h"

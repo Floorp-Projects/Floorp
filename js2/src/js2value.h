@@ -174,6 +174,7 @@ enum Phase  { CompilePhase, RunPhase };
 typedef uint8 AccessSet;
 enum Access { ReadAccess = 0x1, WriteAccess = 0x2, ReadWriteAccess = ReadAccess | WriteAccess};
 
+typedef std::vector<js2val> ValueList;
 
 #endif
 

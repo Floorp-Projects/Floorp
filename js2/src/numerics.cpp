@@ -34,6 +34,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <cfloat>
+
+#include <vector>
+
+#include "systemtypes.h"
+#include "js2value.h"
+
 #include "numerics.h"
 #include "parser.h"
 

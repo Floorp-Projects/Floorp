@@ -684,8 +684,6 @@ public:
     JS2Object *obj;
 };
 
-typedef std::vector<js2val> ValueList;
-
 class NonWithFrame : public Frame {
 public:
 

@@ -67,7 +67,7 @@ namespace MetaData {
     js2val JS2Engine::interpret(Phase execPhase, BytecodeContainer *targetbCon, Environment *env)
     {
         packageFrame = env->getPackageFrame();
-        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env, NULL);
+        jsr(execPhase, targetbCon, sp - execStack, JS2VAL_VOID, env);
         ActivationFrame *f = activationStackTop;
         js2val result;
         try {
@@ -154,6 +154,7 @@ namespace MetaData {
                             curAct = --activationStackTop;
                             localFrame = activationStackTop->localFrame;
                             parameterFrame = activationStackTop->parameterFrame;
+                            parameterSlots = activationStackTop->parameterSlots;
                             bCon = activationStackTop->bCon;
                             if (hndlr->mActivation != curAct) {
                                 while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
@@ -167,6 +168,7 @@ namespace MetaData {
                                                         // be at the top, because of postincrement
                         localFrame = activationStackTop->localFrame;
                         parameterFrame = activationStackTop->parameterFrame;
+                        parameterSlots = activationStackTop->parameterSlots;
                         bCon = activationStackTop->bCon;
                         meta->env = activationStackTop->env;
                     }
@@ -502,6 +504,7 @@ namespace MetaData {
                   packageFrame(NULL),
                   parameterFrame(NULL),
                   localFrame(NULL),
+                  parameterSlots(NULL),
                   traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)
@@ -1028,7 +1031,7 @@ namespace MetaData {
 
     // Save current engine state (pc, environment top) and
     // jump to start of new bytecodeContainer
-    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env, ParameterFrame *pFrame)
+    void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env)
     {
         if (activationStackTop >= (activationStack + MAX_ACTIVATION_STACK))
             meta->reportError(Exception::internalError, "out of activation stack", meta->engine->errorPos());
@@ -1042,6 +1045,7 @@ namespace MetaData {
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
         activationStackTop->localFrame = localFrame;
         activationStackTop->parameterFrame = parameterFrame;
+        activationStackTop->parameterSlots = parameterSlots;
 //		if (pFrame && pFrame->)
         activationStackTop++;
         if (new_bCon) {
@@ -1073,6 +1077,7 @@ namespace MetaData {
         phase = activationStackTop->phase;
         localFrame = activationStackTop->localFrame;
         parameterFrame = activationStackTop->parameterFrame;
+        parameterSlots = activationStackTop->parameterSlots;
         // reset the env. top
         while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
             activationStackTop->newEnv->removeTopFrame();
@@ -1089,6 +1094,7 @@ namespace MetaData {
     // and in structures contained in those locations.
     void JS2Engine::mark()
     {
+        uint32 i;
         if (bCon)
             bCon->mark();
         for (ActivationFrame *f = activationStack; (f < activationStackTop); f++) {
@@ -1103,9 +1109,14 @@ namespace MetaData {
         JS2Object::mark(JS2VAL_TO_DOUBLE(nanValue));
         JS2Object::mark(JS2VAL_TO_DOUBLE(posInfValue));
         JS2Object::mark(JS2VAL_TO_DOUBLE(negInfValue));
-        for (uint32 i = 0; i < 256; i++) {
+        for (i = 0; i < 256; i++) {
             if (float64Table[i])
                 JS2Object::mark(float64Table[i]);
+        }
+        if (parameterSlots) {
+            for (i = 0; i < parameterSlots->size(); i++) {
+                GCMARKVALUE((*parameterSlots)[i]);
+            }
         }
         GCMARKVALUE(retval);
     }

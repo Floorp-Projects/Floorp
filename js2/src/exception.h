@@ -34,10 +34,6 @@
 #ifndef exception_h___
 #define exception_h___
 
-#include "systemtypes.h"
-#include "js2value.h"
-#include "strings.h"
-
 namespace JavaScript
 {
 

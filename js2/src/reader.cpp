@@ -32,6 +32,11 @@
 */
 
 #include <algorithm>
+#include <vector>
+
+#include "systemtypes.h"
+#include "js2value.h"
+#include "strings.h"
 
 #include "reader.h"
 

@@ -1242,10 +1242,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->frameSlots->size());
-            a = (*parameterFrame->frameSlots)[slotIndex];
+            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
+            a = (*parameterSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*parameterFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
+            (*parameterSlots)[slotIndex] = allocNumber(num + 1.0);
             pushNumber(num);
         }
         break;
@@ -1253,10 +1253,10 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->frameSlots->size());
-            a = (*parameterFrame->frameSlots)[slotIndex];
+            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
+            a = (*parameterSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
-            (*parameterFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
+            (*parameterSlots)[slotIndex] = allocNumber(num - 1.0);
             pushNumber(num);
         }
         break;
@@ -1264,21 +1264,21 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->frameSlots->size());
-            a = (*parameterFrame->frameSlots)[slotIndex];
+            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
+            a = (*parameterSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            (*parameterFrame->frameSlots)[slotIndex] = a;
+            (*parameterSlots)[slotIndex] = a;
         }
         break;
     case eParameterSlotPreDec:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(slotIndex < parameterFrame->frameSlots->size());
-            a = (*parameterFrame->frameSlots)[slotIndex];
+            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
+            a = (*parameterSlots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            (*parameterFrame->frameSlots)[slotIndex] = a;
+            (*parameterSlots)[slotIndex] = a;
         }
         break;

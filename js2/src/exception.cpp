@@ -32,6 +32,12 @@
  */
 
 #include <cstdio>
+#include <vector>
+
+#include "systemtypes.h"
+#include "js2value.h"
+#include "strings.h"
+
 #include "exception.h"
 
 namespace JS = JavaScript;
