@@ -326,8 +326,11 @@ nsFileChannel::AsyncRead(nsIStreamListener *listener,
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->AsyncRead(tempListener, ctxt);
+
   done:
     if (NS_FAILED(rv)) {
+        nsresult rv2 = mLoadGroup->RemoveChannel(this);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
     }
@@ -352,12 +355,34 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
 
     mIOFlags |= PR_WRONLY;
 
+    if (mLoadGroup) {
+        nsCOMPtr<nsILoadGroupListenerFactory> factory;
+        //
+        // Create a load group "proxy" listener...
+        //
+        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+        if (factory) {
+            nsIStreamListener *newListener;
+            rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
+            if (NS_SUCCEEDED(rv)) {
+                mRealListener = newListener;
+                NS_RELEASE(newListener);
+            }
+        }
+
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = EnsureTransport();
     if (NS_FAILED(rv)) goto done;
 
     rv = mFileTransport->AsyncWrite(fromStream, observer, ctxt);
+
   done:
     if (NS_FAILED(rv)) {
+        nsresult rv2 = mLoadGroup->RemoveChannel(this);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
     }
