@@ -344,7 +344,7 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
-    NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
+    NS_IMETHOD OnLastWindowClosing();
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
     NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
@@ -398,7 +398,7 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
-    static nsIDOMWindow *mInitialWindow;
+    static PRBool mInitialWindowActive;
     static PRBool mForceProfileStartup;
     static char mMutexName[];
     static PRBool mUseDDE;
@@ -779,7 +779,7 @@ int   nsNativeAppSupportOS2::mConversations = 0;
 HSZ   nsNativeAppSupportOS2::mApplication   = 0;
 HSZ   nsNativeAppSupportOS2::mTopics[nsNativeAppSupportOS2::topicCount] = { 0 };
 DWORD nsNativeAppSupportOS2::mInstance      = 0;
-nsIDOMWindow* nsNativeAppSupportOS2::mInitialWindow = nsnull;
+PRBool nsNativeAppSupportOS2::mInitialWindowActive = PR_FALSE;
 PRBool nsNativeAppSupportOS2::mForceProfileStartup = PR_FALSE;
 
 
@@ -1753,7 +1753,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // if initial hidden window is still being displayed, we need to ignore requests
     // because such requests might not function properly.  See bug 147223 for details
 
-    if (mInitialWindow) {
+    if (mInitialWindowActive) {
       return;
     }
 
@@ -1830,7 +1830,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
           nsCOMPtr<nsIDOMWindowInternal> win;
           GetMostRecentWindow( 0, getter_AddRefs( win ) );
           if (!win)
-            appShell->Quit();
+            appShell->Quit(nsIAppShellService::eAttemptQuit);
         }
       }
 
@@ -2316,7 +2316,7 @@ nsNativeAppSupportOS2::StartServerMode() {
     if ( !newWindow ) {
         return NS_OK;
     }
-    mInitialWindow = newWindow;
+    mInitialWindowActive = PR_TRUE;
 
     // Hide this window by re-parenting it (to ensure it doesn't appear).
     ReParent( newWindow, (HWND)MessageWindow() );
@@ -2330,18 +2330,15 @@ nsNativeAppSupportOS2::SetIsServerMode( PRBool isServerMode ) {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportOS2::OnLastWindowClosing( nsIXULWindow *aWindow ) {
+nsNativeAppSupportOS2::OnLastWindowClosing() {
  
     if ( !mServerMode )
         return NS_OK;
 
     // If the last window closed is our special "turbo" window made
     // in StartServerMode(), don't do anything.
-    nsCOMPtr<nsIDocShell> docShell;
-    ( void )aWindow->GetDocShell( getter_AddRefs( docShell ) );
-    nsCOMPtr<nsIDOMWindow> domWindow( do_GetInterface( docShell ) );
-    if ( domWindow == mInitialWindow ) {
-        mInitialWindow = nsnull;
+    if ( mInitialWindowActive ) {
+        mInitialWindowActive = PR_FALSE;
         return NS_OK;
     }
 
@@ -2374,7 +2371,7 @@ nsNativeAppSupportOS2::OnLastWindowClosing( nsIXULWindow *aWindow ) {
                 nsCOMPtr<nsIAppShellService> appShell =
                     do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
                 if ( NS_SUCCEEDED( rv ) ) {
-                    appShell->Quit();
+                    appShell->Quit(nsIAppShellService::eAttemptQuit);
                 }
                 return NS_OK;
             }
@@ -2424,7 +2421,7 @@ nsNativeAppSupportOS2::OnLastWindowClosing( nsIXULWindow *aWindow ) {
     
         // Turn off turbo mode and quit the application.
         SetIsServerMode( PR_FALSE );
-        appShell->Quit();
+        appShell->Quit(nsIAppShellService::eAttemptQuit);
 
         // Done.  This app will now commence shutdown.
     }
