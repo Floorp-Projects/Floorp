@@ -255,9 +255,6 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 
   mStreamInfo = pluginInfo;
 
-  // if we don't know the end of the stream, use 0 instead of -1. bug 59571
-  if (mNPStream.end == -1)
-    mNPStream.end = 0;
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
                                                        npp,

@@ -2247,7 +2247,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   // it's possible for the server to not send a Content-Length.  We should
   // still work in this case.
   if (NS_FAILED(rv)) {
-    mPluginStreamInfo->SetLength(PRUint32(-1));
+    mPluginStreamInfo->SetLength(PRUint32(0));
   }
   else {
     mPluginStreamInfo->SetLength(length);
