@@ -28,22 +28,14 @@
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 <html:script language="javascript">
-    function GetToolkitCore() {
-      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-      if (!toolkitCore) {
-        toolkitCore = new ToolkitCore();
-        if (toolkitCore)
-          toolkitCore.Init("ToolkitCore");
-      }
-      return toolkitCore;
-    }
 
-    function DoCustomize() {
-      var toolkitCore = GetToolkitCore();
-      if (toolkitCore)
-        toolkitCore.ShowModalDialog("custreceipt.xul",
-            window);
-    }
+function DoCustomize() 
+{
+	var dialog = window.openDialog("chrome://messenger/content/custreceipt.xul",
+								   "",
+								   "chrome");
+}
+
 </html:script>
 
 
