@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -150,7 +151,9 @@ public:
   nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
-                               nsFontCharSetInfo* aCharSet, PRUnichar aChar);
+                               nsFontCharSetInfo* aCharSet, 
+                               PRUnichar aChar,
+                               const char *aName);
 
   static nsresult FamilyExists(const nsString& aFontName);
 
