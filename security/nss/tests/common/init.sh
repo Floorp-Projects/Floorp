@@ -42,8 +42,8 @@
 # variables, utilities and shellfunctions global to NSS QA
 # needs to work on all Unix and Windows platforms
 #
-# included from (don't expect this to be up to date)
-# --------------------------------------------------
+# included from 
+# -------------
 #   all.sh
 #   ssl.sh
 #   sdr.sh
@@ -52,6 +52,7 @@
 #   cert.sh
 #   smime.sh
 #   tools.sh
+#   fips.sh
 #
 # special strings
 # ---------------
@@ -71,6 +72,7 @@
 
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
+# Exit shellfunction to clean up at exit (error, regular or signal)
     Exit()
     {
         if [ -n "$1" ] ; then
@@ -97,6 +99,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         esac
     }
 
+#html functions to give the resultfiles a consistant look
     html() #########################    write the results.html file
     {      # 3 functions so we can put targets in the output.log easier
         echo $* >>${RESULTS}
@@ -129,7 +132,11 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
             fi
         fi
     }
+    HTML_FAILED='</TD><TD bgcolor=red>Failed</TD><TR>'
+    HTML_PASSED='</TD><TD bgcolor=lightGreen>Passed</TD><TR>'
 
+
+#directory name init
     SCRIPTNAME=init.sh
 
     mozilla_root=`(cd ../../../..; pwd)`
@@ -149,6 +156,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     OS_ARCH=`(cd $COMMON; gmake os_arch)`
     OS_NAME=`uname -s | sed -e "s/-[0-9]*\.[0-9]*//"`
 
+#in case of backward comp. tests the calling scripts set the
+#PATH and LD_LIBRARY_PATH and do not want them to be changed
     if [ -z "${DON_T_SET_PATHS}" -o "${DON_T_SET_PATHS}" != "TRUE" ] ; then
         if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  != "CYGWIN_NT" ]; then
             PATH=.\;${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
@@ -170,6 +179,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         mkdir -p ${TESTDIR}
     fi
 
+#HOST and DOMSUF are needed for the server cert 
     case $HOST in
         *\.*)
             HOST=`echo $HOST | sed -e "s/\..*//"`
@@ -177,8 +187,18 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         ?*)
             ;;
         *)
-            echo "$SCRIPTNAME: Fatal HOST environment variable is not defined."
-            exit 1 #does not need to be Exit, very early in script
+            HOST=`uname -n`
+            case $HOST in
+                *\.*)
+                    HOST=`echo $HOST | sed -e "s/\..*//"`
+                    ;;
+                ?*)
+                    ;;
+                *)
+                    echo "$SCRIPTNAME: Fatal HOST environment variable is not defined."
+                    exit 1 #does not need to be Exit, very early in script
+                    ;;
+            esac
             ;;
     esac
 
@@ -189,14 +209,17 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
             exit 1 #does not need to be Exit, very early in script
         fi
     fi
+#HOSTADDR was a workaround for the dist. stress test, and is probably 
+#not needed anymore (purpose: be able to use IP address for the server 
+#cert instead of PC name which was not in the DNS because of dyn IP address
     if [ -z "$USE_IP" -o "$USE_IP" != "TRUE" ] ; then
         HOSTADDR=${HOST}.${DOMSUF}
     else
         HOSTADDR=${IP_ADDRESS}
     fi
 
-    #if running remote side of the distributed stress test we need to use the files that
-    #the server side gives us...
+#if running remote side of the distributed stress test we need to use 
+#the files that the server side gives us...
     if [ -n "$DO_REM_ST" -a "$DO_REM_ST" = "TRUE" ] ; then
         for w in `ls -rtd ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null |
             sed -e "s/.*${HOST}.//"` ; do
@@ -212,6 +235,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         fi
     fi
 
+#find the HOSTDIR, where the results are supposed to go
     if [ -n "${HOSTDIR}" ]; then
         version=`echo $HOSTDIR | sed  -e "s/.*${HOST}.//"` 
     else
@@ -220,6 +244,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         else
             version=1
         fi
+#file has a tendency to disappear, messing up the rest of QA - 
+#workaround to find the next higher number if version file is not there
         if [ -z "${version}" ]; then    # for some strange reason this file
                                         # gets truncated at times... Windos
             for w in `ls -d ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null |
@@ -237,6 +263,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         mkdir -p ${HOSTDIR}
     fi
 
+#result and log file and filename init,
     if [ -z "${LOGFILE}" ]; then
         LOGFILE=${HOSTDIR}/output.log
     fi
@@ -274,6 +301,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     KILL="kill"
     if  [ "${OS_ARCH}" = "Linux" ]; then
+#on linux the selfserv needs up to 30 seconds to fully die and free 
+#the socket
         SLEEP="sleep 30"
     fi
     if [ `uname -s` = "SunOS" ]; then
@@ -281,7 +310,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     else
         PS="ps"
     fi
-    #found 3 rsh's so far that do not work as expected - cygnus mks6 (restricted sh) and mks 7
+#found 3 rsh's so far that do not work as expected - cygnus mks6 
+#(restricted sh) and mks 7 - if it is not in c:/winnt/system32 it
+#needs to be set in the environ.ksh
     if [ -z "$RSH" ]; then
         if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  = "CYGWIN_NT" ]; then
             RSH=/cygdrive/c/winnt/system32/rsh
@@ -293,10 +324,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     fi
    
 
+#more filename and directoryname init
     CURDIR=`pwd`
-
-    HTML_FAILED='</TD><TD bgcolor=red>Failed</TD><TR>'
-    HTML_PASSED='</TD><TD bgcolor=lightGreen>Passed</TD><TR>'
 
     CU_ACTION='Unknown certutil action'
 
@@ -355,6 +384,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     export MOZILLA_ROOT SECURITY_ROOT DIST TESTDIR OBJDIR HOSTDIR QADIR
     export LOGFILE SCRIPTNAME
 
+#used for the distributed stress test, the server generates certificates 
+#from GLOB_MIN_CERT to GLOB_MAX_CERT 
     if [ -z "$GLOB_MIN_CERT" ] ; then
         GLOB_MIN_CERT=0
     fi
