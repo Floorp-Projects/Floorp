@@ -25,10 +25,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <setjmp.h>
 
 // simply throw us out of here!
 
+jmp_buf exit_jump;
+int exit_status = 0;
+
 void std::exit(int status)
 {
-	throw status;
+	exit_status = status;
+	longjmp(exit_jump, -1);
 }
