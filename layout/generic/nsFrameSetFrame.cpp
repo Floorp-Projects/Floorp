@@ -976,12 +976,15 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   // create the children frames; skip content which isn't <frameset> or <frame>
   nsIFrame* lastChild = nsnull;
   if (firstTime) {
-    mChildCount = 0;
+    mChildCount = 0; // number of <frame> or <frameset> children
     if (nsnull != mContent) {
       nsIFrame* frame;
-      PRInt32 numChildren;
+      PRInt32 numChildren; // number of any type of children
       mContent->ChildCount(numChildren);
       for (int childX = 0; childX < numChildren; childX++) {
+        if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
+          break;
+        }
         nsIContent* childCon;
         mContent->ChildAt(childX, childCon);
         nsIHTMLContent* child = nsnull;
