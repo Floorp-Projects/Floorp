@@ -84,3 +84,15 @@ libs::
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/resources/content/prefs/typeaheadfind.js $(DESTDIR)$(mozappdir)/defaults/pref
+
+JARFILES = bin/components/libtypeaheadfind.so bin/components/typeaheadfind.xpt bin/chrome/typeaheadfind.jar bin/defaults/pref/typeaheadfind.js
+
+# Temporary hack to make it easy to make a .xpi.
+# Bug 22062 discusses longer term options.
+xpi::
+	cp install.js $(DIST)
+	( cd $(DIST); zip typeaheadfind-linux.xpi install.js \
+	    bin/components/libtypeaheadfind.so \
+	    bin/components/typeaheadfind.xpt \
+	    bin/chrome/typeaheadfind.jar \
+	    bin/defaults/pref/typeaheadfind.js )
