@@ -825,6 +825,11 @@ CURLDispatchInfo::CURLDispatchInfo(
 		mIsWaitingForMochaImageLoad(inWaitingForMochaImageLoad),
 		mWindowResID(inWindowResID)
 {
+#if 0
+// It's not clear that we really want to call GetURLForReferral when the passed referer is
+// NIL since it breaks Smart Browsing keywords and does not actually appear to be needed to
+// fix bug #90892.  It's also a security hole since it causes the URL of the front window to
+// be sent as the referer even if the user manually types in a URL.
 	if (inTargetContext && mURLStruct->referer == NULL)
 	{
 		cstring theReferer = inTargetContext->GetCurrentURL();
@@ -832,6 +837,8 @@ CURLDispatchInfo::CURLDispatchInfo(
 			mURLStruct->referer = XP_STRDUP(theReferer);
 		mTargetContext = inTargetContext;
 	}
+#endif
+
 	if (inURLStruct)
 		mURLType = NET_URL_Type(NET_URLStruct_Address(inURLStruct));
 	else
