@@ -257,7 +257,7 @@ print "<TABLE BORDER=1><TD><H2>Bug $id posted</H2>\n";
 system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
 print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
-print "<BR><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</a>\n";
+print "<BR><A HREF=\"attachment.cgi?bugid=$id&action=enter\">Attach a file to this bug</a>\n";
 
 navigation_header();
 
