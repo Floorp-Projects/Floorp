@@ -6621,13 +6621,25 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
         ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
       }
       nsIFrame* geometricParent = adjParentFrame;
-      if (NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) {
+      // If there is no container for a fixed, absolute, or floating table because
+      // it is the root content frame, then ignore the positioning.
+      //
+      // XXX This could be supported either by (1) inserting a dummy block between 
+      // the table and the canvas or (2) teaching the canvas how to reflow positioned
+      // elements. (1) has the usual problems when multiple frames share the same content 
+      // (notice all the special cases in this file dealing with inner tables and outer 
+      // tables which share the same content). (2) requires some work and possible factoring.
+      if ((NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) &&
+          (aState.mAbsoluteItems.containingBlock)) {
         isAbsolutelyPositioned = PR_TRUE;
-        geometricParent = aState.mAbsoluteItems.containingBlock;
-      } else if (NS_STYLE_POSITION_FIXED == aDisplay->mPosition) {
+        geometricParent        = aState.mAbsoluteItems.containingBlock;
+      } 
+      else if ((NS_STYLE_POSITION_FIXED == aDisplay->mPosition) &&
+               (aState.mFixedItems.containingBlock)) {
         isFixedPositioned = PR_TRUE;
-        geometricParent = aState.mFixedItems.containingBlock;
-      } else if (isFloating) {
+        geometricParent   = aState.mFixedItems.containingBlock;
+      } 
+      else if (isFloating && aState.mFloatedItems.containingBlock) {
         geometricParent = aState.mFloatedItems.containingBlock;
       }
       nsIFrame* innerTable;
