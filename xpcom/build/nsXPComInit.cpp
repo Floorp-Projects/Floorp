@@ -41,7 +41,6 @@
 #include "prlink.h"
 #include "nsCOMPtr.h"
 #include "nsObserverList.h"
-#include "nsObserver.h"
 #include "nsObserverService.h"
 #include "nsProperties.h"
 #include "nsIProperties.h"

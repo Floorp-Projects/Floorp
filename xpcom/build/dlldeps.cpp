@@ -47,7 +47,6 @@
 #include "nsRecyclingAllocator.h"
 #include "nsIThread.h"
 #include "nsDeque.h"
-#include "nsObserver.h"
 #include "nsTraceRefcnt.h"
 #include "nsXPIDLString.h"
 #include "nsIEnumerator.h"
@@ -118,7 +117,6 @@ void XXXNeverCalled()
     a.Free(0, 0);
     nsIThread::GetCurrent(nsnull);
     nsDeque(nsnull);
-    NS_NewObserver(nsnull, nsnull);
     nsTraceRefcnt::DumpStatistics();
     NS_NewEmptyEnumerator(nsnull);
     nsArrayEnumerator(nsnull);
