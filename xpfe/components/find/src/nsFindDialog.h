@@ -101,7 +101,7 @@ public:
 protected:
     nsCOMPtr<nsIFindComponent>         mComponent;
     nsFindComponent::Context          *mContext;
-    nsCOMPtr<nsIWebShell>              mWebShell;
-    nsCOMPtr<nsIWebShellWindow>        mWindow;
+    nsCOMPtr<nsIWebShell>              mDialogWebShell;
+    nsCOMPtr<nsIWebShellWindow>        mDialogWindow;
 }; // nsFindDialog
 

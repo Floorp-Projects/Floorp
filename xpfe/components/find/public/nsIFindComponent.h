@@ -21,6 +21,7 @@
 #include "nsIAppShellComponent.h"
 
 class nsIWebShell;
+class nsIEditor;
 
 // a6cf90ee-15b3-11d2-932e-00805f8add32
 #define NS_IFINDCOMPONENT_IID \
@@ -63,13 +64,16 @@ struct nsIFindComponent : public nsIAppShellComponent {
     | FindNext requests that provide the returned search context will find     |
     | the appropriate search string in aWebShell.                              |
     |                                                                          |
+    | The editor that's passed in is only required for replace. If you pass    |
+    | in a read-only webshell, then pass nsnull for the editor.                |
+    |                                                                          |
     | The result is of the xpcom equivalent of an opaque type.  It's true type |
     | is defined by the implementation of this interface.  Clients ought never |
     | have to do QueryInterface to convert this to something more elaborate.   |
     | Clients do have to call Release() when they're no longer interested in   |
     | this search context.                                                     |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD CreateContext( nsIWebShell *aWebShell,
+    NS_IMETHOD CreateContext( nsIWebShell *aWebShell, nsIEditor* aEditor,
                               nsISupports **aResult ) = 0;
 
     /*--------------------------------- Find -----------------------------------
@@ -83,7 +87,17 @@ struct nsIFindComponent : public nsIAppShellComponent {
     | case" and "search backward") is up to the implementation of this         |
     | component.                                                               |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD Find( nsISupports *aContext ) = 0;
+    NS_IMETHOD Find( nsISupports *aContext, PRBool *aDidFind) = 0;
+
+    /*--------------------------------- Replace -----------------------------------
+    | Replace the currently selected text. It is intended that the string used |
+    | for replacement is sourced internally to the component (e.g. from a      |
+    | search/replace dialog).                                                  |
+    |                                                                          |
+    | Returns an error if the current context does not allow replacement.      |
+    |                                                                          |
+    --------------------------------------------------------------------------*/
+    NS_IMETHOD Replace( nsISupports *aContext ) = 0;
 
     /*------------------------------- FindNext ---------------------------------
     | Finds the next occurrence (of the previously searched for string) in     |
@@ -92,24 +106,17 @@ struct nsIFindComponent : public nsIAppShellComponent {
     | If no previous Find has been performed with this context, then the       |
     | find component will use the last find performed for any context.         |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD FindNext( nsISupports *aContext ) = 0;
+    NS_IMETHOD FindNext( nsISupports *aContext, PRBool *aDidFind) = 0;
 
     /*----------------------------- ResetContext -------------------------------
     | Reset the given search context to search a new web shell.  Generally,    |
     | this will be the equivalent of calling Release() on the old context and  |
     | then creating a new one for aNewWebShell.                                |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD ResetContext( nsISupports *aContext,
+    NS_IMETHOD ResetContext( nsISupports *aContext, nsIEditor* aEditor,
                              nsIWebShell *aNewWebShell ) = 0;
 
 }; // nsIFindComponent
 
-#define NS_DECL_IFINDCOMPONENT \
-    NS_IMETHOD CreateContext( nsIWebShell *aWebShell,  \
-                              nsISupports **aResult ); \
-    NS_IMETHOD Find( nsISupports *aContext );          \
-    NS_IMETHOD FindNext( nsISupports *aContext );      \
-    NS_IMETHOD ResetContext( nsISupports *aContext,    \
-                             nsIWebShell *aNewWebShell );
 
 #endif
