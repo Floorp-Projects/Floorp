@@ -393,13 +393,14 @@ CollectNicknames( NSSCertificate *c, void *data)
     int len;
     NSSTrustDomain *td;
     NSSTrust *trust;
-    char *nickname;
+    char *stanNickname;
+    char *nickname = NULL;
     
     names = (CERTCertNicknames *)data;
 
-    nickname = nssCertificate_GetNickname(c,NULL);
+    stanNickname = nssCertificate_GetNickname(c,NULL);
     
-    if ( nickname ) {
+    if ( stanNickname ) {
 	if (names->what == SEC_CERT_NICKNAMES_USER) {
 	    saveit = NSSCertificate_IsPrivateKeyAvailable(c, NULL, NULL);
 	}
@@ -444,6 +445,12 @@ CollectNicknames( NSSCertificate *c, void *data)
      * a duplicate
      */
     if ( saveit ) {
+	nickname = STAN_GetCERTCertificateName(c);
+	/* nickname can only be NULL here if we are having memory 
+	 * alloc problems */
+	if (nickname == NULL) {
+	    return SECFailure;
+	}
 	node = (stringNode *)names->head;
 	while ( node != NULL ) {
 	    if ( PORT_Strcmp(nickname, node->string) == 0 ) { 
@@ -467,6 +474,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	len = PORT_Strlen(nickname) + 1;
 	node->string = (char*)PORT_ArenaAlloc(names->arena, len);
 	if ( node->string == NULL ) {
+	    if (nickname) PORT_Free(nickname);
 	    return(SECFailure);
 	}
 	PORT_Memcpy(node->string, nickname, len);
@@ -479,6 +487,7 @@ CollectNicknames( NSSCertificate *c, void *data)
 	names->numnicknames++;
     }
     
+    if (nickname) PORT_Free(nickname);
     return(SECSuccess);
 }
 
