@@ -1394,21 +1394,37 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
       aResult.SetColorValue(color);
       return PR_TRUE;
     }
+
+    // We failed to match the color value as either a color name or a hex
+    // number
+    if ('#' == cbuf[0]) {
+#if 0
+      nsIHTMLDocument* htmlDoc;
+      nsresult         result;
+
+      result = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+      if (NS_SUCCEEDED(result)) {
+        nsDTDMode mode;
+
+        // Check the compatibility mode
+        result = htmlDoc->GetDTDMode(&mode);
+        NS_RELEASE(htmlDoc);
+
+        if (NS_SUCCEEDED(result) && (eDTDMode_Nav == mode)) {
+#endif
+          // Nav treats illegal hex numbers as 0
+          aResult.SetColorValue(0);
+          return PR_TRUE;
+#if 0
+        }
+      }
+#endif
+    }
   }
 
-// XXX Nav doesn't map illegal values to zero, at least not for color names.
-// Changing it so we ignore the illegal values rather than whack the color to
-// black, which in the case of a background color makes the document unreadable
-//#if XXX_no_nav_compat
-#if 1
   // Illegal values are mapped to empty
   aResult.SetEmptyValue();
   return PR_FALSE;
-#else
-  // Illegal values in nav are mapped to zero
-  aResult.SetColorValue(0);
-  return PR_TRUE;
-#endif
 }
 
 PRBool
