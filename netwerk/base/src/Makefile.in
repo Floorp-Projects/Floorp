@@ -77,7 +77,11 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 	CPPSRCS += nsNativeConnectionHelper.cpp
 	CPPSRCS += nsAutodialWin.cpp
 else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	CPPSRCS += nsURLHelperOSX.cpp
+else
 	CPPSRCS += nsURLHelperUnix.cpp
+endif
 endif
 endif
 
