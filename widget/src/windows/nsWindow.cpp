@@ -6769,7 +6769,7 @@ nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
     HWND parentWnd = ::GetParent(mWnd);
     if (parentWnd) {
       nsWindow* parentWidget = GetNSWindowPtr(parentWnd);
-      if (parentWidget->mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
+      if (parentWidget && parentWidget->mIMEIsComposing && nsWindow::uWM_MSIME_MOUSE) {
         if (parentWidget->IMECompositionHitTest(aEventType, &ptPos))
           if (parentWidget->HandleMouseActionOfIME(aAction, &ptPos))
             return PR_TRUE;
