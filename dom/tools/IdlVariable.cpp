@@ -130,6 +130,11 @@ void IdlVariable::GetTypeAsString(char *aString, size_t aStringSize)
         strcpy(aString, mTypeName);
       }
       break;
+    case TYPE_VOID:
+      if (aStringSize > 4) {
+        strcpy(aString, "void");
+      }
+      break;
   }
 }
 

@@ -15,67 +15,96 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
 #include "nscore.h"
-#include "nsIScriptObject.h"
+#include "nsIScriptContext.h"
+#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMIterators.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPtr.h"
+#include "nsString.h"
+#include "nsIDOMNodeIterator.h"
 #include "nsIDOMNode.h"
 
-static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINodeIteratorIID, NS_IDOMNODEITERATOR_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+
+NS_DEF_PTR(nsIDOMNodeIterator);
+NS_DEF_PTR(nsIDOMNode);
+
 
 /***********************************************************************/
-
 //
-// NodeIterator properties getter
+// NodeIterator Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
 GetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  // NS_ASSERTION(nsnull != nodeIterator, "null pointer");
+  nsIDOMNodeIterator *a = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-    case 0: //this is just to keep the compiler from issuing a warning
-            //that there is a switch with only a default case. MMP
-    default:
-      nsIScriptObject *object;
-      if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-        return object->GetProperty(cx, id, vp);
+      case 0:
+      default:
+      {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->GetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
       }
     }
   }
 
-  return JS_TRUE;
+  return PR_TRUE;
 }
 
+/***********************************************************************/
 //
-// NodeIterator properties setter
+// NodeIterator Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
 SetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
+  nsIDOMNodeIterator *a = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-    case 0: //this is just to keep the compiler from issuing a warning
-            //that there is a switch with only a default case. MMP
-    default:
-      nsIScriptObject *object;
-      if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-        return object->SetProperty(cx, id, vp);
+      case 0:
+      default:
+      {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->SetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
       }
     }
   }
 
-  return JS_TRUE;
+  return PR_TRUE;
 }
+
 
 //
 // NodeIterator finalizer
@@ -83,253 +112,429 @@ SetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeNodeIterator(JSContext *cx, JSObject *obj)
 {
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeIterator *a = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
   
-  if (nsnull != nodeIterator) {
+  if (nsnull != a) {
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
       owner->ResetScriptObject();
       NS_RELEASE(owner);
     }
 
-    nodeIterator->Release();
+    NS_RELEASE(a);
   }
 }
 
-/***********************************************************************/
+
 //
-// JS->Native functions
+// NodeIterator enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-SetFilter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+EnumerateNodeIterator(JSContext *cx, JSObject *obj)
 {
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-GetLength(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-
-  PRUint32 length = 0;
-  // call the function
-  if (NS_OK == nodeIterator->GetLength(&length)) {
-    // set the return value
-    *rval = INT_TO_JSVAL(length);
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-GetCurrentNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-  *rval = JSVAL_NULL;
-
-  nsIDOMNode *aNode1 = nsnull;
-  // call the function
-  if (NS_OK == nodeIterator->GetCurrentNode(&aNode1)) {
-
+  nsIDOMNodeIterator *a = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
     // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->EnumerateProperty(cx);
+      NS_RELEASE(object);
     }
-    NS_RELEASE(aNode1);
   }
-
   return JS_TRUE;
 }
 
+
+//
+// NodeIterator resolve
+//
 PR_STATIC_CALLBACK(JSBool)
-GetNextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ResolveNodeIterator(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-  *rval = JSVAL_NULL;
-
-  nsIDOMNode *aNode1 = nsnull;
-  // call the function
-  if (NS_OK == nodeIterator->GetNextNode(&aNode1)) {
-
+  nsIDOMNodeIterator *a = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
     // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->Resolve(cx, id);
+      NS_RELEASE(object);
     }
-    NS_RELEASE(aNode1);
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetLength
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorGetLength(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRUint32 nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetLength(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else {
+    return JS_FALSE;
   }
 
   return JS_TRUE;
 }
 
+
+//
+// Native method GetCurrentNode
+//
 PR_STATIC_CALLBACK(JSBool)
-GetPreviousNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NodeIteratorGetCurrentNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
   *rval = JSVAL_NULL;
 
-  nsIDOMNode *aNode1 = nsnull;
-  // call the function
-  if (NS_OK == nodeIterator->GetPreviousNode(&aNode1)) {
-
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
-    }
-    NS_RELEASE(aNode1);
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
   }
 
-  return JS_TRUE;
-}
+  if (argc >= 0) {
 
-PR_STATIC_CALLBACK(JSBool)
-ToFirst(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-  *rval = JSVAL_NULL;
-
-  nsIDOMNode *aNode1 = nsnull;
-  // call the function
-  if (NS_OK == nodeIterator->ToFirst(&aNode1)) {
-
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
+    if (NS_OK != nativeThis->GetCurrentNode(&nativeRet)) {
+      return JS_FALSE;
     }
-    NS_RELEASE(aNode1);
-  }
 
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-ToLast(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-  *rval = JSVAL_NULL;
-
-  nsIDOMNode *aNode1 = nsnull;
-  // call the function
-  if (NS_OK == nodeIterator->ToLast(&aNode1)) {
-
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
-    }
-    NS_RELEASE(aNode1);
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-MoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  *rval = JSVAL_NULL;
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_INT(argv[0])) {
-
-      nsIDOMNode *aNode1 = nsnull;
-      // call the function
-      if (NS_OK == nodeIterator->MoveTo(JSVAL_TO_INT(argv[0]), &aNode1)) {
-
-        // get the js object
-        nsIScriptObjectOwner *owner = nsnull;
-        if (NS_OK == aNode1->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-          JSObject *object = nsnull;
-          if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-            // set the return value
-            *rval = OBJECT_TO_JSVAL(object);
-          }
-          NS_RELEASE(owner);
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
         }
-        NS_RELEASE(aNode1);
+        NS_RELEASE(owner);
       }
+      NS_RELEASE(nativeRet);
     }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
   }
 
   return JS_TRUE;
 }
 
+
+//
+// Native method GetNextNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorGetNextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetNextNode(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetPreviousNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorGetPreviousNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetPreviousNode(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ToFirst
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorToFirst(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->ToFirst(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ToLast
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorToLast(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->ToLast(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method MoveTo
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeIteratorMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNodeIterator *nativeThis = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->MoveTo(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
-// the jscript class for a DOM NodeIterator
+// class for NodeIterator
 //
-JSClass nodeIterator = {
+JSClass NodeIteratorClass = {
   "NodeIterator", 
   JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,  
-  JS_PropertyStub,    
-  GetNodeIteratorProperty,     
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetNodeIteratorProperty,
   SetNodeIteratorProperty,
-  JS_EnumerateStub, 
-  JS_ResolveStub,     
-  JS_ConvertStub,      
+  EnumerateNodeIterator,
+  ResolveNodeIterator,
+  JS_ConvertStub,
   FinalizeNodeIterator
 };
 
-//
-// NodeIterator property ids
-//
 
 //
 // NodeIterator class properties
 //
+static JSPropertySpec NodeIteratorProperties[] =
+{
+  {0}
+};
+
 
 //
 // NodeIterator class methods
 //
-static JSFunctionSpec nodeIteratorMethods[] = {
-  {"setFilter",         SetFilter,          2},
-  {"getLength",         GetLength,          0},
-  {"getCurrentNode",    GetCurrentNode,     0},
-  {"getNextNode",       GetNextNode,        0},
-  {"getPreviousNode",   GetPreviousNode,    0},
-  {"toFirst",           ToFirst,            0},
-  {"toLast",            ToLast,             0},
-  {"moveTo",            MoveTo,             1},
+static JSFunctionSpec NodeIteratorMethods[] = 
+{
+  {"getLength",          NodeIteratorGetLength,     0},
+  {"getCurrentNode",          NodeIteratorGetCurrentNode,     0},
+  {"getNextNode",          NodeIteratorGetNextNode,     0},
+  {"getPreviousNode",          NodeIteratorGetPreviousNode,     0},
+  {"toFirst",          NodeIteratorToFirst,     0},
+  {"toLast",          NodeIteratorToLast,     0},
+  {"moveTo",          NodeIteratorMoveTo,     1},
   {0}
 };
+
 
 //
 // NodeIterator constructor
@@ -340,79 +545,93 @@ NodeIterator(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-//
-// NodeIterator static property ids
-//
 
 //
-// NodeIterator static properties
+// NodeIterator class initialization
 //
-
-//
-// NodeIterator static methods
-//
-
-/***********************************************************************/
-
-//
-// Init this object class
-//
-nsresult NS_InitNodeIteratorClass(JSContext *aContext, JSObject **aPrototype)
+nsresult NS_InitNodeIteratorClass(nsIScriptContext *aContext, void **aPrototype)
 {
-  // look in the global object for this class prototype
-  static JSObject *proto = nsnull;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  JSObject *proto = nsnull;
+  JSObject *constructor = nsnull;
+  JSObject *parent_proto = nsnull;
+  JSObject *global = JS_GetGlobalObject(jscontext);
+  jsval vp;
 
-  if (nsnull == proto) {
-    proto = JS_InitClass(aContext, // context
-                          JS_GetGlobalObject(aContext), // global object
-                          NULL, // parent proto 
-                          &nodeIterator, // JSClass
-                          NodeIterator, // JSNative ctor
-                          0, // ctor args
-                          NULL, // proto props
-                          nodeIteratorMethods, // proto funcs
-                          NULL, // ctor props (static)
-                          NULL); // ctor funcs (static)
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "NodeIterator", &vp)) ||
+      !JSVAL_IS_OBJECT(vp) ||
+      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
+      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
+      !JSVAL_IS_OBJECT(vp)) {
+
+    proto = JS_InitClass(jscontext,     // context
+                         global,        // global object
+                         parent_proto,  // parent proto 
+                         &NodeIteratorClass,      // JSClass
+                         NodeIterator,            // JSNative ctor
+                         0,             // ctor args
+                         NodeIteratorProperties,  // proto props
+                         NodeIteratorMethods,     // proto funcs
+                         nsnull,        // ctor props (static)
+                         nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
     }
+
+  }
+  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
+    proto = JSVAL_TO_OBJECT(vp);
+  }
+  else {
+    return NS_ERROR_FAILURE;
   }
 
-  if (nsnull != aPrototype) {
+  if (aPrototype) {
     *aPrototype = proto;
   }
-
   return NS_OK;
 }
 
-//
-// NodeIterator instance property ids
-//
 
 //
-// NodeIterator instance properties
+// Method for creating a new NodeIterator JavaScript object
 //
-
-//
-// New a nodeIterator object in js, connect the native and js worlds
-//
-extern "C" NS_DOM nsresult NS_NewScriptNodeIterator(JSContext *aContext, nsIDOMNodeIterator *aNodeIterator, JSObject *aParent, JSObject **aJSObject)
+extern "C" NS_DOM NS_NewScriptNodeIterator(nsIScriptContext *aContext, nsIDOMNodeIterator *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aNodeIterator && nsnull != aJSObject, "null arg");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptNodeIterator");
   JSObject *proto;
-  NS_InitNodeIteratorClass(aContext, &proto);
+  JSObject *parent;
+  nsIScriptObjectOwner *owner;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+
+  if (nsnull == aParent) {
+    parent = nsnull;
+  }
+  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
+      NS_RELEASE(owner);
+      return NS_ERROR_FAILURE;
+    }
+    NS_RELEASE(owner);
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_OK != NS_InitNodeIteratorClass(aContext, (void **)&proto)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // create a js object for this class
-  *aJSObject = JS_NewObject(aContext, &nodeIterator, proto, aParent);
-  if (nsnull != *aJSObject) {
-    // define the instance specific properties
-
+  *aReturn = JS_NewObject(jscontext, &NodeIteratorClass, proto, parent);
+  if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(aContext, *aJSObject, aNodeIterator);
-    aNodeIterator->AddRef();
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
+    NS_ADDREF(aSupports);
   }
-  else return NS_ERROR_FAILURE; 
+  else {
+    return NS_ERROR_FAILURE; 
+  }
 
   return NS_OK;
 }
-

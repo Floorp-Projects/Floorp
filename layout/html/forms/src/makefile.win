@@ -21,7 +21,7 @@ LIBRARY_NAME=raptorhtmlforms_s
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor js
 
 CPPSRCS=nsForm.cpp nsInput.cpp nsInputButton.cpp nsInputCheckbox.cpp \
     nsInputFile.cpp nsInputFrame.cpp \
@@ -33,7 +33,7 @@ CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
     .\$(OBJDIR)\nsInputRadio.obj \
     .\$(OBJDIR)\nsInputText.obj .\$(OBJDIR)\nsSelect.obj 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\base\src -I..\..\style\src \
   -I..\..\..\base\src \
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib

@@ -15,69 +15,102 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
 #include "nscore.h"
-#include "nsIScriptObject.h"
+#include "nsIScriptContext.h"
+#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMAttribute.h"
-#include "nsIDOMIterators.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMAttributeList.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNodeIterator.h"
+#include "nsIDOMAttribute.h"
 
-static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMAttributeIID, NS_IDOMATTRIBUTE_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIAttributeListIID, NS_IDOMATTRIBUTELIST_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kINodeIteratorIID, NS_IDOMNODEITERATOR_IID);
+static NS_DEFINE_IID(kIAttributeIID, NS_IDOMATTRIBUTE_IID);
+
+NS_DEF_PTR(nsIDOMAttributeList);
+NS_DEF_PTR(nsIDOMElement);
+NS_DEF_PTR(nsIDOMNodeIterator);
+NS_DEF_PTR(nsIDOMAttribute);
+
 
 /***********************************************************************/
-
 //
-// Element properties getter
+// Element Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
 GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  // NS_ASSERTION(nsnull != element, "null pointer");
+  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-    case 0: //this is just to keep the compiler from issuing a warning
-            //that there is a switch with only a default case. MMP
-    default:
-      nsIScriptObject *object;
-      if (NS_OK == element->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-        return object->GetProperty(cx, id, vp);
+      case 0:
+      default:
+      {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->GetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
       }
     }
   }
 
-  return JS_TRUE;
+  return PR_TRUE;
 }
 
+/***********************************************************************/
 //
-// Element properties setter
+// Element Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
 SetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
+  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-    case 0: //this is just to keep the compiler from issuing a warning
-            //that there is a switch with only a default case. MMP
-    default:
-      nsIScriptObject *object = nsnull;
-      if (NS_OK == element->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-        return object->SetProperty(cx, id, vp);
+      case 0:
+      default:
+      {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->SetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
       }
     }
   }
 
-  return JS_TRUE;
+  return PR_TRUE;
 }
+
 
 //
 // Element finalizer
@@ -85,311 +118,568 @@ SetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   
-  if (nsnull != element) {
+  if (nsnull != a) {
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == element->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
       owner->ResetScriptObject();
       NS_RELEASE(owner);
     }
 
-    element->Release();
+    NS_RELEASE(a);
   }
 }
 
-/***********************************************************************/
+
 //
-// JS->Native functions
+// Element enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-GetTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+EnumerateElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
+  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->EnumerateProperty(cx);
+      NS_RELEASE(object);
+    }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Element resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveElement(JSContext *cx, JSObject *obj, jsval id)
+{
+  nsIDOMElement *a = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->Resolve(cx, id);
+      NS_RELEASE(object);
+    }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetTagName
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementGetTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
   *rval = JSVAL_NULL;
 
-  // call the function
-  nsAutoString string;
-  if (NS_OK == element->GetTagName(string)) {
-    JSString *jsstring = JS_NewUCStringCopyN(cx, string, string.Length());
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetTagName(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
     // set the return value
     *rval = STRING_TO_JSVAL(jsstring);
   }
+  else {
+    return JS_FALSE;
+  }
 
   return JS_TRUE;
 }
 
+
+//
+// Native method GetAttributes
+//
 PR_STATIC_CALLBACK(JSBool)
-GetAttributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ElementGetAttributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMAttributeList* nativeRet;
+
   *rval = JSVAL_NULL;
 
-  // call the function
-  nsIDOMAttributeList *attributeList = nsnull;
-  if (NS_OK == element->GetAttributes(&attributeList)) {
-
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == attributeList->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      JSObject *object = nsnull;
-      if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-        // set the return value
-        *rval = OBJECT_TO_JSVAL(object);
-      }
-      NS_RELEASE(owner);
-    }
-    NS_RELEASE(attributeList);
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
   }
 
-  return JS_TRUE;
-}
+  if (argc >= 0) {
 
-PR_STATIC_CALLBACK(JSBool)
-GetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  *rval = JSVAL_NULL;
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
-
-      // call the function
-      nsAutoString string;
-      if (NS_OK == element->GetDOMAttribute(string1, string)) {
-        JSString *jsstring = JS_NewUCStringCopyN(cx, string, string.Length());
-        // set the return value
-        *rval = STRING_TO_JSVAL(jsstring);
-      }
+    if (NS_OK != nativeThis->GetAttributes(&nativeRet)) {
+      return JS_FALSE;
     }
-  }
 
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-SetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(2 == argc, "wrong number of arguments");
-  if (2 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0]) &&
-        JSVAL_IS_STRING(argv[1])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
-      JSString *jsstring2 = JSVAL_TO_STRING(argv[1]);
-      nsAutoString string2 = JS_GetStringChars(jsstring2);
-
-      // call the function
-      element->SetDOMAttribute(string1, string2);
-    }
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-RemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
-
-      // call the function
-      element->RemoveAttribute(string1);
-    }
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-GetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  *rval = JSVAL_NULL;
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
-
-      // call the function
-      nsIDOMAttribute *attribute = nsnull;
-      if (NS_OK == element->GetAttributeNode(string1, &attribute)) {
-
-        // get the js object
-        nsIScriptObjectOwner *owner = nsnull;
-        if (NS_OK == attribute->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-          JSObject *object = nsnull;
-          if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-            // set the return value
-            *rval = OBJECT_TO_JSVAL(object);
-          }
-          NS_RELEASE(owner);
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
         }
-        NS_RELEASE(attribute);
+        NS_RELEASE(owner);
       }
+      NS_RELEASE(nativeRet);
     }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
   }
 
   return JS_TRUE;
 }
 
+
+//
+// Native method GetDOMAttribute
+//
 PR_STATIC_CALLBACK(JSBool)
-SetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ElementGetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_OBJECT(argv[0])) {
-      JSObject *obj1 = JSVAL_TO_OBJECT(argv[0]);
-      //XXX should check if that's a good class (do not just GetPrivate)
-      nsISupports *support1 = (nsISupports*)JS_GetPrivate(cx, obj1);
-      NS_ASSERTION(nsnull != support1, "null pointer");
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+  nsAutoString b0;
 
-      nsIDOMAttribute *attribute1 = nsnull;
-      if (NS_OK == support1->QueryInterface(kIDOMAttributeIID, (void**)&attribute1)) {
-        element->SetAttributeNode(attribute1);
-        NS_RELEASE(attribute1);
-      }
-    }
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-RemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_OBJECT(argv[0])) {
-      JSObject *obj1 = JSVAL_TO_OBJECT(argv[0]);
-      //XXX should check if that's a good class (do not just GetPrivate)
-      nsISupports *support1 = (nsISupports*)JS_GetPrivate(cx, obj1);
-      NS_ASSERTION(nsnull != support1, "null pointer");
-
-      nsIDOMAttribute *attribute1 = nsnull;
-      if (NS_OK == support1->QueryInterface(kIDOMAttributeIID, (void**)&attribute1)) {
-        element->RemoveAttributeNode(attribute1);
-        NS_RELEASE(attribute1);
-      }
-    }
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-GetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
   *rval = JSVAL_NULL;
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
 
-      // call the function
-      nsIDOMNodeIterator *nodeIterator = nsnull;
-      if (NS_OK == element->GetElementsByTagName(string1, &nodeIterator)) {
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
 
-        // get the js object
-        nsIScriptObjectOwner *owner = nsnull;
-        if (NS_OK == nodeIterator->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-          JSObject *object = nsnull;
-          if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-            // set the return value
-            *rval = OBJECT_TO_JSVAL(object);
-          }
-          NS_RELEASE(owner);
-        }
-        NS_RELEASE(nodeIterator);
-      }
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
     }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->GetDOMAttribute(b0, nativeRet)) {
+      return JS_FALSE;
+    }
+
+    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
+    // set the return value
+    *rval = STRING_TO_JSVAL(jsstring);
+  }
+  else {
+    return JS_FALSE;
   }
 
   return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
-Normalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *element = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != element, "null pointer");
 
-  // call the function
-  element->Normalize();
+//
+// Native method SetDOMAttribute
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementSetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
+    if (nsnull != jsstring1) {
+      b1.SetString(JS_GetStringChars(jsstring1));
+    }
+    else {
+      b1.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->SetDOMAttribute(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
 
   return JS_TRUE;
 }
+
+
+//
+// Native method RemoveAttribute
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->RemoveAttribute(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetAttributeNode
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMAttribute* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->GetAttributeNode(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetAttributeNode
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMAttributePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JSVAL_IS_OBJECT(argv[0])) {
+      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
+      NS_ASSERTION(nsnull != supports0, "null pointer");
+
+      if ((nsnull == supports0) ||
+          (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
+        return JS_FALSE;
+      }
+    }
+    else if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetAttributeNode(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveAttributeNode
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMAttributePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JSVAL_IS_OBJECT(argv[0])) {
+      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
+      NS_ASSERTION(nsnull != supports0, "null pointer");
+
+      if ((nsnull == supports0) ||
+          (NS_OK != supports0->QueryInterface(kIAttributeIID, (void **)(b0.Query())))) {
+        return JS_FALSE;
+      }
+    }
+    else if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->RemoveAttributeNode(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetElementsByTagName
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodeIterator* nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->GetElementsByTagName(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Normalize
+//
+PR_STATIC_CALLBACK(JSBool)
+ElementNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Normalize()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 /***********************************************************************/
 //
-// the jscript class for a DOM Element
+// class for Element
 //
-JSClass element = {
+JSClass ElementClass = {
   "Element", 
   JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,  
-  JS_PropertyStub,    
-  GetElementProperty,     
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetElementProperty,
   SetElementProperty,
-  JS_EnumerateStub, 
-  JS_ResolveStub,     
-  JS_ConvertStub,      
+  EnumerateElement,
+  ResolveElement,
+  JS_ConvertStub,
   FinalizeElement
 };
 
-//
-// Element property ids
-//
 
 //
 // Element class properties
 //
+static JSPropertySpec ElementProperties[] =
+{
+  {0}
+};
+
 
 //
 // Element class methods
 //
-static JSFunctionSpec elementMethods[] = {
-  {"getTagName",              GetTagName,             0},
-  {"getAttributes",           GetAttributes,          0},
-  {"getAttribute",            GetAttribute,           1},
-  {"setAttribute",            SetAttribute,           2},
-  {"removeAttribute",         RemoveAttribute,        1},
-  {"getAttributeNode",        GetAttributeNode,       1},
-  {"setAttributeNode",        SetAttributeNode,       1},
-  {"removeAttributeNode",     RemoveAttributeNode,    1},
-  {"getElementsByTagName",    GetElementsByTagName,   1},
-  {"normalize",               Normalize,              0},
+static JSFunctionSpec ElementMethods[] = 
+{
+  {"getTagName",          ElementGetTagName,     0},
+  {"getAttributes",          ElementGetAttributes,     0},
+  {"getDOMAttribute",          ElementGetDOMAttribute,     1},
+  {"setDOMAttribute",          ElementSetDOMAttribute,     2},
+  {"removeAttribute",          ElementRemoveAttribute,     1},
+  {"getAttributeNode",          ElementGetAttributeNode,     1},
+  {"setAttributeNode",          ElementSetAttributeNode,     1},
+  {"removeAttributeNode",          ElementRemoveAttributeNode,     1},
+  {"getElementsByTagName",          ElementGetElementsByTagName,     1},
+  {"normalize",          ElementNormalize,     0},
   {0}
 };
+
 
 //
 // Element constructor
@@ -400,82 +690,96 @@ Element(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-//
-// Element static property ids
-//
 
 //
-// Element static properties
+// Element class initialization
 //
-
-//
-// Element static methods
-//
-
-/***********************************************************************/
-
-//
-// Init this object class
-//
-nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitElementClass(JSContext *aContext, JSObject **aPrototype)
+nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
-  // look in the global object for this class prototype
-  static JSObject *proto = nsnull;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  JSObject *proto = nsnull;
+  JSObject *constructor = nsnull;
+  JSObject *parent_proto = nsnull;
+  JSObject *global = JS_GetGlobalObject(jscontext);
+  jsval vp;
 
-  if (nsnull == proto) {
-    JSObject *parentProto;
-    NS_InitNodeClass(aContext, &parentProto);
-    proto = JS_InitClass(aContext, // context
-                          JS_GetGlobalObject(aContext), // global object
-                          parentProto, // parent proto 
-                          &element, // JSClass
-                          Element, // JSNative ctor
-                          0, // ctor args
-                          NULL, // proto props
-                          elementMethods, // proto funcs
-                          NULL, // ctor props (static)
-                          NULL); // ctor funcs (static)
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "Element", &vp)) ||
+      !JSVAL_IS_OBJECT(vp) ||
+      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
+      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
+      !JSVAL_IS_OBJECT(vp)) {
+
+    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
+    proto = JS_InitClass(jscontext,     // context
+                         global,        // global object
+                         parent_proto,  // parent proto 
+                         &ElementClass,      // JSClass
+                         Element,            // JSNative ctor
+                         0,             // ctor args
+                         ElementProperties,  // proto props
+                         ElementMethods,     // proto funcs
+                         nsnull,        // ctor props (static)
+                         nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
     }
+
+  }
+  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
+    proto = JSVAL_TO_OBJECT(vp);
+  }
+  else {
+    return NS_ERROR_FAILURE;
   }
 
-  if (nsnull != aPrototype) {
+  if (aPrototype) {
     *aPrototype = proto;
   }
-
   return NS_OK;
 }
 
-//
-// Element instance property ids
-//
 
 //
-// Element instance properties
+// Method for creating a new Element JavaScript object
 //
-
-//
-// New a element object in js, connect the native and js worlds
-//
-extern "C" NS_DOM nsresult NS_NewScriptElement(JSContext *aContext, nsIDOMElement *aElement, JSObject *aParent, JSObject **aJSObject)
+extern "C" NS_DOM NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aElement && nsnull != aJSObject, "null arg");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptElement");
   JSObject *proto;
-  NS_InitElementClass(aContext, &proto);
+  JSObject *parent;
+  nsIScriptObjectOwner *owner;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+
+  if (nsnull == aParent) {
+    parent = nsnull;
+  }
+  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
+      NS_RELEASE(owner);
+      return NS_ERROR_FAILURE;
+    }
+    NS_RELEASE(owner);
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_OK != NS_InitElementClass(aContext, (void **)&proto)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // create a js object for this class
-  *aJSObject = JS_NewObject(aContext, &element, proto, aParent);
-  if (nsnull != *aJSObject) {
-    // define the instance specific properties
-
+  *aReturn = JS_NewObject(jscontext, &ElementClass, proto, parent);
+  if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(aContext, *aJSObject, aElement);
-    aElement->AddRef();
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
+    NS_ADDREF(aSupports);
   }
-  else return NS_ERROR_FAILURE; 
+  else {
+    return NS_ERROR_FAILURE; 
+  }
 
   return NS_OK;
 }
-

@@ -50,7 +50,7 @@ public:
                                  nsIPresContext* aPresContext);
 
   NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD HasChildNodes(PRBool *aReturn);
   NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
   NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
   NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, 

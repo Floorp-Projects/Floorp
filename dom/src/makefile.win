@@ -27,12 +27,14 @@ CPPSRCS =				\
 	nsJSEnvironment.cpp		\
 	nsJSNode.cpp		\
 	nsJSDocument.cpp	\
+	nsJSDocumentFragment.cpp\
 	nsJSElement.cpp		\
 	nsJSText.cpp		\
-	nsJSNodeIterator.cpp\
+	nsJSNodeIterator.cpp    \
 	nsJSAttribute.cpp	\
-	nsJSAttributeList.cpp\
-	nsJSWindow.cpp\
+	nsJSAttributeList.cpp   \
+	nsJSWindow.cpp          \
+	nsGlobalWindow.cpp      \
 	$(NULL)
 
 MODULE=raptor 
@@ -42,7 +44,8 @@ REQUIRES=xpcom raptor js
 CPP_OBJS=	.\$(OBJDIR)\nsJSEnvironment.obj	.\$(OBJDIR)\nsJSNode.obj .\$(OBJDIR)\nsJSDocument.obj \
     .\$(OBJDIR)\nsJSElement.obj .\$(OBJDIR)\nsJSText.obj \
     .\$(OBJDIR)\nsJSNodeIterator.obj .\$(OBJDIR)\nsJSAttribute.obj \
-    .\$(OBJDIR)\nsJSAttributeList.obj .\$(OBJDIR)\nsJSWindow.obj 
+    .\$(OBJDIR)\nsJSAttributeList.obj .\$(OBJDIR)\nsJSWindow.obj \
+    .\$(OBJDIR)\nsGlobalWindow.obj .\$(OBJDIR)\nsJSDocumentFragment.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js 
 

@@ -369,19 +369,11 @@ nsIStyleRule* nsHTMLTagContent::GetStyleRule(void)
   return result;
 }
 
-nsresult nsHTMLTagContent::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult nsHTMLTagContent::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    *aScriptObject = nsnull;
-    if (nsnull != mParent) {
-      nsIScriptObjectOwner *parent;
-      if (NS_OK == mParent->QueryInterface(kIScriptObjectOwner, (void**)&parent)) {
-        parent->GetScriptObject(aContext, aScriptObject);
-        NS_RELEASE(parent);
-      }
-    }
-    res = NS_NewScriptElement(aContext, this, (JSObject*)*aScriptObject, (JSObject**)&mScriptObject);
+    res = NS_NewScriptElement(aContext, this, mParent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -403,9 +395,9 @@ nsresult nsHTMLTagContent::GetChildNodes(nsIDOMNodeIterator **aIterator)
   return nsHTMLContent::GetChildNodes(aIterator);
 }
 
-nsresult nsHTMLTagContent::HasChildNodes()
+nsresult nsHTMLTagContent::HasChildNodes(PRBool *aReturn)
 {
-  return nsHTMLContent::HasChildNodes();
+  return nsHTMLContent::HasChildNodes(aReturn);
 }
 
 nsresult nsHTMLTagContent::GetFirstChild(nsIDOMNode **aNode)
@@ -440,8 +432,9 @@ nsresult nsHTMLTagContent::RemoveChild(nsIDOMNode *oldChild)
 
 nsresult nsHTMLTagContent::GetTagName(nsString &aName)
 {
-  NS_ASSERTION(nsnull != mTag, "no tag");
-  mTag->ToString(aName);
+  if (nsnull != mTag) {
+    mTag->ToString(aName);
+  }
   return NS_OK;
 }
 
@@ -450,10 +443,11 @@ nsresult nsHTMLTagContent::GetAttributes(nsIDOMAttributeList **aAttributeList)
   NS_PRECONDITION(nsnull != aAttributeList, "null pointer argument");
   if (nsnull != mAttributes) {
     *aAttributeList = new nsDOMAttributeList(*this);
-    return NS_OK;
   }
-
-  return NS_ERROR_FAILURE;
+  else {
+    *aAttributeList = nsnull;
+  }
+  return NS_OK;
 }
 
 nsresult nsHTMLTagContent::GetDOMAttribute(nsString &aName, nsString &aValue)

@@ -87,7 +87,7 @@ public:
   virtual nsIStyleRule* GetStyleRule(void);
 
   // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
   // nsIDOMElement interface
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -96,7 +96,7 @@ public:
   NS_IMETHOD GetNodeType(PRInt32 *aType);
   NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
   NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD HasChildNodes(PRBool *aReturn);
   NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
   NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);

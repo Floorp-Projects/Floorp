@@ -1,11 +1,9 @@
       interface NodeIterator {
         unsigned long       getLength();
-        unsigned long       getCurrentPos();
-        boolean             atFirst();
-        boolean             atLast();
-        Node                toNextNode();
-        Node                toPrevNode();
-        Node                toFirstNode();
-        Node                toLastNode();
+        Node                getCurrentNode();
+        Node                getNextNode();
+        Node                getPreviousNode();
+        Node                toFirst();
+        Node                toLast();
         Node                moveTo(in int n);
       };

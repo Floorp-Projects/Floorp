@@ -40,6 +40,7 @@ protected:
      void     GenerateForwardDecls(IdlSpecification &aSpec);
      void     GenerateGuid(IdlInterface &aInterface);
      void     GenerateClassDecl(IdlInterface &aInterface);
+     void     GenerateEnums(IdlInterface &aInterface);
      void     GenerateMethods(IdlInterface &aInterface);
      void     GenerateEndClassDecl();
      void     GenerateEpilog(IdlSpecification &aSpec);

@@ -1,0 +1,4 @@
+      interface Window {
+	readonly attribute  Document document;
+	void  dump(in wstring str);
+      };

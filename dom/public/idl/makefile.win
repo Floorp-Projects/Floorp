@@ -35,8 +35,8 @@ IDLSRCS =  \
 	Text.idl \
         TreeIterator.idl
 
-XPCOM_DESTDIR=$(DEPTH)\dom\test
-JSSTUB_DESTDIR=$(DEPTH)\dom\test
+XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom
+JSSTUB_DESTDIR=$(DEPTH)\dom\src
 
 GENXDIR=genx
 GENJSDIR=genjs
@@ -56,7 +56,7 @@ export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 	@echo +++ make: generating xpcom headers
 	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
 	@echo +++ make: generating interface ids
-  	$(MOZ_TOOLS)\perl5\perl.exe $(GENIID) $(GENXDIR) 
+  	$(PERL) $(GENIID) $(GENXDIR) 
 	@echo +++ make: generating JavaScript stubs
 	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
 	

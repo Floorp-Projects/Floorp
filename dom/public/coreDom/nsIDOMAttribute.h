@@ -15,150 +15,37 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMAttribute_h__
 #define nsIDOMAttribute_h__
 
-#include "nsDOM.h"
 #include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
 
-// forward declaration
-class nsIDOMNode;
+class nsIDOMAttribute;
 
 #define NS_IDOMATTRIBUTE_IID \
-{ /* 8f6bca77-ce42-11d1-b724-00600891d8c9 */ \
-0x8f6bca77, 0xce42, 0x11d1, \
-  {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
+{ 0x6f7652e0,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-/**
- * The Attribute object represents an attribute in an Element object. Typically the 
- * allowable values for the attribute are defined in a document type definition. 
- * <P>
- * The attribute's effective value is determined as follows: if this attribute has 
- * been explicitly assigned any value, that value is the attribute's effective value; 
- * otherwise, if there is a declaration for this attribute, and that declaration 
- * includes a default value, then that default value is the attribute's effective value; 
- * otherwise, the attribute has no effective value.) Note, in particular, that an
- * effective value of the null string would be returned as a Text node instance whose 
- * toString method will return a zero length string (as will toString invoked directly 
- * on this Attribute instance). If the attribute has no effective value, then this 
- * method will return null. Note the toString method on the Attribute instance can 
- * also be used to retrieve the string version of the attribute's value(s).
- */
 class nsIDOMAttribute : public nsISupports {
 public:
-  /**
-   * Return the name of this attribute. 
-   *
-   * @param aName [out]     The attribute name
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetName(nsString &aName) = 0;
 
-  /**
-   * Return the value of this attribute. 
-   *
-   * @param aName [out]     The attribute value
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetValue(nsString &aName) = 0;
+  NS_IMETHOD    GetValue(nsString& aValue)=0;
+  NS_IMETHOD    SetValue(nsString& aValue)=0;
 
-  /**
-   * Set the value of this attribute. 
-   *
-   * @param aName [in]      The attribute value
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD SetValue(nsString &aName) = 0;
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified)=0;
+  NS_IMETHOD    SetSpecified(PRBool aSpecified)=0;
 
-  /**
-   * If this attribute was explicitly given a value in the original document, 
-   * this will be true; otherwise, it will be false. 
-   *
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetSpecified() = 0;
+  NS_IMETHOD    GetName(nsString& aReturn)=0;
 
-  /**
-   * Set the specified value
-   *
-   * @param specified [in]  The specified value
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD SetSpecified(PRBool specified) = 0;
-
-  /**
-   * Returns the attribute as a string. Character and general entity 
-   * references will have been replaced with their values in the returned string. 
-   *
-   * @param aString [out]   The attribute as a string
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD ToString(nsString &aString) = 0;
+  NS_IMETHOD    ToString(nsString& aReturn)=0;
 };
 
-#define NS_IDOMATTRIBUTELIST_IID \
-{ /* 8f6bca78-ce42-11d1-b724-00600891d8c9 */ \
-0x8f6bca78, 0xce42, 0x11d1, \
-  {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
+extern nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype);
 
-/**
- * AttributeList objects are used to represent collections of Attribute objects 
- * which can be accessed by name. The Attribute objects contained in a AttributeList 
- * may also be accessed by ordinal index. In most cases, AttributeList objects are 
- * created from Element objects. 
- */
-class nsIDOMAttributeList : public nsISupports {
-public:
-  /**
-   * Retrieve an Attribute instance from the list by its name. If it's not present, 
-   * null is returned. 
-   *
-   * @param aAttrName [in]    The name of atrribute
-   * @param aAttribute [out]  The returned attribute
-   * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute) = 0;
-
-  /**
-   * Add a new attribute to the end of the list and associate it with the given name. 
-   * If the name already exists, the previous Attribute object is replaced, and returned. 
-   * If no object of the same name exists, null is returned, and the named Attribute 
-   * is added to the end of the AttributeList object; that is, it is accessible via 
-   * the item method using the index one less than the value returned by getLength. 
-   *
-   * @param aAttribute [in]   The attribute to set
-   * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD SetAttribute(nsIDOMAttribute *attr) = 0;
-
-  /**
-   * Removes the Attribute instance named name from the list and returns it.
-   *
-   * @param aAttrName [in]    The name of atrribute
-   * @param aAttribute [out]  The removed attribute
-   * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD Remove(nsString &attrName, nsIDOMAttribute** aAttribute) = 0;
-
-  /**
-   * Returns the (zero-based) indexth Attribute item in the collection. 
-   *
-   * @param aIndex [in]       The index in the list of attributes
-   * @param aAttribute [out]  The attribute at that index
-   * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute) = 0;
-
-  /**
-   * Returns the number of Attributes in the AttributeList instance. 
-   *
-   * @param aLength [out]   The attribute list length
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
-};
-
+extern "C" NS_DOM NS_NewScriptAttribute(nsIScriptContext *aContext, nsIDOMAttribute *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMAttribute_h__
-

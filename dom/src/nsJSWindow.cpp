@@ -19,62 +19,78 @@
 #include "jsapi.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObject.h"
+#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIWebWidget.h"
-#include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
 
-static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
+
+NS_DEF_PTR(nsIDOMDocument);
+NS_DEF_PTR(nsIDOMWindow);
 
 //
 // Window property ids
 //
-enum window_slot {
-  WINDOW_DOCUMENT           = -1,
+enum Window_slots {
+  WINDOW_DOCUMENT = -11
 };
 
 /***********************************************************************/
-
 //
-// Window properties getter
+// Window Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
 GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIWebWidget *window = (nsIWebWidget*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != window, "null pointer");
+  nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  NS_ASSERTION(nsnull != a, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
       case WINDOW_DOCUMENT:
       {
-        nsIDocument *document = window->GetDocument();
-        // call the function
-        if (nsnull != document) {
-
+        nsIDOMDocument* prop;
+        if (NS_OK == a->GetDocument(&prop)) {
           // get the js object
-          nsIScriptObjectOwner *owner = nsnull;
-          if (NS_OK == document->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-            JSObject *object = nsnull;
-            if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {
-              // set the return value
-              *vp = OBJECT_TO_JSVAL(object);
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
             }
-            NS_RELEASE(owner);
+            NS_RELEASE(prop);
           }
-          NS_RELEASE(document);
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
         }
         break;
       }
       default:
       {
-        nsIScriptObject *object;
-        if (NS_OK == window->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-          PRBool ret = object->GetProperty(cx, id, vp);
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->GetProperty(cx, id, vp);
           NS_RELEASE(object);
-          return ret;
+          return rval;
         }
       }
     }
@@ -83,28 +99,27 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return PR_TRUE;
 }
 
+/***********************************************************************/
 //
-// Window properties setter
+// Window Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
 SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIWebWidget *window = (nsIWebWidget*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != window, "null pointer");
+  nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  NS_ASSERTION(nsnull != a, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case WINDOW_DOCUMENT:
-      {
-        break;
-      }
+      case 0:
       default:
       {
-        nsIScriptObject *object;
-        if (NS_OK == window->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-          PRBool ret = object->SetProperty(cx, id, vp);
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->SetProperty(cx, id, vp);
           NS_RELEASE(object);
-          return ret;
+          return rval;
         }
       }
     }
@@ -112,6 +127,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   return PR_TRUE;
 }
+
 
 //
 // Window finalizer
@@ -119,74 +135,122 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeWindow(JSContext *cx, JSObject *obj)
 {
-  /*
-  nsIWebWidget *window = (nsIWebWidget*)JS_GetPrivate(cx, obj);
-
-  if (nsnull != window) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == window->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->ResetScriptObject();
-      NS_RELEASE(owner);
-    }
-  }
-  */
 }
 
-/***********************************************************************/
+
 //
-// JS->Native functions
+// Window enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+EnumerateWindow(JSContext *cx, JSObject *obj)
 {
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      char *print = JS_GetStringBytes(jsstring1);
-      printf("%s", print);
-      //delete print;
+  nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->EnumerateProperty(cx);
+      NS_RELEASE(object);
     }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Window resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveWindow(JSContext *cx, JSObject *obj, jsval id)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->Resolve(cx, id);
+      NS_RELEASE(object);
+    }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Native method Dump
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  NS_ASSERTION(nsnull != nativeThis, "null pointer");
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->Dump(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
   }
 
   return JS_TRUE;
 }
 
+
 /***********************************************************************/
 //
-// the jscript class for a DOM Window
+// class for Window
 //
-JSClass window = {
+JSClass WindowClass = {
   "Window", 
   JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,  
-  JS_PropertyStub,    
-  GetWindowProperty,     
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetWindowProperty,
   SetWindowProperty,
-  JS_EnumerateStub, 
-  JS_ResolveStub,     
-  JS_ConvertStub,      
+  EnumerateWindow,
+  ResolveWindow,
+  JS_ConvertStub,
   FinalizeWindow
 };
+
 
 //
 // Window class properties
 //
-static JSPropertySpec windowProperties[] =
+static JSPropertySpec WindowProperties[] =
 {
-  {"document",        WINDOW_DOCUMENT,     JSPROP_ENUMERATE},
+  {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
+
 
 //
 // Window class methods
 //
-static JSFunctionSpec windowMethods[] = {
-  {"dump",          Dump,         1},
+static JSFunctionSpec WindowMethods[] = 
+{
+  {"dump",          WindowDump,     1},
   {0}
 };
+
 
 //
 // Window constructor
@@ -197,47 +261,32 @@ Window(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-//
-// Window static property ids
-//
 
 //
-// Window static properties
+// Window class initialization
 //
-
-//
-// Window static methods
-//
-
-/***********************************************************************/
-
-//
-// Init this object class
-//
-nsresult NS_InitWindowClass(JSContext *aContext, JSObject *aGlobalObject)
+nsresult NS_InitWindowClass(nsIScriptContext *aContext, 
+                            nsIScriptGlobalObject *aGlobal)
 {
-  // look in the global object for this class prototype
-  JS_DefineProperties(aContext, aGlobalObject, windowProperties);
-  JS_DefineFunctions(aContext, aGlobalObject, windowMethods);
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  JSObject *global = JS_GetGlobalObject(jscontext);
+
+  JS_DefineProperties(jscontext, global, WindowProperties);
+  JS_DefineFunctions(jscontext, global, WindowMethods);
+
   return NS_OK;
 }
 
-//
-// Window instance property ids
-//
 
 //
-// Window instance properties
+// Method for creating a new Window JavaScript object
 //
-
-//
-// New a Window object in js, connect the native and js worlds
-//
-nsresult NS_NewGlobalWindow(JSContext *aContext, nsIWebWidget *aWindow, void **aJSObject)
+extern "C" NS_DOM NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aWindow && nsnull != aJSObject, "null arg");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null arg");
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
 
-  JSObject *global = ::JS_NewObject(aContext, &window, NULL, NULL);
+  JSObject *global = ::JS_NewObject(jscontext, &WindowClass, NULL, NULL);
   if (global) {
     // The global object has a to be defined in two step:
     // 1- create a generic object, with no prototype and no parent which
@@ -250,13 +299,11 @@ nsresult NS_NewGlobalWindow(JSContext *aContext, nsIWebWidget *aWindow, void **a
     // after JS_InitStandardClasses
 
     // assign "this" to the js object, don't AddRef
-    ::JS_SetPrivate(aContext, global, aWindow);
+    ::JS_SetPrivate(jscontext, global, aSupports);
 
-    *aJSObject = (void*)global;
-
+    *aReturn = (void*)global;
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE; 
+  return NS_ERROR_FAILURE;
 }
-

@@ -470,23 +470,29 @@ nsresult nsHTMLContent::GetParentNode(nsIDOMNode **aNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
     return res;
   }
+  else {
+    *aNode = nsnull;
+  }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult nsHTMLContent::GetChildNodes(nsIDOMNodeIterator **aIterator)
 {
-  return NS_ERROR_FAILURE;
+  *aIterator = nsnull;
+  return NS_OK;
 }
 
-nsresult nsHTMLContent::HasChildNodes()
+nsresult nsHTMLContent::HasChildNodes(PRBool *aReturn)
 {
-  return NS_ERROR_FAILURE;
+  *aReturn = PR_FALSE;
+  return NS_OK;
 }
 
 nsresult nsHTMLContent::GetFirstChild(nsIDOMNode **aNode)
 {
-  return NS_ERROR_FAILURE;
+  *aNode = nsnull;
+  return NS_OK;
 }
 
 nsresult nsHTMLContent::GetPreviousSibling(nsIDOMNode **aNode)

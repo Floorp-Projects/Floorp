@@ -472,6 +472,8 @@ public:
                                nsGUIEvent* aEvent, 
                                nsEventStatus& aEventStatus);
 
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+
 protected:
   virtual ~RootPart();
 };
@@ -508,6 +510,18 @@ RootPart::HandleDOMEvent(nsIPresContext& aPresContext,
                          nsEventStatus& aEventStatus)
 {
   return mDocument->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+}
+
+nsresult 
+RootPart::GetScriptObject(nsIScriptContext *aContext, 
+                                  void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptElement(aContext, this, mDocument, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;
 }
 
 nsresult

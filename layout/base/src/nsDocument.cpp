@@ -25,6 +25,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsEventListenerManager.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
@@ -436,15 +437,17 @@ void nsDocument::ContentHasBeenRemoved(nsIContent* aContainer,
   }
 }
 
-nsresult nsDocument::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptDocument(aContext, this, nsnull, (JSObject**)&mScriptObject);
+    res = NS_NewScriptDocument(aContext, this, global, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
 
+  NS_RELEASE(global);
   return res;
 }
 
@@ -474,14 +477,15 @@ nsresult nsDocument::GetChildNodes(nsIDOMNodeIterator **aIterator)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsDocument::HasChildNodes()
+nsresult nsDocument::HasChildNodes(PRBool *aReturn)
 {
   if (nsnull != mRootContent) {
-    return NS_OK;
+    *aReturn = PR_TRUE;
   }
   else {
-    return NS_ERROR_FAILURE;
+    *aReturn = PR_FALSE;
   }
+  return NS_OK;
 }
 
 nsresult nsDocument::GetFirstChild(nsIDOMNode **aNode)
@@ -664,7 +668,7 @@ nsresult nsDocument::CreateAttributeList(nsIDOMAttributeList **aAttributesList)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsDocument::CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator)
+nsresult nsDocument::CreateTreeIterator(nsIDOMNode *aNode, nsIDOMTreeIterator **aTreeIterator)
 {
   //XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;

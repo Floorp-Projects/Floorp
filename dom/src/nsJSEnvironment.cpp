@@ -18,16 +18,27 @@
 
 #include "nsJSEnvironment.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMText.h"
+#include "nsIDOMAttribute.h"
+#include "nsIDOMAttributeList.h"
+#include "nsIDOMNodeIterator.h"
 
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
 
 static NS_DEFINE_IID(kIScriptContextIID, NS_ISCRIPTCONTEXT_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
-  mRefCnt = 1;
+  mRefCnt = 0;
   mContext = JS_NewContext(aRuntime, gStackSize);
+  JS_SetContextPrivate(mContext, (void *)this);
 }
 
 nsJSContext::~nsJSContext()
@@ -50,81 +61,105 @@ PRBool nsJSContext::EvaluateString(const char *aScript,
                               aRetValue);
 }
 
-JSObject* nsJSContext::GetGlobalObject()
+nsIScriptGlobalObject* nsJSContext::GetGlobalObject()
 {
-  return JS_GetGlobalObject(mContext);
+  JSObject *global = JS_GetGlobalObject(mContext);
+  nsIScriptGlobalObject *script_global;
+  
+  if (nsnull != global) {
+    script_global = (nsIScriptGlobalObject *)JS_GetPrivate(mContext, global);
+    NS_ADDREF(script_global);
+    return script_global;
+  }
+  else {
+    return nsnull;
+  }
 }
 
-JSContext* nsJSContext::GetContext()
+void* nsJSContext::GetNativeContext()
 {
-  return mContext;
+  return (void *)mContext;
 }
 
-#define GLOBAL_OBJECT_NAME "window_object"
-nsresult NS_NewGlobalWindow(JSContext *aContext, nsIWebWidget *aWindow, void **aJSObject);
 
-nsresult nsJSContext::InitContext(nsIWebWidget *aGlobalObject)
+nsresult nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
   nsresult result = NS_ERROR_FAILURE;
-
+  nsIScriptObjectOwner *owner;
   JSObject *global;
-  nsresult res = NS_NewGlobalWindow(mContext, aGlobalObject, (void**)&global);
+  nsresult res = aGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+
   if (NS_OK == res) {
+    res = owner->GetScriptObject(this, (void **)&global);
+
     // init standard classes
-    if (::JS_InitStandardClasses(mContext, global)) {
-      res = InitAllClasses(); // this will complete the global object initialization
+    if ((NS_OK == res) && ::JS_InitStandardClasses(mContext, global)) {
+      JS_SetGlobalObject(mContext, global);
+      res = InitClasses(); // this will complete the global object initialization
     }
+
+    NS_RELEASE(owner);
   }
 
   return res;
 }
 
-nsresult NS_InitWindowClass(JSContext *aContext, JSObject *aGlobal);
-nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitElementClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitDocumentClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitTextClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitAttributeClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitAttributeListClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitNodeIteratorClass(JSContext *aContext, JSObject **aPrototype);
-
-nsresult nsJSContext::InitAllClasses()
+nsresult nsJSContext::InitClasses()
 {
-  if (NS_OK == NS_InitWindowClass(mContext, GetGlobalObject()) &&
-      NS_OK == NS_InitNodeClass(mContext, nsnull) &&
-      NS_OK == NS_InitElementClass(mContext, nsnull) &&
-      NS_OK == NS_InitDocumentClass(mContext, nsnull) &&
-      NS_OK == NS_InitTextClass(mContext, nsnull) &&
-      NS_OK == NS_InitAttributeClass(mContext, nsnull) &&
-      NS_OK == NS_InitAttributeListClass(mContext, nsnull) &&
-      NS_OK == NS_InitNodeIteratorClass(mContext, nsnull))
-    return NS_OK;
+  nsresult res = NS_ERROR_FAILURE;
+  nsIScriptGlobalObject *global = GetGlobalObject();
 
-  return NS_ERROR_FAILURE;
+  if (NS_OK == NS_InitWindowClass(this, global) &&
+      NS_OK == NS_InitNodeClass(this, nsnull) &&
+      NS_OK == NS_InitElementClass(this, nsnull) &&
+      NS_OK == NS_InitDocumentClass(this, nsnull) &&
+      NS_OK == NS_InitTextClass(this, nsnull) &&
+      NS_OK == NS_InitAttributeClass(this, nsnull) &&
+      NS_OK == NS_InitAttributeListClass(this, nsnull) &&
+      NS_OK == NS_InitNodeIteratorClass(this, nsnull)) {
+    res = NS_OK;
+  }
+
+  NS_RELEASE(global);
+  return res;
+}
+
+nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
+
+nsJSEnvironment *
+nsJSEnvironment::GetScriptingEnvironment()
+{
+  if (nsnull == sTheEnvironment) {
+    sTheEnvironment = new nsJSEnvironment();
+  }
+  return sTheEnvironment;
 }
 
 nsJSEnvironment::nsJSEnvironment()
 {
   mRuntime = JS_Init(gGCSize);
-  mScriptContext = new nsJSContext(mRuntime);
 }
 
 nsJSEnvironment::~nsJSEnvironment()
 {
-  NS_RELEASE(mScriptContext);
   JS_Finish(mRuntime);
 }
 
-nsIScriptContext* nsJSEnvironment::GetContext()
+nsIScriptContext* nsJSEnvironment::GetNewContext()
 {
-  return mScriptContext;
+  nsIScriptContext *context;
+  context = new nsJSContext(mRuntime);
+  NS_ADDREF(context);
+  return context;
 }
 
-extern "C" NS_DOM NS_CreateContext(nsIWebWidget *aGlobal, nsIScriptContext **aContext)
+
+extern "C" NS_DOM NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext)
 {
-  nsJSEnvironment *environment = new nsJSEnvironment();
-  *aContext = environment->GetContext();
+  nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();
+  *aContext = environment->GetNewContext();
   (*aContext)->InitContext(aGlobal);
+  aGlobal->SetContext(*aContext);
   return NS_OK;
 }
 

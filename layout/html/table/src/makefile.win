@@ -19,7 +19,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorhtmltable_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -45,7 +45,7 @@ CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
   -I..\..\base\src -I..\..\style\src \
   -I..\..\..\base\src \
-  -I$(PUBLIC)\dom 
+  -I$(PUBLIC)\dom -I$(PUBLIC)\js
 
 LCFLAGS = \
         $(LCFLAGS) \

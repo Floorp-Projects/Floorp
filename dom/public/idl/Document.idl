@@ -1,7 +1,7 @@
       interface Document : DocumentFragment {
         attribute Node           documentType;
         attribute Element        documentElement;
-        attribute DocumentContext contextInfo;
+        attribute DocumentContext documentContext;
         DocumentContext     createDocumentContext();
         Element             createElement(in wstring tagName, 
                                           in AttributeList attributes);

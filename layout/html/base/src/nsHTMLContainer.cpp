@@ -817,14 +817,15 @@ nsresult nsHTMLContainer::GetChildNodes(nsIDOMNodeIterator **aIterator)
   return NS_OK;
 }
 
-nsresult nsHTMLContainer::HasChildNodes()
+nsresult nsHTMLContainer::HasChildNodes(PRBool *aReturn)
 {
   if (0 != mChildren.Count()) {
-    return NS_OK;
+    *aReturn = PR_TRUE;
   } 
   else {
-    return NS_ERROR_FAILURE;
+    *aReturn = PR_FALSE;
   }
+  return NS_OK;
 }
 
 nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
@@ -836,8 +837,10 @@ nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
 
     return res;
   }
-
-  return NS_ERROR_FAILURE;
+  else {
+    aNode = nsnull;
+    return NS_OK;
+  }
 }
 
 nsresult

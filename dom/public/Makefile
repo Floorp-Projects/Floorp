@@ -23,9 +23,11 @@ DEFINES = -D_IMPL_NS_DOM
  
 EXPORTS =			\
 	nsIScriptContext.h	\
-	nsIScriptObject.h	\
+	nsIJSScriptObject.h	\
 	nsIScriptObjectOwner.h	\
-        $(NULL)
+	nsIScriptGlobalObject.h	\
+	nsIDOMWindow.h	        \
+	$(NULL)
 
 MODULE = dom
 

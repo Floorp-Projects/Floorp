@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "jsapi.h"
 
-class nsIWebWidget;
+class nsIScriptGlobalObject;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
@@ -50,46 +50,43 @@ public:
    *
    **/
   virtual PRBool              EvaluateString(const char *aScript, 
-                                              PRUint32 aScriptSize, 
-                                              jsval *aRetValue) = 0;
+                                             PRUint32 aScriptSize, 
+                                             jsval *aRetValue) = 0;
 
   /**
    * Return the global object.
    *
    **/
-  virtual JSObject*           GetGlobalObject() = 0;
+  virtual nsIScriptGlobalObject*  GetGlobalObject() = 0;
 
   /**
-   * Return the JSContext 
+   * Return the native script context
    *
    **/
-  virtual JSContext*          GetContext() = 0;
+  virtual void*                   GetNativeContext() = 0;
 
   /**
    * Init all DOM classes.
    *
    **/
-  virtual nsresult            InitAllClasses() = 0;
+  virtual nsresult                InitClasses() = 0;
 
   /**
    * Init this context.
-   * <P>
-   * <I> The dependency with nsIWebWidget will disappear soon. A more general "global object"
-   * interface should be defined. nsIWebWidget is too specific.</I>
    *
    * @param aGlobalObject the gobal object
    *
    * @return NS_OK if context initialization was successful
    *
    **/
-  virtual nsresult            InitContext(nsIWebWidget *aGlobalObject) = 0;
+  virtual nsresult            InitContext(nsIScriptGlobalObject *aGlobalObject) = 0;
 };
 
 /**
  * Return a new Context
  *
  */
-extern "C" NS_DOM NS_CreateContext(nsIWebWidget *aGlobal, nsIScriptContext **aContext);
+extern "C" NS_DOM NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext);
 
 #endif // nsIScriptContext_h__
 
