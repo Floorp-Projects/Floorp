@@ -41,6 +41,7 @@
   <html:script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
   <html:script src="chrome://global/content/treePopups.js"/>
   <html:script src="chrome://global/content/strres.js"/>
+  <html:script src="chrome://global/content/globalOverlay.js"/>
 
   <menubar>
     <menu value="&menu.file.label;">
@@ -90,8 +91,10 @@
 
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-       onkeyup="if (event.keyCode == 8)	return doDelete(false);"
+       onkeyup="if (event.keyCode == 8)	return doDelete(false); if( event.keyCode == 13 ) OpenURL(event, event.target.parentNode.parentNode, this);"
+       onclick="OpenURL(event, event.target.parentNode.parentNode, this);"
        multiple="true"
+       onselect="bookmarkSelect();"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
        ondragdrop="return DropOnTree(event);"
@@ -119,6 +122,7 @@
      <rule>
       <treechildren>
        <treeitem uri="rdf:*" persist="open"
+         location="rdf:http://home.netscape.com/NC-rdf#URL"
          web:status="rdf:http://home.netscape.com/WEB-rdf#status"
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
          loading="rdf:http://home.netscape.com/NC-rdf#loading">
@@ -212,8 +216,8 @@ of the tree so that the scrollbar is visible. Yes, I know this is not
 necessary for win32 or gtk, but we can use this area for information
 (maybe full URL of selected item or the like) in the future.
 -->
-<box id="status-bar" style="min-height:16px; max-height:16px;">
-  <button class="status-bar" align="left" value=""/>
+<box id="status-bar" style="height:16px; max-height:16px;">
+  <text id="statusbar-text" />
 </box>
 
 </window>
