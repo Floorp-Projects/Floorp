@@ -996,7 +996,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 	}
 
 	// Get the url from the web shell
-	PRUnichar *pszLocationName = nsnull;
+	const PRUnichar *pszLocationName = nsnull;
 	m_pIWebShell->GetTitle(&pszLocationName);
 	if (pszLocationName == nsnull)
 	{
@@ -1005,7 +1005,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 
 	// Convert the string to a BSTR
 	USES_CONVERSION;
-	LPOLESTR pszConvertedLocationName = W2OLE(pszLocationName);
+	LPOLESTR pszConvertedLocationName = W2OLE(const_cast<PRUnichar *>(pszLocationName));
 	*LocationName = SysAllocString(pszConvertedLocationName);
 
 	return S_OK;
@@ -1029,7 +1029,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 	}
 
 	// Get the url from the web shell
-	PRUnichar *pszUrl = nsnull;
+	const PRUnichar *pszUrl = nsnull;
 	PRInt32 aHistoryIndex;
 	m_pIWebShell->GetHistoryIndex(aHistoryIndex);
 	m_pIWebShell->GetURL(aHistoryIndex, &pszUrl);
@@ -1040,7 +1040,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 
 	// Convert the string to a BSTR
 	USES_CONVERSION;
-	LPOLESTR pszConvertedUrl = W2OLE(pszUrl);
+	LPOLESTR pszConvertedUrl = W2OLE(const_cast<PRUnichar *>(pszUrl));
 	*LocationURL = SysAllocString(pszConvertedUrl);
 
 	return S_OK;
