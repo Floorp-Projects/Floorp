@@ -60,6 +60,29 @@
     #define DEBUG_PRINTF (void)
 #endif
 
+#define NS_IMPL_NSGETMODULE1(_class)                                           \
+static _class *g##_class;                                                     \
+extern "C" NS_EXPORT nsresult                                                 \
+NSGetModule(nsIComponentManager *servMgr,                                     \
+            nsIFileSpec* location,                                            \
+            nsIModule** aResult)                                              \
+{                                                                             \
+    nsresult rv = NS_OK;                                                      \
+                                                                              \
+    if (!aResult) return NS_ERROR_NULL_POINTER;                               \
+    if (!g##_class) {                                                         \
+      g##_class = new _class;                                                 \
+      if (!g##_class) return NS_ERROR_OUT_OF_MEMORY;                          \
+    }                                                                         \
+                                                                              \
+    NS_ADDREF(g##_class);                                                     \
+    if (g##_class)                                                            \
+      rv = g##_class->QueryInterface(NS_GET_IID(nsIModule),                   \
+                                   (void **)aResult);                         \
+    NS_RELEASE(g##_class);                                                    \
+    return rv;                                                                \
+}
+
 // Declare nsInstanceCounter class.
 class nsInstanceCounter {
 public:
@@ -377,5 +400,5 @@ className##Module::CanUnload( nsIComponentManager*, PRBool* canUnload) { \
       return NS_OK; \
 } \
 NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) \
-NS_IMPL_NSGETMODULE(className##Module)
+NS_IMPL_NSGETMODULE1(className##Module)
 #endif
