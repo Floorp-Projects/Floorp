@@ -1,49 +1,41 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="mathml.css" type="text/css"?>
-<!DOCTYPE html SYSTEM "mathml.dtd"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "mathml.dtd"
 [
 <!ENTITY vec "&RightArrow;">
 <!ENTITY partial "&PartialD;"> 
 ]>
-
-<html
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.w3.org/1998/Math/MathML"
->
-
-<!-- 
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
   *  The contents of this file are subject to the Mozilla Public
   *  License Version 1.1 (the "License"); you may not use this file
   *  except in compliance with the License. You may obtain a copy of
   *  the License at http://www.mozilla.org/MPL/
-  *  
+  *
   *  Software distributed under the License is distributed on an "AS
   *  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
   *  implied. See the License for the specific language governing
   *  rights and limitations under the License.
-  *  
+  *
   *  The Original Code is Mozilla MathML Project.
-  *  
+  *
   *  The Initial Developer of the Original Code is The University of
   *  Queensland.  Portions created by The University of Queensland are
-  *  Copyright (C) The University of Queensland.  All
+  *  Copyright (C) 1999 The University of Queensland.  All
   *  Rights Reserved.
-  *  
+  *
   *  Contributor(s):
   *    Robert Miner <rminer@geomtech.com>
   -->
 
-<html:html>
-<html:head>
-   <html:title>Maxwell's Equations</html:title>
-</html:head>
+<head>
+  <title>Maxwell's Equations</title>
+</head>
 
-<html:body bgcolor='#ffffff'>
-<html:h2>Maxwell's Equations</html:h2>
+<body style="background-color: #ffffff">
+<h2>Maxwell's Equations</h2>
 
-<html:center>
-
-<math>
+<p align='center'>
+<math xmlns='&mathml;'>
   <mstyle displaystyle='true'>
     <mrow>
       <mo>&lbrace;</mo>
@@ -203,12 +195,12 @@
     </mrow>
   </mstyle>
 </math>
-</html:center>
+</p>
 
-<html:h2>Einstein's field equations</html:h2>
+<h2>Einstein's field equations</h2>
 
-<html:center>
-<math>
+<p align='center'>
+<math xmlns='&mathml;'>
   <mstyle displaystyle='true'>
     <mrow>
       <msubsup>
@@ -271,7 +263,7 @@
     </mrow>
   </mstyle>
 </math>
-</html:center>
+</p>
 
-</html:body>
-</html:html>
+</body>
+</html>
