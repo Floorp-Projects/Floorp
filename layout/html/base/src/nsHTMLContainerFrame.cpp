@@ -145,9 +145,13 @@ nsHTMLContainerFrame::PaintDecorationsAndChildren(
   nsCOMPtr<nsIFontMetrics> fm;
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode);
+  PRBool isVisible;
 
   if (eCompatibility_NavQuirks != mode && 
-      NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+      NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+      NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext,
+                                        PR_TRUE, &isVisible)) &&
+      isVisible) {
     GetTextDecorations(aPresContext, aIsBlock, decorations, underColor, 
                        overColor, strikeColor);
     if (decorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
