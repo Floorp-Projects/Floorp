@@ -21,12 +21,18 @@
  
 # Harvest pointers to news articles and their summaries from mailbox file
 # and write html and rdf files from it.
+#
+# usage: newsbot [mailfile1, mailfile2...] [rdffile]
+# each mail file is standard mbox format such as a sendmail spool file.
+# rdffile is where to put the generated rdf.
+# output is written to standard output.
 
 require 5.00397;
 use strict;
 use Mail::Folder::Mbox;
 use Mail::Address;
 
+my $rdffile = pop (@ARGV); #name of file to write rdf data
 
 unless (@ARGV) {
   # command line argument should be list of mail files to 
@@ -45,12 +51,11 @@ for my $file (@ARGV) {
 
 printheader();
 
-my %articlehash;
+my %articlehash; 
 my @articles;
 my $index=0;
 
 for my $msg (sort { $a <=> $b } $folder->message_list) {
-#for my $msg  ($folder->message_list) {
     my $entity = $folder->get_mime_message($msg);
     my $submitter = $entity->get('From'); chomp($submitter);
     $submitter =~ s/</&lt;/g;
@@ -138,50 +143,53 @@ for (my $i=$index; $i > 0 ; $i--) {
     printarticle ($articles[$i]);
     }
 printfooter();
-#printrdf ($articles[$i]);
+
+if ($rdffile) {
+    printrdf (\@articles, $rdffile);
+    }
 }
 
 
 
-#sub printrdf() {
-#
-#my ($artref) = @_;
-#my %article = %{$artref};
-#
-#
-#my $header =<<'RDFHEAD';
-#<xml version="1.0"?>
-#<rdf:RDF>
-#xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-#xmlns="http://my.netscape.com/rdf/simple/0.9/"
-#
-#  <channel>
-#    <title>NewsBot</title>
-#    <link>http://www.mozilla.org/newsbot/</link>
-#    <description>The mozilla.org news reaper</description>
-#    
-#  </channel>
-#
-#  <image>
-#    <title>Mozilla</title>
-#    <url>http://www.mozilla.org/images/moz.gif</url>
-#    <link>http://www.mozilla.org</link>
-#  </image>
-#
-#RDFHEAD
-#print $header;
-#
-#for (my $i=$index; $i > 0 ; $i--) {
-#    print ("<item>");
-#    print ("  <title>" . %article->{'Subject'} . "</title>");
-#    print ("  <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . %article->{'Message-ID'} . "</link>");
-#    }
-#my $footer =<<'RDFOOT';
-#</rdf:FDF>
-#RDFFOOT
-#print $footer;
-#
-#}
+sub printrdf() {
+my ($ref, $rdffile) = @_;
+my @articles = @{$ref};
+
+unless (open (RDFFILE,">$rdffile") ){
+   die "Couldn\'t open rdf file:\"$rdffile\"\n";
+   }
+select RDFFILE;
+
+my $header =<<'RDFHEAD';
+<xml version="1.0">
+<rdf:RDF>
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns="http://my.netscape.com/rdf/simple/0.9/"
+
+  <channel>
+    <title>NewsBot</title>
+    <link>http://www.mozilla.org/newsbot/</link>
+    <description>The mozilla.org news reaper</description>
+  </channel>
+
+  <image>
+    <title>Mozilla</title>
+    <url>http://www.mozilla.org/images/moz.gif</url>
+    <link>http://www.mozilla.org</link>
+  </image>
+
+RDFHEAD
+print $header;
+
+for (my $i=@articles-1; $i > 0 ; $i--) {
+    print ("  <item>\n");
+    print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
+    print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . $articles[$i]->{'Message-ID'} . "></link>\n");
+    print ("  </item>\n\n");
+    }
+
+print "</rdf:FDF>\n";
+} #end printrdf()
 
 
 
@@ -239,7 +247,7 @@ announcements, discussions, and goings-<WBR>on.
 When you see an article of interest to the general mozilla community 
 forward it to <A HREF="mailto:newsbot@mozilla.org">newsbot@mozilla.org</A> 
 and write a summary of the article.  Newsbot will add your summary to this
-page with pointers back to the original article and its thread.
+page and make pointers back to the original article and its thread in DejaNews.
 
 <BLOCKQUOTE><FONT SIZE=-1>
 For Netscape Communicator users, this means pressing the <I>Forward</I>
