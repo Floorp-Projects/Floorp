@@ -234,7 +234,7 @@ nsInstallTriggerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 
     nsresult result =  inst->QueryInterface(aIID, aResult);
 
-    if (result != NS_OK)
+    if (NS_FAILED(result))
         delete inst;
 
     return result;

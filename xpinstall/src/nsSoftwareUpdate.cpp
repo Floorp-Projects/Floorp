@@ -36,7 +36,7 @@
 #include "nsSoftwareUpdateRun.h"
 #include "nsInstallTrigger.h"
 #include "nsInstallVersion.h"
-
+#include "ScheduledTasks.h"
 
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
@@ -132,7 +132,7 @@ nsSoftwareUpdate::Startup()
     /* Stupid Hack to test js env*/
     /***************************************/
     // FIX:  HACK HACK HACK!
-#if 0  
+#if 1  
     nsSpecialSystemDirectory jarFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     jarFile += "test.jar";
     if (jarFile.Exists())
@@ -143,8 +143,10 @@ nsSoftwareUpdate::Startup()
     /***************************************/
     /* Preform Scheduled Tasks             */
     /***************************************/
-
-    DeleteScheduledNodes();
+    
+    DeleteScheduledFiles();
+    ReplaceScheduledFiles();
+        
     
     return NS_OK;
 }
@@ -189,60 +191,59 @@ NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
 {
     mJarInstallQueue->Add( installInfo );
-    UpdateInstallJarQueue();
+    
+    RunNextInstall();
 
     return NS_OK;
 }
 
 
-nsresult
-nsSoftwareUpdate::UpdateInstallJarQueue()
+NS_IMETHODIMP
+nsSoftwareUpdate::InstallJarCallBack()
 {
-    if (mInstalling == 0)
+    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
+    
+    if (nextInstall != nsnull)
+        delete nextInstall;
+    
+    mJarInstallQueue->Remove(0);
+    
+    mInstalling = PR_FALSE;
+
+    return RunNextInstall();
+
+}
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::RunNextInstall()
+{
+    if (mInstalling == PR_TRUE)
+        return NS_OK;
+
+    mInstalling = PR_TRUE;
+
+    //  check to see if there is anything in our queue
+    if (mJarInstallQueue->GetSize() <= 0)
     {
-        mInstalling++;
-        
-        if (mJarInstallQueue->GetSize() <= 0)
-        {
-            mInstalling--;
-            return 0;
-        }
-        nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
-        
-        if (nextInstall == nsnull)
-        {
-            mInstalling--;
-            return 0;
-        }
-        
-        if (nextInstall->IsMultipleTrigger() == PR_FALSE)
-        {
-            Install( nextInstall );
-          
-            delete nextInstall;
-            mJarInstallQueue->Remove(0);
-        
-            mInstalling--;
-
-            // We are done with install the last jar, let see if there are any more.
-            UpdateInstallJarQueue();  // FIX: Maybe we should do this different to avoid blowing our stack?
-
-            return 0;
-        }
-        else
-        {
-            // FIX: we have a multiple trigger!
-        }
+        mInstalling = PR_FALSE;
+        return NS_OK;
     }
-
-    return 0;
-}
-
-nsresult
-nsSoftwareUpdate::DeleteScheduledNodes()
-{
+    
+    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
+        
+    if (nextInstall->IsMultipleTrigger() == PR_FALSE)
+    {
+        RunInstall( nextInstall );
+    }
+    else
+    {
+        ; // should we do something different?! 
+    }
+    
     return NS_OK;
 }
+
 
 /////////////////////////////////////////////////////////////////////////
 // 
@@ -312,7 +313,7 @@ nsSoftwareUpdateNameSet::nsSoftwareUpdateNameSet()
   nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
                                                  kIScriptNameSetRegistryIID,
                                                 (nsISupports **)&scriptNameSet);
-    if (NS_OK == result) 
+    if (NS_SUCCEEDED(result)) 
     {
         scriptNameSet->AddExternalNameSet(this);
     }
@@ -332,7 +333,7 @@ nsSoftwareUpdateNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     nsresult result = NS_OK;
 
     result = NS_InitInstallVersionClass(aScriptContext, nsnull);
-    if (result != NS_OK) return result;
+    if (NS_FAILED(result)) return result;
 
     result = NS_InitInstallTriggerGlobalClass(aScriptContext, nsnull);
 
@@ -347,13 +348,13 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     nsIScriptNameSpaceManager* manager;
 
     result = aScriptContext->GetNameSpaceManager(&manager);
-    if (NS_OK == result) 
+    if (NS_SUCCEEDED(result)) 
     {
         result = manager->RegisterGlobalName("InstallVersion", 
                                              kInstallVersion_CID, 
                                              PR_TRUE);
         
-        if (result != NS_OK) return result;
+        if (NS_FAILED(result))  return result;
         
         result = manager->RegisterGlobalName("InstallTrigger", 
                                              kInstallTrigger_CID, 
@@ -446,7 +447,7 @@ NSGetFactory(nsISupports* serviceMgr,
 
     nsresult res = inst->QueryInterface(kIFactoryIID, (void**) aFactory);
 
-    if (res != NS_OK)
+    if (NS_FAILED(res)) 
     {   
         delete inst;
     }

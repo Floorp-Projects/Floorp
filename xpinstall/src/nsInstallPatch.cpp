@@ -23,7 +23,7 @@
 #include "nsIDOMInstallVersion.h"
 
 #include "VerReg.h"
-
+#include "ScheduledTasks.h"
 
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
@@ -287,7 +287,7 @@ nsInstallPatch::NativeDeleteFile(nsFileSpec* doomedFile)
            if (doomedFile->Exists())
            {
                 // If file still exists, we need to delete it later!
-                // FIX DeleteOldFileLater( (char*)finalFile );
+                DeleteFileLater(doomedFile->GetCString());
                 return nsInstall::REBOOT_NEEDED;
            }
         }
@@ -301,24 +301,26 @@ nsInstallPatch::NativeDeleteFile(nsFileSpec* doomedFile)
 }
 
 PRInt32
-nsInstallPatch::NativeReplace(const nsFileSpec& oldfile, const nsFileSpec& newFile)
+nsInstallPatch::NativeReplace(const nsFileSpec& oldfile, nsFileSpec& newFile)
 {
     
     oldfile.Delete(PR_FALSE);
     if (oldfile.Exists())
     {
-        //FIX: FE_ReplaceExistingFile
+        ReplaceFileLater(newFile.GetCString(), oldfile.GetCString() );
+        return nsInstall::REBOOT_NEEDED;
     }
-
-    nsFileSpec parentDirectory;
-    oldfile.GetParent(parentDirectory);
-    
-    if (parentDirectory.Exists() && parentDirectory.IsDirectory())
+    else
     {
-        if (newFile.Move(parentDirectory) != 0)
-        {
-            return nsInstall::UNEXPECTED_ERROR;   
-        }
+        // We can simple move the extracted file to the mFinalFile's parent
+        nsFileSpec parentofFinalFile;
+
+        oldfile.GetParent(parentofFinalFile);
+        newFile.Move(parentofFinalFile);
+        
+        char* leafName = newFile.GetLeafName();
+        newFile.Rename(leafName);
+        delete [] leafName;
     }
     
     return nsInstall::SUCCESS;

@@ -133,7 +133,7 @@ nsInstallVersion::Init(const nsString& version)
     major = minor = release = build = 0;
     
     errorCode = nsInstallVersion::StringToVersionNumbers(version, &aMajor, &aMinor, &aRelease, &aBuild);    
-    if (errorCode == NS_OK)
+    if (NS_SUCCEEDED(errorCode)) 
     {
         Init(aMajor, aMinor, aRelease, aBuild);
     }
@@ -416,7 +416,7 @@ nsInstallVersionFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 
     nsresult result =  inst->QueryInterface(aIID, aResult);
 
-    if (result != NS_OK)
+    if (NS_FAILED(result)) 
         delete inst;
 
     return result;
