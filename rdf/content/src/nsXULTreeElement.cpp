@@ -151,6 +151,9 @@ nsXULTreeElement::GetSelectedCells(nsIDOMNodeList** aSelectedCells)
 NS_IMETHODIMP
 nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
 {
+  NS_ASSERTION(aTreeItem, "trying to select a null tree item");
+  if (!aTreeItem) return NS_OK;
+
   // Sanity check. If we're the only item, just bail.
   PRUint32 length;
   mSelectedItems->GetLength(&length);
@@ -251,6 +254,9 @@ nsXULTreeElement::ClearCellSelection()
 void
 nsXULTreeElement::AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem)
 {
+  NS_ASSERTION(aTreeItem,"attepting to add a null tree item to the selection");
+  if (!aTreeItem) return;
+
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
   content->SetAttribute(kNameSpaceID_None, kSelectedAtom, nsAutoString("true"), PR_TRUE);
