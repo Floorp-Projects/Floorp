@@ -305,7 +305,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
   if (!skipConversion)
   {
-    nsString strline(line, length);
+    nsString strline; strline.AssignWithConversion(line, length);
     nsresult rv = NS_OK;
     PRUnichar* wresult = nsnull;
     PRBool whattodo = obj->options->whattodo;

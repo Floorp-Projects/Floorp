@@ -240,7 +240,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
   //
   if (!aAttach->real_name || *aAttach->real_name == 0)
   {
-    nsString  newAttachName = "attachment";
+    nsString  newAttachName; newAttachName.AssignWithConversion("attachment");
     nsresult  rv = NS_OK;
     NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && mimeFinder) 
@@ -253,8 +253,8 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
 
         if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(&aFileExtension))) && aFileExtension)
         {
-          newAttachName.Append(".");
-          newAttachName.Append(aFileExtension);
+          newAttachName.AppendWithConversion(".");
+          newAttachName.AppendWithConversion(aFileExtension);
           PR_FREEIF(aFileExtension);
         }
       }        
@@ -1702,7 +1702,7 @@ MimeGetStringByID(PRInt32 stringID)
       return resultString;
 		else
     {
-      nsAutoString v("");
+      nsAutoString v;
       v = ptrv;
 			tempString = v.ToNewUTF8String();
     }
@@ -1783,7 +1783,7 @@ static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, cons
 
   // no alias resolution for performance
   // if we get alias then no font tag to be generated (i think that's acceptable).
-  aCharset.Assign(text->charset);
+  aCharset.AssignWithConversion(text->charset);
   aCharset.ToLowerCase();
 
 
@@ -1798,7 +1798,7 @@ static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, cons
       goto done;
   
     // append the language to the pref string
-    aPrefStr.Append(langGroup);
+    aPrefStr.AppendWithConversion(langGroup);
 
     nsIPref *aPrefs = GetPrefServiceManager(obj->options);
   
@@ -1817,13 +1817,15 @@ static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, cons
       nsAutoString tempStr(unicode);
       PR_FREEIF(unicode);
 
-      rv = nsMsgI18NConvertFromUnicode(aCharset, tempStr, fontName);
+      nsCAutoString charsetCStr;
+      charsetCStr.AssignWithConversion(aCharset);
+      rv = nsMsgI18NConvertFromUnicode(charsetCStr, tempStr, fontName);
       if (NS_FAILED(rv))
         goto done;
 
       // get a font size from pref
       aPrefStr.Assign(prefixSize);
-      aPrefStr.Append(langGroup);
+      aPrefStr.AppendWithConversion(langGroup);
       rv = aPrefs->GetIntPref(aPrefStr, &fontSize);
       if (NS_FAILED(rv))
         goto done;
@@ -1882,7 +1884,7 @@ int BeginMailNewsFont(MimeObject *obj)
 
     if (!text->charset || !(*text->charset))
       goto done;
-    aCharset.Assign(text->charset);
+    aCharset.AssignWithConversion(text->charset);
 
     // get a font name from pref, could be non ascii (need charset conversion)
     // this is not necessary if we insert this tag after the message is converted to UTF-8
@@ -1891,7 +1893,9 @@ int BeginMailNewsFont(MimeObject *obj)
       goto done;
     nsAutoString tempStr(unicode);
     PR_FREEIF(unicode);
-    rv = nsMsgI18NConvertFromUnicode(aCharset, tempStr, fontName);
+    nsCAutoString charsetCStr;
+    charsetCStr.AssignWithConversion(aCharset);
+    rv = nsMsgI18NConvertFromUnicode(charsetCStr, tempStr, fontName);
     if (NS_FAILED(rv))
       goto done;
 

@@ -325,7 +325,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if (!skipConversion)
   {
     //XXX I18N Converting char* to PRUnichar*
-    nsString strline(linep, (length - (linep - line)) );
+    nsString strline; strline.AssignWithConversion(linep, (length - (linep - line)) );
     PRUnichar* wresult = nsnull;
     nsresult rv = NS_OK;
     PRBool whattodo = obj->options->whattodo;

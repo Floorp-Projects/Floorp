@@ -765,7 +765,7 @@ convert_and_encode:
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
         PRUnichar *u = NULL;
-        nsAutoString fmt("%s");
+        nsAutoString fmt; fmt.AssignWithConversion("%s");
         char aChar = begin[len];
         begin[len] = '\0';
         u = nsTextFormatter::smprintf(fmt.GetUnicode(), begin);
@@ -1243,13 +1243,13 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
   NS_ASSERTION(NULL == mEncoder, "No reinitialization allowed.");
 
-  mInputCharset.Assign(from_charset);     // remember input charset for a hint
+  mInputCharset.AssignWithConversion(from_charset);     // remember input charset for a hint
   if (mInputCharset.IsEmpty()) {
-    mInputCharset.Assign("ISO-8859-1");
+    mInputCharset.AssignWithConversion("ISO-8859-1");
   }
-  mOutputCharset.Assign(to_charset);      // remember output charset
+  mOutputCharset.AssignWithConversion(to_charset);      // remember output charset
   if (mOutputCharset.IsEmpty()) {
-    mOutputCharset.Assign("UTF-8");
+    mOutputCharset.AssignWithConversion("UTF-8");
   }
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
@@ -1261,14 +1261,14 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mInputCharset);
       if (NS_FAILED(res)) {
-        mInputCharset.Assign("ISO-8859-1");
+        mInputCharset.AssignWithConversion("ISO-8859-1");
       }
     }
     aAlias = mOutputCharset;
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mOutputCharset);
       if (NS_FAILED(res)) {
-        mOutputCharset.Assign("UTF-8");
+        mOutputCharset.AssignWithConversion("UTF-8");
       }
     }
   }
@@ -1349,7 +1349,7 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
     nsDetectionConfident oConfident;
     res = mDetector->DoIt(inBuffer, inLength, &oCharset, oConfident);
     if (NS_SUCCEEDED(res) && (eBestAnswer == oConfident || eSureAnswer == oConfident)) {
-      aCharsetDetected.Assign(oCharset);
+      aCharsetDetected.AssignWithConversion(oCharset);
 
       // Check if need a conversion.
       if (!NeedCharsetConversion(aCharsetDetected, mOutputCharset)) {

@@ -67,18 +67,18 @@ nsMimeConverter::DecodeMimePartIIStr(const nsCString& header,
   if (nsnull == decodedCstr) {
     // no decode needed and no default charset was specified
     if (charset.IsEmpty()) {
-      decodedString.Assign(header);
+      decodedString.AssignWithConversion(header);
     }
     else {
       // no MIME encoded, convert default charset to unicode
-      res = ConvertToUnicode((nsAutoString) charset, header, decodedString);
+      res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charset), header, decodedString);
     }
   }
   else {
     // assign the charset encoded in MIME header
     charset.Assign(charsetNameBuffer);
     // convert MIME charset to unicode
-    res = ConvertToUnicode((nsAutoString) charset, (const char *) decodedCstr, decodedString);
+    res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charset), (const char *) decodedCstr, decodedString);
     PR_FREEIF(decodedCstr);
   }
   return res;
@@ -114,7 +114,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
   else {
     // convert MIME charset to unicode
     nsAutoString decodedStr;
-    res = ConvertToUnicode(nsAutoString(charsetCstr), (const char *) decodedCstr, decodedStr);
+    res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charsetCstr), (const char *) decodedCstr, decodedStr);
     *decodedString = decodedStr.ToNewUnicode();
     PR_FREEIF(decodedCstr);
   }

@@ -206,8 +206,8 @@ mime_dump_attachments ( attachmentList );
 		if (NS_SUCCEEDED(rv) && spec)
 		  {
 			if (attachments.Length())
-			  attachments += ',';
-			attachments += spec;
+			  attachments.AppendWithConversion(',');
+			attachments.AppendWithConversion(spec);
 			nsCRT::free(spec);
 			spec = nsnull;
 		  }
@@ -249,7 +249,7 @@ static nsString& mime_decode_string(const char* str,
 {
     static nsString decodedString;
     nsString encodedCharset;
-    nsMsgI18NDecodeMimePartIIStr(nsString(str), encodedCharset,
+    nsMsgI18NDecodeMimePartIIStr(NS_ConvertASCIItoUCS2(str), encodedCharset,
                                  decodedString, eatContinuations);
     return decodedString;
 }
@@ -285,7 +285,7 @@ CreateCompositionFields(const char        *from,
   NS_ADDREF(cFields);
 
   // Now set all of the passed in stuff...
-  cFields->SetCharacterSet(nsString(charset).GetUnicode());
+  cFields->SetCharacterSet(NS_ConvertASCIItoUCS2(charset).GetUnicode());
   cFields->SetFrom(mime_decode_string(from).GetUnicode());
   cFields->SetSubject(mime_decode_string(subject).GetUnicode());
   cFields->SetReplyTo(mime_decode_string(reply_to).GetUnicode());
@@ -1337,7 +1337,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
         else
         {
-            nsString urlStr(mdd->url_name);
+            nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
             fields->SetDraftId(urlStr.GetUnicode());
         	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
         }
@@ -1368,7 +1368,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
 	    else
 	    {
-            nsString urlStr(mdd->url_name);
+            nsString urlStr; urlStr.AssignWithConversion(mdd->url_name);
             fields->SetDraftId(urlStr.GetUnicode());
 	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
 	    }
@@ -1643,7 +1643,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   	//Need some convertion to native file system character set
   	nsAutoString outStr;
   	char * fileName = nsnull;
-  	nsresult rv = ConvertToUnicode(msgCompHeaderInternalCharset(), newAttachment->real_name, outStr);
+  	nsresult rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), newAttachment->real_name, outStr);
   	if (NS_SUCCEEDED(rv))
   	{
   		rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);

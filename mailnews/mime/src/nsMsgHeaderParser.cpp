@@ -105,17 +105,17 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
   nsresult rv = NS_OK;
   // *yuck* the mime converter interface is requiring us to pass in nsStrings which is forcing
   // all this extra string copying...we need to fix the interface!
-  nsAutoString charset ("UTF-8");
+  nsAutoString charset; charset.AssignWithConversion("UTF-8");
   nsXPIDLString unicodeValue;
   nsAutoString value;
   if (aAddress)
   {
-    value = mCurrentAddress;
+    value.AssignWithConversion(mCurrentAddress);
     rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aAddress);
   }
   if (aName)
   {
-    value = mCurrentName;
+    value.AssignWithConversion(mCurrentName);
     rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aName);
   }
   if (aFullAddress)
@@ -126,7 +126,7 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
                                         getter_Copies(fullAddress));
     if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
-      value.Assign(fullAddress);
+      value.AssignWithConversion(fullAddress);
       rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aFullAddress);
     }
 
