@@ -47,7 +47,6 @@ static int pk11_DefaultArraySize = 0;
 Error
 FipsMode(char *arg)
 {
-
 	char *internal_name;
 
 	if(!PORT_Strcasecmp(arg, "true")) {
@@ -55,6 +54,7 @@ FipsMode(char *arg)
 			internal_name = PR_smprintf("%s",
 				SECMOD_GetInternalModule()->commonName);
 			if(SECMOD_DeleteInternalModule(internal_name) != SECSuccess) {
+				PR_fprintf(PR_STDERR, "%s\n", SECU_Strerror(PORT_GetError()));
 				PR_smprintf_free(internal_name);
 				PR_fprintf(PR_STDERR, errStrings[FIPS_SWITCH_FAILED_ERR]);
 				return FIPS_SWITCH_FAILED_ERR;
@@ -74,6 +74,7 @@ FipsMode(char *arg)
 			internal_name = PR_smprintf("%s",
 				SECMOD_GetInternalModule()->commonName);
 			if(SECMOD_DeleteInternalModule(internal_name) != SECSuccess) {
+				PR_fprintf(PR_STDERR, "%s\n", SECU_Strerror(PORT_GetError()));
 				PR_smprintf_free(internal_name);
 				PR_fprintf(PR_STDERR, errStrings[FIPS_SWITCH_FAILED_ERR]);
 				return FIPS_SWITCH_FAILED_ERR;
@@ -105,9 +106,6 @@ FipsMode(char *arg)
 Error
 ChkFipsMode(char *arg)
 {
-
-	char *internal_name;
-
 	if(!PORT_Strcasecmp(arg, "true")) {
 		if (PK11_IsFIPS()) {
 			PR_fprintf(PR_STDOUT, msgStrings[FIPS_ENABLED_MSG]);
@@ -340,7 +338,6 @@ RawListModule(char *modulespec)
 {
 	SECMODModule *module;
 	char **moduleSpecList;
-	SECStatus rv;
 
 	module = SECMOD_LoadModule(modulespec,NULL,PR_FALSE);
 	if (module == NULL) {
