@@ -145,7 +145,7 @@ final class MemberBox implements Serializable
                     memberObject = accessible;
                     method = accessible;
                 } else {
-                    if (!tryToMakeAccessible(method)) {
+                    if (!VMBridge.instance.tryToMakeAccessible(method)) {
                         throw Context.throwAsScriptRuntimeEx(ex);
                     }
                 }
@@ -166,7 +166,7 @@ final class MemberBox implements Serializable
             try {
                 return ctor.newInstance(args);
             } catch (IllegalAccessException ex) {
-                if (!tryToMakeAccessible(ctor)) {
+                if (!VMBridge.instance.tryToMakeAccessible(ctor)) {
                     throw Context.throwAsScriptRuntimeEx(ex);
                 }
             }
@@ -216,26 +216,6 @@ final class MemberBox implements Serializable
             }
         }
         return null;
-    }
-
-    private static boolean tryToMakeAccessible(Member member)
-    {
-        /**
-         * Due to a bug in Sun's VM, public methods in private
-         * classes are not accessible by default (Sun Bug #4071593).
-         * We have to explicitly set the method accessible
-         * via method.setAccessible(true) but we have to use
-         * reflection because the setAccessible() in Method is
-         * not available under jdk 1.1.
-         */
-        if (method_setAccessible != null) {
-            try {
-                Object[] args_wrapper = { Boolean.TRUE };
-                method_setAccessible.invoke(member, args_wrapper);
-                return true;
-            } catch (Exception ex) { }
-        }
-        return false;
     }
 
     private void readObject(ObjectInputStream in)
@@ -367,17 +347,5 @@ final class MemberBox implements Serializable
 
     private transient Member memberObject;
     transient Class[] argTypes;
-
-    private static Method method_setAccessible;
-
-    static {
-        try {
-            Class MethodClass = Class.forName("java.lang.reflect.Method");
-            method_setAccessible = MethodClass.getMethod(
-                "setAccessible", new Class[] { Boolean.TYPE });
-        } catch (Exception ex) {
-            // Assume any exceptions means the method does not exist.
-        }
-    }
 }
 

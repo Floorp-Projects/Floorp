@@ -89,18 +89,19 @@ public class ScriptRuntime {
         ObjectClass       = Kit.classOrNull("java.lang.Object"),
         ShortClass        = Kit.classOrNull("java.lang.Short"),
         StringClass       = Kit.classOrNull("java.lang.String"),
-
-        SerializableClass = Kit.classOrNull("java.io.Serializable"),
-
         DateClass         = Kit.classOrNull("java.util.Date");
 
     public final static Class
-        ContextClass      = Kit.classOrNull("org.mozilla.javascript.Context"),
-        ContextFactoryClass = Kit.classOrNull("org.mozilla.javascript.ContextFactory"),
-        FunctionClass     = Kit.classOrNull("org.mozilla.javascript.Function"),
-        ScriptableClass   = Kit.classOrNull("org.mozilla.javascript.Scriptable"),
-        ScriptableObjectClass = Kit.classOrNull("org.mozilla.javascript.ScriptableObject"),
-        UndefinedClass    = Kit.classOrNull("org.mozilla.javascript.Undefined");
+        ContextClass
+            = Kit.classOrNull("org.mozilla.javascript.Context"),
+        ContextFactoryClass
+            = Kit.classOrNull("org.mozilla.javascript.ContextFactory"),
+        FunctionClass
+            = Kit.classOrNull("org.mozilla.javascript.Function"),
+        ScriptableClass
+            = Kit.classOrNull("org.mozilla.javascript.Scriptable"),
+        ScriptableObjectClass
+            = Kit.classOrNull("org.mozilla.javascript.ScriptableObject");
 
     private static final String
         XML_INIT_CLASS = "org.mozilla.javascript.xmlimpl.XMLLibImpl";
@@ -672,7 +673,7 @@ public class ScriptRuntime {
         return "[object " + obj.getClassName() + ']';
     }
 
-    public static String toString(Object[] args, int index) 
+    public static String toString(Object[] args, int index)
     {
         return (index < args.length) ? toString(args[index]) : "undefined";
     }
@@ -2419,7 +2420,7 @@ public class ScriptRuntime {
         }
     }
 
-    private static Object toPrimitive(Object val) 
+    private static Object toPrimitive(Object val)
     {
         if (!(val instanceof Scriptable)) {
             return val;

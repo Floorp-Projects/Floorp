@@ -275,6 +275,24 @@ public class Context
     }
 
     /**
+     * Get the current Context.
+     *
+     * The current Context is per-thread; this method looks up
+     * the Context associated with the current thread. <p>
+     *
+     * @return the Context associated with the current thread, or
+     *         null if no context is associated with the current
+     *         thread.
+     * @see org.mozilla.javascript.Context#enter()
+     * @see org.mozilla.javascript.Context#exit()
+     */
+    public static Context getCurrentContext()
+    {
+        Object helper = VMBridge.instance.getThreadContextHelper();
+        return VMBridge.instance.getContext(helper);
+    }
+
+    /**
      * Get a context associated with the current thread, creating
      * one if need be.
      *
@@ -339,14 +357,8 @@ public class Context
      */
     public static Context enter(Context cx)
     {
-        Object[] storage = getThreadContextStorage();
-        Context old;
-        if (storage != null) {
-            old = (Context)storage[0];
-        } else {
-            old = getCurrentContext_jdk11();
-        }
-
+        Object helper = VMBridge.instance.getThreadContextHelper();
+        Context old = VMBridge.instance.getContext(helper);
         if (old != null) {
             if (cx != null && cx != old && cx.enterCount != 0) {
                 // The suplied context must be the context for
@@ -378,11 +390,7 @@ public class Context
         }
 
         if (old == null) {
-            if (storage != null) {
-                storage[0] = cx;
-            } else {
-                setThreadContext_jdk11(cx);
-            }
+            VMBridge.instance.setContext(helper, cx);
         }
         ++cx.enterCount;
 
@@ -406,13 +414,8 @@ public class Context
      */
     public static void exit()
     {
-        Object[] storage = getThreadContextStorage();
-        Context cx;
-        if (storage != null) {
-            cx = (Context)storage[0];
-        } else {
-            cx = getCurrentContext_jdk11();
-        }
+        Object helper = VMBridge.instance.getThreadContextHelper();
+        Context cx = VMBridge.instance.getContext(helper);
         if (cx == null) {
             throw new IllegalStateException(
                 "Calling Context.exit without previous Context.enter");
@@ -426,14 +429,7 @@ public class Context
         if (cx.sealed) onSealedMutation();
         --cx.enterCount;
         if (cx.enterCount == 0) {
-            if (storage != null) {
-                storage[0] = null;
-            } else {
-                setThreadContext_jdk11(null);
-            }
-        }
-
-        if (cx.enterCount == 0) {
+            VMBridge.instance.setContext(helper, null);
             ContextFactory.getGlobal().onContextReleased(cx);
         }
     }
@@ -478,33 +474,31 @@ public class Context
             factory = ContextFactory.getGlobal();
         }
 
-        Object[] storage = getThreadContextStorage();
-        Context cx;
-        if (storage != null) {
-            cx = (Context)storage[0];
-        } else {
-            cx = getCurrentContext_jdk11();
-        }
-
+        Object helper = VMBridge.instance.getThreadContextHelper();
+        Context cx = VMBridge.instance.getContext(helper);
         if (cx != null) {
+            Object result;
             if (cx.factory != null) {
-                return callable.call(cx, scope, thisObj, args);
+                result = callable.call(cx, scope, thisObj, args);
             } else {
-                // Context was associated with the thread via Context.enter
+                // Context was associated with the thread via Context.enter,
+                // set factory to make Context.enter/exit to be no-op
+                // during call
                 cx.factory = factory;
                 try {
-                    return callable.call(cx, scope, thisObj, args);
+                    result = callable.call(cx, scope, thisObj, args);
                 } finally {
                     cx.factory = null;
                 }
             }
+            return result;
         }
 
-        cx = prepareNewContext(factory, storage);
+        cx = prepareNewContext(factory, helper);
         try {
             return callable.call(cx, scope, thisObj, args);
         } finally {
-            releaseContext(storage, cx);
+            releaseContext(helper, cx);
         }
     }
 
@@ -513,13 +507,8 @@ public class Context
      */
     static Object call(ContextFactory factory, ContextAction action)
     {
-        Object[] storage = getThreadContextStorage();
-        Context cx;
-        if (storage != null) {
-            cx = (Context)storage[0];
-        } else {
-            cx = getCurrentContext_jdk11();
-        }
+        Object helper = VMBridge.instance.getThreadContextHelper();
+        Context cx = VMBridge.instance.getContext(helper);
 
         if (cx != null) {
             if (cx.factory != null) {
@@ -534,16 +523,16 @@ public class Context
             }
         }
 
-        cx = prepareNewContext(factory, storage);
+        cx = prepareNewContext(factory, helper);
         try {
             return action.run(cx);
         } finally {
-            releaseContext(storage, cx);
+            releaseContext(helper, cx);
         }
     }
 
     private static Context prepareNewContext(ContextFactory factory,
-                                             Object[] storage)
+                                             Object contextHelper)
     {
         Context cx = factory.makeContext();
         if (cx.factory != null || cx.enterCount != 0) {
@@ -554,22 +543,13 @@ public class Context
         if (factory.isSealed() && !cx.isSealed()) {
             cx.seal(null);
         }
-        if (storage != null) {
-            storage[0] = cx;
-        } else {
-            setThreadContext_jdk11(cx);
-        }
-
+        VMBridge.instance.setContext(contextHelper, cx);
         return cx;
     }
 
-    private static void releaseContext(Object[] storage, Context cx)
+    private static void releaseContext(Object contextHelper, Context cx)
     {
-        if (storage != null) {
-            storage[0] = null;
-        } else {
-            setThreadContext_jdk11(null);
-        }
+        VMBridge.instance.setContext(contextHelper, null);
         try {
             cx.factory.onContextReleased(cx);
         } finally {
@@ -614,60 +594,6 @@ public class Context
     public static void removeContextListener(ContextListener listener)
     {
         ContextFactory.getGlobal().addListener(listener);
-    }
-
-    /**
-     * Get the current Context.
-     *
-     * The current Context is per-thread; this method looks up
-     * the Context associated with the current thread. <p>
-     *
-     * @return the Context associated with the current thread, or
-     *         null if no context is associated with the current
-     *         thread.
-     * @see org.mozilla.javascript.Context#enter
-     * @see org.mozilla.javascript.Context#exit
-     */
-    public static Context getCurrentContext()
-    {
-        Object[] storage = getThreadContextStorage();
-        if (storage != null) {
-            return (Context)storage[0];
-        }
-        return getCurrentContext_jdk11();
-    }
-
-    private static Object[] getThreadContextStorage()
-    {
-        if (threadLocalCx != null) {
-            try {
-                Object[] storage
-                    = (Object[])threadLocalGet.invoke(threadLocalCx, null);
-                if (storage == null) {
-                    storage = new Object[1];
-                    threadLocalSet.invoke(threadLocalCx,
-                                          new Object[] { storage });
-                }
-                return storage;
-            } catch (Exception ex) { }
-        }
-        return null;
-    }
-
-    private static Context getCurrentContext_jdk11()
-    {
-        Thread t = Thread.currentThread();
-        return (Context) threadContexts.get(t);
-    }
-
-    private static void setThreadContext_jdk11(Context cx)
-    {
-        Thread t = Thread.currentThread();
-        if (cx != null) {
-            threadContexts.put(t, cx);
-        } else {
-            threadContexts.remove(t);
-        }
     }
 
     /**
@@ -2173,21 +2099,15 @@ public class Context
             // in any case or JVM class loading is severely broken
             Class cxClass = this.getClass();
             ClassLoader loader = cxClass.getClassLoader();
-            if (method_getContextClassLoader != null) {
-                Thread thread = Thread.currentThread();
-                ClassLoader threadLoader = null;
-                try {
-                    threadLoader = (ClassLoader)method_getContextClassLoader.
-                                       invoke(thread, ScriptRuntime.emptyArgs);
-                } catch (Exception ex) { }
-                if (threadLoader != null && threadLoader != loader) {
-                    if (testIfCanUseLoader(threadLoader, cxClass)) {
-                        // Thread.getContextClassLoader is not cached since
-                        // its caching prevents it from GC which may lead to
-                        // a memory leak and hides updates to
-                        // Thread.getContextClassLoader
-                        return threadLoader;
-                    }
+            ClassLoader threadLoader
+                = VMBridge.instance.getCurrentThreadClassLoader();
+            if (threadLoader != null && threadLoader != loader) {
+                if (testIfCanUseLoader(threadLoader, cxClass)) {
+                    // Thread.getContextClassLoader is not cached since
+                    // its caching prevents it from GC which may lead to
+                    // a memory leak and hides updates to
+                    // Thread.getContextClassLoader
+                    return threadLoader;
                 }
             }
             applicationClassLoader = loader;
@@ -2467,41 +2387,6 @@ public class Context
         if (sealed) onSealedMutation();
         if (activationNames != null)
             activationNames.remove(name);
-    }
-
-    private static Hashtable threadContexts = new Hashtable(11);
-    private static Object threadLocalCx;
-    private static Method threadLocalGet;
-    private static Method threadLocalSet;
-
-    static {
-        Class cl = Kit.classOrNull("java.lang.ThreadLocal");
-        if (cl != null) {
-            try {
-                threadLocalGet = cl.getMethod("get", null);
-                threadLocalSet = cl.getMethod("set",
-                    new Class[] { ScriptRuntime.ObjectClass });
-                threadLocalCx = cl.newInstance();
-            } catch (Exception ex) { }
-        }
-    }
-
-    // We'd like to use "Thread.getContextClassLoader", but
-    // that's only available on Java2.
-    private static Method method_getContextClassLoader;
-
-    static {
-        // Don't use "Thread.class": that performs the lookup
-        // in the class initializer, which doesn't allow us to
-        // catch possible security exceptions.
-        Class threadClass = Kit.classOrNull("java.lang.Thread");
-        if (threadClass != null) {
-            try {
-                method_getContextClassLoader =
-                    threadClass.getDeclaredMethod("getContextClassLoader",
-                                                   new Class[0]);
-            } catch (Exception ex) { }
-        }
     }
 
     private static String implementationVersion;
