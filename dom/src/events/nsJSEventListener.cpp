@@ -25,18 +25,26 @@
 #include "nsIServiceManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptObjectOwner.h"
 
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+static NS_DEFINE_IID(kIJSEventListenerIID, NS_IJSEVENTLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 /*
  * nsJSEventListener implementation
  */
-nsJSEventListener::nsJSEventListener(JSContext *aContext, JSObject *aObj) 
+nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
+                                     nsIScriptObjectOwner *aOwner) 
 {
   NS_INIT_REFCNT();
+
+  // Both of these are weak references. We are guaranteed
+  // because of the ownership model that this object will be
+  // freed (and the references dropped) before either the context
+  // or the owner goes away.
   mContext = aContext;
-  mJSObj = aObj;
+  mOwner = aOwner;
 }
 
 nsJSEventListener::~nsJSEventListener() 
@@ -50,6 +58,11 @@ nsresult nsJSEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMEventListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIJSEventListenerIID)) {
+    *aInstancePtr = (void*)(nsIJSEventListener*)this;
     AddRef();
     return NS_OK;
   }
@@ -74,6 +87,12 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   JSObject *eventObj;
   char* eventChars;
   nsAutoString eventString;
+  // XXX This doesn't seem like the correct context on which to execute
+  // the event handler. Might need to get one from the JS thread context
+  // stack.
+  JSContext* cx = (JSContext*)mContext->GetNativeContext();
+  JSObject* obj;
+  nsresult result = NS_OK;
 
   if (NS_OK != aEvent->GetType(eventString)) {
     //JS can't handle this event yet or can't handle it at all
@@ -81,35 +100,59 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   eventString.Insert("on", 0, 2);
-
   eventChars = eventString.ToNewCString();
+  
+  result = mOwner->GetScriptObject(mContext, (void**)&obj);
+  if (NS_FAILED(result)) {
+    return result;
+  }
 
-  if (!JS_LookupProperty(mContext, mJSObj, eventChars, &funval)) {
+  if (!JS_LookupProperty(cx, obj, eventChars, &funval)) {
     nsCRT::free(eventChars);
     return NS_ERROR_FAILURE;
   }
 
   nsCRT::free(eventChars);
 
-  if (JS_TypeOfValue(mContext, funval) != JSTYPE_FUNCTION) {
+  if (JS_TypeOfValue(cx, funval) != JSTYPE_FUNCTION) {
     return NS_OK;
   }
 
-  nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(mContext);
-  if (NS_OK != NS_NewScriptKeyEvent(mScriptCX, aEvent, nsnull, (void**)&eventObj)) {
+  result = NS_NewScriptKeyEvent(mContext, aEvent, nsnull, (void**)&eventObj);
+  if (NS_FAILED(result)) {
     return NS_ERROR_FAILURE;
   }
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
-  JSFunction *jsFun = JS_ValueToFunction(mContext, funval);
+  JSFunction *jsFun = JS_ValueToFunction(cx, funval);
   PRBool jsBoolResult;
-  if (!jsFun || NS_FAILED(mScriptCX->CallFunction(mJSObj, jsFun, 1, argv, 
-                                                  &jsBoolResult))) 
+  if (!jsFun)
   {
     return NS_ERROR_FAILURE;
   }
+  result = mContext->CallFunction(obj, jsFun, 1, argv, &jsBoolResult);
+  if (NS_FAILED(result)) {
+    return result;
+  }
   if (!jsBoolResult) 
     aEvent->PreventDefault();
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsJSEventListener::GetEventTarget(nsIScriptContext**aContext, 
+                                  nsIScriptObjectOwner** aOwner)
+{
+  NS_ASSERTION(aContext && aOwner, "null argument");
+  if (aContext) {
+    *aContext = mContext;
+    NS_ADDREF(mContext);
+  }
+  if (aOwner) { 
+    *aOwner = mOwner;
+    NS_ADDREF(mOwner);
+  }
 
   return NS_OK;
 }
@@ -118,11 +161,9 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  * Factory functions
  */
 
-extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void *aObj)
+extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner)
 {
-  JSContext *mCX = (JSContext*)aContext->GetNativeContext();
-  
-  nsJSEventListener* it = new nsJSEventListener(mCX, (JSObject*)aObj);
+  nsJSEventListener* it = new nsJSEventListener(aContext, aOwner);
   if (NULL == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
