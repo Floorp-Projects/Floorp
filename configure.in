@@ -1356,9 +1356,12 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
-MOZ_ARG_ENABLE_BOOL(js-stubs,
-[  --enable-js-stubs       Use XPIDL JavaScript Stubs.],
-  AC_DEFINE(XPIDL_JS_STUBS))
+dnl commenting this out
+dnl according to waterson it is obsolete.
+dnl I'll remove it once I hear back from jband.  
+dnl MOZ_ARG_ENABLE_BOOL(js-stubs,
+dnl [  --enable-js-stubs       Use XPIDL JavaScript Stubs.],
+dnl   AC_DEFINE(XPIDL_JS_STUBS))
 
 dnl ========================================================
 dnl =
