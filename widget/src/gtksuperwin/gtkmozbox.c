@@ -98,6 +98,11 @@ gtk_mozbox_realize (GtkWidget *widget)
 
   widget->window = gdk_window_new (mozbox->parent_window,
 				   &attributes, attributes_mask);
+
+  /* set the back pixmap to None so that you don't end up with the gtk
+     default which is BlackPixel */
+  gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
+
   gdk_window_set_user_data (widget->window, mozbox);
 
   widget->style = gtk_style_attach (widget->style, widget->window);

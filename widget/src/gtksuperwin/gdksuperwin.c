@@ -140,6 +140,10 @@ gdk_superwin_new (GdkWindow *parent_window,
   superwin->shell_window = gdk_window_new (parent_window,
 					   &attributes, attributes_mask);
 
+  /* set the back pixmap to None so that you don't end up with the gtk
+     default which is BlackPixel */
+  gdk_window_set_back_pixmap (superwin->shell_window, NULL, FALSE);
+
   /* if we failed to create a window, die a horrible death */
   g_assert((superwin->shell_window));
 
@@ -151,6 +155,10 @@ gdk_superwin_new (GdkWindow *parent_window,
 
   superwin->bin_window = gdk_window_new (superwin->shell_window,
                                          &attributes, attributes_mask);
+
+  /* set the back pixmap to None so that you don't end up with the gtk
+     default which is BlackPixel */
+  gdk_window_set_back_pixmap (superwin->bin_window, NULL, FALSE);
 
   /* set the backing store for the bin window */
   bin_xwindow = GDK_WINDOW_XWINDOW(superwin->bin_window);
@@ -213,7 +221,16 @@ gdk_superwin_scroll (GdkSuperWin *superwin,
       translate->serial = NextRequest (GDK_DISPLAY());
       superwin->translate_queue = g_list_append (superwin->translate_queue, translate);
     }
-
+  
+  /* If we're scrolling more than a page just shortcut and expose the
+     whole window.  This saves us some X request traffic. */
+  if (dx >= width || -dx >= width ||
+      dy >= height || -dy >= height)
+    {
+      gdk_superwin_expose_area(superwin, 0, 0,
+                               width, height);
+      return;
+    }
 
   gdk_window_move_resize (superwin->bin_window,
 			  MIN (0, -dx), MIN (0, -dy),
