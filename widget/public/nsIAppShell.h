@@ -19,6 +19,7 @@
 #define nsIAppShell_h__
 
 #include "nsString.h"
+#include "nsIEventQueue.h"
 
 /**
  * Flags for the getNativeData function.
@@ -67,13 +68,13 @@ public:
   virtual nsresult Run() = 0;
 
  /**
-  * Prepare to process events
+  * Prepare to process events. 
   */
   
   NS_IMETHOD Spinup() = 0;
 
  /**
-  * Prepare to stop processing events
+  * Prepare to stop processing events.  
   */
   
   NS_IMETHOD Spindown() = 0;

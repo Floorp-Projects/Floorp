@@ -19,6 +19,8 @@
 #ifndef nsIImapProtocol_h___
 #define nsIImapProtocol_h___
 
+#include "nsIEventQueueService.h"
+
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "plevent.h"
@@ -76,9 +78,9 @@ public:
 	// or more importantly the event queue of the consumer of the imap
 	// protocol data. The protocol also needs a host session list.
 	/////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue) = 0;
+	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue) = 0;
 
-    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
+    NS_IMETHOD GetThreadEventQueue(nsIEventQueue **aEventQueue) = 0;
 
     NS_IMETHOD NotifyFEEventCompletion() = 0;
 

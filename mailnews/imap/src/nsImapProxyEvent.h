@@ -33,11 +33,11 @@ class nsImapProxyBase
 {
 public:
     nsImapProxyBase(nsIImapProtocol* aProtocol,
-                    PLEventQueue* aEventQ,
+                    nsIEventQueue* aEventQ,
                     PRThread* aThread);
     virtual ~nsImapProxyBase();
 
-    PLEventQueue* m_eventQueue;
+    nsIEventQueue* m_eventQueue;
     PRThread* m_thread;
     nsIImapProtocol* m_protocol;
 };
@@ -48,7 +48,7 @@ class nsImapLogProxy : public nsIImapLog,
 public:
 	nsImapLogProxy(nsIImapLog* aImapLog,
                  nsIImapProtocol* aProtocol,
-                 PLEventQueue* aEventQ,
+                 nsIEventQueue* aEventQ,
                  PRThread* aThread);
 	virtual ~nsImapLogProxy();
 
@@ -65,7 +65,7 @@ class nsImapMailFolderSinkProxy : public nsIImapMailFolderSink,
 public:
     nsImapMailFolderSinkProxy(nsIImapMailFolderSink* aImapMailFolderSink,
                           nsIImapProtocol* aProtocol,
-                          PLEventQueue* aEventQ,
+                          nsIEventQueue* aEventQ,
                           PRThread* aThread);
     virtual ~nsImapMailFolderSinkProxy();
     
@@ -113,7 +113,7 @@ class nsImapMessageSinkProxy : public nsIImapMessageSink,
 public:
     nsImapMessageSinkProxy(nsIImapMessageSink* aImapMessageSink,
                        nsIImapProtocol* aProtocol,
-                       PLEventQueue* aEventQ,
+                       nsIEventQueue* aEventQ,
                        PRThread* aThread);
     virtual ~nsImapMessageSinkProxy();
 
@@ -156,7 +156,7 @@ class nsImapExtensionSinkProxy : public nsIImapExtensionSink,
 public:
     nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapExtensionSink,
                          nsIImapProtocol* aProtocol,
-                         PLEventQueue* aEventQ,
+                         nsIEventQueue* aEventQ,
                          PRThread* aThread);
     virtual ~nsImapExtensionSinkProxy();
 
@@ -188,7 +188,7 @@ class nsImapMiscellaneousSinkProxy : public nsIImapMiscellaneousSink,
 public:
     nsImapMiscellaneousSinkProxy (nsIImapMiscellaneousSink* aImapMiscellaneousSink,
                               nsIImapProtocol* aProtocol,
-                              PLEventQueue* aEventQ,
+                              nsIEventQueue* aEventQ,
                               PRThread* aThread);
     ~nsImapMiscellaneousSinkProxy ();
 
@@ -244,7 +244,7 @@ struct nsImapEvent : public PLEvent
 	virtual void InitEvent();
 
 	NS_IMETHOD HandleEvent() = 0;
-	void PostEvent(PLEventQueue* aEventQ);
+	void PostEvent(nsIEventQueue* aEventQ);
 
 	static void PR_CALLBACK imap_event_handler(PLEvent* aEvent);
 	static void PR_CALLBACK imap_event_destructor(PLEvent *aEvent);

@@ -111,6 +111,7 @@ nsImapMailFolder::~nsImapMailFolder()
 {
     if (m_mailDatabase)
         m_mailDatabase->Close(PR_TRUE);
+		NS_IF_RELEASE(m_eventQueue);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgFolder)
@@ -437,13 +438,13 @@ nsImapMailFolder::FindAndSelectFolder(nsISupports* aElement,
     aImapMailFolder->GetDepth(&depth);
 
     // Get current thread envent queue
-    PLEventQueue* eventQueue = nsnull;
+    nsCOMPtr<nsIEventQueue> eventQueue;
 
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                            &eventQueue);
+                                            getter_AddRefs(eventQueue));
 
     rv = aImapMailFolder->GetName(&folderName);
     if (folderName && *folderName && PL_strcasecmp(folderName, target) == 0 &&

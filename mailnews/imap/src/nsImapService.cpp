@@ -104,7 +104,7 @@ nsresult nsImapService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsImapService::CreateImapConnection(PLEventQueue *aEventQueue, nsIImapUrl * aImapUrl, 
+nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl, 
                                     nsIImapProtocol ** aImapConnection)
 {
 	nsresult rv = NS_OK;
@@ -167,7 +167,7 @@ nsImapService::GetFolderName(nsIImapUrl* aImapUrl, nsIMsgFolder* aImapFolder,
 }
 
 NS_IMETHODIMP
-nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, 
+nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
                             nsIURL ** aURL)
@@ -219,7 +219,7 @@ nsImapService::SelectFolder(PLEventQueue * aClientEventQueue,
 
 // lite select, used to verify UIDVALIDITY while going on/offline
 NS_IMETHODIMP
-nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue, 
+nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue, 
                                 nsIMsgFolder * aImapMailFolder, 
                                 nsIUrlListener * aUrlListener, 
                                 nsIURL ** aURL)
@@ -279,12 +279,12 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI, nsISupports
 	nsImapUrl * imapUrl = nsnull;
 	nsIImapUrl * url = nsnull;
 	nsresult rv = NS_OK;
-    PLEventQueue *queue;
+  nsCOMPtr<nsIEventQueue> queue;
  	// get the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 
 	if (NS_SUCCEEDED(rv) && pEventQService)
-		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+		rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
 
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
@@ -329,7 +329,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMai
 /*   'x' is the message UID or sequence number list */
 /* will set the 'SEEN' flag */
 NS_IMETHODIMP
-nsImapService::FetchMessage(PLEventQueue * aClientEventQueue, 
+nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, nsIURL ** aURL,
@@ -386,7 +386,7 @@ nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 }
 // utility function to handle basic setup - will probably change when the real connection stuff is done.
 nsresult nsImapService::GetImapConnectionAndUrl(
-    PLEventQueue * aClientEventQueue, nsIImapUrl * &imapUrl,
+    nsIEventQueue * aClientEventQueue, nsIImapUrl * &imapUrl,
     nsIMsgFolder* &aImapMailFolder, nsIImapProtocol * &protocolInstance, 
     nsString2 &urlSpec)
 {
@@ -448,7 +448,7 @@ nsresult nsImapService::CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2
 /*   'x' is the message UID or sequence number list */
 /* will not affect the 'SEEN' flag */
 NS_IMETHODIMP
-nsImapService::GetHeaders(PLEventQueue * aClientEventQueue, 
+nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue, 
                           nsIMsgFolder * aImapMailFolder, 
                           nsIUrlListener * aUrlListener, 
                           nsIURL ** aURL,
@@ -504,7 +504,7 @@ nsImapService::GetHeaders(PLEventQueue * aClientEventQueue,
 
 // Noop, used to update a folder (causes server to send changes).
 NS_IMETHODIMP
-nsImapService::Noop(PLEventQueue * aClientEventQueue, 
+nsImapService::Noop(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener,
                     nsIURL ** aURL)
@@ -550,7 +550,7 @@ nsImapService::Noop(PLEventQueue * aClientEventQueue,
 
 // Expunge, used to "compress" an imap folder,removes deleted messages.
 NS_IMETHODIMP
-nsImapService::Expunge(PLEventQueue * aClientEventQueue, 
+nsImapService::Expunge(nsIEventQueue * aClientEventQueue, 
                        nsIMsgFolder * aImapMailFolder,
                        nsIUrlListener * aUrlListener, 
                        nsIURL ** aURL)
@@ -596,7 +596,7 @@ nsImapService::Expunge(PLEventQueue * aClientEventQueue,
 
 /* old-stle biff that doesn't download headers */
 NS_IMETHODIMP
-nsImapService::Biff(PLEventQueue * aClientEventQueue, 
+nsImapService::Biff(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener, 
                     nsIURL ** aURL,
@@ -646,7 +646,7 @@ nsImapService::Biff(PLEventQueue * aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::DeleteMessages(PLEventQueue * aClientEventQueue, 
+nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue, 
                               nsIMsgFolder * aImapMailFolder, 
                               nsIUrlListener * aUrlListener, 
                               nsIURL ** aURL,
@@ -701,7 +701,7 @@ nsImapService::DeleteMessages(PLEventQueue * aClientEventQueue,
 
 // Delete all messages in a folder, used to empty trash
 NS_IMETHODIMP
-nsImapService::DeleteAllMessages(PLEventQueue * aClientEventQueue, 
+nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue, 
                                  nsIMsgFolder * aImapMailFolder,
                                  nsIUrlListener * aUrlListener, 
                                  nsIURL ** aURL)
@@ -746,7 +746,7 @@ nsImapService::DeleteAllMessages(PLEventQueue * aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::AddMessageFlags(PLEventQueue * aClientEventQueue,
+nsImapService::AddMessageFlags(nsIEventQueue * aClientEventQueue,
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener, 
                                nsIURL ** aURL,
@@ -759,7 +759,7 @@ nsImapService::AddMessageFlags(PLEventQueue * aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::SubtractMessageFlags(PLEventQueue * aClientEventQueue,
+nsImapService::SubtractMessageFlags(nsIEventQueue * aClientEventQueue,
                                     nsIMsgFolder * aImapMailFolder, 
                                     nsIUrlListener * aUrlListener, 
                                     nsIURL ** aURL,
@@ -772,7 +772,7 @@ nsImapService::SubtractMessageFlags(PLEventQueue * aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::SetMessageFlags(PLEventQueue * aClientEventQueue,
+nsImapService::SetMessageFlags(nsIEventQueue * aClientEventQueue,
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener, 
                                nsIURL ** aURL,
@@ -788,7 +788,7 @@ nsImapService::SetMessageFlags(PLEventQueue * aClientEventQueue,
 		"setmsgflags", flags, messageIdsAreUID);
 }
 
-nsresult nsImapService::DiddleFlags(PLEventQueue * aClientEventQueue, 
+nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue, 
                                     nsIMsgFolder * aImapMailFolder, 
                                     nsIUrlListener * aUrlListener,
                                     nsIURL ** aURL,
@@ -896,7 +896,7 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
 }
 
 NS_IMETHODIMP
-nsImapService::DiscoverAllFolders(PLEventQueue* aClientEventQueue,
+nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
                                   nsIMsgFolder* aImapMailFolder,
                                   nsIUrlListener* aUrlListener,
                                   nsIURL** aURL)
@@ -939,7 +939,7 @@ nsImapService::DiscoverAllFolders(PLEventQueue* aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::DiscoverAllAndSubscribedFolders(PLEventQueue* aClientEventQueue,
+nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
                                               nsIMsgFolder* aImapMailFolder,
                                               nsIUrlListener* aUrlListener,
                                               nsIURL** aURL)
@@ -982,7 +982,7 @@ nsImapService::DiscoverAllAndSubscribedFolders(PLEventQueue* aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::DiscoverChildren(PLEventQueue* aClientEventQueue,
+nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
                                 nsIMsgFolder* aImapMailFolder,
                                 nsIUrlListener* aUrlListener,
                                 nsIURL** aURL)
@@ -1037,7 +1037,7 @@ nsImapService::DiscoverChildren(PLEventQueue* aClientEventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::DiscoverLevelChildren(PLEventQueue* aClientEventQueue,
+nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                                      nsIMsgFolder* aImapMailFolder,
                                      nsIUrlListener* aUrlListener,
                                      PRInt32 level,

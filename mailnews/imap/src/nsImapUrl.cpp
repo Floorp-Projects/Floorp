@@ -22,6 +22,8 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
+#include "nsIEventQueueService.h"
+
 #include "nsIURL.h"
 #include "nsImapUrl.h"
 

@@ -131,7 +131,7 @@ public:
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
 
-	nsIMAP4TestDriver(PLEventQueue *queue);
+	nsIMAP4TestDriver(nsIEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
@@ -182,10 +182,10 @@ protected:
 
 	nsresult InitializeProtocol(const char * urlSpec);
 	PRBool m_protocolInitialized; 
-    PLEventQueue *m_eventQueue;
+  nsIEventQueue *m_eventQueue;
 };
 
-nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
+nsIMAP4TestDriver::nsIMAP4TestDriver(nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
     m_inbox = 0;
@@ -196,6 +196,7 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 	m_runTestHarness = PR_TRUE;
 	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
+		NS_IF_ADDREF(queue);
 
 	m_IMAP4Protocol = nsnull; // we can't create it until we have a url...
 	m_msgParser = nsnull;
@@ -262,6 +263,7 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 
 nsIMAP4TestDriver::~nsIMAP4TestDriver()
 {
+	NS_IF_RELEASE(m_eventQueue);
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_IMAP4Protocol);
 	if (m_mailDB)
@@ -682,7 +684,7 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 
 int main()
 {
-    PLEventQueue *queue;
+    nsCOMPtr<nsIEventQueue> queue;
     nsresult result;
 
 	// register all the components we might need - what's the imap service going to be called?
@@ -707,7 +709,7 @@ int main()
 
 	if (NS_FAILED(result)) return result;
 
-    pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) 
 	{
         printf("unable to get event queue.\n");

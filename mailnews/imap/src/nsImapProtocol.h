@@ -65,8 +65,8 @@ public:
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
 	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy);
 	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl);
-	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue);
-    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
+	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue);
+    NS_IMETHOD GetThreadEventQueue(nsIEventQueue **aEventQueue);
     // Notify FE Event has been completed
     NS_IMETHOD NotifyFEEventCompletion();
 
@@ -283,8 +283,8 @@ private:
 	char * ReadNextLineFromInput(char * aDataBuffer,char *& aStartPos, PRUint32 aDataBufferSize, nsIInputStream * aInputStream);
 
     // ******* Thread support *******
-    PLEventQueue *m_sinkEventQueue;
-    PLEventQueue *m_eventQueue;
+    nsIEventQueue *m_sinkEventQueue;
+    nsIEventQueue *m_eventQueue;
     PRThread     *m_thread;
     PRMonitor    *m_dataAvailableMonitor;   // used to notify the arrival of data from the server
 	PRMonitor    *m_urlReadyToRunMonitor;	// used to notify the arrival of a new url to be processed

@@ -21,6 +21,9 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
 #include "nscore.h"
@@ -65,6 +68,7 @@ const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -248,7 +252,7 @@ nsImapProtocol::nsImapProtocol() :
 		IMAP = PR_NewLogModule("IMAP");
 }
 
-nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue)
+nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue)
 {
 	NS_PRECONDITION(aSinkEventQueue && aHostSessionList, 
              "oops...trying to initalize with a null sink event queue!");
@@ -257,6 +261,8 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
 
 	m_displayConsumer = nsnull;
     m_sinkEventQueue = aSinkEventQueue;
+		NS_IF_ADDREF(m_sinkEventQueue);
+
     m_hostSessionList = aHostSessionList;
     m_parser.SetHostSessionList(aHostSessionList);
     m_parser.SetFlagState(&m_flagState);
@@ -310,7 +316,7 @@ nsImapProtocol::~nsImapProtocol()
     NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
     if (m_eventQueue)
     {
-        PL_DestroyEventQueue(m_eventQueue);
+        NS_RELEASE(m_eventQueue);
         m_eventQueue = nsnull;
     }
 
@@ -530,8 +536,26 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
         PR_CExitMonitor(me);
         return;
     }
-    me->m_eventQueue = PL_CreateEventQueue("ImapProtocolThread",
+
+		// Wrap the PLQueue we're going to make in an nsIEventQueue
+    nsIEventQueueService* pEventQService;
+    nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          nsIEventQueueService::GetIID(),
+                                          (nsISupports**)&pEventQService);
+		if (NS_FAILED(result))
+		  return;
+		
+		PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread",
                                        PR_GetCurrentThread());
+
+		if (NS_FAILED(result = pEventQService->CreateFromPLEventQueue(aPLQueue,
+			                                                            &me->m_eventQueue))) {
+			return;
+		}
+
+		// Release the eventqueueservice
+		nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
+
     NS_ASSERTION(me->m_eventQueue, 
                  "Unable to create imap thread event queue.\n");
     if (!me->m_eventQueue)
@@ -545,7 +569,7 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
     // call the platform specific main loop ....
     me->ImapThreadMainLoop();
 
-    PR_DestroyEventQueue(me->m_eventQueue);
+		NS_IF_RELEASE(me->m_eventQueue);
     me->m_eventQueue = nsnull;
 
     // ***** Important need to remove the connection out from the connection
@@ -564,12 +588,14 @@ nsImapProtocol::ImapThreadIsRunning()
 }
 
 NS_IMETHODIMP
-nsImapProtocol::GetThreadEventQueue(PLEventQueue **aEventQueue)
+nsImapProtocol::GetThreadEventQueue(nsIEventQueue **aEventQueue)
 {
     // *** should subclassing PLEventQueue and ref count it ***
     // *** need to find a way to prevent dangling pointer ***
     // *** a callback mechanism or a semaphor control thingy ***
-    PR_CEnterMonitor(this);
+    
+		PR_CEnterMonitor(this);
+		NS_IF_ADDREF(m_eventQueue);
     if (aEventQueue)
         *aEventQueue = m_eventQueue;
     PR_CExitMonitor(this);

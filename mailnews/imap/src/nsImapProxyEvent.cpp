@@ -19,6 +19,9 @@
 #include "nscore.h"
 #include "msgCore.h"		// precompiled header
 #include "nspr.h"
+
+#include "nsIEventQueueService.h"
+
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
@@ -44,12 +47,12 @@ nsImapEvent::InitEvent()
 }
 
 void
-nsImapEvent::PostEvent(PLEventQueue* aEventQ)
+nsImapEvent::PostEvent(nsIEventQueue* aEventQ)
 {
 		NS_PRECONDITION(nsnull != aEventQ, "PostEvent: aEventQ is null");
 
 		InitEvent();
-		PL_PostEvent(aEventQ, this);
+		aEventQ->PostEvent(this);
 }
 
 void PR_CALLBACK
@@ -67,7 +70,7 @@ nsImapEvent::imap_event_destructor(PLEvent *aEvent)
 }
 
 nsImapProxyBase::nsImapProxyBase(nsIImapProtocol* aProtocol,
-                                 PLEventQueue* aEventQ,
+                                 nsIEventQueue* aEventQ,
                                  PRThread* aThread)
 {
     NS_ASSERTION (aProtocol && aEventQ && aThread,
@@ -77,17 +80,20 @@ nsImapProxyBase::nsImapProxyBase(nsIImapProtocol* aProtocol,
     NS_IF_ADDREF(m_protocol);
 		
 		m_eventQueue = aEventQ;
+		NS_IF_ADDREF(m_eventQueue);
+
 		m_thread = aThread;
 }
 
 nsImapProxyBase::~nsImapProxyBase()
 {
     NS_IF_RELEASE (m_protocol);
+		NS_IF_RELEASE(m_eventQueue);
 }
 
 nsImapLogProxy::nsImapLogProxy(nsIImapLog* aImapLog, 
                                nsIImapProtocol* aProtocol,
-															 PLEventQueue* aEventQ,
+															 nsIEventQueue* aEventQ,
 															 PRThread* aThread) :
     nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
@@ -166,7 +172,7 @@ nsImapLogProxyEvent::HandleEvent()
 nsImapMailFolderSinkProxy::nsImapMailFolderSinkProxy(
     nsIImapMailFolderSink* aImapMailFolderSink,
     nsIImapProtocol* aProtocol,
-    PLEventQueue* aEventQ,
+    nsIEventQueue* aEventQ,
     PRThread* aThread) : nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
     NS_ASSERTION (aImapMailFolderSink, 
@@ -584,7 +590,7 @@ nsImapMailFolderSinkProxy::AbortHeaderParseStream(nsIImapProtocol* aProtocol)
 
 nsImapMessageSinkProxy::nsImapMessageSinkProxy(nsIImapMessageSink* aImapMessageSink,
                                        nsIImapProtocol* aProtocol,
-                                       PLEventQueue* aEventQ,
+                                       nsIEventQueue* aEventQ,
                                        PRThread* aThread) :
     nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
@@ -863,7 +869,7 @@ nsImapMessageSinkProxy::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
 
 nsImapExtensionSinkProxy::nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapExtensionSink,
                                            nsIImapProtocol* aProtocol,
-                                           PLEventQueue* aEventQ,
+                                           nsIEventQueue* aEventQ,
                                            PRThread* aThread) :
     nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
@@ -1099,7 +1105,7 @@ nsImapExtensionSinkProxy::SetFolderAdminURL(nsIImapProtocol* aProtocol,
 nsImapMiscellaneousSinkProxy::nsImapMiscellaneousSinkProxy(
     nsIImapMiscellaneousSink* aImapMiscellaneousSink, 
     nsIImapProtocol* aProtocol,
-    PLEventQueue* aEventQ,
+    nsIEventQueue* aEventQ,
     PRThread* aThread) : nsImapProxyBase(aProtocol, aEventQ, aThread)
 {
     NS_ASSERTION (aImapMiscellaneousSink, 

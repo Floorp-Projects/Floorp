@@ -48,7 +48,7 @@ class nsIImapMessageSink;
 class nsIUrlListener;
 class nsIURL;
 class nsIImapUrl;
-struct PLEventQueue;
+class nsIEventQueue;
 class nsIMsgFolder;
 
 class nsIImapService : public nsISupports
@@ -56,87 +56,87 @@ class nsIImapService : public nsISupports
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IIMAPSERVICE_IID; return iid; }
 
-	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
+	NS_IMETHOD CreateImapConnection (nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
                                      nsIImapProtocol ** aImapConnection) = 0;
 	
 	// As always, you can pass in null for the url listener and the url if you don't require either.....
 	// aClientEventQueue is the event queue of the event sinks. We post events into this queue.
 	// mscott -- eventually this function will take in the account (identity/incoming server) associated with 
 	// the request
-	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
                             nsIURL ** aURL) = 0;
-	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD LiteSelectFolder(nsIEventQueue * aClientEventQueue, 
                                 nsIMsgFolder * aImapMailFolder,  
                                 nsIUrlListener * aUrlListener, 
                                 nsIURL ** aURL) = 0;
 
-	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD FetchMessage(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIUrlListener * aUrlListener, nsIURL ** aURL,
 							nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID) = 0;
-	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD Noop(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
-	NS_IMETHOD GetHeaders(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD GetHeaders(nsIEventQueue * aClientEventQueue, 
                           nsIMsgFolder * aImapMailFolder, 
                           nsIUrlListener * aUrlListener, nsIURL ** aURL,
                           const char *messageIdentifierList,
                           PRBool messageIdsAreUID) = 0;
-	NS_IMETHOD Expunge(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD Expunge(nsIEventQueue * aClientEventQueue, 
                        nsIMsgFolder * aImapMailFolder,
                        nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
-	NS_IMETHOD Biff(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD Biff(nsIEventQueue * aClientEventQueue, 
                     nsIMsgFolder * aImapMailFolder,
                     nsIUrlListener * aUrlListener, nsIURL ** aURL,
                     PRUint32 uidHighWater) = 0;
-	NS_IMETHOD DeleteMessages(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD DeleteMessages(nsIEventQueue * aClientEventQueue, 
                               nsIMsgFolder * aImapMailFolder, 
                               nsIUrlListener * aUrlListener, nsIURL ** aURL,
                               const char *messageIdentifierList,
                               PRBool messageIdsAreUID) = 0;
-	NS_IMETHOD DeleteAllMessages(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD DeleteAllMessages(nsIEventQueue * aClientEventQueue, 
                                  nsIMsgFolder * aImapMailFolder,
                                  nsIUrlListener * aUrlListener, 
                                  nsIURL ** aURL) = 0;
-	NS_IMETHOD AddMessageFlags(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD AddMessageFlags(nsIEventQueue * aClientEventQueue, 
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener, nsIURL ** aURL,
                                const char *messageIdentifierList,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID) = 0;
-	NS_IMETHOD SubtractMessageFlags(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD SubtractMessageFlags(nsIEventQueue * aClientEventQueue, 
                                     nsIMsgFolder * aImapMailFolder, 
                                     nsIUrlListener * aUrlListener, 
                                     nsIURL ** aURL,
                                     const char *messageIdentifierList,
                                     imapMessageFlagsType flags,
                                     PRBool messageIdsAreUID) = 0;
-	NS_IMETHOD SetMessageFlags(PLEventQueue * aClientEventQueue, 
+	NS_IMETHOD SetMessageFlags(nsIEventQueue * aClientEventQueue, 
                                nsIMsgFolder * aImapMailFolder, 
                                nsIUrlListener * aUrlListener, nsIURL ** aURL,
                                const char *messageIdentifierList,
                                imapMessageFlagsType flags,
                                PRBool messageIdsAreUID) = 0;
 
-    NS_IMETHOD DiscoverAllFolders(PLEventQueue* aClientEventQueue,
+    NS_IMETHOD DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
                                   nsIMsgFolder* aImapMailFolder,
                                   nsIUrlListener* aUrlListener,
                                   nsIURL** aURL) = 0;
-    NS_IMETHOD DiscoverAllAndSubscribedFolders(PLEventQueue*
+    NS_IMETHOD DiscoverAllAndSubscribedFolders(nsIEventQueue*
                                                aClientEventQueue,
                                                nsIMsgFolder* aImapMailFolder,
                                                nsIUrlListener* aUrlListener,
                                                nsIURL** aURL) = 0;
-    NS_IMETHOD DiscoverChildren(PLEventQueue* aClientEventQueue,
+    NS_IMETHOD DiscoverChildren(nsIEventQueue* aClientEventQueue,
                                 nsIMsgFolder* aImapMailFolder,
                                 nsIUrlListener* aUrlListener,
                                 nsIURL** aURL) = 0;
-    NS_IMETHOD DiscoverLevelChildren(PLEventQueue* aClientEventQueue,
+    NS_IMETHOD DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                                      nsIMsgFolder* aImapMailFolder,
                                      nsIUrlListener* aUrlListener,
                                      PRInt32 level,
