@@ -277,8 +277,13 @@ NS_IMETHODIMP nsMsgSearchSession::InterruptSearch()
 {
   if (m_window)
   {
-    ReleaseFolderDBRef();
-    m_idxRunningScope = m_scopeList.Count(); // this'll make us not run another url
+    EnableFolderNotifications(PR_TRUE);
+    while (m_idxRunningScope < m_scopeList.Count())
+    {
+      ReleaseFolderDBRef();
+      m_idxRunningScope++;
+    }
+    //m_idxRunningScope = m_scopeList.Count() so it will make us not run another url
     m_window->StopUrls();
   }
   if (m_backgroundTimer)
@@ -368,6 +373,7 @@ NS_IMETHODIMP nsMsgSearchSession::OnStopRunningUrl(nsIURI *url, nsresult aExitCo
   if (NS_SUCCEEDED(rv) && runningAdapter)
   {
     runningAdapter->CurrentUrlDone(aExitCode);
+    EnableFolderNotifications(PR_TRUE);
     ReleaseFolderDBRef();
   }
   m_idxRunningScope++;
@@ -414,7 +420,6 @@ nsresult nsMsgSearchSession::Initialize()
 		// NS_ASSERTION(scopeTerm->IsValid());
 
 		err = scopeTerm->InitializeAdapter (m_termList);
-
 //		if (scopeTerm->m_folder->GetType() == FOLDER_MAIL)
 //			m_offlineProgressTotal += scopeTerm->m_folder->GetTotalMessages();
 	}
@@ -481,17 +486,18 @@ nsresult nsMsgSearchSession::GetNextUrl()
 
   m_urlQueue.CStringAt(m_idxRunningScope, nextUrl);
   nsMsgSearchScopeTerm *currentTerm = GetRunningScope();
+  EnableFolderNotifications(PR_FALSE);
   nsCOMPtr <nsIMsgFolder> folder = currentTerm->m_folder;
   if (folder)
   {
     nsXPIDLCString folderUri;
     folder->GetURI(getter_Copies(folderUri));
-  nsresult rv = GetMessageServiceFromURI(folderUri.get(), getter_AddRefs(msgService));
+    nsresult rv = GetMessageServiceFromURI(folderUri.get(), getter_AddRefs(msgService));
 
-  if (NS_SUCCEEDED(rv) && msgService && currentTerm)
-    msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.get());
+    if (NS_SUCCEEDED(rv) && msgService && currentTerm)
+      msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.get());
 
-	return rv;
+	  return rv;
   }
   return NS_OK;
 }
@@ -534,6 +540,7 @@ nsresult nsMsgSearchSession::StartTimer()
 
 nsresult nsMsgSearchSession::SearchWOUrls ()
 {
+  EnableFolderNotifications(PR_FALSE);
   return StartTimer();
 }
 
@@ -682,8 +689,11 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
       *aDone = PR_TRUE;
     if (*aDone || NS_FAILED(rv))
     {
+      EnableFolderNotifications(PR_TRUE);
       ReleaseFolderDBRef();
       m_idxRunningScope++;
+      EnableFolderNotifications(PR_FALSE);
+
       //			if (m_idxRunningScope < m_scopeList.Count())
       //  			UpdateStatusBar (MK_MSG_SEARCH_STATUS);
     }
@@ -694,6 +704,19 @@ nsresult nsMsgSearchSession::TimeSliceSerial (PRBool *aDone)
   {
     *aDone = PR_TRUE;
     return NS_OK;
+  }
+}
+
+void 
+nsMsgSearchSession::EnableFolderNotifications(PRBool aEnable)
+{
+  nsMsgSearchScopeTerm *scope = GetRunningScope();
+  if (scope)
+  {
+    nsCOMPtr<nsIMsgFolder> folder;
+    scope->GetFolder(getter_AddRefs(folder));
+    if (folder)  //enable msg count notifications
+      folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, aEnable, PR_FALSE);
   }
 }
 

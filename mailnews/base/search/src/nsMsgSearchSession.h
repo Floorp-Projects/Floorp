@@ -77,6 +77,7 @@ protected:
 	nsresult SearchWOUrls ();
 	nsresult GetNextUrl();
   nsresult NotifyListenersDone(nsresult status);
+  void EnableFolderNotifications(PRBool aEnable);
   void ReleaseFolderDBRef();
 
 	nsMsgSearchScopeTermArray m_scopeList;
