@@ -14,6 +14,10 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 
+// we should really get this from "CHBrowserService.h",
+// but that requires linkage and extra search paths.
+static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
+
 #import "ExtendedTableView.h"
 
 // prefs for keychain password autofill
@@ -195,6 +199,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(void) dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   // NOTE: no need to worry about mCachedPermissions or mCachedCookies because if we're going away
   // the respective sheets have closed and cleaned up.
   
@@ -203,11 +209,26 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   [super dealloc];
 }
 
+- (void)xpcomShutdown:(NSNotification*)notification
+{
+  // these null the pointer
+  NS_IF_RELEASE(mPermissionManager);
+  NS_IF_RELEASE(mCookieManager);
+}
+
 -(void) mainViewDidLoad
 {
   if (!mPrefService)
     return;
-    
+  
+  // we need to register for xpcom shutdown so that we can clear the
+  // services before XPCOM is shut down. We can't rely on dealloc, 
+  // because we don't know when it will get called (we might be autoreleased).
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                              selector:@selector(xpcomShutdown:)
+                              name:XPCOMShutDownNotificationName
+                              object:nil];
+
   // Hookup cookie prefs.
   PRInt32 acceptCookies = kAcceptAllCookies;
   mPrefService->GetIntPref("network.cookie.cookieBehavior", &acceptCookies);
