@@ -27,6 +27,7 @@ DLLNAME=htmldshl
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 XPIDLSRCS=						\
+		.\nsCHTMLDocShell.idl	\
 		.\nsIHTMLDocShell.idl	\
 		$(NULL)
 
