@@ -73,18 +73,25 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 //end
 
 
-//
-// CLASS nsFormSubmission
-//
-
+/**
+ * Helper superclass implementation of nsIFormSubmission, providing common
+ * methods that most of the specific implementations need and use.
+ */
 class nsFormSubmission : public nsIFormSubmission {
 
 public:
 
+  /**
+   * @param aCharset the charset of the form as a string
+   * @param aEncoder an encoder that will encode Unicode names and values into
+   *        bytes to be sent over the wire (usually a charset transformation)
+   * @param aFormProcessor a form processor who can listen to 
+   * @param aBidiOptions the BIDI options flags for the current pres context
+   */
   nsFormSubmission(const nsAString& aCharset,
-                  nsISaveAsCharset* aEncoder,
-                  nsIFormProcessor* aFormProcessor,
-                  PRInt32 aBidiOptions)
+                   nsISaveAsCharset* aEncoder,
+                   nsIFormProcessor* aFormProcessor,
+                   PRInt32 aBidiOptions)
     : mCharset(aCharset),
       mEncoder(aEncoder),
       mFormProcessor(aFormProcessor),
@@ -101,54 +108,124 @@ public:
                       nsIContent* aSource, nsIPresContext* aPresContext,
                       nsIDocShell** aDocShell, nsIRequest** aRequest);
 
-
+  /**
+   * Called to initialize the submission.  Perform any initialization that may
+   * fail here.  Subclasses *must* implement this.
+   */
   NS_IMETHOD Init() = 0;
 
 protected:
-  // this is essentially the nsFormSubmission interface
+  // this is essentially the nsFormSubmission interface (to be overridden)
+  /**
+   * Given a URI and the current submission, create the final URI and data
+   * stream that will be submitted.  Subclasses *must* implement this.
+   *
+   * @param aURL the URL being submitted to [INOUT]
+   * @param aPostDataStream a data stream for POST data [OUT]
+   */
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURL,
                                   nsIInputStream** aPostDataStream) = 0;
 
   // Helpers
+  /**
+   * Call to have the form processor listen in when a name/value pair is found
+   * to be submitted.
+   *
+   * @param aSource the HTML element the name/value is associated with
+   * @param aName the name that will be submitted
+   * @param aValue the value that will be submitted
+   * @return the new value (or null if the value was not changed)
+   */
   nsString* ProcessValue(nsIDOMHTMLElement* aSource,
                          const nsAString& aName, const nsAString& aValue);
 
   // Encoding Helpers
-  char* EncodeVal(const nsAString& aIn);
-  char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
+  /**
+   * Encode a Unicode string to bytes using the encoder (or just do ToNewCString
+   * if there is no encoder).
+   * @param aStr the string to encode
+   * @return a char* pointing to the encoded bytes (use nsMemory::Free to free)
+   */
+  char* EncodeVal(const nsAString& aStr);
+  /**
+   * Encode a Unicode string to bytes using an encoder.  (Used by EncodeVal)
+   * @param aStr the string to encode
+   * @param aLen the length of aStr
+   * @param aEncoder the encoder to encode the bytes with (cannot be null)
+   * @return a char* pointing to the encoded bytes (use nsMemory::Free to free)
+   */
+  char* UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
                           nsISaveAsCharset* aEncoder);
 
+  /** The name of the encoder charset */
   nsString mCharset;
+  /** The encoder that will encode Unicode names and values into
+   *  bytes to be sent over the wire (usually a charset transformation)
+   */
   nsCOMPtr<nsISaveAsCharset> mEncoder;
+  /** A form processor who can listen to values */
   nsCOMPtr<nsIFormProcessor> mFormProcessor;
+  /** The BIDI options flags for the current pres context */
   PRInt32 mBidiOptions;
 
 public:
   // Static helpers
-  static void GetSubmitCharset(nsIForm* form,
+
+  /**
+   * Get the submit charset for a form (suitable to pass in to the constructor).
+   * @param aForm the form in question
+   * @param aCtrlsModAtSubmit BIDI controls text mode.  Unused in non-BIDI
+   *        builds.
+   * @param aCharset the returned charset [OUT]
+   */
+  static void GetSubmitCharset(nsIForm* aForm,
                                PRUint8 aCtrlsModAtSubmit,
-                               nsAString& oCharset);
-  static nsresult GetEncoder(nsIForm* form,
+                               nsAString& aCharset);
+  /**
+   * Get the encoder for a form (suitable to pass in to the constructor).
+   * @param aForm the form in question
+   * @param aPresContext the pres context in which we are submitting
+   * @param aCharset the charset of the form
+   * @param aEncoder the returned encoder [OUT]
+   */
+  static nsresult GetEncoder(nsIForm* aForm,
                              nsIPresContext* aPresContext,
                              const nsAString& aCharset,
-                             nsISaveAsCharset** encoder);
-  static nsresult GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue);
+                             nsISaveAsCharset** aEncoder);
+  /**
+   * Get an attribute of a form as int, provided that it is an enumerated value.
+   * @param aForm the form in question
+   * @param aAtom the attribute (for example, nsHTMLAtoms::enctype) to get
+   * @param aValue the result (will not be set at all if the attribute does not
+   *        exist on the form, so *make sure you provide a default value*.)
+   *        [OUT]
+   */
+  static void GetEnumAttr(nsIForm* aForm, nsIAtom* aAtom, PRInt32* aValue);
 };
 
 
-//
-// CLASS nsFSURLEncoded
-//
+/**
+ * Handles URL encoded submissions, both of the POST and GET variety.
+ */
 class nsFSURLEncoded : public nsFormSubmission
 {
 public:
+  /**
+   * @param aCharset the charset of the form as a string
+   * @param aEncoder an encoder that will encode Unicode names and values into
+   *        bytes to be sent over the wire (usually a charset transformation)
+   * @param aFormProcessor a form processor who can listen to 
+   * @param aBidiOptions the BIDI options flags for the current pres context
+   * @param aMethod the method of the submit (either NS_FORM_METHOD_GET or
+   *        NS_FORM_METHOD_POST).
+   */
   nsFSURLEncoded(const nsAString& aCharset,
                  nsISaveAsCharset* aEncoder,
                  nsIFormProcessor* aFormProcessor,
                  PRInt32 aBidiOptions,
                  PRInt32 aMethod)
     : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions),
-      mMethod(aMethod), mNumPairs(0)
+      mMethod(aMethod)
   { }
   virtual ~nsFSURLEncoded() { }
  
@@ -164,6 +241,8 @@ public:
                              nsIInputStream* aStream,
                              const nsACString& aContentType,
                              PRBool aMoreFilesToCome);
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+      { *aAcceptsFiles = PR_FALSE; return NS_OK; }
 
   NS_IMETHOD Init();
 
@@ -171,18 +250,25 @@ protected:
   // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
-      { *aAcceptsFiles = PR_FALSE; return NS_OK; }
 
   // Helpers
-  void URLEncode(const nsAString& aString, nsCString& aEncoded);
+  /**
+   * URL encode a Unicode string by encoding it to bytes, converting linebreaks
+   * properly, and then escaping many bytes as %xx.
+   *
+   * @param aStr the string to encode
+   * @param aEncoded the encoded string [OUT]
+   */
+  void URLEncode(const nsAString& aStr, nsCString& aEncoded);
 
 private:
-  // Method (NS_FORM_METHOD_(POST|GET))
+  /**
+   * The method of the submit (either NS_FORM_METHOD_GET or
+   * NS_FORM_METHOD_POST).
+   */
   PRInt32 mMethod;
-  // Number of pairs parsed so far
-  PRInt32 mNumPairs;
 
+  /** The query string so far (the part after the ?) */
   nsCString mQueryString;
 };
 
@@ -219,7 +305,7 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   // Append data to string
   //
-  if (mNumPairs == 0) {
+  if (mQueryString.IsEmpty()) {
     mQueryString += convName + NS_LITERAL_CSTRING("=") + convValue;
   } else {
     mQueryString += NS_LITERAL_CSTRING("&") + convName
@@ -227,8 +313,6 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   }
 
   delete processedValue;
-
-  mNumPairs++;
 
   return NS_OK;
 }
@@ -241,8 +325,7 @@ nsFSURLEncoded::AddNameFilePair(nsIDOMHTMLElement* aSource,
                                 const nsACString& aContentType,
                                 PRBool aMoreFilesToCome)
 {
-  AddNameValuePair(aSource,aName,aFilename);
-  return NS_OK;
+  return AddNameValuePair(aSource,aName,aFilename);
 }
 
 //
@@ -251,7 +334,6 @@ nsFSURLEncoded::AddNameFilePair(nsIDOMHTMLElement* aSource,
 NS_IMETHODIMP
 nsFSURLEncoded::Init()
 {
-  mNumPairs = 0;
   mQueryString.Truncate();
   return NS_OK;
 }
@@ -333,12 +415,12 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
 // i18n helper routines
 void
-nsFSURLEncoded::URLEncode(const nsAString& aString, nsCString& aEncoded)
+nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 {
-  char* inBuf = EncodeVal(aString);
+  char* inBuf = EncodeVal(aStr);
 
   if (!inBuf)
-    inBuf = ToNewCString(aString);
+    inBuf = ToNewCString(aStr);
 
   // convert to CRLF breaks
   char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
@@ -354,12 +436,20 @@ nsFSURLEncoded::URLEncode(const nsAString& aString, nsCString& aEncoded)
 
 
 
-//
-// CLASS nsFSMultipartFormData
-//
+/**
+ * Handle multipart/form-data encoding, which does files as well as normal
+ * inputs.  This always does POST.
+ */
 class nsFSMultipartFormData : public nsFormSubmission
 {
 public:
+  /**
+   * @param aCharset the charset of the form as a string
+   * @param aEncoder an encoder that will encode Unicode names and values into
+   *        bytes to be sent over the wire (usually a charset transformation)
+   * @param aFormProcessor a form processor who can listen to 
+   * @param aBidiOptions the BIDI options flags for the current pres context
+   */
   nsFSMultipartFormData(const nsAString& aCharset,
                         nsISaveAsCharset* aEncoder,
                         nsIFormProcessor* aFormProcessor,
@@ -378,6 +468,8 @@ public:
                              nsIInputStream* aStream,
                              const nsACString& aContentType,
                              PRBool aMoreFilesToCome);
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+      { *aAcceptsFiles = PR_TRUE; return NS_OK; }
 
   NS_IMETHOD Init();
 
@@ -385,17 +477,43 @@ protected:
   // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
-      { *aAcceptsFiles = PR_TRUE; return NS_OK; }
 
   // Helpers
   nsresult AddPostDataStream();
 
 private:
+  /**
+   * Get whether we are supposed to be doing backwards compatible submit, which
+   * causes us to leave off the mandatory Content-Transfer-Encoding header.
+   * This used to cause Bad Things, including server crashes.
+   *
+   * It is hoped that we can get rid of this at some point, but that will take
+   * a lot of testing or some other browsers that send the header and have not
+   * had problems.
+   */
   PRBool mBackwardsCompatibleSubmit;
 
+  /**
+   * The post data stream as it is so far.  This is a collection of smaller
+   * chunks--string streams and file streams interleaved to make one big POST
+   * stream.
+   */
   nsCOMPtr<nsIMultiplexInputStream> mPostDataStream;
+
+  /**
+   * The current string chunk.  When a file is hit, the string chunk gets
+   * wrapped up into an input stream and put into mPostDataStream so that the
+   * file input stream can then be appended and everything is in the right
+   * order.  Then the string chunk gets appended to again as we process more
+   * name/value pairs.
+   */
   nsCString mPostDataChunk;
+
+  /**
+   * The boundary string to use after each "part" (the boundary that marks the
+   * end of a value).  This is computed randomly and is different for each
+   * submission.
+   */
   nsCString mBoundary;
 };
 
@@ -859,7 +977,7 @@ nsFormSubmission::GetEncoder(nsIForm* form,
 
 // i18n helper routines
 char*
-nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
+nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
                                     nsISaveAsCharset* aEncoder)
 {
   nsresult rv = NS_OK;
@@ -874,10 +992,10 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
   if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
      && mCharset.Equals(NS_LITERAL_STRING("windows-1256"),
                 nsCaseInsensitiveStringComparator())) {
-    Conv_06_FE_WithReverse(nsString(aSrc),
+    Conv_06_FE_WithReverse(nsString(aStr),
                            newBuffer,
                            textDirAtSubmit);
-    aSrc = (PRUnichar*)newBuffer.get();
+    aStr = (PRUnichar*)newBuffer.get();
     aLen=newBuffer.Length();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_LOGICAL
@@ -885,8 +1003,8 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
                              nsCaseInsensitiveStringComparator())) {
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
-    Conv_FE_06(nsString(aSrc), newBuffer);
-    aSrc = (PRUnichar*)newBuffer.get();
+    Conv_FE_06(nsString(aStr), newBuffer);
+    aStr = (PRUnichar*)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     if (textDirAtSubmit == 2) { //RTL
@@ -894,36 +1012,36 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
       PRUint32 loop = aLen;
       PRUint32 z;
       for (z=0; z<=aLen; z++) {
-        temp.SetCharAt((PRUnichar)aSrc[loop], z);
+        temp.SetCharAt((PRUnichar)aStr[loop], z);
         loop--;
       }
     }
-    aSrc = (PRUnichar*)temp.get();
+    aStr = (PRUnichar*)temp.get();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
           && mCharset.Equals(NS_LITERAL_STRING("IBM864"),
                              nsCaseInsensitiveStringComparator())
                   && textDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
-    Conv_FE_06(nsString(aSrc), newBuffer);
-    aSrc = (PRUnichar*)newBuffer.get();
+    Conv_FE_06(nsString(aStr), newBuffer);
+    aStr = (PRUnichar*)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     //Now we need to reverse the Buffer, it is by searching the buffer
     PRUint32 loop = aLen;
     PRUint32 z;
     for (z=0; z<=aLen; z++) {
-      temp.SetCharAt((PRUnichar)aSrc[loop], z);
+      temp.SetCharAt((PRUnichar)aStr[loop], z);
       loop--;
     }
-    aSrc = (PRUnichar*)temp.get();
+    aStr = (PRUnichar*)temp.get();
   }
 #endif
 
   
   char* res = nsnull;
-  if(aSrc && aSrc[0]) {
-    rv = aEncoder->Convert(aSrc, &res);
+  if(aStr && aStr[0]) {
+    rv = aEncoder->Convert(aStr, &res);
     NS_ASSERTION(NS_SUCCEEDED(rv), "conversion failed");
   } 
   if(! res)
@@ -933,7 +1051,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen,
 
 
 // static
-nsresult
+void
 nsFormSubmission::GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue)
 {
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(form);
@@ -941,22 +1059,21 @@ nsFormSubmission::GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue)
     nsHTMLValue value;
     if (content->GetHTMLAttribute(atom, value) == NS_CONTENT_ATTR_HAS_VALUE) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        (*aValue) = value.GetIntValue();
+        *aValue = value.GetIntValue();
       }
     }
   }
-  return NS_OK;
 }
 
 char*
-nsFormSubmission::EncodeVal(const nsAString& aIn)
+nsFormSubmission::EncodeVal(const nsAString& aStr)
 {
   char* retval;
   if (mEncoder) {
-    retval = UnicodeToNewBytes(PromiseFlatString(aIn).get(), aIn.Length(),
+    retval = UnicodeToNewBytes(PromiseFlatString(aStr).get(), aStr.Length(),
                                mEncoder);
   } else {
-    retval = ToNewCString(aIn);
+    retval = ToNewCString(aStr);
   }
 
   return retval;
