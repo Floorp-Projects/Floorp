@@ -17,6 +17,7 @@
  */
 
 #include "nsToolbar.h"
+#include "nsHTToolbarDataModel.h"
 #include "nsWidgetsCID.h"
 #include "nspr.h"
 #include "nsIWidget.h"
@@ -25,6 +26,8 @@
 #include "nsIToolbarItemHolder.h"
 #include "nsImageButton.h"
 #include "nsRepository.h"
+#include "nsIDeviceContext.h"
+
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCToolbarCID,  NS_TOOLBAR_CID);
@@ -47,6 +50,22 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIToolbarItemHolderIID, NS_ITOOLBARITEMHOLDER_IID);
 static NS_DEFINE_IID(kToolbarItemHolderCID, NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kIImageButtonListenerIID, NS_IIMAGEBUTTONLISTENER_IID);
+
+static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
+
+
+static nsEventStatus PR_CALLBACK
+HandleToolbarEvent(nsGUIEvent *aEvent)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+  nsIContentConnector * toolbar;
+  if (NS_OK == aEvent->widget->QueryInterface(kIContentConnectorIID,(void**)&toolbar)) {
+    result = toolbar->HandleEvent(aEvent);
+    NS_RELEASE(toolbar);
+  }
+  return result;
+}
+
 
 //------------------------------------------------------------
 class ToolbarLayoutInfo {
@@ -89,7 +108,7 @@ static CNavTokenDeallocator gItemInfoKiller;*/
 //-- nsToolbar Constructor
 //--------------------------------------------------------------------
 nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
-	mImageGroup(nsnull)
+	mImageGroup(nsnull), mDataModel(new nsHTToolbarDataModel)
 {
   NS_INIT_REFCNT();
 
@@ -114,6 +133,8 @@ nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
 //--------------------------------------------------------------------
 nsToolbar::~nsToolbar()
 {
+  delete mDataModel;
+  
   NS_IF_RELEASE(mToolbarMgr);
   NS_IF_RELEASE(mImageGroup);
 
@@ -210,6 +231,32 @@ HandleTabEvent(nsGUIEvent *aEvent)
 
 
 //
+// Create
+//
+// Override to setup event listeners at widget creation time.
+//
+NS_METHOD
+nsToolbar :: Create(nsIWidget *aParent,
+                    const nsRect &aRect,
+                    EVENT_CALLBACK aHandleEventFunction,
+                    nsIDeviceContext *aContext,
+                    nsIAppShell *aAppShell,
+                    nsIToolkit *aToolkit,
+                    nsWidgetInitData *aInitData)
+{
+  nsresult answer = ChildWindow::Create(aParent, aRect,
+     nsnull != aHandleEventFunction ? aHandleEventFunction : HandleToolbarEvent,
+     aContext, aAppShell, aToolkit, aInitData);
+
+  if (mDataModel)
+	mDataModel->SetDataModelListener(this);
+
+  return answer;
+  
+} // Create
+
+
+//
 // SetContentRoot
 //
 // Hook up the toolbar to the content model rooted at the given node
@@ -217,10 +264,8 @@ HandleTabEvent(nsGUIEvent *aEvent)
 NS_METHOD
 nsToolbar::SetContentRoot(nsIContent* pContent)
 {
-#if PINK_NOT_YET_IMPLEMENTED
 	if (mDataModel)
 		mDataModel->SetContentRoot(pContent);
-#endif
 
 	return NS_OK;
 }
@@ -797,6 +842,20 @@ nsEventStatus nsToolbar::OnPaint(nsIRenderingContext& aRenderingContext,
   aRenderingContext.FillRect(r);
   r.width--;
 
+  nsIDeviceContext* dc = GetDeviceContext();  //*** use COM_auto_ptr here
+  
+  nsFont titleBarFont("MS Sans Serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+					  400, NS_FONT_DECORATION_NONE,
+					  12);
+  nsBasicStyleInfo styleInfo(titleBarFont);
+  mDataModel->GetToolbarStyle(dc, styleInfo);
+  
+  // If there is a background image, draw it.
+  if ( styleInfo.BackgroundImage() )
+    PaintBackgroundImage(aRenderingContext, styleInfo.BackgroundImage(), r);
+  
+  NS_RELEASE(dc);
+   
   if (mBorderType != eToolbarBorderType_none) 
   {
     nsRect rect(r);
@@ -1001,3 +1060,74 @@ NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
 
   return NS_OK;    
 }
+
+
+//
+// PaintBackgroundImage
+//
+// Given a rendering context and a bg image, this will tile the image across the
+// background.
+// NOTE: When the toolbar becomes a frame, we should get all this for free so this
+//       code can probably go away.
+//
+void 
+nsToolbar::PaintBackgroundImage(nsIRenderingContext& ctx,
+									  nsIImage* bgImage, const nsRect& constraintRect,
+								      int xSrcOffset, int ySrcOffset)
+{
+	// This code gets a bit intense. Will comment heavily.
+
+	int imageWidth = bgImage->GetWidth();	// The dimensions of the background image being tiled.
+	int imageHeight = bgImage->GetHeight();
+
+	int totalWidth = constraintRect.width;   // The dimensions of the space we're
+	int totalHeight = constraintRect.height; // drawing into.
+
+	if (imageWidth <= 0 || imageHeight <= 0) // Don't draw anything if we don't have a sane image.
+		return;
+
+	int xSize = imageWidth - xSrcOffset;	// The dimensions of the actual tile we'll end
+	int ySize = imageHeight - ySrcOffset;	// up drawing.  A subset of the full BG image.
+	
+	xSize = (xSize > totalWidth) ? totalWidth : xSize;		
+	ySize = (ySize > totalHeight) ? totalHeight : ySize;
+
+	int rightMostPoint = constraintRect.x + constraintRect.width;	// Edges of the space we're
+	int bottomMostPoint = constraintRect.y + constraintRect.height; // drawing into.
+
+	int xDstOffset = constraintRect.x;	// Top-left coordinates in the space where
+	int yDstOffset = constraintRect.y;  // we'll be drawing.  Where we'll place the tile.
+
+	int initXOffset = xSrcOffset;
+	
+	// Tile vertically until we move out of the constraining rect.
+	while (yDstOffset < bottomMostPoint)
+	{
+		// Tile horizontally until we move out of the constraining rect.
+		while (xDstOffset < rightMostPoint)
+		{
+			// Draw the subimage.  Pull the subimage from the larger image
+			// and then draw it.
+			ctx.DrawImage(bgImage, nsRect(xSrcOffset, ySrcOffset, xSize, ySize),
+						   nsRect(xDstOffset, yDstOffset, xSize, ySize));
+
+			// The next subimage will be as much of the full BG image as can fit in the
+			// constraining rect.  If we're at the edge, we don't draw quite as much.
+			xSrcOffset = 0;
+			xDstOffset += xSize;
+			xSize = (xDstOffset + imageWidth) > rightMostPoint ? imageWidth - (xDstOffset + imageWidth) + rightMostPoint : imageWidth;
+		}
+
+		xSrcOffset = initXOffset;	// Start of all rows will be at the same initial x offset.
+		xDstOffset = constraintRect.x; // Reset our x-position for drawing the next row.
+		xSize = (xDstOffset + imageWidth) > rightMostPoint ? rightMostPoint - xDstOffset : imageWidth;
+
+		// Determine the height of the next row.  Will be as much of the BG image
+		// as can fit in the constraining rect. If we're at the bottom edge, we don't
+		// draw quite as much.
+		ySrcOffset = 0;
+		yDstOffset += ySize;
+		ySize = (yDstOffset + imageHeight) > bottomMostPoint ? bottomMostPoint - yDstOffset : imageHeight;
+	}
+}
+
