@@ -52,7 +52,9 @@ NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFla
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->SetFlags(aFlags);
+  // We need NS_BLOCK_SPACE_MGR to ensure that the options inside the select
+  // aren't expanded by right floats outside the select.
+  it->SetFlags(aFlags | NS_BLOCK_SPACE_MGR);
   *aNewFrame = it;
   return NS_OK;
 }
