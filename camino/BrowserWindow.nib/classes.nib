@@ -52,6 +52,7 @@
                 mLocationSheetURLField = id; 
                 mLocationSheetWindow = id; 
                 mLocationToolbarView = id; 
+                mLock = id; 
                 mPageMenu = id; 
                 mPersonalToolbar = CHBookmarksToolbar; 
                 mProgress = id; 
@@ -79,6 +80,20 @@
             SUPERCLASS = CHExtendedOutlineView; 
         }, 
         {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            ACTIONS = {load = id; }; 
+            CLASS = CHBrowserWrapper; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mLockIcon = id; 
+                mWindowController = id; 
+                progress = id; 
+                progressSuper = id; 
+                status = id; 
+                urlbar = id; 
+            }; 
+            SUPERCLASS = NSView; 
+        }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {

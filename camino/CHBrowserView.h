@@ -65,6 +65,7 @@ class nsIDragHelperService;
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
 - (void)onLocationChange:(NSURL*)url;
 - (void)onStatusChange:(NSString*)aMessage;
+- (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
 @end

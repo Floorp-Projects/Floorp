@@ -38,15 +38,22 @@
 #import <Cocoa/Cocoa.h>
 #import "CHBrowserView.h"
 
+@class BrowserWindowController;
+
 @interface CHBrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
 {
   id urlbar;
   id status;
   id progress;
   id progressSuper;
-  id mWindowController;
+  BrowserWindowController* mWindowController;
   NSTabViewItem* mTab;
   NSWindow* mWindow;
+
+    // the secure state of this browser. We need to hold it so that we can set
+    // the global lock icon whenever we become the primary. Value is one of
+    // security enums in nsIWebProgressListener.
+  unsigned long mSecureState;
 
   CHBrowserView* mBrowserView;
   NSString* defaultStatus;
@@ -71,7 +78,7 @@
 -(NSString*)getCurrentURLSpec;
 
 -(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
-    progress: (id)aProgress windowController: (id)aWindowController;
+    progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController;
 -(void)disconnectView;
 -(void)setTab: (NSTabViewItem*)tab;
 
@@ -87,6 +94,7 @@
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
 - (void)onLocationChange:(NSURL*)url;
 - (void)onStatusChange:(NSString*)aMessage;
+- (void)onSecurityStateChange:(unsigned long)newState;
 
 // NSBrowserContainer messages
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;

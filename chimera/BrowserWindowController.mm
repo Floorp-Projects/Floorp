@@ -53,6 +53,8 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "CHGeckoUtils.h"
+#include "nsIWebProgressListener.h"
+
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
@@ -1000,6 +1002,51 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 - (NSView*) bookmarksToolbar
 {
   return mPersonalToolbar;
+}
+
+
+//
+// updateLock:
+//
+// Sets the lock icon in the status bar to the appropriate image
+//
+- (void)updateLock:(unsigned int)inSecurityState
+{
+  switch ( inSecurityState ) {
+    case nsIWebProgressListener::STATE_IS_INSECURE:
+      [mLock setImage:[BrowserWindowController insecureIcon]];
+      break;
+    case nsIWebProgressListener::STATE_IS_SECURE:
+      [mLock setImage:[BrowserWindowController secureIcon]];
+      break;
+    case nsIWebProgressListener::STATE_IS_BROKEN:
+      [mLock setImage:[BrowserWindowController brokenIcon]];
+      break;
+  }
+}
+
++ (NSImage*) insecureIcon
+{
+  static NSImage* sInsecureIcon = nil;
+  if ( !sInsecureIcon )
+    sInsecureIcon = [NSImage imageNamed:@"globe_ico"];
+  return sInsecureIcon;
+}
+
++ (NSImage*) secureIcon;
+{
+  static NSImage* sSecureIcon = nil;
+  if ( !sSecureIcon )
+    sSecureIcon = [NSImage imageNamed:@"historyicon"];
+  return sSecureIcon;
+}
+
++ (NSImage*) brokenIcon;
+{
+  static NSImage* sBrokenIcon = nil;
+  if ( !sBrokenIcon )
+    sBrokenIcon = [NSImage imageNamed:@"smallbookmark"];
+  return sBrokenIcon;
 }
 
 @end
