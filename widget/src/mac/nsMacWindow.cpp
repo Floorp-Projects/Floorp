@@ -65,12 +65,6 @@ pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, 
 long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 #endif
 
-// These magic adjustments are so that the contained webshells hangs one pixel
-// off the right and bottom sides of the window. This aligns the scroll bar
-// correctly, and compensates for different window frame dimentions on
-// Windows and Mac.
-#define WINDOW_SIZE_TWEAKING
-
 #define kWindowPositionSlop 10
 
 // еее TODO: these should come from the system, not be hard-coded. What if I'm running
@@ -287,6 +281,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mZoomOnShow(PR_FALSE)
 	, mPhantomScrollbar(nsnull)
 	, mPhantomScrollbarData(nsnull)
+	, mResizeIsFromUs(PR_FALSE)
 {
 	mMacEventHandler.reset(new nsMacEventHandler(this));
 	WIDGET_SET_CLASSNAME("nsMacWindow");	
@@ -477,12 +472,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		Rect wRect;
 		nsRectToMacRect(aRect, wRect);
 
-#ifdef WINDOW_SIZE_TWEAKING
-		// see also the Resize method
-		wRect.right --;
-		wRect.bottom --;
-#endif
-
 		if (eWindowType_popup != mWindowType)
 			::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
 		else
@@ -620,7 +609,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           
           // resize the window and repaint
           nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
-          if ( self ) {
+          if ( self && !self->mResizeIsFromUs ) {
             self->mMacEventHandler->ResizeEvent(myWind);
             self->mMacEventHandler->UpdateEvent();
           }
@@ -1036,18 +1025,14 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 		
 		Rect macRect;
 		::GetWindowPortBounds ( mWindowPtr, &macRect );
-#ifdef WINDOW_SIZE_TWEAKING
-		macRect.right ++;
-		macRect.bottom ++;
-#endif
+
 		if (((macRect.right - macRect.left) != aWidth)
 			|| ((macRect.bottom - macRect.top) != aHeight))
 		{
-#ifdef WINDOW_SIZE_TWEAKING
-			::SizeWindow(mWindowPtr, aWidth - 1, aHeight - 1, aRepaint);
-#else
+		  // make sure that we don't infinitely recurse if live-resize is on
+      mResizeIsFromUs = PR_TRUE;
 			::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
-#endif
+      mResizeIsFromUs = PR_FALSE;
 		}
 	}
 	Inherited::Resize(aWidth, aHeight, aRepaint);
@@ -1224,17 +1209,6 @@ BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam
     case kWindowMsgDraw:
     case kWindowMsgDrawGrowOutline:
     case kWindowMsgGetFeatures:
-      break;
-      
-    case kWindowMsgCalculateShape:
-      // Make the content area bigger so that it draws over the structure region. Use
-      // the sytem wdef to compute the struct/content regions and then play.
-      long result = CallSystemWDEF(inCode, inWindow, inMessage, inParam);
-      ::InsetRgn(((WindowPeek)inWindow)->contRgn, -1, -1);
-      
-      // for some reason, the topleft corner doesn't draw correctly unless i do this.
-	    Rect& structRect = (**((WindowPeek)inWindow)->strucRgn).rgnBBox;
-	    structRect.top++; structRect.left++;
       break;
       
     default:

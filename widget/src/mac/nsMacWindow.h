@@ -134,6 +134,7 @@ protected:
 	PRBool                          mAcceptsActivation;
 	PRBool                          mIsActive;
 	PRBool                          mZoomOnShow;
+	PRBool                          mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
 	
 	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
 	PhantomScrollbarData* mPhantomScrollbarData;
