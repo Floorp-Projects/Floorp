@@ -692,8 +692,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 // XXX DON'T NS_IF_RELEASE(postDataStream), this happens in Necko!
     NS_IF_RELEASE(handler);
 
-DebugPrint("url", absURLSpec);
-DebugPrint("data", data);
+// If you need these for debugging...
+// wrap them in DEBUG_<username>
+// Printing the data and url prints the contents of passwords
+//DebugPrint("url", absURLSpec);
+//DebugPrint("data", data);
   }
   return result;
 }
