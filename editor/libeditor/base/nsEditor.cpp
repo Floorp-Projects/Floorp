@@ -261,6 +261,8 @@ nsEditor::~nsEditor()
   IMETextTxn::ClassShutdown();
  
   PR_AtomicDecrement(&gInstanceCount);
+
+  NS_IF_RELEASE(mViewManager);
 }
 
 
@@ -304,7 +306,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 
   ps->GetViewManager(&mViewManager);
   if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
-  mViewManager->Release(); //we want a weak link
 
   mUpdateCount=0;
   InsertTextTxn::ClassInit();

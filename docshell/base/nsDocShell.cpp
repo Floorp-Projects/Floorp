@@ -1158,6 +1158,14 @@ nsDocShell::SetChromeEventHandler(nsIChromeEventHandler * aChromeEventHandler)
 {
     // Weak reference. Don't addref.
     mChromeEventHandler = aChromeEventHandler;
+
+    NS_ASSERTION(!mScriptGlobal,
+                 "SetChromeEventHandler() called after the script global "
+                 "object was created! This means that the script global "
+                 "object in this docshell won't get the right chrome event "
+                 "handler. You really don't want to see this assert, FIX "
+                 "YOUR CODE!");
+
     return NS_OK;
 }
 
@@ -2441,7 +2449,6 @@ nsDocShell::Stop(PRUint32 aStopFlags)
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         if (mContentViewer)
             mContentViewer->Stop();
-
     }
 
     if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
@@ -2650,7 +2657,6 @@ nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP
 nsDocShell::Create()
 {
-    NS_ENSURE_STATE(!mContentViewer);
     mPrefs = do_GetService(NS_PREF_CONTRACTID);
     //GlobalHistory is now set in SetGlobalHistory
     //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_CONTRACTID);
@@ -2835,8 +2841,6 @@ nsDocShell::GetParentWidget(nsIWidget ** parentWidget)
 NS_IMETHODIMP
 nsDocShell::SetParentWidget(nsIWidget * aParentWidget)
 {
-    NS_ENSURE_STATE(!mContentViewer);
-
     mParentWidget = aParentWidget;
 
     return NS_OK;
@@ -3960,6 +3964,7 @@ nsDocShell::CreateAboutBlankContentViewer()
     // generate (about:blank) document to load
     docFactory->CreateBlankDocument(loadGroup, getter_AddRefs(blankDoc));
     if (blankDoc) {
+      blankDoc->SetContainer(NS_STATIC_CAST(nsIDocShell *, this));
 
       // create a content viewer for us and the new document
       docFactory->CreateInstanceForDocument(NS_ISUPPORTS_CAST(nsIDocShell *, this),
@@ -4301,13 +4306,13 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
-    if (!widget) {
-        NS_ERROR("GetMainWidget coughed up a null widget");
-        return NS_ERROR_FAILURE;
+
+    if (widget) {
+        NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
     }
 
     nsRect bounds(x, y, cx, cy);
-    NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
+
     if (NS_FAILED(mContentViewer->Init(widget, mDeviceContext, bounds))) {
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
@@ -4330,7 +4335,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         focusController->SetSuppressFocus(PR_FALSE,
                                           "Win32-Only Link Traversal Issue");
 
-    if (bgSet) {
+    if (bgSet && widget) {
         // Stuff the bgcolor from the last view manager into the new
         // view manager. This improves page load continuity.
         nsCOMPtr<nsIDocumentViewer> docviewer =
