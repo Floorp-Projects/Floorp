@@ -391,9 +391,9 @@
 
   function BrowserAddBookmark(url,title)
   {
-    var svc = Components.classes["component://netscape/browser/bookmarks-service"].getService();
-    svc = svc.QueryInterface(Components.interfaces.nsIBookmarksService);
-    svc.AddBookmark(url, title);
+    var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+    bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+    bmks.AddBookmark(url, title);
   }
 
   function BrowserEditBookmarks()
@@ -495,39 +495,22 @@
 		return;
 	}
 
-	// rjc: added support for URL shortcuts (3/30/1999)
+    // rjc: added support for URL shortcuts (3/30/1999)
+    try {
+      var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+      bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 
-	// get RDF Core service
-	var rdfCoreFound = false;
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (rdfCore)
-	{
-		rdfCoreFound = true;
-	}
-	else
-	{
-		rdfCore = new RDFCore();
-		if (rdfCore)
-		{
-			rdfCore.Init("RDFCore");
-// We do not need this add() call. It fails and doesn't execute the loadURL
-// call that is following. The job of add has already been done by the Init()
-// call.  
-		//	XPAppCoresManager.Add(rdfCore);
-			rdfCoreFound = true;
-		}
-	}
-	if (rdfCoreFound == true)
-	{
-		var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
+      var shortcutURL = bmks.FindShortcut(document.getElementById('urlbar').value);
 
-		dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
+      dump("FindShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
 
-		if ((shortcutURL != null) && (shortcutURL != ""))
-		{
-			document.getElementById('urlbar').value = shortcutURL;
-		}
+      if ((shortcutURL != null) && (shortcutURL != "")) {
+        document.getElementById('urlbar').value = shortcutURL;
+      }
 	}
+    catch (ex) {
+      // stifle any exceptions so we're sure to load the URL.
+    }
 
 	appCore.loadUrl(document.getElementById('urlbar').value);
       
