@@ -86,9 +86,6 @@ CreateNewStreamConv(nsISupports* aOuter, REFNSIID aIID, void **aResult)
         return rv;                                                   
     } 
     rv = inst->QueryInterface(aIID, aResult);
-    if (NS_FAILED(rv)) {                                             
-        *aResult = nsnull;                                           
-    }                                                                
     NS_RELEASE(inst);             /* get rid of extra refcnt */      
     return rv;              
 }

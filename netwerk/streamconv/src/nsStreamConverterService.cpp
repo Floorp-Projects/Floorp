@@ -696,5 +696,9 @@ NS_NewStreamConv(nsStreamConverterService** aStreamConv)
     if (!*aStreamConv) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aStreamConv);
-    return (*aStreamConv)->Init();
+    nsresult rv = (*aStreamConv)->Init();
+    if (NS_FAILED(rv))
+        NS_RELEASE(*aStreamConv);
+
+    return rv;
 }
