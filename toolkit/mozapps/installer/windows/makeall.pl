@@ -54,8 +54,6 @@ if ($inConfigFiles eq "")
   exit(1);
 }  
 
-print "**** GAOT = $ENV{WIZ_nameProduct}\n";
-
 # Initialize state from environment (which is established in the calling script
 # after reading the installer.cfg file. 
 $versionLanguage          = $ENV{WIZ_versionLanugage};
