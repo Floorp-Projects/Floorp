@@ -2535,8 +2535,10 @@ dnl This check is apparently only needed for Linux.
 case "$target" in
 	*-linux*)
 	    dnl ===================================================================
-	    curdir=`pwd`
-	    rm -f conftest* /tmp/conftest*
+	    _curdir=`pwd`
+	    export _curdir
+	    rm -rf conftest* _conftest
+	    mkdir _conftest
 	    cat >> conftest.C <<\EOF
 #include <stdio.h>
 #include <link.h>
@@ -2548,9 +2550,9 @@ void __dump_link_map(void) {
 }
 int main() {
   dlopen("./conftest1.so",RTLD_LAZY);
-  dlopen("./../tmp/conftest1.so",RTLD_LAZY);
-  dlopen("/tmp/conftest1.so",RTLD_LAZY);
-  dlopen("/tmp/../tmp/conftest1.so",RTLD_LAZY);
+  dlopen("./../_conftest/conftest1.so",RTLD_LAZY);
+  dlopen("CURDIR/_conftest/conftest1.so",RTLD_LAZY);
+  dlopen("CURDIR/_conftest/../_conftest/conftest1.so",RTLD_LAZY);
   __dump_link_map();
 }
 #else
@@ -2559,16 +2561,17 @@ int main() { printf("./conftest1.so\n"); }
 #endif
 EOF
 
+	    $PERL -p -i -e "s/CURDIR/\$ENV{_curdir}/g;" conftest.C
+
 	    cat >> conftest1.C <<\EOF
 #include <stdio.h>
 void foo(void) {printf("foo in dll called\n");}
 EOF
-
 	    ${CXX-g++} -fPIC -c -g conftest1.C
 	    ${CXX-g++} -shared -Wl,-h -Wl,conftest1.so -o conftest1.so conftest1.o
 	    ${CXX-g++} -g conftest.C -o conftest -ldl
-	    cp -f conftest1.so conftest /tmp
-	    cd /tmp
+	    cp -f conftest1.so conftest _conftest
+	    cd _conftest
 	    if test `./conftest | grep conftest1.so | wc -l` -gt 1
 	    then
 		echo
@@ -2578,8 +2581,8 @@ EOF
 		echo "*** will be excessive memory usage at runtime."
 		echo
 	    fi
-	    cd ${curdir}
-	    rm -f conftest* /tmp/conftest*
+	    cd ${_curdir}
+	    rm -rf conftest* _conftest
 	    dnl ===================================================================
 	    ;;
 esac
