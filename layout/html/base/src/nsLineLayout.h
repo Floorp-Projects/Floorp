@@ -353,7 +353,8 @@ protected:
 #define PFD_ISLETTERFRAME               0x00000010
 #define PFD_ISSTICKY                    0x00000020
 #define PFD_ISBULLET                    0x00000040
-#define PFD_LASTFLAG                    PFD_ISBULLET
+#define PFD_ISPLACEHOLDERFRAME          0x00000080
+#define PFD_LASTFLAG                    PFD_ISPLACEHOLDERFRAME
 
     PRPackedBool mFlags;
 
