@@ -31,7 +31,6 @@
 #include "nsMsgI18N.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsINntpService.h"
-#include "nsMsgNewsCID.h"
 #include "nsMimeTypes.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
@@ -44,7 +43,6 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
-static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
@@ -502,7 +500,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 				PL_strcpy(ptr+1, ptr2);
 		}
 
-    // Ok, if we are here, we need to decide the Newsgroup related headers
+    // we need to decide the Newsgroup related headers
     // to write to the outgoing message. In ANY case, we need to write the
     // "Newsgroup" header which is the "proper" header as opposed to the
     // HEADER_X_MOZILLA_NEWSHOST which can contain the "news:" URL's.
@@ -511,49 +509,37 @@ mime_generate_headers (nsMsgCompFields *fields,
     // "news://news.mozilla.org/netscape.test,news://news.mozilla.org/netscape.junk"
     // we need to turn that into: "netscape.test,netscape.junk"
     //
-    NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv); 
-    char *newHeader = nsnull;
-    rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
-    if (NS_SUCCEEDED(rv) && nntpService) 
-    {
-      // caller frees the memory in newHeader
-      // ConvertNewsgroupsString takes "news://news.mozilla.org/netscape.test,news://news.mozilla.org/netscape.junk"
-      // and turns it into "netscape.test,netscape.junk"
-      rv = nntpService->ConvertNewsgroupsString(n2, &newHeader);
-      if (NS_FAILED(rv)) {
-		*status = rv;
-        return nsnull;
-	  }
-#ifdef NS_DEBUG
-      else 
-      {
-        printf("SUCCESS:  %s -> %s\n",n2,newHeader);
-      }
-#endif
-    }
-    else {
-	  *status = rv;
+    nsCOMPtr <nsINntpService> nntpService = do_GetService("@mozilla.org/messenger/nntpservice;1");
+    if (NS_FAILED(rv) || !nntpService) {
+      *status = NS_ERROR_FAILURE;
       return nsnull;
-	}
+    }
+
+    nsXPIDLCString newsgroupsHeaderVal;
+    nsXPIDLCString newshostHeaderVal;
+    rv = nntpService->GenerateNewsHeaderValsForPosting(n2, getter_Copies(newsgroupsHeaderVal), getter_Copies(newshostHeaderVal));
+    if (NS_FAILED(rv)) {
+      *status = rv;
+      return nsnull;
+    }
 
     PUSH_STRING ("Newsgroups: ");
-		PUSH_STRING (newHeader);
-    PR_FREEIF(newHeader);
-  	PUSH_NEWLINE ();
+    PUSH_STRING (newsgroupsHeaderVal.get());
+    PUSH_NEWLINE ();
 
     // If we are here, we are NOT going to send this now. (i.e. it is a Draft, 
     // Send Later file, etc...). Because of that, we need to store what the user
     // typed in on the original composition window for use later when rebuilding
     // the headers
-    if (deliver_mode != nsIMsgSend::nsMsgDeliverNow) 
+    if (deliver_mode != nsIMsgSend::nsMsgDeliverNow)
     {
       // This is going to be saved for later, that means we should just store
       // what the user typed into the "Newsgroup" line in the HEADER_X_MOZILLA_NEWSHOST
       // header for later use by "Send Unsent Messages", "Drafts" or "Templates"
       PUSH_STRING (HEADER_X_MOZILLA_NEWSHOST);
       PUSH_STRING (": ");
-      PUSH_STRING(n2);
-		  PUSH_NEWLINE ();
+      PUSH_STRING (newshostHeaderVal.get());
+      PUSH_NEWLINE ();
     }
 
 		PR_FREEIF(n2);

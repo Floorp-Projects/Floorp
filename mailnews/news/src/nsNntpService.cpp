@@ -707,14 +707,16 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retval)
+nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char **newsgroupsHeaderVal, char **newshostHeaderVal)
 {
   nsresult rv = NS_OK;
-  NS_ENSURE_ARG_POINTER(newsgroupsNames);
-  NS_ENSURE_ARG_POINTER(_retval);
-  if (*newsgroupsNames == '\0') return NS_ERROR_INVALID_ARG;
 
-  // newsgroupsNames can be a comma seperated list of these:
+  NS_ENSURE_ARG_POINTER(newsgroupsList);
+  NS_ENSURE_ARG_POINTER(newsgroupsHeaderVal);
+  NS_ENSURE_ARG_POINTER(newshostHeaderVal);
+  NS_ENSURE_ARG_POINTER(*newsgroupsList);
+
+  // newsgroupsList can be a comma seperated list of these:
   // news://host/group
   // news://group
   // host/group
@@ -724,12 +726,12 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
   // if we detect that, we stop and return error.
 
   // nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
-  char *list = nsCRT::strdup(newsgroupsNames);
+  char *list = nsCRT::strdup(newsgroupsList);
   char *token = nsnull;
   char *rest = list;
   nsCAutoString host;
   nsCAutoString str;
-  nsCAutoString retvalStr;
+  nsCAutoString newsgroups;
     
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) {
@@ -772,11 +774,11 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
           return NS_ERROR_FAILURE;
         }
         
-        // build up the retvalStr;
-        if (!retvalStr.IsEmpty()) {
-          retvalStr += ",";
+        // build up the newsgroups
+        if (!newsgroups.IsEmpty()) {
+          newsgroups += ",";
         }
-        retvalStr += currentGroup;
+        newsgroups += currentGroup;
       }
       else {
         // str is "group"
@@ -786,11 +788,11 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
             return rv;
         }
 
-        // build up the retvalStr;
-        if (!retvalStr.IsEmpty()) {
-          retvalStr += ",";
+        // build up the newsgroups
+        if (!newsgroups.IsEmpty()) {
+          newsgroups += ",";
         }
-        retvalStr += str;
+        newsgroups += str;
       }
 
       if (!currentHost.IsEmpty()) {
@@ -812,8 +814,11 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
   }
   CRTFREEIF(list);
   
-  *_retval = retvalStr.ToNewCString();
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+  *newshostHeaderVal = host.ToNewCString();
+  if (!*newshostHeaderVal) return NS_ERROR_OUT_OF_MEMORY;
+
+  *newsgroupsHeaderVal = newsgroups.ToNewCString();
+  if (!*newsgroupsHeaderVal) return NS_ERROR_OUT_OF_MEMORY;
   
   return NS_OK;
 }
