@@ -1559,36 +1559,47 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
       SetTableWidth(aPresContext);
     }
 
-    // Constrain our reflow width to the computed table width. Note: this is based
-    // on the width of the first-in-flow
-    nsHTMLReflowState reflowState(aReflowState);
-    PRInt32 pass1Width = mRect.width;
-    if (mPrevInFlow) {
-      nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
-      pass1Width = table->mRect.width;
-    }
-    reflowState.availableWidth = pass1Width;
-    if (pass1MaxElementSize) { 
-      // we already have the max element size, so don't request it during pass2
-      aDesiredSize.maxElementSize = nsnull;
-    }
-    rv = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, aStatus);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    aDesiredSize.width = PR_MIN(aDesiredSize.width, pass1Width);
+    if ((eReflowReason_Initial == aReflowState.reason) &&
+        (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth)) {
+      // Don't bother doing a pass2 reflow. Use our pass1 width as our
+      // desired width
+      aDesiredSize.width = mRect.width;
 
-    // If this is an incremental reflow and we're here that means we had to
-    // reflow all the rows, e.g., the column widths changed. We need to make
-    // sure that any damaged areas are repainted
-    if (eReflowReason_Incremental == aReflowState.reason) {
-      nsRect  damageRect;
+    } else {
+      nscoord pass1Height = aDesiredSize.height;
 
-      damageRect.x = 0;
-      damageRect.y = 0;
-      damageRect.width = mRect.width;
-      damageRect.height = mRect.height;
-      Invalidate(aPresContext, damageRect);
+      // Constrain our reflow width to the computed table width. Note: this is based
+      // on the width of the first-in-flow
+      nsHTMLReflowState reflowState(aReflowState);
+      PRInt32 pass1Width = mRect.width;
+      if (mPrevInFlow) {
+        nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
+        pass1Width = table->mRect.width;
+      }
+      reflowState.availableWidth = pass1Width;
+      if (pass1MaxElementSize) { 
+        // we already have the max element size, so don't request it during pass2
+        aDesiredSize.maxElementSize = nsnull;
+      }
+      rv = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, aStatus);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aDesiredSize.width = PR_MIN(aDesiredSize.width, pass1Width);
+  
+      // If this is an incremental reflow and we're here that means we had to
+      // reflow all the rows, e.g., the column widths changed. We need to make
+      // sure that any damaged areas are repainted
+      if (eReflowReason_Incremental == aReflowState.reason) {
+        nsRect  damageRect;
+  
+        damageRect.x = 0;
+        damageRect.y = 0;
+        damageRect.width = mRect.width;
+        damageRect.height = mRect.height;
+        Invalidate(aPresContext, damageRect);
+      }
     }
   }
   else {
@@ -1703,16 +1714,31 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext*          aPresContext,
         kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
         continue;
       }
+
+      // Get the row group's border padding
+      nsMargin borderPadding;
+      GetTableBorderForRowGroup(GetRowGroupFrameFor(kidFrame, childDisplay), borderPadding);
+      const nsStyleSpacing* tableSpacing;
+      GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)tableSpacing));
+      nsMargin padding;
+      tableSpacing->GetPadding(padding);
+      borderPadding += padding;
+      
+      // Reflow the child
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                        availSize, aReason);
       // Note: we don't bother checking here for whether we should clear the
       // isTopOfPage reflow state flag, because we're dealing with an unconstrained
       // height and it isn't an issue...
-      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, aStatus);
+      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, borderPadding.left,
+                  borderPadding.top + y, 0, aStatus);
 
       // Place the child since some of its content fit in us.
-      FinishReflowChild(kidFrame, aPresContext, kidSize, 0, 0, 0);
+      FinishReflowChild(kidFrame, aPresContext, kidSize, borderPadding.left,
+                        borderPadding.top + y, 0);
       if (NS_UNCONSTRAINEDSIZE==kidSize.height)
+        // XXX This is very suspicious. Why would a row group frame want
+        // such a large height?
         y = NS_UNCONSTRAINEDSIZE;
       else
         y += kidSize.height;
@@ -1746,7 +1772,18 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext*          aPresContext,
     }
   }
 
+  // Get the table's border/padding
+  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin tableBorderPadding;
+  GetTableBorder (tableBorderPadding);   // this gets the max border thickness at each edge
+  nsMargin tablePadding;
+  mySpacing->GetPadding(tablePadding);
+  tableBorderPadding += tablePadding;
+
   aDesiredSize.width = kidSize.width;
+  nscoord defaultHeight = y + tableBorderPadding.top + tableBorderPadding.bottom;
+  aDesiredSize.height = ComputeDesiredHeight(aPresContext, aReflowState, defaultHeight);
   mBits.mFirstPassValid = PR_TRUE;
 
   return rv;
@@ -3447,66 +3484,70 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
 
   nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState, PR_TRUE);
   if ((tableSpecifiedHeight > 0) && (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
-    if (tableSpecifiedHeight > aDefaultHeight) { 
-      // proportionately distribute the excess height to each row
+    if (tableSpecifiedHeight > aDefaultHeight) {
       result = tableSpecifiedHeight;
-      nscoord excess = tableSpecifiedHeight - aDefaultHeight;
-      nscoord sumOfRowHeights = 0;
-      nscoord rowGroupYPos = 0;
-      nsIFrame* childFrame = mFrames.FirstChild();
-      nsIFrame* firstRowGroupFrame = nsnull;
-      while (nsnull != childFrame) {
-        const nsStyleDisplay* childDisplay;
-        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-        if (IsRowGroup(childDisplay->mDisplay)) {
-          if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) { 
-            ((nsTableRowGroupFrame*)childFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
-          }
-          if (!firstRowGroupFrame) {
-            // the first row group's y position starts inside our padding
-            const nsStyleSpacing* spacing =
-              (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	          nsMargin margin(0,0,0,0);
-            if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
-              rowGroupYPos = margin.top;
-            }
-            if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
-              rowGroupYPos += margin.top;
-            }
-            firstRowGroupFrame = childFrame;
-          }
-        }
-        childFrame->GetNextSibling(&childFrame);
-      }
 
-      childFrame = mFrames.FirstChild();
-      while (childFrame) {
-        const nsStyleDisplay* childDisplay;
-        childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-        if (IsRowGroup(childDisplay->mDisplay)) {
-          if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) {
-            nscoord excessForGroup = 0;
-            const nsStyleTable* tableStyle;
-            GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-            DistributeSpaceToRows(aPresContext, aReflowState, childFrame, sumOfRowHeights, 
-                                  excess, tableStyle, excessForGroup, rowGroupYPos);
-
-            // Make sure child views are properly positioned
-            nsIView*  view;
-            childFrame->GetView(aPresContext, &view);
-            if (view) {
-              nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
-            } else {
-              nsContainerFrame::PositionChildViews(aPresContext, childFrame);
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
+        // proportionately distribute the excess height to each row. Note that we
+        // don't need to do this if it's an unconstrained reflow
+        nscoord excess = tableSpecifiedHeight - aDefaultHeight;
+        nscoord sumOfRowHeights = 0;
+        nscoord rowGroupYPos = 0;
+        nsIFrame* childFrame = mFrames.FirstChild();
+        nsIFrame* firstRowGroupFrame = nsnull;
+        while (nsnull != childFrame) {
+          const nsStyleDisplay* childDisplay;
+          childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+          if (IsRowGroup(childDisplay->mDisplay)) {
+            if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) { 
+              ((nsTableRowGroupFrame*)childFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
+            }
+            if (!firstRowGroupFrame) {
+              // the first row group's y position starts inside our padding
+              const nsStyleSpacing* spacing =
+                (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  	          nsMargin margin(0,0,0,0);
+              if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
+                rowGroupYPos = margin.top;
+              }
+              if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
+                rowGroupYPos += margin.top;
+              }
+              firstRowGroupFrame = childFrame;
             }
           }
-          else {
-            nsRect rowGroupRect;
-            childFrame->GetRect(rowGroupRect);
-            rowGroupYPos += rowGroupRect.height;
-          }
+          childFrame->GetNextSibling(&childFrame);
         }
-        childFrame->GetNextSibling(&childFrame);
+  
+        childFrame = mFrames.FirstChild();
+        while (childFrame) {
+          const nsStyleDisplay* childDisplay;
+          childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+          if (IsRowGroup(childDisplay->mDisplay)) {
+            if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) {
+              nscoord excessForGroup = 0;
+              const nsStyleTable* tableStyle;
+              GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+              DistributeSpaceToRows(aPresContext, aReflowState, childFrame, sumOfRowHeights, 
+                                    excess, tableStyle, excessForGroup, rowGroupYPos);
+  
+              // Make sure child views are properly positioned
+              nsIView*  view;
+              childFrame->GetView(aPresContext, &view);
+              if (view) {
+                nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
+              } else {
+                nsContainerFrame::PositionChildViews(aPresContext, childFrame);
+              }
+            }
+            else {
+              nsRect rowGroupRect;
+              childFrame->GetRect(rowGroupRect);
+              rowGroupYPos += rowGroupRect.height;
+            }
+          }
+          childFrame->GetNextSibling(&childFrame);
+        }
       }
     }
   }
