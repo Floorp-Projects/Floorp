@@ -391,7 +391,7 @@ protected:
                            const nsMargin&      aInnerPadding,
                            const nsMargin&      aCaptionMargin,
                            const nsMargin&      aCaptionMargionNoAuto,
-                           nscoord              aAvailWidth);
+                           const nscoord        aAvailWidth);
 
   void InvalidateDamage(nsIPresContext* aPresContext,
                         PRUint8         aCaptionSide,
