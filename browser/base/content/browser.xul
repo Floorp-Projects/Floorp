@@ -57,7 +57,6 @@
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
   <stringbundleset id="stringbundleset"> <!-- Overlay hook for 3rd parties. Don't remove. -->
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
