@@ -934,11 +934,24 @@ function UpgradeThreadPaneUI()
 
   try {
     threadPaneUIVersion = pref.getIntPref("mailnews.ui.threadpane.version");
-    if (threadPaneUIVersion == 1) {
-      labelCol = document.getElementById("labelCol");
-      labelCol.setAttribute("hidden", "true");
-      pref.setIntPref("mailnews.ui.threadpane.version", 2);
-    }
+    if (threadPaneUIVersion < 3) {
+      var subjectCol = document.getElementById("subjectCol");
+      var junkCol = document.getElementById("junkStatusCol");
+      var threadTree = document.getElementById("threadTree");
+      
+      var beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
+      if (beforeCol)
+        threadTree._reorderColumn(junkCol, beforeCol, true);
+      else // subjectCol was the last column, put it after
+        threadTree._reorderColumn(junkCol, subjectCol, false);
+
+      if (threadPaneUIVersion == 1) {
+        labelCol = document.getElementById("labelCol");
+        labelCol.setAttribute("hidden", "true");
+      }
+
+      pref.setIntPref("mailnews.ui.threadpane.version", 3);
+    }    
 	}
   catch (ex) {
     dump("UpgradeThreadPane: ex = " + ex + "\n");
