@@ -781,6 +781,7 @@ nsSelection::nsSelection()
     if (mDomSelections[index])
       autoCopyService->Listen(mDomSelections[index]);
   }
+  mDisplaySelection = nsISelectionController::SELECTION_ON;
 }
 
 
