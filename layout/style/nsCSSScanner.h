@@ -71,6 +71,8 @@ struct nsCSSToken {
       ((eCSSToken_Dimension == mType) ||
        ((eCSSToken_Number == mType) && (mNumber == 0.0f)));
   }
+
+  void AppendToString(nsString& aBuffer);
 };
 
 // CSS Scanner API. Used to tokenize an input stream using the CSS
