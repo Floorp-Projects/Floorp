@@ -57,10 +57,10 @@
 #else
 /* let CFLAGS override these */
 #ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetunix.so"
+#define WIDGET_DLL "libwidgetmotif.so"
 #endif
 #ifndef GFXWIN_DLL
-#define GFXWIN_DLL "libgfxunix.so"
+#define GFXWIN_DLL "libgfxmotif.so"
 #endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
