@@ -1147,27 +1147,44 @@ sub DumpBugActivity {
 
     SendSQL($query);
     
-    print "<table border cellpadding=4>\n";
-    print "<tr>\n";
-    print "    <th>Who</th><th>What</th><th>Removed</th><th>Added</th><th>When</th>\n";
-    print "</tr>\n";
+    # Instead of outright printing this, we are going to store it in a $html
+    # variable and print it and the end.  This is so we can explain ? (if nesc.)
+    # at the top of the activity table rather than the botom.
+    my $html = "";
+    $html .= "<table border cellpadding=4>\n";
+    $html .= "<tr>\n";
+    $html .= "    <th>Who</th><th>What</th><th>Removed</th><th>Added</th><th>When</th>\n";
+    $html .= "</tr>\n";
     
     my @row;
+    my $incomplete_data = 0;
     while (@row = FetchSQLData()) {
         my ($field,$when,$removed,$added,$who) = (@row);
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
         $added = "&nbsp;" if $added eq "";
-        print "<tr>\n";
-        print "<td>$who</td>\n";
-        print "<td>$field</td>\n";
-        print "<td>$removed</td>\n";
-        print "<td>$added</td>\n";
-        print "<td>$when</td>\n";
-        print "</tr>\n";
+        if ($added =~ /^\?/ || $removed =~ /^\?/) {
+            $incomplete_data = 1;
+        }
+        $html .= "<tr>\n";
+        $html .= "<td>$who</td>\n";
+        $html .= "<td>$field</td>\n";
+        $html .= "<td>$removed</td>\n";
+        $html .= "<td>$added</td>\n";
+        $html .= "<td>$when</td>\n";
+        $html .= "</tr>\n";
     }
-    print "</table>\n";
+    $html .= "</table>\n";
+    if ($incomplete_data) {
+        print "There was a bug in older versions of Bugzilla which caused activity data \n";
+        print "to be lost if there was a large number of cc's or dependencies.  That \n";
+        print "has been fixed, however, there was some data already lost on this bug \n";
+        print "that could not be regenerated.  The changes that the script could not \n";
+        print "reliably determine are prefixed by '?'\n";
+        print "<p>\n";
+    }
+    print $html;
 }
 
 

@@ -2431,6 +2431,12 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
                 $added = "?";
                 $removed = "?";
             }
+            # If the origianl field (old|new)value was full, then this
+            # could be incomplete data.
+            if (length($oldvalue) == 255 || length($newvalue) == 255) {
+                $added = "? $added";
+                $removed = "? $removed";
+            }
         } else {
             $removed = $oldvalue;
             $added = $newvalue;
