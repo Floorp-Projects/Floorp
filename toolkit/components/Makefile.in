@@ -68,10 +68,15 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS += alerts
 endif
 
-DIRS += startup downloads build
+DIRS += downloads
 
 endif
 endif
 endif
+
+DIRS += \
+	startup \
+	build \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
