@@ -18,6 +18,7 @@
  */
 #include "nsILoggingSink.h"
 #include "nsHTMLTags.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -33,6 +34,21 @@ static char gSkippedContentTags[] = {
   eHTMLTag_title,
   0
 };
+
+/**
+ * 
+ * @update	gess8/8/98
+ * @param 
+ * @return
+ */
+ostream& operator<<(ostream& os,nsAutoString& aString){
+	const PRUnichar* uc=aString.GetUnicode();
+	int len=aString.Length();
+	for(int i=0;i<len;i++)
+		os<<(char)uc[i];
+	return os;
+}
+
 
 class nsLoggingSink : public nsILoggingSink {
 public:
@@ -68,7 +84,7 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
 
   // nsILoggingSink
-  NS_IMETHOD Init(FILE* fp);
+  NS_IMETHOD SetOutputStream(ostream& aStream);
 
   nsresult OpenNode(const char* aKind, const nsIParserNode& aNode);
   nsresult CloseNode(const char* aKind);
@@ -78,7 +94,8 @@ public:
   PRBool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:
-  FILE* mFile;
+	ostream*	mOutput;
+	int				mLevel;
 };
 
 nsresult
@@ -98,14 +115,15 @@ NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
 nsLoggingSink::nsLoggingSink()
 {
   NS_INIT_REFCNT();
-  mFile = nsnull;
+  mOutput = 0;
+	mLevel=-1;
 }
 
 nsLoggingSink::~nsLoggingSink()
 {
-  if (nsnull != mFile) {
-    fclose(mFile);
-    mFile = nsnull;
+  if (0 != mOutput) {
+    mOutput->flush();  
+    mOutput = 0;
   }
 }
 
@@ -143,27 +161,32 @@ nsLoggingSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;
 }
 
-nsresult
-nsLoggingSink::Init(FILE* fp)
-{
-  if (nsnull == fp) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  mFile = fp;
+NS_IMETHODIMP
+nsLoggingSink::SetOutputStream(ostream& aStream) {
+  mOutput = &aStream;
   return NS_OK;
 }
+
+void WriteTabs(ostream& anOutputStream,int aTabCount) {
+	int tabs;
+	for(tabs=0;tabs<aTabCount;tabs++)
+		anOutputStream << "  ";
+}
+
 
 NS_IMETHODIMP
 nsLoggingSink::WillBuildModel()
 {
-  fputs("<begin>\n", mFile);
+	WriteTabs(*mOutput,++mLevel);
+	(*mOutput) << "<begin>" << endl;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel)
 {
-  fputs("</begin>\n", mFile);
+	WriteTabs(*mOutput,mLevel--);
+	(*mOutput) << "</begin>" << endl;
   return NS_OK;
 }
 
@@ -188,7 +211,14 @@ nsLoggingSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsLoggingSink::CloseContainer(const nsIParserNode& aNode)
 {
-  return CloseNode("container");
+
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+  if ((nodeType >= eHTMLTag_unknown) &&
+      (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
+    const char* tag = NS_EnumToTag(nodeType);
+		return CloseNode(tag);
+	}
+	return CloseNode("???");
 }
 
 NS_IMETHODIMP
@@ -208,9 +238,9 @@ nsLoggingSink::SetTitle(const nsString& aValue)
 {
   nsAutoString tmp;
   QuoteText(aValue, tmp);
-  fputs("<title value=\"", mFile);
-  fputs(tmp, mFile);
-  fputs("\"/>", mFile);
+	WriteTabs(*mOutput,++mLevel);
+	(*mOutput) << "<title value=\"" << tmp << "\"/>" << endl;
+	--mLevel;
   return NS_OK;
 }
 
@@ -286,31 +316,32 @@ nsLoggingSink::CloseFrameset(const nsIParserNode& aNode)
   return CloseNode("frameset");
 }
 
+
 nsresult
 nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
 {
-  fprintf(mFile, "<open kind=\"%s\" ", aKind);
+	WriteTabs(*mOutput,++mLevel);
+
+	(*mOutput) << "<open container=";
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = NS_EnumToTag(nodeType);
-    fprintf(mFile, "tag=\"%s\"", tag);
+		(*mOutput) << "\"" << tag << "\"";
   }
   else {
     const nsString& text = aNode.GetText();
-    fputs("tag=\"", mFile);
-    fputs(text, mFile);
-    fputs(" \"", mFile);
+		(*mOutput) << "\"" << text << " \"";
   }
 
   if (WillWriteAttributes(aNode)) {
-    fputs(">\n", mFile);
+		(*mOutput) << ">" << endl;
     WriteAttributes(aNode);
-    fputs("</open>\n", mFile);
+		(*mOutput) << "</open>" << endl;
   }
   else {
-    fputs("/>\n", mFile);
+		(*mOutput) << ">" << endl;
   }
 
   return NS_OK;
@@ -319,7 +350,8 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
 nsresult
 nsLoggingSink::CloseNode(const char* aKind)
 {
-  fprintf(mFile, "<close kind=\"%s\"/>\n", aKind);
+	WriteTabs(*mOutput,mLevel--);
+	(*mOutput) << "<close container=\"" << aKind << "\">" << endl;
   return NS_OK;
 }
 
@@ -332,10 +364,9 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
-    fputs(" <attr key=\"", mFile);
-    fputs(k, mFile);
-    fputs("\" value=\"", mFile);
 
+		(*mOutput) << " <attr key=\"" << k << "\" value=\"";
+ 
     tmp.Truncate();
     tmp.Append(v);
     PRUnichar first = tmp.First();
@@ -351,18 +382,18 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
       }
     }
     QuoteText(tmp, tmp2);
-    fputs(tmp2, mFile);
-    fputs("\"/>\n", mFile);
+
+		(*mOutput) << tmp2 << "\"/>" << endl;
   }
 
   if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
     const nsString& content = aNode.GetSkippedContent();
     if (content.Length() > 0) {
       nsAutoString tmp;
-      fputs(" <content value=\"", mFile);
+
       QuoteText(content, tmp);
-      fputs(tmp, mFile);
-      fputs("\"/>\n", mFile);
+			(*mOutput) << " <content value=\"";
+			(*mOutput) << tmp << "\"/>" << endl;
     }
   }
 
@@ -388,18 +419,20 @@ nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
 nsresult
 nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 {
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+ 	WriteTabs(*mOutput,1+mLevel);
+	nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = NS_EnumToTag(nodeType);
-    fprintf(mFile, "<leaf tag=\"%s\"", tag);
+
+		(*mOutput) << "<leaf tag=\"" << tag << "\"";
     if (WillWriteAttributes(aNode)) {
-      fputs(">\n", mFile);
+			(*mOutput) << ">" << endl;
       WriteAttributes(aNode);
-      fputs("</leaf>\n", mFile);
+			(*mOutput) << "</leaf>" << endl;
     }
     else {
-      fputs("/>\n", mFile);
+			(*mOutput) << "/>" << endl;
     }
   }
   else {
@@ -409,13 +442,11 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
     case eHTMLTag_whitespace:
     case eHTMLTag_text:
       QuoteText(aNode.GetText(), tmp);
-      fputs("<text value=\"", mFile);
-      fputs(tmp, mFile);
-      fputs("\"/>\n", mFile);
+			(*mOutput) << "<text value=\"" << tmp << "\"/>" << endl;
       break;
 
     case eHTMLTag_newline:
-      fputs("<newline/>\n", mFile);
+			(*mOutput) << "<newline/>" << endl;
       break;
 
     case eHTMLTag_entity:
@@ -425,9 +456,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
       if (pos >= 0) {
         tmp.Cut(pos, 1);
       }
-      fputs("<entity value=\"", mFile);
-      fputs(tmp, mFile);
-      fputs("\"/>\n", mFile);
+			(*mOutput) << "<entity value=\"" << tmp << "\"/>" << endl;
       break;
 
     default:
