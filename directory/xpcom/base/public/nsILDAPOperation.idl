@@ -39,7 +39,8 @@ interface nsILDAPMessage;
 [scriptable, uuid(fd3d413b-14b0-49c4-8348-a4fc0edba9ff)]
 interface nsILDAPOperation : nsISupports
 {
-    // the connection this operation is on
+    // the connection this operation is on.  this MUST be set before 
+    // initiating any actual operations.
     //
     attribute nsILDAPConnection connection;
     
