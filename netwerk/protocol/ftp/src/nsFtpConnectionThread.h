@@ -169,6 +169,7 @@ private:
     nsresult SendFTPCommand(nsCString& command);
     void ConvertFilespecToVMS(nsCString& fileSpec);
     void ConvertDirspecToVMS(nsCString& fileSpec);
+    void ConvertDirspecFromVMS(nsCString& fileSpec);
     nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
     nsresult SetContentType();
     PRBool CanReadEntry();
