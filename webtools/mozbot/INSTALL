@@ -200,7 +200,13 @@ To load modules is easy.
    /msg mozbot load module
 
 ...where "module" is a module name, such as "HelloWorld" (note that
-the ".bm" extension is not included).
+the ".bm" extension is not included). By default, the General,
+Greeting, Infobot and Parrot modules are loaded. The General module
+provides the 'help' command and responds to CTCP VERSION messages. The
+Greeting module responds to greetings and generally tries to be
+friendly. The Infobot module provides information storage and
+retrieval functions. The Parrot module lets an admin control the bot
+much like a puppet.
 
 By default, modules will be enabled in all channels. See the
 "variables" section below to change this.

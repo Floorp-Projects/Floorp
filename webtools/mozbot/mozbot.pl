@@ -193,7 +193,7 @@ my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
-my @modulenames = ('General');
+my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 
 # - which variables can be saved.
 &registerConfigVariables(
