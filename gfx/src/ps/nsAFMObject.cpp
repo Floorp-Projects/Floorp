@@ -51,6 +51,7 @@
 #include "Courier-Oblique.h"
 #include "Symbol.h"
 #include "nsReadableUtils.h"
+#include "nsVoidArray.h"
 
 struct SubstituteMap {
   const char *name;
@@ -295,6 +296,21 @@ nsAutoString    psfontname;
 }
 
 /** ---------------------------------------------------
+ *	helper callback function
+ */
+static PRBool PR_CALLBACK
+GenericFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void* aData)
+{
+  nsVoidArray* array = NS_STATIC_CAST(nsVoidArray*, aData);
+  char* name = ToNewCString(aFamily);
+  if (name) {
+    array->AppendElement(name);
+    return PR_TRUE; // don't stop
+  }
+  return PR_FALSE;
+}
+
+/** ---------------------------------------------------
  *  See documentation in nsAFMParser.h
  *	@update 2/25/99 dwc
  */
@@ -302,21 +318,37 @@ PRInt16
 nsAFMObject::CreateSubstituteFont(const nsFont &aFontName)
 {
 PRInt16     ourfont = 0;
-PRUint32    i;
+PRUint32    i = gNumSubstituteMap;
 
- 
- for(i=0;i<gNumSubstituteMap;i++){
-    if(aFontName.name.EqualsWithConversion(gSubstituteMap[i].name, PR_TRUE) && 
-       (aFontName.style != NS_FONT_STYLE_NORMAL)== gSubstituteMap[i].italic &&
-       NS_IS_BOLD(aFontName.weight) == gSubstituteMap[i].bold) {
-      ourfont = gSubstituteMap[i].index;
-      break;
-   }
+  // Get Font List
+  nsVoidArray fontNames;
+  // Iterate over the list of names using the callback mechanism of nsFont...
+  aFontName.EnumerateFamilies(GenericFontEnumCallback, &fontNames); // ignore return value
+
+  PRInt32 k;
+  PRBool found = PR_FALSE;
+  for (k=0;k<fontNames.Count() && !found;k++) {
+    char * fontName = (char*)fontNames[k];
+    for(i=0;i<gNumSubstituteMap;i++) {
+      //printf("Looking for Name[%s] Checking [%s]\n", NS_LossyConvertUCS2toASCII(name).get(),gSubstituteMap[i].name);
+      if(!nsCRT::strcasecmp(fontName, gSubstituteMap[i].name) && 
+         (aFontName.style != NS_FONT_STYLE_NORMAL)== gSubstituteMap[i].italic &&
+         NS_IS_BOLD(aFontName.weight) == gSubstituteMap[i].bold) {
+        ourfont = gSubstituteMap[i].index;
+        found = PR_TRUE;
+        break;
+      }
+    }
+  } // for
+
+  for (k=0;k<fontNames.Count();k++) {
+    nsMemory::Free((char*)fontNames[k]);
   }
 
   // no matches in the substitution table -- default to times
   if(i == gNumSubstituteMap){
-    printf(" NO FONT WAS FOUND \n");
+
+    printf(" NO FONT WAS FOUND Name[%s]\n", NS_LossyConvertUCS2toASCII(aFontName.name).get());
     if(aFontName.style == NS_FONT_STYLE_NORMAL){
       ourfont = NS_IS_BOLD(aFontName.weight) ? 1 : 0;
     } else {
