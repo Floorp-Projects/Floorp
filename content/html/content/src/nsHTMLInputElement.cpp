@@ -114,7 +114,7 @@ typedef nsITextControlFrame textControlPlace;
 //
 // Accessors for mBitField
 //
-#define BF_SKIP_FOCUS_EVENT 0
+// #define BF_SKIP_FOCUS_EVENT 0 no longer used
 #define BF_HANDLING_CLICK 1
 #define BF_VALUE_CHANGED 2
 #define BF_CHECKED_CHANGED 3
@@ -1289,12 +1289,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  if ((aEvent->message == NS_FOCUS_CONTENT
-       && GET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT))
-      || (aEvent->message == NS_BLUR_CONTENT
-          && GET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT))) {
-    return NS_OK;
-  }
 
   // Do not process any DOM events if the element is disabled
   PRBool disabled;
@@ -1533,18 +1527,12 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
         case NS_FOCUS_CONTENT:
         {
-          // If this is a file control, check to see if focus has bubbled
-          // up from its child textfield or child button.  If that's the case, 
-          // don't focus this parent file control -- leave focus on the child.
-          if (mType != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
-            nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-            if (formControlFrame) {
-              SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
-              formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-              SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
-            }
-            return NS_OK;
-          }
+          // Check to see if focus has bubbled up from a form control's
+          // child textfield or button.  If that's the case, don't focus
+          // this parent file control -- leave focus on the child.
+          nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+          if (formControlFrame && !(aFlags & NS_EVENT_FLAG_BUBBLE))
+            formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
         }                                                                         
         break; // NS_FOCUS_CONTENT
 
