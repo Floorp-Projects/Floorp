@@ -78,6 +78,8 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)	
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+
+clobber::
+    rm -f $(DIST)\bin\components\$(DLLNAME).dll
