@@ -286,6 +286,23 @@ extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aCont
       return NS_ERROR_FAILURE;
     }
 
+    if ((PR_TRUE == JS_LookupProperty(jscontext, global, "SelectionListener", &vp)) &&
+        JSVAL_IS_OBJECT(vp) &&
+        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
+      vp = INT_TO_JSVAL(nsIDOMSelectionListener::NO_REASON);
+      JS_SetProperty(jscontext, constructor, "NO_REASON", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMSelectionListener::DRAG_REASON);
+      JS_SetProperty(jscontext, constructor, "DRAG_REASON", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMSelectionListener::MOUSEDOWN_REASON);
+      JS_SetProperty(jscontext, constructor, "MOUSEDOWN_REASON", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMSelectionListener::MOUSEUP_REASON);
+      JS_SetProperty(jscontext, constructor, "MOUSEUP_REASON", &vp);
+
+    }
+
   }
   else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
     proto = JSVAL_TO_OBJECT(vp);
