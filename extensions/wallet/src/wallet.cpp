@@ -1164,6 +1164,26 @@ wallet_Clear(nsVoidArray ** list) {
 }
 
 /*
+ * alocate another mapElement
+ * We are going to buffer up allocations because it was found that alocating one
+ * element at a time was very inefficient on the mac
+ */
+static wallet_MapElement *
+wallet_AlocateMapElement() {
+  const PRInt32 alocations = 500;
+  static wallet_MapElement* mapElementTable;
+  static PRInt32 last = alocations;
+  if (last >= alocations) {
+    mapElementTable = new wallet_MapElement[alocations];
+    if (!mapElementTable) {
+      return nsnull;
+    }
+    last = 0;
+  }
+  return &mapElementTable[last++];
+}
+
+/*
  * add an entry to the designated list
  */
 static PRBool
@@ -1178,7 +1198,13 @@ wallet_WriteToList(
   wallet_MapElement * ptr;
   PRBool added_to_list = PR_FALSE;
 
-  wallet_MapElement * mapElement = new wallet_MapElement;
+  wallet_MapElement * mapElement;
+  if (list == wallet_URLFieldToSchema_list || list == wallet_FieldToSchema_list ||
+      list == wallet_SchemaConcat_list  || list == wallet_DistinguishedSchema_list) {
+    mapElement = wallet_AlocateMapElement();
+  } else {
+    mapElement = new wallet_MapElement;
+  }
   if (!mapElement) {
     return PR_FALSE;
   }
@@ -2386,7 +2412,7 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
 //    PRInt32 count = LIST_COUNT(wallet_URLFieldToSchema_list);
 //    for (PRInt32 i=0; i<count; i++) {
 //      ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_URLFieldToSchema_list->ElementAt(i));
-//      ptr->item1->ToCString(item1, 100);
+//      ptr->item1.ToCString(item1, 100);
 //      fprintf(stdout, item1);
 //      fprintf(stdout,"\n");
 //      wallet_Dump(ptr->itemList);
