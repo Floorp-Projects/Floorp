@@ -1,0 +1,94 @@
+#!/bin/sh
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Mozilla Communicator.
+# 
+# The Initial Developer of the Original Code is Chris McAfee.
+# Portions created by Chris McAfee are
+# Copyright (C) The Mozilla Organization.
+# All Rights Reserved.
+# 
+# Contributor(s): Chris McAfee <mcafee@netscape.com>
+# 
+
+#
+# Tinderbox control script.
+#
+# Assumes that at most two tinderboxes are running
+# simultaneously, depend and clobber.
+#
+
+# Depend or clobber build?
+case "$1" in
+  depend)
+	treeOption="depend"
+	;;
+  clobber)
+	treeOption="clobber"
+	;;
+  *)
+	echo "Usage: tinderbox [depend|clobber] {start|stop|status|restart}"
+	exit 1
+esac
+
+# See how we were called.
+case "$2" in
+  start)
+	echo -n "Starting "
+	echo -n $1
+	echo -n " tinderbox..."
+    if test -f $1.pid; then
+      echo -n $1
+      echo -n " build already running with PID "
+	  cat $1.pid
+	else
+	  nohup ./build-seamonkey.pl --$treeOption &
+	  echo -n " PID "
+      echo $!
+	  echo $! > $1.pid
+    fi
+	;;
+  stop)
+	echo -n "Shutting down "
+	echo -n $1
+	echo " tinderbox..."
+    if test -f $1.pid; then
+	  echo "kill -9 `cat $1.pid`"
+	  kill -9 `cat $1.pid`
+      \rm $1.pid
+	fi
+	echo
+	;;
+  status)
+    if test -f $1.pid; then
+	  echo -n $1
+	  echo -n " build is running with PID of "
+	  cat $1.pid
+    else
+      echo -n $1
+	  echo " build is not running."
+    fi
+	;;
+  restart)
+	echo -n "Restarting "
+	echo -n $1
+	echo " tinderbox:"
+	$0 $1 stop
+	$0 $1 start
+	;;
+  *)
+	echo "Usage: tinderbox [depend|clobber] {start|stop|status|restart}"
+	exit 1
+esac
+
+exit 0
+
