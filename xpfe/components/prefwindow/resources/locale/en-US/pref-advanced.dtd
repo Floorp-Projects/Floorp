@@ -10,6 +10,10 @@
 <!ENTITY enbJavaCheck.label           "Enable Java">
 <!ENTITY enbJavaCheck.accesskey       "j">
 
+<!--LOCALIZATION NOTE (enbJsCheck.label): 'JavaScript' should never be translated -->
+<!ENTITY enbJsCheck.label             "Enable JavaScript for Navigator">
+<!ENTITY enbJsCheck.accesskey         "r">
+
 <!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
 <!ENTITY sendAddFtpCheck.accesskey    "e">
 
