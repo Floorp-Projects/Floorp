@@ -20,13 +20,9 @@
  * jsContext.cpp -- implementation of the jsIContext interface for the JSAPI.
  */
 
-extern "C" {
-#include <jsapi.h>
-}
-
-#include <nsISupports.h>
+#include "jsIScriptable.h"
 #include "jsContext.h"
-#include "jsScriptable.h"
+#include "JSWrapper.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIContextIID, JS_ICONTEXT_IID);
@@ -68,7 +64,7 @@ jsContext::~jsContext()
 }
 
 JSContext *
-jsContext::getJSContext()
+jsContext::GetJS()
 {
     return cx;
 }
@@ -185,7 +181,7 @@ jsContext::toScriptable(jsval v, jsIScriptable *scope)
 
 JSObject *jsScriptableCreateJSObjectProxy(jsIContext *cx, jsIScriptable *scope)
 {
-    JSObject *obj = ((jsScriptable *)scope)->getJSObject(cx);
+    JSObject *obj = scope->GetJS();
     if (!obj) {
 	/* XXX construct a proxy object */
 	return NULL;
@@ -195,7 +191,7 @@ JSObject *jsScriptableCreateJSObjectProxy(jsIContext *cx, jsIScriptable *scope)
 
 jsIScriptable *jsScriptableCreateFromJSObject(jsIContext *cx, JSObject *obj)
 {
-    return new jsScriptable(cx, obj);
+    return new JSWrapper(cx->GetJS(), obj);
 }
 
 nsresult
@@ -205,7 +201,7 @@ jsContext::evaluateString(jsIScriptable *scope,
 			  uintN lineno,
 			  jsval *rval)
 {
-    JSObject *obj = scope->getJSObject(this);
+    JSObject *obj = scope->GetJS();
     if (!obj) 
 	return NS_ERROR_FAILURE;
     if (!JS_EvaluateScript(cx, obj, JS_GetStringBytes(source), 
@@ -220,7 +216,7 @@ jsContext::evaluateString(jsIScriptable *scope,
 nsresult
 jsContext::initStandardObjects(jsIScriptable *scope)
 {
-    JSObject *obj = scope->getJSObject(this);
+    JSObject *obj = scope->GetJS();
     if (!obj) 
 	return NS_ERROR_FAILURE;
     if (!JS_InitStandardClasses(cx, obj))

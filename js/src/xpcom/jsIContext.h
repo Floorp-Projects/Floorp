@@ -25,10 +25,8 @@ class jsIContext;
 #ifndef JS_ICONTEXT_H
 #define JS_ICONTEXT_H
 
-#include <nsISupports.h>
-#include <jsapi.h>
-#include "jsIScript.h"
 #include "jsIScriptable.h"
+#include "jsIScript.h"
 #include "jsIFunction.h"
 #include "jsIErrorReporter.h"
 
@@ -42,6 +40,7 @@ class jsIContext;
 
 class jsIContext: public nsISupports {
  public:
+     virtual JSContext* GetJS() =0;
     /**
      * Compile a JavaScript function.
      * @return NULL on error, compiled jsIFunction *otherwise.
@@ -116,7 +115,7 @@ class jsIContext: public nsISupports {
      * Note: the return value indicates the success of the operation,
      * not the resulting boolean value.  *bp stores the new boolean value.
      */
-    NS_IMETHOD toBoolean(jsval v, JSBool *bp) = 0;
+    virtual nsresult toBoolean(jsval v, JSBool *bp) = 0;
 
     /**
      * Convert a jsval to a (newly-allocated) JavaScript number value.
@@ -137,7 +136,7 @@ class jsIContext: public nsISupports {
     /**
      * Evaluate a JavaScript source string.
      */
-    NS_IMETHOD evaluateString(jsIScriptable *scope,
+    virtual nsresult evaluateString(jsIScriptable *scope,
 			      JSString *source,
 			      JSString *sourceName,
 			      uintN lineno,
@@ -147,7 +146,7 @@ class jsIContext: public nsISupports {
      * Initialize the standard (ECMA-plus) objects in the given scope.
      * Makes scope an ECMA `global object'.
      */
-    NS_IMETHOD initStandardObjects(jsIScriptable *scope) = 0;
+    virtual nsresult initStandardObjects(jsIScriptable *scope) = 0;
 
     /**
      * Report a (usually fatal) runtime error.
