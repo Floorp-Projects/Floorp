@@ -34,10 +34,24 @@ function FillHistoryMenu( aParent, aMenu )
     var browserElement = document.getElementById("content");
     if (browserElement)
       {
-        var docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
-        if (docShell)
-          {
-            var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+	     var foopy = { }; 
+         var ds;
+		 var docShell;
+		 // Try to get docshell from appCore so that go/forward/back
+		 // menus work right after a theme switch. If fetching from
+		 // appCore fails use, the original method,
+         if (appCore) {
+		    appCore.getContentDocShell(foopy); 
+            ds = foopy.value; 
+		 }
+		 if (ds) {
+		    dump("Got docshell from appCOre\n");
+		    docShell = ds;
+		 }
+	     else
+            docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
+        if (docShell) {        
+		    var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
             if (webNavigation)
               {
                 var shistory = webNavigation.sessionHistory;
