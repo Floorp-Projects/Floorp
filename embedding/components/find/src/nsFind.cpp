@@ -324,7 +324,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     rv = mIterator->CurrentNode(getter_AddRefs(content));
 #ifdef DEBUG_FIND
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
-    printf(":::::::::::::::::::::::::: Got the first node "); DumpNode(dnode);
+    printf(":::::: Got the first node "); DumpNode(dnode);
 #endif
     tc = do_QueryInterface(content);
     if (tc)
@@ -364,7 +364,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     rv = mIterator->CurrentNode(getter_AddRefs(content));
 #ifdef DEBUG_FIND
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
-    printf(":::::::::::::::::::::::::: Got another node "); DumpNode(dnode);
+    printf(":::::: Got another node "); DumpNode(dnode);
 #endif
     // nsIContentIterator.h says Next() will return error at end,
     // but it doesn't really, so we have to check:
@@ -563,10 +563,6 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   const PRUnichar* patStr = patAutoStr.get();
   PRInt32 patLen = patAutoStr.Length() - 1;
 
-  // The offset only matters for the first node,
-  // so make a local copy so that we can zero it when we loop:
-  PRInt32 offset = mIterOffset;
-
   // current offset into the pattern -- reset to beginning/end:
   PRInt32 pindex = (mFindBackward ? patLen : 0);
 
@@ -581,6 +577,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 
   nsCOMPtr<nsITextContent> tc;
   const nsTextFragment *frag = nsnull;
+  PRInt32 fragLen = 0;
 
   // Pointers into the current fragment:
   const PRUnichar *t2b = nsnull;
@@ -628,8 +625,6 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         return NS_OK;
       }
 
-      offset = mIterOffset;
-
       // We have a new text content.  If its block parent is different
       // from the block parent of the last text content, then we
       // need to clear the match since we don't want to find
@@ -648,10 +643,11 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         mLastBlockParent = blockParent;
         // End any pending match:
         matchAnchorNode = nsnull;
+        matchAnchorOffset = 0;
         pindex = (mFindBackward ? patLen : 0);
       }
  
-     // Get the text content:
+      // Get the text content:
       tc = do_QueryInterface(mIterNode);
       if (!tc)         // Out of nodes
       {
@@ -663,19 +659,33 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 
       nsresult rv = tc->GetText(&frag);
       if (NS_FAILED(rv)) continue;
+      fragLen = frag->GetLength();
+
+      // Set our starting point in this node.
+      // If we're going back to the anchor node, which means that we
+      // just ended a partial match, use the saved offset:
+      if (mIterNode == matchAnchorNode)
+        findex = matchAnchorOffset + (mFindBackward ? 1 : 0);
+
       // mIterOffset, if set, is the range's idea of an offset,
       // and points between characters.  But when translated
       // to a string index, it points to a character.  If we're
       // going backward, this is one character too late and
       // we'll match part of our previous pattern.
-      if (offset >= 0)
-        restart = offset - (mFindBackward ? 1 : 0);
+      else if (mIterOffset >= 0)
+        findex = mIterOffset - (mFindBackward ? 1 : 0);
+
+      // Otherwise, just start at the appropriate end of the fragment:
       else if (mFindBackward)
-        restart = frag->GetLength()-1;
+        findex = fragLen - 1;
       else
-        restart = 0;
+        findex = 0;
+
+      // Offset can only apply to the first node:
+      mIterOffset = -1;
+
       // If this is outside the bounds of the string, then skip this node:
-      if (restart < 0 || restart > frag->GetLength()-1)
+      if (findex < 0 || findex > fragLen-1)
       {
 #ifdef DEBUG_FIND
         printf("At the end of a text node -- skipping to the next\n");
@@ -683,7 +693,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         frag = 0;
         continue;
       }
-      findex = restart;
+
 #ifdef DEBUG_FIND
       printf("Starting from offset %d\n", findex);
 #endif
@@ -692,7 +702,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         t2b = frag->Get2b();
         t1b = nsnull;
 #ifdef DEBUG_FIND
-        nsAutoString str2(t2b, frag->GetLength());
+        nsAutoString str2(t2b, fragLen);
         printf("2 byte, '%s'\n", NS_LossyConvertUCS2toASCII(str2).get());
 #endif
       }
@@ -701,7 +711,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         t1b = frag->Get1b();
         t2b = nsnull;
 #ifdef DEBUG_FIND
-        nsCAutoString str1(t1b, frag->GetLength());
+        nsCAutoString str1(t1b, fragLen);
         printf("1 byte, '%s'\n", str1.get());
 #endif
       }
@@ -714,16 +724,14 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 #ifdef DEBUG_FIND
       printf("Same node -- (%d, %d)\n", pindex, findex);
 #endif
-      if (mFindBackward ? (findex < 0) : (findex >= frag->GetLength()))
+      if (mFindBackward ? (findex < 0) : (findex >= fragLen))
       {
 #ifdef DEBUG_FIND
-        printf("Will need to pull a new node: restart=%d, frag len=%d\n",
-               restart, frag->GetLength());
+        printf("Will need to pull a new node: mAO = %d, frag len=%d\n",
+               matchAnchorOffset, fragLen);
 #endif
         // Done with this node.  Pull a new one.
         frag = nsnull;
-        // Offset can only apply to the first node:
-        offset = -1;
         continue;
       }
     }
@@ -783,7 +791,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
       // Save the range anchors if we haven't already:
       if (!matchAnchorNode) {
         matchAnchorNode = mIterNode;
-        matchAnchorOffset = findex + (mFindBackward ? 1 : 0);
+        matchAnchorOffset = findex;
       }
 
       // Are we done?
@@ -805,18 +813,20 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
             {
               nsCOMPtr<nsIDOMNode> startParent;
               nsCOMPtr<nsIDOMNode> endParent;
+              // convert char index to range point:
+              PRInt32 mao = matchAnchorOffset + (mFindBackward ? 1 : 0);
               if (mFindBackward)
               {
                 startParent = do_QueryInterface(tc);
                 endParent = matchAnchorNode;
                 matchStartOffset = findex;
-                matchEndOffset = matchAnchorOffset;
+                matchEndOffset = mao;
               }
               else
               {
                 startParent = matchAnchorNode;
                 endParent = do_QueryInterface(tc);
-                matchStartOffset = matchAnchorOffset;
+                matchStartOffset = mao;
                 matchEndOffset = findex+1;
               }
               if (startParent && endParent)
@@ -871,7 +881,8 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // we started the current match.
     if (matchAnchorNode)    // we're ending a partial match
     {
-      findex = restart;   // +incr will be added to findex when we continue
+      findex = matchAnchorOffset;
+          // +incr will be added to findex when we continue
       nsCOMPtr<nsIContent> content (do_QueryInterface(matchAnchorNode));
       nsresult rv = NS_ERROR_UNEXPECTED;
       NS_ASSERTION(content, "Text content isn't nsIContent!");
@@ -883,6 +894,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     }
     restart = findex + incr;
     matchAnchorNode = nsnull;
+    matchAnchorOffset = 0;
     inWhitespace = PR_FALSE;
     pindex = (mFindBackward ? patLen : 0);
 #ifdef DEBUG_FIND
