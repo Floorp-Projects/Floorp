@@ -1173,11 +1173,21 @@ bash# ./checksetup.pl
     <section>
       <title>Upgrading From Previous Versions</title>
       <para>
-	The developers of Bugzilla are constantly adding new tables, columns and
-	fields.  You'll get SQL errors if you just update the code.  The strategy
-	to update is to simply always run the checksetup.pl script whenever
-	you upgrade your installation of Bugzilla.  If you want to see what has
-	changed, you can read the comments in that file, starting from the end.
+  A plain Bugzilla is fairly easy to upgrade from one version to a newer one.
+  However, things get a bit more complicated if you've made changes to 
+  Bugzilla's code. In this case, you may have to re-make or reapply those
+  changes.
+  It is recommended that you take a backup of your database and your entire
+  Bugzilla installation before attempting an upgrade. You can upgrade a 'clean'
+  installation by untarring a new tarball over the old installation. If you
+  are upgrading from 2.12 or later, you can type <filename>cvs -z3 
+  update</filename>, and resolve conflicts if there are any.   
+      </para>
+      <para>
+	Because the developers of Bugzilla are constantly adding new tables, columns
+  and fields, you'll probably get SQL errors if you just update the code and
+  attempt to use Bugzilla. Always run the checksetup.pl script whenever
+	you upgrade your installation. 
       </para>
       <para>
 	If you are running Bugzilla version 2.8 or lower, and wish to upgrade to
