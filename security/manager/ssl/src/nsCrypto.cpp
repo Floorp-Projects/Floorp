@@ -53,8 +53,6 @@
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIDOMCryptoDialogs.h"
 #include "jsapi.h"
-#include "jsdbgapi.h"
-#include "jscntxt.h"
 #include <ctype.h>
 #include "nsReadableUtils.h"
 #include "pk11func.h"
