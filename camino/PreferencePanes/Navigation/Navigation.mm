@@ -377,38 +377,41 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   // add separator first, current instance of Camino will be inserted before it
   [menu addItem:[NSMenuItem separatorItem]];
 
-  /* Set up new menu
-    Right now, if Launch Services can't find an app in our list, it just won't make it into
-    the menu. If it can't find the app that is the default app, there will be no default browser
-    selectioned in the menu. If it can't find Camino (it happens oddly enough) then we won't be in
-    the list either. This should be fixed when somebody has time since we obviously know where to
-    find ourselves if not other apps.
-    */
+  // Set up new menu
   NSEnumerator *browserEnumerator = [browsers objectEnumerator];
   while (NSString *bundleID = [browserEnumerator nextObject]) {
     NSURL *appURL = nil;
-    if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
-      NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
-                                                    action:@selector(defaultBrowserChange:) keyEquivalent:@""];
-      NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:[[appURL path] stringByStandardizingPath]];
-      [icon setSize:NSMakeSize(16.0, 16.0)];
-      [item setImage:icon];
-      [item setRepresentedObject:bundleID];
-      [item setTarget:self];
-      [item setEnabled:YES];
-      
-      // if this item is Camino, insert it first in the list
+    OSErr e = LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID,
+                                       NULL, NULL, (CFURLRef*)&appURL);
+    if (e != noErr) {
+      // see if it was supposed to find Camino and use our own path in that case,
+      // otherwise skip this bundle ID
       if ([bundleID isEqualToString:caminoBundleID])
-        [menu insertItem:item atIndex:0];
+        appURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]];
       else
-        [menu addItem:item];
-      
-      // if this item has the same bundle ID as the current default browser, select it
-      if ([bundleID isEqualToString:currentDefaultBrowserBundleID])
-        selectedBrowserMenuItem = item;
-      
-      [item release];
+        continue;
     }
+    
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
+                                                  action:@selector(defaultBrowserChange:) keyEquivalent:@""];
+    NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:[[appURL path] stringByStandardizingPath]];
+    [icon setSize:NSMakeSize(16.0, 16.0)];
+    [item setImage:icon];
+    [item setRepresentedObject:bundleID];
+    [item setTarget:self];
+    [item setEnabled:YES];
+    
+    // if this item is Camino, insert it first in the list
+    if ([bundleID isEqualToString:caminoBundleID])
+      [menu insertItem:item atIndex:0];
+    else
+      [menu addItem:item];
+    
+    // if this item has the same bundle ID as the current default browser, select it
+    if ([bundleID isEqualToString:currentDefaultBrowserBundleID])
+      selectedBrowserMenuItem = item;
+    
+    [item release];
   }
   
   // allow user to select a browser
