@@ -363,7 +363,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
           loadResult = GetDataOffClipboard ( 'styl', &clipboardData, &dataSize );
           if (NS_SUCCEEDED(loadResult) && 
               clipboardData &&
-              (dataSize >= (sizeof(ScrpSTElement) + 2))) {
+              ((PRUint32)dataSize >= (sizeof(ScrpSTElement) + 2))) {
             StScrpRec *scrpRecP = (StScrpRec *) clipboardData;
             ScrpSTElement *styl = scrpRecP->scrpStyleTab;
             ScriptCode script = styl ? ::FontToScript(styl->scrpFont) : smCurrentScript;
@@ -475,8 +475,6 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
   if ( outDataSize )
       *outDataSize = 0;
 
-  // check if it is on the clipboard
-  long offsetUnused = 0;
 
 #if TARGET_CARBON
   ScrapRef scrap;
@@ -630,7 +628,7 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
     if ( flavorList ) {
       err = ::GetScrapFlavorInfoList ( scrap, &flavorCount, flavorList );
       if ( !err && flavorList ) {
-        for ( int i = 0; i < flavorCount; ++i ) {
+        for ( unsigned int i = 0; i < flavorCount; ++i ) {
           if ( flavorList[i].flavorType == inMacFlavor )
             retval = PR_TRUE;
         }

@@ -425,7 +425,7 @@ NS_METHOD nsMenuX::RemoveAll()
     // clear command id's
     nsCOMPtr<nsIMenuCommandDispatcher> dispatcher ( do_QueryInterface(mManager) );
     if ( dispatcher ) {
-      for ( int i = 1; i <= mNumMenuItems; ++i ) {
+      for ( unsigned int i = 1; i <= mNumMenuItems; ++i ) {
         PRUint32 commandID = 0L;
         OSErr err = ::GetMenuItemCommandID(mMacMenuHandle, i, (unsigned long*)&commandID);
         if ( !err )
@@ -1180,7 +1180,7 @@ nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   
   PRUint32 count = mMenuContent->GetChildCount();
 
-  for (PRInt32 i = 0; i < count; i++) {
+  for (PRUint32 i = 0; i < count; i++) {
     PRInt32 dummy;
     nsIContent *child = mMenuContent->GetChildAt(i);
     nsCOMPtr<nsIAtom> tag;

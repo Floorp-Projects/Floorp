@@ -2398,7 +2398,7 @@ nsresult nsMacEventHandler::UnicodeHandleUpdateInputArea(const PRUnichar* text, 
     //  so instead we iterate over the range list and map each range individually.  it's probably faster than
     //  trying to do collapse all the ranges into a single offset list
     //
-    PRUint32 i;
+    PRInt32 i;
     for(i = 0; i < rangeArray->fNumOfRanges; i++) {      
       // 2.2.2.1 check each range item in NS_ASSERTION
       NS_ASSERTION(

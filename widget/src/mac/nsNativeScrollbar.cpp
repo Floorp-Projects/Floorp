@@ -147,7 +147,6 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   PRUint32 oldPos, newPos;
   PRUint32 incr;
   PRUint32 visibleImageSize;
-  PRInt32 scrollBarMessage = 0;
   GetPosition(&oldPos);
   GetLineIncrement(&incr);
   GetViewSize(&visibleImageSize);
@@ -247,7 +246,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
 void
 nsNativeScrollbar::UpdateContentPosition(PRUint32 inNewPos)
 {
-  if ( inNewPos == mValue || !mContent )   // break any possible recursion
+  if ( (PRInt32)inNewPos == mValue || !mContent )   // break any possible recursion
     return;
 
   // guarantee |inNewPos| is in the range of [0, mMaxValue] so it's correctly unsigned

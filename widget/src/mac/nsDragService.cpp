@@ -273,8 +273,8 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTran
   // see it if you're paying attention, but who pays such close attention?
   Rect dragRect;
   ::GetRegionBounds(theDragRgn, &dragRect);
-  theEvent.where.v = rint(dragRect.top + (dragRect.bottom - dragRect.top) / 2);
-  theEvent.where.h = rint(dragRect.left + (dragRect.right - dragRect.left) / 2);
+  theEvent.where.v = dragRect.top + ((dragRect.bottom - dragRect.top) / 2);
+  theEvent.where.h = dragRect.left + ((dragRect.right - dragRect.left) / 2);
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
@@ -548,7 +548,7 @@ nsDragService::GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex )
       FlavorFlags unused;
       PRBool dataFound = PR_FALSE;
       void* dataBuff = nsnull;
-      PRInt32 dataSize = 0;
+      PRUint32 dataSize = 0;
       if ( macOSFlavor && ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {	    
         nsresult loadResult = ExtractDataFromOS(mDragRef, itemRef, macOSFlavor, &dataBuff, &dataSize);
   	    if ( NS_SUCCEEDED(loadResult) && dataBuff )
