@@ -500,7 +500,7 @@ NS_IMETHODIMP nsDocShell::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem)
   while (parent)
   {
     *aRootTreeItem = parent;
-    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(parent->GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
   }
   NS_IF_ADDREF(*aRootTreeItem);
   return NS_OK;
@@ -634,7 +634,6 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShellT
       }
   return NS_OK;
 }
-
 
 //*****************************************************************************
 // nsDocShell::nsIBaseWindow
