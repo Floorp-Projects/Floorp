@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE TreeView>
+
+
+<window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:html="http://www.w3.org/TR/REC-html40">
+
+<xul:tree>
+  <xul:treehead>
+    <xul:treerow>
+      <xul:treecell>Subject</xul:treecell>
+      <xul:treecell>Sender</xul:treecell>
+      <xul:treecell>Date</xul:treecell>
+    </xul:treerow>
+  </xul:treehead>
+  <xul:treebody>
+    <xul:treeitem>
+      <xul:treerow>
+        <xul:treecell><xul:treeindentation/>Netcenter TV Advertising</xul:treecell>
+        <xul:treecell><xul:treeindentation/>lynn@netscape.com</xul:treecell>
+        <xul:treecell><xul:treeindentation/>Wed, 27 Jan 1999 10:34:33</xul:treecell>
+      </xul:treerow>
+      <xul:treerow>
+        <xul:treecell><xul:treeindentation/>Mac/Unix Y2K Audit Reminder</xul:treecell>
+        <xul:treecell><xul:treeindentation/>juliew@netscape.com</xul:treecell>
+        <xul:treecell><xul:treeindentation/>Wed, 27 Jan 1999 12:20:15</xul:treecell>
+      </xul:treerow>
+    </xul:treeitem>
+  </xul:treebody>
+</xul:tree>
+</window>
+

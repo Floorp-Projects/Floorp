@@ -1,0 +1,52 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window> 
+
+<window>
+  <xul:commands>
+    <xul:command name="nsCmd:GetMessage" onCommand="window.getmessage();"/>
+    <xul:command name="nsCmd:NewMessage" onCommand="window.newmessage();"/>
+    <xul:command name="nsCmd:ReplyMessage" onCommand="window.replymessage();"/>
+    <xul:command name="nsCmd:ForwardMessage" onCommand="window.forwardmessage();"/>
+    <xul:command name="nsCmd:DeleteMessage" onCommand="window.deletemessage();"/>
+    <!-- other parameters of command are assumed to have
+      some useful initial value -->
+  </xul:commands>
+  <xul:menubar>
+    <xul:menu name="File">
+      <xul:menuitem name="New Message" cmd="nsCmd:NewMessage"/>
+      <xul:menuitem name="Get New Message" cmd="nsCmd:GetMessage"/>
+    </xul:menu>
+    <xul:menu name="Edit">
+      <xul:menuitem name="Delete Message" cmd="nsCmd:DeleteMessage"/>
+    </xul:menu>
+    <xul:menu name="Message">
+      <xul:menuitem name="Reply" cmd="nsCmd:ReplyMessage"/>
+      <xul:menuitem name="Forward" cmd="nsCmd:ForwardMessage" />
+     </xul:menu>
+
+  </xul:menubar>
+  
+    <xul:toolbar>
+          <html:button cmd="nsCmd:GetMessage" style="background-color:rgb(192,192,192);">
+                          <html:img src="getmsg.gif"/><html:BR/>Get Msg
+          </html:button>
+          <html:button cmd="nsCmd:NewMessage" style="background-color:rgb(192,192,192);">
+                          <html:img src="newmsg.gif"/><html:BR/>New Msg
+          </html:button>
+          <html:button cmd="nsCmd:ReplyMessage" style="background-color:rgb(192,192,192);">
+                          <html:img src="replymsg.gif"/><html:BR/>Reply
+          </html:button>
+          <html:button cmd="nsCmd:ForwardMessage" style="background-color:rgb(192,192,192);">
+                          <html:img src="fwdmsg.gif"/><html:BR/>Forward
+          </html:button>
+          <html:button cmd="nsCmd:DeleteMessage" style="background-color:rgb(192,192,192);">
+                          <html:img src="delmsg.gif"/><html:BR/>Delete
+          </html:button>
+          <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+          </html:a>
+    </xul:toolbar>
+    
+</window>
+

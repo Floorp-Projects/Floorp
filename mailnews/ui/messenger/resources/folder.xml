@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="common.css" type="text/css"?>
+
+<!DOCTYPE TreeView>
+
+
+<window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:html="http://www.w3.org/TR/REC-html40">
+
+<xul:tree>
+  <xul:treehead>
+    <xul:treerow>
+      <xul:treecell>Name</xul:treecell>
+      <xul:treecell>Unread</xul:treecell>
+      <xul:treecell>Total</xul:treecell>
+    </xul:treerow>
+  </xul:treehead>
+  <xul:treebody>
+    <xul:treeitem>
+      <xul:treerow>
+        <xul:treecell><xul:treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</xul:treecell>
+        <xul:treecell></xul:treecell>
+      </xul:treerow>
+	<xul:treechildren>
+      <xul:treeitem>
+	    <xul:treerow>
+          <xul:treecell><xul:treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Inbox</xul:treecell>
+          <xul:treecell>1</xul:treecell>
+          <xul:treecell>130</xul:treecell>
+        </xul:treerow>
+	  </xul:treeitem>
+	  <xul:treeitem>
+	    <xul:treerow>
+          <xul:treecell><xul:treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Send</xul:treecell>
+          <xul:treecell>0</xul:treecell>
+          <xul:treecell>9</xul:treecell>
+        </xul:treerow>
+	  </xul:treeitem>
+    </xul:treechildren>
+    </xul:treeitem>
+
+  </xul:treebody>
+
+</xul:tree>
+
+</window>
+
