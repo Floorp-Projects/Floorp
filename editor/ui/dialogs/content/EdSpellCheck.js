@@ -20,7 +20,7 @@
  * Contributor(s):
  */
 
-var MisspelledWord;
+var gMisspelledWord;
 var spellChecker;
 var allowSelectWord = true;
 var PreviousReplaceWord = "";
@@ -191,7 +191,7 @@ function InitLanguageMenu(curLang)
 
 function DoEnabling()
 {
-  if (!MisspelledWord)
+  if (!gMisspelledWord)
   {
     // No more misspelled words
     dialog.MisspelledWord.setAttribute("value",GetString( firstTime ? "NoMisspelledWord" : "CheckSpellingDone"));
@@ -232,38 +232,41 @@ function DoEnabling()
 
 function NextWord()
 {
-  MisspelledWord = spellChecker.GetNextMisspelledWord();
+  gMisspelledWord = spellChecker.GetNextMisspelledWord();
   SetWidgetsForMisspelledWord();
 }
 
 function SetWidgetsForMisspelledWord()
 {
-  dialog.MisspelledWord.setAttribute("value",MisspelledWord);
+  dialog.MisspelledWord.setAttribute("value", gMisspelledWord);
 
 
   // Initial replace word is misspelled word
-  dialog.ReplaceWordInput.value = MisspelledWord;
-  PreviousReplaceWord = MisspelledWord;
+  dialog.ReplaceWordInput.value = gMisspelledWord;
+  PreviousReplaceWord = gMisspelledWord;
 
   // This sets dialog.ReplaceWordInput to first suggested word in list
-  FillSuggestedList();
+  FillSuggestedList(gMisspelledWord);
 
   DoEnabling();
 
-  if (MisspelledWord)
+  if (gMisspelledWord)
     SetTextboxFocus(dialog.ReplaceWordInput);
 }
 
 function CheckWord()
 {
   word = dialog.ReplaceWordInput.value;
-  if (word) {
+  if (word) 
+  {
     isMisspelled = spellChecker.CheckCurrentWord(word);
-    if (isMisspelled) {
-      MisspelledWord = word;
-      FillSuggestedList();
+    if (isMisspelled)
+    {
+      FillSuggestedList(word);
       SetReplaceEnable();
-    } else {
+    } 
+    else 
+    {
       ClearTreelist(dialog.SuggestedList);
       var item = AppendStringToTreelistById(dialog.SuggestedList, "CorrectSpelling");
       if (item) item.setAttribute("disabled", "true");
@@ -336,8 +339,8 @@ function Ignore()
 
 function IgnoreAll()
 {
-  if (MisspelledWord) {
-    spellChecker.IgnoreWordAllOccurrences(MisspelledWord);
+  if (gMisspelledWord) {
+    spellChecker.IgnoreWordAllOccurrences(gMisspelledWord);
   }
   NextWord();
 }
@@ -345,10 +348,10 @@ function IgnoreAll()
 function Replace()
 {
   newWord = dialog.ReplaceWordInput.value;
-  if (MisspelledWord && MisspelledWord != newWord)
+  if (gMisspelledWord && gMisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
-    isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, false);
+    isMisspelled = spellChecker.ReplaceWord(gMisspelledWord, newWord, false);
     editorShell.EndBatchChanges();
   }
   NextWord();
@@ -357,10 +360,10 @@ function Replace()
 function ReplaceAll()
 {
   newWord = dialog.ReplaceWordInput.value;
-  if (MisspelledWord && MisspelledWord != newWord)
+  if (gMisspelledWord && gMisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
-    isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, true);
+    isMisspelled = spellChecker.ReplaceWord(gMisspelledWord, newWord, true);
     editorShell.EndBatchChanges();
   }
   NextWord();
@@ -368,15 +371,15 @@ function ReplaceAll()
 
 function AddToDictionary()
 {
-  if (MisspelledWord) {
-    spellChecker.AddWordToDictionary(MisspelledWord);
+  if (gMisspelledWord) {
+    spellChecker.AddWordToDictionary(gMisspelledWord);
   }
   NextWord();
 }
 
 function EditDictionary()
 {
-  window.openDialog("chrome://editor/content/EdDictionary.xul", "_blank", "chrome,close,titlebar,modal", "", MisspelledWord);
+  window.openDialog("chrome://editor/content/EdDictionary.xul", "_blank", "chrome,close,titlebar,modal", "", gMisspelledWord);
 }
 
 function SelectLanguage()
@@ -399,14 +402,14 @@ function Recheck()
     spellChecker.UninitSpellChecker();
     spellChecker.InitSpellChecker();
     spellChecker.SetCurrentDictionary(curLang);
-    MisspelledWord = spellChecker.GetNextMisspelledWord();
+    gMisspelledWord = spellChecker.GetNextMisspelledWord();
     SetWidgetsForMisspelledWord();
   } catch(ex) {
     dump(ex);
   }
 }
 
-function FillSuggestedList()
+function FillSuggestedList(misspelledWord)
 {
   var list = dialog.SuggestedList;
 
@@ -414,7 +417,7 @@ function FillSuggestedList()
   allowSelectWord = false;
   ClearTreelist(list);
 
-  if (MisspelledWord.length > 0)
+  if (misspelledWord.length > 0)
   {
     // Get suggested words until an empty string is returned
     var count = 0;
@@ -448,7 +451,7 @@ function SetReplaceEnable()
 {
   // Enable "Change..." buttons only if new word is different than misspelled
   var newWord = dialog.ReplaceWordInput.value;
-  var enable = newWord.length > 0 && newWord != MisspelledWord;
+  var enable = newWord.length > 0 && newWord != gMisspelledWord;
   SetElementEnabledById("Replace", enable);
   SetElementEnabledById("ReplaceAll", enable);
   if (enable)
