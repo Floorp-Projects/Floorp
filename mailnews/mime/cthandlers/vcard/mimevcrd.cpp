@@ -1202,47 +1202,31 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
     if (status < 0) return status;
 		status = WriteEachLineToStream (obj, "<P><SCRIPT>");
 		if (status < 0) return status;
-		captionLine = PR_smprintf ("function showAdvanced%d() {", s_unique);
-		if (captionLine)
-			status = WriteEachLineToStream (obj, captionLine);
-		PR_FREEIF (captionLine);
-		captionLine = NULL;
-		if (status < 0) return status;
-    //CSS: JS
-		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"none\";", s_unique);
+
+		captionLine = PR_smprintf (
+"function showAdvanced%d()\
+{\
+  var	longDiv  = document.getElementById(\"advanced%d\");\
+  var	shortDiv = document.getElementById(\"basic%d\");\
+  longDiv.setAttribute(\"style\", \"display:block;\");\
+  shortDiv.setAttribute(\"style\", \"display:none;\");\
+};\
+function showBasic%d()\
+{\
+  var	longDiv  = document.getElementById(\"advanced%d\");\
+  var	shortDiv = document.getElementById(\"basic%d\");\
+  longDiv.setAttribute(\"style\", \"display:none;\");\
+  shortDiv.setAttribute(\"style\", \"display:block;\");\
+};", 
+                        s_unique, s_unique, s_unique, 
+                        s_unique, s_unique, s_unique);
     if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
-		captionLine = NULL;
 		if (status < 0) return status;
-    //CSS: JS
-    captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"block\";", s_unique);
-		if (captionLine)
-			status = WriteEachLineToStream (obj, captionLine);
-		PR_FREEIF (captionLine);
-		captionLine = NULL;
-		if (status < 0) return status;
-		status = WriteEachLineToStream (obj, "};");
-		if (status < 0) return status;
-		captionLine = PR_smprintf ("function showBasic%d() {", s_unique);
-		if (captionLine)
-			status = WriteEachLineToStream (obj, captionLine);
-		PR_FREEIF (captionLine);
-		captionLine = NULL;
-		if (status < 0) return status;
-    //CSS: JS
- 		captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"none\";", s_unique);
-		if (captionLine)
-			status = WriteEachLineToStream (obj, captionLine);
-		PR_FREEIF (captionLine);
-		if (status < 0) return status;
-    //CSS: JS
- 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"block\";", s_unique);
-		if (captionLine)
-			status = WriteEachLineToStream (obj, captionLine);
-		PR_FREEIF (captionLine);
-		if (status < 0) return status;
-		status = WriteEachLineToStream (obj, "}; </SCRIPT></P>");
+
+
+		status = WriteEachLineToStream (obj, "</SCRIPT></P>");
 	} 
 	else {
     //CSS: END DIV
