@@ -219,12 +219,18 @@ nsCocoaBrowserService::AlertCheck(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
   NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
   NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  BOOL valueBool = *checkValue ? YES : NO;
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  [controller alertCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-
-  *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  if (checkValue) {
+    BOOL valueBool = *checkValue ? YES : NO;
+    
+    [controller alertCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
+    
+    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  }
+  else {
+    [controller alert:window title:titleStr text:textStr];    
+  }
   
   return NS_OK;
 }
@@ -266,12 +272,18 @@ nsCocoaBrowserService::ConfirmCheck(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
   NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
   NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  BOOL valueBool = *checkValue ? YES : NO;
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller confirmCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
-
-  *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  if (checkValue) {
+    BOOL valueBool = *checkValue ? YES : NO;
+    
+    *_retval = (PRBool)[controller confirmCheck:window title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
+    
+    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  }
+  else {
+    *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
+  }
   
   return NS_OK;
 }
@@ -311,12 +323,17 @@ nsCocoaBrowserService::Prompt(nsIDOMWindow *parent,
   NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
   NSMutableString* valueStr = [NSMutableString stringWithCharacters:*value length:(*value ? nsCRT::strlen(*value) : 0)];
     
-  BOOL valueBool = *checkValue ? YES : NO;
+  BOOL valueBool;
+  if (checkValue) {
+    valueBool = *checkValue ? YES : NO;
+  }
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller prompt:window title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool];
+  *_retval = (PRBool)[controller prompt:window title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
 
-  *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  if (checkValue) {
+    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  }
   PRUint32 length = [valueStr length];
   PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
   [valueStr getCharacters:retStr];
@@ -348,12 +365,17 @@ nsCocoaBrowserService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   NSMutableString* userNameStr = [NSMutableString stringWithCharacters:*username length:(*username ? nsCRT::strlen(*username) : 0)];
   NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
     
-  BOOL valueBool = *checkValue ? YES : NO;
+  BOOL valueBool;
+  if (checkValue) {
+    valueBool = *checkValue ? YES : NO;
+  }
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller promptUserNameAndPassword:window title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool];
-
-  *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  *_retval = (PRBool)[controller promptUserNameAndPassword:window title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
+  
+  if (checkValue) {
+    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  }
 
   PRUint32 length = [userNameStr length];
   PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));
@@ -390,12 +412,17 @@ nsCocoaBrowserService::PromptPassword(nsIDOMWindow *parent,
   NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
   NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
     
-  BOOL valueBool = *checkValue ? YES : NO;
+  BOOL valueBool;
+  if (checkValue) {
+    valueBool = *checkValue ? YES : NO;
+  }
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
-  *_retval = (PRBool)[controller promptPassword:window title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool];
+  *_retval = (PRBool)[controller promptPassword:window title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
 
-  *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  if (checkValue) {
+    *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
+  }
 
   PRUint32 length = [passwordStr length];
   PRUnichar* retStr = (PRUnichar*)nsMemory::Alloc((length + 1) * sizeof(PRUnichar));

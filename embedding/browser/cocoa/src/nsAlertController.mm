@@ -76,20 +76,26 @@
   return (result == 1);
 }
 
-- (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue
+- (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
 {
   [promptPanelText setStringValue:text];
   [promptPanel setTitle:title];
-  int state = (*checkValue ? NSOnState : NSOffState);
-  [promptPanelCheck setState:state];
+  if (doCheck) {
+    int state = (*checkValue ? NSOnState : NSOffState);
+    [promptPanelCheck setState:state];
+    [promptPanelCheck setEnabled:YES];
+  }
+  else {
+    [promptPanelCheck setEnabled:NO];
+  }  
   [promptPanelCheck setTitle:checkMsg];
-  [promptPanelInput setTitle:promptText];
+  [promptPanelInput setStringValue:promptText];
 
   int result = [NSApp runModalForWindow:promptPanel relativeToWindow:parent];
 
   *checkValue = ([promptPanelCheck state] == NSOnState);
 
-  NSString* value = [promptPanelInput title];
+  NSString* value = [promptPanelInput stringValue];
   PRUint32 length = [promptText length];
   if (length) {
     NSRange all;
@@ -104,21 +110,27 @@
   return (result == 1);	
 }
 
-- (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue 
+- (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
 {
   [usernamePanelText setStringValue:text];
   [usernamePanel setTitle:title];
-  int state = (*checkValue ? NSOnState : NSOffState);
-  [usernamePanelCheck setState:state];
+  if (doCheck) {
+    int state = (*checkValue ? NSOnState : NSOffState);
+    [usernamePanelCheck setState:state];
+    [usernamePanelCheck setEnabled:YES];
+  }
+  else {
+    [usernamePanelCheck setEnabled:NO];
+  }  
   [usernamePanelCheck setTitle:checkMsg];
-  [usernamePanelPassword setTitle:passwordText];
-  [usernamePanelUserName setTitle:userNameText];
+  [usernamePanelPassword setStringValue:passwordText];
+  [usernamePanelUserName setStringValue:userNameText];
 
   int result = [NSApp runModalForWindow:usernamePanel relativeToWindow:parent];
 
   *checkValue = ([usernamePanelCheck state] == NSOnState);
 
-  NSString* value = [usernamePanelUserName title];
+  NSString* value = [usernamePanelUserName stringValue];
   PRUint32 length = [userNameText length];
   if (length) {
     NSRange all;
@@ -128,7 +140,7 @@
   }
   [userNameText appendString:value];
 
-  value = [usernamePanelPassword title];
+  value = [usernamePanelPassword stringValue];
   length = [passwordText length];
   if (length) {
     NSRange all;
@@ -143,20 +155,26 @@
   return (result == 1);	
 }
 
-- (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue 
+- (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck
 {
   [passwordPanelText setStringValue:text];
   [passwordPanel setTitle:title];
-  int state = (*checkValue ? NSOnState : NSOffState);
-  [passwordPanelCheck setState:state];
+  if (doCheck) {
+    int state = (*checkValue ? NSOnState : NSOffState);
+    [passwordPanelCheck setState:state];
+    [passwordPanelCheck setEnabled:YES];
+  }
+  else {
+    [passwordPanelCheck setEnabled:NO];
+  }  
   [passwordPanelCheck setTitle:checkMsg];
-  [passwordPanelInput setTitle:passwordText];
+  [passwordPanelInput setStringValue:passwordText];
 
   int result = [NSApp runModalForWindow:passwordPanel relativeToWindow:parent];
 
   *checkValue = ([passwordPanelCheck state] == NSOnState);
 
-  NSString* value = [passwordPanelInput title];
+  NSString* value = [passwordPanelInput stringValue];
   PRUint32 length = [passwordText length];
   if (length) {
     NSRange all;
