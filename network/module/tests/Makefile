@@ -37,6 +37,7 @@ EX_LIBS = \
 	$(DIST)/bin/libremoturl.so \
  	$(DIST)/bin/libhttpurl.so \
 	$(DIST)/bin/libnetcache.so \
+	$(DIST)/bin/libmimetype.so \
 	$(DIST)/bin/libnetwork.so \
 	$(DIST)/bin/libnetlib.so  \
         $(DIST)/bin/libreg.so	\
