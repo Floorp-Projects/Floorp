@@ -1378,19 +1378,30 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
         // Create a simple page sequence frame
         rv = NS_NewSimplePageSequenceFrame(pageSequenceFrame);
         if (NS_SUCCEEDED(rv)) {
+          nsIFrame* pageFrame;
           nsIFrame* childList;
   
           // Initialize the frame and force it to have a view
           pageSequenceFrame->Init(*aPresContext, aContent, scrollFrame, pseudoStyle);
-          NS_RELEASE(pseudoStyle);
           nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
                                                    pseudoStyle, PR_TRUE);
+
+          // Create the first page
+          NS_NewPageFrame(pageFrame);
+
+          // Initialize it and force it to have a view
+          // XXX Use a PAGE style context...
+          pageFrame->Init(*aPresContext, aContent, pageSequenceFrame, pseudoStyle);
+          nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
+                                                   pseudoStyle, PR_TRUE);
+          NS_RELEASE(pseudoStyle);
   
-          // Process the child content, and set the page sequence frame's initial
-          // child list
-          rv = ProcessChildren(aPresContext, pageSequenceFrame, aContent, childList);
+          // Process the child content, and set the page and page sequence frame's
+          // initial child lists
+          rv = ProcessChildren(aPresContext, pageFrame, aContent, childList);
           if (NS_SUCCEEDED(rv)) {
-            pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+            pageFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+            pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
     
             // Set the scroll frame's initial child list
             scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
