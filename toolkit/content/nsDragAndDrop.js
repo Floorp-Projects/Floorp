@@ -313,9 +313,26 @@ var transferUtils = {
  * nsDragAndDrop - a convenience wrapper for nsTransferable, nsITransferable
  *                 and nsIDragService/nsIDragSession. 
  *
- * USAGE INFORMATION: see 'README-nsDragAndDrop.html' in the same source directory
- *                    as this file (typically xpfe/global/resources/content)
- */
+ * Use: map the handler functions to the 'ondraggesture', 'ondragover' and
+ *   'ondragdrop' event handlers on your XML element, e.g.                   
+ *   <xmlelement ondraggesture="nsDragAndDrop.startDrag(event, observer);"   
+ *               ondragover="nsDragAndDrop.startDrag(event, observer);"      
+ *               ondragdrop="nsDragAndDrop.drop(event, observer);"/>         
+ *                                                                           
+ *   You need to create an observer js object with the following member      
+ *   functions:                                                              
+ *     Object onDragStart (event)        // called when drag initiated,      
+ *                                       // returns flavour list with data   
+ *                                       // to stuff into transferable      
+ *     void onDragOver (Object flavour)  // called when element is dragged   
+ *                                       // over, so that it can perform     
+ *                                       // any drag-over feedback for provided
+ *                                       // flavour                          
+ *     void onDrop (Object data)         // formatted data object dropped.   
+ *     Object getSupportedFlavours ()    // returns a flavour list so that   
+ *                                       // nsTransferable can determine
+ *                                       // whether or not to accept drop. 
+ **/   
 
 var nsDragAndDrop = {
   
