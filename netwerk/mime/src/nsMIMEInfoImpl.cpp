@@ -22,6 +22,12 @@
 
 #include "nsMIMEInfoImpl.h"
 #include "nsXPIDLString.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsEscape.h"
+
+#define NEVER_ASK_FOR_SAVE_TO_DISK_PREF "browser.helperApps.neverAsk.saveToDisk"
+#define NEVER_ASK_FOR_OPEN_FILE_PREF "browser.helperApps.neverAsk.openFile"
 
 // nsISupports methods
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
@@ -30,13 +36,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
 nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
     mPreferredAction = nsIMIMEInfo::saveToDisk;
-    mAlwaysAskBeforeHandling = PR_TRUE;
 }
 
 nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) :mMIMEType( aMIMEType ){
     NS_INIT_REFCNT();
     mPreferredAction = nsIMIMEInfo::saveToDisk;
-    mAlwaysAskBeforeHandling = PR_TRUE;
 }
 
 PRUint32
@@ -239,12 +243,104 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredAction(nsMIMEInfoHandleAction aPreferr
 
 NS_IMETHODIMP nsMIMEInfoImpl::GetAlwaysAskBeforeHandling(PRBool * aAlwaysAsk)
 {
-  *aAlwaysAsk = mAlwaysAskBeforeHandling;
+  // this is a bit complicated. We now store the always ask preference in two preferences:
+  // browser.helperApps.neverAsk.saveToDisk and
+  // browser.helperApps.neverAsk.openFile
+  // Both lists are comma delimited lists containing mime types which the user has specifically
+  // decided to override the helper app dialog for. 
+
+  // for get always ask, we just need to search both pref branches for our mime type...
+  PRBool mimeTypeIsPresent = PR_FALSE;
+  CheckPrefForMimeType(NEVER_ASK_FOR_SAVE_TO_DISK_PREF, &mimeTypeIsPresent);
+
+  if (mimeTypeIsPresent)
+  {
+    *aAlwaysAsk = PR_FALSE;
+    mPreferredAction = nsIMIMEInfo::saveToDisk;
+  }
+  else
+  {
+    CheckPrefForMimeType(NEVER_ASK_FOR_OPEN_FILE_PREF, &mimeTypeIsPresent);
+    if (mimeTypeIsPresent)
+    {
+      *aAlwaysAsk = PR_FALSE;
+      // do we need to force a preferred action here? I don't think so...
+    }
+  }
+
   return NS_OK;
+}
+
+// re-write me to use new string apis to avoid the extra string copy of the pref value in order to call ::Find
+void nsMIMEInfoImpl::CheckPrefForMimeType(const char * prefName, PRBool * aMimeTypeIsPresent)
+{
+  *aMimeTypeIsPresent = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+  {
+    nsXPIDLCString prefCString;
+    nsCAutoString prefValue;
+    rv = prefBranch->GetCharPref(prefName, getter_Copies(prefCString));
+    if (NS_SUCCEEDED(rv) && *prefCString.get())
+    {
+      nsUnescape(NS_CONST_CAST(char*,(const char*)prefCString.get()));
+
+      prefValue = prefCString; // i should be able to avoid this string copy
+      PRInt32 pos = prefValue.Find(mMIMEType, PR_TRUE);
+      if (pos >= 0)
+        *aMimeTypeIsPresent = PR_TRUE;
+    }
+  } // if we got the prefs service
+}
+
+void nsMIMEInfoImpl::SetRememberPrefForMimeType(const char * prefName)
+{
+   // first, make sure it isn't already there...
+  PRBool mimeTypeIsPresent = PR_FALSE;
+  CheckPrefForMimeType(prefName, &mimeTypeIsPresent);
+  if (mimeTypeIsPresent) return; // mime type is already present...
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch)
+  {
+    // read out the current pref string and unescape it.
+    nsXPIDLCString prefCString;
+    nsCAutoString prefValue;
+    rv = prefBranch->GetCharPref(prefName, getter_Copies(prefCString));
+    if (NS_SUCCEEDED(rv) && *prefCString.get())
+    {
+      nsUnescape(NS_CONST_CAST(char*,(const char*)prefCString.get()));
+      prefValue = prefCString;
+    }
+
+    if (!prefValue.IsEmpty()) // if the pref string isn't empty...
+    {
+      prefValue.Append(", ");
+      prefValue.Append(mMIMEType);
+    }
+    else
+      prefValue = mMIMEType;
+
+    // always escape the pref b4 storing it in case someone enters some funky characters for a mime type...
+    nsXPIDLCString escapedPrefString;
+    *((char **)getter_Copies(escapedPrefString)) = nsEscape(prefValue, url_XAlphas);
+    prefBranch->SetCharPref(prefName, escapedPrefString);
+  }
 }
 
 NS_IMETHODIMP nsMIMEInfoImpl::SetAlwaysAskBeforeHandling(PRBool aAlwaysAsk)
 {
-  mAlwaysAskBeforeHandling = aAlwaysAsk;
+  if (!aAlwaysAsk)
+  {
+    if (mPreferredAction == nsIMIMEInfo::saveToDisk)
+      SetRememberPrefForMimeType(NEVER_ASK_FOR_SAVE_TO_DISK_PREF);
+    else
+      SetRememberPrefForMimeType(NEVER_ASK_FOR_OPEN_FILE_PREF);
+  }
   return NS_OK;
 }
