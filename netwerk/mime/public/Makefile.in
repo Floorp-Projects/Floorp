@@ -32,7 +32,6 @@ XPIDL_MODULE	= mimetype
 XPIDLSRCS	= \
 		nsIMIMEService.idl \
 		nsIMIMEInfo.idl \
-		nsIMIMEDataSource.idl \
 		$(NULL)
 
 EXPORTS		= \
