@@ -255,7 +255,8 @@ void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
   ProcessSelfRegisterFile(dwTiming, szSectionPrefix);
   ProcessDeleteFile(dwTiming, szSectionPrefix);
   ProcessRemoveDirectory(dwTiming, szSectionPrefix);
-  ProcessRunApp(dwTiming, szSectionPrefix);
+  if(!gbIgnoreRunAppX)
+    ProcessRunApp(dwTiming, szSectionPrefix);
   ProcessWinReg(dwTiming, szSectionPrefix);
   ProcessProgramFolder(dwTiming, szSectionPrefix);
   ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
@@ -330,6 +331,7 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
   DWORD dwReturn;
   void  *vZip;
 
+  dwReturn = FO_SUCCESS;
   /* Check for the existance of the from (source) file */
   if(!FileExists(szFrom))
     return(FO_ERROR_FILE_NOT_FOUND);
@@ -352,27 +354,44 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
   if(SetCurrentDirectory(szTo) == FALSE)
     return(FO_ERROR_CHANGE_DIR);
 
-  ZIP_OpenArchive(szFrom, &vZip);
+  if((dwReturn = ZIP_OpenArchive(szFrom, &vZip)) != ZIP_OK)
+    return(dwReturn);
+
   /* 1st parameter should be NULL or it will fail */
   /* It indicates extract the entire archive */
-  ExtractDirEntries(NULL, vZip);
+  dwReturn = ExtractDirEntries(NULL, vZip);
   ZIP_CloseArchive(&vZip);
 
   if(SetCurrentDirectory(szBuf) == FALSE)
     return(FO_ERROR_CHANGE_DIR);
 
-  return(FO_SUCCESS);
+  return(dwReturn);
 }
 
 HRESULT ProcessXpcomFile()
 {
   char szSource[MAX_BUF];
   char szDestination[MAX_BUF];
+  DWORD dwErr;
 
   if(*siCFXpcomFile.szMessage != '\0')
     ShowMessage(siCFXpcomFile.szMessage, TRUE);
 
-  FileUncompress(siCFXpcomFile.szSource, siCFXpcomFile.szDestination);
+  if((dwErr = FileUncompress(siCFXpcomFile.szSource, siCFXpcomFile.szDestination)) != FO_SUCCESS)
+  {
+    char szMsg[MAX_BUF];
+    char szErrorString[MAX_BUF];
+
+    if(*siCFXpcomFile.szMessage != '\0')
+      ShowMessage(siCFXpcomFile.szMessage, FALSE);
+
+    LogISProcessXpcomFile(LIS_FAILURE, dwErr);
+    GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
+    wsprintf(szMsg, szErrorString, siCFXpcomFile.szSource, dwErr);
+    PrintError(szMsg, ERROR_CODE_HIDE);
+    return(dwErr);
+  }
+  LogISProcessXpcomFile(LIS_SUCCESS, dwErr);
 
   /* copy msvcrt.dll and msvcirt.dll to the bin of the Xpcom temp dir:
    *   (c:\temp\Xpcom.ns\bin)
@@ -385,7 +404,7 @@ HRESULT ProcessXpcomFile()
   AppendBackSlash(szDestination, sizeof(szDestination));
   lstrcat(szDestination, "bin");
 
-  FileCopy(szSource, szDestination, TRUE);
+  FileCopy(szSource, szDestination, TRUE, FALSE);
 
   if(*siCFXpcomFile.szMessage != '\0')
     ShowMessage(siCFXpcomFile.szMessage, FALSE);
@@ -428,9 +447,22 @@ HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
 
       if((!bOnlyIfExists) || (bOnlyIfExists && FileExists(szDestination)))
       {
+        DWORD dwErr;
+
         GetPrivateProfileString(szSection, "Message",     "", szBuf, sizeof(szBuf), szFileIniConfig);
         ShowMessage(szBuf, TRUE);
-        FileUncompress(szSource, szDestination);
+        if((dwErr = FileUncompress(szSource, szDestination)) != FO_SUCCESS)
+        {
+          char szMsg[MAX_BUF];
+          char szErrorString[MAX_BUF];
+
+          ShowMessage(szBuf, FALSE);
+          GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
+          wsprintf(szMsg, szErrorString, szSource, dwErr);
+          PrintError(szMsg, ERROR_CODE_HIDE);
+          return(dwErr);
+        }
+
         ShowMessage(szBuf, FALSE);
       }
     }
@@ -458,10 +490,8 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
     MoveFile(szFrom, szTo);
 
     /* log the file move command */
-    lstrcpy(szBuf, szFrom);
-    lstrcat(szBuf, " to ");
-    lstrcat(szBuf, szTo);
-    UpdateInstallLog(KEY_MOVE_FILE, szBuf);
+    wsprintf(szBuf, "%s to %s", szFrom, szTo);
+    UpdateInstallLog(KEY_MOVE_FILE, szBuf, FALSE);
 
     return(FO_SUCCESS);
   }
@@ -478,10 +508,8 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
     MoveFile(szFrom, szToTemp);
 
     /* log the file move command */
-    lstrcpy(szBuf, szFrom);
-    lstrcat(szBuf, " to ");
-    lstrcat(szBuf, szToTemp);
-    UpdateInstallLog(KEY_MOVE_FILE, szBuf);
+    wsprintf(szBuf, "%s to %s", szFrom, szToTemp);
+    UpdateInstallLog(KEY_MOVE_FILE, szBuf, FALSE);
 
     return(FO_SUCCESS);
   }
@@ -510,10 +538,8 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
       MoveFile(szFromTemp, szToTemp);
 
       /* log the file move command */
-      lstrcpy(szBuf, szFromTemp);
-      lstrcat(szBuf, " to ");
-      lstrcat(szBuf, szToTemp);
-      UpdateInstallLog(KEY_MOVE_FILE, szBuf);
+      wsprintf(szBuf, "%s to %s", szFromTemp, szToTemp);
+      UpdateInstallLog(KEY_MOVE_FILE, szBuf, FALSE);
     }
 
     bFound = FindNextFile(hFile, &fdFile);
@@ -551,7 +577,7 @@ HRESULT ProcessMoveFile(DWORD dwTiming, char *szSectionPrefix)
   return(FO_SUCCESS);
 }
 
-HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
+HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
 {
   HANDLE          hFile;
   WIN32_FIND_DATA fdFile;
@@ -569,12 +595,8 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
     AppendBackSlash(szToTemp, sizeof(szToTemp));
     lstrcat(szToTemp, szBuf);
     CopyFile(szFrom, szToTemp, bFailIfExists);
-
-    /* log the file copy command */
-    lstrcpy(szBuf, szFrom);
-    lstrcat(szBuf, " to ");
-    lstrcat(szBuf, szToTemp);
-    UpdateInstallLog(KEY_COPY_FILE, szBuf);
+    wsprintf(szBuf, "%s to %s", szFrom, szToTemp);
+    UpdateInstallLog(KEY_COPY_FILE, szBuf, bDnu);
 
     return(FO_SUCCESS);
   }
@@ -605,10 +627,8 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists)
       CopyFile(szFromTemp, szToTemp, bFailIfExists);
 
       /* log the file copy command */
-      lstrcpy(szBuf, szFromTemp);
-      lstrcat(szBuf, " to ");
-      lstrcat(szBuf, szToTemp);
-      UpdateInstallLog(KEY_COPY_FILE, szBuf);
+      wsprintf(szBuf, "%s to %s", szFromTemp, szToTemp);
+      UpdateInstallLog(KEY_COPY_FILE, szBuf, bDnu);
     }
 
     bFound = FindNextFile(hFile, &fdFile);
@@ -719,6 +739,7 @@ HRESULT ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix)
   char  szSource[MAX_BUF];
   char  szDestination[MAX_BUF];
   BOOL  bFailIfExists;
+  BOOL  bDnu;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Copy File", szSection, sizeof(szSection));
@@ -731,13 +752,19 @@ HRESULT ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szDestination, szBuf);
 
+      GetPrivateProfileString(szSection, "Do Not Uninstall", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      if(lstrcmpi(szBuf, "TRUE") == 0)
+        bDnu = TRUE;
+      else
+        bDnu = FALSE;
+
       GetPrivateProfileString(szSection, "Fail If Exists", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(lstrcmpi(szBuf, "TRUE") == 0)
         bFailIfExists = TRUE;
       else
         bFailIfExists = FALSE;
 
-      FileCopy(szSource, szDestination, bFailIfExists);
+      FileCopy(szSource, szDestination, bFailIfExists, bDnu);
     }
 
     ++dwIndex;
@@ -872,7 +899,7 @@ HRESULT ProcessSelfRegisterFile(DWORD dwTiming, char *szSectionPrefix)
   return(FO_SUCCESS);
 }
 
-void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
+void UpdateInstallLog(LPSTR szKey, LPSTR szString, BOOL bDnu)
 {
   FILE *fInstallLog;
   char szBuf[MAX_BUF];
@@ -896,11 +923,40 @@ void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
 
   if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
   {
-    lstrcpy(szBuf, "     ** ");
-    lstrcat(szBuf, szKey);
-    lstrcat(szBuf, szDir);
-    lstrcat(szBuf, "\n");
+    if(bDnu)
+      wsprintf(szBuf, "     ** (*dnu*) %s%s\n", szKey, szString);
+    else
+      wsprintf(szBuf, "     ** %s%s\n", szKey, szString);
+
     fwrite(szBuf, sizeof(char), lstrlen(szBuf), fInstallLog);
+    fclose(fInstallLog);
+  }
+}
+
+void UpdateInstallStatusLog(LPSTR szString)
+{
+  FILE *fInstallLog;
+  char szFileInstallStatusLog[MAX_BUF];
+
+  if(gbILUseTemp)
+  {
+    lstrcpy(szFileInstallStatusLog, szTempDir);
+    AppendBackSlash(szFileInstallStatusLog, sizeof(szFileInstallStatusLog));
+  }
+  else
+  {
+    lstrcpy(szFileInstallStatusLog, sgProduct.szPath);
+    AppendBackSlash(szFileInstallStatusLog, sizeof(szFileInstallStatusLog));
+    lstrcat(szFileInstallStatusLog, sgProduct.szSubPath);
+    AppendBackSlash(szFileInstallStatusLog, sizeof(szFileInstallStatusLog));
+  }
+
+  CreateDirectoriesAll(szFileInstallStatusLog, FALSE);
+  lstrcat(szFileInstallStatusLog, FILE_INSTALL_STATUS_LOG);
+
+  if((fInstallLog = fopen(szFileInstallStatusLog, "a+t")) != NULL)
+  {
+    fwrite(szString, sizeof(char), lstrlen(szString), fInstallLog);
     fclose(fInstallLog);
   }
 }
@@ -969,7 +1025,7 @@ HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
         hrResult = CreateDirectory(szCreatePath, NULL);
 
         if(bLogForUninstall)
-          UpdateInstallLog(KEY_CREATE_FOLDER, szCreatePath);
+          UpdateInstallLog(KEY_CREATE_FOLDER, szCreatePath, FALSE);
       }
       szCreatePath[i] = szPath[i];
     }
@@ -1384,11 +1440,12 @@ void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
   }
 }
 
-void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwReturnValueSize)
+DWORD GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwReturnValueSize)
 {
   HKEY  hkResult;
   DWORD dwErr;
   DWORD dwSize;
+  DWORD dwType;
   char  szBuf[MAX_BUF];
 
   ZeroMemory(szBuf, sizeof(szBuf));
@@ -1397,15 +1454,24 @@ void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, D
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     dwSize = sizeof(szBuf);
-    dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+    dwErr  = RegQueryValueEx(hkResult, szName, 0, &dwType, szBuf, &dwSize);
 
-    if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
+    if((dwType == REG_MULTI_SZ) && (*szBuf != '\0'))
+    {
+      DWORD dwCpSize;
+
+      dwCpSize = dwReturnValueSize < dwSize ? (dwReturnValueSize - 1) : dwSize;
+      memcpy(szReturnValue, szBuf, dwCpSize);
+    }
+    else if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
       ExpandEnvironmentStrings(szBuf, szReturnValue, dwReturnValueSize);
     else
       *szReturnValue = '\0';
 
     RegCloseKey(hkResult);
   }
+
+  return(dwType);
 }
 
 void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPBYTE lpbData, DWORD dwSize)
@@ -1571,6 +1637,10 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
           dwIconId = 0;
 
         CreateALink(szFile, szProgramFolder, szDescription, szWorkingDir, szArguments, szIconPath, dwIconId);
+        lstrcpy(szBuf, szProgramFolder);
+        AppendBackSlash(szBuf, sizeof(szBuf));
+        lstrcat(szBuf, szDescription);
+        UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
 
         ++dwIndex1;
         itoa(dwIndex1, szIndex1, 10);

@@ -85,8 +85,7 @@ struct ExtractFilesDlgInfo
 } dlgInfo;
 
 
-#ifdef SSU_TEST
-
+#if 0
 void ParseURLServerAndPath(char *szInURL, char *szOutServer, DWORD dwOutServerBufSize, char *szOutPath, DWORD dwOutPathBufSize)
 {
   DWORD dwOutServerLen;
@@ -118,91 +117,6 @@ void ParseURLServerAndPath(char *szInURL, char *szOutServer, DWORD dwOutServerBu
     else
       ptrChar = CharNext(ptrChar);
   }
-}
-
-void TruncateURLString(HWND hWnd, LPSTR szInURL, DWORD dwInURLBufSize, LPSTR szOutString, DWORD dwOutStringBufSize)
-{
-  HDC           hdcWnd;
-  LOGFONT       logFont;
-  HFONT         hfontTmp;
-  HFONT         hfontOld;
-  RECT          rWndRect;
-  SIZE          sizeString;
-  BOOL          bDone;
-  char          szFilename[MAX_BUF];
-  char          szURLServerPart[MAX_BUF];
-  char          szURLPath[MAX_BUF];
-  char          *ptrCharPrev1;
-  char          *ptrCharPrev2;
-  char          *ptrCharPrev3;
-  char          *ptrCharPrev4;
-  char          cCharPrev2;
-  char          cCharPrev3;
-  char          cCharPrev4;
-
-  ZeroMemory(szOutString, dwOutStringBufSize);
-  if(dwInURLBufSize > dwOutStringBufSize)
-    return;
-
-  if(lstrlen(szInURL) == 0)
-    return;
-
-  ParsePath(szInURL, szFilename, sizeof(szFilename), TRUE, PP_FILENAME_ONLY);
-  ParsePath(szInURL, szURLwithoutFilename, sizeof(szURLwithoutFilename), TRUE, PP_PATH_ONLY);
-  ParseURLServerAndPath(szURLwithoutFilename, szURLServerPart, sizeof(szURLServerPart), szURLPath, sizeof(szURLPath));
-  
-
-  lstrcpy(szOutString, szInURL);
-  hdcWnd = GetWindowDC(hWnd);
-  GetClientRect(hWnd, &rWndRect);
-  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
-                       sizeof(logFont),
-                       (PVOID)&logFont,
-                       0);
-
-  hfontTmp = CreateFontIndirect(&logFont);
-
-  if(hfontTmp)
-    hfontOld = (HFONT)SelectObject(hdcWnd, hfontTmp);
-
-  /* make this its own function so that we can call it for szURLServerPath, szURLPath, and szFilename */
-  /** From here **/
-  GetTextExtentPoint32(hdcWnd, szOutString, lstrlen(szOutString), &sizeString);
-  if(sizeString.cx > rWndRect.right)
-  {
-    bDone = FALSE;
-    while(!bDone)
-    {
-      ptrCharPrev1 = CharPrev(szOutString, &szOutString[lstrlen(szOutString)]);
-      ptrCharPrev2 = CharPrev(szOutString, ptrCharPrev1);
-      ptrCharPrev3 = CharPrev(szOutString, ptrCharPrev2);
-      ptrCharPrev4 = CharPrev(szOutString, ptrCharPrev3);
-      cCharPrev2 = *ptrCharPrev2;
-      cCharPrev3 = *ptrCharPrev3;
-      cCharPrev4 = *ptrCharPrev4;
-
-      *ptrCharPrev1 = '\0';
-      *ptrCharPrev2 = '.';
-      *ptrCharPrev3 = '.';
-      *ptrCharPrev4 = '.';
-
-
-      GetTextExtentPoint32(hdcWnd, szOutString, lstrlen(szOutString), &sizeString);
-      if(sizeString.cx > rWndRect.right)
-      {
-        *ptrCharPrev2 = cCharPrev2;
-        *ptrCharPrev3 = cCharPrev3;
-        *ptrCharPrev4 = cCharPrev4;
-      }
-      else
-        bDone = TRUE;
-    }
-  }
-  /** To here **/
-
-  SelectObject(hdcWnd, hfontOld);
-  DeleteObject(hfontTmp);
-  ReleaseDC(hWnd, hdcWnd);
 }
 #endif
 
@@ -249,7 +163,7 @@ void SetStatusUrl(void)
 
     hStatusUrl = GetDlgItem(dlgInfo.hWndDlg, IDC_STATUS_URL);
     if(hStatusUrl)
-      TruncateString(hStatusUrl, gszUrl, sizeof(gszUrl), szUrlPathBuf, sizeof(szUrlPathBuf));
+      TruncateString(hStatusUrl, gszUrl, szUrlPathBuf, sizeof(szUrlPathBuf));
     else
       lstrcpy(szUrlPathBuf, gszUrl);
 
@@ -435,8 +349,9 @@ int DownloadViaFTP(char *szUrl)
   return(rv);
 }
 
-int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bShowRetryMsg, BOOL bIgnoreNetworkError)
+int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bShowRetryMsg, BOOL bIgnoreNetworkError, char *szFailedFile, DWORD dwFailedFileSize)
 {
+  char      szCurrentFile[MAX_BUF];
   char      szIndex[MAX_ITOA];
   char      szSection[MAX_INI_SK];
   char      szSavedCwd[MAX_BUF_MEDIUM];
@@ -446,6 +361,9 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
 
   if(szInputIniFile == NULL)
     return(WIZ_ERROR_UNDEFINED);
+
+  if(szFailedFile)
+    ZeroMemory(szFailedFile, dwFailedFileSize);
 
   GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
   SetCurrentDirectory(szDownloadDir);
@@ -490,6 +408,9 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
     iFileDownloadRetries = 0;
     do
     {
+      /* save the file name to be downloaded */
+      ParsePath(gszUrl, szCurrentFile, sizeof(szCurrentFile), TRUE, PP_FILENAME_ONLY);
+
       /* Download starts here */
       if((szProxyServer != NULL) && (szProxyPort != NULL) &&
          (*szProxyServer != '\0') && (*szProxyPort != '\0'))
@@ -507,17 +428,16 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
 
       if(rv == nsFTPConn::E_USER_CANCEL)
       {
-        char szBuf[MAX_BUF_MEDIUM];
-        char szFilename[MAX_BUF_TINY];
+        char szFile[MAX_BUF];
 
-        ParsePath(gszUrl, szFilename, sizeof(szFilename), TRUE, PP_FILENAME_ONLY);
-        lstrcpy(szBuf, szDownloadDir);
-        AppendBackSlash(szBuf, sizeof(szBuf));
-        lstrcat(szBuf, szFilename);
+        lstrcpy(szFile, szDownloadDir);
+        AppendBackSlash(szFile, sizeof(szFile));
+        lstrcat(szFile, szCurrentFile);
 
-        if(FileExists(szBuf))
-          DeleteFile(szBuf);
+        if(FileExists(szFile))
+          DeleteFile(szFile);
 
+        /* break out of the do loop */
         break;
       }
     } while((rv != nsFTPConn::E_USER_CANCEL) && (rv != nsFTPConn::OK) && (iFileDownloadRetries++ < MAX_FILE_DOWNLOAD_RETRIES));
@@ -531,9 +451,17 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
       /* too many retries from failed downloads */
       char szMsg[MAX_BUF];
 
+      if(szFailedFile && ((DWORD)lstrlen(szCurrentFile) <= dwFailedFileSize))
+        lstrcpy(szFailedFile, szCurrentFile);
+
       GetPrivateProfileString("Strings", "Error Too Many Network Errors", "", szMsg, sizeof(szMsg), szFileIniConfig);
       if(*szMsg != '\0')
-        PrintError(szMsg, ERROR_CODE_HIDE);
+      {
+        char szBuf[MAX_BUF];
+
+        wsprintf(szBuf, szMsg, szCurrentFile);
+        PrintError(szBuf, ERROR_CODE_HIDE);
+      }
 
       /* Set return value and break out of for() loop.
        * We don't want to continue if there were too

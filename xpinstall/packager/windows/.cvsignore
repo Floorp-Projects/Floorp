@@ -18,3 +18,5 @@ xpcom.template
 psm.js
 psm.template
 redirect.ini
+talkback.js
+talkback.template

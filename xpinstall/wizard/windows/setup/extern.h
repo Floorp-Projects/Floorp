@@ -72,6 +72,8 @@ extern BOOL             bCreateDestinationDir;
 extern BOOL             bReboot;
 extern BOOL             gbILUseTemp;
 extern BOOL             gbPreviousUnfinishedDownload;
+extern BOOL             gbIgnoreRunAppX;
+extern BOOL             gbIgnoreProgramFolderX;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;

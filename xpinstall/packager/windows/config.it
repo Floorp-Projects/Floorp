@@ -130,7 +130,7 @@ Message1=It is strongly recommended that you exit all Windows programs before ru
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 
 [Dialog License]
-Show Dialog=FALSE
+Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Software License Agreement
 License File=license.txt
@@ -166,6 +166,11 @@ C3=Component Uninstaller
 C4=Component US English Profile Defaults
 C5=Component En US lang pack
 C6=Component US region pack
+; Make sure Component QFA is LAST because it is a place holder until
+; mozilla.org release team switches to the real .xpi file.  Also
+; because not every 3rd party developer might want this component, so
+; having this LAST will be easier to remove from the list.
+C7=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -185,6 +190,11 @@ C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
+; Make sure Component QFA is LAST because it is a place holder until
+; mozilla.org release team switches to the real .xpi file.  Also
+; because not every 3rd party developer might want this component, so
+; having this LAST will be easier to remove from the list.
+C9=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -206,6 +216,11 @@ C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
+; Make sure Component QFA is LAST because it is a place holder until
+; mozilla.org release team switches to the real .xpi file.  Also
+; because not every 3rd party developer might want this component, so
+; having this LAST will be easier to remove from the list.
+C9=Component QFA
 
 
 
@@ -215,6 +230,13 @@ Show Dialog=TRUE
 Title=$ProductName$ Setup - Select Components
 ;*** LOCALIZE ME BABY ***
 Message0=The browser is always installed.  Select or clear the additional components you want to install.
+
+[Dialog Select Additional Components]
+Show Dialog=FALSE
+;*** LOCALIZE ME BABY ***
+Title=$ProductName$ Setup - Select Additional Components
+;*** LOCALIZE ME BABY ***
+Message0=Select or clear the additional components you want to install.
 
 ;*** DO NOT LOCALIZE - BEGIN ***
 ; do not localize this part because it is not currently being used
@@ -258,6 +280,15 @@ Message0=Select the region you wish to download from, or leave on Default to dow
 ;*** LOCALIZE ME BABY ***
 Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
 Save Installer=
+; Use Protocol accepts only two options:
+;   FTP
+;   HTTP
+; Default is FTP if key is not set.
+Use Protocol=FTP
+; Use Protocol Settings key shows or hides the
+; Use FTP/Use HTTP radio buttons in the Download Dialog.
+; Default value is ENABLED unless DISABLED is specified.
+Use Protocol Settings=ENABLED
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
@@ -411,6 +442,23 @@ Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 [Component Uninstaller-Destination Path0]
 Path=[WINDIR]
 
+;Create an uninstaller shortcut for $ProductName$
+[Component Uninstaller-Program Folder0]
+Timing=post archive
+Show Folder=HIDE
+Program Folder=[Default Folder]
+
+[Component Uninstaller-Program Folder0-Shortcut0]
+File=[WINDIR]\$UninstallFile$
+;*** LOCALIZE ME BABY ***
+Arguments=/ua "$UserAgent$"
+Working Dir=[WINDIR]
+;*** LOCALIZE ME BABY ***
+Description=$ProductName$ Uninstaller
+Icon Path=[WINDIR]\$UninstallFile$
+Icon Id=0
+
+
 [Component Chatzilla]
 Description Short=Chatzilla
 ;*** LOCALIZE ME BABY ***
@@ -437,7 +485,7 @@ Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
 ;*** LOCALIZE ME BABY ***
 Description Short=English (US) language pack
 ;*** LOCALIZE ME BABY ***
-Description Long=English (US)language pack
+Description Long=English (US) language pack
 Archive=langenus.xpi
 $InstallSize$:langenus
 $InstallSizeSystem$
@@ -456,6 +504,23 @@ $InstallSizeSystem$
 $InstallSizeArchive$:regus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\US.jar
+
+[Component QFA]
+Description Short=Quality Feedback Agent
+;*** LOCALIZE ME BABY ***
+Description Long=Tool for reporting software crashes
+Archive=talkback.xpi
+$InstallSize$:talkback
+$InstallSizeSystem$
+$InstallSizeArchive$:talkback.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Components\fullsoft.dll
+
+; This is to randomly set the default checkbox for this component.
+; This particular value will set the checkbox checked [number]% of the time.
+; This logic is done only during the initialization of setup, not in any
+; particular dialog.
+Random Install Percentage=100
 
 [Component PSM]
 Description Short=Personal Security Manager
@@ -480,7 +545,7 @@ Cleanup=TRUE
 Message=Preparing Install, please wait...
 
 [Redirect]
-Status=Enabled
+Status=Disabled
 ; This is used in conjunction with the Site Selector info to build a
 ; url to where to download the needed redirect.ini file from.
 ; If there's more than one server path, they will be used as fail
@@ -547,9 +612,10 @@ Fail If Exists=FALSE
 
 [Copy File1]
 Timing=post smartupdate
-Source=[SETUP STARTUP PATH]\$UninstallFile$
+Source=[XPI PATH]\$UninstallFile$
 Destination=[WINDIR]
 Fail If Exists=FALSE
+Do Not Uninstall=TRUE
 
 
 ;Copy File SequentialX sections
@@ -722,7 +788,7 @@ Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one
 ;*** LOCALIZE ME BABY ***
 Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  You can restart Setup to continue where it left off.
 ;*** LOCALIZE ME BABY ***
-Error Too Many Network Errors=Too many network errors.  Please retry again later.  You can restart Setup to continue where it left off.
+Error Too Many Network Errors=Too many network errors trying to download %s.  Please retry again later.  You can restart Setup to continue where it left off.
 ;*** LOCALIZE ME BABY ***
 Message Verifying Archives=Verifying integrity of archives, please wait...
 ;*** LOCALIZE ME BABY ***
@@ -739,6 +805,16 @@ Dialog Download Title Minimized=%d%% for all files
 STR Force Upgrade Required=(Required)
 ;*** LOCALIZE ME BABY ***
 Message Cancel Setup AUTO mode=Canceling Setup, please wait...
+;*** LOCALIZE ME BABY ***
+Error File Uncompress=Error uncompressing file %s: %d
+;*** LOCALIZE ME BABY ***
+UsageMsg Usage=Usage: %s [options]%s	[options] can be any of the following combination:%s		-h:		This help.%s		-a [path]:		Alternate archive search path.%s		-n [filename]:	Setup's parent's process filename.%s		-ma:		Run setup in Auto mode.%s		-ms:		Run setup in Silent mode.%s		-ira:		Ignore the [RunAppX] sections%s		-ispf:		Ignore the [Program FolderX] sections that show%s				the Start Menu shortcut folder at the end of installation.
+;*** LOCALIZE ME BABY ***
+IDC Use FTP=Use &FTP
+;*** LOCALIZE ME BABY ***
+IDC Use HTTP=Use &HTTP
+;*** LOCALIZE ME BABY ***
+IDC Save Installer Files=&Save installer files locally
 
 
 [Site Selector]

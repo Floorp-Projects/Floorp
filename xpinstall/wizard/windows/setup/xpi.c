@@ -33,6 +33,10 @@
 #define BDIR_RIGHT 1
 #define BDIR_LEFT  2
 
+typedef HRESULT (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
+typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
+typedef void    (_cdecl *XpiExit)(void);
+
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
@@ -145,6 +149,34 @@ void GetTotalArchivesToInstall(void)
   }
 }
 
+char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize)
+{
+  int  i = 0;
+  char szErrorNumber[MAX_BUF];
+
+  ZeroMemory(szErrorString, dwErrorStringSize);
+  itoa(dwError, szErrorNumber, 10);
+
+  /* map the error value to a string */
+  while(TRUE)
+  {
+    if(*XpErrorList[i] == '\0')
+      break;
+
+    if(lstrcmpi(szErrorNumber, XpErrorList[i]) == 0)
+    {
+      if(*XpErrorList[i + 1] != '\0')
+        lstrcpy(szErrorString, XpErrorList[i + 1]);
+
+      break;
+    }
+
+    ++i;
+  }
+
+  return(szErrorString);
+}
+
 HRESULT SmartUpdateJars()
 {
   DWORD     dwIndex0;
@@ -170,6 +202,7 @@ HRESULT SmartUpdateJars()
   ShowMessage(szMsgSmartUpdateStart, TRUE);
   if(InitializeXPIStub() == WIZ_OK)
   {
+    LogISXPInstall(W_START);
     lstrcpy(szBuf, sgProduct.szPath);
     if(*sgProduct.szSubPath != '\0')
     {
@@ -240,39 +273,20 @@ HRESULT SmartUpdateJars()
 
         wsprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
         SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
+        LogISXPInstallComponent(siCObject->szDescriptionShort);
 
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
         if(hrResult == 999)
           bReboot = TRUE;
         else if(hrResult != WIZ_OK)
         {
+          LogISXPInstallComponentResult(hrResult);
           if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
           {
-            int  i = 0;
             char szErrorString[MAX_BUF];
-            char szErrorNumber[MAX_BUF];
 
-            ZeroMemory(szErrorString, MAX_BUF);
-            itoa(hrResult, szErrorNumber, 10);
-
-            /* map the error value to a string */
-            while(TRUE)
-            {
-              if(*XpErrorList[i] == '\0')
-                break;
-
-              if(lstrcmpi(szErrorNumber, XpErrorList[i]) == 0)
-              {
-                if(*XpErrorList[i + 1] != '\0')
-                  lstrcpy(szErrorString, XpErrorList[i + 1]);
-
-                break;
-              }
-
-              ++i;
-            }
-
-            wsprintf(szBuf, "%s: %d %s", szEXpiInstall, hrResult, szErrorString);
+            GetErrorString(hrResult, szErrorString, sizeof(szErrorString));
+            wsprintf(szBuf, "%s - %s: %d %s", szEXpiInstall, siCObject->szDescriptionShort, hrResult, szErrorString);
             PrintError(szBuf, ERROR_CODE_HIDE);
           }
 
@@ -283,6 +297,7 @@ HRESULT SmartUpdateJars()
         ++dwCurrentArchive;
         UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
         ProcessWindowsMessages();
+        LogISXPInstallComponentResult(hrResult);
       }
 
       if(siCObject->dwAttributes & SIC_SELECTED)
@@ -302,6 +317,7 @@ HRESULT SmartUpdateJars()
   }
 
   DeInitializeXPIStub();
+  LogISXPInstall(W_END);
 
   return(hrResult);
 }

@@ -111,6 +111,8 @@
 #define IDC_BUTTON_PROXY_SETTINGS       1067
 #define IDC_STATUS_FILE                 1070
 #define IDC_STATUS_STATUS               1071
+#define IDC_USE_HTTP                    1073
+#define IDC_USE_FTP                     1074
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -158,6 +160,7 @@
 #define IDS_STR_SAVE_INSTALLER_FILES    11027
 #define IDS_MSG_INIT_SETUP              11028
 #define IDS_STR_MESSAGEBOX_TITLE        11029
+#define IDS_ERROR_GETVERSION            11030
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -167,7 +170,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        113
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1072
+#define _APS_NEXT_CONTROL_VALUE         1074
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

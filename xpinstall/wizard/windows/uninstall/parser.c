@@ -43,15 +43,13 @@ BOOL DeleteOrDelayUntilReboot(LPSTR szFile)
   if(FileExists(szFile))
   {
     bDelayDelete = TRUE;
-    if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-      return(FALSE);
-
     if(ulOSType & OS_NT)
-    {
       MoveFileEx(szFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-    }
     else
     {
+      if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
+        return(FALSE);
+
       lstrcpy(szWininitFile, szWinDir);
       AppendBackSlash(szWininitFile, sizeof(szWininitFile));
       lstrcat(szWininitFile, "wininit.ini");
