@@ -1181,3 +1181,13 @@ function dumpObject( anObject, prefix ) {
 function dumpExpr( expr ) {
     dump( expr+"="+eval(expr)+"\n" );
 }
+
+var leakDetector = null;
+
+// Dumps current set of memory leaks.
+function dumpMemoryLeaks() {
+	if (leakDetector == null)
+		leakDetector = createInstance("component://netscape/xpcom/leakdetector", "nsILeakDetector");
+	if (leakDetector != null)
+		leakDetector.dumpLeaks();
+}
