@@ -17,8 +17,8 @@
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -38,13 +38,13 @@ LIBS		= \
 		$(NULL)
 
 TEST_FILES	= \
-	$(srcdir)/testxpc.js \
-	$(srcdir)/xpctest_echo.js \
-	$(srcdir)/xpctest_ids.js \
-	$(srcdir)/xpctest_overloaded.js \
-	$(srcdir)/xpctest_enum_create.js \
-	$(srcdir)/xpctest_primitives.js
-
+		$(srcdir)/testxpc.js \
+		$(srcdir)/xpctest_echo.js \
+		$(srcdir)/xpctest_ids.js \
+		$(srcdir)/xpctest_overloaded.js \
+		$(srcdir)/xpctest_enum_create.js \
+		$(srcdir)/xpctest_primitives.js \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "MPL"); you may not use this file except in
 # compliance with the MPL.  You may obtain a copy of the MPL at
@@ -12,34 +13,26 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1999 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH 		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconk.mk
 
-LIBRARY_NAME	= jsloader
 MODULE		= jsloader
+LIBRARY_NAME	= jsloader
+IS_COMPONENT	= 1
 
-CPPSRCS		= \
-		mozJSComponentLoader.cpp \
-		$(NULL)
-
-
-include $(topsrcdir)/config/config.mk
-
-IS_COMPONENT=1
-
-ifneq ($(OS_ARCH),BeOS)
-LIBS		+= \
-		-lmozjs \
-		-lxpcom \
-		$(NSPR_LIBS) \
-		$(NULL)
-endif
+CPPSRCS		= mozJSComponentLoader.cpp
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJSFILE -DJS_THREADSAFE
+
+ifneq ($(OS_ARCH),BeOS)
+LIBS		+= -lmozjs -lxpcom $(NSPR_LIBS)
+endif
+
