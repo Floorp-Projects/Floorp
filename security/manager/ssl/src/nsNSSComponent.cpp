@@ -624,7 +624,7 @@ nsNSSComponent::PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloade
 nsresult
 nsNSSComponent::DownloadCRLDirectly(nsAutoString url, nsAutoString key)
 {
-  //This api is meant to support dierct interactive update of crl from the crl manager
+  //This api is meant to support direct interactive update of crl from the crl manager
   //or other such ui.
   PSMContentDownloader *psmDownloader = new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
   
@@ -689,10 +689,10 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
     enabledPrefCString.ReplaceSubstring(updateEnabledPref,".");
     tempCrlKey.AssignWithConversion(enabledPrefCString.get());
       
-    //Check if this crl has alreday been scheduled. If its present in the hashtable
-    //It would imply that it has been scheduled alreday in this client session, and
-    //is either in the precess of being downloaded, or its download has not succeeded
-    //for some reason. In the second case, we willnot retry in the current client session
+    //Check if this crl has already been scheduled. Its presence in the hashtable
+    //implies that it has been scheduled already this client session, and
+    //is either in the process of being downloaded, or its download failed
+    //for some reason. In the second case, we will not retry in the current client session
     nsStringKey hashKey(tempCrlKey.get());
     if(crlsScheduledForDownload->Exists(&hashKey)){
       continue;
@@ -750,7 +750,7 @@ nsNSSComponent::Notify(nsITimer *timer)
   crlDownloadTimerOn = PR_FALSE;
   PR_Unlock(mCrlTimerLock);
 
-  //First, Handle handle this do0wnload
+  //First, handle this download
   rv = DownloadCrlSilently();
 
   //Dont Worry if successful or not
@@ -786,8 +786,8 @@ nsNSSComponent::DefineNextTimer()
   }
 
   //If some timer is already running, cancel it. Thus, the request that came last,
-  //wins. This would ensure that in no way we end up setting to diffenent timers
-  //This part should be syncronized, for this function might be called from separate
+  //wins. This would ensure that in no way we end up setting two different timers
+  //This part should be synchronized because this function might be called from separate
   //threads
 
   //Lock the lock
@@ -833,7 +833,7 @@ nsresult
 nsNSSComponent::StopCRLUpdateTimer()
 {
   
-  //If it is at all runing. 
+  //If it is at all running. 
   if(mUpdateTimerInitialized == PR_TRUE){
     if(crlsScheduledForDownload != nsnull){
       crlsScheduledForDownload->Enumerate(crlHashTable_clearEntry);
@@ -861,7 +861,7 @@ nsNSSComponent::InitializeCRLUpdateTimer()
 {
   nsresult rv;
     
-  //First Check if this is already initialized. Ten we stop it,
+  //First check if this is already initialized. Then we stop it.
   if(mUpdateTimerInitialized == PR_FALSE){
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if(NS_FAILED(rv)){
