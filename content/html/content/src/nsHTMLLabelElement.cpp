@@ -193,6 +193,7 @@ public:
 
 protected:
   already_AddRefed<nsIContent> GetForContent();
+  already_AddRefed<nsIContent> GetFirstFormControl(nsIContent *current);
 
   // XXX It would be nice if we could use an event flag instead.
   PRBool mHandlingEvent;
@@ -510,20 +511,36 @@ nsHTMLLabelElement::GetForContent()
       return result;
     }
   } else {
-    // No FOR attribute, we are a label for our first child element.
-    PRInt32 numNodes;
-    rv = ChildCount(numNodes);
-    if (NS_SUCCEEDED(rv)) {
-      for (PRInt32 i = 0; i < numNodes; i++) {
-        nsIContent *result;
-        ChildAt(i, result);
-        if (result) {
-          if (result->IsContentOfType(nsIContent::eHTML_FORM_CONTROL))
-            return result;
-          NS_RELEASE(result);
+    // No FOR attribute, we are a label for our first form control element.
+    // do a depth-first traversal to look for the first form control element
+    return GetFirstFormControl(this);
+  }
+  return nsnull;
+}
+
+already_AddRefed<nsIContent>
+nsHTMLLabelElement::GetFirstFormControl(nsIContent *current)
+{
+  PRInt32 numNodes;
+  nsresult rv = current->ChildCount(numNodes);
+  if (NS_SUCCEEDED(rv)) {
+    for (PRInt32 i = 0; i < numNodes; i++) {
+      nsIContent *child;
+      current->ChildAt(i, child);
+      if (child) {
+        if (child->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+          return child;
+        }
+        else {
+          nsIContent* content = GetFirstFormControl(child).get();
+          NS_RELEASE(child);
+          if (content) {
+            return content;
+          }
         }
       }
     }
   }
+
   return nsnull;
 }
