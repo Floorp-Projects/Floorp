@@ -98,7 +98,7 @@
  * always compiled in, in case some other module that uses it is
  * compiled with debugging even if this library is not.
  */
-static PRBool gWarningMessageBoxEnable;
+static PRBool gWarningMessageBoxEnable = PR_TRUE;
 static PRLogModuleInfo* gDebugLog;
 
 static void InitLog(void)
@@ -108,8 +108,8 @@ static void InitLog(void)
     gDebugLog->level = PR_LOG_DEBUG;
 
 #if defined(XP_UNIX) || defined(_WIN32)
-    if (getenv("MOZ_WARNING_MESSAGE_BOX")) {
-      gWarningMessageBoxEnable = PR_TRUE;
+    if (getenv("MOZ_WARNING_NO_MESSAGE_BOX")) {
+      gWarningMessageBoxEnable = PR_FALSE;
     }
 #endif
   }
@@ -166,7 +166,7 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
 
   char buf[1000];
   PR_snprintf(buf, sizeof(buf),
-              "Warning: %s: '%s', file %s, line %d",
+              "WARNING: %s: '%s', file %s, line %d",
               aStr, aExpr, aFile, aLine);
 
 #if defined(_WIN32)
