@@ -69,7 +69,9 @@ public:
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
 
+#if 0
   NS_IMETHOD PushState(PRInt32 aFlags);
+#endif
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipEmpty);
 
