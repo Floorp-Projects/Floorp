@@ -138,7 +138,7 @@ struct nsIRegistry : public nsISupports {
     --------------------------------------------------------------------------*/
     typedef uint32 Key;
 
-    enum WellKnownKeys { Users = 1, Common = 2, CurrentUser = 3 };
+    enum WellKnownKeys { None = 0, Users = 1, Common = 2, CurrentUser = 3 };
 
     enum WellKnownRegistry {
         ApplicationComponentRegistry = 1
