@@ -224,17 +224,18 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
       nsXPIDLString data;
       dataWrapper->ToString ( getter_Copies(data) );  //еее COPY #1
       if ( data ) {
-        nsAutoString dataStr ( data );   //еее COPY #2
+        PRUnichar* castedData = NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar*, data));
+        nsAutoString dataStr ( CBufDescriptor(castedData, PR_TRUE, aDataLen) );  //еее try not to copy the data
         nsAutoString outStr;
 
         if ( toFlavor.Equals(kTextMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {  //еее COPY #3, then runs over the data to parse
+          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {  //еее shouldn't copy
             nsCOMPtr<nsISupportsString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              char* holderBecauseNSStringIsLame = outStr.ToNewCString();  //еее COPY #4
-              dataWrapper->SetData ( holderBecauseNSStringIsLame );       //еее COPY #5
+              char* holderBecauseNSStringIsLame = outStr.ToNewCString();  //еее COPY #2
+              dataWrapper->SetData ( holderBecauseNSStringIsLame );       //еее COPY #3
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
@@ -244,12 +245,12 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
           }
         } // if plain text
         else if ( toFlavor.Equals(kHTMLMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToHTML(dataStr, outStr)) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToHTML(dataStr, outStr)) ) {  //еее shouldn't copy
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );
+              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );  //еее COPY #2
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
@@ -258,12 +259,12 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
           }
         } // else if HTML
         else if ( toFlavor.Equals(kAOLMailMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {
+          if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {  //еее COPY #2
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
             if ( dataWrapper ) {
-              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );
+              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );  //еее COPY #3
               nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
               *aToData = genericDataWrapper;
               NS_ADDREF(*aToData);
@@ -294,35 +295,29 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
   *
   */
 NS_IMETHODIMP
-nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr)
+nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
   aToStr = "";
-  nsIParser* parser;
+  nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
                                              NS_GET_IID(nsIParser), 
-                                             (void **)&parser);
-  if (NS_OK != rv)
+                                             getter_AddRefs(parser));
+  if ( !parser )
     return rv;
 
-  nsIHTMLContentSink* sink = nsnull;
-
-  rv = NS_New_HTMLToTXT_SinkStream(&sink,&aToStr,0);
-
-  if (NS_OK == rv) {
+  nsCOMPtr<nsIHTMLContentSink> sink;
+  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),&aToStr,0);
+  if ( sink ) {
     parser->SetContentSink(sink);
 	
-    nsIDTD* dtd = nsnull;
-    rv = NS_NewXIFDTD(&dtd);
-    if (NS_OK == rv) {
+    nsCOMPtr<nsIDTD> dtd;
+    rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+    if ( dtd ) {
       parser->RegisterDTD(dtd);
-      nsAutoString str(aFromStr);
-      parser->Parse(str, 0, "text/xif",PR_FALSE,PR_TRUE);           
+      parser->Parse(aFromStr, 0, "text/xif",PR_FALSE,PR_TRUE);           
     }
-    NS_IF_RELEASE(dtd);
   }
-  NS_IF_RELEASE(sink);
-  NS_RELEASE(parser);
 
   return NS_OK;
 }
@@ -332,36 +327,29 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromStr, nsString &
   *
   */
 NS_IMETHODIMP
-nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromStr, nsString & aToStr)
+nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
   aToStr = "";
-  nsIParser* parser;
-
+  nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
                                              NS_GET_IID(nsIParser), 
-                                             (void **)&parser);
-  if (NS_OK != rv)
+                                             getter_AddRefs(parser));
+  if ( !parser )
     return rv;
 
-  nsIHTMLContentSink* sink = nsnull;
-
-  rv = NS_New_HTML_ContentSinkStream(&sink,&aToStr,0);
-
-  if (NS_OK == rv) {
+  nsCOMPtr<nsIHTMLContentSink> sink;
+  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink),&aToStr,0);
+  if ( sink ) {
     parser->SetContentSink(sink);
 	
-    nsIDTD* dtd = nsnull;
-    rv = NS_NewXIFDTD(&dtd);
-    if (NS_OK == rv) {
+    nsCOMPtr<nsIDTD> dtd;
+    rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+    if ( dtd ) {
       parser->RegisterDTD(dtd);
-      nsAutoString str(aFromStr);
-      parser->Parse(str, 0, "text/xif",PR_FALSE,PR_TRUE);           
+      parser->Parse(aFromStr, 0, "text/xif",PR_FALSE,PR_TRUE);           
     }
-    NS_IF_RELEASE(dtd);
   }
-  NS_IF_RELEASE(sink);
-  NS_RELEASE(parser);
   return NS_OK;
 }
 
@@ -370,7 +358,7 @@ nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromStr, nsString &
   *
   */
 NS_IMETHODIMP
-nsXIFFormatConverter::ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr)
+nsXIFFormatConverter::ConvertFromXIFToAOLMail(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
   nsAutoString html;
   if (NS_OK == ConvertFromXIFToHTML(aFromStr, html)) {

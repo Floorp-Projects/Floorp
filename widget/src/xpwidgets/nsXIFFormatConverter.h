@@ -43,9 +43,9 @@ protected:
 
   nsresult AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor ) ;
   
-  NS_IMETHOD ConvertFromXIFToHTML(const nsString & aFromStr, nsString & aToStr);
-  NS_IMETHOD ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr);
-  NS_IMETHOD ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr);
+  NS_IMETHOD ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAutoString & aToStr);
+  NS_IMETHOD ConvertFromXIFToText(const nsAutoString & aFromStr, nsAutoString & aToStr);
+  NS_IMETHOD ConvertFromXIFToAOLMail(const nsAutoString & aFromStr, nsAutoString & aToStr);
 
 };
 
