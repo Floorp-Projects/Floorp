@@ -138,23 +138,39 @@ var folderListener = {
 
 		}
         } else if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
-            
-		if(IsCurrentLoadedFolder(folder))
-		{
-			msgNavigationService.EnsureDocumentIsLoaded(document);
-			if(gNextMessageAfterDelete)
-			{
-				var nextMessage = document.getElementById(gNextMessageAfterDelete);
-	       gNextMessageAfterDelete = null;
-				SelectNextMessage(nextMessage);
-				var threadTree = GetThreadTree();
-				if(threadTree)
-					threadTree.ensureElementIsVisible(nextMessage);
-			}
-		}
-	}
+			HandleDeleteOrMoveMsgCompleted(folder);
+		}     
     }
 }
+
+function HandleDeleteOrMoveMsgCompleted(folder)
+{
+
+	if(IsCurrentLoadedFolder(folder))
+	{
+		msgNavigationService.EnsureDocumentIsLoaded(document);
+		if(gNextMessageAfterDelete)
+		{
+			var nextMessage = document.getElementById(gNextMessageAfterDelete);
+			gNextMessageAfterDelete = null;
+			SelectNextMessage(nextMessage);
+			var threadTree = GetThreadTree();
+			if(threadTree)
+				threadTree.ensureElementIsVisible(nextMessage);
+		}
+		//if there's nothing to select then see if the tree has any messages.
+		//if not, then clear the message pane.
+		else
+		{
+			var tree = GetThreadTree();
+			var topmost = msgNavigationService.FindFirstMessage(tree);
+			if(!topmost)
+				ClearMessagePane()
+		}
+	}
+
+}
+
 
 function IsCurrentLoadedFolder(folder)
 {

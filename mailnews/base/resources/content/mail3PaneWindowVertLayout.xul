@@ -278,11 +278,6 @@ Rights Reserved.
 			  value="&folderContextSearchMessages.label;"
 			  accesskey="&folderContextSearchMessages.accesskey;"
 			  oncommand="MsgSearchMessages();"/>
-		<menuseparator id="folderPaneContext-sep-search"/>
-		<menuitem id="folderPaneContext-properties"
-			  value="&folderContextProperties.label;"
-			  accesskey="&folderContextProperties.accesskey;"
-			  oncommand="MsgFolderProperties();"/>
 	</popup>
   <popup id="emailAddressPopup" popupanchor="bottomleft">
       <menuitem value="&AddToAddressBook.label;"

@@ -161,7 +161,15 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
   } catch (ex) {
       dump("error setting title: " + ex + "\n");
   }
+
   
+  //if it's a server, clear the threadpane and don't bother trying to load.
+  if(msgfolder.isServer)
+  {
+	ClearThreadPane();
+	return;
+  }
+    
   gBeforeFolderLoadTime = new Date();
   gCurrentLoadingFolderURI = uri;
 
@@ -636,17 +644,21 @@ function FolderPaneSelectionChange()
 		if ( selArray && (selArray.length == 1) )
         {
 			ChangeFolderByDOMNode(selArray[0]);
-            // explicitly force the message pane to get cleared when we switch folders
-            ClearMessagePane(); 
         }
 		else
 		{
-			var threadTree = GetThreadTree();
-			ClearThreadTreeSelection();
-			threadTree.setAttribute('ref', null);
-			ClearMessagePane();
+			ClearThreadPane();
 		}
 	}
+	ClearMessagePane();
+
+}
+
+function ClearThreadPane()
+{
+	var threadTree = GetThreadTree();
+	ClearThreadTreeSelection();
+	threadTree.setAttribute('ref', null);
 }
 
 function OpenFolderTreeToFolder(folderURI)

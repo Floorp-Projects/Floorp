@@ -85,10 +85,12 @@ Rights Reserved.
     <treecol persist="hidden width" flex="7" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
     <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="4" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+	  <splitter class="tree-splitter"/>
 	  <treecol persist="hidden width" id="UnreadButtonColumn" rdf:resource="http://home.netscape.com/NC-rdf#IsUnread"/>
 	  <treecol persist="hidden width" flex="2" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
 	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="1" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
+	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" id="FlaggedButtonColumn" rdf:resource="http://home.netscape.com/NC-rdf#Flagged"/>
     <treecol persist="hidden width" flex="1" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
 	  <splitter class="tree-splitter"/>
@@ -97,6 +99,7 @@ Rights Reserved.
     <treecol persist="hidden width" flex="1" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="1" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+	  <splitter class="tree-splitter"/>
 	  <treecol persist="hidden width" id="OrderReceivedColumn" rdf:resource="http://home.netscape.com/NC-rdf#OrderReceived"/>
 	  <treecol persist="width" id="PopupColumn"/>
   </treecolgroup>
