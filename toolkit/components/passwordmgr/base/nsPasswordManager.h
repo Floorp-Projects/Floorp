@@ -190,4 +190,5 @@ protected:
 
   nsCOMPtr<nsIFile> mSignonFile;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
+  nsIDOMHTMLInputElement* mAutoCompletingField;
 };
