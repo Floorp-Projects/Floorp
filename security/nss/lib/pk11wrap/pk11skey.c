@@ -171,7 +171,7 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
     if (symKey) {
 	symKey->next = NULL;
-	if (!symKey->sessionOwner)
+	if ((symKey->series != slot->series) || (!symKey->sessionOwner))
     	    symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
 	return symKey;
     }
