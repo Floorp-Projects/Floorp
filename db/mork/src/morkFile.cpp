@@ -56,6 +56,11 @@
 #include "morkFile.h"
 #endif
 
+#ifdef MORK_WIN
+#include "io.h"
+#include <windows.h>
+#endif
+
 // #define MORK_CONFIG_USE_ORKINFILE 1
  
 #ifdef MORK_CONFIG_USE_ORKINFILE
@@ -919,6 +924,23 @@ morkStdioFile::Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief)
   return NS_OK;
 }
 
+
+#if defined(MORK_WIN)
+
+void mork_fileflush(FILE * file)
+{
+  fflush(file);
+  OSVERSIONINFOA vi = { sizeof(OSVERSIONINFOA) };
+  if ((GetVersionExA(&vi) && vi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS))
+  {
+    // Win9x/ME
+    int fd = fileno(file);
+    HANDLE fh = (HANDLE)_get_osfhandle(fd);
+    FlushFileBuffers(fh);
+  }
+}
+
+#endif /*MORK_WIN*/
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

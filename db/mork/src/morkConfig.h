@@ -94,7 +94,13 @@
 #define MORK_FILETELL(file) ftell(file) 
 #define MORK_FILESEEK(file, where, how) fseek(file, where, how) 
 #define MORK_FILEREAD(outbuf, insize, file) fread(outbuf, 1, insize, file) 
+#if defined(MORK_WIN)
+void mork_fileflush(FILE * file);
+#define MORK_FILEFLUSH(file) mork_fileflush(file) 
+#else
 #define MORK_FILEFLUSH(file) fflush(file) 
+#endif /*MORK_WIN*/
+
 #if defined(MORK_OS2)
 FILE* mork_fileopen(const char* name, const char* mode);
 #define MORK_FILEOPEN(file, how) mork_fileopen(file, how) 
