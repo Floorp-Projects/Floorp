@@ -650,6 +650,10 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
     for (index = 0; index < 4; index++) {
       if ((mBorderStyle[index] != aOther.mBorderStyle[index]) || 
           (mBorderColor[index] != aOther.mBorderColor[index])) {
+        if ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[index]) ||
+          (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[index])) {
+          return NS_STYLE_HINT_REFLOW;  // border on or off
+        }
         return NS_STYLE_HINT_VISUAL;
       }
     }
