@@ -27,6 +27,7 @@
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -186,12 +187,20 @@ static void* handleTriggerEvent(XPITriggerEvent* event)
                              event->status );
     if ( args )
     {
+        nsCOMPtr<nsIJSContextStack> stack =
+            do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+        if (stack)
+            stack->Push(event->cx);
+
         JS_CallFunctionValue( event->cx,
                               JSVAL_TO_OBJECT(event->global),
                               event->cbval,
                               2,
                               args,
                               &ret );
+
+        if (stack)
+            stack->Pop(nsnull);
 
         JS_PopArguments( event->cx, mark );
     }
