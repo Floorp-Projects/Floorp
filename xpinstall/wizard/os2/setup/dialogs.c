@@ -146,8 +146,6 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   BOOL rc;
   char szBuf[MAX_BUF];
   SWP  swpDlg;
-  SWP  swpImage;
-  SWP  swpImageBorder;
   
   switch(msg)
   {

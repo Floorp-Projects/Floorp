@@ -1329,6 +1329,9 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
         bDnu = FALSE;
 
       PrfWriteProfileString(HINI_USERPROFILE, szApp, szKey, szValue);
+      /* log the win reg command */
+      sprintf(szBuf, "%s [%s]", szApp, szKey);
+      UpdateInstallLog(KEY_STORE_INI_ENTRY, szBuf, bDnu);
     }
 
     ++ulIndex;
@@ -1351,6 +1354,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
 
   char  szClassName[MAX_BUF];
   char  szTitle[MAX_BUF];
+  char  szObjectID[MAX_BUF];
   char  szSetupString[MAX_BUF];
   char  szLocation[MAX_BUF];
   char  szAssocFilters[MAX_BUF];
@@ -1412,13 +1416,13 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
           strcat(szSetupString, "STARTUPDIR=");
           strcat(szSetupString, szBuf2);
         }
-        GetPrivateProfileString(szSection1, "Object ID",  "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if (szBuf[0]) {
+        GetPrivateProfileString(szSection1, "Object ID",  "", szObjectID, sizeof(szObjectID), szFileIniConfig);
+        if (szObjectID[0]) {
           if (szSetupString[0]) {
             strcat(szSetupString, ";");
           }
           strcat(szSetupString, "OBJECTID=");
-          strcat(szSetupString, szBuf);
+          strcat(szSetupString, szObjectID);
         }
         GetPrivateProfileString(szSection1, "Association Filters",  "", szBuf, sizeof(szBuf), szFileIniConfig);
         if (szBuf[0]) {
@@ -1451,16 +1455,14 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
 
         WinCreateObject(szClassName, szTitle, szSetupString, szLocation, CO_REPLACEIFEXISTS);
 
-        if (diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState == TRUE) {
-
+        if (szObjectID) {
+          strcpy(szBuf, szObjectID);
+        } else {
+          strcpy(szBuf, szProgramFolder);
+          AppendBackSlash(szBuf, sizeof(szBuf));
+          strcat(szBuf, szTitle);
         }
-        
-#ifdef OLDCODE
-        strcpy(szBuf, szProgramFolder);
-        AppendBackSlash(szBuf, sizeof(szBuf));
-        strcat(szBuf, szDescription);
-        UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
-#endif
+        UpdateInstallLog(KEY_OS2_OBJECT, szBuf, FALSE);
 
         ++dwIndex1;
         itoa(dwIndex1, szIndex1, 10);
