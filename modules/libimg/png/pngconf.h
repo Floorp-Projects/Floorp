@@ -1285,6 +1285,7 @@ typedef z_stream FAR *  png_zstreamp;
 #  define CVT_PTR(ptr) (png_far_to_near(png_ptr,ptr,CHECK))
 #  define CVT_PTR_NOCHECK(ptr) (png_far_to_near(png_ptr,ptr,NOCHECK))
 #  define png_strcpy _fstrcpy
+#  define png_strncpy _fstrncpy    /* Added to v 1.2.6 */
 #  define png_strlen _fstrlen
 #  define png_memcmp _fmemcmp      /* SJT: added */
 #  define png_memcpy _fmemcpy
@@ -1293,6 +1294,7 @@ typedef z_stream FAR *  png_zstreamp;
 #  define CVT_PTR(ptr)         (ptr)
 #  define CVT_PTR_NOCHECK(ptr) (ptr)
 #  define png_strcpy strcpy
+#  define png_strncpy strncpy   /* Added to v 1.2.6 */
 #  define png_strlen strlen
 #  define png_memcmp memcmp     /* SJT: added */
 #  define png_memcpy memcpy
