@@ -2725,6 +2725,18 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
       case NS_STYLE_TEXT_ALIGN_RIGHT:
       case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
+        {
+          // fix for bug 50758
+          // right-aligned text in a text control doesn't know how to paint itself
+          // so we force the invalidate here.  Getting the current line is quick, 
+          // and at worst we're invalidating more of the line (and just that line) than we need to.
+          nsLineBox *currentLine=nsnull;
+          // use localResult because a failure here should not be propagated to my caller
+          nsresult localResult = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
+          if (NS_SUCCEEDED(localResult) && currentLine) {
+            currentLine->SetForceInvalidate(PR_TRUE);
+          }
+        }
         dx = remainingWidth;
         break;
 
