@@ -270,9 +270,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCDraggedObject)) {
         inst = (nsISupports*)new nsDraggedObject();
     }
-    else if (mClassID.Equals(kCXIFFormatConverter)) {
-        inst = (nsISupports*)new nsDraggedObject();
-    }
 #ifdef DRAG_DROP
     //else if (mClassID.Equals(kCDataObj)) {
         //inst = (nsISupports*)new CfDataObj();
