@@ -579,25 +579,33 @@ function ToggleMessageRead(treeItem)
 {
 
 	var tree = GetThreadTree();
-	var isUnread = treeItem.getAttribute('IsUnread');
-	var unread = (isUnread == "true");
 
 	var messageResource = RDF.GetResource(treeItem.getAttribute('id'));
+
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#IsUnread');
+	var result = tree.database.GetTarget(messageResource, property , true);
+	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	var isUnread = (result.Value == "true")
+
 	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
 	var messageArray = new Array(1);
 	messageArray[0] = message;
 
-	MarkMessagesRead(tree.database, messageArray, unread);
+	MarkMessagesRead(tree.database, messageArray, isUnread);
 }
 
 function ToggleMessageFlagged(treeItem)
 {
 
 	var tree = GetThreadTree();
-	var flaggedValue = treeItem.getAttribute('Flagged');
-	var flagged = (flaggedValue =="flagged");
 
 	var messageResource = RDF.GetResource(treeItem.getAttribute('id'));
+
+	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#Flagged');
+	var result = tree.database.GetTarget(messageResource, property , true);
+	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	var flagged = (result.Value == "flagged")
+
 	var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
 	var messageArray = new Array(1);
 	messageArray[0] = message;

@@ -27,7 +27,15 @@ function ThreadPaneOnClick(event)
     var targetclass = event.target.getAttribute('class');
     dump('targetclass = ' + targetclass + '\n');
 
-    if (targetclass == 'tree-cell-twisty') {
+	if(targetclass.indexOf('unreadcol') != -1)
+	{
+		ToggleMessageRead(event.target.parentNode.parentNode);
+	}
+	if(targetclass.indexOf('flagcol') != -1)
+	{
+		ToggleMessageFlagged(event.target.parentNode.parentNode);
+	}
+    else if (targetclass == 'tree-cell-twisty') {
         // The twisty is nested three below the treeitem:
         // <treeitem>
         //   <treerow>
