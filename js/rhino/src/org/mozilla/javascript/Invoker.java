@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * David C. Navas
  *
  * Alternatively, the contents of this file may be used under the
@@ -50,5 +51,20 @@ public abstract class Invoker {
     public Invoker createInvoker(Context cx, Method method, Class[] types) {
         return null;
     }
+
+    public static Invoker makeMaster()
+    {
+        if (implClass == null)
+            return null;
+
+        Invoker master = (Invoker)ScriptRuntime.newInstanceOrNull(implClass);
+        if (master == null)
+            implClass = null;
+
+        return master;
+    }
+
+    private static Class implClass = ScriptRuntime.classOrNull(
+        "org.mozilla.javascript.optimizer.InvokerImpl");
 
 }
