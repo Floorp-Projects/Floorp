@@ -13,7 +13,7 @@
              (+ (- (character-to-code c) (character-to-code #\A)) 10)
              (if (character-set-member c (set-of-ranges character #\a #\z))
                (+ (- (character-to-code c) (character-to-code #\a)) 10)
-               (bottom integer)))))
+               (bottom)))))
        )))
   
   (defparameter *sfg* (world-grammar *sfw* 'standard-function-grammar)))
