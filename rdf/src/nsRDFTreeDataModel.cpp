@@ -176,7 +176,7 @@ nsRDFTreeDataModel::GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const
 }
 
 NS_IMETHODIMP
-nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
+nsRDFTreeDataModel::GetItemTextForColumn(nsString& result,
                                          nsITreeDMItem* pItem,
                                          nsITreeColumn* pColumn) const
 {
@@ -189,33 +189,21 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
     nsIRDFResource* columnRsrc = NULL;
 
     do {
-        if (NS_FAILED(pItem->QueryInterface(kIRDFResourceIID, (void**) &itemRsrc))) {
-            res = NS_ERROR_INVALID_ARG;
-            PR_ASSERT(0);
+        if (NS_FAILED(res = pItem->QueryInterface(kIRDFResourceIID, (void**) &itemRsrc)))
             break;
-        }
 
-        if (NS_FAILED(pColumn->QueryInterface(kIRDFResourceIID, (void**) &columnRsrc))) {
-            res = NS_ERROR_INVALID_ARG;
-            PR_ASSERT(0);
+        if (NS_FAILED(res = pColumn->QueryInterface(kIRDFResourceIID, (void**) &columnRsrc)))
             break;
-        }
 
         RDF_Resource item;
-        if (NS_FAILED(itemRsrc->GetResource(item))) {
-            res = NS_ERROR_UNEXPECTED;
-            PR_ASSERT(0);
+        if (NS_FAILED(res = itemRsrc->GetResource(item)))
             break;
-        }
 
         RDF_Resource property;
-        if (NS_FAILED(columnRsrc->GetResource(property))) {
-            res = NS_ERROR_UNEXPECTED;
-            PR_ASSERT(0);
+        if (NS_FAILED(res = columnRsrc->GetResource(property)))
             break;
-        }
     
-        const char* result =
+        const char* text =
             (const char*) RDF_GetSlotValue(GetDB(),
                                            item,
                                            property, // property
@@ -223,13 +211,12 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
                                            PR_FALSE,
                                            PR_TRUE);
 
-        if (! result) {
+        if (! text) {
             res = NS_ERROR_UNEXPECTED;
-            PR_ASSERT(0);
             break;
         }
 
-        nodeText = result;
+        result = nsString(text);
     } while (0);
 
     if (columnRsrc)
