@@ -174,41 +174,56 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 	// Write until the buffer is empty
     while (amountRead > 0)
     {
-		if (callbacks->writeready != NULL)
-		{
-#if !TARGET_CARBON
-// pinkerton
-// relies on routine descriptors, not present in carbon. We need to fix this.
-		numtowrite = CallNPP_WriteReadyProc(callbacks->writeready,
-                                            npp,
-                                            &mNPStream);
-#endif
-		
-		if (numtowrite > amountRead)
-			numtowrite = amountRead;
-		}
-		else // if WriteReady is not supported by the plugin, just write the whole buffer
-			numtowrite = length;
+		  if (callbacks->writeready != NULL)
+		  {
+    #if !TARGET_CARBON
+    // pinkerton
+    // relies on routine descriptors, not present in carbon. We need to fix this.
+		    numtowrite = CallNPP_WriteReadyProc(callbacks->writeready,
+                                                npp,
+                                                &mNPStream);
+    #endif
+		    
+		    if (numtowrite > amountRead)
+			    numtowrite = amountRead;
+		  }
+		  else // if WriteReady is not supported by the plugin, just write the whole buffer
+			  numtowrite = length;
 
-		// if WriteReady returned 0, the plugin is not ready to handle the data,
-		// so just skip the Write until WriteReady returns a >0 value
-		if(numtowrite > 0)
-		{
+		  // if WriteReady returned 0, the plugin is not ready to handle the data,
+		  // so just skip the Write until WriteReady returns a >0 value
+		  if(numtowrite > 0)
+		  {
+  #if !TARGET_CARBON
+  // pinkerton
+  // relies on routine descriptors, not present in carbon. We need to fix this.
+			  writeCount = CallNPP_WriteProc(callbacks->write,
+                                         npp,
+                                         &mNPStream, 
+                                         mPosition,
+                                         numtowrite,
+                                         (void *)buffer);
+			  if(writeCount < 0)
+				  return NS_ERROR_FAILURE;
+  #endif
+			  amountRead -= numtowrite;
+			  mPosition += numtowrite;
+/**/
+        if(amountRead == 0)//~~~this is a temporary workaround to make RealAudio work
+        {
+          NPError error = CallNPP_DestroyStreamProc(callbacks->destroystream, npp, &mNPStream, NPRES_DONE);
+  		    if(error != NPERR_NO_ERROR)
+			      return NS_ERROR_FAILURE;
+
+          if(callbacks->urlnotify != NULL && mNotifyData != nsnull)
+          {
 #if !TARGET_CARBON
-// pinkerton
-// relies on routine descriptors, not present in carbon. We need to fix this.
-			writeCount = CallNPP_WriteProc(callbacks->write,
-                                       npp,
-                                       &mNPStream, 
-                                       mPosition,
-                                       numtowrite,
-                                       (void *)buffer);
-			if(writeCount < 0)
-				return NS_ERROR_FAILURE;
+            CallNPP_URLNotifyProc(callbacks->urlnotify,npp,mNPStream.url,nsPluginReason_Done,mNotifyData);
 #endif
-			amountRead -= numtowrite;
-			mPosition += numtowrite;
-		}
+          }
+        }
+
+		  }
     }
 
     return NS_OK;
