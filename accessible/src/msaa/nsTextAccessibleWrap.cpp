@@ -43,6 +43,7 @@
 #include "nsContentCID.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDOMRange.h"
+#include "nsIFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -264,4 +265,52 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
                                 startPoint.y - startRect.y , t2p);
 
   return NS_OK;
+}
+
+STDMETHODIMP nsTextAccessibleWrap::get_fontFamily(
+    /* [retval][out] */ BSTR __RPC_FAR *aFontFamily)
+{
+  nsIFrame *frame = GetFrame();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (!frame || !presShell) {
+    return E_FAIL;
+  }
+
+  nsCOMPtr<nsIRenderingContext> rc;
+  presShell->CreateRenderingContext(frame, getter_AddRefs(rc));
+  if (!rc) {
+    return E_FAIL;
+  }
+
+  const nsStyleFont *font = frame->GetStyleFont();
+
+  const nsStyleVisibility *visibility = frame->GetStyleVisibility();
+
+  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup))) {
+    return E_FAIL;
+  }
+
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+  rc->GetDeviceContext(*getter_AddRefs(deviceContext));
+  if (!deviceContext) {
+    return E_FAIL;
+  }
+
+  nsIFontMetrics *fm;
+  rc->GetFontMetrics(fm);
+  if (!fm) {
+    return E_FAIL;
+  }
+
+  const nsFont *actualFont = nsnull;
+  fm->GetFont(actualFont);
+  if (!actualFont) {
+    return E_FAIL;
+  }
+
+  nsAutoString fontFamily;
+  deviceContext->FirstExistingFont(*actualFont, fontFamily);
+  
+  *aFontFamily = ::SysAllocString(fontFamily.get());
+  return S_OK;
 }

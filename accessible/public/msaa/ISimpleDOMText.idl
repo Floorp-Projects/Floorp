@@ -47,7 +47,7 @@ cpp_quote("// An interface that extends MSAA's IAccessible to provide important 
 cpp_quote("//")
 cpp_quote("// @STATUS UNDER_REVIEW")
 cpp_quote("//")
-cpp_quote("// get_domText(/* out */ BSTR *domText")
+cpp_quote("// [propget] domText(/* out,retval */ BSTR *domText")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
 cpp_quote("// Similar to IAccessible::get_accName, but does not strip out whitespace characters.")
 cpp_quote("// Important for retrieving the correct start/end substring indices to use with other")
@@ -76,11 +76,16 @@ cpp_quote("// The in parameters for start and end indices refer to the string re
 cpp_quote("// by ISimpleDOMText::get_domText().")
 cpp_quote("//")
 cpp_quote("//")
+cpp_quote("// [propget] fontFamily(/* out,retval */ BSTR *fontFamily);")
+cpp_quote("// ---------------------------------------------------------------------------------------------------=")
+cpp_quote("// Return a single computed font family name, which is better than the comma delineated list")
+cpp_quote("// that is returned by the ISimpleDOMNode computed style methods for font-family.")
+cpp_quote("// In other words, return something like 'Arial' instead of 'Arial, Helvetica, Sans-serif'.")
 cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
 cpp_quote("")
 cpp_quote("")
 
-[object, uuid(aa24e510-a4e6-4112-a258-0ba7f12e85a9)]
+[object, uuid(4e747be5-2052-4265-8af0-8ecad7aad1c0)]
 interface ISimpleDOMText: IUnknown
 {
   // Includes whitespace in DOM
@@ -102,5 +107,7 @@ interface ISimpleDOMText: IUnknown
 
   HRESULT scrollToSubstring([in] unsigned int startIndex, 
                             [in] unsigned int endIndex);
+
+  [propget] HRESULT fontFamily([out, retval] BSTR *fontFamily);
 };
 
