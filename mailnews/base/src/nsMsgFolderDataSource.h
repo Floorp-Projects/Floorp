@@ -218,6 +218,7 @@ protected:
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kNameAtom;
   
   static nsrefcnt gFolderResourceRefCnt;
 

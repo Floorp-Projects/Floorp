@@ -89,6 +89,7 @@ nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 nsIAtom * nsMsgFolderDataSource::kBiffStateAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
   mInitialized(PR_FALSE)
@@ -142,6 +143,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kTotalMessagesAtom);
     NS_RELEASE(kTotalUnreadMessagesAtom);
     NS_RELEASE(kBiffStateAtom);
+    NS_RELEASE(kNameAtom);
 	}
 }
 
@@ -196,6 +198,7 @@ nsresult nsMsgFolderDataSource::Init()
     kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
     kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
     kBiffStateAtom               = NS_NewAtom("BiffState");
+    kNameAtom              = NS_NewAtom("Name");
   }
 	CreateLiterals(rdf);
 	rv = CreateArcsOutEnumerator();
@@ -800,7 +803,19 @@ nsMsgFolderDataSource::OnItemUnicharPropertyChanged(nsISupports *item,
                                                     const PRUnichar *oldValue,
                                                     const PRUnichar *newValue)
 {
-  
+  nsresult rv;
+
+  if (kNameAtom == property) {
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(item);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        PRInt32 numUnread;
+        folder->GetNumUnread(PR_FALSE, &numUnread);
+        NotifyFolderTreeNameChanged(folder, numUnread);
+      }
+    }
+  }
   return NS_OK;
 }
 
