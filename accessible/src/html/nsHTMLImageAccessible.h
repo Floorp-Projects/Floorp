@@ -55,11 +55,10 @@ public:
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
 
 protected:
-  nsIAccessible *CreateAreaAccessible(PRInt32 areaNum);
+  virtual void CacheChildren(PRBool aWalkAnonContent);
+  already_AddRefed<nsIAccessible> CreateAreaAccessible(PRInt32 areaNum);
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
 };
 

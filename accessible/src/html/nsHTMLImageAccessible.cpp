@@ -127,18 +127,10 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetRole(PRUint32 *_retval)
 }
 
 
-nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
+already_AddRefed<nsIAccessible> nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
 {
   if (!mMapElement) 
     return nsnull;
-
-   if (areaNum == -1) {
-    PRInt32 numAreaMaps;
-    GetChildCount(&numAreaMaps);
-    if (numAreaMaps<=0)
-      return nsnull;
-    areaNum = NS_STATIC_CAST(PRUint32,numAreaMaps-1);
-  }
 
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
   mMapElement->GetAreas(getter_AddRefs(mapAreas));
@@ -165,36 +157,45 @@ nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
 }
 
 
-/* nsIAccessible getFirstChild (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetFirstChild(nsIAccessible **_retval)
+void nsHTMLImageAccessible::CacheChildren(PRBool aWalkAnonContent)
 {
-  *_retval = CreateAreaAccessible(0);
-  return NS_OK;
-}
-
-
-/* nsIAccessible getLastChild (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetLastChild(nsIAccessible **_retval)
-{
-  *_retval = CreateAreaAccessible(-1);
-  return NS_OK;
-}
-
-#ifdef NEVER
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLImageAccessible::GetChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  if (mMapElement) {
-    nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
-    mMapElement->GetAreas(getter_AddRefs(mapAreas));
-    if (mapAreas) {
-      PRUint32 length;
-      mapAreas->GetLength(&length);
-      *_retval = NS_STATIC_CAST(PRInt32, length);
-    }
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = -1;
+    return;
   }
 
-  return NS_OK;
+  if (mAccChildCount != eChildCountUninitialized) {
+    return;
+  }
+
+  mAccChildCount = 0;
+  nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+  if (mMapElement) {
+    mMapElement->GetAreas(getter_AddRefs(mapAreas));
+  }
+  if (!mapAreas) {
+    return;
+  }
+
+  PRUint32 numMapAreas;
+  mapAreas->GetLength(&numMapAreas);
+
+  nsCOMPtr<nsIAccessible> areaAccessible;
+  nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+  while (mAccChildCount < numMapAreas && 
+         (areaAccessible = CreateAreaAccessible(mAccChildCount)) != nsnull) {
+    if (privatePrevAccessible) {
+      privatePrevAccessible->SetNextSibling(areaAccessible);
+    }
+    else {
+      SetFirstChild(areaAccessible);
+    }
+
+    ++mAccChildCount;
+
+    privatePrevAccessible = do_QueryInterface(areaAccessible);
+    NS_ASSERTION(privatePrevAccessible, "nsIAccessible impl's should always support nsPIAccessible as well");
+  }
 }
-#endif
+
