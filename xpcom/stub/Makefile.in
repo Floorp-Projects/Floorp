@@ -62,7 +62,7 @@ REQUIRES	= string \
 DEFINES		= -D_IMPL_NS_STRINGAPI
 LOCAL_INCLUDES	= -I$(srcdir)/../build
 
-CPPSRCS		= nsXPComStub.cpp ../build/nsStringAPI.cpp
+CPPSRCS		= nsXPComStub.cpp nsStringAPI.cpp
 
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 SDK_BINARY = $(SHARED_LIBRARY)
