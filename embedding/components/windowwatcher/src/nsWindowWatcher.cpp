@@ -1159,6 +1159,8 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
 
   chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nsnull) ?
     nsIWebBrowserChrome::CHROME_OPENAS_CHROME : 0;
+  chromeFlags |= WinHasOption(aFeatures, "extrachrome", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_EXTRA : 0;
   chromeFlags |= WinHasOption(aFeatures, "centerscreen", 0, nsnull) ?
     nsIWebBrowserChrome::CHROME_CENTER_SCREEN : 0;
   chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nsnull) ?
