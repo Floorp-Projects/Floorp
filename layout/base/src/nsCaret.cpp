@@ -1047,42 +1047,46 @@ void nsCaret::GetCaretRectAndInvert()
     }
     caretRect.width = mCaretTwipsWidth;
 
-    // Avoid view redraw problems by making sure the
-    // caret doesn't hang outside the right edge of
-    // the frame. This ensures that the caret gets
-    // erased properly if the frame's right edge gets
-    // invalidated.
+    // Check if the caret intersects with the right edge
+    // of the frame. If it does, and the frame's right edge
+    // is close to the right edge of the clipRect, we may
+    // need to adjust the caret's x position so that it
+    // remains visible.
 
     nscoord caretXMost = caretRect.XMost();
     nscoord frameXMost = frameRect.XMost();
 
-    if (caretRect.x <= frameXMost && caretXMost > frameXMost)
+    if (caretXMost > frameXMost)
     {
-      caretRect.x -= caretXMost - frameXMost;
+      nscoord clipXMost  = clipRect.XMost();
 
-      const nsStyleText* textStyle = mLastCaretFrame->GetStyleText();
-      const nsStyleVisibility* vis = mLastCaretFrame->GetStyleVisibility();
-
-      if ((vis->mDirection == NS_STYLE_DIRECTION_LTR &&
-           textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT) ||
-          (vis->mDirection == NS_STYLE_DIRECTION_RTL &&
-           textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT))
+      if (caretRect.x == frameRect.x && caretRect.x <= clipXMost &&
+          caretXMost > clipXMost)
       {
-        // If the frame is aligned right, stick the caret to the left
-        // edge of the frame.
-        if (caretRect.XMost() >= frameXMost)
-        {
-          caretRect.x = frameXMost - caretRect.width - 1;
-        }
+        // The left side of the caret is attached to the left edge of
+        // the frame, and it is wider than the frame itself. It also
+        // overlaps the right edge of the clipRect so we need to nudge
+        // it to the left so that it remains visible.
+        //
+        // We usually hit this case when the caret is attached to a
+        // br frame (which is about 1 twip in width) that is positioned
+        // at the right edge of the content area because it is right aligned
+        // or the right margin pushed it beyond the width of the view port.
+
+        caretRect.x = clipXMost - caretRect.width;
       }
-      else
+      else if (caretRect.x == frameXMost && frameXMost == clipXMost)
       {
-        // If the frame is aligned left, stick the caret to the right
-        // edge of the frame.
-        if (caretRect.x < frameRect.x)
-        {
-          caretRect.x = frameRect.x;
-        }
+        // The left side of the caret is attached to the right edge of
+        // the frame, but it's going to get clipped because it's positioned
+        // on the  right edge of the clipRect, so nudge it to the
+        // left so it remains visible.
+        //
+        // We usually hit this case when the caret is after the last
+        // character on the line, and the line exceeds the width of the
+        // view port.
+
+        caretRect.x = clipXMost - caretRect.width;
       }
     }
 
