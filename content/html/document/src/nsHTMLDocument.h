@@ -275,9 +275,9 @@ protected:
                                       PRInt32& aCharsetSource, 
                                       nsAString& aCharset);
 
-  void nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, 
-                                          nsAString& aCharset,
-                                          const char* aCommand);
+  void StartAutodetection(nsIDocShell *aDocShell, 
+                          nsAString& aCharset,
+                          const char* aCommand);
 
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
