@@ -892,7 +892,6 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/xmlextras/build/Makefile
 	    extensions/xmlextras/build/src/Makefile
 	    extensions/xmlextras/soap/public/Makefile
-	    extensions/xmlextras/soap/base/Makefile
             " ;;
         xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/xmlterm/Makefile
