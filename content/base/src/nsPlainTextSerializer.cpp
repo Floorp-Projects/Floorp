@@ -1963,7 +1963,7 @@ PRInt32 GetUnicharStringWidth(const PRUnichar* pwcs, PRInt32 n)
 
   for (;*pwcs && n-- > 0; pwcs++)
     if ((w = GetUnicharWidth(*pwcs)) < 0)
-      return -1;
+      ++width; // Taking 1 as the width of non-printable character, for bug# 94475.
     else
       width += w;
 
