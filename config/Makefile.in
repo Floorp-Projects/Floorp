@@ -83,6 +83,7 @@ export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(HEADERS)
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
+	-rm -f $(DIST)/bin/chrome/chromelist.txt
 
 GARBAGE += build_number nsBuildID.h
 
