@@ -8,8 +8,19 @@
 # So that I can debug tinderbox on machines where this
 # program is not installed.
 
-# $Revision: 1.2 $ 
-# $Date: 2003/05/12 16:05:56 $ 
+# We need to associate date/times with change numbers and have these
+# be persistent between calls.  If these pairs were randomly generated
+# it would totally destroy the data structures used in VC_Perforce.
+# WE do not need to keep the same user/comments/files/jobs between
+# calls.  Just fudge up something which looks good to the eye.  The
+# date/times with change numbers pairs are created and stored in a
+# file every time the change command is run.  The file is used by the
+# describe command to ensure consistency between changenumber
+# date/time pairs.
+
+
+# $Revision: 1.3 $ 
+# $Date: 2003/05/12 17:25:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
 # $Name:  $ 
@@ -51,9 +62,10 @@ use TinderConfig;
 use Utils;
 use HTMLPopUp;
 use Persistence;
+use FileStructure;
 
 
-$STATE_FILE = '/tmp/p4sim_statefile.txt';
+$STATE_FILE = "$FileStructure::TINDERBOX_HTML_DIR/p4sim_statefile.txt";
 
 # the list of types which can appear with a file update
 
@@ -99,6 +111,7 @@ $STATE_FILE = '/tmp/p4sim_statefile.txt';
 	       //mozilla/webtools/tinderbox2/src/man
 	       );
 
+# some jobs have text names others are mostly numbers
 @JOBNAMES = qw( 
 		extraspacesinactions 
 		multipletargetactions 
@@ -276,10 +289,6 @@ sub pickone {
     return $element;
 }
 
-# Given a time in perl time format return a string which looks like a
-# time string cvs would give us.  There are two types of strings
-# returned by different versioni of perl we randomly return a string
-# of either type.
 
 sub time2perforceFormat {
   # convert time() format to the format which appears in perforce output
@@ -380,7 +389,8 @@ sub simulate_perforce_jobnum {
 sub parse_args {
 
 # We must be able to simulate the cvs calls which tinderbox makes:
-#   p4 describe -s 1 2 3 4 5 6
+# 		p4 changes -s submitted  @2003/05/11,@now
+#		p4 describe -s 567 568 569
 
     @ORIG_ARGV = @ARGV;
 
@@ -401,10 +411,18 @@ sub parse_args {
 	    (@CHANGE_NUMBERS =  @ARGV);
     }
 
-    $TIME_NOW = time();
-
     scalar(@CHANGE_NUMBERS) || 
 	die ("argument '-s num' is required.\n");
+
+    ( ($DESCRIBE) || ($CHANGES) ) ||
+        die ("Must call simulator with argument either ".
+             "'changes' or 'describe' \n");
+
+    ($DESCRIBE) &&
+        (!( -r $STATE_FILE )) &&
+        die ("Must call simulator with argument ".
+             "'changes' before call with 'describe' \n");
+
 
   return 1;
 } # parse_args
@@ -450,7 +468,7 @@ sub simulate_jobs{
     # In the simulation we usually have no jobs or one single job but
     # sometimes we get a bunch of files at the same time.
 
-    my $num = rand 20;
+    my $num = rand 50;
     $num =~ s/\..*//;
     if( $num >=10 ) {
 	$num = 0;
@@ -462,7 +480,7 @@ sub simulate_jobs{
 	print "Jobs fixed ...\n\n";
 	foreach $i (1 .. $num) {
 	    
-	    # The parser ignores the date
+	    # The parser ignores the date, don't bother to simulate
 	    my $date = '2003/05/11';
 	    my $jobnum = simulate_perforce_jobnum();
 	    my $author = pickone(@AUTHORS);
@@ -477,37 +495,25 @@ sub simulate_jobs{
     return ;
 }
 
-set_static_vars();
-get_env();
-parse_args();
-
-
-# We need to associate date/times with change numbers and have these
-# be persistent between calls.  If these pairs were randomly generated
-# it would totally destroy the data structures used in VC_Perforce.
-# WE do not need to keep the same user/comments between calls.  Just
-# fudge up something which looks good to the eye.
-
-if ($CHANGES) {
-
+sub simulate_changes_cmd {
     my $date;
     if ( "@CHANGE_NUMBERS" =~  m!\@(\d\d\d\d/\d\d/\d\d)\,!) {
         $date = $1;
         $date = perforce_date_str2time($date);
     }
-
+    
     # Make date/time and Changeset pairs. Start far in the past so
     # that current numbers are big and we test perforces ability to
     # skip processing changeset 1.
-
-    my $time = $TIME_NOW - $main::SECONDS_PER_YEAR;
+    
+    my $time = $main::TIME - $main::SECONDS_PER_YEAR;
     my $i=0;
     my $start_here;
-    while ($time < $TIME_NOW) {
+    while ($time < $main::TIME) {
         $i++;
         my $next_checkin = rand (60*60*2);
         $next_checkin =~ s/\..*//;
-
+        
         if ( 
              ($time >= $date)
              && 
@@ -516,13 +522,13 @@ if ($CHANGES) {
             $start_here = $i;
             $start_here--;
         }
-
+        
         $time += $next_checkin;
         $CHANGE_NUMS[$i] = $time;
     }
-
+    
     # now print the output.
-
+    
     foreach $i ($start_here .. $#CHANGE_NUMS) {
         my ($day, $time)= time2perforceFormat($CHANGE_NUMS[$i]);
         my $author = pickone(@AUTHORS);
@@ -531,50 +537,66 @@ if ($CHANGES) {
     }
 
     
-#    Persistence::save_structure( 
-#                                 \@CHANGE_NUMS,
-#                                 $STATE_FILE,
-#                                 );
-
-#  my ($record) = Persistence::load_structure($STATE_FILE);
+    Persistence::save_structure( 
+                                 \@CHANGE_NUMS,
+                                 $STATE_FILE,
+                                 );
 
     exit 0;
 }
 
+sub simulate_describe_cmd {
+    foreach $change_number (@CHANGE_NUMBERS) {
+        
+        if( $change_number == 0 ) {
+            # this is what p4 does when asked for zero
 
-foreach $CHANGE_NUMBER (@CHANGE_NUMBERS) {
+            print STDERR "Invalid changelist number '0'.\n";
+            exit 1;
+        }
+        
+        my ($ref_change_nums) = Persistence::load_structure($STATE_FILE);
+        my @change_nums = @{ $ref_change_nums };
 
-    if( $CHANGE_NUMBER == 0 ) {
-	print STDERR "Invalid changelist number '0'.\n";
-	exit 1;
+        if( $change_number > $#change_nums ) {
+            # simulate being asked for a change list which does not
+            # yet exist.
+            
+            print STDERR "$change_number - no such changelist.\n";
+            exit 0;
+        }
+        
+        
+        my $author = pickone(@AUTHORS);
+        my $comment = pickone(@CHANGESET_COMMENTS);
+        my $date = time2perforceFormat($change_nums[$change_number]);
+        
+        print "Change $change_number by $author on $date\n";
+        print "\n";
+        print "$comment";
+        print "\n";
+        
+        simulate_jobs();
+        simulate_files();
+        
     }
-
-
-
-
-    my $num = rand 10;
-    $num =~ s/\..*//;
-    if( $num == 5 ) {
-	# simulate being asked for a change list which does not yet exist.
-	
-	print STDERR "$CHANGE_NUMBER - no such changelist.\n";
-	exit 0;
-    }
     
-    
-    my $author = pickone(@AUTHORS);
-    my $comment = pickone(@CHANGESET_COMMENTS);
-    my $date = '2003/05/11 18:58:44';
-    
-    print "Change $CHANGE_NUMBER by $author on $date\n";
-    print "\n";
-    print "$comment";
-    print "\n";
-    
-    simulate_jobs();
-    simulate_files();
-
+    exit 0;
 }
+
+
+set_static_vars();
+get_env();
+parse_args();
+
+
+if ($CHANGES) {
+    simulate_changes_cmd();
+} else {
+    simulate_describe_cmd();
+}
+
+# not reached
 exit 0;
 
 __END__
