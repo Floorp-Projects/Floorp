@@ -100,16 +100,43 @@ static nsHashtable *systemDirectoriesLocations = NULL;
 
 
 #if defined (XP_WIN)
+
+static PRBool gGlobalOSInitialized = PR_FALSE;
+static PRBool gGlobalDBCSEnabledOS = PR_FALSE;
+
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
 //----------------------------------------------------------------------------------------
 {
-  // windows does not care about case.  push to uppercase:
+  // check if the Windows is DBCSEnabled once.
+  if (PR_FALSE == gGlobalOSInitialized) {
+    if (GetSystemMetrics(SM_DBCSENABLED))
+      gGlobalDBCSEnabledOS = PR_TRUE;
+    gGlobalOSInitialized = PR_TRUE;
+  }
+
+  // windows does not care about case.  pu sh to uppercase:
   int length = strlen(aPath);
-  for (int i = 0; i < length; i++)
-      if (islower(aPath[i]))
-        aPath[i] = _toupper(aPath[i]);
-    
+  int i = 0; /* C++ portability guide #20 */
+  if (!gGlobalDBCSEnabledOS)  {
+    // for non-DBCS windows
+    for (i = 0; i < length; i++)
+        if (islower(aPath[i]))
+          aPath[i] = _toupper(aPath[i]);
+  }
+  else {
+    // for DBCS windows
+    for (i = 0; i < length; i++)  {
+      if (IsDBCSLeadByte(aPath[i])) {
+        // begining of the double bye char
+        i++;
+      }
+      else  {
+        if ( islower(aPath[i]))
+          aPath[i] = _toupper(aPath[i]);
+      }
+    } //end of for loop
+  }
   return aPath;
 }
 
@@ -144,7 +171,7 @@ static void GetWindowsFolder(int folder, nsFileSpec& outDirectory)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    outDirectory = MakeUpperCase(pBuffer);
+    outDirectory =strdup(pBuffer);
 
 Clean:
     // Clean up. 
