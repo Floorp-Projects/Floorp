@@ -348,25 +348,12 @@ nsPopupSetFrame::RePositionPopup(nsBoxLayoutState& aState)
   // Sync up the view.
   nsIFrame* activeChild = GetActiveChild();
   if (activeChild && mElementContent) {
-
-    nsCOMPtr<nsIContent> menuPopupContent;
-    activeChild->GetContent(getter_AddRefs(menuPopupContent));
-    nsAutoString popupAnchor, popupAlign;
-      
-    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
-    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
-
-    if (popupAnchor.IsEmpty())
-      popupAnchor.AssignWithConversion("bottomleft");
-    if (popupAlign.IsEmpty())
-      popupAlign.AssignWithConversion("topleft");
-   
     nsIFrame* frameToSyncTo = nsnull;
     nsCOMPtr<nsIPresShell> presShell;
     nsIPresContext* presContext = aState.GetPresContext();
     presContext->GetShell(getter_AddRefs(presShell));
     presShell->GetPrimaryFrameFor ( mElementContent, &frameToSyncTo );
-    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, popupAnchor, popupAlign, frameToSyncTo, mXPos, mYPos);
+    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(presContext, mPopupAnchor, mPopupAlign, frameToSyncTo, mXPos, mYPos);
   }
 }
 
@@ -453,6 +440,9 @@ nsPopupSetFrame::CreatePopup(nsIContent* aElementContent, nsIContent* aPopupCont
   mPopupType = aPopupType;
   mElementContent = aElementContent;
   
+  mPopupAlign = aPopupAlignment;
+  mPopupAnchor = anAnchorAlignment;
+
   // Show the popup at the specified position.
   mXPos = aXPos;
   mYPos = aYPos;

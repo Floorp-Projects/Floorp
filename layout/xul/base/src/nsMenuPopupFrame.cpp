@@ -449,6 +449,9 @@ nsMenuPopupFrame :: AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioY
   if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
     *ioXPos += inParentRect.width;
   }
+  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
+    *outFlushWithTopBottom = PR_TRUE;
+  }
   else if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("bottomright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos -= mRect.height;

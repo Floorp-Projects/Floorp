@@ -1007,6 +1007,50 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
       return NS_OK;
 }
 
+static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& aAlign)
+{
+  nsAutoString position;
+  aPopupElt->GetAttribute(kNameSpaceID_None, nsXULAtoms::position, position);
+  if (position.IsEmpty())
+    return;
+
+  if (position.Equals(NS_LITERAL_STRING("before_start"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("bottomleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
+    aAnchor.AssignWithConversion("topright");
+    aAlign.AssignWithConversion("bottomright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
+    aAnchor.AssignWithConversion("bottomleft");
+    aAlign.AssignWithConversion("topleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
+    aAnchor.AssignWithConversion("bottomright");
+    aAlign.AssignWithConversion("topright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("topright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
+    aAnchor.AssignWithConversion("bottomleft");
+    aAlign.AssignWithConversion("bottomright");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
+    aAnchor.AssignWithConversion("topright");
+    aAlign.AssignWithConversion("topleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
+    aAnchor.AssignWithConversion("bottomright");
+    aAlign.AssignWithConversion("bottomleft");
+  }
+  else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
+    aAnchor.AssignWithConversion("topleft");
+    aAlign.AssignWithConversion("topleft");
+  }
+}
 
 void
 nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
@@ -1023,6 +1067,8 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
       
     menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
     menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+
+    ConvertPosition(menuPopupContent, popupAnchor, popupAlign);
 
     PRBool onMenuBar = PR_TRUE;
     if (mMenuParent)
