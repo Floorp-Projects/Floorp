@@ -70,7 +70,7 @@ GetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLULISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.compact", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLULISTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLULISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.compact", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ SetHTMLUListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLULISTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlulistelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

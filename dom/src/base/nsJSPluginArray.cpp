@@ -74,7 +74,7 @@ GetPluginArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case PLUGINARRAY_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -219,7 +219,7 @@ PluginArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -272,7 +272,7 @@ PluginArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -321,7 +321,7 @@ PluginArrayRefresh(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.refresh", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "pluginarray.refresh",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

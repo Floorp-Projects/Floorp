@@ -71,7 +71,7 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_COLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.color", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.color", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_FACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.face", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.face", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.size", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_COLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.color", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.color", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -169,7 +169,7 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_FACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.face", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.face", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -184,7 +184,7 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFONTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfontelement.size", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

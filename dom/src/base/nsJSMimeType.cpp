@@ -75,7 +75,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MIMETYPE_DESCRIPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.description", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.description", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MIMETYPE_ENABLEDPLUGIN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.enabledplugin", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.enabledplugin", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -110,7 +110,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MIMETYPE_SUFFIXES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.suffixes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.suffixes", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -127,7 +127,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MIMETYPE_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "mimetype.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -71,7 +71,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ENTITY_PUBLICID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "entity.publicid", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "entity.publicid", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ENTITY_SYSTEMID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "entity.systemid", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "entity.systemid", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ENTITY_NOTATIONNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "entity.notationname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "entity.notationname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

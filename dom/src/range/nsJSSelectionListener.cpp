@@ -153,7 +153,7 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selectionlistener.notifyselectionchanged", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selectionlistener.notifyselectionchanged",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -71,7 +71,7 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_START:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -171,7 +171,7 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_START:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -193,7 +193,7 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOLISTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -77,7 +77,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case PLUGIN_DESCRIPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "plugin.description", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.description", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -94,7 +94,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case PLUGIN_FILENAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "plugin.filename", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.filename", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -111,7 +111,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case PLUGIN_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "plugin.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case PLUGIN_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "plugin.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -273,7 +273,7 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "plugin.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "plugin.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -326,7 +326,7 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "plugin.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "plugin.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

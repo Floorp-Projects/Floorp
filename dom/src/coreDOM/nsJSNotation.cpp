@@ -70,7 +70,7 @@ GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NOTATION_PUBLICID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "notation.publicid", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "notation.publicid", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NOTATION_SYSTEMID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "notation.systemid", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "notation.systemid", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

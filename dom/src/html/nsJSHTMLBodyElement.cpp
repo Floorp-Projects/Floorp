@@ -74,7 +74,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_ALINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_BACKGROUND:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -108,7 +108,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -125,7 +125,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_LINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -142,7 +142,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -159,7 +159,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_VLINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -208,7 +208,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_ALINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -223,7 +223,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_BACKGROUND:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -238,7 +238,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -253,7 +253,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_LINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -268,7 +268,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -283,7 +283,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBODYELEMENT_VLINK:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

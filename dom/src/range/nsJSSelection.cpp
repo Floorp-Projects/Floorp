@@ -83,7 +83,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ANCHORNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchornode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchornode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -101,7 +101,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ANCHOROFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchoroffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchoroffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_FOCUSNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusnode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusnode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_FOCUSOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ISCOLLAPSED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.iscollapsed", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.iscollapsed", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -170,7 +170,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_RANGECOUNT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.rangecount", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "selection.rangecount", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -278,7 +278,7 @@ SelectionGetRangeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.getrangeat", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.getrangeat",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -329,7 +329,7 @@ SelectionClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.clearselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.clearselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -373,7 +373,7 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapse", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapse",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -433,7 +433,7 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.extend", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.extend",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -494,7 +494,7 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.containsnode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.containsnode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -551,7 +551,7 @@ SelectionDeleteFromDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.deletefromdocument", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.deletefromdocument",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -594,7 +594,7 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.addrange", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.addrange",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -648,7 +648,7 @@ SelectionStartBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.startbatchchanges", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.startbatchchanges",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -690,7 +690,7 @@ SelectionEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.endbatchchanges", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.endbatchchanges",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -733,7 +733,7 @@ SelectionAddSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.addselectionlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.addselectionlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -788,7 +788,7 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.removeselectionlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.removeselectionlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

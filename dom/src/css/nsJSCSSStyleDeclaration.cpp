@@ -70,7 +70,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case CSSSTYLEDECLARATION_CSSTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case CSSSTYLEDECLARATION_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -144,7 +144,7 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case CSSSTYLEDECLARATION_CSSTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.csstext", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -217,7 +217,7 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertyvalue", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertyvalue",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -267,7 +267,7 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertypriority", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.getpropertypriority",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -318,7 +318,7 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.setproperty", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.setproperty",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -370,7 +370,7 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstyledeclaration.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -78,7 +78,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HASH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -95,7 +95,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOST:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.host", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.host", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -112,7 +112,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOSTNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -129,7 +129,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PATHNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -146,7 +146,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PORT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.port", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.port", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -163,7 +163,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PROTOCOL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -180,7 +180,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_SEARCH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.search", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.search", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -229,7 +229,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HASH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -244,7 +244,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOST:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.host", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.host", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -259,7 +259,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOSTNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -274,7 +274,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PATHNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -289,7 +289,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PORT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.port", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.port", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -304,7 +304,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PROTOCOL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -319,7 +319,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_SEARCH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.search", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "location.search", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -391,7 +391,7 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "location.tostring", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "location.tostring",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -439,7 +439,7 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.reload", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.reload",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -487,7 +487,7 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.replace", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.replace",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

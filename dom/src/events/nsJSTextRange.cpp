@@ -80,7 +80,7 @@ GetTextRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_SUCCEEDED(a->GetRangeStart(&prop))) {
+        if (NS_OK == a->GetRangeStart(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -96,7 +96,7 @@ GetTextRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_SUCCEEDED(a->GetRangeEnd(&prop))) {
+        if (NS_OK == a->GetRangeEnd(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -112,7 +112,7 @@ GetTextRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_SUCCEEDED(a->GetRangeType(&prop))) {
+        if (NS_OK == a->GetRangeType(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -130,7 +130,7 @@ GetTextRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRUint16 prop;
         nsIDOMTextRangeList* b;
         if (NS_OK == a->QueryInterface(kITextRangeListIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetLength(&prop))) {
+          if(NS_OK == b->GetLength(&prop)) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }

@@ -156,7 +156,7 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "domimplementation.hasfeature", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "domimplementation.hasfeature",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

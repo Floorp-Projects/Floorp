@@ -69,7 +69,7 @@ GetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDIVELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldivelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldivelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLDivElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDIVELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldivelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldivelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

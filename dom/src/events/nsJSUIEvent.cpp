@@ -97,7 +97,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screenx", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screenx", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -114,7 +114,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screeny", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screeny", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -131,7 +131,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_CLIENTX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clientx", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clientx", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -148,7 +148,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_CLIENTY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clienty", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clienty", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -165,7 +165,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_ALTKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.altkey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.altkey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -182,7 +182,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_CTRLKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.ctrlkey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.ctrlkey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -199,7 +199,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_SHIFTKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.shiftkey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.shiftkey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -216,7 +216,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_METAKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.metakey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.metakey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -233,7 +233,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_CHARCODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.charcode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.charcode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -250,7 +250,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_KEYCODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.keycode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.keycode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -267,7 +267,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_BUTTON:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.button", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.button", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -284,7 +284,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case UIEVENT_CLICKCOUNT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clickcount", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clickcount", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -301,7 +301,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_LAYERX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layerx", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layerx", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -327,7 +327,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_LAYERY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layery", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layery", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -353,7 +353,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_PAGEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -379,7 +379,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_PAGEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -405,7 +405,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_WHICH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.which", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.which", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -431,7 +431,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_RANGEPARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeparent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeparent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -458,7 +458,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_RANGEOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rangeoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -484,7 +484,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSUIEVENT_RC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rc", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

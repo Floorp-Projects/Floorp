@@ -69,7 +69,7 @@ nsScriptSecurityManager::GetScriptSecurityManager()
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
                                            void *aObj, const char *aProp, 
-                                           PRBool *aResult)
+                                           PRBool isWrite, PRBool *aResult)
 {
     *aResult = PR_FALSE;
     JSContext *cx = (JSContext *)aContext->GetNativeContext();

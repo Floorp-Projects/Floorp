@@ -88,7 +88,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ELEMENTS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.elements", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.elements", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -106,7 +106,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -123,7 +123,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -157,7 +157,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ACTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -174,7 +174,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ENCTYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -191,7 +191,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_METHOD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -208,7 +208,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -225,7 +225,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLFORMELEMENT_ENCODING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.encoding", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.encoding", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -338,7 +338,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -353,7 +353,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.acceptcharset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -368,7 +368,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ACTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.action", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -383,7 +383,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_ENCTYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.enctype", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -398,7 +398,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_METHOD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.method", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -413,7 +413,7 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFORMELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.target", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -484,7 +484,7 @@ HTMLFormElementSubmit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.submit", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.submit",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -526,7 +526,7 @@ HTMLFormElementReset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.reset", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlformelement.reset",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -576,7 +576,7 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -632,7 +632,7 @@ NSHTMLFormElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

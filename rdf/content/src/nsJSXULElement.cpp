@@ -92,7 +92,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -109,7 +109,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -126,7 +126,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.style", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -144,7 +144,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_DATABASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -162,7 +162,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_RESOURCE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.resource", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.resource", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -180,7 +180,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_CONTROLLER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -230,7 +230,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.id", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -245,7 +245,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.classname", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -260,7 +260,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_DATABASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.database", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -278,7 +278,7 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULELEMENT_CONTROLLER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulelement.controller", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -354,7 +354,7 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.addbroadcastlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.addbroadcastlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -411,7 +411,7 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.removebroadcastlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.removebroadcastlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -466,7 +466,7 @@ XULElementDoCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.docommand", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.docommand",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -511,7 +511,7 @@ XULElementGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.getelementsbyattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulelement.getelementsbyattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -69,7 +69,7 @@ GetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMENUELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmenuelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmenuelement.compact", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMENUELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmenuelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmenuelement.compact", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

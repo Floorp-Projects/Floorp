@@ -72,7 +72,7 @@ GetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODELIST_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nodelist.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nodelist.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -189,7 +189,7 @@ NodeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nodelist.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nodelist.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

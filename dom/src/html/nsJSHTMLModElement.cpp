@@ -70,7 +70,7 @@ GetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_CITE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.cite", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.cite", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_DATETIME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.datetime", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.datetime", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_CITE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.cite", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.cite", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_DATETIME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.datetime", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmodelement.datetime", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

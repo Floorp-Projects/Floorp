@@ -72,7 +72,7 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_CONTENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -89,7 +89,7 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_HTTPEQUIV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -106,7 +106,7 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -123,7 +123,7 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_SCHEME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -172,7 +172,7 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_CONTENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -187,7 +187,7 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_HTTPEQUIV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -202,7 +202,7 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -217,7 +217,7 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMETAELEMENT_SCHEME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

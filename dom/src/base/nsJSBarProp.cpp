@@ -69,7 +69,7 @@ GetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case BARPROP_VISIBLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "barprop.visible", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "barprop.visible", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetBarPropProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case BARPROP_VISIBLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "barprop.visible", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "barprop.visible", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

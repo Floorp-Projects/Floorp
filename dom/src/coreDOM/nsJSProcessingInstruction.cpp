@@ -70,7 +70,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       case PROCESSINGINSTRUCTION_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       case PROCESSINGINSTRUCTION_DATA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       case PROCESSINGINSTRUCTION_DATA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

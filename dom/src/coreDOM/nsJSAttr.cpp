@@ -71,7 +71,7 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ATTR_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "attr.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ATTR_SPECIFIED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "attr.specified", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.specified", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ATTR_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ATTR_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

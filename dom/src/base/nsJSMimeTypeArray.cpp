@@ -74,7 +74,7 @@ GetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MIMETYPEARRAY_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -219,7 +219,7 @@ MimeTypeArrayItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -272,7 +272,7 @@ MimeTypeArrayNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "mimetypearray.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

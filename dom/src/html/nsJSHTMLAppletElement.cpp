@@ -79,7 +79,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -96,7 +96,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -113,7 +113,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -130,7 +130,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -147,7 +147,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -164,7 +164,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -181,7 +181,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -198,7 +198,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -215,7 +215,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_OBJECT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -232,7 +232,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -249,7 +249,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -298,7 +298,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -313,7 +313,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -328,7 +328,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -343,7 +343,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -358,7 +358,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -373,7 +373,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -388,7 +388,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -403,7 +403,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -418,7 +418,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_OBJECT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -433,7 +433,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -448,7 +448,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

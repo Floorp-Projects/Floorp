@@ -69,7 +69,7 @@ GetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLPREELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlpreelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlpreelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLPREELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlpreelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlpreelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -79,7 +79,7 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -97,7 +97,7 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -147,7 +147,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -166,7 +166,7 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -242,7 +242,7 @@ XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.addcommand", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.addcommand",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -297,7 +297,7 @@ XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.removecommand", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.removecommand",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -351,7 +351,7 @@ XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.updatecommands", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.updatecommands",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -394,7 +394,7 @@ XULCommandDispatcherGetController(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.getcontroller", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.getcontroller",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -438,7 +438,7 @@ XULCommandDispatcherSetController(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.setcontroller", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.setcontroller",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

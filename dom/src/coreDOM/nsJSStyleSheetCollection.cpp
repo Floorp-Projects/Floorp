@@ -72,7 +72,7 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case STYLESHEETCOLLECTION_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -189,7 +189,7 @@ StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -128,7 +128,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_WINDOW:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.window", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.window", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -146,7 +146,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SELF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.self", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.self", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -164,7 +164,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DOCUMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.document", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.document", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -182,7 +182,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAVIGATOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.navigator", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.navigator", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -200,7 +200,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREEN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screen", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screen", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -218,7 +218,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_HISTORY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.history", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.history", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -236,7 +236,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.parent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.parent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -254,7 +254,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_TOP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.top", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.top", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -272,7 +272,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_CONTENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.content", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.content", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -290,7 +290,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_MENUBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.menubar", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.menubar", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -308,7 +308,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_TOOLBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.toolbar", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.toolbar", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -326,7 +326,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_LOCATIONBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.locationbar", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.locationbar", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -344,7 +344,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PERSONALBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.personalbar", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.personalbar", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -362,7 +362,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUSBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.statusbar", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.statusbar", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -380,7 +380,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCROLLBARS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollbars", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollbars", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -398,7 +398,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DIRECTORIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.directories", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.directories", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -416,7 +416,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_CLOSED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.closed", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.closed", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -433,7 +433,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_FRAMES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.frames", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.frames", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -451,7 +451,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OPENER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -469,7 +469,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.status", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.status", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -486,7 +486,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DEFAULTSTATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -503,7 +503,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -520,7 +520,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -537,7 +537,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -554,7 +554,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -571,7 +571,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -588,7 +588,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -605,7 +605,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -622,7 +622,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEXOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -639,7 +639,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEYOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -688,7 +688,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OPENER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -707,7 +707,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.status", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.status", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -722,7 +722,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DEFAULTSTATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -737,7 +737,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -752,7 +752,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -774,7 +774,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -796,7 +796,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -818,7 +818,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -840,7 +840,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -862,7 +862,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -884,7 +884,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEXOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -906,7 +906,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEYOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -985,7 +985,7 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.dump", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.dump",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1033,7 +1033,7 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.alert", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.alert",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1076,7 +1076,7 @@ WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.confirm", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.confirm",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1119,7 +1119,7 @@ WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.prompt", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.prompt",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1161,7 +1161,7 @@ WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1203,7 +1203,7 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1245,7 +1245,7 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.close", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.close",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1287,7 +1287,7 @@ WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.back", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.back",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1329,7 +1329,7 @@ WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.forward", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.forward",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1371,7 +1371,7 @@ WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.home", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.home",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1413,7 +1413,7 @@ WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.stop", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.stop",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1455,7 +1455,7 @@ WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.print", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.print",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1499,7 +1499,7 @@ WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.moveto", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.moveto",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1556,7 +1556,7 @@ WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.moveby", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.moveby",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1613,7 +1613,7 @@ WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeto", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeto",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1670,7 +1670,7 @@ WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeby", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeby",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1727,7 +1727,7 @@ WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollto", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollto",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1784,7 +1784,7 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollby", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollby",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1840,7 +1840,7 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.cleartimeout", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.cleartimeout",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1892,7 +1892,7 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.clearinterval", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.clearinterval",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1944,7 +1944,7 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.settimeout", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.settimeout",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1987,7 +1987,7 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.setinterval", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.setinterval",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2037,7 +2037,7 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.createpopup", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.createpopup",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2110,7 +2110,7 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.open", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.open",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2153,7 +2153,7 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.opendialog", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "window.opendialog",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2202,7 +2202,7 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2257,7 +2257,7 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2314,7 +2314,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -2380,7 +2380,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -73,7 +73,7 @@ GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLISINDEXELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLISINDEXELEMENT_PROMPT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.prompt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.prompt", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ SetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLISINDEXELEMENT_PROMPT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.prompt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlisindexelement.prompt", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

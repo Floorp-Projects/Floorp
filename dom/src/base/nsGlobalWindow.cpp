@@ -3308,7 +3308,8 @@ NavigatorImpl::Preference(JSContext* cx,
     return result;
   }  
   PRBool ok;
-  secMan->CheckScriptAccess(scriptCX, self, "navigator.preference", &ok);
+  secMan->CheckScriptAccess(scriptCX, self, "navigator.preference", 
+                            (argc == 1 ? PR_FALSE : PR_TRUE), &ok);
   if (!ok) {
     //Need to throw error here
     return NS_ERROR_FAILURE;

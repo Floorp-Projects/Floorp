@@ -86,7 +86,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -104,7 +104,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_DEFAULTSELECTED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.defaultselected", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.defaultselected", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -121,7 +121,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.text", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -138,7 +138,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_INDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.index", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.index", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -155,7 +155,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -172,7 +172,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_LABEL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.label", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.label", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -189,7 +189,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_SELECTED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.selected", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.selected", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -206,7 +206,7 @@ GetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -255,7 +255,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_DEFAULTSELECTED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.defaultselected", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.defaultselected", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -272,7 +272,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_INDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.index", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.index", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -294,7 +294,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -311,7 +311,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_LABEL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.label", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.label", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -326,7 +326,7 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLOPTIONELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

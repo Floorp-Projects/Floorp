@@ -83,7 +83,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_STARTPARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.startparent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.startparent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -101,7 +101,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_STARTOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.startoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.startoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ENDPARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.endparent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.endparent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ENDOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.endoffset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.endoffset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ISCOLLAPSED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.iscollapsed", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.iscollapsed", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -170,7 +170,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_COMMONPARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "range.commonparent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "range.commonparent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -279,7 +279,7 @@ RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setstart", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setstart",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -338,7 +338,7 @@ RangeSetStartBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setstartbefore", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setstartbefore",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -393,7 +393,7 @@ RangeSetStartAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setstartafter", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setstartafter",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -449,7 +449,7 @@ RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setend", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setend",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -508,7 +508,7 @@ RangeSetEndBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setendbefore", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setendbefore",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -563,7 +563,7 @@ RangeSetEndAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.setendafter", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.setendafter",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -618,7 +618,7 @@ RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.collapse", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.collapse",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -669,7 +669,7 @@ RangeSelectNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.selectnode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.selectnode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -724,7 +724,7 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.selectnodecontents", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.selectnodecontents",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -781,7 +781,7 @@ RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.compareendpoints", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.compareendpoints",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -839,7 +839,7 @@ RangeDeleteContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.deletecontents", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.deletecontents",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -882,7 +882,7 @@ RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.extractcontents", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.extractcontents",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -925,7 +925,7 @@ RangeCloneContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.clonecontents", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.clonecontents",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -968,7 +968,7 @@ RangeInsertNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.insertnode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.insertnode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1023,7 +1023,7 @@ RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.surroundcontents", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.surroundcontents",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1078,7 +1078,7 @@ RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.clone", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.clone",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1121,7 +1121,7 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "range.tostring", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "range.tostring",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1171,7 +1171,7 @@ NSRangeCreateContextualFragment(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.createcontextualfragment", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.createcontextualfragment",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1227,7 +1227,7 @@ NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.isvalidfragment", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nsrange.isvalidfragment",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -70,7 +70,7 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CHARACTERDATA_DATA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CHARACTERDATA_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CHARACTERDATA_DATA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -210,7 +210,7 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.substringdata", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.substringdata",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -266,7 +266,7 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.appenddata", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.appenddata",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -316,7 +316,7 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.insertdata", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.insertdata",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -370,7 +370,7 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.deletedata", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.deletedata",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -428,7 +428,7 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.replacedata", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "characterdata.replacedata",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

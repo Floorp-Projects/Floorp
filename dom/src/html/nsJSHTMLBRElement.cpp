@@ -69,7 +69,7 @@ GetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBRELEMENT_CLEAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbrelement.clear", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbrelement.clear", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBRELEMENT_CLEAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbrelement.clear", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbrelement.clear", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

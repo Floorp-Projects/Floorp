@@ -74,7 +74,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSIMPORTRULE_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSIMPORTRULE_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.media", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -108,7 +108,7 @@ GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSIMPORTRULE_STYLESHEET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.stylesheet", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.stylesheet", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -158,7 +158,7 @@ SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSIMPORTRULE_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.href", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -173,7 +173,7 @@ SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSIMPORTRULE_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssimportrule.media", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

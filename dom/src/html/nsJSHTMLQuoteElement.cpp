@@ -69,7 +69,7 @@ GetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLQUOTEELEMENT_CITE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlquoteelement.cite", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlquoteelement.cite", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLQUOTEELEMENT_CITE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlquoteelement.cite", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlquoteelement.cite", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

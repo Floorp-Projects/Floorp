@@ -77,7 +77,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -94,7 +94,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -111,7 +111,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_LANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_DIR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -145,7 +145,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -162,7 +162,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.style", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -212,7 +212,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_ID:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -227,7 +227,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -242,7 +242,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_LANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -257,7 +257,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_DIR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -272,7 +272,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLELEMENT_CLASSNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

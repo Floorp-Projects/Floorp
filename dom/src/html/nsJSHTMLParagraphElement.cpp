@@ -69,7 +69,7 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case HTMLPARAGRAPHELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlparagraphelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparagraphelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case HTMLPARAGRAPHELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlparagraphelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparagraphelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

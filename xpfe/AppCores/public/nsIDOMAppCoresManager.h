@@ -56,11 +56,11 @@ public:
 
 
 #define NS_FORWARD_IDOMAPPCORESMANAGER(_to)  \
-  NS_IMETHOD    Startup() { return _to##Startup(); }  \
-  NS_IMETHOD    Shutdown() { return _to##Shutdown(); }  \
-  NS_IMETHOD    Add(nsIDOMBaseAppCore* aAppcore) { return _to##Add(aAppcore); }  \
-  NS_IMETHOD    Remove(nsIDOMBaseAppCore* aAppcore) { return _to##Remove(aAppcore); }  \
-  NS_IMETHOD    Find(const nsString& aId, nsIDOMBaseAppCore** aReturn) { return _to##Find(aId, aReturn); }  \
+  NS_IMETHOD    Startup() { return _to Startup(); }  \
+  NS_IMETHOD    Shutdown() { return _to Shutdown(); }  \
+  NS_IMETHOD    Add(nsIDOMBaseAppCore* aAppcore) { return _to Add(aAppcore); }  \
+  NS_IMETHOD    Remove(nsIDOMBaseAppCore* aAppcore) { return _to Remove(aAppcore); }  \
+  NS_IMETHOD    Find(const nsString& aId, nsIDOMBaseAppCore** aReturn) { return _to Find(aId, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype);

@@ -71,7 +71,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_COLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.color", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.color", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_FACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.face", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.face", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.size", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_COLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.color", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.color", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -169,7 +169,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_FACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.face", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.face", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -184,7 +184,7 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLBASEFONTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbasefontelement.size", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -74,7 +74,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSRULE_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSRULE_CSSTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.csstext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.csstext", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -108,7 +108,7 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSRULE_SHEET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.sheet", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.sheet", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -158,7 +158,7 @@ SetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSRULE_CSSTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.csstext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssrule.csstext", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

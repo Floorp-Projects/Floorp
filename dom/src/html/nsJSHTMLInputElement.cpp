@@ -90,7 +90,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -107,7 +107,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DEFAULTCHECKED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -124,7 +124,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -142,7 +142,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ACCEPT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -159,7 +159,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -176,7 +176,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -193,7 +193,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -210,7 +210,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_CHECKED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -227,7 +227,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -244,7 +244,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_MAXLENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -261,7 +261,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -278,7 +278,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -295,7 +295,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -312,7 +312,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -329,7 +329,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -346,7 +346,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -363,7 +363,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_USEMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -380,7 +380,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -397,7 +397,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_AUTOCOMPLETE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -446,7 +446,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -461,7 +461,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DEFAULTCHECKED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -478,7 +478,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ACCEPT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -493,7 +493,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -508,7 +508,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -523,7 +523,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -538,7 +538,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_CHECKED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -555,7 +555,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -572,7 +572,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_MAXLENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -594,7 +594,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -609,7 +609,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -626,7 +626,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -641,7 +641,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -656,7 +656,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -678,7 +678,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_USEMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -693,7 +693,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -708,7 +708,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLINPUTELEMENT_AUTOCOMPLETE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -779,7 +779,7 @@ HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -821,7 +821,7 @@ HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -863,7 +863,7 @@ HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.select", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.select",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -905,7 +905,7 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.click", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.click",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

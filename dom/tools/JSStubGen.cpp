@@ -465,7 +465,7 @@ static const char kPropCaseBeginStr[] =
 "      case %s_%s:\n"
 "      {\n"
 "        PRBool ok = PR_FALSE;\n"
-"        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
+"        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", %s, &ok);\n"
 "        if (!ok) {\n"
 "          //Need to throw error here\n"
 "          return JS_FALSE;\n"
@@ -549,7 +549,12 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       strcpy(lwr_iface_name, iface_name);
       StrLwr(lwr_iface_name);
 
-      sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name);
+      if (aIsGetter) {
+        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name, "PR_FALSE");
+      }
+      else {
+        sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name, "PR_TRUE");
+      }
       *file << buf;
 
       if (aIsGetter) {
@@ -991,7 +996,7 @@ static const char kMethodBodyBeginStr[] = "\n"
 "  }\n"
 "  {\n"
 "    PRBool ok;\n"
-"    secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
+"    secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\",PR_FALSE , &ok);\n"
 "    if (!ok) {\n"
 "      //Need to throw error here\n"
 "      return JS_FALSE;\n"

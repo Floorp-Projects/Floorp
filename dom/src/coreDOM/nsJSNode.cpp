@@ -94,7 +94,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_NODENAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.nodename", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodename", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -111,7 +111,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_NODEVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_NODETYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.nodetype", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodetype", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -145,7 +145,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_PARENTNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.parentnode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.parentnode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -163,7 +163,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_CHILDNODES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.childnodes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.childnodes", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -181,7 +181,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_FIRSTCHILD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.firstchild", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.firstchild", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -199,7 +199,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_LASTCHILD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.lastchild", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.lastchild", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -217,7 +217,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_PREVIOUSSIBLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.previoussibling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.previoussibling", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -235,7 +235,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_NEXTSIBLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.nextsibling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nextsibling", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -253,7 +253,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_ATTRIBUTES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.attributes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.attributes", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -271,7 +271,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_OWNERDOCUMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.ownerdocument", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.ownerdocument", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -321,7 +321,7 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NODE_NODEVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -395,7 +395,7 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.insertbefore", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.insertbefore",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -459,7 +459,7 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.replacechild", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.replacechild",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -522,7 +522,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.removechild", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.removechild",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -578,7 +578,7 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.appendchild", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.appendchild",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -633,7 +633,7 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.haschildnodes", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.haschildnodes",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -677,7 +677,7 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "node.clonenode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "node.clonenode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -736,7 +736,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -802,7 +802,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

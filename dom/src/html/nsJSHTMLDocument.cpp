@@ -105,7 +105,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -122,7 +122,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_REFERRER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.referrer", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.referrer", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -139,7 +139,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_DOMAIN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -156,7 +156,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_URL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.url", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.url", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -173,7 +173,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_BODY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -191,7 +191,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_IMAGES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.images", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.images", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -209,7 +209,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_APPLETS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.applets", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.applets", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -227,7 +227,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_LINKS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.links", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.links", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -245,7 +245,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_FORMS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.forms", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.forms", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -263,7 +263,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_ANCHORS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.anchors", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.anchors", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -281,7 +281,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_COOKIE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -298,7 +298,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -324,7 +324,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -350,7 +350,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -376,7 +376,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -402,7 +402,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -428,7 +428,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LASTMODIFIED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.lastmodified", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.lastmodified", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -454,7 +454,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_EMBEDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.embeds", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.embeds", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -481,7 +481,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LAYERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.layers", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.layers", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -508,7 +508,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_PLUGINS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.plugins", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.plugins", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -604,7 +604,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -619,7 +619,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_BODY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -638,7 +638,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_COOKIE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -653,7 +653,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -677,7 +677,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -701,7 +701,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -725,7 +725,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -749,7 +749,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -829,7 +829,7 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -873,7 +873,7 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -923,7 +923,7 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -978,7 +978,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1028,7 +1028,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1082,7 +1082,7 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.open", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.open",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1130,7 +1130,7 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.write", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.write",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1178,7 +1178,7 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.writeln", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.writeln",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -72,7 +72,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HISTORY_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "history.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -89,7 +89,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HISTORY_CURRENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.current", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "history.current", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -106,7 +106,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HISTORY_PREVIOUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.previous", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "history.previous", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -123,7 +123,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HISTORY_NEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.next", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "history.next", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -229,7 +229,7 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.back", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "history.back",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -271,7 +271,7 @@ HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.forward", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "history.forward",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -314,7 +314,7 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.go", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "history.go",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
