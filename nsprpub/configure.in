@@ -1692,6 +1692,7 @@ mips-sony-newsos*)
 *-os2*)
     AC_DEFINE(XP_OS2)
     AC_DEFINE(XP_PC)
+    AC_DEFINE(BSD_SELECT)
     AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
@@ -1708,7 +1709,6 @@ mips-sony-newsos*)
     # EMX/GCC build
     if test "$GNU_CC"; then
         AC_DEFINE(XP_OS2_EMX)
-        AC_DEFINE(BSD_SELECT)
         AC_DEFINE(OS2)
         AR=emxomfar
         AR_FLAGS='-p256 r $@'

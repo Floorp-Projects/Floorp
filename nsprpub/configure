@@ -4559,6 +4559,10 @@ EOF
 EOF
 
     cat >> confdefs.h <<\EOF
+#define BSD_SELECT 1
+EOF
+
+    cat >> confdefs.h <<\EOF
 #define _PR_GLOBAL_THREADS_ONLY 1
 EOF
 
@@ -4578,10 +4582,6 @@ EOF
     if test "$GNU_CC"; then
         cat >> confdefs.h <<\EOF
 #define XP_OS2_EMX 1
-EOF
-
-        cat >> confdefs.h <<\EOF
-#define BSD_SELECT 1
 EOF
 
         cat >> confdefs.h <<\EOF
