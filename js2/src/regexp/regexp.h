@@ -84,13 +84,13 @@ typedef struct REParseState {
 
 typedef struct RECapture {
     REint32 index;              /* start of contents of this capture, -1 for empty  */
-    REuint32 length;            /* length of capture */
+    REint32 length;             /* length of capture */
 } RECapture;
 
 typedef struct REState {
-    REuint32 endIndex;
-    REuint32 length;            /* the length of a succesful match */
-    REuint32 n;                 /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
+    REint32 endIndex;
+    REint32 length;             /* the length of a succesful match */
+    REint32 n;                  /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
     RECapture parens[1];        /* first of 'n' captures, allocated at end of this struct */
 } REState;
 
@@ -102,15 +102,20 @@ typedef struct REState {
  *  The RegExp source does not have any delimiters and the flag string is
  *  to be supplied separately (can be NULL, with a 0 length)
  */
-REParseState *REParse(const REchar *source, REuint32 sourceLength, const REchar *flags, REuint32 flagsLength, REbool oldSyntax);
+REParseState *REParse(const REchar *source, REint32 sourceLength, const REchar *flags, REint32 flagsLength, REbool oldSyntax);
 
+/*
+ *  The [[Match]] implementation
+ *
+ */
+REState *REMatch(REParseState *parseState, const REchar *text, REint32 length);
 
 /*
  *  Execute the RegExp against the supplied text, filling in the REState.
  *
  *
  */
-REState *REExecute(REParseState *parseState, const REchar *text, REuint32 length);
+REState *REExecute(REParseState *parseState, const REchar *text, REint32 length);
 
 
 /*
