@@ -1733,6 +1733,27 @@ dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
 
+HAVE_GCC3_ABI=
+if test "$GNU_CC"; then
+  AC_CACHE_CHECK(for gcc 3.0 ABI,
+      ac_cv_gcc_three_abi,
+      [AC_TRY_COMPILE([],
+                      [
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+  return 0;
+#else
+#error Not gcc3.
+#endif
+                      ],
+                      ac_cv_gcc_three_abi="yes",
+                      ac_cv_gcc_three_abi="no")])
+  if test "$ac_cv_gcc_three_abi" = "yes"; then
+      HAVE_GCC3_ABI=1
+  fi
+fi
+AC_SUBST(HAVE_GCC3_ABI)
+
+
 AC_MSG_CHECKING(for ios::binary)
 AC_CACHE_VAL(ac_cv_ios_binary,
  [AC_TRY_COMPILE([#include <iostream.h>]
