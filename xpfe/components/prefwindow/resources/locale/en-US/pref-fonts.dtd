@@ -1,18 +1,22 @@
 <!-- extracted from content/pref-fonts.xul -->
 
-
+<!--LOCALIZATION NOTE pref-fonts.dtd 'Fonts' prefs dialog -->
 <!ENTITY  window.title "Fonts">
 <!ENTITY  lHeader "Fonts">
 <!ENTITY  rHeader "Change the fonts in your display">
 <!ENTITY  encod.select "For the Encoding:">
 <!ENTITY  encod1.option "Western">
 <!ENTITY  size.select "Size">
+<!--LOCALIZATION NOTE size1.option Don't change this string -->
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
+<!--LOCALIZATION NOTE varFont.option Don't change this string -->
 <!ENTITY  varFont.option "10">
 <!ENTITY  fixedFont.Select "Fixed Width Font">
+<!--LOCALIZATION NOTE fixedFont.option Don't translate this term. -->
 <!ENTITY  fixedFont.option "Filler">
 <!ENTITY  header2 "Sometimes a document will provide its own fonts.">
 <!ENTITY  useDefaultFontRadio "Use my default fonts, overriding document-specified fonts">
+<!--LOCALIZATION NOTE useDocFontRadio Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontRadio "Use document-specified fonts, but disable Dynamic Fonts">
 <!ENTITY  useDocFontsRadio "Use document-specified fonts, including Dynamic Fonts">

@@ -1,10 +1,15 @@
 <!-- extracted from content/pref-composer.xul -->
 
+<!--LOCALIZATION NOTE pref-composer.dtd 'Composer' prefs dialog. Similar to Communcator 4.x Document Properties/Colors and Background -->
+
+<!--LOCALIZATION NOTE title.label Never translate the term 'Composer' -->
 <!ENTITY  title.label "Composer">
 <!ENTITY  lHeader "Composer">
 <!ENTITY  rHeader "Set general preferences for authoring of Web pages">
 <!ENTITY  authorName "Author Name">
+<!--LOCALIZATION NOTE AutoSaveCheck.label Edit box appears between these two strings. Translators may need to alter the word order over the two strings according to locale. -->
 <!ENTITY  AutoSaveCheck.label "Automatically save page every">
+<!--LOCALIZATION NOTE minText Edit box appears between these two strings. Translators may need to alter the word order over the two strings according to locale. -->
 <!ENTITY  minText "minutes">
 <!ENTITY  exterLegend.label "External Editors">
 <!ENTITY  htmlSource "HTML Source:">
@@ -18,4 +23,5 @@
 <!ENTITY  ActiveLinkText.label "Active Link Text">
 <!ENTITY  FollowedLinkText.label "Followed Link Text">
 <!ENTITY  BackgroundColor.label "Background">
+<!--LOCALIZATION NOTE colorPick Don't translate this term -->
 <!ENTITY  colorPick "ColorPicker">

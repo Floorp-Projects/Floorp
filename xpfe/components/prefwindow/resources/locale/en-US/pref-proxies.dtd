@@ -1,5 +1,6 @@
 <!-- extracted from content/pref-proxies.xul -->
 
+<!--LOCALIZATION NOTE pref-proxies.dtd The Proxies preferences dialog -->
 <!ENTITY  title.label "Sample Prefs Panel">
 <!ENTITY  lHeader  "Proxies">
 <!ENTITY  rHeader  "Configure proxies to access the Internet">
