@@ -177,6 +177,19 @@ friend class CTokenHandler;
      */
     virtual PRBool EnableParser(PRBool aState);
 
+
+    /**
+     *  This rather arcane method (hack) is used as a signal between the
+     *  DTD and the parser. It allows the DTD to tell the parser that content
+     *  that comes through (parser::parser(string)) but not consumed should
+     *  propagate into the next string based parse call.
+     *  
+     *  @update  gess 9/1/98
+     *  @param   aState determines whether we propagate unused string content.
+     *  @return  current state
+     */
+    void SetUnusedInput(nsString& aBuffer);
+
     /**
      * This method gets called (automatically) during incremental parsing
      * @update	gess5/11/98
@@ -304,6 +317,7 @@ protected:
     nsString            mCommand;
     PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;
+    nsString            mUnusedInput;
 };
 
 

@@ -244,6 +244,16 @@ class nsScanner {
       nsString& GetBuffer(void);
 
       /**
+       *  Call this to copy bytes out of the scanner that have not yet been consumed
+       *  by the tokenization process.
+       *  
+       *  @update  gess 5/12/98
+       *  @param   aCopyBuffer is where the scanner buffer will be copied to
+       *  @return  nada
+       */
+      void CopyUnusedData(nsString& aCopyBuffer);
+
+      /**
        *  Retrieve the name of the file that the scanner is reading from.
        *  In some cases, it's just a given name, because the scanner isn't
        *  really reading from a file.

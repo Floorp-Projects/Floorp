@@ -696,23 +696,31 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
  */  
 eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
   int theTopIndex=aTagStack.mCount;
-  eHTMLTags aPrevTag=aTagStack.mTags[theTopIndex-1];
+  eHTMLTags thePrevTag=aTagStack.Last();
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
-    if(aPrevTag==aCurrentTag) {
+    if(thePrevTag==aCurrentTag) {
       return (gHTMLElements[aCurrentTag].CanContainSelf()) ? eHTMLTag_unknown: aCurrentTag;
     }
     if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
 
+      PRInt32 theRootIndex=kNotFound;
       CTagList* theRootTags=gHTMLElements[aCurrentTag].GetRootTags();
       if(theRootTags) {
-        PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);
+        theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);
         CTagList* theStartTags=gHTMLElements[aCurrentTag].GetAutoCloseStartTags();
         PRInt32 thePeerIndex=kNotFound;
         if(theStartTags){
           thePeerIndex=theStartTags->GetBottommostIndexOf(aTagStack,theRootIndex+1);
         }
-        else thePeerIndex=GetTopmostIndexOf(aCurrentTag,aTagStack);
+        else {
+          //this extra check is need to handle case like this: <DIV><P><DIV>
+          //the new div can close the P,but doesn't close the top DIV.
+          thePeerIndex=GetTopmostIndexOf(aCurrentTag,aTagStack);
+          if(gHTMLElements[aCurrentTag].CanContainSelf()) {
+            thePeerIndex++;
+          }
+        }
         if(theRootIndex<thePeerIndex) {
           return aTagStack.mTags[thePeerIndex]; //return the tag that was used in peer test.
         }
@@ -724,14 +732,19 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
         if(kNotFound!=thePeerIndex){
           if(thePeerIndex==theTopIndex-1) {
             //the guy you can autoclose is on the top of the stack...
-            return aPrevTag;
+            return thePrevTag;
           } //if
         } //if
       }//if
+      else if(kNotFound<theRootIndex) {
+        //This block handles our fallback cases like: <html><body><center><p>  <- <table> 
+        while((theRootIndex<--theTopIndex) && (!gHTMLElements[aTagStack.mTags[theTopIndex]].CanContain(aCurrentTag))) {
+        }
+        return aTagStack.mTags[theTopIndex+1];
+        //return aTagStack.mTags[theRootIndex+1];
+      }
 
     } //if
-    else if(nsHTMLElement::IsInlineElement(aCurrentTag)) {
-    }//if 
   } //if
   return eHTMLTag_unknown;
 }
@@ -748,6 +761,24 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
  */  
 PRBool CanBeContained(eHTMLTags aChildTag,nsTagStack& aTagStack) {
   PRBool result=PR_TRUE;
+
+  CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+  if(theRootTags) {
+    PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);          
+    PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
+    if(kNotFound==theChildIndex) {
+      CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+      if(theSynTags) {
+        theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
+      }
+    }
+    if(theRootIndex<theChildIndex){
+      eHTMLTags thePrevTag=aTagStack.Last();
+      result=gHTMLElements[thePrevTag].CanContainType(gHTMLElements[aChildTag].mParentBits);
+      return result;
+    }
+  }
+
   return result;
 }
     
@@ -977,6 +1008,114 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   return result;
 }
 
+/**
+ *  Call this to see if you have a closeable peer on the stack that
+ *  is ABOVE one of its root tags.
+ *   
+ *  @update  gess 3/25/98
+ *  @param   aRootTagList -- list of root tags for aTag
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag) {
+  PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
+  CTagList* theCloseTags=gHTMLElements[aTag].GetAutoCloseStartTags();
+  PRInt32 theChildIndex=-1;
+  PRBool  result=PR_FALSE;
+  if(theCloseTags) {
+    theChildIndex=theCloseTags->GetTopmostIndexOf(aTagStack);
+  }
+  else {
+    theChildIndex=aTagStack.GetTopmostIndexOf(aTag);
+  }
+  return PRBool(theRootIndex<theChildIndex);
+}
+
+/**
+ *  Call this to find the index of a given child, or (if not found)
+ *  the index of its nearest synonym.
+ *   
+ *  @update  gess 3/25/98
+ *  @param   aTagStack -- list of open tags
+ *  @param   aTag -- tag to test for containership
+ *  @return  index of kNotFound
+ */
+PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
+  PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
+  if(kNotFound==theChildIndex) {
+    CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    if(theSynTags) {
+      theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
+    }
+  }
+  return theChildIndex;
+}
+
+/**
+ *  This method is called to determine whether or not an END tag
+ *  can be autoclosed. This means that based on the current
+ *  context, the stack should be closed to the nearest matching
+ *  tag.
+ *     
+ *  @param   aTag -- tag enum of child to be tested
+ *  @return  PR_TRUE if autoclosure should occur
+ */ 
+eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
+  int theTopIndex=aTagStack.mCount;
+  eHTMLTags thePrevTag=aTagStack.Last();
+ 
+  if(nsHTMLElement::IsContainer(aCurrentTag)){
+    PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aCurrentTag);
+    
+    if(kNotFound<theChildIndex) {
+      if(thePrevTag==aTagStack.mTags[theChildIndex]){
+        return aTagStack.mTags[theChildIndex];
+      } 
+    
+      if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
+
+          /*here's what to do: 
+              Our here is sitting at aChildIndex. There are other tags above it
+              on the stack. We have to try to close them out, but we may encounter
+              one that can block us. The way to tell is by comparing each tag on
+              the stack against our closeTag and rootTag list. 
+
+              For each tag above our hero on the stack, ask 3 questions:
+                1. Is it in the closeTag list? If so, the we can skip over it
+                2. Is it in the rootTag list? If so, then we're gated by it
+                3. Otherwise its non-specified and we simply presume we can close it.
+          */
+
+        CTagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
+        CTagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
+      
+        if(theCloseTags){  
+            //at a min., this code is needed for H1..H6
+        
+          while(theChildIndex<--theTopIndex) {
+            eHTMLTags theNextTag=aTagStack.mTags[theTopIndex];
+            if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
+              if(PR_TRUE==theRootTags->Contains(theNextTag)) {
+                return eHTMLTag_unknown; //we encountered a tag in root list so fail (because we're gated).
+              }
+              //otherwise presume it's something we can simply ignore and continue search...
+            }
+            //otherwise its in the close list so skip to next tag...
+          }
+          return aCurrentTag; //if you make it here, we're ungated and found a target!
+        }//if
+        else if(theRootTags) {
+          //since we didn't find any close tags, see if there is an instance of aCurrentTag
+          //above the stack from the roottag.
+          if(HasCloseablePeerAboveRoot(*theRootTags,aTagStack,aCurrentTag))
+            return aCurrentTag;
+          else return eHTMLTag_unknown;
+        }
+      } //if
+    }//if
+  } //if
+  return eHTMLTag_unknown;
+}
 
 /**
  *  This method gets called when an end token has been 
@@ -995,23 +1134,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult    result=NS_OK;
-  CEndToken*  et = (CEndToken*)(aToken);
-  eHTMLTags   theChildTag=(eHTMLTags)et->GetTypeID();
-
-  // Here's the hacky part: 
-  // Because we're trying to be backward compatible with Nav4/5, 
-  // we have to handle explicit styles the way it does. That means
-  // that we keep an internal style stack.When an EndToken occurs, 
-  // we should see if it is an explicit style tag. If so, we can 
-  // close the explicit style tag (goofy, huh?)
-
-
-  //now check to see if this token should be omitted, or 
-  //if it's gated from closing by the presence of another tag.
-  if(PR_TRUE==CanOmitEndTag(mBodyContext->Last(),theChildTag)) {
-    UpdateStyleStackForCloseTag(theChildTag,theChildTag);
-    return result;
-  }
+  eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
 
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
   switch(theChildTag) {
@@ -1029,26 +1152,20 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       result=CloseContainer(theNode,theChildTag,PR_FALSE);
       break;
 
-    case eHTMLTag_td:
-    case eHTMLTag_th:
-      //result=CloseContainersTo(theChildTag,PR_TRUE); 
-      // Empty the transient style stack (we just closed any extra
-      // ones off so it's safe to do it now) because they don't carry
-      // forward across table cell boundaries.
-      //mBodyContext->mStyles->mCount=0;
-      //break;
-
     default:
-      if(IsContainer(theChildTag)){
-        CTagList* theCloseTags=gHTMLElements[theChildTag].GetAutoCloseEndTags();
-
-        if(theCloseTags){
-          PRInt32 thePeerIndex=theCloseTags->GetTopmostIndexOf(mBodyContext->mTags);
-          theChildTag=(kNotFound<thePeerIndex) ? mBodyContext->mTags[thePeerIndex] : theChildTag;
+      {
+        //now check to see if this token should be omitted, or 
+        //if it's gated from closing by the presence of another tag.
+        if(PR_TRUE==CanOmitEndTag(mBodyContext->Last(),theChildTag)) {
+          UpdateStyleStackForCloseTag(theChildTag,theChildTag);
         }
-        result=CloseContainersTo(theChildTag,PR_TRUE); 
+        else {
+          eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,mBodyContext->mTags);
+          if(eHTMLTag_unknown!=theTarget) {
+            result=CloseContainersTo(theTarget,PR_TRUE);
+          }
+        }
       }
-      //
       break;
   }
   return result;
@@ -1145,11 +1262,6 @@ nsresult CNavDTD::HandleScriptToken(nsCParserNode& aNode) {
   PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
 
   nsresult result=AddLeaf(aNode);
-  CParserContext* theContext=mParser->PeekContext();
-  if(theContext && theContext->mPrevContext && (CParserContext::eCTString==theContext->mContextType)) {
-    mParser->PopContext();
-    delete theContext;
-  }
   return result;
 }
 
@@ -1337,28 +1449,6 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   return result;
 }
 
-/**
- *  Call this to see if you have a closeable peer on the stack that
- *  is ABOVE one of its root tags.
- *   
- *  @update  gess 3/25/98
- *  @param   aRootTagList -- list of root tags for aTag
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag) {
-  PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
-  CTagList* theCloseTags=gHTMLElements[aTag].GetAutoCloseStartTags();
-  PRInt32 theChildIndex=-1;
-  PRBool  result=PR_FALSE;
-  if(theCloseTags) {
-    theChildIndex=theCloseTags->GetTopmostIndexOf(aTagStack);
-  }
-  else {
-    theChildIndex=aTagStack.GetTopmostIndexOf(aTag);
-  }
-  return PRBool(theRootIndex<theChildIndex);
-}
 
 /**
  *  This method gets called to determine whether a given 
@@ -1407,7 +1497,9 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         default:
           if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown)))
             result=!HasOpenContainer(eHTMLTag_form);
-          else result=FindTagInSet(aChild,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown));
+          else if(!gHTMLElements[aParent].CanContain(aChild)) {
+            result=PR_TRUE;
+          }
       }
       break;
 
@@ -1431,6 +1523,9 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         //ok, since no parent claimed it, test based on the child...
       switch(aChild) {
 
+        case eHTMLTag_textarea:
+          break;
+
         case eHTMLTag_userdefined:
         case eHTMLTag_comment:
           result=PR_TRUE; 
@@ -1443,7 +1538,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         // case eHTMLTag_input:
         case eHTMLTag_fieldset:     case eHTMLTag_isindex:
         case eHTMLTag_label:        case eHTMLTag_legend:
-        case eHTMLTag_select:       case eHTMLTag_textarea:
+        case eHTMLTag_select:       //case eHTMLTag_textarea:
         case eHTMLTag_option:
           result=!HasOpenContainer(eHTMLTag_form);
           break;
@@ -1542,65 +1637,6 @@ PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
   return result;
 } 
      
-/**
- *  This method is called to determine whether or not an END tag
- *  can be autoclosed. This means that based on the current
- *  context, the stack should be closed to the nearest matching
- *  tag.
- *     
- *  @param   aTag -- tag enum of child to be tested
- *  @return  PR_TRUE if autoclosure should occur
- */ 
-eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack,PRInt32 aChildIndex) {
-  int theTopIndex=aTagStack.mCount;
-  eHTMLTags aPrevTag=aTagStack.mTags[theTopIndex-1];
- 
-  if(nsHTMLElement::IsContainer(aCurrentTag)){
-    if(aPrevTag==aCurrentTag){
-      return aCurrentTag;
-    } 
-    
-    if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
-
-        /*here's what to do: 
-            Our here is sitting at aChildIndex. There are other tags above it
-            on the stack. We have to try to close them out, but we may encounter
-            one that can block us. The way to tell is by comparing each tag on
-            the stack against our closeTag and rootTag list. 
-
-            For each tag above our here on the stack, ask 3 questions:
-              1. Is it in the closeTag list? If so, the we can skip over it
-              2. Is it in the rootTag list? If so, then we're gated by it
-              3. Otherwise its non-specified and we simply presume we can close it.
-        */
-
-      CTagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
-      CTagList* theRootTags=gHTMLElements[aCurrentTag].GetRootTags();
-      if(theCloseTags){  
-
-        while(aChildIndex<--theTopIndex) {
-          eHTMLTags theNextTag=aTagStack.mTags[theTopIndex];
-          if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
-            if(PR_TRUE==theRootTags->Contains(theNextTag)) {
-              return eHTMLTag_unknown; //we encountered a tag in root list so fail (because we're gated).
-            }
-            //otherwise presume it's something we can simply ignore and continue search...
-          }
-          //otherwise its in the close list so skip to next tag...
-        }
-        return aCurrentTag; //if you make it here, we're ungated and found a target!
-      }//if
-      else if(theRootTags) {
-        //since we didn't find any close tags, see if there is an instance of aCurrentTag
-        //above the stack from the roottag.
-        if(HasCloseablePeerAboveRoot(*theRootTags,aTagStack,aCurrentTag))
-          return aCurrentTag;
-        else return eHTMLTag_unknown;
-      }
-    } //if
-  } //if
-  return eHTMLTag_unknown;
-}
 
 /**
  *  This method gets called to determine whether a given
@@ -1613,62 +1649,34 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
 PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool  result=PR_FALSE;
 
-  //begin with some simple (and obvious) cases...
-  switch((eHTMLTags)aChild) {
+  if(gHTMLElements[aChild].CanOmitEndTag(aParent)) {
+    return PR_TRUE;
+  }
 
-    case eHTMLTag_userdefined:
-    case eHTMLTag_comment:
-      result=PR_TRUE; 
-      break;
-
-    case eHTMLTag_a:
-      result=!HasOpenContainer(aChild);
-      break;
-
-    case eHTMLTag_html:
-    case eHTMLTag_body:
-      result=PR_TRUE;
-      break;
-      
-    case eHTMLTag_newline:    
-    case eHTMLTag_whitespace:
-
-      switch(aParent) {
-        case eHTMLTag_html:     case eHTMLTag_head:   
-        case eHTMLTag_title:    case eHTMLTag_map:    
-        case eHTMLTag_tr:       case eHTMLTag_table:  
-        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
-        case eHTMLTag_tbody:    case eHTMLTag_col:    
-        case eHTMLTag_colgroup: case eHTMLTag_unknown:
-          result=PR_TRUE;
-        default:
-          break;
-      } //switch
-      break;
-
-      //It turns out that a <Hn> can be closed by any other <H?>
-      //This code makes them all seem compatible.
-    case eHTMLTag_h1:           case eHTMLTag_h2:
-    case eHTMLTag_h3:           case eHTMLTag_h4:
-    case eHTMLTag_h5:           case eHTMLTag_h6:
-      if(FindTagInSet(aParent,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown))) {
-        result=PR_FALSE;
-        break;
+/*
+  CTagList* theRootTags=gHTMLElements[aChild].GetRootTags();
+  if(theRootTags) {
+    PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(mBodyContext->mTags);          
+    PRInt32 theChildIndex=GetTopmostIndexOf(aChild);
+    if(kNotFound==theChildIndex) {
+      CTagList* theSynTags=gHTMLElements[aChild].GetSynonymousTags(); //get the list of tags that THIS tag can close
+      if(theSynTags) {
+        theChildIndex=theSynTags->GetTopmostIndexOf(mBodyContext->mTags);
       }
-      //Otherwise, IT's OK TO FALL THROUGH HERE...
+    }
+    result=!PRBool(theRootIndex<theChildIndex);
+  }
+*/
 
+  PRInt32 theChildIndex=GetTopmostIndexOf(aChild);
+  if(kNotFound==theChildIndex) {
+    CTagList* theSynTags=gHTMLElements[aChild].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    if(theSynTags) {
+      theChildIndex=theSynTags->GetTopmostIndexOf(mBodyContext->mTags);
+    }
+  }
+  result=PRBool(kNotFound==theChildIndex);
 
-    default: 
-      {
-        PRInt32 theTagPos=GetTopmostIndexOf(aChild);
-        if(kNotFound!=theTagPos) {
-          eHTMLTags theTarget=FindAutoCloseTargetForEndTag(aChild,mBodyContext->mTags,theTagPos);
-          result=PRBool(eHTMLTag_unknown==theTarget);
-        }
-        else result=PR_TRUE;
-      }
-      break; 
-  } //switch 
   return result;
 }
 
