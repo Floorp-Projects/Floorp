@@ -1858,6 +1858,47 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
       break;
   }
 
+  // try 'xxyyzz' without '#' prefix for compatibility with IE and Nav4x (bug 23236)
+  if (PR_TRUE == mNavQuirkMode) {
+  	// - If the string starts with 'a-f', the nsCSSScanner builds the token
+  	//   as a eCSSToken_Ident and we can parse the string as a 'xxyyzz' RGB color.
+  	// - If it only contains '0-9' digits, the token is a eCSSToken_Number and it
+  	//   must be converted back to a 6 characters string to be parsed as a RGB color.
+  	// - If it starts with '0-9' and contains any 'a-f', the token is a eCSSToken_Dimension,
+  	//   the mNumber part must be converted back to a string and the mIdent part must be
+  	//   appended to that string so that the resulting string has 6 characters.
+		// Note: This is a hack for Nav compatibility. Do not attempt to simplify it
+		// by hacking into the ncCSSScanner. This would be very bad.
+		nsAutoString str;
+		char  buffer[10];
+		switch (tk->mType) {
+			case eCSSToken_Ident:
+				str.SetString(tk->mIdent);
+				break;
+
+			case eCSSToken_Number:
+				if (tk->mIntegerValid) {
+					sprintf(buffer, "%06d", tk->mInteger);
+					str.SetString(buffer);
+				}
+				break;
+
+			case eCSSToken_Dimension:
+				if (tk->mIdent.Length() <= 6) {
+					sprintf(buffer, "%06.0f", tk->mNumber);
+					nsAutoString temp;
+					temp.SetString(buffer);
+					temp.Right(str, 6 - tk->mIdent.Length());
+					str.Append(tk->mIdent);
+				}
+				break;
+		}
+	  if (NS_HexToRGB(str, &rgba)) {
+	    aValue.SetColorValue(rgba);
+	    return PR_TRUE;
+	  }
+  }
+
   // It's not a color
   UngetToken();
   return PR_FALSE;
@@ -2269,7 +2310,8 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     return PR_FALSE;
   }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
-    if ((eCSSToken_ID == tk->mType) || 
+    if ((PR_TRUE == mNavQuirkMode) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
+    		(eCSSToken_ID == tk->mType) || 
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
          (tk->mIdent.EqualsIgnoreCase("rgb")))) {
