@@ -113,7 +113,10 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     nsFileSpec fileSpec(m_mailDirectory);
     fileSpec += "Inbox";
     m_outFileStream = new nsOutputFileStream(fileSpec, 
-                                             PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
+                                             PR_WRONLY | PR_CREATE_FILE);
+	if (m_outFileStream)
+		m_outFileStream->seek(fileSpec.GetFileSize());
+
 
 	// create a new mail parser
     m_newMailParser = new nsParseNewMailState;
