@@ -232,8 +232,7 @@ $jscript .= q{
 function selectProduct(f) {
     // Apparently, IE4 chokes on the below, so do nothing if running that.
     var agt=navigator.userAgent.toLowerCase();
-    if ((agt.indexOf("msie") != -1) &&
-        (parseInt(navigator.appVersion) == 4)) return;
+    if ((agt.indexOf("msie") != -1)) return;
 
     var cnt = 0;
     var i;
