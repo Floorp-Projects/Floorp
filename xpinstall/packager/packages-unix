@@ -242,7 +242,6 @@ bin/chrome/comm.jar
 bin/chrome/content-packs.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
-bin/chrome/embed.jar
 bin/chrome/installed-chrome.txt
 bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
