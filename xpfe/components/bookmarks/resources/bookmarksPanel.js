@@ -51,3 +51,11 @@ function Startup()
 function manageBookmarks() {
   openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", "", "chrome,dialog=no,resizable=yes");
 }
+
+function addBookmark() {
+  var contentArea = top.document.getElementById('content');                   
+  if (contentArea)                                                       
+    BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation, true);    
+  else
+    BookmarksUtils.addBookmark(null, null, undefined, true);
+}
