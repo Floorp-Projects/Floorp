@@ -75,6 +75,8 @@ SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type);
 SECStatus 
 SEC_DestroyCrl(CERTSignedCrl *crl);
 
+CERTSignedCrl* SEC_DupCrl(CERTSignedCrl* acrl);
+
 SECStatus
 CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust);
