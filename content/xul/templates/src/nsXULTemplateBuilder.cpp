@@ -132,6 +132,9 @@ public:
 	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
 	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
 	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
+
+	nsCOMPtr<nsIContent>			lastContainer;
+	PRBool					lastWasFirst, lastWasLast;
 } sortStateClass;
 
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,

@@ -1415,12 +1415,17 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 typedef	class	sortState
 {
 public:
+	// state match strings
 	nsAutoString				sortResource, sortResource2;
 
+	// state variables
 	nsCOMPtr<nsIRDFDataSource>		mCache;
 	nsCOMPtr<nsIRDFResource>		sortProperty, sortProperty2;
 	nsCOMPtr<nsIRDFResource>		sortPropertyColl, sortPropertyColl2;
 	nsCOMPtr<nsIRDFResource>		sortPropertySort, sortPropertySort2;
+
+	nsCOMPtr<nsIContent>			lastContainer;
+	PRBool					lastWasFirst, lastWasLast;
 } sortStateClass;
 
 
@@ -1445,6 +1450,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 	sortInfo.sortProperty2 = nsnull;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
 	sortInfo.cacheFirstHint = PR_TRUE;
+	sortInfo.cacheFirstNode = nsnull;
 	sortInfo.cacheIsFirstNodeCollationKey = PR_FALSE;
 
 	if (sortState->mCache)
@@ -1454,6 +1460,13 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 	else
 	{
 		sortInfo.mInner = nsnull;
+	}
+
+	if (container != sortState->lastContainer.get())
+	{
+		sortState->lastContainer = container;
+		sortState->lastWasFirst = PR_FALSE;
+		sortState->lastWasLast = PR_FALSE;
 	}
 
 	PRBool			sortInfoAvailable = PR_FALSE;
@@ -1622,30 +1635,71 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 		(isContainerRDFSeq == PR_TRUE)))
 	{
 		// figure out where to insert the node when a sort order is being imposed
-		// using a smart binary comparison
 		PRInt32			numChildren = 0;
 		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 		if (numChildren > 0)
 		{
 		        nsCOMPtr<nsIContent>	child;
+		        nsIContent		*temp;
 
 // #define	OPTIMIZED_BINARY_INSERTION
 #ifdef	OPTIMIZED_BINARY_INSERTION
 
-		        PRInt32			direction = 0, left = 1, right = numChildren, x;
-		        while (right >= 1)
+			// rjc says: The following is an implementaion of a fairly optimal
+			// binary search insertion sort... with interpolation at either end-point.
+		        PRInt32			direction;
+
+			if (sortState->lastWasFirst == PR_TRUE)
+			{
+				container->ChildAt(0, *getter_AddRefs(child));
+				temp = child.get();
+				direction = inplaceSortCallback(&node, &temp, &sortInfo);
+				if (direction < 0)
+				{
+					container->InsertChildAt(node, 0, aNotify);
+					childAdded = PR_TRUE;
+				}
+				else
+				{
+					sortState->lastWasFirst = PR_FALSE;
+				}
+			}
+			else if (sortState->lastWasLast == PR_TRUE)
+			{
+				container->ChildAt(numChildren-1, *getter_AddRefs(child));
+				temp = child.get();
+				direction = inplaceSortCallback(&node, &temp, &sortInfo);
+				if (direction > 0)
+				{
+					container->AppendChildTo(node, aNotify);
+					childAdded = PR_TRUE;
+				}
+				else
+				{
+					sortState->lastWasLast = PR_FALSE;
+				}
+			}
+
+		        PRInt32			left = 1, right = numChildren, x;
+		        while ((childAdded == PR_FALSE) && (right >= 1))
 		        {
-		        	x = (1 + right) / 2;
+		        	x = (left + right) / 2;
 				container->ChildAt(x-1, *getter_AddRefs(child));
-				nsIContent	*theChild = child.get();
-				// Note: since cacheFirstHint is PR_TRUE, the first node passed
+				temp = child.get();
+
+				// rjc says: since cacheFirstHint is PR_TRUE, the first node passed
 				// into inplaceSortCallback() must be the node that doesn't change
-				direction = inplaceSortCallback(&node, &theChild, &sortInfo);
-				if (right - left <= 1 )
+
+				direction = inplaceSortCallback(&node, &temp, &sortInfo);
+				if (((x == left) && (direction < 0)) || (((x == right)) && (direction > 0)) || (left == right))
 				{
 					PRInt32		thePos = ((direction > 0) ? x : x-1);
 					container->InsertChildAt(node, thePos, aNotify);
 					childAdded = PR_TRUE;
+					
+					sortState->lastWasFirst = (thePos == 0) ? PR_TRUE: PR_FALSE;
+					sortState->lastWasLast = (thePos >= numChildren) ? PR_TRUE: PR_FALSE;
+					
 					break;
 				}
 		        	if (direction < 0)	right = x-1;
@@ -1677,10 +1731,10 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 				if (current != last)
 				{
 					container->ChildAt(current, *getter_AddRefs(child));
-					nsIContent	*theChild = child.get();
+					temp = child.get();
 					// Note: since cacheFirstHint is PR_TRUE, the first node passed
 					// into inplaceSortCallback() must be the node that doesn't change
-					direction = inplaceSortCallback(&node, &theChild, &sortInfo);
+					direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				}
 				if ( (direction == 0) ||
 					((current == last + 1) && (direction < 0)) ||
@@ -1756,6 +1810,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.parentContainer = treeNode;
 	sortInfo.inbetweenSeparatorSort = PR_FALSE;
 	sortInfo.cacheFirstHint = PR_FALSE;
+	sortInfo.cacheFirstNode = nsnull;
 	sortInfo.cacheIsFirstNodeCollationKey = PR_FALSE;
 
 	// remove any sort hints on tree root node
