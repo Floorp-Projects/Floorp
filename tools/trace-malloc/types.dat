@@ -57,56 +57,119 @@ PR_Malloc
 PR_NewCondVar
 js_SetSlotThreadSafe
 
+# XXX dladdr badness: js_SetSlotThreadSafe doesn't call *alloc
 <JS-unclassified>
 js_SetSlotThreadSafe
 
-<JS-unclassified>
+<JS-cached-deflated-string>
+js_DeflateString
+js_GetStringBytes
+
+<JS-ad-hoc-deflated-string>
+JS_malloc
 js_DeflateString
 
 <JS-unclassified>
 JS_vsxprintf
 
-<JS-unclassified>
+<JSContext>
 js_NewContext
 
-<JS-unclassified>
+<JSRuntime>
 PR_Malloc
 PR_NewCondVar
 JS_Init
 
-<JS-unclassified>
+<JSRuntime>
+PR_Calloc
+PR_NewLock
 JS_Init
 
-<JS-unclassified>
-js_SetSlotWhileLocked
+<JSRuntime>
+JS_Init
 
-<JS-unclassified>
+<JSRuntime.gcRootsHash>
+~.*
+JS_NewHashTable
 js_InitGC
 
+# XXX dladdr badness: js_GC doesn't call *alloc
 <JS-unclassified>
 js_GC
 
-<JS-unclassified>
+<JS-GC-arena>
+JS_ArenaAllocate
+~.*
+js_AllocGCThing
+
+<JS-unclassified-arena>
 JS_ArenaAllocate
 
-<JS-unclassified>
+<JSScope>
 JS_malloc
+js_NewScope
 
-<JS-unclassified>
-JS_realloc
+# first .* is js_alloc_symbol, second is js_hash_scope_add
+<JSScope>
+JS_malloc
+~.*
+JS_HashTableRawAdd
+~.*
+~js_(Define|Set)Property
+
+# first .* is js_alloc_symbol, second is js_list_scope_add
+<JSScope>
+JS_malloc
+~.*
+~.*
+~js_(Define|Set)Property
+
+<JSScopeProperty>
+JS_malloc
+js_NewScopeProperty
+
+<JS-slots>
+~JS_(m|re)alloc
+js_AllocSlot
 
 <JS-unclassified>
 PR_Malloc
 PR_NewCondVar
-js_SetSlotWhileLocked
+js_SetSlotThreadSafe
 
 <JS-unclassified>
 PR_Calloc
 PR_NewLock
-js_SetSlotWhileLocked
+js_SetSlotThreadSafe
 
-<JS-unclassified>
+<JS-Array>
 js_NewArrayObject
+
+<JS-function>
+JS_malloc
+js_NewFunction
+
+<JS-atom>
+JS_malloc
+js_NewStringCopyN
+js_AtomizeString
+
+<JS-script>
+JS_malloc
+js_NewScript
+
+<JS-function>
+JS_malloc
+js_NewObject
+js_NewFunction
+
+<JSScope>
+JS_malloc
+~.*
+JS_NewHashTable
+~.*
+~js_(Define|Set)Property
+
 
 #----------------------------------------------------------------------
 # Unclassified string allocations
