@@ -1594,9 +1594,13 @@ nsresult ConsumeAttributeEntity(nsString& aString,
  *  This general purpose method is used when you want to
  *  consume attributed text value. 
  *  Note: It also reduces entities within attributes.
- *  
+ *
+ *  @param   aNewlineCount -- the newline count to increment when hitting newlines
  *  @param   aScanner -- controller of underlying input source
  *  @param   aTerminalChars -- characters that stop consuming attribute.
+ *  @param   aAllowNewlines -- whether to allow newlines in the value.
+ *                             XXX it would be nice to roll this info into
+ *                             aTerminalChars somehow....
  *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
  *  @return  error result
  */
@@ -1605,6 +1609,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
                                    PRInt32& aNewlineCount,
                                    nsScanner& aScanner,
                                    const nsReadEndCondition& aEndCondition,
+                                   PRBool aAllowNewlines,
                                    PRInt32 aFlag)
 {
   nsresult result = NS_OK;
@@ -1618,7 +1623,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
       if(ch == kAmpersand) {
         result = ConsumeAttributeEntity(aString,aScanner,aFlag);
       }
-      else if(ch == kCR) {
+      else if(ch == kCR && aAllowNewlines) {
         aScanner.GetChar(ch);
         result = aScanner.Peek(ch);
         if (NS_SUCCEEDED(result)) {
@@ -1632,7 +1637,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
           ++aNewlineCount;
         }
       }
-      else if(ch == kNewLine) {
+      else if(ch == kNewLine && aAllowNewlines) {
         aScanner.GetChar(ch);
         aString.Append(PRUnichar('\n'));
         ++aNewlineCount;
@@ -1685,7 +1690,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   aScanner.CurrentPosition(theOffset);
 
   result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
-                                   *terminateCondition,aFlag);
+                                   *terminateCondition,PR_TRUE,aFlag);
 
   if(NS_SUCCEEDED(result)) {
     result = aScanner.SkipOver(aChar); // aChar should be " or '
@@ -1701,7 +1706,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
     aString.Truncate();
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
     result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
-                                     theAttributeTerminator,aFlag);
+                                     theAttributeTerminator,PR_FALSE,aFlag);
   }
   return result;
 }
@@ -1800,6 +1805,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                                                      mNewlineCount,
                                                      aScanner,
                                                      theAttributeTerminator,
+                                                     PR_FALSE,
                                                      aFlag);
                   } 
                 }//if
