@@ -217,6 +217,43 @@ RDFCoreAddBookmark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 }
 
 
+//
+// Native method FindBookmarkShortcut
+//
+PR_STATIC_CALLBACK(JSBool)
+RDFCoreFindBookmarkShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRDFCore *nativeThis = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->FindBookmarkShortcut(b0, nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function findBookmarkShortcut requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for RDFCore
@@ -251,6 +288,7 @@ static JSFunctionSpec RDFCoreMethods[] =
 {
   {"doSort",          RDFCoreDoSort,     3},
   {"addBookmark",          RDFCoreAddBookmark,     2},
+  {"findBookmarkShortcut",          RDFCoreFindBookmarkShortcut,     1},
   {0}
 };
 

@@ -51,6 +51,7 @@ class nsRDFCore : public nsBaseAppCore,
 
     NS_IMETHOD    DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
     NS_IMETHOD    AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle);
+    NS_IMETHOD    FindBookmarkShortcut(const nsString& aUserInput, nsString& shortcutURL);
 
   protected:
 

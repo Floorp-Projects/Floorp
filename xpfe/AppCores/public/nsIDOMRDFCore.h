@@ -38,18 +38,22 @@ public:
   NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection)=0;
 
   NS_IMETHOD    AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle)=0;
+
+  NS_IMETHOD    FindBookmarkShortcut(const nsString& aUserInput, nsString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMRDFCORE   \
   NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection);  \
   NS_IMETHOD    AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle);  \
+  NS_IMETHOD    FindBookmarkShortcut(const nsString& aUserInput, nsString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMRDFCORE(_to)  \
   NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection) { return _to##DoSort(aNode, aSortResource, aSortDirection); }  \
   NS_IMETHOD    AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle) { return _to##AddBookmark(aUrl, aOptionalTitle); }  \
+  NS_IMETHOD    FindBookmarkShortcut(const nsString& aUserInput, nsString& aReturn) { return _to##FindBookmarkShortcut(aUserInput, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitRDFCoreClass(nsIScriptContext *aContext, void **aPrototype);
