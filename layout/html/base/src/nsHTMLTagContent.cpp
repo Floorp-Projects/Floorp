@@ -1056,7 +1056,13 @@ void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
     }
 
     nsAutoString absURLSpec;
-    nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
+    if (aURLSpec.Length() > 0) {
+      nsresult rv = NS_MakeAbsoluteURL(docURL, aBase, aURLSpec, absURLSpec);
+    }
+    else {
+      absURLSpec = aURLSpec;
+    }
+
     if (nsnull != docURL) {
       NS_RELEASE(docURL);
     }
