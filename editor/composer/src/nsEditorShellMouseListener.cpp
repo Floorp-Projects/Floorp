@@ -218,7 +218,7 @@ printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
       mEditorShell->HandleMouseClickOnElement(element, clickCount, x, y, &handled);
 
       if (handled)
-        return NS_ERROR_BASE; // consumed
+        mouseEvent->PreventDefault();
     }
   }
   // Should we do this only for "right" mouse button?
