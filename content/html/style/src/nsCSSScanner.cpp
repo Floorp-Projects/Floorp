@@ -134,12 +134,8 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       }
       break;
     case eCSSToken_Percentage:
-      if (mIntegerValid) {
-        aBuffer.AppendInt(mInteger, 10);
-      }
-      else {
-        aBuffer.AppendFloat(mNumber);
-      }
+      NS_ASSERTION(!mIntegerValid, "How did a percentage token get this set?");
+      aBuffer.AppendFloat(mNumber * 100.0f);
       aBuffer.Append(PRUnichar('%')); // STRING USE WARNING: technically, this should be |AppendWithConversion|
       break;
     case eCSSToken_Dimension:
