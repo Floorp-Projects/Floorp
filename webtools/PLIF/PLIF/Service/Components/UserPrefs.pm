@@ -293,7 +293,7 @@ sub applyUserPrefsChanges {
     }
 
     my $userDataSource = $app->getService('dataSource.user');
-    foreach my $fieldRow ($userDataSource->getFields($app)) {
+    foreach my $fieldRow (@{$userDataSource->getFields($app)}) {
         # $field contains [type, fieldID, category, name, typeData]*
         my $fieldID = $fieldRow->[1];
         my $fieldCategory = $fieldRow->[2];
