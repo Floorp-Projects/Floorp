@@ -25,15 +25,47 @@
 #define nsAboutCacheEntry_h__
 
 #include "nsIAboutModule.h"
+#include "nsIChannel.h"
+#include "nsICacheListener.h"
+#include "nsICacheSession.h"
+#include "nsIStreamListener.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+
+class nsICacheEntryDescriptor;
 
 class nsAboutCacheEntry : public nsIAboutModule
+                        , public nsIChannel
+                        , public nsICacheListener
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIABOUTMODULE
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSICACHELISTENER
 
     nsAboutCacheEntry() { NS_INIT_ISUPPORTS(); }
     virtual ~nsAboutCacheEntry() {}
+
+private:
+    nsresult WriteCacheEntryDescription(nsIOutputStream *, nsICacheEntryDescriptor *);
+    nsresult WriteCacheEntryUnavailable(nsIOutputStream *, nsresult);
+    nsresult ParseURI(nsCString &, nsCString &);
+
+private:
+    nsCOMPtr<nsIChannel>            mStreamChannel;
+    nsCOMPtr<nsIStreamListener>     mListener;
+    nsCOMPtr<nsISupports>           mListenerContext;
+    nsCOMPtr<nsICacheSession>       mCacheSession;
 };
+
+#define NS_ABOUT_CACHE_ENTRY_MODULE_CID              \
+{ /* 7fa5237d-b0eb-438f-9e50-ca0166e63788 */         \
+    0x7fa5237d,                                      \
+    0xb0eb,                                          \
+    0x438f,                                          \
+    {0x9e, 0x50, 0xca, 0x01, 0x66, 0xe6, 0x37, 0x88} \
+}
 
 #endif // nsAboutCacheEntry_h__

@@ -34,6 +34,9 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\mzAboutMozilla.obj		\
 	.\$(OBJDIR)\nsAboutPlugins.obj \
 	.\$(OBJDIR)\nsAboutCache.obj		\
+!ifdef MOZ_NEW_CACHE
+    .\$(OBJDIR)\nsAboutCacheEntry.obj \
+!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
