@@ -1088,10 +1088,10 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
 }
 
 
-#define UCS2_BE "X-ISO-10646-UCS-2-BE"
-#define UCS2_LE "X-ISO-10646-UCS-2-LE"
-#define UCS4_BE "X-ISO-10646-UCS-4-BE"
-#define UCS4_LE "X-ISO-10646-UCS-4-LE"
+#define UCS2_BE "UTF-16BE"
+#define UCS2_LE "UTF-16LE"
+#define UCS4_BE "UTF-32BE"
+#define UCS4_LE "UTF-32LE"
 #define UCS4_2143 "X-ISO-10646-UCS-4-2143"
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 
