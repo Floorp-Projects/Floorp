@@ -55,7 +55,7 @@ typedef enum NET_ReloadMethod
                               is not saved once we know we have to check with the server anyway.
                            */
      TV_NTWK_SERVER_ONLY,   /* test validation, use necko cache first */ 
-     SERVER_ONLY,       /* server only, force_reload */
+     SERVER_ONLY       /* server only, force_reload */
 } NET_ReloadMethod;
 
 /*
