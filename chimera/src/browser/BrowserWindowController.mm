@@ -564,6 +564,12 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 }
 
 
+-(void)loadURLString:(NSString*)aStr
+{
+  [self loadURL:[NSURL URLWithString:aStr]];
+}
+
+
 -(void)loadURL:(NSURL*)aURL
 {
     if (mInitialized) {
