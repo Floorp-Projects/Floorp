@@ -50,6 +50,7 @@ GetVersionTable();
 SendSQL("select short_desc from bugs where bug_id = $::FORM{'id'}");
 my $summary = FetchOneColumn();
 if( $summary ) {
+    $summary = html_quote($summary);
     PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
 }else {
     PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
