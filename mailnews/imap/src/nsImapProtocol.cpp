@@ -2220,26 +2220,35 @@ nsImapProtocol::GetArbitraryHeadersToDownload()
     return rv;
 }
 
+static void PRTime2Seconds(PRTime prTime, PRInt32 *seconds)
+{
+	PRInt64 microSecondsPerSecond, intermediateResult;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+	LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2I((*seconds), intermediateResult);
+}
+
 void
 nsImapProtocol::AdjustChunkSize()
 {
-  PRInt32 t32;
+  PRTime deltaTime;
+  PRInt32 deltaInSeconds;
 
   m_endTime = PR_Now();
+  LL_SUB(deltaTime, m_endTime, m_startTime);
+  PRTime2Seconds(deltaTime, &deltaInSeconds);
   m_trackingTime = PR_FALSE;
-  PRTime t;
-  LL_SUB(t, m_endTime, m_startTime);
-  if (! LL_GE_ZERO(t))
+  if (deltaInSeconds < 0)
     return;             // bogus for some reason
   
-  LL_L2I(t32, t);
-  if (t32 <= m_tooFastTime) {
+  if (deltaInSeconds <= m_tooFastTime) {
     m_chunkSize += m_chunkAddSize;
     m_chunkThreshold = m_chunkSize + (m_chunkSize / 2);
     if (m_chunkSize > m_maxChunkSize)
       m_chunkSize = m_maxChunkSize;
   }
-  else if (t32 <= m_idealTime)
+  else if (deltaInSeconds <= m_idealTime)
     return;
   else {
     if (m_chunkSize > m_chunkStartSize)
