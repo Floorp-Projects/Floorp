@@ -1367,8 +1367,9 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     // right menu click on linux should also pop up a context menu
     if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
-        InitButtonEvent(event, NS_CONTEXTMENU, aEvent);
-        DispatchEvent(&event, status);
+        nsMouseEvent contextMenuEvent;
+        InitButtonEvent(contextMenuEvent, NS_CONTEXTMENU, aEvent);
+        DispatchEvent(&contextMenuEvent, status);
     }
 }
 
