@@ -954,16 +954,16 @@ MapTableFrameInto(nsIHTMLAttributes* aAttributes,
 {
   // set up defaults
   if (aSpacing->GetBorderStyle(0) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(0, NS_STYLE_BORDER_STYLE_OUTSET);
+    aSpacing->SetBorderStyle(0, NS_STYLE_BORDER_STYLE_BG_OUTSET);
   }
   if (aSpacing->GetBorderStyle(1) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(1, NS_STYLE_BORDER_STYLE_OUTSET);
+    aSpacing->SetBorderStyle(1, NS_STYLE_BORDER_STYLE_BG_OUTSET);
   }
   if (aSpacing->GetBorderStyle(2) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(2, NS_STYLE_BORDER_STYLE_OUTSET);
+    aSpacing->SetBorderStyle(2, NS_STYLE_BORDER_STYLE_BG_OUTSET);
   }
   if (aSpacing->GetBorderStyle(3) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(3, NS_STYLE_BORDER_STYLE_OUTSET);
+    aSpacing->SetBorderStyle(3, NS_STYLE_BORDER_STYLE_BG_OUTSET);
   }
 
   nsHTMLValue frameValue;
