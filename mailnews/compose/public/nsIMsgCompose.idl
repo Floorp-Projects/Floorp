@@ -108,12 +108,6 @@ interface nsIMsgCompose : nsISupports {
                  in nsIMsgIdentity identity);
 
 	/* ... */
-    void SendMsgEx(in MSG_DeliverMode deliverMode,
-                   in nsIMsgIdentity identity,
-                   in wstring addrTo, in wstring addrCc, in wstring addrBcc,
-                   in wstring newsgroup, in wstring subject, in wstring body);
-    
-	/* ... */
     void CloseWindow();
     
     /*

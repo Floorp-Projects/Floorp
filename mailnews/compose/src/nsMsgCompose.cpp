@@ -107,7 +107,6 @@ nsMsgCompose::nsMsgCompose()
 {
 	NS_INIT_REFCNT();
 
-  mEntityConversionDone = PR_FALSE;
 	mQuotingToFollow = PR_FALSE;
 	mWhatHolder = 1;
 	mDocumentListener = nsnull;
@@ -494,7 +493,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
   return mStateListeners->RemoveElement(iSupports);
 }
 
-nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity)
+nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone)
 {
   nsresult rv = NS_OK;
   
@@ -551,7 +550,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       PRInt32     bodyLength;
       char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
 
-      if (!mEntityConversionDone)
+      if (!entityConversionDone)
       {
         // Convert body to mail charset
         char      *outCString;
@@ -565,10 +564,6 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
           {
             bodyString = outCString;
             newBody = PR_TRUE;
-
-            if ( (deliverMode == nsIMsgCompDeliverMode::Now) ||
-                 (deliverMode == nsIMsgCompDeliverMode::Later) )  
-              mEntityConversionDone = PR_TRUE;
           }
         }
       }
@@ -654,6 +649,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
 nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity)
 {
 	nsresult rv = NS_OK;
+	PRBool entityConversionDone = PR_FALSE;
 
   // i'm assuming the compose window is still up at this point...
   nsCOMPtr<nsIPrompt> prompt;
@@ -673,49 +669,42 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     if(UseFormatFlowed(charset))
         flags |= nsIDocumentEncoder::OutputFormatFlowed;
     
-    if (!mEntityConversionDone)
+    rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+	  
+    if (NS_SUCCEEDED(rv) && NULL != bodyText)
     {
-      rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
-		  
-      if (NS_SUCCEEDED(rv) && NULL != bodyText)
-      {
-		    msgBody = bodyText;
-        nsMemory::Free(bodyText);
+	    msgBody = bodyText;
+      nsMemory::Free(bodyText);
 
-		    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		    char *outCString = NULL;
-        rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                    msgBody.GetUnicode(), &outCString);
-		    if (NS_SUCCEEDED(rv) && NULL != outCString) 
-		    {
-          // body contains multilingual data, confirm send to the user
-          if (NS_ERROR_UENC_NOMAPPING == rv) {
-            PRBool proceedTheSend;
-            rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
-            if (!proceedTheSend) {
-              PR_FREEIF(outCString);
-              return NS_ERROR_BUT_DONT_SHOW_ALERT;
-            }
+	    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
+	    char *outCString = NULL;
+      rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
+                                  msgBody.GetUnicode(), &outCString);
+	    if (NS_SUCCEEDED(rv) && NULL != outCString) 
+	    {
+        // body contains multilingual data, confirm send to the user
+        if (NS_ERROR_UENC_NOMAPPING == rv) {
+          PRBool proceedTheSend;
+          rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+          if (!proceedTheSend) {
+            PR_FREEIF(outCString);
+            return NS_ERROR_BUT_DONT_SHOW_ALERT;
           }
-
-          if ( (deliverMode == nsIMsgCompDeliverMode::Now) ||
-               (deliverMode == nsIMsgCompDeliverMode::Later) )
-            mEntityConversionDone = PR_TRUE;
-
-			    m_compFields->SetBody(outCString);
-			    PR_Free(outCString);
-		    }
-		    else
-        {
-          nsCAutoString msgbodyC;
-          msgbodyC.AssignWithConversion(msgBody);
-			    m_compFields->SetBody(msgbodyC);
         }
+		    m_compFields->SetBody(outCString);
+        entityConversionDone = PR_TRUE;
+		    PR_Free(outCString);
+	    }
+	    else
+      {
+        nsCAutoString msgbodyC;
+        msgbodyC.AssignWithConversion(msgBody);
+		    m_compFields->SetBody(msgbodyC);
       }
     }
-	}
+  }
 
-  rv = _SendMsg(deliverMode, identity);
+  rv = _SendMsg(deliverMode, identity, entityConversionDone);
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
@@ -727,110 +716,6 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	return rv;
 }
 
-
-nsresult
-nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
-                        nsIMsgIdentity *identity,
-                        const PRUnichar *addrTo, const PRUnichar *addrCc,
-                        const PRUnichar *addrBcc, const PRUnichar *newsgroup,
-                        const PRUnichar *subject, const PRUnichar *body)
-{
-	nsresult rv = NS_OK;
-
-	if (m_compFields && identity) 
-	{ 
-		nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
-		char *outCString;
-
-		// Convert fields to UTF-8
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrTo), &outCString))) 
-		{
-			m_compFields->SetTo(outCString);
-			PR_Free(outCString);
-		}
-		else 
-		{
-		  nsCAutoString addrToCStr; addrToCStr.AssignWithConversion(addrTo);
-			m_compFields->SetTo(addrToCStr);
-	  }
-
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrCc), &outCString))) 
-		{
-			m_compFields->SetCc(outCString);
-			PR_Free(outCString);
-		}
-		else
-		{
-      nsCAutoString addrCcCStr; addrCcCStr.AssignWithConversion(addrCc);
-      m_compFields->SetCc(addrCcCStr);
-    }
-
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(addrBcc), &outCString))) 
-		{
-			m_compFields->SetBcc(outCString);
-			PR_Free(outCString);
-		}
-		else 
-		{
-      nsCAutoString addrBccCStr; addrBccCStr.AssignWithConversion(addrBcc);
-      m_compFields->SetBcc(addrBccCStr);
-    }
-
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(newsgroup), &outCString))) 
-		{
-			m_compFields->SetNewsgroups(outCString);
-			PR_Free(outCString);
-		}
-		else 
-		{
-      nsCAutoString newsgroupCStr; newsgroupCStr.AssignWithConversion(newsgroup);
-      m_compFields->SetNewsgroups(newsgroupCStr);
-    }
-        
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(subject), &outCString))) 
-		{
-			m_compFields->SetSubject(outCString);
-			PR_Free(outCString);
-		}
-		else 
-		{
-      nsCAutoString subjectCStr; subjectCStr.AssignWithConversion(subject);
-      m_compFields->SetSubject(subjectCStr);
-    }
-
-		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		aCharset.AssignWithConversion(m_compFields->GetCharacterSet());
-		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, nsAutoString(body), &outCString))) 
-		{
-			m_compFields->SetBody(outCString);
-			PR_Free(outCString);
-		}
-		else
-		{
-      nsCAutoString bodyCStr; bodyCStr.AssignWithConversion(body);
-      m_compFields->SetBody(bodyCStr);
-    }
-
-		rv = _SendMsg(deliverMode, identity);
-	}
-	else
-		rv = NS_ERROR_NOT_INITIALIZED;
-
-	if (NS_FAILED(rv))
-	{
-		ShowWindow(PR_TRUE);
-    if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
-    {
-      // i'm assuming the compose window is still up at this point...
-      nsCOMPtr<nsIPrompt> prompt;
-      if (m_window)
-        m_window->GetPrompter(getter_AddRefs(prompt));
-			if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
-		    nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
-    }
-	}
-	return rv;
-}
 
 nsresult nsMsgCompose::CloseWindow()
 {

@@ -94,7 +94,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult                      ProcessReplyFlags();
 
  private:
-	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity);
+	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
   nsresult GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
@@ -124,8 +124,6 @@ class nsMsgCompose : public nsIMsgCompose
 	nsCOMPtr<nsIOutputStream>     mBaseStream;
 
 	nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
-
-  PRBool                        mEntityConversionDone;
 
   // Deal with quoting issues...
   nsString                      mCiteReference;
