@@ -53,5 +53,7 @@ particular environments. */
 #endif /* MOZILLA */
 
 // Enable Unicode string processing in expat
+#ifndef XP_UNIX
 #define XML_UNICODE_WCHAR_T
+#endif
 #define XML_UNICODE
