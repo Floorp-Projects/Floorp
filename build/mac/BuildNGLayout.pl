@@ -80,7 +80,6 @@ $options{jar_manifests} = 0;        # use jar.mn files for resources, not MANIFE
 $options{jars}    		= 0;        # build jar files
 
 # Don't change these (where should they go?)
-$optiondefines{transformiix}{MOZ_XSL}	= 1;
 $optiondefines{mathml}{MOZ_MATHML}		= 1;
 $optiondefines{svg}{MOZ_SVG}			= 1;
 

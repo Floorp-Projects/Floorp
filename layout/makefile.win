@@ -27,9 +27,7 @@ DIRS=                \
         xml          \
         xul          \
         xbl          \
-!if defined(MOZ_XSL)
         xsl          \
-!endif
 !ifdef MOZ_MATHML
         mathml       \
 !endif

@@ -26,9 +26,6 @@
 #include "nsMarkupDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
-#ifdef MOZ_XSL
-#include "nsITransformMediator.h"
-#endif
 
 class nsIParser;
 class nsIDOMNode;

@@ -25,9 +25,6 @@ LIBRARY_NAME=raptorxmldoc_s
 MODULE=raptor 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-!if defined(MOZ_XSL)
-DEFINES=$(DEFINES) -DMOZ_XSL
-!endif
 
 CPPSRCS=					\
 	nsXMLContentSink.cpp			\

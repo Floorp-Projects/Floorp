@@ -59,6 +59,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkxsldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxbl_s.$(LIB_SUFFIX) \
@@ -82,12 +83,6 @@ ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/libgksvgcon_s.$(LIB_SUFFIX) \
                 $(DIST)/lib/libgksvgbase_s.$(LIB_SUFFIX) \
-                $(NSNULL)
-endif
-
-ifdef MOZ_XSL
-SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/libgkxsldoc_s.$(LIB_SUFFIX) \
                 $(NSNULL)
 endif
 

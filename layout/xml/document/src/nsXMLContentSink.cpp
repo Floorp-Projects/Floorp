@@ -68,11 +68,9 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
-#ifdef MOZ_XSL
 #include "nsXSLContentSink.h"
 #include "nsParserCIID.h"
 #include "nsIDocumentViewer.h"
-#endif
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -80,16 +78,10 @@
 static char kNameSpaceSeparator = ':';
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
-
-#ifdef MOZ_XSL
 static char kXSLType[] = "text/xsl";
-#endif
 
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
-
-#ifdef MOZ_XSL
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif
 
 nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
 PRUint32 nsXMLContentSink::gRefCnt = 0;
@@ -158,9 +150,7 @@ nsXMLContentSink::nsXMLContentSink()
   mInScript = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
-#ifdef MOZ_XSL
   mXSLTransformMediator = nsnull;
-#endif
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -229,25 +219,14 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   return aDoc->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
 }
 
-#ifndef MOZ_XSL
-
-NS_IMPL_ADDREF(nsXMLContentSink)
-NS_IMPL_RELEASE(nsXMLContentSink)
-
-#else
-
 NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
 NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
-
-#endif
 
 NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-#ifdef MOZ_XSL
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-#endif
 	NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
@@ -279,10 +258,6 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   mDocument->SetRootContent(mDocElement);
 
-#ifndef MOZ_XSL
-  StartLayout();
-  mDocument->EndLoad();
-#else
   nsresult rv;
   if (mXSLTransformMediator) {
     rv = SetupTransformMediator();
@@ -292,7 +267,6 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     StartLayout();
     mDocument->EndLoad();
   }
-#endif
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
@@ -301,7 +275,6 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   return NS_OK;
 }
 
-#ifdef MOZ_XSL
 // The observe method is called on completion of the transform.  The nsISupports argument is an
 // nsIDOMElement interface to the root node of the output content model.
 NS_IMETHODIMP
@@ -320,7 +293,7 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
       mXSLTransformMediator->GetResultDocument(getter_AddRefs(resultDOMDoc));
       nsCOMPtr<nsIDocument> resultDoc = do_QueryInterface(resultDOMDoc);
 
-      mDocument->EndLoad();
+      nsCOMPtr<nsIDocument> sourceDoc = mDocument;
       NS_RELEASE(mDocument);
 
       mDocument = resultDoc;
@@ -336,6 +309,10 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
 
       // Reset the observer on the transform mediator
       mXSLTransformMediator->SetTransformObserver(nsnull);
+
+      // Start the layout process
+      StartLayout();
+      sourceDoc->EndLoad();
     }
     else
     {
@@ -350,11 +327,11 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
 
       mXSLTransformMediator = nsnull;
       mDocument->SetRootContent(mDocElement);
-    }
 
-    // Start the layout process
-    StartLayout();
-    mDocument->EndLoad();
+      // Start the layout process
+      StartLayout();
+      mDocument->EndLoad();
+    }
   }
   return rv;
 }
@@ -393,7 +370,6 @@ nsXMLContentSink::SetupTransformMediator()
 
   return rv;
 }
-#endif
 
 NS_IMETHODIMP
 nsXMLContentSink::WillInterrupt(void)
@@ -642,12 +618,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         // For XSL, we need to wait till after the transform
         // to set the root content object.  Hence, the following
         // ifndef.
-#ifdef MOZ_XSL
         if (!mXSLTransformMediator)
             mDocument->SetRootContent(mDocElement);
-#else
-        mDocument->SetRootContent(mDocElement);
-#endif
       }
       else {
         nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
@@ -975,7 +947,6 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   aType.StripWhitespace();
 }
 
-#ifdef MOZ_XSL
 nsresult
 nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
                                       const nsAReadableString& aHref)
@@ -1091,7 +1062,6 @@ nsXMLContentSink::ProcessXSLStyleLink(nsIContent* aElement,
 
   return rv;
 }
-#endif
 
 nsresult
 nsXMLContentSink::ProcessCSSStyleLink(nsIContent* aElement,
@@ -1188,13 +1158,8 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         media.ToLowerCase();
       }
       result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
-#ifndef MOZ_XSL
-      result = ProcessCSSStyleLink(node, href, alternate.EqualsWithConversion("yes"),
-                                title, type, media);
-#else
       result = ProcessStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
-#endif
     }
   }
 
