@@ -223,7 +223,8 @@ protected:
                        PRBool aAttachArguments, nsIDOMWindow** aReturn);
   nsresult      AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 argc);
   PRUint32      CalculateChromeFlags(char *aFeatures);
-  nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures);
+  nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures,
+                    PRBool aNewWindow);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 
   static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);

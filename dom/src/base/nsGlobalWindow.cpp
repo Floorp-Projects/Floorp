@@ -1931,11 +1931,16 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
   if ((nsnull != mWebShell) && 
       (NS_OK == mWebShell->GetContainer(webShellContainer)) && 
       (nsnull != webShellContainer)) {
+
+    PRBool windowIsNew;
+
     // Check for existing window of same name.
+    windowIsNew = PR_FALSE;
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
     if (nsnull == newOuterShell) {
 			// No window of that name, and we are allowed to create a new one now.
       webShellContainer->NewWebShell(chromeFlags, PR_FALSE, newOuterShell);
+      windowIsNew = PR_TRUE;
     }
 
     if (nsnull != newOuterShell) {
@@ -1944,7 +1949,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
           AttachArguments(*aReturn, argv+3, argc-3);
         newOuterShell->SetName(name.GetUnicode());
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
-        SizeAndShowOpenedWebShell(newOuterShell, options);
+        SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew);
       }
       NS_RELEASE(newOuterShell);
     }
@@ -2046,7 +2051,8 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
 
 // set the newly opened webshell's (window) size, and show it
 nsresult
-GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures)
+GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures,
+                                            PRBool aNewWindow)
 {
   if (nsnull == aOuterShell)
     return NS_ERROR_NULL_POINTER;
@@ -2057,30 +2063,44 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
                    *openedWindow = nsnull;
 
   // use this window's size as the default
-  if (NS_SUCCEEDED(GetBrowserWindowInterface(thisWindow))) {
+  if (aNewWindow && NS_SUCCEEDED(GetBrowserWindowInterface(thisWindow))) {
     thisWindow->GetWindowBounds(defaultBounds);
     NS_RELEASE(thisWindow);
   }
 
   // get the nsIBrowserWindow corresponding to the given aOuterShell
   nsIWebShell *rootShell;
-	aOuterShell->GetRootWebShellEvenIfChrome(rootShell);
-	if (nsnull != rootShell) {
+  aOuterShell->GetRootWebShellEvenIfChrome(rootShell);
+  if (nsnull != rootShell) {
     nsIWebShellContainer *newContainer;
-		rootShell->GetContainer(newContainer);
-		if (nsnull != newContainer) {
-			if (NS_FAILED(newContainer->QueryInterface(kIBrowserWindowIID, (void**)&openedWindow)))
+    rootShell->GetContainer(newContainer);
+    if (nsnull != newContainer) {
+      if (NS_FAILED(newContainer->QueryInterface(kIBrowserWindowIID, (void**)&openedWindow)))
         openedWindow = nsnull;
-			NS_RELEASE(newContainer);
-		}
-		NS_RELEASE(rootShell);
-	}
+        NS_RELEASE(newContainer);
+      }
+      NS_RELEASE(rootShell);
+    }
 
   // set size
   if (nsnull != openedWindow) {
 
+    nsRect   contentOffsets; // constructor sets all values to 0
     PRUint32 chromeFlags = CalculateChromeFlags(aFeatures);
-    PRBool openAsContent = ((chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0);
+    PRBool   openAsContent = ((chromeFlags & NS_CHROME_OPEN_AS_CHROME) == 0);
+
+    // if it's an extant window, we are already our default size
+    if (!aNewWindow)
+      if (openAsContent) {
+        // defaultBounds are the content rect. also, save window size diffs
+        openedWindow->GetWindowBounds(contentOffsets);
+        openedWindow->GetContentBounds(defaultBounds);
+        contentOffsets.x -= defaultBounds.x;
+        contentOffsets.y -= defaultBounds.y;
+        contentOffsets.width -= defaultBounds.width;
+        contentOffsets.height -= defaultBounds.height;
+      } else
+        openedWindow->GetWindowBounds(defaultBounds);
 
     if (nsnull != aFeatures) {
 
@@ -2096,16 +2116,35 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
 
       left = WinHasOption(aFeatures, "left") | WinHasOption(aFeatures, "screenX");
       top = WinHasOption(aFeatures, "top") | WinHasOption(aFeatures, "screenY");
+
+      if (left)
+        defaultBounds.x = left;
+      if (top)
+        defaultBounds.y = top;
+      if (width)
+        defaultBounds.width = width;
+      if (height)
+        defaultBounds.height = height;
     }
 
     // beard: don't resize/reposition the window if it is the same web shell.
     if (aOuterShell != mWebShell) {
-      if (openAsContent)
-        openedWindow->SizeContentTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
-      else if (width > 0 || height > 0)
-        openedWindow->SizeWindowTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
+      if (openAsContent) {
+        openedWindow->SizeWindowTo(defaultBounds.width + contentOffsets.width,
+                                   defaultBounds.height + contentOffsets.height);
+        // oy. sizing the content makes sense: that's what the user asked for,
+        // however, it doesn't have the desired effect because all sizing
+        // functions eventually end up sizing the window, and the subwindows
+        // used to calculate the appropriate deltas are different. here we use
+        // the HTML content area; the window uses the main webshell.  maybe
+        // i could calculate a triple offset, but commenting it out is easier,
+        // and probably effectively the same thing.
+//      openedWindow->SizeContentTo(defaultBounds.width, defaultBounds.height);
+      } else
+        openedWindow->SizeWindowTo(defaultBounds.width, defaultBounds.height);
       
-      openedWindow->MoveTo(left ? left : defaultBounds.x, top ? top : defaultBounds.y);
+      openedWindow->MoveTo(defaultBounds.x + contentOffsets.x,
+                      defaultBounds.y + contentOffsets.y);
       openedWindow->Show();
     }
 
