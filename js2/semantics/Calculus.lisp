@@ -3576,27 +3576,36 @@
 ; (and <expr> ... <expr>)
 ; Short-circuiting logical AND.
 (defun scan-and (world type-env special-form expr &rest exprs)
-  (apply #'scan-and-or-xor world type-env special-form 'and t expr exprs))
+  (multiple-value-bind (code annotated-expr true-type-env false-type-env)
+                       (apply #'scan-and-condition world type-env special-form expr exprs)
+    (declare (ignore true-type-env false-type-env))
+    (values
+     code
+     (world-boolean-type world)
+     annotated-expr)))
 
 ; (or <expr> ... <expr>)
 ; Short-circuiting logical OR.
 (defun scan-or (world type-env special-form expr &rest exprs)
-  (apply #'scan-and-or-xor world type-env special-form 'or nil expr exprs))
+  (multiple-value-bind (code annotated-expr true-type-env false-type-env)
+                       (apply #'scan-or-condition world type-env special-form expr exprs)
+    (declare (ignore true-type-env false-type-env))
+    (values
+     code
+     (world-boolean-type world)
+     annotated-expr)))
 
 ; (xor <expr> ... <expr>)
 ; Logical XOR.
 (defun scan-xor (world type-env special-form expr &rest exprs)
-  (apply #'scan-and-or-xor world type-env special-form 'xor nil expr exprs))
-
-(defun scan-and-or-xor (world type-env special-form op identity &rest exprs)
   (multiple-value-map-bind (codes annotated-exprs)
                            #'(lambda (expr)
                                (scan-typed-value world type-env expr (world-boolean-type world)))
-                           (exprs)
+                           ((cons expr exprs))
     (values
-     (gen-poly-op op identity codes)
+     (gen-poly-op 'xor nil codes)
      (world-boolean-type world)
-     (list* 'expr-annotation:special-form special-form op annotated-exprs))))
+     (list* 'expr-annotation:special-form special-form 'xor annotated-exprs))))
 
 
 ; (not <expr>)
@@ -4317,7 +4326,10 @@
 
 ; (new <type> <field-expr1> ... <field-exprn>)
 ; Used to create both tuples and records.
-; A <field-expr> may be :uninit to indicate an uninitialized field, which must have kind :opt-const or :opt-var.
+; A <field-expr> should be one of the following:
+;   an expression
+;   :uninit to indicate an uninitialized field, which must have kind :opt-const or :opt-var
+;   (:delay <global-var>) to indicate a field (which must have kind :opt-const or :opt-var) initialized the first time it's read to a global variable
 (defun scan-new (world type-env special-form type-name &rest value-exprs)
   (let* ((type (scan-kinded-type world type-name :tag))
          (tag (type-tag type))
@@ -4329,11 +4341,22 @@
     (multiple-value-map-bind (value-codes value-annotated-exprs)
                              #'(lambda (field value-expr)
                                  (cond
-                                  ((not (eq value-expr :uninit))
-                                   (scan-typed-value world type-env value-expr (field-type field)))
-                                  ((field-optional field)
-                                   (values :%uninit% value-expr))
-                                  (t (error "Can't leave non-optional field ~S uninitialized" (field-label field)))))
+                                  ((eq value-expr :uninit)
+                                   (if (field-optional field)
+                                     (values :%uninit% value-expr)
+                                     (error "Can't leave non-optional field ~S uninitialized" (field-label field))))
+                                  ((and (consp value-expr) (eq (first value-expr) :delay))
+                                   (cond
+                                    ((not (field-optional field))
+                                     (error "Can't delay non-optional field ~S" (field-label field)))
+                                    ((or (not (consp (rest value-expr))) (cddr value-expr) (not (symbolp (second value-expr))))
+                                     (error "Bad :delay expression ~S" value-expr))
+                                    (t (multiple-value-bind (value-code value-annotated-expr)
+                                                            (scan-typed-value world type-env (second value-expr) (field-type field))
+                                         (unless (and (consp value-code) (eq (first value-code) 'fetch-value) (= (length value-code) 2) (symbolp (second value-code)))
+                                           (error ":delay expression ~S must refer to a global variable" value-expr))
+                                         (values (list 'make-delayed-value (list 'quote (second value-code))) value-annotated-expr)))))
+                                  (t (scan-typed-value world type-env value-expr (field-type field)))))
                              (fields value-exprs)
       (values
        (let ((name (tag-name tag)))
@@ -4344,10 +4367,15 @@
        (list* 'expr-annotation:special-form special-form type type-name value-annotated-exprs)))))
 
 
-(defun assert-not-%uninit% (value)
-  (if (eq value :%uninit%)
-    (error "Uninitialized field read")
-    value))
+(defstruct (delayed-value (:constructor make-delayed-value (symbol)) (:predicate delayed-value?))
+  (symbol nil :type symbol :read-only t))  ;Global variable name
+
+
+(defun check-optional-value (value)
+  (cond
+   ((eq value :%uninit%) (error "Uninitialized field read"))
+   ((delayed-value? value) (fetch-value (delayed-value-symbol value)))
+   (t value)))
 
 ; (& <label> <record-expr>)
 ; Return the tuple or record field's value.
@@ -4398,7 +4426,7 @@
                                                  (cdr position-alist))))))))))))
           (values
            (if any-opt
-             (list 'assert-not-%uninit% code)
+             (list 'check-optional-value code)
              code)
            result-type
            (list 'expr-annotation:special-form special-form record-type label record-annotated-expr)))))))
