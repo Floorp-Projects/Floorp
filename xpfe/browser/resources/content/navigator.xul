@@ -126,6 +126,10 @@ Contributor(s): ______________________________________. -->
                   value="&openFrameCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.openFrame();"/>
+        <menuitem id="context-showonlythisframe"
+                  value="&showOnlyThisFrameCmd.label;"
+                  accesskey="&showOnlyThisFrameCmd.accesskey;"
+                  oncommand="contextMenu.showOnlyThisFrame();"/>
         <menuseparator id="context-sep-open"/>
         <!-- Navigation ============================== -->
         <menuitem id="context-back"
