@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.15 1998/08/13 11:02:11 leif Exp $
+# $Id: Conn.pm,v 1.16 1998/08/13 12:02:27 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -489,7 +489,7 @@ sub update
 	}
     }
 
-  $ret = ldap_modify($self->{"ld"}, $entry->{"dn"}, \%mod)
+  $ret = ldap_modify_s($self->{"ld"}, $entry->{"dn"}, \%mod)
     if ($#arr >= $[);
 
   return ($ret == LDAP_SUCCESS);
