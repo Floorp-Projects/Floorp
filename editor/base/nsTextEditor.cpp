@@ -440,7 +440,7 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   nsAutoString stringToInsert;
   PlaceholderTxn *placeholderTxn=nsnull;
   nsresult result = mRules->WillInsertText(selection, aStringToInsert, &cancel, stringToInsert,
-                                  &placeholderTxn);
+                                           &placeholderTxn);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::InsertText(stringToInsert);
@@ -519,7 +519,19 @@ NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 
 NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 {
-  return nsEditor::Undo(aCount);
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsresult result = mRules->WillUndo(selection, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    result = nsEditor::Undo(aCount);
+    nsEditor::GetSelection(getter_AddRefs(selection));
+    result = mRules->DidUndo(selection, result);
+  }
+  return result;
 }
 
 NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
@@ -529,7 +541,19 @@ NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 
 NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 {
-  return nsEditor::Redo(aCount);
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsresult result = mRules->WillRedo(selection, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    result = nsEditor::Redo(aCount);
+    nsEditor::GetSelection(getter_AddRefs(selection));
+    result = mRules->DidRedo(selection, result);
+  }
+  return result;
 }
 
 NS_IMETHODIMP nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)

@@ -1083,8 +1083,6 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
     return NS_ERROR_NOT_INITIALIZED;
   }
   
-  BeginTransaction();
-
   nsCOMPtr<nsIDOMNodeList>nodeList;
   nsAutoString bodyTag = "body";
   nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -1128,7 +1126,6 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
       }
     }
   }
-  EndTransaction();
   return result;
 }
 

@@ -124,6 +124,10 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = do_QueryInterface(nsnull);
     // there is no longer any legit selection, so clear it.
+    // BEGIN HACK -- ClearSelection does not remove the anchor!  Subsequent code depends on 
+    //               ClearSelection making it so IsCollapsed returns TRUE
+    aSelection->Collapse(mBogusNode, 0);
+    // END HACK
     aSelection->ClearSelection();
   }
 
@@ -188,7 +192,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after insert break.");
   // if the insert break resulted in consecutive BR tags, 
   // collapse the two BR tags into a single P
-  if (NS_SUCCEEDED(aResult))  // note we're checking aResult, the param that tells us if the insert break happened or not
+  if (NS_SUCCEEDED(result)) 
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(aSelection,&result);
@@ -378,6 +382,103 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
             }
           }
         }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  return NS_OK;
+}
+
+/* the idea here is to see if the magic empty node has suddenly reappeared as the result of the undo.
+ * if it has, set our state so we remember it.
+ * There is a tradeoff between doing here and at redo, or doing it everywhere else that might care.
+ * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
+ */
+NS_IMETHODIMP
+nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  nsresult result = aResult;  // if aResult is an error, we return it.
+  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  if (NS_SUCCEEDED(result)) 
+  {
+    if (mBogusNode) {
+      mBogusNode = do_QueryInterface(nsnull);
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMNode>node;
+      PRInt32 offset;
+      nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
+      while ((NS_SUCCEEDED(result)) && node)
+      {
+        nsCOMPtr<nsIDOMElement>element;
+        element = do_QueryInterface(node);
+        if (element)
+        {
+          nsAutoString att(kMOZEditorBogusNodeAttr);
+          nsAutoString val;
+          nsresult result = element->GetAttribute(att, val);
+          if (val.Equals(kMOZEditorBogusNodeValue)) {
+            mBogusNode = do_QueryInterface(element);
+          }
+        }
+        nsCOMPtr<nsIDOMNode> temp;
+        result = node->GetParentNode(getter_AddRefs(temp));
+        node = do_QueryInterface(temp);
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  nsresult result = aResult;  // if aResult is an error, we return it.
+  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  if (NS_SUCCEEDED(result)) 
+  {
+    if (mBogusNode) {
+      mBogusNode = do_QueryInterface(nsnull);
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMNode>node;
+      PRInt32 offset;
+      nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
+      while ((NS_SUCCEEDED(result)) && node)
+      {
+        nsCOMPtr<nsIDOMElement>element;
+        element = do_QueryInterface(node);
+        if (element)
+        {
+          nsAutoString att(kMOZEditorBogusNodeAttr);
+          nsAutoString val;
+          nsresult result = element->GetAttribute(att, val);
+          if (val.Equals(kMOZEditorBogusNodeValue)) {
+            mBogusNode = do_QueryInterface(element);
+          }
+        }
+        nsCOMPtr<nsIDOMNode> temp;
+        result = node->GetParentNode(getter_AddRefs(temp));
+        node = do_QueryInterface(temp);
       }
     }
   }
