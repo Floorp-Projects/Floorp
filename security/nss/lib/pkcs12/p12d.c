@@ -2142,8 +2142,6 @@ sec_pkcs12_validate_cert(sec_PKCS12SafeBag *cert,
     if(testCert) {
 	if(!testCert->nickname) {
 	    cert->removeExisting = PR_TRUE;
-	} else {
-	    cert->noInstall = PR_TRUE;
 	}
 	CERT_DestroyCertificate(testCert);
 	if(cert->noInstall && !cert->removeExisting) {
