@@ -97,7 +97,7 @@ scale_cb(Widget w,XtPointer client_data,XtPointer call_data)
 
 	value = value / 10;
 
-	printf("%s(%s,%d)\n",__FUNCTION__,XtName(w),value);
+	printf("%s(%s,%d)\n","__FUNCTION__",XtName(w),value);
 
 	XtVaSetValues(_tool_bar,XmNindicatorPosition,value,NULL);
 }
@@ -107,7 +107,7 @@ hide_cb(Widget w,XtPointer client_data,XtPointer call_data)
 {
 	assert( XfeIsAlive(_tool_bar) );
 
-	printf("%s(%s)\n",__FUNCTION__,XtName(w));
+	printf("%s(%s)\n","__FUNCTION__",XtName(w));
 
 	XtVaSetValues(_tool_bar,XmNindicatorPosition,XmINDICATOR_DONT_SHOW,NULL);
 }
@@ -137,7 +137,7 @@ location_cb(Widget w,XtPointer client_data,XtPointer call_data)
 	}
 
 	printf("%s(%s) location = %s\n",
-		   __FUNCTION__,
+		   "__FUNCTION__",
 		   XtName(w),
 		   XfeDebugRepTypeValueToName(XmRToolBarIndicatorLocation,location));
 
