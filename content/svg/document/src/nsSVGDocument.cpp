@@ -43,6 +43,8 @@
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMSVGSVGElement.h"
+#include "nsCOMPtr.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGDocument)
@@ -103,9 +105,10 @@ nsSVGDocument::GetURL(nsAString& aURL) {
 
 NS_IMETHODIMP
 nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement) {
-  NS_NOTYETIMPLEMENTED("nsSVGDocument::GetRootElement");
-  // XXX - writeme
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMSVGSVGElement> root = do_QueryInterface(mRootContent);
+  *aRootElement = root;
+  NS_IF_ADDREF(*aRootElement);
+  return NS_OK;
 }
 
 nsresult
