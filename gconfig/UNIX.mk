@@ -35,6 +35,12 @@ MKDEPEND_DIR    = $(GDEPTH)/gconfig/mkdepend
 MKDEPEND        = $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
 MKDEPENDENCIES  = $(NSINSTALL_DIR)/$(OBJDIR_NAME)/depend.mk
 
+GUI_LIBS        = -lXt -lX11
+OPT_SLASH       = /
+LIB_PREFIX      = lib
+LIB_SUFFIX      = .a
+NSPR_LIBS       = plds21 plc21 nspr21 msgc21
+
 ####################################################################
 #
 # One can define the makefile variable NSDISTMODE to control

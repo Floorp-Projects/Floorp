@@ -30,10 +30,10 @@ CPU_ARCH		= x86
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
 ifdef USE_PTHREADS
-	OS_LIBS		= -lc_r
+	OS_LIBS		+= -lc_r
 	DEFINES		+= -D_PR_NEED_FAKE_POLL
 else
-	OS_LIBS		= -lc
+	OS_LIBS		+= -lc
 endif
 
 ARCH			= freebsd

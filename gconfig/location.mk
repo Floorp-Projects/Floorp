@@ -24,12 +24,14 @@
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
 DIST          = $(GDEPTH)/dist/$(PLATFORM)
+DIST_LIB      = $(GDEPTH)/dist/$(PLATFORM)/lib
 VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
 DEPENDENCIES  = $(PLATFORM)/.md
 
 # XXX - Need this for compatibility with 'old' config style
 #       when your component requires something in the 'other' world
 CONFIG_DIST          = $(GDEPTH)/dist/$(CONFIG_PLATFORM)
+CONFIG_DIST_LIB      = $(GDEPTH)/dist/$(CONFIG_PLATFORM)/lib
 
 ifdef BUILD_DEBUG_GC
 	DEFINES += -DDEBUG_GC

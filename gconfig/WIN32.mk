@@ -49,6 +49,13 @@ OUT_NAME     = -out:
 
 OS_LIBS = gdi32.lib kernel32.lib advapi32.lib user32.lib
 
+GUI_LIBS = 
+NSPR_LIBS = libplds21 libplc21 libnspr21 libmsgc21
+OPT_SLASH = /
+LIB_PREFIX      =
+LIB_SUFFIX      = .lib
+
+
 ifdef BUILD_OPT
 	OS_CFLAGS  += -MD
 	OPTIMIZER  += -O2

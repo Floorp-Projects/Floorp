@@ -54,7 +54,7 @@ ifeq ($(OS_RELEASE),2.0)
 endif
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
-OS_LIBS			= -L/lib -ldl -lc
+OS_LIBS			+= -L/lib -ldl -lc
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT -D_PR_NEED_FAKE_POLL

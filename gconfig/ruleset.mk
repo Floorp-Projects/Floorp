@@ -141,6 +141,11 @@ ifndef LIBRARY
 	endif
 endif
 
+# Rules to convert EXTRA_LIBS to platform-dependent naming scheme
+ifdef EXTRA_LIBS
+	EXTRA_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(EXTRA_LIBS:%=%$(LIB_SUFFIX)))
+endif
+
 ifdef LIBRARY
 #	LIBRARY := $(addprefix $(OBJDIR)/, $(LIBRARY))
 	ifdef MKSHLIB

@@ -37,7 +37,7 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 RANLIB			= /bin/true
 
 OS_CFLAGS		+= $(ODD_CFLAGS) -DSVR4 -D__SVR4 -DNEC -Dnec_ews -DHAVE_STRERROR
-OS_LIBS			= -lsocket -lnsl -ldl $(LDOPTIONS)
+OS_LIBS			+= -lsocket -lnsl -ldl $(LDOPTIONS)
 LDOPTIONS		= -lc -L/usr/ucblib -lucb
 
 NOSUCHFILE		= /nec-rm-f-sucks
