@@ -27,6 +27,7 @@ LIBRARY_NAME=ender
 
 CPPSRCS =				\
       nsEditor.cpp			     \
+      nsEditorService.cpp \
       nsEditorController.cpp \
       nsEditorCommands.cpp   \
       nsEditorUtils.cpp      \

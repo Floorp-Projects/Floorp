@@ -26,7 +26,7 @@
 #include "nsEditorShell.h"		// for the CID
 #include "nsEditor.h"				// for gInstanceCount
 #include "nsEditorController.h" //CID
-
+#include "nsEditorService.h" 
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -36,6 +36,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
@@ -52,9 +53,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 static nsModuleComponentInfo components[] = {
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
-      "component://netscape/editor/htmleditor", nsHTMLEditorLogConstructor,
-      nsHTMLEditorLog::RegisterProc,
-      nsHTMLEditorLog::UnregisterProc, },
+      "component://netscape/editor/htmleditor", nsHTMLEditorLogConstructor, },
 #else
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "component://netscape/editor/htmleditor", nsHTMLEditorConstructor, },
@@ -65,6 +64,10 @@ static nsModuleComponentInfo components[] = {
       "component://netscape/editor/editorshell", nsEditorShellConstructor, },
     { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
       "component://netscape/editor/editorspellcheck", nsEditorShellConstructor, },
+    { "Editor Service", NS_EDITORSERVICE_CID,
+      "component://netscape/editor/editorservice", nsEditorServiceConstructor,
+      nsEditorService::RegisterProc,
+      nsEditorService::UnregisterProc, },
 };
 
 ////////////////////////////////////////////////////////////////////////
