@@ -440,7 +440,7 @@ PRInt32              nsXULElement::kNameSpaceID_RDF;
 PRInt32              nsXULElement::kNameSpaceID_XUL;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-PRUint32             nsXULProtlotypeAttribute::gNumElements;
+PRUint32             nsXULPrototypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
 PRUint32             nsXULPrototypeAttribute::gNumEventHandlers;
 PRUint32             nsXULPrototypeAttribute::gNumCacheTests;
