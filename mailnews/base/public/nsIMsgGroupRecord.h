@@ -6,7 +6,6 @@
 #define __gen_nsIMsgGroupRecord_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -14,7 +13,9 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
+#include "nsIID.h"
 #include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgGroupRecord */
@@ -32,14 +33,23 @@ class nsIMsgGroupRecord : public nsISupports {
     return iid;
   }
 
+  /* void Init (in voidStar parent, in string partname, in long long time, in long uniqueid, in long fileoffset, in char delimiter); */
+  NS_IMETHOD Init(void* parent, char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset, char delimiter) = 0;
+
+  /* void InitFromParent (in nsIMsgGroupRecord parent, in string saveline, in long savelinelength, in long fileoffset); */
+  NS_IMETHOD InitFromParent(nsIMsgGroupRecord *parent, char *saveline, PRInt32 savelinelength, PRInt32 fileoffset) = 0;
+
+  /* void InitFromFile (in nsIMsgGroupRecord parent, in string partname, in long long time, in long uniqueid, in long fileoffset); */
+  NS_IMETHOD InitFromFile(nsIMsgGroupRecord *parent, char *partname, PRInt64 time, PRInt32 uniqueid, PRInt32 fileoffset) = 0;
+
   /* void InitializeSibling (); */
   NS_IMETHOD InitializeSibling() = 0;
 
   /* short GroupNameCompare (in string name1, in string name2, in char delimeter, in boolean caseSensitive); */
   NS_IMETHOD GroupNameCompare(char *name1, char *name2, char delimeter, PRBool caseSensitive, PRInt16 *_retval) = 0;
 
-  /* nsIMsgGroupRecord FindDescendant (in string name); */
-  NS_IMETHOD FindDescendant(char *name, nsIMsgGroupRecord **_retval) = 0;
+  /* nsIMsgGroupRecord FindDescendent (in string name); */
+  NS_IMETHOD FindDescendent(char *name, nsIMsgGroupRecord **_retval) = 0;
 
   /* readonly attribute nsIMsgGroupRecord parent; */
   NS_IMETHOD GetParent(nsIMsgGroupRecord * *aParent) = 0;
@@ -62,8 +72,8 @@ class nsIMsgGroupRecord : public nsISupports {
   /* readonly attribute string partName; */
   NS_IMETHOD GetPartName(char * *aPartName) = 0;
 
-  /* readonly attribute string fullname; */
-  NS_IMETHOD GetFullname(char * *aFullname) = 0;
+  /* readonly attribute string fullName; */
+  NS_IMETHOD GetFullName(char * *aFullName) = 0;
 
   /* attribute string prettyName; */
   NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
@@ -72,39 +82,47 @@ class nsIMsgGroupRecord : public nsISupports {
   /* readonly attribute long long addTime; */
   NS_IMETHOD GetAddTime(PRInt64 *aAddTime) = 0;
 
-  /* boolean IsCategory (); */
-  NS_IMETHOD IsCategory(PRBool *_retval) = 0;
+  /* readonly attribute boolean isCategory; */
+  NS_IMETHOD GetIsCategory(PRBool *aIsCategory) = 0;
 
-  /* attribute boolean IsCategoryContainer; */
+  /* attribute boolean isCategoryContainer; */
   NS_IMETHOD GetIsCategoryContainer(PRBool *aIsCategoryContainer) = 0;
   NS_IMETHOD SetIsCategoryContainer(PRBool aIsCategoryContainer) = 0;
 
   /* readonly attribute nsIMsgGroupRecord categoryContainer; */
   NS_IMETHOD GetCategoryContainer(nsIMsgGroupRecord * *aCategoryContainer) = 0;
 
-  /* attribute boolean virtual; */
-  NS_IMETHOD GetVirtual(PRBool *aVirtual) = 0;
-  NS_IMETHOD SetVirtual(PRBool aVirtual) = 0;
+  /* attribute boolean isVirtual; */
+  NS_IMETHOD GetIsVirtual(PRBool *aIsVirtual) = 0;
+  NS_IMETHOD SetIsVirtual(PRBool aIsVirtual) = 0;
 
-  /* attribute boolean group; */
-  NS_IMETHOD GetGroup(PRBool *aGroup) = 0;
-  NS_IMETHOD SetGroup(PRBool aGroup) = 0;
+  /* attribute boolean isGroup; */
+  NS_IMETHOD GetIsGroup(PRBool *aIsGroup) = 0;
+  NS_IMETHOD SetIsGroup(PRBool aIsGroup) = 0;
 
-  /* attribute boolean expanded; */
-  NS_IMETHOD GetExpanded(PRBool *aExpanded) = 0;
-  NS_IMETHOD SetExpanded(PRBool aExpanded) = 0;
+  /* attribute boolean isExpanded; */
+  NS_IMETHOD GetIsExpanded(PRBool *aIsExpanded) = 0;
+  NS_IMETHOD SetIsExpanded(PRBool aIsExpanded) = 0;
 
-  /* attribute boolean htmlOk; */
-  NS_IMETHOD GetHtmlOk(PRBool *aHtmlOk) = 0;
-  NS_IMETHOD SetHtmlOk(PRBool aHtmlOk) = 0;
+  /* attribute boolean isDescendentsLoaded; */
+  NS_IMETHOD GetIsDescendentsLoaded(PRBool *aIsDescendentsLoaded) = 0;
+  NS_IMETHOD SetIsDescendentsLoaded(PRBool aIsDescendentsLoaded) = 0;
+
+  /* attribute boolean HTMLOkGroup; */
+  NS_IMETHOD GetHTMLOkGroup(PRBool *aHTMLOkGroup) = 0;
+  NS_IMETHOD SetHTMLOkGroup(PRBool aHTMLOkGroup) = 0;
+
+  /* attribute boolean HTMLOkTree; */
+  NS_IMETHOD GetHTMLOkTree(PRBool *aHTMLOkTree) = 0;
+  NS_IMETHOD SetHTMLOkTree(PRBool aHTMLOkTree) = 0;
 
   /* attribute boolean needsExtraInfo; */
   NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
 
-  /* attribute boolean onServer; */
-  NS_IMETHOD GetOnServer(PRBool *aOnServer) = 0;
-  NS_IMETHOD SetOnServer(PRBool aOnServer) = 0;
+  /* attribute boolean doesNotExistOnServer; */
+  NS_IMETHOD GetDoesNotExistOnServer(PRBool *aDoesNotExistOnServer) = 0;
+  NS_IMETHOD SetDoesNotExistOnServer(PRBool aDoesNotExistOnServer) = 0;
 
   /* readonly attribute long uniqueID; */
   NS_IMETHOD GetUniqueID(PRInt32 *aUniqueID) = 0;

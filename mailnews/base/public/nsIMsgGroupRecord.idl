@@ -18,16 +18,39 @@
 
 #include "nsISupports.idl"
 
+
 [uuid(4ed03c60-b256-11d2-b7f0-00805f05ffa5)]
 interface nsIMsgGroupRecord : nsISupports {
 
+    /* making this a voidStar is really ugly, but it's a quick
+     * solution right now
+     */
+    void Init(in voidStar parent,
+              in string partname,
+              in long long time,
+              in long uniqueid,
+              in long fileoffset,
+              in char delimiter);
+    
+    void InitFromParent(in nsIMsgGroupRecord parent,
+                        in string saveline,
+                        in long savelinelength,
+                        in long fileoffset);
+    
+    void InitFromFile(in nsIMsgGroupRecord parent,
+                      in string partname,
+                      in long long time,
+                      in long uniqueid,
+                      in long fileoffset);
+    
     void InitializeSibling();
+    
     short GroupNameCompare(in string name1,
                            in string name2,
                            in char delimeter,
                            in boolean caseSensitive);
 
-    nsIMsgGroupRecord FindDescendant(in string name);
+    nsIMsgGroupRecord FindDescendent(in string name);
     
     readonly attribute nsIMsgGroupRecord parent;
     readonly attribute nsIMsgGroupRecord children;
@@ -37,23 +60,26 @@ interface nsIMsgGroupRecord : nsISupports {
     nsIMsgGroupRecord GetNextAlphabeticNoCategories();
 
     readonly attribute string partName;
-    readonly attribute string fullname;
+    readonly attribute string fullName;
 
     attribute string prettyName;
     readonly attribute long long addTime;
 
-    boolean IsCategory();
+    readonly attribute boolean isCategory;
     
-    attribute boolean IsCategoryContainer;
+    attribute boolean isCategoryContainer;
 
     readonly attribute nsIMsgGroupRecord categoryContainer;
     
-    attribute boolean virtual;
-    attribute boolean group;
-    attribute boolean expanded;
-    attribute boolean htmlOk;
+    attribute boolean isVirtual;
+    attribute boolean isGroup;
+    
+    attribute boolean isExpanded;
+    attribute boolean isDescendentsLoaded;
+    attribute boolean HTMLOkGroup;
+    attribute boolean HTMLOkTree;
     attribute boolean needsExtraInfo;
-    attribute boolean onServer;
+    attribute boolean doesNotExistOnServer;
     readonly attribute long uniqueID;
     attribute long fileOffset;
 
