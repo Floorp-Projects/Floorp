@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>Mozilla ActiveX control smoketest</title>
+</head>
+<body>
+<p>Some links which invoke things that break too often in embedding apps:</p>
+<ol>
+  <li><a href="http://www.mozilla.org/">A normal link</a></li>
+  <li><a href="http://www.mozilla.org/" target="_blank">A link with a _blank target window</a></li>
+  <li><a href="http://www.mozilla.org/" target="foo">1st link with a foo target window</a></li>
+  <li><a href="http://www.bugzilla.org/" target="foo">2nd link with a foo target window</a></li>
+  <li onclick="javascript:window.open('http://www.gnome.org/')">A JS onclick handler (click me)</li>
+  <li><a href="view-source:http://www.mozilla.org/">view-source:</a></li>
+  <li><a href="data:text/html,<html><body>Hello do you see this?</body></html>">data:</a></li>
+  <li><a href="http://pear.math.pitt.edu/mathzilla/Examples/markupOftheWeek.mhtml">A page of mathml</a></li>
+  <li><a href="about:">about:</a></li>
+  <li><a href="about:config">about:config</a> (copy and paste into address bar)</li>
+  <li><a href="about:plugins">about:plugins</a> (copy and paste into address bar)</li>
+  <li><a href="javascript:">javascript:</a> (copy and paste into address bar)</li>
+  <li><a href="https://www.verisign.com/">A secure website</a></li>
+  <li>user / pass prompt</li>
+  <li>External content type</li>
+  <li><a href="http://devedge.netscape.com/viewsource/2003/windows-media-in-netscape/media/closecap-outtakes.html">Activex scripting content</a></li>
+</ol>
+</body>
+</html>
