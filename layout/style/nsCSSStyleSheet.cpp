@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   IBM Corp.
+ *   Daniel Glazman <glazman@netscape.com>
  */
 
 #include "nsICSSStyleSheet.h"
@@ -219,8 +220,8 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
 void RuleHash::AppendRule(nsICSSStyleRule* aRule)
 {
   nsCSSSelector*  selector = aRule->FirstSelector();
-  if (nsnull != selector->mID) {
-    AppendRuleToTable(mIdTable, selector->mID, aRule);
+  if (nsnull != selector->mIDList) {
+    AppendRuleToTable(mIdTable, selector->mIDList->mAtom, aRule);
   }
   else if (nsnull != selector->mClassList) {
     AppendRuleToTable(mClassTable, selector->mClassList->mAtom, aRule);
@@ -1957,7 +1958,7 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
       nsCSSSelector *iter;
       for (iter = styleRule->FirstSelector(); iter; iter = iter->mNext) {
         /* P.classname means we have to check the attribute "class" */
-        if (iter->mID) {
+        if (iter->mIDList) {
           AtomKey idKey(nsHTMLAtoms::id);
           mInner->mRelevantAttributes.Put(&idKey, nsHTMLAtoms::id);
         }
@@ -2978,11 +2979,25 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       }
     }
     if ((PR_TRUE == result) &&
-        ((nsnull != aSelector->mID) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
+        ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
       result = PR_FALSE;
       if (data.mStyledContent) {
-        if ((nsnull == aSelector->mID) || (aSelector->mID == data.mContentID)) {
+        nsAtomList* IDList = aSelector->mIDList;
+        if (nsnull == IDList) {
           result = PR_TRUE;
+        }
+        else if (nsnull != data.mContentID) {
+          result = PR_TRUE;
+          while (nsnull != IDList) {
+            if (IDList->mAtom != data.mContentID) {
+              result = PR_FALSE;
+              break;
+            }
+            IDList = IDList->mNext;
+          }
+        }
+        
+        if (PR_TRUE == result) {
           nsAtomList* classList = aSelector->mClassList;
           while (nsnull != classList) {
             if (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom)) {
