@@ -35,6 +35,7 @@ IDLSRCS		= \
 		CSSMediaRule.idl \
 		CSSPageRule.idl \
 		CSSRule.idl \
+		CSSRuleList.idl \
 		CSSStyleDeclaration.idl \
 		CSSStyleRule.idl \
 		CSSStyleRuleCollection.idl \

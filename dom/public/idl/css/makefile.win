@@ -25,12 +25,13 @@ DEPTH=..\..\..\..
 MODULE=raptor 
 
 IDLSRCS =  \
-  CSS2Properties.idl \
+	CSS2Properties.idl \
 	CSSFontFaceRule.idl \
-  CSSImportRule.idl \
+	CSSImportRule.idl \
 	CSSMediaRule.idl \
 	CSSPageRule.idl \
 	CSSRule.idl \
+	CSSRuleList.idl \
 	CSSStyleDeclaration.idl \
 	CSSStyleRule.idl \
 	CSSStyleRuleCollection.idl \
