@@ -59,9 +59,9 @@
 #include "nsIServiceManager.h"
 #include "nsISVGRectangleSink.h"
 #include "nsISVGValueUtils.h"
-#include "nsISVGViewportRect.h"
-#include "nsISVGViewportAxis.h"
+#include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGNumber.h"
+#include "nsSVGCoordCtxProvider.h"
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
@@ -146,7 +146,8 @@ class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsISVGOuterSVGFrame,
                            public nsISVGContainerFrame,
                            public nsISVGValueObserver,
-                           public nsSupportsWeakReference
+                           public nsSupportsWeakReference,
+                           public nsSVGCoordCtxProvider
 {
   friend nsresult
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
@@ -225,14 +226,18 @@ public:
   // nsISVGOuterSVGFrame interface:
   NS_IMETHOD InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedraw);
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended);
-  NS_IMETHOD SuspendRedraw();
-  NS_IMETHOD UnsuspendRedraw();
   NS_IMETHOD GetRenderer(nsISVGRenderer**renderer);
   NS_IMETHOD CreateSVGRect(nsIDOMSVGRect **_retval);
-  NS_IMETHOD NotifyViewportChange();
 
+  // nsISVGSVGFrame interface:
+  NS_IMETHOD SuspendRedraw();
+  NS_IMETHOD UnsuspendRedraw();
+  NS_IMETHOD NotifyViewportChange();
+  
   // nsISVGContainerFrame interface:
-  NS_IMETHOD_(nsISVGOuterSVGFrame*) GetOuterSVGFrame();
+  nsISVGOuterSVGFrame*GetOuterSVGFrame();
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   
 protected:
   // implementation helpers:
@@ -247,8 +252,6 @@ protected:
   void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
                                nsPresContext* aPresContext,
                                const nsHTMLReflowState& aReflowState);
-  nsresult SetViewportDimensions(nsISVGViewportRect* vp, float width, float height);
-  nsresult SetViewportScale(nsISVGViewportRect* vp, nsPresContext *context);
   
 //  nsIView* mView;
   nsIPresShell* mPresShell; // XXX is a non-owning ref ok?
@@ -256,6 +259,7 @@ protected:
   PRBool mNeedsReflow;
   PRBool mViewportInitialized;
   nsCOMPtr<nsISVGRenderer> mRenderer;
+  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 };
 
 //----------------------------------------------------------------------
@@ -317,6 +321,17 @@ nsresult nsSVGOuterSVGFrame::Init()
 #error "No SVG renderer."
 #endif
   NS_ASSERTION(mRenderer, "could not get renderer");
+
+  // we are an *outer* svg element, so this frame will become the
+  // coordinate context for our content element:
+  float mmPerPx = GetTwipsPerPx() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
+  SetCoordCtxMMPerPx(mmPerPx, mmPerPx);
+  
+  nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
+  NS_ASSERTION(SVGElement, "wrong content element");
+  SVGElement->SetParentCoordCtxProvider(this);
+
+  
   AddAsWidthHeightObserver();
   SuspendRedraw();
   return NS_OK;
@@ -328,8 +343,10 @@ nsresult nsSVGOuterSVGFrame::Init()
 NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGOuterSVGFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
 //----------------------------------------------------------------------
@@ -337,10 +354,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow)
+                         nsIContent*     aContent,
+                         nsIFrame*       aParent,
+                         nsStyleContext* aContext,
+                         nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
   rv = nsSVGOuterSVGFrameBase::Init(aPresContext, aContent, aParent,
@@ -362,8 +379,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  nsresult rv;
-  
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
   {
     printf("nsSVGOuterSVGFrame(%p)::Reflow()[\n",this);
@@ -432,8 +447,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   // printf("--- nsSVGOuterSVGFrame(%p)::Reflow(frame:%p,reason:%d) ---\n",this,aReflowState.frame,aReflowState.reason);
 #endif
   
-  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
   NS_ENSURE_TRUE(SVGElement, NS_ERROR_FAILURE);
 
@@ -442,7 +455,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   // The width/height attribs given on the <svg>-element might be
   // percentage values of the parent viewport. We will set the parent
-  // viewport dimensions to the available space.
+  // coordinate context dimensions to the available space.
 
   nsRect maxRect, preferredRect;
   CalculateAvailableSpace(&maxRect, &preferredRect, aPresContext, aReflowState);
@@ -451,21 +464,16 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   SuspendRedraw(); 
   
-  // As soon as we set the viewport, the width/height attributes might
-  // emit change-notifications. We don't want those right now:
+  // As soon as we set the coordinate context, the width/height
+  // attributes might emit change-notifications. We don't want those
+  // right now:
   RemoveAsWidthHeightObserver();
 
-  nsCOMPtr<nsISVGViewportRect> parentViewport;
-  SVGElement->GetParentViewportRect(getter_AddRefs(parentViewport));
-  NS_ENSURE_TRUE(parentViewport, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISVGValue> pvp_value = do_QueryInterface(parentViewport);
-  pvp_value->BeginBatchUpdate();
-  rv = SetViewportDimensions(parentViewport, preferredWidth, preferredHeight);
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = SetViewportScale(parentViewport, aPresContext);
-  NS_ENSURE_SUCCESS(rv,rv);
-  pvp_value->EndBatchUpdate();
+  nsCOMPtr<nsIDOMSVGRect> r;
+  CreateSVGRect(getter_AddRefs(r));
+  r->SetWidth(preferredWidth);
+  r->SetHeight(preferredHeight);
+  SetCoordCtxRect(r);
   
 #ifdef DEBUG
   // some debug stuff:
@@ -494,7 +502,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 //   }
 #endif
 
-  // now that the parent viewport dimensions have been set, the
+  // now that the parent coord ctx dimensions have been set, the
   // width/height attributes will be valid.
   // Let's work out our desired dimensions.
 
@@ -535,23 +543,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
-  // Set the viewport.
-  // XXX. I have a feeling that this code belongs in DidReflow(),
-  // using mRect. Bug #118723 prevents us from putting it there.
-  nsCOMPtr<nsIDOMSVGRect> domViewport;
-  SVGElement->GetViewport(getter_AddRefs(domViewport));
-  NS_ENSURE_TRUE(domViewport, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISVGViewportRect> viewport = do_QueryInterface(domViewport);
-  NS_ENSURE_TRUE(viewport, NS_ERROR_FAILURE);  
-
-  nsCOMPtr<nsISVGValue> vp_value = do_QueryInterface(viewport);
-  vp_value->BeginBatchUpdate();
-  rv = SetViewportDimensions(viewport, width, height);
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = SetViewportScale(viewport, aPresContext);
-  NS_ENSURE_SUCCESS(rv,rv);
-  vp_value->EndBatchUpdate();
-  
   AddAsWidthHeightObserver();
   
   UnsuspendRedraw();
@@ -905,6 +896,35 @@ nsSVGOuterSVGFrame::InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedra
 }
 
 NS_IMETHODIMP
+nsSVGOuterSVGFrame::IsRedrawSuspended(PRBool* isSuspended)
+{
+  *isSuspended = (mRedrawSuspendCount>0) || !mViewportInitialized;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::GetRenderer(nsISVGRenderer**renderer)
+{
+  *renderer = mRenderer;
+  NS_IF_ADDREF(*renderer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::CreateSVGRect(nsIDOMSVGRect **_retval)
+{
+  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
+  NS_ASSERTION(svgElement, "wrong content element");  
+  if(svgElement)
+    return svgElement->CreateSVGRect(_retval);
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+// nsISVGSVGFrame methods:
+
+
+NS_IMETHODIMP
 nsSVGOuterSVGFrame::SuspendRedraw()
 {
 #ifdef DEBUG
@@ -970,45 +990,22 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::IsRedrawSuspended(PRBool* isSuspended)
-{
-  *isSuspended = (mRedrawSuspendCount>0) || !mViewportInitialized;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::GetRenderer(nsISVGRenderer**renderer)
-{
-  *renderer = mRenderer;
-  NS_IF_ADDREF(*renderer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::CreateSVGRect(nsIDOMSVGRect **_retval)
-{
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
-  NS_ASSERTION(svgElement, "wrong content element");  
-  if(svgElement)
-    return svgElement->CreateSVGRect(_retval);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsSVGOuterSVGFrame::NotifyViewportChange()
 {
   // no point in doing anything when were not init'ed yet:
   if (!mViewportInitialized) return NS_OK;
 
+  // make sure canvas transform matrix gets (lazily) recalculated:
+  mCanvasTM = nsnull;
+  
   // inform children
-  // XXX we should have an nsISVGChildFrame:NotifyViewportChange() function
   SuspendRedraw();
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCTMChanged(); 
+      SVGFrame->NotifyCanvasTMChanged(); 
     kid = kid->GetNextSibling();
   }
   UnsuspendRedraw();
@@ -1018,12 +1015,38 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
 
-NS_IMETHODIMP_(nsISVGOuterSVGFrame *)
+nsISVGOuterSVGFrame *
 nsSVGOuterSVGFrame::GetOuterSVGFrame()
 {
   return this;
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGOuterSVGFrame::GetCanvasTM()
+{
+  if (!mCanvasTM) {
+    nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
+    NS_ASSERTION(svgElement, "wrong content element");
+    svgElement->GetViewboxToViewportTransform(getter_AddRefs(mCanvasTM));
+  }
+  nsIDOMSVGMatrix* retval = mCanvasTM.get();
+  NS_IF_ADDREF(retval);
+  return retval;
+}
+
+already_AddRefed<nsSVGCoordCtxProvider>
+nsSVGOuterSVGFrame::GetCoordContextProvider()
+{
+  NS_ASSERTION(mContent, "null parent");
+
+  // Our <svg> content element is the CoordContextProvider for our children:
+  nsSVGCoordCtxProvider *provider;
+  mContent->QueryInterface(NS_GET_IID(nsSVGCoordCtxProvider), (void**)&provider);
+
+  NS_IF_ADDREF(provider);
+  
+  return provider;  
+}
 
 //----------------------------------------------------------------------
 // Implementation helpers
@@ -1144,62 +1167,3 @@ nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
   if (preferredRect->height > maxRect->height)
     preferredRect->height = maxRect->height;
 }  
-
-
-nsresult
-nsSVGOuterSVGFrame::SetViewportDimensions(nsISVGViewportRect* vp,
-                                          float width, float height)
-{
-  {
-    nsCOMPtr<nsISVGViewportAxis> axis;
-    vp->GetXAxis(getter_AddRefs(axis));
-    NS_ENSURE_TRUE(axis, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMSVGNumber> length;
-    axis->GetLength(getter_AddRefs(length));
-    length->SetValue(width);
-  }
-
-  {
-    nsCOMPtr<nsISVGViewportAxis> axis;
-    vp->GetYAxis(getter_AddRefs(axis));
-    NS_ENSURE_TRUE(axis, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMSVGNumber> length;
-    axis->GetLength(getter_AddRefs(length));
-    length->SetValue(height);
-  }
-  return NS_OK;
-}  
-
-nsresult
-nsSVGOuterSVGFrame::SetViewportScale(nsISVGViewportRect* vp, nsPresContext *context)
-{
-  float mmPerPx = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
-
-  nsCOMPtr<nsIDOMSVGNumber> scaleX;
-  {
-    nsCOMPtr<nsISVGViewportAxis> axis;
-    vp->GetXAxis(getter_AddRefs(axis));
-    NS_ENSURE_TRUE(axis, NS_ERROR_FAILURE);
-    axis->GetMillimeterPerPixel(getter_AddRefs(scaleX));
-  }
-
-  nsCOMPtr<nsIDOMSVGNumber> scaleY;
-  {
-    nsCOMPtr<nsISVGViewportAxis> axis;
-    vp->GetYAxis(getter_AddRefs(axis));
-    NS_ENSURE_TRUE(axis, NS_ERROR_FAILURE);
-    axis->GetMillimeterPerPixel(getter_AddRefs(scaleY));
-  }
-
-  float old_x, old_y;
-
-  scaleX->GetValue(&old_x);
-  scaleY->GetValue(&old_y);
-
-  if (old_x != mmPerPx || old_y != mmPerPx) {
-    scaleX->SetValue(mmPerPx);
-    scaleY->SetValue(mmPerPx);
-  }
-  
-  return NS_OK;
-}

@@ -44,6 +44,7 @@
 #include "nsISVGValue.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGAnimTransformList.h"
+#include "nsIDOMSVGTransformList.h"
 #include "nsSVGDefsFrame.h"
 
 //----------------------------------------------------------------------
@@ -223,12 +224,15 @@ nsSVGDefsFrame::WillModifySVGObservable(nsISVGValue* observable)
 NS_IMETHODIMP
 nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable)
 {
+  // make sure our cached transform matrix gets (lazily) updated
+  mCanvasTM = nsnull;
+  
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCTMChanged();
+      SVGFrame->NotifyCanvasTMChanged();
   }  
   return NS_OK;
 }
@@ -277,14 +281,17 @@ nsSVGDefsFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGDefsFrame::NotifyCTMChanged()
+nsSVGDefsFrame::NotifyCanvasTMChanged()
 {
+  // make sure our cached transform matrix gets (lazily) updated
+  mCanvasTM = nsnull;
+  
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCTMChanged();
+      SVGFrame->NotifyCanvasTMChanged();
     }
   }
   return NS_OK;
@@ -328,7 +335,7 @@ nsSVGDefsFrame::GetBBox(nsIDOMSVGRect **_retval)
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
 
-NS_IMETHODIMP_(nsISVGOuterSVGFrame *)
+nsISVGOuterSVGFrame *
 nsSVGDefsFrame::GetOuterSVGFrame()
 {
   NS_ASSERTION(mParent, "null parent");
@@ -341,4 +348,62 @@ nsSVGDefsFrame::GetOuterSVGFrame()
   }
 
   return containerFrame->GetOuterSVGFrame();  
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGDefsFrame::GetCanvasTM()
+{
+  if (!mCanvasTM) {
+    // get our parent's tm and append local transforms (if any):
+    NS_ASSERTION(mParent, "null parent");
+    nsISVGContainerFrame *containerFrame;
+    mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+    if (!containerFrame) {
+      NS_ERROR("invalid parent");
+      return nsnull;
+    }
+    nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
+    NS_ASSERTION(parentTM, "null TM");
+
+    // got the parent tm, now check for local tm:
+    nsCOMPtr<nsIDOMSVGMatrix> localTM;
+    {
+      nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
+      NS_ASSERTION(transformable, "wrong content element");
+      nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
+      transformable->GetTransform(getter_AddRefs(atl));
+      NS_ASSERTION(atl, "null animated transform list");
+      nsCOMPtr<nsIDOMSVGTransformList> transforms;
+      atl->GetAnimVal(getter_AddRefs(transforms));
+      NS_ASSERTION(transforms, "null transform list");
+      PRUint32 numberOfItems;
+      transforms->GetNumberOfItems(&numberOfItems);
+      if (numberOfItems>0)
+        transforms->GetConsolidation(getter_AddRefs(localTM));
+    }
+    
+    if (localTM)
+      parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
+    else
+      mCanvasTM = parentTM;
+  }
+
+  nsIDOMSVGMatrix* retval = mCanvasTM.get();
+  NS_IF_ADDREF(retval);
+  return retval;
+}
+
+already_AddRefed<nsSVGCoordCtxProvider>
+nsSVGDefsFrame::GetCoordContextProvider()
+{
+  NS_ASSERTION(mParent, "null parent");
+  
+  nsISVGContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+  if (!containerFrame) {
+    NS_ERROR("invalid container");
+    return nsnull;
+  }
+
+  return containerFrame->GetCoordContextProvider();  
 }

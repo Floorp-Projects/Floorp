@@ -64,7 +64,7 @@ nsSVGStroke::Build(ArtVpath* path, nsISVGPathGeometrySource* source)
   {
     double matrix[6];
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
-    source->GetCTM(getter_AddRefs(ctm));
+    source->GetCanvasTM(getter_AddRefs(ctm));
     NS_ASSERTION(ctm, "graphic source didn't have a ctm");
     
     float val;

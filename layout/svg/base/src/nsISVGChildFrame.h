@@ -49,9 +49,9 @@ class nsPresContext;
 class nsIDOMSVGRect;
 struct nsRect;
 
-// {1F23A200-B583-40EC-8564-9E6740C4DD3A}
+// {64BEAA3A-E188-4C44-BEB8-CCB609CED126}
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x1f23a200, 0xb583, 0x40ec, { 0x85, 0x64, 0x9e, 0x67, 0x40, 0xc4, 0xdd, 0x3a } }
+{ 0x64beaa3a, 0xe188, 0x4c44, { 0xbe, 0xb8, 0xcc, 0xb6, 0x09, 0xce, 0xd1, 0x26 } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -64,7 +64,7 @@ public:
   NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit)=0;
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion()=0;
   NS_IMETHOD InitialUpdate()=0;
-  NS_IMETHOD NotifyCTMChanged()=0;
+  NS_IMETHOD NotifyCanvasTMChanged()=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;
 

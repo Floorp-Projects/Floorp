@@ -146,9 +146,12 @@ static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
 #include "nsISVGTextContainerFrame.h"
+#include "nsISVGContainerFrame.h"
 
 nsresult
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+nsresult
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
@@ -169,13 +172,13 @@ nsresult
 NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-extern nsresult
+nsresult
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
-extern nsresult
+nsresult
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-extern nsresult
+nsresult
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
-extern nsresult
+nsresult
 NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 #endif
 
@@ -6853,7 +6856,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   PRBool isAbsolutelyPositioned = PR_FALSE;
   PRBool isFixedPositioned = PR_FALSE;
   PRBool forceView = PR_FALSE;
-  PRBool isBlock = PR_FALSE;
   PRBool processChildren = PR_FALSE;
   
   NS_ASSERTION(aTag != nsnull, "null SVG tag");
@@ -6865,20 +6867,27 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   //nsSVGTableCreator svgTableCreator(aPresShell); // Used to make table views.
  
   if (aTag == nsSVGAtoms::svg) {
-    // See if the element is absolute or fixed positioned. These
-    // properties only apply to outer SVG elements.
-    const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
-    if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
-      isAbsolutelyPositioned = PR_TRUE;
-    }
-    else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
-      isFixedPositioned = PR_TRUE;
-    }
-    
-    forceView = PR_TRUE;
-    isBlock = PR_TRUE;
+    nsCOMPtr<nsISVGContainerFrame> container = do_QueryInterface(aParentFrame);
     processChildren = PR_TRUE;
-    rv = NS_NewSVGOuterSVGFrame(aPresShell, aContent, &newFrame);
+    if (!container) {
+      // This is the outermost <svg> element.
+      // See if the element is absolute or fixed positioned. These
+      // properties only apply to outer SVG elements.
+      const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
+      if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
+        isAbsolutelyPositioned = PR_TRUE;
+      }
+      else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
+        isFixedPositioned = PR_TRUE;
+      }
+    
+      forceView = PR_TRUE;
+      rv = NS_NewSVGOuterSVGFrame(aPresShell, aContent, &newFrame);
+    }
+    else {
+      // This is an inner <svg> element
+      rv = NS_NewSVGInnerSVGFrame(aPresShell, aContent, &newFrame);
+    }
   }
   else if (aTag == nsSVGAtoms::g) {
     processChildren = PR_TRUE;
@@ -6961,7 +6970,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
       nsFrameItems childItems;
       if (processChildren) {
         rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
-                             newFrame, PR_TRUE, childItems, isBlock);
+                             newFrame, PR_TRUE, childItems, PR_FALSE);
 
         CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                               PR_FALSE, childItems);

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,30 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGVIEWPORTAXIS_H__
-#define __NS_ISVGVIEWPORTAXIS_H__
+#ifndef __NS_NSSVGCOORDCTX_H__
+#define __NS_NSSVGCOORDCTX_H__
 
-#include "nsISupports.h"
-
-class nsIDOMSVGNumber;
+#include "nsCOMPtr.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsSVGNumber.h"
 
 ////////////////////////////////////////////////////////////////////////
-// nsISVGViewportAxis: private interface used as a context for
-// percentage/unit-based calculations on svg lengths
+// nsSVGCoordCtx: ref-counted class used as a context for
+// percentage/unit-based calculation on svg lengths
 
-// {62C247BD-0CF0-43B6-A937-6BD7875B5E0E}
-#define NS_ISVGVIEWPORTAXIS_IID \
-{ 0x62c247bd, 0x0cf0, 0x43b6, { 0xa9, 0x37, 0x6b, 0xd7, 0x87, 0x5b, 0x5e, 0x0e } }
-
-class nsISVGViewportAxis : public nsISupports
+class nsSVGCoordCtx
 {
-  public:
-    static const nsIID& GetIID() { static nsIID iid = NS_ISVGVIEWPORTAXIS_IID; return iid; }
+public:
+  float GetMillimeterPerPixel() { return mmPerPx; }
+  
+  already_AddRefed<nsIDOMSVGNumber> GetLength() {
+    nsIDOMSVGNumber *rv = mLength.get();
+    NS_IF_ADDREF(rv);
+    return rv;
+  }
 
-    NS_IMETHOD GetMillimeterPerPixel(nsIDOMSVGNumber **scale)=0;
-    NS_IMETHOD GetLength(nsIDOMSVGNumber **length)=0;
+  
+  nsrefcnt AddRef() { return ++mRefCnt; }
+  nsrefcnt Release() {
+    --mRefCnt;
+    if (mRefCnt == 0) {
+      mRefCnt = 1; // stabilize
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }  
+  
+protected:
+  friend class nsSVGCoordCtxHolder;
+  
+  nsSVGCoordCtx() : mRefCnt(1) { // addrefs
+    NS_NewSVGNumber(getter_AddRefs(mLength));
+  }
+  
+  PRUint32 mRefCnt;
+  float mmPerPx;
+  nsCOMPtr<nsIDOMSVGNumber> mLength;
 };
 
-#endif // __NS_ISVGVIEWPORTAXIS_H__
-
-
+#endif // __NS_NSSVGCOORDCTX_H__

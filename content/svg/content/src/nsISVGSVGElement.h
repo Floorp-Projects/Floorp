@@ -42,21 +42,21 @@
 #include "nsISupports.h"
 #include "nsIDOMSVGSVGElement.h"
 
-class nsISVGViewportRect;
+class nsSVGCoordCtxProvider;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGSVGElement: private interface implemented by <svg>-elements
 
-// {C82DA355-56DE-4DB0-B7A8-D9750BF0DDD9}
+// {EB4533A1-10F3-4366-88CE-77682D140759}
 #define NS_ISVGSVGELEMENT_IID \
-{ 0xc82da355, 0x56de, 0x4db0, { 0xb7, 0xa8, 0xd9, 0x75, 0x0b, 0xf0, 0xdd, 0xd9 } }
+{ 0xeb4533a1, 0x10f3, 0x4366, { 0x88, 0xce, 0x77, 0x68, 0x2d, 0x14, 0x07, 0x59 } }
 
 class nsISVGSVGElement : public nsIDOMSVGSVGElement
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISVGSVGELEMENT_IID; return iid; }
 
-  NS_IMETHOD GetParentViewportRect(nsISVGViewportRect **parentViewport)=0;
+  NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)=0;
 };
 
 #endif // __NS_ISVGSVGELEMENT__

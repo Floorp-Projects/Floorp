@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,9 +44,9 @@
 class nsISVGGlyphFragmentNode;
 class nsIDOMSVGMatrix;
 
-// {F9F28DFE-50B7-488F-B972-5B268AA5BFCA}
+// {24717461-465F-4575-85B2-923285EC18D5}
 #define NS_ISVGTEXTFRAME_IID \
-{ 0xf9f28dfe, 0x50b7, 0x488f, { 0xb9, 0x72, 0x5b, 0x26, 0x8a, 0xa5, 0xbf, 0xca } }
+{ 0x24717461, 0x465f, 0x4575, { 0x85, 0xb2, 0x92, 0x32, 0x85, 0xec, 0x18, 0xd5 } }
 
 class nsISVGTextFrame : public nsISVGTextContainerFrame
 {
@@ -56,7 +56,6 @@ public:
 
   NS_IMETHOD_(void) NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller)=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller)=0;
-  NS_IMETHOD GetCTM(nsIDOMSVGMatrix **aCTM)=0;
   NS_IMETHOD_(PRBool) IsMetricsSuspended()=0;
   NS_IMETHOD_(PRBool) IsGlyphFragmentTreeSuspended()=0;
 };

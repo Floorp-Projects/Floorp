@@ -43,8 +43,7 @@
 #include "nsSVGAnimatedLengthList.h"
 #include "nsSVGLengthList.h"
 #include "nsISVGSVGElement.h"
-#include "nsISVGViewportAxis.h"
-#include "nsISVGViewportRect.h"
+#include "nsSVGCoordCtxProvider.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
@@ -326,8 +325,8 @@ void nsSVGTextElement::ParentChainChanged()
   GetOwnerSVGElement(getter_AddRefs(dom_elem));
   if (!dom_elem) return;
 
-  nsCOMPtr<nsISVGSVGElement> svg_elem = do_QueryInterface(dom_elem);
-  NS_ASSERTION(svg_elem, "<svg> element missing interface");
+  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(dom_elem);
+  NS_ASSERTION(ctx, "<svg> element missing interface");
 
   // x:
   {
@@ -335,14 +334,8 @@ void nsSVGTextElement::ParentChainChanged()
     mX->GetBaseVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-
-    nsCOMPtr<nsIDOMSVGRect> vp_dom;
-    svg_elem->GetViewport(getter_AddRefs(vp_dom));
-    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
-    nsCOMPtr<nsISVGViewportAxis> ctx;
-    vp->GetXAxis(getter_AddRefs(ctx));
     
-    lengthlist->SetContext(ctx);
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
   }
 
   // y:
@@ -351,14 +344,8 @@ void nsSVGTextElement::ParentChainChanged()
     mY->GetBaseVal(getter_AddRefs(dom_lengthlist));
     nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
     NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-
-    nsCOMPtr<nsIDOMSVGRect> vp_dom;
-    svg_elem->GetViewport(getter_AddRefs(vp_dom));
-    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
-    nsCOMPtr<nsISVGViewportAxis> ctx;
-    vp->GetYAxis(getter_AddRefs(ctx));
     
-    lengthlist->SetContext(ctx);
+    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
   }
 
   // recurse into child content:

@@ -43,7 +43,7 @@
 #include "nsVoidArray.h"
 #include "nsDOMError.h"
 #include "nsReadableUtils.h"
-#include "nsISVGViewportAxis.h"
+#include "nsSVGCoordCtx.h"
 #include "nsCRT.h"
 #include "nsISVGValueUtils.h"
 
@@ -70,7 +70,7 @@ public:
   NS_DECL_NSIDOMSVGLENGTHLIST
 
   // nsISVGLengthList interface:
-  NS_IMETHOD SetContext(nsISVGViewportAxis* context);
+  NS_IMETHOD SetContext(nsSVGCoordCtx* context);
   
   // remainder of nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
@@ -93,7 +93,7 @@ protected:
   void ReleaseLengths();
   
   nsAutoVoidArray mLengths;
-  nsCOMPtr<nsISVGViewportAxis> mContext;
+  nsRefPtr<nsSVGCoordCtx> mContext;
 };
 
 
@@ -277,10 +277,10 @@ nsSVGLengthList::AppendItem(nsIDOMSVGLength *newItem, nsIDOMSVGLength **_retval)
 }
 
 //----------------------------------------------------------------------
-// nsISVGLength methods:
+// nsISVGLengthList methods:
 
 NS_IMETHODIMP
-nsSVGLengthList::SetContext(nsISVGViewportAxis *context)
+nsSVGLengthList::SetContext(nsSVGCoordCtx *context)
 {
   mContext = context;
 

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,7 +65,7 @@ interface nsPresContext;
  *
  * @nosubgrouping
  */
-[scriptable, uuid(d65a8784-5382-4b68-848d-0a91cd096937)]
+[scriptable, uuid(83e8fdb2-d06f-4391-a89d-8f32933262fa)]
 interface nsISVGGeometrySource : nsISupports
 {
   /**
@@ -85,11 +85,11 @@ interface nsISVGGeometrySource : nsISupports
   /** @} */
   
   /**
-   * @name Current transform matrix
+   * @name Canvas transform matrix
    * @{
    */
-  readonly attribute nsIDOMSVGMatrix CTM;
-  const unsigned long UPDATEMASK_CTM               = 0x00000002;
+  readonly attribute nsIDOMSVGMatrix canvasTM;
+  const unsigned long UPDATEMASK_CANVAS_TM               = 0x00000002;
   /** @} */
   
   /**

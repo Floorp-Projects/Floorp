@@ -36,40 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_ISVGVIEWPORTRECT_H__
-#define __NS_ISVGVIEWPORTRECT_H__
+#ifndef __NS_ISVGSVGFRAME_H__
+#define __NS_ISVGSVGFRAME_H__
 
-#include "nsIDOMSVGRect.h"
+#include "nsISupports.h"
 
-class nsISVGViewportAxis;
+class nsIFrame;
+class nsISVGRendererRegion;
+class nsIPresContext;
 
-////////////////////////////////////////////////////////////////////////
-// nsISVGViewportRect: private viewport interface
+// {C38FDFC3-7030-47CB-BA69-D7C5F45E657C}
+#define NS_ISVGSVGFRAME_IID \
+{ 0xc38fdfc3, 0x7030, 0x47cb, { 0xba, 0x69, 0xd7, 0xc5, 0xf4, 0x5e, 0x65, 0x7c } }
 
-// {96547374-899B-434C-9566-0E23C58712F6}
-#define NS_ISVGVIEWPORTRECT_IID \
-{ 0x96547374, 0x899b, 0x434c, { 0x95, 0x66, 0x0e, 0x23, 0xc5, 0x87, 0x12, 0xf6 } }
-
-class nsISVGViewportRect : public nsIDOMSVGRect
-{
+class nsISVGSVGFrame : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGVIEWPORTRECT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGSVGFRAME_IID)
 
-  NS_IMETHOD GetXAxis(nsISVGViewportAxis **xaxis)=0;
-  NS_IMETHOD GetYAxis(nsISVGViewportAxis **yaxis)=0;
-  NS_IMETHOD GetUnspecifiedAxis(nsISVGViewportAxis **axis)=0;
+  NS_IMETHOD SuspendRedraw()=0;        
+  NS_IMETHOD UnsuspendRedraw()=0;      
+  NS_IMETHOD NotifyViewportChange()=0; 
 };
 
-
-//////////////////////////////////////////////////////////////////////
-
-class nsIDOMSVGNumber;
-
-extern nsresult
-NS_NewSVGViewportRect(nsISVGViewportRect **result,
-                      nsIDOMSVGNumber* scalex,
-                      nsIDOMSVGNumber* scaley,
-                      nsIDOMSVGNumber* lengthx,
-                      nsIDOMSVGNumber* lengthy);
-
-#endif // __NS_ISVGVIEWPORTRECT_H__
+#endif // __NS_ISVGSVGFRAME_H__

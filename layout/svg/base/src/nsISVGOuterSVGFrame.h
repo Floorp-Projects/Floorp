@@ -39,18 +39,18 @@
 #ifndef __NS_ISVGOUTERSVGFRAME_H__
 #define __NS_ISVGOUTERSVGFRAME_H__
 
-#include "nsISupports.h"
+#include "nsISVGSVGFrame.h"
 
 class nsISVGRenderer;
 class nsIFrame;
 class nsISVGRendererRegion;
 class nsPresContext;
 
-// {760AC5FE-E33B-4A8A-95D2-5B238A628AAE}
+// {5A889B3C-A235-41E2-8AB4-65547FCC79DB}
 #define NS_ISVGOUTERSVGFRAME_IID \
-{ 0x760ac5fe, 0xe33b, 0x4a8a, { 0x95, 0xd2, 0x5b, 0x23, 0x8a, 0x62, 0x8a, 0xae } }
+{ 0x5a889b3c, 0xa235, 0x41e2, { 0x8a, 0xb4, 0x65, 0x54, 0x7f, 0xcc, 0x79, 0xdb } }
 
-class nsISVGOuterSVGFrame : public nsISupports {
+class nsISVGOuterSVGFrame : public nsISVGSVGFrame {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGOUTERSVGFRAME_IID)
 

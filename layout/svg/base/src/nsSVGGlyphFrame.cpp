@@ -100,7 +100,7 @@ public:
   NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
@@ -371,9 +371,9 @@ nsSVGGlyphFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::NotifyCTMChanged()
+nsSVGGlyphFrame::NotifyCanvasTMChanged()
 {
-  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_CTM);
+  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
   
   return NS_OK;
 }
@@ -435,16 +435,22 @@ nsSVGGlyphFrame::GetPresContext(nsPresContext * *aPresContext)
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGMatrix CTM; */
+/* readonly attribute nsIDOMSVGMatrix canvasTM; */
 NS_IMETHODIMP
-nsSVGGlyphFrame::GetCTM(nsIDOMSVGMatrix * *aCTM)
+nsSVGGlyphFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
-  *aCTM = nsnull;
+  NS_ASSERTION(mParent, "null parent");
   
-  nsISVGTextFrame * textframe = GetTextFrame();
-  NS_ASSERTION(textframe, "null textframe");
-  
-  return textframe->GetCTM(aCTM);  
+  nsISVGContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+  if (!containerFrame) {
+    NS_ERROR("invalid container");
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
+  *aCTM = parentTM.get();
+  NS_ADDREF(*aCTM);
+  return NS_OK;
 }
 
 /* readonly attribute float strokeOpacity; */

@@ -39,8 +39,11 @@
 #include "nsSVGRect.h"
 #include "prdtoa.h"
 #include "nsSVGValue.h"
+#include "nsISVGValueUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCRT.h"
+#include "nsWeakReference.h"
+#include "nsIDOMSVGLength.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGRect class
@@ -49,13 +52,8 @@ class nsSVGRect : public nsIDOMSVGRect,
                   public nsSVGValue
 {
 public:
-  static nsresult Create(nsIDOMSVGRect** result,
-                         float x=0.0f, float y=0.0f,
-                         float w=0.0f, float h=0.0f);
-protected:
-  nsSVGRect(float x, float y, float w, float h);
-
-public:
+  nsSVGRect(float x, float y, float w, float h); // addrefs
+  
   // nsISupports interface:
   NS_DECL_ISUPPORTS
 
@@ -74,20 +72,8 @@ protected:
 //----------------------------------------------------------------------
 // implementation:
 
-nsresult
-nsSVGRect::Create(nsIDOMSVGRect** result,
-                        float x, float y, float w, float h)
-{
-  *result = (nsIDOMSVGRect*) new nsSVGRect(x,y,w,h);
-  if(!*result) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-
-
-nsSVGRect::nsSVGRect(float x, float y, float w, float h)
-    : mX(x), mY(y), mWidth(w), mHeight(h)
+nsSVGRect::nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f)
+    : mRefCnt(1), mX(x), mY(y), mWidth(w), mHeight(h)
 {
 }
 
@@ -219,179 +205,141 @@ NS_IMETHODIMP nsSVGRect::SetHeight(float aHeight)
 
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGRect prototype wrapper class
-// delegates all 'getter' calls to the given prototype if the property
-// hasn't been set on the object directly
+// nsSVGViewBox : a special kind of nsIDOMSVGRect that defaults to
+// (0,0,viewportWidth.value,viewportHeight.value) until set explicitly.
 
-class nsSVGRectPrototypeWrapper : public nsIDOMSVGRect,
-                                  public nsSVGValue
+class nsSVGViewBox : public nsSVGRect,
+                     public nsISVGValueObserver,
+                     public nsSupportsWeakReference
 {
 public:
-  static nsresult Create(nsIDOMSVGRect** result,
-                         nsIDOMSVGRect* prototype,
-                         nsIDOMSVGRect* body=nsnull);
-protected:
-  nsSVGRectPrototypeWrapper(nsIDOMSVGRect* prototype,
-                            nsIDOMSVGRect* body);
-  virtual ~nsSVGRectPrototypeWrapper();
+  nsSVGViewBox(nsIDOMSVGLength* viewportWidth,
+               nsIDOMSVGLength* viewportHeight); // addrefs
+  virtual ~nsSVGViewBox();
 
-public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
+  
+  // nsISVGValueObserver interface:
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
 
-  // nsIDOMSVGRect interface:
-  NS_DECL_NSIDOMSVGRECT
+  // nsIDOMSVGRect specializations:
+  NS_IMETHOD SetX(float aX);
+  NS_IMETHOD SetY(float aY);
+  NS_IMETHOD SetWidth(float aWidth);
+  NS_IMETHOD SetHeight(float aHeight);
 
-  // nsISVGValue interface:
+  // nsISVGValue specializations:
   NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-
-
-protected:
-  void EnsureBody();
-  nsIDOMSVGRect* Delegate() { return mBody ? mBody.get() : mPrototype.get(); }
-
-  nsCOMPtr<nsIDOMSVGRect> mPrototype;
-  nsCOMPtr<nsIDOMSVGRect> mBody;
+  
+private:
+  void MarkSet();
+  
+  PRBool mIsSet;
+  nsCOMPtr<nsIDOMSVGLength> mViewportWidth;
+  nsCOMPtr<nsIDOMSVGLength> mViewportHeight;
 };
 
 //----------------------------------------------------------------------
 // implementation:
-
-nsresult
-nsSVGRectPrototypeWrapper::Create(nsIDOMSVGRect** result,
-                                  nsIDOMSVGRect* prototype,
-                                  nsIDOMSVGRect* body)
+nsSVGViewBox::nsSVGViewBox(nsIDOMSVGLength* viewportWidth, nsIDOMSVGLength* viewportHeight)
+    : mIsSet(PR_FALSE),
+      mViewportWidth(viewportWidth),
+      mViewportHeight(viewportHeight)
 {
-  *result = (nsIDOMSVGRect*) new nsSVGRectPrototypeWrapper(prototype, body);
-  if(!*result) return NS_ERROR_OUT_OF_MEMORY;
+  mViewportWidth->GetValue(&mWidth);
+  mViewportHeight->GetValue(&mHeight);
+  NS_ADD_SVGVALUE_OBSERVER(mViewportWidth);
+  NS_ADD_SVGVALUE_OBSERVER(mViewportHeight);
+}
 
-  NS_ADDREF(*result);
+nsSVGViewBox::~nsSVGViewBox()
+{
+  if (!mIsSet) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mViewportWidth);
+    NS_REMOVE_SVGVALUE_OBSERVER(mViewportHeight);
+  }
+}
+
+void nsSVGViewBox::MarkSet()
+{
+  if (mIsSet) return;
+  mIsSet = PR_TRUE;
+  NS_REMOVE_SVGVALUE_OBSERVER(mViewportWidth);
+  NS_REMOVE_SVGVALUE_OBSERVER(mViewportHeight);
+}
+
+//----------------------------------------------------------------------
+// nsISupports:
+
+NS_IMPL_ADDREF_INHERITED(nsSVGViewBox, nsSVGRect)
+NS_IMPL_RELEASE_INHERITED(nsSVGViewBox, nsSVGRect)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGViewBox)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGRect)
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGViewBox::WillModifySVGObservable(nsISVGValue* observable)
+{
   return NS_OK;
 }
 
-nsSVGRectPrototypeWrapper::nsSVGRectPrototypeWrapper(nsIDOMSVGRect* prototype,
-                                                     nsIDOMSVGRect* body)
-    : mPrototype(prototype), mBody(body)
-{
-  NS_ASSERTION(mPrototype, "need prototype");
-}
-
-nsSVGRectPrototypeWrapper::~nsSVGRectPrototypeWrapper()
-{
-//   if (mBody) {
-//     nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBody);
-//     if (val)
-//       val->RemoveObserver(this);
-//   }
-}
-
-void nsSVGRectPrototypeWrapper::EnsureBody()
-{
-  if (mBody) return;
-
-  nsSVGRect::Create(getter_AddRefs(mBody));
-  NS_ASSERTION(mBody, "couldn't create body");
-//   nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBody);
-//   if (val)
-//     val->AddObserver(this);
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_IMPL_ADDREF(nsSVGRectPrototypeWrapper)
-NS_IMPL_RELEASE(nsSVGRectPrototypeWrapper)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGRectPrototypeWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGRect)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGRect)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
-NS_INTERFACE_MAP_END
-
-//----------------------------------------------------------------------
-// nsISVGValue methods:
-
 NS_IMETHODIMP
-nsSVGRectPrototypeWrapper::SetValueString(const nsAString& aValue)
+nsSVGViewBox::DidModifySVGObservable(nsISVGValue* observable)
 {
+  NS_ASSERTION(!mIsSet, "inconsistent state");
   WillModify();
-  EnsureBody();
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBody);
-  NS_ASSERTION(val, "missing interface on body");
-
-  nsresult rv = val->SetValueString(aValue);
+  mViewportWidth->GetValue(&mWidth);
+  mViewportHeight->GetValue(&mHeight);  
   DidModify();
-  return rv;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMSVGRect specializations:
+NS_IMETHODIMP
+nsSVGViewBox::SetX(float aX)
+{
+  MarkSet();
+  return nsSVGRect::SetX(aX);
 }
 
 NS_IMETHODIMP
-nsSVGRectPrototypeWrapper::GetValueString(nsAString& aValue)
+nsSVGViewBox::SetY(float aY)
 {
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface( Delegate() );
-  NS_ASSERTION(val, "missing interface on body");
-
-  return val->GetValueString(aValue);
+  MarkSet();
+  return nsSVGRect::SetY(aY);
 }
+
+NS_IMETHODIMP
+nsSVGViewBox::SetWidth(float aWidth)
+{
+  MarkSet();
+  return nsSVGRect::SetWidth(aWidth);
+}
+
+NS_IMETHODIMP
+nsSVGViewBox::SetHeight(float aHeight)
+{
+  MarkSet();
+  return nsSVGRect::SetHeight(aHeight);
+}
+
 
 //----------------------------------------------------------------------
-// nsIDOMSVGRect methods:
+// nsISVGValue specializations:
 
-/* attribute float x; */
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::GetX(float *aX)
+NS_IMETHODIMP
+nsSVGViewBox::SetValueString(const nsAString& aValue)
 {
-  return Delegate()->GetX(aX);
-}
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::SetX(float aX)
-{
-  WillModify();
-  EnsureBody();
-  nsresult rv =  mBody->SetX(aX);
-  DidModify();
-  return rv;
-}
-
-/* attribute float y; */
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::GetY(float *aY)
-{
-  return Delegate()->GetY(aY);
-}
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::SetY(float aY)
-{
-  WillModify();
-  EnsureBody();
-  nsresult rv = mBody->SetY(aY);
-  DidModify();
-  return rv;
-}
-
-/* attribute float width; */
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::GetWidth(float *aWidth)
-{
-  return Delegate()->GetWidth(aWidth);
-}
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::SetWidth(float aWidth)
-{
-  WillModify();
-  EnsureBody();
-  nsresult rv = mBody->SetWidth(aWidth);
-  DidModify();
-  return rv;
-}
-
-/* attribute float height; */
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::GetHeight(float *aHeight)
-{
-  return Delegate()->GetHeight(aHeight);
-}
-NS_IMETHODIMP nsSVGRectPrototypeWrapper::SetHeight(float aHeight)
-{
-  WillModify();
-  EnsureBody();
-  nsresult rv = mBody->SetHeight(aHeight);
-  DidModify();
-  return rv;
+  MarkSet();
+  return nsSVGRect::SetValueString(aValue);
 }
 
 
@@ -402,12 +350,24 @@ nsresult
 NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
               float width, float height)
 {
-  return nsSVGRect::Create(result, x, y, width, height);
+  *result = new nsSVGRect(x, y, width, height); // ctor addrefs
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 nsresult
-NS_NewSVGRectPrototypeWrapper(nsIDOMSVGRect** result,
-                              nsIDOMSVGRect* prototype)
+NS_NewSVGViewBox(nsIDOMSVGRect** result,
+                 nsIDOMSVGLength *viewportWidth,
+                 nsIDOMSVGLength *viewportHeight)
 {
-  return nsSVGRectPrototypeWrapper::Create(result, prototype);
+  if (!viewportHeight || !viewportWidth) {
+    NS_ERROR("need viewport height/width for viewbox");
+    return NS_ERROR_FAILURE;
+  }
+  
+  *result = new nsSVGViewBox(viewportWidth, viewportHeight); // ctor addrefs
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;  
 }

@@ -120,13 +120,15 @@ public:
   NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
-  NS_IMETHOD_(nsISVGOuterSVGFrame *) GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *GetOuterSVGFrame();
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   
   // nsISVGTextContainerFrame interface:
   NS_IMETHOD_(nsISVGTextFrame *) GetTextFrame();
@@ -153,7 +155,6 @@ protected:
 private:
   PRUint32 mCharOffset; // index of first character of this node relative to the enclosing <text>-element
   PRBool mFragmentTreeDirty; 
-  
 };
 
 //----------------------------------------------------------------------
@@ -367,7 +368,7 @@ nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable)
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCTMChanged(); // XXX
+      SVGFrame->NotifyCanvasTMChanged(); // XXX
     kid = kid->GetNextSibling();
   }  
   return NS_OK;
@@ -464,14 +465,14 @@ nsSVGTSpanFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::NotifyCTMChanged()
+nsSVGTSpanFrame::NotifyCanvasTMChanged()
 {
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCTMChanged();
+      SVGFrame->NotifyCanvasTMChanged();
     }
     kid = kid->GetNextSibling();
   }
@@ -571,7 +572,7 @@ nsSVGTSpanFrame::GetBBox(nsIDOMSVGRect **_retval)
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
 
-NS_IMETHODIMP_(nsISVGOuterSVGFrame *)
+nsISVGOuterSVGFrame *
 nsSVGTSpanFrame::GetOuterSVGFrame()
 {
   NS_ASSERTION(mParent, "null parent");
@@ -585,6 +586,37 @@ nsSVGTSpanFrame::GetOuterSVGFrame()
 
   return containerFrame->GetOuterSVGFrame();  
 }
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGTSpanFrame::GetCanvasTM()
+{
+  NS_ASSERTION(mParent, "null parent");
+  
+  nsISVGContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+  if (!containerFrame) {
+    NS_ERROR("invalid container");
+    return nsnull;
+  }
+
+  return containerFrame->GetCanvasTM();  
+}
+
+already_AddRefed<nsSVGCoordCtxProvider>
+nsSVGTSpanFrame::GetCoordContextProvider()
+{
+  NS_ASSERTION(mParent, "null parent");
+  
+  nsISVGContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+  if (!containerFrame) {
+    NS_ERROR("invalid container");
+    return nsnull;
+  }
+
+  return containerFrame->GetCoordContextProvider();  
+}
+
 
 //----------------------------------------------------------------------
 // nsISVGTextContainerFrame methods:

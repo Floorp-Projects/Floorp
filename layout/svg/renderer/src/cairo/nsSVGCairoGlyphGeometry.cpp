@@ -340,7 +340,7 @@ void
 nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  mSource->GetCTM(getter_AddRefs(ctm));
+  mSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
   
   float m[6];

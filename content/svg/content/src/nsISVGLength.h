@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,21 +41,21 @@
 
 #include "nsIDOMSVGLength.h"
 
-class nsISVGViewportAxis;
+class nsSVGCoordCtx;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGLength: private interface for svg lengths
 
-// {4DA3041C-7A32-4F81-A44F-E468D025AD7C}
+// {ADFA6DD4-7E59-4FA2-BF55-BCE7D40C9F88}
 #define NS_ISVGLENGTH_IID \
-{ 0x4da3041c, 0x7a32, 0x4f81, { 0xa4, 0x4f, 0xe4, 0x68, 0xd0, 0x25, 0xad, 0x7c } }
+{ 0xadfa6dd4, 0x7e59, 0x4fa2, { 0xbf, 0x55, 0xbc, 0xe7, 0xd4, 0x0c, 0x9f, 0x88 } }
 
 class nsISVGLength : public nsIDOMSVGLength
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGLENGTH_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGLENGTH_IID)
 
-  NS_IMETHOD SetContext(nsISVGViewportAxis* axis)=0;
+  NS_IMETHOD SetContext(nsSVGCoordCtx* ctx)=0;
 };
 
 
