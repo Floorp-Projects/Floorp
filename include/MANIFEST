@@ -29,7 +29,6 @@ libevent.h
 libi18n.h
 libmime.h
 libmocha.h
-libnet.h
 libstyle.h
 lo_ele.h
 mcom_ndbm.h
