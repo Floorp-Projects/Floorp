@@ -27,27 +27,38 @@
 #include "nsIEnumerator.h"
 #include "nsISupportsArray.h"
 
+// {E777D484-E6E3-11d2-8ACD-00105A1B8860}
+#define NS_OBSERVERLIST_CID \
+{ 0xe777d484, 0xe6e3, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
-class nsObserverList : public nsIObserverList {
+class nsObserverList : public nsIObserverList
+{
 public:
 
-    NS_IMETHOD AddObserver(nsIObserver** anObserver);
-    NS_IMETHOD RemoveObserver(nsIObserver** anObserver);
+               nsObserverList();
+    virtual    ~nsObserverList();
+
+ 		NS_DEFINE_STATIC_CID_ACCESSOR(NS_OBSERVERLIST_CID);
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD AddObserver(nsIObserver* anObserver);
+    NS_IMETHOD RemoveObserver(nsIObserver* anObserver);
 
 	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator);
 
-    nsObserverList();
-    virtual ~nsObserverList(void);
+public:
+
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+     
+protected:
 
     // This is ObserverList monitor object.
     PRLock* mLock;
-     
-    NS_DECL_ISUPPORTS
-
    
 private:
 
- 	nsISupportsArray *mObserverList;
+ 	  nsCOMPtr<nsISupportsArray>  mObserverList;
 
 };
 

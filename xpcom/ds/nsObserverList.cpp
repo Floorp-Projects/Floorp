@@ -25,12 +25,12 @@
 #define NS_IMPL_IDS
 #include "pratom.h"
 #include "nsIObserverList.h"
-#include "nsObserverList.h"
 #include "nsString.h"
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsIWeakReference.h"
 
+#include "nsObserverList.h"
 
 #define NS_AUTOLOCK(__monitor) nsAutoLock __lock(__monitor)
 
@@ -173,8 +173,7 @@ NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList)
 }
 
 nsObserverList::nsObserverList()
-    : mLock(nsnull),
-        mObserverList(NULL)
+    : mLock(nsnull)
 {
     NS_INIT_REFCNT();
     mLock = PR_NewLock();
@@ -183,34 +182,30 @@ nsObserverList::nsObserverList()
 nsObserverList::~nsObserverList(void)
 {
     PR_DestroyLock(mLock);
-    NS_IF_RELEASE(mObserverList);
 }
 
 
-nsresult nsObserverList::AddObserver(nsIObserver** anObserver)
+NS_IMETHODIMP nsObserverList::AddObserver(nsIObserver* anObserver)
 {
 	nsresult rv;
 	PRBool inserted;
     
+  NS_ENSURE_ARG(anObserver);
+
 	NS_AUTOLOCK(mLock);
 
-    if (anObserver == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }  
-
-	if(!mObserverList) {
-        rv = NS_NewISupportsArray(&mObserverList);
+	if (!mObserverList) {
+    rv = NS_NewISupportsArray(getter_AddRefs(mObserverList));
 		if (NS_FAILED(rv)) return rv;
     }
 
 #ifdef NS_WEAK_OBSERVERS
-  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(*anObserver);
+  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(anObserver);
   nsCOMPtr<nsISupports> observerRef;
   if ( weakRefFactory )
   	observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
   else
-  	observerRef = *anObserver;
+  	observerRef = anObserver;
 
 	if(observerRef) {
 		inserted = mObserverList->AppendElement(observerRef); 
@@ -224,28 +219,24 @@ nsresult nsObserverList::AddObserver(nsIObserver** anObserver)
 	return NS_ERROR_FAILURE;
 }
 
-nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
+NS_IMETHODIMP nsObserverList::RemoveObserver(nsIObserver* anObserver)
 {
 	PRBool removed;
 
+  NS_ENSURE_ARG(anObserver);
+
  	NS_AUTOLOCK(mLock);
 
-    if (anObserver == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }  
-
-    if(!mObserverList) {
+ if (!mObserverList)
         return NS_ERROR_FAILURE;
-    }
 
 #ifdef NS_WEAK_OBSERVERS
-  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(*anObserver);
+  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(anObserver);
   nsCOMPtr<nsISupports> observerRef;
   if ( weakRefFactory )
   	observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
   else
-  	observerRef = *anObserver;
+  	observerRef = anObserver;
 
 	if(observerRef) {
 		removed = mObserverList->RemoveElement(observerRef);  
@@ -257,21 +248,16 @@ nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
     }
 
     return NS_ERROR_FAILURE;
-
 }
 
 NS_IMETHODIMP nsObserverList::EnumerateObserverList(nsIEnumerator** anEnumerator)
 {
 	NS_AUTOLOCK(mLock);
 
-    if (anEnumerator == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
+  NS_ENSURE_ARG(anEnumerator);
 
-    if(!mObserverList) {
+ if (!mObserverList)
         return NS_ERROR_FAILURE;
-    }
 
 #ifdef NS_WEAK_OBSERVERS
 	nsCOMPtr<nsIBidirectionalEnumerator> enumerator = new nsObserverListEnumerator(mObserverList);
@@ -284,3 +270,23 @@ NS_IMETHODIMP nsObserverList::EnumerateObserverList(nsIEnumerator** anEnumerator
 #endif
 }
 
+
+//----------------------------------------------------------------------------------------
+NS_METHOD nsObserverList::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
+//----------------------------------------------------------------------------------------
+{
+  if (aInstancePtr == NULL)
+    return NS_ERROR_NULL_POINTER;
+
+	nsObserverList* it = new nsObserverList;
+  if (!it)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = it->QueryInterface(aIID, aInstancePtr);
+  if (NS_FAILED(rv))
+  {
+    delete it;
+    return rv;
+  }
+  return rv;
+}

@@ -33,20 +33,19 @@
 #define NS_IOBSERVERLIST_IID \
 { 0xe777d482, 0xe6e3, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
-// {E777D484-E6E3-11d2-8ACD-00105A1B8860}
-#define NS_OBSERVERLIST_CID \
-{ 0xe777d484, 0xe6e3, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
-
 class nsIObserverList : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IOBSERVERLIST_IID; return iid; }
     
-    NS_IMETHOD AddObserver(nsIObserver** anObserver) = 0;
-    NS_IMETHOD RemoveObserver(nsIObserver** anObserver) = 0;
+    NS_IMETHOD AddObserver(nsIObserver* anObserver) = 0;
+    NS_IMETHOD RemoveObserver(nsIObserver* anObserver) = 0;
 	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator) = 0;
    
 };
 
 extern NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList);
+
+#define NS_OBSERVERLIST_CONTRACTID "@mozilla.org/xpcom/observer-list;1"
+#define NS_OBSERVERLIST_CLASSNAME "Observer List"
 
 #endif /* nsIObserverList_h__ */
