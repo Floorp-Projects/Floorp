@@ -83,7 +83,8 @@ const MT_FEVAL_OUT = "FEVAL-OUT";
 const exceptionMsgNames = ["err.notimplemented", 
                            "err.required.param",
                            "err.invalid.param",
-                           "err.subscript.load"];
+                           "err.subscript.load",
+                           "err.no.debugger"];
 
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
@@ -164,6 +165,8 @@ const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
 const MSN_CMDMATCH           = "msg.commandmatch";
 const MSN_CMDMATCH_ALL       = "msg.commandmatch.all";
+const MSN_PROPS_HEADER       = "msg.props.header";
+const MSN_PROPSD_HEADER      = "msg.propsd.header";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
