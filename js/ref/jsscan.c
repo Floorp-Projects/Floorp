@@ -514,7 +514,10 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
 	    fprintf(stderr, "line %u: ", ts->lineno);
-	fprintf(stderr, "%s:\n%s\n", message, ts->linebuf.base);
+	fprintf(stderr, "%s:\n%s\n",message,
+                js_DeflateString(cx, ts->linebuf.base,
+                                 ts->linebuf.limit - ts->linebuf.base));
+        
 #endif
     }
     if (lastc == '\n')
