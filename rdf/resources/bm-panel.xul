@@ -14,7 +14,6 @@
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
   <treehead>
     <treeitem>
       <treecell onclick="return doSort('NameColumn');">
@@ -25,10 +24,6 @@
 	<observes element="URLColumn" attribute="sortActive"/>
 	<observes element="URLColumn" attribute="sortDirection"/>
       URL</treecell>
-      <treecell onclick="return doSort('ShortcutURLColumn');">
-	<observes element="ShortcutURLColumn" attribute="sortActive"/>
-	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
-      Shortcut URL</treecell>
     </treeitem>
   </treehead>
 
