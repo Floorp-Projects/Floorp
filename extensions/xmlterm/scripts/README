@@ -1,0 +1,8 @@
+scripts --- Scripts for use under XMLterm
+
+
+xmlterm         Helper script to launch XMLTerm chrome using mozilla (sh)
+
+xcat            XMLTerm aware UNIX "cat" command (Perl)
+
+xls             XMLTerm aware UNIX "ls" command (Perl)
