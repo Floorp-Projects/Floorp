@@ -47,8 +47,8 @@ printStatus (summary);
 expect = 'TypeError:51';
 try
 {
-  var obj = {toString: function() {return new Object();}}
-  obj();
+  var obj = {toString: function() {return new Object();}};
+  var result = String(obj);
   actual = 'no error';
 }
 catch(e)
