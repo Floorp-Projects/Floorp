@@ -1,0 +1,32 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+[object, uuid(921AC210-96B5-11d2-B7EB-00805F05FFA5)]
+interface nsIMsgOfflineNewsState : nsISupports {
+
+    /* outputBuffer is actually
+     * a buffer to dump data into, but we normally pass it NET_Socket_Buffer,
+     * which is constant. The implementation should only allocate a new
+     * buffer if *outputBuffer is NULL.
+     */
+    long Process(out string outputBuffer, in long bufferSize);
+    long Interrupt();
+};
+
