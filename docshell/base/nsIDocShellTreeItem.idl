@@ -82,9 +82,40 @@ interface nsIDocShellTreeItem : nsISupports
 	there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
+
+	/*
+	Returns the docShellTreeItem with the specified name.  Search order is as 
+	follows...
+	1.)  For each immediate child.
+		a.) Check name of child and if it matches return it.
+		b.)  Ask the child to perform the check
+			i.) Do not ask a child if it is the aRequestor
+			ii.) Do not ask a child if it is of a different item type.
+	2.)  If there is a parent of the same item type ask parent to perform the check
+		a.) Do not ask parent if it is the aRequestor
+	3.)  If there is a tree owner ask the tree owner to perform the check
+		a.)  This should only be done if there is no parent of the same type.
+
+	Return the child DocShellTreeItem with the specified name.
+	name - This is the name of the item that is trying to be found.
+	aRequestor - This is the docshellTreeItem that is requesting the find.  This
+		parameter is used to identify when the child is asking it's parent to find
+		a child with the specific name.  The parent uses this parameter to ensure
+		a resursive state does not occur by not again asking the requestor for find
+		a shell by the specified name.  Inversely the child uses it to ensure it
+		does not ask it's parent to do the search if it's parent is the one that
+		asked it to search.
+	*/
+	nsIDocShellTreeItem findItemWithName(in wstring name, in nsIDocShellTreeItem aRequestor);
+
 	/*
 	The owner of the DocShell Tree.  This interface will be called upon when
 	the docshell has things it needs to tell to the owner of the docshell.
+	Note that docShell tree ownership does not cross tree types.  Meaning
+	setting ownership on a chrome tree does not set ownership on the content 
+	sub-trees.  A given tree's boundaries are identified by the type changes.
+	Trees of different types may be connected, but should not be traversed
+	for things such as ownership.
 	
 	Note implementers of this interface should NOT effect the lifetime of the 
 	parent DocShell by holding this reference as it creates a cycle.  Owners
