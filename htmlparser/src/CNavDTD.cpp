@@ -25,7 +25,6 @@
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
-#include "nsTokenHandler.h"
 #include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -59,9 +58,11 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static char*        kVerificationDir = "c:/temp";
-static char         gShowCRC=0;
 static CTokenRecycler* gRecycler=0;
- 
+
+#ifdef  RICKG_DEBUG
+static char         gShowCRC=0;
+#endif 
 
 static eHTMLTags gFormElementTags[]= {  
     eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
@@ -231,112 +232,6 @@ NS_IMPL_ADDREF(CNavDTD)
 NS_IMPL_RELEASE(CNavDTD)
 
 
-
-/**
- *  
- *  
- *  @update  gess 6/9/98
- *  @param   
- *  @return  
- */
-static
-PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
-  PRInt32         result=0;
-  CHTMLToken*     theToken= (CHTMLToken*)(aToken);
-  eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
-  CNavDTD*        theDTD=(CNavDTD*)aDTD;
-  
-  if(aDTD) {
-    switch(theType) {
-      case eToken_start:
-      case eToken_whitespace: 
-      case eToken_newline:
-      case eToken_text:
-        result=theDTD->HandleStartToken(aToken); break;
-      case eToken_end:
-        result=theDTD->HandleEndToken(aToken); break;
-      case eToken_comment:
-        result=theDTD->HandleCommentToken(aToken); break;
-      case eToken_entity:
-        result=theDTD->HandleEntityToken(aToken); break;
-      case eToken_attribute:
-        result=theDTD->HandleAttributeToken(aToken); break;
-      case eToken_style:
-        result=theDTD->HandleStyleToken(aToken); break;
-      case eToken_instruction:
-        result=theDTD->HandleProcessingInstructionToken(aToken); break;
-      case eToken_doctypeDecl:
-        result=theDTD->HandleDocTypeDeclToken(aToken); break;
-      default:
-        result=0;
-    }//switch
-  }//if
-  return result;
-}
-
-/**
- *  Register a handler.
- *  
- *  @update  gess 4/2/98
- *  @param   
- *  @return  
- */
-CITokenHandler* CNavDTD::AddTokenHandler(CITokenHandler* aHandler) {
-  NS_ASSERTION(0!=aHandler,"Error: Null handler");
-  
-  if(aHandler)  {
-    eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
-    if(type<eToken_last) {
-      mTokenHandlers[type]=aHandler;
-    }
-    else {
-      //add code here to handle dynamic tokens...
-    }
-  }
-  return 0;
-}
-
-/**
- *  init the set of default token handlers...
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-void CNavDTD::InitializeDefaultTokenHandlers() {
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_start));
-
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_end));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_comment));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_entity));
-
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_whitespace));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_newline));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_text));
-  
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_attribute));
-//  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_script));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_style));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_skippedcontent));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_instruction));
-  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_doctypeDecl));
-}
-
-/**
- *  Finds a tag handler for the given tag type, given in string.
- *  
- *  @update  gess 4/2/98
- *  @param   aString contains name of tag to be handled
- *  @return  valid tag handler (if found) or null
- */
-void CNavDTD::DeleteTokenHandlers(void) {
-  for(int i=eToken_unknown;i<eToken_last;i++){
-    delete mTokenHandlers[i];
-    mTokenHandlers[i]=0;
-  }
-}
-
-
 /**
  *  Default constructor
  *   
@@ -350,12 +245,10 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mParser=0;       
   mDTDDebug=0;   
   mLineNumber=1;  
-  nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenBody=PR_FALSE;
   mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
-  InitializeDefaultTokenHandlers(); 
   mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
   mFormContext=0;
@@ -365,12 +258,18 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mExpectedCRC32=0;
   mSaveBadTokens = PR_FALSE;
   mDTDState=NS_OK;
+
+  if(!gHTMLElements) {
+    InitializeElementTable();
+  }
+
 //  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 #ifdef  RICKG_DEBUG
   nsHTMLElement::DebugDumpContainment("c:/temp/rules.new","ElementTable Rules");
   nsHTMLElement::DebugDumpMembership("c:/temp/table.out");
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
+
 }
 
 
@@ -399,7 +298,7 @@ void CNavDTD::RecycleNode(nsCParserNode* aNode) {
 
 /**
  * 
- * @update	gess1/8/99
+ * @update  gess1/8/99
  * @param 
  * @return
  */
@@ -415,7 +314,6 @@ const nsIID& CNavDTD::GetMostDerivedIID(void)const {
  *  @return  
  */
 CNavDTD::~CNavDTD(){
-  DeleteTokenHandlers();
   delete mHeadContext;
   delete mBodyContext;
   if(mTokenizer)
@@ -543,9 +441,9 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   * as you can. Not all tokens may make sense, so you may not be able to
   * read them all (until more come in later).
   *
-  * @update	gess5/18/98
-  * @param	aParser is the parser object that's driving this process
-  * @return	error code (almost always NS_OK)
+  * @update gess5/18/98
+  * @param  aParser is the parser object that's driving this process
+  * @return error code (almost always NS_OK)
   */
 nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
@@ -693,6 +591,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         execSkipContent=PR_TRUE;
         gRecycler->RecycleToken(aToken);
         theToken=(CHTMLToken*)mSkippedContent.PopFront();
+        theType=eToken_start;
         // result=HandleStartToken(theToken);
       }
       else {
@@ -729,6 +628,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 mTokenizer->PushTokenFront(aToken); //put this token back...
                 mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
                 theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theTag=eHTMLTag_body);
+                theType=eToken_start;
                 //now open a body...
               }
             }
@@ -748,30 +648,55 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       }
       else {
 
-        CITokenHandler* theHandler=GetTokenHandler(theType);
-        if(theHandler) {
-          mParser=(nsParser*)aParser;
-          result=(*theHandler)(theToken,this);
-          if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-            if(theToken->mRecycle)
-              gRecycler->RecycleToken(theToken);
-          }
-          else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
-            return result;
-          else return NS_OK;
-          /*************************************************************/
-           // CAUTION: Here we are forgetting to push the ATTRIBUTE Tokens.
-           //          So, before you uncomment this part please make sure
-           //          that the attribute tokens are also accounted for.
-          
-           //else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
-           //  mTokenizer->PushTokenFront(theToken);
-           //else result=NS_OK;
-          /***************************************************************/
-          if (mDTDDebug) {
-             //mDTDDebug->Verify(this, mParser, mBodyContext->GetCount(), mBodyContext->mStack, mFilename);
-          }
-        } //if
+        mParser=(nsParser*)aParser;
+
+        switch(theType) {
+          case eToken_start:
+          case eToken_whitespace: 
+          case eToken_newline:
+          case eToken_text:
+            result=HandleStartToken(theToken); break;
+          case eToken_end:
+            result=HandleEndToken(theToken); break;
+          case eToken_comment:
+            result=HandleCommentToken(theToken); break;
+          case eToken_entity:
+            result=HandleEntityToken(theToken); break;
+          case eToken_attribute:
+            result=HandleAttributeToken(theToken); break;
+          case eToken_style:
+            result=HandleStyleToken(theToken); break;
+          case eToken_instruction:
+            result=HandleProcessingInstructionToken(theToken); break;
+          case eToken_doctypeDecl:
+            result=HandleDocTypeDeclToken(theToken); break;
+          default:
+            break;
+        }//switch
+
+
+        if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
+          if(theToken->mRecycle)
+            gRecycler->RecycleToken(theToken);
+        }
+        else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
+          return result;
+        else return NS_OK;
+
+        /*************************************************************/
+         // CAUTION: Here we are forgetting to push the ATTRIBUTE Tokens.
+         //          So, before you uncomment this part please make sure
+         //          that the attribute tokens are also accounted for.
+        
+         //else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
+         //  mTokenizer->PushTokenFront(theToken);
+         //else result=NS_OK;
+        /***************************************************************/
+#if 0
+        if (mDTDDebug) {
+          mDTDDebug->Verify(this, mParser, mBodyContext->GetCount(), mBodyContext->mStack, mFilename);
+        }
+#endif
       }
     }
 
@@ -784,7 +709,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
  *
  *  @update  gess 3/25/98
  *  @param   aHandler -- object to receive subsequent tokens...
- *  @return	 error code (usually 0)
+ *  @return  error code (usually 0)
  */
 nsresult CNavDTD::CaptureTokenPump(nsITagHandler* aHandler) {
   nsresult result=NS_OK;
@@ -796,7 +721,7 @@ nsresult CNavDTD::CaptureTokenPump(nsITagHandler* aHandler) {
  *
  *  @update  gess 3/25/98
  *  @param   aHandler -- object that received tokens...
- *  @return	 error code (usually 0)
+ *  @return  error code (usually 0)
  */
 nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
   nsresult result=NS_OK;
@@ -1839,42 +1764,34 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 
  * @param   holds the number of skipped content elements encountered
  * @return  Error condition.
  */
-nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
+nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
 
   CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+
+  eHTMLTags       theNodeTag=(eHTMLTags)aNode.GetNodeType();
 
   int aIndex=0;
   int aMax=mSkippedContent.GetSize();
   nsAutoString theTempStr;
   nsAutoString theStr;
+
   for(aIndex=0;aIndex<aMax;aIndex++){
     CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
-    theNextToken->GetSource(theTempStr);
+
+    eHTMLTokenTypes theTokenType=(eHTMLTokenTypes)theNextToken->GetTokenType();
+
+    if((eHTMLTag_textarea==theNodeTag) && (eToken_entity==theTokenType)) {
+      ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(theTempStr);
+    }
+    else theNextToken->GetSource(theTempStr);
+
     theStr+=theTempStr;
     theRecycler->RecycleToken(theNextToken);
   }
+
   aNode.SetSkippedContent(theStr);
   return NS_OK;
 }
-
-
-/**
- *  Finds a tag handler for the given tag type.
- *  
- *  @update  gess 4/2/98
- *  @param   aTagType type of tag to be handled
- *  @return  valid tag handler (if found) or null
- */
-CITokenHandler* CNavDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
-  CITokenHandler* result=0;
-  if((aType>0) && (aType<eToken_last)) {
-    result=mTokenHandlers[aType];
-  } 
-  else {
-  }
-  return result;
-}
-
            
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
@@ -2041,15 +1958,14 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::ForwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
+PRBool CNavDTD::ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag)  {
   PRBool result=PR_FALSE;
 
   switch(aParentTag) {
     case eHTMLTag_table:
       {
-        static eHTMLTags tableTags[]={eHTMLTag_tr,eHTMLTag_td};
-        if(FindTagInSet(aChildTag,tableTags,sizeof(tableTags)/sizeof(eHTMLTag_unknown))) {
-          return BackwardPropagate(aStack,aParentTag,aChildTag);
+        if((eHTMLTag_tr==aChildTag) || (eHTMLTag_td==aChildTag)) {
+          return BackwardPropagate(aSequence,aParentTag,aChildTag);
         }
       }
       //otherwise, intentionally fall through...
@@ -2058,9 +1974,8 @@ PRBool CNavDTD::ForwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTML
       {  
         PRBool theCanContainResult=CanContain(eHTMLTag_td,aChildTag);
         if(PR_TRUE==theCanContainResult) {
-          aStack.Push(eHTMLTag_td);
-          result=BackwardPropagate(aStack,aParentTag,eHTMLTag_td);
-  //        result=PR_TRUE;
+          aSequence.Append((PRUnichar)eHTMLTag_td);
+          result=BackwardPropagate(aSequence,aParentTag,eHTMLTag_td);
         }
       }
       break;
@@ -2086,9 +2001,10 @@ PRBool CNavDTD::ForwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTML
  * @param   aChild -- tag type of child
  * @return  TRUE if propagation closes; false otherwise
  */
-PRBool CNavDTD::BackwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
   eHTMLTags theParentTag=aParentTag; //just init to get past first condition...
+
   do {
     CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     if(theRootTags) {
@@ -2096,7 +2012,7 @@ PRBool CNavDTD::BackwardPropagate(nsEntryStack& aStack,eHTMLTags aParentTag,eHTM
       if(CanContain(theParentTag,aChildTag)) {
         //we've found a complete sequence, so push the parent...
         aChildTag=theParentTag;
-        aStack.Push(theParentTag);
+        aSequence.Append((PRUnichar)theParentTag);
       }
     }
     else break;
@@ -2853,9 +2769,37 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
     OpenTransientStyles(theTag); 
 
     STOP_TIMER();
-
+    
     result=mSink->AddLeaf(aNode);
 
+#if 1
+    PRBool done=false;
+    nsCParserNode*  theNode=CreateNode();
+    while(!done) {
+      CToken*   theToken=mTokenizer->PeekToken();
+      if(theToken) {
+        eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID();
+        switch(theTag) {
+          case eHTMLTag_newline:
+            mLineNumber++;
+          case eHTMLTag_text:
+          case eHTMLTag_whitespace:
+            {
+              theToken=mTokenizer->PopToken();
+              theNode->Init(theToken,mLineNumber,GetTokenRecycler());
+              result=mSink->AddLeaf(*theNode);
+            }
+            break;
+          default:
+            done=PR_TRUE;
+        } //switch
+      }//if
+      else done=PR_TRUE;
+    } //while
+    RecycleNode(theNode);
+
+#endif
+    
     START_TIMER();
 
   }
@@ -2932,87 +2876,38 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode& aNode){
  */
 nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   
-  static nsEntryStack kPropagationStack;
-  kPropagationStack.Empty();
+  nsAutoString  theSequence;
   
   nsresult  result=(nsresult)kContextMismatch;
   eHTMLTags theTop=mBodyContext->Last();
-  PRBool    bResult=ForwardPropagate(kPropagationStack,theTop,aChildTag);
+  PRBool    bResult=ForwardPropagate(theSequence,theTop,aChildTag);
   
   if(PR_FALSE==bResult){
 
     if(eHTMLTag_unknown!=theTop) {
       if(theTop!=aChildTag) //dont even bother if we're already inside a similar element...
-        bResult=BackwardPropagate(kPropagationStack,theTop,aChildTag);
-
-     /*****************************************************************************
-        OH NOOOO!...
-
-        We found a pretty fundamental flaw in the backward propagation code.
-        The previous version propagated from a child to a target parent, and
-        then again from the target parent to the root. 
-        Only thing is, that won't work in cases where a container exists that's 
-        not in the usual hiearchy:
-          
-          <html><body>
-            <div>
-              <table>
-                <!--missing TR>
-                  <td>cell text</td>
-                </tr>
-              </table> ...etc...
-
-        In this case, we'd propagate fine from the <TD> to the <TABLE>, and
-        then from the table to the <html>. Unfortunately, the <DIV> won't show
-        up in the propagated form, and then we get out of sync with the actual
-        context stack when it comes to autogenerate containers.
-      ******************************************************************************/
-      
+        bResult=BackwardPropagate(theSequence,theTop,aChildTag);      
     } //if
-    else bResult=BackwardPropagate(kPropagationStack,eHTMLTag_html,aChildTag);
+    else bResult=BackwardPropagate(theSequence,eHTMLTag_html,aChildTag);
   } //elseif
 
-  if((0==mBodyContext->GetCount()) || (mBodyContext->Last()==kPropagationStack.Pop()))
+  PRInt32   theLen=theSequence.Length();
+  eHTMLTags theTag=(eHTMLTags)theSequence[--theLen];
+
+  if((0==mBodyContext->GetCount()) || (mBodyContext->Last()==theTag))
     result=NS_OK;
 
   //now, build up the stack according to the tags 
   //you have that aren't in the stack...
   nsAutoString  theEmpty;
   CStartToken theToken(theEmpty);
-  PRInt32 count = kPropagationStack.GetCount();
   if(PR_TRUE==bResult){
-    while(count>0) {
-      eHTMLTags theTag=kPropagationStack.Pop();
+    while(theLen) {
+      theTag=(eHTMLTags)theSequence[--theLen];
       theToken.SetTypeID(theTag);  //open the container...
       HandleStartToken(&theToken);
-      count--;
     }
     result=NS_OK;
-  }
-  return result;
-}
-
-
-/**
- *  This method gets called to ensure that the context
- *  stack is properly set up for the given child. 
- *  We pop containers off the stack (all the way down 
- *  html) until we get a container that can contain
- *  the given child.
- *  
- *  @update  gess 4/8/98
- *  @param   
- *  @return  
- */
-nsresult CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
-  nsresult  result=NS_OK;
-  eHTMLTags theTopTag=mBodyContext->Last();
-
-  while( (theTopTag!=kNotFound) && 
-         (PR_FALSE==CanContain(theTopTag,aChildTag)) &&
-         (PR_FALSE==CanPropagate(theTopTag,aChildTag))){
-    CloseTopmostContainer();
-    theTopTag=mBodyContext->Last();
   }
   return result;
 }
@@ -3060,7 +2955,7 @@ CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
 
 /**
  * 
- * @update	gess8/4/98
+ * @update  gess8/4/98
  * @param 
  * @return
  */
@@ -3071,7 +2966,7 @@ nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
 
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
- * @update	gess12/28/98
+ * @update  gess12/28/98
  * @param   none
  * @return  ptr to tokenizer
  */
@@ -3118,7 +3013,7 @@ nsresult CNavDTD::WillInterruptParse(void){
 
 /**
  * 
- * @update	gpk03/14/99
+ * @update  gpk03/14/99
  * @param 
  * @return
  */

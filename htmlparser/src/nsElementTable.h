@@ -61,6 +61,8 @@ public:
 //*********************************************************************************************
 
 
+extern void InitializeElementTable(void);
+
 /**
  * 
  * @update	gess 01/04/99
@@ -135,9 +137,7 @@ struct nsHTMLElement {
   eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen
 }; 
 
-extern nsHTMLElement gHTMLElements[];
-extern CTagList      gFramesetKids;
-extern CTagList      gHeadingTags;
+extern nsHTMLElement* gHTMLElements;
 
 //special property bits...
 static const int kDiscardTag       = 0x0001; //tells us to toss this tag

@@ -386,6 +386,8 @@ protected:
 public:
     Stopwatch           mTotalTime;
     Stopwatch           mParseTime;
+    Stopwatch           mDTDTime;
+    Stopwatch           mTokenizeTime;
 #endif
 
 };

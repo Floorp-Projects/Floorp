@@ -90,18 +90,6 @@ eHTMLTags CTagList::GetTagAt(PRUint32 anIndex) const{
 }
 
  
-static eHTMLTags gStyleTags[]={
-  eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_b,
-  eHTMLTag_bdo,     eHTMLTag_big,       eHTMLTag_blink,
-  eHTMLTag_center,  eHTMLTag_cite,      eHTMLTag_code,
-  eHTMLTag_del,     eHTMLTag_dfn,       eHTMLTag_em,
-  eHTMLTag_font,    eHTMLTag_i,         eHTMLTag_ins,
-  eHTMLTag_kbd,     eHTMLTag_q,
-  eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_small,
-  eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,
-  eHTMLTag_sub,     eHTMLTag_sup,       eHTMLTag_tt,
-  eHTMLTag_u,       eHTMLTag_var};
-
   
 /***************************************************************************** 
   Now it's time to list all the html elements all with their capabilities...
@@ -237,975 +225,1153 @@ const int kNoPropRange=0;
 const int kDefaultPropRange=1;
 const int kBodyPropRange=2;
 
-nsHTMLElement gHTMLElements[] = {
-
-  { /*tag*/                             eHTMLTag_unknown,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,		
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kOmitWS, 10,
-    /*special parents,kids,skip*/       0,&gUnknownKids,eHTMLTag_unknown},
-
-
-  /*************************************************
-    Note: I changed A to contain flow elements
-          since it's such a popular (but illegal) 
-          idiom.
-   *************************************************/
-
-  { /*tag*/                             eHTMLTag_a,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	  
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_abbr,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_acronym,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_address,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gAddressKids,eHTMLTag_unknown}, 
-
-  { /*tag*/                             eHTMLTag_applet,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_area,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gAreaParent,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kInlineEntity, kSelf,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gAreaParent,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_b,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (FSTYPE|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_base,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHead,	&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_basefont,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_bdo,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_bgsound,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-    /*special props, prop-range*/       0,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_big,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (FSTYPE|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_blink,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_blockquote,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_body,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
-	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
-    /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kHTMLContent,(kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       kOmitEndTag, kBodyPropRange,
-    /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_br,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_button,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kFlowEntity, kFormControl,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gButtonKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_caption,
-    /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
-    /*autoclose starttags and endtags*/ &gCaptionAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-    /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInTable,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_center,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kInlineEntity|kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_cite,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_code,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_col,
-    /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gColParents,&gColParents,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gColParents,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_colgroup,
-    /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kOmitWS|kNoPropagate,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_dd,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
-    /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-    /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kNoPropagate|kMustCloseSelf,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_del,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_dfn,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_dir,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kList, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_div,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_dl,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
-    /*special props, prop-range*/       kOmitWS, kNoPropRange,
-    /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_dt,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
-    /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-    /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
-    /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_em,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_embed,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlockEntity, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_endnote,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_fieldset,
-    /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gFieldsetKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_font,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gFontKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_form,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       0,&gFormKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_frame, 
-    /*req-parent excl-parent*/          eHTMLTag_frameset,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInFrameset,&gInFrameset,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       &gInFrameset,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_frameset,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_body,
-	  /*rootnodes,endrootnodes*/          &gFramesetParents,&gInHTML,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHTMLContent, kSelf, kAllTags,	
-    /*special props, prop-range*/       kOmitWS|kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHTML,&gFramesetKids,eHTMLTag_unknown},
-
-
-  { /*tag*/                             eHTMLTag_h1,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_h2,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_h3,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_h4,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_h5,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_h6,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
-    /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_head,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHTMLContent, (kHeadContent|kHeadMisc), kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInHTML,&gHeadKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_hr,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_html,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_html,
-	  /*rootnodes,endrootnodes*/          &gHTMLRootTags,	&gHTMLRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kHTMLContent, kNone,	
-    /*special props, prop-range*/       kSaveMisplaced|kOmitEndTag|kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gHtmlKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_i,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_iframe,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_ilayer,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_image,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_img,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_input,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_ins,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_isindex,
-    /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kBlock|kHeadContent), kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_kbd,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_keygen,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_label,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kInlineEntity, kSelf,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_layer,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kSelf,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_legend,
-    /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInFieldset,&gInFieldset,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kInlineEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInFieldset,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_li,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
-    /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kSelf,	
-    /*special props, prop-range*/       kNoPropagate, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_link,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_listing,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_map,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	
-    /*special props, prop-range*/       kOmitWS, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_menu,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kList, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_meta,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_multicol,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_nobr,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, (kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_noembed, 
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kDiscardTag, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_noembed},
-
-  { /*tag*/                             eHTMLTag_noframes,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gNoframeRoot,&gNoframeRoot,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-    /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_noframes},
-
-  { /*tag*/                             eHTMLTag_nolayer,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_nolayer},
-
-  { /*tag*/                             eHTMLTag_noscript,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-    /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_noscript},
-
-  { /*tag*/                             eHTMLTag_object,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlowEntity|SPECIALTYPE|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_ol,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
-    /*autoclose starttags and endtags*/ &gOLAutoClose, &gULCloseTags, 0,0,
-    /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_optgroup,
-    /*requiredAncestor*/                eHTMLTag_select,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_option,
-    /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
-    /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_p,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,&gDontAutoClose,
-    /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	  //this used to contain FLOW. But it's really an inline container.
-    /*special props, prop-range*/       0,kDefaultPropRange,                      //otherwise it tries to contain things like H1..H6
-    /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_param,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gParamParents,	&gParamParents,	
-    /*autoclose starttags and endtags*/ &gPAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_parsererror,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_plaintext,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_html},
-
-  { /*tag*/                             eHTMLTag_pre,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPreformatted, kFlowEntity, kNone,	//I'm allowing WAY too much in here. Spec says inline.
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown},
-
-  { /*tag*/                             eHTMLTag_q,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+
+
+//*********************************************************************************************
+//
+//        Now let's dynamically build the element table...
+//
+//*********************************************************************************************
+nsHTMLElement* gHTMLElements=0;
+
+
+void Initialize(eHTMLTags aTag,
+                eHTMLTags aRequiredAncestor,
+                eHTMLTags aExcludingAncestor, 
+                CTagList* aRootNodes, 
+                CTagList* aEndRootNodes,
+                CTagList* aAutocloseStart,    
+                CTagList* aAutocloseEnd,      
+                CTagList* aSynonymousTags,    
+                CTagList* aDontAutocloseEnd,  
+                int       aParentBits,        
+                int       aInclusionBits, 
+                int       aExclusionBits,     
+                int       aSpecialProperties,
+                int       aPropagateRange,
+                CTagList* aSpecialParents,    
+                CTagList* aSpecialKids,    
+                eHTMLTags aSkipTarget
+                ) 
+{
+  gHTMLElements[aTag].mTagID=aTag;
+  gHTMLElements[aTag].mRequiredAncestor=aRequiredAncestor;
+  gHTMLElements[aTag].mExcludingAncestor=aExcludingAncestor; 
+  gHTMLElements[aTag].mRootNodes=aRootNodes;         
+  gHTMLElements[aTag].mEndRootNodes=aEndRootNodes;
+  gHTMLElements[aTag].mAutocloseStart=aAutocloseStart;
+  gHTMLElements[aTag].mAutocloseEnd=aAutocloseEnd;
+  gHTMLElements[aTag].mSynonymousTags=aSynonymousTags;
+  gHTMLElements[aTag].mDontAutocloseEnd=aDontAutocloseEnd;
+  gHTMLElements[aTag].mParentBits=aParentBits;
+  gHTMLElements[aTag].mInclusionBits=aInclusionBits;
+  gHTMLElements[aTag].mExclusionBits=aExclusionBits;
+  gHTMLElements[aTag].mSpecialProperties=aSpecialProperties;
+  gHTMLElements[aTag].mPropagateRange=aPropagateRange;
+  gHTMLElements[aTag].mSpecialParents=aSpecialParents;
+  gHTMLElements[aTag].mSpecialKids=aSpecialKids;
+  gHTMLElements[aTag].mSkipTarget=aSkipTarget;
+}
+
+
+void InitializeElementTable(void) {          
+  if(!gHTMLElements) {
+    gHTMLElements=new nsHTMLElement[eHTMLTag_userdefined+5];
+
+    Initialize(
+        /*tag*/                             eHTMLTag_unknown,
+        /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	      /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,		
+        /*autoclose starttags and endtags*/ 0,0,0,0,
+        /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+        /*special props, prop-range*/       kOmitWS, 10,
+        /*special parents,kids,skip*/       0,&gUnknownKids,eHTMLTag_unknown);       
+
+    /*************************************************
+      Note: I changed A to contain flow elements
+            since it's such a popular (but illegal) 
+            idiom.
+     *************************************************/
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_a,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	  
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_abbr,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_acronym,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_address,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gAddressKids,eHTMLTag_unknown); 
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_applet,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_area,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gAreaParent,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kInlineEntity, kSelf,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gAreaParent,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_b,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (FSTYPE|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_base,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHead,	&gRootTags,
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_basefont,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_bdo,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_bgsound,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*special props, prop-range*/       0,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_big,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (FSTYPE|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_blink,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_blockquote,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_body,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
+	    /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
+      /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kHTMLContent,(kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       kOmitEndTag, kBodyPropRange,
+      /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_br,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_button,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFormControl, kFlowEntity, kFormControl,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gButtonKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_caption,
+      /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
+      /*autoclose starttags and endtags*/ &gCaptionAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
+      /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInTable,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_center,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, (kInlineEntity|kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_cite,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_code,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_col,
+      /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gColParents,&gColParents,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gColParents,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_colgroup,
+      /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kOmitWS|kNoPropagate,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_dd,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
+      /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
+      /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
+      /*special props, prop-range*/       kNoPropagate|kMustCloseSelf,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_del,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_dfn,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_dir,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kList, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_div,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_dl,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
+      /*special props, prop-range*/       kOmitWS, kNoPropRange,
+      /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_dt,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
+      /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
+      /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,	
+      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_em,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_embed,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlockEntity, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_endnote,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_fieldset,
+      /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       kNoPropagate|kOmitWS,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gFieldsetKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_font,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gFontKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_form,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       0,&gFormKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_frame, 
+      /*req-parent excl-parent*/          eHTMLTag_frameset,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInFrameset,&gInFrameset,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       &gInFrameset,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_frameset,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_body,
+	    /*rootnodes,endrootnodes*/          &gFramesetParents,&gInHTML,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHTMLContent, kSelf, kAllTags,	
+      /*special props, prop-range*/       kOmitWS|kNoPropagate|kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       &gInHTML,&gFramesetKids,eHTMLTag_unknown);
+
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h1,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h2,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h3,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h4,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h5,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_h6,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHeadingTags,  &gHeadingTags, &gHeadingTags,0,
+      /*parent,incl,exclgroups*/          kHeading, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_head,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHTMLContent, (kHeadContent|kHeadMisc), kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInHTML,&gHeadKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_hr,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_html,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_html,
+	    /*rootnodes,endrootnodes*/          &gHTMLRootTags,	&gHTMLRootTags,
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kHTMLContent, kNone,	
+      /*special props, prop-range*/       kSaveMisplaced|kOmitEndTag|kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gHtmlKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_i,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_iframe,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_ilayer,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_image,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_img,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_input,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_ins,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_isindex,
+      /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          (kBlock|kHeadContent), kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInBody,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_kbd,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_keygen,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_label,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFormControl, kInlineEntity, kSelf,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_layer,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kSelf,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_legend,
+      /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInFieldset,&gInFieldset,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kInlineEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInFieldset,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_li,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gLIRootTags,&gLIRootTags,	
+      /*autoclose starttags and endtags*/ &gLIAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kSelf,	
+      /*special props, prop-range*/       kNoPropagate, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_link,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_listing,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_map,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, SPECIALTYPE|kBlockEntity, kNone,	
+      /*special props, prop-range*/       kOmitWS, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_menu,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kList, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_meta,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHeadMisc, kNone, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_multicol,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_nobr,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, (kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_noembed, 
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kDiscardTag, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_noembed);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_noframes,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gNoframeRoot,&gNoframeRoot,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
+      /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_noframes);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_nolayer,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_nolayer);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_noscript,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_noscript);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_object,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlowEntity|SPECIALTYPE|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_ol,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
+      /*autoclose starttags and endtags*/ &gOLAutoClose, &gULCloseTags, 0,0,
+      /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_optgroup,
+      /*requiredAncestor*/                eHTMLTag_select,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_option,
+      /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
+      /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_p,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,&gDontAutoClose,
+      /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	  //this used to contain FLOW. But it's really an inline container.
+      /*special props, prop-range*/       0,kDefaultPropRange,                      //otherwise it tries to contain things like H1..H6
+      /*special parents,kids,skip*/       0,&gInP,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_param,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gParamParents,	&gParamParents,	
+      /*autoclose starttags and endtags*/ &gPAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       &gParamParents,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_parsererror,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_plaintext,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_html);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_pre,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPreformatted, kFlowEntity, kNone,	//I'm allowing WAY too much in here. Spec says inline.
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown);
+
+    Initialize( 
+      /*tag*/                             eHTMLTag_q,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
  
-  { /*tag*/                             eHTMLTag_s,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_s,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_samp,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_samp,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_script,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kPCDATA, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn|kLegalOpen, kNoPropRange,
-    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script},
+    Initialize( 
+      /*tag*/                             eHTMLTag_script,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kPCDATA, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn|kLegalOpen, kNoPropRange,
+      /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script);
 
-  { /*tag*/                             eHTMLTag_select,
-    /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity,	
-    /*special props, prop-range*/       kNoPropagate|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_select,
+      /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity,	
+      /*special props, prop-range*/       kNoPropagate|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_server,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_server,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_small,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_small,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_sound,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_sound,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_sourcetext,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_sourcetext,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ &gDivAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_spacer,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_spacer,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_span,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlockEntity, (kInlineEntity|kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_span,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlockEntity, (kInlineEntity|kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_strike,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_strike,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_strong,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_strong,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_style,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadMisc, kPCDATA, kNone,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_style,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHead,	&gInHead,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHeadMisc, kPCDATA, kNone,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style);
 
-  { /*tag*/                             eHTMLTag_sub,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_sub,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_sup,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+    
+      /*tag*/                             eHTMLTag_sup,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kSpecial, (kSelf|SPECIALTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_table,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
-    /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), 2,
-    /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_table,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
+      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), 2,
+      /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_tbody,
-    /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
-    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
-    /*parent,incl,exclgroups*/          kNone, kNone, (kSelf|kInlineEntity),	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_tbody,
+      /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*parent,incl,exclgroups*/          kNone, kNone, (kSelf|kInlineEntity),	
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_td,
-    /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
-    /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
-    /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_td,
+      /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
+      /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
+      /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_textarea,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInForm,	&gInForm,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_textarea},
+    Initialize( 
+      /*tag*/                             eHTMLTag_textarea,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInForm,	&gInForm,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFormControl, kPCDATA, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       &gInForm,&gContainsText,eHTMLTag_textarea);
 
-  { /*tag*/                             eHTMLTag_tfoot,
-    /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
-    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
-    /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
-    /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_tfoot,
+      /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_th, 
-    /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
-    /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
-    /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
-    /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_th, 
+      /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gTDRootTags,&gTDRootTags,	
+      /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,0,0,
+      /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
+      /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+      /*special parents,kids,skip*/       &gTDRootTags,&gBodyKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_thead,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
-    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
-    /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
-    /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_thead,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
+      /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
+      /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
+      /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_title,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadMisc,kPCDATA, kNone,	
-    /*special props, prop-range*/       kOmitWS|kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title},
+    Initialize( 
+      /*tag*/                             eHTMLTag_title,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInHead,&gInHead,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kHeadMisc,kPCDATA, kNone,	
+      /*special props, prop-range*/       kOmitWS|kNoStyleLeaksIn, kNoPropRange,
+      /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title);
 
-  { /*tag*/                             eHTMLTag_tr,
-    /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gTRParents,&gTREndParents,	
-    /*autoclose starttags and endtags*/ &gTRCloseTags,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kInlineEntity,	
-    /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
-    /*special parents,kids,skip*/       &gTRParents,&gTRKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_tr,
+      /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gTRParents,&gTREndParents,	
+      /*autoclose starttags and endtags*/ &gTRCloseTags,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kInlineEntity,	
+      /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
+      /*special parents,kids,skip*/       &gTRParents,&gTRKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_tt,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_tt,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_u,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_u,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFontStyle, (kSelf|FSTYPE), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_ul,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
-    /*autoclose starttags and endtags*/ &gOLAutoClose,&gULCloseTags,0,0,
-    /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_ul,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gOLRootTags,&gOLRootTags,	
+      /*autoclose starttags and endtags*/ &gOLAutoClose,&gULCloseTags,0,0,
+      /*parent,incl,exclgroups*/          kList, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,&gULKids,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_var,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_var,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_wbr,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
-    /*special props, prop-range*/       0,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_wbr,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*special props, prop-range*/       0,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_xmp,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
-    /*special props, prop-range*/       0,kDefaultPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_xmp},
+    Initialize( 
+      /*tag*/                             eHTMLTag_xmp,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_xmp);
 
-  { /*tag*/                             eHTMLTag_text,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       0,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_text,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       0,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_whitespace, 
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       0,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_whitespace, 
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       0,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_newline,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_newline,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_comment,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_comment,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_entity,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       0, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_entity,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_markupDecl,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-    /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_markupDecl,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
-  { /*tag*/                             eHTMLTag_userdefined,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special props, prop-range*/       kOmitEndTag, kNoPropRange,
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
+    Initialize( 
+      /*tag*/                             eHTMLTag_userdefined,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
+      /*special props, prop-range*/       kOmitEndTag, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+  }//if
 };
 
 int nsHTMLElement::GetSynonymousGroups(int aGroup) {
@@ -1520,6 +1686,20 @@ PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) 
  * @return
  */
 PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
+
+  static eHTMLTags gStyleTags[]={
+    eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_b,
+    eHTMLTag_bdo,     eHTMLTag_big,       eHTMLTag_blink,
+    eHTMLTag_center,  eHTMLTag_cite,      eHTMLTag_code,
+    eHTMLTag_del,     eHTMLTag_dfn,       eHTMLTag_em,
+    eHTMLTag_font,    eHTMLTag_i,         eHTMLTag_ins,
+    eHTMLTag_kbd,     eHTMLTag_q,
+    eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_small,
+    eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,
+    eHTMLTag_sub,     eHTMLTag_sup,       eHTMLTag_tt,
+    eHTMLTag_u,       eHTMLTag_var
+  };
+
   PRBool result=FindTagInSet(aChild,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_body));
   return result;
 }
@@ -1909,3 +2089,4 @@ void nsHTMLElement::DebugDumpContainType(const char* aFilename){
   out<<endl<<endl;
 #endif
 }
+

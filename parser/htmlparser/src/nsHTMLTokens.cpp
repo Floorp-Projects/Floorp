@@ -33,8 +33,6 @@
 
 
 static const char*  gUserdefined = "userdefined";
-static const char*  gIdentChars="-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
-static const char*  gNumChars="0123456789ABCDEFabcdef";
 
 const PRInt32 kMAXNAMELEN=10;
 
@@ -211,7 +209,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   mTextValue=aChar;
-  nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_TRUE,PR_FALSE);
+  nsresult result=aScanner.ReadIdentifier(mTextValue);
   mTypeID = nsHTMLTags::LookupTag(mTextValue);
 
    //Good. Now, let's skip whitespace after the identifier,
@@ -439,12 +437,12 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  static    const char* theTerminals="&<\r\n";
+  static    const char* theTerminals="\n\r&<";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if(((kCR==aChar) || (kNewLine==aChar)) && (NS_OK==result)) {
@@ -599,12 +597,12 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  static    const char* theTerminals="]\r";
+  static    const char* theTerminals="\r]";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if((kCR==aChar) && (NS_OK==result)) {
@@ -1143,7 +1141,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
   static const char* theTerminals="\b\t\n\r >";
-  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE,PR_FALSE);
+  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_TRUE,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
   PRUnichar theLast=aString.Last();
@@ -1196,9 +1194,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
         result=aScanner.GetChar(aChar);        //skip the hash sign...
         if(NS_OK==result) {
           mTextKey=aChar;
-
-          static const char*  gDigits="0123456789";
-          result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE,PR_FALSE);
+          result=aScanner.ReadNumber(mTextKey);
         }
       }
       else {
@@ -1345,10 +1341,8 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  
   mTextValue=aChar;
-  static const char* theWhitespace="\b\t ";
-  nsresult result=aScanner.ReadWhile(mTextValue,theWhitespace,PR_FALSE,PR_FALSE);
+  nsresult result=aScanner.ReadWhitespace(mTextValue);
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
   }
@@ -1460,10 +1454,10 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
           aString+=theChar;
         }
         if(NS_OK==result){
-          result=aScanner.ReadWhile(aString,gNumChars,PR_TRUE,PR_FALSE);
+          result=aScanner.ReadNumber(aString);
         }
       }
-      else result=aScanner.ReadWhile(aString,gIdentChars,PR_TRUE,PR_FALSE);
+      else result=aScanner.ReadIdentifier(aString);
       if(NS_OK==result) {
         result=aScanner.Peek(theChar);
         if(NS_OK==result) {

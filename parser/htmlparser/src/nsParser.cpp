@@ -196,9 +196,11 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mDTDVerification=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
-
+  
 #ifdef RAPTOR_PERF_METRICS
   mParseTime.Reset();
+  mDTDTime.Reset();
+  mTokenizeTime.Reset();
 #endif
 }
 
@@ -697,8 +699,9 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
     nsCRT::free(spec);
 #endif
 
-    CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, mCharset, mCharsetSource),aKey,aListener);
-    if(pc) {
+    nsScanner* theScanner=new nsScanner(theName,PR_FALSE,mCharset,mCharsetSource);
+    CParserContext* pc=new CParserContext(theScanner,aKey,aListener);
+    if(pc && theScanner) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
       PushContext(*pc);
@@ -729,8 +732,10 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
   nsAutoString theUnknownFilename("unknown");
 
   nsInputStream input(&aStream);
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, mCharset, mCharsetSource),aKey,0);
-  if(pc) {
+    
+  nsScanner* theScanner=new nsScanner(theUnknownFilename,input,mCharset,mCharsetSource);
+  CParserContext* pc=new CParserContext(theScanner,aKey,0);
+  if(pc && theScanner) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
     pc->mStreamListenerState=eOnStart;  
@@ -776,8 +781,10 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  {
       //only make a new context if we dont have one, OR if we do, but has a different context key...
-      pc=new CParserContext(new nsScanner(mUnusedInput, mCharset, mCharsetSource),aKey, 0);
-      if(pc) {
+    
+      nsScanner* theScanner=new nsScanner(mUnusedInput,mCharset,mCharsetSource);
+      pc=new CParserContext(theScanner,aKey, 0);
+      if(pc && theScanner) {
         PushContext(*pc);
         pc->mStreamListenerState=eOnStart;  
         pc->mContextType=CParserContext::eCTString;
@@ -918,6 +925,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
       if(NS_OK==result) {     
+
         result=Tokenize(aIsFinalChunk);
         result=BuildModel();
         
@@ -945,6 +953,14 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           RAPTOR_STOPWATCH_TRACE(("Parse Time: "));
           mParseTime.Print();
           RAPTOR_STOPWATCH_TRACE(("\n"));
+
+          printf("DTD Time: ");
+          mDTDTime.Print();
+          printf("\n");
+
+          printf("Tokenize Time: ");
+          mTokenizeTime.Print();
+          printf("\n");
 
 #endif
           return mInternalState;
@@ -997,8 +1013,11 @@ nsresult nsParser::BuildModel() {
     }
 
     nsIDTD* theRootDTD=theRootContext->mDTD;
-    if(theRootDTD)
+    if(theRootDTD) {
+      NS_START_STOPWATCH(mDTDTime);
       result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
+      NS_STOP_STOPWATCH(mDTDTime);
+    }
   }
   else{
     mInternalState=result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -1442,6 +1461,9 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   if(theTokenizer){
+
+    NS_START_STOPWATCH(mTokenizeTime);
+
     WillTokenize(aIsFinalChunk);
     while(NS_SUCCEEDED(result)) {
       mParserContext->mScanner->Mark();
@@ -1458,6 +1480,9 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
       }
     } 
     DidTokenize(aIsFinalChunk);
+
+    NS_STOP_STOPWATCH(mTokenizeTime);
+
   } 
   else{
     result=mInternalState=NS_ERROR_HTMLPARSER_BADTOKENIZER;

@@ -168,6 +168,18 @@ class nsScanner {
        *  
        *  @update  gess 3/25/98
        *  @param   aString receives new data from stream
+       *  @param   addTerminal tells us whether to append terminal to aString
+       *  @return  error code
+       */
+      nsresult ReadIdentifier(nsString& aString);
+      nsresult ReadNumber(nsString& aString);
+      nsresult ReadWhitespace(nsString& aString);
+
+      /**
+       *  Consume characters until you find the terminal char
+       *  
+       *  @update  gess 3/25/98
+       *  @param   aString receives new data from stream
        *  @param   aTerminal contains terminating char
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
@@ -299,7 +311,7 @@ class nsScanner {
 
   protected:
 
-    enum {eBufferSizeThreshold=512};
+    enum {eBufferSizeThreshold=0x1000};  //4K
 
       /**
        * Internal method used to cause the internal buffer to
@@ -320,6 +332,7 @@ class nsScanner {
       nsCharsetSource mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
+      nsString        mUnicodeXferBuf;
 };
 
 #endif
