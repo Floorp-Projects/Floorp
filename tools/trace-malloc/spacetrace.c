@@ -1283,11 +1283,11 @@ void freeRun(STRun* aRun)
 ** Returns NULL on failure.
 ** Must call freeRun() with the new STRun.
 */
-STRun* createRunFromGlobal(STOptions* inOptions)
+STRun* createRunFromGlobal(STOptions* inOptions, STContext* inContext)
 {
     STRun* retval = NULL;
 
-    if(NULL != inOptions)
+    if(NULL != inOptions && NULL != inContext)
     {
         /*
         ** We stamp the run.
@@ -1327,7 +1327,7 @@ STRun* createRunFromGlobal(STOptions* inOptions)
             /*
             ** Categorize the run.
             */
-            failure = categorizeRun(inOptions, retval, &globals);
+            failure = categorizeRun(inOptions, inContext, retval, &globals);
             if (0 != failure)
             {
                 REPORT_ERROR(__LINE__, categorizeRun);
@@ -1341,9 +1341,9 @@ STRun* createRunFromGlobal(STOptions* inOptions)
             if (node)
             {
                 /* Recalculate cost of run */
-                recalculateRunCost(inOptions, node->run);
+                recalculateRunCost(inOptions, node->runs[inContext->mIndex]);
                 
-                retval = node->run;
+                retval = node->runs[inContext->mIndex];
             }
         }
     }
@@ -4915,7 +4915,7 @@ STContext* contextLookup(STOptions* inOptions)
             {
                 unlock = PR_TRUE;
 
-                retval->mSortedRun = createRunFromGlobal(&inCache->mItems[retval->mIndex].mOptions);
+                retval->mSortedRun = createRunFromGlobal(&inCache->mItems[retval->mIndex].mOptions, &inCache->mItems[retval->mIndex].mContext);
             }
 
             /*
@@ -4936,8 +4936,8 @@ STContext* contextLookup(STOptions* inOptions)
                 if(node)
                 {
                     /* Recalculate cost of run */
-                    recalculateRunCost(&inCache->mItems[retval->mIndex].mOptions, node->run);
-                    retval->mSortedRun = node->run;
+                    recalculateRunCost(&inCache->mItems[retval->mIndex].mOptions, node->runs[retval->mIndex]);
+                    retval->mSortedRun = node->runs[retval->mIndex];
                 }
 
 #if ST_WANT_GRAPHS
@@ -5486,7 +5486,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.34 2002/05/13 00:01:15 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.35 2002/05/13 01:48:29 blythe%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {
@@ -6058,6 +6058,16 @@ int main(int aArgCount, char** aArgArray)
     }
 
     /*
+    **  Small category code init.
+    */
+    globals.mCategoryRoot.runs = (STRun**)calloc(globals.mCommandLineOptions.mContexts, sizeof(STRun*));
+    if(NULL == globals.mCategoryRoot.runs)
+    {
+        retval = __LINE__;
+        REPORT_ERROR(__LINE__, calloc);
+    }
+
+    /*
     ** Show help on usage if need be.
     */
     showedHelp = showHelp();
@@ -6094,6 +6104,15 @@ int main(int aArgCount, char** aArgArray)
     /*
     **  All threads are joined/done by this line.
     */
+
+    /*
+    **  Category root has a small modification to clear up.
+    */
+    if(NULL != globals.mCategoryRoot.runs)
+    {
+        free(globals.mCategoryRoot.runs);
+        globals.mCategoryRoot.runs = NULL;
+    }
 
     /*
     **  Blow away our caches.
