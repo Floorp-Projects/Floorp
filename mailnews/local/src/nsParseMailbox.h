@@ -28,6 +28,8 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsIMsgDatabase.h"
 #include "nsIMsgHdr.h"
+#include "nsIMsgStatusFeedback.h"
+#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
 
@@ -188,19 +190,20 @@ public:
 
 	void			UpdateDBFolderInfo();
 	void			UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *mailboxName);
-	void			UpdateStatusText ();
+	void			UpdateStatusText (PRUint32 stringID);
 
 	// Update the progress bar based on what we know.
 	virtual void    UpdateProgressPercent ();
 
 protected:
+	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
 	virtual PRInt32			PublishMsgHeader();
 	virtual void			FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr *tweakMe);
 	void					FreeBuffers();
 
 	// data
-
+	nsXPIDLCString   m_folderName;
 	char			*m_mailboxName;
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;

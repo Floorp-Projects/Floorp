@@ -35,6 +35,8 @@
 #include "nsIMsgFolder.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsLocalStringBundle.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilterService.h"
@@ -73,19 +75,26 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 	// we have an error.
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
-	nsCOMPtr<nsIURL> url = do_QueryInterface(ctxt);
+	nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(ctxt);
 
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
+		url->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
 		nsXPIDLCString fileName;
 		url->DirFile(getter_Copies(fileName));
+		url->GetFileName(getter_Copies(m_folderName));
 		if (fileName)
 		{
 			nsFilePath dbPath(fileName);
 			nsFileSpec dbName(dbPath);
 
+			// the size of the mailbox file is our total base line for measuring progress
+			m_graph_progress_total = dbName.GetFileSize();
+			UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
+			
 			nsCOMPtr<nsIMsgDatabase> mailDB;
 			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 			if (NS_SUCCEEDED(rv) && mailDB)
@@ -95,7 +104,9 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 				rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
 			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
+#ifdef DEBUG_mscott
 			printf("url file = %s\n", (const char *)fileName);
+#endif
 		}
 	}
 
@@ -147,6 +158,11 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 		m_mailDB->Close(TRUE);
 	}
 #endif
+
+	// be sure to clear any status text and progress info..
+	m_graph_progress_received = 0;
+	UpdateProgressPercent();
+	UpdateStatusText(LOCAL_STATUS_DOCUMENT_DONE);
 	return NS_OK;
 
 }
@@ -174,34 +190,41 @@ nsMsgMailboxParser::~nsMsgMailboxParser()
 	PR_FREEIF(m_mailboxName);
 }
 
-void nsMsgMailboxParser::UpdateStatusText ()
+void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 {
-#ifdef WE_HAVE_PROGRESS
-	char *leafName = PL_strrchr (m_mailboxName, '/');
-	if (!leafName)
-		leafName = m_mailboxName;
-	else
-		leafName++;
-	NET_UnEscape(leafName);
-	char *upgrading = XP_GetString (MK_MSG_REPARSE_FOLDER);
-	int progressLength = nsCRT::strlen(upgrading) + nsCRT::strlen(leafName) + 1;
-	char *progress = new char [progressLength];
-	PR_snprintf (progress, progressLength, upgrading, leafName); 
-	FE_Progress (m_context, progress);
-	delete [] progress;
-#endif
+	if (m_statusFeedback)
+	{
+		PRUnichar * statusString = LocalGetStringByID(stringID);
+
+		if (stringID == LOCAL_STATUS_SELECTING_MAILBOX)
+		{
+			if (statusString)
+			{
+				// all this ugly conversion stuff is necessary because we can't sprintf a value
+				// with a PRUnichar string.
+				nsCAutoString cstr (statusString);
+				char * finalString = PR_smprintf(cstr.GetBuffer(), (const char *) m_folderName);
+				nsAutoString uniFinalString(finalString);
+				m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
+				PL_strfree(finalString);
+			}
+		}
+		else
+		{
+			if (statusString)
+				m_statusFeedback->ShowStatusString(statusString);
+		}
+
+		nsCRT::free(statusString);
+	}
 }
 
 void nsMsgMailboxParser::UpdateProgressPercent ()
 {
-#ifdef WE_HAVE_PROGRESS
-	XP_ASSERT(m_context != nsnull);
-	XP_ASSERT(m_graph_progress_total != 0);
-	if ((m_context) && (m_graph_progress_total != 0))
+	if (m_statusFeedback && m_graph_progress_total != 0)
 	{
-		MSG_SetPercentProgress(m_context, m_graph_progress_received, m_graph_progress_total);
+		m_statusFeedback->ShowProgress((100 *(m_graph_progress_received))  / m_graph_progress_total);	
 	}
-#endif
 }
 
 int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
@@ -210,18 +233,18 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *
 
 	PRUint32 bytesRead = 0;
 
-	if (m_inputStream.GrowBuffer(aLength) == NS_OK)
+	if (NS_SUCCEEDED(m_inputStream.GrowBuffer(aLength)))
 	{
 		// OK, this sucks, but we're going to have to copy into our
 		// own byte buffer, and then pass that to the line buffering code,
 		// which means a couple buffer copies.
 		ret = aIStream->Read(m_inputStream.GetBuffer(), aLength, &bytesRead);
-		if (ret == NS_OK)
+		if (NS_SUCCEEDED(ret))
 			ret = BufferInput(m_inputStream.GetBuffer(), bytesRead);
 	}
 	if (m_graph_progress_total > 0)
 	{
-		if (ret == NS_OK)
+		if (NS_SUCCEEDED(ret))
 		  m_graph_progress_received += bytesRead;
 	}
 	return (ret);
@@ -360,6 +383,8 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 		Clear();
 		status = StartNewEnvelope(line, lineLength);
 		NS_ASSERTION(status >= 0, " error starting envelope parsing mailbox");
+		// at the start of each new message, update the progress bar
+		UpdateProgressPercent();
 		if (status < 0)
 			return status;
 	}
