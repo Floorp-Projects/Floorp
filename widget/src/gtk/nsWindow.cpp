@@ -179,7 +179,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mShell), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-
+    mIsToplevel = PR_TRUE;
     gtk_signal_connect(GTK_OBJECT(mShell),
                      "delete_event",
                      GTK_SIGNAL_FUNC(handle_delete_event),
@@ -202,10 +202,12 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-  gtk_signal_connect(GTK_OBJECT(mWidget),
+#if 0
+  gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "size_allocate",
                      GTK_SIGNAL_FUNC(handle_size_allocate),
                      this);
+#endif
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),
@@ -366,7 +368,7 @@ NS_METHOD nsWindow::EndResizingChildren(void)
   return NS_OK;
 }
 
-
+#if 0
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
   if (mEventCallback) {
@@ -374,6 +376,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   }
   return PR_FALSE;
 }
+#endif
 
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {

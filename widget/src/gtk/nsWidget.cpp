@@ -21,6 +21,7 @@
 #include "nsIAppShell.h"
 #include "nsGfxCIID.h"
 #include "nsRepository.h"
+#include "nsGtkEventHandler.h"
 #include <gdk/gdkx.h>
 
 // BGR, not RGB
@@ -31,6 +32,9 @@
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+
+PRBool nsWidget::OnResizing = PR_FALSE;
+PRBool nsWidget::OnMoving = PR_FALSE;
 
 //#define DBG 1
 
@@ -55,6 +59,9 @@ nsWidget::nsWidget()
   mBounds.height = 0;
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
+  mMoveEventsPending = 0;
+  mResizeEventsPending = 0;
+  mIsToplevel = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
@@ -171,7 +178,7 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
-
+  mMoveEventsPending++;
 #ifdef USE_GTK_FIXED
   ::gtk_fixed_move(GTK_FIXED(mWidget->parent), mWidget, aX, aY);
 #else
@@ -182,22 +189,25 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  if ((mBounds.width == aWidth) && (mBounds.height == aHeight))
-  {
-    return NS_OK;
+#if 0
+  printf("nsWidget::Resize %s (%p) to %d %d %d events pending %s\n",
+         gtk_widget_get_name(mWidget), this,
+         aWidth, aHeight, mResizeEventsPending,
+         ( nsWidget::OnResizing ? "OnResize in progress" : "" ));
+#endif
+  if (nsWidget::OnResizing && mBounds.width == aWidth &&  mBounds.height == aHeight) {
+    //    printf("Skipping resize because we're in an OnResize and we just got set to the same size.\n");
   }
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+  else {
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
+    mResizeEventsPending++;
+    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+  }
 
-  if (aRepaint)
-    if (GTK_WIDGET_VISIBLE (mWidget))
-      ::gtk_widget_queue_draw (mWidget);
-
-/*
   if (aRepaint && GTK_IS_WIDGET (mWidget) &&
-      GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
-
+       GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    
     GdkEventExpose event;
 
     event.type = GDK_EXPOSE;
@@ -214,36 +224,73 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
     gdk_window_unref (event.window);
   }
-*/
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 			   PRUint32 aHeight, PRBool aRepaint)
 {
-/*
-  GtkAllocation alloc;
-  alloc.x = aX;
-  alloc.y = aY;
-  alloc.width = aWidth;
-  alloc.height = aHeight;
-
-  printf("nsWidget::Resize with x/y called.\n");
-  
-  mBounds.x = aX;
-  mBounds.y = aY;
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
-
-  gtk_widget_size_allocate (mWidget, &alloc);
-  //gtk_widget_set_usize(mWidget, aWidth, aHeight);
-  
-  if (aRepaint)
-    gtk_widget_queue_draw(mWidget);
-*/
-  Move(aX,aY);
   Resize(aWidth,aHeight,aRepaint);
+  Move(aX,aY);
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Send a resize message to the listener
+//
+//-------------------------------------------------------------------------
+PRBool nsWidget::OnResize(nsRect &aRect)
+{
+  // call the event callback
+#if 0
+  printf("nsWidget::OnResize %s (%p)\n",
+         gtk_widget_get_name(mWidget),
+         this);
+#endif
+  if (mEventCallback) {
+    nsSizeEvent event;
+    InitEvent(event, NS_SIZE);
+    event.windowSize = &aRect;
+    event.eventStructType = NS_SIZE_EVENT;
+    if (mWidget) {
+      event.mWinWidth = mWidget->allocation.width;
+      event.mWinHeight = mWidget->allocation.height;
+    } else {
+      event.mWinWidth = 0;
+      event.mWinHeight = 0;
+    }
+    event.point.x = mWidget->allocation.x;
+    event.point.y = mWidget->allocation.y;
+    event.time = 0;
+    PRBool result = DispatchWindowEvent(&event);
+    // XXX why does this always crash?  maybe we need to add 
+    // a ref in the dispatch code?  check the windows
+    // code for a reference
+    //NS_RELEASE(event.widget);
+    return result;
+  }
+return PR_FALSE;
+}
+
+//------
+// Move
+//------
+PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
+{
+  nsGUIEvent event;
+#if 0
+  printf("nsWidget::OnMove %s (%p)\n",
+         gtk_widget_get_name(mWidget),
+         this);
+#endif
+  InitEvent(event, NS_MOVE);
+  event.point.x = aX;
+  event.point.y = aY;
+  event.eventStructType = NS_GUI_EVENT;
+  PRBool result = DispatchWindowEvent(&event);
+  // NS_RELEASE(event.widget);
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -524,8 +571,14 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   CreateNative (parentWidget);
   gtk_widget_show(mWidget);
-
+  
   Resize(mBounds.width, mBounds.height, PR_FALSE);
+
+  // connect the size allocate to the
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "size_allocate",
+                     GTK_SIGNAL_FUNC(handle_size_allocate),
+                     this);
 
   /* place the widget in its parent */
   if (parentWidget)

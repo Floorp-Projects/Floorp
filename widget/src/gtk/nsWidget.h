@@ -73,6 +73,8 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD SetFocus(void);
 
     NS_IMETHOD GetBounds(nsRect &aRect);
+    virtual PRBool OnResize(nsRect &aRect);
+    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
@@ -111,7 +113,14 @@ class nsWidget : public nsBaseWidget
     PRBool     ConvertStatus(nsEventStatus aStatus);
     PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
-
+  // keep track of the events pending...
+    PRUint32   mMoveEventsPending;
+    PRUint32   mResizeEventsPending;
+  // are we a "top level" widget?
+    PRBool     mIsToplevel;
+  // are we doing a OnResize or OnMove?  Be careful not to recurse.
+    static PRBool OnResizing;
+    static PRBool OnMoving;
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();
