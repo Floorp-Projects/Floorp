@@ -927,22 +927,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 
     nsAutoString utf8("UTF-8");
     parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-
     parser->SetContentSink(sink);
-
-    // XXX this should eventually be kRDFDTDCID (oh boy, that's a
-    // pretty identifier). The RDF DTD will be a much more
-    // RDF-resilient parser.
-    nsCOMPtr<nsIDTD> dtd;
-    rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
-                                            nsnull,
-                                            kIDTDIID,
-                                            getter_AddRefs(dtd));
-
-    if (NS_FAILED(rv)) return rv;
-
-    parser->RegisterDTD(dtd);
-
 
     nsCOMPtr<nsIStreamListener> lsnr;
     rv = parser->QueryInterface(kIStreamListenerIID, getter_AddRefs(lsnr));
