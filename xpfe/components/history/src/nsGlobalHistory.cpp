@@ -2406,6 +2406,12 @@ nsGlobalHistory::OpenDB()
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the initial filesize. Used in Commit() to determine type of commit.
+  rv = historyFile->GetFileSize(&mFileSizeOnDisk);
+  if (NS_FAILED(rv)) {
+    LL_I2L(mFileSizeOnDisk, 0);
+  }
   
   return NS_OK;
 }
