@@ -64,6 +64,9 @@ function onNext(event) {
     if (validate)
         if (!validate(contentWindow, wizardContents)) return;
 
+    if (typeof(contentWindow.ValidateContents) == "function")
+        if (!contentWindow.ValidateContents()) return;
+
     saveContents(contentWindow, wizardContents);
     
     nextPage(contentWindow);
@@ -88,7 +91,13 @@ function getUrlFromTag(title) {
 
 
 // helper functions that actually do stuff
+function setNextEnabled(enabled) {
+    
+}
 
+function setBackEnabled(enabled) {
+
+}
 
 function nextPage(win) {
     var nextPageTag = wizardMap[currentPageTag].next;

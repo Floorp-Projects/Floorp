@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 
-<!DOCTYPE window SYSTEM "chrome://l10n/locale/am-main.dtd" >
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

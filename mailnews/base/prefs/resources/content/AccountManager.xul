@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://l10n/locale/AccountManager.dtd" >
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 
 <window	id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

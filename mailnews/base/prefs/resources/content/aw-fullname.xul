@@ -22,7 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-fullname.dtd" >
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-fullname.dtd" >
 <window id="fullnamepage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('fullname');">
