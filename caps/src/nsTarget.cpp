@@ -361,276 +361,277 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   ThreadAccessTarg = new nsUserTarget("UniversalThreadAccess", sysPrin,
                                       targetRiskHigh,
                                       targetRiskColorHigh,
-                                      CAPS_TARGET_DESC_THREAD_ACCESS,
-                                      CAPS_TARGET_DETAIL_DESC_THREAD_ACCESS,
-                                      CAPS_TARGET_URL_THREAD_ACCESS);
+                                      JavaSecUI_getString(CAPS_TARGET_DESC_THREAD_ACCESS),
+                                      JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_THREAD_ACCESS),
+                                      JavaSecUI_getHelpURL(CAPS_TARGET_URL_THREAD_ACCESS)
+                                      );
   ThreadAccessTarg->registerTarget();
   
   ThreadGroupAccessTarg = new nsUserTarget("UniversalThreadGroupAccess", 
                                            sysPrin,
                                            targetRiskHigh,
                                            targetRiskColorHigh,
-                                           CAPS_TARGET_DESC_THREAD_GROUP_ACCESS,
-                                           CAPS_TARGET_DETAIL_DESC_THREAD_GROUP_ACCESS,
-                                           CAPS_TARGET_URL_THREAD_GROUP_ACCESS);
+                                           JavaSecUI_getString(CAPS_TARGET_DESC_THREAD_GROUP_ACCESS),
+                                           JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_THREAD_GROUP_ACCESS),
+                                           JavaSecUI_getHelpURL(CAPS_TARGET_URL_THREAD_GROUP_ACCESS));
   ThreadGroupAccessTarg->registerTarget();
   
   ExecAccessTarg = new nsUserTarget("UniversalExecAccess", sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_EXEC_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_EXEC_ACCESS,
-                                    CAPS_TARGET_URL_EXEC_ACCESS);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_EXEC_ACCESS),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_EXEC_ACCESS),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_EXEC_ACCESS));
   ExecAccessTarg->registerTarget();
   
   ExitAccessTarg = new nsUserTarget("UniversalExitAccess", sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_EXIT_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_EXIT_ACCESS,
-                                    CAPS_TARGET_URL_EXIT_ACCESS);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_EXIT_ACCESS),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_EXIT_ACCESS),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_EXIT_ACCESS));
   ExitAccessTarg->registerTarget();
   
   LinkAccessTarg = new nsUserTarget("UniversalLinkAccess", sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_LINK_ACCESS,
-                                    CAPS_TARGET_DETAIL_DESC_LINK_ACCESS,
-                                    CAPS_TARGET_URL_LINK_ACCESS);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_LINK_ACCESS),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_LINK_ACCESS),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_LINK_ACCESS));
   LinkAccessTarg->registerTarget();
   
   PropertyWriteTarg = new nsUserTarget("UniversalPropertyWrite", sysPrin,
                                        targetRiskHigh,
                                        targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_PROPERTY_WRITE,
-                                       CAPS_TARGET_DETAIL_DESC_PROPERTY_WRITE,
-                                       CAPS_TARGET_URL_PROPERTY_WRITE);
+                                       JavaSecUI_getString(CAPS_TARGET_DESC_PROPERTY_WRITE),
+                                       JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PROPERTY_WRITE),
+                                       JavaSecUI_getHelpURL(CAPS_TARGET_URL_PROPERTY_WRITE));
   PropertyWriteTarg->registerTarget();
   
   PropertyReadTarg = new nsUserTarget("UniversalPropertyRead", sysPrin,
                                       targetRiskLow,
                                       targetRiskColorLow,
-                                      CAPS_TARGET_DESC_PROPERTY_READ,
-                                      CAPS_TARGET_DETAIL_DESC_PROPERTY_READ,
-                                      CAPS_TARGET_URL_PROPERTY_READ);
+                                      JavaSecUI_getString(CAPS_TARGET_DESC_PROPERTY_READ),
+                                      JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PROPERTY_READ),
+                                      JavaSecUI_getHelpURL(CAPS_TARGET_URL_PROPERTY_READ));
   PropertyReadTarg->registerTarget();
   
   FileReadTarg = new nsUserTarget("UniversalFileRead", sysPrin,
                                   targetRiskHigh,
                                   targetRiskColorHigh,
-                                  CAPS_TARGET_DESC_FILE_READ,
-                                  CAPS_TARGET_DETAIL_DESC_FILE_READ,
-                                  CAPS_TARGET_URL_FILE_READ);
+                                  JavaSecUI_getString(CAPS_TARGET_DESC_FILE_READ),
+                                  JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FILE_READ),
+                                  JavaSecUI_getHelpURL(CAPS_TARGET_URL_FILE_READ));
   FileReadTarg->registerTarget();
   
   FileWriteTarg = new nsUserTarget("UniversalFileWrite", sysPrin,
                                    targetRiskHigh,
                                    targetRiskColorHigh,
-                                   CAPS_TARGET_DESC_FILE_WRITE,
-                                   CAPS_TARGET_DETAIL_DESC_FILE_WRITE,
-                                   CAPS_TARGET_URL_FILE_WRITE);
+                                   JavaSecUI_getString(CAPS_TARGET_DESC_FILE_WRITE),
+                                   JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FILE_WRITE),
+                                   JavaSecUI_getHelpURL(CAPS_TARGET_URL_FILE_WRITE));
   FileWriteTarg->registerTarget();
   
   FileDeleteTarg = new nsUserTarget("UniversalFileDelete", sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_FILE_DELETE,
-                                    CAPS_TARGET_DETAIL_DESC_FILE_DELETE,
-                                    CAPS_TARGET_URL_FILE_DELETE);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_FILE_DELETE),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FILE_DELETE),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_FILE_DELETE));
   FileDeleteTarg->registerTarget();
   
   FdReadTarg = new nsUserTarget("UniversalFdRead", sysPrin,
                                 targetRiskHigh,
                                 targetRiskColorHigh,
-                                CAPS_TARGET_DESC_FD_READ,
-                                CAPS_TARGET_DETAIL_DESC_FD_READ,
-                                CAPS_TARGET_URL_FD_READ);
+                                JavaSecUI_getString(CAPS_TARGET_DESC_FD_READ),
+                                JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FD_READ),
+                                JavaSecUI_getHelpURL(CAPS_TARGET_URL_FD_READ));
   FdReadTarg->registerTarget();
   
   FdWriteTarg = new nsUserTarget("UniversalFdWrite", sysPrin,
                                  targetRiskHigh,
                                  targetRiskColorHigh,
-                                 CAPS_TARGET_DESC_FD_WRITE,
-                                 CAPS_TARGET_DETAIL_DESC_FD_WRITE,
-                                 CAPS_TARGET_URL_FD_WRITE);
+                                 JavaSecUI_getString(CAPS_TARGET_DESC_FD_WRITE),
+                                 JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FD_WRITE),
+                                 JavaSecUI_getHelpURL(CAPS_TARGET_URL_FD_WRITE));
   FdWriteTarg->registerTarget();
   
   ListenTarg = new nsUserTarget("UniversalListen", sysPrin,
                                 targetRiskHigh,
                                 targetRiskColorHigh,
-                                CAPS_TARGET_DESC_LISTEN,
-                                CAPS_TARGET_DETAIL_DESC_LISTEN,
-                                CAPS_TARGET_URL_LISTEN);
+                                JavaSecUI_getString(CAPS_TARGET_DESC_LISTEN),
+                                JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_LISTEN),
+                                JavaSecUI_getHelpURL(CAPS_TARGET_URL_LISTEN));
   ListenTarg->registerTarget();
   
   AcceptTarg = new nsUserTarget("UniversalAccept", sysPrin,
                                 targetRiskHigh,
                                 targetRiskColorHigh,
-                                CAPS_TARGET_DESC_ACCEPT,
-                                CAPS_TARGET_DETAIL_DESC_ACCEPT,
-                                CAPS_TARGET_URL_ACCEPT);
+                                JavaSecUI_getString(CAPS_TARGET_DESC_ACCEPT),
+                                JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ACCEPT),
+                                JavaSecUI_getHelpURL(CAPS_TARGET_URL_ACCEPT));
   AcceptTarg->registerTarget();
   
   MulticastTarg = new nsUserTarget("UniversalMulticast", sysPrin,
                                    targetRiskHigh,
                                    targetRiskColorHigh,
-                                   CAPS_TARGET_DESC_MULTICAST,
-                                   CAPS_TARGET_DETAIL_DESC_MULTICAST,
-                                   CAPS_TARGET_URL_MULTICAST);
+                                   JavaSecUI_getString(CAPS_TARGET_DESC_MULTICAST),
+                                   JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_MULTICAST),
+                                   JavaSecUI_getHelpURL(CAPS_TARGET_URL_MULTICAST));
   MulticastTarg->registerTarget();
   
   TopLevelWindowTarg = new nsUserTarget("UniversalTopLevelWindow", sysPrin,
                                         targetRiskHigh,
                                         targetRiskColorHigh,
-                                        CAPS_TARGET_DESC_TOP_LEVEL_WINDOW,
-                                        CAPS_TARGET_DETAIL_DESC_TOP_LEVEL_WINDOW,
-                                        CAPS_TARGET_URL_TOP_LEVEL_WINDOW);
+                                        JavaSecUI_getString(CAPS_TARGET_DESC_TOP_LEVEL_WINDOW),
+                                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_TOP_LEVEL_WINDOW),
+                                        JavaSecUI_getHelpURL(CAPS_TARGET_URL_TOP_LEVEL_WINDOW));
   TopLevelWindowTarg->registerTarget();
   
   DialogModalityTarg = new nsUserTarget("UniversalDialogModality", sysPrin,
                                         targetRiskMedium,
                                         targetRiskColorMedium,
-                                        CAPS_TARGET_DESC_DIALOG_MODALITY,
-                                        CAPS_TARGET_DETAIL_DESC_DIALOG_MODALITY,
-                                        CAPS_TARGET_URL_DIALOG_MODALITY);
+                                        JavaSecUI_getString(CAPS_TARGET_DESC_DIALOG_MODALITY),
+                                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_DIALOG_MODALITY),
+                                        JavaSecUI_getHelpURL(CAPS_TARGET_URL_DIALOG_MODALITY));
   DialogModalityTarg->registerTarget();
   
   PackageAccessTarg = new nsTarget("UniversalPackageAccess", sysPrin,
                                    targetRiskHigh,
                                    targetRiskColorHigh,
-                                   CAPS_TARGET_DESC_PACKAGE_ACCESS,
-                                   CAPS_TARGET_DETAIL_DESC_PACKAGE_ACCESS,
-                                   CAPS_TARGET_URL_PACKAGE_ACCESS);
+                                   JavaSecUI_getString(CAPS_TARGET_DESC_PACKAGE_ACCESS),
+                                   JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PACKAGE_ACCESS),
+                                   JavaSecUI_getHelpURL(CAPS_TARGET_URL_PACKAGE_ACCESS));
   PackageAccessTarg->registerTarget();
   
   PackageDefinitionTarg = new nsTarget("UniversalPackageDefinition", 
                                        sysPrin,
                                        targetRiskHigh,
                                        targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_PACKAGE_DEFINITION,
-                                       CAPS_TARGET_DETAIL_DESC_PACKAGE_DEFINITION,
-                                       CAPS_TARGET_URL_PACKAGE_DEFINITION);
+                                       JavaSecUI_getString(CAPS_TARGET_DESC_PACKAGE_DEFINITION),
+                                       JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PACKAGE_DEFINITION),
+                                       JavaSecUI_getHelpURL(CAPS_TARGET_URL_PACKAGE_DEFINITION));
   PackageDefinitionTarg->registerTarget();
   
   SetFactoryTarg = new nsUserTarget("UniversalSetFactory", 
                                     sysPrin,
                                     targetRiskHigh,
                                     targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_SET_FACTORY,
-                                    CAPS_TARGET_DETAIL_DESC_SET_FACTORY,
-                                    CAPS_TARGET_URL_SET_FACTORY);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_SET_FACTORY),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SET_FACTORY),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_SET_FACTORY));
   SetFactoryTarg->registerTarget();
   
   MemberAccessTarg = new nsTarget("UniversalMemberAccess", 
                                   sysPrin,
                                   targetRiskHigh,
                                   targetRiskColorHigh,
-                                  CAPS_TARGET_DESC_MEMBER_ACCESS,
-                                  CAPS_TARGET_DETAIL_DESC_MEMBER_ACCESS,
-                                  CAPS_TARGET_URL_MEMBER_ACCESS);
+                                  JavaSecUI_getString(CAPS_TARGET_DESC_MEMBER_ACCESS),
+                                  JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_MEMBER_ACCESS),
+                                  JavaSecUI_getHelpURL(CAPS_TARGET_URL_MEMBER_ACCESS));
   MemberAccessTarg->registerTarget();
   
   PrintJobAccessTarg = new nsUserTarget("UniversalPrintJobAccess",
                                         sysPrin,
                                         targetRiskLow,
                                         targetRiskColorLow,
-                                        CAPS_TARGET_DESC_PRINT_JOB_ACCESS,
-                                        CAPS_TARGET_DETAIL_DESC_PRINT_JOB_ACCESS,
-                                        CAPS_TARGET_URL_PRINT_JOB_ACCESS);
+                                        JavaSecUI_getString(CAPS_TARGET_DESC_PRINT_JOB_ACCESS),
+                                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PRINT_JOB_ACCESS),
+                                        JavaSecUI_getHelpURL(CAPS_TARGET_URL_PRINT_JOB_ACCESS));
   PrintJobAccessTarg->registerTarget();
   
   SystemClipboardAccessTarg = new nsUserTarget("UniversalSystemClipboardAccess", 
                                                sysPrin,
                                                targetRiskHigh,
                                                targetRiskColorHigh,
-                                               CAPS_TARGET_DESC_SYSTEM_CLIPBOARD_ACCESS,
-                                               CAPS_TARGET_DETAIL_DESC_SYSTEM_CLIPBOARD_ACCESS,
-                                               CAPS_TARGET_URL_SYSTEM_CLIPBOARD_ACCESS);
+                                               JavaSecUI_getString(CAPS_TARGET_DESC_SYSTEM_CLIPBOARD_ACCESS),
+                                               JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SYSTEM_CLIPBOARD_ACCESS),
+                                               JavaSecUI_getHelpURL(CAPS_TARGET_URL_SYSTEM_CLIPBOARD_ACCESS));
   SystemClipboardAccessTarg->registerTarget();
   
   AwtEventQueueAccessTarg = new nsUserTarget("UniversalAwtEventQueueAccess", 
                                              sysPrin,
                                              targetRiskHigh,
                                              targetRiskColorHigh,
-                                             CAPS_TARGET_DESC_AWT_EVENT_QUEUE_ACCESS,
-                                             CAPS_TARGET_DETAIL_DESC_AWT_EVENT_QUEUE_ACCESS,
-                                             CAPS_TARGET_URL_AWT_EVENT_QUEUE_ACCESS);
+                                             JavaSecUI_getString(CAPS_TARGET_DESC_AWT_EVENT_QUEUE_ACCESS),
+                                             JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_AWT_EVENT_QUEUE_ACCESS),
+                                             JavaSecUI_getHelpURL(CAPS_TARGET_URL_AWT_EVENT_QUEUE_ACCESS));
   AwtEventQueueAccessTarg->registerTarget();
   
   SecurityProviderTarg = new nsTarget("UniversalSecurityProvider",
                                       sysPrin,
                                       targetRiskHigh,
                                       targetRiskColorHigh,
-                                      CAPS_TARGET_DESC_SECURITY_PROVIDER,
-                                      CAPS_TARGET_DETAIL_DESC_SECURITY_PROVIDER,
-                                      CAPS_TARGET_URL_SECURITY_PROVIDER);
+                                      JavaSecUI_getString(CAPS_TARGET_DESC_SECURITY_PROVIDER),
+                                      JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SECURITY_PROVIDER),
+                                      JavaSecUI_getHelpURL(CAPS_TARGET_URL_SECURITY_PROVIDER));
   SecurityProviderTarg->registerTarget();
   
   CreateSecurityManagerTarg = new nsTarget("CreateSecurityManager",
                                            sysPrin,
                                            targetRiskHigh,
                                            targetRiskColorHigh,
-                                           CAPS_TARGET_DESC_CREATE_SECURITY_MANAGER,
-                                           CAPS_TARGET_DETAIL_DESC_CREATE_SECURITY_MANAGER,
-                                           CAPS_TARGET_URL_CREATE_SECURITY_MANAGER);
+                                           JavaSecUI_getString(CAPS_TARGET_DESC_CREATE_SECURITY_MANAGER),
+                                           JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CREATE_SECURITY_MANAGER),
+                                           JavaSecUI_getHelpURL(CAPS_TARGET_URL_CREATE_SECURITY_MANAGER));
   CreateSecurityManagerTarg->registerTarget();
   
   ImpersonatorTarg = new nsTarget("Impersonator", sysPrin,
                                   targetRiskHigh,
                                   targetRiskColorHigh,
-                                  CAPS_TARGET_DESC_IMPERSONATOR,
-                                  CAPS_TARGET_DETAIL_DESC_IMPERSONATOR,
-                                  CAPS_TARGET_URL_IMPERSONATOR);
+                                  JavaSecUI_getString(CAPS_TARGET_DESC_IMPERSONATOR),
+                                  JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_IMPERSONATOR),
+                                  JavaSecUI_getHelpURL(CAPS_TARGET_URL_IMPERSONATOR));
   ImpersonatorTarg->registerTarget();
   
   BrowserReadTarg = new nsUserTarget("UniversalBrowserRead", sysPrin,
                                      targetRiskMedium,
                                      targetRiskColorMedium,
-                                     CAPS_TARGET_DESC_BROWSER_READ,
-                                     CAPS_TARGET_DETAIL_DESC_BROWSER_READ,
-                                     CAPS_TARGET_URL_BROWSER_READ);
+                                     JavaSecUI_getString(CAPS_TARGET_DESC_BROWSER_READ),
+                                     JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_BROWSER_READ),
+                                     JavaSecUI_getHelpURL(CAPS_TARGET_URL_BROWSER_READ));
   BrowserReadTarg->registerTarget();
   
   BrowserWriteTarg = new nsUserTarget("UniversalBrowserWrite", sysPrin,
                                       targetRiskHigh,
                                       targetRiskColorHigh,
-                                      CAPS_TARGET_DESC_BROWSER_WRITE,
-                                      CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE,
-                                      CAPS_TARGET_URL_BROWSER_WRITE);
+                                      JavaSecUI_getString(CAPS_TARGET_DESC_BROWSER_WRITE),
+                                      JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_BROWSER_WRITE),
+                                      JavaSecUI_getHelpURL(CAPS_TARGET_URL_BROWSER_WRITE));
   BrowserWriteTarg->registerTarget();
   
   UniversalPreferencesReadTarg = new nsUserTarget("UniversalPreferencesRead", 
                                                   sysPrin,
                                                   targetRiskMedium,
                                                   targetRiskColorMedium,
-                                                  CAPS_TARGET_DESC_PREFS_READ,
-                                                  CAPS_TARGET_DETAIL_DESC_PREFS_READ,
-                                                  CAPS_TARGET_URL_PREFS_READ);
+                                                  JavaSecUI_getString(CAPS_TARGET_DESC_PREFS_READ),
+                                                  JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PREFS_READ),
+                                                  JavaSecUI_getHelpURL(CAPS_TARGET_URL_PREFS_READ));
   UniversalPreferencesReadTarg->registerTarget();
   
   UniversalPreferencesWriteTarg = new nsUserTarget("UniversalPreferencesWrite", 
                                                    sysPrin,
                                                    targetRiskHigh,
                                                    targetRiskColorHigh,
-                                                   CAPS_TARGET_DESC_PREFS_WRITE,
-                                                   CAPS_TARGET_DETAIL_DESC_PREFS_WRITE,
-                                                   CAPS_TARGET_URL_PREFS_WRITE);
+                                                   JavaSecUI_getString(CAPS_TARGET_DESC_PREFS_WRITE),
+                                                   JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PREFS_WRITE),
+                                                   JavaSecUI_getHelpURL(CAPS_TARGET_URL_PREFS_WRITE));
   UniversalPreferencesWriteTarg->registerTarget();
   
   SendMailTarg = new nsUserTarget("UniversalSendMail", sysPrin,
                                   targetRiskMedium,
                                   targetRiskColorMedium,
-                                  CAPS_TARGET_DESC_SEND_MAIL,
-                                  CAPS_TARGET_DETAIL_DESC_SEND_MAIL,
-                                  CAPS_TARGET_URL_SEND_MAIL);
+                                  JavaSecUI_getString(CAPS_TARGET_DESC_SEND_MAIL),
+                                  JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SEND_MAIL),
+                                  JavaSecUI_getHelpURL(CAPS_TARGET_URL_SEND_MAIL));
   SendMailTarg->registerTarget();
   
   RegistryPrivateTarg = new nsUserTarget("PrivateRegistryAccess", sysPrin,
                                          targetRiskLow,
                                          targetRiskColorLow,
-                                         CAPS_TARGET_DESC_REG_PRIVATE,
-                                         CAPS_TARGET_DETAIL_DESC_REG_PRIVATE,
-                                         CAPS_TARGET_URL_REG_PRIVATE);
+                                         JavaSecUI_getString(CAPS_TARGET_DESC_REG_PRIVATE),
+                                         JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_REG_PRIVATE),
+                                         JavaSecUI_getHelpURL(CAPS_TARGET_URL_REG_PRIVATE));
   RegistryPrivateTarg->registerTarget();
   
   targetPtrArray = new nsTargetArray();
@@ -640,9 +641,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   RegistryStandardTarg = new nsUserTarget("StandardRegistryAccess", sysPrin,
                                           targetRiskMedium,
                                           targetRiskColorMedium,
-                                          CAPS_TARGET_DESC_REG_STANDARD,
-                                          CAPS_TARGET_DETAIL_DESC_REG_STANDARD,
-                                          CAPS_TARGET_URL_REG_STANDARD,
+                                          JavaSecUI_getString(CAPS_TARGET_DESC_REG_STANDARD),
+                                          JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_REG_STANDARD),
+                                          JavaSecUI_getHelpURL(CAPS_TARGET_URL_REG_STANDARD),
                                           targetPtrArray);
   RegistryStandardTarg->registerTarget();
   
@@ -654,9 +655,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                        sysPrin,
                                        targetRiskHigh,
                                        targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_REG_ADMIN,
-                                       CAPS_TARGET_DETAIL_DESC_REG_ADMIN,
-                                       CAPS_TARGET_URL_REG_ADMIN,
+                                       JavaSecUI_getString(CAPS_TARGET_DESC_REG_ADMIN),
+                                       JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_REG_ADMIN),
+                                       JavaSecUI_getHelpURL(CAPS_TARGET_URL_REG_ADMIN),
                                        targetPtrArray);
   RegistryAdminTarg->registerTarget();
   
@@ -664,9 +665,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                     sysPrin,
                                     targetRiskHigh,
 			                        targetRiskColorHigh,
-                                    CAPS_TARGET_DESC_UNINSTALL,
-                                    CAPS_TARGET_DETAIL_DESC_UNINSTALL,
-                                    CAPS_TARGET_URL_UNINSTALL);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_UNINSTALL),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_UNINSTALL),
+                                    JavaSecUI_getString(CAPS_TARGET_URL_UNINSTALL));
   UninstallTarg->registerTarget();
 
   targetPtrArray = new nsTargetArray();
@@ -680,9 +681,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                         sysPrin,
                                         targetRiskHigh,
 			                            targetRiskColorHigh,
-                                        CAPS_TARGET_DESC_SOFTWAREINSTALL,
-                                        CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL,
-                                        CAPS_TARGET_URL_SOFTWAREINSTALL,
+                                        JavaSecUI_getString(CAPS_TARGET_DESC_SOFTWAREINSTALL),
+                                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL),
+                                        JavaSecUI_getString(CAPS_TARGET_URL_SOFTWAREINSTALL),
                                         targetPtrArray);
   SoftwareInstallTarg->registerTarget();
 
@@ -694,9 +695,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                         sysPrin,
                                         targetRiskHigh,
 			                            targetRiskColorHigh,
-                                        CAPS_TARGET_DESC_SILENTINSTALL,
-                                        CAPS_TARGET_DETAIL_DESC_SILENTINSTALL,
-                                        CAPS_TARGET_URL_SILENTINSTALL,
+                                        JavaSecUI_getString(CAPS_TARGET_DESC_SILENTINSTALL),
+                                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SILENTINSTALL),
+                                        JavaSecUI_getString(CAPS_TARGET_URL_SILENTINSTALL),
                                         targetPtrArray);
   SilentInstallTarg->registerTarget();
 
@@ -708,26 +709,26 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   ConnectTarg = new nsUserTarget("UniversalConnect", sysPrin,
                                  targetRiskHigh,
                                  targetRiskColorHigh,
-                                 CAPS_TARGET_DESC_CONNECT,
-                                 CAPS_TARGET_DETAIL_DESC_CONNECT,
-                                 CAPS_TARGET_URL_CONNECT,
+                                 JavaSecUI_getString(CAPS_TARGET_DESC_CONNECT),
+                                 JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CONNECT),
+                                 JavaSecUI_getHelpURL(CAPS_TARGET_URL_CONNECT),
                                  targetPtrArray);
   ConnectTarg->registerTarget();
   
   ClientAuthTarg = new nsUserTarget("ClientAuth", sysPrin,
                                     targetRiskMedium,
                                     targetRiskColorMedium,
-                                    CAPS_TARGET_DESC_CLIENT_AUTH,
-                                    CAPS_TARGET_DETAIL_DESC_CLIENT_AUTH,
-                                    CAPS_TARGET_URL_CLIENT_AUTH);
+                                    JavaSecUI_getString(CAPS_TARGET_DESC_CLIENT_AUTH),
+                                    JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CLIENT_AUTH),
+                                    JavaSecUI_getHelpURL(CAPS_TARGET_URL_CLIENT_AUTH));
   ClientAuthTarg->registerTarget();
   
   RedirectTarg = new nsTarget("UniversalRedirect", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_REDIRECT,
-                              CAPS_TARGET_DETAIL_DESC_REDIRECT,
-                              CAPS_TARGET_URL_REDIRECT);
+                              JavaSecUI_getString(CAPS_TARGET_DESC_REDIRECT),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_REDIRECT),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_REDIRECT));
   RedirectTarg->registerTarget();
   
   targetPtrArray = new nsTargetArray();
@@ -739,9 +740,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                              sysPrin,
                                              targetRiskHigh,
                                              targetRiskColorHigh,
-                                             CAPS_TARGET_DESC_CONNECT_WITH_REDIRECT,
-                                             CAPS_TARGET_DETAIL_DESC_CONNECT_WITH_REDIRECT,
-                                             CAPS_TARGET_URL_CONNECT_WITH_REDIRECT,
+                                             JavaSecUI_getString(CAPS_TARGET_DESC_CONNECT_WITH_REDIRECT),
+                                             JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CONNECT_WITH_REDIRECT),
+                                             JavaSecUI_getHelpURL(CAPS_TARGET_URL_CONNECT_WITH_REDIRECT),
                                              targetPtrArray);
   ConnectWithRedirectTarg->registerTarget();
   
@@ -753,9 +754,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   CodebaseEnvTarg = new nsTarget("CodebaseEnvironment", sysPrin,
                                  targetRiskLow,
                                  targetRiskColorLow,
-                                 CAPS_TARGET_DESC_CODEBASE_ENV,
-                                 CAPS_TARGET_DETAIL_DESC_CODEBASE_ENV,
-                                 CAPS_TARGET_URL_CODEBASE_ENV,
+                                 JavaSecUI_getString(CAPS_TARGET_DESC_CODEBASE_ENV),
+                                 JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CODEBASE_ENV),
+                                 JavaSecUI_getHelpURL(CAPS_TARGET_URL_CODEBASE_ENV),
                                  targetPtrArray);
   CodebaseEnvTarg->registerTarget();
   
@@ -796,9 +797,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsTarget("SuperUser", sysPrin, 
                         targetRiskHigh,
                         targetRiskColorHigh,
-                        CAPS_TARGET_DESC_SUPER_USER,
-                        CAPS_TARGET_DETAIL_DESC_SUPER_USER,
-                        CAPS_TARGET_URL_SUPER_USER, 
+                        JavaSecUI_getString(CAPS_TARGET_DESC_SUPER_USER),
+                        JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SUPER_USER),
+                        JavaSecUI_getHelpURL(CAPS_TARGET_URL_SUPER_USER), 
                         targetPtrArray);
   target->registerTarget();
   
@@ -810,9 +811,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                                  sysPrin,
                                                  targetRiskHigh,
                                                  targetRiskColorHigh,
-                                                 CAPS_TARGET_DESC_SAR,
-                                                 CAPS_TARGET_DETAIL_DESC_SAR,
-                                                 CAPS_TARGET_URL_SAR);
+                                                 JavaSecUI_getString(CAPS_TARGET_DESC_SAR),
+                                                 JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SAR),
+                                                 JavaSecUI_getHelpURL(CAPS_TARGET_URL_SAR));
   SiteArchiveTarget->registerTarget();
   
   targetPtrArray = new nsTargetArray();
@@ -832,9 +833,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsUserTarget("30Capabilities", sysPrin, 
                             targetRiskHigh,
                             targetRiskColorHigh,
-                            CAPS_TARGET_DESC_30_CAPABILITIES,
-                            CAPS_TARGET_DETAIL_DESC_30_CAPABILITIES,
-                            CAPS_TARGET_URL_30_CAPABILITIES, 
+                            JavaSecUI_getString(CAPS_TARGET_DESC_30_CAPABILITIES),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_30_CAPABILITIES),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_30_CAPABILITIES), 
                             targetPtrArray);
   target->registerTarget();
   //
@@ -846,9 +847,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   nsTarget *mappTarget = new nsTarget("MarimbaAppContextTarget", sysPrin, 
                                       targetRiskMedium,
                                       targetRiskColorMedium,
-                                      CAPS_TARGET_DESC_MARIMBA,
-                                      CAPS_TARGET_DETAIL_DESC_MARIMBA,
-                                      CAPS_TARGET_URL_MARIMBA);
+                                      JavaSecUI_getString(CAPS_TARGET_DESC_MARIMBA),
+                                      JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_MARIMBA),
+                                      JavaSecUI_getHelpURL(CAPS_TARGET_URL_MARIMBA));
   mappTarget->registerTarget();
   
   //
@@ -870,9 +871,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsUserTarget("MarimbaInternalTarget", sysPrin, 
                             targetRiskHigh,
                             targetRiskColorHigh,
-                            CAPS_TARGET_DESC_MARIMBA,
-                            CAPS_TARGET_DETAIL_DESC_MARIMBA,
-                            CAPS_TARGET_URL_MARIMBA, 
+                            JavaSecUI_getString(CAPS_TARGET_DESC_MARIMBA),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_MARIMBA),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_MARIMBA), 
                             targetPtrArray);
   target->registerTarget();
   
@@ -889,9 +890,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   nsTarget *iiopTarget = new nsUserTarget("IIOPRuntime", sysPrin,
                                        targetRiskHigh,
                                        targetRiskColorHigh,
-                                       CAPS_TARGET_DESC_IIOP,
-                                       CAPS_TARGET_DETAIL_DESC_IIOP,
-                                       CAPS_TARGET_URL_IIOP,
+                                       JavaSecUI_getString(CAPS_TARGET_DESC_IIOP),
+                                       JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_IIOP),
+                                       JavaSecUI_getHelpURL(CAPS_TARGET_URL_IIOP),
                                        targetPtrArray);
   iiopTarget->registerTarget();
   
@@ -915,9 +916,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("Debugger", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_DEBUGGER,
-                              CAPS_TARGET_DETAIL_DESC_DEBUGGER,
-                              CAPS_TARGET_URL_DEBUGGER, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_DEBUGGER),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_DEBUGGER),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_DEBUGGER), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -928,9 +929,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("CanvasAccess", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_CANVAS_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS,
-                              CAPS_TARGET_URL_CANVAS_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_CANVAS_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CANVAS_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_CANVAS_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -946,9 +947,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                                              sysPrin,
                                              targetRiskHigh,
                                              targetRiskColorHigh,
-                                             CAPS_TARGET_DESC_FILE_ACCESS,
-                                             CAPS_TARGET_DETAIL_DESC_FILE_ACCESS,
-                                             CAPS_TARGET_URL_FILE_ACCESS,
+                                             JavaSecUI_getString(CAPS_TARGET_DESC_FILE_ACCESS),
+                                             JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_FILE_ACCESS),
+                                             JavaSecUI_getHelpURL(CAPS_TARGET_URL_FILE_ACCESS),
                                              targetPtrArray);
   UniversalFileAccessTarg->registerTarget();
   
@@ -957,24 +958,22 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   i=0;
   targetPtrArray->Set(i++, (void *)BrowserReadTarg);
   targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
-  UniversalBrowserAccessTarg = 
-    new nsUserTarget("UniversalBrowserAccess",
-                     sysPrin,
-                     targetRiskHigh,
-                     targetRiskColorHigh,
-                     CAPS_TARGET_DESC_BROWSER_ACCESS,
-                     CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS,
-                     CAPS_TARGET_URL_BROWSER_ACCESS,
-                     targetPtrArray);
+  UniversalBrowserAccessTarg = new nsUserTarget("UniversalBrowserAccess",
+                                                sysPrin,
+                                                targetRiskHigh,
+                                                targetRiskColorHigh,
+                                                JavaSecUI_getString(CAPS_TARGET_DESC_BROWSER_ACCESS),
+                                                JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_BROWSER_ACCESS),
+                                                JavaSecUI_getHelpURL(CAPS_TARGET_URL_BROWSER_ACCESS),
+                                                targetPtrArray);
   UniversalBrowserAccessTarg->registerTarget();
   
-  LimitedFileAccessTarg = 
-    new nsUserTarget("LimitedFileAccess", sysPrin,
-                     targetRiskLow,
-                     targetRiskColorLow,
-                     CAPS_TARGET_DESC_LIMITED_FILE_ACCESS,
-                     CAPS_TARGET_DETAIL_DESC_LIMITED_FILE_ACCESS,
-                     CAPS_TARGET_URL_LIMITED_FILE_ACCESS);
+  LimitedFileAccessTarg = new nsUserTarget("LimitedFileAccess", sysPrin,
+                                         targetRiskLow,
+                                         targetRiskColorLow,
+                                         JavaSecUI_getString(CAPS_TARGET_DESC_LIMITED_FILE_ACCESS),
+                                         JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_LIMITED_FILE_ACCESS),
+                                         JavaSecUI_getHelpURL(CAPS_TARGET_URL_LIMITED_FILE_ACCESS));
   LimitedFileAccessTarg->registerTarget();
 			
   targetPtrArray = new nsTargetArray();
@@ -984,9 +983,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("GamesAccess", sysPrin,
                               targetRiskLow,
                               targetRiskColorLow,
-                              CAPS_TARGET_DESC_GAMES_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_GAMES_ACCESS,
-                              CAPS_TARGET_URL_GAMES_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_GAMES_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_GAMES_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_GAMES_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1000,9 +999,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("WordProcessorAccess", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_WORD_PROCESSOR_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_WORD_PROCESSOR_ACCESS,
-                              CAPS_TARGET_URL_WORD_PROCESSOR_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_WORD_PROCESSOR_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_WORD_PROCESSOR_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_WORD_PROCESSOR_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1016,9 +1015,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("SpreadsheetAccess", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_SPREADSHEET_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_SPREADSHEET_ACCESS,
-                              CAPS_TARGET_URL_SPREADSHEET_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_SPREADSHEET_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_SPREADSHEET_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_SPREADSHEET_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1032,9 +1031,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("PresentationAccess", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_PRESENTATION_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_PRESENTATION_ACCESS,
-                              CAPS_TARGET_URL_PRESENTATION_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_PRESENTATION_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_PRESENTATION_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_PRESENTATION_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1048,9 +1047,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("DatabaseAccess", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_DATABASE_ACCESS,
-                              CAPS_TARGET_DETAIL_DESC_DATABASE_ACCESS,
-                              CAPS_TARGET_URL_DATABASE_ACCESS, 
+                              JavaSecUI_getString(CAPS_TARGET_DESC_DATABASE_ACCESS),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_DATABASE_ACCESS),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_DATABASE_ACCESS), 
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1067,9 +1066,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("TerminalEmulator", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_TERMINAL_EMULATOR,
-                              CAPS_TARGET_DETAIL_DESC_TERMINAL_EMULATOR,
-                              CAPS_TARGET_URL_TERMINAL_EMULATOR,
+                              JavaSecUI_getString(CAPS_TARGET_DESC_TERMINAL_EMULATOR),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_TERMINAL_EMULATOR),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_TERMINAL_EMULATOR),
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1084,9 +1083,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("JARPackager", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_JAR_PACKAGER,
-                              CAPS_TARGET_DETAIL_DESC_JAR_PACKAGER,
-                              CAPS_TARGET_URL_JAR_PACKAGER,
+                              JavaSecUI_getString(CAPS_TARGET_DESC_JAR_PACKAGER),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_JAR_PACKAGER),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_JAR_PACKAGER),
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1104,9 +1103,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   userTarg = new nsUserTarget("AccountSetup", sysPrin,
                               targetRiskHigh,
                               targetRiskColorHigh,
-                              CAPS_TARGET_DESC_ACCOUNT_SETUP,
-                              CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP,
-                              CAPS_TARGET_URL_ACCOUNT_SETUP,
+                              JavaSecUI_getString(CAPS_TARGET_DESC_ACCOUNT_SETUP),
+                              JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ACCOUNT_SETUP),
+                              JavaSecUI_getHelpURL(CAPS_TARGET_URL_ACCOUNT_SETUP),
                               targetPtrArray);
   userTarg->registerTarget();
   
@@ -1130,9 +1129,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsUserTarget("Netcaster", sysPrin, 
                             targetRiskHigh,
                             targetRiskColorHigh,
-                            CAPS_TARGET_DESC_CONSTELLATION,
-                            CAPS_TARGET_DETAIL_DESC_CONSTELLATION,
-                            CAPS_TARGET_URL_CONSTELLATION, 
+                            JavaSecUI_getString(CAPS_TARGET_DESC_CONSTELLATION),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_CONSTELLATION),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_CONSTELLATION), 
                             targetPtrArray);
   target->registerTarget();
 
@@ -1141,9 +1140,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsUserTarget("AllJavaPermission", sysPrin, 
                             targetRiskHigh,
                             targetRiskColorHigh,
-                            CAPS_TARGET_DESC_ALL_JAVA_PERMISSION,
-                            CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION,
-                            CAPS_TARGET_URL_ALL_JAVA_PERMISSION);
+                            JavaSecUI_getString(CAPS_TARGET_DESC_ALL_JAVA_PERMISSION),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_ALL_JAVA_PERMISSION));
   target->registerTarget();
 
   /* Permission to All privileges in Java */
@@ -1161,9 +1160,9 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
   target = new nsUserTarget("AllJavaScriptPermission", sysPrin, 
                             targetRiskHigh,
                             targetRiskColorHigh,
-                            CAPS_TARGET_DESC_ALL_JS_PERMISSION,
-                            CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION,
-                            CAPS_TARGET_URL_ALL_JS_PERMISSION,
+                            JavaSecUI_getString(CAPS_TARGET_DESC_ALL_JS_PERMISSION),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_ALL_JS_PERMISSION),
                             targetPtrArray);
   target->registerTarget();
 
@@ -1174,30 +1173,6 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
 //
 // 			PUBLIC METHODS 
 //
-
-nsTarget::nsTarget(char *name, 
-                   nsPrincipal *prin, 
-                   PRInt32 risk, 
-                   char *riskColor, 
-                   int desc_id, 
-                   int detail_desc_id,
-                   int help_url_id, 
-                   nsTargetArray* targetArray)
-{
-  char *description = NULL;
-  char *detailDescription = NULL;
-  char *url = NULL;
-  if (desc_id)
-    description = JavaSecUI_getString(desc_id);
-  if (detail_desc_id)
-    detailDescription = JavaSecUI_getString(detail_desc_id);
-  if (help_url_id)
-    url = JavaSecUI_getHelpURL(help_url_id);
-  init(name, prin, targetArray, risk, riskColor, description, 
-       detailDescription, url);
-  XP_FREE(url);
-}
-
 
 nsTarget::~nsTarget(void)
 {
@@ -1314,14 +1289,8 @@ nsTarget * nsTarget::findTarget(char *name, nsPrincipal *prin)
   if (prin->equals(nsPrivilegeManager::getSystemPrincipal())) {
     return findTarget(name);
   }
-  /* name and principal combination uniquely identfies a target */
-  nsTarget* targ = new nsTarget((char *)name, prin, 
-                                nsRiskType_HighRisk,
-                                JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH),
-                                NULL, NULL, NULL, NULL);
-  nsTarget* ret_val = findTarget(targ);
-  delete targ;
-  return ret_val;
+  nsTarget * targ = new nsTarget((char *)name, prin);
+  return findTarget(targ);
 }
 
 nsPrivilege * nsTarget::checkPrivilegeEnabled(nsPrincipalArray* prinArray, void *data)
@@ -1419,7 +1388,14 @@ nsTargetArray* nsTarget::getAllRegisteredTargets(void)
 
 char * nsTarget::getRisk(void)
 {
-  return JavaSecUI_targetRiskStr(itsRisk);
+  /* XXX: The following needs to be i18n */
+  if (itsRisk <= nsRiskType_LowRisk) {
+    return "low";
+  }
+  if (itsRisk <= nsRiskType_MediumRisk) {
+    return "medium";
+  }
+  return "high";
 }
 
 char * nsTarget::getRiskColor(void)
@@ -1525,9 +1501,6 @@ void nsTarget::init(char *name, nsPrincipal *prin, nsTargetArray* targetArray,
   if (riskColor) {
     itsRiskColorStr = new char[strlen(riskColor) + 1];
     XP_STRCPY(itsRiskColorStr, riskColor);
-  } else {
-    /* XXX: we should default to High */
-    itsRiskColorStr = NULL;
   }
 
   if (description == NULL)
@@ -1572,6 +1545,11 @@ void nsTarget::init(char *name, nsPrincipal *prin, nsTargetArray* targetArray,
 
 static PRBool initialize(void) 
 {
+  /* XXX:
+     We need to implement the static initializer that creates all the 
+     system targets
+  */
+
   return PR_TRUE;
 }
 
