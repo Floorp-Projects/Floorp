@@ -43,6 +43,7 @@ CHROME_L10N = \
 	.\accept2locale.properties \
 	.\languageNames.properties \
 	.\regionNames.properties \
+	.\commonDialogs.properties \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>
