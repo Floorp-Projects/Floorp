@@ -41,6 +41,7 @@ typedef struct _nsParserError {
   PRInt32 colNumber;  
   nsString description;  
   nsString sourceLine;
+  nsString sourceURL;
 } nsParserError;
 
 #endif

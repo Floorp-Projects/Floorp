@@ -303,6 +303,8 @@ CreateErrorText(const nsParserError* aError, nsString& aErrorString)
 
   if (aError) {
     aErrorString.Append(aError->description);
+    aErrorString.AppendWithConversion("\nLocation: ");
+    aErrorString.Append(aError->sourceURL);
     aErrorString.AppendWithConversion("\nLine Number ");
     aErrorString.AppendInt(aError->lineNumber, 10);
     aErrorString.AppendWithConversion(", Column ");
@@ -402,6 +404,7 @@ nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBo
     // Adjust the column number so that it is one based rather than zero based.
     error->colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
     error->description.AssignWithConversion(XML_ErrorString(error->code));
+    error->sourceURL = mState->scanner->GetFilename();
     if (!aIsFinal) {
       PRInt32 byteIndexRelativeToFile = 0;
       byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
