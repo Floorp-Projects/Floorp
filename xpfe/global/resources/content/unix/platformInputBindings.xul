@@ -21,6 +21,10 @@
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteWordBackward');
     controller.doCommand('cmd_deleteWordBackward');"/>
+<key id="emKillToBegkb" key="u" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToBeginningOfLine');
+    controller.doCommand('cmd_deleteToBeginningOfLine');"/>
 <key id="emKillToEndkb" key="k" control="true" shift="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToEndOfLine');
