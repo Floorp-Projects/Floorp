@@ -145,8 +145,8 @@ function onUnload() {
 
 var started   = false;
 var completed = false;
-var startTime;
-var elapsed;
+var startTime = 0;
+var elapsed   = 0;
 var interval = 1000; // Update every 1000 milliseconds.
 var lastUpdate = -interval; // Update initially.
 
