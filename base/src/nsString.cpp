@@ -135,6 +135,26 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler) const
   aHandler->Add(mCapacity * sizeof(chartype));
 }
 
+/**
+ *  Determine whether or not the characters in this
+ *  string are in sorted order.
+ *  
+ *  @update  gess 8/25/98
+ *  @return  TRUE if ordered.
+ */
+PRBool nsString::IsOrdered(void) const {
+  PRBool  result=PR_TRUE;
+  if(mLength>1) {
+    PRInt32 theIndex;
+    for(theIndex=1;theIndex<mLength;theIndex++) {
+      if(mStr[theIndex-1]>=mStr[theIndex]) {
+        result=PR_FALSE;
+        break;
+      }
+    }
+  }
+  return result;
+}
 
 /**
  * This method gets called when the internal buffer needs
@@ -1186,6 +1206,30 @@ nsString& nsString::StripWhitespace()
   return StripChars("\r\t\n");
 }
 
+/**
+ *  Search for given character within this string.
+ *  This method does so by using a binary search,
+ *  so your string HAD BETTER BE ORDERED!
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aChar is the unicode char to be found
+ *  @return  offset in string, or -1 (kNotFound)
+ */
+PRInt32 nsString::BinarySearch(PRUnichar aChar) const {
+  PRInt32 low=0;
+  PRInt32 high=mLength-1;
+
+  while (low <= high) {
+    int middle = (low + high) >> 1;
+    if (mStr[middle]==aChar)
+      return middle;
+    if (mStr[middle]>aChar)
+      high = middle - 1; 
+    else
+      low = middle + 1; 
+  }
+  return kNotFound;
+}
 
 /**
  *  Search for given buffer within this string
@@ -1196,7 +1240,7 @@ nsString& nsString::StripWhitespace()
  */
 PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
   NS_ASSERTION(0!=anISOLatin1Buf,kNullPointerError);
-  PRInt32 result=-1;
+  PRInt32 result=kNotFound;
   if(anISOLatin1Buf) {
     PRInt32 len=strlen(anISOLatin1Buf);
     if(len<=mLength) { //only enter if abuffer length is <= mStr length.
@@ -1217,7 +1261,7 @@ PRInt32 nsString::Find(const char* anISOLatin1Buf) const{
  */
 PRInt32 nsString::Find(const PRUnichar* aString) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
-  PRInt32 result=-1;
+  PRInt32 result=kNotFound;
   if(aString) {
     PRInt32 len=nsCRT::strlen(aString);
     if(len<=mLength) { //only enter if abuffer length is <= mStr length.
@@ -1238,7 +1282,7 @@ PRInt32 nsString::Find(const PRUnichar* aString) const{
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsString& aString) const{
-  PRInt32 result=-1;
+  PRInt32 result=kNotFound;
 
   PRInt32 len=aString.mLength;
   if(len<=mLength) { //only enter if abuffer length is <= mStr length.
