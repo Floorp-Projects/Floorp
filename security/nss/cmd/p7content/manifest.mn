@@ -37,10 +37,7 @@ MODULE = security
 
 CSRCS = p7content.c
 
-REQUIRES = seccmd dbm
+REQUIRES = seccmd 
 
 PROGRAM = p7content
-# PROGRAM = ./$(OBJDIR)/p7content.exe
-
-USE_STATIC_LIBS = 1
 
