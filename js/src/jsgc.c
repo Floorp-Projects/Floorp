@@ -759,7 +759,7 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
                                   ? NULL
                                   : JSVAL_TO_PRIVATE(privateValue);
         const char *className = gc_object_class_name(thing);
-        fprintf(fp, "object %8p %s", privateThing, className);
+        fprintf(fp, "object %08p %s", privateThing, className);
         break;
       }
       case GCX_DOUBLE:
@@ -989,7 +989,6 @@ js_ForceGC(JSContext *cx, uintN gcflags)
 
     for (i = 0; i < GCX_NTYPES; i++)
         cx->newborn[i] = NULL;
-    cx->lastAtom = NULL;
     cx->runtime->gcPoke = JS_TRUE;
     js_GC(cx, gcflags);
     JS_ArenaFinish();
@@ -1262,8 +1261,6 @@ restart:
                 NULL);
         for (i = GCX_EXTERNAL_STRING; i < GCX_NTYPES; i++)
             GC_MARK(cx, acx->newborn[i], "newborn external string", NULL);
-        if (acx->lastAtom)
-            GC_MARK_ATOM(cx, acx->lastAtom, NULL);
 #if JS_HAS_EXCEPTIONS
         if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);

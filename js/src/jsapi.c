@@ -1518,7 +1518,6 @@ JS_ClearNewbornRoots(JSContext *cx)
 
     for (i = 0; i < GCX_NTYPES; i++)
         cx->newborn[i] = NULL;
-    cx->lastAtom = NULL;
 }
 
 #include "jshash.h" /* Added by JSIFY */
