@@ -1627,10 +1627,10 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
         // nsIControllers.  These objects prevent their global
         // object's script object from being garbage collected,
         // which means JS continues to hold an owning reference
-        // to the GlobalWindowImpl, which owns the document,
+        // to the nsGlobalWindow, which owns the document,
         // which owns this content.  That's a cycle, so we break
         // it here.  (It might be better to break this by releasing
-        // mDocument in GlobalWindowImpl::SetDocShell, but I'm not
+        // mDocument in nsGlobalWindow::SetDocShell, but I'm not
         // sure whether that would fix all possible cycles through
         // mControllers.)
         if (!aDocument && mSlots) {

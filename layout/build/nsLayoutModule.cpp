@@ -423,7 +423,7 @@ Shutdown()
   nsImageLoadingContent::Shutdown();
   nsStyleSet::FreeGlobals();
 
-  GlobalWindowImpl::ShutDown();
+  nsGlobalWindow::ShutDown();
   nsDOMClassInfo::ShutDown();
   nsTextControlFrame::ShutDown();
   nsXBLWindowKeyHandler::ShutDown();

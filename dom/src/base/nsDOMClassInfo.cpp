@@ -452,7 +452,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // The Window class lets you QI into interfaces that are not in the
   // flattened set (i.e. nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY
   // is not set), because of this make sure all scriptable interfaces
-  // that are implemented by GlobalWindowImpl can securely be exposed
+  // that are implemented by nsGlobalWindow can securely be exposed
   // to JS.
 
 

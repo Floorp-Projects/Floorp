@@ -84,8 +84,8 @@ nsFocusController::~nsFocusController(void)
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsFocusController, nsIFocusController,
-                   nsIDOMFocusListener, nsIDOMEventListener, nsSupportsWeakReference)
+NS_IMPL_ISUPPORTS4(nsFocusController, nsIFocusController, nsIDOMFocusListener,
+                   nsIDOMEventListener, nsSupportsWeakReference)
 
 NS_IMETHODIMP
 nsFocusController::Create(nsIFocusController** aResult)
@@ -186,7 +186,8 @@ nsFocusController::UpdateCommands(const nsAString& aEventName)
     if (domDoc) {
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
  
-      nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(doc->GetScriptGlobalObject()));
+      nsCOMPtr<nsIDOMWindowInternal> window =
+        do_QueryInterface(doc->GetScriptGlobalObject());
       if (window)
         window->UpdateCommands(aEventName);
     }
@@ -198,8 +199,9 @@ nsFocusController::UpdateCommands(const nsAString& aEventName)
 NS_IMETHODIMP
 nsFocusController::GetControllers(nsIControllers** aResult)
 {
-  //XXX: we should fix this so there's a generic interface that describes controllers, 
-  //     so this code would have no special knowledge of what object might have controllers.
+  // XXX: we should fix this so there's a generic interface that
+  // describes controllers, so this code would have no special
+  // knowledge of what object might have controllers.
   if (mCurrentElement) {
 
 #ifdef MOZ_XUL
@@ -208,16 +210,19 @@ nsFocusController::GetControllers(nsIControllers** aResult)
       return xulElement->GetControllers(aResult);
 #endif
 
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea(do_QueryInterface(mCurrentElement));
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea =
+      do_QueryInterface(mCurrentElement);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(mCurrentElement));
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement =
+      do_QueryInterface(mCurrentElement);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
   }
   else if (mCurrentWindow) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(mCurrentWindow));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow =
+      do_QueryInterface(mCurrentWindow);
     if (domWindow)
       return domWindow->GetControllers(aResult);
   }
@@ -365,21 +370,24 @@ nsFocusController::Blur(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOMWindowInternal** aWindow)
+nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument,
+                                               nsIDOMWindowInternal** aWindow)
 {
 	NS_ENSURE_ARG_POINTER(aWindow);
 
   nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(aDocument);
   if(!objectOwner) return NS_OK;
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(objectOwner->GetScriptGlobalObject());
+  nsCOMPtr<nsIDOMWindowInternal> domWindow =
+    do_QueryInterface(objectOwner->GetScriptGlobalObject());
   *aWindow = domWindow;
   NS_IF_ADDREF(*aWindow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFocusController::GetControllerForCommand(const char * aCommand, nsIController** _retval)
+nsFocusController::GetControllerForCommand(const char * aCommand,
+                                           nsIController** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);	
   *_retval = nsnull;
@@ -406,21 +414,22 @@ nsFocusController::GetControllerForCommand(const char * aCommand, nsIController*
     currentWindow = do_QueryInterface(domWindow);
   }
   else if (mCurrentWindow) {
-    GlobalWindowImpl *win =
-      NS_STATIC_CAST(GlobalWindowImpl*,
-                     NS_STATIC_CAST(nsIDOMWindowInternal*, mCurrentWindow));
+    nsGlobalWindow *win =
+      NS_STATIC_CAST(nsGlobalWindow *,
+                     NS_STATIC_CAST(nsIDOMWindowInternal *, mCurrentWindow));
     currentWindow = win->GetPrivateParent();
   }
   else return NS_OK;
 
   while(currentWindow) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(currentWindow);
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(currentWindow));
     if(domWindow) {
       nsCOMPtr<nsIControllers> controllers2;
       domWindow->GetControllers(getter_AddRefs(controllers2));
       if(controllers2) {
         nsCOMPtr<nsIController> controller;
-        controllers2->GetControllerForCommand(aCommand, getter_AddRefs(controller));
+        controllers2->GetControllerForCommand(aCommand,
+                                              getter_AddRefs(controller));
         if(controller) {
           *_retval = controller;
           NS_ADDREF(*_retval);
@@ -428,9 +437,9 @@ nsFocusController::GetControllerForCommand(const char * aCommand, nsIController*
         }
       }
     } 
-    GlobalWindowImpl *win =
-      NS_STATIC_CAST(GlobalWindowImpl*,
-                     NS_STATIC_CAST(nsIDOMWindowInternal*, currentWindow));
+    nsGlobalWindow *win =
+      NS_STATIC_CAST(nsGlobalWindow *,
+                     NS_STATIC_CAST(nsIDOMWindowInternal *, currentWindow));
     currentWindow = win->GetPrivateParent();
   }
   

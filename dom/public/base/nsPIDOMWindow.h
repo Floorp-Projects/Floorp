@@ -53,7 +53,7 @@
 // permissive to least permissive so that it's safe to push state in
 // all situations. Pushing popup state onto the stack never makes the
 // current popup state less permissive (see
-// GlobalWindowImpl::PushPopupControlState()).
+// nsGlobalWindow::PushPopupControlState()).
 enum PopupControlState {
   openAllowed = 0,  // open that window without worries
   openControlled,   // it's a popup, but allow it
@@ -72,7 +72,7 @@ enum OpenAllowValue {
 
 class nsIDocShell;
 class nsIFocusController;
-struct nsTimeoutImpl;
+struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
 { 0x7e12a2d6, 0x9a2a, 0x4907, \
@@ -147,7 +147,7 @@ protected:
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
   nsIDOMElement *mFrameElement; // weak
   nsCOMPtr<nsIURI> mOpenerScriptURL; // strong; used to determine whether to clear scope
-  nsTimeoutImpl         *mRunningTimeout;
+  nsTimeout             *mRunningTimeout;
 
   PRUint32               mMutationBits;
 

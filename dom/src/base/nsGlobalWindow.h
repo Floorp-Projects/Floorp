@@ -96,34 +96,34 @@ class nsPresContext;
 class nsIDOMEvent;
 class nsIScrollableView;
 
-typedef struct nsTimeoutImpl nsTimeoutImpl;
+typedef struct nsTimeout nsTimeout;
 
-class BarPropImpl;
-class LocationImpl;
-class NavigatorImpl;
-class ScreenImpl;
-class HistoryImpl;
+class nsBarProp;
+class nsLocation;
+class nsNavigator;
+class nsScreen;
+class nsHistory;
 class nsIDocShellLoadInfo;
 
 //*****************************************************************************
-// GlobalWindowImpl: Global Object for Scripting
+// nsGlobalWindow: Global Object for Scripting
 //*****************************************************************************
 // Beware that all scriptable interfaces implemented by
-// GlobalWindowImpl will be reachable from JS, if you make this class
+// nsGlobalWindow will be reachable from JS, if you make this class
 // implement new interfaces you better know what you're
 // doing. Security wise this is very sensitive code. --
 // jst@netscape.com
 
 
-class GlobalWindowImpl : public nsIScriptGlobalObject,
-                         public nsPIDOMWindow,
-                         public nsIDOMJSWindow,
-                         public nsIScriptObjectPrincipal,
-                         public nsIDOMEventReceiver,
-                         public nsIDOM3EventTarget,
-                         public nsIDOMViewCSS,
-                         public nsSupportsWeakReference,
-                         public nsIInterfaceRequestor
+class nsGlobalWindow : public nsIScriptGlobalObject,
+                       public nsPIDOMWindow,
+                       public nsIDOMJSWindow,
+                       public nsIScriptObjectPrincipal,
+                       public nsIDOMEventReceiver,
+                       public nsIDOM3EventTarget,
+                       public nsIDOMViewCSS,
+                       public nsSupportsWeakReference,
+                       public nsIInterfaceRequestor
 {
 public:
   // public methods
@@ -208,14 +208,14 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // Object Management
-  GlobalWindowImpl();
+  nsGlobalWindow();
 
   static void ShutDown();
   static PRBool IsCallerChrome();
 
 protected:
   // Object Management
-  virtual ~GlobalWindowImpl();
+  virtual ~nsGlobalWindow();
   void CleanUp();
   void ClearControllers();
 
@@ -236,11 +236,10 @@ protected:
 
   // Timeout Functions
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
-  void RunTimeout(nsTimeoutImpl *aTimeout);
+  void RunTimeout(nsTimeout *aTimeout);
   nsresult ClearTimeoutOrInterval();
   void ClearAllTimeouts();
-  void InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
-                             nsTimeoutImpl *aTimeout);
+  void InsertTimeoutIntoList(nsTimeout **aInsertionPoint, nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
   // Helper Functions
@@ -313,20 +312,20 @@ protected:
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   JSObject*                     mJSObject;
-  nsRefPtr<NavigatorImpl>       mNavigator;
-  nsRefPtr<ScreenImpl>          mScreen;
-  nsRefPtr<HistoryImpl>         mHistory;
+  nsRefPtr<nsNavigator>         mNavigator;
+  nsRefPtr<nsScreen>            mScreen;
+  nsRefPtr<nsHistory>           mHistory;
   nsRefPtr<nsDOMWindowList>     mFrames;
-  nsRefPtr<LocationImpl>        mLocation;
-  nsRefPtr<BarPropImpl>         mMenubar;
-  nsRefPtr<BarPropImpl>         mToolbar;
-  nsRefPtr<BarPropImpl>         mLocationbar;
-  nsRefPtr<BarPropImpl>         mPersonalbar;
-  nsRefPtr<BarPropImpl>         mStatusbar;
-  nsRefPtr<BarPropImpl>         mScrollbars;
+  nsRefPtr<nsLocation>          mLocation;
+  nsRefPtr<nsBarProp>           mMenubar;
+  nsRefPtr<nsBarProp>           mToolbar;
+  nsRefPtr<nsBarProp>           mLocationbar;
+  nsRefPtr<nsBarProp>           mPersonalbar;
+  nsRefPtr<nsBarProp>           mStatusbar;
+  nsRefPtr<nsBarProp>           mScrollbars;
   nsCOMPtr<nsIWeakReference>    mWindowUtils;
-  nsTimeoutImpl*                mTimeouts;
-  nsTimeoutImpl**               mTimeoutInsertionPoint;
+  nsTimeout*                    mTimeouts;
+  nsTimeout**                   mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
   nsString                      mStatus;
@@ -355,10 +354,10 @@ protected:
 };
 
 /*
- * nsGlobalChromeWindow inherits from GlobalWindowImpl. It is the global
+ * nsGlobalChromeWindow inherits from nsGlobalWindow. It is the global
  * object created for a Chrome Window only.
  */
-class nsGlobalChromeWindow : public GlobalWindowImpl,
+class nsGlobalChromeWindow : public nsGlobalWindow,
                              public nsIDOMChromeWindow
 {
 public:
@@ -378,9 +377,9 @@ protected:
  * Timeout struct that holds information about each JavaScript
  * timeout.
  */
-struct nsTimeoutImpl
+struct nsTimeout
 {
-  nsTimeoutImpl()
+  nsTimeout()
   {
 #ifdef DEBUG_jst
     {
@@ -392,10 +391,10 @@ struct nsTimeoutImpl
 
     memset(this, 0, sizeof(*this));
 
-    MOZ_COUNT_CTOR(nsTimeoutImpl);
+    MOZ_COUNT_CTOR(nsTimeout);
   }
 
-  ~nsTimeoutImpl()
+  ~nsTimeout()
   {
 #ifdef DEBUG_jst
     {
@@ -405,14 +404,14 @@ struct nsTimeoutImpl
     }
 #endif
 
-    MOZ_COUNT_DTOR(nsTimeoutImpl);
+    MOZ_COUNT_DTOR(nsTimeout);
   }
 
   void Release(nsIScriptContext* aContext);
   void AddRef();
 
   // Window for which this timeout fires
-  GlobalWindowImpl *mWindow;
+  nsGlobalWindow *mWindow;
 
   // The JS expression to evaluate or function to call, if !mExpr
   JSString *mExpr;
@@ -454,7 +453,7 @@ struct nsTimeoutImpl
 
   // Pointer to the next timeout in the linked list of scheduled
   // timeouts
-  nsTimeoutImpl *mNext;
+  nsTimeout *mNext;
 
   // The popup state at timeout creation time if not created from
   // another timeout
@@ -466,15 +465,15 @@ private:
 };
 
 //*****************************************************************************
-// NavigatorImpl: Script "navigator" object
+// nsNavigator: Script "navigator" object
 //*****************************************************************************
 
-class NavigatorImpl : public nsIDOMNavigator,
-                      public nsIDOMJSNavigator
+class nsNavigator : public nsIDOMNavigator,
+                    public nsIDOMJSNavigator
 {
 public:
-  NavigatorImpl(nsIDocShell *aDocShell);
-  virtual ~NavigatorImpl();
+  nsNavigator(nsIDocShell *aDocShell);
+  virtual ~nsNavigator();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMNAVIGATOR
@@ -485,8 +484,8 @@ public:
   nsresult RefreshMIMEArray();
 
 protected:
-  nsRefPtr<MimeTypeArrayImpl> mMimeTypes;
-  nsRefPtr<PluginArrayImpl> mPlugins;
+  nsRefPtr<nsMimeTypeArray> mMimeTypes;
+  nsRefPtr<nsPluginArray> mPlugins;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
@@ -495,15 +494,15 @@ protected:
 class nsIURI;
 
 //*****************************************************************************
-// LocationImpl: Script "location" object
+// nsLocation: Script "location" object
 //*****************************************************************************
 
-class LocationImpl : public nsIDOMLocation,
-                     public nsIDOMNSLocation
+class nsLocation : public nsIDOMLocation,
+                   public nsIDOMNSLocation
 {
 public:
-  LocationImpl(nsIDocShell *aDocShell);
-  virtual ~LocationImpl();
+  nsLocation(nsIDocShell *aDocShell);
+  virtual ~nsLocation();
 
   NS_DECL_ISUPPORTS
 

@@ -186,7 +186,7 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
       }
     }
 
-    GlobalWindowImpl::ShutDown();
+    nsGlobalWindow::ShutDown();
     nsDOMClassInfo::ShutDown();
     nsJSEnvironment::ShutDown();
 

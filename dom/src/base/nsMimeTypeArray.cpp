@@ -47,33 +47,33 @@
 #include "nsIFile.h"
 
 
-MimeTypeArrayImpl::MimeTypeArrayImpl(nsIDOMNavigator* navigator)
+nsMimeTypeArray::nsMimeTypeArray(nsIDOMNavigator* navigator)
 {
 	mNavigator = navigator;
 	mMimeTypeCount = 0;
 	mMimeTypeArray = nsnull;
 }
 
-MimeTypeArrayImpl::~MimeTypeArrayImpl()
+nsMimeTypeArray::~nsMimeTypeArray()
 {
   Clear();
 }
 
 
-// QueryInterface implementation for MimeTypeArrayImpl
-NS_INTERFACE_MAP_BEGIN(MimeTypeArrayImpl)
+// QueryInterface implementation for nsMimeTypeArray
+NS_INTERFACE_MAP_BEGIN(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMimeTypeArray)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MimeTypeArray)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(MimeTypeArrayImpl)
-NS_IMPL_RELEASE(MimeTypeArrayImpl)
+NS_IMPL_ADDREF(nsMimeTypeArray)
+NS_IMPL_RELEASE(nsMimeTypeArray)
 
 
 NS_IMETHODIMP
-MimeTypeArrayImpl::GetLength(PRUint32* aLength)
+nsMimeTypeArray::GetLength(PRUint32* aLength)
 {
 	if (mMimeTypeArray == nsnull) {
 		nsresult rv = GetMimeTypes();
@@ -85,7 +85,7 @@ MimeTypeArrayImpl::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
+nsMimeTypeArray::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 {
 	if (mMimeTypeArray == nsnull) {
 		nsresult rv = GetMimeTypes();
@@ -101,8 +101,7 @@ MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 }
 
 NS_IMETHODIMP
-MimeTypeArrayImpl::NamedItem(const nsAString& aName,
-                             nsIDOMMimeType** aReturn)
+nsMimeTypeArray::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
@@ -160,23 +159,23 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
       }
 
       // If we got here, we support this type!  Say so.
-      nsCOMPtr<nsIDOMMimeType> helperImpl = new HelperMimeTypeImpl(aName);
-      if (!helperImpl) {
+      nsCOMPtr<nsIDOMMimeType> helper = new nsHelperMimeType(aName);
+      if (!helper) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      MimeTypeElementImpl* entry = new MimeTypeElementImpl(nsnull, helperImpl);
+      nsCOMPtr<nsIDOMMimeType> entry = new nsMimeType(nsnull, helper);
       if (!entry) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      return CallQueryInterface(entry, aReturn);
+      entry.swap(*aReturn);
     }
   }
 
   return NS_OK;
 }
 
-void  MimeTypeArrayImpl::Clear()
+void  nsMimeTypeArray::Clear()
 {
   if (mMimeTypeArray != nsnull) {
     for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
@@ -188,13 +187,13 @@ void  MimeTypeArrayImpl::Clear()
   mMimeTypeCount = 0;
 }
 
-nsresult MimeTypeArrayImpl::Refresh()
+nsresult nsMimeTypeArray::Refresh()
 {
   Clear();
   return GetMimeTypes();
 }
 
-nsresult MimeTypeArrayImpl::GetMimeTypes()
+nsresult nsMimeTypeArray::GetMimeTypes()
 {
   NS_PRECONDITION(!mMimeTypeArray && mMimeTypeCount==0,
                       "already initialized");
@@ -241,38 +240,37 @@ nsresult MimeTypeArrayImpl::GetMimeTypes()
 	return rv;
 }
 
-MimeTypeElementImpl::MimeTypeElementImpl(nsIDOMPlugin* aPlugin,
-                                         nsIDOMMimeType* aMimeType)
+nsMimeType::nsMimeType(nsIDOMPlugin* aPlugin, nsIDOMMimeType* aMimeType)
 {
 	mPlugin = aPlugin;
 	mMimeType = aMimeType;
 }
 
-MimeTypeElementImpl::~MimeTypeElementImpl()
+nsMimeType::~nsMimeType()
 {
 }
 
 
-// QueryInterface implementation for MimeTypeElementImpl
-NS_INTERFACE_MAP_BEGIN(MimeTypeElementImpl)
+// QueryInterface implementation for nsMimeType
+NS_INTERFACE_MAP_BEGIN(nsMimeType)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMimeType)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MimeType)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(MimeTypeElementImpl)
-NS_IMPL_RELEASE(MimeTypeElementImpl)
+NS_IMPL_ADDREF(nsMimeType)
+NS_IMPL_RELEASE(nsMimeType)
 
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetDescription(nsAString& aDescription)
+nsMimeType::GetDescription(nsAString& aDescription)
 {
 	return mMimeType->GetDescription(aDescription);
 }
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
+nsMimeType::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
 {	
 	*aEnabledPlugin = mPlugin;
 	NS_IF_ADDREF(*aEnabledPlugin);
@@ -280,43 +278,43 @@ MimeTypeElementImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
 }
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetSuffixes(nsAString& aSuffixes)
+nsMimeType::GetSuffixes(nsAString& aSuffixes)
 {
 	return mMimeType->GetSuffixes(aSuffixes);
 }
 
 NS_IMETHODIMP
-MimeTypeElementImpl::GetType(nsAString& aType)
+nsMimeType::GetType(nsAString& aType)
 {
 	return mMimeType->GetType(aType);
 }
 
-// QueryInterface implementation for HelperMimeTypeImpl
-NS_IMPL_ISUPPORTS1(HelperMimeTypeImpl, nsIDOMMimeType)
+// QueryInterface implementation for nsHelperMimeType
+NS_IMPL_ISUPPORTS1(nsHelperMimeType, nsIDOMMimeType)
 
 NS_IMETHODIMP
-HelperMimeTypeImpl::GetDescription(nsAString& aDescription)
+nsHelperMimeType::GetDescription(nsAString& aDescription)
 {
 	aDescription.Truncate();
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-HelperMimeTypeImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
+nsHelperMimeType::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
 {
 	*aEnabledPlugin = nsnull;
 	return NS_OK;
 }
   
 NS_IMETHODIMP
-HelperMimeTypeImpl::GetSuffixes(nsAString& aSuffixes)
+nsHelperMimeType::GetSuffixes(nsAString& aSuffixes)
 {
 	aSuffixes.Truncate();
 	return NS_OK;
 }
   
 NS_IMETHODIMP
-HelperMimeTypeImpl::GetType(nsAString& aType)
+nsHelperMimeType::GetType(nsAString& aType)
 {
 	aType = mType;
 	return NS_OK;

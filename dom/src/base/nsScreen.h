@@ -47,11 +47,11 @@ class nsIDeviceContext;
 struct nsRect;
 
 // Script "screen" object
-class ScreenImpl : public nsIDOMScreen
+class nsScreen : public nsIDOMScreen
 {
 public:
-  ScreenImpl( nsIDocShell* aDocShell );
-  virtual ~ScreenImpl();
+  nsScreen(nsIDocShell* aDocShell);
+  virtual ~nsScreen();
 
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
 

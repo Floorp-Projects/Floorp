@@ -43,16 +43,16 @@
 #include "nsIPluginHost.h"
 #include "nsIURL.h"
 
-class NavigatorImpl;
+class nsNavigator;
 class nsIDocShell;
 class nsIPluginHost;
 
-class PluginArrayImpl : public nsIDOMPluginArray,
-                        public nsIDOMJSPluginArray
+class nsPluginArray : public nsIDOMPluginArray,
+                      public nsIDOMJSPluginArray
 {
 public:
-  PluginArrayImpl(NavigatorImpl* navigator, nsIDocShell *aDocShell);
-  virtual ~PluginArrayImpl();
+  nsPluginArray(nsNavigator* navigator, nsIDocShell *aDocShell);
+  virtual ~nsPluginArray();
 
   NS_DECL_ISUPPORTS
 
@@ -71,18 +71,18 @@ public:
   void SetDocShell(nsIDocShell* aDocShell);
 
 protected:
-  NavigatorImpl* mNavigator;
+  nsNavigator* mNavigator;
   nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
   nsIDocShell* mDocShell; // weak reference
 };
 
-class PluginElementImpl : public nsIDOMPlugin
+class nsPluginElement : public nsIDOMPlugin
 {
 public:
-  PluginElementImpl(nsIDOMPlugin* plugin);
-  virtual ~PluginElementImpl();
+  nsPluginElement(nsIDOMPlugin* plugin);
+  virtual ~nsPluginElement();
 
   NS_DECL_ISUPPORTS
 
