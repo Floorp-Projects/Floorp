@@ -30,7 +30,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPPMDecoder)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "ppm decoder",
     NS_PPMDECODER_CID,

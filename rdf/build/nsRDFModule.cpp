@@ -102,7 +102,7 @@ MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {   // register our build-in datasources:
     { 
      "RDF Composite Data Source", 

@@ -56,7 +56,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_CONTRACTID, nsURILoaderConstructor, },
   { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_CONTRACTID, nsDocLoaderImplConstructor, },
   { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_CONTRACTID, 

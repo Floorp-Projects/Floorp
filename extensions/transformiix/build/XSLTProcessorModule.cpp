@@ -108,7 +108,7 @@ Shutdown(nsIModule* aSelf)
 }
 
 // Component Table
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
     { "Transformiix XSLT Processor",
       TRANSFORMIIX_XSLT_PROCESSOR_CID,
       TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,

@@ -23,7 +23,7 @@
 #include "nsIGenericFactory.h"
 #include "nsFingerHandler.h"
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     { "The Finger Protocol Handler", 
       NS_FINGERHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "finger",

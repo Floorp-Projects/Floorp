@@ -34,7 +34,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICODecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBMPDecoder)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "ICO Decoder",
      NS_ICODECODER_CID,

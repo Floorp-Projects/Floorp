@@ -70,7 +70,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimingService);
 
-static nsModuleComponentInfo gAppShellModuleInfo[] =
+static const nsModuleComponentInfo gAppShellModuleInfo[] =
 {
   { "AppShell Service",
     NS_APPSHELL_SERVICE_CID,

@@ -47,7 +47,7 @@
  */
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "JVM Manager Service", 
       NS_JVMMANAGER_CID,  

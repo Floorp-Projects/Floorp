@@ -107,7 +107,7 @@ static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
 // For each class that wishes to support nsIClassInfo, add a line like this
 NS_DECL_CLASSINFO(nsSampleImpl)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_CONTRACTID, nsSampleImplConstructor,
     nsSampleRegistrationProc /* NULL if you dont need one */,

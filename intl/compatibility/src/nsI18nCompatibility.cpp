@@ -80,7 +80,7 @@ NS_IMETHODIMP nsI18nCompatibility::CSIDtoCharsetName(PRUint16 csid, PRUnichar **
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsI18nCompatibility)
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
  { "I18n compatibility", NS_I18NCOMPATIBILITY_CID, 
     NS_I18NCOMPATIBILITY_CONTRACTID, nsI18nCompatibilityConstructor}

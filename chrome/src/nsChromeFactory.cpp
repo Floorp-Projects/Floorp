@@ -50,7 +50,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "Chrome Registry", 
       NS_CHROMEREGISTRY_CID,

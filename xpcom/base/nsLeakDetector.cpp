@@ -166,7 +166,7 @@ nsresult NS_InitLeakDetector()
 	if (NS_FAILED(rv))
 		return rv;
 
-    static nsModuleComponentInfo info = {
+    static const nsModuleComponentInfo info = {
         "Leak Detector", kCLeakDetectorCID, NS_CLEAKDETECTOR_CONTRACTID, nsLeakDetectorConstructor
     };
 

@@ -49,7 +49,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteClient)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "XRemote Client",
     NS_XREMOTECLIENT_CID,

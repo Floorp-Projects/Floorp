@@ -40,7 +40,7 @@
 #include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "File Protocol Handler", 
       NS_FILEPROTOCOLHANDLER_CID,  

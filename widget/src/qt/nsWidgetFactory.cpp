@@ -123,7 +123,7 @@ static nsresult nsVertScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
   return rv;
 }  
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Qt nsWindow",
     NS_WINDOW_CID,

@@ -58,7 +58,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSHistory, Init)
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the history library
 
-static nsModuleComponentInfo gSHistoryModuleInfo[] = 
+static const nsModuleComponentInfo gSHistoryModuleInfo[] = 
 {
    { "nsSHEntry", NS_SHENTRY_CID,
       NS_SHENTRY_CONTRACTID, nsSHEntryConstructor },

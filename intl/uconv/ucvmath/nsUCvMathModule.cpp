@@ -116,7 +116,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMathematica4);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMathematica5);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMTExtra);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
 #if defined(XP_PC) || defined(XP_MAC)
   { 

@@ -50,7 +50,7 @@ NS_UCONV_REG_UNREG(nsUnicodeToTIS620, "Unicode", "tis620-2", NS_UNICODETOTIS620_
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTIS620);
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { ENCODER_NAME_BASE "tis620-2" , NS_UNICODETOTIS620_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "tis620-2",

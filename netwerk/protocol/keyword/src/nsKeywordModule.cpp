@@ -38,7 +38,7 @@
 #include "nsIGenericFactory.h"
 #include "nsKeywordProtocolHandler.h"
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",

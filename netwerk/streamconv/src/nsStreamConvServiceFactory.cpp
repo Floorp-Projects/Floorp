@@ -95,7 +95,7 @@ CreateNewStreamConv(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 }
 
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "Stream Converter Service", 
       NS_STREAMCONVERTERSERVICE_CID,

@@ -114,7 +114,7 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
   return rv; 
 } 
  
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 { 
   { "BeOS Font Metrics", 
     NS_FONT_METRICS_CID, 

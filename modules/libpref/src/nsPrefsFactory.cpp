@@ -49,7 +49,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefLocalizedString, Init)
  
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   {
     NS_PREFSERVICE_CLASSNAME, 

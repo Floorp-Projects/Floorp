@@ -30,7 +30,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGDecoder)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "PNG decoder",
     NS_PNGDECODER_CID,

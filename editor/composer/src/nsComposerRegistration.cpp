@@ -55,7 +55,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
       "@mozilla.org/editor/composercontroller;1",
       nsComposerControllerConstructor, },

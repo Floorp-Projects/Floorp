@@ -232,7 +232,7 @@ MAKE_CTOR(CreateNewOutlinerBoxObject,   nsIBoxObject,           NS_NewOutlinerBo
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
 #ifdef DEBUG
   { "Frame utility",
     NS_FRAME_UTIL_CID,

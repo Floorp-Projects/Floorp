@@ -103,7 +103,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP862);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP864);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP864i);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "IBM850" , NS_CP850TOUNICODE_CID, 

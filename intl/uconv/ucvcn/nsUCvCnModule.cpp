@@ -108,7 +108,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font0);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font1);
 
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "GB2312" , NS_GB2312TOUNICODE_CID, 

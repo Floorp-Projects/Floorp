@@ -101,7 +101,7 @@ protected:
 // Factory constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFileView, Init)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "nsFileView", NS_FILEVIEW_CID,
     NS_FILEVIEW_CONTRACTID, nsFileViewConstructor }

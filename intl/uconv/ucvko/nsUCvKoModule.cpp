@@ -111,7 +111,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP949ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP949);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022KRToUnicode);
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     DECODER_NAME_BASE "EUC-KR" , NS_EUCKRTOUNICODE_CID, 

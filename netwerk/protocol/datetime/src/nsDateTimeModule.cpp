@@ -38,7 +38,7 @@
 #include "nsIGenericFactory.h"
 #include "nsDateTimeHandler.h"
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     { "The DateTime Protocol Handler", 
       NS_DATETIMEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "datetime",

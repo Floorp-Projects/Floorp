@@ -110,7 +110,7 @@ nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
   return nsCharsetConverterManager::RegisterConverterManagerData();
 }
 
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
   { 
     "Charset Conversion Manager", NS_ICHARSETCONVERTERMANAGER_CID,

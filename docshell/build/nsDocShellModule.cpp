@@ -35,7 +35,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup);
 // a component
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocShell);
 
-static nsModuleComponentInfo gDocShellModuleInfo[] = {
+static const nsModuleComponentInfo gDocShellModuleInfo[] = {
     { "WebShell", 
       NS_WEB_SHELL_CID,
       "@mozilla.org/webshell;1",

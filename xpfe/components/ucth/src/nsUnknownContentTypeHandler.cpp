@@ -307,7 +307,7 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnknownContentTypeHandler)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { NS_IUNKNOWNCONTENTTYPEHANDLER_CLASSNAME, 
     NS_UNKNOWNCONTENTTYPEHANDLER_CID, 
     NS_IUNKNOWNCONTENTTYPEHANDLER_CONTRACTID,

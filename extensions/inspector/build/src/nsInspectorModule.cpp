@@ -120,7 +120,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inPNGEncoder)
 { 0xece14df2, 0xfc83, 0x469f, { 0x83, 0xac, 0x68, 0x4d, 0x5f, 0x6, 0xb6, 0xce } }
 #endif
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "DOM View",
     IN_DOMVIEW_CID, 

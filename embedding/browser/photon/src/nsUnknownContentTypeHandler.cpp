@@ -226,7 +226,7 @@ NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
 NS_GENERIC_FACTORY_CONSTRUCTOR( nsUnknownContentTypeHandler )
 
 // The list of components we register
-static nsModuleComponentInfo info[] = {
+static const nsModuleComponentInfo info[] = {
 	"nsUnknownContentTypeHandler",
 	NS_IHELPERAPPLAUNCHERDIALOG_IID,
 	NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,

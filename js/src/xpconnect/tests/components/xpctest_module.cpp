@@ -45,7 +45,7 @@ NS_DECL_CLASSINFO(xpcTestCallJS)
 NS_DECL_CLASSINFO(xpcTestChild2)
 
 // XXX contractids need to be standardized!
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   {nsnull, NS_ECHO_CID,                   "@mozilla.org/js/xpc/test/Echo;1",                 xpctest::ConstructEcho                  },
   {nsnull, NS_CHILD_CID,                  "@mozilla.org/js/xpc/test/Child;1",                xpctest::ConstructChild                 },
   {nsnull, NS_NOISY_CID,                  "@mozilla.org/js/xpc/test/Noisy;1",                xpctest::ConstructNoisy                 },

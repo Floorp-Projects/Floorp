@@ -42,7 +42,7 @@
 extern nsRecyclingAllocator *gZlibAllocator;
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { "Zip Reader", 
        NS_ZIPREADER_CID,

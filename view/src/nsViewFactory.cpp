@@ -69,7 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollingView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollPortView)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
     ViewManagerConstructor },
   { "View", NS_VIEW_CID, "@mozilla.org/view;1", nsViewConstructor },

@@ -48,7 +48,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 NS_DECL_CLASSINFO(nsXPCException)
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   {nsnull, NS_JS_ID_CID,                         XPC_ID_CONTRACTID,            nsJSIDConstructor             },
   {nsnull, NS_XPCONNECT_CID,                     XPC_XPCONNECT_CONTRACTID,     nsIXPConnectConstructor       },
   {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID,    XPC_CONTEXT_STACK_CONTRACTID, nsIJSContextStackConstructor  },

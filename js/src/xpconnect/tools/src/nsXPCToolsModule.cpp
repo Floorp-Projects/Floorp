@@ -52,7 +52,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCToolsProfiler)
     { 0x7f5d12e0, 0xe97b, 0x11d3, \
         { 0x8f, 0x69, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a } }
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
  {nsnull, COMPILER_CID, XPCTOOLS_COMPILER_CONTRACTID, nsXPCToolsCompilerConstructor},
  {nsnull, PROFILER_CID, XPCTOOLS_PROFILER_CONTRACTID, nsXPCToolsProfilerConstructor}
 };

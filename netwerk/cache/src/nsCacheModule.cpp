@@ -29,7 +29,7 @@
 // nsCacheService
 //
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     {
         NS_CACHESERVICE_CLASSNAME,
         NS_CACHESERVICE_CID,

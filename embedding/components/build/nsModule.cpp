@@ -53,7 +53,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
 
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
 
   { "Dialog ParamBlock", NS_DIALOGPARAMBLOCK_CID, NS_DIALOGPARAMBLOCK_CONTRACTID, nsDialogParamBlockConstructor },
   { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },

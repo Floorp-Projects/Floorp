@@ -66,7 +66,7 @@ void TestDynamicClassImpl::Test() {
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(TestDynamicClassImpl);
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "Test Dynamic", NS_TESTLOADEDFACTORY_CID, NS_TESTLOADEDFACTORY_CONTRACTID,
     TestDynamicClassImplConstructor

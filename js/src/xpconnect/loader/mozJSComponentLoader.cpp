@@ -1347,7 +1347,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader);
 #endif
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
     { "JS component loader", MOZJSCOMPONENTLOADER_CID,
       mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
       RegisterJSLoader, UnregisterJSLoader },

@@ -77,7 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLanguageAtomService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageService)
 
 // The list of components we register
-static nsModuleComponentInfo gComponents[] = {
+static const nsModuleComponentInfo gComponents[] = {
   { "nsLocaleService component",
     NS_LOCALESERVICE_CID,
     NS_LOCALESERVICE_CONTRACTID,

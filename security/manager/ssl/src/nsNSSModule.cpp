@@ -206,7 +206,7 @@ static NS_METHOD RegisterPSMContentListeners(
   return NS_OK;
 }
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   {
     PSM_COMPONENT_CLASSNAME,

@@ -38,7 +38,7 @@ static const char* loaderRegistryPath = "@mozilla.org/oji/test/api/loader;1";
 static const char* loaderRegistryDesc = "OJI API Test Loader";
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
     { loaderRegistryDesc, 
       OJITESTLOADER_CID,  

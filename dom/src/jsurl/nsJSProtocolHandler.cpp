@@ -804,7 +804,7 @@ nsJSProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static nsModuleComponentInfo gJSModuleInfo[] = {
+static const nsModuleComponentInfo gJSModuleInfo[] = {
     { "JavaScript Protocol Handler",
       NS_JSPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "javascript",

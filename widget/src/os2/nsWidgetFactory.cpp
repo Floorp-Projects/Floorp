@@ -214,7 +214,7 @@ static NS_IMETHODIMP nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID a
 
 
 // component definition, will be exported using XPCOM
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "OS/2 AppShell",
     NS_APPSHELL_CID,

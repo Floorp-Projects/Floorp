@@ -41,7 +41,7 @@
 #include "nsMIMEInfoImpl.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl);
 
-static nsModuleComponentInfo gResComponents[] = {
+static const nsModuleComponentInfo gResComponents[] = {
     { "The MIME mapping service", 
       NS_MIMESERVICE_CID,
       "@mozilla.org/mime;1",

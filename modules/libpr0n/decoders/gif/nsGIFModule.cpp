@@ -47,7 +47,7 @@ extern nsRecyclingAllocator *gGifAllocator;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   { "GIF Decoder",
      NS_GIFDECODER2_CID,
