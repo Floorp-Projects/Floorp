@@ -423,7 +423,6 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
         aSearchRange->GetStartOffset(&startOffset);
         aStartPoint->GetEndContainer(getter_AddRefs(endNode));
         aStartPoint->GetEndOffset(&endOffset);
-        printf("Set reverse-normal range %d, %d\n", startOffset, endOffset);
       } else {     // forward
         aStartPoint->GetStartContainer(getter_AddRefs(startNode));
         aStartPoint->GetStartOffset(&startOffset);
