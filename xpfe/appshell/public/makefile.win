@@ -32,6 +32,7 @@ EXPORTS =                         \
         nsFileLocations.h         \
 	nsIGlobalHistory.h	  \
         nsIFileLocator.h          \
+        nsINetSupportDialogService.h	\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
