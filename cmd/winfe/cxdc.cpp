@@ -2748,11 +2748,6 @@ void CDCCX::DisplayPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed,
 
 #ifndef MOZ_NGLAYOUT
 
-void CDCCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *pBuiltin)
-{
-	return;
-}
-
 void CDCCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed)
 {
     NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->objTag.FE_Data;
@@ -3765,10 +3760,6 @@ moved into DrawTextPostDecoration()
 }	// void CDCCX::DisplayText()
 
 #ifndef MOZ_NGLAYOUT
-
-void CDCCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin)	{
-	return;
-}
 
 void CDCCX::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed)	{
 	//	We have our OLE document handle this.
