@@ -4601,6 +4601,8 @@ if test "$MOZ_LDAP_XPCOM"; then
         else
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/nsldappr32v50.${LIB_SUFFIX}'
         fi
+    elif test "$VACPP"; then
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/ldappr50.${LIB_SUFFIX}'
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap50 -llber50 -lprldap50'
     fi
