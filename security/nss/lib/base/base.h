@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.14 $ $Date: 2002/02/28 01:32:32 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.15 $ $Date: 2002/04/04 16:14:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -450,6 +450,25 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
 
 /* The following line exceeds 72 characters, but emacs screws up if I split it. */
 #define nss_ZNEWARRAY(arenaOpt, type, quantity) ((type *)nss_ZAlloc((arenaOpt), sizeof(type) * (quantity)))
+
+/*
+ * nss_ZREALLOCARRAY
+ *
+ * This preprocessor macro will reallocate memory for an array of
+ * new objects, and will cast the return value appropriately.
+ * This routine may return NULL upon error, in which case it will 
+ *  have set an error upon the error stack.
+ *
+ * The error may be one of the following values:
+ *  NSS_ERROR_INVALID_POINTER
+ *  NSS_ERROR_NO_MEMORY
+ *  NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD
+ *
+ * Return value:
+ *  NULL upon error
+ *  A pointer to the replacement segment of memory
+ */
+#define nss_ZREALLOCARRAY(p, type, quantity) ((type *)nss_ZRealloc((p), sizeof(type) * (quantity)))
 
 /*
  * nssArena_verifyPointer
