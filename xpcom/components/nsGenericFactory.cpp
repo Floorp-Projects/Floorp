@@ -278,15 +278,15 @@ nsGenericModule::Initialize()
 void
 nsGenericModule::Shutdown()
 {
+    // Release the factory objects
+    mFactories.Reset();
+
     if (mInitialized) {
         mInitialized = PR_FALSE;
 
         if (mDtor)
             mDtor(this);
     }
-
-    // Release the factory objects
-    mFactories.Reset();
 }
 
 // Create a factory object for creating instances of aClass.
