@@ -37,7 +37,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
     $(MAKE_INSTALL) notification.gif            $(DIST)\bin\res\xpinstall
-    $(MAKE_INSTALL) SoftwareUpdate.css          $(DIST)\bin\res\xpinstall
     $(MAKE_INSTALL) SoftwareUpdates.rdf         $(DIST)\bin\res\xpinstall
     $(MAKE_INSTALL) SoftwareUpdate-Source-1.rdf $(DIST)\bin\res\xpinstall
     $(MAKE_INSTALL) $(DLL)                      $(DIST)\bin\components
@@ -45,5 +44,4 @@ install:: $(DLL)
 clobber::
     rm -f $(DIST)\res\xpinstall\SoftwareUpdates.rdf        
     rm -f $(DIST)\res\xpinstall\SoftwareUpdate-Source-1.rdf
-    rm -f $(DIST)\res\xpinstall\SoftwareUpdate.css
     rm -f $(DIST)\res\xpinstall\notification.gif
