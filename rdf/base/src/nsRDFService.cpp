@@ -60,6 +60,7 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsXPIDLString.h"
+#include "pldhash.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prlog.h"
@@ -84,12 +85,6 @@ static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static PRLogModuleInfo* gLog = nsnull;
 #endif
 
-// Defining these will re-use the string pointer that is owned by the
-// resource (or literal) as the key for the hashtable. It avoids two
-// strdup()'s for each new resource that is created.
-#define REUSE_RESOURCE_URI_AS_KEY
-#define REUSE_LITERAL_VALUE_AS_KEY
-
 ////////////////////////////////////////////////////////////////////////
 // RDFServiceImpl
 //
@@ -100,8 +95,10 @@ class RDFServiceImpl : public nsIRDFService,
 {
 protected:
     PLHashTable* mNamedDataSources;
-    PLHashTable* mResources;
-    PLHashTable* mLiterals;
+    PLDHashTable mResources;
+    PLDHashTable mLiterals;
+    PLDHashTable mInts;
+    PLDHashTable mDates;
 
     char mLastURIPrefix[16];
     PRInt32 mLastPrefixlen;
@@ -123,8 +120,13 @@ public:
     NS_DECL_NSIRDFSERVICE
 
     // Implementation methods
-    nsresult RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace = PR_FALSE);
+    nsresult RegisterLiteral(nsIRDFLiteral* aLiteral);
     nsresult UnregisterLiteral(nsIRDFLiteral* aLiteral);
+    nsresult RegisterInt(nsIRDFInt* aInt);
+    nsresult UnregisterInt(nsIRDFInt* aInt);
+    nsresult RegisterDate(nsIRDFDate* aDate);
+    nsresult UnregisterDate(nsIRDFDate* aDate);
+
     nsresult GetDataSource(const char *aURI, PRBool aBlock, nsIRDFDataSource **aDataSource );
 };
 
@@ -133,6 +135,7 @@ static RDFServiceImpl* gRDFService; // The one-and-only RDF service
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with one
 // change to free the key in DataSourceFreeEntry.
+// XXX sigh, why were DefaultAllocTable et. al. declared static, anyway?
 
 static void * PR_CALLBACK
 DataSourceAllocTable(void *pool, PRSize size)
@@ -182,6 +185,196 @@ static PLHashAllocOps dataSourceHashAllocOps = {
     DataSourceAllocEntry, DataSourceFreeEntry
 };
 
+//----------------------------------------------------------------------
+//
+// For the mResources hashtable.
+//
+
+struct ResourceHashEntry : public PLDHashEntryHdr {
+    const char *mKey;
+    nsIRDFResource *mResource;
+
+    static const void * PR_CALLBACK
+    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+    {
+        ResourceHashEntry *entry = NS_STATIC_CAST(ResourceHashEntry *, hdr);
+        return entry->mKey;
+    }
+
+    static PLDHashNumber PR_CALLBACK
+    HashKey(PLDHashTable *table, const void *key)
+    {
+        return nsCRT::HashCode(NS_STATIC_CAST(const char *, key));
+    }
+
+    static PRBool PR_CALLBACK
+    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+               const void *key)
+    {
+        const ResourceHashEntry *entry =
+            NS_STATIC_CAST(const ResourceHashEntry *, hdr);
+
+        return 0 == nsCRT::strcmp(NS_STATIC_CAST(const char *, key),
+                                  entry->mKey);
+    }
+};
+
+static PLDHashTableOps gResourceTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    ResourceHashEntry::GetKey,
+    ResourceHashEntry::HashKey,
+    ResourceHashEntry::MatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+// ----------------------------------------------------------------------
+//
+// For the mLiterals hashtable.
+//
+
+struct LiteralHashEntry : public PLDHashEntryHdr {
+    nsIRDFLiteral *mLiteral;
+    const PRUnichar *mKey;
+
+    static const void * PR_CALLBACK
+    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+    {
+        LiteralHashEntry *entry = NS_STATIC_CAST(LiteralHashEntry *, hdr);
+        return entry->mKey;
+    }
+
+    static PLDHashNumber PR_CALLBACK
+    HashKey(PLDHashTable *table, const void *key)
+    {
+        return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar *, key));
+    }
+
+    static PRBool PR_CALLBACK
+    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+               const void *key)
+    {
+        const LiteralHashEntry *entry =
+            NS_STATIC_CAST(const LiteralHashEntry *, hdr);
+
+        return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar *, key),
+                                  entry->mKey);
+    }
+};
+
+static PLDHashTableOps gLiteralTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    LiteralHashEntry::GetKey,
+    LiteralHashEntry::HashKey,
+    LiteralHashEntry::MatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+// ----------------------------------------------------------------------
+//
+// For the mInts hashtable.
+//
+
+struct IntHashEntry : public PLDHashEntryHdr {
+    nsIRDFInt *mInt;
+    PRInt32    mKey;
+
+    static const void * PR_CALLBACK
+    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+    {
+        IntHashEntry *entry = NS_STATIC_CAST(IntHashEntry *, hdr);
+        return &entry->mKey;
+    }
+
+    static PLDHashNumber PR_CALLBACK
+    HashKey(PLDHashTable *table, const void *key)
+    {
+        return PLDHashNumber(*NS_STATIC_CAST(const PRInt32 *, key));
+    }
+
+    static PRBool PR_CALLBACK
+    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+               const void *key)
+    {
+        const IntHashEntry *entry =
+            NS_STATIC_CAST(const IntHashEntry *, hdr);
+
+        return *NS_STATIC_CAST(const PRInt32 *, key) == entry->mKey;
+    }
+};
+
+static PLDHashTableOps gIntTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    IntHashEntry::GetKey,
+    IntHashEntry::HashKey,
+    IntHashEntry::MatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+// ----------------------------------------------------------------------
+//
+// For the mDates hashtable.
+//
+
+struct DateHashEntry : public PLDHashEntryHdr {
+    nsIRDFDate *mDate;
+    PRTime      mKey;
+
+    static const void * PR_CALLBACK
+    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+    {
+        DateHashEntry *entry = NS_STATIC_CAST(DateHashEntry *, hdr);
+        return &entry->mKey;
+    }
+
+    static PLDHashNumber PR_CALLBACK
+    HashKey(PLDHashTable *table, const void *key)
+    {
+        // xor the low 32 bits with the high 32 bits.
+        PRTime t = *NS_STATIC_CAST(const PRTime *, key);
+        PRInt64 h64, l64;
+        LL_USHR(h64, t, 32);
+        l64 = LL_INIT(0, 0xffffffff);
+        LL_AND(l64, l64, t);
+        PRInt32 h32, l32;
+        LL_L2I(h32, h64);
+        LL_L2I(l32, l64);
+        return PLDHashNumber(l32 ^ h32);
+    }
+
+    static PRBool PR_CALLBACK
+    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+               const void *key)
+    {
+        const DateHashEntry *entry =
+            NS_STATIC_CAST(const DateHashEntry *, hdr);
+
+        return LL_EQ(*NS_STATIC_CAST(const PRTime *, key), entry->mKey);
+    }
+};
+
+static PLDHashTableOps gDateTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    DateHashEntry::GetKey,
+    DateHashEntry::HashKey,
+    DateHashEntry::MatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
 
 ////////////////////////////////////////////////////////////////////////
 // LiteralImpl
@@ -244,11 +437,6 @@ LiteralImpl::LiteralImpl(const PRUnichar* s)
 
 LiteralImpl::~LiteralImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: LiteralImpl\n", gInstanceCount);
-#endif
-
     gRDFService->UnregisterLiteral(this);
 
     // Use NS_RELEASE2() here, because we want to decrease the
@@ -346,14 +534,19 @@ DateImpl::DateImpl(const PRTime s)
     : mValue(s)
 {
     NS_INIT_REFCNT();
+    gRDFService->RegisterDate(this);
+    NS_ADDREF(gRDFService);
 }
 
 DateImpl::~DateImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: DateImpl\n", gInstanceCount);
-#endif
+    gRDFService->UnregisterDate(this);
+
+    // Use NS_RELEASE2() here, because we want to decrease the
+    // refcount, but not null out the gRDFService pointer (which is
+    // what a vanilla NS_RELEASE() would do).
+    nsrefcnt refcnt;
+    NS_RELEASE2(gRDFService, refcnt);
 }
 
 NS_IMPL_ADDREF(DateImpl);
@@ -448,14 +641,19 @@ IntImpl::IntImpl(PRInt32 s)
     : mValue(s)
 {
     NS_INIT_REFCNT();
+    gRDFService->RegisterInt(this);
+    NS_ADDREF(gRDFService);
 }
 
 IntImpl::~IntImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: IntImpl\n", gInstanceCount);
-#endif
+    gRDFService->UnregisterInt(this);
+
+    // Use NS_RELEASE2() here, because we want to decrease the
+    // refcount, but not null out the gRDFService pointer (which is
+    // what a vanilla NS_RELEASE() would do).
+    nsrefcnt refcnt;
+    NS_RELEASE2(gRDFService, refcnt);
 }
 
 NS_IMPL_ADDREF(IntImpl);
@@ -525,50 +723,17 @@ IntImpl::EqualsInt(nsIRDFInt* intValue, PRBool* result)
 ////////////////////////////////////////////////////////////////////////
 // RDFServiceImpl
 
-static PLHashNumber PR_CALLBACK
-rdf_HashWideString(const void* key)
-{
-    PLHashNumber result = 0;
-    for (PRUnichar* s = (PRUnichar*) key; *s != nsnull; ++s)
-        result = (result >> 28) ^ (result << 4) ^ *s;
-    return result;
-}
-
-static PRIntn PR_CALLBACK
-rdf_CompareWideStrings(const void* v1, const void* v2)
-{
-    return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, v1), NS_STATIC_CAST(const PRUnichar*, v2));
-}
-
-
 RDFServiceImpl::RDFServiceImpl()
-    :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull), mLastPrefixlen(0)
+    :  mNamedDataSources(nsnull),
+       mLastPrefixlen(0)
 {
     NS_INIT_REFCNT();
 }
-
-
 
 nsresult
 RDFServiceImpl::Init()
 {
     nsresult rv;
-
-    mResources = PL_NewHashTable(1023,              // nbuckets
-                                 PL_HashString,     // hash fn
-                                 PL_CompareStrings, // key compare fn
-                                 PL_CompareValues,  // value compare fn
-                                 nsnull, nsnull);   // alloc ops & priv
-
-    if (! mResources) return NS_ERROR_OUT_OF_MEMORY;
-
-    mLiterals = PL_NewHashTable(1023,
-                                rdf_HashWideString,
-                                rdf_CompareWideStrings,
-                                PL_CompareValues,
-                                nsnull, nsnull);
-
-    if (! mLiterals) return NS_ERROR_OUT_OF_MEMORY;
 
     mNamedDataSources = PL_NewHashTable(23,
                                         PL_HashString,
@@ -576,7 +741,20 @@ RDFServiceImpl::Init()
                                         PL_CompareValues,
                                         &dataSourceHashAllocOps, nsnull);
 
-    if (! mNamedDataSources) return NS_ERROR_OUT_OF_MEMORY;
+    if (! mNamedDataSources)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_DHashTableInit(&mResources, &gResourceTableOps, nsnull,
+                      sizeof(ResourceHashEntry), PL_DHASH_MIN_SIZE);
+
+    PL_DHashTableInit(&mLiterals, &gLiteralTableOps, nsnull,
+                      sizeof(LiteralHashEntry), PL_DHASH_MIN_SIZE);
+
+    PL_DHashTableInit(&mInts, &gIntTableOps, nsnull,
+                      sizeof(IntHashEntry), PL_DHASH_MIN_SIZE);
+
+    PL_DHashTableInit(&mDates, &gDateTableOps, nsnull,
+                      sizeof(DateHashEntry), PL_DHASH_MIN_SIZE);
 
     rv = nsComponentManager::FindFactory(kRDFDefaultResourceCID, getter_AddRefs(mDefaultResourceFactory));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
@@ -593,23 +771,14 @@ RDFServiceImpl::Init()
 
 RDFServiceImpl::~RDFServiceImpl()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: RDFServiceImpl\n", gInstanceCount);
-#endif
-
     if (mNamedDataSources) {
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nsnull;
     }
-    if (mResources) {
-        PL_HashTableDestroy(mResources);
-        mResources = nsnull;
-    }
-    if (mLiterals) {
-        PL_HashTableDestroy(mLiterals);
-        mLiterals = nsnull;
-    }
+    PL_DHashTableFinish(&mResources);
+    PL_DHashTableFinish(&mLiterals);
+    PL_DHashTableFinish(&mInts);
+    PL_DHashTableFinish(&mDates);
     gRDFService = nsnull;
 }
 
@@ -691,13 +860,12 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 
     // First, check the cache to see if we've already created and
     // registered this thing.
-    nsIRDFResource* result =
-        NS_STATIC_CAST(nsIRDFResource*, PL_HashTableLookup(mResources, aURI));
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mResources, aURI, PL_DHASH_LOOKUP);
 
-    if (result) {
-        // Addref for the callee.
-        NS_ADDREF(result);
-        *aResource = result;
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        ResourceHashEntry *entry = NS_STATIC_CAST(ResourceHashEntry *, hdr);
+        NS_ADDREF(*aResource = entry->mResource);
         return NS_OK;
     }
 
@@ -789,6 +957,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         }
     }
 
+    nsIRDFResource *result;
     rv = factory->CreateInstance(nsnull, NS_GET_IID(nsIRDFResource), (void**) &result);
     if (NS_FAILED(rv)) return rv;
 
@@ -890,13 +1059,13 @@ RDFServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
     if (! aLiteral)
         return NS_ERROR_NULL_POINTER;
 
-    // See if we have on already cached
-    nsIRDFLiteral* literal =
-        NS_STATIC_CAST(nsIRDFLiteral*, PL_HashTableLookup(mLiterals, aValue));
+    // See if we have one already cached
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mLiterals, aValue, PL_DHASH_LOOKUP);
 
-    if (literal) {
-        NS_ADDREF(literal);
-        *aLiteral = literal;
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        LiteralHashEntry *entry = NS_STATIC_CAST(LiteralHashEntry *, hdr);
+        NS_ADDREF(*aLiteral = entry->mLiteral);
         return NS_OK;
     }
 
@@ -905,31 +1074,46 @@ RDFServiceImpl::GetLiteral(const PRUnichar* aValue, nsIRDFLiteral** aLiteral)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::GetDateLiteral(PRTime time, nsIRDFDate** literal)
+RDFServiceImpl::GetDateLiteral(PRTime aTime, nsIRDFDate** aResult)
 {
-    // XXX how do we cache these? should they live in their own hashtable?
-    DateImpl* result = new DateImpl(time);
+    // See if we have one already cached
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mDates, &aTime, PL_DHASH_LOOKUP);
+
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        DateHashEntry *entry = NS_STATIC_CAST(DateHashEntry *, hdr);
+        NS_ADDREF(*aResult = entry->mDate);
+        return NS_OK;
+    }
+
+    DateImpl* result = new DateImpl(aTime);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *literal = result;
-    NS_ADDREF(result);
+    NS_ADDREF(*aResult = result);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::GetIntLiteral(PRInt32 value, nsIRDFInt** literal)
+RDFServiceImpl::GetIntLiteral(PRInt32 aInt, nsIRDFInt** aResult)
 {
-    // XXX how do we cache these? should they live in their own hashtable?
-    IntImpl* result = new IntImpl(value);
+    // See if we have one already cached
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mInts, &aInt, PL_DHASH_LOOKUP);
+
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
+        IntHashEntry *entry = NS_STATIC_CAST(IntHashEntry *, hdr);
+        NS_ADDREF(*aResult = entry->mInt);
+        return NS_OK;
+    }
+
+    IntImpl* result = new IntImpl(aInt);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *literal = result;
-    NS_ADDREF(result);
+    NS_ADDREF(*aResult = result);
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, PRBool* _result)
@@ -968,13 +1152,8 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool aReplace)
 
     nsresult rv;
 
-#ifdef REUSE_RESOURCE_URI_AS_KEY
     const char* uri;
     rv = aResource->GetValueConst(&uri);
-#else
-    nsXPIDLCString uri;
-    rv = aResource->GetValue(getter_Copies(uri));
-#endif
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get URI from resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -982,10 +1161,10 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool aReplace)
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    PLHashNumber keyhash = (*mResources->keyHash)(uri);
-    PLHashEntry** hep = PL_HashTableRawLookup(mResources, keyhash, uri);
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mResources, uri, PL_DHASH_LOOKUP);
 
-    if (*hep) {
+    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
         if (!aReplace) {
             NS_WARNING("resource already registered, and replace not specified");
             return NS_ERROR_FAILURE;    // already registered
@@ -997,33 +1176,26 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool aReplace)
 
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("rdfserv   replace-resource [%p] <-- [%p] %s",
-                (*hep)->value, aResource, (const char*) uri));
-
-#ifdef REUSE_RESOURCE_URI_AS_KEY
-        (*hep)->key   = uri;
-#endif
-        (*hep)->value = aResource;
+                NS_STATIC_CAST(ResourceHashEntry *, hdr)->mResource,
+                aResource, (const char*) uri));
     }
     else {
-#ifdef REUSE_RESOURCE_URI_AS_KEY
-        PL_HashTableRawAdd(mResources, hep, keyhash, uri, aResource);
-#else
-        const char* key = PL_strdup(uri);
-        if (! key)
+        hdr = PL_DHashTableOperate(&mResources, uri, PL_DHASH_ADD);
+        if (! hdr)
             return NS_ERROR_OUT_OF_MEMORY;
-
-        PL_HashTableRawAdd(mResources, hep, keyhash, key, aResource);
-#endif
 
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("rdfserv   register-resource [%p] %s",
                 aResource, (const char*) uri));
-
-        // N.B., we only hold a weak reference to the resource: that
-        // way, the resource can be destroyed when the last refcount
-        // goes away. The single addref that the CreateResource() call
-        // made will be owned by the callee.
     }
+
+    // N.B., we only hold a weak reference to the resource: that way,
+    // the resource can be destroyed when the last refcount goes
+    // away. The single addref that the CreateResource() call made
+    // will be owned by the callee.
+    ResourceHashEntry *entry = NS_STATIC_CAST(ResourceHashEntry *, hdr);
+    entry->mResource = aResource;
+    entry->mKey = uri;
 
     return NS_OK;
 }
@@ -1037,35 +1209,24 @@ RDFServiceImpl::UnregisterResource(nsIRDFResource* aResource)
 
     nsresult rv;
 
-#ifdef REUSE_RESOURCE_URI_AS_KEY
     const char* uri;
     rv = aResource->GetValueConst(&uri);
-#else
-    nsXPIDLCString uri;
-    rv = aResource->GetValue(getter_Copies(uri));
-#endif
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(uri != nsnull, "resource has no URI");
     if (! uri)
         return NS_ERROR_UNEXPECTED;
 
-    PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
-    if (!hep || !*hep)
-        return NS_OK;
-
-#ifndef REUSE_RESOURCE_URI_AS_KEY
-    PL_strfree((char*) (*hep)->key);
-#endif
-
-    // N.B. that we _don't_ release the resource: we only held a weak
-    // reference to it in the hashtable.
-
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-resource [%p] %s",
             aResource, (const char*) uri));
 
-    PL_HashTableRawRemove(mResources, hep, *hep);
+#ifdef DEBUG
+    if (PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mResources, uri, PL_DHASH_LOOKUP)))
+        NS_WARNING("resource was never registered");
+#endif
+
+    PL_DHashTableOperate(&mResources, uri, PL_DHASH_REMOVE);
     return NS_OK;
 }
 
@@ -1249,65 +1410,34 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
+RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral)
 {
-    NS_PRECONDITION(aLiteral != nsnull, "null ptr");
-    if (! aLiteral)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-
-#ifdef REUSE_LITERAL_VALUE_AS_KEY
     const PRUnichar* value;
-    rv = aLiteral->GetValueConst(&value);
-#else
-    nsXPIDLString value;
-    rv = aLiteral->GetValue(getter_Copies(value));
-#endif
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal's value");
-    if (NS_FAILED(rv)) return rv;
+    aLiteral->GetValueConst(&value);
 
-    PLHashEntry** hep = PL_HashTableRawLookup(mLiterals, (*mLiterals->keyHash)(value), value);
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mLiterals,
+                                                             value,
+                                                             PL_DHASH_LOOKUP)),
+                 "literal already registered");
 
-    if (*hep) {
-        if (! aReplace) {
-            NS_WARNING("literal already registered and replace not specified");
-            return NS_ERROR_FAILURE;
-        }
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mLiterals, value, PL_DHASH_ADD);
 
-        // N.B., we do _not_ release the original literal because we
-        // only ever held a weak reference to it. We simply replace
-        // it.
+    if (! hdr)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfserv   replace-literal [%p] <-- [%p] %s",
-                (*hep)->value, aLiteral, (const PRUnichar*) value));
+    LiteralHashEntry *entry = NS_STATIC_CAST(LiteralHashEntry *, hdr);
 
-#ifdef REUSE_LITERAL_VALUE_AS_KEY
-        (*hep)->key   = value;
-#endif
-        (*hep)->value = aLiteral;
-    }
-    else {
-#ifdef REUSE_LITERAL_VALUE_AS_KEY
-        PL_HashTableAdd(mLiterals, value, aLiteral);
-#else
-        const PRUnichar* key = value.get() ? nsCRT::strdup(value.get()) : 0;
-        if (! key)
-            return NS_ERROR_OUT_OF_MEMORY;
+    // N.B., we only hold a weak reference to the literal: that
+    // way, the literal can be destroyed when the last refcount
+    // goes away. The single addref that the CreateLiteral() call
+    // made will be owned by the callee.
+    entry->mLiteral = aLiteral;
+    entry->mKey = value;
 
-        PL_HashTableAdd(mLiterals, key, aLiteral);
-#endif
-
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfserv   register-literal [%p] %s",
-                aLiteral, (const PRUnichar*) value));
-
-        // N.B., we only hold a weak reference to the literal: that
-        // way, the literal can be destroyed when the last refcount
-        // goes away. The single addref that the CreateLiteral() call
-        // made will be owned by the callee.
-    }
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv   register-literal [%p] %s",
+            aLiteral, (const PRUnichar*) value));
 
     return NS_OK;
 }
@@ -1316,38 +1446,141 @@ RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
 nsresult
 RDFServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
 {
-    NS_PRECONDITION(aLiteral != nsnull, "null ptr");
-
-    nsresult rv;
-
-#ifdef REUSE_LITERAL_VALUE_AS_KEY
     const PRUnichar* value;
-    rv = aLiteral->GetValueConst(&value);
-#else
-    nsXPIDLString value;
-    rv = aLiteral->GetValue(getter_Copies(value));
-#endif
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal's value");
-    if (NS_FAILED(rv)) return rv;
+    aLiteral->GetValueConst(&value);
 
-    PLHashEntry** hep = PL_HashTableRawLookup(mLiterals, (*mLiterals->keyHash)(value), value);
-    if (!hep || !*hep)
-        return NS_OK;
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mLiterals,
+                                                             value,
+                                                             PL_DHASH_LOOKUP)),
+                 "literal was never registered");
 
-#ifndef REUSE_LITERAL_VALUE_AS_KEY
-    nsMemory::Free((void*) (*hep)->key);
-#endif
+    PL_DHashTableOperate(&mLiterals, value, PL_DHASH_REMOVE);
 
     // N.B. that we _don't_ release the literal: we only held a weak
     // reference to it in the hashtable.
-
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-literal [%p] %s",
             aLiteral, (const PRUnichar*) value));
 
-    PL_HashTableRawRemove(mLiterals, hep, *hep);
     return NS_OK;
 }
+
+//----------------------------------------------------------------------
+
+nsresult
+RDFServiceImpl::RegisterInt(nsIRDFInt* aInt)
+{
+    PRInt32 value;
+    aInt->GetValue(&value);
+
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mInts,
+                                                             &value,
+                                                             PL_DHASH_LOOKUP)),
+                 "int already registered");
+
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mInts, &value, PL_DHASH_ADD);
+
+    if (! hdr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    IntHashEntry *entry = NS_STATIC_CAST(IntHashEntry *, hdr);
+
+    // N.B., we only hold a weak reference to the literal: that
+    // way, the literal can be destroyed when the last refcount
+    // goes away. The single addref that the CreateInt() call
+    // made will be owned by the callee.
+    entry->mInt = aInt;
+    entry->mKey = value;
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv   register-int [%p] %d",
+            aInt, value));
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFServiceImpl::UnregisterInt(nsIRDFInt* aInt)
+{
+    PRInt32 value;
+    aInt->GetValue(&value);
+
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mInts,
+                                                             &value,
+                                                             PL_DHASH_LOOKUP)),
+                 "int was never registered");
+
+    PL_DHashTableOperate(&mInts, &value, PL_DHASH_REMOVE);
+
+    // N.B. that we _don't_ release the literal: we only held a weak
+    // reference to it in the hashtable.
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv unregister-int [%p] %d",
+            aInt, value));
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsresult
+RDFServiceImpl::RegisterDate(nsIRDFDate* aDate)
+{
+    PRTime value;
+    aDate->GetValue(&value);
+
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(PL_DHashTableOperate(&mDates,
+                                                             &value,
+                                                             PL_DHASH_LOOKUP)),
+                 "date already registered");
+
+    PLDHashEntryHdr *hdr =
+        PL_DHashTableOperate(&mDates, &value, PL_DHASH_ADD);
+
+    if (! hdr)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    DateHashEntry *entry = NS_STATIC_CAST(DateHashEntry *, hdr);
+
+    // N.B., we only hold a weak reference to the literal: that
+    // way, the literal can be destroyed when the last refcount
+    // goes away. The single addref that the CreateDate() call
+    // made will be owned by the callee.
+    entry->mDate = aDate;
+    entry->mKey = value;
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv   register-date [%p] %ld",
+            aDate, value));
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFServiceImpl::UnregisterDate(nsIRDFDate* aDate)
+{
+    PRTime value;
+    aDate->GetValue(&value);
+
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(PL_DHashTableOperate(&mDates,
+                                                             &value,
+                                                             PL_DHASH_LOOKUP)),
+                 "date was never registered");
+
+    PL_DHashTableOperate(&mDates, &value, PL_DHASH_REMOVE);
+
+    // N.B. that we _don't_ release the literal: we only held a weak
+    // reference to it in the hashtable.
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("rdfserv unregister-date [%p] %ld",
+            aDate, value));
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 
