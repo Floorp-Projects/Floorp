@@ -474,6 +474,44 @@ input[type=hidden] {
   visibility: hidden;
 }
 
+/*------- Focus ------*/
+a:focus {
+  outline: 1px dotted black;
+}
+
+a:focus img {
+  outline: 1px dotted black;
+}
+
+select[mulitple]:focus {
+  border: 1px dotted black;
+}
+
+select[size]:focus {
+  border: 1px dotted black;
+}
+
+select[size="1"]:focus {
+  border: 0px dotted black;
+}
+
+select[size="1"]:focus input#-moz-display {
+  border: 1px dotted black;
+}
+
+input[type=radio]:focus {
+  border: 2px inset rgb(204, 204, 204);
+}
+
+input[type=checkbox]:focus {
+  border: 1px inset rgb(204, 204, 204);
+}
+
+input[type=image]:focus {
+  border: 2px dotted black;
+}
+
+/*------- End Focus ------*/
 
 input[type=file] {
   white-space: nowrap;
