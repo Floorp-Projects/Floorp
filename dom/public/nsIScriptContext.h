@@ -23,10 +23,6 @@
 #include "nsISupports.h"
 #include "jsapi.h"
 
-//
-// This dependency will disappear soon. A more general "global object"
-// interface will be defined. nsIWebWidget is too specific
-//
 class nsIWebWidget;
 
 #define NS_ISCRIPTCONTEXT_IID \
@@ -34,19 +30,65 @@ class nsIWebWidget;
 0x8f6bca7d, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
 
+/**
+ * It is used by the application to initialize a runtime and run scripts.
+ * A script runtime would implement this interface.
+ * <P><I>It does have a bit too much java script information now, that
+ * should be removed in a short time. Ideally this interface will be
+ * language neutral</I>
+ */
 class nsIScriptContext : public nsISupports {
 public:
+  /**
+   * Execute a script.
+   *
+   * @param aScript a string representing the script to be executed
+   * @param aScriptSize the length of aScript
+   * @param aRetValue return value 
+   *
+   * @return true if the script was valid and got executed
+   *
+   **/
   virtual PRBool              EvaluateString(const char *aScript, 
                                               PRUint32 aScriptSize, 
                                               jsval *aRetValue) = 0;
+
+  /**
+   * Return the global object.
+   *
+   **/
   virtual JSObject*           GetGlobalObject() = 0;
+
+  /**
+   * Return the JSContext 
+   *
+   **/
   virtual JSContext*          GetContext() = 0;
+
+  /**
+   * Init all DOM classes.
+   *
+   **/
   virtual nsresult            InitAllClasses() = 0;
-  // This dependency (nsIWebWidget) will disappear soon. A more general "global object"
-  // interface will be defined. nsIWebWidget is too specific
+
+  /**
+   * Init this context.
+   * <P>
+   * <I> The dependency with nsIWebWidget will disappear soon. A more general "global object"
+   * interface should be defined. nsIWebWidget is too specific.</I>
+   *
+   * @param aGlobalObject the gobal object
+   *
+   * @return NS_OK if context initialization was successful
+   *
+   **/
   virtual nsresult            InitContext(nsIWebWidget *aGlobalObject) = 0;
 };
 
+/**
+ * Return a new Context
+ *
+ */
 extern "C" NS_DOM NS_CreateContext(nsIWebWidget *aGlobal, nsIScriptContext **aContext);
 
 #endif // nsIScriptContext_h__

@@ -162,7 +162,7 @@ public:
                                               nsIDOMAttribute **aAttribute);
   virtual nsresult            CreateAttributeList(nsIDOMAttributeList **aAttributesList);
   virtual nsresult            CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator);
-  virtual nsresult            GetElementsByTagName(nsIDOMNodeIterator **aIterator);
+  virtual nsresult            GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator);
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook

@@ -94,13 +94,13 @@ nsresult nsDOMAttribute::GetName(nsString &aName)
   return NS_OK;
 }
 
-nsresult nsDOMAttribute::GetValue(nsString &aValue /*nsIDOMNode **aValue*/)
+nsresult nsDOMAttribute::GetValue(nsString &aValue)
 {
   aValue = *mValue;
   return NS_OK;
 }
 
-nsresult nsDOMAttribute::SetValue(nsString &aValue /*nsIDOMNode *aValue*/)
+nsresult nsDOMAttribute::SetValue(nsString &aValue)
 {
   delete mValue;
   mValue = new nsString(aValue);

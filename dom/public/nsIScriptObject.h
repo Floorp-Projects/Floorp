@@ -27,19 +27,24 @@
 0x8f6bca7c, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} } 
 
-//
-// The interface a js object can implement
-//
+/**
+ * A java script specific interface. 
+ * <P>
+ * It's implemented by an object that has to execute specific java script
+ * behavior like the array semantic.
+ * <P>
+ * It is used by the script runtime to collect information about an object
+ */
 class nsIScriptObject : public nsISupports {
 public:
-    virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-    virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-    virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-    virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
-    virtual PRBool    EnumerateProperty(JSContext *aContext) = 0;
-    virtual PRBool    Resolve(JSContext *aContext, jsval aID) = 0;
-    virtual PRBool    Convert(JSContext *aContext, jsval aID) = 0;
-    virtual void      Finalize(JSContext *aContext) = 0;
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp) = 0;
+  virtual PRBool    EnumerateProperty(JSContext *aContext) = 0;
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID) = 0;
+  virtual PRBool    Convert(JSContext *aContext, jsval aID) = 0;
+  virtual void      Finalize(JSContext *aContext) = 0;
 };
 
 #endif // nsIScriptObject_h__

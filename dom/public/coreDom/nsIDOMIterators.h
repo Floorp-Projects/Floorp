@@ -30,15 +30,96 @@ class nsIDOMNode;
 0x8f6bca75, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
 
+/**
+ * A NodeIterator is a very simple iterator class that can be used to provide 
+ * a simple linear view of the document heirarchy. 
+ */
 class nsIDOMNodeIterator : public nsISupports {
 public:
+  /**
+   * This method set or unsets some iterator state that controls the 
+   * filter to apply when traversing the document tree. 
+   *
+   * @param aFilter [in]    An integer that uniquely indicates what the filter 
+   *                        operation will be operating against.
+   * @param aFilterOn [in]  When true, this flag states that the specified item is 
+   *                        to be filtered, otherwise, it will not be
+   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            SetFilter(PRInt32 aFilter, PRBool aFilterOn) = 0;
+
+  /**
+   * This method returns the number of items that will be iterated over if the 
+   * iterator is started at the beginning, and getNextNode() is called repeatedly 
+   * until the end of the sequence is encountered. 
+   *
+   * @param aLength [out]   This method will always return the correct number of items 
+   *                        in a single threaded environment, but may return misleading 
+   *                        results in multithreaded, multiuser situations.
+   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            GetLength(PRUint32 *aLength) = 0;
+
+  /**
+   * This method returns the Node over which the iterator currentl rests. 
+   *
+   * @param aNode [out]   This method will return the Node at the current position in the interation.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            GetCurrentNode(nsIDOMNode **aNode) = 0;
+
+  /**
+   * This method alters the internal state of the iterator such that the node it 
+   * references is the next in the sequence the iterator is presenting relative 
+   * to the current position. When filtering, this will skip any items being filtered. 
+   *
+   * @param aNode [out]   This method returns the node that has been traversed to, 
+   *                      or null when it is not possible to iterate any further.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            GetNextNode(nsIDOMNode **aNode) = 0;
+
+  /**
+   * This method alters the internal state of the iterator such that the node it 
+   * references is the previous node in the sequence the iterator is presenting relative 
+   * to the current position. When filtering, this will skip any items being filtered.
+   *
+   * @param aNode [out]   This method returns the node that has been traversed to, or 
+   *                      null when it is not possible to iterate any further.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            GetPreviousNode(nsIDOMNode **aNode) = 0;
+
+  /**
+   * This method alters the internal state of the iterator such that the node it 
+   * references is the first node in the sequence the iterator is presenting relative 
+   * to the current position. When filtering, this will skip any items being filtered. 
+   *
+   * @param aNode [out]    This method will only return null when there are no items to iterate over.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            ToFirst(nsIDOMNode **aNode) = 0;
+
+  /**
+   * This method alters the internal state of the iterator such that the node it 
+   * references is the last node in the sequence the iterator is presenting relative 
+   * to the current position. When filtering, this will skip any items being filtered.
+   *
+   * @param aNode [out]    This method will only return null when there are no items to iterate over.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            ToLast(nsIDOMNode **aNode) = 0;
+
+  /**
+   * This method alters the internal state of the iterator such that the node it 
+   * references is the Nth node in the sequence the iterator is presenting relative 
+   * to the current position. When filtering, this will skip any items being filtered.
+   *
+   * @param aNth [in]     The position to move to
+   * @param aNode [out]   This method will return null when position specified is out 
+   *                      of the range of legal values.
+   * @return <b>NS_OK</b> iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            MoveTo(int aNth, nsIDOMNode **aNode) = 0;
 };
 

@@ -29,9 +29,29 @@ class nsString;
 0x8f6bca70, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
 
+/**
+ * The "DOM" interface provides a number of methods for performing operations that are 
+ * independent of any particular instance of the document object model. 
+ */
 class nsIDOM : public nsISupports {
 public:
+  /**
+   * Creates a document of the specified type 
+   *
+   * @param type [in]       The type of document to create, i.e., "HTML" or "XML"
+   * @param aDocument [out] An instance of an HTML or XML document is created. Documents are a
+   *                        special type of DOM object because other objects (such as Elements,
+   *                        DocumentFragments, etc.) can only exist within the context of a Document
+   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            CreateDocument(nsString &type, nsIDOMDocument** aDocument) = 0;
+
+  /**
+   * Returns TRUE if the current DOM implements a given feature, FALSE otherwise 
+   *
+   * @param aFeature [in]   The package name of the feature to test
+   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
+   */
   virtual nsresult            HasFeature(nsString &aFeature) = 0;
 };
 
