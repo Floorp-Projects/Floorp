@@ -166,7 +166,7 @@
 
 <!ENTITY onthe-text            "その月の ">
 <!ENTITY last-text             "この前の ">
-<!ENTITY ofthemonth-text       " に。">
+<!ENTITY ofthemonth-text       " に">
 
 
 <!ENTITY todo.title.new         "新しい ToDo">
