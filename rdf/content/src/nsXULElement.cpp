@@ -360,6 +360,8 @@ public:
                            const nsString& aAttributeValue,
                            nsRDFDOMNodeList* aElements);
 
+    static PRBool IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode);
+
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
 
@@ -380,6 +382,7 @@ private:
     static nsIAtom*             kTreeItemAtom;
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kTreeCellAtom;
+    static nsIAtom*             kTreeChildrenAtom;
 
     static nsIAtom*             kSelectedAtom;
     
@@ -425,6 +428,7 @@ nsIAtom*             RDFElementImpl::kTreeAtom;
 nsIAtom*             RDFElementImpl::kTreeItemAtom;
 nsIAtom*             RDFElementImpl::kTreeRowAtom;
 nsIAtom*             RDFElementImpl::kTreeCellAtom;
+nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
 nsIAtom*             RDFElementImpl::kSelectedAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
@@ -518,6 +522,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kTreeItemAtom    = NS_NewAtom("treeitem");
         kTreeRowAtom     = NS_NewAtom("treerow");
         kTreeCellAtom    = NS_NewAtom("treecell");
+        kTreeChildrenAtom = NS_NewAtom("treechildren");
         kSelectedAtom    = NS_NewAtom("selected");
         kPopupAtom       = NS_NewAtom("popup");
         kTooltipAtom     = NS_NewAtom("tooltip");
@@ -599,6 +604,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kTreeCellAtom);
+        NS_IF_RELEASE(kTreeChildrenAtom);
         NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kContextAtom);
@@ -1632,16 +1638,13 @@ RDFElementImpl::GetParent(nsIContent*& aResult) const
 NS_IMETHODIMP
 RDFElementImpl::SetParent(nsIContent* aParent)
 {
-    mParent = aParent; // no refcount
-
-    // This is the point where we teach an observes node's parent that it is a broadcast
-    // listener.
-    
-    // If we're an observes node, then we need to add our parent element
-    // as a broadcast listener.
     nsCOMPtr<nsIAtom> tagName;
     GetTag(*getter_AddRefs(tagName));
 
+    mParent = aParent; // no refcount
+
+    // If we're an observes node, then we need to add our parent element
+    // as a broadcast listener.
     if (tagName && tagName.get() == kObservesAtom) {
       // Find the node that we're supposed to be
       // observing and perform the hookup.
@@ -1876,6 +1879,70 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     NS_ASSERTION(oldKid != nsnull, "old kid not nsIContent");
     if (! oldKid)
         return NS_ERROR_FAILURE;
+
+    // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
+    // the possibility exists that some of the items in the removed subtree
+    // are selected (and therefore need to be deselected). We need to account for this.
+    nsCOMPtr<nsIAtom> tag;
+    oldKid->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == kTreeChildrenAtom || tag.get() == kTreeItemAtom ||
+                tag.get() == kTreeCellAtom)) {
+      // This is the nasty case. We have (potentially) a slew of selected items
+      // and cells going away.
+      // First, retrieve the tree.
+      nsRDFDOMNodeList* itemList = nsnull;
+      nsRDFDOMNodeList* cellList = nsnull;
+      nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+      GetParentTree(getter_AddRefs(treeElement));
+      if (treeElement) {
+        nsCOMPtr<nsIDOMNodeList> nodes;
+        treeElement->GetSelectedItems(getter_AddRefs(nodes));
+        itemList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        treeElement->GetSelectedCells(getter_AddRefs(nodes));
+        cellList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        nsCOMPtr<nsIDOMNode> parentKid = do_QueryInterface(oldKid);
+        PRBool fireSelectionHandler = PR_FALSE;
+        if (itemList) {
+          // Iterate over all of the items and find out if they are contained inside
+          // the removed subtree.
+          PRUint32 length;
+          itemList->GetLength(&length);
+          for (PRUint32 i = 0; i < length; i++) {
+            nsCOMPtr<nsIDOMNode> node;
+            itemList->Item(i, getter_AddRefs(node));
+            if (IsAncestor(parentKid, node)) {
+              nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+              content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_FALSE);
+              length--;
+              i--;
+              fireSelectionHandler = PR_TRUE;
+            }
+          }
+        }
+        if (cellList) {
+          // Iterate over all of the items and find out if they are contained inside
+          // the removed subtree.
+          PRUint32 length;
+          cellList->GetLength(&length);
+          for (PRUint32 i = 0; i < length; i++) {
+            nsCOMPtr<nsIDOMNode> node;
+            cellList->Item(i, getter_AddRefs(node));
+            if (IsAncestor(parentKid, node)) {
+              nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+              content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_FALSE);
+              length--;
+              i--;
+              fireSelectionHandler = PR_TRUE;
+            }
+          }
+        }
+
+        if (fireSelectionHandler) {
+          nsXULTreeElement* tree = (nsXULTreeElement*)(treeElement.get()); // XXX Yes, I am evil.
+          tree->FireOnSelectHandler();
+        }
+      }
+    }
 
     if (oldKid) {
         nsIDocument* doc = mDocument;
@@ -2586,20 +2653,24 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     if (NS_EVENT_FLAG_INIT == aFlags) {
         aDOMEvent = &domEvent;
         aEvent->flags = NS_EVENT_FLAG_NONE;
-        // In order for the event to have a proper target for menus (which have no corresponding
-        // frame target in the visual model), we have to explicitly set the target of the
-        // event to prevent it from trying to retrieve the target from a frame.
+        // In order for the event to have a proper target for events that don't go through
+        // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
+        // ourselves. Also, key sets and menus don't have frames and therefore need their
+        // targets explicitly specified.
         nsAutoString tagName;
         GetTagName(tagName);
-        if (tagName == "menu" || tagName == "menuitem" ||
+        if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
+            aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
+            aEvent->message == NS_FORM_CHANGE || 
+            tagName == "menu" || tagName == "menuitem" ||
             tagName == "menubar" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-                NS_ERROR("Unable to instantiate a listener manager on a menu/key event.");
+                NS_ERROR("Unable to instantiate a listener manager on this event.");
                 return ret;
             }
             if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, aDOMEvent))) {
-                NS_ERROR("Menu/key event will fail without the ability to create the event early.");
+                NS_ERROR("This event will fail without the ability to create the event early.");
                 return ret;
             }
             
@@ -3308,3 +3379,17 @@ RDFElementImpl::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
   return NS_OK;
 }
 
+PRBool 
+RDFElementImpl::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
+{
+  nsCOMPtr<nsIDOMNode> parent = dont_QueryInterface(aChildNode);
+  while (parent && (parent.get() != aParentNode)) {
+    nsCOMPtr<nsIDOMNode> newParent;
+    parent->GetParentNode(getter_AddRefs(newParent));
+    parent = newParent;
+  }
+
+  if (parent)
+    return PR_TRUE;
+  return PR_FALSE;
+}

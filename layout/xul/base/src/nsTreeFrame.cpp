@@ -25,6 +25,7 @@
 #include "nsTreeCellFrame.h"
 #include "nsCellMap.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsINameSpaceManager.h"
 
 //
 // NS_NewTreeFrame
@@ -71,7 +72,11 @@ void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aF
   nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(mContent);
   nsCOMPtr<nsIDOMXULElement> cellElement = do_QueryInterface(cellContent);
   nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
+
+  nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
+  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, "true", PR_FALSE);
   treeElement->SelectItem(itemElement);
+  mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->SelectCell(cellElement);
 }
 
@@ -90,7 +95,10 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
   nsCOMPtr<nsIDOMXULElement> cellElement = do_QueryInterface(cellContent);
   nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
 
+  nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
+  mContent->SetAttribute(kNameSpaceID_None, kSuppressSelectChange, "true", PR_FALSE);
   treeElement->ToggleItemSelection(itemElement);
+  mContent->UnsetAttribute(kNameSpaceID_None, kSuppressSelectChange, PR_FALSE);
   treeElement->ToggleCellSelection(cellElement);
 }
 
