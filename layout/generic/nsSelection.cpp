@@ -3087,7 +3087,6 @@ nsSelection::CommonPageMove(PRBool aForward,
   const nsIView* clipView;
   //get the frame from the scrollable view
 
-  void*    clientData;
   nsIFrame* mainframe = nsnull;
 
   // The view's client data points back to its frame
@@ -3159,7 +3158,6 @@ nsSelection::CommonPageMove(PRBool aForward,
   
   if (caretView)
   {
-    nscoord x,y;
     while (caretView != scrolledView)
     {
       caretPos += caretView->GetPosition();
