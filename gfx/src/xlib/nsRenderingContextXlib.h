@@ -71,7 +71,7 @@ class nsRenderingContextXlib : public nsIRenderingContext,
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipState);
 
-  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipState);
+  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipState);

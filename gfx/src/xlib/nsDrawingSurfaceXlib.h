@@ -41,6 +41,7 @@ public:
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
   NS_IMETHOD Init (Drawable aDrawable, GC aGC);
+  NS_IMETHOD Init (GC aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
   GC         GetGC(void) { return mGC; }
   Drawable   GetDrawable(void) { return mPixmap; }  
 
