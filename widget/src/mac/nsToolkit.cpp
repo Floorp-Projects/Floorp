@@ -340,7 +340,7 @@ void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
 
   if (!RecoverMemoryReserve(kMemoryReserveSize))
   {
-    nsMemory::HeapMinimize();
+    nsMemory::HeapMinimize(PR_TRUE);
   }
 }
 
