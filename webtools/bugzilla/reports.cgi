@@ -35,6 +35,8 @@
 #    daily stats file, so now works independently of collectstats.pl
 #    version
 #    Added image caching by date and datasets
+# Myk Melez <myk@mozilla.org):
+#    Implemented form field validation and reorganized code.
 
 use diagnostics;
 use strict;
@@ -58,7 +60,6 @@ my %bugsperperson;
 
 # while this looks odd/redundant, it allows us to name
 # functions differently than the value passed in
-
 my %reports = 
     ( 
     "most_doomed" => \&most_doomed,
@@ -71,19 +72,6 @@ my %reports =
 # to viewing reports, as well.  Time to check the login in that case.
 ConnectToDatabase(1);
 quietly_check_login();
-
-print "Content-type: text/html\n";
-
-# Changing attachment to inline to resolve 46897 - zach@zachlipton.com
-print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
-
-# If we're here for the first time, give a banner. Else respect the banner flag.
-if ( (!defined $FORM{'product'}) || ($FORM{'banner'})  ) {
-    PutHeader ("Bug Reports")
-}
-else {
-    print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
-}
 
 GetVersionTable();
 
@@ -103,54 +91,60 @@ if(Param("usebuggroups")) {
     push( @myproducts, "-All-", @legal_product );
 }
 
-$FORM{'output'} ||= "most_doomed"; # a reasonable default
-
 if (! defined $FORM{'product'}) {
+
+    print "Content-type: text/html\n\n";
+    PutHeader("Bug Reports");
     &choose_product;
-}
-else {
+    PutFooter();
+
+} else {
+
+    # For security and correctness, validate the value of the "product" form variable.
+    # Valid values are those products for which the user has permissions which appear
+    # in the "product" drop-down menu on the report generation form.
+    grep($_ eq $FORM{'product'}, @myproducts)
+      || DisplayError("You entered an invalid product name.") && exit;
+
     # If usebuggroups is on, we don't want people to be able to view
     # reports for products they don't have permissions for...
-    if(Param("usebuggroups") &&
-       GroupExists($FORM{'product'}) &&
-       !UserInGroup($FORM{'product'}))
-    {
-        print "<H1>Permission denied.</H1>\n";
-        print "Sorry; you do not have the permissions necessary to view\n";
-        print "reports for this product.\n";
-        print "<P>\n";
-        PutFooter();
-        exit;
-    }
+    Param("usebuggroups") 
+      && GroupExists($FORM{'product'}) 
+      && !UserInGroup($FORM{'product'})
+      && DisplayError("You do not have the permissions necessary to view reports for this product.")
+      && exit;
           
-    # we want to be careful about what subroutines 
-    # can be called from outside. modify %reports
-    # accordingly when a new report type is added
+    # For security and correctness, validate the value of the "output" form variable.
+    # Valid values are the keys from the %reports hash defined above which appear in
+    # the "output" drop-down menu on the report generation form.
+    $FORM{'output'} ||= "most_doomed"; # a reasonable default
+    grep($_ eq $FORM{'output'}, keys %reports)
+      || DisplayError("You entered an invalid output type.") 
+      && exit;
 
-    if (! exists $reports{$FORM{'output'}}) {
-        $FORM{'output'} = "most_doomed"; # a reasonable default
+    # Output appropriate HTTP response headers
+    print "Content-type: text/html\n";
+    # Changing attachment to inline to resolve 46897 - zach@zachlipton.com
+    print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
+
+    if ($FORM{'banner'}) {
+      PutHeader("Bug Reports");
+    } 
+    else {
+      print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
     }
-    
-    my $f = $reports{$FORM{'output'}};
 
-    if (! defined $f) {
-        print "start over, your form data was all messed up.<p>\n";
-        foreach (keys %::FORM) {
-            print "<font color=blue>$_</font> : " . 
-                ($FORM{$_} ? $FORM{$_} : "undef") . "<br>\n";
-        }
-        PutFooter() if $FORM{banner};
-        exit;
-    }
+    # Execute the appropriate report generation function 
+    # (the one whose name is the same as the value of the "output" form variable).
+    &{$reports{$FORM{'output'}}};
 
-    &{$f};
+    # ??? why is this necessary? formatting looks fine without it
+    print "<p>";
+
+    PutFooter() if $FORM{banner};
+
 }
 
-print <<FIN;
-<p>
-FIN
-
-PutFooter() if $FORM{banner};
 
 
 ##################################
@@ -257,7 +251,6 @@ FIN
 FIN
 #Add this above to get a control for showing the SQL query:
 #<input type=checkbox name=showsql value=1>&nbsp;Show SQL<br>
-    PutFooter();
 }
 
 sub most_doomed {
@@ -485,11 +478,6 @@ FIN
 FIN
 }
 
-sub is_legal_product {
-    my $product = shift;
-    return grep { $_ eq $product} @myproducts;
-}
-
 sub daily_stats_filename {
     my ($prodname) = @_;
     $prodname =~ s/\//-/gs;
@@ -500,10 +488,6 @@ sub show_chart {
 	# if we don't have the graphic mouldes don't even try to go
 	# here. Should probably return some decent error message.
 	return unless $use_gd;
-
-    if (! is_legal_product ($FORM{'product'})) {
-        &die_politely ("Unknown product: $FORM{'product'}");
-    }
 
     if (! $FORM{datasets}) {
         die_politely("You didn't select any datasets to plot");
