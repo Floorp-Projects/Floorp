@@ -696,7 +696,7 @@ nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsFormControlFrame::GetType() const
+nsFormControlFrame::GetFormControlType() const
 {
   return nsFormControlHelper::GetType(mContent);
 }

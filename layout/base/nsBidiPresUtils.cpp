@@ -257,10 +257,10 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   PRBool                   isTextFrame    = PR_FALSE;
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
-  nsCOMPtr<nsIAtom>        frameType;
   nsIContent*              content = nsnull;
   nsCOMPtr<nsITextContent> textContent;
   const nsTextFragment*    fragment;
+  nsIAtom*                 frameType = nsnull;
 
   for (; ;) {
     if (fragmentLength <= 0) {
@@ -270,9 +270,8 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
       contentOffset = 0;
       
       frame = (nsIFrame*) (mLogicalFrames[frameIndex]);
-
-      frame->GetFrameType(getter_AddRefs(frameType) );
-      if (nsLayoutAtoms::textFrame == frameType.get() ) {
+      frameType = frame->GetType();
+      if (nsLayoutAtoms::textFrame == frameType) {
         content = frame->GetContent();
         if (!content) {
           mSuccess = NS_OK;
@@ -310,7 +309,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
       }
     } // if (runLength <= 0)
 
-    if (nsLayoutAtoms::directionalFrame == frameType.get()) {
+    if (nsLayoutAtoms::directionalFrame == frameType) {
       delete frame;
       ++lineOffset;
     }
@@ -370,7 +369,6 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
   nsIFrame*             frame;
   nsIFrame*             directionalFrame;
   nsIFrame*             kid;
-  nsCOMPtr<nsIAtom>     frameType;
   nsresult              rv;
   nsresult              res = NS_OK;
 
@@ -408,13 +406,13 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
       }
     }
 
-    frame->GetFrameType(getter_AddRefs(frameType) );
+    nsIAtom* frameType = frame->GetType();
 
     if ( (!display->IsBlockLevel() )
-        && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
-          || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
-          || (nsLayoutAtoms::letterFrame == frameType.get() )
-          || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
+        && ( (nsLayoutAtoms::inlineFrame == frameType)
+          || (nsLayoutAtoms::positionedInlineFrame == frameType)
+          || (nsLayoutAtoms::letterFrame == frameType)
+          || (nsLayoutAtoms::blockFrame == frameType) ) ) {
       frame->FirstChild(aPresContext, nsnull, &kid);
       res = InitLogicalArray(aPresContext, kid, aNextInFlow, aAddMarkers);
     }
@@ -450,16 +448,15 @@ nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
   nsIFrame*                 frame;
   nsIContent*               prevContent = nsnull;
   nsCOMPtr<nsITextContent>  textContent;
-  nsCOMPtr<nsIAtom>         frameType;
   const nsTextFragment*     frag;
   PRUint32                  i;
   PRUint32                  count = mLogicalFrames.Count();
 
   for (i = 0; i < count; i++) {
     frame = (nsIFrame*) (mLogicalFrames[i]);
-    frame->GetFrameType(getter_AddRefs(frameType) );
+    nsIAtom* frameType = frame->GetType();
 
-    if (nsLayoutAtoms::textFrame == frameType.get() ) {
+    if (nsLayoutAtoms::textFrame == frameType) {
       nsIContent* content = frame->GetContent();
       if (!content) {
         mSuccess = NS_OK;
@@ -480,11 +477,11 @@ nsBidiPresUtils::CreateBlockBuffer(nsIPresContext* aPresContext)
       }
       frag->AppendTo(mBuffer);
     }
-    else if (nsLayoutAtoms::brFrame == frameType.get() ) { // break frame
+    else if (nsLayoutAtoms::brFrame == frameType) { // break frame
       // Append line separator
       mBuffer.Append( (PRUnichar) kLineSeparator);
     }
-    else if (nsLayoutAtoms::directionalFrame == frameType.get() ) {
+    else if (nsLayoutAtoms::directionalFrame == frameType) {
       nsDirectionalFrame* dirFrame;
       frame->QueryInterface(NS_GET_IID(nsDirectionalFrame),
                             (void**) &dirFrame);
@@ -684,16 +681,13 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
   // We assume that <b></b> rectangle takes all the room from "english" left edge to
   // "WERBEH" right edge.
 
-  nsCOMPtr<nsIAtom> frameType;
-
   frame = aFirstChild;
   for (i = 0; i < aChildCount; i++) {
-    frame->GetFrameType(getter_AddRefs(frameType) );
-    if ( frameType.get()
-        && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
-          || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
-          || (nsLayoutAtoms::letterFrame == frameType.get() )
-          || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
+    nsIAtom* frameType = frame->GetType();
+    if ( (nsLayoutAtoms::inlineFrame == frameType)
+          || (nsLayoutAtoms::positionedInlineFrame == frameType)
+          || (nsLayoutAtoms::letterFrame == frameType)
+          || (nsLayoutAtoms::blockFrame == frameType) ) {
       PRInt32 minX = 0x7FFFFFFF;
       PRInt32 maxX = 0;
       RepositionContainerFrame(aPresContext, frame, minX, maxX);
@@ -710,19 +704,17 @@ nsBidiPresUtils::RepositionContainerFrame(nsIPresContext* aPresContext,
 {
   nsIFrame* frame;
   nsIFrame* firstChild;
-  nsCOMPtr<nsIAtom> frameType;
   PRInt32 minX = 0x7FFFFFFF;
   PRInt32 maxX = 0;
 
   aContainer->FirstChild(aPresContext, nsnull, &firstChild);
 
   for (frame = firstChild; frame; frame = frame->GetNextSibling()) {
-    frame->GetFrameType(getter_AddRefs(frameType) );
-    if ( (frameType.get() )
-      && ( (nsLayoutAtoms::inlineFrame == frameType.get() )
-        || (nsLayoutAtoms::positionedInlineFrame == frameType.get() )
-        || (nsLayoutAtoms::letterFrame == frameType.get() )
-        || (nsLayoutAtoms::blockFrame == frameType.get() ) ) ) {
+    nsIAtom* frameType = frame->GetType();
+    if ( (nsLayoutAtoms::inlineFrame == frameType)
+        || (nsLayoutAtoms::positionedInlineFrame == frameType)
+        || (nsLayoutAtoms::letterFrame == frameType)
+        || (nsLayoutAtoms::blockFrame == frameType) ) {
       RepositionContainerFrame(aPresContext, frame, minX, maxX);
     }
     else {
@@ -791,7 +783,6 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
                                         PRInt32         aLastIndex,
                                         PRInt32&        aOffset) const
 {
-  nsCOMPtr<nsIAtom> frameType;
   nsIFrame*         frame;
   PRInt32           index;
   nsIFrame*         parent = aFrame->GetParent();
@@ -803,8 +794,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsIPresContext* aPresContext,
 
   for (index = aLastIndex; index > aFirstIndex; index--) {
     frame = (nsIFrame*) mLogicalFrames[index];
-    frame->GetFrameType(getter_AddRefs(frameType) );
-    if (nsLayoutAtoms::directionalFrame == frameType.get() ) {
+    if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
       delete frame;
       ++aOffset;
     }

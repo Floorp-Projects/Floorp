@@ -83,8 +83,8 @@ public:
         eWIDTH_SOURCE_CELL_WITH_SPAN=2    // a cell implicitly specified a width via colspan
   };
 
-  nsTableColType GetType() const;
-  void SetType(nsTableColType aType);
+  nsTableColType GetColType() const;
+  void SetColType(nsTableColType aType);
 
   /** instantiate a new instance of nsTableColFrame.
     * @param aResult    the new object is returned in this out-param
@@ -131,7 +131,7 @@ public:
    *
    * @see nsLayoutAtoms::tableColFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

@@ -1314,19 +1314,16 @@ nsTextControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
   else NS_ASSERTION(PR_FALSE, "RemovedAsPrimaryFrame called after PreDestroy");
 }
 
-NS_IMETHODIMP 
-nsTextControlFrame::GetFrameType(nsIAtom** aType) const 
+nsIAtom*
+nsTextControlFrame::GetType() const 
 { 
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer"); 
-  *aType = nsLayoutAtoms::textInputFrame; 
-  NS_ADDREF(*aType); 
-  return NS_OK; 
+  return nsLayoutAtoms::textInputFrame;
 } 
 
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsTextControlFrame::IsSingleLineTextControl() const
 {
-  PRInt32 type = GetType();
+  PRInt32 type = GetFormControlType();
   return (type == NS_FORM_INPUT_TEXT) || (type == NS_FORM_INPUT_PASSWORD);
 }
 
@@ -1353,7 +1350,7 @@ PRBool nsTextControlFrame::IsPlainTextControl() const
 
 PRBool nsTextControlFrame::IsPasswordTextControl() const
 {
-  return GetType() == NS_FORM_INPUT_PASSWORD;
+  return GetFormControlType() == NS_FORM_INPUT_PASSWORD;
 }
 
 
@@ -2098,7 +2095,7 @@ nsTextControlFrame::GetName(nsAString* aResult)
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsTextControlFrame::GetType() const
+nsTextControlFrame::GetFormControlType() const
 {
   return nsFormControlHelper::GetType(mContent);
 }

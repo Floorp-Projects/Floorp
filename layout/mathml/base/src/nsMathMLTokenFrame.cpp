@@ -60,12 +60,10 @@ nsMathMLTokenFrame::~nsMathMLTokenFrame()
 {
 }
 
-NS_IMETHODIMP
-nsMathMLTokenFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsMathMLTokenFrame::GetType() const
 {
-  *aType = nsMathMLAtoms::ordinaryMathMLFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsMathMLAtoms::ordinaryMathMLFrame;
 }
 
 static void
@@ -372,9 +370,7 @@ SetQuote(nsIPresContext* aPresContext,
     // walk down the hierarchy of first children because they could be wrapped
     aFrame->FirstChild(aPresContext, nsnull, &textFrame);
     if (textFrame) {
-      nsCOMPtr<nsIAtom> frameType;
-      textFrame->GetFrameType(getter_AddRefs(frameType));
-      if (frameType == nsLayoutAtoms::textFrame)
+      if (textFrame->GetType() == nsLayoutAtoms::textFrame)
         break;
     }
     aFrame = textFrame;

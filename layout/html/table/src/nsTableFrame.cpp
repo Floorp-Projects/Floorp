@@ -185,13 +185,10 @@ nsTableFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP
-nsTableFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableFrame; 
 }
 
 
@@ -476,9 +473,7 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
                                        nsIContent*     aContent, 
                                        nsIAtom*        aAttribute)
 {
-  nsIAtom* frameType;
-  aFrame->GetFrameType(&frameType);
-  if (IS_TABLE_CELL(frameType)) {
+  if (IS_TABLE_CELL(aFrame->GetType())) {
     if ((nsHTMLAtoms::rowspan == aAttribute) || 
         (nsHTMLAtoms::colspan == aAttribute)) {
       nsTableCellMap* cellMap = GetCellMap();
@@ -499,7 +494,6 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
       }
     }
   }
-  NS_IF_RELEASE(frameType);
 }
 
 
@@ -559,7 +553,7 @@ PRInt32 nsTableFrame::GetIndexOfLastRealCol()
   for (PRInt32 colX = numCols; colX >= 0; colX--) { 
     nsTableColFrame* colFrame = GetColFrame(colX);
     if (colFrame) {
-      if (eColAnonymousCell != colFrame->GetType()) {
+      if (eColAnonymousCell != colFrame->GetColType()) {
         return colX;
       }
     }
@@ -691,9 +685,7 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
   nsIFrame* kidFrame = aFirstFrame;
   PRBool didLastFrame = PR_FALSE;
   while (kidFrame) {
-    nsIAtom* kidType;
-    kidFrame->GetFrameType(&kidType);
-    if (nsLayoutAtoms::tableColGroupFrame == kidType) {
+    if (nsLayoutAtoms::tableColGroupFrame == kidFrame->GetType()) {
       if (didLastFrame) {
         firstColGroupToReset = (nsTableColGroupFrame*)kidFrame;
         break;
@@ -708,7 +700,6 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
         colIndex += numCols;
       }
     }
-    NS_IF_RELEASE(kidType);
     if (kidFrame == aLastFrame) {
       didLastFrame = PR_TRUE;
     }
@@ -725,7 +716,7 @@ void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
                              PRInt32          aColIndex)
 {
   mColFrames.InsertElementAt(&aColFrame, aColIndex);
-  nsTableColType insertedColType = aColFrame.GetType();
+  nsTableColType insertedColType = aColFrame.GetColType();
   PRInt32 numCacheCols = mColFrames.Count();
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
@@ -735,7 +726,7 @@ void nsTableFrame::InsertCol(nsIPresContext&  aPresContext,
       if (eColAnonymousCell != insertedColType) {
         nsTableColFrame* lastCol = (nsTableColFrame *)mColFrames.ElementAt(numCacheCols - 1);
         if (lastCol) {
-          nsTableColType lastColType = lastCol->GetType();
+          nsTableColType lastColType = lastCol->GetColType();
           if (eColAnonymousCell == lastColType) {
             // remove the col from the cache
             mColFrames.RemoveElementAt(numCacheCols - 1);
@@ -850,7 +841,7 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
   aPresContext.GetShell(getter_AddRefs(presShell));
   nsresult result = NS_NewTableColGroupFrame(presShell, &newFrame);
   if (NS_SUCCEEDED(result) && newFrame) {
-    ((nsTableColGroupFrame *)newFrame)->SetType(aColGroupType);
+    ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
     newFrame->Init(&aPresContext, colGroupContent, this, colGroupStyle, nsnull);
   }
   return (nsTableColGroupFrame *)newFrame;
@@ -867,19 +858,16 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext& aPresContext,
   nsTableColGroupFrame* colGroupFrame = nsnull;
   nsIFrame* childFrame = mColGroups.FirstChild();
   while (childFrame) {
-    nsIAtom* frameType = nsnull;
-    childFrame->GetFrameType(&frameType);
-    if (nsLayoutAtoms::tableColGroupFrame == frameType) {
+    if (nsLayoutAtoms::tableColGroupFrame == childFrame->GetType()) {
       colGroupFrame = (nsTableColGroupFrame *)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
-    NS_IF_RELEASE(frameType);
   }
 
   nsTableColGroupType lastColGroupType = eColGroupContent; 
   nsTableColGroupType newColGroupType  = eColGroupContent; 
   if (colGroupFrame) {
-    lastColGroupType = colGroupFrame->GetType();
+    lastColGroupType = colGroupFrame->GetColType();
   }
   if (eColAnonymousCell == aColType) {
     if (eColGroupAnonymousCell != lastColGroupType) {
@@ -932,12 +920,9 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
   // Get the last col frame
   aColGroupFrame.FirstChild(&aPresContext, nsnull, &childFrame);
   while (childFrame) {
-    nsIAtom* frameType = nsnull;
-    childFrame->GetFrameType(&frameType);
-    if (nsLayoutAtoms::tableColFrame == frameType) {
+    if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
       lastColFrame = (nsTableColGroupFrame *)childFrame;
     }
-    NS_IF_RELEASE(frameType);
     childFrame = childFrame->GetNextSibling();
   }
 
@@ -971,7 +956,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext.GetShell(getter_AddRefs(presShell));
     NS_NewTableColFrame(presShell, &colFrame);
-    ((nsTableColFrame *) colFrame)->SetType(aColType);
+    ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(&aPresContext, iContent, &aColGroupFrame,
                    styleContext, nsnull);
     colFrame->SetInitialChildList(&aPresContext, nsnull, nsnull);
@@ -1062,7 +1047,7 @@ nsTableFrame::DestroyAnonymousColFrames(nsIPresContext& aPresContext,
   PRInt32 numColsRemoved = 0;
   for (PRInt32 colX = endIndex; colX >= startIndex; colX--) {
     nsTableColFrame* colFrame = GetColFrame(colX);
-    if (colFrame && (eColAnonymousCell == colFrame->GetType())) {
+    if (colFrame && (eColAnonymousCell == colFrame->GetColType())) {
       nsTableColGroupFrame* cgFrame =
         NS_STATIC_CAST(nsTableColGroupFrame*, colFrame->GetParent());
       // remove the frame from the colgroup
@@ -1209,9 +1194,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
   PRBool stopTelling = PR_FALSE;
   for (nsIFrame* kidFrame = aFirstFrame.FirstChild(); (kidFrame && !stopAsking);
        kidFrame = kidFrame->GetNextSibling()) {
-    nsCOMPtr<nsIAtom> kidType;
-    kidFrame->GetFrameType(getter_AddRefs(frameType));
-    if (IS_TABLE_CELL(kidType.get())) {
+    if (IS_TABLE_CELL(kidFrame->GetType())) {
       nsTableCellFrame* cellFrame = (nsTableCellFrame*)kidFrame;
       stopTelling = tableFrame->CellChangedWidth(*cellFrame, cellFrame->GetPass1MaxElementWidth(), 
                                                  cellFrame->GetMaximumWidth(), PR_TRUE);
@@ -1266,7 +1249,7 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
   nsIFrame* rgFrame = nsnull;
   nsIAtom* frameType = aFrameTypeIn;
   if (!aFrameTypeIn) {
-    aFrame->GetFrameType(&frameType);
+    frameType = aFrame->GetType();
   }
   if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
     rgFrame = aFrame;
@@ -1278,17 +1261,11 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
       nsIFrame* scrolledFrame;
       scrollable->GetScrolledFrame(nsnull, scrolledFrame);
       if (scrolledFrame) {
-        nsIAtom* scrolledType;
-        scrolledFrame->GetFrameType(&scrolledType);
-        if (nsLayoutAtoms::tableRowGroupFrame == scrolledType) {
+        if (nsLayoutAtoms::tableRowGroupFrame == scrolledFrame->GetType()) {
           rgFrame = scrolledFrame;
         }
-        NS_IF_RELEASE(scrolledType);
       }
     }
-  }
-  if (!aFrameTypeIn) {
-    NS_IF_RELEASE(frameType);
   }
   return (nsTableRowGroupFrame*)rgFrame;
 }
@@ -1306,16 +1283,13 @@ nsTableFrame::CollectRows(nsIPresContext* aPresContext,
     nsIFrame* childFrame = nsnull;
     rgFrame->FirstChild(aPresContext, nsnull, &childFrame);
     while (childFrame) {
-      nsIAtom* childType;
-      childFrame->GetFrameType(&childType);
-      if (nsLayoutAtoms::tableRowFrame == childType) {
+      if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
         aCollection.AppendElement(childFrame);
         numRows++;
       }
       else {
         numRows += CollectRows(aPresContext, childFrame, aCollection);
       }
-      NS_IF_RELEASE(childType);
       childFrame = childFrame->GetNextSibling();
     }
   }
@@ -1703,9 +1677,7 @@ ProcessRowInserted(nsIPresContext* aPresContext,
     rgFrame->FirstChild(aPresContext, nsnull, &childFrame);
     // find the row that was inserted first
     while (childFrame) {
-      nsCOMPtr<nsIAtom> childType;
-      childFrame->GetFrameType(getter_AddRefs(childType));
-      if (nsLayoutAtoms::tableRowFrame == childType.get()) {
+      if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
         nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
         if (rowFrame->IsFirstInserted()) {
           rowFrame->SetFirstInserted(PR_FALSE);
@@ -1751,16 +1723,15 @@ AncestorsHaveStyleHeight(const nsHTMLReflowState& aReflowState)
   for (const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
        parentRS && parentRS->frame; 
        parentRS = parentRS->parentReflowState) {
-    nsCOMPtr<nsIAtom> frameType;
-    parentRS->frame->GetFrameType(getter_AddRefs(frameType));
-    if (IS_TABLE_CELL(frameType.get())                         ||
-        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
-        (nsLayoutAtoms::tableRowGroupFrame == frameType.get())) {
+    nsIAtom* frameType = parentRS->frame->GetType();
+    if (IS_TABLE_CELL(frameType)                         ||
+        (nsLayoutAtoms::tableRowFrame      == frameType) ||
+        (nsLayoutAtoms::tableRowGroupFrame == frameType)) {
       if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
         return PR_TRUE;
       }
     }
-    else if (nsLayoutAtoms::tableFrame == frameType.get()) {
+    else if (nsLayoutAtoms::tableFrame == frameType) {
       // we reached the containing table, so always return
       if (::IsPctStyleHeight(parentRS->mStylePosition) || ::IsFixedStyleHeight(parentRS->mStylePosition)) {
         return PR_TRUE;
@@ -1800,18 +1771,17 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
-    nsCOMPtr<nsIAtom> frameType;
-    rs->frame->GetFrameType(getter_AddRefs(frameType));
-    if (IS_TABLE_CELL(frameType.get())) {
+    nsIAtom* frameType = rs->frame->GetType();
+    if (IS_TABLE_CELL(frameType)) {
       ((nsTableCellFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
     }
-    else if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+    else if (nsLayoutAtoms::tableRowFrame == frameType) {
       ((nsTableRowFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
     }
-    else if (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) {
+    else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
       ((nsTableRowGroupFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
     }
-    else if (nsLayoutAtoms::tableFrame == frameType.get()) {
+    else if (nsLayoutAtoms::tableFrame == frameType) {
       if (rs == &aReflowState) {
         // don't stop because we started with this table 
         ((nsTableFrame*)rs->frame)->SetNeedSpecialReflow(PR_TRUE);
@@ -4043,9 +4013,7 @@ nsTableFrame::GetBorderPadding(const nsHTMLReflowState& aReflowState,
     const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
     while (parentRS) {
       if (parentRS->frame) {
-        nsCOMPtr<nsIAtom> frameType;
-        parentRS->frame->GetFrameType(getter_AddRefs(frameType));
-        if (nsLayoutAtoms::tableFrame == frameType.get()) {
+        if (nsLayoutAtoms::tableFrame == parentRS->frame->GetType()) {
           nsSize basis(parentRS->mComputedWidth, parentRS->mComputedHeight);
           GetPaddingFor(basis, *paddingData, padding);
           break;
@@ -4129,9 +4097,7 @@ nsTableFrame::GetTableFrame(nsIFrame*      aSourceFrame,
     // "result" is the result of intermediate calls, not the result we return from this method
     for (nsIFrame* parentFrame = aSourceFrame->GetParent(); parentFrame;
          parentFrame = parentFrame->GetParent()) {
-      nsCOMPtr<nsIAtom> frameType;
-      parentFrame->GetFrameType(getter_AddRefs(frameType));
-      if (nsLayoutAtoms::tableFrame == frameType.get()) {
+      if (nsLayoutAtoms::tableFrame == parentFrame->GetType()) {
         aTableFrame = (nsTableFrame*)parentFrame;
         rv = NS_OK; // only set if we found the table frame
         break;
@@ -4326,13 +4292,9 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
   if (!aPriorChildFrame) {
     return result;
   }
-  nsIAtom* frameType;
-  aPriorChildFrame->GetFrameType(&frameType);
-  if (aChildType == frameType) {
-    NS_RELEASE(frameType);
+  if (aChildType == aPriorChildFrame->GetType()) {
     return (nsTableCellFrame*)aPriorChildFrame;
   }
-  NS_IF_RELEASE(frameType);
 
   // aPriorChildFrame is not of type aChildType, so we need start from 
   // the beginnng and find the closest one 
@@ -4340,11 +4302,9 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
   nsIFrame* lastMatchingFrame = nsnull;
   aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame && (childFrame != aPriorChildFrame)) {
-    childFrame->GetFrameType(&frameType);
-    if (aChildType == frameType) {
+    if (aChildType == childFrame->GetType()) {
       lastMatchingFrame = childFrame;
     }
-    NS_IF_RELEASE(frameType);
     childFrame = childFrame->GetNextSibling();
   }
   return (nsTableCellFrame*)lastMatchingFrame;
@@ -4359,21 +4319,16 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
     nsIFrame* rowFrame;
     rgFrame->FirstChild(aPresContext, nsnull, &rowFrame);
     while (rowFrame) {
-      nsIAtom* rowType;
-      rowFrame->GetFrameType(&rowType);
-      if (nsLayoutAtoms::tableRowFrame == rowType) {
+      if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
         printf("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
         nsIFrame* cellFrame;
         rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
         while (cellFrame) {
-          nsIAtom* cellType;
-          cellFrame->GetFrameType(&cellType);
-          if (IS_TABLE_CELL(cellType)) {
+          if (IS_TABLE_CELL(cellFrame->GetType())) {
             PRInt32 colIndex;
             ((nsTableCellFrame*)cellFrame)->GetColIndex(colIndex);
             printf("cell(%d)=%p ", colIndex, cellFrame);
           }
-          NS_IF_RELEASE(cellType);
           cellFrame = cellFrame->GetNextSibling();
         }
         printf("\n");
@@ -4381,7 +4336,6 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
       else {
         DumpRowGroup(aPresContext, rowFrame);
       }
-      NS_IF_RELEASE(rowType);
       rowFrame = rowFrame->GetNextSibling();
     }
   }
@@ -7054,9 +7008,7 @@ nsReflowTimer* GetFrameTimer(nsIFrame* aFrame,
     return ((nsTableCellFrame*)aFrame)->mTimer;
   else if (nsLayoutAtoms::blockFrame == aFrameType) { 
     nsIFrame* parentFrame = aFrame->GetParent();
-    nsCOMPtr<nsIAtom> fType;
-    parentFrame->GetFrameType(getter_AddRefs(fType));
-    if (IS_TABLE_CELL(fType)) {
+    if (IS_TABLE_CELL(parentFrame->GetType())) {
       nsTableCellFrame* cellFrame = (nsTableCellFrame*)parentFrame;
       // fix up the block timer, which may be referring to the cell
       if (cellFrame->mBlockTimer->mFrame == parentFrame) {
@@ -7176,16 +7128,15 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
   }
 #endif
   // get the the frame summary timer
-  nsCOMPtr<nsIAtom> frameType = nsnull;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  nsReflowTimer* frameTimer = GetFrameTimer(aFrame, frameType.get());
+  nsIAtom* frameType = aFrame->GetType();
+  nsReflowTimer* frameTimer = GetFrameTimer(aFrame, frameType);
   if (!frameTimer) {NS_ASSERTION(PR_FALSE, "no frame timer");return;}
   if (!aMetrics) { // start
 #ifdef DEBUG_TABLE_REFLOW_TIMING_DETAIL
     // create the reflow timer
     nsReflowTimer* timer = new nsReflowTimer(aFrame);
     // create the aux table timers if they don't exist
-    if ((nsLayoutAtoms::tableFrame == frameType.get()) && !timer->mNextSibling) {
+    if ((nsLayoutAtoms::tableFrame == frameType) && !timer->mNextSibling) {
       timer->mNextSibling = new nsReflowTimer(aFrame);
       timer->mNextSibling->mNextSibling = new nsReflowTimer(aFrame);
       timer->mNextSibling->mNextSibling->mNextSibling = new nsReflowTimer(aFrame);
@@ -7282,25 +7233,19 @@ void nsTableFrame::DebugTimeMethod(nsMethod           aMethod,
 void nsTableFrame::DebugReflowDone(nsIFrame* aFrame)
 {
   // get the timer of aFrame
-  nsCOMPtr<nsIAtom> frameType = nsnull;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  nsReflowTimer* thisTimer = GetFrameTimer(aFrame, frameType.get());
+  nsReflowTimer* thisTimer = GetFrameTimer(aFrame, aFrame->GetType());
 
   // get the nearest ancestor frame with a timer
   nsReflowTimer* ancestorTimer;
   nsIFrame* ancestorFrame = aFrame->GetParent();
   while (ancestorFrame) {
-    nsCOMPtr<nsIAtom> frameType = nsnull;
-    ancestorFrame->GetFrameType(getter_AddRefs(frameType));
-    ancestorTimer = GetFrameTimer(ancestorFrame, frameType.get());
+    ancestorTimer = GetFrameTimer(ancestorFrame, ancestorFrame->GetType());
     if (ancestorTimer) break;
     ancestorFrame = ancestorFrame->GetParent();
   }
   if (ancestorTimer) { // add this timer to its parent
     ancestorTimer->mChildren.AppendElement(thisTimer);
-    nsCOMPtr<nsIAtom> fType;
-    aFrame->GetFrameType(getter_AddRefs(fType));
-    if (IS_TABLE_CELL(fType)) {
+    if (IS_TABLE_CELL(aFrame->GetType())) {
       // add the cell block timer as a child of the cell timer
       nsTableCellFrame* cellFrame = (nsTableCellFrame*)aFrame;
       cellFrame->mTimer->mChildren.AppendElement(cellFrame->mBlockTimer);
@@ -7452,8 +7397,7 @@ void DumpTableFramesRecur(nsIPresContext* aPresContext,
   indent[aIndent + MIN_INDENT] = 0;
 
   char fName[MAX_SIZE];
-  nsCOMPtr<nsIAtom> fType;
-  aFrame->GetFrameType(getter_AddRefs(fType));
+  nsIAtom* fType = aFrame->GetType();
   GetFrameTypeName(fType, fName);
 
   printf("%s%s %p", indent, fName, aFrame);
@@ -7468,10 +7412,10 @@ void DumpTableFramesRecur(nsIPresContext* aPresContext,
   }
   printf("\n");
 
-  if (nsLayoutAtoms::tableFrame         == fType.get() ||
-      nsLayoutAtoms::tableRowGroupFrame == fType.get() ||
-      nsLayoutAtoms::tableRowFrame      == fType.get() ||
-      IS_TABLE_CELL(fType.get())) {
+  if (nsLayoutAtoms::tableFrame         == fType ||
+      nsLayoutAtoms::tableRowGroupFrame == fType ||
+      nsLayoutAtoms::tableRowFrame      == fType ||
+      IS_TABLE_CELL(fType)) {
     nsIFrame* child;
     aFrame->FirstChild(aPresContext, nsnull, &child);
     while(child) {
@@ -7486,10 +7430,8 @@ nsTableFrame::DumpTableFrames(nsIPresContext* aPresContext,
                               nsIFrame*       aFrame)
 {
   nsTableFrame* tableFrame = nsnull;
-  nsCOMPtr<nsIAtom> fType;
-  aFrame->GetFrameType(getter_AddRefs(fType));
 
-  if (nsLayoutAtoms::tableFrame == fType.get()) { 
+  if (nsLayoutAtoms::tableFrame == aFrame->GetType()) { 
     tableFrame = (nsTableFrame*)aFrame;
   }
   else {

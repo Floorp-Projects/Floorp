@@ -111,7 +111,7 @@ public:
    *
    * @see nsLayoutAtoms::viewportFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 

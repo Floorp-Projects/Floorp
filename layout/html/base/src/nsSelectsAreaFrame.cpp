@@ -143,9 +143,7 @@ nsSelectsAreaFrame::Paint(nsIPresContext*      aPresContext,
   nsIFrame* frame = this;
   while (frame) {
     frame = frame->GetParent();
-    nsCOMPtr<nsIAtom> type;
-    frame->GetFrameType(getter_AddRefs(type));
-    if (type == nsLayoutAtoms::listControlFrame) {
+    if (frame->GetType() == nsLayoutAtoms::listControlFrame) {
       nsListControlFrame* listFrame = NS_STATIC_CAST(nsListControlFrame*, frame);
       listFrame->PaintFocus(aRenderingContext, aWhichLayer);
       return NS_OK;

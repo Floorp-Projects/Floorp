@@ -103,7 +103,7 @@ public:
                               PRInt32         aModType);
 
   NS_IMETHOD     GetName(nsAString* aName);
-  NS_IMETHOD_(PRInt32) GetType() const;
+  NS_IMETHOD_(PRInt32) GetFormControlType() const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
   void           ScrollIntoView(nsIPresContext* aPresContext);
 

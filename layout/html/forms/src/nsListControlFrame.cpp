@@ -2034,7 +2034,7 @@ nsListControlFrame::GetSkipSides() const
 
 //---------------------------------------------------------
 NS_IMETHODIMP_(PRInt32)
-nsListControlFrame::GetType() const
+nsListControlFrame::GetFormControlType() const
 {
   return NS_FORM_SELECT;
 }
@@ -2637,13 +2637,10 @@ nsListControlFrame::DidReflow(nsIPresContext*           aPresContext,
   }
 }
 
-NS_IMETHODIMP
-nsListControlFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsListControlFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::listControlFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::listControlFrame; 
 }
 
 #ifdef DEBUG

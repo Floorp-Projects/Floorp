@@ -82,13 +82,10 @@ nsTableOuterFrame::Destroy(nsIPresContext* aPresContext)
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
-nsTableCaptionFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableCaptionFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableCaptionFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableCaptionFrame;
 }
 
 nsresult 
@@ -221,9 +218,7 @@ nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
     mFrames.SetFrames(aChildList);
     mInnerTableFrame = nsnull;
     if (aChildList) {
-      nsCOMPtr<nsIAtom> fType;
-      aChildList->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::tableFrame == fType.get()) {
+      if (nsLayoutAtoms::tableFrame == aChildList->GetType()) {
         mInnerTableFrame = (nsTableFrame*)aChildList;
       }
     }
@@ -1203,19 +1198,15 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
 PRBool 
 nsTableOuterFrame::IsNested(const nsHTMLReflowState& aReflowState) const
 {
-  PRBool result = PR_FALSE;
   // Walk up the reflow state chain until we find a cell or the root
   const nsHTMLReflowState* rs = aReflowState.parentReflowState;
   while (rs) {
-    nsCOMPtr<nsIAtom> frameType;
-    rs->frame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableFrame == frameType.get()) {
-      result = PR_TRUE;
-      break;
+    if (nsLayoutAtoms::tableFrame == rs->frame->GetType()) {
+      return PR_TRUE;
     }
     rs = rs->parentReflowState;
   }
-  return result;
+  return PR_FALSE;
 }
 
 PRBool 
@@ -2145,13 +2136,10 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 #endif
 }
 
-NS_IMETHODIMP
-nsTableOuterFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableOuterFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableOuterFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableOuterFrame;
 }
 
 /* ----- global methods ----- */

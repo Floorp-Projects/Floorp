@@ -74,7 +74,7 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 protected:
   virtual ~BRFrame();
 };
@@ -210,13 +210,10 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BRFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+BRFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::brFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::brFrame;
 }
 
 NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,

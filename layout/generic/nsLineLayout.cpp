@@ -94,9 +94,7 @@ static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFra
   nscoord sizes = 0;
 
   // see if aFrame is an image frame first
-  nsCOMPtr<nsIAtom> type;
-  aFrame.GetFrameType(getter_AddRefs(type));
-  if(type.get() == nsLayoutAtoms::imageFrame) {
+  if (aFrame.GetType() == nsLayoutAtoms::imageFrame) {
     sizes += aFrame.GetSize().width;
   } else {
     // see if there are children to process
@@ -429,9 +427,8 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   mPlacedFloats |= (aPlacedLeftFloat ? PLACED_LEFT : PLACED_RIGHT);
   SetFlag(LL_IMPACTEDBYFLOATS, PR_TRUE);
 
-  nsCOMPtr<nsIAtom> frameType;
-  aFloatFrame->GetFrameType(getter_AddRefs(frameType));
-  SetFlag(LL_LASTFLOATWASLETTERFRAME, (nsLayoutAtoms::letterFrame == frameType.get()));
+  SetFlag(LL_LASTFLOATWASLETTERFRAME,
+          nsLayoutAtoms::letterFrame == aFloatFrame->GetType());
 
   // Now update all of the open spans...
   mRootSpan->mContainsFloat = PR_TRUE;              // make sure mRootSpan gets updated too
@@ -1011,8 +1008,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif // IBMBIDI
 
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
+  nsIAtom* frameType = aFrame->GetType();
 
   rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
   if (NS_FAILED(rv)) {
@@ -1025,7 +1021,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // This only shows up in textareas, so do a quick check to see if we're inside one
   if (eReflowReason_Initial == reflowState.reason)
   {
-    if (frameType && nsLayoutAtoms::textFrame == frameType.get()) 
+    if (nsLayoutAtoms::textFrame == frameType) 
     { // aFrame is a text frame, see if it's inside a text control
       // although this is a bit slow, the frame tree shouldn't be too deep, it's only called
       // for the text frame's initial reflow (once in the text frame's lifetime)
@@ -1035,15 +1031,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       for (nsIFrame *parentFrame = aFrame->GetParent(); parentFrame;
            parentFrame = parentFrame->GetParent())
       { 
-        nsCOMPtr<nsIAtom> parentFrameType;
-        parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
-        if (parentFrameType)
+        if (nsLayoutAtoms::textInputFrame == parentFrame->GetType()) 
         {
-          if (nsLayoutAtoms::textInputFrame == parentFrameType.get()) 
-          {
-            inTextControl = PR_TRUE; // found it
-            break;
-          }
+          inTextControl = PR_TRUE; // found it
+          break;
         }
       }
       if (inTextControl)
@@ -1065,7 +1056,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // XXX See if the frame is a placeholderFrame and if it is process
   // the float.
   if (frameType) {
-    if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+    if (nsLayoutAtoms::placeholderFrame == frameType) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
       if (outOfFlowFrame) {
         // Make sure it's floated and not absolutely positioned
@@ -1077,23 +1068,18 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           else {
             AddFloat((nsPlaceholderFrame*)aFrame, aReflowStatus);
           }
-          nsIAtom* oofft;
-          outOfFlowFrame->GetFrameType(&oofft);
-          if (oofft) {
-            if (oofft == nsLayoutAtoms::letterFrame) {
-              SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
-              // An incomplete reflow status means we should split the
-              // float if the height is constrained (bug 145305). We
-              // never split floating first letters.
-              if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
-                aReflowStatus = NS_FRAME_COMPLETE;
-            }
-            NS_RELEASE(oofft);
+          if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
+            SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
+            // An incomplete reflow status means we should split the
+            // float if the height is constrained (bug 145305). We
+            // never split floating first letters.
+            if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
+              aReflowStatus = NS_FRAME_COMPLETE;
           }
         }
       }
     }
-    else if (nsLayoutAtoms::textFrame == frameType.get()) {
+    else if (nsLayoutAtoms::textFrame == frameType) {
       // Note non-empty text-frames for inline frame compatability hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
       // XXX An empty text frame at the end of the line seems not
@@ -1130,7 +1116,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
       }
     }
-    else if (nsLayoutAtoms::letterFrame==frameType.get()) {
+    else if (nsLayoutAtoms::letterFrame==frameType) {
       pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
     }
   }
@@ -1406,9 +1392,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
 #ifdef FIX_BUG_50257
   // another special case:  always place a BR
-  nsCOMPtr<nsIAtom> frameType;
-  pfd->mFrame->GetFrameType(getter_AddRefs(frameType));
-  if (nsLayoutAtoms::brFrame == frameType.get()) {
+  if (nsLayoutAtoms::brFrame == pfd->mFrame->GetType()) {
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> BR frame fits\n");
 #endif
@@ -1640,10 +1624,9 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
 {
   if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)
   {
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::brFrame != frameType.get() && 
-        nsLayoutAtoms::textFrame != frameType.get())
+    nsIAtom* frameType = aFrame->GetType();
+    if (nsLayoutAtoms::brFrame != frameType && 
+        nsLayoutAtoms::textFrame != frameType)
     {
       const nsStyleMargin* margin = aFrame->GetStyleMargin();
       if (IsPercentageUnitSides(&margin->mMargin)) {
@@ -2439,9 +2422,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // Check if it's a BR frame that is not alone on its line (it
           // is given a height of zero to indicate this), and if so reset
           // yTop and yBottom so that BR frames don't influence the line.
-          nsCOMPtr<nsIAtom> frameType;
-          frame->GetFrameType(getter_AddRefs(frameType));
-          if (nsLayoutAtoms::brFrame == frameType.get()) {
+          if (nsLayoutAtoms::brFrame == frame->GetType()) {
             yTop = VERTICAL_ALIGN_FRAMES_NO_MINIMUM;
             yBottom = VERTICAL_ALIGN_FRAMES_NO_MAXIMUM;
           }
@@ -3235,9 +3216,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
       continue;
 
     // If this is a text frame, return it.
-    nsCOMPtr<nsIAtom> frameType;
-    next->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::textFrame == frameType.get())
+    if (nsLayoutAtoms::textFrame == next->GetType())
       return next;
   }
 

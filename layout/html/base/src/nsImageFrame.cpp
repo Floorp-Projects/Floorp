@@ -938,10 +938,8 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
       aMetrics.height > aReflowState.availableHeight) { 
-    nsCOMPtr<nsIAtom> fType;
-    GetFrameType(getter_AddRefs(fType));
     // split an image frame but not an image control frame
-    if (nsLayoutAtoms::imageFrame == fType) {
+    if (nsLayoutAtoms::imageFrame == GetType()) {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
       // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
@@ -1788,13 +1786,10 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsImageFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsImageFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::imageFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::imageFrame;
 }
 
 #ifdef DEBUG

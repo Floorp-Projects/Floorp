@@ -2523,12 +2523,10 @@ nsIWidget* nsIFrame::GetWindow() const
   return window;
 }
 
-NS_IMETHODIMP
-nsFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 void
@@ -3267,32 +3265,28 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
         if ( isEditor ) 
         {
-          nsIAtom *resultFrameType;
-          if(NS_SUCCEEDED(resultFrame->GetFrameType(&resultFrameType)) && resultFrameType)
+          if (resultFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
           {
-            if (resultFrameType ==  nsLayoutAtoms::tableOuterFrame)
+            if (((point.x - offset.x + tempRect.x)<0) ||  ((point.x - offset.x+ tempRect.x)>tempRect.width))//off left/right side
             {
-              if (((point.x - offset.x + tempRect.x)<0) ||  ((point.x - offset.x+ tempRect.x)>tempRect.width))//off left/right side
+              nsIContent* content = resultFrame->GetContent();
+              if (content)
               {
-                nsIContent* content = resultFrame->GetContent();
-                if (content)
+                nsIContent* parent = content->GetParent();
+                if (parent)
                 {
-                  nsIContent* parent = content->GetParent();
-                  if (parent)
+                  aPos->mResultContent = parent;
+                  aPos->mContentOffset = parent->IndexOf(content);
+                  aPos->mPreferLeft = PR_FALSE;
+                  if ((point.x - offset.x+ tempRect.x)>tempRect.width)
                   {
-                    aPos->mResultContent = parent;
-                    aPos->mContentOffset = parent->IndexOf(content);
-                    aPos->mPreferLeft = PR_FALSE;
-                    if ((point.x - offset.x+ tempRect.x)>tempRect.width)
-                    {
-                      aPos->mContentOffset++;//go to end of this frame
-                      aPos->mPreferLeft = PR_TRUE;
-                    }
-                    aPos->mContentOffsetEnd = aPos->mContentOffset;
-                    //result frame is the result frames parent.
-                    aPos->mResultFrame = resultFrame->GetParent();
-                    return NS_POSITION_BEFORE_TABLE;
+                    aPos->mContentOffset++;//go to end of this frame
+                    aPos->mPreferLeft = PR_TRUE;
                   }
+                  aPos->mContentOffsetEnd = aPos->mContentOffset;
+                  //result frame is the result frames parent.
+                  aPos->mResultFrame = resultFrame->GetParent();
+                  return NS_POSITION_BEFORE_TABLE;
                 }
               }
             }
@@ -3776,8 +3770,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   if we hit a header or footer thats ok just go into them,
 */
             PRBool searchTableBool = PR_FALSE;
-            nsIAtom *resultFrameType;
-            if(NS_SUCCEEDED(aPos->mResultFrame->GetFrameType(&resultFrameType)) && resultFrameType == nsLayoutAtoms::tableOuterFrame)
+            if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
             {
               nsIFrame *frame = aPos->mResultFrame;
               result = frame->FirstChild(aPresContext, nsnull,&frame);
@@ -4128,9 +4121,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     //in the case of a text node since that does not mean we are stuck. it could mean a change in style for
     //the text node.  in the case of a hruleframe with generated before and after content, we do not
     //want the splittable generated frame to get us stuck on an HR
-    nsCOMPtr<nsIAtom>        frameType;
-    newFrame->GetFrameType(getter_AddRefs(frameType) );
-    if (nsLayoutAtoms::textFrame != frameType.get() )
+    if (nsLayoutAtoms::textFrame != newFrame->GetType())
       continue;  //we should NOT be getting stuck on the same piece of content on the same line. skip to next line.
   }
   isBidiGhostFrame = (newFrame->GetRect().IsEmpty() &&
@@ -5260,10 +5251,7 @@ void DR_State::InitFrameTypeTable()
 void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
                                     PRInt32   aIndent)
 { 
-  nsCOMPtr<nsIAtom> fType;
-  aFrame->GetFrameType(getter_AddRefs(fType));
-
-  DR_FrameTypeInfo* frameTypeInfo = GetFrameTypeInfo(fType);
+  DR_FrameTypeInfo* frameTypeInfo = GetFrameTypeInfo(aFrame->GetType());
   if (frameTypeInfo) {
     for (PRInt32 i = 0; i < aIndent; i++) {
       printf(" ");
@@ -5297,9 +5285,7 @@ PRBool DR_State::RuleMatches(DR_Rule&          aRule,
        rulePart = rulePart->mNext, parentNode = parentNode->mParent) {
     if (rulePart->mFrameType) {
       if (parentNode->mFrame) {
-        nsCOMPtr<nsIAtom> fNodeType;
-        parentNode->mFrame->GetFrameType(getter_AddRefs(fNodeType));
-        if (rulePart->mFrameType != fNodeType) {
+        if (rulePart->mFrameType != parentNode->mFrame->GetType()) {
           return PR_FALSE;
         }
       }
@@ -5319,9 +5305,7 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode)
 
   PRBool matchingRule = PR_FALSE;
 
-  nsCOMPtr<nsIAtom> fType;
-  aNode.mFrame->GetFrameType(getter_AddRefs(fType));
-  DR_FrameTypeInfo* info = GetFrameTypeInfo(fType.get());
+  DR_FrameTypeInfo* info = GetFrameTypeInfo(aNode.mFrame->GetType());
   NS_ASSERTION(info, "program error");
   PRInt32 numRules = info->mRules.Count();
   for (PRInt32 ruleX = 0; ruleX < numRules; ruleX++) {

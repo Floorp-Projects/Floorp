@@ -2697,9 +2697,7 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
     nsRect rect = aFrame->GetRect();
     nsRect containerRect = container->GetRect();
       
-    nsCOMPtr<nsIAtom> typeAtom;
-    container->GetFrameType(getter_AddRefs(typeAtom));
-    if (typeAtom == nsLayoutAtoms::viewportFrame) {
+    if (container->GetType() == nsLayoutAtoms::viewportFrame) {
       // For absolutely positioned frames scrollbars are taken into
       // account by virtue of getting a containing block that does
       // _not_ include the scrollbars.  For fixed positioned frames,

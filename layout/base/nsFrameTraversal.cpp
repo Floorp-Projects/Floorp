@@ -335,11 +335,9 @@ nsLeafIterator::nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
 static PRBool
 IsRootFrame(nsIFrame* aFrame)
 {
-  nsCOMPtr<nsIAtom>atom;
-  
-  aFrame->GetFrameType(getter_AddRefs(atom));
-  return (atom.get() == nsLayoutAtoms::canvasFrame) ||
-         (atom.get() == nsLayoutAtoms::rootFrame);
+  nsIAtom* atom = aFrame->GetType();
+  return (atom == nsLayoutAtoms::canvasFrame) ||
+         (atom == nsLayoutAtoms::rootFrame);
 }
 
 NS_IMETHODIMP
@@ -386,11 +384,8 @@ nsLeafIterator::Next()
           // check if  FrameType of result is TextInputFrame
           if (mLockScroll) //lock the traversal when we hit a scroll frame
           {
-            nsCOMPtr<nsIAtom> atom;
-            nsresult res = result->GetFrameType(getter_AddRefs(atom));
-            if ( NS_SUCCEEDED(res) && atom ) {
-              if ( atom.get() == nsLayoutAtoms::scrollFrame ) return NS_ERROR_FAILURE;
-            }
+            if ( result->GetType() == nsLayoutAtoms::scrollFrame )
+              return NS_ERROR_FAILURE;
           }
           if (mExtensive)
             break;
@@ -423,22 +418,20 @@ nsLeafIterator::Prev()
       // check if  FrameType of grandParent is TextInputFrame
       if (mLockScroll) //lock the traversal when we hit a scroll frame
       {
-        nsCOMPtr<nsIAtom> atom;
-        nsresult res = grandParent->GetFrameType(getter_AddRefs(atom));
-        if ( NS_SUCCEEDED(res) && atom ) 
-        {
+        nsIAtom* atom = grandParent->GetType();
   #ifdef DEBUG_skamio
+        if ( atom ) 
+        {
           nsAutoString aString;
           res = atom->ToString(aString);
           if ( NS_SUCCEEDED(res) ) {
             printf("%s:%d\n", __FILE__, __LINE__);
             printf("FrameType: %s\n", NS_ConvertUCS2toUTF8(aString).get());
           }
-  #endif
-          if ( atom.get() == nsLayoutAtoms::scrollFrame ) 
-            return NS_ERROR_FAILURE;
-
         }
+  #endif
+        if ( atom == nsLayoutAtoms::scrollFrame ) 
+          return NS_ERROR_FAILURE;
       }
       if (NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result)))
       {
@@ -524,9 +517,7 @@ nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
 
   // See if it's a placeholder frame for a float.
   if (aFrame) {
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-    PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
+    PRBool isPlaceholder = nsLayoutAtoms::placeholderFrame == aFrame->GetType();
     if (isPlaceholder) {
       // Get the out-of-flow frame that the placeholder points to.
       // This is the real float that we should examine.

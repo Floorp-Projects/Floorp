@@ -103,8 +103,7 @@ public:
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
 
-  NS_IMETHOD
-  GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

@@ -49,13 +49,10 @@ nsDirectionalFrame::GetChar(void) const
  *
  * @see nsLayoutAtoms::directionalFrame
  */
-NS_IMETHODIMP
-nsDirectionalFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsDirectionalFrame::GetType() const
 { 
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::directionalFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::directionalFrame; 
 }
   
 const nsIID&

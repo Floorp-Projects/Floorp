@@ -156,13 +156,10 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPageContentFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsPageContentFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::pageContentFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::pageContentFrame; 
 }
 
 #ifdef DEBUG

@@ -1619,9 +1619,7 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
           // the frame is the body frame, so we provide the canvas frame
           nsIFrame *pCanvasFrame = aFrame->GetParent();
           while (pCanvasFrame) {
-            nsCOMPtr<nsIAtom>  parentType;
-            pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
-            if (parentType.get() == nsLayoutAtoms::canvasFrame) {
+            if (pCanvasFrame->GetType() == nsLayoutAtoms::canvasFrame) {
               *aBGFrame = pCanvasFrame;
               break;
             }
@@ -2516,11 +2514,8 @@ static nsIFrame*
 GetNearestScrollFrame(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    nsCOMPtr<nsIAtom> frameType;
-
     // Is it a scroll frame?
-    f->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::scrollFrame == frameType) {
+    if (nsLayoutAtoms::scrollFrame == f->GetType()) {
       return f;
     }
   }
@@ -2535,17 +2530,12 @@ GetRootScrollableFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame)
 {
   nsIScrollableFrame* scrollableFrame = nsnull;
 
-  nsCOMPtr<nsIAtom> frameType;
-  aRootFrame->GetFrameType(getter_AddRefs(frameType));
-
-  if (nsLayoutAtoms::viewportFrame == frameType) {
+  if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
     nsIFrame* childFrame;
     aRootFrame->FirstChild(aPresContext, nsnull, &childFrame);
 
     if (childFrame) {
-      childFrame->GetFrameType(getter_AddRefs(frameType));
-
-      if (nsLayoutAtoms::scrollFrame == frameType) {
+      if (nsLayoutAtoms::scrollFrame == childFrame->GetType()) {
         // Use this frame, even if we are using GFX frames for the
         // viewport, which contains another scroll frame below this
         // frame, since the GFX scrollport frame does not implement
@@ -2632,8 +2622,7 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
 inline nsIFrame*
 IsCanvasFrame(nsIPresContext* aPresContext, nsIFrame *aFrame)
 {
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
+  nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsLayoutAtoms::canvasFrame ||
       frameType == nsLayoutAtoms::rootFrame ||
       frameType == nsLayoutAtoms::pageFrame) {
@@ -2662,11 +2651,9 @@ FindCanvasBackground(nsIPresContext* aPresContext,
     const nsStyleBackground* result = firstChild->GetStyleBackground();
   
     // for printing and print preview.. this should be a pageContentFrame
-    nsCOMPtr<nsIAtom> frameType;
     nsStyleContext* parentContext;
 
-    firstChild->GetFrameType(getter_AddRefs(frameType));
-    if ( (frameType == nsLayoutAtoms::pageContentFrame) ){
+    if (firstChild->GetType() == nsLayoutAtoms::pageContentFrame) {
       // we have to find the background style ourselves.. since the 
       // pageContentframe does not have content
       while(firstChild){
@@ -2978,8 +2965,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   nsRect bgOriginArea;
 
-  nsCOMPtr<nsIAtom> frameType;
-  aForFrame->GetFrameType(getter_AddRefs(frameType));
+  nsIAtom* frameType = aForFrame->GetType();
   if (frameType == nsLayoutAtoms::inlineFrame) {
     switch (aColor.mBackgroundInlinePolicy) {
     case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:

@@ -771,13 +771,10 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
   return nsObjectFrameSuper::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
-nsObjectFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsObjectFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::objectFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::objectFrame; 
 }
 
 #ifdef DEBUG

@@ -127,7 +127,7 @@ public:
    *
    * @see nsLayoutAtoms::sequenceFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
 #ifdef NS_DEBUG
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;

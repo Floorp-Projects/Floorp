@@ -289,9 +289,7 @@ UseHTMLReflowConstraints(nsBoxToBlockAdaptor* aAdaptor, nsBoxLayoutState& aState
   if (!parentFrame) {
     return PR_FALSE;
   }
-  nsCOMPtr<nsIAtom> parentFrameType;
-  parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
-  if (!parentFrameType || parentFrameType != nsLayoutAtoms::scrollFrame) {
+  if (parentFrame->GetType() != nsLayoutAtoms::scrollFrame) {
     return PR_FALSE;
   }
 

@@ -605,13 +605,10 @@ nsScrollBoxFrame::GetContentOf(nsIContent** aContent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScrollBoxFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsScrollBoxFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::scrollFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::scrollFrame;
 }
 
 #ifdef NS_DEBUG

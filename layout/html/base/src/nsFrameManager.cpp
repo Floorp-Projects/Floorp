@@ -547,9 +547,7 @@ FrameManager::GetCanvasFrame(nsIFrame** aCanvasFrame) const
       // get each sibling of the child and check them, startig at the child
       nsIFrame *siblingFrame = childFrame;
       while (siblingFrame) {
-        nsCOMPtr<nsIAtom>  frameType;
-        siblingFrame->GetFrameType(getter_AddRefs(frameType));
-        if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+        if (siblingFrame->GetType() == nsLayoutAtoms::canvasFrame) {
           // this is it: set the out-arg and stop looking
           *aCanvasFrame = siblingFrame;
           break;
@@ -734,12 +732,8 @@ FrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-#ifdef DEBUG
-  nsCOMPtr<nsIAtom> frameType;
-  aPlaceholderFrame->GetFrameType(getter_AddRefs(frameType));
-  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType,
+  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-#endif
   if (!mPlaceholderMap.ops) {
     if (!PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nsnull,
                            sizeof(PlaceholderMapEntry), 16)) {
@@ -764,12 +758,8 @@ FrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-#ifdef DEBUG
-  nsCOMPtr<nsIAtom> frameType;
-  aPlaceholderFrame->GetFrameType(getter_AddRefs(frameType));
-  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType,
+  NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-#endif
 
   /*
    * nsCSSFrameConstructor::ReconstructDocElementHierarchy calls
@@ -1172,9 +1162,7 @@ CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(FrameManager* aFr
                (PLDestroyEventProc)&FrameManager::DestroyPLEvent);
   mFrame = aFrame;
   
-  nsIAtom*  frameType;
-  aFrame->GetFrameType(&frameType);
-  if (nsLayoutAtoms::objectFrame == frameType) {
+  if (nsLayoutAtoms::objectFrame == aFrame->GetType()) {
     AddLoadGroupRequest(aPresShell);
   }
 }
@@ -1410,7 +1398,6 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
   PRInt32 listIndex = 0;
   nsIAtom* childList = nsnull;
   nsIFrame* child;
-  nsIAtom*  frameType;
 
   do {
     child = nsnull;
@@ -1418,8 +1405,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
     while ((NS_SUCCEEDED(result)) && child) {
       if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
-        child->GetFrameType(&frameType);
-        if (nsLayoutAtoms::placeholderFrame == frameType) { 
+        if (nsLayoutAtoms::placeholderFrame == child->GetType()) { 
           // placeholder: first recirse and verify the out of flow frame,
           // then verify the placeholder's context
           nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
@@ -1435,7 +1421,6 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
         else { // regular frame
           VerifyStyleTree(aPresContext, child, nsnull);
         }
-        NS_IF_RELEASE(frameType);
       }
       child = child->GetNextSibling();
     }
@@ -1494,7 +1479,6 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
           PRInt32 listIndex = 0;
           nsIAtom* childList = nsnull;
           nsIFrame* child;
-          nsIAtom*  frameType;
 
           do {
             child = nsnull;
@@ -1502,8 +1486,7 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
             while ((NS_SUCCEEDED(result)) && child) {
               if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
                 // only do frames that are in flow
-                child->GetFrameType(&frameType);
-                if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+                if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
                   // get out of flow frame and recurse there
                   nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
                   NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
@@ -1517,7 +1500,6 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
                 else { // regular frame
                   result = ReParentStyleContext(child, newContext);
                 }
-                NS_IF_RELEASE(frameType);
               }
 
               child = child->GetNextSibling();
@@ -1914,9 +1896,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         while (NS_SUCCEEDED(result) && child) {
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
             // only do frames that are in flow
-            nsCOMPtr<nsIAtom> frameType;
-            child->GetFrameType(getter_AddRefs(frameType));
-            if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+            if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
               nsIFrame* outOfFlowFrame =
                 NS_STATIC_CAST(nsPlaceholderFrame*,child)->GetOutOfFlowFrame();

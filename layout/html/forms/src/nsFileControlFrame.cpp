@@ -212,7 +212,7 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsFileControlFrame::GetType() const
+nsFileControlFrame::GetFormControlType() const
 {
   return NS_FORM_INPUT_FILE;
 }

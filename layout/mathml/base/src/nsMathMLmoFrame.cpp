@@ -70,13 +70,11 @@ static const PRUnichar kApplyFunction  = PRUnichar(0x2061);
 static const PRUnichar kInvisibleTimes = PRUnichar(0x2062);
 static const PRUnichar kNullCh         = PRUnichar('\0');
 
-NS_IMETHODIMP
-nsMathMLmoFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsMathMLmoFrame::GetType() const
 {
   if (mFrames.GetLength() > 1) {
-    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
-    NS_ADDREF(*aType);
-    return NS_OK;
+    return nsMathMLAtoms::operatorVisibleMathMLFrame;
   }
 
   nsAutoString data;
@@ -84,17 +82,15 @@ nsMathMLmoFrame::GetFrameType(nsIAtom** aType) const
   PRInt32 length = data.Length();
   PRUnichar ch = (length == 0) ? kNullCh : data[0];
   if (length > 1)
-    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
-  else if (ch == kInvisibleComma || 
-           ch == kApplyFunction  ||
-           ch == kInvisibleTimes ||
-           ch == kNullCh)
-    *aType = nsMathMLAtoms::operatorInvisibleMathMLFrame;
-  else
-    *aType = nsMathMLAtoms::operatorVisibleMathMLFrame;
+    return nsMathMLAtoms::operatorVisibleMathMLFrame;
+  
+  if (ch == kInvisibleComma || 
+      ch == kApplyFunction  ||
+      ch == kInvisibleTimes ||
+      ch == kNullCh)
+    return nsMathMLAtoms::operatorInvisibleMathMLFrame;
 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsMathMLAtoms::operatorVisibleMathMLFrame;
 }
 
 // since a mouse click implies selection, we cannot just rely on the

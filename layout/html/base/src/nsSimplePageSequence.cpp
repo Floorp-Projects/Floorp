@@ -1051,13 +1051,10 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext*      aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsSimplePageSequenceFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsSimplePageSequenceFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::sequenceFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::sequenceFrame; 
 }
 
 //------------------------------------------------------------------------------

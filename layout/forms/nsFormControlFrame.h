@@ -152,7 +152,7 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
-  NS_IMETHOD_(PRInt32) GetType() const;
+  NS_IMETHOD_(PRInt32) GetFormControlType() const;
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);
 

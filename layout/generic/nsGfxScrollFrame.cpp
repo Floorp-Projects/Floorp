@@ -352,10 +352,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
     nsIFrame* parent = GetParent();
-    nsCOMPtr<nsIAtom> parentType;
-    if (parent)
-      parent->GetFrameType(getter_AddRefs(parentType));
-    if (parentType != nsLayoutAtoms::viewportFrame) {
+    if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
       SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
       return NS_OK;
     }
@@ -461,9 +458,7 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
     nsIBox* box = nsnull;
     frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
     if (box) {
-      nsCOMPtr<nsIAtom> frameType;
-      frame->GetFrameType(getter_AddRefs(frameType));
-      if (frameType == nsLayoutAtoms::scrollFrame) {
+      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
         NS_ASSERTION(!mInner->mScrollAreaBox, "Found multiple scroll areas?");
         mInner->mScrollAreaBox = box;
         understood = PR_TRUE;
@@ -632,13 +627,10 @@ nsGfxScrollFrame::GetSkipSides() const
   return 0;
 }
 
-NS_IMETHODIMP
-nsGfxScrollFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsGfxScrollFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::scrollFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::scrollFrame; 
 }
 
 NS_IMETHODIMP
@@ -1567,9 +1559,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
       && nsBoxLayoutState::Dirty == aState.GetLayoutReason()) {
     nsIFrame* parentFrame = mOuter->GetParent();
     if (parentFrame) {
-      nsCOMPtr<nsIAtom> parentFrameType;
-      parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
-      if (parentFrameType.get() == nsLayoutAtoms::viewportFrame) {
+      if (parentFrame->GetType() == nsLayoutAtoms::viewportFrame) {
         // Usually there are no fixed children, so don't do anything unless there's
         // at least one fixed child
         nsIFrame* child;

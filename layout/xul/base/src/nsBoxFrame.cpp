@@ -1436,9 +1436,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
     PaintSelf(aPresContext, aRenderingContext, aDirtyRect, 0, PR_FALSE);
   }
 
-  nsCOMPtr<nsIAtom> frameType;
-  GetFrameType(getter_AddRefs(frameType));
-  if (frameType == nsLayoutAtoms::rootFrame) {
+  if (GetType() == nsLayoutAtoms::rootFrame) {
     // We are wrapping the root frame of a XUL document. We
     // need to check the pres shell to find out if painting is locked
     // down (because we're still in the early stages of document
@@ -1778,13 +1776,10 @@ nsBoxFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsBoxFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsBoxFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::boxFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::boxFrame;
 }
 
 NS_IMETHODIMP

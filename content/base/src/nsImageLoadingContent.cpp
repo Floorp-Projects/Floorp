@@ -478,8 +478,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
         // to be easily detectable.  For example, I suspect that this code will
         // fail for <object> in the current CantRenderReplacedElement
         // implementation...
-        nsCOMPtr<nsIAtom> frameType;
-        frame->GetFrameType(getter_AddRefs(frameType));
+        nsIAtom* frameType = frame->GetType();
         if (frameType != nsLayoutAtoms::imageFrame &&
             frameType != nsLayoutAtoms::imageControlFrame &&
             frameType != nsLayoutAtoms::objectFrame) {

@@ -2697,22 +2697,18 @@ GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame*
   *aScrollFrame = nsnull;
   nsIFrame* theFrame = nsnull;
   if (aRootFrame) {
-    nsCOMPtr<nsIAtom> fType;
-    aRootFrame->GetFrameType(getter_AddRefs(fType));
-    if (fType && (nsLayoutAtoms::viewportFrame == fType.get())) {
+    if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
 
       // If child is scrollframe keep it (native)
       aRootFrame->FirstChild(aPresContext, nsnull, &theFrame);
       if (theFrame) {
-        theFrame->GetFrameType(getter_AddRefs(fType));
-        if (nsLayoutAtoms::scrollFrame == fType.get()) {
+        if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
           *aScrollFrame = theFrame;
 
           // If the first child of that is scrollframe, use it instead (gfx)
           theFrame->FirstChild(aPresContext, nsnull, &theFrame);
           if (theFrame) {
-            theFrame->GetFrameType(getter_AddRefs(fType));
-            if (nsLayoutAtoms::scrollFrame == fType.get()) {
+            if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
               *aScrollFrame = theFrame;
             }
           }
@@ -3356,10 +3352,10 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   if (!frame)
     return NS_ERROR_FAILURE;
   //we need to get to the area frame.
-  nsCOMPtr<nsIAtom> frameType; 
+  nsIAtom* frameType;
   do 
   {
-    frame->GetFrameType(getter_AddRefs(frameType));
+    frameType = frame->GetType();
     if (frameType != nsLayoutAtoms::areaFrame)
     {
       result = frame->FirstChild(mPresContext, nsnull, &frame);
@@ -4345,12 +4341,12 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
   // change the top of the bounds to include the whole line.
   if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
-    nsCOMPtr<nsIAtom> frameType;
+    nsIAtom* frameType;
     nsIFrame *prevFrame = aFrame;
     nsIFrame *frame = aFrame;
 
-    while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
-                     frameType == nsLayoutAtoms::inlineFrame)) {
+    while (frame &&
+           (frameType = frame->GetType()) == nsLayoutAtoms::inlineFrame) {
       prevFrame = frame;
       frame = prevFrame->GetParent();
     }
@@ -6619,9 +6615,8 @@ PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
         nsIFrame* target;
         aRC->GetTarget(target);
 
-        nsCOMPtr<nsIAtom> type;
-        target->GetFrameType(getter_AddRefs(type));
-        NS_ASSERTION(type, "frame didn't override GetFrameType()");
+        nsIAtom* type = target->GetType();
+        NS_ASSERTION(type, "frame didn't override GetType()");
 
         nsAutoString typeStr(NS_LITERAL_STRING("unknown"));
         if (type)

@@ -1162,20 +1162,17 @@ printf("\n");
 // For MathML, the 'type' will be used to determine the spacing between frames
 // Subclasses can override this method to return a 'type' that will give
 // them a particular spacing
-NS_IMETHODIMP
-nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsMathMLContainerFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   // see if this is an embellished operator (mapped to 'Op' in TeX)
   if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
       mEmbellishData.coreFrame) {
-    return mEmbellishData.coreFrame->GetFrameType(aType);
+    return mEmbellishData.coreFrame->GetType();
   }
 
   // everything else is a schematta element (mapped to 'Inner' in TeX)
-  *aType = nsMathMLAtoms::schemataMathMLFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsMathMLAtoms::schemataMathMLFrame;
 }
 
 enum eMathMLFrameType {
@@ -1303,12 +1300,11 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   nsHTMLReflowMetrics childSize (nsnull);
   nsBoundingMetrics bmChild;
   nscoord leftCorrection = 0, italicCorrection = 0;
-  nsCOMPtr<nsIAtom> prevFrameType;
+  nsIAtom* prevFrameType = nsnull;
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    nsCOMPtr<nsIAtom> childFrameType;
-    childFrame->GetFrameType(getter_AddRefs(childFrameType));
+    nsIAtom* childFrameType = childFrame->GetType();
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild);
     GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
     if (0 == count) {
@@ -1368,8 +1364,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
     fromFrameType = eMathMLFrameType_UNKNOWN;
     childFrame = mFrames.FirstChild();
     while (childFrame) {
-      nsCOMPtr<nsIAtom> childFrameType;
-      childFrame->GetFrameType(getter_AddRefs(childFrameType));
+      nsIAtom* childFrameType = childFrame->GetType();
       GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild);
       GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
       dy = aDesiredSize.ascent - childSize.ascent;
@@ -1416,13 +1411,12 @@ GetInterFrameSpacingFor(nsIPresContext* aPresContext,
 
   PRInt32 carrySpace = 0;
   eMathMLFrameType fromFrameType = eMathMLFrameType_UNKNOWN;
-  nsCOMPtr<nsIAtom> childFrameType;
-  nsCOMPtr<nsIAtom> prevFrameType;
-  childFrame->GetFrameType(getter_AddRefs(childFrameType));
+  nsIAtom* childFrameType = childFrame->GetType();
+  nsIAtom* prevFrameType = nsnull;
   childFrame = childFrame->GetNextSibling();
   while (childFrame) {
     prevFrameType = childFrameType;
-    childFrame->GetFrameType(getter_AddRefs(childFrameType));
+    childFrameType = childFrame->GetType();
     nscoord space = GetInterFrameSpacing(aScriptLevel,
       prevFrameType, childFrameType, &fromFrameType, &carrySpace);
     if (aChildFrame == childFrame) {

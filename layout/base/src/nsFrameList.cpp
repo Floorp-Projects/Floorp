@@ -472,10 +472,8 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   nsILineIterator* iter;
-  nsCOMPtr<nsIAtom>atom;
 
-  aFrame->GetFrameType(getter_AddRefs(atom));
-  if (atom.get() == nsLayoutAtoms::blockFrame)
+  if (aFrame->GetType() == nsLayoutAtoms::blockFrame)
     return GetPrevSiblingFor(aFrame);
 
   nsIFrame* frame;
@@ -537,10 +535,8 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   nsILineIterator* iter;
-  nsCOMPtr<nsIAtom>atom;
 
-  aFrame->GetFrameType(getter_AddRefs(atom));
-  if (atom.get() == nsLayoutAtoms::blockFrame) {
+  if (aFrame->GetType() == nsLayoutAtoms::blockFrame) {
     return aFrame->GetNextSibling();
   }
 

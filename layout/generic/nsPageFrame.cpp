@@ -154,12 +154,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
     nsIFrame*           firstFrame  = mFrames.FirstChild();
     nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
     NS_ASSERTION(contentPage, "There should always be a content page");
-
-#ifdef NS_DEBUG
-    nsCOMPtr<nsIAtom> type;
-    firstFrame->GetFrameType(getter_AddRefs(type));
-    NS_ASSERTION(nsLayoutAtoms::pageContentFrame == type, "This frame isn't a pageContentFrame");
-#endif
+    NS_ASSERTION(nsLayoutAtoms::pageContentFrame == firstFrame->GetType(),
+                 "This frame isn't a pageContentFrame");
 
     if (contentPage && mPrevInFlow) {
       nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, mPrevInFlow);
@@ -270,13 +266,10 @@ void nsPageFrame::SetClipRect(nsRect* aClipRect)
 }
 
 
-NS_IMETHODIMP
-nsPageFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsPageFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::pageFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::pageFrame; 
 }
 
 #ifdef DEBUG
@@ -837,13 +830,10 @@ nsPageBreakFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPageBreakFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsPageBreakFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::pageBreakFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::pageBreakFrame; 
 }
 
 

@@ -231,13 +231,11 @@ static PRBool
 HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
 {
   nsIFrame* kid = nsnull;
-  nsCOMPtr<nsIAtom> frameType;
     
-  for (aParent->FirstChild(aPresContext, nsnull, &kid); kid; 
+  for (aParent->FirstChild(aPresContext, nsnull, &kid); kid;
        kid = kid->GetNextSibling())
   {
-    kid->GetFrameType(getter_AddRefs(frameType));
-    if (frameType == nsLayoutAtoms::textFrame) {
+    if (kid->GetType() == nsLayoutAtoms::textFrame) {
       // This is only a candidate. We need to determine if this text
       // frame is empty, as in containing only (non-pre) whitespace.
       // See bug 20163.

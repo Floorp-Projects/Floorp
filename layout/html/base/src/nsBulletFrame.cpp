@@ -168,13 +168,10 @@ nsBulletFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsBulletFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsBulletFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::bulletFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::bulletFrame;
 }
 
 #include "nsIDOMNode.h"

@@ -311,9 +311,7 @@ nsTableRowGroupFrame::InitChildReflowState(nsIPresContext&    aPresContext,
   nsMargin* pCollapseBorder = nsnull;
   if (aBorderCollapse) {
     if (aReflowState.frame) {
-      nsCOMPtr<nsIAtom> fType;
-      aReflowState.frame->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+      if (nsLayoutAtoms::tableRowFrame == aReflowState.frame->GetType()) {
         nsTableRowFrame* rowFrame = (nsTableRowFrame*)aReflowState.frame;
         pCollapseBorder = rowFrame->GetBCBorderWidth(aPixelsToTwips, collapseBorder);
       }
@@ -356,17 +354,14 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
   nsIFrame* kidFrame = (aStartFrame) ? aStartFrame : mFrames.FirstChild();
 
   for ( ; kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-    // Get the frame state bits
-    nsCOMPtr<nsIAtom> kidType;
-    kidFrame->GetFrameType(getter_AddRefs(kidType));
-
     // See if we should only reflow the dirty child frames
     PRBool doReflowChild = PR_TRUE;
     if (aDirtyOnly && ((kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) == 0)) {
       doReflowChild = PR_FALSE;
     }
+    nsIAtom* kidType = kidFrame->GetType();
     if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
-      if (!isPaginated && (nsLayoutAtoms::tableRowFrame == kidType.get() &&
+      if (!isPaginated && (nsLayoutAtoms::tableRowFrame == kidType &&
                            !((nsTableRowFrame*)kidFrame)->NeedSpecialReflow())) {
         doReflowChild = PR_FALSE;
       }
@@ -420,12 +415,12 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
       lastReflowedRow = kidFrame;
 
       if (aFirstRowReflowed && !*aFirstRowReflowed) { 
-        if (nsLayoutAtoms::tableRowFrame == kidType.get()) {
+        if (nsLayoutAtoms::tableRowFrame == kidType) {
           *aFirstRowReflowed = (nsTableRowFrame*)kidFrame;
         }
       }
       if (isPaginated && aPageBreakBeforeEnd && !*aPageBreakBeforeEnd && 
-          (nsLayoutAtoms::tableRowFrame == kidType.get())) {
+          (nsLayoutAtoms::tableRowFrame == kidType)) {
         nsTableRowFrame* nextRow = ((nsTableRowFrame*)kidFrame)->GetNextRow();
         if (nextRow) {
           *aPageBreakBeforeEnd = nsTableFrame::PageBreakAfter(*kidFrame, nextRow);
@@ -468,9 +463,7 @@ nsTableRowGroupFrame::GetFirstRow()
 {
   for (nsIFrame* childFrame = GetFirstFrame(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    nsCOMPtr<nsIAtom> frameType;
-    childFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+    if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
       return (nsTableRowFrame*)childFrame;
     }
   }
@@ -1378,9 +1371,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
   nsAutoVoidArray rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
-    nsCOMPtr<nsIAtom> frameType;
-    rowFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+    if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
       rows.AppendElement(rowFrame);
     }
   }
@@ -1433,9 +1424,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
   PRBool gotFirstRow = PR_FALSE;
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
-    nsCOMPtr<nsIAtom> frameType;
-    rowFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+    if (nsLayoutAtoms::tableRowFrame == rowFrame->GetType()) {
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {
         ((nsTableRowFrame*)rowFrame)->SetFirstInserted(PR_TRUE);
@@ -1484,9 +1473,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
   nsTableFrame* tableFrame = nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
   if (tableFrame) {
-    nsCOMPtr<nsIAtom> frameType;
-    aOldFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+    if (nsLayoutAtoms::tableRowFrame == aOldFrame->GetType()) {
       // remove the rows from the table (and flag a rebalance)
       tableFrame->RemoveRows(*aPresContext, (nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
 
@@ -1612,9 +1599,7 @@ nsTableRowGroupFrame::RecoverState(nsRowGroupReflowState& aReflowState,
   // Walk the list of children up to aKidFrame
   for (nsIFrame* frame = mFrames.FirstChild(); frame && (frame != aKidFrame);
        frame = frame->GetNextSibling()) {
-       nsCOMPtr<nsIAtom> fType;
-    frame->GetFrameType(getter_AddRefs(fType));
-    if (fType.get() == nsLayoutAtoms::tableRowFrame) {
+    if (frame->GetType() == nsLayoutAtoms::tableRowFrame) {
       // Update the running y-offset
       nsSize kidSize = frame->GetSize();
       aReflowState.y += kidSize.height + cellSpacingY;
@@ -1634,10 +1619,7 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
                                        nsIFrame*     aFrame)
 {
   // Make sure it's a row frame and not a row group frame
-  nsCOMPtr<nsIAtom>  frameType;
-
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType.get() == nsLayoutAtoms::tableRowFrame) {
+  if (aFrame->GetType() == nsLayoutAtoms::tableRowFrame) {
     PRInt32 rowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
     
     // It's a simple row frame if there are no cells that span into or
@@ -1657,9 +1639,7 @@ GetLastRowSibling(nsIFrame* aRowFrame)
   nsIFrame* lastRowFrame = nsnull;
   for (nsIFrame* lastFrame = aRowFrame; lastFrame;
        lastFrame = lastFrame->GetNextSibling()) {
-    nsCOMPtr<nsIAtom> fType;
-    lastFrame->GetFrameType(getter_AddRefs(fType));
-    if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+    if (nsLayoutAtoms::tableRowFrame == lastFrame->GetType()) {
       lastRowFrame = lastFrame;
     }
   }
@@ -1802,13 +1782,10 @@ nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext*        aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableRowGroupFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableRowGroupFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableRowGroupFrame;
 }
 
 
@@ -1947,9 +1924,7 @@ nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame,
 
   // make sure it is a rowFrame in the RowGroup
   // - it should be, but we do not validate in every case (see bug 88849)
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType.get() != nsLayoutAtoms::tableRowFrame) {
+  if (aFrame->GetType() != nsLayoutAtoms::tableRowFrame) {
     NS_WARNING("RowGroup contains a frame that is not a row");
     *aLineNumberResult = 0;
     return NS_ERROR_FAILURE;
