@@ -1226,7 +1226,7 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
 
   if(oldLoadGroup)
-     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK);
+     oldLoadGroup->RemoveRequest(request, nsnull, NS_BINDING_RETARGETED);
       
   aChannel->SetLoadGroup(nsnull);
   aChannel->SetNotificationCallbacks(nsnull);

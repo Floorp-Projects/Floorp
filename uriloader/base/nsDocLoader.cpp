@@ -633,10 +633,11 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
           } 
           //
           // If the request failed (for any reason other than being
-          // redirected), the TRANSFERRING notification can still be fired
-          // if a HTTP connection was established to a server.
+          // redirected or retargeted), the TRANSFERRING notification can
+          // still be fired if a HTTP connection was established to a server.
           //
-          else if (aStatus != NS_BINDING_REDIRECTED) {
+          else if (aStatus != NS_BINDING_REDIRECTED &&
+                   aStatus != NS_BINDING_RETARGETED) {
             nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
 
             if (httpChannel) {

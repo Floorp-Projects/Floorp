@@ -4543,7 +4543,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
         loadGroup->AddRequest(request, nsnull);
         if (currentLoadGroup)
-            currentLoadGroup->RemoveRequest(request, nsnull, NS_OK);
+            currentLoadGroup->RemoveRequest(request, nsnull,
+                                            NS_BINDING_RETARGETED);
 
         // Update the notification callbacks, so that progress and
         // status information are sent to the right docshell...
