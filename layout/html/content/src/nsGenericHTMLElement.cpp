@@ -880,9 +880,8 @@ nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
 
   docEncoder->Init(mDocument, NS_LITERAL_STRING("text/html"), 0);
 
-  nsRange *range = new nsRange;
+  nsCOMPtr<nsIDOMRange> range(new nsRange);
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
-  nsCOMPtr<nsIDOMRange> kungFoDeathGrip(range);
 
   rv = range->SelectNodeContents(thisNode);
   NS_ENSURE_SUCCESS(rv, rv);
