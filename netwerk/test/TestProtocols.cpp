@@ -41,6 +41,18 @@
 #include "nsCRT.h"
 #include "nsIProtocolConnection.h"
 #include "nsIUrl.h"
+#include "nsIHTTPConnection.h"
+#include "nsIHTTPEventSink.h" 
+
+#ifdef XP_PC
+#define XPCOM_DLL  "xpcom32.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define XPCOM_DLL  "libxpcom.so"
+#endif
+#endif
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetServiceCID,             NS_NETSERVICE_CID);
@@ -49,7 +61,7 @@ static PRTime gElapsedTime;
 static int gKeepRunning = 1;
 static nsIEventQueue* gEventQ = nsnull;
 
-class InputTestConsumer : public nsIStreamListener
+class InputTestConsumer : public nsIHTTPEventSink
 {
 public:
 
@@ -58,6 +70,19 @@ public:
 
   // ISupports interface...
   NS_DECL_ISUPPORTS
+
+    // nsIHTTPEventSink interface...
+    NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context);
+
+    NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
+
+    NS_IMETHOD      OnProgress(nsISupports* i_Context, 
+                            PRUint32 i_Progress, 
+                            PRUint32 i_ProgressMax);
+
+    // OnRedirect gets fired only if you have set FollowRedirects on the handler!
+    NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
+                            nsIUrl* i_NewLocation);
 
   // IStreamListener interface...
   NS_IMETHOD OnStartBinding(nsISupports* context);
@@ -83,8 +108,8 @@ InputTestConsumer::~InputTestConsumer()
 }
 
 
-NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-NS_IMPL_ISUPPORTS(InputTestConsumer,kIStreamListenerIID);
+//NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+NS_IMPL_ISUPPORTS(InputTestConsumer,nsIHTTPEventSink::GetIID());
 
 
 NS_IMETHODIMP
@@ -123,6 +148,43 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+InputTestConsumer::OnAwaitingInput(nsISupports* context)
+{
+    printf("\n+++ InputTestConsumer::OnAwaitingInput +++\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InputTestConsumer::OnHeadersAvailable(nsISupports* context)
+{
+    printf("\n+++ InputTestConsumer::OnHeadersAvailable +++\n");
+    nsCOMPtr<nsIHTTPConnection> pHTTPCon(do_QueryInterface(context));
+    if (pHTTPCon)
+    {
+        const char* type;
+        //optimize later TODO allow atoms here...! intead of just the header strings
+        pHTTPCon->GetResponseHeader("Content-type", &type);
+        if (type)
+            printf("\nRecieving ... %s\n", type);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InputTestConsumer::OnProgress(nsISupports* context, PRUint32 i_Progress, PRUint32 i_ProgressMax)
+{
+    printf("\n+++ InputTestConsumer::OnProgress +++\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InputTestConsumer::OnRedirect(nsISupports* context, nsIUrl* i_NewLocation)
+{
+    printf("\n+++ InputTestConsumer::OnRedirect +++\n");
+    return NS_OK;
+}
+
 
 int
 main(int argc, char* argv[])
@@ -143,6 +205,7 @@ main(int argc, char* argv[])
                                           "components");
     if (NS_FAILED(rv)) return rv;
 
+    
     // Create the Event Queue for this thread...
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -171,8 +234,8 @@ main(int argc, char* argv[])
             if (pURL)
             {
                 nsCOMPtr<nsIProtocolConnection> pConnection;
-                if (NS_OK == pService->NewConnection(pURL, nsnull, nsnull, 
-                                              getter_AddRefs(pConnection)))
+#if 0 // remove once the blocking io issues are worked out
+                if (NS_OK == pService->NewConnection(pURL, nsnull, nsnull, getter_AddRefs(pConnection)))
                 {
                     /* Flavour One! */
                     // Plain vanilla getting a file... in blocking mode
@@ -195,8 +258,15 @@ main(int argc, char* argv[])
                     }
                 }
 
-#if 0
+#endif
+//#if 0
                 /* Flavour Two */
+                InputTestConsumer* pMyConsumer = new InputTestConsumer();
+                if (!pMyConsumer)
+                {
+                    NS_ERROR("Failed to create a new consumer!");
+                    return -1;
+                }
                 // Async reading thru the calls of the event sink interface
                 if (NS_OK == pService->NewConnection(pURL, pMyConsumer, 
                                        nsnull, getter_AddRefs(pConnection)))
@@ -208,12 +278,12 @@ main(int argc, char* argv[])
                             request object. This is done by QI for the specific
                             protocolConnection.
                         */
-                        nsCOMPtr<nsIHTTPConnection> pHTTPCon(pConnection);
+                        nsCOMPtr<nsIHTTPConnection> pHTTPCon(do_QueryInterface(pConnection));
 
                         if (pHTTPCon)
                         {
                             // Setting a sample user agent string.
-                            if (NS_OK == pHTTPCon->SetAgent("Mozilla/5.0 [en] (Win98; U)"))
+                            if (NS_OK == pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)"))
                             {
                             }
                         }
@@ -222,7 +292,7 @@ main(int argc, char* argv[])
                         pConnection->Open();
                     }
                 }
-#endif
+//#endif
 
             }
         }
