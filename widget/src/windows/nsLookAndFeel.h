@@ -24,6 +24,8 @@
 #define __nsLookAndFeel
 #include "nsILookAndFeel.h"
 
+#include "nsCOMPtr.h"
+
 class nsLookAndFeel: public nsILookAndFeel {
 public:
   nsLookAndFeel();
