@@ -4736,18 +4736,14 @@ CheckPixelError(nscoord aSize,
   }
 }
 
-void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
-                                  nsIFrame*                aFrame,
-                                  const nsHTMLReflowState& aReflowState)
+static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
+                                    nsIFrame*                aFrame,
+                                    const nsHTMLReflowState& aReflowState,
+                                    DR_FrameTreeNode&        aTreeNode,
+                                    PRBool                   aChanged)
 {
-  if (!DR_state.mInited) DR_state.Init();
-  if (!DR_state.mActive) return nsnull;
-
-  NS_ASSERTION(aFrame, "invalid call");
-
-  DR_FrameTreeNode* treeNode = DR_state.CreateTreeNode(aFrame, aReflowState);
-  if (treeNode->mDisplay) {
-    DR_state.DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+  if (aTreeNode.mDisplay) {
+    DR_state.DisplayFrameTypeInfo(aFrame, aTreeNode.mIndent);
 
     char width[16];
     char height[16];
@@ -4768,7 +4764,10 @@ void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
     if (inFlow) {
       printf("nif=%p ", inFlow);
     }
-    printf("cnt=%d \n", DR_state.mCount);
+    if (aChanged) 
+      printf("CHANGED \n");
+    else 
+      printf("cnt=%d \n", DR_state.mCount);
     if (DR_state.mDisplayPixelErrors) {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -4777,6 +4776,21 @@ void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
       CheckPixelError(aReflowState.mComputedWidth, p2t);
       CheckPixelError(aReflowState.mComputedHeight, p2t);
     }
+  }
+}
+
+void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
+                                  nsIFrame*                aFrame,
+                                  const nsHTMLReflowState& aReflowState)
+{
+  if (!DR_state.mInited) DR_state.Init();
+  if (!DR_state.mActive) return nsnull;
+
+  NS_ASSERTION(aFrame, "invalid call");
+
+  DR_FrameTreeNode* treeNode = DR_state.CreateTreeNode(aFrame, aReflowState);
+  if (treeNode) {
+    DisplayReflowEnterPrint(aPresContext, aFrame, aReflowState, *treeNode, PR_FALSE);
   }
   return treeNode;
 }
@@ -4826,6 +4840,14 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
     }
   }
   DR_state.DeleteTreeNode(*treeNode);
+}
+
+void DR_cookie::Change() const
+{
+  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)mValue;
+  if (treeNode && treeNode->mDisplay) {
+    DisplayReflowEnterPrint(mPresContext, mFrame, mReflowState, *treeNode, PR_TRUE);
+  }
 }
 
 #endif
