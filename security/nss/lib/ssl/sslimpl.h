@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.23 2002/02/27 04:40:16 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.24 2002/04/04 00:14:09 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -1289,12 +1289,12 @@ SEC_END_PROTOS
 #endif
 
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-#define SSL_GETPID() getpid()
+#define SSL_GETPID getpid
+#elif defined(_WIN32_WCE)
+#define SSL_GETPID GetCurrentProcessId
 #elif defined(WIN32)
-
 extern int __cdecl _getpid(void);
-/* #define SSL_GETPID() GetCurrentProcessId() */
-#define SSL_GETPID() _getpid()
+#define SSL_GETPID _getpid
 #else
 #define SSL_GETPID() 0
 #endif

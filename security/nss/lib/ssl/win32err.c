@@ -38,8 +38,10 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: win32err.c,v 1.1 2000/03/31 19:37:19 relyea%netscape.com Exp $
+ * $Id: win32err.c,v 1.2 2002/04/04 00:14:12 nelsonb%netscape.com Exp $
  */
+
+#if !defined(_WIN32_WCE)
 
 #include "prerror.h"
 #include "prlog.h"
@@ -371,3 +373,4 @@ void nss_MD_win32_map_default_error(PRInt32 err)
     PR_SetError(prError, err);
 }
 
+#endif

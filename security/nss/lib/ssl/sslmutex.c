@@ -30,8 +30,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.9 2002/02/27 21:48:53 bishakhabanerjee%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.10 2002/04/04 00:14:10 nelsonb%netscape.com Exp $
  */
+
+/* This ifdef should match the one in sslsnce.c */
+#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2)) && !defined(_WIN32_WCE)
 
 #include "sslmutex.h"
 #include "prerr.h"
@@ -504,7 +507,9 @@ sslMutex_Lock(sslMutex *pMutex)
         break;
 
     case WAIT_TIMEOUT:
+#if defined(WAIT_IO_COMPLETION)
     case WAIT_IO_COMPLETION:
+#endif
     default:            /* should never happen. nothing we can do. */
         PR_ASSERT(!("WaitForSingleObject returned invalid value."));
 	PORT_SetError(PR_UNKNOWN_ERROR);
@@ -650,5 +655,7 @@ sslMutex_Lock(sslMutex *pMutex)
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
+
+#endif
 
 #endif

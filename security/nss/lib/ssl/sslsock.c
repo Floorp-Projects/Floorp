@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.27 2002/03/22 22:48:02 ian.mcgreer%sun.com Exp $
+ * $Id: sslsock.c,v 1.28 2002/04/04 00:14:11 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1801,7 +1801,7 @@ ssl_NewSocket(void)
 {
     sslSocket *ss;
 #ifdef DEBUG
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS)
+#if (defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS)) && !defined(_WIN32_WCE)
     static int firsttime = 1;
 
     if (firsttime) {
