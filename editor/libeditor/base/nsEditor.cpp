@@ -2282,8 +2282,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     if (!selection) return NS_ERROR_NULL_POINTER;
 
     // remember some selection points
-    nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
-    PRInt32 selStartOffset, selEndOffset;
+    nsCOMPtr<nsIDOMNode> selStartNode, selEndNode, parent;
+    PRInt32 selStartOffset, selEndOffset, joinOffset, keepOffset;
     result = GetStartNodeAndOffset(selection, &selStartNode, &selStartOffset);
     if (NS_FAILED(result)) return result;
     result = GetEndNodeAndOffset(selection, &selEndNode, &selEndOffset);
@@ -2293,7 +2293,54 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     if (aNodeToKeepIsFirst) leftNode = aNodeToKeep;
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
     if (NS_FAILED(result)) return result;
+    result = GetNodeLocation(aNodeToJoin, &parent, &joinOffset);
+    if (NS_FAILED(result)) return result;
+    result = GetNodeLocation(aNodeToKeep, &parent, &keepOffset);
+    if (NS_FAILED(result)) return result;
     
+    // if selection endpoint is between the nodes, remember it as being
+    // in the one that is going away instead.  This simplifies later selection
+    // adjustment logic at end of this method.
+    if (selStartNode == parent)
+    {
+      if (aNodeToKeepIsFirst)
+      {
+        if ((selStartOffset > keepOffset) && (selStartOffset <= joinOffset))
+        {
+          selStartNode = aNodeToJoin; 
+          selStartOffset = 0;
+        }
+      }
+      else
+      {
+        if ((selStartOffset > joinOffset) && (selStartOffset <= keepOffset))
+        {
+          selStartNode = aNodeToJoin; 
+          selStartOffset = firstNodeLength;
+        }
+      }
+    }
+    if (selEndNode == parent)
+    {
+      if (aNodeToKeepIsFirst)
+      {
+        if ((selEndOffset > keepOffset) && (selEndOffset <= joinOffset))
+        {
+          selEndNode = aNodeToJoin; 
+          selEndOffset = 0;
+        }
+      }
+      else
+      {
+        if ((selEndOffset > joinOffset) && (selEndOffset <= keepOffset))
+        {
+          selEndNode = aNodeToJoin; 
+          selEndOffset = firstNodeLength;
+        }
+      }
+    }
+    
+    // ok, ready to do join now.
     // if it's a text node, just shuffle around some text
     nsCOMPtr<nsIDOMCharacterData> keepNodeAsText( do_QueryInterface(aNodeToKeep) );
     nsCOMPtr<nsIDOMCharacterData> joinNodeAsText( do_QueryInterface(aNodeToJoin) );
@@ -2379,6 +2426,10 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
             selStartOffset += firstNodeLength;
           }
         }
+        else if ((selStartNode.get() == aNodeToKeep) && !aNodeToKeepIsFirst)
+        {
+          selStartOffset += firstNodeLength;
+        }
         if (selEndNode.get() == aNodeToJoin)
         {
           selEndNode = aNodeToKeep;
@@ -2386,6 +2437,10 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           {
             selEndOffset += firstNodeLength;
           }
+        }
+        else if ((selEndNode.get() == aNodeToKeep) && !aNodeToKeepIsFirst)
+        {
+          selEndOffset += firstNodeLength;
         }
         selection->Collapse(selStartNode,selStartOffset);
         selection->Extend(selEndNode,selEndOffset);

@@ -216,6 +216,10 @@ NS_IMETHODIMP
 nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)
 {
+  // dont let any txns in here move the selection around behind our back.
+  // Note that this won't prevent explicit selection setting from working.
+  nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+
   if (!aSelection || !aInfo) 
     return NS_ERROR_NULL_POINTER;
     
