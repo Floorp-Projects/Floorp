@@ -1,3704 +1,6207 @@
 <?xml version="1.0"?>
+
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
   xmlns:nc="http://home.netscape.com/NC-rdf#">
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="activation"
-         nc:name="activation"
-	 nc:link="chrome://help/locale/register_help.html#activationSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="add_bookmarks"
+
          nc:name="add bookmarks"
+
 	 nc:link="chrome://help/locale/customize_help.html#add_bookmarksSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="add_email_account"
+
          nc:name="add email account"
+
 	 nc:link="chrome://help/locale/mail_help.html#add_email_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="add_IMAP_account"
+
          nc:name="add IMAP account"
+
 	 nc:link="chrome://help/locale/mail_help.html#add_IMAP_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="add_POP_account"
+
          nc:name="add POP account"
+
 	 nc:link="chrome://help/locale/mail_help.html#add_POP_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="adding_bookmarks"
+
          nc:name="adding bookmarks"
+
 	 nc:link="chrome://help/locale/customize_help.html#adding_bookmarksSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="adding_contacts"
-         nc:name="adding contacts"
-	 nc:link="chrome://help/locale/icq_help.html#adding_contactsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="adding_favorites"
+
          nc:name="adding favorites"
+
 	 nc:link="chrome://help/locale/customize_help.html#adding_favoritesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="adding_groups"
-         nc:name="adding groups"
-	 nc:link="chrome://help/locale/icq_help.html#adding_groupsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="adding_ICQ_contacts"
-         nc:name="adding ICQ contacts"
-	 nc:link="chrome://help/locale/im_help.html#adding_ICQ_contactsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="adding_links_in Navigator"
+
          nc:name="adding links in Navigator"
+
 	 nc:link="chrome://help/locale/customize_help.html#adding_links_in NavigatorSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="address_autocompletion"
+
          nc:name="address autocompletion"
+
 	 nc:link="chrome://help/locale/mail_help.html#address_autocompletionSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="addressing_settings"
+
          nc:name="addressing settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#addressing_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AIM_away_messages"
-         nc:name="AIM away messages"
-	 nc:link="chrome://help/locale/im_help.html#AIM_away_messagesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AIM_links"
-         nc:name="AIM links"
-	 nc:link="chrome://help/locale/im_help.html#AIM_linksSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AIM_preferences"
-         nc:name="AIM preferences"
-	 nc:link="chrome://help/locale/im_help.html#AIM_preferencesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="AIM_styles"
-         nc:name="AIM styles"
-	 nc:link="chrome://help/locale/im_help.html#AIM_stylesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="allowing_contact_you"
-         nc:name="allowing contact you"
-	 nc:link="chrome://help/locale/im_help.html#allowing_contact_youSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AOL_account"
-         nc:name="AOL account"
-	 nc:link="chrome://help/locale/mail_help.html#AOL_accountSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="attach_signature_file"
+
          nc:name="attach signature file"
+
 	 nc:link="chrome://help/locale/mail_help.html#attach_signature_fileSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="attaching_files_to_messages"
+
          nc:name="attaching files to messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#attaching_files_to_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="attachments"
+
          nc:name="attachments"
+
 	 nc:link="chrome://help/locale/mail_help.html#attachmentsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="autocomplete"
+
          nc:name="autocomplete"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#autocompleteSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="away_messages_AIM"
-         nc:name="away messages AIM"
-	 nc:link="chrome://help/locale/im_help.html#away_messages_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="back_up_certificates"
+
          nc:name="back up certificates"
+
 	 nc:link="chrome://help/locale/certs_help.html#back_up_certificatesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="backup_certificates"
+
          nc:name="backup certificates"
+
 	 nc:link="chrome://help/locale/certs_help.html#backup_certificatesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="biff"
+
          nc:name="biff"
+
 	 nc:link="chrome://help/locale/mail_help.html#biffSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="blocking_ICQ_users"
-         nc:name="blocking ICQ users"
-	 nc:link="chrome://help/locale/icq_help.html#blocking_ICQ_usersSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="blocking_Instant_Messenger_users"
-         nc:name="blocking Instant Messenger users"
-	 nc:link="chrome://help/locale/im_help.html#blocking_Instant_Messenger_usersSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="blocking_popups"
+
          nc:name="blocking popups"
+
 	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#blocking_popupsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="BMP"
+
          nc:name="BMP"
+
 	 nc:link="chrome://help/locale/composer_help.html#BMPSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="bookmark_folder"
+
          nc:name="bookmark folder"
+
 	 nc:link="chrome://help/locale/customize_help.html#bookmark_folderSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="bookmark_group"
+
          nc:name="bookmark group"
+
 	 nc:link="chrome://help/locale/customize_help.html#bookmark_groupSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="bookmark_properties"
+
          nc:name="bookmark properties"
+
 	 nc:link="chrome://help/locale/customize_help.html#bookmark_propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="bookmarking_Navigator_tabs"
+
          nc:name="bookmarking Navigator tabs"
+
 	 nc:link="chrome://help/locale/customize_help.html#bookmarking_Navigator_tabsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Bookmarks_menu"
+
          nc:name="Bookmarks menu"
+
 	 nc:link="chrome://help/locale/nav_help.html#Bookmarks_menuSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="broken_lock_icon"
+
          nc:name="broken lock icon"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#broken_lock_iconSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="buddy_list"
-         nc:name="buddy list"
-	 nc:link="chrome://help/locale/im_help.html#buddy_listSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="buddy_list_problems_AIM"
-         nc:name="buddy list problems AIM"
-	 nc:link="chrome://help/locale/im_help.html#buddy_list_problems_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="buddy_status"
-         nc:name="buddy status"
-	 nc:link="chrome://help/locale/im_help.html#buddy_statusSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="buttons"
+
          nc:name="buttons"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#buttonsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="cache"
+
          nc:name="cache"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#cacheSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="changing_skins"
+
          nc:name="changing skins"
+
 	 nc:link="chrome://help/locale/customize_help.html#changing_skinsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="character_coding"
+
          nc:name="character coding"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#character_codingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="characters"
+
          nc:name="characters"
+
 	 nc:link="chrome://help/locale/composer_help.html#charactersSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="chat_rooms"
-         nc:name="chat rooms"
-	 nc:link="chrome://help/locale/im_help.html#chat_roomsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="check_spelling_of_message_text"
+
          nc:name="check spelling of message text"
+
 	 nc:link="chrome://help/locale/mail_help.html#check_spelling_of_message_textSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="checking_security_before_sending_message"
+
          nc:name="checking security before sending message"
+
 	 nc:link="chrome://help/locale/mail_sec_help.html#checking_security_before_sending_messageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="checking_security_for_received_messages"
+
          nc:name="checking security for received messages"
+
 	 nc:link="chrome://help/locale/mail_sec_help.html#checking_security_for_received_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="clear_cache"
+
          nc:name="clear cache"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#clear_cacheSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="click_and_search"
+
          nc:name="click and search"
+
 	 nc:link="chrome://help/locale/nav_help.html#click_and_searchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="click_to_search"
+
          nc:name="click to search"
+
 	 nc:link="chrome://help/locale/nav_help.html#click_to_searchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="close_sidebar"
+
          nc:name="close sidebar"
+
 	 nc:link="chrome://help/locale/customize_help.html#close_sidebarSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="closing_Navigator_tabs"
+
          nc:name="closing Navigator tabs"
+
 	 nc:link="chrome://help/locale/customize_help.html#closing_Navigator_tabsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="compact_folders"
+
          nc:name="compact folders"
+
 	 nc:link="chrome://help/locale/mail_help.html#compact_foldersSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="compacting_to_save_disk_space"
+
          nc:name="compacting to save disk space"
+
 	 nc:link="chrome://help/locale/mail_help.html#compacting_to_save_disk_spaceSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Composer_settings"
+
          nc:name="Composer settings"
+
 	 nc:link="chrome://help/locale/composer_help.html#Composer_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="confirm_receipt"
+
          nc:name="confirm receipt"
+
 	 nc:link="chrome://help/locale/mail_help.html#confirm_receiptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="connect_at_launch"
-         nc:name="connect at launch"
-	 nc:link="chrome://help/locale/icq_help.html#connect_at_launchSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="connect_at_startup"
-         nc:name="connect at startup"
-	 nc:link="chrome://help/locale/icq_help.html#connect_at_startupSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="contact_names"
-         nc:name="contact names"
-	 nc:link="chrome://help/locale/icq_help.html#contact_namesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="contacts"
-         nc:name="contacts"
-	 nc:link="chrome://help/locale/icq_help.html#contactsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="controlling_access"
-         nc:name="controlling access"
-	 nc:link="chrome://help/locale/im_help.html#controlling_accessSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="controlling_spam"
+
          nc:name="controlling spam"
+
 	 nc:link="chrome://help/locale/mail_help.html#controlling_spamSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="controlling_your_privacy"
+
          nc:name="controlling your privacy"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#controlling_your_privacySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="cotter"
+
          nc:name="cotter"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#cotterSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="creating_bookmarks"
+
          nc:name="creating bookmarks"
+
 	 nc:link="chrome://help/locale/customize_help.html#creating_bookmarksSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="csv_export"
+
          nc:name="csv export"
+
 	 nc:link="chrome://help/locale/mail_help.html#csv_exportSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="csv_import"
+
          nc:name="csv import"
+
 	 nc:link="chrome://help/locale/mail_help.html#csv_importSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="default_browser_preferences"
+
          nc:name="default browser preferences"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#default_browser_preferencesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="default_font_for_mail_messages"
+
          nc:name="default font for mail messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#default_font_for_mail_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="default_mail_account"
+
          nc:name="default mail account"
+
 	 nc:link="chrome://help/locale/mail_help.html#default_mail_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="default_or_multiple_SMTP_servers"
+
          nc:name="default or multiple SMTP servers"
+
 	 nc:link="chrome://help/locale/mail_help.html#default_or_multiple_SMTP_serversSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="delete_bookmark"
+
          nc:name="delete bookmark"
+
 	 nc:link="chrome://help/locale/customize_help.html#delete_bookmarkSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="delete_LDAP_directory"
+
          nc:name="delete LDAP directory"
+
 	 nc:link="chrome://help/locale/mail_help.html#delete_LDAP_directorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="delete_mail"
+
          nc:name="delete mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#delete_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="delete_mail_account"
+
          nc:name="delete mail account"
+
 	 nc:link="chrome://help/locale/mail_help.html#delete_mail_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="delete_published_pages"
+
          nc:name="delete published pages"
+
 	 nc:link="chrome://help/locale/composer_help.html#delete_published_pagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="digital_ID"
+
          nc:name="digital ID"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#digital_IDSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="directory_server_properties"
+
          nc:name="directory server properties"
+
 	 nc:link="chrome://help/locale/mail_help.html#directory_server_propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="disable_JavaScript"
+
          nc:name="disable JavaScript"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_JavaScriptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="disable_QuickLaunch"
+
          nc:name="disable QuickLaunch"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_QuickLaunchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="disconnect"
+
          nc:name="disconnect"
+
 	 nc:link="chrome://help/locale/mail_help.html#disconnectSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="disk_cache"
+
          nc:name="disk cache"
+
 	 nc:link="chrome://help/locale/nav_help.html#disk_cacheSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="display_mail"
+
          nc:name="display mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#display_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="display_name"
-         nc:name="display name"
-	 nc:link="chrome://help/locale/icq_help.html#display_nameSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="displaying_attachments"
+
          nc:name="displaying attachments"
+
 	 nc:link="chrome://help/locale/mail_help.html#displaying_attachmentsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="distribution_list"
+
          nc:name="distribution list"
+
 	 nc:link="chrome://help/locale/mail_help.html#distribution_listSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="download"
+
          nc:name="download"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="download_LDAP"
+
          nc:name="download LDAP"
+
 	 nc:link="chrome://help/locale/mail_help.html#download_LDAPSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Download_Manager"
+
          nc:name="Download Manager"
+
 	 nc:link="chrome://help/locale/nav_help.html#Download_ManagerSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="downloading"
+
          nc:name="downloading"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="downloading_messages"
+
          nc:name="downloading messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#downloading_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="edit_page"
+
          nc:name="edit page"
+
 	 nc:link="chrome://help/locale/composer_help.html#edit_pageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="editing_bookmarks"
+
          nc:name="editing bookmarks"
+
 	 nc:link="chrome://help/locale/customize_help.html#editing_bookmarksSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="editing_web_pages"
+
          nc:name="editing web pages"
+
 	 nc:link="chrome://help/locale/composer_help.html#editing_web_pagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="email_addresses_in_Instant_Messenger"
-         nc:name="email addresses in Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#email_addresses_in_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="eml_file_format"
+
          nc:name="eml file format"
+
 	 nc:link="chrome://help/locale/mail_help.html#eml_file_formatSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="emoticons_in_mail_messages"
+
          nc:name="emoticons in mail messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#emoticons_in_mail_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="enable_QuickLaunch"
+
          nc:name="enable QuickLaunch"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#enable_QuickLaunchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="encrypting_email_messages"
+
          nc:name="encrypting email messages"
+
 	 nc:link="chrome://help/locale/mail_sec_help.html#encrypting_email_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="encryption_status_of_web_page"
+
          nc:name="encryption status of web page"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#encryption_status_of_web_pageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="encryption_technologies"
+
          nc:name="encryption technologies"
+
 	 nc:link="chrome://help/locale/ssl_help.html#encryption_technologiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Eudora_address_book_import"
+
          nc:name="Eudora address book import"
+
 	 nc:link="chrome://help/locale/mail_help.html#Eudora_address_book_importSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Eudora_messages"
+
          nc:name="Eudora messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#Eudora_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="exporting_buddy_lists"
-         nc:name="exporting buddy lists"
-	 nc:link="chrome://help/locale/im_help.html#exporting_buddy_listsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="favicons"
+
          nc:name="favicons"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#faviconsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="favorites"
+
          nc:name="favorites"
+
 	 nc:link="chrome://help/locale/customize_help.html#favoritesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="File_Bookmark"
+
          nc:name="File Bookmark"
+
 	 nc:link="chrome://help/locale/customize_help.html#File_BookmarkSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="filing_mail"
+
          nc:name="filing mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#filing_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Find_As_You_Type"
+
          nc:name="Find As You Type"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Find_As_You_TypeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Find_Links_As_You_Type"
+
          nc:name="Find Links As You Type"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Find_Links_As_You_TypeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Find_Text_As_You_Type"
+
          nc:name="Find Text As You Type"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Find_Text_As_You_TypeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="finding_buddies"
-         nc:name="finding buddies"
-	 nc:link="chrome://help/locale/im_help.html#finding_buddiesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Flash"
+
          nc:name="Flash"
+
 	 nc:link="chrome://help/locale/nav_help.html#FlashSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="folder_permissions"
+
          nc:name="folder permissions"
+
 	 nc:link="chrome://help/locale/mail_help.html#folder_permissionsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="folder_privileges"
+
          nc:name="folder privileges"
+
 	 nc:link="chrome://help/locale/mail_help.html#folder_privilegesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="folder_properties"
+
          nc:name="folder properties"
+
 	 nc:link="chrome://help/locale/mail_help.html#folder_propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Form_Manager_concatenations"
+
          nc:name="Form Manager concatenations"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#Form_Manager_concatenationsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ftp_and_publishing"
+
          nc:name="ftp and publishing"
+
 	 nc:link="chrome://help/locale/composer_help.html#ftp_and_publishingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="full_screen_mode"
+
          nc:name="full screen mode"
+
 	 nc:link="chrome://help/locale/nav_help.html#full_screen_modeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="generating_html_or_css"
+
          nc:name="generating html or css"
+
 	 nc:link="chrome://help/locale/composer_help.html#generating_html_or_cssSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="get_a_map"
+
          nc:name="get a map"
+
 	 nc:link="chrome://help/locale/mail_help.html#get_a_mapSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="get_directions"
+
          nc:name="get directions"
+
 	 nc:link="chrome://help/locale/mail_help.html#get_directionsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="get_mail"
+
          nc:name="get mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#get_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="getting_mail_receipts"
+
          nc:name="getting mail receipts"
+
 	 nc:link="chrome://help/locale/mail_help.html#getting_mail_receiptsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="getting_message_receipts"
+
          nc:name="getting message receipts"
+
 	 nc:link="chrome://help/locale/mail_help.html#getting_message_receiptsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="GIF"
+
          nc:name="GIF"
+
 	 nc:link="chrome://help/locale/composer_help.html#GIFSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="global_LDAP_settings"
+
          nc:name="global LDAP settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#global_LDAP_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="helper_applications"
+
          nc:name="helper applications"
+
 	 nc:link="chrome://help/locale/nav_help.html#helper_applicationsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="hidden_form_fields"
+
          nc:name="hidden form fields"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#hidden_form_fieldsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="hide_columns"
+
          nc:name="hide columns"
+
 	 nc:link="chrome://help/locale/mail_help.html#hide_columnsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="home_page"
+
          nc:name="home page"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#home_pageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Home_Page_bookmark_group"
+
          nc:name="Home Page bookmark group"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#Home_Page_bookmark_groupSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="host_name_for_publishing"
+
          nc:name="host name for publishing"
+
 	 nc:link="chrome://help/locale/composer_help.html#host_name_for_publishingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="html"
+
          nc:name="html"
+
 	 nc:link="chrome://help/locale/nav_help.html#htmlSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="HTML_color_codes"
+
          nc:name="HTML color codes"
+
 	 nc:link="chrome://help/locale/composer_help.html#HTML_color_codesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="HTML_display_options"
+
          nc:name="HTML display options"
+
 	 nc:link="chrome://help/locale/mail_help.html#HTML_display_optionsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="HTML_formatting"
+
          nc:name="HTML formatting"
+
 	 nc:link="chrome://help/locale/composer_help.html#HTML_formattingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="HTML_mail"
+
          nc:name="HTML mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#HTML_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="http"
+
          nc:name="http"
+
 	 nc:link="chrome://help/locale/nav_help.html#httpSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="HTTP_address"
+
          nc:name="HTTP address"
+
 	 nc:link="chrome://help/locale/composer_help.html#HTTP_addressSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ian_oeschger"
+
          nc:name="ian oeschger"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#ian_oeschgerSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ICQ_away_status"
-         nc:name="ICQ away status"
-	 nc:link="chrome://help/locale/icq_help.html#ICQ_away_statusSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ICQ_disconnecting"
-         nc:name="ICQ disconnecting"
-	 nc:link="chrome://help/locale/icq_help.html#ICQ_disconnectingSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ID_card"
+
          nc:name="ID card"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#ID_cardSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="identification"
+
          nc:name="identification"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#identificationSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="identity"
+
          nc:name="identity"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#identitySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="idle_reporting"
-         nc:name="idle reporting"
-	 nc:link="chrome://help/locale/im_help.html#idle_reportingSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ignore_thread"
+
          nc:name="ignore thread"
+
 	 nc:link="chrome://help/locale/mail_help.html#ignore_threadSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="IM"
+
          nc:name="IM"
+
 	 nc:link="chrome://help/locale/mail_help.html#IMSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="IMAP_account"
+
          nc:name="IMAP account"
+
 	 nc:link="chrome://help/locale/mail_help.html#IMAP_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="IMAP_folder_properties"
+
          nc:name="IMAP folder properties"
+
 	 nc:link="chrome://help/locale/mail_help.html#IMAP_folder_propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="IMAP_folder_quota"
+
          nc:name="IMAP folder quota"
+
 	 nc:link="chrome://help/locale/mail_help.html#IMAP_folder_quotaSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="import_certificates"
+
          nc:name="import certificates"
+
 	 nc:link="chrome://help/locale/certs_help.html#import_certificatesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="importing_a_certificate_chain"
+
          nc:name="importing a certificate chain"
+
 	 nc:link="chrome://help/locale/certs_help.html#importing_a_certificate_chainSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="importing_buddy_lists"
-         nc:name="importing buddy lists"
-	 nc:link="chrome://help/locale/im_help.html#importing_buddy_listsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="importing_Communicator_address_books"
+
          nc:name="importing Communicator address books"
+
 	 nc:link="chrome://help/locale/mail_help.html#importing_Communicator_address_booksSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="importing_Communicator_messages"
+
          nc:name="importing Communicator messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#importing_Communicator_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="importing_intermediate_CA_certificates"
+
          nc:name="importing intermediate CA certificates"
+
 	 nc:link="chrome://help/locale/certs_help.html#importing_intermediate_CA_certificatesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="importing_server_CA_certificates"
+
          nc:name="importing server CA certificates"
+
 	 nc:link="chrome://help/locale/cert_dialog_help.html#importing_server_CA_certificatesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="indent"
+
          nc:name="indent"
+
 	 nc:link="chrome://help/locale/composer_help.html#indentSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="information_design"
+
          nc:name="information design"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#information_designSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger_keyboard_shortcuts"
-         nc:name="Instant Messenger keyboard shortcuts"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger_keyboard_shortcutsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger_privacy"
-         nc:name="Instant Messenger privacy"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger_privacySDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="internet_keywords"
+
          nc:name="internet keywords"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="jatin_billimoria"
+
          nc:name="jatin billimoria"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#jatin_billimoriaSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Java"
+
          nc:name="Java"
+
 	 nc:link="chrome://help/locale/nav_help.html#JavaSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="JavaScript"
+
          nc:name="JavaScript"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="javascript_in_HTML_documents"
+
          nc:name="javascript in HTML documents"
+
 	 nc:link="chrome://help/locale/composer_help.html#javascript_in_HTML_documentsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="javascript_in_mail"
+
          nc:name="javascript in mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#javascript_in_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="john_gorham"
+
          nc:name="john gorham"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#john_gorhamSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="join"
+
          nc:name="join"
+
 	 nc:link="chrome://help/locale/mail_help.html#joinSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="join_newsgroups"
+
          nc:name="join newsgroups"
+
 	 nc:link="chrome://help/locale/mail_help.html#join_newsgroupsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="JPEG"
+
          nc:name="JPEG"
+
 	 nc:link="chrome://help/locale/composer_help.html#JPEGSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="JPG"
+
          nc:name="JPG"
+
 	 nc:link="chrome://help/locale/composer_help.html#JPGSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="keywords"
+
          nc:name="keywords"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#keywordsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="LDAP_directory"
+
          nc:name="LDAP directory"
+
 	 nc:link="chrome://help/locale/mail_help.html#LDAP_directorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="LDAP_update"
+
          nc:name="LDAP update"
+
 	 nc:link="chrome://help/locale/mail_help.html#LDAP_updateSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="LDAP_using_SSL"
+
          nc:name="LDAP using SSL"
+
 	 nc:link="chrome://help/locale/mail_help.html#LDAP_using_SSLSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ldif_export"
+
          nc:name="ldif export"
+
 	 nc:link="chrome://help/locale/mail_help.html#ldif_exportSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="ldif_import"
+
          nc:name="ldif import"
+
 	 nc:link="chrome://help/locale/mail_help.html#ldif_importSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="links_Instant_Messenger"
-         nc:name="links Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#links_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="location_bar"
+
          nc:name="location bar"
+
 	 nc:link="chrome://help/locale/nav_help.html#location_barSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="lock_icon"
+
          nc:name="lock icon"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#lock_iconSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="logging_on_ICQ"
-         nc:name="logging on ICQ"
-	 nc:link="chrome://help/locale/icq_help.html#logging_on_ICQSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Macromedia"
+
          nc:name="Macromedia"
+
 	 nc:link="chrome://help/locale/nav_help.html#MacromediaSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mail_addresses"
+
          nc:name="mail addresses"
+
 	 nc:link="chrome://help/locale/mail_help.html#mail_addressesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail_and_AIM"
-         nc:name="Mail and AIM"
-	 nc:link="chrome://help/locale/im_help.html#Mail_and_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mail_draft"
+
          nc:name="mail draft"
+
 	 nc:link="chrome://help/locale/mail_help.html#mail_draftSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mail_privacy_and_security"
+
          nc:name="mail privacy and security"
+
 	 nc:link="chrome://help/locale/mail_help.html#mail_privacy_and_securitySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mail_return_receipts_settings"
+
          nc:name="mail return receipts settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#mail_return_receipts_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mail_security_settings"
+
          nc:name="mail security settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#mail_security_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="map_button_in_address_book"
+
          nc:name="map button in address book"
+
 	 nc:link="chrome://help/locale/mail_help.html#map_button_in_address_bookSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="MAPI"
+
          nc:name="MAPI"
+
 	 nc:link="chrome://help/locale/mail_help.html#MAPISDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mapquest"
+
          nc:name="mapquest"
+
 	 nc:link="chrome://help/locale/mail_help.html#mapquestSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="mark_as_new"
+
          nc:name="mark as new"
+
 	 nc:link="chrome://help/locale/mail_help.html#mark_as_newSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="MDN_receipt"
+
          nc:name="MDN receipt"
+
 	 nc:link="chrome://help/locale/mail_help.html#MDN_receiptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="memory"
+
          nc:name="memory"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#memorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="memory_cache"
+
          nc:name="memory cache"
+
 	 nc:link="chrome://help/locale/nav_help.html#memory_cacheSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="message_confirmation"
+
          nc:name="message confirmation"
+
 	 nc:link="chrome://help/locale/mail_help.html#message_confirmationSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Message_display_options"
+
          nc:name="Message display options"
+
 	 nc:link="chrome://help/locale/mail_help.html#Message_display_optionsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="message_file_format"
+
          nc:name="message file format"
+
 	 nc:link="chrome://help/locale/mail_help.html#message_file_formatSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="message_privacy_and_security"
+
          nc:name="message privacy and security"
+
 	 nc:link="chrome://help/locale/mail_help.html#message_privacy_and_securitySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="message_status"
+
          nc:name="message status"
+
 	 nc:link="chrome://help/locale/mail_help.html#message_statusSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Microsoft"
+
          nc:name="Microsoft"
+
 	 nc:link="chrome://help/locale/forieusers.html#MicrosoftSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="MIME"
+
          nc:name="MIME"
+
 	 nc:link="chrome://help/locale/nav_help.html#MIMESDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="minibrowser"
-         nc:name="minibrowser"
-	 nc:link="chrome://help/locale/im_help.html#minibrowserSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="move_bookmark"
+
          nc:name="move bookmark"
+
 	 nc:link="chrome://help/locale/customize_help.html#move_bookmarkSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="moving_mail"
+
          nc:name="moving mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#moving_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="multiple_pages"
+
          nc:name="multiple pages"
+
 	 nc:link="chrome://help/locale/customize_help.html#multiple_pagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="multiple_screen_names"
-         nc:name="multiple screen names"
-	 nc:link="chrome://help/locale/im_help.html#multiple_screen_namesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="multiple_windows"
+
          nc:name="multiple windows"
+
 	 nc:link="chrome://help/locale/customize_help.html#multiple_windowsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Navigator_Back_button"
+
          nc:name="Navigator Back button"
+
 	 nc:link="chrome://help/locale/nav_help.html#Navigator_Back_buttonSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Navigator_Forward_button"
+
          nc:name="Navigator Forward button"
+
 	 nc:link="chrome://help/locale/nav_help.html#Navigator_Forward_buttonSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Navigator_Reload_button"
+
          nc:name="Navigator Reload button"
+
 	 nc:link="chrome://help/locale/nav_help.html#Navigator_Reload_buttonSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Navigator_Stop_button"
+
          nc:name="Navigator Stop button"
+
 	 nc:link="chrome://help/locale/nav_help.html#Navigator_Stop_buttonSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Netscape__Network_privacy_policy"
+
          nc:name="Netscape  Network privacy policy"
+
 	 nc:link="chrome://help/locale/privacy_help.html#Netscape__Network_privacy_policySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Netscape__privacy_policy"
+
          nc:name="Netscape  privacy policy"
+
 	 nc:link="chrome://help/locale/privacy_help.html#Netscape__privacy_policySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Netscape_Calendar"
+
          nc:name="Netscape Calendar"
+
 	 nc:link="chrome://help/locale/glossary.html#Netscape_CalendarSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_account"
+
          nc:name="new account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="new_AOL_account"
-         nc:name="new AOL account"
-	 nc:link="chrome://help/locale/mail_help.html#new_AOL_accountSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_email_account"
+
          nc:name="new email account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_email_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_IMAP_account"
+
          nc:name="new IMAP account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_IMAP_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_LDAP_directory"
+
          nc:name="new LDAP directory"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_LDAP_directorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_mail_alert"
+
          nc:name="new mail alert"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_mail_alertSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="new_mail_indicator"
-         nc:name="new mail indicator"
-	 nc:link="chrome://help/locale/im_help.html#new_mail_indicatorSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_mail_sound"
+
          nc:name="new mail sound"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_mail_soundSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_news_account"
+
          nc:name="new news account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_news_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_newsgroup_account"
+
          nc:name="new newsgroup account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_newsgroup_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_pop_account"
+
          nc:name="new pop account"
+
 	 nc:link="chrome://help/locale/mail_help.html#new_pop_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="new_screen_name_registration"
-         nc:name="new screen name registration"
-	 nc:link="chrome://help/locale/register_help.html#new_screen_name_registrationSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="new_screen_names"
-         nc:name="new screen names"
-	 nc:link="chrome://help/locale/im_help.html#new_screen_namesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_version"
+
          nc:name="new version"
+
 	 nc:link="chrome://help/locale/nav_help.html#new_versionSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="new_web_page"
+
          nc:name="new web page"
+
 	 nc:link="chrome://help/locale/composer_help.html#new_web_pageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="news_account"
+
          nc:name="news account"
+
 	 nc:link="chrome://help/locale/mail_help.html#news_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="newsgroup_account"
+
          nc:name="newsgroup account"
+
 	 nc:link="chrome://help/locale/mail_help.html#newsgroup_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="newsgroup_security_settings"
+
          nc:name="newsgroup security settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#newsgroup_security_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_directory"
+
          nc:name="offline directory"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_directorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_folder_properties"
+
          nc:name="offline folder properties"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_folder_propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_LDAP"
+
          nc:name="offline LDAP"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_LDAPSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_mail"
+
          nc:name="offline mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_messages"
+
          nc:name="offline messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="offline_replication"
+
          nc:name="offline replication"
+
 	 nc:link="chrome://help/locale/mail_help.html#offline_replicationSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="open_lock_icon"
+
          nc:name="open lock icon"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#open_lock_iconSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="open_recent_pages_in_Composer"
+
          nc:name="open recent pages in Composer"
+
 	 nc:link="chrome://help/locale/composer_help.html#open_recent_pages_in_ComposerSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="opening_existing_ICQ_accounts_in_AIM"
-         nc:name="opening existing ICQ accounts in AIM"
-	 nc:link="chrome://help/locale/icq_help.html#opening_existing_ICQ_accounts_in_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="opening_files"
+
          nc:name="opening files"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#opening_filesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="opening_mail"
+
          nc:name="opening mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#opening_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="opening_Navigator_tabs"
+
          nc:name="opening Navigator tabs"
+
 	 nc:link="chrome://help/locale/customize_help.html#opening_Navigator_tabsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="opening_new_ICQ_accounts"
-         nc:name="opening new ICQ accounts"
-	 nc:link="chrome://help/locale/icq_help.html#opening_new_ICQ_accountsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="opening_web_pages_in_Navigator"
+
          nc:name="opening web pages in Navigator"
+
 	 nc:link="chrome://help/locale/nav_help.html#opening_web_pages_in_NavigatorSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="outdent"
+
          nc:name="outdent"
+
 	 nc:link="chrome://help/locale/composer_help.html#outdentSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Outlook_address_book_import"
+
          nc:name="Outlook address book import"
+
 	 nc:link="chrome://help/locale/mail_help.html#Outlook_address_book_importSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Outlook_Express"
+
          nc:name="Outlook Express"
+
 	 nc:link="chrome://help/locale/mail_help.html#Outlook_ExpressSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Outlook_Express_messages"
+
          nc:name="Outlook Express messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#Outlook_Express_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Outlook_messages"
+
          nc:name="Outlook messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#Outlook_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="P3P_settings"
+
          nc:name="P3P settings"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#P3P_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="pipelining"
+
          nc:name="pipelining"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#pipeliningSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="plugins"
+
          nc:name="plugins"
+
 	 nc:link="chrome://help/locale/nav_help.html#pluginsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="PNG"
+
          nc:name="PNG"
+
 	 nc:link="chrome://help/locale/composer_help.html#PNGSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="pop_account"
+
          nc:name="pop account"
+
 	 nc:link="chrome://help/locale/mail_help.html#pop_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="popup_preferences"
+
          nc:name="popup preferences"
+
 	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_preferencesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="popup_windows"
+
          nc:name="popup windows"
+
 	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_windowsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="posting"
+
          nc:name="posting"
+
 	 nc:link="chrome://help/locale/mail_help.html#postingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="preferences_AIM"
-         nc:name="preferences AIM"
-	 nc:link="chrome://help/locale/im_help.html#preferences_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="print_preview"
+
          nc:name="print preview"
+
 	 nc:link="chrome://help/locale/nav_help.html#print_previewSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="printing_mail"
+
          nc:name="printing mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#printing_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="printing_messages"
+
          nc:name="printing messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#printing_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="properties"
+
          nc:name="properties"
+
 	 nc:link="chrome://help/locale/mail_help.html#propertiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="protecting_your_IP_address"
+
          nc:name="protecting your IP address"
+
 	 nc:link="chrome://help/locale/privacy_help.html#protecting_your_IP_addressSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="protecting_your_privacy"
+
          nc:name="protecting your privacy"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#protecting_your_privacySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="publishing_URL"
+
          nc:name="publishing URL"
+
 	 nc:link="chrome://help/locale/composer_help.html#publishing_URLSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="quick_search_for_mail_messages"
+
          nc:name="quick search for mail messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#quick_search_for_mail_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="quick_search_in_address_book"
+
          nc:name="quick search in address book"
+
 	 nc:link="chrome://help/locale/mail_help.html#quick_search_in_address_bookSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="QuickLaunch"
+
          nc:name="QuickLaunch"
+
 	 nc:link="chrome://help/locale/nav_help.html#QuickLaunchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Quicktime"
+
          nc:name="Quicktime"
+
 	 nc:link="chrome://help/locale/nav_help.html#QuicktimeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="radio"
+
          nc:name="radio"
+
 	 nc:link="chrome://help/locale/customize_help.html#radioSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="read_mail"
+
          nc:name="read mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#read_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="read_only"
+
          nc:name="read only"
+
 	 nc:link="chrome://help/locale/mail_help.html#read_onlySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="read_receipt"
+
          nc:name="read receipt"
+
 	 nc:link="chrome://help/locale/mail_help.html#read_receiptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="read_receipts_settings"
+
          nc:name="read receipts settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#read_receipts_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="read_write_and_manage_privileges"
+
          nc:name="read write and manage privileges"
+
 	 nc:link="chrome://help/locale/mail_help.html#read_write_and_manage_privilegesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Real"
+
          nc:name="Real"
+
 	 nc:link="chrome://help/locale/nav_help.html#RealSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="receiving_ICQ_messages"
-         nc:name="receiving ICQ messages"
-	 nc:link="chrome://help/locale/icq_help.html#receiving_ICQ_messagesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="reconnect"
+
          nc:name="reconnect"
+
 	 nc:link="chrome://help/locale/mail_help.html#reconnectSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="registration"
-         nc:name="registration"
-	 nc:link="chrome://help/locale/register_help.html#registrationSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="remove_bookmark"
+
          nc:name="remove bookmark"
+
 	 nc:link="chrome://help/locale/customize_help.html#remove_bookmarkSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="remove_mail_account"
+
          nc:name="remove mail account"
+
 	 nc:link="chrome://help/locale/mail_help.html#remove_mail_accountSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="removing_ICQ_contacts"
-         nc:name="removing ICQ contacts"
-	 nc:link="chrome://help/locale/icq_help.html#removing_ICQ_contactsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="return_receipts"
+
          nc:name="return receipts"
+
 	 nc:link="chrome://help/locale/mail_help.html#return_receiptsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="robin_foster_clark"
+
          nc:name="robin foster clark"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#robin_foster_clarkSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="san_serif"
+
          nc:name="san serif"
+
 	 nc:link="chrome://help/locale/customize_help.html#san_serifSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="save_image"
+
          nc:name="save image"
+
 	 nc:link="chrome://help/locale/nav_help.html#save_imageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="saving_mail"
+
          nc:name="saving mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#saving_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="saving_passwords"
+
          nc:name="saving passwords"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#saving_passwordsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="scheduling_appointments"
+
          nc:name="scheduling appointments"
+
 	 nc:link="chrome://help/locale/glossary.html#scheduling_appointmentsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="scheduling_meetings"
+
          nc:name="scheduling meetings"
+
 	 nc:link="chrome://help/locale/glossary.html#scheduling_meetingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="scope_in_LDAP"
+
          nc:name="scope in LDAP"
+
 	 nc:link="chrome://help/locale/mail_help.html#scope_in_LDAPSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="screen_name"
-         nc:name="screen name"
-	 nc:link="chrome://help/locale/im_help.html#screen_nameSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="search"
+
          nc:name="search"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#searchSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="search_engine"
+
          nc:name="search engine"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#search_engineSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="searching_from_the_Location_Bar"
+
          nc:name="searching from the Location Bar"
+
 	 nc:link="chrome://help/locale/nav_help.html#searching_from_the_Location_BarSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="searching_help"
+
          nc:name="searching help"
+
 	 nc:link="chrome://help/locale/help_help.html#searching_helpSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="searching_selected_words"
+
          nc:name="searching selected words"
+
 	 nc:link="chrome://help/locale/nav_help.html#searching_selected_wordsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="searching_text"
+
          nc:name="searching text"
+
 	 nc:link="chrome://help/locale/composer_help.html#searching_textSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="security"
+
          nc:name="security"
+
 	 nc:link="chrome://help/locale/mail_help.html#securitySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="security_settings"
+
          nc:name="security settings"
+
 	 nc:link="chrome://help/locale/mail_help.html#security_settingsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="see_mail"
+
          nc:name="see mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#see_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="send_mail"
+
          nc:name="send mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#send_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="sending_a_message_to_a_group"
+
          nc:name="sending a message to a group"
+
 	 nc:link="chrome://help/locale/mail_help.html#sending_a_message_to_a_groupSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="sending_ICQ_messages"
-         nc:name="sending ICQ messages"
-	 nc:link="chrome://help/locale/icq_help.html#sending_ICQ_messagesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="sending_problems_AIM"
-         nc:name="sending problems AIM"
-	 nc:link="chrome://help/locale/im_help.html#sending_problems_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="serif"
+
          nc:name="serif"
+
 	 nc:link="chrome://help/locale/customize_help.html#serifSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="server_certificate_problems"
+
          nc:name="server certificate problems"
+
 	 nc:link="chrome://help/locale/cert_dialog_help.html#server_certificate_problemsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="setting_ICQ_preferences"
-         nc:name="setting ICQ preferences"
-	 nc:link="chrome://help/locale/icq_help.html#setting_ICQ_preferencesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="setting_P3P_levels"
+
          nc:name="setting P3P levels"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#setting_P3P_levelsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="setting_up_Instant_Messenger"
-         nc:name="setting up Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#setting_up_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="sign_on_problems_AIM"
-         nc:name="sign on problems AIM"
-	 nc:link="chrome://help/locale/im_help.html#sign_on_problems_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="sign_up"
-         nc:name="sign up"
-	 nc:link="chrome://help/locale/register_help.html#sign_upSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="signing_email_messages"
+
          nc:name="signing email messages"
+
 	 nc:link="chrome://help/locale/mail_sec_help.html#signing_email_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="signing_on_to_Instant_Messenger"
-         nc:name="signing on to Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#signing_on_to_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="site_subdirectory"
+
          nc:name="site subdirectory"
+
 	 nc:link="chrome://help/locale/composer_help.html#site_subdirectorySDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="smart_card_backups"
+
          nc:name="smart card backups"
+
 	 nc:link="chrome://help/locale/certs_help.html#smart_card_backupsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="smilies"
-         nc:name="smilies"
-	 nc:link="chrome://help/locale/im_help.html#smiliesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="smilies_in_mail_messages"
+
          nc:name="smilies in mail messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#smilies_in_mail_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="SOCKS"
+
          nc:name="SOCKS"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#SOCKSSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="source_code"
+
          nc:name="source code"
+
 	 nc:link="chrome://help/locale/composer_help.html#source_codeSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="spellchecking_message_text"
+
          nc:name="spellchecking message text"
+
 	 nc:link="chrome://help/locale/mail_help.html#spellchecking_message_textSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="spellchecking_messages"
+
          nc:name="spellchecking messages"
+
 	 nc:link="chrome://help/locale/mail_help.html#spellchecking_messagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="start_page"
+
          nc:name="start page"
+
 	 nc:link="chrome://help/locale/customize_help.html#start_pageSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="starting_mail"
+
          nc:name="starting mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#starting_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="steve_rudman"
+
          nc:name="steve rudman"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#steve_rudmanSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="style_sheets"
+
          nc:name="style sheets"
+
 	 nc:link="chrome://help/locale/composer_help.html#style_sheetsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="styles_in_AIM"
-         nc:name="styles in AIM"
-	 nc:link="chrome://help/locale/im_help.html#styles_in_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="subscribing_to_IMAP_folders"
+
          nc:name="subscribing to IMAP folders"
+
 	 nc:link="chrome://help/locale/mail_help.html#subscribing_to_IMAP_foldersSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="symbols"
+
          nc:name="symbols"
+
 	 nc:link="chrome://help/locale/composer_help.html#symbolsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="synchronization"
+
          nc:name="synchronization"
+
 	 nc:link="chrome://help/locale/mail_help.html#synchronizationSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Tab_Key_Navigation"
+
          nc:name="Tab Key Navigation"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Tab_Key_NavigationSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="tabbed_browsing"
+
          nc:name="tabbed browsing"
+
 	 nc:link="chrome://help/locale/nav_help.html#tabbed_browsingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="talkback"
+
          nc:name="talkback"
+
 	 nc:link="chrome://help/locale/glossary.html#talkbackSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="taskbar"
+
          nc:name="taskbar"
+
 	 nc:link="chrome://help/locale/customize_help.html#taskbarSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="text_export"
+
          nc:name="text export"
+
 	 nc:link="chrome://help/locale/mail_help.html#text_exportSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="time_stamps_AIM"
-         nc:name="time stamps AIM"
-	 nc:link="chrome://help/locale/im_help.html#time_stamps_AIMSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Today_button"
-         nc:name="Today button"
-	 nc:link="chrome://help/locale/im_help.html#Today_buttonSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="urn:root">
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="tokens"
+
          nc:name="tokens"
+
 	 nc:link="chrome://help/locale/using_certs_help.html#tokensSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="turning_off_foreign_cookies"
+
          nc:name="turning off foreign cookies"
+
 	 nc:link="chrome://help/locale/using_priv_help.html#turning_off_foreign_cookiesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="turning_off_Java"
+
          nc:name="turning off Java"
+
 	 nc:link="chrome://help/locale/nav_help.html#turning_off_JavaSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="turning_off_JavaScript"
+
          nc:name="turning off JavaScript"
+
 	 nc:link="chrome://help/locale/nav_help.html#turning_off_JavaScriptSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="type_ahead_searching"
+
          nc:name="type ahead searching"
+
 	 nc:link="chrome://help/locale/nav_help.html#type_ahead_searchingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="type_down_addressing"
+
          nc:name="type down addressing"
+
 	 nc:link="chrome://help/locale/mail_help.html#type_down_addressingSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="uploading_web_pages"
+
          nc:name="uploading web pages"
+
 	 nc:link="chrome://help/locale/composer_help.html#uploading_web_pagesSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="URL_bar"
+
          nc:name="URL bar"
+
 	 nc:link="chrome://help/locale/nav_help.html#URL_barSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="using_Download_Manager"
+
          nc:name="using Download Manager"
+
 	 nc:link="chrome://help/locale/nav_help.html#using_Download_ManagerSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="using_mail"
+
          nc:name="using mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#using_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="validate_html_in_a_document"
+
          nc:name="validate html in a document"
+
 	 nc:link="chrome://help/locale/composer_help.html#validate_html_in_a_documentSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="VeriSign_server_certificate"
+
          nc:name="VeriSign server certificate"
+
 	 nc:link="chrome://help/locale/cert_dialog_help.html#VeriSign_server_certificateSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="view_certificate"
+
          nc:name="view certificate"
+
 	 nc:link="chrome://help/locale/cert_dialog_help.html#view_certificateSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="viewing_P3P_policy"
+
          nc:name="viewing P3P policy"
-	 nc:link="chrome://help/locale/page_info_help.html#viewing_P3P_policySDX"/>
+
+	 nc:link="chrome://help/locale/page_info_help.html#pageinfo_security"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="wallpaper"
+
          nc:name="wallpaper"
+
 	 nc:link="chrome://help/locale/nav_help.html#wallpaperSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="warning_AIM_users"
-         nc:name="warning AIM users"
-	 nc:link="chrome://help/locale/im_help.html#warning_AIM_usersSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
+
 
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="watch_thread"
+
          nc:name="watch thread"
+
 	 nc:link="chrome://help/locale/mail_help.html#watch_threadSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="web_page_editor"
+
          nc:name="web page editor"
+
 	 nc:link="chrome://help/locale/composer_help.html#web_page_editorSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="web_site_icons"
+
          nc:name="web site icons"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_appearance.html#web_site_iconsSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="whats_related"
+
          nc:name="whats related"
+
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#whats_relatedSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="Winamp"
+
          nc:name="Winamp"
+
 	 nc:link="chrome://help/locale/nav_help.html#WinampSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="work_offline"
+
          nc:name="work offline"
+
 	 nc:link="chrome://help/locale/customize_help.html#work_offlineSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="work_online"
+
          nc:name="work online"
+
 	 nc:link="chrome://help/locale/customize_help.html#work_onlineSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="write_mail"
+
          nc:name="write mail"
+
 	 nc:link="chrome://help/locale/mail_help.html#write_mailSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
 
+
+
 <rdf:Description about="urn:root">
+
    <nc:subheadings>
+
      <rdf:Seq><rdf:li>
+
        <rdf:Description ID="writers"
+
          nc:name="writers"
+
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#writersSDX"/>
+
      </rdf:li></rdf:Seq>
+
    </nc:subheadings>
+
 </rdf:Description>
+
+
 
 </rdf:RDF>
