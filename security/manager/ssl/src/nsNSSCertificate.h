@@ -59,6 +59,8 @@ public:
 
 private:
   CERTCertificate *mCert;
+
+  PRBool verifyFailed(PRUint32 *_verified);
 };
 
 class nsNSSCertificateDB : public nsIX509CertDB

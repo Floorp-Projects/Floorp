@@ -60,6 +60,17 @@ function AddCertChain(node, chain)
   }
 }
 
+function AddUsage(usage)
+{
+  var tree = document.getElementById("usage");
+  var row  = document.createElement("treerow");
+  var cell = document.createElement("treecell");
+  cell.setAttribute("class", "propertylist");
+  cell.setAttribute("value", usage);
+  row.appendChild(cell);
+  tree.appendChild(row);
+}
+
 function setWindowName()
 {
   //  Get the cert from the cert database
@@ -105,6 +116,39 @@ function setWindowName()
   }
   } catch (e) {}
   AddCertChain("chain", chain.reverse());
+  
+  //  Verification and usage
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var verifystr = "";
+  var o1 = {};
+  var o2 = {};
+  var o3 = {};
+  cert.getUsages(o1, o2, o3);
+  var verifystate = o1.value;
+  var count = o2.value;
+  var usageList = o3.value;
+  if (verifystate == cert.VERIFIED_OK) {
+    verifystr = bundle.GetStringFromName('certVerified');
+  } else if (verifystate == cert.CERT_REVOKED) {
+    verifystr = bundle.GetStringFromName('certNotVerified_CertRevoked');
+  } else if (verifystate == cert.CERT_EXPIRED) {
+    verifystr = bundle.GetStringFromName('certNotVerified_CertExpired');
+  } else if (verifystate == cert.CERT_NOT_TRUSTED) {
+    verifystr = bundle.GetStringFromName('certNotVerified_CertNotTrusted');
+  } else if (verifystate == cert.ISSUER_NOT_TRUSTED) {
+    verifystr = bundle.GetStringFromName('certNotVerified_IssuerNotTrusted');
+  } else if (verifystate == cert.ISSUER_UNKNOWN) {
+    verifystr = bundle.GetStringFromName('certNotVerified_IssuerUnknown');
+  } else if (verifystate == cert.INVALID_CA) {
+    verifystr = bundle.GetStringFromName('certNotVerified_CAInvalid');
+  } else { /* if (verifystate == cert.NOT_VERIFIED_UNKNOWN) */
+    verifystr = bundle.GetStringFromName('certNotVerified_Unknown');
+  }
+  var verified=document.getElementById('verified');
+  verified.setAttribute("value", verifystr);
+  for (var i=0; i<count; i++) {
+    AddUsage(usageList[i]);
+  }
 
   //  Common Name
   var cn=document.getElementById('commonname');
