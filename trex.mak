@@ -181,9 +181,9 @@ pull_platform::
     @echo +++ trex.mak: checking out platform with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
     -$(CVS) $(CONFIG_BRANCH)  $(CONFIG_DIR)
-    -$(CVS) $(MOZ_TOP)/raptor.mak
+    -$(CVS) $(MOZ_TOP)/nglayout.mak
     cd $(MOZ_SRC)\$(MOZ_TOP)
-    nmake -f raptor.mak pull_all
+    nmake -f nglayout.mak pull_all
     cd $(MOZ_SRC)\.
     
 
@@ -207,7 +207,7 @@ build_all:: build_platform build_trex
 #    @$(MMAKE) install $(MAKEDIR) $(PLATFORM_DIRS)
 build_platform:: 
     cd $(MOZ_SRC)\$(MOZ_TOP)\.
-    nmake -f raptor.mak all
+    nmake -f nglayout.mak all
     cd $(MOZ_SRC)\.
 
 
