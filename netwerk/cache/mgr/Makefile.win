@@ -27,6 +27,10 @@ MODULE = nkcache
 
 LIBRARY_NAME = nkcachemgr_s
 
+EXPORTS =                                    \
+	.\nsCacheManager.h                   \
+	$(NULL)
+
 CPP_OBJS =                                   \
 	.\$(OBJDIR)\nsCacheManager.obj       \
 	.\$(OBJDIR)\nsCachedNetData.obj      \
