@@ -2627,10 +2627,10 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
     nsIContent* content = nsnull;
     nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
 
-    if (isContent != nsnull)
+    if (NS_SUCCEEDED(isContent) && content)
     {
       PRBool  isInSelection = IsInSelection(sel,content);
-      
+
       if (isInSelection == PR_TRUE)
       {
         BeginConvertToXIF(aConverter,aNode);
@@ -2654,8 +2654,9 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 
 void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-  nsXIFConverter  converter(aBuffer);
-  // call the function
+  printf("nsDocument::CreateXIF\n");
+
+  nsXIFConverter converter(aBuffer);
 
   converter.SetSelection(aSelection);
 
@@ -2667,17 +2668,50 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.BeginStartTag("document_info");
   converter.AddAttribute(nsString("charset"),charset);
   converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
-    
-  
+
   converter.AddEndTag("section_head");
   converter.AddStartTag("section_body");
 
   nsIDOMElement* root = nsnull;
   if (NS_OK == GetDocumentElement(&root)) 
   {  
+#if 1
     ToXIF(converter,root);
+#else
+    // Make a content iterator over the selection:
+    nsCOMPtr<nsIContentIterator> iter;
+    nsresult res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                      nsIContentIterator::GetIID(), 
+                                                      getter_AddRefs(iter));
+    if ((NS_SUCCEEDED(res)) && iter)
+    {
+      nsCOMPtr<nsIContent> rootContent (do_QueryInterface(root));
+      if (rootContent)
+      {
+        iter->Init(rootContent);
+        // loop through the content iterator for each content node
+        while (NS_COMFALSE == iter->IsDone())
+        {
+          nsCOMPtr<nsIContent> content;
+          res = iter->CurrentNode(getter_AddRefs(content));
+          if (NS_FAILED(res))
+            break;
+          //content->BeginConvertToXIF(converter);
+          content->ConvertContentToXIF(converter);
+          //content->FinishConvertToXIF(converter);
+#if 0
+          nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
+          if (node)
+            ToXIF(converter, node);
+#endif
+          iter->Next();
+        }
+      }
+    }
+#endif
     NS_RELEASE(root);
   }
+
   converter.AddEndTag("section_body");
 
   converter.AddEndTag("section");
@@ -2904,31 +2938,13 @@ nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
  *  @param   param -- description
  *  @return  PR_TRUE if the content is found within the selection
  */
-PRBool nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* aContent) const
+PRBool
+nsDocument::IsInSelection(nsIDOMSelection* aSelection, const nsIContent* aContent) const
 {
-  PRBool          result = PR_FALSE;
-  
-  if (aSelection != nsnull) {
-    //traverses through an iterator to see if the acontent is in the ranges
-    nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(aSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))
-        && enumerator)
-    {
-      for (enumerator->First();NS_OK != enumerator->IsDone() ; enumerator->Next()) {
-        nsIDOMRange* range = nsnull;
-        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range)))
-        {
-          // VC build won't cast away const automatically:
-          nsIContent* nonConstContent = (nsIContent*)aContent;
-          return IsNodeIntersectsRange(nonConstContent, range);
-          NS_RELEASE(range);
-        }
-        if (result) break;
-      }
-      NS_IF_RELEASE(enumerator);
-    }
-  }
-  return result;
+  PRBool aYes = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> node (do_QueryInterface(aContent));
+  aSelection->ContainsNode(node, PR_FALSE, &aYes);
+  return aYes;
 }
 
 nsIContent* nsDocument::GetPrevContent(const nsIContent *aContent) const

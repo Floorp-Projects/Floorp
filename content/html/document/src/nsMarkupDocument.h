@@ -49,8 +49,6 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
-  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   
   // XXX Temp hack: moved from nsDocument

@@ -158,9 +158,9 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
  
   PRInt32     count = GetNumberOfStyleSheets();
 
-  for (PRInt32 index = 0; index < count; index++)
+  for (PRInt32 indx = 0; indx < count; indx++)
   {
-    nsIStyleSheet*          sheet = GetStyleSheetAt(index);
+    nsIStyleSheet*          sheet = GetStyleSheetAt(indx);
     nsICSSStyleSheet*       cssSheet = nsnull;
     
     if (sheet != nsnull)
@@ -258,42 +258,4 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
   nsDocument::FinishConvertToXIF(aConverter,aNode);
 }
 
-void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
-{
-  nsIDOMSelection* sel = aConverter.GetSelection();
-
-  if (sel != nsnull)
-  {
-    nsIContent* content = nsnull;
-
-    if (NS_SUCCEEDED(aNode->QueryInterface(kIContentIID, (void**)&content)))
-    {
-      PRBool  isInSelection = IsInSelection(sel,content);
-      
-      if (isInSelection == PR_TRUE)
-      {
-        BeginConvertToXIF(aConverter,aNode);
-        ConvertChildrenToXIF(aConverter,aNode);
-        FinishConvertToXIF(aConverter,aNode);
-      }
-      else
-      {
-        ConvertChildrenToXIF(aConverter,aNode);
-      }
-      NS_RELEASE(content);
-    }
-  }
-  else
-  {
-    BeginConvertToXIF(aConverter,aNode);
-    ConvertChildrenToXIF(aConverter,aNode);
-    FinishConvertToXIF(aConverter,aNode);
-  }
-}
-
-
-void nsMarkupDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
-{
-  nsDocument::CreateXIF(aBuffer,aSelection);
-}
 
