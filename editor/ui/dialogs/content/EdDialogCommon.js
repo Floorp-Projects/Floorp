@@ -623,39 +623,6 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   return color;
 }
 
-// Test for valid image by sniffing out the extension
-function IsValidImage(imageName)
-{
-  var image = TrimString(imageName);
-  if ( !image )
-    return false;
-
-  /* look for an extension */
-  var tailindex = image.lastIndexOf(".");
-  if ( tailindex == 0 || tailindex == -1 ) /* -1 is not found */
-    return false;
-
-  /* move past period, get the substring from the first character after the '.' to the last character (length) */
-  tailindex = tailindex + 1;
-  var type = image.substring(tailindex,image.length);
-
-  /* convert extension to lower case */
-  if (type)
-    type = type.toLowerCase();
-
-  // TODO: Will we convert .BMPs to a web format?
-  switch( type )
-  {
-    case "gif":
-    case "jpg":
-    case "jpeg":
-    case "png":
-      return true;
-      break;
-  }
-  return false;
-}
-
 function InitMoreFewer()
 {
   // Set SeeMore bool to the OPPOSITE of the current state,
@@ -671,19 +638,19 @@ function onMoreFewer()
   if (SeeMore)
   {
     gDialog.MoreSection.setAttribute("collapsed","true");
-    window.sizeToContent();
     gDialog.MoreFewerButton.setAttribute("more","0");
     gDialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
     SeeMore = false;
+//    window.sizeToContent();
   }
   else
   {
     gDialog.MoreSection.removeAttribute("collapsed");
-    window.sizeToContent();
     gDialog.MoreFewerButton.setAttribute("more","1");
     gDialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
     SeeMore = true;
   }
+  window.sizeToContent();
 }
 
 function SwitchToValidatePanel()
