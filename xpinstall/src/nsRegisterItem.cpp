@@ -107,7 +107,7 @@ PRInt32 nsRegisterItem::Complete()
     if ( reg && !(mChromeType & CHROME_DELAYED) )
     {
         if (mChromeType & CHROME_SKIN)
-            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile);
+            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile, PR_FALSE);
 
         if (mChromeType & CHROME_LOCALE)
             rv = reg->InstallLocale(mURL.GetBuffer(), isProfile);

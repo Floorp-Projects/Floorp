@@ -94,6 +94,7 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packages);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, package);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, locType);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, allowScripts);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -241,6 +242,9 @@ nsChromeRegistry::nsChromeRegistry()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
     rv = mRDFService->GetResource(kURICHROME_locType, getter_AddRefs(mLocType));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+    rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
   }
 }
@@ -1439,7 +1443,8 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
    
 NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                                                 const nsCString& aBaseURL,
-                                                PRBool aUseProfile, PRBool aRemove)
+                                                PRBool aUseProfile, PRBool aAllowScripts,
+                                                PRBool aRemove)
 {
   // XXX don't allow local chrome overrides of install chrome!
 
@@ -1493,6 +1498,12 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   nsAutoString unistr;unistr.AssignWithConversion(aBaseURL);
   nsCOMPtr<nsIRDFLiteral> baseLiteral;
   mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(baseLiteral));
+
+  // Get the literal for our script access.
+  nsAutoString scriptstr;
+  scriptstr.AssignWithConversion("false");
+  nsCOMPtr<nsIRDFLiteral> scriptLiteral;
+  mRDFService->GetLiteral(scriptstr.GetUnicode(), getter_AddRefs(scriptLiteral));
 
   // Build the prefix string. Only resources with this prefix string will have their
   // assertions copied.
@@ -1619,8 +1630,10 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 
           if (arc == mPackages) {
             // We are the main entry for a skin/locale.
-            // Set up our loctype  
+            // Set up our loctype and our script access 
             nsChromeRegistry::UpdateArc(installSource, resource, mLocType, locLiteral, aRemove);
+            if (aProviderType.Equals(nsCAutoString("skin")) && !aAllowScripts)
+              nsChromeRegistry::UpdateArc(installSource, resource, mAllowScripts, scriptLiteral, aRemove);
           }
 
           nsCOMPtr<nsIRDFNode> newTarget;
@@ -1646,40 +1659,40 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile, PRBool aAllowScripts)
 {
   nsCAutoString provider("skin");
-  return InstallProvider(provider, aBaseURL, aUseProfile, PR_FALSE);
+  return InstallProvider(provider, aBaseURL, aUseProfile, aAllowScripts, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallLocale(const char* aBaseURL, PRBool aUseProfile)
 {
   nsCAutoString provider("locale");
-  return InstallProvider(provider, aBaseURL, aUseProfile, PR_FALSE);
+  return InstallProvider(provider, aBaseURL, aUseProfile, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallPackage(const char* aBaseURL, PRBool aUseProfile)
 {
   nsCAutoString provider("package");
-  return InstallProvider(provider, aBaseURL, aUseProfile, PR_FALSE);
+  return InstallProvider(provider, aBaseURL, aUseProfile, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)
 {
   nsCAutoString provider("skin");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE);
+  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const PRUnichar* aLocaleName, PRBool aUseProfile)
 {
   nsCAutoString provider("locale");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE);
+  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, PRBool aUseProfile)
 {
   nsCAutoString provider("package");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE);
+  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -1945,6 +1958,59 @@ void nsChromeRegistry::GetUserSheetURL(nsCString & aURL)
   aURL.Append("user.css");
 }
 
+NS_IMETHODIMP nsChromeRegistry::AllowScriptsForSkin(nsIURI* aChromeURI, PRBool *aResult)
+{
+  *aResult = PR_TRUE;
+
+  // split the url
+  nsCAutoString package, provider, file;
+  nsresult rv;
+  rv = SplitURL(aChromeURI, package, provider, file);
+  if (NS_FAILED(rv)) return NS_OK;
+
+  // verify it's a skin url
+  if (!provider.Equals("skin"))
+    return NS_OK;
+
+  // XXX could factor this with selectproviderforpackage
+  // get the selected skin resource for the package
+  nsCOMPtr<nsIRDFNode> selectedProvider;
+  
+  nsCAutoString resourceStr("urn:mozilla:package:");
+  resourceStr += package;
+
+  // Obtain the resource.
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource(resourceStr, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }  
+
+  if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, mSelectedSkin, PR_TRUE, getter_AddRefs(selectedProvider))))
+    return NS_OK;
+
+  if (!selectedProvider)
+    FindProvider(package, provider, mSelectedSkin, getter_AddRefs(selectedProvider));
+  if (!selectedProvider)
+    return NS_OK;
+
+  resource = do_QueryInterface(selectedProvider);
+  if (!resource)
+    return NS_OK;
+
+  // get its script access
+  nsCAutoString scriptAccess;
+  nsChromeRegistry::FollowArc(mChromeDataSource,
+                              scriptAccess, 
+                              resource,
+                              mAllowScripts);
+  if (!scriptAccess.IsEmpty())
+    *aResult = PR_FALSE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsChromeRegistry::CheckForNewChrome() {
 
@@ -2057,7 +2123,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
 
     // process the line
     if (skin.Equals(chromeType))
-      InstallSkin(chromeURL, isProfile);
+      InstallSkin(chromeURL, isProfile, PR_FALSE);
     else if (content.Equals(chromeType))
       InstallPackage(chromeURL, isProfile);
     else if (locale.Equals(chromeType))

@@ -158,9 +158,9 @@ nsHTMLLegendElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLLegendElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLLegendElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP

@@ -63,8 +63,8 @@ public:
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
     return mInner.GetDocument(aResult);
   }
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) {
-    return mInner.SetDocument(aDocument, aDeep);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers) {
+    return mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
   }
   NS_IMETHOD GetParent(nsIContent*& aResult) const {
     return mInner.GetParent(aResult);

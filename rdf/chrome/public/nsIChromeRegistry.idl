@@ -79,7 +79,7 @@ interface nsIChromeRegistry : nsISupports
 	void deselectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
 
   /* Installation APIs */
-  void installSkin(in string baseURL, in boolean useProfile);
+  void installSkin(in string baseURL, in boolean useProfile, in boolean allowScripts);
   void uninstallSkin(in wstring skinName, in boolean useProfile);
 
   void installLocale(in string baseURL, in boolean useProfile);
@@ -89,6 +89,8 @@ interface nsIChromeRegistry : nsISupports
   void uninstallPackage(in wstring packageName, in boolean useProfile);
 
   void getBackstopSheets(out nsISupportsArray styleSheets);
+
+  boolean allowScriptsForSkin(in nsIURI url);
 
   void checkForNewChrome();
 };

@@ -755,7 +755,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
     content->SetContentID(id);
-    content->SetDocument(mDocument, PR_FALSE);
+    content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
     // Set the attributes on the new content element
     result = AddAttributes(aNode, content, isHTML);
@@ -940,7 +940,7 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
       domComment->AppendData(text);
       NS_RELEASE(domComment);
 
-      comment->SetDocument(mDocument, PR_FALSE);
+      comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(comment);
     }
     NS_RELEASE(comment);
@@ -967,7 +967,7 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
       domCDATA->AppendData(text);
       NS_RELEASE(domCDATA);
 
-      cdata->SetDocument(mDocument, PR_FALSE);
+      cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(cdata);
     }
     NS_RELEASE(cdata);
@@ -1267,7 +1267,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   ParseProcessingInstruction(text, target, data);
   result = NS_NewXMLProcessingInstruction(&node, target, data);
   if (NS_OK == result) {
-    node->SetDocument(mDocument, PR_FALSE);
+    node->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     result = AddContentAsLeaf(node);
   }
 
@@ -1327,7 +1327,7 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
       rv = NS_NewTextNode(&content);
       if (NS_OK == rv) {
         // Set the content's document
-        content->SetDocument(mDocument, PR_FALSE);
+        content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         // Set the text in the text node
         static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);

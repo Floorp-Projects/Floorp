@@ -216,9 +216,9 @@ nsHTMLTextAreaElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLTextAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP

@@ -816,7 +816,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 
   if (nsnull != mRootContent) {
     // Ensure that document is nsnull to allow validity checks on content
-    mRootContent->SetDocument(nsnull, PR_TRUE);
+    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     ContentRemoved(nsnull, mRootContent, 0);
     NS_IF_RELEASE(mRootContent);
   }
@@ -1477,7 +1477,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // actually set the script context owner to null so that the
   // content elements can remove references to their script objects.
   if ((nsnull == aScriptGlobalObject) && (nsnull != mRootContent)) {
-    mRootContent->SetDocument(nsnull, PR_TRUE);
+    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
@@ -2444,7 +2444,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
   }
 
   if (NS_OK == result) {
-    content->SetDocument(this, PR_TRUE);
+    content->SetDocument(this, PR_TRUE, PR_TRUE);
     *aReturn = aNewChild;
     NS_ADDREF(aNewChild);
   }
@@ -2515,8 +2515,8 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   }
 
   if (NS_OK == result) {
-    content->SetDocument(this, PR_TRUE);
-    refContent->SetDocument(nsnull, PR_TRUE);
+    content->SetDocument(this, PR_TRUE, PR_TRUE);
+    refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     *aReturn = aNewChild;
     NS_ADDREF(aNewChild);
   }
@@ -2567,7 +2567,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   }
 
   if (NS_OK == result) {
-    content->SetDocument(nsnull, PR_TRUE);
+    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     *aReturn = aOldChild;
   }
   else {

@@ -1182,7 +1182,7 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMN
             // done now. We do it -before- inserting into the content
             // model, because some frames assume that the document
             // will have been set.
-            rv = newcontent->SetDocument(mDocument, PR_TRUE);
+            rv = newcontent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
 
             rv = InsertChildAt(newcontent, pos, PR_TRUE);
@@ -1201,7 +1201,7 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMN
         // now. We do it -before- appending to the content model,
         // because some frames assume that they can get to the
         // document right away.
-        rv = newcontent->SetDocument(mDocument, PR_TRUE);
+        rv = newcontent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
         rv = AppendChildTo(newcontent, PR_TRUE);
@@ -1246,7 +1246,7 @@ nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMN
                 // is done now. We do it -before- replacing the nodein
                 // the content model, because some frames assume that
                 // the document will have been set.
-                rv = newelement->SetDocument(mDocument, PR_TRUE);
+                rv = newelement->SetDocument(mDocument, PR_TRUE, PR_TRUE);
                 if (NS_FAILED(rv)) return rv;
 
                 rv = ReplaceChildAt(newelement, pos, PR_TRUE);
@@ -2403,9 +2403,9 @@ nsXULElement::GetDocument(nsIDocument*& aResult) const
     NS_IF_ADDREF(aResult);
     return NS_OK;
 }
-
+  
 NS_IMETHODIMP
-nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
     nsresult rv;
 
@@ -2476,9 +2476,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                 PRBool reset = PR_FALSE;
 
                 if (nameSpaceID == kNameSpaceID_None) {
-                    nsIID iid;
-                    rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
-                    if (NS_FAILED(rv)) return rv;
+                    if (aCompileEventHandlers) {
+                        nsIID iid;
+                        rv = gXULUtils->GetEventHandlerIID(attr, &iid, &reset);
+                        if (NS_FAILED(rv)) return rv;
+                    }
 
                     if (! reset) {
                         if ((attr.get() == kPopupAtom) ||
@@ -2520,7 +2522,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             if (! child)
                 continue;
 
-            child->SetDocument(aDocument, aDeep);
+            child->SetDocument(aDocument, aDeep, aCompileEventHandlers);
         }
     }
 
@@ -2625,7 +2627,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         //nsRange::OwnerChildInserted(this, aIndex);
 
         // N.B. that this is "shallow"!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         if (aNotify && mDocument) {
                 mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
@@ -2668,7 +2670,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
         // N.B. that we only do a "shallow" SetDocument()
         // here. Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         if (aNotify && mDocument) {
             mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
@@ -2676,7 +2678,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
         // This will cause the script object to be unrooted for each
         // element in the subtree.
-        oldKid->SetDocument(nsnull, PR_TRUE);
+        oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);
@@ -2704,7 +2706,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         // ranges don't need adjustment since new child is at end of list
 
         // N.B. that this is only "shallow". Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         if (aNotify && mDocument) {
             PRUint32 cnt;
@@ -2813,7 +2815,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
         // This will cause the script object to be unrooted for each
         // element in the subtree.
-        oldKid->SetDocument(nsnull, PR_TRUE);
+        oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);

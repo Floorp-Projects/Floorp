@@ -88,7 +88,7 @@ public:
 
   // Implementation for nsIContent
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
   NS_IMETHOD GetParent(nsIContent*& aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
 
@@ -359,7 +359,7 @@ nsAttributeContent::GetDocument(nsIDocument*& aResult) const
 
 
 nsresult
-nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   mDocument = aDocument;
   //NS_IF_ADDREF(mDocument);

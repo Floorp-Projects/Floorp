@@ -233,7 +233,7 @@ nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   // The document gets set to null before it is destroyed,
   // so we unregister the the access key here (if it has one)
@@ -242,7 +242,7 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult res = mInner.SetDocument(aDocument, aDeep);
+  nsresult res = mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   // Register the access key here (if it has one) 
   // if the document isn't null

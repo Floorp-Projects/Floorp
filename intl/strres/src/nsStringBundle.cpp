@@ -142,6 +142,8 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
+  if (!mProps)
+    return NS_OK;
   NS_ENSURE_TRUE(mProps, NS_ERROR_FAILURE);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao_

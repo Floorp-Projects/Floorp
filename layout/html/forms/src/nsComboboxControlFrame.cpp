@@ -2165,7 +2165,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
     /*
-    labelContent->SetDocument(doc, PR_FALSE);
+    labelContent->SetDocument(doc, PR_FALSE, PR_TRUE);
     mContent->AppendChildTo(labelContent, PR_FALSE);
     */
 

@@ -1409,7 +1409,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), nodeInfo);
     if (NS_FAILED(rv)) { return rv; }
     if (!headElement) { return NS_ERROR_NULL_POINTER; }
-    headElement->SetDocument(doc, PR_FALSE);
+    headElement->SetDocument(doc, PR_FALSE, PR_TRUE);
       // create the body
 
     nimgr->GetNodeInfo(nsHTMLAtoms::body, nsnull, kNameSpaceID_None,
@@ -1418,7 +1418,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     rv = NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), nodeInfo);
     if (NS_FAILED(rv)) { return rv; }
     if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
-    bodyElement->SetDocument(doc, PR_FALSE);
+    bodyElement->SetDocument(doc, PR_FALSE, PR_TRUE);
       // put the head and body into the root
     rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
     if (NS_FAILED(rv)) { return rv; }
@@ -2577,7 +2577,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
           if (!content) { return NS_ERROR_NULL_POINTER; }
           nsIDocument* doc;
           mContent->GetDocument(doc);
-          content->SetDocument(doc, PR_FALSE);
+          content->SetDocument(doc, PR_FALSE, PR_TRUE);
           NS_RELEASE(doc);
           mContent->AppendChildTo(content, PR_FALSE);
 

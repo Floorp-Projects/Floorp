@@ -125,7 +125,7 @@ private:
 
   NS_IMETHOD InstallProvider(const nsCString& aProviderType,
                              const nsCString& aBaseURL,
-                             PRBool aUseProfile, PRBool aRemove);
+                             PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
 
   void ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
@@ -150,6 +150,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mPackage;
   nsCOMPtr<nsIRDFResource> mName;
   nsCOMPtr<nsIRDFResource> mLocType;
+  nsCOMPtr<nsIRDFResource> mAllowScripts;
 
   // Style Sheets
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;

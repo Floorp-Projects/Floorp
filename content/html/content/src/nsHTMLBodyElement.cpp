@@ -125,7 +125,7 @@ public:
   nsBodyInner();
   virtual ~nsBodyInner();
 
-  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
+  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
 
   BodyRule*       mContentStyleRule;
   BodyFixupRule*  mInlineStyleRule;
@@ -153,7 +153,7 @@ nsBodyInner::~nsBodyInner()
   }
 }
 
-nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   if (nsnull != mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
@@ -165,7 +165,7 @@ nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mInlineStyleRule->mSheet = nsnull;
     NS_RELEASE(mInlineStyleRule); // destroy old style rule since the sheet will probably change
   }
-  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep);
+  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 }
 
 //----------------------------------------------------------------------

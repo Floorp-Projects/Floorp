@@ -1016,11 +1016,11 @@ void
 nsXULDocument::SetRootContent(nsIContent* aRoot)
 {
     if (mRootContent) {
-        mRootContent->SetDocument(nsnull, PR_TRUE);
+        mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     }
     mRootContent = aRoot;
     if (mRootContent) {
-        mRootContent->SetDocument(this, PR_TRUE);
+        mRootContent->SetDocument(this, PR_TRUE, PR_TRUE);
     }
 }
 
@@ -1299,7 +1299,7 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         // that the content elements can remove references to their
         // script objects.
         if (mRootContent)
-            mRootContent->SetDocument(nsnull, PR_TRUE);
+            mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
         // Break circular reference for the case where the currently
         // focused window is ourself.
@@ -2157,7 +2157,7 @@ nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
 
     // Set the document.
     nsCOMPtr<nsIContent> formContent = do_QueryInterface(aForm);
-    formContent->SetDocument(this, PR_TRUE);
+    formContent->SetDocument(this, PR_TRUE, PR_TRUE);
 
     // Forms are containers, and as such take up a bit of space.
     // Set a style attribute to keep the hidden form from showing up.
@@ -5357,7 +5357,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (! result)
             return NS_ERROR_UNEXPECTED;
 
-        rv = result->SetDocument(this, PR_FALSE);
+        rv = result->SetDocument(this, PR_FALSE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
         rv = AddAttributes(aPrototype, result);
@@ -5394,7 +5394,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (! result)
             return NS_ERROR_UNEXPECTED;
 
-        rv = result->SetDocument(this, PR_FALSE);
+        rv = result->SetDocument(this, PR_FALSE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
         rv = AddAttributes(aPrototype, result);
@@ -6131,7 +6131,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 
     NS_ASSERTION(doc != nsnull, "merging into null document");
 
-    rv = aChild->SetDocument(doc, PR_TRUE);
+    rv = aChild->SetDocument(doc, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

@@ -261,7 +261,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  root->SetDocument(this, PR_FALSE);
+  root->SetDocument(this, PR_FALSE, PR_TRUE);
   SetRootContent(root);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
@@ -274,7 +274,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  body->SetDocument(this, PR_FALSE);
+  body->SetDocument(this, PR_FALSE, PR_TRUE);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::p, nsnull, kNameSpaceID_None,
                                      *getter_AddRefs(nodeInfo));
@@ -285,7 +285,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  center->SetDocument(this, PR_FALSE);
+  center->SetDocument(this, PR_FALSE, PR_TRUE);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
                                      kNameSpaceID_None,
@@ -297,7 +297,7 @@ nsImageDocument::CreateSyntheticDocument()
   if (NS_OK != rv) {
     return rv;
   }
-  image->SetDocument(this, PR_FALSE);
+  image->SetDocument(this, PR_FALSE, PR_TRUE);
 
   char* src;
   mDocumentURL->GetSpec(&src);

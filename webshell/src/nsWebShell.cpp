@@ -1683,9 +1683,9 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   // (5) hook up the document and its content
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
   if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
-  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE, PR_TRUE), NS_ERROR_FAILURE);
   doc->SetRootContent(rootContent);
-  rootContent->SetDocument(doc, PR_TRUE);
+  rootContent->SetDocument(doc, PR_TRUE, PR_TRUE);
 
   // (6) reflow the document
   PRInt32 i;

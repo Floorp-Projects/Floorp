@@ -176,9 +176,9 @@ nsHTMLFieldSetElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLFieldSetElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLFieldSetElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP
