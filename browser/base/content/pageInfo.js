@@ -22,6 +22,7 @@
 # Contributor(s): smorrison@gte.com
 #   Terry Hayes <thayes@netscape.com>
 #   Daniel Brooks <db48x@yahoo.com>
+#   Florian QUEZE <f.qu@laposte.net>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -870,16 +871,27 @@ function makePreview(row)
   var physWidth = 0, physHeight = 0;
 
   if ((item instanceof nsILinkElement || item instanceof nsIInputElement || 
-       item instanceof nsIImageElement || isBG) && isProtocolAllowed)  
+       item instanceof nsIImageElement || isBG) && isProtocolAllowed)
   {
     newImage.src = absoluteURL;
     physWidth = newImage.width;
     physHeight = newImage.height;
 
-    if ("width" in item && item.width)
-      newImage.width = item.width;
-    if ("height" in item && item.height)
-      newImage.height = item.height;
+    // "width" and "height" attributes must be set to newImage,
+    // even if there is no "width" or "height attribute in item;
+    // otherwise, the preview image cannot be displayed correctly.
+    if (!isBG)
+    {
+      newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
+      newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
+    }
+    else
+    {
+      // the Width and Height of an HTML tag should not be use for its background image
+      // (for example, "table" can have "width" or "height" attributes)
+      newImage.width = newImage.naturalWidth;
+      newImage.height = newImage.naturalHeight;
+    }
   } 
   else 
   {
