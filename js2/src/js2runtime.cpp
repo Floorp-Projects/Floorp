@@ -3362,12 +3362,9 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       mLocals(NULL),
       mArgumentBase(NULL),
       mReader(NULL),
-      mGlobal(global),
-
       mErrorReporter(NULL),
-      argumentFormatMap(NULL)
-
-
+      argumentFormatMap(NULL),
+      mGlobal(global)
 
 {
     uint32 i;

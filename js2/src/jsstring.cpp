@@ -272,7 +272,7 @@ static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, 
     if (JSValue::getType(searchValue) == RegExp_Type) {
 	REState *pState = (checked_cast<JSRegExpInstance *>(JSValue::instance(searchValue)))->mRegExp;
 	REMatchState *match;
-	uint32 m = pState->parenCount;
+//	uint32 m = pState->parenCount;
 	String newString;
         int32 lastIndex = 0;
 
