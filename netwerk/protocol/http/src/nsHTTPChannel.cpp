@@ -2604,7 +2604,7 @@ nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
         if (trans)
             trans->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
         else
-        if (mCacheEntry)
+        if (!mSecurityInfo && mCacheEntry)
             mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
         if (mSecurityInfo)
