@@ -40,6 +40,7 @@
 + locale/global/dialog.properties               (@AB_CD@/chrome/global/dialog.properties)
 + locale/global/tabbrowser.dtd                  (@AB_CD@/chrome/global/tabbrowser.dtd)
 + locale/global/tabbrowser.properties           (@AB_CD@/chrome/global/tabbrowser.properties)
++ locale/global/tree.dtd                        (@AB_CD@/chrome/global/tree.dtd)
 + locale/global/textcontext.dtd                 (@AB_CD@/chrome/global/textcontext.dtd)
 + locale/global/viewSource.dtd                  (@AB_CD@/chrome/global/viewSource.dtd)
 + locale/global/viewSource.properties           (@AB_CD@/chrome/global/viewSource.properties)
