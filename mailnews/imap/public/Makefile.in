@@ -22,16 +22,19 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS= \
-			nsIImapUrl.h			\
-			nsIImapProtocol.h		\
-			nsIImapLog.h			\
-			nsIIMAPHostSessionList.h \
-			nsIImapMailfolderSink.h \
-			nsIImapMessageSink.h \
-			nsIImapExtensionSink.h \
-			nsIImapMiscellaneousSink.h \
-		$(NULL)
+EXPORTS= 								\
+			nsIImapUrl.h				\
+			nsIImapProtocol.h			\
+			nsIImapLog.h				\
+			nsIIMAPHostSessionList.h 	\
+			nsIImapMailFolderSink.h 	\
+			nsIImapMessageSink.h 		\
+			nsIImapExtensionSink.h 		\
+			nsIImapMiscellaneousSink.h 	\
+			nsIImapFlagAndUidState.h	\
+			nsIImapIncomingServer.h		\
+			nsIImapService.h			\
+			$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
