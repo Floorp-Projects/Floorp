@@ -63,7 +63,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD PagedUpDown();
 
 protected:
@@ -72,6 +72,8 @@ protected:
 
   virtual PRBool RowGroupReceivesExcessSpace();
   
+  void DestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose);
+
   NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,

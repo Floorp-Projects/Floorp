@@ -523,7 +523,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     Invalidate(changeRect, PR_TRUE);
 
     if (mScrollbarListener)
-      mScrollbarListener->PositionChanged(mCurPos, curpos);
+      mScrollbarListener->PositionChanged(*aPresContext, mCurPos, curpos);
     
     mCurPos = curpos;
 

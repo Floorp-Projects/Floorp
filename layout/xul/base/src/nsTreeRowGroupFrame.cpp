@@ -18,6 +18,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsINameSpaceManager.h"
 #include "nsIFrameReflow.h"
 #include "nsTreeFrame.h"
 #include "nsIPresContext.h"
@@ -89,19 +90,70 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsTableRowGroupFrame::QueryInterface(aIID, aInstancePtr);   
 }
 
+void nsTreeRowGroupFrame::DestroyRows(nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+{
+  // We need to destroy frames until our row count has been properly
+  // reduced.  A reflow will then pick up and create the new frames.
+  nsIFrame* childFrame = GetFirstFrame();
+  while (childFrame && rowsToLose > 0) {
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
+    {
+      PRInt32 rowGroupCount;
+      ((nsTreeRowGroupFrame*)childFrame)->GetRowCount(rowGroupCount);
+      if ((rowGroupCount - rowsToLose) > 0) {
+        // The row group will destroy as many rows as it can, and it will
+        // modify rowsToLose.
+        ((nsTreeRowGroupFrame*)childFrame)->DestroyRows(aPresContext, rowsToLose);
+        return;
+      }
+      else rowsToLose = 0;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      // Lost a row.
+      rowsToLose--;
+    }
+    
+    nsIFrame* nextFrame;
+    GetNextFrame(childFrame, &nextFrame);
+    mFrames.DeleteFrame(aPresContext, childFrame);
+    mTopFrame = childFrame = nextFrame;
+  }
+}
+
 NS_IMETHODIMP
-nsTreeRowGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
   if (aOldIndex == aNewIndex)
     return NS_OK;
 
   printf("The position changed!\n");
   
+  // Get our row count.
+  PRInt32 rowCount;
+  GetRowCount(rowCount);
+
+  // Get our presentation context.
   if (aNewIndex > aOldIndex) {
     // Figure out how many rows we have to lose off the top.
     PRInt32 rowsToLose = aNewIndex - aOldIndex;
+    if (rowsToLose > rowCount) {
+      // B
+    }
+    DestroyRows(aPresContext, rowsToLose);
+  }
+  else {
+    // Figure out how many rows we have to lose off the bottom.
   }
 
+  // Invalidate the cell map and column cache.
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  tableFrame->InvalidateCellMap();
+  tableFrame->InvalidateColumnCache();
+    
   return NS_OK;
 }
 
@@ -117,16 +169,19 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
 {
   mIsLazy = PR_TRUE;
   mScrollbar = aFrame;
-  nsCOMPtr<nsIAtom> scrollbarAtom = dont_AddRef(NS_NewAtom("slider"));
-  nsIFrame* sliderFrame;
-  nsScrollbarButtonFrame::GetChildWithTag(scrollbarAtom, aFrame, sliderFrame);
-  ((nsSliderFrame*)sliderFrame)->SetScrollbarListener(this);
-
+  nsCOMPtr<nsIAtom> sliderAtom = dont_AddRef(NS_NewAtom("slider"));
+  nsCOMPtr<nsIAtom> incrementAtom = dont_AddRef(NS_NewAtom("increment"));
+  nsCOMPtr<nsIAtom> pageIncrementAtom = dont_AddRef(NS_NewAtom("pageincrement"));
+  
   nsCOMPtr<nsIContent> scrollbarContent;
-  sliderFrame->GetContent(getter_AddRefs(scrollbarContent));
-  nsCOMPtr<nsIDOMElement> scrollbarNode = do_QueryInterface(scrollbarContent);
-  scrollbarNode->SetAttribute("increment", "1");
-  scrollbarNode->SetAttribute("decrement", "1");
+  aFrame->GetContent(getter_AddRefs(scrollbarContent));
+  
+  scrollbarContent->SetAttribute(kNameSpaceID_None, incrementAtom, "1", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, pageIncrementAtom, "1", PR_FALSE);
+
+  nsIFrame* result;
+  nsScrollbarButtonFrame::GetChildWithTag(sliderAtom, aFrame, result);
+  ((nsSliderFrame*)result)->SetScrollbarListener(this);
 }
 
 PRBool nsTreeRowGroupFrame::RowGroupDesiresExcessSpace() 
@@ -300,12 +355,15 @@ nsIFrame*
 nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext) 
 { 
   // Clear ourselves out.
-  mBottomFrame = mTopFrame = nsnull;
+  mBottomFrame = mTopFrame;
   mIsFull = PR_FALSE;
 
   // We may just be a normal row group.
   if (!mIsLazy)
     return mFrames.FirstChild();
+
+  if (mTopFrame)
+    return mTopFrame;
 
   // See if we have any frame whatsoever.
   LocateFrame(nsnull, &mTopFrame);
@@ -357,8 +415,8 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         mContent->ChildAt(i+1, *getter_AddRefs(nextContent));
         mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nextContent,
                                                    aResult);
+        mBottomFrame = *aResult;
         printf("Created a frame\n");
-        mBottomFrame = mFrames.FrameAt(i+1);
         const nsStyleDisplay *rowDisplay;
         mBottomFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
         if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay) {
