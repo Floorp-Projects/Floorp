@@ -1173,7 +1173,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // contents or we fluff out to the maximum block width. Note:
     // We always shrink wrap when given an unconstrained width.
     if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
-        !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) && !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
+        !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) &&
+        !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
         !compact) {
       // Set our width to the max width if we aren't already that
       // wide. Note that the max-width has nothing to do with our
@@ -1184,19 +1185,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
     // See if we should compute our max element size
     if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-      // Adjust the computedWidth
-      if (aState.GetFlag(BRS_NOWRAP)) {
-        // When no-wrap is true the max-element-size.width is the
-        // width of the widest line plus the right border. Note that
-        // aState.mKidXMost already has the left border factored in
-        maxWidth = aState.mKidXMost + borderPadding.right;
-      }
-      else {
-        // Add in border and padding dimensions to already computed
-        // max-element-size values.
-        maxWidth = aState.mMaxElementSize.width +
-          borderPadding.left + borderPadding.right;
-      }
+      // Add in border and padding dimensions to already computed
+      // max-element-size values.
+      maxWidth = aState.mMaxElementSize.width +
+        borderPadding.left + borderPadding.right;
       if (computedWidth < maxWidth) {
         computedWidth = maxWidth;
       }
@@ -4051,18 +4043,9 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
   printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
 #endif
 
-  // If the floaters are wider than the content, then use the maximum
-  // floater width as the maximum width.
-  //
-  // It used to be the case that we would always place some content
-  // next to a floater, regardless of the amount of available space
-  // after subtracing off the floaters sizes. This can lead to content
-  // overlapping floaters, so we no longer do this (and pass CSS2's
-  // conformance tests). This is not how navigator 4-1 used to do
-  // things.
-  if (maxWidth > aMaxElementSize->width) {
-    aMaxElementSize->width = maxWidth;
-  }
+  // To ensure that we always place some content next to a floater,
+  // _add_ the max floater width to our line's max element size.
+  aMaxElementSize->width += maxWidth;
 
   // Only update the max-element-size's height value if the floater is
   // part of the current line.
@@ -4119,16 +4102,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   }
 
   // Update xmost
-  nscoord xmost;
-  if(aLine->IsBlock() && aState.GetFlag(BRS_NOWRAP)) {
-    // since the nowrap blocks tend to be as wide as their widest element or
-    // sequel of elements that can't be wrapped anymore (see patch for bug 80817)
-    // let them set xmost to be the width of the widest element of the reflowed line
-    // (patches bug 93363 and other NOWRAP dups)
-    xmost = aLine->mMaxElementWidth + aState.BorderPadding().left;
-  } else {
-    xmost = aLine->mBounds.XMost();
-  }
+  nscoord xmost = aLine->mBounds.XMost();
 
 #ifdef DEBUG
   if (CRAZY_WIDTH(xmost)) {
