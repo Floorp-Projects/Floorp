@@ -36,6 +36,11 @@ public:
                             void** aInstancePtr);
 
   //overrides
+  NS_IMETHOD  Init(nsIViewManager* aManager,
+      						 const nsRect &aBounds,
+                   const nsIView *aParent,
+      						 const nsViewClip *aClip = nsnull,
+      						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
   NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
@@ -64,6 +69,8 @@ public:
                                      PRBool *aHorizontalVisible) const;
   NS_IMETHOD  SetScrollProperties(PRUint32 aProperties);
   NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
+  NS_IMETHOD  SetLineHeight(nscoord aHeight);
+  NS_IMETHOD  GetLineHeight(nscoord *aHeight);
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLines);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
 
@@ -98,6 +105,7 @@ protected:
   nsITimer            *mScrollingTimer;
   nscoord             mScrollingDelta;
   PRUint32            mScrollProperties;
+  nscoord             mLineHeight;
 };
 
 #endif

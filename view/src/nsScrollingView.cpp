@@ -390,6 +390,7 @@ nsScrollingView :: nsScrollingView()
   mCornerView = nsnull;
   mScrollPref = nsScrollPreference_kAuto;
   mScrollingTimer = nsnull;
+  mLineHeight = 240;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -440,6 +441,32 @@ nsrefcnt nsScrollingView :: Release()
 {
   NS_WARNING("not supported for views");
   return 1;
+}
+
+
+NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
+                                      const nsRect &aBounds,
+                                      const nsIView *aParent,
+                                      const nsViewClip *aClip,
+                                      nsViewVisibility aVisibilityFlag)
+{
+  nsIDeviceContext  *dx = nsnull;
+
+  aManager->GetDeviceContext(dx);
+
+  if (dx)
+  {
+    float t2d, d2a;
+
+    dx->GetTwipsToDevUnits(t2d);
+    dx->GetDevUnitsToAppUnits(d2a);
+
+    mLineHeight = NSToCoordRound(240.0f * t2d * d2a);
+
+    NS_RELEASE(dx);
+  }
+
+  return nsView::Init(aManager, aBounds, aParent, aClip, aVisibilityFlag);
 }
 
 NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
@@ -1047,7 +1074,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
           dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
 
           scrollv->SetParameters(mSizeY, availheight,
-                                 mOffsetY, NSIntPointsToTwips(12));
+                                 mOffsetY, mLineHeight);
         }
         else
         {
@@ -1126,7 +1153,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeScrollOffsets(PRBool aAdjustWidgets)
           dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
 
           scrollh->SetParameters(mSizeX, availwidth,
-                                 mOffsetX, NSIntPointsToTwips(12));
+                                 mOffsetX, mLineHeight);
         }
         else
         {
@@ -1565,6 +1592,18 @@ NS_IMETHODIMP nsScrollingView :: SetScrollProperties(PRUint32 aProperties)
 NS_IMETHODIMP nsScrollingView :: GetScrollProperties(PRUint32 *aProperties)
 {
   *aProperties = mScrollProperties;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: SetLineHeight(nscoord aHeight)
+{
+  mLineHeight = aHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: GetLineHeight(nscoord *aHeight)
+{
+  *aHeight = mLineHeight;
   return NS_OK;
 }
 

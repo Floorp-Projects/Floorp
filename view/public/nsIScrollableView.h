@@ -170,6 +170,21 @@ public:
   NS_IMETHOD GetScrollProperties(PRUint32 *aProperties) = 0;
 
   /**
+   * Set the height of a line used for line scrolling.
+   * @param aHeight new line height in app units. the default
+   *        height is 12 points.
+   * @return error status
+   */
+  NS_IMETHOD SetLineHeight(nscoord aHeight) = 0;
+
+  /**
+   * Get the height of a line used for line scrolling.
+   * @param aHeight out parameter for line height
+   * @return error status
+   */
+  NS_IMETHOD GetLineHeight(nscoord *aHeight) = 0;
+
+  /**
    * Scroll the view up or down by aNumLines lines. positive
    * values move down in the view. Prevents scrolling off the
    * end of the view.
