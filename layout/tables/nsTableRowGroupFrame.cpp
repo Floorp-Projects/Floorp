@@ -602,7 +602,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
     rowHeights = new nscoord[numRows];
     if (!rowHeights) return;
     nsCRT::memset (rowHeights, 0, numRows*sizeof(nscoord));
-  }
+  } // else - tree row groups need not have rows directly beneath them
 
   /* Step 1:  get the height of the tallest cell in the row and save it for
    *          pass 2. This height is for table cells that originate in this

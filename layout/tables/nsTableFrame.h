@@ -527,13 +527,10 @@ protected:
                         nsIFrame*              aKidFrame,
                         nsSize*                aMaxElementSize);
 
-  NS_METHOD AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame, 
-                                        PRInt32& aRowX);
-
-  NS_METHOD CollapseRowGroup(nsIPresContext* aPresContext,
-                             nsIFrame* aRowGroupFrame,
-                             const nscoord& aYTotalOffset,
-                             nscoord& aYGroupOffset, PRInt32& aRowX);
+  NS_METHOD CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
+                                        nsIFrame* aRowGroupFrame,
+                                        const nscoord& aYTotalOffset,
+                                        nscoord& aYGroupOffset, PRInt32& aRowX);
 
   NS_METHOD AdjustForCollapsingRows(nsIPresContext* aPresContext, 
                                     nscoord&        aHeight);
