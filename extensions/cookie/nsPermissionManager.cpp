@@ -47,6 +47,9 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsPermission.h"
+#include "nsNetCID.h"
+
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,13 +129,15 @@ nsresult nsPermissionManager::Init()
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
   }
-  
+  rv = nsServiceManager::GetService(kIOServiceCID, 
+                                    NS_GET_IID(nsIIOService), 
+                                    getter_AddRefs(mIOService));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPermissionManager::Add
     (const char * objectURL, PRBool permission, PRInt32 type) {
-  ::PERMISSION_Add(objectURL, permission, type);
+  ::PERMISSION_Add(objectURL, permission, type, mIOService);
   return NS_OK;
 }
 
