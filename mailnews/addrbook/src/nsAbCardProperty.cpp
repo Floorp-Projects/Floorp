@@ -682,7 +682,7 @@ NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 	if (mCardDatabase)
 	{
 		mCardDatabase->EditCard(this, PR_TRUE);
-		mCardDatabase->Commit(kSmallCommit);
+		mCardDatabase->Commit(kLargeCommit);
 		return NS_OK;
 	}
 	else
