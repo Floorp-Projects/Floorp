@@ -62,23 +62,6 @@ public:
   NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
 };
 
-/**
-  * Special Accessible that just contains other accessible objects
-  *   no actions, no name, no state, no value
-  */
-class nsContainerAccessible : public nsAccessibleWrap
-{
-public:
-  nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-};
-
 /** 
   * Leaf version of DOM Accessible -- has no children
   */

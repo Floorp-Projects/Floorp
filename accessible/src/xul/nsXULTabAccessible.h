@@ -91,11 +91,15 @@ protected:
 };
 
 /** merely a container of tab obejcts */
-class nsXULTabsAccessible : public nsContainerAccessible
+class nsXULTabsAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetAccName(nsAString& _retval);
 };
 
 #endif  

@@ -111,57 +111,9 @@ NS_IMETHODIMP nsBlockAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible 
   return NS_OK;
 }
 
-/**
-  * nsContainerAccessible
-  */
-nsContainerAccessible::nsContainerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsContainerAccessible, nsAccessible)
-
-/** no actions */
-NS_IMETHODIMP nsContainerAccessible::GetAccNumActions(PRUint8 *_retval)
-{
-  *_retval = eNo_Action;
-  return NS_OK;
-}
-
-/** no actions */
-NS_IMETHODIMP nsContainerAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
-{
-  return NS_OK;
-}
-
-/** no actions */
-NS_IMETHODIMP nsContainerAccessible::AccDoAction(PRUint8 index)
-{
-  return NS_OK;
-}
-
-/** no state -- normal */
-NS_IMETHODIMP nsContainerAccessible::GetAccState(PRUint32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-/** no value */
-NS_IMETHODIMP nsContainerAccessible::GetAccValue(nsAString& _retval)
-{
-  return NS_OK;
-}
-
-/** no name*/
-NS_IMETHODIMP nsContainerAccessible::GetAccName(nsAString& _retval)
-{
-  return NS_OK;
-}
-
 
 //-------------
-// nsLeafFrameAccessible
+// nsLeafAccessible
 //-------------
 
 nsLeafAccessible::nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
