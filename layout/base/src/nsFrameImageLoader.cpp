@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "prlog.h"
 #include "nsISizeOfHandler.h"
+#include "nsIStyleContext.h"
 
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -182,7 +183,10 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
          ("nsFrameImageLoader::Notify frame=%p type=%x p1=%x p2=%x p3=%x",
           mTargetFrame, aNotificationType, aParam1, aParam2, aParam3));
 
-  nsIView*  view;
+  nsIView*      view;
+  nsRect        damageRect;
+  float         p2t;
+  const nsRect* changeRect;
 
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
@@ -195,22 +199,45 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kPixmapUpdate:
-  case nsImageNotification_kImageComplete:
-  case nsImageNotification_kFrameComplete:
     if ((mImage == nsnull) && (nsnull != aImage)) {
       mImage = aImage;
       NS_ADDREF(aImage);
     }
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
-    DamageRepairFrame();
+
+    // Convert the rect from pixels to twips
+    p2t = mPresContext->GetPixelsToTwips();
+    changeRect = (const nsRect*)aParam3;
+    damageRect.x = nscoord(p2t * changeRect->x);
+    damageRect.y = nscoord(p2t * changeRect->y);
+    damageRect.width = nscoord(p2t * changeRect->width);
+    damageRect.height = nscoord(p2t * changeRect->height);
+    DamageRepairFrame(&damageRect);
+    break;
+
+  case nsImageNotification_kImageComplete:
+    // We expect to have gotten at least one pixmap update...
+    NS_ASSERTION((nsnull != mImage) &&
+                 (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY),
+                 "unexpected notification order");
+    break;
+
+  case nsImageNotification_kFrameComplete:
+    // New frame of a GIF animation
+    // XXX Image library sends this for all images, and not just for animated
+    // images. You bastards. It's a waste to re-draw the image if it's not an
+    // animated image, but unfortunately we don't currently have a way to tell
+    // whether the image is animated
+    DamageRepairFrame(nsnull);
     break;
 
   case nsImageNotification_kIsTransparent:
     // Mark the frame's view as having transparent areas
     mTargetFrame->GetView(view);
-    NS_ASSERTION(nsnull != view, "no image view");
-    view->SetContentTransparency(PR_TRUE);
-    view->Release();
+    if (nsnull != view) {
+      view->SetContentTransparency(PR_TRUE);
+      view->Release();
+    }
     break;
   }
 }
@@ -229,14 +256,14 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
     ReflowFrame();
   }
   else {
-    DamageRepairFrame();
+    DamageRepairFrame(nsnull);
   }
 }
 
 static PRBool gXXXInstalledColorMap;
 
 void
-nsFrameImageLoader::DamageRepairFrame()
+nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
 {
   PR_LOG(gFrameImageLoaderLMI, PR_LOG_DEBUG,
          ("nsFrameImageLoader::DamageRepairFrame frame=%p status=%x",
@@ -261,11 +288,35 @@ nsFrameImageLoader::DamageRepairFrame()
   nsPoint offset;
   nsRect bounds;
   nsIView* view;
-  mTargetFrame->GetRect(bounds);
+
+  if (nsnull == aDamageRect) {
+    // Invalidate the entire frame
+    // XXX We really only need to invalidate the clientg area of the frame...
+    mTargetFrame->GetRect(bounds);
+    bounds.x = bounds.y = 0;
+  }
+  else {
+    // aDamageRect represents the part of the content area that needs
+    // updating
+    bounds = *aDamageRect;
+
+    // Offset damage origin by border/padding
+    // XXX This is pretty sleazy. See the XXX remark below...
+    const nsStyleSpacing* space;
+    nsMargin  borderPadding;
+
+    mTargetFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)space);
+    space->CalcBorderPaddingFor(mTargetFrame, borderPadding);
+    bounds.MoveBy(borderPadding.left, borderPadding.top);
+  }
+
+  // XXX We should tell the frame the damage area and let it invalidate
+  // itself. Add some API calls to nsIFrame to allow a caller to invalidate
+  // parts of the frame...
   mTargetFrame->GetOffsetFromView(offset, view);
   nsIViewManager* vm = view->GetViewManager();
-  bounds.x = offset.x;
-  bounds.y = offset.y;
+  bounds.x += offset.x;
+  bounds.y += offset.y;
   vm->UpdateView(view, bounds, 0);
   NS_RELEASE(vm);
   NS_RELEASE(view);
