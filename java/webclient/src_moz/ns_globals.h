@@ -48,6 +48,9 @@ extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
 
  * Set to nsnull in WrapperFactoryImpl.cpp nativeTerminate().
 
+ * PENDING(edburns): is it preferable to use nsComponentManager:: static
+ * methods?
+
  */
 
 class nsIComponentManager;
