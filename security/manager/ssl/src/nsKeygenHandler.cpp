@@ -177,7 +177,10 @@ nsKeygenFormProcessor::Init()
   nsAutoString str;
 
   // Get the key strings //
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  nsCOMPtr<nsINSSComponent> nssComponent;
+  nssComponent = do_GetService(kNSSComponentCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("HighGrade").get(),
