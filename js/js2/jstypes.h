@@ -199,6 +199,7 @@ namespace JSTypes {
     extern const JSValue kNegativeInfinity;
     extern const JSValue kPositiveInfinity;
 
+    // JS2 predefined types:
     extern JSType Any_Type;
     extern JSType Integer_Type;
     extern JSType Number_Type;
@@ -211,6 +212,10 @@ namespace JSTypes {
     extern JSType Null_Type;
     extern JSType Void_Type;
     extern JSType None_Type;
+
+    // JS1X heritage classes as types:
+    extern JSType Object_Type;
+    extern JSType Date_Type;
 
     typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
 
@@ -554,8 +559,19 @@ namespace JSTypes {
     protected:
         String mName;
         JSType *mBaseType;
+
+        // The constructor is an implementation of the [[Construct]] mechanism
+        JSFunction *mConstructor;
+        // The invokor is an implementation of the [[Call]] mechanism
+        JSFunction *mInvokor;
     public:
-        JSType(const String &name, JSType *baseType) : mName(name), mBaseType(baseType)
+        JSType(const String &name, JSType *baseType) : mName(name), mBaseType(baseType), mConstructor(NULL), mInvokor(NULL)
+        {
+            mType = &Type_Type;
+        }
+        
+        JSType(const String &name, JSType *baseType, JSFunction *constructor, JSFunction *invokor = NULL) 
+                    : mName(name), mBaseType(baseType), mConstructor(constructor), mInvokor(invokor)
         {
             mType = &Type_Type;
         }
@@ -565,6 +581,22 @@ namespace JSTypes {
         const String& getName() const { return mName; }
 
         int32 distance(const JSType *other) const;
+
+        JSFunction *getConstructor() const { return mConstructor; }
+        JSFunction *getInvokor() const { return mInvokor; }
+    };
+
+    class JSBoolean : public JSObject {
+    protected:
+        bool mValue;
+        static JSObject* BooleanPrototypeObject;
+        static JSString* BooleanString;
+    public:
+        JSBoolean(bool value) : mValue(value), JSObject(BooleanPrototypeObject) { setClass(BooleanString); }
+
+        static void initBooleanObject(JSScope *g);
+
+        bool getValue() { return mValue; }
     };
 
 } /* namespace JSTypes */    

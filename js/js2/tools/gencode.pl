@@ -288,8 +288,14 @@ $ops{"RETURN_VOID"} =
 $ops{"CALL"} =
   {
    super  => "Instruction_4",
-   rem    => "result, base, target, args",
+   rem    => "result, target, this, args",
    params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "RegisterList") ]
+  };
+$ops{"DIRECT_CALL"} =
+  {
+   super  => "Instruction_3",
+   rem    => "result, target, args",
+   params => [ ("TypedRegister", "JSFunction *", "RegisterList") ]
   };
 $ops{"GET_METHOD"} =
   {
@@ -535,22 +541,20 @@ sub get_print_body {
     for $type (@types) {
 
         if ($type eq "TypedRegister") {
-
            push (@oplist, "mOp$op" );
-
- #           push (@oplist, "\"R\" << ((mOp$op.first == NotARegister) ? -1 : mOp$op.first)");
-
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
         } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
-        } elsif ($type =~ /JSType\*/) {
+        } elsif ($type =~ /JSType *\*/) {
             push (@oplist, "\"'\" << mOp$op->getName() << \"'\"");
+        } elsif ($type =~ /JSFunction *\*/) {
+            push (@oplist, "\"JSFunction\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
         } elsif ($type =~ /ICodeModule/) {
             push (@oplist, "\"ICodeModule\"");
-        } elsif ($type =~ /JSClass\*/) {
+        } elsif ($type =~ /JSClass *\*/) {
             push (@oplist, "mOp$op->getName()");
         } else {
             push (@oplist, "mOp$op");

@@ -466,6 +466,14 @@ TypedRegister ICodeGenerator::call(TypedRegister target, TypedRegister thisArg, 
     return dest;
 }
 
+TypedRegister ICodeGenerator::directCall(JSFunction *target, RegisterList *args)
+{
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    DirectCall *instr = new DirectCall(dest, target, *args);
+    iCode->push_back(instr);
+    return dest;
+}
+
 TypedRegister ICodeGenerator::getMethod(TypedRegister thisArg, uint32 slotIndex)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
@@ -1102,8 +1110,16 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         ret = newClass(clazz);
                         ret = call(getStatic(clazz, className), ret, &args);
                     }
-                    else
-                        NOT_REACHED("new <name>, where <name> is not a new-able type (whatever that means)");   // XXX Runtime error.
+                    else {
+                        //
+                        // like 'new Boolean()' - see if the type has a constructor
+                        //
+                        JSFunction *f = value.type->getConstructor();
+                        if (f)
+                            ret = directCall(f, &args);
+                        else
+                            NOT_REACHED("new <name>, where <name> is not a new-able type (whatever that means)");   // XXX Runtime error.
+                    }
                 }
                 else
                     if (value.isFunction()) {
