@@ -302,7 +302,7 @@ class mdbCell;
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
 class mdbISupports { // msg db base class
 public:
-	mdb_count Release(void);
+	mdb_count Release(void) {return 0;}
 	mdb_count AddRef(void);
 };
 // } %%%%% end temporary dummy base class for class hierarchy %%%%%
