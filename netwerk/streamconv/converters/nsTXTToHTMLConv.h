@@ -23,7 +23,7 @@
 #ifndef ____nstxttohtmlconv___h___
 #define ____nstxttohtmlconv___h___
 
-#include "nsIStreamConverter.h"
+#include "nsITXTToHTMLConv.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsIFactory.h"
@@ -45,10 +45,11 @@ typedef struct convToken {
     PRBool   prepend;   // flag indicating how the modText should be used.
 } convToken;
     
-class nsTXTToHTMLConv : public nsIStreamConverter {
+class nsTXTToHTMLConv : public nsITXTToHTMLConv {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMCONVERTER
+    NS_DECL_NSITXTTOHTMLCONV
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
@@ -90,6 +91,8 @@ protected:
     nsString                        mBuffer;   // any carry over data
     nsVoidArray                     mTokens;   // list of tokens to search for
     convToken                       *mToken;   // current token (if any)
+    nsString                        mPageTitle; // Page title
+    PRBool                          mPreFormatHTML; // Whether to use <pre> tags
 };
 
 #endif // ____nstxttohtmlconv___h___
