@@ -691,11 +691,11 @@ nsJunkmail.prototype =
     wrappedJSObject: null,
     mTable: null,
 
-    get mBatchUpdate()
+    get batchUpdate()
     {
         return (this.mTable.mBatchUpdateLevel > 0);
     },
-    set mBatchUpdate(aBatchUpdate)
+    set batchUpdate(aBatchUpdate)
     {
         if (aBatchUpdate) {
             ++this.mTable.mBatchUpdateLevel;

@@ -88,7 +88,7 @@ function analyzeFolder()
             var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
             while (!message.isRead) {
                 if (!messages.hasMoreElements()) {
-                    gJunkmailComponent.mBatchUpdate = false;
+                    gJunkmailComponent.batchUpdate = false;
                     return;
                 }
                 message = messages.getNext().QueryInterface(nsIMsgDBHdr);
@@ -96,14 +96,14 @@ function analyzeFolder()
             analyze(message, processNext);
         }
         else {
-            gJunkmailComponent.mBatchUpdate = false;
+            gJunkmailComponent.batchUpdate = false;
         }
     }
 
     getJunkmailComponent();
     var folder = GetFirstSelectedMsgFolder();
     var messages = folder.getMessages(msgWindow);
-    gJunkmailComponent.mBatchUpdate = true;
+    gJunkmailComponent.batchUpdate = true;
     processNext();
 }
 
@@ -129,14 +129,14 @@ function analyzeMessages()
             analyze(message, processNext);
         }
         else {
-            gJunkmailComponent.mBatchUpdate = false;
+            gJunkmailComponent.batchUpdate = false;
         }
     }
 
     getJunkmailComponent();
     var messages = GetSelectedMessages();
     var counter = 0;
-    gJunkmailComponent.mBatchUpdate = true;
+    gJunkmailComponent.batchUpdate = true;
     processNext();
 }
 
@@ -185,14 +185,14 @@ function markFolder(aSpam)
             mark(message, aSpam, processNext);
         }
         else {
-            gJunkmailComponent.mBatchUpdate = false;
+            gJunkmailComponent.batchUpdate = false;
         }
     }
 
     getJunkmailComponent();
     var folder = GetFirstSelectedMsgFolder();
     var messages = folder.getMessages(msgWindow);
-    gJunkmailComponent.mBatchUpdate = true;
+    gJunkmailComponent.batchUpdate = true;
     processNext();
 }
 
@@ -209,14 +209,14 @@ function markMessages(aSpam)
             mark(message, aSpam, processNext);
         }
         else {
-            gJunkmailComponent.mBatchUpdate = false;
+            gJunkmailComponent.batchUpdate = false;
         }
     }
 
     getJunkmailComponent();
     var messages = GetSelectedMessages();
     var counter = 0;
-    gJunkmailComponent.mBatchUpdate = true;
+    gJunkmailComponent.batchUpdate = true;
     processNext();
 }
 
