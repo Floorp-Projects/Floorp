@@ -104,6 +104,7 @@ si_SaveSignonDataInKeychain();
 
 char* signonFileName = nsnull;
 static PRBool gLoadedUserData = PR_FALSE;
+static PRUint32 gSelectUserDialogCount = 0;
 
 
 /***************************
@@ -390,7 +391,21 @@ si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList
   PRInt32 selectedIndex;
   PRBool rtnValue;
   PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
+
+  /* Notify signon manager dialog to update its display */
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+  gSelectUserDialogCount++;
+  if (os) {
+    os->NotifyObservers(nsnull, "signonSelectUser", NS_LITERAL_STRING("suspend").get());
+  }
+
   rv = dialog->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
+
+  gSelectUserDialogCount--;
+  if (os) {
+    os->NotifyObservers(nsnull, "signonSelectUser", NS_LITERAL_STRING("resume").get());
+  }
+
   Recycle(title_string);
   if (selectedIndex >= *pCount) {
     return PR_FALSE; // out-of-range selection
@@ -2701,6 +2716,15 @@ PUBLIC nsresult
 SINGSIGN_Enumerate
     (PRInt32 hostNumber, PRInt32 userNumber, char **host,
      PRUnichar ** user, PRUnichar ** pswd) {
+
+  if (gSelectUserDialogCount>0 && hostNumber==0 && userNumber==0) {
+    // starting to enumerate over all saved logins
+    // notify recipients if login list is in use by SelectUserDialog
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "signonSelectUser", NS_LITERAL_STRING("inUse").get());
+    }
+  }
 
   if (hostNumber > SINGSIGN_HostCount() || userNumber > SINGSIGN_UserCount(hostNumber)) {
     return NS_ERROR_FAILURE;
