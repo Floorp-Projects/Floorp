@@ -510,9 +510,6 @@ public:
   nsString& Append(const PRUnichar* aString,PRInt32 aCount=-1);
   nsString& Append(PRUnichar aChar);
 
-  void  AppendWithConversion( PRInt32 i, PRInt32 radix=10 ) { AppendInt(i, radix); }
-  void  AppendWithConversion( float f )                     { AppendFloat(f); }
-
   nsString& Append(const char* aString,PRInt32 aCount=-1)   { AppendWithConversion(aString,aCount); return *this; }
   nsString& Append(char aChar)                              { AppendWithConversion(aChar); return *this; }
   nsString& Append(PRInt32 aInteger,PRInt32 aRadix=10)      { AppendInt(aInteger,aRadix); return *this; }
@@ -714,6 +711,7 @@ public:
    * @param   aCount tells us how many chars to compare
    * @return  -1,0,1
    */
+
   PRInt32 CompareWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRInt32 CompareWithConversion(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
@@ -869,6 +867,14 @@ public:
   static  void        Recycle(nsString* aString);
   static  nsString*  CreateString(void);
 
+private:
+    // NOT TO BE IMPLEMENTED
+    //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
+  void AssignWithConversion( PRUnichar );
+  void AssignWithConversion( const PRUnichar*, PRInt32=-1 );
+  void AppendWithConversion( PRUnichar );
+  void AppendWithConversion( const PRUnichar*, PRInt32=-1 );
+  void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
 };
 
 #if 0//def NEW_STRING_APIS

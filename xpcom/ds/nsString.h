@@ -474,9 +474,6 @@ public:
   nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendInt(aInteger,aRadix); return *this;}
   nsCString& Append(float aFloat)                       {AppendFloat(aFloat); return *this;}
 
-  void  AppendWithConversion(PRInt32 aInteger, PRInt32 aRadix=10) {AppendInt(aInteger,aRadix);}
-  void  AppendWithConversion(float aFloat)                        {AppendFloat(aFloat);}
-
   /**
    * Here's a bunch of methods that append varying types...
    * @param   various...
@@ -775,6 +772,13 @@ public:
   static  void        Recycle(nsCString* aString);
   static  nsCString*  CreateString(void);
 
+private:
+    // NOT TO BE IMPLEMENTED
+    //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
+  void AssignWithConversion( char );
+  void AssignWithConversion( const char*, PRInt32=-1 );
+  void AppendWithConversion( char );
+  void InsertWithConversion( char, PRUint32 );
 };
 
 #if 0//def NEW_STRING_APIS
