@@ -28,8 +28,12 @@ CHROME_CONTENT = \
 	.\EdDialogCommon.js \
 	.\EdLinkProps.xul \
 	.\EdLinkProps.js \
+	.\EdLinkChecker.xul \
+	.\EdLinkChecker.js \
 	.\EdImageProps.xul \
 	.\EdImageProps.js \
+	.\EdImageOverlay.xul \
+	.\EdImageOverlay.js \
 	.\EdHLineProps.xul \
 	.\EdHLineProps.js \
 	.\EdSpellCheck.xul \
@@ -42,6 +46,22 @@ CHROME_CONTENT = \
 	.\EdInsertTable.js \
 	.\EdTableProps.xul \
 	.\EdTableProps.js \
+	.\EdFormProps.xul \
+	.\EdFormProps.js \
+	.\EdInputProps.xul \
+	.\EdInputProps.js \
+	.\EdInputImage.xul \
+	.\EdInputImage.js \
+	.\EdTextAreaProps.xul \
+	.\EdTextAreaProps.js \
+	.\EdSelectProps.xul \
+	.\EdSelectProps.js \
+	.\EdButtonProps.xul \
+	.\EdButtonProps.js \
+	.\EdLabelProps.xul \
+	.\EdLabelProps.js \
+	.\EdFieldSetProps.xul \
+	.\EdFieldSetProps.js \
 	.\EdInsSrc.xul \
 	.\EdInsSrc.js \
 	.\EdInsertChars.xul \
