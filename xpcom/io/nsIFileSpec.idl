@@ -22,6 +22,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsFileSpec.h" // for factory method
+%}
+
 interface nsIFileURL;
 interface nsIFilePath;
 
@@ -111,6 +115,7 @@ interface nsIDirectoryIterator : nsISupports
 
 %{C++
 // Factory methods
+NS_COM nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result);
 NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 %}
