@@ -12,7 +12,7 @@
 ;
 ; en-US
 bin/defaults/profile/en-US/*
-bin/chrome/locales/en-US/*
+bin/chrome/locales/en-US.jar
 bin/searchplugins/*
 
 [deflenus]
@@ -187,9 +187,11 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/packages/widget-toolkit/*
-bin/chrome/packages/core/*
-bin/chrome/skins/*
+bin/chrome/packages/widget-toolkit.jar
+bin/chrome/packages/core.jar
+bin/chrome/skins/modern.jar
+bin/chrome/skins/blue.jar
+bin/chrome/skins/classic.jar
 -bin/chrome/packages/core/editor/content/EditorInitPage.html
 -bin/chrome/packages/core/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -261,12 +263,12 @@ bin/components/msgsearch.xpt
 bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
-bin/chrome/packages/messenger/*
+bin/chrome/packages/messenger.jar
 
 
 [chatzilla]
 bin/components/chatzilla-service.js
-bin/chrome/packages/chatzilla/*
+bin/chrome/packages/chatzilla.jar
 
 
 [talkback]
