@@ -2475,6 +2475,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
             // before we could read any data from it
             error.Assign(NS_LITERAL_STRING("netReset"));
             break;
+        case NS_ERROR_DOCUMENT_NOT_CACHED:
+            // Doc falied to load because we are offline and the cache does not
+            // contain a copy of the document.
+            error.Assign(NS_LITERAL_STRING("netOffline"));
+            break;
         }
     }
 

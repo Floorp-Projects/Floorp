@@ -99,7 +99,7 @@ private:
     nsresult ProcessAuthentication(PRUint32 httpStatus);
 
     // cache specific methods
-    nsresult OpenCacheEntry(PRBool *delayed);
+    nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
     nsresult GenerateCacheKey(nsACString &key);
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
