@@ -85,6 +85,9 @@ public:
   // caller needs to free
   static char			*GetGroupNameFromURL(const char *url);
 
+  NS_IMETHOD GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags);
+  NS_IMETHOD GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType);
+
 protected:
   virtual PRBool	    ThreadBySubjectWithoutRe() ;
 

@@ -298,10 +298,8 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   // folder.setAttribute('ref', "");
-   if (isNewsURI(uri))
-       SetNewsFolderColumns(true);
-   else
-       SetNewsFolderColumns(false);
+  // show "Lines" for news, "Size" for mail
+  SetNewsFolderColumns(isNewsURI(uri));
 
   // null this out, so we don't try sort.
   if (gDBView) {
@@ -562,28 +560,6 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   }
 
   gDBView = Components.classes[dbviewContractId].createInstance(Components.interfaces.nsIMsgDBView);
-
-  var isNews = isNewsURI(msgFolder.URI);
-  if (!viewFlags) {
-    if (isNews) {
-      // news defaults to threaded mode
-      viewFlags = nsMsgViewFlagsType.kThreadedDisplay;
-    }
-  }
-
-  if (!sortType) {
-    if (isNews) {
-      // news defaults to threaded mode
-      sortType = nsMsgViewSortType.byThread;
-    }
-    else {
-      sortType = nsMsgViewSortType.byDate;
-    }
-  }
-
-  if (!sortOrder) {
-    sortOrder = nsMsgViewSortOrder.ascending;
-  }
 
   gCurViewFlags = viewFlags;
   var count = new Object;

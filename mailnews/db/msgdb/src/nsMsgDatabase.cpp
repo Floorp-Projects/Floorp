@@ -4148,3 +4148,16 @@ NS_IMETHODIMP nsMsgDownloadSettings::SetAgeLimitOfMsgsToDownload(PRUint32 ageLim
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags)
+{ 
+  NS_ENSURE_ARG_POINTER(aDefaultViewFlags);
+  *aDefaultViewFlags = nsMsgViewFlagsType::kNone;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultSortType);
+  *aDefaultSortType = nsMsgViewSortType::byDate;
+  return NS_OK;
+}

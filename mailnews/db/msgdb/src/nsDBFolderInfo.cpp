@@ -770,8 +770,12 @@ NS_IMETHODIMP nsDBFolderInfo::SetViewType(nsMsgViewTypeValue aViewType)
 /* attribute nsMsgViewFlagsTypeValue viewFlags; */
 NS_IMETHODIMP nsDBFolderInfo::GetViewFlags(nsMsgViewFlagsTypeValue *aViewFlags)
 {
+  nsMsgViewFlagsTypeValue defaultViewFlags;
+  nsresult rv = m_mdb->GetDefaultViewFlags(&defaultViewFlags);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   PRUint32 viewFlagsValue;
-  nsresult rv = GetUint32Property("viewFlags", &viewFlagsValue, nsMsgViewFlagsType::kNone);
+  rv = GetUint32Property("viewFlags", &viewFlagsValue, defaultViewFlags);
   *aViewFlags = viewFlagsValue;
   return rv;
 }
@@ -783,8 +787,12 @@ NS_IMETHODIMP nsDBFolderInfo::SetViewFlags(nsMsgViewFlagsTypeValue aViewFlags)
 /* attribute nsMsgViewSortTypeValue sortType; */
 NS_IMETHODIMP nsDBFolderInfo::GetSortType(nsMsgViewSortTypeValue *aSortType)
 {
+  nsMsgViewSortTypeValue defaultSortType;
+  nsresult rv = m_mdb->GetDefaultSortType(&defaultSortType);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   PRUint32 sortTypeValue;
-  nsresult rv = GetUint32Property("sortType",  &sortTypeValue, nsMsgViewSortType::byDate);
+  rv = GetUint32Property("sortType", &sortTypeValue, defaultSortType);
   *aSortType = sortTypeValue;
   return rv;
 }

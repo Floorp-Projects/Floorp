@@ -447,3 +447,18 @@ NS_IMETHODIMP nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	return err;
 }
 
+NS_IMETHODIMP 
+nsNewsDatabase::GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultViewFlags);
+  *aDefaultViewFlags = nsMsgViewFlagsType::kThreadedDisplay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNewsDatabase::GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultSortType);
+  *aDefaultSortType = nsMsgViewSortType::byThread;
+  return NS_OK;
+}
