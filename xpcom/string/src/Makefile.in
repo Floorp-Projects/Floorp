@@ -45,6 +45,7 @@ CPPSRCS		=				\
 		nsPromiseFlatString.cpp		\
 		nsPromiseSubstring.cpp		\
 		nsReadableUtils.cpp		\
+		nsSharableString.cpp		\
 		nsSharedBufferList.cpp		\
 		nsSlidingString.cpp		\
 		$(NULL)
