@@ -156,7 +156,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 #endif /* DEBUG_CLIPBOARD */
             if (dataSize && data != nsnull) {
               NS_ConvertUCS2toUTF8 cv((const PRUnichar *)data, (PRUint32)dataSize / 2);
-              const char *utf8Str = (const char *)cv;
+              const char *utf8Str = cv.get();
               uint32 utf8Len = strlen(utf8Str);
 #ifdef DEBUG_CLIPBOARD
               if (0 == strcmp(flavorStr, kUnicodeMime))
