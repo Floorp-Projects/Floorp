@@ -2802,9 +2802,8 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
   rv = aTableCreator.CreateTableColFrame(&aNewFrame); if (NS_FAILED(rv)) return rv;
   InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, aStyleContext, nsnull, aNewFrame);
   // if the parent frame was anonymous then reparent the style context
-  nsStyleContext* parentStyleContext = parentFrame->GetStyleContext();
   if (aIsPseudoParent) {
-    aPresContext->ReParentStyleContext(aNewFrame, parentStyleContext);
+    aPresContext->ReParentStyleContext(aNewFrame, parentFrame->GetStyleContext());
   }
 
   // construct additional col frames if the col frame has a span > 1
@@ -11678,8 +11677,8 @@ ReparentFrame(nsIPresContext* aPresContext,
               nsStyleContext* aParentStyleContext,
               nsIFrame* aFrame)
 {
-  aPresContext->ReParentStyleContext(aFrame, aParentStyleContext);
   aFrame->SetParent(aNewParentFrame);
+  aPresContext->ReParentStyleContext(aFrame, aParentStyleContext);
 }
 
 // Special routine to handle placing a list of frames into a block

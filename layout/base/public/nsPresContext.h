@@ -253,7 +253,9 @@ public:
 
   /** 
    * For a given frame tree, get a new style context that is the equivalent
-   * but within a new parent
+   * but within a new parent.  The StyleContextParent of aFrame should be
+   * changed _before_ this method is called, so that style tree verification
+   * can take place correctly.
    */
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext) = 0;
