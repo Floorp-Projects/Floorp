@@ -48,6 +48,12 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick) = 0;
     NS_IMETHOD WALLET_Capture(nsIDocument* doc, nsString name, nsString value) = 0;
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName) = 0;
+
+    NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;
+    NS_IMETHOD SI_RememberSignonData
+        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) = 0;
+    NS_IMETHOD SI_RestoreSignonData
+        (char* URLNAME, char* name, char** value)=0;
 };
 
 #endif /* nsIWalletService_h___ */
