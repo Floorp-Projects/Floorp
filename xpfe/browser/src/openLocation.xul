@@ -21,7 +21,7 @@ take it out once this works! -->
 		</html:div>
 		<box align="vertical" flex="100%" style="height: 100%;">
 	    
-		<html:div style="width: 100%;">Enter the World Wide Web location (URL) you would like to open. </html:div><html:div style="width: 100%; margin-bottom: 0.5em;">Use the Choose File... button to select a local file:</html:div>
+		<html:div style="width: 100%;">Enter the World Wide Web location (URL) you would like to open or </html:div><html:div style="width: 100%; margin-bottom: 0.5em;">use the Choose File... button to select a local file:</html:div>
 	        
 	     		<box align="horizontal">
 	         	<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
