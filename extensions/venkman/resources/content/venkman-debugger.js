@@ -40,12 +40,30 @@ const jsdIValue = Components.interfaces.jsdIValue;
 const jsdIProperty = Components.interfaces.jsdIProperty;
 
 var $ = new Array(); /* array to store results from evals in debug frames */
-console._scripts = new Object();
-console._sources = new Object();
 
 console._scriptHook = {
-    onScriptCreated: function scripthook (script) {       
+    onScriptCreated: function scripthook (script) {
         addScript (script);
+
+        /* if this script's line extent is 0, the file containing this script is
+         * fully loaded, check to see if we need to set any breakpoints */
+        if (script.lineExtent == 0)
+        {
+            for (var i = 0; i < console._futureBreaks.length; ++i)
+                if (script.fileName.search(console._futureBreaks[i].filePattern)
+                    != -1)
+                {
+                    if (setBreakpoint (script.fileName,
+                                       console._futureBreaks[i].line))
+                    {
+                        display (getMsg(MSN_BP_CREATED,
+                                        [script.fileName,
+                                         console._futureBreaks[i].line, 1]));
+                    }
+                    
+                }
+        }
+                
     },
 
     onScriptDestroyed: function scripthook (script) {
@@ -269,12 +287,13 @@ function formatProperty (p)
     return s;
 }
 
-function formatScript (scr)
+function formatScript (script)
 {
-    if (!scr)
-        throw BadMojo (ERR_REQUIRED_PARAM, "scr");
+    if (!script)
+        throw BadMojo (ERR_REQUIRED_PARAM, "script");
 
-    return MSG_TYPE_FUNCTION + " " + scr.functionName + " in " + scr.fileName;
+    return MSG_TYPE_FUNCTION + " " + script.functionName + " in " +
+        script.fileName;
 }
 
 function formatFrame (f)
@@ -373,10 +392,16 @@ function loadSource (url, cb)
         
 function initDebugger()
 {   
-    console._continueCodeStack = new Array();
-    console._breakpoints = new Array();
-    console._stopLevel = 0;
-    console._scriptCount = 0;
+    console._continueCodeStack = new Array(); /* top of stack is the default */
+                                              /* return code for the most    */
+                                              /* recent debugTrap().         */
+    console._breakpoints = new Array();  /* breakpoints in loaded scripts.   */
+    console._futureBreaks = new Array(); /* breakpoints in scripts that we   */
+                                         /* don't know about yet.            */
+    console._scripts = new Object();     /* scripts, keyed by filename.      */
+    console._sources = new Object();     /* source code, keyed by filename.  */
+    console._stopLevel = 0;              /* nest level.                      */
+    console._scriptCount = 0;            /* active script count.             */
     
     /* create the debugger instance */
     if (!Components.classes[JSD_CTRID])
@@ -506,7 +531,15 @@ function setBreakpoint (fileName, line)
         display (getMsg(MSN_ERR_NOSCRIPT, fileName), MT_ERROR);
         return false;
     }
-    
+
+    /* In case we've already got a breakpoint at this filename/ line,
+     * clear it before we continue.  This keeps us from having duplicate
+     * file/line entries in the breakpoint list.  If we just bailed out based
+     * on the return value of getBreakpoint(), the user would not be able to
+     * set the breakpoint again for new scripts.
+     */
+    clearBreakpoint (fileName, line);
+            
     var bpList = new Array();
     
     for (var i = 0; i < ary.length; ++i)
@@ -530,5 +563,24 @@ function setBreakpoint (fileName, line)
     return bpList;
 }
 
+function isFutureBreakpoint (filePattern, line)
+{
+    for (var b in console._futureBreaks)
+        if (console._futureBreaks[b].filePattern == filePattern &&
+            console._futureBreaks[b].line == line)
+        {
+            return true;
+        }
+
+    return false;
+}
+                
+function setFutureBreakpoint (filePattern, line)
+{
+    if (!isFutureBreakpoint(filePattern, line))
+        console._futureBreaks.push({filePattern: filePattern, line: line});
+    
+    return true;
+}
     
             
