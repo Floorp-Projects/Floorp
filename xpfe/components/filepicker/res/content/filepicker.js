@@ -57,7 +57,7 @@ function onLoad() {
 
 function onOK()
 {
-  var ret = false;
+  var ret = nsIFilePicker.returnCancel;
   textInput = document.getElementById("textInput");
 
   var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
@@ -93,36 +93,48 @@ function onOK()
   switch(filePickerMode) {
   case nsIFilePicker.modeLoad:
     if (isFile) {
-      retvals.file = file;
       retvals.directory = file.parent.path;
-      ret = true;
+      ret = nsIFilePicker.returnOK;
     } else if (isDirectory) {
       if (!sfile.equals(file)) {
         gotoDirectory(file.path);
       }
+      ret = nsIFilePicker.returnCancel;
     }
     break;
   case nsIFilePicker.modeSave:
     if (isFile) {
       // we need to pop up a dialog asking if you want to save
+      rv = window.confirm(file.path + "already exists.  Do you want to replace it?");
+      if (rv)
+        ret = nsIFilePicker.returnReplace;
+      else
+        ret = nsIFilePicker.returnCancel;
       retvals.directory = file.parent.path;
-      ret = false;
     }
     break;
   case nsIFilePicker.modeGetFolder:
     if (isDir) {
       retvals.directory = file.parent.path;
-      return;
+      ret = nsIFilePicker.returnOK;
     }
     break;
   }
 
-  return ret;
+  retvals.file = file;
+
+  retvals.buttonStatus = ret;
+
+  if (ret == nsIFilePicker.returnCancel)
+    return false;
+  else
+    return true;
 }
 
 function onCancel()
 {
   // Close the window.
+  retvals.retval = nsIFilePicker.returnCancel;
   return true;
 }
 

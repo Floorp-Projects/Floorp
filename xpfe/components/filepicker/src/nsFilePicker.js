@@ -128,6 +128,7 @@ nsFilePicker.prototype = {
 
     this.mFile = o.retvals.file;
     lastDirectory = o.retvals.directory;
+    return o.retvals.buttonStatus;
   }
 }
 
