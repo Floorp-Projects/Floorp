@@ -28,7 +28,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h"
 
-#ifdef DEBUG_seth
+#ifdef DEBUG_seth_
 #define DEBUG_NEWS 1
 #endif
 
