@@ -345,6 +345,13 @@ nsXULTreeElement::FireOnSelectHandler()
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));
 
+  // If there's no document (e.g., a selection is occuring in a
+  // 'orphaned' node), then there ain't a whole lot to do here!
+  if (! document) {
+    NS_WARNING("FireOnSelectHandler occurred in orphaned node");
+    return NS_OK;
+  }
+
   // The frame code can suppress the firing of this handler by setting an attribute
   // for us.  Look for that and bail if it's present.
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
