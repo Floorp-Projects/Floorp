@@ -495,7 +495,7 @@ PR_IMPLEMENT(void) PR_DestroyMonitor(PRMonitor *mon)
 /* The GC uses this; it is quite arguably a bad interface.  I'm just 
  * duplicating it for now - XXXMB
  */
-PR_IMPLEMENT(PRInt32) PR_GetMonitorEntryCount(PRMonitor *mon)
+PR_IMPLEMENT(PRIntn) PR_GetMonitorEntryCount(PRMonitor *mon)
 {
     pthread_t self = pthread_self();
     if (pthread_equal(mon->owner, self))
