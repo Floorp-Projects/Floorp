@@ -129,7 +129,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   PRBool result = PR_FALSE;
   char fileBuffer[MAX_PATH+1] = "";
-  char *converted = ConvertToFileSystemCharset(mDefault.get());
+  char *converted = ConvertToFileSystemCharset(mDefault);
   if (nsnull == converted) {
     mDefault.ToCString(fileBuffer,MAX_PATH);
   }
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     nsMemory::Free( converted );
   }
 
-  char *title = ConvertToFileSystemCharset(mTitle.get());
+  char *title = ConvertToFileSystemCharset(mTitle);
   if (nsnull == title)
     title = ToNewCString(mTitle);
   nsCAutoString initialDir;
