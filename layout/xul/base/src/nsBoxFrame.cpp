@@ -662,6 +662,19 @@ nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
 
 }
 
+#ifdef DEBUG_rods
+static int myCounter = 0;
+static void printSize(char * aDesc, nscoord aSize) 
+{
+  printf(" %s: ", aDesc);
+  if (aSize == NS_UNCONSTRAINEDSIZE) {
+    printf("UC");
+  } else {
+    printf("%d", aSize);
+  }
+}
+#endif
+
 NS_IMETHODIMP
 nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -669,6 +682,33 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsBoxFrame", aReflowState.reason);
+
+#ifdef DEBUG_rods
+  printf("-------------Starting BoxFrame Reflow ----------------------------\n");
+  printf("%p ** nsBF::Reflow %d R: ", this, myCounter++);
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:
+      printf("Ini");break;
+    case eReflowReason_Incremental:
+      printf("Inc");break;
+    case eReflowReason_Resize:
+      printf("Rsz");break;
+    case eReflowReason_StyleChange:
+      printf("Sty");break;
+    case eReflowReason_Dirty:
+      printf("Drt ");
+      break;
+    default:printf("<unknown>%d", aReflowState.reason);break;
+  }
+  
+  printSize("AW", aReflowState.availableWidth);
+  printSize("AH", aReflowState.availableHeight);
+  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CH", aReflowState.mComputedHeight);
+
+  printf(" *\n");
+
+#endif
 
   NS_ASSERTION(aReflowState.mComputedWidth >=0 && aReflowState.mComputedHeight >= 0, "Computed Size < 0");
 
@@ -707,15 +747,25 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   }
 
   // get our desiredSize
-  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
-     computedSize.width = prefSize.width;
-  else
-     computedSize.width += m.left + m.right;
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+    if (aReflowState.availableWidth != NS_INTRINSICSIZE && aReflowState.availableWidth < prefSize.width) {
+      computedSize.width = aReflowState.availableWidth;
+    } else {
+      computedSize.width = prefSize.width;
+    }
+  } else {
+    computedSize.width += m.left + m.right;
+  }
 
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
-     computedSize.height = prefSize.height;
-  else
-     computedSize.height += m.top + m.bottom;
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+    if (aReflowState.availableHeight != NS_INTRINSICSIZE && aReflowState.availableHeight < prefSize.height) {
+      computedSize.height = aReflowState.availableHeight;
+    } else {
+      computedSize.height = prefSize.height;
+    }
+  } else {
+    computedSize.height += m.top + m.bottom;
+  }
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
@@ -748,16 +798,41 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
-#define FIX_FOR_BUG_40596
-#ifdef FIX_FOR_BUG_40596
-     if (mRect.width > minSize.width)
-#else
+#if 0
      if (mRect.width < minSize.width)
-#endif
         maxElementSize->width = minSize.width;
      else
         maxElementSize->width = mRect.width;
+#else
+     if (mRect.width > minSize.width) {
+       if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+         maxElementSize->width = minSize.width;
+       } else {
+         maxElementSize->width = mRect.width;
+       }
+     } else {
+        maxElementSize->width = mRect.width;
+     }
+
+     if (mRect.height > minSize.height)
+        maxElementSize->height = minSize.height;
+     else
+        maxElementSize->height = mRect.height;
+#endif
   }
+
+#ifdef DEBUG_rods
+  {
+    printf("****** nsBoxFrame W:%d H:%d  ", aDesiredSize.width, aDesiredSize.height);
+
+    if (maxElementSize) {
+      printf("MW:%d MH:%d\n", maxElementSize->width, maxElementSize->height); 
+    } else {
+      printf("MW:? MH:?\n"); 
+    }
+
+  }
+#endif
 
   return NS_OK;
 }
