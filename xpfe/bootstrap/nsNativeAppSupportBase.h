@@ -22,6 +22,8 @@
  */
 #include "nsNativeAppSupport.h"
 
+#include "nsCOMPtr.h"
+
 // nsNativeAppSupportBase
 //
 // This is a default implementation of the nsINativeAppSupport interface
@@ -39,11 +41,7 @@ public:
     ~nsNativeAppSupportBase();
 
     // nsINativeAppSupport methods.
-    NS_IMETHOD Start( PRBool *result );
-    NS_IMETHOD Stop( PRBool *result );
-    NS_IMETHOD Quit();
-    NS_IMETHOD ShowSplashScreen();
-    NS_IMETHOD HideSplashScreen();
+    NS_DECL_NSINATIVEAPPSUPPORT
 
     NS_IMETHOD CreateSplashScreen( nsISplashScreen **splash );
 
@@ -53,6 +51,7 @@ public:
     NS_IMETHOD QueryInterface( const nsIID &iid, void**p );
 
     nsrefcnt mRefCnt;
-    nsISplashScreen *mSplash;
+    nsCOMPtr<nsISplashScreen> mSplash;
+    PRBool   mServerMode;
 }; // class nsSplashScreenWin
 

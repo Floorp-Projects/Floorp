@@ -33,13 +33,13 @@ XPIDLSRCS =                        \
 		.\nsIXULWindow.idl       \
         .\nsIUserInfo.idl   \
 		.\nsITimingService.idl \
+        .\nsINativeAppSupport.idl \
 		$(NULL)
 
 EXPORTS =                         \
         nsIWebShellWindow.h       \
         nsAppShellCIDs.h          \
         nsISplashScreen.h         \
-        nsINativeAppSupport.h     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

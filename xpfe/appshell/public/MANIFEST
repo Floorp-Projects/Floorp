@@ -8,4 +8,3 @@ nsIWebShellWindow.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
 nsISplashScreen.h
-nsINativeAppSupport.h

@@ -32,6 +32,11 @@
 #include "nsIDOMWindow.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"         
+#include "nsIBaseWindow.h"       
+#include "nsIAppShellService.h"
 #include <windows.h>
 #include <ddeml.h>
 #include <stdlib.h>
@@ -242,6 +247,8 @@ public:
     NS_IMETHOD Start( PRBool *aResult );
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
+    NS_IMETHOD SetIsServerMode( PRBool aIsServerMode );
+    NS_IMETHOD CacheBrowserWindow( nsIDOMWindow *aWindow, PRBool *aResult );
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -249,7 +256,7 @@ public:
     // Utility function to handle a Win32-specific command line
     // option: "-console", which dynamically creates a Windows
     // console.
-    static void CheckConsole();
+    void CheckConsole();
 
 private:
     static HDDEDATA CALLBACK HandleDDENotification( UINT     uType,
@@ -262,7 +269,10 @@ private:
                                                     ULONG    dwData2 );
     static void HandleRequest( LPBYTE request );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
-    static nsresult OpenWindow( const char *urlstr, const char *args );
+    static nsresult OpenWindow( const char *urlstr, const char *args, nsIDOMWindow **aResult = 0 );
+    static nsresult OpenBrowserWindow( const char *args );                   
+    static nsresult ReParent( nsIDOMWindowInternal *window, HWND newParent );
+    static nsCOMPtr<nsIDOMWindowInternal> mCachedWin;                        
     static int   mConversations;
     static HSZ   mApplication, mTopic;
     static DWORD mInstance;
@@ -493,6 +503,18 @@ nsNativeAppSupportWin::CheckConsole() {
             }
             // Don't bother doing this more than once.
             break;
+        } else if ( strcmp( "-turbo", __argv[i] ) == 0
+                    ||
+                    strcmp( "/turbo", __argv[i] ) == 0
+                    ||
+                    strcmp( "-server", __argv[i] ) == 0                                              
+                    ||
+                    strcmp( "/server", __argv[i] ) == 0 ) {         
+            // Start in server mode (and suppress splash screen).   
+            SetIsServerMode( PR_TRUE );                             
+            __argv[i] = "-nosplash"; // Bit of a hack, but it works!
+            // Ignore other args.                                   
+            break;                                                  
         }
     }
     return;
@@ -503,9 +525,12 @@ nsNativeAppSupportWin::CheckConsole() {
 nsresult
 NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
     if ( aResult ) {
-        *aResult = new nsNativeAppSupportWin;
-        if ( *aResult ) {
-            NS_ADDREF( *aResult );
+        nsNativeAppSupportWin *pNative = new nsNativeAppSupportWin;
+        if ( pNative ) {                                           
+            *aResult = pNative;                                    
+            NS_ADDREF( *aResult );                                 
+            // Check for dynamic console creation request.         
+            pNative->CheckConsole();                               
         } else {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -513,8 +538,6 @@ NS_CreateNativeAppSupport( nsINativeAppSupport **aResult ) {
         return NS_ERROR_NULL_POINTER;
     }
 
-    // Check for dynamic console creation request.
-    nsNativeAppSupportWin::CheckConsole();
     return NS_OK;
 }
 
@@ -553,6 +576,7 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
 #define MOZ_DDE_EXEC_TIMEOUT  15000
 
 // Static member definitions.
+nsCOMPtr<nsIDOMWindowInternal> nsNativeAppSupportWin::mCachedWin = 0;
 int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopic         = 0;
@@ -613,7 +637,7 @@ struct MessageWindow {
                                                     0 ) ),      // create struct
                         NS_ERROR_FAILURE );
 
-        #ifdef MOZ_DEBUG_DDE
+        #if MOZ_DEBUG_DDE
         printf( "Message window = 0x%08X\n", (int)mHandle );
         #endif
 
@@ -632,7 +656,7 @@ struct MessageWindow {
         if ( msg == WM_COPYDATA ) {
             // This is an incoming request.
             COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lp;
-            #ifdef MOZ_DEBUG_DDE
+            #if MOZ_DEBUG_DDE
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
             #endif
             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
@@ -668,9 +692,9 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     *aResult = PR_FALSE;
 
     // Grab mutex first.
-    int retval;
-    UINT id = ID_DDE_APPLICATION_NAME;
-    retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
+	int retval;
+	UINT id = ID_DDE_APPLICATION_NAME;
+	retval = LoadString( (HINSTANCE) NULL, id, (LPTSTR) nameBuffer, sizeof(nameBuffer) );
     if ( retval == 0 ) {
         // No app name; just keep running.
         *aResult = PR_TRUE;
@@ -917,7 +941,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
             #if MOZ_DEBUG_DDE
             printf( "Launching browser on url [%s]...\n", (const char*)arg );
             #endif
-            (void)OpenWindow( "chrome://navigator/content/", arg );
+            (void)OpenBrowserWindow( arg );
         }
         else if (NS_SUCCEEDED(args->GetCmdLineValue("-chrome", getter_Copies(arg))) &&
                  (const char*)arg ) {
@@ -941,6 +965,16 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
             printf( "Launching mail...\n" );
             #endif
             (void)OpenWindow( "chrome://messenger/content/", "" );
+        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-kill", getter_Copies(arg))) &&
+                    (const char*)arg ) {
+            // Turn off server mode.
+            nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1" );
+            nsCOMPtr<nsINativeAppSupport> native;
+            if ( appShell &&
+                 NS_SUCCEEDED( appShell->GetNativeAppSupport( getter_AddRefs( native ) ) ) &&
+                 native ) {
+                native->SetIsServerMode( PR_FALSE );
+            }
         } else {
             #if MOZ_DEBUG_DDE
             printf( "Unknown request [%s]\n", (char*) request );
@@ -957,9 +991,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
             if (defaultArgs) {
                 nsCString url;
                 url.AssignWithConversion( defaultArgs );
-                OpenWindow("chrome://navigator/content/", (const char*)url);
+                OpenBrowserWindow((const char*)url);
             } else {
-                OpenWindow("chrome://navigator/content/", "about:blank");
+                OpenBrowserWindow("about:blank");
             }
         }
     
@@ -1123,9 +1157,13 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 }
 
 nsresult
-nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
+nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args, nsIDOMWindow **aResult ) {
 
   nsresult rv = NS_ERROR_FAILURE;
+
+  if ( aResult ) { 
+      *aResult = 0;
+  }                
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
@@ -1136,10 +1174,134 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
     nsCOMPtr<nsIDOMWindow> newWindow;
     rv = wwatch->OpenWindow(0, urlstr, "_blank", "chrome,dialog=no,all",
                    sarg, getter_AddRefs(newWindow));
-#ifdef MOZ_DEBUG_DDE
+    if ( aResult ) {                     
+        // Caller wants resulting window.
+        *aResult = newWindow;            
+        NS_IF_ADDREF( *aResult );        
+    }                                    
+#if MOZ_DEBUG_DDE
   } else {
       printf("Get WindowWatcher (or create string) failed\n");
 #endif
   }
   return rv;
+}
+
+static char procPropertyName[] = "MozillaProcProperty";
+
+// Subclass procedure used to filter out WM_SETFOCUS messages while reparenting.
+static LRESULT CALLBACK focusFilterProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
+    if ( uMsg == WM_SETFOCUS ) {
+        // Don't let Mozilla's window procedure see this.
+        return 0;
+    } else {
+        // Pass on all other messages to Mozilla's window proc.
+        HANDLE oldProc = ::GetProp( hwnd, procPropertyName );
+        if ( oldProc ) {
+            return ::CallWindowProc( (WNDPROC)oldProc, hwnd, uMsg, wParam, lParam );
+        } else {
+            // Last resort is the default window proc.
+            return ::DefWindowProc( hwnd, uMsg, wParam, lParam );
+        }
+    }
+}
+
+nsresult
+nsNativeAppSupportWin::ReParent( nsIDOMWindowInternal *window, HWND newParent ) {
+    nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
+    if ( !ppScriptGlobalObj ) {
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIDocShell> ppDocShell;
+    ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
+    if ( !ppDocShell ) {
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+    if ( !ppBaseWindow ) {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIWidget> ppWidget;
+    ppBaseWindow->GetMainWidget( getter_AddRefs( ppWidget ) );
+    HWND hMainFrame = (HWND)ppWidget->GetNativeData( NS_NATIVE_WIDGET );
+    if ( !hMainFrame ) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Filter out WM_SETFOCUS messages while reparenting to 
+    // other than the desktop.
+    //
+    // For some reason, Windows generates one and it causes
+    // our focus/activation code to assert.
+    LONG oldProc = 0;
+    if ( newParent ) {
+        // Subclass the window.
+        oldProc = ::SetWindowLong( hMainFrame,
+                                   GWL_WNDPROC,
+                                   (LONG)(WNDPROC)focusFilterProc );
+
+        // Store old procedure in window so it is available within
+        // focusFilterProc.
+        ::SetProp( hMainFrame, procPropertyName, (HANDLE)oldProc );
+    }
+
+    // Reset the parent.
+    ::SetParent( hMainFrame, newParent );
+
+    // Restore old procedure.
+    if ( newParent ) {
+        ::SetWindowLong( hMainFrame, GWL_WNDPROC, oldProc );
+        ::RemoveProp( hMainFrame, procPropertyName );
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsNativeAppSupportWin::OpenBrowserWindow( const char *args ) {
+    nsresult rv = NS_OK;
+    // Check if we have a cached (hidden) window.
+    if ( mCachedWin ) {
+        nsCOMPtr<nsIDOMWindowInternal> win = mCachedWin;
+        // Drop window from cache.
+        mCachedWin = 0;
+        // Show it.
+        ReParent( win, 0 );
+    } else {
+        // No cached window, open a new one.
+        rv = OpenWindow( "chrome://navigator/content", args );
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportWin::SetIsServerMode( PRBool aIsServerMode ) {
+    // Pas to base class implementation.
+    nsresult rv = nsNativeAppSupportBase::SetIsServerMode( aIsServerMode );
+    if ( NS_SUCCEEDED(rv) && !aIsServerMode && mCachedWin ) {
+        // Server mode is now off.  Discard cached window.
+        mCachedWin->Close();
+        mCachedWin = 0;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportWin::CacheBrowserWindow(nsIDOMWindow *aWindow, PRBool *aResult) {
+    NS_ENSURE_ARG( aResult );
+    *aResult = PR_FALSE;
+    // Cache this window if we don't already have one.
+    if ( !mCachedWin ) {
+        NS_ENSURE_ARG( aWindow );
+        nsresult rv = NS_OK;
+        mCachedWin = do_QueryInterface( aWindow, &rv );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // We cached this window; tell caller so they don't close it.
+            *aResult = PR_TRUE;
+            // Re-parent it to hide it.
+            ReParent( mCachedWin, (HWND)MessageWindow() );
+        }
+    }
+    return NS_OK;
 }

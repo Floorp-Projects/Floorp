@@ -32,6 +32,7 @@
 //Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIWindowMediator.h"
+#include "nsISplashScreen.h"
 
 class nsAppShellService : public nsIAppShellService,
                           public nsIObserver,

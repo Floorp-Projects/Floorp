@@ -69,6 +69,7 @@
 // Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIDocShell.h"
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
@@ -255,7 +256,8 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args)
 static nsresult
 OpenChromeURL( const char * urlstr,
                PRInt32 height = NS_SIZETOCONTENT,
-               PRInt32 width = NS_SIZETOCONTENT )
+               PRInt32 width = NS_SIZETOCONTENT,
+               nsIDOMWindow **aResult = nsnull )
 {
 #ifdef DEBUG_CMD_LINE
     printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
@@ -276,6 +278,20 @@ OpenChromeURL( const char * urlstr,
                                       nsIWebBrowserChrome::CHROME_ALL,
                                       width, height,
                                       getter_AddRefs(newWindow));
+    // Check if caller wants resulting window.
+    if(aResult) {
+        // Always return 0 if we don't have a window.
+        *aResult = nsnull;
+        // If window open was OK, then pass result as nsIDOMWindow.
+        if (NS_SUCCEEDED(rv) && newWindow) {
+            nsCOMPtr<nsIDocShell> docShell;
+            if (NS_SUCCEEDED(newWindow->GetDocShell(getter_AddRefs(docShell)))) {
+                nsCOMPtr<nsIDOMWindow> newDOMWin = do_GetInterface(docShell);
+                *aResult = newDOMWin;
+                NS_IF_ADDREF(*aResult);
+            }
+        }
+    }
   return rv;
 }
 
@@ -620,7 +636,7 @@ static nsresult DoOnShutdown()
 }
 
 
-static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
+static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width, nsIDOMWindow **aResult)
 {
     nsresult rv;
     nsCOMPtr<nsICmdLineHandler> handler(do_GetService(NS_BROWSERSTARTUPHANDLER_CONTRACTID, &rv));
@@ -630,7 +646,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    rv = OpenChromeURL(chromeUrlForTask, height, width );
+    rv = OpenChromeURL(chromeUrlForTask, height, width, aResult);
     if (NS_FAILED(rv)) return rv;
 
     return rv;
@@ -712,7 +728,26 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &height);
 				
-      rv = OpenBrowserWindow(height, width);
+      nsCOMPtr<nsIDOMWindow> browserWin;
+      rv = OpenBrowserWindow(height, width, getter_AddRefs(browserWin));
+
+      // See if we're in running in server mode.
+      if (NS_SUCCEEDED(rv) && browserWin) {
+        nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+        if (appShellService) {
+          nsCOMPtr<nsINativeAppSupport> nativeApp;
+          appShellService->GetNativeAppSupport(getter_AddRefs(nativeApp));
+          if (nativeApp) {
+            PRBool serverMode = PR_FALSE;
+            nativeApp->GetIsServerMode(&serverMode);
+            if (serverMode) {
+              // Then cache (i.e., hide) this browser window.
+              PRBool cached = PR_FALSE;
+              nativeApp->CacheBrowserWindow(browserWin, &cached);
+            }
+          }
+        }
+      }
     }
   }
   return rv;
