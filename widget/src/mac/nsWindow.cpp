@@ -674,30 +674,36 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	}
 	else
 #endif
+
+#if 0
+	// this is correct, but slow.
+	StartDraw();
+	{
+		Rect macRect;
+		nsRectToMacRect(aRect, macRect);
+		::InvalRect(&macRect);
+	}
+	EndDraw();
+	return NS_OK;
+#endif
+
 	{
 		nsRect wRect = aRect;
-		Rect macRect;
+		wRect.MoveBy(mBounds.x, mBounds.y);				// beard:  this is required, see GetNativeData(NS_NATIVE_OFFSETX).
 		LocalToWindowCoordinate(wRect);
+		Rect macRect;
 		nsRectToMacRect(wRect, macRect);
 
-		StPortSetter	portSetter(mWindowPtr);
-#if TARGET_CARBON
+		StPortSetter portSetter(mWindowPtr);
 		Rect savePortRect;
 		::GetWindowPortBounds(mWindowPtr, &savePortRect);
-#else
-		Rect savePortRect = mWindowPtr->portRect;
-#endif
 		::SetOrigin(0, 0);
-#if TARGET_CARBON
 		::InvalWindowRect(mWindowPtr, &macRect);
-#else
-		::InvalRect(&macRect);
-#endif
-//¥REVISIT		::SetOrigin(savePortRect.left, savePortRect.top);
+		::SetOrigin(savePortRect.left, savePortRect.top);
 	}
 	return NS_OK;
 }
-   
+
 //-------------------------------------------------------------------------
 //
 // Invalidate this component visible area
