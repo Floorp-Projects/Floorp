@@ -549,6 +549,7 @@ void ClearWinRegUninstallFileDeletion(void)
 HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
+  char szCurrentProcessDir[MAX_BUF];
 
   bSDUserCanceled     = FALSE;
   hDlgMessage         = NULL;
@@ -563,15 +564,18 @@ HRESULT Initialize(HINSTANCE hInstance)
   if(NS_LoadStringAlloc(hInstance, IDS_ERROR_STRING_NULL, &szEStringNull,  MAX_BUF))
     return(1);
 
+  GetModuleFileName(NULL, szBuf, sizeof(szBuf));
+  ParsePath(szBuf, szCurrentProcessDir,
+            sizeof(szCurrentProcessDir),
+            FALSE,
+            PP_PATH_ONLY);
   hAccelTable = LoadAccelerators(hInstance, CLASS_NAME_SETUP_DLG);
 
   if((hSetupRscInst = LoadLibraryEx("Setuprsc.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) == NULL)
   {
     char szFullFilename[MAX_BUF];
 
-    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
-    ParsePath(szBuf, szFullFilename,
-              sizeof(szFullFilename), FALSE, PP_PATH_ONLY);
+    lstrcpy(szFullFilename, szCurrentProcessDir);
     AppendBackSlash(szFullFilename, sizeof(szFullFilename));
     lstrcat(szFullFilename, "Setuprsc.dll");
     if((hSetupRscInst = LoadLibraryEx(szFullFilename, NULL, 0)) == NULL)
@@ -595,7 +599,7 @@ HRESULT Initialize(HINSTANCE hInstance)
 
   if((szSetupDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  GetCurrentDirectory(MAX_BUF, szSetupDir);
+  lstrcpy(szSetupDir, szCurrentProcessDir);
 
   if((szTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
