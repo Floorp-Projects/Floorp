@@ -7,15 +7,15 @@
     <RDF:li>
        <RDF:Description ID="bookmarks">
          <NC:title>Bookmarks</NC:title>
-         <NC:content>chrome://res/rdf/bm-panel.xul</NC:content>
-         <NC:customize>chrome://res/rdf/bm-panel-cust.xul</NC:customize>
+         <NC:content>resource://res/rdf/bm-panel.xul</NC:content>
+         <NC:customize>resource://res/rdf/bm-panel-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
     <RDF:li>
        <RDF:Description ID="flash">
          <NC:title>Flashes</NC:title>
-         <NC:content>chrome://res/rdf/flash.xul</NC:content>
-         <NC:customize>chrome://res/rdf/flash-cust.xul</NC:customize>
+         <NC:content>resource://res/rdf/flash.xul</NC:content>
+         <NC:customize>resource://res/rdf/flash-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
     <RDF:li>

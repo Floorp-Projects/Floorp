@@ -30,6 +30,7 @@ FILES = \
 	bookmarks.html			\
 	history.css			\
 	history.xul			\
+	bm-panel.xul			\
 	bm-props.xul			\
 	bookmark-folder-closed.gif	\
 	bookmark-folder-open.gif	\

@@ -9,7 +9,7 @@ RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 var profiledir = 'resource:/res/rdf/';
 
 // the location of the flash registry.
-var sidebardb = profiledir + 'panels-browser.rdf';
+var sidebardb = profiledir + 'sidebar-browser.rdf';
 var sidebar_resource = 'NC:BrowserSidebarRoot';
 
 function Init(sidebardb, sidebar_resource)
@@ -56,12 +56,13 @@ function createPanel(registry, service) {
   var panel_customize = getAttr(registry, service, 'customize');
 
   dump('Adding...' + panel_title + '\n');
-  var div = document.createElement('div');
-  var title = document.createElement('titlebutton');
-  var customize = document.createElement('titlebutton');
+  var div = document.createElement('html:div');
+  var title = document.createElement('titledbutton');
+  var customize = document.createElement('titledbutton');
   var toolbar = document.createElement('toolbar');
+  var newline1 = document.createElement('html:br');
   var iframe = document.createElement('html:iframe');
-  var newline = document.createElement('html:br');
+  var newline2 = document.createElement('html:br');
   title.setAttribute('value', panel_title);
   customize.setAttribute('value', 'Customize');
   iframe.setAttribute('src', panel_content);
@@ -69,8 +70,9 @@ function createPanel(registry, service) {
   toolbar.appendChild(title);
   toolbar.appendChild(customize);
   div.appendChild(toolbar);
+  div.appendChild(newline1);
   div.appendChild(iframe);
-  div.appendChild(newline);
+  div.appendChild(newline2);
   return div;
 }
 
