@@ -2391,6 +2391,9 @@ public:
     ComputeContainmentProperties();
 
     nsresult
+    GetFlags();
+
+    nsresult
     CompileRules();
 
     nsresult
@@ -2523,7 +2526,7 @@ public:
     nsresult RemoveGeneratedContent(nsIContent* aElement);
 
     PRBool
-    IsTreeWidgetItem(nsIContent* aElement);
+    IsLazyWidgetItem(nsIContent* aElement);
 
     static void
     GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
@@ -2607,6 +2610,12 @@ protected:
     static nsString    kFalseStr;
 
     PRBool mIsBuilding;
+
+    enum {
+        eDontTestEmpty = (1 << 0)
+    };
+
+    PRInt32 mFlags;
 
     class AutoSentry {
     protected:
@@ -3868,7 +3877,8 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mRoot(nsnull),
       mTimer(nsnull),
       mRulesCompiled(PR_FALSE),
-      mIsBuilding(PR_FALSE)
+      mIsBuilding(PR_FALSE),
+      mFlags(0)
 {
     NS_INIT_REFCNT();
 }
@@ -4014,8 +4024,16 @@ NS_IMPL_ISUPPORTS3(nsXULTemplateBuilder,
 NS_IMETHODIMP
 nsXULTemplateBuilder::Rebuild()
 {
+    // Clear the conflict set *now*, so that cleaning out crufty
+    // content is cheap.
+    mConflictSet.Clear();
+
+    // Recompile the rules
     CompileRules();
+
+    // Remove the old content, and create the new content.
     RebuildContainer(mRoot);
+
     return NS_OK;
 }
 
@@ -4151,7 +4169,7 @@ nsXULTemplateBuilder::OpenContainer(nsIContent* aElement)
     rv = CreateContainerContents(aElement, resource, PR_FALSE, getter_AddRefs(container), &newIndex);
     if (NS_FAILED(rv)) return rv;
 
-    if (container && IsTreeWidgetItem(aElement)) {
+    if (container && IsLazyWidgetItem(aElement)) {
         // The tree widget is special, and has to be spanked every
         // time we add content to a container.
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
@@ -4411,7 +4429,8 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
         if (! bestmatch)
             continue;
 
-        // XXXwaterson fix me!
+        // If the new "bestmatch" is different from the last match,
+        // then we need to yank some content out and rebuild it.
         const Match* lastmatch = matches->GetLastMatch();
         if (bestmatch != lastmatch) {
             Value value;
@@ -4452,15 +4471,20 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
 
             content = VALUE_TO_ICONTENT(value);
 
-            nsCOMPtr<nsIContent> tmpl;
-            bestmatch->mRule->GetContent(getter_AddRefs(tmpl));
-
+            // See if we've built the container contents for "content"
+            // yet. If not, we don't need to build any content. This
+            // happens, for example, if we recieve an assertion on a
+            // closed folder in a tree widget or on a menu that hasn't
+            // yet been dropped.
             PRBool contentsGenerated = PR_TRUE;
             nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(content);
             if (xulcontent)
                 xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
 
             if (contentsGenerated) {
+                nsCOMPtr<nsIContent> tmpl;
+                bestmatch->mRule->GetContent(getter_AddRefs(tmpl));
+
                 BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
                                          VALUE_TO_IRDFRESOURCE(key->mMemberValue),
                                          PR_TRUE, bestmatch, nsnull, nsnull);
@@ -4469,7 +4493,7 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
                 matches->SetLastMatch(bestmatch);
             }
             else {
-                // If we don't build the content, then pretend we
+                // If we *don't* build the content, then pretend we
                 // never saw this match.
                 matches->Remove(bestmatch);
             }
@@ -5067,15 +5091,13 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             if (iscontainer) {
-                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, kTrueStr, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
+                realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, kTrueStr, PR_FALSE);
 
-                // test to see if the container has contents
-                rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
-                                           isempty ? kTrueStr : kFalseStr,
-                                           PR_FALSE);
-
-                if (NS_FAILED(rv)) return rv;
+                if (! (mFlags & eDontTestEmpty)) {
+                    realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
+                                          isempty ? kTrueStr : kFalseStr,
+                                          PR_FALSE);
+                }
             }
         }
         else if ((tag.get() == nsXULAtoms::textnode) && (nameSpaceID == kNameSpaceID_XUL)) {
@@ -5718,7 +5740,7 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
     // The tree widget is special. If the item isn't open, then just
     // "pretend" that there aren't any contents here. We'll create
     // them when OpenContainer() gets called.
-    if (IsTreeWidgetItem(aElement) && !IsOpen(aElement))
+    if (IsLazyWidgetItem(aElement) && !IsOpen(aElement))
         return NS_OK;
 
     // See if the element's templates contents have been generated:
@@ -5911,7 +5933,6 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
     // we know we'll have children.
     nsresult rv;
 
-#ifdef RDF_USE_HAS_ARC_OUT
     *aIsContainer = PR_FALSE;
 	*aIsEmpty = PR_TRUE;
 
@@ -5925,7 +5946,12 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
             // Well, it's a container...
             *aIsContainer = PR_TRUE;
 
-            // ...is it empty?
+            // ...should we check if it's empty?
+            if (mFlags & eDontTestEmpty)
+                return NS_OK;
+
+            // Yes: call GetTarget() and see if there's anything on
+            // the other side...
             nsCOMPtr<nsIRDFNode> dummy;
             rv = mDB->GetTarget(aResource, *property, PR_TRUE, getter_AddRefs(dummy));
             if (NS_FAILED(rv)) return rv;
@@ -5950,71 +5976,12 @@ nsXULTemplateBuilder::CheckContainer(nsIRDFResource* aResource, PRBool* aIsConta
     rv = gRDFContainerUtils->IsContainer(mDB, aResource, aIsContainer);
     if (NS_FAILED(rv)) return rv;
 
-    if (*aIsContainer) {
+    if (*aIsContainer && ! (mFlags & eDontTestEmpty)) {
         rv = gRDFContainerUtils->IsEmpty(mDB, aResource, aIsEmpty);
         if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
-#else
-    nsCOMPtr<nsISimpleEnumerator> arcs;
-    rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
-    if (NS_FAILED(rv)) return rv;
-
-    // Initialize to some sane default values
-    *aIsContainer = PR_FALSE;
-    *aIsEmpty = PR_TRUE;
-
-    while (1) {
-        PRBool hasMore;
-        rv = arcs->HasMoreElements(&hasMore);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
-        if (NS_FAILED(rv))
-            return PR_FALSE;
-
-        if (! hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> isupports;
-        rv = arcs->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv))
-            return PR_FALSE;
-
-        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
-
-        PRBool isordinal;
-        rv = gRDFContainerUtils->IsOrdinalProperty(property, &isordinal);
-        if (NS_FAILED(rv)) return rv;
-
-        if (isordinal || mContainmentProperties.Contains(property)) {
-            // Well, it's a container...
-            *aIsContainer = PR_TRUE;
-
-            // ...is it empty?
-            nsCOMPtr<nsIRDFNode> dummy;
-            rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(dummy));
-            if (NS_FAILED(rv)) return rv;
-
-            if (dummy != nsnull) {
-                *aIsEmpty = PR_FALSE;
-                return NS_OK;
-            }
-
-            // Even if there isn't a target for *this* containment
-            // property, we have continue to check the other
-            // properties: one of them may have a target.
-        }
-    }
-
-    // If we get here, and it's a container, then it's an *empty*
-    // container.
-    if  (*aIsContainer)
-        return NS_OK;
-
-    // Otherwise, just return whether or not it's an RDF container
-    return gRDFContainerUtils->IsContainer(mDB, aResource, aIsContainer);
-#endif
 }
 
 
@@ -6023,13 +5990,16 @@ nsXULTemplateBuilder::IsOpen(nsIContent* aElement)
 {
     nsresult rv;
 
+    // XXXhyatt - use XBL service to obtain base tag.
+
     nsCOMPtr<nsIAtom> tag;
     rv = aElement->GetTag(*getter_AddRefs(tag));
     if (NS_FAILED(rv)) return PR_FALSE;
 
     // Treat the 'root' element as always open, -unless- it's a
     // menu/menupopup. We don't need to "fake" these as being open.
-    if ((aElement == mRoot.get()) && (tag.get() != nsXULAtoms::menu))
+    if ((aElement == mRoot.get()) && (tag.get() != nsXULAtoms::menu) &&
+        (tag.get() != nsXULAtoms::menulist) && (tag.get() != nsXULAtoms::menubutton))
       return PR_TRUE;
 
     nsAutoString value;
@@ -6088,6 +6058,10 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
         rv = child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
+        // Remove element from the conflict set
+        MatchSet firings, retractions;
+        mConflictSet.Remove(ContentTestNode::Element(child), firings, retractions);
+
         // Remove this and any children from the content support map.
         mContentSupportMap.Remove(child);
     }
@@ -6097,14 +6071,16 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 
 
 PRBool
-nsXULTemplateBuilder::IsTreeWidgetItem(nsIContent* aElement)
+nsXULTemplateBuilder::IsLazyWidgetItem(nsIContent* aElement)
 {
-    // Determine if this is a <tree> or a <treeitem> element
+    // Determine if this is a <tree>, <treeitem>, or <menu> element
     nsresult rv;
 
     PRInt32 nameSpaceID;
     rv = aElement->GetNameSpaceID(nameSpaceID);
     if (NS_FAILED(rv)) return PR_FALSE;
+
+    // XXXhyatt Use the XBL service to obtain a base tag.
 
     nsCOMPtr<nsIAtom> tag;
     rv = aElement->GetTag(*getter_AddRefs(tag));
@@ -6113,7 +6089,9 @@ nsXULTemplateBuilder::IsTreeWidgetItem(nsIContent* aElement)
     if (nameSpaceID != kNameSpaceID_XUL)
         return PR_FALSE;
 
-    if ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem))
+    if ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem) ||
+        (tag.get() == nsXULAtoms::menu) || (tag.get() == nsXULAtoms::menulist) ||
+        (tag.get() == nsXULAtoms::menubutton))
         return PR_TRUE;
 
     return PR_FALSE;
@@ -6306,9 +6284,6 @@ nsXULTemplateBuilder::SetContainerAttrs(nsIContent *aElement, const Match* aMatc
     nsAutoString oldcontainer;
     aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, oldcontainer);
 
-    nsAutoString oldempty;
-    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
-
     PRBool iscontainer, isempty;
     CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
 
@@ -6318,14 +6293,18 @@ nsXULTemplateBuilder::SetContainerAttrs(nsIContent *aElement, const Match* aMatc
         aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, newcontainer, PR_TRUE);
     }
 
-    const nsString& newempty = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+    if (! (mFlags & eDontTestEmpty)) {
+        nsAutoString oldempty;
+        aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
-    if (oldempty != newempty) {
-        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newempty, PR_TRUE);
+        const nsString& newempty = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+
+        if (oldempty != newempty) {
+            aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newempty, PR_TRUE);
+        }
     }
 
     return NS_OK;
-
 }
 
 
@@ -6662,6 +6641,21 @@ nsXULTemplateBuilder::InitializeRuleNetwork(InnerNode** aChildNode)
 }
 
 
+nsresult
+nsXULTemplateBuilder::GetFlags()
+{
+    mFlags = 0;
+
+    nsAutoString flags;
+    mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::flags, flags);
+
+    if (flags.Find(NS_LITERAL_STRING("dont-test-empty")) >= 0)
+        mFlags |= eDontTestEmpty;
+
+    return NS_OK;
+}
+
+
 
 nsresult
 nsXULTemplateBuilder::CompileRules()
@@ -6671,6 +6665,8 @@ nsXULTemplateBuilder::CompileRules()
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
+
+    GetFlags();
 
     mRulesCompiled = PR_FALSE; // in case an error occurs
 
