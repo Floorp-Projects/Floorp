@@ -266,5 +266,4 @@ clean realclean:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout depend build clean realclean
-
+.PHONY: checkout depend build clean realclean pull_all build_all clobber clobber_all pull_and_build_all
