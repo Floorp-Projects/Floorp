@@ -578,20 +578,16 @@ Rights Reserved.
       <menupopup onpopupshowing="InitMessageMark()">
         <menuitem id="threadPaneContext-markRead"
                   type="checkbox"
-                  key="key_toggleRead"
                   label="&markAsReadCmd.label;"
                   accesskey="&markAsReadCmd.accesskey;"
                   observes="cmd_markAsRead"/>
         <menuitem label="&markThreadAsReadCmd.label;"
-                  key="key_markThreadAsRead"
                   accesskey="&markThreadAsReadCmd.accesskey;"
                   observes="cmd_markThreadAsRead"/>
         <menuitem label="&markReadByDateCmd.label;"
-                  key="key_markReadByDate"
                   accesskey="&markReadByDateCmd.accesskey;"
                   command="cmd_markReadByDate"/>
         <menuitem label="&markAllReadCmd.label;"
-                  key="key_markAllRead"
                   accesskey="&markAllReadCmd.accesskey;"
                   observes="cmd_markAllRead"/>
         <menuseparator/>
@@ -602,11 +598,9 @@ Rights Reserved.
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;"
-                  key="key_markJunk"
                   accesskey="&markAsJunkCmd.accesskey;"
                   observes="cmd_markAsJunk"/>
         <menuitem label="&markAsNotJunkCmd.label;"
-                  key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;"
                   observes="cmd_markAsNotJunk"/>
       </menupopup>
@@ -922,20 +916,16 @@ Rights Reserved.
       <menupopup onpopupshowing="InitMessageMark()">
         <menuitem id="threadPaneContext-markRead"
                   type="checkbox"
-                  key="key_toggleRead"
                   label="&markAsReadCmd.label;"
                   accesskey="&markAsReadCmd.accesskey;"
                   observes="cmd_markAsRead"/>
         <menuitem label="&markThreadAsReadCmd.label;"
-                  key="key_markThreadAsRead"
                   accesskey="&markThreadAsReadCmd.accesskey;"
                   observes="cmd_markThreadAsRead"/>
         <menuitem label="&markReadByDateCmd.label;"
-                  key="key_markReadByDate"
                   accesskey="&markReadByDateCmd.accesskey;"
                   command="cmd_markReadByDate"/>
         <menuitem label="&markAllReadCmd.label;"
-                  key="key_markAllRead"
                   accesskey="&markAllReadCmd.accesskey;"
                   observes="cmd_markAllRead"/>
         <menuseparator/>
@@ -946,11 +936,9 @@ Rights Reserved.
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;" 
-                  key="key_markJunk"
                   accesskey="&markAsJunkCmd.accesskey;" 
                   observes="cmd_markAsJunk"/>
         <menuitem label="&markAsNotJunkCmd.label;" 
-                  key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;" 
                   observes="cmd_markAsNotJunk"/>
       </menupopup>
