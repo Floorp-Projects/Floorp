@@ -38,6 +38,7 @@ CPPSRCS =				\
 	nsCP949ToUnicode.cpp		\
 	nsUnicodeToCP949.cpp		\
 	nsUnicodeToX11Johab.cpp		\
+	nsUnicodeToJohab.cpp		\
 	nsUCvKOSupport.cpp		\
 	nsUCvKoModule.cpp			\
 	$(NULL)
@@ -51,6 +52,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP949ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToCP949.obj		\
 	.\$(OBJDIR)\nsUnicodeToX11Johab.obj		\
+	.\$(OBJDIR)\nsUnicodeToJohab.obj		\
 	.\$(OBJDIR)\nsUCvKOSupport.obj			\
 	.\$(OBJDIR)\nsUCvKoModule.obj 			\
 	$(NULL)
