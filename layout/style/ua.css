@@ -299,6 +299,15 @@ DD {
 
 // Leafs
 
+APPLET {
+  display: inline;
+}
+EMBED {
+  display: inline;
+}
+OBJECT {
+  display: inline;
+}
 HR {
   display: block;
 }
