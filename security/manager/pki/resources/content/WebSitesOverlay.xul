@@ -33,16 +33,15 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="webCerts" orient="vertical">
-    <box><html>&certmgr.websites;</html></box>
+    <html>&certmgr.websites;</html>
     <separator class="thin"/>
-    <tree id="websites_treeset" debug="false" flex="0" multiple="true"
-          height="100" onselect="websites_enableButtons()">
-      <treecolgroup>
-        <treecol flex="1"/>
-        <treecol collapsed="true" flex="1"/>
-      </treecolgroup>
-      <treechildren id="servers" flex="1" />
-    </tree>
+    <outliner id="server-outliner" multiple="true"
+              onselect="websites_enableButtons()" flex="1">
+      <outlinercol id="certcol" label="Certificate Name" flex="1"/>
+      <splitter/>
+      <outlinercol id="tokencol" label="Token Name" flex="1"/>
+      <outlinerbody flex="1"/>
+    </outliner>
     <box>
       <button id="websites_viewButton" class="normal" 
               label="&certmgr.view.label;" orient="horizontal" 

@@ -33,41 +33,13 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <box id="CACerts" orient="vertical">
-    <tree id="ca_treeset" debug="false" flex="0" multiple="true"
-          height="100" onselect="ca_enableButtons()">
-      <treecolgroup>
-        <treecol flex="1"/>
-        <treecol collapsed="true" flex="1"/>
-      </treecolgroup>
-      <treechildren>
-        <treeitem container="true" open="true" flex="1">
-<!--
-          <treehead>
--->
-            <treerow>
-              <treecell label="&certmgr.ca.builtins;" flex="1"/>
-              <treecell collapsed="true" flex="1"/>
-            </treerow>
-<!--
-          </treehead>
--->
-          <treechildren id="builtins" flex="1" />
-        </treeitem>
-        <treeitem container="true" open="true" flex="1">
-<!--
-          <treehead>
--->
-            <treerow>
-              <treecell label="&certmgr.ca.mycas;" flex="1"/>
-              <treecell collapsed="true" flex="1"/>
-            </treerow>
-<!--
-          </treehead>
--->
-          <treechildren id="mycas" flex="1" />
-        </treeitem>
-      </treechildren>
-    </tree>
+    <outliner id="ca-outliner" multiple="true" 
+              onselect="ca_enableButtons()" flex="1">
+      <outlinercol id="certcol" label="Certificate Name" flex="1"/>
+      <splitter/>
+      <outlinercol id="tokencol" label="Token Name" flex="1"/>
+      <outlinerbody flex="1"/>
+    </outliner>
     <box>
       <button id="ca_viewButton" class="normal" 
               label="&certmgr.view.label;" orient="horizontal" 
