@@ -3015,24 +3015,41 @@ nsImapIncomingServer::GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnSer
 {
     NS_ENSURE_ARG_POINTER(aCanCreateFoldersOnServer);
 
+    nsresult rv;
+
     // Initialize aCanCreateFoldersOnServer true, a default value for IMAP
     *aCanCreateFoldersOnServer = PR_TRUE;
 
     nsCAutoString prefName;
-    nsresult rv = CreatePrefNameWithRedirectorType(".canCreateFolders", prefName);
-    if (NS_FAILED(rv)) 
-        return NS_OK; // return if no redirector type
-
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if(NS_SUCCEEDED(rv)) {
-       rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
+
+    nsXPIDLCString serverKey;
+    rv = GetKey(getter_Copies(serverKey));
+
+    // Time to check if this server has the pref 
+    // (mail.server.<serverkey>.canCreateFolders) already set
+    nsMsgIncomingServer::getPrefName(serverKey, 
+                                     "canCreateFolders", 
+                                     prefName);
+    rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
+
+    // If the server pref is not set in then look at the 
+    // pref set with redirector type
+    if (NS_FAILED(rv)) {
+        rv = CreatePrefNameWithRedirectorType(".canCreateFolders", prefName);
+        if (NS_FAILED(rv)) 
+            return NS_OK; // return if no redirector type
+
+        if(NS_SUCCEEDED(rv)) {
+            rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
+        }
     }
 
-    // Couldn't get the default value with the hostname.
+    // Couldn't get the default value with the redirector type.
     // Fall back on IMAP default value
     if (NS_FAILED(rv)) {
-       // set default value
-       *aCanCreateFoldersOnServer = PR_TRUE;
+        // set default value
+        *aCanCreateFoldersOnServer = PR_TRUE;
     }
     return NS_OK;
 }
@@ -3183,20 +3200,37 @@ nsImapIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServe
 {
     NS_ENSURE_ARG_POINTER(aCanFileMessagesOnServer);
 
+    nsresult rv;
+
     // Initialize aCanFileMessagesOnServer true, a default value for IMAP
     *aCanFileMessagesOnServer = PR_TRUE;
 
     nsCAutoString prefName;
-    nsresult rv = CreatePrefNameWithRedirectorType(".canFileMessages", prefName);
-    if (NS_FAILED(rv)) 
-        return NS_OK; //  return if no redirector type
-
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if(NS_SUCCEEDED(rv)) {
-        rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
+
+    nsXPIDLCString serverKey;
+    rv = GetKey(getter_Copies(serverKey));
+
+    // Time to check if this server has the pref 
+    // (mail.server.<serverkey>.canFileMessages) already set
+    nsMsgIncomingServer::getPrefName(serverKey, 
+                                     "canFileMessages", 
+                                     prefName);
+    rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
+
+    // If the server pref is not set in then look at the 
+    // pref set with redirector type
+    if (NS_FAILED(rv)) {
+        rv = CreatePrefNameWithRedirectorType(".canFileMessages", prefName);
+        if (NS_FAILED(rv)) 
+            return NS_OK; //  return if no redirector type
+
+        if(NS_SUCCEEDED(rv)) {
+            rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
+        }
     }
 
-    // Couldn't get the default value with the hostname.
+    // Couldn't get the default value with the redirector type.
     // Fall back on IMAP default value
     if (NS_FAILED(rv)) {
         // set default value

@@ -16,8 +16,8 @@
             <NC:rememberPassword>false</NC:rememberPassword>
             <NC:redirectorType>aol</NC:redirectorType>
             <NC:defaultCopiesAndFoldersPrefsToServer>false</NC:defaultCopiesAndFoldersPrefsToServer>
-            <NC:canCreateFolders>false</NC:canCreateFolders>
-            <NC:canFileMessages>false</NC:canFileMessages>
+            <NC:canCreateFoldersOnServer>false</NC:canCreateFoldersOnServer>
+            <NC:canFileMessagesOnServer>false</NC:canFileMessagesOnServer>
             <NC:ServerType-imap>
               <NC:nsIImapIncomingServer>
                 <NC:deleteModel>2</NC:deleteModel>
