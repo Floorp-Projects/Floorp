@@ -51,6 +51,10 @@ class nsISizeOfHandler;
 #define NS_ISTYLE_SET_IID     \
 {0xe59396b0, 0xb244, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+#ifdef SHARE_STYLECONTEXTS
+typedef PRUint32 scKey; // key for style contexts: it is a CRC32 value actually...
+#endif
+
 class nsIStyleSet : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_SET_IID; return iid; }
@@ -292,36 +296,5 @@ protected:
   nsUniqueStyleItems* ##_name = nsUniqueStyleItems::GetUniqueStyleItems(); \
   NS_ASSERTION(##_name != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleImtes factory");
 
-
-#ifdef SHARE_STYLECONTEXTS
-
-typedef PRUint32 scKey; // key for style contexts: it is a CRC32 value actually...
-
-class StyleContextCache
-{
-public :
-  StyleContextCache(void);
-  ~StyleContextCache(void);
-
-  nsresult AddContext(scKey aKey, nsIStyleContext *aContext);
-  nsresult RemoveContext(scKey aKey, nsIStyleContext *aContext);
-  nsresult RemoveAllContexts(scKey aKey);
-  nsresult GetContexts(scKey aKey, nsVoidArray **aResults); // do not munge list
-  PRUint32 Count(void);
-private:
-  StyleContextCache(StyleContextCache &aNoSrcAllowed); // Not Implemented
-
-  void DumpStats(void);
-  void Tickle(const char *msg = nsnull);
-
-  // make sure there is a list for the specified key
-  nsresult VerifyList(scKey aKey);
-  // returns the list for the key, may be null
-  nsVoidArray *GetList(scKey aKey);
-
-  nsHashtable mHashTable;
-  PRUint32    mCount;
-};
-#endif /* SHARE_STYLECONTEXTS */
 
 #endif /* nsIStyleSet_h___ */
