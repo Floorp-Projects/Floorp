@@ -501,33 +501,12 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   else block = GetBlockNodeParent(selNode);
   if (!block) return res;
   
-  nsAutoString tagName;
-  GetTagString(block,tagName);
-  tagName.ToLowerCase();
-  if (tagName == "table" || tagName == "tr" || 
-      tagName == "td"    || tagName == "th" ||
-      tagName == "thead" || tagName == "tfoot" ||
-      tagName == "tbody" || tagName == "caption")
+  if (IsTableElement(block))
   {
     // find enclosing table
     nsCOMPtr<nsIDOMNode> tbl;
-    if (tagName == "table") tbl = block;
-    else
-    {
-      nsCOMPtr<nsIDOMNode> tmp, node = block;
-      do
-      {
-        GetTagString(node,tagName);
-        tagName.ToLowerCase();
-        if (tagName == "table")
-        {
-          tbl = node;
-          break;
-        }
-        tmp = GetBlockNodeParent(node);
-        node= tmp;
-      } while (node);
-    }
+    if (IsTable(block)) tbl = block;
+    else tbl = GetEnclosingTable(block);
     if (!tbl) return res;
     // advance to next cell
     // first create an iterator over the table
@@ -554,9 +533,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
       res = iter->CurrentNode(getter_AddRefs(cNode));
       if (NS_FAILED(res)) return res;
       node = do_QueryInterface(cNode);
-      GetTagString(node,tagName);
-      tagName.ToLowerCase();
-      if (tagName == "td")
+      if (IsTableCell(node) && (GetEnclosingTable(node) == tbl))
       {
         selection->Collapse(node, 0);
         *outHandled = PR_TRUE;
@@ -3101,6 +3078,56 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #pragma mark -
 #endif
 
+
+NS_IMETHODIMP 
+nsHTMLEditor::Undo(PRUint32 aCount)
+{
+  nsresult result = NS_OK;
+
+  BeginUpdateViewBatch();
+
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kUndo);
+  nsCOMPtr<nsIDOMSelection> selection;
+  GetSelection(getter_AddRefs(selection));
+  PRBool cancel;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  
+  if (!cancel && NS_SUCCEEDED(result))
+  {
+    result = nsEditor::Undo(aCount);
+    result = mRules->DidDoAction(selection, &ruleInfo, result);
+  } 
+   
+  EndUpdateViewBatch();
+
+  return result;
+}
+
+
+NS_IMETHODIMP 
+nsHTMLEditor::Redo(PRUint32 aCount)
+{
+  nsresult result = NS_OK;
+
+  BeginUpdateViewBatch();
+
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kRedo);
+  nsCOMPtr<nsIDOMSelection> selection;
+  GetSelection(getter_AddRefs(selection));
+  PRBool cancel;
+  result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  
+  if (!cancel && NS_SUCCEEDED(result))
+  {
+    result = nsEditor::Redo(aCount);
+    result = mRules->DidDoAction(selection, &ruleInfo, result);
+  } 
+   
+  EndUpdateViewBatch();
+
+  return result;
+}
+
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4615,6 +4642,79 @@ nsHTMLEditor::IsSubordinateBlock(nsString &aTag, PRBool &aIsTag)
     aIsTag = PR_FALSE;
   }
   return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// IsTable: true if node an html table
+//                  
+PRBool 
+nsHTMLEditor::IsTable(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "table")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTableCell: true if node an html td
+//                  
+PRBool 
+nsHTMLEditor::IsTableCell(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableCell");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  if (tag == "td")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTableElement: true if node an html table, td, tr, ...
+//                  
+PRBool 
+nsHTMLEditor::IsTableElement(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElement");
+  nsAutoString tagName;
+  nsEditor::GetTagString(node,tagName);
+  if (tagName == "table" || tagName == "tr" || 
+      tagName == "td"    || tagName == "th" ||
+      tagName == "thead" || tagName == "tfoot" ||
+      tagName == "tbody" || tagName == "caption")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetEnclosingTable: find ancestor who is a table, if any
+//                  
+nsCOMPtr<nsIDOMNode> 
+nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
+{
+  NS_PRECONDITION(aNode, "null node passed to nsHTMLEditor::GetEnclosingTable");
+  nsCOMPtr<nsIDOMNode> tbl, tmp, node = aNode;
+
+  while (!tbl)
+  {
+    tmp = GetBlockNodeParent(node);
+    if (!tmp) break;
+    if (IsTable(tmp)) tbl = tmp;
+    node = tmp;
+  }
+  return tbl;
 }
 
 

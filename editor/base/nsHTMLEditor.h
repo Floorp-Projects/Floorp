@@ -182,6 +182,9 @@ public:
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
+  NS_IMETHOD Undo(PRUint32 aCount);
+  NS_IMETHOD Redo(PRUint32 aCount);
+
   NS_IMETHOD Cut();
   NS_IMETHOD Copy();
   NS_IMETHOD Paste();
@@ -288,6 +291,10 @@ protected:
 
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
 
+  static PRBool IsTable(nsIDOMNode *aNode);
+  static PRBool IsTableCell(nsIDOMNode *aNode);
+  static PRBool IsTableElement(nsIDOMNode *aNode);
+  static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode
     * If <aProperty aAttribute=aValue> contains aNode, 
