@@ -857,6 +857,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           else {
             AddFloater((nsPlaceholderFrame*)aFrame);
           }
+          nsIAtom* oofft;
+          outOfFlowFrame->GetFrameType(&oofft);
+          if (oofft) {
+            if (oofft == nsLayoutAtoms::letterFrame) {
+              mFirstLetterStyleOK = PR_FALSE;
+            }
+            NS_RELEASE(oofft);
+          }
         }
       }
     }
