@@ -3372,6 +3372,7 @@ nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*
       nsString& temp=aToken->GetStringValueXXX();
       if(0==temp.Length()){
         delete aToken;
+        aToken = nsnull;
       }
       else result=kNoError;
     }
