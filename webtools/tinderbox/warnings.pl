@@ -32,7 +32,7 @@ $lxr_data_root = '/export2/lxr-data';
   'long long',
   '__cmsg_data',
   'location of the previous definition',
-  'by \`',
+  '\' was hidden',
   'declaration of \`index\'',
 );
 $ignore_pat = "(?:".join('|',@ignore).")";
@@ -158,8 +158,12 @@ sub gcc_parser {
     my $file = "$dir/$filename";
 
     unless (defined($warnings{$file}{$line})) {
-      # Remember where in the build log the warning occured
 
+      # Special case for "`foo' was hidden\nby `foo2'"
+      $warning_text = "...was hidden " . $warning_text 
+        if $warning_text =~ /^by \`/;
+
+      # Remember where in the build log the warning occured
       $warnings{$file}{$line} = {
          first_seen_line => $.,
          log_file        => $log_file,
@@ -234,9 +238,6 @@ sub print_warnings_as_html {
   <html>
     <head>
       <title>Blamed Build Warnings</title>
-    <style>
-      td { background-color: #ededed }
-    </style>
     </head>
     <body>
       <font size="+2" face="Helvetica,Arial"><b>
@@ -257,7 +258,7 @@ __END_HEADER
   # Summary Table (name, count)
   #
   use POSIX;
-  print "<table border=0 cellpadding=1 cellspacing=0>\n";
+  print "<table border=0 cellpadding=1 cellspacing=0 bgcolor=#ededed>\n";
   my $num_columns = 6;
   my $num_rows = ceil($#who_list / $num_columns);
   for (my $ii=0; $ii < $num_rows; $ii++) {
@@ -278,51 +279,46 @@ __END_HEADER
   }
   print "</table><p>\n";
 
+  # Count Unblamed warnings
+  #
+  my $total_unblamed_warnigns=0;
+  for my $file (keys %unblamed) {
+    for my $linenum (keys %{$warnings{$file}}) {
+      $total_unblamed_warnings += $warnings{$file}{$linenum}{count};
+      $warnings_by_who{Unblamed}{$file}{$linenum} = $warnings{$file}{$linenum};
+    }
+  }
+  $who_count{Unblamed} = $total_unblamed_warnings;
+
   # Print all the warnings
   #
-  for $who (@who_list) {
-    my $count = $who_count{$who};
+  for $who (@who_list, "Unblamed") {
+    my $total_count = $who_count{$who};
     my ($name, $email);
     ($name = $who) =~ s/%.*//;
     ($email = $who) =~ s/%/@/;
     
     print "<h2>";
-    print "<a name='$name' href='mailto:$email'>$name</a>";
-    print " (1 warning)"       if $count == 1;
-    print " ($count warnings)" if $count > 1;
+    print "<a name='$name' href='mailto:$email'>" unless $name eq 'Unblamed';
+    print "$name";
+    print "</a>" unless $name eq 'Unblamed';
+    print " (1 warning)"       if $total_count == 1;
+    print " ($total_count warnings)" if $total_count > 1;
     print "</h2>";
 
-    print "\n<ol>\n";
+    print "\n<table>\n";
+    my $count = 1;
     for $file (sort keys %{$warnings_by_who{$who}}) {
       for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $warn_rec = $warnings_by_who{$who}{$file}{$linenum};
-
+        print_count($count, $warn_rec->{count});
         print_warning($tree, $br, $file, $linenum, $warn_rec);
-        print_source_code($linenum, $warn_rec);
+        print_source_code($linenum, $warn_rec) unless $unblamed{$file};
+        $count += $warn_rec->{count};
       }
     }
-    print "</ol>\n"
+    print "</table>\n";
   }
-
-  # Unblamed warnings
-  #
-  my $total_unblamed_warnigns=0;
-  for my $file (keys %unblamed) {
-    for my $linenum (keys %{$warnings{$file}}) {
-      $total_unblamed_warnings++;
-    }
-  }
-  print "<h2>";
-  print "Unblamed ($total_unblamed_warnings warnings)";
-  print "</h2>";
-  print "<ul>";
-  for my $file (sort keys %unblamed) {
-    for my $linenum (sort keys %{$warnings{$file}}) {
-      my $warn_rec = $warnings{$file}{$linenum};
-      print_warning($tree, $br, $file, $linenum, $warn_rec);
-    }
-  }
-  print "</ul>";
 
   print <<"__END_FOOTER";
   <p>
@@ -336,11 +332,20 @@ __END_FOOTER
   select($old_fh);
 }
 
+sub print_count {
+  my ($start, $count) = @_;
+
+  print "<tr><td align=right>$start";
+  print "-".($start+$count-1) if $count > 1;
+  print ".</td>";
+}
+
 sub print_warning {
   my ($tree, $br, $file, $linenum, $warn_rec) = @_;
 
   my $warning = $warn_rec->{warning_text};
-  print "<li>";
+
+  print "<td>";
 
   # File link
   if ($file =~ /\[multiple\]/) {
@@ -357,7 +362,7 @@ sub print_warning {
     print   "$file:$linenum";
     print "</a> ";
   }
-  print "<br>";
+  print "</td></tr><tr><td></td><td>";
   # Warning text
   print "\u$warning";
   # Build log link
@@ -368,9 +373,9 @@ sub print_warning {
   if ($warn_rec->{count} == 1) {
     print "See build log excerpt";
   } else {
-    print "See 1st of $warn_rec->{count} occurrences in build log";
+    print "See 1st build log reference";
   }
-  print "</a>)<br>";
+  print "</a>)</td></tr>";
 }
 
 sub print_source_code {
@@ -380,7 +385,7 @@ sub print_source_code {
   # Source code fragment
   #
   my ($keyword) = $warning =~ /\`([^\']*)\'/;
-  print "<table><tr><td>";
+  print "<tr><td></td><td bgcolor=#ededed>";
   print "<pre><font size='-1'>";
   
   my $source_text = trim_common_leading_whitespace($warn_rec->{source});
@@ -396,7 +401,7 @@ sub print_source_code {
 
   print "</font>";
   #print "</pre>";
-  print "</td></tr></table>\n";
+  print "</td></tr>\n";
 }
 
 sub build_url {
