@@ -38,6 +38,12 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
+<!-- DTD File with all strings specific to the file -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendarPrefs.dtd" > %dtd1;
+]>
+
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');"
       headertitle="Calendar">
@@ -53,22 +59,15 @@
      ]]>
    </script>
 
-   <!-- SAMPLE PREFS
-   Check out http://lxr.mozilla.org/seamonkey/source/xpfe/components/prefwindow/resources/content/nsPrefWindow.js
-   for more information
-   
-   <checkbox id="someid" type="checkbox" pref="true" preftype="bool"
-          prefattribute="checked" prefstring="calendar.preferencename"
-          label="Label" />
-   -->
-   <vbox>
-      <description>When an alarm goes off:</description>
+   <groupbox orient="vertical">
+      <caption label="&pref.mainbox.caption;"/>
+      <description>&pref.alarmgoesoff.label;</description>
       <checkbox id="alarmplaysound" type="checkbox" pref="true" preftype="bool"
           prefattribute="checked" prefstring="calendar.alarms.playsound"
-          label="Play a sound" />
+          label="&pref.playasound;" />
           
       <checkbox id="alarmshow" type="checkbox" pref="true" preftype="bool"
           prefattribute="checked" prefstring="calendar.alarms.show"
-          label="Show an alarm box" />
-   </vbox>
+          label="&pref.showalarmbox;" />
+   </groupbox>
 </page>
