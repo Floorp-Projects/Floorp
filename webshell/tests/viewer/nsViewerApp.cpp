@@ -61,6 +61,10 @@
 #include <crtdbg.h>
 #endif
 
+#ifdef MOZ_FULLCIRCLE
+#include <fullsoft.h>
+#endif
+
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 
@@ -179,6 +183,16 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
   mPrefs->Startup("prefs.js");
+
+
+  // Load Fullcircle Talkback crash-reporting mechanism.
+  // http://www.fullcirclesoftware.com for more details.
+  // Private build only.
+#ifdef MOZ_FULLCIRCLE
+  // This probably needs to be surrounded by a pref, the
+  // old 5.0 world used "general.fullcircle_enable".
+  FCInitialize();
+#endif
 
   // Setup networking library
   rv = NS_InitINetService();
