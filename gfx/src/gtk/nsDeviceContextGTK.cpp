@@ -566,6 +566,11 @@ NS_IMETHODIMP nsDeviceContextGTK::EndDocument(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK::AbortDocument(void)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextGTK::BeginPage(void)
 {
   return NS_OK;
