@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998, 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#ifndef nsMsgTxn_h__
+#define nsMsgTxn_h__
+
+#include "nsITransaction.h"
+#include "msgCore.h"
+
+#define NS_MESSAGETRANSACTION_IID \
+{ /* da621b30-1efc-11d3-abe4-00805f8ac968 */ \
+    0xda621b30, 0x1efc, 0x11d3, \
+	{ 0xab, 0xe4, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
+/**
+ * base class for all message undo/redo transactions.
+ */
+class NS_MSG_BASE nsMsgTxn : public nsITransaction
+{
+    NS_DECL_ISUPPORTS 
+
+    nsMsgTxn();
+    virtual ~nsMsgTxn();
+
+    NS_IMETHOD Do(void);
+    
+    NS_IMETHOD Undo(void) = 0;
+    
+    NS_IMETHOD Redo(void) = 0;
+    
+    NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
+
+    NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+
+    NS_IMETHOD Write(nsIOutputStream *aOutputStream);
+
+    NS_IMETHOD GetUndoString(nsString *aString);
+
+    NS_IMETHOD GetRedoString(nsString *aString);
+
+};
+
+#endif
