@@ -783,7 +783,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",                       "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",                 "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",                             "$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",                       "$distdirectory:idl:");
     
     #CHROME
     InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                     "$distdirectory:idl:");
