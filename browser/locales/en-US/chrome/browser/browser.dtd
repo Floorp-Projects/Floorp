@@ -75,6 +75,7 @@
 <!ENTITY reloadButton.tooltip         "Reload current page">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY stopCmd.accesskey            "S">
+<!ENTITY stopCmd.macCommandKey        ".">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY goButton.label               "Go">
 <!ENTITY goButton.tooltip             "Type a location in the address field, then click Go">
