@@ -99,8 +99,10 @@ HandleColormapPrefs( void )
 	/* first check ncols */
  
 	rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
-	if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 )
+	if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 ) {
 		gdk_rgb_set_min_colors( ivalue );
+		return;
+	}
 
 	/* next check installcmap */
 
