@@ -303,7 +303,7 @@ function InitDialog()
   {
     // Note: Other possible values are "left" and "right",
     //  but "align" is deprecated, so should we even support "botton"?
-    if (TableCaptionElement.vAlign == "bottom")
+    if (GetHTMLOrCSSStyleValue(TableCaptionElement, "align", "caption-side") == "bottom")
       index = 2;
     else
       index = 1;
