@@ -25,9 +25,10 @@
 ; kernel-item-alist is a list of pairs (item . prev), where item is a kernel item
 ; and prev is either nil or a laitem.  kernel is a list of the kernel items in a canonical order.
 ; Return a new state with the given list of kernel items and state number.
-; For each non-null prev in kernel-item-alist, update (laitem-propagates prev) to include the
-; corresponding laitem in the new state.
-(defun make-state (grammar kernel kernel-item-alist number initial-lookaheads)
+; If update-propagates is true, for each non-null prev in kernel-item-alist, update
+; (laitem-propagates prev) to include the corresponding laitem in the new state.  Do this anyway
+; for internal lookaheads, regardless of update-propagates.
+(defun make-state (grammar kernel kernel-item-alist update-propagates number initial-lookaheads)
   (let ((laitems nil)
         (laitems-hash (make-hash-table :test #'eq)))
     (labels
@@ -57,10 +58,8 @@
            (when prev
              (pushnew laitem (laitem-propagates prev))))))
       
-      (dolist (acons kernel-item-alist nil)
-        (let ((item (car acons))
-              (prev (cdr acons)))
-          (close-item item initial-lookaheads prev)))
+      (dolist (acons kernel-item-alist)
+        (close-item (car acons) initial-lookaheads (and update-propagates (cdr acons))))
       (allocate-state number kernel (nreverse laitems)))))
 
 
@@ -125,7 +124,7 @@
         (lookahead-lists-weakly-compatible
          (mapcar #'(lambda (acons) (laitem-lookaheads (state-laitem state (car acons)))) kernel-item-alist)
          (mapcar #'(lambda (acons) (laitem-lookaheads (cdr acons))) kernel-item-alist)))))
-  
+
 
 ; Propagate all lookaheads in the state.
 (defun propagate-internal-lookaheads (state)
@@ -156,7 +155,7 @@
   (let* ((initial-item (make-item grammar (grammar-start-production grammar) 0))
          (lr-states-hash (make-hash-table :test #'equal))  ;kernel -> list of states with that kernel
          (initial-kernel (list initial-item))
-         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) 0 (make-terminalset grammar *end-marker*)))
+         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) nil 0 (make-terminalset grammar *end-marker*)))
          (states (list initial-state))
          (next-state-number 1))
     (setf (gethash initial-kernel lr-states-hash) (list initial-state))
@@ -176,7 +175,7 @@
                                                 possible-destination-states))
                (propagate-external-lookaheads kernel-item-alist destination-state dirty-states))
               (t
-               (setq destination-state (make-state grammar kernel kernel-item-alist next-state-number *empty-terminalset*))
+               (setq destination-state (make-state grammar kernel kernel-item-alist nil next-state-number *empty-terminalset*))
                (propagate-external-lookaheads kernel-item-alist destination-state dirty-states)
                (push destination-state (gethash kernel lr-states-hash))
                (incf next-state-number)
@@ -238,7 +237,7 @@
   (let* ((initial-item (make-item grammar (grammar-start-production grammar) 0))
          (lalr-states-hash (make-hash-table :test #'equal))  ;kernel -> state
          (initial-kernel (list initial-item))
-         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) 0 (make-terminalset grammar *end-marker*)))
+         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) t 0 (make-terminalset grammar *end-marker*)))
          (states (list initial-state))
          (next-state-number 1))
     (setf (gethash initial-kernel lalr-states-hash) initial-state)
@@ -252,7 +251,7 @@
                  (dolist (acons kernel-item-alist)
                    (pushnew (state-laitem destination-state (car acons)) (laitem-propagates (cdr acons))))
                  (progn
-                   (setq destination-state (make-state grammar kernel kernel-item-alist next-state-number *empty-terminalset*))
+                   (setq destination-state (make-state grammar kernel kernel-item-alist t next-state-number *empty-terminalset*))
                    (setf (gethash kernel lalr-states-hash) destination-state)
                    (incf next-state-number)
                    (push destination-state states)
