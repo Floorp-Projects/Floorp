@@ -186,16 +186,19 @@ literals, comments and processing instructions.
 
 
 #define XmlTok(enc, state, ptr, end, nextTokPtr) \
-  (((enc)->scanners[state])(enc, ptr, end, nextTokPtr))
+  (((enc)->scanners[state]) (enc, ptr, end, nextTokPtr))
 
 #define XmlPrologTok(enc, ptr, end, nextTokPtr) \
-   XmlTok(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr)
+  (((enc)->scanners[XML_PROLOG_STATE]) (enc, ptr, end, nextTokPtr))
+//   XmlTok(enc, XML_PROLOG_STATE, ptr, end, nextTokPtr)
 
 #define XmlContentTok(enc, ptr, end, nextTokPtr) \
-   XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
+  (((enc)->scanners[XML_CONTENT_STATE]) (enc, ptr, end, nextTokPtr))
+//   XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
 
 #define XmlCdataSectionTok(enc, ptr, end, nextTokPtr) \
-   XmlTok(enc, XML_CDATA_SECTION_STATE, ptr, end, nextTokPtr)
+  (((enc)->scanners[XML_CDATA_SECTION_STATE]) (enc, ptr, end, nextTokPtr))
+//   XmlTok(enc, XML_CDATA_SECTION_STATE, ptr, end, nextTokPtr)
 
 /* This is used for performing a 2nd-level tokenization on
 the content of a literal that has already been returned by XmlTok. */ 
@@ -204,10 +207,12 @@ the content of a literal that has already been returned by XmlTok. */
   (((enc)->literalScanners[literalType])(enc, ptr, end, nextTokPtr))
 
 #define XmlAttributeValueTok(enc, ptr, end, nextTokPtr) \
-   XmlLiteralTok(enc, XML_ATTRIBUTE_VALUE_LITERAL, ptr, end, nextTokPtr)
+  (((enc)->literalScanners[XML_ATTRIBUTE_VALUE_LITERAL])(enc, ptr, end, nextTokPtr))
+//   XmlLiteralTok(enc, XML_ATTRIBUTE_VALUE_LITERAL, ptr, end, nextTokPtr)
 
 #define XmlEntityValueTok(enc, ptr, end, nextTokPtr) \
-   XmlLiteralTok(enc, XML_ENTITY_VALUE_LITERAL, ptr, end, nextTokPtr)
+  (((enc)->literalScanners[XML_ENTITY_VALUE_LITERAL])(enc, ptr, end, nextTokPtr))
+//   XmlLiteralTok(enc, XML_ENTITY_VALUE_LITERAL, ptr, end, nextTokPtr)
 
 #define XmlSameName(enc, ptr1, ptr2) (((enc)->sameName)(enc, ptr1, ptr2))
 
