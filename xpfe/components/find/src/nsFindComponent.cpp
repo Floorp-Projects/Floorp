@@ -547,7 +547,6 @@ nsFindComponent::Find( nsISupports *aContext )
         Context *context = (Context*)aContext;
 
         // Open Find dialog and prompt for search parameters.
-        nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
         nsIWebShellWindow *newWindow;
 
         // Make url for dialog xul.
@@ -562,7 +561,7 @@ nsFindComponent::Find( nsISupports *aContext )
 
         rv = mAppShell->CreateTopLevelWindow( nsnull,
                                               url,
-                                              controllerCID,
+                                              PR_TRUE,
                                               newWindow,
                                               nsnull,
                                               dialog,
