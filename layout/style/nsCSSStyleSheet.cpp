@@ -1949,7 +1949,10 @@ nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 nsNameSpaceMap*
 nsCSSStyleSheet::GetNameSpaceMap() const
 {
-  return mInner ? mInner->mNameSpaceMap : nsnull;
+  if (mInner)
+    return mInner->mNameSpaceMap;
+
+  return nsnull;
 }
 
 NS_IMETHODIMP
