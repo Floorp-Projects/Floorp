@@ -67,6 +67,7 @@ CPPSRCS =			\
         nsAllocator.cpp         \
 	xcDll.cpp \
 	xcDllStore.cpp \
+	nsGenericFactory.cpp \
 	$(NULL)
 
 CPP_OBJS = \
@@ -87,6 +88,7 @@ CPP_OBJS = \
         .\$(OBJDIR)\nsAllocator.obj             \
     .\$(OBJDIR)\xcDll.obj \
 	.\$(OBJDIR)\xcDllStore.obj \
+	.\$(OBJDIR)\nsGenericFactory.obj \
 	$(NULL)
 
 MODULE = xpcom 
