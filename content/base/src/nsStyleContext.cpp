@@ -565,7 +565,7 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
     
     // We begin by examining those style structs that are capable of causing the maximal
     // difference, a FRAMECHANGE.
-    // FRAMECHANGE Structs: Display, XUL, Content, UserInterface
+    // FRAMECHANGE Structs: Display, XUL, Content, UserInterface, Quotes
     if (aHint < maxHint) {
       const nsStyleDisplay* display = (const nsStyleDisplay*)PeekStyleData(eStyleStruct_Display);
       if (display) {
@@ -630,12 +630,26 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
     }
 #endif
 
+    // If the quotes implementation is ever going to change we might not need
+    // a framechange here and a reflow should be sufficient.  See bug 35768.
+    if (aHint < maxHint) {
+      const nsStyleQuotes* quotes = (const nsStyleQuotes*)PeekStyleData(eStyleStruct_Quotes);
+      if (quotes) {
+        const nsStyleQuotes* otherQuotes = (const nsStyleQuotes*)aOther->GetStyleData(eStyleStruct_Quotes);
+        if (quotes != otherQuotes) {
+          hint = quotes->CalcDifference(*otherQuotes);
+          if (aHint < hint)
+            aHint = hint;
+        }
+      }
+    }
+
     // At this point, we know that the worst kind of damage we could do is a reflow.
     maxHint = NS_STYLE_HINT_REFLOW;
         
     // The following structs cause (as their maximal difference) a reflow to occur.
     // REFLOW Structs: Font, Margin, Padding, Border, List, Position, Text, TextReset,
-    // Visibility, Quotes, Table, TableBorder
+    // Visibility, Table, TableBorder
     if (aHint < maxHint) {
       const nsStyleFont* font = (const nsStyleFont*)PeekStyleData(eStyleStruct_Font);
       if (font) {
@@ -762,18 +776,6 @@ nsStyleContext::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint)
         const nsStyleTableBorder* otherTable = (const nsStyleTableBorder*)aOther->GetStyleData(eStyleStruct_TableBorder);
         if (table != otherTable) {
           hint = table->CalcDifference(*otherTable);
-          if (aHint < hint)
-            aHint = hint;
-        }
-      }
-    }
-
-    if (aHint < maxHint) {
-      const nsStyleQuotes* quotes = (const nsStyleQuotes*)PeekStyleData(eStyleStruct_Quotes);
-      if (quotes) {
-        const nsStyleQuotes* otherQuotes = (const nsStyleQuotes*)aOther->GetStyleData(eStyleStruct_Quotes);
-        if (quotes != otherQuotes) {
-          hint = quotes->CalcDifference(*otherQuotes);
           if (aHint < hint)
             aHint = hint;
         }

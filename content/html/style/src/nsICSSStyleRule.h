@@ -42,8 +42,10 @@
 //#include <stdio.h>
 #include "nsICSSRule.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
+#include "nsIAtom.h"
 
 class nsISizeOfHandler;
 
@@ -60,8 +62,21 @@ public:
   ~nsAtomList(void);
   PRBool Equals(const nsAtomList* aOther) const;
 
-  nsIAtom*    mAtom;
-  nsAtomList* mNext;
+  nsCOMPtr<nsIAtom> mAtom;
+  nsAtomList*       mNext;
+};
+
+struct nsAtomStringList {
+public:
+  nsAtomStringList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
+  nsAtomStringList(const nsString& aAtomValue, const PRUnichar *aString = nsnull);
+  nsAtomStringList(const nsAtomStringList& aCopy);
+  ~nsAtomStringList(void);
+  PRBool Equals(const nsAtomStringList* aOther) const;
+
+  nsCOMPtr<nsIAtom> mAtom;
+  PRUnichar*        mString;
+  nsAtomStringList* mNext;
 };
 
 #define NS_ATTR_FUNC_SET        0     // [attr]
@@ -112,8 +127,8 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(const nsString& aPseudoClass);
-  void AddPseudoClass(nsIAtom* aPseudoClass);
+  void AddPseudoClass(const nsString& aPseudoClass, const PRUnichar* aString = nsnull);
+  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString = nsnull);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);
@@ -133,10 +148,11 @@ private:
 
 public:
   PRInt32         mNameSpace;
-  nsIAtom*        mTag;
+  nsCOMPtr<nsIAtom> mTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
-  nsAtomList*     mPseudoClassList;
+  nsAtomStringList* mPseudoClassList; // atom for the pseudo, string for
+                                      // the argument to functional pseudos
   nsAttrSelector* mAttrList;
   PRUnichar       mOperator;
   nsCSSSelector*  mNegations;

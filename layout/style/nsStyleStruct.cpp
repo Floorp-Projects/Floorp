@@ -1246,17 +1246,19 @@ nsStyleQuotes::nsStyleQuotes(const nsStyleQuotes& aSource)
 PRInt32 
 nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
 {
+  // If the quotes implementation is ever going to change we might not need
+  // a framechange here and a reflow should be sufficient.  See bug 35768.
   if (mQuotesCount == aOther.mQuotesCount) {
     PRUint32 ix = (mQuotesCount * 2);
     while (0 < ix--) {
       if (mQuotes[ix] != aOther.mQuotes[ix]) {
-        return NS_STYLE_HINT_REFLOW;
+        return NS_STYLE_HINT_FRAMECHANGE;
       }
     }
 
     return NS_STYLE_HINT_NONE;
   }
-  return NS_STYLE_HINT_REFLOW;
+  return NS_STYLE_HINT_FRAMECHANGE;
 }
 
 // --------------------

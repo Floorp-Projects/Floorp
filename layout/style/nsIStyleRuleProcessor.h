@@ -43,6 +43,7 @@
 #include "nsISupports.h"
 #include "nsIPresContext.h" // for nsCompatability
 #include "nsILinkHandler.h"
+#include "nsString.h"
 
 class nsISizeOfHandler;
 
@@ -78,6 +79,8 @@ struct RuleProcessorData {
     aContext->FreeToShell(sizeof(RuleProcessorData), this);
   };
 
+  const nsString* GetLang();
+
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
   nsIContent*       mParentContent; // if content, content->GetParent()
@@ -98,6 +101,10 @@ struct RuleProcessorData {
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
+
+protected:
+  nsAutoString mLanguage;
+  PRBool mIsLanguageValid;
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {

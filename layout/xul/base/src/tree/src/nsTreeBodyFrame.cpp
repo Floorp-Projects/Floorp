@@ -3306,7 +3306,7 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
     // it is contained in our scratch array.  If we have a miss, then
     // we aren't a match.  If all items in the pseudoclass list are
     // present in the scratch array, then we have a match.
-    nsAtomList* curr = aSelector->mPseudoClassList;
+    nsAtomStringList* curr = aSelector->mPseudoClassList;
     while (curr) {
       PRInt32 index;
       mScratchArray->GetIndexOf(curr->mAtom, &index);
