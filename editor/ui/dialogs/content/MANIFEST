@@ -46,3 +46,5 @@ EdMessage.js
 EdDialogOverlay.xul
 EdAdvancedEdit.xul
 EdAdvancedEdit.js
+EdListProps.xul
+EdListProps.js

@@ -159,7 +159,7 @@ function AddToDictionary()
 
 function EditDictionary()
 {
-  window.openDialog("chrome://editor/content/EdDictionary.xul", "Dictionary", "chrome,close,titlebar,modal", "", misspelledWord);
+  window.openDialog("chrome://editor/content/EdDictionary.xul", "_blank", "chrome,close,titlebar,modal", "", misspelledWord);
 }
 
 function SelectLanguage()

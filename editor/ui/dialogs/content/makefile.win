@@ -44,7 +44,8 @@ install::
 	$(MAKE_INSTALL) EdDialogOverlay.xul    $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdAdvancedEdit.xul     $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdAdvancedEdit.js      $(DIST)\bin\chrome\editor\content\default
-
+	$(MAKE_INSTALL) EdListProps.xul        $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdListProps.js         $(DIST)\bin\chrome\editor\content\default
 
 
 clobber::
@@ -72,3 +73,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EdDialogOverlay.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdAdvancedEdit.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdAdvancedEdit.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdListProps.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdListProps.js

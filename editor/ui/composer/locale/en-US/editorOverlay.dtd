@@ -180,6 +180,22 @@
 <!ENTITY paragraphDfnTermCmd.label "Definition term">
 <!ENTITY paragraphDfnDescCmd.label "Definition description">
 
+<!-- List menu items -->
+<!ENTITY listMenu.label "List">
+<!ENTITY formatlistmenu.accesskey "l">
+<!ENTITY listNoneCmd.label "None">
+<!ENTITY listnone.accesskey "o">
+<!ENTITY listBullettedCmd.label "Bulletted">
+<!ENTITY listbulletted.accesskey "b">
+<!ENTITY listNumberedCmd.label "Numbered">
+<!ENTITY listnumbered.accesskey "n">
+<!ENTITY listDefinitionCmd.label "Definition">
+<!ENTITY listdefinition.accesskey "d">
+
+<!ENTITY alignMenu.label "Align">
+<!ENTITY formatlistmenu.accesskey "a">
+<!-- Align items shared with popup above -->
+
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">
 <!ENTITY stylesheetEditorOneCmd.label "Editor Styles 1">
 <!ENTITY stylesheetOldstyleCmd.label "Oldstyle">
@@ -395,7 +411,7 @@
 <!ENTITY coloryellow.accesskey "y">
 <!ENTITY colormagenta.accesskey "m">
 <!ENTITY formatremovestyles.accesskey "r">
-<!ENTITY formatremovelinks.accesskey "l">
+<!ENTITY formatremovelinks.accesskey "m">
 <!ENTITY formatheadingmenu.accesskey "h">
 <!ENTITY headingnone.accesskey "n">
 <!ENTITY heading1.accesskey "1">
