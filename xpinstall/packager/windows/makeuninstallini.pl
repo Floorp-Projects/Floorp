@@ -81,14 +81,14 @@ print "\n Making $outIniFile...\n";
 while($line = <fpInIt>)
 {
   # For each line read, search and replace $Version$ with the version passed in
-  $line =~ s/\$Version\$/$inVersion/i;
-  $line =~ s/\$UserAgent\$/$userAgent/i;
-  $line =~ s/\$UserAgentShort\$/$userAgentShort/i;
-  $line =~ s/\$XPInstallVersion\$/$xpinstallVersion/i;
-  $line =~ s/\$CompanyName\$/$nameCompany/i;
-  $line =~ s/\$ProductName\$/$nameProduct/i;
-  $line =~ s/\$MainExeFile\$/$fileMainExe/i;
-  $line =~ s/\$UninstallFile\$/$fileUninstall/i;
+  $line =~ s/\$Version\$/$inVersion/gi;
+  $line =~ s/\$UserAgent\$/$userAgent/gi;
+  $line =~ s/\$UserAgentShort\$/$userAgentShort/gi;
+  $line =~ s/\$XPInstallVersion\$/$xpinstallVersion/gi;
+  $line =~ s/\$CompanyName\$/$nameCompany/gi;
+  $line =~ s/\$ProductName\$/$nameProduct/gi;
+  $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
+  $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
   print fpOutIni $line;
 }
 
