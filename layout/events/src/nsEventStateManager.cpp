@@ -882,6 +882,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
 
         nsIFrame* currFrame = mCurrentTarget;
+        nsCOMPtr<nsIContent> activeContent;
+        if (mCurrentTarget)
+          mCurrentTarget->GetContent(getter_AddRefs(activeContent));
+
         // Look for the nearest enclosing focusable frame.
         while (currFrame) {
           const nsStyleUserInterface* ui;
@@ -901,7 +905,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         else if (!suppressBlur)
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
-        SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
+        if (activeContent)
+          SetContentState(activeContent, NS_EVENT_STATE_ACTIVE);
       }
       else {
         // if we're here, the event handler returned false, so stop
@@ -2455,6 +2460,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       NS_IF_RELEASE(gLastFocusedContent);
       gLastFocusedContent = mCurrentFocus;
       NS_IF_ADDREF(gLastFocusedContent);
+      aContent = nsnull;
     } else {
       notifyContent[3] = gLastFocusedContent;
       NS_IF_ADDREF(gLastFocusedContent);
