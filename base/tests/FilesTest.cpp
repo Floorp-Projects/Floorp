@@ -689,7 +689,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_DriveDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -701,7 +701,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_TemporaryDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -713,7 +713,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_CurrentProcessDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -726,7 +726,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_SystemDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -738,7 +738,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_DesktopDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -750,7 +750,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_TrashDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -762,7 +762,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_StartupDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -774,7 +774,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_ShutdownDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -786,7 +786,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_AppleMenuDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -798,7 +798,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_ControlPanelDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -810,7 +810,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_ExtensionDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -822,7 +822,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Mac_FontsDirectory yields \t";
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -835,7 +835,7 @@ int FilesTest::SpecialSystemDirectories()
 
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -848,7 +848,7 @@ int FilesTest::SpecialSystemDirectories()
 
     if (systemDir.Valid())
     {
-        mConsole << systemDir << nsEndl;
+        mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -861,7 +861,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Win_SystemDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -873,7 +873,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Win_WindowsDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -886,7 +886,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Unix_LocalDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
@@ -899,7 +899,7 @@ int FilesTest::SpecialSystemDirectories()
 
     if (systemDir.Valid())
     {
-        (nsOutputStream&)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir.GetNativePathCString() << nsEndl;
     }
     else
     {
