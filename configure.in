@@ -143,14 +143,15 @@ alpha*-*-osf*)
     fi ;;
 
 *-freebsd*)
-    if test -z "$GNU_CC"; then
-	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
-    fi 
     if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` = "elf"; then
         DLL_SUFFIX="so"
     else
 	DLL_SUFFIX="so.1.0"
-    fi ;;
+	DSO_LDOPTS="-shared"
+    fi
+    if test -z "$GNU_CC"; then
+	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
+    fi ;; 
 
 *-netbsd*)
     DLL_SUFFIX=".so.1.0"
@@ -284,6 +285,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(ftime getcwd gethostname getwd mkdir mktime putenv rmdir select)
 AC_CHECK_FUNCS(socket strcspn strdup strerror strspn strstr strtol strtoul)
 AC_CHECK_FUNCS(uname qsort snprintf waitid fork1 remainder lchown)
+AC_CHECK_FUNCS(localtime_r)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
