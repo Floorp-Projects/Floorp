@@ -84,8 +84,9 @@ nsSound::~nsSound()
 void nsSound::PurgeLastSound() {
   if (mLastSound) {
     // Purge the current sound buffer.
-    ::PlaySound(NULL, NULL, SND_PURGE);  // This call halts the sound if it was still playing.
-  
+    CWinMM& theMM = CWinMM::GetModule();
+    theMM.PlaySound(nsnull, nsnull, SND_PURGE); // This call halts the sound if it was still playing.
+
     // Now delete the buffer.
     free(mLastSound);
     mLastSound = nsnull;
@@ -134,7 +135,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     // We shouldn't have to hold on to this and free it.
     mLastSound = (char *) malloc(stringLen);
     memcpy(mLastSound, string, stringLen);
-    ::PlaySound(mLastSound, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
+
+    CWinMM& theMM = CWinMM::GetModule();
+    theMM.PlaySound(mLastSound, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
   }
 
   return NS_OK;
@@ -161,11 +164,13 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
   PurgeLastSound();
 
+  CWinMM& theMM = CWinMM::GetModule();
+
   if (nsCRT::strcmp("_moz_mailbeep", aSoundAlias) == 0) {
-    ::PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
+    theMM.PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
   }
   else {
-    ::PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
+    theMM.PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
   }
 
   return NS_OK;
