@@ -23,6 +23,7 @@
 #include "nsGtkMenu.h"
 #include "nsIServiceManager.h"
 #include "nsIImageManager.h"
+#include "nsIThread.h"
 #include "plevent.h"
 #include "prinit.h"
 #include "prlog.h"
@@ -175,6 +176,9 @@ int main(int argc, char **argv)
     // force it here, but we have no choice because of toolkit specific
     // code linked into the viewer.
     putenv("MOZ_TOOLKIT=gtk");
+
+    rv = nsIThread::SetMainThread();
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "couldn't set main thread");
 
     gTheApp = new nsNativeViewerApp();
     gTheApp->Initialize(argc, argv);
