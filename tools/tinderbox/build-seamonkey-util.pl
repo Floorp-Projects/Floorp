@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.171 $ ';
+$::UtilsVersion = '$Revision: 1.172 $ ';
 
 package TinderUtils;
 
@@ -1577,8 +1577,8 @@ sub fork_and_log {
 
     unless ($pid) { # child
 
-        # Chimera don't want to reset home dir.
-        unless ($Settings::ResetHomeDirForTests) {
+        # Chimera doesn't want to reset home dir.
+        if ($Settings::ResetHomeDirForTests) {
             $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
         }
             
