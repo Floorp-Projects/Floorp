@@ -424,7 +424,7 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
-    JSBool ok = JS_FALSE, b;
+    JSBool ok, b;
     JSObject *obj;
     JSFunction *fun;
     JSString *str;
@@ -434,6 +434,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
     switch (type) {
       case JSTYPE_VOID:
 	*vp = JSVAL_VOID;
+        ok = JS_TRUE;
 	break;
       case JSTYPE_OBJECT:
 	ok = js_ValueToObject(cx, v, &obj);
@@ -551,15 +552,14 @@ JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, jsval v)
 {
-    JSType type = JSTYPE_VOID;
+    JSType type;
     JSObject *obj;
     JSObjectOps *ops;
     JSClass *clasp;
 
     CHECK_REQUEST(cx);
-    if (JSVAL_IS_VOID(v)) {
-	type = JSTYPE_VOID;
-    } else if (JSVAL_IS_OBJECT(v)) {
+    if (JSVAL_IS_OBJECT(v)) {
+        /* XXX JSVAL_IS_OBJECT(v) is true for null too! Can we change ECMA? */
 	obj = JSVAL_TO_OBJECT(v);
 	if (obj &&
 	    (ops = obj->map->ops,
@@ -577,6 +577,8 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 	type = JSTYPE_STRING;
     } else if (JSVAL_IS_BOOLEAN(v)) {
 	type = JSTYPE_BOOLEAN;
+    } else {
+	type = JSTYPE_VOID;
     }
     return type;
 }
