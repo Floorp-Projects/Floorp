@@ -298,8 +298,12 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 }
 
 /*
- * Emit a jump op with offset pointing to the previous jump of this type,
- * so that we can walk back up the chain fixing up the final destination.
+ * Emit a jump op with offset pointing to the previous jump of this type, so
+ * that we can walk back up the chain fixing up the final destination.  Note
+ * that we could encode delta as an unsigned offset, and gain a bit of delta
+ * domain -- but when we backpatch, we would ReportStatementTooLarge anyway.
+ * We may as well report that error now, and we must avoid storing unchecked
+ * deltas here.
  */
 #define EMIT_CHAINED_JUMP(cx, cg, last, op, jmp)                              \
     JS_BEGIN_MACRO                                                            \
@@ -307,8 +311,14 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
         offset = CG_OFFSET(cg);                                               \
         delta = offset - (last);                                              \
         last = offset;                                                        \
-        jmp = js_Emit3((cx), (cg), (op), JUMP_OFFSET_HI(delta),               \
-                       JUMP_OFFSET_LO(delta));                                \
+        JS_ASSERT(delta > 0);                                                 \
+        if (delta > JUMP_OFFSET_MAX) {                                        \
+            ReportStatementTooLarge(cx, cg);                                  \
+            jmp = -1;                                                         \
+        } else {                                                              \
+            jmp = js_Emit3((cx), (cg), (op), JUMP_OFFSET_HI(delta),           \
+                           JUMP_OFFSET_LO(delta));                            \
+        }                                                                     \
     JS_END_MACRO
 
 /* Emit additional bytecode(s) for non-local jumps. */
@@ -396,11 +406,10 @@ static JSBool
 PatchGotos(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
            ptrdiff_t last, jsbytecode *target, jsbytecode op)
 {
-    jsbytecode *pc, *top;
+    jsbytecode *pc;
     ptrdiff_t delta, jumpOffset;
 
     pc = CG_CODE(cg, last);
-    top = CG_CODE(cg, stmt->top);
     while (pc != CG_CODE(cg, -1)) {
         JS_ASSERT(*pc == op);
         delta = GET_JUMP_OFFSET(pc);
