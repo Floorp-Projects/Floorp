@@ -227,6 +227,11 @@ PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstanc
               if (PL_strcasecmp(jpiDescription + 92, "1.5") < 0)
                 return PR_FALSE;
             }
+            if (PL_strncasecmp(jpiDescription, "IBM Java(TM) Plug-in", 20) == 0) {
+              // Java Plugin support Xembed from JRE 1.5
+              if (PL_strcasecmp(jpiDescription + 27, "1.5") < 0)
+                return PR_FALSE;
+            }
           }
         }
       }
