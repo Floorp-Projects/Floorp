@@ -42,6 +42,8 @@
 #include "nsIProfile.h"
 #include "nsQuickSort.h"
 
+#include "nsTextFormater.h"
+
 #include "plhash.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -596,6 +598,21 @@ NS_IMETHODIMP nsPref::SetCharPref(const char *pref,const char* value)
     return _convertRes(PREF_SetCharPref(pref, value));
 }
 
+NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
+{
+    nsresult rv;
+    nsAutoString str(value);
+
+    char *utf8String = str.ToNewUTF8String();
+
+    if (!utf8String) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = SetCharPref(pref, utf8String);
+    nsCRT::free(utf8String);
+
+    return rv;
+}
+
 NS_IMETHODIMP nsPref::SetIntPref(const char *pref,PRInt32 value)
 {
     return _convertRes(PREF_SetIntPref(pref, value));
@@ -724,6 +741,37 @@ NS_IMETHODIMP nsPref::ClearUserPref(const char *pref_name)
 NS_IMETHODIMP nsPref::CopyCharPref(const char *pref, char ** return_buf)
 {
     return _convertRes(PREF_CopyCharPref(pref, return_buf));
+}
+
+// unicode "%s" format string
+static const PRUnichar unicodeFormatter[] = {
+    (PRUnichar)'%',
+    (PRUnichar)'s',
+    (PRUnichar)0,
+};
+
+NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
+{
+    nsresult rv;
+    
+    // get the UTF8 string for conversion
+    char *utf8String;
+    rv = CopyCharPref(pref, &utf8String);
+    if (NS_FAILED(rv)) return rv;
+    
+    // convert to PRUnichar using nsTextFormatter
+    // this is so ugly, it allocates memory at least 4 times :(
+    PRUnichar *unicodeString =
+        nsTextFormater::smprintf(unicodeFormatter, utf8String);
+    PL_strfree(utf8String);
+    if (!unicodeString) return NS_ERROR_OUT_OF_MEMORY;
+
+    // use the right allocator
+    *return_buf = nsCRT::strdup(unicodeString);
+    nsTextFormater::smprintf_free(unicodeString);
+    if (!*return_buf) return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsPref::CopyBinaryPref(const char *pref,

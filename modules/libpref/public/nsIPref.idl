@@ -106,6 +106,7 @@ interface nsIPref : nsISupports {
 
   /* set preferences */
   void SetCharPref(in string pref, in string value);
+  void SetUnicharPref(in string pref, in wstring value);
   void SetIntPref(in string pref, in long value);
   void SetBoolPref(in string pref, in boolean value);
   [noscript] void SetBinaryPref(in string pref, in voidStar value, in unsigned long size);
@@ -143,6 +144,7 @@ interface nsIPref : nsISupports {
   
   /* copy versions of getters */
   string CopyCharPref(in string pref);
+  wstring CopyUnicharPref(in string pref);
   [noscript] voidStar CopyBinaryPref(in string pref, out long size);
   
   string CopyDefaultCharPref(in string pref);
