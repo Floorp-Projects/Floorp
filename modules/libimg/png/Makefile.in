@@ -55,11 +55,11 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifndef MOZ_NATIVE_ZLIB
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lzlib
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lz
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(DIST)/lib/zlib.lib
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(DIST)/lib/z.lib
 else
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=

@@ -52,7 +52,7 @@ CPPSRCS		= \
 
 LIBS        = \
         `gtk-config --libs` \
-        -ljar50_s \
+        -ljar$(VERSION_NUMBER)_s \
         $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub

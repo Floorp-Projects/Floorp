@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= zlib
-LIBRARY_NAME	= zlib
+LIBRARY_NAME	= z
 
 
 CSRCS		= \
