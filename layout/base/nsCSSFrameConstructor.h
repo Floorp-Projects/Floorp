@@ -69,8 +69,8 @@ struct nsFindFrameHint
   nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
 };
 
-struct nsFrameConstructorState;
-  
+class nsFrameConstructorState;
+
 class nsCSSFrameConstructor
 {
 public:
@@ -606,7 +606,10 @@ private:
                                  nsIFrame*                aNewFrame,
                                  PRBool                   aForceBindingParent,
                                  PRBool                   aAppendToExisting,
-                                 nsFrameItems&            aChildItems);
+                                 nsFrameItems&            aChildItems,
+                                 nsIFrame*                aAnonymousCreator,
+                                 nsIContent*              aInsertionNode,
+                                 PRBool                   aAnonymousParentIsBlock);
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -1079,6 +1082,21 @@ private:
       mQuoteList.RecalcAll();
   }
 
+  inline NS_HIDDEN_(nsresult)
+    CreateInsertionPointChildren(nsIPresShell *aPresShell,
+                                 nsPresContext *aPresContext,
+                                 nsFrameConstructorState &aState,
+                                 nsIFrame *aNewFrame,
+                                 nsIContent *aContent,
+                                 PRBool aUseInsertionFrame = PR_TRUE);
+
+  NS_HIDDEN_(nsresult)
+    CreateInsertionPointChildren(nsIPresShell *aPresShell,
+                                 nsPresContext *aPresContext,
+                                 nsFrameConstructorState &aState,
+                                 nsIFrame *aNewFrame,
+                                 PRBool aUseInsertionFrame);
+                                 
 public:
   struct RestyleData;
   friend struct RestyleData;
@@ -1101,7 +1119,7 @@ public:
     void HandleEvent();
   };
 
-  friend struct nsFrameConstructorState;
+  friend class nsFrameConstructorState;
 
 protected:
   nsCOMPtr<nsIEventQueue>        mRestyleEventQueue;

@@ -40,6 +40,7 @@
 #include "nsIDOMElement.h"
 #include "nsIXTFVisualWrapperPrivate.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsXTFFrameUtils.h"
 
 typedef nsBoxFrame nsXTFXULDisplayFrameBase;
 
@@ -61,6 +62,7 @@ private:
 public:
   // nsIFrame
   virtual nsIFrame* GetContentInsertionFrame();
+  virtual already_AddRefed<nsIContent> GetContentInsertionNode();
 
   NS_IMETHOD EndLayout(nsBoxLayoutState& aState);
   
@@ -108,19 +110,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsXTFXULDisplayFrameBase)
 nsIFrame*
 nsXTFXULDisplayFrame::GetContentInsertionFrame()
 {
-  nsCOMPtr<nsIXTFVisualWrapperPrivate> visual = do_QueryInterface(mContent);
-  NS_ASSERTION(visual, "huh? associated content not implementing nsIXTFVisualWrapperPrivate");
-  
-  nsCOMPtr<nsIDOMElement> childInsertionPoint;
-  visual->GetInsertionPoint(getter_AddRefs(childInsertionPoint));
-  if (!childInsertionPoint) return nsnull; // we don't take visual child content
-  
-  nsCOMPtr<nsIContent> content = do_QueryInterface(childInsertionPoint);
-  NS_ASSERTION(content, "element not implementing nsIContent!?");
+  return nsXTFFrameUtils::GetContentInsertionFrame(this);
+}
 
-  nsIFrame* insertionFrame = nsnull;
-  GetPresContext()->GetPresShell()->GetPrimaryFrameFor(content, &insertionFrame);
-  return insertionFrame;
+already_AddRefed<nsIContent>
+nsXTFXULDisplayFrame::GetContentInsertionNode()
+{
+  return nsXTFFrameUtils::GetContentInsertionNode(this);
 }
 
 NS_IMETHODIMP

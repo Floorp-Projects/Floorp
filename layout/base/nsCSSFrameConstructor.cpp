@@ -894,7 +894,26 @@ private:
   nsIAtom* mChildListName;
   nsFrameConstructorState* mState;
 
-  friend struct nsFrameConstructorState;
+  friend class nsFrameConstructorState;
+};
+
+// Structure for saving the existing state when pushing/popping insertion
+// points for nsIAnonymousContentCreator.  The destructor restores the state
+// to its previous state.  See documentation of these members in
+// nsFrameConstructorState.
+class nsFrameConstructorInsertionState {
+public:
+  nsFrameConstructorInsertionState();
+  ~nsFrameConstructorInsertionState();
+
+private:
+  nsIFrame*   mAnonymousCreator;
+  nsIContent* mInsertionContent;
+  PRBool      mCreatorIsBlock;
+
+  nsFrameConstructorState* mState;
+
+  friend class nsFrameConstructorState;
 };
 
 // Structure used for maintaining state information during the
@@ -913,6 +932,13 @@ public:
   PRBool                    mFirstLineStyle;
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   nsPseudoFrames            mPseudoFrames;
+
+  // The nsIAnonymousContentCreator we're currently constructing children for.
+  nsIFrame                 *mAnonymousCreator;
+  // The insertion point node for mAnonymousCreator.
+  nsIContent               *mInsertionContent;
+  // Whether the parent is a block (see ProcessChildren's aParentIsBlock)
+  PRBool                    mCreatorIsBlock;
 
   // Constructor
   // Use the passed-in history state.
@@ -979,8 +1005,15 @@ public:
                     PRBool aCanBePositioned = PR_TRUE,
                     PRBool aCanBeFloated = PR_TRUE);
 
+  // Push an nsIAnonymousContentCreator and its insertion node
+  void PushAnonymousContentCreator(nsIFrame *aCreator,
+                                   nsIContent *aContent,
+                                   PRBool aIsBlock,
+                                   nsFrameConstructorInsertionState &aSaveState);
+
 protected:
   friend class nsFrameConstructorSaveState;
+  friend class nsFrameConstructorInsertionState;
 
   /**
    * ProcessFrameInsertions takes the frames in aFrameItems and adds them as
@@ -1004,7 +1037,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsPresContext*        aPresCont
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
     mFrameState(aHistoryState),
-    mPseudoFrames()
+    mPseudoFrames(),
+    mAnonymousCreator(nsnull),
+    mInsertionContent(nsnull),
+    mCreatorIsBlock(PR_FALSE)
 {
 }
 
@@ -1020,7 +1056,10 @@ nsFrameConstructorState::nsFrameConstructorState(nsPresContext*        aPresCont
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mPseudoFrames()
+    mPseudoFrames(),
+    mAnonymousCreator(nsnull),
+    mInsertionContent(nsnull),
+    mCreatorIsBlock(PR_FALSE)
 {
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
@@ -1213,6 +1252,23 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
 }
 
 void
+nsFrameConstructorState::PushAnonymousContentCreator(nsIFrame *aCreator,
+                                                     nsIContent *aContent,
+                                                     PRBool aIsBlock,
+                                                     nsFrameConstructorInsertionState &aSaveState)
+{
+  NS_ASSERTION(aCreator || !aContent, "Must have a frame if there is an insertion node");
+  aSaveState.mAnonymousCreator = mAnonymousCreator;
+  aSaveState.mInsertionContent = mInsertionContent;
+  aSaveState.mCreatorIsBlock = mCreatorIsBlock;
+  aSaveState.mState = this;
+
+  mAnonymousCreator = aCreator;
+  mInsertionContent = aContent;
+  mCreatorIsBlock = aIsBlock;
+}
+
+void
 nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                                                 nsIAtom* aChildListName)
 {
@@ -1320,6 +1376,40 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
   }
 }
 
+nsFrameConstructorInsertionState::nsFrameConstructorInsertionState()
+  : mAnonymousCreator(nsnull),
+    mInsertionContent(nsnull),
+    mCreatorIsBlock(PR_FALSE),
+    mState(nsnull)
+{
+}
+
+nsFrameConstructorInsertionState::~nsFrameConstructorInsertionState()
+{
+  // Restore the state
+  if (mState) {
+    mState->mAnonymousCreator = mAnonymousCreator;
+    mState->mInsertionContent = mInsertionContent;
+    mState->mCreatorIsBlock = mCreatorIsBlock;
+  }
+}
+
+// Putting this up here to help inlining work on compilers that won't inline
+// definitions that are after the call site.
+inline nsresult
+nsCSSFrameConstructor::CreateInsertionPointChildren(nsIPresShell *aPresShell,
+                                                    nsPresContext *aPresContext,
+                                                    nsFrameConstructorState &aState,
+                                                    nsIFrame *aNewFrame,
+                                                    nsIContent *aContent,
+                                                    PRBool aUseInsertionFrame)
+{
+  if (aState.mInsertionContent == aContent)
+    return CreateInsertionPointChildren(aPresShell, aPresContext, aState,
+                                        aNewFrame, aUseInsertionFrame);
+
+  return NS_OK;
+}
 
 static 
 PRBool IsBorderCollapse(nsIFrame* aFrame)
@@ -5298,6 +5388,12 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     }
   }
 
+  if (newFrame) {
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (addToHashTable) {
     // Add a mapping from content object to primary frame. Note that for
     // floated and positioned frames this is the out-of-flow frame and not
@@ -5387,7 +5483,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 
   return CreateAnonymousFrames(aPresShell, aPresContext, aState, aParent,
                                mDocument, aNewFrame, PR_FALSE,
-                               aAppendToExisting, aChildItems);
+                               aAppendToExisting, aChildItems,
+                               nsnull, nsnull, PR_FALSE);
 }
 
 // after the node has been constructed and initialized create any
@@ -5401,12 +5498,21 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
                                              nsIFrame*                aParentFrame,
                                              PRBool                   aForceBindingParent,
                                              PRBool                   aAppendToExisting,
-                                             nsFrameItems&            aChildItems)
+                                             nsFrameItems&            aChildItems,
+                                             nsIFrame*                aAnonymousCreator,
+                                             nsIContent*              aInsertionNode,
+                                             PRBool                   aAnonymousParentIsBlock)
 {
   nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
 
   if (!creator)
     return NS_OK;
+
+  nsFrameConstructorInsertionState saveState;
+  aState.PushAnonymousContentCreator(aAnonymousCreator,
+                                     aInsertionNode,
+                                     aAnonymousParentIsBlock,
+                                     saveState);
 
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
@@ -6044,6 +6150,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
 // addToHashTable:
 
+  if (newFrame) {
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (topFrame) {
     // the top frame is always what we map the content to. This is the frame that contains a pointer
     // to the content node.
@@ -6299,7 +6411,7 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
 
   // if there are any anonymous children for the scroll frame, create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
-                        PR_FALSE, PR_FALSE, aAnonymousFrames);
+                        PR_FALSE, PR_FALSE, aAnonymousFrames, nsnull, nsnull, PR_FALSE);
 
   return NS_OK;
 } 
@@ -6678,12 +6790,18 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
                  "Cases where AddChild() can fail must handle it themselves");
   }
 
-  if (newFrame && addToHashTable) {
-    // Add a mapping from content object to primary frame. Note that for
-    // floated and positioned frames this is the out-of-flow frame and not
-    // the placeholder frame
-    if (!primaryFrameSet)
-      aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
+  if (newFrame) {
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (addToHashTable) {
+      // Add a mapping from content object to primary frame. Note that for
+      // floated and positioned frames this is the out-of-flow frame and not
+      // the placeholder frame
+      if (!primaryFrameSet)
+        aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
+    }
   }
 
   return rv;
@@ -6937,6 +7055,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     // Set the frame's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent);
   }
   return rv;
 }
@@ -7013,6 +7133,11 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsIPresShell*            aPresShell,
       return rv;
     }
 
+    // Get the content node in the anonymous content tree where the explicit
+    // children should be inserted.
+
+    nsCOMPtr<nsIContent> insertionNode = newFrame->GetContentInsertionNode();
+
     // Create anonymous frames before processing children, so that
     // explicit child content can be appended to the correct anonymous
     // frame. Call version of CreateAnonymousFrames that doesn't check
@@ -7023,25 +7148,24 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsIPresShell*            aPresShell,
                  "xtf wrapper not implementing nsIXTFVisualWrapperPrivate");
 
     nsFrameItems childItems;
+
+    // Since we've set the insertion frame, our children will automatically
+    // be constructed once |insertionNode| has had its frame created.
+    // Call version of CreateAnonymousFrames that doesn't check tag:
+
     CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, mDocument, newFrame,
                           visual->ApplyDocumentStyleSheets(),
-                          PR_FALSE, childItems);
+                          PR_FALSE, childItems,
+                          newFrame, insertionNode, isBlock);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
-    
-    // Process the child content if requested
-    nsIFrame *insertionFrame = newFrame->GetContentInsertionFrame();
-    if (insertionFrame) {
-        nsFrameItems insertionItems;
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
-                             insertionFrame, PR_TRUE, insertionItems, isBlock);
-        if (insertionItems.childList) {
-          AppendFrames(aPresContext, aPresShell,aState.mFrameManager,
-                       aContent, insertionFrame,
-                       insertionItems.childList);
-        }
-    }
+
+    // Note: we don't worry about insertionFrame here because we know
+    // that XTF elements always insert into the primary frame of their
+    // insertion content.
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent, PR_FALSE);
   }
   return rv;
 }
@@ -7363,6 +7487,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
       // Set the frame's initial child list
       newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     }
+
+    rv = CreateInsertionPointChildren(aPresShell, aPresContext,
+                                      aState, newFrame, aContent);
   }
   return rv;
 }
@@ -13667,4 +13794,29 @@ nsCSSFrameConstructor::RestyleEvent::RestyleEvent(nsCSSFrameConstructor* aConstr
   PL_InitEvent(this, aConstructor,
                ::HandleRestyleEvent, ::DestroyRestyleEvent);
 }
-  
+
+nsresult
+nsCSSFrameConstructor::CreateInsertionPointChildren(nsIPresShell *aPresShell,
+                                                    nsPresContext *aPresContext,
+                                                    nsFrameConstructorState &aState,
+                                                    nsIFrame *aNewFrame,
+                                                    PRBool aUseInsertionFrame)
+{
+  nsIContent *creatorContent = aState.mAnonymousCreator->GetContent();
+  nsFrameItems insertionItems;
+
+  nsIFrame *insertionFrame =
+    aUseInsertionFrame ? aNewFrame->GetContentInsertionFrame() : aNewFrame;
+
+  nsresult rv = ProcessChildren(aPresShell, aPresContext, aState,
+                                creatorContent, insertionFrame, PR_TRUE,
+                                insertionItems, aState.mCreatorIsBlock);
+
+  if (NS_SUCCEEDED(rv) && insertionItems.childList) {
+    rv = AppendFrames(aPresContext, aPresShell, aState.mFrameManager,
+                      creatorContent, insertionFrame,
+                      insertionItems.childList);
+  }
+
+  return rv;
+}

@@ -64,6 +64,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsXTFXULDisplayFrame.cpp \
 		nsXTFXMLDisplayFrame.cpp \
+		nsXTFFrameUtils.cpp \
 		$(NULL)
 
 ifdef MOZ_SVG

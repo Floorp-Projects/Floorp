@@ -94,9 +94,9 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 8657598f-a18a-4b7f-96f3-6e7fe8a8beee
+// c8f3532b-ed45-4812-8da9-2a1b0afe4179
 #define NS_IFRAME_IID \
- { 0x8657598f, 0xa18a, 0x4b7f, { 0x96, 0xf3, 0x6e, 0x7f, 0xe8, 0xa8, 0xbe, 0xee } }
+ { 0xc8f3532b, 0xed45, 0x4812, { 0x8d, 0xa9, 0x2a, 0x1b, 0x0a, 0xfe, 0x41, 0x79 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -562,6 +562,15 @@ public:
    * Get the frame that should be the parent for the frames of child elements
    */
   virtual nsIFrame* GetContentInsertionFrame() { return this; }
+
+  /**
+   * Get the child content node whose frame should be used as the parent for
+   * the frames of child elements.  A frame can implement this method, instead
+   * of GetContentInsertionFrame, if its insertion point corresponds to a
+   * content node, and the frame for that node is not constructed immediately
+   * when the frame is initialized.
+   */
+  virtual already_AddRefed<nsIContent> GetContentInsertionNode() { return nsnull; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
