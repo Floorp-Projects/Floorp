@@ -330,7 +330,19 @@ XFE_RDFTreeView::resize(XtPointer callData)
 
 	if (cbs->reason == XmCR_RESIZE_COLUMN)
     {
-        D( printf("Inside XFE_RDFTreeView::resize(COLUMN, %d)\n", cbs->column);); 
+        D(printf("Inside XFE_RDFTreeView::resize(COLUMN, %d)\n", cbs->column);); 
+        XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT, cbs->column);
+
+        XFE_ColumnData *column_data = getColumnData(cbs->column);
+
+        int width = 0;
+        XtVaGetValues(_tree,
+                      XmNcolumnPtr, column,
+                      XmNcolumnWidth, &width,
+                      NULL);
+
+        HT_SetColumnWidth(_ht_view, column_data->token, column_data->token_type,
+                          width);
     }
 }
 
@@ -1002,6 +1014,8 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
       gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNbackground, pixel); ac++;
+         XtSetArg(av[ac], XmNcellBackground, pixel); ac++;
+         XtSetArg(av[ac], XmNblankBackground, pixel); ac++;
       }
    }
 
@@ -1013,6 +1027,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
       gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
+         XtSetArg(av[ac], XmNcellForeground, pixel); ac++;
       }
    }
 
