@@ -27,9 +27,6 @@
  */
 
 #include "NodeStack.h"
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
 
   //-------------/
  //- Constants -/

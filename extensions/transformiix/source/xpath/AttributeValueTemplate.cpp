@@ -38,14 +38,10 @@ AttributeValueTemplate::AttributeValueTemplate() {};
  * Default destructor
 **/
 AttributeValueTemplate::~AttributeValueTemplate() {
-    ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
-        iter->next(); //advance iterator to allow remove
-        Expr* expr = (Expr*)iter->remove();
-        delete expr;
+    txListIterator iter(&expressions);
+    while (iter.hasNext()) {
+        delete (Expr*)iter.next();
     }
-    delete iter;
-
 } //-- ~AttributeValueTemplate
 
 /**
@@ -64,15 +60,14 @@ void AttributeValueTemplate::addExpr(Expr* expr) {
 **/
 ExprResult* AttributeValueTemplate::evaluate(txIEvalContext* aContext)
 {
-    ListIterator* iter = expressions.iterator();
+    txListIterator iter(&expressions);
     String result;
-    while ( iter->hasNext() ) {
-        Expr* expr = (Expr*)iter->next();
+    while (iter.hasNext()) {
+        Expr* expr = (Expr*)iter.next();
         ExprResult* exprResult = expr->evaluate(aContext);
         exprResult->stringValue(result);
         delete exprResult;
     }
-    delete iter;
     return new StringResult(result);
 } //-- evaluate
 
@@ -85,13 +80,12 @@ ExprResult* AttributeValueTemplate::evaluate(txIEvalContext* aContext)
 * @return the String representation of this Expr.
 **/
 void AttributeValueTemplate::toString(String& str) {
-    ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
+    txListIterator iter(&expressions);
+    while (iter.hasNext()) {
         str.append('{');
-        Expr* expr = (Expr*)iter->next();
+        Expr* expr = (Expr*)iter.next();
         expr->toString(str);
         str.append('}');
     }
-    delete iter;
 } //-- toString
 

@@ -313,12 +313,12 @@ private:
 
     void processStylesheet(Document* aSource,
                            Document* aStylesheet,
-                           ListIterator* aImportFrame,
+                           txListIterator* aImportFrame,
                            ProcessorState* aPs);
 
     void processTopLevel(Document* aSource,
                          Element* aStylesheet,
-                         ListIterator* importFrame,
+                         txListIterator* importFrame,
                          ProcessorState* aPs);
 
     /*
@@ -330,7 +330,7 @@ private:
      */
     void processInclude(String& aHref,
                         Document* aSource,
-                        ListIterator* aImportFrame,
+                        txListIterator* aImportFrame,
                         ProcessorState* aPs);
 
     ExprResult* processVariable(Node* node, Element* xslVariable, ProcessorState* ps);

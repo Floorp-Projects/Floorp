@@ -29,9 +29,6 @@
  * StringList
 **/
 
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
 #include "StringList.h"
 
 /**

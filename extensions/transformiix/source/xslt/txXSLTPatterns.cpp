@@ -75,7 +75,7 @@ txPattern::~txPattern()
  */
 txUnionPattern::~txUnionPattern()
 {
-    ListIterator iter(&mLocPathPatterns);
+    txListIterator iter(&mLocPathPatterns);
     while (iter.hasNext()) {
         delete (txPattern*)iter.next();
     }
@@ -108,7 +108,7 @@ double txUnionPattern::getDefaultPriority()
  */
 MBool txUnionPattern::matches(Node* aNode, txIMatchContext* aContext)
 {
-    ListIterator iter(&mLocPathPatterns);
+    txListIterator iter(&mLocPathPatterns);
     while (iter.hasNext()) {
         txPattern* p = (txPattern*)iter.next();
         if (p->matches(aNode, aContext)) {
@@ -120,7 +120,7 @@ MBool txUnionPattern::matches(Node* aNode, txIMatchContext* aContext)
 
 nsresult txUnionPattern::getSimplePatterns(txList& aList)
 {
-    ListIterator iter(&mLocPathPatterns);
+    txListIterator iter(&mLocPathPatterns);
     while (iter.hasNext()) {
         aList.add(iter.next());
         iter.remove();
@@ -163,7 +163,7 @@ void txUnionPattern::toString(String& aDest)
  */
 txLocPathPattern::~txLocPathPattern()
 {
-    ListIterator iter(&mSteps);
+    txListIterator iter(&mSteps);
     while (iter.hasNext()) {
          delete (Step*)iter.next();
     }
@@ -196,7 +196,7 @@ MBool txLocPathPattern::matches(Node* aNode, txIMatchContext* aContext)
      * tree.
      */
 
-    ListIterator iter(&mSteps);
+    txListIterator iter(&mSteps);
     iter.resetToEnd();
 
     Step* step;
@@ -255,7 +255,7 @@ double txLocPathPattern::getDefaultPriority()
 
 void txLocPathPattern::toString(String& aDest)
 {
-    ListIterator iter(&mSteps);
+    txListIterator iter(&mSteps);
 #ifdef DEBUG
     aDest.append("txLocPathPattern{");
 #endif

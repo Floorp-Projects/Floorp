@@ -392,7 +392,7 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
 **/
 void XSLTProcessor::processStylesheet(Document* aSource,
                                       Document* aStylesheet,
-                                      ListIterator* aImportFrame,
+                                      txListIterator* aImportFrame,
                                       ProcessorState* aPs)
 {
     NS_ASSERTION(aStylesheet, "processTopLevel called without stylesheet");
@@ -427,7 +427,7 @@ void XSLTProcessor::processStylesheet(Document* aSource,
 **/
 void XSLTProcessor::processTopLevel(Document* aSource,
                                     Element* aStylesheet,
-                                    ListIterator* importFrame,
+                                    txListIterator* importFrame,
                                     ProcessorState* aPs)
 {
     // Index templates and process top level xsl elements
@@ -717,27 +717,20 @@ void XSLTProcessor::processTopLevel(Document* aSource,
  */
 void XSLTProcessor::processInclude(String& aHref,
                                    Document* aSource,
-                                   ListIterator* aImportFrame,
+                                   txListIterator* aImportFrame,
                                    ProcessorState* aPs)
 {
     // make sure the include isn't included yet
-    StackIterator* iter = aPs->getEnteredStylesheets()->iterator();
-    if (!iter) {
-        // XXX report out of memory
-        return;
-    }
-    
-    while (iter->hasNext()) {
-        if (((String*)iter->next())->isEqual(aHref)) {
+    txStackIterator iter(aPs->getEnteredStylesheets());
+    while (iter.hasNext()) {
+        if (((String*)iter.next())->isEqual(aHref)) {
             String err("Stylesheet includes itself. URI: ");
             err.append(aHref);
             aPs->receiveError(err, NS_ERROR_FAILURE);
-            delete iter;
             return;
         }
     }
     aPs->getEnteredStylesheets()->push(&aHref);
-    delete iter;
 
     // Load XSL document
     Node* stylesheet = aPs->retrieveDocument(aHref, NULL_STRING);
@@ -1661,16 +1654,12 @@ void XSLTProcessor::processAttributeSets(Element* aElement, Node* aNode, Process
     String name;
     while (tokenizer.hasMoreTokens()) {
         tokenizer.nextToken(name);
-        StackIterator *attributeSets = mAttributeSetStack.iterator();
-        NS_ASSERTION(attributeSets, "Out of memory");
-        if (!attributeSets)
-            return;
-        while (attributeSets->hasNext()) {
-            String* test = (String*)attributeSets->next();
+        txStackIterator attributeSets(&mAttributeSetStack);
+        while (attributeSets.hasNext()) {
+            String* test = (String*)attributeSets.next();
             if (test->isEqual(name))
                 return;
         }
-        delete attributeSets;
 
         NodeSet* attSet = aPs->getAttributeSet(name);
         if (attSet) {
@@ -2396,7 +2385,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
         ps.setEvalContext(&evalContext);
 
         // Index templates and process top level xsl elements
-        ListIterator importFrame(ps.getImportFrames());
+        txListIterator importFrame(ps.getImportFrames());
         importFrame.addAfter(new ProcessorState::ImportFrame(0));
         if (!importFrame.next())
             return NS_ERROR_OUT_OF_MEMORY;

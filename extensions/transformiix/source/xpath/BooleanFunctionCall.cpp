@@ -65,7 +65,7 @@ BooleanFunctionCall::BooleanFunctionCall(BooleanFunctions aType)
 **/
 ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    ListIterator iter(&params);
+    txListIterator iter(&params);
 
     switch (mType) {
         case TX_BOOLEAN:

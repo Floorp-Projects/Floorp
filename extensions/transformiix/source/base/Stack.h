@@ -33,11 +33,11 @@
 #include "List.h"
 #include "baseutils.h"
 
-typedef ListIterator StackIterator;
-
 class Stack : private List {
 
 public:
+
+    friend class txStackIterator;
 
       //----------------/
      //- Constructors -/
@@ -53,8 +53,6 @@ public:
      * Destructor for Stack, will not delete Object references
     **/
     virtual ~Stack();
-
-    StackIterator* iterator();
 
     /**
      * Returns the specified Object from the top of this Stack,
@@ -92,5 +90,35 @@ private:
 
 }; //-- Stack
 
+class txStackIterator {
+
+public:
+
+    /*
+     * Creates a new txListIterator for the given txList
+     * @param list, the txList to create an Iterator for
+     */
+    txStackIterator(Stack* aStack) : mIter(aStack)
+    {}
+
+    /*
+     * Returns true if there is more objects on the stack
+     */
+    MBool hasNext()
+    {
+        return mIter.hasNext();
+    }
+
+    /*
+     * Returns the next Object pointer from the stack
+     */
+    void* next()
+    {
+        return mIter.next();
+    }
+
+private:
+    txListIterator mIter;
+};
 
 #endif

@@ -901,16 +901,15 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     String name;
     // XXX TODO, bug 117658
     TX_GET_ATOM_STRING(aLName, name);
-    StackIterator* iter = variableSets.iterator();
+    txStackIterator iter(&variableSets);
     ExprResult* exprResult = 0;
-    while (iter->hasNext()) {
-        NamedMap* map = (NamedMap*) iter->next();
+    while (iter.hasNext()) {
+        NamedMap* map = (NamedMap*)iter.next();
         if (map->get(name)) {
             exprResult = ((VariableBinding*)map->get(name))->getValue();
             break;
         }
     }
-    delete iter;
     aResult = exprResult;
     return aResult ? NS_OK : NS_ERROR_INVALID_ARG;
 } //-- getVariable
@@ -970,7 +969,7 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node)
 **/
 void ProcessorState::receiveError(const String& errorMessage, nsresult aRes)
 {
-    ListIterator iter(&errorObservers);
+    txListIterator iter(&errorObservers);
     while (iter.hasNext()) {
         ErrorObserver* observer = (ErrorObserver*)iter.next();
         observer->receiveError(errorMessage, aRes);

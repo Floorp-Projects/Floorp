@@ -56,7 +56,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
         return 0;
     }
 
-    ListIterator iter(&params);
+    txListIterator iter(&params);
     String keyName;
     evaluateToString((Expr*)iter.next(), aContext, keyName);
     Expr* param = (Expr*) iter.next();
@@ -111,7 +111,7 @@ txXSLKey::txXSLKey(ProcessorState* aPs)
 
 txXSLKey::~txXSLKey()
 {
-    ListIterator iter(&mKeys);
+    txListIterator iter(&mKeys);
     Key* key;
     while ((key = (Key*)iter.next())) {
         delete key->matchPattern;
@@ -224,7 +224,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
     String val;
     NodeSet *nodeSet;
 
-    ListIterator iter(&mKeys);
+    txListIterator iter(&mKeys);
     while (iter.hasNext())
     {
         Key* key=(Key*)iter.next();
