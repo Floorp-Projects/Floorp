@@ -398,7 +398,18 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
     char *buffer = (char *) PR_CALLOC(1024);
     if (buffer)
     {
-        nsFileSpec fileSpec("c:\\temp\\tempMessage.eml");
+#ifdef XP_UNIX
+#define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
+#endif
+
+#ifdef XP_PC
+#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
+#endif
+
+#ifdef XP_MAC
+#define MESSAGE_PATH  "tempMessage.eml"
+#endif
+        nsFileSpec fileSpec(MESSAGE_PATH);
         nsInputFileStream fileStream(fileSpec);
         nsString msgBody = what == 2 ? "--------Original Message--------\r\n" 
             : ""; 
