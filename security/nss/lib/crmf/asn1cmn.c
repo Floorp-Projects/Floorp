@@ -164,10 +164,7 @@ cmmf_DecodeDERCertificate(CERTCertDBHandle *db, SECItem *derCert)
 {
     CERTCertificate *newCert;
 
-    newCert = CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
-    if (newCert != NULL && newCert->dbhandle == NULL) {
-        newCert->dbhandle = db;
-    }
+    newCert = CERT_NewTempCertificate(db, derCert, NULL, PR_FALSE, PR_TRUE);
     return newCert;
 }
 

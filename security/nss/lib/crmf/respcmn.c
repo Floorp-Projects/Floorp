@@ -168,7 +168,8 @@ cmmf_MakeCertList(CERTCertificate **inCerts)
 	if (derCert->data == NULL) {
 	    derCert = freeCert = cmmf_encode_certificate(inCerts[i]);
 	}
-	currCert=CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
+	currCert=CERT_NewTempCertificate(CERT_GetDefaultCertDB(), 
+	                                 derCert, NULL, PR_FALSE, PR_TRUE);
 	if (freeCert != NULL) {
 	    SECITEM_FreeItem(freeCert, PR_TRUE);
 	    freeCert = NULL;

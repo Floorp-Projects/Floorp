@@ -162,7 +162,8 @@ CERT_ConvertAndDecodeCertificate(char *certstr)
     if (rv != SECSuccess)
 	return NULL;
 
-    cert = CERT_DecodeDERCertificate(&der, PR_TRUE, NULL);
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), 
+                                   &der, NULL, PR_FALSE, PR_TRUE);
 
     PORT_Free(der.data);
     return cert;
@@ -528,7 +529,9 @@ CERT_DecodeCertFromPackage(char *certbuf, int certlen)
     rv = CERT_DecodeCertPackage(certbuf, certlen, collect_certs,
 				(void *)&collectArgs);
     if ( rv == SECSuccess ) {
-	cert = CERT_DecodeDERCertificate(&collectArgs.cert, PR_TRUE, NULL);
+	cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+	                               &collectArgs.cert, NULL, 
+	                               PR_FALSE, PR_TRUE);
     }
     
     PORT_FreeArena(collectArgs.arena, PR_FALSE);

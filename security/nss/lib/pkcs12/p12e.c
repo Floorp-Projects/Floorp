@@ -1416,7 +1416,8 @@ SEC_PKCS12AddDERCertAndEncryptedKey(SEC_PKCS12ExportContext *p12ctxt,
 
     mark = PORT_ArenaMark(p12ctxt->arena);
 
-    cert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                   derCert, NULL, PR_FALSE, PR_FALSE);
     if(!cert) {
 	PORT_ArenaRelease(p12ctxt->arena, mark);
 	PORT_SetError(SEC_ERROR_NO_MEMORY);

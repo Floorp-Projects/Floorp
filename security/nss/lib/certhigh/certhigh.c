@@ -854,6 +854,7 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 	certs++;
 
 	/* decode my certificate */
+	/* This use is ok -- only looks at decoded parts, calls NewTemp later */
 	newcert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
 	if ( newcert == NULL ) {
 	    goto loser;
