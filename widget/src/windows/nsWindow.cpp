@@ -3005,7 +3005,7 @@ DWORD nsWindow::WindowStyle()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowExStyle()
 {
-    return WS_EX_CLIENTEDGE;
+    return WS_EX_WINDOWEDGE;
 }
 
 
