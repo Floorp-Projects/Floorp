@@ -77,36 +77,41 @@ sub open {
     # try to connect
     $self->dump(9, 'opening AIM connection');
     $self->handle(undef);
-    my $aim = Net::AIM->new();
-    # $aim->debug(${$self->getDebugLevel} > 4);
-    if ($aim->newconn('Screenname' => $self->address,
-                      'Password' => $self->password,
-                      'AutoReconnect' => 1)) {
-        # wow, we did it
-        # add a buddy first of all (seem to need this, not sure why)
-        $aim->add_buddy(0, 'Buddies', $self->address);
+    {
+        # The Net::AIM code sprouts warning like there's no tomorrow
+        # Let's mute them. :-)
+        local $^W = 0;
+        my $aim = Net::AIM->new();
+        # $aim->debug(${$self->getDebugLevel} > 4);
+        if ($aim->newconn('Screenname' => $self->address,
+                          'Password' => $self->password,
+                          'AutoReconnect' => 1)) {
+            # wow, we did it
+            # add a buddy first of all (seem to need this, not sure why)
+            $aim->add_buddy(0, 'Buddies', $self->address);
 
-        # this is dodgy; protocol specs don't guarentee that this
-        # message will arrive
-        $aim->getconn->set_handler('nick', sub {
-                                       my $conn = shift;
-                                       my($evt, $from, $to) = @_;
-                                       my $nick = $evt->args()->[0];
-                                       $self->handle($aim);
-                                       $self->dump(9, "opened AIM connection to $from as $nick");
-                                   });
+            # this is dodgy; protocol specs don't guarentee that this
+            # message will arrive
+            $aim->getconn->set_handler('nick', sub {
+                                           my $conn = shift;
+                                           my($evt, $from, $to) = @_;
+                                           my $nick = $evt->args()->[0];
+                                           $self->handle($aim);
+                                           $self->dump(9, "opened AIM connection to $from as $nick");
+                                       });
 
-        # while we're at it, here's an error handler for completeness
-        $aim->getconn->set_handler('error', sub {
-                                       my $conn = shift;
-                                       my($evt) = @_;
-                                       my($error, @stuff) = @{$evt->args()};
-                                       my $errstr = $evt->trans($error);
-                                       $errstr =~ s/\$(\d+)/$stuff[$1]/ge;
-                                       $self->warn(4, "error occured while opening AIM connection: $errstr");
-                                   });
+            # while we're at it, here's an error handler for completeness
+            $aim->getconn->set_handler('error', sub {
+                                           my $conn = shift;
+                                           my($evt) = @_;
+                                           my($error, @stuff) = @{$evt->args()};
+                                           my $errstr = $evt->trans($error);
+                                           $errstr =~ s/\$(\d+)/$stuff[$1]/ge;
+                                           $self->warn(4, "error occured while opening AIM connection: $errstr");
+                                       });
 
-        while (not defined($self->handle) and $aim->do_one_loop()) { }
+            while (not defined($self->handle) and $aim->do_one_loop()) { }
+        }
     }
 
     if (not defined($self->handle)) {
@@ -117,7 +122,10 @@ sub open {
 sub close {
     my $self = shift;
     if (defined($self->handle)) {
-        $self->handle->getconn->disconnect();
+        my $conn = $self->handle->getconn;
+        if (defined($conn)) {
+            $conn->disconnect();
+        }
     }
 }
 
