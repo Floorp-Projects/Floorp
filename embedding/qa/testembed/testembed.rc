@@ -174,6 +174,9 @@ BEGIN
     END
     POPUP "&Interfaces"
     BEGIN
+        MENUITEM "Run All Test Cases",          ID_INTERFACES_RUNALLTESTCASES
+
+        MENUITEM SEPARATOR
         POPUP "nsI&File"
         BEGIN
             MENUITEM "Run All Tests",               ID_INTERFACES_NSIFILE_RUNALLTESTS
