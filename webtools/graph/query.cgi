@@ -45,7 +45,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=graph.cgi?&testname=$_$testname>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -69,7 +69,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=graph.cgi?tbox=$_&testname=$testname&autoscale=0&days=0>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=0&days=0>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
