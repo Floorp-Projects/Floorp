@@ -30,7 +30,7 @@ public:
   NS_DECL_ISUPPORTS
 
   rdfStreamListener(RDFFile);
-  ~rdfStreamListener();
+  virtual ~rdfStreamListener();
 
   NS_METHOD GetBindInfo(nsIURL* aURL);
 
@@ -51,7 +51,8 @@ private:
   RDFFile mFile;
 };
 
-NS_IMPL_ISUPPORTS( rdfStreamListener, NS_ISTREAMLISTENER_IID )
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+NS_IMPL_ISUPPORTS( rdfStreamListener, kIStreamListenerIID )
 
 rdfStreamListener::rdfStreamListener(RDFFile f) : mFile(f)
 {
