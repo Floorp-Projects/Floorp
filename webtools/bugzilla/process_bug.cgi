@@ -91,9 +91,10 @@ scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 # do a match on the fields if applicable
 
 &Bugzilla::User::match_field({
-    'qa_contact'    => { 'type' => 'single' },
-    'newcc'         => { 'type' => 'multi'  },
-    'assigned_to'   => { 'type' => 'single' },
+    'qa_contact'        => { 'type' => 'single' },
+    'newcc'             => { 'type' => 'multi'  },
+    'assigned_to'       => { 'type' => 'single' },
+    '^requestee-(\d+)$' => { 'type' => 'single' },
 });
 
 # If we are duping bugs, let's also make sure that we can change 

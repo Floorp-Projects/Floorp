@@ -368,10 +368,6 @@ sub clear {
 sub FormToNewFlags {
     my ($target, $data) = @_;
     
-    # Flag for whether or not we must get verification of the requestees
-    # (if the user did not uniquely identify them).
-    my $verify_requestees = 0;
-
     # Get information about the setter to add to each flag.
     # Uses a conditional to suppress Perl's "used only once" warnings.
     my $setter = new Bugzilla::User($::userid);
@@ -396,66 +392,19 @@ sub FormToNewFlags {
 
         my $requestee_str = $data->{"requestee-$type_id"} || $data->{'requestee'};
         if ($requestee_str) {
-            $flag->{'requestee_str'} = $requestee_str;
-            MatchRequestees($flag);
-            $verify_requestees = 1 if scalar(@{$flag->{'requestees'}}) != 1;
+            my $requestee_id = &::DBname_to_id($requestee_str);
+            $requestee_id 
+              || &::ThrowUserError("invalid_username", {name => $requestee_str});
+            $flag->{'requestee'} = new Bugzilla::User($requestee_id);
         }
         
         # Add the flag to the array of flags.
         push(@flags, $flag);
     }
 
-    if ($verify_requestees) {
-        $::vars->{'target'} = $target;
-        $::vars->{'flags'} = \@flags;
-        $::vars->{'form'} = $data;
-        $::vars->{'mform'} = \%::MFORM || \%::MFORM;
-        
-        print "Content-Type: text/html\n\n" unless $::vars->{'header_done'};
-        $::template->process("request/verify.html.tmpl", $::vars)
-          || &::ThrowTemplateError($::template->error());
-        exit;
-    }
-    
     # Return the list of flags.
     return \@flags;
 }
-
-sub MatchRequestees {
-    my ($flag) = @_;
-    
-    my $requestee_str = $flag->{'requestee_str'};
-    
-    # To reduce the size of queries, require the user to enter at least 
-    # three characters of each requestee's name unless this installation
-    # automatically appends an email suffix to each user's login name,
-    # in which case we can't guarantee their names are at least three
-    # characters long.
-    if (!Param('emailsuffix') && length($requestee_str) < 3) {
-        &::ThrowUserError("requestee_too_short");
-    }
-
-    # Get a list of potential requestees whose email address or real name 
-    # matches the substring entered by the user.  Try an exact match first,
-    # then fall back to a substring search.  Limit search to 100 matches, 
-    # since at that point there are too many to make the user wade through, 
-    # and we need to get the user to enter a more constrictive match string.
-    my $user_id = &::DBname_to_id($requestee_str);
-    if ($user_id) { $flag->{'requestees'} = [ new Bugzilla::User($user_id) ] }
-    else          { $flag->{'requestees'} = Bugzilla::User::match($requestee_str, 101, 1) }
-    
-    # If there is only one requestee match, make them the requestee.
-    if (scalar(@{$flag->{'requestees'}}) == 1) {
-        $flag->{'requestee'} = $flag->{'requestees'}[0];
-    } 
-
-    # If there are too many requestee matches, throw an error.
-    elsif (scalar(@{$flag->{'requestees'}}) == 101) {
-        &::ThrowUserError("requestee_too_many_matches", 
-                          { requestee => $requestee_str });
-    }
-}
-
 
 # Ideally, we'd use Bug.pm, but it's way too heavyweight, and it can't be
 # made lighter without totally rewriting it, so we'll use this function

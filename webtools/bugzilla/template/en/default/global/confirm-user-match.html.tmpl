@@ -23,13 +23,15 @@
 [%# INTERFACE:
   # form: hash; the form values submitted to the script
   # mform: hash; the form multi-values submitted to the script
+  # fields: hash/record; the fields being matched, each of which has:
+  #     type: single|multi: whether or not the user can select multiple matches
+  #     flag_type: for flag requestee fields, the type of flag being requested
   # matches: hash; Hierarchical.  The levels go like this:
   #     field_name {
   #         pattern_text {
-  #             'users'      = @user_list           (user objects)
-  #             'selecttype' = single|multi         (selectbox type)
-  #             'status'     = success|fail|trunc   (result of search.
-  #                                 'trunc' (truncated) means max was reached)
+  #             'users'  = @user_list           (user objects)
+  #             'status' = success|fail|trunc   (result of search.
+  #                             'trunc' (truncated) means max was reached)
   #         }
   #     }
   # script: string; The name of the calling script, used to create a
@@ -90,7 +92,7 @@
                     </font>
                     Please go back and try again with a more specific
                     name/address.
-                  [% ELSIF query.value.selecttype == 'single' %]
+                  [% ELSIF fields.${field.key}.type == 'single' %]
                     matched:<br>
                     <select name="[% field.key FILTER html %]"
                      id="[% field.key FILTER html %]">
@@ -172,6 +174,9 @@
     [%  field_descs.${field_name} FILTER html -%]
 
   [%- # ELSIF for things that don't belong in the field_descs hash here -%]
+
+  [% ELSIF field_name.match("^requestee") %]
+    [% fields.${field_name}.flag_type.name %] requestee
 
   [% ELSE %]
     [% field_name FILTER html %]

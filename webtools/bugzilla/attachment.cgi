@@ -44,6 +44,7 @@ require "CGI.pl";
 # Use these modules to handle flags.
 use Bugzilla::Flag; 
 use Bugzilla::FlagType; 
+use Bugzilla::User;
 
 # Establish a connection to the database backend.
 ConnectToDatabase();
@@ -109,6 +110,7 @@ elsif ($action eq "update")
   validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
   validatePrivate();
+  Bugzilla::User::match_field({ '^requestee-(\d+)$' => { 'type' => 'single' } });
   Bugzilla::Flag::validate(\%::FORM);
   Bugzilla::FlagType::validate(\%::FORM);
   update();

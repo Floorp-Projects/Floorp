@@ -217,6 +217,35 @@ sub match_field {
     # What does a "--do_not_change--" field look like (if any)?
     my $dontchange = $vars->{'form'}->{'dontchange'};
 
+    # Fields can be regular expressions matching multiple form fields
+    # (f.e. "requestee-(\d+)"), so expand each non-literal field
+    # into the list of form fields it matches.
+    my $expanded_fields = {};
+    foreach my $field_pattern (keys %{$fields}) {
+        # Check if the field has any non-word characters.  Only those fields
+        # can be regular expressions, so don't expand the field if it doesn't
+        # have any of those characters.
+        if ($field_pattern =~ /^\w+$/) {
+            $expanded_fields->{$field_pattern} = $fields->{$field_pattern};
+        }
+        else {
+            my @field_names = grep(/$field_pattern/, keys %{$vars->{'form'}});
+            foreach my $field_name (@field_names) {
+                $expanded_fields->{$field_name} = 
+                  { type => $fields->{$field_pattern}->{'type'} };
+                
+                # The field is a requestee field; in order for its name to show
+                # up correctly on the confirmation page, we need to find out
+                # the name of its flag type.
+                if ($field_name =~ /^requestee-(\d+)$/) {
+                    $expanded_fields->{$field_name}->{'flag_type'} = 
+                      Bugzilla::FlagType::get($1);
+                }
+            }
+        }
+    }
+    $fields = $expanded_fields;
+
     # Skip all of this if the option has been turned off
     return 1 if (&::Param('usermatchmode') eq 'off');
 
@@ -285,10 +314,8 @@ sub match_field {
                 next;
             }
 
-            $matches->{$field}->{$query}->{'users'}      = $users;
-            $matches->{$field}->{$query}->{'status'}     = 'success';
-            $matches->{$field}->{$query}->{'selecttype'} =
-                    $fields->{$field}->{'type'};
+            $matches->{$field}->{$query}->{'users'}  = $users;
+            $matches->{$field}->{$query}->{'status'} = 'success';
 
             # here is where it checks for multiple matches
 
@@ -323,6 +350,7 @@ sub match_field {
     return 1 unless $need_confirm; # skip confirmation if not needed.
 
     $vars->{'script'}        = $ENV{'SCRIPT_NAME'}; # for self-referencing URLs
+    $vars->{'fields'}        = $fields; # fields being matched
     $vars->{'matches'}       = $matches; # matches that were made
     $vars->{'matchsuccess'}  = $matchsuccess; # continue or fail
 
