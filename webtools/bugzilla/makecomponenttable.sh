@@ -127,6 +127,8 @@ insert into components (value, program, initialowner) values ("Threading", "NGLa
 insert into components (value, program, initialowner) values ("Viewer App", "NGLayout", "rickg@netscape.com");
 insert into components (value, program, initialowner) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com");
 insert into components (value, program, initialowner) values ("XPCOM", "NGLayout", "scullin@netscape.com");
+insert into components (value, program, initialowner) values ("xpidl", "NGLayout", "shaver@netscape.com");
+
 
 insert into components (value, program, initialowner) values ("Bonsai", "Webtools", "terry@mozilla.org");
 insert into components (value, program, initialowner) values ("Bugzilla", "Webtools", "terry@mozilla.org");
