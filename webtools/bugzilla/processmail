@@ -150,7 +150,7 @@ sub GetBugText {
                    "bug_status", "resolution", "priority", "bug_severity",
                    "area", "assigned_to", "reporter", "bug_file_loc",
                    "short_desc", "component", "qa_contact", "target_milestone",
-                   "status_whiteboard");
+                   "status_whiteboard", "groupset");
 
     my $query = "select " . join(", ", @collist) .
         " from bugs where bug_id = $id";
@@ -224,9 +224,12 @@ sub fixaddresses {
         if ($i eq "") {
             next;
         }
-        SendSQL("select emailnotification from profiles where login_name = " .
+        SendSQL("select emailnotification, groupset & $::bug{'groupset'} from profiles where login_name = " .
                 SqlQuote($i));
-        my $emailnotification = FetchOneColumn();
+        my ($emailnotification, $groupset) = (FetchSQLData());
+        if ($groupset ne $::bug{'groupset'}) {
+            next;
+        }
         if ($emailnotification eq "CConly") {
             if ($field ne "cc") {
                 next;
