@@ -2028,20 +2028,25 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
   if (nsnull == aFeatures)
     return NS_CHROME_ALL_CHROME;
 
-  chromeFlags |= WinHasOption(aFeatures, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
-  chromeFlags |= WinHasOption(aFeatures, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
-  chromeFlags |= (WinHasOption(aFeatures, "directories") | WinHasOption(aFeatures, "personalbar"))
+  PRBool presenceFlag = PR_FALSE;
+  chromeFlags |= WinHasOption(aFeatures, "toolbar", presenceFlag) ? NS_CHROME_TOOL_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "location", presenceFlag) ? NS_CHROME_LOCATION_BAR_ON : 0;
+  chromeFlags |= (WinHasOption(aFeatures, "directories", presenceFlag) | WinHasOption(aFeatures, "personalbar", presenceFlag))
     ? NS_CHROME_PERSONAL_TOOLBAR_ON : 0;
-  chromeFlags |= WinHasOption(aFeatures, "status") ? NS_CHROME_STATUS_BAR_ON : 0;
-  chromeFlags |= WinHasOption(aFeatures, "menubar") ? NS_CHROME_MENU_BAR_ON : 0;
-  chromeFlags |= WinHasOption(aFeatures, "scrollbars") ? NS_CHROME_SCROLLBARS_ON : 0;
-  chromeFlags |= WinHasOption(aFeatures, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "status", presenceFlag) ? NS_CHROME_STATUS_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "menubar", presenceFlag) ? NS_CHROME_MENU_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "scrollbars", presenceFlag) ? NS_CHROME_SCROLLBARS_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "resizable", presenceFlag) ? NS_CHROME_WINDOW_RESIZE_ON : 0;
   chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
 
-  chromeFlags |= WinHasOption(aFeatures, "chrome") ? NS_CHROME_OPEN_AS_CHROME : 0;
+  // From this point onward, if the above features weren't specified at all,
+  // we will assume that all chrome is present.
+  if (!presenceFlag) 
+    chromeFlags |= NS_CHROME_ALL_CHROME;
 
-  chromeFlags |= WinHasOption(aFeatures, "modal") ? NS_CHROME_MODAL : 0;
-  chromeFlags |= WinHasOption(aFeatures, "dialog") ? NS_CHROME_OPEN_AS_DIALOG : 0;
+  chromeFlags |= WinHasOption(aFeatures, "chrome", presenceFlag) ? NS_CHROME_OPEN_AS_CHROME : 0;
+  chromeFlags |= WinHasOption(aFeatures, "modal", presenceFlag) ? NS_CHROME_MODAL : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dialog", presenceFlag) ? NS_CHROME_OPEN_AS_DIALOG : 0;
 
   /*z-ordering, history, dependent
   chromeFlags->topmost         = WinHasOption(aFeatures, "alwaysRaised");
@@ -2126,19 +2131,19 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFea
         openedWindow->GetWindowBounds(defaultBounds);
 
     if (nsnull != aFeatures) {
-
+      PRBool presenceFlag = PR_FALSE; // Unused. Yuck.
       if (openAsContent) {
-        width = WinHasOption(aFeatures, "innerWidth") | WinHasOption(aFeatures, "width");
-        height = WinHasOption(aFeatures, "innerHeight") | WinHasOption(aFeatures, "height");
+        width = WinHasOption(aFeatures, "innerWidth", presenceFlag) | WinHasOption(aFeatures, "width", presenceFlag);
+        height = WinHasOption(aFeatures, "innerHeight", presenceFlag) | WinHasOption(aFeatures, "height", presenceFlag);
       }
       else {
         // Chrome. Look for outerWidth, outerHeight, or width/height
-        width = WinHasOption(aFeatures, "outerWidth") | WinHasOption(aFeatures, "width");
-        height = WinHasOption(aFeatures, "outerHeight") | WinHasOption(aFeatures, "height");
+        width = WinHasOption(aFeatures, "outerWidth", presenceFlag) | WinHasOption(aFeatures, "width", presenceFlag);
+        height = WinHasOption(aFeatures, "outerHeight", presenceFlag) | WinHasOption(aFeatures, "height", presenceFlag);
       }
 
-      left = WinHasOption(aFeatures, "left") | WinHasOption(aFeatures, "screenX");
-      top = WinHasOption(aFeatures, "top") | WinHasOption(aFeatures, "screenY");
+      left = WinHasOption(aFeatures, "left", presenceFlag) | WinHasOption(aFeatures, "screenX", presenceFlag);
+      top = WinHasOption(aFeatures, "top", presenceFlag) | WinHasOption(aFeatures, "screenY", presenceFlag);
 
       if (left)
         defaultBounds.x = left;
@@ -2274,7 +2279,7 @@ GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
 }
 
 PRInt32 
-GlobalWindowImpl::WinHasOption(char *options, char *name)
+GlobalWindowImpl::WinHasOption(char *options, char *name, PRBool& aPresenceFlag)
 {
   char *comma, *equal;
   PRInt32 found = 0;
@@ -2285,6 +2290,7 @@ GlobalWindowImpl::WinHasOption(char *options, char *name)
     equal = strchr(options, '=');
     if (equal) *equal = '\0';
     if (nsCRT::strcasecmp(options, name) == 0) {
+      aPresenceFlag = PR_TRUE;
       if (!equal || nsCRT::strcasecmp(equal + 1, "yes") == 0)
         found = 1;
       else
