@@ -201,14 +201,9 @@ function FolderProperties(name, uri)
 
 function MsgToggleMessagePane()
 {
-	//OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
-	OnClickThreadAndMessagePaneSplitterGrippy();
+  //OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
+  OnClickThreadAndMessagePaneSplitterGrippy();
   MsgToggleSplitter("threadpane-splitter");
-}
-
-function MsgToggleFolderPane()
-{
-    MsgToggleSplitter("sidebarsplitter");
 }
 
 function MsgToggleSplitter(id)
@@ -220,7 +215,6 @@ function MsgToggleSplitter(id)
     else
         splitter.setAttribute("state", "collapsed")
 }
-
 
 function NotifyQuitApplication()
 {
