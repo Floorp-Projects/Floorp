@@ -100,7 +100,7 @@ function calendarUploadFile(aSourceFilename, newLocation, login, password, conte
       output_file_to_channel(protocolChannel, aSourceFilename, contentType);
       protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
        
-      return( true );
+      return;
    }
    catch (e)
    {

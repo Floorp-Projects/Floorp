@@ -460,7 +460,7 @@ calendarManager.prototype.publishCalendar = function calMan_publishCalendar( Sel
    if( !SelectedCalendar )
    {
       var SelectedCalendarId = this.getSelectedCalendarId();
-      var SelectedCalendar = this.rdf.getNode( SelectedCalendarId );
+      SelectedCalendar = this.rdf.getNode( SelectedCalendarId );
    }
    
    calendarUploadFile(SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
@@ -956,6 +956,8 @@ function deleteCalendar( )
    refreshToDoTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
+
+   return true;
 }
 
 // CofC
@@ -965,12 +967,13 @@ function deleteCalendar( )
 function calendarColorStyleRuleUpdate( ThisCalendarObject )
 {
    var j = -1;
+   var i;
    
    // obtain calendar name from the Id
    containerName = ThisCalendarObject.Id.split(':')[2];
 
    var tempStyleSheets = document.styleSheets;
-   for (var i=0; i<tempStyleSheets.length; i++)
+   for (i=0; i<tempStyleSheets.length; i++)
    {
       if (tempStyleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
 	  {
@@ -985,7 +988,7 @@ function calendarColorStyleRuleUpdate( ThisCalendarObject )
 	   var ruleList = tempStyleSheets[j].cssRules;
 	   var ruleName;
 
-	   for (var i=0; i < ruleList.length; i++)
+	   for (i=0; i < ruleList.length; i++)
 	   {
 		  ruleName = ruleList[i].cssText.split(' ');
 

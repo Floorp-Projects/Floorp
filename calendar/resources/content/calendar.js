@@ -172,7 +172,8 @@ function calendarInit()
    // initialize calendar color style rules in the calendar's styleSheet
 
    // find calendar's style sheet index
-   for (var i=0; i<document.styleSheets.length; i++)
+   var i;
+   for (i=0; i<document.styleSheets.length; i++)
    {
       if (document.styleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
 	  {
@@ -189,13 +190,13 @@ function calendarInit()
    var seq = gCalendarWindow.calendarManager.rdf.getRootSeq("urn:calendarcontainer");
    var list = seq.getSubNodes();
 
-	for(var i=0; i<list.length;i++)
-	{
+   for(i=0; i<list.length;i++)
+   {
 
      calendarNode = gCalendarWindow.calendarManager.rdf.getNode( list[i].subject );
      
-	 // grab the container name and use it for the name of the style rule
-	 containerName = list[i].subject.split(":")[2];
+     // grab the container name and use it for the name of the style rule
+     containerName = list[i].subject.split(":")[2];
 
 	 // obtain calendar color from the rdf datasource
      calendarColor = calendarNode.getAttribute("http://home.netscape.com/NC-rdf#color");
@@ -996,21 +997,24 @@ function deleteToDoCommand( DoNotConfirm )
     var end = new Object();
     var numRanges = tree.view.selection.getRangeCount();
 
+    var t;
+    var v;
+    var toDoItem;
     if( numRanges == 1 ) {
-        for (var t=0; t<numRanges; t++){
+        for (t=0; t<numRanges; t++){
             tree.view.selection.getRangeAt(t,start,end);
-            for (var v=start.value; v<=end.value; v++){
-                var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+            for (v=start.value; v<=end.value; v++){
+                toDoItem = tree.taskView.getCalendarTaskAtRow( v );
                 refreshRemoteCalendarAndRunFunction( toDoItem.id, toDoItem.parent.server, "deleteTodo" );
             }
         }
     } else {
         gICalLib.batchMode = true;
 
-        for (var t=0; t<numRanges; t++){
+        for (t=0; t<numRanges; t++){
             tree.view.selection.getRangeAt(t,start,end);
-            for (var v=start.value; v<=end.value; v++){
-                var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+            for (v=start.value; v<=end.value; v++){
+                toDoItem = tree.taskView.getCalendarTaskAtRow( v );
                 var todoId = toDoItem.id
                 gICalLib.deleteTodo( todoId );   
             }
@@ -1145,6 +1149,7 @@ function getPreviewTextForTask( toDoItem )
    {
       showTooltip = false; //Don't show the tooltip
    }
+   return null;
 }
 
 /**
@@ -1479,7 +1484,7 @@ function changeOnlyWorkdayCheckbox( menuindex ) {
     changemenu = 1 ;
     break;
   default:
-    return(false);
+    return;
   }
   if(check == "true") {
     document.getElementById( "only-workday-checkbox-" + changemenu ).setAttribute("checked","true");
@@ -1505,7 +1510,7 @@ function changeDisplayToDoInViewCheckbox( menuindex ) {
     changemenu = 1 ;
     break;
   default:
-    return(false);
+    return;
   }
   if(check == "true") {
     document.getElementById( "display-todo-inview-checkbox-" + changemenu ).setAttribute("checked","true");

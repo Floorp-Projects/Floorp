@@ -136,7 +136,7 @@ function loadEventsFromFile()
           tempEventArray = parseXCSData( aDataStream );
           break;
         case 2: // csv
-          var tempEventArray = parseOutlookCSVData( aDataStream );
+          tempEventArray = parseOutlookCSVData( aDataStream );
           break;
         default:
           tempEventArray = null;
@@ -167,8 +167,9 @@ function loadEventsFromFile()
                   ( promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 );
       
       // Ask user what to import (all / prompt each / none)
+      var buttonPressed;
       if (calendarEventArray.length > 0) {
-        var buttonPressed = promptService.confirmEx( window, "Import", importText, flags,
+        buttonPressed = promptService.confirmEx( window, "Import", importText, flags,
                                                      importAllStr, discardAllStr, promptStr,
                                                      null, result );
         
@@ -181,7 +182,7 @@ function loadEventsFromFile()
       
       // Ask user what to do with duplicates
       if (duplicateEventArray.length > 0) {
-        var buttonPressed = promptService.confirmEx( window, "Import duplicates", dupeText, flags,
+        buttonPressed = promptService.confirmEx( window, "Import duplicates", dupeText, flags,
                                                      importAllStr, discardAllStr, promptStr,
                                                      null, result );
         if(buttonPressed == 0) // Import all
@@ -254,13 +255,13 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
                else
                {
                   //otherwise use the default
-                  var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+                  ServerName = gCalendarWindow.calendarManager.getDefaultServer();
                }
             }
             else
             {
                //otherwise use the default
-               var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+               ServerName = gCalendarWindow.calendarManager.getDefaultServer();
             }
          }
          gICalLib.addEvent( calendarEvent, ServerName );
@@ -506,7 +507,7 @@ function parseOutlookCSVData( outlookCsvStr ) {
         // Construct event regexp according to field indexes. The regexp can
         // be made stricter, if it seems this matches too loosely.
         var regExpStr = "^";
-        for( var i = 1; i < header.length; i++ ) {
+        for( i = 1; i < header.length; i++ ) {
          if( i != 1 )
            regExpStr += ",";
          if( i == args.descriptionIndex )
@@ -522,7 +523,7 @@ function parseOutlookCSVData( outlookCsvStr ) {
           do {
             eventFields[0] ="";
             //strip quotation marks
-            for( var i=1; i < eventFields.length; i++ )
+            for( i=1; i < eventFields.length; i++ )
               if( eventFields[i].length > 0 )
                 eventFields[i] = eventFields[i].slice( 1, -1 );
             

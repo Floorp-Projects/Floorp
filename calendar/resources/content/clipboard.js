@@ -148,7 +148,7 @@ function copyToClipboard( calendarEventArray )
 {  
    if( !calendarEventArray)
    {
-      var calendarEventArray = new Array( 0 );
+      calendarEventArray = new Array( 0 );
       calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
    }
 
