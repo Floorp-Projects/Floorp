@@ -31,6 +31,10 @@ class nsINNTPNewsgroup : public nsISupports {
   NS_IMETHOD SetName(char * aName) = 0;
 
   /*  <IDL>  */
+  NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
+  NS_IMETHOD SetPrettyName(char * aPrettyName) = 0;
+
+  /*  <IDL>  */
   NS_IMETHOD GetPassword(char * *aPassword) = 0;
   NS_IMETHOD SetPassword(char * aPassword) = 0;
 
@@ -48,12 +52,6 @@ class nsINNTPNewsgroup : public nsISupports {
   /*  <IDL>  */
   NS_IMETHOD IsCategory(PRBool *aIsCategory) = 0;
   NS_IMETHOD SetCategory(PRBool aCategory) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD SetFlag(PRInt32 flag) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD IsSubscribed(PRBool *aIsSubscribed) = 0;

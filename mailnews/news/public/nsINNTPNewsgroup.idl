@@ -30,6 +30,7 @@
 interface nsINNTPNewsgroup : nsISupports {
   
   attribute string name;
+  attribute string prettyName;
   
   attribute string password;
   attribute string username;
@@ -41,11 +42,9 @@ interface nsINNTPNewsgroup : nsISupports {
 
   attribute boolean category;
 
-  boolean GetFlag(in long flag);
-  void SetFlag(in long flag);
-
   attribute boolean subscribed;
   attribute boolean wantNewTotals;
+
 };
 
 
