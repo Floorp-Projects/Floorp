@@ -259,13 +259,10 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
             return NS_OK;
           }
 
-          PRInt32 xPos;
-    		  PRInt32 yPos;
-          uiEvent->GetScreenX(&xPos); 
+          PRInt32 xPos, yPos;
+    		  uiEvent->GetScreenX(&xPos); 
           uiEvent->GetScreenY(&yPos); 
-          xPos = 50; // For now, hardcode to (50,50), since screen doesn't work.
-          yPos = 50;
-                 
+                
           domWindow->CreatePopup(element, popupContent, 
                                xPos, yPos, 
                                type, popupAlignment);
