@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.12 2000/08/02 01:03:14 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.13 2000/08/02 20:50:57 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -135,7 +135,6 @@ mp_err mp_init(mp_int *mp)
 mp_err mp_init_size(mp_int *mp, mp_size prec)
 {
   ARGCHK(mp != NULL && prec > 0, MP_BADARG);
-/*if (prec < 128) prec = 128;	/* XXX HACK */
 
   if((DIGITS(mp) = s_mp_alloc(prec, sizeof(mp_digit))) == NULL)
     return MP_MEM;
@@ -877,9 +876,11 @@ CLEANUP:
 /* sqr = a^2;   Caller provides both a and tmp; */
 mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
 {
-  mp_word  w, k = 0;
+  mp_digit *pa, *pb, *ps, *alim;
+  mp_word  w; 
+  mp_digit d, k;
   mp_err   res;
-  mp_size  ix, jx, kx;
+  mp_size  ix;
   mp_int   tmp;
 
   ARGCHK(a != NULL && sqr != NULL, MP_BADARG);
@@ -897,79 +898,56 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
   if((res = s_mp_pad(sqr, 2 * USED(a))) != MP_OKAY)
     goto CLEANUP;
 
-  for(ix = 0; ix < USED(a); ix++) {
-    if(DIGIT(a, ix) == 0)
-      continue;
+  /*
+    The inner product is computed as:
+       (C, S) = t[i,j] + 2 a[i] a[j] + C
+   */
 
-    w = DIGIT(sqr, ix + ix) + (DIGIT(a, ix) * (mp_word)DIGIT(a, ix));
-
-    DIGIT(sqr, ix + ix) = ACCUM(w);
-    k = CARRYOUT(w);
-
-    /*
-      The inner product is computed as:
-
-         (C, S) = t[i,j] + 2 a[i] a[j] + C
-
-      This can overflow what can be represented in an mp_word, and
-      since C arithmetic does not provide any way to check for
-      overflow, we have to check explicitly for overflow conditions
-      before they happen.
-     */
-    for(jx = ix + 1; jx < USED(a); jx++) {
-      mp_word  u = 0, v;
-
-      /* Compute the multiplicative step */
-      w = (mp_word)DIGIT(a, ix) * DIGIT(a, jx);
-
-      /* If w is more than half MP_WORD_MAX, the doubling will
-	 overflow, and we need to record a carry out into the next
-	 word */
-      u = (w >> (MP_WORD_BIT - 1)) & 1;
-
-      /* Double what we've got, overflow will be ignored as defined
-	 for C arithmetic (we've already noted if it is to occur)
-       */
-      w *= 2;
-
-      /* Compute the additive step */
-      v = (mp_word)DIGIT(sqr, ix + jx) + k;
-
-      /* If we do not already have an overflow carry, check to see
-	 if the addition will cause one, and set the carry out if so 
-       */
-      u |= ((MP_WORD_MAX - v) < w);
-
-      /* Add in the rest, again ignoring overflow */
-      w += v;
-
-      /* Set the i,j digit of the output */
-      DIGIT(sqr, ix + jx) = ACCUM(w);
-
-      /* Save carry information for the next iteration of the loop.
-	 This is why k must be an mp_word, instead of an mp_digit */
-      k = CARRYOUT(w) | (u << DIGIT_BIT);
-
-    } /* for(jx ...) */
-
-    /* Set the last digit in the cycle and reset the carry */
-    k = DIGIT(sqr, ix + jx) + k;
-    DIGIT(sqr, ix + jx) = ACCUM(k);
-    k = CARRYOUT(k);
+  pa = MP_DIGITS(a);
+  alim = pa + MP_USED(a);
+  for (ix = 0; pa < alim; ++ix) {
+    d = *pa++;
+    ps = MP_DIGITS(sqr) + 1 + (ix << 1);
+    k = 0;
+    for (pb = pa; pb < alim; ) {
+      w = d * (mp_word)*pb++ + k + *ps;
+      *ps++ = ACCUM(w);
+      k = CARRYOUT(w);
+    } /* while (pa < alim) */
 
     /* If we are carrying out, propagate the carry to the next digit
        in the output.  This may cascade, so we have to be somewhat
        circumspect -- but we will have enough precision in the output
        that we won't overflow 
      */
-    kx = 1;
-    while(k) {
-      k = (mp_word)DIGIT(sqr, ix + jx + kx) + 1;
-      DIGIT(sqr, ix + jx + kx) = ACCUM(k);
-      k = CARRYOUT(k);
-      ++kx;
+    while (k) {
+      w = k + (mp_word)*ps;
+      *ps++ = ACCUM(w);
+      k = CARRYOUT(w);
     }
   } /* for(ix ...) */
+
+  if (MP_OKAY != (res = s_mp_mul_2d(sqr, 1)))
+    goto CLEANUP;
+  if (MP_OKAY != (res = s_mp_pad(sqr, 2 * USED(a))))
+    goto CLEANUP;
+
+  pa = MP_DIGITS(a);
+  ps = MP_DIGITS(sqr);
+  w  = 0;
+  while (pa < alim) {
+    d = *pa++;
+    w += (d * (mp_word)d) + *ps;
+    *ps++ = ACCUM(w);
+    w = (w >> DIGIT_BIT) + *ps;
+    *ps++ = ACCUM(w);
+    w = (w >> DIGIT_BIT);
+  }
+  while (w) {
+    w += *ps;
+    *ps++ = ACCUM(w);
+    w = (w >> DIGIT_BIT);
+  }
 
   SIGN(sqr) = ZPOS;
   s_mp_clamp(sqr);
@@ -1308,6 +1286,7 @@ mp_err mp_sqrt(const mp_int *a, mp_int *b)
 {
   mp_int   x, t;
   mp_err   res;
+  mp_size  used;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -1316,7 +1295,7 @@ mp_err mp_sqrt(const mp_int *a, mp_int *b)
     return MP_RANGE;
 
   /* Special cases for zero and one, trivial     */
-  if(mp_cmp_d(a, 0) == MP_EQ || mp_cmp_d(a, 1) == MP_EQ) 
+  if(mp_cmp_d(a, 1) <= 0)
     return mp_copy(a, b);
     
   /* Initialize the temporaries we'll use below  */
@@ -1326,6 +1305,11 @@ mp_err mp_sqrt(const mp_int *a, mp_int *b)
   /* Compute an initial guess for the iteration as a itself */
   if((res = mp_init_copy(&x, a)) != MP_OKAY)
     goto X;
+
+  used = MP_USED(&x);
+  if (used > 1) {
+    s_mp_rshd(&x, used / 2);
+  }
 
   for(;;) {
     /* t = (x * x) - a */
@@ -2375,7 +2359,6 @@ mp_err   s_mp_grow(mp_int *mp, mp_size min)
 
     /* Set min to next nearest default precision block size */
     min = ((min + (s_mp_defprec - 1)) / s_mp_defprec) * s_mp_defprec;
-/*  if (min < 128) min = 128;	/* XXX HACK */
 
     if((tmp = s_mp_alloc(min, sizeof(mp_digit))) == NULL)
       return MP_MEM;
@@ -2530,6 +2513,8 @@ void     s_mp_exch(mp_int *a, mp_int *b)
    Shift mp leftward by p digits, growing if needed, and zero-filling
    the in-shifted digits at the right end.  This is a convenient
    alternative to multiplication by powers of the radix
+   The value of USED(mp) must already have been set to the value for
+   the shifted result.
  */   
 
 mp_err   s_mp_lshd(mp_int *mp, mp_size p)
@@ -2559,6 +2544,48 @@ mp_err   s_mp_lshd(mp_int *mp, mp_size p)
 } /* end s_mp_lshd() */
 
 /* }}} */
+
+/* {{{ s_mp_mul_2d(mp, d) */
+
+/*
+  Multiply the integer by 2^d, where d is a number of bits.  This
+  amounts to a bitwise shift of the value.
+ */
+mp_err   s_mp_mul_2d(mp_int *mp, mp_digit d)
+{
+  mp_err   res;
+  mp_digit dshift, bshift;
+  mp_digit mask;
+
+  ARGCHK(mp != NULL,  MP_BADARG);
+
+  dshift = d / MP_DIGIT_BIT;
+  bshift = d % MP_DIGIT_BIT;
+  /* bits to be shifted out of the top word */
+  mask   = ((mp_digit)~0 << (MP_DIGIT_BIT - bshift)); 
+  mask  &= MP_DIGIT(mp, MP_USED(mp) - 1);
+
+  if (MP_OKAY != (res = s_mp_pad(mp, MP_USED(mp) + dshift + (mask != 0) )))
+    return res;
+
+  if (dshift && MP_OKAY != (res = s_mp_lshd(mp, dshift)))
+    return res;
+
+  if (bshift) { 
+    mp_digit *pa = MP_DIGITS(mp);
+    mp_digit *alim = pa + MP_USED(mp);
+    mp_digit  prev = 0;
+
+    for (pa += dshift; pa < alim; ) {
+      mp_digit x = *pa;
+      *pa++ = (x << bshift) | prev;
+      prev = x >> (DIGIT_BIT - bshift);
+    }
+  }
+
+  s_mp_clamp(mp);
+  return MP_OKAY;
+} /* end s_mp_mul_2d() */
 
 /* {{{ s_mp_rshd(mp, p) */
 
