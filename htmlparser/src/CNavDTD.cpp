@@ -540,7 +540,13 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
     mSink=(nsIHTMLContentSink*)aSink;
     if(aNotifySink && mSink){
       if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
-        result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
+        while(mBodyContext->GetCount() > 0) {
+          eHTMLTags theTarget = mBodyContext->Last();
+          if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch))
+            result = HandleSavedTokensAbove(theTarget);
+          CloseContainersTo(theTarget,PR_FALSE);
+        }
+        //result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
       }
 
 #ifdef RGESS_DEBUG
@@ -1398,10 +1404,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
           case eHTMLTag_body:
-            if(HasOpenContainer(theChildTag)){
-              return NS_OK; //OpenContainer(attrNode,PR_FALSE); 
-            }
-            break;
           case eHTMLTag_head:
             if(mHadBodyOrFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,attrNode);
