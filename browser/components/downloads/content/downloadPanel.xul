@@ -59,7 +59,7 @@
         </rule>
       </template>
     </vbox>
-    <splitter id="download-splitter" style="min-height: 3px; height: 3px;"/>
+    <!-- <splitter id="download-splitter" style="min-height: 3px; height: 3px;"/> -->
     <vbox flex="1">
       <sidebarheader align="center">
         <label value="&finishedDownloads.label;"/>
