@@ -148,7 +148,7 @@ public:
   NS_IMETHOD Init(nsIPresContext *aPresContext, nsObjectFrame *aFrame);
   
   nsPluginPort* GetPluginPort();
-  void ReleasePluginPort();//~~~
+  void ReleasePluginPort(nsPluginPort * pluginPort);//~~~
 
   void SetPluginHost(nsIPluginHost* aHost);
 
@@ -1436,7 +1436,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         }
 
         //~~~
-        mInstanceOwner->ReleasePluginPort();
+        mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
 
 		if (mWidget)
 		{
@@ -2539,13 +2539,13 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 }
 
 //~~~
-void nsPluginInstanceOwner::ReleasePluginPort()
+void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
 {
 #ifdef XP_WIN
 	if (mWidget != NULL)
   {
     if(mPluginWindow.type == nsPluginWindowType_Drawable)
-      mWidget->FreeNativeData((HDC)mPluginWindow.window, NS_NATIVE_GRAPHIC);
+      mWidget->FreeNativeData((HDC)pluginPort, NS_NATIVE_GRAPHIC);
   }
 #endif
 }
