@@ -65,7 +65,6 @@ LLIBS	= \
 !else
  $(DIST)\lib\netwerk.lib \
 !endif
- $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\secfreenav32.lib	\
  $(HASHLIBS)
 
