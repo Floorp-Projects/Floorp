@@ -131,14 +131,14 @@
         <label id="extDescription" flex="1"/>
       </vbox>
       <vbox>
-        <button disabled="true" id="disableExtension" label="Disable Extension" oncommand="toggleExtension();"/> <!-- XXXdwh localize -->
-        <button disabled="true" label="Uninstall Extension" oncommand="uninstallExtension();"/> <!-- XXXdwh localize -->
+        <button disabled="true" id="disableExtension" label="&disableExtension.label;" oncommand="toggleExtension();"/>
+        <button disabled="true" label="&uninstallExtension.label;" oncommand="uninstallExtension();"/>
       </vbox>
     </hbox>
     <separator/>
     <hbox align="start">
           <html:a class="themesLink" href="http://www.mozilla.org/projects/phoenix/extensions/index.html"
-              style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a>
+              style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a> <!-- XXXBlake localize this url -->
     </hbox>
   </vbox>
 
