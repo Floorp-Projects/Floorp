@@ -254,18 +254,18 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
 
   /* Use start to find the first new line before the error position and
      end to find the first new line after the error position */
-  reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
-  reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= numCharsInBuffer);
+  reachedStart = (startIndex <= 0 || '\n' == *start || '\r' == *start);
+  reachedEnd = (endIndex >= numCharsInBuffer || '\n' == *end || '\r' == *end);
   while (!reachedStart || !reachedEnd) {
     if (!reachedStart) {
       start--;
       startIndex--;
-      reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
+      reachedStart = (startIndex <= 0 || '\n' == *start || '\r' == *start);
     }
     if (!reachedEnd) {
       end++;
       endIndex++;
-      reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= numCharsInBuffer);
+      reachedEnd = (endIndex >= numCharsInBuffer || '\n' == *end || '\r' == *end);
     }
   }
 
