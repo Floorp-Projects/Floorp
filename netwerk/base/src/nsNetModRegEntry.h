@@ -37,7 +37,7 @@ public:
 
     // nsNetModRegEntry
     nsNetModRegEntry(const char *aTopic, nsIEventQueue *aEventQ, nsINetNotify *aNotify, nsCID aCID);
-    ~nsNetModRegEntry();
+    virtual ~nsNetModRegEntry();
 
     char                *mTopic;
     nsIEventQueue       *mEventQ;
