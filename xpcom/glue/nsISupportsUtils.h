@@ -70,6 +70,17 @@ typedef unsigned long nsrefcnt;
 typedef PRUint32 nsrefcnt;
 #endif
 
+/**
+ * NS_NO_VTABLE is emitted by xpidl in interface declarations whenever xpidl
+ * can determine that the interface can't contain a constructor.  This results
+ * in some space savings and possible runtime savings - see bug 49416.
+ */
+#if defined(_MSC_VER) && _MSC_VER >= 1100
+#define NS_NO_VTABLE __declspec(novtable)
+#else
+#define NS_NO_VTABLE
+#endif
+
 #include "nsTraceRefcnt.h"
 
 /**
@@ -78,7 +89,7 @@ typedef PRUint32 nsrefcnt;
  * and a reference counted memory model (AddRef/Release). This is
  * modelled after the win32 IUnknown API.
  */
-class nsISupports {
+class NS_NO_VTABLE nsISupports {
 public:
 
   /**
