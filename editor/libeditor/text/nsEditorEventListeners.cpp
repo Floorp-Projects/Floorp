@@ -288,10 +288,10 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 
       case nsIDOMEvent::VK_INSERT:
         {
-          nsresult result;
           //XXX: should be from a factory
           //XXX: should manage the refcount of txn
           /*
+          nsresult result;
           nsAutoString attribute("src");
           nsAutoString value("resource:/res/samples/raptor.jpg");
 
