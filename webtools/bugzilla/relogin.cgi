@@ -33,6 +33,11 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 Content-type: text/html
 
 ";
+
+# delete the cookie before dumping the header so that it shows the user
+# as logged out if %commandmenu% is in the header
+delete $::COOKIE{"Bugzilla_login"};
+
 PutHeader ("Relogin");
 
 print "<B>Your login has been forgotten</B>.</P>
@@ -40,8 +45,6 @@ The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>
 ";
-
-delete $::COOKIE{"Bugzilla_login"};
 
 PutFooter();
 
