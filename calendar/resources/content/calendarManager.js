@@ -701,7 +701,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
        }
        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
        return null;
-     },
+     }
    }
 
    Channel.notificationCallbacks = notificationCallbacks;
@@ -713,13 +713,16 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
 
 calendarManager.prototype.getProfileDirectory = function calMan_getProfileDirectory()
 {
-   var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
-      
-   var profileInternal = profileComponent.QueryInterface(Components.interfaces.nsIProfileInternal);
- 
-   var profileFile = profileInternal.getProfileDir(profileInternal.currentProfile);
-      
-   return( profileFile );
+   var dirService;
+   if( "@mozilla.org/directory_service;1" in Components.classes ) {
+       dirService = Components.classes["@mozilla.org/directory_service;1"]
+             .getService(Components.interfaces.nsIProperties);
+   } else {
+       dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+             .getService(Components.interfaces.nsIProperties);
+   }
+   var profileDir = dirService.get("ProfD", Components.interfaces.nsIFile);
+   return profileDir;
 }
 
 
