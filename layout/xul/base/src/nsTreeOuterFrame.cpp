@@ -108,16 +108,16 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
-    /*
+    
     // XXX at the moment we don't handle non incremental dirty reflow commands. So just convert them
     // to style changes for now.
     if (aReflowState.reason == eReflowReason_Dirty) {
-        NS_WARNING("Converting Dirty to StyleChange!! Table need to implement reflow Dirty!!");
+        NS_WARNING("XXX Fix me!! Converting Dirty to Resize!! Table need to implement reflow Dirty!!");
         nsHTMLReflowState goodState(aReflowState);
-        goodState.reason = eReflowReason_StyleChange;
+        goodState.reason = eReflowReason_Resize;
         return Reflow(aPresContext, aDesiredSize, goodState, aStatus);
     }
-    */
+    
 
     PRBool badWidth = PR_FALSE;
 
