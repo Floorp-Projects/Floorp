@@ -230,8 +230,14 @@ PRBool nsMapiRegistryUtils::IsDefaultMailClient()
 {
     if (!isSmartDll() && !isMozDll()) 
         return PR_FALSE;
+    //first try to get the users default mail client
     nsCAutoString name; 
-    GetRegistryKey(HKEY_LOCAL_MACHINE, "Software\\Clients\\Mail", "", name);
+    GetRegistryKey(HKEY_CURRENT_USER, "Software\\Clients\\Mail", "", name);
+    //if that fails then get the machine's default client
+    if(name.IsEmpty()){
+        GetRegistryKey(HKEY_LOCAL_MACHINE, "Software\\Clients\\Mail", "", name);
+    }
+
     if (!name.IsEmpty()) {
          nsCAutoString keyName("Software\\Clients\\Mail\\");
          keyName += name.get(); 
