@@ -1196,10 +1196,6 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   window->clipRect.right = 0;
 #endif
 
-#ifdef XP_UNIX
-  window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
-#endif
-
   // Check to see if content-policy wants to veto this
   if(aURI != nsnull)
   {
@@ -1273,10 +1269,6 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
   window->clipRect.left = 0;
   window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
   window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
-#endif
-
-#ifdef XP_UNIX
-  window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
 
   return NS_OK;
@@ -2013,6 +2005,15 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   NS_IF_RELEASE(mWidget);
   mContext = nsnull;
+
+#ifdef XP_UNIX
+  // the mem for this struct is allocated
+  // by PR_MALLOC in ns4xPluginInstance.cpp:ns4xPluginInstance::SetWindow()
+  if (mPluginWindow.ws_info) {
+    PR_Free(mPluginWindow.ws_info);
+    mPluginWindow.ws_info = nsnull;
+  }
+#endif
 }
 
 /*
