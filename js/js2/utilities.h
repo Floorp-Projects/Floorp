@@ -45,14 +45,31 @@
  using std::vsnprintf;
  using std::fprintf;
  #define STD std
+ #define STATIC_CONST(type, expr) static const type expr
 #else
  #define STD
  // Microsoft Visual C++ 6.0 bug: these identifiers should not begin with underscores
  #define snprintf _snprintf
  #define vsnprintf _vsnprintf
+ // Microsoft Visual C++ 6.0 bug: constants not supported
+ #define STATIC_CONST(type, expr) enum {expr}
 #endif
 using std::string;
 using std::auto_ptr;
+
+#ifdef __GNUC__ // why doesn't g++ support iterator?
+namespace std {
+	template<class Category, class T, class Distance = ptrdiff_t, class Pointer = T*, class Reference = T&>
+	struct iterator {
+		typedef T value_type;
+		typedef Distance difference_type;
+		typedef Pointer pointer;
+		typedef Reference reference;
+		typedef Category iterator_category;
+	};
+};
+#endif
+
 
 namespace JavaScript {
 
@@ -80,6 +97,19 @@ namespace JavaScript {
 
 	template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
 	template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
+
+
+//
+// Alignment
+//
+
+	template<typename T>
+	struct AlignmentHelper {
+		char ch;
+		T t;
+	};
+	#define ALIGNMENT_OF(T) offsetof(JavaScript::AlignmentHelper<T>, t)
+
 
 //
 // Bit manipulation
@@ -147,6 +177,13 @@ namespace JavaScript {
 		str.append(uchars, uchars + length);
 	}
 
+	// Widen and append characters between begin and end to the end of str.
+	inline void appendChars(String &str, const char *begin, const char *end)
+	{
+		ASSERT(begin <= end);
+		str.append(reinterpret_cast<const uchar *>(begin), reinterpret_cast<const uchar *>(end));
+	}
+
 	// Widen and insert length characters starting at chars into the given position of str.
 	inline void insertChars(String &str, String::size_type pos, const char *chars, size_t length)
 	{
@@ -157,6 +194,11 @@ namespace JavaScript {
 #else // Microsoft VC6 bug: String constructor and append limited to char16 iterators
 	String widenCString(const char *cstr);
 	void appendChars(String &str, const char *chars, size_t length);
+	inline void appendChars(String &str, const char *begin, const char *end)
+	{
+		ASSERT(begin <= end);
+		appendChars(str, begin, static_cast<size_t>(end - begin));
+	}
 	void insertChars(String &str, String::size_type pos, const char *chars, size_t length);
 #endif
 	void insertChars(String &str, String::size_type pos, const char *cstr);
@@ -272,22 +314,73 @@ namespace JavaScript {
 
 	// Assign zero to every element between first inclusive and last exclusive.
 	// This is equivalent ot fill(first, last, 0) but may be more efficient.
-	template<class For>
-	inline void zero(For first, For last)
+	template<class ForwardIterator>
+	inline void zero(ForwardIterator first, ForwardIterator last)
 	{
-		while (first != last)
-			*first++ = 0;
+		while (first != last) {
+			*first = 0;
+			++first;
+		}
 	}
 
 
 	// Assign zero to n elements starting at first.
 	// This is equivalent ot fill_n(first, n, 0) but may be more efficient.
-	template<class For, class Size>
-	inline void zero_n(For first, Size n)
+	template<class ForwardIterator, class Size>
+	inline void zero_n(ForwardIterator first, Size n)
 	{
-		while (n--)
-			*first++ = 0;
+		while (n) {
+			*first = 0;
+			++first;
+			--n;
+		}
 	}
+
+	// Same as find(first, last, value) but may be more efficient because it doesn't
+	// use a reference for value.
+	template<class InputIterator, class T>
+	inline InputIterator findValue(InputIterator first, InputIterator last, T value)
+	{
+		while (first != last && !(*first == value))
+			++first;
+		return first;
+	}
+
+
+//
+// Zones
+//
+
+	// A zone is a region of memory from which objects can be allocated individually.
+	// The memory in a zone is deallocated when the zone is deallocated or its clear
+	// method called.
+
+	class Zone {
+		union Header {
+			Header *next;				// Next block header in linked list
+			char padding[basicAlignment]; // Padding to ensure following block is fully aligned
+		};								// Block data follows header
+		
+		Header *headers;				// Linked list of allocated blocks
+		char *freeBegin;				// Pointer to free bytes left in current block
+		char *freeEnd;					// Pointer to end of free bytes left in current block
+		size_t blockSize;				// Size of individual arena blocks
+		
+	  public:
+		explicit Zone(size_t blockSize = 1024);
+	  private:
+	    Zone(const Zone&);				// No copy constructor
+	    void operator=(const Zone&);	// No assignment operator
+	  public:
+		void clear();
+		~Zone() {clear();}
+		
+	  private:
+		void *newBlock(size_t size);
+	  public:
+		void *allocate(size_t size);
+		void *allocateUnaligned(size_t size);
+	};
 
 
 //
@@ -320,41 +413,22 @@ namespace JavaScript {
 	// destructors are called, in reverse order of being registered, at the time the arena is deallocated
 	// or cleared.  When registering destructors for an object O be careful not to delete O manually because that
 	// would run its destructor twice.
-	class Arena {
-		struct Directory {
-			enum {maxNBlocks = 31};
-			
-			Directory *next;			// Next directory in linked list
-			uint nBlocks;				// Number of blocks used in this directory
-			void *blocks[maxNBlocks];	// Pointers to data blocks; only the first nBlocks are valid
-			
-			Directory(): nBlocks(0) {}
-			void clear();
-		};
-		
+	class Arena: public Zone {
 		struct DestructorEntry;
 
-		char *freeBegin;				// Pointer to free bytes left in current block
-		char *freeEnd;					// Pointer to end of free bytes left in current block
-		size_t blockSize;				// Size of individual arena blocks
-		Directory *currentDirectory;	// Directory in which the last block was allocated
-		Directory rootDirectory;		// Initial directory; root of linked list of Directories
 		DestructorEntry *destructorEntries; // Linked list of destructor registrations, ordered from most to least recently registered
 		
 	  public:
-		explicit Arena(size_t blockSize = 1024);
+		explicit Arena(size_t blockSize = 1024): Zone(blockSize), destructorEntries(0) {}
 	  private:
-	    Arena(const Arena&);			// No copy constructor
-	    void operator=(const Arena&);	// No assignment operator
+		void runDestructors();
 	  public:
-		void clear();
-		~Arena() {clear();}
+		void clear() {runDestructors(); Zone::clear();}
+		~Arena() {runDestructors();}
 		
 	  private:
-		void *newBlock(size_t size);
 		void newDestructorEntry(void (*destructor)(void *), void *object);
 	  public:
-		void *allocate(size_t size);
 		// Ensure that object's destructor is called at the time the arena is deallocated or cleared.
 		// The destructors will be called in reverse order of being registered.
 		// registerDestructor might itself runs out of memory, in which case it immediately
@@ -371,10 +445,10 @@ namespace JavaScript {
 	struct ArenaObject {
 		void *operator new(size_t size, Arena &arena) {return arena.allocate(size);}
 		void *operator new[](size_t size, Arena &arena) {return arena.allocate(size);}
-#ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
+	  #ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
 		void operator delete(void *, Arena &) {}
 		void operator delete[](void *, Arena &) {}
-#endif
+	  #endif
 	  private:
 		void operator delete(void *, size_t) {}
 		void operator delete[](void *) {}
@@ -408,8 +482,7 @@ namespace JavaScript {
 		static void construct(pointer p, const T &val) {new(p) T(val);}
 		static void destroy(pointer p) {p->~T();}
 		
-#ifdef __GNUC__
-        // why doesn't g++ support numeric_limits<T>?
+#ifdef __GNUC__ // why doesn't g++ support numeric_limits<T>?
         static size_type max_size() {return size_type(-1) / sizeof(T);}
 #else
 		static size_type max_size() {return std::numeric_limits<size_type>::max() / sizeof(T);}
@@ -421,6 +494,35 @@ namespace JavaScript {
 
 	String &newArenaString(Arena &arena);
 	String &newArenaString(Arena &arena, const String &str);
+
+
+//
+// Pools
+//
+
+	// A Pool holds a collection of objects of the same type.  These objects can be
+	// allocated and deallocated inexpensively.
+	// To allocate a T, use new(pool) T(...), where pool has type Pool<T>.
+	// To deallocate a T, use pool.destroy(t), where t has type T*.
+	template <typename T>
+	class Pool: public Zone {
+		struct FreeList {
+			FreeList *next;				// Next item in linked list of freed objects
+		};
+		STATIC_CONST(size_t, entrySize = sizeof(T) >= sizeof(FreeList *) ? sizeof(T) : sizeof(FreeList *));
+		
+		FreeList *freeList;				// Head of linked list of freed objects
+		
+	  public:
+		// clumpSize is the number of T's that are allocated at a time.
+		explicit Pool(size_t clumpSize): Zone(clumpSize * entrySize), freeList(0) {}
+
+		// Allocate memory for a single T.  Use this with a placement new operator to create a new T.
+		void *allocate() {if (freeList) {FreeList *p = freeList; freeList = p->next; return p;} return allocateUnaligned(entrySize);}
+		void deallocate(void *t) {FreeList *p = static_cast<FreeList *>(t); p->next = freeList; freeList = p;}
+
+		void destroy(T *t) {ASSERT(t); t->~T(); deallocate(t);}
+	};
 
 
 //
@@ -453,7 +555,7 @@ namespace JavaScript {
 
 
 //
-// Growable arrays
+// Growable Arrays
 //
 
 	// A Buffer initially points to inline storage of initialSize elements of type T.
@@ -463,7 +565,7 @@ namespace JavaScript {
 	class Buffer {
 	  public:
 		T *buffer;						// Pointer to the current buffer
-		size_t size;					// Gross size of the buffer
+		size_t size;					// Current size of the buffer
 	  private:
 		T initialBuffer[initialSize];	// Initial buffer
 	  public:
@@ -488,57 +590,388 @@ namespace JavaScript {
 	}
 
 
-	// private
+	// See ArrayBuffer below.
 	template <typename T>
-	class ProtoArrayBuffer {
+	class RawArrayBuffer {
+		T *const cache;					// Pointer to a fixed-size cache for holding the buffer if it's small enough
 	  protected:
-	    T *buffer;
-	    int32 length;
-	    int32 bufferSize;
+		T *buffer;						// Pointer to the current buffer
+		size_t length;					// Logical size of the buffer
+		size_t bufferSize;				// Physical size of the buffer
+	  #ifdef DEBUG
+		size_t maxReservedSize;			// Maximum size reserved so far
+	  #endif
 
-	    void append(const T *elts, int32 nElts, T *cache);
+	  public:
+		RawArrayBuffer(T *cache, size_t cacheSize): cache(cache), buffer(cache), length(0), bufferSize(cacheSize)
+			{DEBUG_ONLY(maxReservedSize = 0);}
+	  private:
+	    RawArrayBuffer(const RawArrayBuffer&);	// No copy constructor
+	    void operator=(const RawArrayBuffer&);	// No assignment operator
+	  public:
+	    ~RawArrayBuffer() {if (buffer != cache) delete[] buffer;}
+
+	  private:
+		void enlarge(size_t newLength);
+	  public:
+
+		// Methods that do not expand the buffer cannot throw exceptions.
+	    size_t size() const {return length;}
+		operator bool() const {return length != 0;}
+		bool operator !() const {return length == 0;}
+
+		T &front() {ASSERT(length); return *buffer;}
+		const T &front() const {ASSERT(length); return *buffer;}
+		T &back() {ASSERT(length); return buffer[length-1];}
+		const T &back() const {ASSERT(length); return buffer[length-1];}
+	    T *contents() const {return buffer;}
+
+		void reserve(size_t nElts);
+		T *reserve_back(size_t nElts = 1);
+		T *advance_back(size_t nElts = 1);
+
+		void fast_push_back(const T &elt);
+		void push_back(const T &elt);
+	    void append(const T *elts, size_t nElts);
+	    void append(const T *begin, const T *end) {ASSERT(end >= begin); append(begin, static_cast<size_t>(end - begin));}
+
+		T &pop_back() {ASSERT(length); return buffer[--length];}
 	};
 
 
-	// private
+	// Enlarge the buffer so that it can hold at least newLength elements.
+	// May throw an exception, in which case the buffer is left unchanged.
 	template <typename T>
-	void ProtoArrayBuffer<T>::append(const T *elts, int32 nElts, T *cache)
+	void RawArrayBuffer<T>::enlarge(size_t newLength) {
+		size_t newBufferSize = bufferSize * 2;
+		if (newBufferSize < newLength)
+			newBufferSize = newLength;
+
+        auto_ptr<T> newBuffer(new T[newBufferSize]);
+        T *oldBuffer = buffer;
+        std::copy(oldBuffer, oldBuffer + length, newBuffer.get());
+        buffer = newBuffer.release();
+        if (oldBuffer != cache)
+            delete[] oldBuffer;
+        bufferSize = newBufferSize;
+	}
+
+	// Ensure that there is room to hold nElts elements in the buffer, without expanding the
+	// buffer's logical length.
+	// May throw an exception, in which case the buffer is left unchanged.
+	template <typename T>
+	inline void RawArrayBuffer<T>::reserve(size_t nElts) {
+		if (bufferSize < nElts)
+			enlarge(nElts);
+	  #ifdef DEBUG
+		if (maxReservedSize < nElts)
+			maxReservedSize = nElts;
+	  #endif
+	}
+
+	// Ensure that there is room to hold nElts more elements in the buffer, without expanding the
+	// buffer's logical length.  Return a pointer to the first element just past the logical length.
+	// May throw an exception, in which case the buffer is left unchanged.
+	template <typename T>
+	inline T *RawArrayBuffer<T>::reserve_back(size_t nElts) {
+		reserve(length + nElts);
+		return buffer[length];
+	}
+
+	// Advance the logical length by nElts, assuming that the memory has previously been reserved.
+	// Return a pointer to the first new element.
+	template <typename T>
+	inline T *RawArrayBuffer<T>::advance_back(size_t nElts) {
+		ASSERT(length + nElts <= maxReservedSize);
+		T *p = buffer + length;
+		length += nElts;
+		return p;
+	}
+
+	// Same as push_back but assumes that the memory has previously been reserved.
+	// May throw an exception if copying elt throws one, in which case the buffer is left unchanged.
+	template <typename T>
+	inline void RawArrayBuffer<T>::fast_push_back(const T &elt) {
+		ASSERT(length < maxReservedSize);
+		buffer[length] = elt;
+		++length;
+	}
+
+	// Append elt to the back of the buffer.
+	// May throw an exception, in which case the buffer is left unchanged.
+	template <typename T>
+	inline void RawArrayBuffer<T>::push_back(const T &elt) {
+		*reserve_back() = elt;
+		++length;
+	}
+
+	// Append nElts elements elts to the back of the array buffer.
+	// May throw an exception, in which case the buffer is left unchanged.
+	template <typename T>
+	void RawArrayBuffer<T>::append(const T *elts, size_t nElts)
 	{
-	    assert(nElts >= 0);
-	    int32 newLength = length + nElts;
-	    if (newLength > bufferSize) {
-	        // Allocate a new buffer and copy the current buffer's contents there.
-	        int32 newBufferSize = newLength + bufferSize;
-	        auto_ptr<T> newBuffer = new T[newBufferSize];
-	        T *p = buffer;
-	        T *pLimit = old + length;
-	        T *q = newBuffer.get();
-	        while (p != pLimit)
-	            *q++ = *p++;
-	        if (buffer != cache)
-	            delete[] buffer;
-	        buffer = newBuffer.release();
-	        bufferSize = newBufferSize;
-	    }
+	    size_t newLength = length + nElts;
+	    if (newLength > bufferSize)
+	    	enlarge(newLength);
+	    std::copy(elts, elts + nElts, buffer + length);
 	    length = newLength;
 	}
 
 
 	// An ArrayBuffer represents an array of elements of type T.  The ArrayBuffer contains
 	// storage for a fixed size array of cacheSize elements; if this size is exceeded, the
-	// ArrayBuffer allocates the array from the heap.
-	// Use append to append nElts elements to the end of the ArrayBuffer.
-	template <typename T, int32 cacheSize>
-	class ArrayBuffer: public ProtoArrayBuffer<T> {
-	    T cache[cacheSize];
+	// ArrayBuffer allocates the array from the heap.  Elements can be appended to the back
+	// of the array using append.  An ArrayBuffer can also act as a stack: elements can be
+	// pushed and popped from the back.
+	//
+	// All ArrayBuffer operations are atomic with respect to exceptions -- either they
+	// succeed or they do not affect the ArrayBuffer's existing elements and length.
+	// If T has a constructor, it must have a constructor with no arguments; that constructor
+	// is called at the time memory for the ArrayBuffer is allocated, just like when
+	// allocating a regular C++ array.
+	template <typename T, size_t cacheSize>
+	class ArrayBuffer: public RawArrayBuffer<T> {
+	    T cacheArray[cacheSize];
+	  public:
+	    ArrayBuffer(): RawArrayBuffer<T>(cacheArray, cacheSize) {}
+	};
+
+
+//
+// Array Queues
+//
+
+	// See ArrayQueue below.
+	template <typename T>
+	class RawArrayQueue {
+		T *const cache;					// Pointer to a fixed-size cache for holding the buffer if it's small enough
+	  protected:
+	    T *buffer;						// Pointer to the current buffer
+	    T *bufferEnd;					// Pointer to the end of the buffer
+	    T *f;							// Front end of the circular buffer, used for reading elements; buffer <= f < bufferEnd
+	    T *b;							// Back end of the circular buffer, used for writing elements; buffer < b <= bufferEnd
+	    size_t length;					// Number of elements used in the circular buffer
+	    size_t bufferSize;				// Physical size of the buffer
+	  #ifdef DEBUG
+		size_t maxReservedSize;			// Maximum size reserved so far
+	  #endif
 
 	  public:
-	    ArrayBuffer() {buffer = &cache; length = 0; bufferSize = cacheSize;}
-	    ~ArrayBuffer() {if (buffer != &cache) delete[] buffer;}
-	    
-	    int32 size() const {return length;}
-	    T *front() const {return buffer;}
-	    void append(const T *elts, int32 nElts) {ProtoArrayBuffer<T>::append(elts, nElts, cache);}
+		RawArrayQueue(T *cache, size_t cacheSize):
+			cache(cache), buffer(cache), bufferEnd(cache + cacheSize), f(cache), b(cache), length(0), bufferSize(cacheSize)
+			{DEBUG_ONLY(maxReservedSize = 0);}
+	  private:
+	    RawArrayQueue(const RawArrayQueue&);	// No copy constructor
+	    void operator=(const RawArrayQueue&);	// No assignment operator
+	  public:
+		~RawArrayQueue() {if (buffer != cache) delete[] buffer;}
+
+	  private:
+		void enlarge(size_t newLength);
+	  public:
+
+		// Methods that do not expand the buffer cannot throw exceptions.
+		size_t size() const {return length;}
+		operator bool() const {return length != 0;}
+		bool operator !() const {return length == 0;}
+
+		T &front() {ASSERT(length); return *f;}
+		const T &front() const {ASSERT(length); return *f;}
+		T &back() {ASSERT(length); return b[-1];}
+		const T &back() const {ASSERT(length); return b[-1];}
+
+		T &pop_front() {ASSERT(length); --length; T &elt = *f++; if (f == bufferEnd) f = buffer; return elt;}
+		size_t pop_front(size_t nElts, T *&begin, T *&end);
+		T &pop_back() {ASSERT(length); --length; T &elt = *--b; if (b == buffer) b = bufferEnd; return elt;}
+
+		void reserve_back();
+		void reserve_back(size_t nElts);
+		T *advance_back();
+		T *advance_back(size_t nElts, size_t &nEltsAdvanced);
+
+		void fast_push_back(const T &elt);
+		void push_back(const T &elt);
+
+		// Same as append but assumes that memory has previously been reserved.
+		// Does not throw exceptions.  T::operator= must not throw exceptions.
+		template <class InputIter> void fast_append(InputIter begin, InputIter end) {
+			size_t nElts = static_cast<size_t>(std::distance(begin, end));
+			ASSERT(length + nElts <= maxReservedSize);
+			while (nElts) {
+				size_t nEltsAdvanced;
+				T *dst = advance_back(nElts, nEltsAdvanced);
+				nElts -= nEltsAdvanced;
+				while (nEltsAdvanced--) {
+					*dst = *begin; ++dst; ++begin;
+				}
+			}
+		}
+
+		// Append elements from begin to end to the back of the queue.  T::operator= must not throw exceptions.
+		// reserve_back may throw an exception, in which case the queue is left unchanged.
+		template <class InputIter> void append(InputIter begin, InputIter end) {
+			size_t nElts = static_cast<size_t>(std::distance(begin, end));
+			reserve_back(nElts);
+			while (nElts) {
+				size_t nEltsAdvanced;
+				T *dst = advance_back(nElts, nEltsAdvanced);
+				nElts -= nEltsAdvanced;
+				while (nEltsAdvanced--) {
+					*dst = *begin; ++dst; ++begin;
+				}
+			}
+		}
+	};
+
+	// Pop between one and nElts elements from the front of the queue.  Set begin and end
+	// to an array of the first n elements, where n is the return value.  The popped elements
+	// may be accessed until the next non-const operation.
+	// Does not throw exceptions.
+	template <typename T>
+	size_t RawArrayQueue<T>::pop_front(size_t nElts, T *&begin, T *&end) {
+		ASSERT(nElts <= length);
+		begin = f;
+		size_t eltsToEnd = static_cast<size_t>(bufferEnd - f);
+		if (nElts < eltsToEnd) {
+			length -= nElts;
+			f += nElts;
+			end = f;
+			return nElts;
+		} else {
+			length -= eltsToEnd;
+			end = bufferEnd;
+			f = buffer;
+			return eltsToEnd;
+		}
+	}
+
+	// Enlarge the buffer so that it can hold at least newLength elements.
+	// May throw an exception, in which case the queue is left unchanged.
+	template <typename T>
+	void RawArrayQueue<T>::enlarge(size_t newLength) {
+		size_t newBufferSize = bufferSize * 2;
+		if (newBufferSize < newLength)
+			newBufferSize = newLength;
+
+        auto_ptr<T> newBuffer(new T[newBufferSize]);
+        T *oldBuffer = buffer;
+		size_t eltsToEnd = static_cast<size_t>(bufferEnd - f);
+		if (eltsToEnd <= length)
+	        std::copy(f, f + eltsToEnd, newBuffer.get());
+		else {
+	        std::copy(f, bufferEnd, newBuffer.get());
+	        std::copy(oldBuffer, b, newBuffer.get() + eltsToEnd);
+		}
+        buffer = newBuffer.release();
+        f = buffer;
+        b = buffer + length;
+        if (oldBuffer != cache)
+            delete[] oldBuffer;
+        bufferSize = newBufferSize;
+	}
+
+	// Ensure that there is room to hold one more element at the back of the queue, without expanding the
+	// queue's logical length.
+	// May throw an exception, in which case the queue is left unchanged.
+	template <typename T>
+	inline void RawArrayQueue<T>::reserve_back() {
+		if (length == bufferSize)
+			enlarge(length + 1);
+	  #ifdef DEBUG
+		if (maxReservedSize <= length)
+			maxReservedSize = length + 1;
+	  #endif
+	}
+
+	// Ensure that there is room to hold nElts more elements at the back of the queue, without expanding the
+	// queue's logical length.
+	// May throw an exception, in which case the queue is left unchanged.
+	template <typename T>
+	inline void RawArrayQueue<T>::reserve_back(size_t nElts) {
+		nElts += length;
+		if (bufferSize < nElts)
+			enlarge(nElts);
+	  #ifdef DEBUG
+		if (maxReservedSize < nElts)
+			maxReservedSize = nElts;
+	  #endif
+	}
+
+	// Advance the back of the queue by one element, assuming that the memory has previously been reserved.
+	// Return a pointer to that new element.
+	// Does not throw exceptions.
+	template <typename T>
+	inline T *RawArrayQueue<T>::advance_back() {
+		ASSERT(length < maxReservedSize);
+	  	++length;
+	  	if (b == bufferEnd)
+	  		b = buffer;
+	  	return b++;
+	}
+
+	// Advance the back of the queue by between one and nElts elements and return a pointer to them,
+	// assuming that the memory has previously been reserved.
+	// nEltsAdvanced gets the actual number of elements advanced.
+	// Does not throw exceptions.
+	template <typename T>
+	T *RawArrayQueue<T>::advance_back(size_t nElts, size_t &nEltsAdvanced) {
+		size_t newLength = length + nElts;
+		ASSERT(newLength <= maxReservedSize);
+		if (nElts) {
+			T *b2 = b;
+			if (b2 == bufferEnd)
+				b2 = buffer;
+
+			size_t room = static_cast<size_t>(bufferEnd - b2);
+			if (nElts > room) {
+				nElts = room;
+				newLength = length + nElts;
+			}
+			length = newLength;
+			nEltsAdvanced = nElts;
+			b = b2 + nElts;
+			return b2;
+		} else {
+			nEltsAdvanced = 0;
+			return 0;
+		}
+	}
+
+	// Same as push_back but assumes that the memory has previously been reserved.
+	// May throw an exception if copying elt throws one, in which case the queue is left unchanged.
+	template <typename T>
+	inline void RawArrayQueue<T>::fast_push_back(const T &elt) {
+		ASSERT(length < maxReservedSize);
+		T *b2 = b;
+	  	if (b2 == bufferEnd)
+	  		b2 = buffer;
+	  	*b2 = elt;
+		b = b2 + 1;
+		++length;
+	}
+
+	// Append elt to the back of the queue.
+	// May throw an exception, in which case the queue is left unchanged.
+	template <typename T>
+	inline void RawArrayQueue<T>::push_back(const T &elt) {
+		reserve_back();
+		T *b2 = b == bufferEnd ? buffer : b;
+		*b2 = elt;
+		b = b2 + 1;
+		++length;
+	}
+
+
+	// An ArrayQueue represents an array of elements of type T that can be written at its
+	// back end and read at its front or back end.  In addition, arrays of multiple elements may be
+	// written at the back end or read at the front end.  The ArrayQueue contains storage for a fixed size
+	// array of cacheSize elements; if this size is exceeded, the ArrayQueue allocates the
+	// array from the heap.
+	template <typename T, size_t cacheSize>
+	class ArrayQueue: public RawArrayQueue<T> {
+	    T cacheArray[cacheSize];
+	  public:
+	    ArrayQueue(): RawArrayQueue<T>(cacheArray, cacheSize) {}
 	};
 
 
@@ -550,11 +983,7 @@ namespace JavaScript {
 	// they were STL-like sequences.  These classes define STL forward iterators that walk
 	// through singly-linked lists of objects threaded through fields named 'next'.  The type
 	// parameter E must be a class that has a member named 'next' whose type is E* or const E*.
-	
-#if 0
-    /* (rginda) std::iterator is not defined in gcc, and no one is using
-     * this yet. If you decide to use this, you'll have to work around the
-     * gcc lossage */
+
 	template <class E>
 	class ListIterator: public std::iterator<std::forward_iterator_tag, E> {
 		E *element;
@@ -573,11 +1002,11 @@ namespace JavaScript {
 
 	
 	template <class E>
-#ifndef _WIN32 // Microsoft VC6 bug: std::iterator should support five template arguments
+  #ifndef _WIN32 // Microsoft VC6 bug: std::iterator should support five template arguments
 	class ConstListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t, const E*, const E&> {
-#else
+  #else
 	class ConstListIterator: public std::iterator<std::forward_iterator_tag, E, ptrdiff_t> {
-#endif
+  #endif
 		const E *element;
 
 	  public:
@@ -593,8 +1022,43 @@ namespace JavaScript {
 		friend bool operator!=(const ConstListIterator &i, const ConstListIterator &j) {return i.element != j.element;}
 	};
 
-//#if 0
-#endif
+
+//
+// Doubly Linked Lists
+//
+
+	// A ListQueue provides insert and delete operations on a doubly-linked list of objects
+	// threaded through fields named 'next' and 'prev'.  The type parameter E must be a class
+	// derived from ListQueueEntry.
+	// The ListQueue does not own its elements.  They must be deleted explicitly if needed.
+	
+	struct ListQueueEntry {
+		ListQueueEntry *next;			// Next entry in linked list
+		ListQueueEntry *prev;			// Previous entry in linked list
+	
+	  #ifdef DEBUG
+		ListQueueEntry(): next(0), prev(0) {}
+	  #endif
+	};
+
+	template <class E>
+	struct ListQueue: private ListQueueEntry {
+		ListQueue() {next = this; prev = this;}
+	
+		operator bool() const {return next != this;}	// Return true if the ListQueue is nonempty
+		bool operator !() const {return next == this;}	// Return true if the ListQueue is empty
+
+		E &front() const {ASSERT(operator bool()); return *static_cast<E *>(next);}
+		E &back() const {ASSERT(operator bool()); return *static_cast<E *>(prev);}
+
+		void push_front(E &elt) {ASSERT(!elt.next && !elt.prev); elt.next = next; elt.prev = this; next->prev = &elt; next = &elt;}
+		void push_back(E &elt) {ASSERT(!elt.next && !elt.prev); elt.next = this; elt.prev = prev; prev->next = &elt; prev = &elt;}
+		E &pop_front() {ASSERT(operator bool()); E *elt = static_cast<E *>(next); next = elt->next; next->prev = this;
+						DEBUG_ONLY(elt->next = 0; elt->prev = 0;) return *elt;}
+		E &pop_back() {ASSERT(operator bool()); E *elt = static_cast<E *>(prev); prev = elt->prev; prev->next = this;
+					   DEBUG_ONLY(elt->next = 0; elt->prev = 0;) return *elt;}
+	};
+
 
 //
 // Bit Sets
@@ -602,13 +1066,8 @@ namespace JavaScript {
 
 	template<size_t size>
 	class BitSet {
-	  #ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: constants not supported
-		static const size_t nWords = (size+31)>>5;
-		static const uint32 lastWordMask = (2u<<((size-1)&31)) - 1;
-	  #else
-		enum {nWords = (size+31)>>5};
-		enum {lastWordMask = (2<<((size-1)&31)) - 1};
-	  #endif
+		STATIC_CONST(size_t, nWords = (size+31)>>5);
+		STATIC_CONST(uint32, lastWordMask = (2u<<((size-1)&31)) - 1);
 		uint32 words[nWords];		// Bitmap of bits.  The first word contains bits 0(LSB)...31(MSB), the second contains bits 32...63, etc.
 
 	  public:
@@ -734,6 +1193,22 @@ namespace JavaScript {
 
 
 //
+// Input
+//
+
+	class LineReader {
+		FILE *in;						// File from which currently reading
+		bool crWasLast;					// True if a CR character was the last one read
+	
+	  public:
+		explicit LineReader(FILE *in): in(in), crWasLast(false) {}
+
+		size_t readLine(string &str);
+		size_t readLine(String &wstr);
+	};
+
+
+//
 // Output
 //
 
@@ -752,18 +1227,14 @@ namespace JavaScript {
 	// Formatters accept both char and char16 text and convert as appropriate to their actual stream.
     class Formatter {
 	  protected:
-		virtual void printChar8(char ch) = 0;
-		virtual void printChar16(char16 ch) = 0;
-		virtual void printZStr8(const char *str) = 0;
+		virtual void printChar8(char ch);
+		virtual void printChar16(char16 ch);
+		virtual void printZStr8(const char *str);
 		virtual void printStr8(const char *strBegin, const char *strEnd) = 0;
 		virtual void printStr16(const char16 *strBegin, const char16 *strEnd) = 0;
-		virtual void printString16(const String &s) = 0;
-		virtual void printVFormat8(const char *format, va_list args) = 0;
+		virtual void printString16(const String &s);
+		virtual void printVFormat8(const char *format, va_list args);
 	  public:
-
-		friend void printString(Formatter &f, const char *strBegin, const char *strEnd) {f.printStr8(strBegin, strEnd);}
-		friend void printString(Formatter &f, const char16 *strBegin, const char16 *strEnd) {f.printStr16(strBegin, strEnd);}
-		friend void printFormat(Formatter &f, const char *format, ...) {va_list args; va_start(args, format); f.printVFormat8(format, args); va_end(args);}
 
 		Formatter &operator<<(char ch) {printChar8(ch); return *this;}
 		Formatter &operator<<(char16 ch) {printChar16(ch); return *this;}
@@ -771,6 +1242,9 @@ namespace JavaScript {
 		Formatter &operator<<(const String &s) {printString16(s); return *this;}
         Formatter &operator<<(uint32 i) {printFormat(*this, "%u", i); return *this;}
 
+		friend void printString(Formatter &f, const char *strBegin, const char *strEnd) {f.printStr8(strBegin, strEnd);}
+		friend void printString(Formatter &f, const char16 *strBegin, const char16 *strEnd) {f.printStr16(strBegin, strEnd);}
+		friend void printFormat(Formatter &f, const char *format, ...) {va_list args; va_start(args, format); f.printVFormat8(format, args); va_end(args);}
     };
         
     void printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format);
@@ -782,6 +1256,7 @@ namespace JavaScript {
     inline void printHex(Formatter &f, int32 i, int nDigits = 0, char pad = '0') {printNum(f, (uint32)i, nDigits, pad, "%X");}
     inline void printHex(Formatter &f, uint32 i, int nDigits = 0, char pad = '0') {printNum(f, i, nDigits, pad, "%X");}
     void printPtr(Formatter &f, void *p);
+
 
 	// An AsciiFileFormatter is a Formatter that prints to a standard ASCII file or stream.
 	// Characters with Unicode values of 256 or higher are converted to escape sequences.
@@ -805,27 +1280,168 @@ namespace JavaScript {
 		void printZStr8(const char *str);
 		void printStr8(const char *strBegin, const char *strEnd);
 		void printStr16(const char16 *strBegin, const char16 *strEnd);
-		void printString16(const String &s);
-		void printVFormat8(const char *format, va_list args);
 	};
 
 	extern AsciiFileFormatter stdOut;
 	extern AsciiFileFormatter stdErr;
 
 
-//
-// Input
-//
+	// A StringFormatter is a Formatter that prints to a String.
+	class StringFormatter: public Formatter {
+		String s;
 
-	class LineReader {
-		FILE *in;						// File from which currently reading
-		bool crWasLast;					// True if a CR character was the last one read
-	
 	  public:
-		explicit LineReader(FILE *in): in(in), crWasLast(false) {}
+		operator String &() {return s;}
+		operator const String &() const {return s;}
+		void clear() {JavaScript::clear(s);}
+	  protected:
+		void printChar8(char ch);
+		void printChar16(char16 ch);
+		void printZStr8(const char *str);
+		void printStr8(const char *strBegin, const char *strEnd);
+		void printStr16(const char16 *strBegin, const char16 *strEnd);
+		void printString16(const String &str);
+	};
 
-		size_t readLine(string& str);
-		size_t readLine(String& wstr);
+
+//
+// Formatted Output
+//
+
+	class PrettyPrinter: public Formatter {
+	  public:
+		STATIC_CONST(uint32, unlimitedLineWidth = 0x7FFFFFFF);
+	  private:
+		STATIC_CONST(uint32, infiniteLength = 0x80000000);
+		const uint32 lineWidth;			// Current maximum desired line width
+
+		struct BlockInfo {
+			uint32 margin;				// Saved margin before this block's beginning
+			uint32 lastBreak;			// Saved lastBreak before this block's beginning
+			bool fits;					// True if this entire block fits on one line
+		};
+		// Variables for the back end that prints to the destination
+		Formatter &outputFormatter;		// Destination formatter on which the result should be printed
+		uint32 outputPos;				// Number of characters printed on current output line
+		uint32 lineNum;					// Serial number of current line
+		uint32 lastBreak;				// Number of line just after the last break that occurred in this block
+		uint32 margin;					// Current left margin in spaces
+		ArrayBuffer<BlockInfo, 20> savedBlocks; // Stack of saved information about partially printed blocks
+
+		// Variables for the front end that calculates block sizes
+		class Region;
+		class Indent;
+		class Block;
+
+		struct Item: ListQueueEntry {
+			enum Kind {text, blockBegin, indentBlockBegin, blockEnd, indent, linearBreak, fillBreak};
+
+			const Kind kind;			// The kind of this text sequence
+			bool lengthKnown;			// True if totalLength is known; always true for text, blockEnd, and indent Items
+			uint32 length;				// Length of this text sequence, number of spaces for this break, or delta for indent or indentBlockBegin
+			uint32 totalLength;			// Total length of this block (for blockBegin) or length of this break plus following clump (for breaks)
+										// If lengthKnown is false, this is the serialPos of this Item instead of a length
+			bool hasKind(Kind k) const {return kind == k;}
+			
+			explicit Item(Kind kind): kind(kind), lengthKnown(true) {}
+			Item(Kind kind, uint32 length): kind(kind), lengthKnown(true), length(length) {}
+			Item(Kind kind, uint32 length, uint32 beginSerialPos):
+					kind(kind), lengthKnown(false), length(length), totalLength(beginSerialPos) {}
+			
+			void computeTotalLength(uint32 endSerialPos) {ASSERT(!lengthKnown); lengthKnown = true; totalLength = endSerialPos - totalLength;}
+		};
+
+	  #ifdef DEBUG
+		Region *topRegion;				// Most deeply nested Region
+	  #endif
+		uint32 nNestedBlocks;			// Number of nested Blocks
+		uint32 leftSerialPos;			// The difference rightSerialPos-leftSerialPos is always the number of characters that
+		uint32 rightSerialPos;			//   would be output by printing activeItems if they all fit on one line;
+										//   only the difference matters -- the absolute values are irrelevant and may wrap around 2^32.
+		ArrayQueue<Item *, 20> itemStack; // Stack of enclosing nested Items whose lengths have not yet been determined
+										// itemStack always has room for at least nNestedBlocks extra entries so that end Items may be added
+										// without throwing an exception.
+		Pool<Item> itemPool;			// Pool from which to allocate activeItems
+		ListQueue<Item> activeItems;	// Queue of items left to be printed
+		ArrayQueue<char16, 256> itemText; // Text of text items in activeItems, in the same order as in activeItems
+
+	  public:
+		static uint32 defaultLineWidth;	// Default for lineWidth if not given to the constructor
+
+		explicit PrettyPrinter(Formatter &f, uint32 lineWidth = defaultLineWidth);
+	  private:
+	    PrettyPrinter(const PrettyPrinter&);	// No copy constructor
+	    void operator=(const PrettyPrinter&);	// No assignment operator
+	  public:
+		~PrettyPrinter();
+		
+	  private:
+		void outputBreak(bool sameLine, uint32 nSpaces);
+		bool reduceLeftActiveItems(uint32 rightOffset);
+		void reduceRightActiveItems();
+
+		Item &beginIndent(int32 offset);
+		void endIndent(Item &i);
+
+		Item &beginBlock(Item::Kind kind, int32 offset);
+		void endBlock(Item &i);
+
+		void conditionalBreak(uint32 nSpaces, Item::Kind kind);
+
+	  protected:
+		void printStr8(const char *strBegin, const char *strEnd);
+		void printStr16(const char16 *strBegin, const char16 *strEnd);
+	  public:
+
+		void requiredBreak();
+		void linearBreak(uint32 nSpaces) {conditionalBreak(nSpaces, Item::linearBreak);}
+		void fillBreak(uint32 nSpaces) {conditionalBreak(nSpaces, Item::fillBreak);}
+		
+		void end();
+
+		friend class Region;
+		friend class Indent;
+		friend class Block;
+
+		class Region {
+		  #ifdef DEBUG
+			Region *next;				// Link to next most deeply nested Region
+		  #endif
+		  protected:
+			PrettyPrinter &pp;
+
+			Region(PrettyPrinter &pp): pp(pp) {DEBUG_ONLY(next = pp.topRegion; pp.topRegion = this;)}
+		  private:
+		    Region(const Region&);			// No copy constructor
+		    void operator=(const Region&);	// No assignment operator
+		  protected:
+		  #ifdef DEBUG
+			~Region() {pp.topRegion = next;}
+		  #endif
+		};
+		
+		// Use an Indent object to temporarily indent a PrettyPrinter by the offset given to the Indent's constructor.
+		// The PrettyPrinter's margin is set back to its original value when the Indent object is destroyed.
+		// Using an Indent object is exception-safe; no matter how control leaves an Indent scope, the indent is undone.
+		// Scopes of Indent and Block objects must be properly nested.
+		class Indent: public Region {
+			Item &endItem;				// The Item returned by beginIndent
+		  public:
+			Indent(PrettyPrinter &pp, int32 offset): Region(pp), endItem(pp.beginIndent(offset)) {}
+			~Indent() {pp.endIndent(endItem);}
+		};
+		
+		// Use a Block object to temporarily enter a PrettyPrinter block.  If an offset is provided, line breaks inside
+		// the block are indented by that offset relative to the existing indent; otherwise, line breaks inside the block
+		// are indented to the current output position.  The block lasts until the Block object is destroyed.
+		// Scopes of Indent and Block objects must be properly nested.
+		class Block: public Region {
+			Item &endItem;				// The Item returned by beginBlock
+		  public:
+			explicit Block(PrettyPrinter &pp): Region(pp), endItem(pp.beginBlock(Item::blockBegin, 0)) {}
+			Block(PrettyPrinter &pp, int32 offset): Region(pp), endItem(pp.beginBlock(Item::indentBlockBegin, offset)) {}
+			~Block() {pp.endBlock(endItem);}
+		};
 	};
 
 
@@ -874,12 +1490,19 @@ inline void *operator new(size_t size, JavaScript::Arena &arena) {return arena.a
  inline void *operator new[](size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
 #endif
 
-#ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
+#ifndef __MWERKS__	// Metrowerks 5.3 bug: Two-argument delete isn't supported yet
  // Global delete operators.  These are only called in the rare cases that a constructor throws an exception
  // and has to undo an operator new.  An explicit delete statement will never invoke these.
  inline void operator delete(void *, JavaScript::Arena &) {}
  #ifndef _WIN32		// Microsoft Visual C++ 6.0 bug: new and new[] aren't distinguished
   inline void operator delete[](void *, JavaScript::Arena &) {}
  #endif
+#endif
+
+template <typename T>
+inline void *operator new(size_t DEBUG_ONLY(size), JavaScript::Pool<T> &pool) {ASSERT(size == sizeof(T)); return pool.allocate();}
+#ifndef __MWERKS__	// Metrowerks 5.3 bug: Two-argument delete isn't supported yet
+ template <typename T>
+ inline void operator delete(void *t, JavaScript::Pool<T> &pool) {pool.deallocate(t);}
 #endif
 #endif
