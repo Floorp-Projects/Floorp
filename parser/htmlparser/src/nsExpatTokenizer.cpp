@@ -223,7 +223,7 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
   error->code = XML_GetErrorCode(mExpatParser);
   error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
   error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
-  error->description = XML_ErrorString(error->code);
+  error->description = (PRUnichar*) XML_ErrorString(error->code);
   byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
   SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
   token->SetError(error);
@@ -299,12 +299,12 @@ void nsExpatTokenizer::FrontloadMisplacedContent(nsDeque& aDeque){
 /***************************************/
 /* Expat Callback Functions start here */
 /***************************************/
- 
+
 void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts){
   CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.SetString(name);
+    theString.SetString((PRUnichar *) name);
     AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
     int theAttrCount=0;
     while(*atts){
@@ -312,9 +312,9 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
       CAttributeToken* theAttrToken= (CAttributeToken*)gTokenRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown);
       if(theAttrToken){
         nsString& theKey=theAttrToken->GetKey();
-        theKey.SetString(*atts++);
+        theKey.SetString((PRUnichar *) (*atts++));
         nsString& theValue=theAttrToken->GetStringValueXXX();
-        theValue.SetString(*atts++);
+        theValue.SetString((PRUnichar *) (*atts++));
       }
       CToken* theTok=(CToken*)theAttrToken;
       AddToken(theTok,NS_OK,*gTokenDeque,gTokenRecycler);
@@ -330,7 +330,7 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.SetString(name);
+    theString.SetString((PRUnichar *) name);
     AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
   }
   else{
@@ -362,7 +362,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
   else if (currentCDataToken) {
     // While there exists a current CDATA token, keep appending all strings from expat into it.
     nsString& theString = currentCDataToken->GetStringValueXXX();
-    theString.Append(s,len);
+    theString.Append((PRUnichar *) s,len);
   }
   else {
     CToken* newToken = 0;
@@ -381,7 +381,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
     if(newToken) {
       if ((s[0] != kNewLine) && (s[0] != CR)) {
         nsString& theString=newToken->GetStringValueXXX();
-        theString.Append(s,len);
+        theString.Append((PRUnichar *) s,len);
       }
       AddToken(newToken,NS_OK,*gTokenDeque,gTokenRecycler);
     }
@@ -396,10 +396,10 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
     theString.Append("<?");
-    theString.Append(target);
+    theString.Append((PRUnichar *) target);
     if(data) {
       theString.Append(" ");
-      theString.Append(data);
+      theString.Append((PRUnichar *) data);
     }
     theString.Append("?>");
     AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
