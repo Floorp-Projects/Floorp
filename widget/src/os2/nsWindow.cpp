@@ -1424,6 +1424,33 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
    return NS_OK;
 }
 
+//get the bounds, but don't take into account the client size
+
+void nsWindow::GetNonClientBounds(nsRect &aRect)
+{
+  if (mWnd) {
+      RECTL r;
+      WinQueryWindowRect(mWnd, &r);
+
+      // assign size
+      aRect.width = r.xRight - r.xLeft;
+      aRect.height = r.yBottom - r.yTop;
+
+      // convert coordinates if parent exists
+      HWND parent = WinQueryWindow(mWnd, QW_PARENT);
+      if (parent) {
+        RECTL pr;
+        WinQueryWindowRect(parent, &pr);
+        r.xLeft -= pr.xLeft;
+        r.yTop -= pr.yTop;
+      }
+      aRect.x = r.xLeft;
+      aRect.y = r.yTop;
+  } else {
+      aRect.SetRect(0,0,0,0);
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 // Get this component font
@@ -2147,9 +2174,17 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
     PRBool isMozWindowTakingFocus = PR_TRUE;
 
     switch (msg) {
-#if 0
+//#if 0
         case WM_COMMAND: // fire off menu selections
         {
+           nsMenuEvent event;
+           event.mCommand = SHORT1FROMMP(mp1);
+           event.eventStructType = NS_MENU_EVENT;
+           InitEvent(event, NS_MENU_SELECTED);
+           result = DispatchWindowEvent(&event);
+           NS_RELEASE(event.widget);
+        }
+#if 0
           USHORT usSrc = SHORT1FROMMP( mp2);
           if( usSrc == CMDSRC_MENU || usSrc == CMDSRC_ACCELERATOR)
             result = OnMenuClick( SHORT1FROMMP(mp1));
