@@ -2330,7 +2330,10 @@
       (? js2
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
           ((validate (c :unused) (c-env :unused) a) (if (in a true-type) (todo) (throw syntax-error)))
-          ((eval (r-env :unused) (d :unused)) (todo)))))
+          ((eval (r-env :unused) (d :unused)) (todo))))
+      (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
+        ((validate (c :unused) (c-env :unused) (a :unused)) (todo))
+        ((eval (r-env :unused) (d :unused)) (todo))))
     
     (rule (:annotatable-directive :omega_2) ((validate (-> (context compile-frame attribute-not-false boolean) context)) (eval (-> (runtime-frame object) object)))
       (production (:annotatable-directive :omega_2) (:export-definition (:semicolon :omega_2)) annotatable-directive-export-definition
@@ -2358,9 +2361,6 @@
         ((validate (c :unused) (c-env :unused) (a :unused) (has-attributes :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive
-        ((validate (c :unused) (c-env :unused) (a :unused) (has-attributes :unused)) (todo))
-        ((eval (r-env :unused) (d :unused)) (todo)))
-      (production (:annotatable-directive :omega_2) (:pragma (:semicolon :omega_2)) annotatable-directive-pragma
         ((validate (c :unused) (c-env :unused) (a :unused) (has-attributes :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo))))
     
