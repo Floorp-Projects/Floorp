@@ -59,22 +59,28 @@ function onMasterPasswordLoad()
   var timeout = internal_token.getAskPasswordTimeout();
   var timeoutField = document.getElementById("passwordTimeout");
   timeoutField.setAttribute("value", timeout);
+  
+  changePasswordSettings();
 }
 
 function changePasswordSettings()
 {
   var askTimes = 0;
   var timeout = internal_token.getAskPasswordTimeout();
+  var timeoutField = document.getElementById("passwordTimeout");
   var radiogroup = document.getElementById("passwordAskTimes");
   switch ( radiogroup.value ) {
   case "0": 
+    timeoutField.setAttribute("disabled", true);
     askTimes = nsIPK11Token.ASK_FIRST_TIME;
     break;
   case "1": 
+    timeoutField.setAttribute("disabled", true);
     askTimes = nsIPK11Token.ASK_EVERY_TIME;
     break;
-  case "2": 
-    var timeoutField = document.getElementById("passwordTimeout");
+  case "2":
+    timeoutField.removeAttribute("disabled");
+    timeoutField.focus();
     timeout = timeoutField.value;
     var re = new RegExp("^[0-9]+$");
     if (!re.test(timeout)) {
