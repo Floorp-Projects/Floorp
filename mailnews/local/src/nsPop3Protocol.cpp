@@ -647,7 +647,7 @@ nsPop3Protocol::ReadLine(nsIInputStream* inputStream, PRUint32 length,
     for (i = length; i > 0; i--)
     {
         n = 1;
-        inputStream->Read(cp, 0, n, &n);
+        inputStream->Read(cp, n, &n);
         if (n <= 0)
             break;
         else if (*cp == '\r')
@@ -692,7 +692,7 @@ nsPop3Protocol::Read(nsIInputStream* inputStream, PRUint32 length,
         }
     }
     
-    inputStream->Read(m_pop3ConData->data_buffer, 0, length, &bytesRead);
+    inputStream->Read(m_pop3ConData->data_buffer, length, &bytesRead);
     m_pop3ConData->data_buffer[bytesRead] = 0;
     *buffer = m_pop3ConData->data_buffer;
     return bytesRead   ;
@@ -813,7 +813,7 @@ nsPop3Protocol::SendCommand(const char * command)
 
     PR_ASSERT(command && m_outputStream && m_outputConsumer);
 
-    rv = m_outputStream->Write(command, 0, PL_strlen(command), &write_count);
+    rv = m_outputStream->Write(command, PL_strlen(command), &write_count);
     if (NS_SUCCEEDED(rv) && write_count == PL_strlen(command))
     {
         nsIInputStream *inputStream = NULL;
