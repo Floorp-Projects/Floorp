@@ -103,8 +103,7 @@ private:
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
-    nsISupports *m_consumer;
-
+    nsISupports* m_consumer;
 
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);

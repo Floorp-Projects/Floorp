@@ -147,6 +147,12 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			const char * hostName = nsnull;
 			PRUint32 port = IMAP_PORT;
 
+			m_runningUrl->GetHost(&hostName);
+			m_runningUrl->GetHostPort(&port);
+
+			/*JT - Should go away when netlib registers itself! */
+			nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, 
+												  "netlib.dll", PR_FALSE, PR_FALSE); 
             nsINetService* pNetService;
             rv = nsServiceManager::GetService(kNetServiceCID,
                                               nsINetService::GetIID(),
@@ -280,7 +286,30 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 
 	// we would read a line from the stream and then parse it.....I think this function can
 	// effectively replace ReadLineFromSocket...
-	return NS_OK;
+    nsIImapUrl *aImapUrl;
+    nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(),
+                                        (void**)&aImapUrl);
+    PRUint32 len = aLength > OUTPUT_BUFFER_SIZE-1 ? OUTPUT_BUFFER_SIZE-1 : aLength;
+
+    if(NS_SUCCEEDED(res))
+    {
+        res = aIStream->Read(m_dataBuf, len, &len);
+        if (NS_SUCCEEDED(res))
+        {
+            m_dataBuf[len] = 0;
+            nsIImapLog* aImapLog = nsnull;
+            res = aImapUrl->GetImapLog(&aImapLog);
+            if (NS_SUCCEEDED(res) && aImapLog)
+            {
+                nsImapLogProxy aProxy(aImapLog, m_sinkEventQueue, m_thread);
+                aProxy.HandleImapLogData(m_dataBuf);
+                NS_RELEASE(aImapLog);
+            }
+        }
+        NS_RELEASE(aImapUrl);
+    }
+
+	return res;
 }
 
 NS_IMETHODIMP nsImapProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
@@ -419,7 +448,22 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 			{
 				// mscott - I think Imap urls always come in fresh for each Imap protocol connection
 				// so we should always be calling m_transport->open(our url)....
-				NS_ASSERTION(0, "I don't think we should get here for imap urls");
+				// NS_ASSERTION(0, "I don't think we should get here for imap
+                // urls");
+                // ********** jefft ********* okay let's use ? search string
+                // for passing the raw command now.
+                const char *search = nsnull;
+                aURL->GetSearch(&search);
+                char *tmpBuffer = nsnull;
+                if (search && PL_strlen(search))
+                {
+                    tmpBuffer = PR_smprintf("%s\r\n", search);
+                    if (tmpBuffer)
+                    {
+                        SendData(tmpBuffer);
+                        PR_Free(tmpBuffer);
+                    }
+                }
 			}
 		} // if we have an imap url and a transport
         if (aConsumer)

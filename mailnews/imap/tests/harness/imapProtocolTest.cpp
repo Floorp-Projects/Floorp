@@ -42,6 +42,7 @@
 #include "nsIImapLog.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMsgMailSession.h"
+#include "nsIImapLog.h"
 
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -51,6 +52,7 @@
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL	 "xppref32.dll"
+#define MSGIMAP_DLL "msgimap.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -58,6 +60,7 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL	 "pref.so"   // mscott: is this right?
+#define MSGIMAP_DLL "libmsgimap.so"
 #endif
 #endif
 
@@ -70,6 +73,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -153,28 +157,35 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 	strcat(m_urlSpec, "/");
 }
 
-NS_IMPL_ADDREF(nsIMAP4TestDriver);
-NS_IMPL_RELEASE(nsIMAP4TestDriver);
+NS_IMPL_ADDREF(nsIMAP4TestDriver)
+NS_IMPL_RELEASE(nsIMAP4TestDriver)
+// NS_IMPL_ISUPPORTS(nsIMAP4TestDriver, nsIUrlListener::GetIID())
 
-NS_IMETHODIMP nsIMAP4TestDriver::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+nsresult 
+nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    if (NULL == aInstancePtr)
+    if (nsnull == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
- 
-    if (aIID.Equals(nsIStreamListener::GetIID()) || aIID.Equals(kISupportsIID)) 
-	{
-        *aInstancePtr = (void*) ((nsIStreamListener*)this);
-        AddRef();
-        return NS_OK;
+
+    *aInstancePtr = nsnull;
+
+    if (aIID.Equals(nsIUrlListener::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIUrlListener*)this;
     }
-    if (aIID.Equals(nsIImapLog::GetIID())) 
-	{
-        *aInstancePtr = (void*) ((nsIImapLog*)this);
-        AddRef();
-        return NS_OK;
+    else if (aIID.Equals(nsIImapLog::GetIID()))
+    {
+        *aInstancePtr = (void*)(nsIImapLog*)this;
     }
- 
-    return NS_NOINTERFACE;
+    else if (aIID.Equals(kISupportsIID))
+    {
+        *aInstancePtr = (void*)(nsISupports*)(nsIUrlListener*)this;
+    }
+    else
+        return NS_NOINTERFACE;
+
+    NS_ADDREF_THIS();
+    return NS_OK;
 }
 
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
@@ -183,13 +194,20 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 
 	// this is called when we don't have a url nor a protocol instance yet...
 	// use service manager to get an imap 4 url...
-	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull, nsIImapUrl::GetIID(), (void **) &m_url);
+	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                            nsIImapUrl::GetIID(), (void **)
+                                            &m_url);
 	// now create a protocol instance...
-	if (NS_SUCCEEDED(rv))
+	if (NS_SUCCEEDED(rv) && m_url)
+    {
+		m_url->SetImapLog(this);
 		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &m_IMAP4Protocol);
-
+    }
 	if (NS_SUCCEEDED(rv))
+    {
 		m_protocolInitialized = PR_TRUE;
+        m_IMAP4Protocol->Initialize(m_eventQueue);
+    }
 	return rv;
 }
 
@@ -382,8 +400,15 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 
 	if (m_protocolInitialized == PR_FALSE)
 		rv = InitializeProtocol(m_urlString);
-	if (m_url)
+    if (!m_url)
+        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                                nsIImapUrl::GetIID(), (void **)
+                                                &m_url);
+	if (NS_SUCCEEDED(rv) && m_url)
+    {
+        m_url->SetImapLog(this);
 		rv = m_url->SetSpec(m_urlString); // reset spec
+    }
 	
 	if (NS_SUCCEEDED(rv))
 	{
@@ -542,6 +567,11 @@ int main()
 //	nsComponentManager::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	// IMAP Service goes here?
+    nsComponentManager::RegisterComponent(kImapUrlCID, nsnull, nsnull,
+                                          MSGIMAP_DLL, PR_FALSE, PR_FALSE);
+
+    nsComponentManager::RegisterComponent(kImapProtocolCID, nsnull, nsnull,
+                                          MSGIMAP_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for the test app thread...a standin for the ui thread
     nsIEventQueueService* pEventQService;

@@ -383,6 +383,14 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
             cp = PL_strchr(cp, '/');
             m_port = strtol(cp0, (char **)nsnull, 10);
         }
+        cp = PL_strchr(cp, '?');
+        if (cp)
+        {
+            cp++;
+            PRInt32 slen = PL_strlen(cp);
+            m_search = (char*) PR_Malloc(slen+1);
+            PL_strcpy(m_search, cp);
+        }
 	}
 
     delete cSpec;
