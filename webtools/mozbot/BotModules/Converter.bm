@@ -218,12 +218,12 @@ sub convertInches {
     my $yards = sigfig(3, $inches / 36.0);
     my $miles = sigfig(3, $inches / 190080.0);
     # metric
-    my $kilometers = sigfig(3, $inches * 0.00000254);
-    my $meters = sigfig(3, $inches * 0.00254);
-    my $centimeters = sigfig(3, $inches * 0.254);
-    my $millimeters = sigfig(3, $inches * 2.54);
-    my $nanometers = sigfig(3, $inches * 2540000.0);
-    my $angstroms = sigfig(3, $inches * 25400000.0);
+    my $kilometers = sigfig(3, $inches * 0.0000254);
+    my $meters = sigfig(3, $inches * 0.0254);
+    my $centimeters = sigfig(3, $inches * 2.54);
+    my $millimeters = sigfig(3, $inches * 25.4);
+    my $nanometers = sigfig(3, $inches * 25400000.0);
+    my $angstroms = sigfig(3, $inches * 254000000.0);
     # normalise
     my $inches = sigfig(3, $inches);
     $self->say($event, "$event->{'from'}: ${inches}in = ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
@@ -232,60 +232,63 @@ sub convertInches {
 sub convertFeet {
     my $self = shift;
     my($event, $feet) = @_;
+    my $inches = $feet * 12.0;
     # imperial
-    my $inches = sigfig(3, $feet * 12.0);
-    # (feet)
-    my $yards = sigfig(3, $feet / 3.0);
-    my $miles = sigfig(3, $feet / 15840.0);
+    # (inches)
+    my $feet = sigfig(3, $inches / 12.0);
+    my $yards = sigfig(3, $inches / 36.0);
+    my $miles = sigfig(3, $inches / 190080.0);
     # metric
-    my $kilometers = sigfig(3, $feet * 0.00000254 * 12.0);
-    my $meters = sigfig(3, $feet * 0.00254 * 12.0);
-    my $centimeters = sigfig(3, $feet * 0.254 * 12.0);
-    my $millimeters = sigfig(3, $feet * 2.54 * 12.0);
-    my $nanometers = sigfig(3, $feet * 2540000.0 * 12.0);
-    my $angstroms = sigfig(3, $feet * 25400000.0 * 12.0);
+    my $kilometers = sigfig(3, $inches * 0.0000254);
+    my $meters = sigfig(3, $inches * 0.0254);
+    my $centimeters = sigfig(3, $inches * 2.54);
+    my $millimeters = sigfig(3, $inches * 25.4);
+    my $nanometers = sigfig(3, $inches * 25400000.0);
+    my $angstroms = sigfig(3, $inches * 254000000.0);
     # normalise
-    my $feet = sigfig(3, $feet);
+    my $inches = sigfig(3, $inches);
     $self->say($event, "$event->{'from'}: ${feet}ft = ${inches}in, ${yards}yd, ${miles}mi, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
 }
 
 sub convertYards {
     my $self = shift;
     my($event, $yards) = @_;
+    my $inches = $yards * 36.0;
     # imperial
-    my $inches = sigfig(3, $yards * 36.0);
-    my $feet = sigfig(3, $yards * 3.0);
-    # (yards)
-    my $miles = sigfig(3, $yards / 5280.0);
+    # (inches)
+    my $feet = sigfig(3, $inches / 12.0);
+    my $yards = sigfig(3, $inches / 36.0);
+    my $miles = sigfig(3, $inches / 190080.0);
     # metric
-    my $kilometers = sigfig(3, $yards * 0.0000000254 * 36.0);
-    my $meters = sigfig(3, $yards * 0.00254 * 36.0);
-    my $centimeters = sigfig(3, $yards * 0.254 * 36.0);
-    my $millimeters = sigfig(3, $yards * 2.54 * 36.0);
-    my $nanometers = sigfig(3, $yards * 2540000.0 * 36.0);
-    my $angstroms = sigfig(3, $yards * 25400000.0 * 36.0);
+    my $kilometers = sigfig(3, $inches * 0.0000254);
+    my $meters = sigfig(3, $inches * 0.0254);
+    my $centimeters = sigfig(3, $inches * 2.54);
+    my $millimeters = sigfig(3, $inches * 25.4);
+    my $nanometers = sigfig(3, $inches * 25400000.0);
+    my $angstroms = sigfig(3, $inches * 254000000.0);
     # normalise
-    my $yards = sigfig(3, $yards);
+    my $inches = sigfig(3, $inches);
     $self->say($event, "$event->{'from'}: ${yards}yd = ${inches}in, ${feet}ft, ${miles}mi, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
 }
 
 sub convertMiles {
     my $self = shift;
     my($event, $miles) = @_;
+    my $inches = $miles * 190080.0;
     # imperial
-    my $inches = sigfig(3, $miles * 190080.0);
-    my $feet = sigfig(3, $miles * 15840.0);
-    my $yards = sigfig(3, $miles * 5280.0);
-    # (miles)
+    # (inches)
+    my $feet = sigfig(3, $inches / 12.0);
+    my $yards = sigfig(3, $inches / 36.0);
+    my $miles = sigfig(3, $inches / 190080.0);
     # metric
-    my $kilometers = sigfig(3, $miles * 0.00000254 * 190080.0);
-    my $meters = sigfig(3, $miles * 0.00254 * 190080.0);
-    my $centimeters = sigfig(3, $miles * 0.254 * 190080.0);
-    my $millimeters = sigfig(3, $miles * 2.54 * 190080.0);
-    my $nanometers = sigfig(3, $miles * 2540000.0 * 190080.0);
-    my $angstroms = sigfig(3, $miles * 25400000.0 * 190080.0);
+    my $kilometers = sigfig(3, $inches * 0.0000254);
+    my $meters = sigfig(3, $inches * 0.0254);
+    my $centimeters = sigfig(3, $inches * 2.54);
+    my $millimeters = sigfig(3, $inches * 25.4);
+    my $nanometers = sigfig(3, $inches * 25400000.0);
+    my $angstroms = sigfig(3, $inches * 254000000.0);
     # normalise
-    my $miles = sigfig(3, $miles);
+    my $inches = sigfig(3, $inches);
     $self->say($event, "$event->{'from'}: ${miles}mi = ${inches}in, ${feet}ft, ${yards}yd, ${kilometers}Km, ${meters}m, ${centimeters}cm, ${millimeters}mm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
 }
 
