@@ -37,17 +37,10 @@
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/selectBookmark.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
 
-  <hbox align="start">
-    <image class="question-icon"/>
-    <separator class="thin" orient="vertical"/>
-    <description id="selectBookmarkDescription" flex="1"/>
-  </hbox>
-  <separator class="thin"/>
   <bookmarks-tree id="bookmarks-view" style="height:15em;" flex="1" type="single-column"
                   onpopupshowing="return false;"
                   ondblclick="onDblClick()"
-                  onselect="updateOK();"
-/>
+                  onselect="updateOK();"/>
   <separator/>
 
 </dialog>
