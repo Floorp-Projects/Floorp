@@ -21,33 +21,36 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nspr.h"
-#include "prlong.h"
-#include "nsHTTPChannel.h"
 #include "netCore.h"
-#include "nsIHttpEventSink.h"
-#include "nsIHTTPProtocolHandler.h"
+#include "nsAuthEngine.h"
+#include "nsHTTPAtoms.h"
+#include "nsHTTPChannel.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIChannel.h"
-#include "nsIInputStream.h"
-#include "nsIStreamListener.h"
-#include "nsIIOService.h"
-#include "nsXPIDLString.h"
-#include "nsHTTPAtoms.h"
-#include "nsNetUtil.h"
-#include "nsIHttpNotify.h"
-#include "nsINetModRegEntry.h"
-#include "nsProxyObjectManager.h"
-#include "nsIServiceManager.h"
-#include "nsINetModuleMgr.h"
-#include "nsIEventQueueService.h"
-#include "nsIMIMEService.h"
 #include "nsIEnumerator.h"
-#include "nsAuthEngine.h"
-#include "nsINetDataCacheManager.h"
+#include "nsIEventQueueService.h"
+#include "nsIHTTPProtocolHandler.h"
+#include "nsIHttpEventSink.h"
+#include "nsIHttpNotify.h"
+#include "nsIIOService.h"
+#include "nsIInputStream.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIMIMEService.h"
 #include "nsINetDataCache.h"
+#include "nsINetDataCacheManager.h"
+#include "nsINetModRegEntry.h"
+#include "nsINetModuleMgr.h"
+#include "nsIServiceManager.h"
+#include "nsIStreamListener.h"
+#include "nsNetUtil.h"
+#include "nsProxyObjectManager.h"
+#include "nsXPIDLString.h"
+#include "nspr.h"
+#include "prlong.h"
+#ifdef DEBUG_gagan
+#include "nsUnixColorPrintf.h"
+#endif
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all platforms
 #include "nsIPref.h"
@@ -1423,7 +1426,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
 
 nsresult 
 nsHTTPChannel::Authenticate(const char *iChallenge, 
-        nsIChannel **oChannel)
+        nsIChannel **oChannel, PRBool iProxyAuth)
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr <nsIChannel> channel;
@@ -1434,7 +1437,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
 
     // Determine the new username password combination to use 
     char* newUserPass = nsnull;
-    if (!mAuthTriedWithPrehost)
+    if (!mAuthTriedWithPrehost && !iProxyAuth) // Proxy auth's never in prehost
     {
         nsXPIDLCString prehost;
         
@@ -1512,6 +1515,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
             }
             CRTFREEIF(newUserPass);
             newUserPass = temp.ToNewCString();
+#ifdef DEBUG_gagan
+    PRINTF_BLUE;
+    printf("UserPassword- %s",newUserPass);
+#endif
         }
     }
 
@@ -1535,9 +1542,11 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
 
     // This smells like a clone function... maybe there is a 
     // benefit in doing that, think. TODO.
-    rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, mCallbacks, 
-                                 mLoadAttributes, mOriginalURI, 
-                                 mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
+    rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, 
+                                mCallbacks, 
+                                mLoadAttributes, mOriginalURI, 
+                                mBufferSegmentSize, mBufferMaxSize, 
+                                getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv; 
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
@@ -1546,7 +1555,8 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
         return rv;
 
     // Add the authentication header.
-    httpChannel->SetRequestHeader(nsHTTPAtoms::Authorization, 
+    httpChannel->SetRequestHeader(iProxyAuth ?
+            nsHTTPAtoms::Proxy_Authorization : nsHTTPAtoms::Authorization, 
             authString);
 
     // Let it know that we have already tried prehost stuff...
@@ -1709,7 +1719,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
                 this, statusCode));
-        if (401 == statusCode) {
+        if ((401 == statusCode) || (407 == statusCode)) {
             rv = ProcessAuthentication(statusCode);
         }
         break;
@@ -1791,25 +1801,33 @@ nsHTTPChannel::ProcessRedirection(PRInt32 aStatusCode)
 nsresult
 nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
 {
-    NS_ASSERTION(aStatusCode == 401, // thats all we handle for now... 
+    // 401 and 407 that's all we handle for now... 
+    NS_ASSERTION((401 == aStatusCode) || (407 == aStatusCode),
                  "We don't handle other types of errors!"); 
 
-    if (aStatusCode != 401)
-        return NS_OK; // Let life go on...
-
-    nsresult rv;
+    nsresult rv = NS_OK; // Let life go on...
     nsXPIDLCString challenge; // identifies the auth type and realm.
-    rv = GetResponseHeader(nsHTTPAtoms::WWW_Authenticate, getter_Copies(challenge));
+    
+    if (401 == aStatusCode)
+    {
+        rv = GetResponseHeader(nsHTTPAtoms::WWW_Authenticate, 
+                getter_Copies(challenge));
+    }
+    else if (407 == aStatusCode)
+    {
+        rv = GetResponseHeader(nsHTTPAtoms::Proxy_Authenticate, 
+                getter_Copies(challenge));
+    }
+    else 
+        return rv;
     // We can't send user-password without this challenge.
-    if (NS_FAILED(rv)) return rv;
-
-    // TODO Add proxy-authenticate header check too...
-    // can we do * on an XPIDLCString? check... todo
-    if (!challenge || !*challenge)
+    if (NS_FAILED(rv) || !challenge || !*challenge)
         return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    if (NS_FAILED(rv = Authenticate(challenge, getter_AddRefs(channel))))
+    if (NS_FAILED(rv = Authenticate(challenge, 
+                    getter_AddRefs(channel), 
+                    (407 == aStatusCode))))
         return rv;
 
     // Abort the current response...  This will disconnect the consumer from

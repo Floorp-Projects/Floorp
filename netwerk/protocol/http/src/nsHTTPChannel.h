@@ -81,7 +81,8 @@ public:
 
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
-                                     nsIChannel **oChannel);
+                                     nsIChannel **oChannel,
+                                     PRBool bProxyAuth = PR_FALSE);
     nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
     nsresult            Redirect(const char *aURL,
