@@ -67,7 +67,7 @@ public:
 
     void SetVerificationDirectory(char * verify_dir);
     void SetRecordStatistics(PRBool bval);
-    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, nsVoidArray &aContextStack, char * aURLRef);
+    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef);
     void DumpVectorRecord(void);
 
     // global table for storing vector statistics and the size
@@ -78,8 +78,8 @@ private:
     char * mVerificationDir;
     PRBool mRecordingStatistics;
 
-    PRBool DebugRecord(char * path, char * pURLRef, char * filename);
-    void NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector);
+    PRBool DebugRecord(char * path, nsString& pURLRef, char * filename);
+    void NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector);
     void MakeVectorString(char * vector_string, VectorInfo * pInfo);
 };
 
@@ -188,7 +188,7 @@ void CDTDDebug::SetRecordStatistics(PRBool bval)
  * @return  TRUE if it is already record (dont rerecord)
  */
 
-PRBool CDTDDebug::DebugRecord(char * path, char * pURLRef, char * filename)
+PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
 {
    char recordPath[2048];
    PRIntn oflags = 0;
@@ -215,7 +215,9 @@ PRBool CDTDDebug::DebugRecord(char * path, char * pURLRef, char * filename)
 	  // vectors are stored on the format iof "URL vector filename"
 	  // where the vector contains the verification path and
 	  // the filename contains the debug source dump
-      sprintf(string,"%s %s %s\r\n", pURLRef, path, filename);
+      char buffer[513];
+      aURLRef.ToCString(buffer,sizeof(buffer)-1);
+      sprintf(string,"%s %s %s\r\n", buffer, path, filename);
 
 	  // get the file size, read in the file and parse it line at
 	  // a time to check to see if we have already recorded this
@@ -310,7 +312,7 @@ static int compare( const void *arg1, const void *arg2 )
  *  @return
  */
 
-void CDTDDebug::NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector)
+void CDTDDebug::NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
 {
     // if the table doesn't exist, create it
 	if (!mVectorInfoArray) {
@@ -327,7 +329,7 @@ void CDTDDebug::NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector
             PRBool match = PR_TRUE;
 
             for (PRInt32 j = 0; j < count; j++)
-               if (mVectorInfoArray[i]->vector[j] != (eHTMLTags)(int)aTags[j]) {
+               if (mVectorInfoArray[i]->vector[j] != aTags[j]) {
                   match = PR_FALSE;
                   break;
                }
@@ -348,7 +350,7 @@ void CDTDDebug::NoteVector(nsVoidArray & aTags,PRInt32 count, PRBool good_vector
 	pVectorInfo->good_vector = good_vector;
 	pVectorInfo->vector = (eHTMLTags*)PR_Malloc(count*sizeof(eHTMLTags));
    for (PRInt32 i = 0; i < count; i++)
-      pVectorInfo->vector[i] = (eHTMLTags)(int)aTags[i];
+      pVectorInfo->vector[i] = aTags[i];
 	mVectorInfoArray[mVectorCount++] = pVectorInfo;
 
     // have we maxed out the table?  grow it.. sort it.. love it. 
@@ -467,7 +469,7 @@ void CDTDDebug::DumpVectorRecord(void)
  * @return  TRUE if we know how to handle it, else false
  */
 
-PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, nsVoidArray &aContextStack, char * aURLRef) 
+PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef) 
 {
    PRBool  result=PR_TRUE;
 
@@ -477,7 +479,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPo
 
       if(aDTD && aContextStackPos>1) {
          for (int i = 0; i < aContextStackPos-1; i++)
-            if (!aDTD->CanContain((eHTMLTags)(int)aContextStack[i],(eHTMLTags)(int)aContextStack[i+1])) {
+            if (!aDTD->CanContain(aContextStack[i],aContextStack[i+1])) {
                result = PR_FALSE;
                break;
             }
@@ -495,7 +497,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPo
       int i=0;      
       for(i=0;i<aContextStackPos;i++){
          strcat(path,"/");
-         const char* name=GetTagName((eHTMLTags)(int)aContextStack[i]);
+         const char* name=GetTagName(aContextStack[i]);
          strcat(path,name);
          PR_MkDir(path,0);
       }

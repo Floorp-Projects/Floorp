@@ -87,7 +87,7 @@ class COtherDTD : public CNavDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0);
+    virtual PRInt32 WillBuildModel(nsString& aString);
 
     /**
      * 
@@ -217,22 +217,6 @@ class COtherDTD : public CNavDTD {
      * @return  True if closure was achieved -- other false
      */
     virtual PRBool BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
-
-    /**
-     * 
-     * @update	gess6/4/98
-     * @param 
-     * @return
-     */
-    virtual PRInt32 DidOpenContainer(eHTMLTags aTag,PRBool anExplicitOpen);    
-
-    /**
-     * 
-     * @update	gess6/4/98
-     * @param 
-     * @return
-     */
-    virtual PRInt32 DidCloseContainer(eHTMLTags aTag,PRBool anExplicitClosure);
 
     /**
      * This method gets called when a start token has been consumed and needs 

@@ -178,7 +178,7 @@ eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-PRInt32 COtherDTD::WillBuildModel(const char* aFilename) {
+PRInt32 COtherDTD::WillBuildModel(nsString& aFilename) {
   return CNavDTD::WillBuildModel(aFilename);
 }
 
@@ -464,25 +464,6 @@ PRBool COtherDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTML
   return CNavDTD::BackwardPropagate(aVector,aParentTag,aChildTag);
 }
 
-/**
- * 
- * @update	gess6/4/98
- * @param   aTag is the id of the html container being opened
- * @return  0 if all is well.
- */
-PRInt32 COtherDTD::DidOpenContainer(eHTMLTags aTag,PRBool anExplicitOpen){
-  return CNavDTD::DidOpenContainer(aTag,anExplicitOpen);
-}
-
-/**
- * 
- * @update	gess6/4/98
- * @param 
- * @return
- */
-PRInt32 COtherDTD::DidCloseContainer(eHTMLTags aTag,PRBool anExplicitClosure){
-  return CNavDTD::DidOpenContainer(aTag,anExplicitClosure);
-}
 
 /*********************************************
   Here comes code that handles the interface

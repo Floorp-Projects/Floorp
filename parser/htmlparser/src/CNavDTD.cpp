@@ -91,6 +91,115 @@ static char  gWhitespaceTags[]={
   0};
 
 
+/************************************************************************
+  CTagStack class implementation.
+  The reason we use this class is so that we can view the stack state 
+  in the usual way via the debugger.
+ ************************************************************************/
+
+
+CTagStack::CTagStack(int aDefaultSize) {
+#ifdef _dynstack
+  mSize=aDefaultSize;
+  mTags =new eHTMLTags[mSize];
+  mBits =new PRBool[mSize];
+#else
+  mSize=eStackSize;
+#endif
+  mCount=0;
+  nsCRT::zero(mTags,mSize*sizeof(eHTMLTag_html));
+  nsCRT::zero(mBits,mSize*sizeof(PRBool));
+}
+
+/**
+ * Default constructor
+ * @update	gess7/9/98
+ * @param   aDefaultsize tells the stack what size to start out.
+ *          however, we'll autosize as needed.
+ */
+CTagStack::~CTagStack() {
+#ifdef _dynstack
+    delete mTags;
+    delete mBits;
+    mTags=0;
+    mBits=0;
+#endif
+    mSize=mCount=0;
+  }
+
+/**
+ * 
+ * @update	gess7/9/98
+ * @param 
+ * @return
+ */
+void CTagStack::Push(eHTMLTags aTag) {
+
+  if(mCount>=mSize) {
+
+#ifdef _dynstack
+    eHTMLTags* tmp=new eHTMLTags[2*mSize];
+    nsCRT::zero(tmp,2*mSize*sizeof(eHTMLTag_html));
+    nsCRT::memcpy(tmp,mTags,mSize*sizeof(eHTMLTag_html));
+    delete mTags;
+    mTags=tmp;
+
+    PRBool* tmp2=new PRBool[2*mSize];
+    nsCRT::zero(tmp2,2*mSize*sizeof(PRBool));
+    nsCRT::memcpy(tmp2,mBits,mSize*sizeof(PRBool));
+    delete mBits;
+    mBits=tmp2;
+    mSize*=2;
+#endif
+  }
+  mTags[mCount++]=aTag;
+}
+
+/**
+ * 
+ * @update	gess7/9/98
+ * @param 
+ * @return
+ */
+eHTMLTags CTagStack::Pop() {
+  eHTMLTags result=eHTMLTag_unknown;
+  if(mCount>0) {
+    result=mTags[--mCount];
+    mTags[mCount]=eHTMLTag_unknown;
+    mBits[mCount]=PR_FALSE;
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update	gess7/9/98
+ * @param 
+ * @return
+ */
+eHTMLTags CTagStack::First() const {
+  if(mCount>0)
+    return mTags[0];
+  return eHTMLTag_unknown;
+}
+
+/**
+ * 
+ * @update	gess7/9/98
+ * @param 
+ * @return
+ */
+eHTMLTags CTagStack::Last() const {
+  if(mCount>0)
+    return mTags[mCount-1];
+  return eHTMLTag_unknown;
+}
+
+
+/************************************************************************
+  And now for the main class -- CNavDTD...
+ ************************************************************************/
+
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -123,6 +232,7 @@ nsresult CNavDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   ((nsISupports*) *aInstancePtr)->AddRef();
   return NS_OK;                                                        
 }
+
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -234,15 +344,13 @@ static CNavTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
+CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller), 
+  mContextStack(), mStyleStack()  {
   NS_INIT_REFCNT();
   mParser=0;
-  mFilename=0;
   mSink = nsnull;
   mDTDDebug=0;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
-  mContextStackPos=0;
-  mStyleStackPos=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
   InitializeDefaultTokenHandlers();
@@ -257,8 +365,6 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
  */
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
-  if (mFilename)
-    PL_strfree(mFilename);
 
   if (mDTDDebug)
     NS_RELEASE(mDTDDebug);
@@ -280,6 +386,7 @@ void CNavDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
 	if (mDTDDebug)
 		NS_ADDREF(mDTDDebug);
 }
+
 
 /**
  * This method is called to determine if the given DTD can parse
@@ -308,24 +415,16 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
   return result;
 }
 
-
-
 /**
  * 
  * @update	gess5/18/98
  * @param 
  * @return
  */
-PRInt32 CNavDTD::WillBuildModel(const char* aFilename){
+PRInt32 CNavDTD::WillBuildModel(nsString& aFilename){
   PRInt32 result=0;
 
-  if (mFilename) {
-    PL_strfree(mFilename);
-    mFilename=0;
-  }
-  if(aFilename) {
-    mFilename = PL_strdup(aFilename);
-  }
+  mFilename=aFilename;
 
   if(mSink)
     mSink->WillBuildModel();
@@ -342,7 +441,7 @@ PRInt32 CNavDTD::WillBuildModel(const char* aFilename){
 PRInt32 CNavDTD::DidBuildModel(PRInt32 anErrorCode){
   PRInt32 result=0;
 
-  if((kNoError==anErrorCode) && (mContextStackPos>0)) {
+  if((kNoError==anErrorCode) && (mContextStack.mCount>0)) {
     CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
   if(mSink) {
@@ -375,7 +474,7 @@ PRInt32 CNavDTD::HandleToken(CToken* aToken){
     if(theHandler) {
       result=(*theHandler)(theToken,this);
       if (mDTDDebug)
-         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
+         mDTDDebug->Verify(this, mParser, mContextStack.mCount, mContextStack.mTags, mFilename);
     }
 
   }//if
@@ -420,13 +519,13 @@ PRInt32 CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIP
   }
 
   if(IsContainer(aChildTag)){
-    if(PR_TRUE==(PRBool)mLeafBits[mContextStackPos-1]) {
+    if(PR_TRUE==mContextStack.mBits[mContextStack.mCount-1]) {
       CloseTransientStyles(aChildTag);
     }
     result=OpenContainer(aNode,PR_TRUE);
   }
   else {
-    if(PR_FALSE==(PRBool)mLeafBits[mContextStackPos-1]) {
+    if(PR_FALSE==mContextStack.mBits[mContextStack.mCount-1]) {
       OpenTransientStyles(aChildTag);
     }
     result=AddLeaf(aNode);
@@ -576,16 +675,8 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
   // we have to handle explicit styles the way it does. That means
   // that we keep an internal style stack.When an EndToken occurs, 
   // we should see if it is an explicit style tag. If so, we can 
-  // close AND explicit style tag (goofy, huh?)
+  // close the explicit style tag (goofy, huh?)
 
-/*
-  if(0!=strchr(gStyleTags,tokenTagType)){
-    eHTMLTags topTag=GetTopNode();
-    if(0!=strchr(gStyleTags,topTag)){
-      tokenTagType=topTag;
-    }
-  }
-*/
 
     //now check to see if this token should be omitted...
   if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
@@ -622,7 +713,7 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
       // Empty the transient style stack (we just closed any extra
       // ones off so it's safe to do it now) because they don't carry
       // forward across table cell boundaries.
-      mStyleStackPos = 0;
+      mStyleStack.mCount=0;
       break;
 
     default:
@@ -1148,8 +1239,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       break;    //singletons can't contain anything...
 
     case eHTMLTag_li:
-      if ((eHTMLTag_li == aChild) ||
-          (eHTMLTag_ul == aChild) ||	// XXX this is temporary!!!
+      if ((eHTMLTag_li == aChild) || //XXX this is temporary!!!
+          (eHTMLTag_ul == aChild) ||
           (eHTMLTag_ol == aChild) ||
           (eHTMLTag_menu == aChild) ||
           (eHTMLTag_dir == aChild)) {
@@ -1621,29 +1712,6 @@ PRBool CNavDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTa
 }
 
 /**
- * 
- * @update	gess6/4/98
- * @param   aTag is the id of the html container being opened
- * @return  0 if all is well.
- */
-PRInt32 CNavDTD::DidOpenContainer(eHTMLTags aTag,PRBool /*anExplicitOpen*/){
-  PRInt32   result=0;
-  return result;
-}
-
-/**
- * 
- * @update	gess6/4/98
- * @param 
- * @return
- */
-PRInt32 CNavDTD::DidCloseContainer(eHTMLTags aTag,PRBool/*anExplicitClosure*/){
-  PRInt32 result=0;
-  return result;
-}
-
-
-/**
  *  This method allows the caller to determine if a form
  *  element is currently open.
  *  
@@ -1672,9 +1740,7 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
  *  @return  tag id of topmost node in contextstack
  */
 eHTMLTags CNavDTD::GetTopNode() const {
-  if(mContextStackPos) 
-    return (eHTMLTags)(int)mContextStack[mContextStackPos-1];
-  return eHTMLTag_unknown;
+  return mContextStack.Last();
 }
 
 
@@ -1688,8 +1754,8 @@ eHTMLTags CNavDTD::GetTopNode() const {
  */
 PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
   int i=0;
-  for(i=mContextStackPos-1;i>=0;i--){
-    if((eHTMLTags)(int)mContextStack[i]==aTag)
+  for(i=mContextStack.mCount-1;i>=0;i--){
+    if(mContextStack.mTags[i]==aTag)
       return i;
   }
   return kNotFound;
@@ -1720,8 +1786,8 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 
     eHTMLTags parentTag=GetTopNode();
     if(CanContainStyles(parentTag)) {
-      for(pos=0;pos<mStyleStackPos;pos++) {
-        eHTMLTags theTag=(eHTMLTags)(int)mStyleStack[pos]; 
+      for(pos=0;pos<mStyleStack.mCount;pos++) {
+        eHTMLTags theTag=mStyleStack.mTags[pos]; 
         if(PR_FALSE==HasOpenContainer(theTag)) {
 
           CStartToken   token(GetTagName(theTag));
@@ -1735,7 +1801,7 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
             default:
               token.SetTypeID(theTag);  //open the html container...
               result=OpenContainer(theNode,PR_FALSE);
-              mLeafBits.ReplaceElementAt((void*)PR_TRUE,mContextStackPos-1);
+              mContextStack.mBits[mContextStack.mCount-1]=PR_TRUE;
           } //switch
         }
         if(kNoError!=result)
@@ -1761,11 +1827,11 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 PRInt32 CNavDTD::CloseTransientStyles(eHTMLTags aTag){
   PRInt32 result=0;
 
-  if((mStyleStackPos>0) && (mLeafBits[mContextStackPos-1])) {
+  if((mStyleStack.mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
     if(0==strchr(gWhitespaceTags,aTag)){
 
-      result=CloseContainersTo((eHTMLTags)(int)mStyleStack[0],PR_FALSE);
-      mLeafBits.ReplaceElementAt((void*)PR_FALSE,mContextStackPos-1);
+      result=CloseContainersTo(mStyleStack.mTags[0],PR_FALSE);
+      mContextStack.mBits[mContextStack.mCount-1]=PR_FALSE;
 
     }//if
   }//if
@@ -1782,10 +1848,10 @@ PRInt32 CNavDTD::CloseTransientStyles(eHTMLTags aTag){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::OpenHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
 
   PRInt32 result=mSink->OpenHTML(aNode); 
-  mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+  mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
 
@@ -1799,9 +1865,9 @@ PRInt32 CNavDTD::OpenHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseHTML(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseHTML(aNode); 
-  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.Pop();
   return result;
 }
 
@@ -1815,7 +1881,7 @@ PRInt32 CNavDTD::CloseHTML(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::OpenHead(const nsIParserNode& aNode){
-  mContextStack.ReplaceElementAt((void*)eHTMLTag_head,++mContextStackPos);
+  mContextStack.Push(eHTMLTag_head);
   PRInt32 result=mSink->OpenHead(aNode); 
   return result;
 }
@@ -1830,7 +1896,7 @@ PRInt32 CNavDTD::OpenHead(const nsIParserNode& aNode){
  */
 PRInt32 CNavDTD::CloseHead(const nsIParserNode& aNode){
   PRInt32 result=mSink->CloseHead(aNode); 
-  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.Pop();
   return result;
 }
 
@@ -1843,7 +1909,7 @@ PRInt32 CNavDTD::CloseHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
 
   PRInt32 result=kNoError;
   eHTMLTags topTag=GetTopNode();
@@ -1875,7 +1941,7 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
 
   if(kNoError==result) {
     result=mSink->OpenBody(aNode); 
-    mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+    mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   }
   return result;
 }
@@ -1889,9 +1955,9 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseBody(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseBody(aNode); 
-  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.Pop();
   return result;
 }
 
@@ -1980,9 +2046,9 @@ PRInt32 CNavDTD::CloseMap(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::OpenFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
   PRInt32 result=mSink->OpenFrameset(aNode); 
-  mContextStack.ReplaceElementAt((void*)aNode.GetNodeType(),mContextStackPos++);
+  mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
 
@@ -1995,9 +2061,9 @@ PRInt32 CNavDTD::OpenFrameset(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseFrameset(const nsIParserNode& aNode){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   PRInt32 result=mSink->CloseFrameset(aNode); 
-  mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+  mContextStack.Pop();
   return result;
 }
 
@@ -2011,7 +2077,7 @@ PRInt32 CNavDTD::CloseFrameset(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   
   PRInt32   result=kNoError; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
@@ -2037,7 +2103,7 @@ PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleSta
 
     default:
       result=mSink->OpenContainer(aNode); 
-      mContextStack.ReplaceElementAt((void*)nodeType,mContextStackPos++);
+      mContextStack.Push((eHTMLTags)aNode.GetNodeType());
       break;
   }
 
@@ -2057,7 +2123,7 @@ PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleSta
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   PRInt32   result=kNoError; //was false
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
@@ -2085,11 +2151,11 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
     case eHTMLTag_title:
     default:
       result=mSink->CloseContainer(aNode); 
-      mContextStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mContextStackPos);
+      mContextStack.Pop();
       break;
   }
 
-  mLeafBits.ReplaceElementAt((void*)PR_FALSE, mContextStackPos);
+  mContextStack.mBits[mContextStack.mCount]=PR_FALSE;
   if((kNoError==result) && (PR_TRUE==aUpdateStyles)){
     UpdateStyleStackForCloseTag(nodeType,aTag);
   }
@@ -2106,15 +2172,15 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   PRInt32 result=kNoError;
 
   CEndToken aToken(gEmpty);
   nsCParserNode theNode(&aToken);
 
-  if((anIndex<mContextStackPos) && (anIndex>=0)) {
-    while(mContextStackPos>anIndex) {
-      eHTMLTags theTag=(eHTMLTags)(int)mContextStack[mContextStackPos-1];
+  if((anIndex<mContextStack.mCount) && (anIndex>=0)) {
+    while(mContextStack.mCount>anIndex) {
+      eHTMLTags theTag=mContextStack.Last();
       aToken.SetTypeID(theTag);
       result=CloseContainer(theNode,aTag,aUpdateStyles);
     }
@@ -2131,7 +2197,7 @@ PRInt32 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdate
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
 
   PRInt32 pos=GetTopmostIndexOf(aTag);
 
@@ -2172,10 +2238,10 @@ PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
  * @return  TRUE if ok, FALSE if error
  */
 PRInt32 CNavDTD::CloseTopmostContainer(){
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
 
   CEndToken aToken(gEmpty);
-  eHTMLTags theTag=(eHTMLTags)(int)mContextStack[mContextStackPos-1];
+  eHTMLTags theTag=mContextStack.Last();
   aToken.SetTypeID(theTag);
   nsCParserNode theNode(&aToken);
   return CloseContainer(theNode,theTag,PR_TRUE);
@@ -2217,7 +2283,7 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     //add code here to build up context stack based on forward propagated context vector...
     pos=0;
     cnt=theVector.Length()-1;
-    if(mContextStack[mContextStackPos-1]==(void*)theVector[cnt])
+    if(mContextStack.Last()==(eHTMLTags)theVector[cnt])
       result=kNoError;
     else result=kContextMismatch;
   }
@@ -2236,8 +2302,8 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
       pos=0;
       cnt=theVector.Length();
       result=kNoError;
-      while(pos<mContextStackPos) {
-        if(mContextStack[pos]==(void*)theVector[cnt-1-pos]) {
+      while(pos<mContextStack.mCount) {
+        if(mContextStack.mTags[pos]==(eHTMLTags)theVector[cnt-1-pos]) {
           pos++;
         }
         else {
@@ -2321,7 +2387,7 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
     case eHTMLTag_tt:
     case eHTMLTag_u:
     case eHTMLTag_var:
-      mStyleStack.ReplaceElementAt((void*)aTag,mStyleStackPos++);
+      mStyleStack.Push(aTag);
       break;
 
     case eHTMLTag_h1: case eHTMLTag_h2:
@@ -2347,7 +2413,7 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
 PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   PRInt32 result=0;
   
-  if(mStyleStackPos>0) {
+  if(mStyleStack.mCount>0) {
     switch (aTag) {
 
       case eHTMLTag_a:
@@ -2369,7 +2435,7 @@ PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTa
       case eHTMLTag_u:
       case eHTMLTag_var:
         if(aTag==anActualTag)
-          mStyleStack.ReplaceElementAt((void*)eHTMLTag_unknown,--mStyleStackPos);
+          mStyleStack.Pop();
         break;
 
       case eHTMLTag_h1: case eHTMLTag_h2:
@@ -2716,8 +2782,8 @@ PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
   CScanner* theScanner=mParser->GetScanner();
   if(kNoError==result){
     
-    PRUnichar aChar;
-    result=theScanner->GetChar(aChar);
+    PRUnichar theChar;
+    result=theScanner->GetChar(theChar);
     switch(result) {
       case kEOF:
         break;
@@ -2728,25 +2794,25 @@ PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
 
       case kNoError:
       default:
-        switch(aChar) {
+        switch(theChar) {
           case kLessThan:
-            return ConsumeTag(aChar,*theScanner,aToken);
+            return ConsumeTag(theChar,*theScanner,aToken);
 
           case kAmpersand:
-            return ConsumeEntity(aChar,*theScanner,aToken);
+            return ConsumeEntity(theChar,*theScanner,aToken);
           
           case kCR: case kLF:
-            return ConsumeNewline(aChar,*theScanner,aToken);
+            return ConsumeNewline(theChar,*theScanner,aToken);
           
           case kNotFound:
             break;
           
           default:
-            if(!nsString::IsSpace(aChar)) {
-              nsAutoString temp(aChar);
+            if(!nsString::IsSpace(theChar)) {
+              nsAutoString temp(theChar);
               return ConsumeText(temp,*theScanner,aToken);
             }
-            return ConsumeWhitespace(aChar,*theScanner,aToken);
+            return ConsumeWhitespace(theChar,*theScanner,aToken);
         } //switch
         break; 
     } //switch

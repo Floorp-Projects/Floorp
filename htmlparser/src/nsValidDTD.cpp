@@ -190,7 +190,7 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-PRInt32 CValidDTD::WillBuildModel(const char* aFilename){
+PRInt32 CValidDTD::WillBuildModel(nsString& aFilename){
   PRInt32 result=0;
   return result;
 }

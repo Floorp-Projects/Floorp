@@ -19,10 +19,8 @@
 //#define __INCREMENTAL 1
 
 #include "nsScanner.h"
-#include "nsIURL.h" 
 #include "nsDebug.h"
 
-const char* gURLRef=0;
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
 
 #ifdef __INCREMENTAL
@@ -31,87 +29,53 @@ const int   kBufsize=1;
 const int   kBufsize=64;
 #endif
 
+
 /**
- *  Use this constructor if you want an incremental (callback)
- *  based input stream.
+ *  Use this constructor if you want i/o to be based on an
+ *  incremental netstream. If you pass a null filename, you
+ *  can still provide data to the scanner via append.
  *
  *  @update  gess 5/12/98
- *  @param   aMode represents the parser mode (nav, other)
+ *  @param   aFilename --
  *  @return  
  */
-CScanner::CScanner(eParseMode aMode) : mBuffer("") {
+CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) : 
+    mBuffer(""), mFilename(aFilename) 
+{
   mOffset=0;
   mMarkPos=-1;
   mTotalRead=0;
-  mParseMode=aMode;
-  mNetStream=0;
+  mOwnsStream=aCreateStream;
   mFileStream=0;
-  mIncremental=PR_TRUE;
-  mOwnsStream=PR_TRUE;
+  if(aCreateStream) {
+    char buffer[513];
+    aFilename.ToCString(buffer,sizeof(buffer)-1);
+    #if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
+      /* XXX: IRIX does not support ios::binary */
+      mFileStream=new fstream(buffer,ios::in);
+    #else
+      mFileStream=new fstream(buffer,ios::in|ios::binary);
+    #endif
+  } //if
 }
 
 /**
- *  Use this constructor if you want i/o to be file based.
+ *  Use this constructor if you want i/o to be stream based.
  *
  *  @update  gess 5/12/98
- *  @param   aMode represents the parser mode (nav, other)
+ *  @param   aStream --
+ *  @param   assumeOwnership --
+ *  @param   aFilename --
  *  @return  
  */
-CScanner::CScanner(const char* aFilename,eParseMode aMode) : mBuffer("") {
-  NS_ASSERTION(0!=aFilename,"Error: Null filename!");
+CScanner::CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership) :
+    mBuffer(""), mFilename(aFilename)
+{    
   mOffset=0;
   mMarkPos=-1;
   mTotalRead=0;
-  mParseMode=aMode;
-  mNetStream=0;
-  mIncremental=PR_FALSE;
-  mOwnsStream=PR_TRUE;
-#if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
-  /* XXX: IRIX does not support ios::binary */
-  mFileStream=new fstream(aFilename,ios::in);
-#else
-  mFileStream=new fstream(aFilename,ios::in|ios::binary);
-#endif
-}
-
-/**
- *  Use this constructor if you want i/o to be file based.
- *
- *  @update  gess 5/12/98
- *  @param   aMode represents the parser mode (nav, other)
- *  @return  
- */
-CScanner::CScanner(fstream& aStream,eParseMode aMode) : mBuffer("") {
-  mOffset=0;
-  mMarkPos=-1;
-  mTotalRead=0;
-  mParseMode=aMode;
-  mNetStream=0;
-  mIncremental=PR_FALSE;
-  mOwnsStream=PR_FALSE;
+  mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
-}
-
-/**
- *  Use this constructor if you want i/o to be based on a
- *  non-incremental netstream.
- *
- *  @update  gess 5/12/98
- *  @param   aMode represents the parser mode (nav, other)
- *  @return  
- */
-CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
-  NS_ASSERTION(0!=aURL,"Error: Null URL!");
-  mOffset=0;
-  mMarkPos=-1;
-  mTotalRead=0;
-  mParseMode=aMode;
-  mFileStream=0;
-  PRInt32 error=0;
-  mIncremental=PR_FALSE;
-  mNetStream=aURL->Open(&error);
-  gURLRef=aURL->GetSpec();
-  mOwnsStream=PR_FALSE;
 }
 
 
@@ -128,13 +92,7 @@ CScanner::~CScanner() {
     if(mOwnsStream)
       delete mFileStream;
   }
-  else if(mNetStream) {
-    mNetStream->Close();
-    mNetStream->Release();
-  }
   mFileStream=0;
-  mNetStream=0;
-  gURLRef=0;
 }
 
 /**
@@ -200,34 +158,9 @@ void _PreCompressBuffer(nsString& aBuffer,PRInt32& anOffset,PRInt32& aMarkPos){
 }
 
 
-/**
- *  This method should only be called by the parser when
- *  we're doing incremental i/o over the net.
- *  
- *  @update  gess 5/12/98
- *  @param   aBuffer contains next blob of i/o data
- *  @param   aSize contains size of buffer
- *  @return  0 if all went well, otherwise error code.
- */
-PRInt32 CScanner::IncrementalAppend(const char* aBuffer,PRInt32 aSize){
-  NS_ASSERTION(((!mFileStream) && (!mNetStream)),"Error: Should only be called during incremental net i/o!");
-
-  PRInt32 result=0;
-  if((!mFileStream) && (!mNetStream)) {
-
-    _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
-
-    //now that the buffer is (possibly) shortened, let's append the new data.
-    if(0<aSize) {
-      mBuffer.Append(aBuffer,aSize);
-      mTotalRead+=aSize;
-    }
-  }
-  return result;
-}
-
 /** 
- * Grab data from underlying stream.
+ * Append data to our underlying input buffer as
+ * if it were read from an input stream.
  *
  * @update  gess4/3/98
  * @return  error code
@@ -235,6 +168,7 @@ PRInt32 CScanner::IncrementalAppend(const char* aBuffer,PRInt32 aSize){
 PRBool CScanner::Append(nsString& aBuffer) {
   _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
   mBuffer.Append(aBuffer);
+  mTotalRead+=aBuffer.Length();
   return PR_TRUE;
 }
 
@@ -248,6 +182,7 @@ PRBool CScanner::Append(nsString& aBuffer) {
 PRBool CScanner::Append(const char* aBuffer, PRInt32 aLen){
   _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
   mBuffer.Append(aBuffer,aLen);
+  mTotalRead+=aLen;
   return PR_TRUE;
 }
 
@@ -262,18 +197,18 @@ PRInt32 CScanner::FillBuffer(void) {
 
   _PreCompressBuffer(mBuffer,mOffset,mMarkPos);
 
-  if((!mIncremental) && (!mNetStream) && (!mFileStream)) {
+  if(!mFileStream) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
     //If you're here, it means someone tried to load a
     //non-existent document. So as a favor, we emit a
     //little bit of HTML explaining the error.
     if(0==mTotalRead) {
       mBuffer.Append((const char*)kBadHTMLText);
-      mBuffer.Append((const char*)gURLRef);
+      mBuffer.Append(mFilename);
     }
-    else return 0;
+    else return kInterrupted;
   }
-  else if(!mIncremental) {
+  else {
     PRInt32 numread=0;
     char buf[kBufsize+1];
     buf[kBufsize]=0;
@@ -282,17 +217,11 @@ PRInt32 CScanner::FillBuffer(void) {
       mFileStream->read(buf,kBufsize);
       numread=mFileStream->gcount();
     }
-    else if(mNetStream) {
-      numread=mNetStream->Read(&anError,buf,0,kBufsize);
-      if(1==anError)
-        anError=kEOF;
-    }
     mOffset=mBuffer.Length();
     if((0<numread) && (0==anError))
       mBuffer.Append((const char*)buf,numread);
     mTotalRead+=mBuffer.Length();
   }
-  else anError=kInterrupted;
 
   return anError;
 }
@@ -308,9 +237,7 @@ PRInt32 CScanner::Eof() {
   PRInt32 theError=0;
 
   if(mOffset>=mBuffer.Length()) {
-    if(!mIncremental)
-      theError=FillBuffer();  
-    else return kInterrupted;
+    theError=FillBuffer();  
   }
   
   if(0==theError) 
@@ -451,21 +378,21 @@ PRInt32 CScanner::SkipPast(nsString& aValidSet){
  *  @return  error code
  */
 PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerminal){
-  PRUnichar ch=0;
+  PRUnichar theChar=0;
   PRInt32   result=kNoError;
   PRInt32   wrPos=0;
 
   while(kNoError==result) {
-    result=GetChar(ch);
+    result=GetChar(theChar);
     if(kNoError==result) {
-      PRInt32 pos=aValidSet.Find(ch);
+      PRInt32 pos=aValidSet.Find(theChar);
       if(kNotFound==pos) {
         if(addTerminal)
-          aString+=ch;
-        else PutBack(ch);
+          aString+=theChar;
+        else PutBack(theChar);
         break;
       }
-      else aString+=ch;
+      else aString+=theChar;
     }
   }
   return result;
@@ -533,6 +460,18 @@ PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool add
  */
 nsString& CScanner::GetBuffer(void) {
   return mBuffer;
+}
+
+/**
+ *  Retrieve the name of the file that the scanner is reading from.
+ *  In some cases, it's just a given name, because the scanner isn't
+ *  really reading from a file.
+ *  
+ *  @update  gess 5/12/98
+ *  @return  
+ */
+nsString& CScanner::GetFilename(void) {
+  return mFilename;
 }
 
 /**

@@ -177,7 +177,7 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
  * @param 
  * @return
  */
-PRInt32 CWellFormedDTD::WillBuildModel(const char* aFilename){
+PRInt32 CWellFormedDTD::WillBuildModel(nsString& aFilename){
   PRInt32 result=0;
   return result;
 }

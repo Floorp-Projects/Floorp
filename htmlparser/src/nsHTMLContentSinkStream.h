@@ -52,15 +52,7 @@ class CHTMLContentSinkStream : public nsIHTMLContentSink {
    * @param 
    * @return
    */
-  CHTMLContentSinkStream(); 
-
-  /**
-   * 
-   * @update	gess7/7/98
-   * @param 
-   * @return
-   */
-  CHTMLContentSinkStream(ostream& aStream); 
+  CHTMLContentSinkStream(ostream* aStream); 
 
   /**
    * 
@@ -70,14 +62,6 @@ class CHTMLContentSinkStream : public nsIHTMLContentSink {
    */
   virtual ~CHTMLContentSinkStream();
 
-
-  /**
-   * 
-   * @update	gess7/7/98
-   * @param 
-   * @return
-   */
-  void SetOutputStream(ostream& aStream);
 
    /**
     * This method gets called by the parser when it encounters
@@ -249,7 +233,7 @@ protected:
 
 };
 
-extern NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(CHTMLContentSinkStream** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_New_HTML_ContentSinkStream(CHTMLContentSinkStream** aInstancePtrResult,ostream* aStream);
 
 
 #endif

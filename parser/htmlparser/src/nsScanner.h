@@ -35,43 +35,21 @@
 #include "nsString.h"
 #include "nsParserTypes.h"
 #include "prtypes.h"
-#include "nsIInputStream.h"
 #include <fstream.h>
 
-class nsIURL;
-//class ifstream;
 
 class CScanner {
   public:
 
       /**
-       *  Use this constructor if you want an incremental (callback)
-       *  based input stream.
+       *  Use this constructor if you want i/o to be based on 
+       *  a file (therefore a stream) or just data you provide via Append().
        *
        *  @update  gess 5/12/98
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(eParseMode aMode=eParseMode_navigator);
-      
-      /**
-       *  Use this constructor if you want i/o to be based on a
-       *  non-incremental netstream.
-       *
-       *  @update  gess 5/12/98
-       *  @param   aMode represents the parser mode (nav, other)
-       *  @return  
-       */
-      CScanner(nsIURL* aURL,eParseMode aMode=eParseMode_navigator);
-
-      /**
-       *  Use this constructor if you want i/o to be file based.
-       *
-       *  @update  gess 5/12/98
-       *  @param   aMode represents the parser mode (nav, other)
-       *  @return  
-       */
-      CScanner(const char* aFilename,eParseMode aMode=eParseMode_navigator);
+      CScanner(nsString& aFilename,PRBool aCreateStream=PR_TRUE);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
@@ -80,7 +58,7 @@ class CScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      CScanner(fstream& aStream,eParseMode aMode=eParseMode_navigator);
+      CScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership=PR_TRUE);
 
 
       ~CScanner();
@@ -241,16 +219,17 @@ class CScanner {
        *  @param   
        *  @return  
        */
-      PRInt32 IncrementalAppend(const char* aBuffer,PRInt32 aSize);
+      nsString& GetBuffer(void);
 
       /**
-       *  
+       *  Retrieve the name of the file that the scanner is reading from.
+       *  In some cases, it's just a given name, because the scanner isn't
+       *  really reading from a file.
        *  
        *  @update  gess 5/12/98
-       *  @param   
        *  @return  
        */
-      nsString& GetBuffer(void);
+      nsString& GetFilename(void);
 
       static void SelfTest();
 
@@ -268,13 +247,11 @@ class CScanner {
 
 
       fstream*        mFileStream;
-      nsIInputStream* mNetStream;
       nsString        mBuffer;
+      nsString        mFilename;
       PRInt32         mOffset;
       PRInt32         mMarkPos;
       PRInt32         mTotalRead;
-      eParseMode      mParseMode;
-      PRBool          mIncremental;
       PRBool          mOwnsStream;
 };
 

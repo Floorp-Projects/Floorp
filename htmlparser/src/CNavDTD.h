@@ -45,6 +45,54 @@ class nsIParserNode;
 class CITokenHandler;
 class nsParser;
 
+
+
+/***************************************************************
+  First define a helper class called CTagStack.
+
+  Simple, we've built ourselves a little data structure that
+  serves as a stack for htmltags (and associated bits). 
+  What's special is that if you #define _dynstack 1, the stack
+  size can grow dynamically (like you'ld want in a release build.)
+  If you don't #define _dynstack 1, then the stack is a fixed size,
+  equal to the eStackSize enum. This makes debugging easier, because
+  you can see the htmltags on the stack if its not dynamic.
+ ***************************************************************/
+
+//#define _dynstack 1
+class CTagStack {
+  enum {eStackSize=200};
+
+public:
+
+            CTagStack(int aDefaultSize=50);
+            ~CTagStack();
+  void      Push(eHTMLTags aTag);
+  eHTMLTags Pop();
+  eHTMLTags First() const;
+  eHTMLTags Last() const;
+
+  int       mSize;
+  int       mCount;
+
+#ifdef _dynstack
+  eHTMLTags*  mTags;
+  PRBool*     mBits;
+#else
+  eHTMLTags   mTags[200];
+  PRBool      mBits[200];
+#endif
+};
+
+/***************************************************************
+  Now the main event: CNavDTD.
+
+  This not so simple class performs all the duties of token 
+  construction and model building. It works in conjunction with
+  an nsParser.
+ ***************************************************************/
+
+
 class CNavDTD : public nsIDTD {
             
   public:
@@ -103,7 +151,7 @@ class CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0);
+    virtual PRInt32 WillBuildModel(nsString& aFilename);
 
     /**
      * 
@@ -252,14 +300,6 @@ class CNavDTD : public nsIDTD {
     virtual PRBool BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
 
     /**
-     * 
-     * @update	gess6/4/98
-     * @param 
-     * @return
-     */
-    virtual PRInt32 DidOpenContainer(eHTMLTags aTag,PRBool anExplicitOpen);    
-
-    /**
      * Ask parser if a given container is open ANYWHERE on stack
      * @update	gess5/11/98
      * @param   id of container you want to test for
@@ -283,129 +323,36 @@ class CNavDTD : public nsIDTD {
      */
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
 
-    /**
-     * 
-     * @update	gess6/4/98
-     * @param 
-     * @return
-     */
-    virtual PRInt32 DidCloseContainer(eHTMLTags aTag,PRBool anExplicitClosure);
 
     /**
-     * This method gets called when a start token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
+     * The following set of methods are used to partially construct 
+     * the content model (via the sink) according to the type of token.
      * @update	gess5/11/98
      * @param   aToken is the start token to be handled
      * @return  TRUE if the token was handled.
      */
     PRInt32 HandleStartToken(CToken* aToken);
-
-    /**
-     * This method gets called when a start token has been consumed, and
-     * we want to use default start token handling behavior.
-     * This method gets called automatically by handleStartToken.
-     *
-     * @update	gess5/11/98
-     * @param   aToken is the start token to be handled
-     * @param   aChildTag is the tag-type of given token
-     * @param   aNode is a node be updated with info from given token
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
-
-    /**
-     * This method gets called when an end token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the end token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleEndToken(CToken* aToken);
-
-    /**
-     * This method gets called when an entity token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the entity token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleEntityToken(CToken* aToken);
-
-    /**
-     * This method gets called when a comment token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the comment token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleCommentToken(CToken* aToken);
-
-    /**
-     * This method gets called when a skipped-content token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the skipped-content token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleSkippedContentToken(CToken* aToken);
-
-    /**
-     * This method gets called when an attribute token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the attribute token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleAttributeToken(CToken* aToken);
-
-    /**
-     * This method gets called when a script token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the script token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleScriptToken(CToken* aToken);
-    
-    /**
-     * This method gets called when a style token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the style token to be handled
-     * @return  TRUE if the token was handled.
-     */
     PRInt32 HandleStyleToken(CToken* aToken);
 
-	
 
 protected:
 
     /**
-     * Causes token handlers to be registered for this parser.
-     * DO NOT CALL THIS! IT'S DEPRECATED!
+     * The following methods are use to create and manage
+     * the dynamic set of token handlers.
      * @update	gess5/11/98
      */
-    void InitializeDefaultTokenHandlers();
-
-   
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
+    void            InitializeDefaultTokenHandlers();
     CITokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
     CITokenHandler* AddTokenHandler(CITokenHandler* aHandler);
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    void DeleteTokenHandlers(void);
-
+    void            DeleteTokenHandlers(void);
 
 
     //*************************************************
@@ -414,145 +361,43 @@ protected:
     //*************************************************
 
     /**
-     * This cover method opens the given node as a HTML item in 
-     * content sink.
+     * The next set of method open given HTML element.
+     * 
      * @update	gess5/11/98
      * @param   HTML (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
     PRInt32 OpenHTML(const nsIParserNode& aNode);
-
-    /**
-     * 
-     * @update	gess5/11/98
-     * @param 
-     * @return
-     */
-    PRInt32 CloseHTML(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a head item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   HEAD (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenHead(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink head to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseHead(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a body item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   BODY (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink body to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the body node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a form item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FORM (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink form to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the form node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a form item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FORM (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenMap(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink form to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the form node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseMap(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a frameset item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FRAMESET (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink frameset to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the frameeset node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a generic container in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   generic container (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
     PRInt32 OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack);
 
     /**
-     * This cover method causes a generic containre in the content-sink to be closed
+     * The next set of methods close the given HTML element.
+     * 
      * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
+     * @param   HTML (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
+    PRInt32 CloseHTML(const nsIParserNode& aNode);
+    PRInt32 CloseHead(const nsIParserNode& aNode);
+    PRInt32 CloseBody(const nsIParserNode& aNode);
+    PRInt32 CloseForm(const nsIParserNode& aNode);
+    PRInt32 CloseMap(const nsIParserNode& aNode);
+    PRInt32 CloseFrameset(const nsIParserNode& aNode);
     PRInt32 CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aUpdateStyles);
     
     /**
-     * This cover method causes the topmost container to be closed in sink
+     * The special purpose methods automatically close
+     * one or more open containers.
      * @update	gess5/11/98
      * @return  TRUE if all went well.
      */
     PRInt32 CloseTopmostContainer();
-    
-    /**
-     * Cause all containers down to topmost given tag to be closed
-     * @update	gess5/11/98
-     * @param   aTag is the tag at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
     PRInt32 CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
-
-    /**
-     * Cause all containers down to given position to be closed
-     * @update	gess5/11/98
-     * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
     PRInt32 CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles);
 
     /**
@@ -603,81 +448,22 @@ protected:
      CToken* CreateTokenOfType(eHTMLTokenTypes aType);
 
     /**
-     * Retrieve the next TAG from the given scanner.
+     * The following methods consume a particular type
+     * of HTML token.
+     *
      * @update	gess 5/11/98
      * @param   aScanner is the input source
      * @param   aToken is the next token (or null)
      * @return  error code
      */
     PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve next START tag from given scanner.
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve collection of HTML/XML attributes from given scanner
-     * @update	gess 5/11/98
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
-    
-    /**
-     * Retrieve a sequence of text from given scanner.
-     * @update	gess 5/11/98
-     * @param   aString will contain retrieved text.
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
-    PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve an entity from given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a whitespace sequence from the given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-    
-    /**
-     * Retrieve a comment from the given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-
-    /**
-     * Retrieve newlines from given scanner
-     * @update	gess 5/11/98
-     * @param   aChar last char read from scanner
-     * @param   aScanner is the input source
-     * @param   aToken is the next token (or null)
-     * @return  error code
-     */
     PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
 
     /**
      * Causes content to be skipped up to sequence contained in aString.
@@ -700,16 +486,13 @@ protected:
 
     CITokenHandler*     mTokenHandlers[eToken_last];
 
-    nsVoidArray         mLeafBits;
-    nsVoidArray         mContextStack;
-    PRInt32             mContextStackPos;
-    nsVoidArray         mStyleStack;
-    PRInt32             mStyleStackPos;
+    CTagStack           mContextStack;
+    CTagStack           mStyleStack;
 
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
-    char*               mFilename;
+    nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
 };
 
