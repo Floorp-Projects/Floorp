@@ -1124,7 +1124,9 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
   nsReadingIterator<PRUnichar> end, current;
   aScanner.EndReading(end);
   aScanner.CurrentPosition(current);
-  nsReadingIterator<PRUnichar> beginData = current, beginLastMinus = end;
+  nsReadingIterator<PRUnichar> beginData = current, 
+                               beginLastMinus = end,
+                               bestAltCommentEnd = end;
 
   // When we get here, we have always already consumed <!
   // Skip over possible leading minuses
@@ -1143,6 +1145,9 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
       // Find the end of the comment
       while (FindCharInReadable(kGreaterThan, current, currentEnd)) {
         gt = current;
+        if (bestAltCommentEnd == end) {
+          bestAltCommentEnd = gt;
+        }
         --current;
         PRBool goodComment = PR_FALSE;
         if (current != beginLastMinus && *current == kMinus) { // ->
@@ -1187,31 +1192,39 @@ nsresult ConsumeComment(nsScanner& aScanner, nsString& aString) {
         }
       } //while
   
-      if (gt != end && !aScanner.IsIncremental()) {
-        // If you're here, then we're in a special state. 
-        // The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
-        // In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
-        // If so, rewind just pass that, and use everything up to that point as your comment.
-        // If not, the document has no end comment and should be treated as one big comment.
-        if (beginData != gt) { // protects from <!-->
-#if 0
-          // XXX We should do this, but it HANGS until bug 112943 is fixed:
-          aString = Substring(beginData, ++gt);
-#else
-          // XXX Instead we can do this EVIL HACK (from jag):
-          PRUint32 len = Distance(beginData, ++gt);
-          aString.SetLength(len);
-          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
-          copy_string(beginData, gt, dest);
-#endif
-        } else {
-          ++gt;
-        }
-        aScanner.SetPosition(gt);
-        return NS_OK;
-      } else {
+      if (aScanner.IsIncremental()) {
+        // We got here because we saw the beginning of a comment,
+        // but not yet the end, and we are still loading the page. In that
+        // case the return value here will cause us to unwind,
+        // wait for more content, and try again.
+        // XXX For performance reasons we should cache where we were, and
+        //     continue from there for next call
         return kEOF;  // not really an nsresult, but...
       }
+
+      // If you're here, then we're in a special state. 
+      // The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
+      // In this case, the first thing we try is to see if we found an alternate endcomment delimiter ">".
+      // If so, rewind just pass that, and use everything up to that point as your comment.
+      // If not, the document has no end comment and should be treated as one big comment.
+      gt = bestAltCommentEnd;
+      if (beginData != gt) { // protects from <!-->
+#if 0
+        // XXX We should do this, but it HANGS until bug 112943 is fixed:
+        aString = Substring(beginData, gt);
+#else
+        // XXX Instead we can do this EVIL HACK (from jag):
+        PRUint32 len = Distance(beginData, gt);
+        aString.SetLength(len);
+        PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+        copy_string(beginData, gt, dest);
+#endif
+      }
+      if (gt != end) {
+        ++gt;
+      }
+      aScanner.SetPosition(gt);
+      return NS_OK;
     }
   }
   
