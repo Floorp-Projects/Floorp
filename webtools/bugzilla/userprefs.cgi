@@ -495,8 +495,8 @@ sub SaveFooter {
             Error("Hmm, the $name query seems to have gone away.");
         }
     }
-    SendSQL("UPDATE profiles SET mybugslink = '" . $::FORM{'mybugslink'} .
-            "' WHERE userid = $userid");
+    SendSQL("UPDATE profiles SET mybugslink = " . SqlQuote($::FORM{'mybugslink'}) .
+            " WHERE userid = $userid");
 }
     
 
