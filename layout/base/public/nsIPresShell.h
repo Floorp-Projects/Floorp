@@ -504,7 +504,9 @@ public:
 
   /**
    * Store the nsIAnonymousContentCreator-generated anonymous
-   * content that's associated with an element.
+   * content that's associated with an element. The new anonymous content
+   * is added to whatever anonymous content might already be associated with
+   * the element.
    * @param aContent the element with which the anonymous
    *   content is to be associated with
    * @param aAnonymousElements an array of nsIContent

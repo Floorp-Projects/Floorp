@@ -142,9 +142,18 @@ nsSelectsAreaFrame::Paint(nsIPresContext*      aPresContext,
                           PRUint32             aFlags)
 {
   nsresult rv = nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
-  // This assumes that that the ListControlFrame is the Parent
-  nsListControlFrame* listFrame = NS_STATIC_CAST(nsListControlFrame*, mParent);
-  listFrame->PaintFocus(aRenderingContext, aWhichLayer);
 
-  return rv;
+  nsIFrame* frame = this;
+  while (frame) {
+    frame->GetParent(&frame);
+    nsCOMPtr<nsIAtom> type;
+    frame->GetFrameType(getter_AddRefs(type));
+    if (type == nsLayoutAtoms::listControlFrame) {
+      nsListControlFrame* listFrame = NS_STATIC_CAST(nsListControlFrame*, frame);
+      listFrame->PaintFocus(aRenderingContext, aWhichLayer);
+      return NS_OK;
+    }
+  }
+
+  return NS_OK;
 }

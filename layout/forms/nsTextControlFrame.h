@@ -287,7 +287,7 @@ protected:
   PRInt32 GetWidthInCharacters() const;
 
   // nsIScrollableViewProvider
-  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
 
 private:
   //helper methods

@@ -115,6 +115,9 @@ public:
     *
     * @param aPresContext         the presentation context
     * @param aContainer           the content node into which content was appended
+    * @param aContainerFrame      the frame which the content will be inserted under if
+    *                             aContainer has more than one frame; may be null, in which
+    *                             case primary frame is used.
     * @param aChild               the content node that was inserted
     * @param aNewIndexInContainer the index of aChild in aContainer
     * @param aFrameState          the layout history object used to initialize the new frame(s)
@@ -127,6 +130,7 @@ public:
     */
   NS_IMETHOD ContentInserted(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
+                             nsIFrame*       aContainerFrame,
                              nsIContent*     aChild,
                              PRInt32         aIndexInContainer,
                              nsILayoutHistoryState* aFrameState,

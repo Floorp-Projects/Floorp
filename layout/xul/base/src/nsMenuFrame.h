@@ -168,7 +168,7 @@ public:
 
   // nsIScrollableViewProvider methods
 
-  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
 
   // nsMenuFrame methods 
 

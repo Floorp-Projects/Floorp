@@ -1175,10 +1175,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-#ifdef DEBUG_roc
-      printf("*** Metrics width/height on the way out=%d,%d\n", aMetrics.width, aMetrics.height);
-#endif
-
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return rv;
 }

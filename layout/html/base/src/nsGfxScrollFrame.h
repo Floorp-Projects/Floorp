@@ -69,10 +69,8 @@ public:
 
   virtual ~nsGfxScrollFrame();
 
-
-  // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
-  // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
-  // contains more than one frame
+  // Called to set the child frames. We typically have three: the scroll area,
+  // the vertical scrollbar, and the horizontal scrollbar.
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -183,6 +181,10 @@ public:
 protected:
   nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;
+
+  // If a child frame was added or removed, reload our child frame list
+  // We need this if a scrollbar frame is recreated
+  void ReloadChildFrames(nsIPresContext* aPresContext);
 
 private:
   friend class nsGfxScrollFrameInner;

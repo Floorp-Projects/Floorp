@@ -488,6 +488,53 @@ nsGfxScrollFrame::Init(nsIPresContext*  aPresContext,
   mInner->mDocument->AddObserver(mInner);
   return rv;
 }
+
+void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
+{
+  mInner->mScrollAreaBox = nsnull;
+  mInner->mHScrollbarBox = nsnull;
+  mInner->mVScrollbarBox = nsnull;
+
+  nsIFrame* frame = nsnull;
+  FirstChild(aPresContext, nsnull, &frame);
+  while (frame) {
+    PRBool understood = PR_FALSE;
+
+    nsIBox* box = nsnull;
+    frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
+    if (box) {
+      nsCOMPtr<nsIAtom> frameType;
+      frame->GetFrameType(getter_AddRefs(frameType));
+      if (frameType == nsLayoutAtoms::scrollFrame) {
+        NS_ASSERTION(!mInner->mScrollAreaBox, "Found multiple scroll areas?");
+        mInner->mScrollAreaBox = box;
+        understood = PR_TRUE;
+      } else {
+        nsCOMPtr<nsIContent> content;
+        frame->GetContent(getter_AddRefs(content));
+        if (content) {
+          nsAutoString value;
+          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
+                                                            nsXULAtoms::orient, value)) {
+            // probably a scrollbar then
+            if (value.EqualsIgnoreCase("horizontal")) {
+              NS_ASSERTION(!mInner->mHScrollbarBox, "Found multiple horizontal scrollbars?");
+              mInner->mHScrollbarBox = box;
+            } else {
+              NS_ASSERTION(!mInner->mVScrollbarBox, "Found multiple vertical scrollbars?");
+              mInner->mVScrollbarBox = box;
+            }
+            understood = PR_TRUE;
+          }
+        }
+      }
+    }
+
+    NS_ASSERTION(understood, "What is this frame doing here?");
+
+    frame->GetNextSibling(&frame);
+  }
+}
   
 NS_IMETHODIMP
 nsGfxScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -496,15 +543,8 @@ nsGfxScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsresult  rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
-  // get scroll area
-  GetChildBox(&mInner->mScrollAreaBox);
-  
-  // horizontal scrollbar
-  mInner->mScrollAreaBox->GetNextBox(&mInner->mHScrollbarBox);
 
-  // vertical scrollbar
-  if (mInner->mHScrollbarBox)
-    mInner->mHScrollbarBox->GetNextBox(&mInner->mVScrollbarBox);
+  ReloadChildFrames(aPresContext);
 
   // listen for scroll events.
   mInner->GetScrollableView(aPresContext)->AddScrollPositionListener(mInner);
@@ -519,12 +559,12 @@ nsGfxScrollFrame::AppendFrames(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
 {
-  nsIFrame* frame;
-  mInner->mScrollAreaBox->GetFrame(&frame);
-  return frame->AppendFrames(aPresContext,
-                                     aPresShell,
-                                     aListName,
-                                     aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aPresContext,
+                                         aPresShell,
+                                         aListName,
+                                         aFrameList);
+  ReloadChildFrames(aPresContext);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -534,14 +574,13 @@ nsGfxScrollFrame::InsertFrames(nsIPresContext* aPresContext,
                       nsIFrame*       aPrevFrame,
                       nsIFrame*       aFrameList)
 {
-  nsIFrame* frame;
-  mInner->mScrollAreaBox->GetFrame(&frame);
-
-  return frame->InsertFrames(aPresContext,
-                                     aPresShell,
-                                     aListName,
-                                     aPrevFrame,
-                                     aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aPresContext,
+                                         aPresShell,
+                                         aListName,
+                                         aPrevFrame,
+                                         aFrameList);
+  ReloadChildFrames(aPresContext);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -550,30 +589,12 @@ nsGfxScrollFrame::RemoveFrame(nsIPresContext* aPresContext,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
 {
-  nsIFrame* vscroll = nsnull;
-  if (mInner->mVScrollbarBox)
-    mInner->mVScrollbarBox->GetFrame(&vscroll);
-  nsIFrame* hscroll = nsnull;
-  if (mInner->mHScrollbarBox)
-    mInner->mHScrollbarBox->GetFrame(&hscroll);
-
-  if (aOldFrame == vscroll) {
-    mInner->mVScrollbarBox = nsnull;
-    return nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-  }
-  else if (aOldFrame == hscroll) {
-    mInner->mHScrollbarBox = nsnull;
-    return nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
-  }
-  else {
-    nsIFrame* frame;
-    mInner->mScrollAreaBox->GetFrame(&frame);
-
-    return frame->RemoveFrame (aPresContext,
-                                       aPresShell,
-                                       aListName,
-                                       aOldFrame);
-  }
+  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext,
+                                        aPresShell,
+                                        aListName,
+                                        aOldFrame);
+  ReloadChildFrames(aPresContext);
+  return rv;
 }
 
 
@@ -584,14 +605,13 @@ nsGfxScrollFrame::ReplaceFrame(nsIPresContext* aPresContext,
                      nsIFrame*       aOldFrame,
                      nsIFrame*       aNewFrame)
 {
-  nsIFrame* frame;
-  mInner->mScrollAreaBox->GetFrame(&frame);
-
-  return frame->ReplaceFrame (aPresContext,
-                                     aPresShell,
-                                     aListName,
-                                     aOldFrame,
-                                     aNewFrame);
+  nsresult rv = nsBoxFrame::ReplaceFrame(aPresContext,
+                                         aPresShell,
+                                         aListName,
+                                         aOldFrame,
+                                         aNewFrame);
+  ReloadChildFrames(aPresContext);
+  return rv;
 }
 
 
@@ -892,6 +912,7 @@ NS_INTERFACE_MAP_BEGIN(nsGfxScrollFrame)
   NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIScrollableFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollableViewProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
@@ -1078,11 +1099,13 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
 nsIScrollableView*
 nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 {
-  nsIScrollableView* scrollingView;
   nsIView*           view;
   nsIFrame* frame = nsnull;
   mScrollAreaBox->GetFrame(&frame);
   frame->GetView(aPresContext, &view);
+  if (!view) return nsnull;
+
+  nsIScrollableView* scrollingView;
   nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
   NS_ASSERTION(NS_SUCCEEDED(result), "assertion gfx scrollframe does not contain a scrollframe");          
   return scrollingView;

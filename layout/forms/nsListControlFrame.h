@@ -48,10 +48,11 @@
 //#define DO_PIXELS
 #endif
 
-#include "nsScrollFrame.h"
+#include "nsGfxScrollFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
+#include "nsIStatefulFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
@@ -169,9 +170,10 @@ protected:
  * Frame-based listbox.
  */
 
-class nsListControlFrame : public nsScrollFrame, 
+class nsListControlFrame : public nsGfxScrollFrame,
                            public nsIFormControlFrame, 
                            public nsIListControlFrame,
+                           public nsIStatefulFrame,
                            public nsIDOMMouseListener,
                            public nsIDOMMouseMotionListener,
                            public nsIDOMKeyListener,
@@ -222,8 +224,6 @@ public:
    * @see nsLayoutAtoms::scrollFrame
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-
-  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
 
 #ifdef DEBUG
     // nsIFrameDebug
@@ -290,6 +290,10 @@ public:
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
+  //nsIStatefulFrame
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+
   //nsIDOMEventListener
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
@@ -339,16 +343,9 @@ protected:
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
   virtual void ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxList = nsnull);
 
-  nsListControlFrame();
+  nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument);
   virtual ~nsListControlFrame();
 
-  // nsScrollFrame overrides
-  // Override the widget created for the list box so a Borderless top level
-  // widget is created for drop-down lists.
-  virtual  nsresult CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay);
-  virtual  nsresult GetScrollingParentView(nsIPresContext* aPresContext,
-                                           nsIFrame* aParent,
-                                           nsIView** aParentView);
   // Utility methods
   nsresult GetSizeAttribute(PRInt32 *aSize);
   nsIContent* GetOptionFromContent(nsIContent *aContent);
@@ -361,7 +358,6 @@ protected:
   PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
-  void     GetScrollableView(nsIScrollableView*& aScrollableView);
 
   // Dropped down stuff
   void     SetComboboxItem(PRInt32 aIndex);
