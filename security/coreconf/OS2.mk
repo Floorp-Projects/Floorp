@@ -86,10 +86,16 @@ DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
 ifdef MAPFILE
-# Add LD options to restrict exported symbols to those in the map file
+MKSHLIB += $(MAPFILE)
 endif
-# Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+PROCESS_MAP_FILE = \
+	echo LIBRARY $(LIBRARY_NAME)$(LIBRARY_VERSION) INITINSTANCE TERMINSTANCE > $@; \
+	echo PROTMODE >> $@; \
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@; \
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@; \
+	echo EXPORTS >> $@; \
+	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' >> $@
 
 endif   #NO_SHARED_LIB
 
@@ -147,6 +153,17 @@ DSO_LDOPTS              =
 # DLL_SUFFIX              = .dll
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
+ifdef MAPFILE
+MKSHLIB += $(MAPFILE)
+endif
+PROCESS_MAP_FILE = \
+	echo LIBRARY $(LIBRARY_NAME)$(LIBRARY_VERSION) INITINSTANCE TERMINSTANCE > $@; \
+	echo PROTMODE >> $@; \
+	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@; \
+	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@; \
+	echo EXPORTS >> $@; \
+	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' >> $@
 endif   #NO_SHARED_LIB
 
 OS_CFLAGS          = /Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-
@@ -159,20 +176,22 @@ MOZ_COMPONENT_NSPR_LIBS=-L$(DIST)/lib $(NSPR_LIBS)
 NSPR_INCLUDE_DIR =   
 
 
+DLLFLAGS    = /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
+EXEFLAGS    = -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
+LDFLAGS     = /FREE /NOE /LINENUMBERS /nologo
+
 ifdef BUILD_OPT
-OPTIMIZER		= -Oi -G5
+OPTIMIZER		= /O+ /Gl+ /G5 /qarch=pentium
 DEFINES 		+= -UDEBUG -U_DEBUG -DNDEBUG
-DLLFLAGS		= /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
-EXEFLAGS    		= -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
 OBJDIR_TAG 		= _OPT
-LDFLAGS     = /FREE /NODEBUG /NOE /LINENUMBERS /nologo
+LDFLAGS     += /NODEBUG /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA
 else
 OS_CFLAGS   += /Ti+
 DEFINES 		+= -DDEBUG -D_DEBUG -DDEBUGPRINTS     #HCT Need += to avoid overidding manifest.mn 
-DLLFLAGS		= /DEBUG /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
-EXEFLAGS    		= -DEBUG -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
+DLLFLAGS    += /DE
+EXEFLAGS    += /DE
 OBJDIR_TAG 		= _DBG
-LDFLAGS 		= /FREE /DE /NOE /LINENUMBERS /nologo 
+LDFLAGS     += /DE
 endif   # BUILD_OPT
 
 endif   # XP_OS2_VACPP

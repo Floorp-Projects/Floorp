@@ -312,7 +312,7 @@ endif
 ifeq ($(OS_TARGET),OS2)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	rm -f $@
-	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
+	$(IMPLIB) $@ $(SHARED_LIBRARY)
 	$(RANLIB) $@
 endif
 
@@ -339,25 +339,8 @@ else
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS) $(RES))
 else
-ifeq ($(OS_TARGET),OS2)
-	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
-	@cmd /C "echo PROTMODE >>$@.def"
-	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$@.def"
-	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$@.def"	
-	@cmd /C "echo EXPORTS >>$@.def"
-	$(FILTER) $(OBJS) >>$@.def
-ifdef SUB_SHLOBJS
-	@echo Number of words in OBJ list = $(words $(SUB_SHLOBJS))
-	@echo If above number is over 100, need to reedit coreconf/rules.mk
-	-$(FILTER) $(wordlist 1,20,$(SUB_SHLOBJS)) >>$@.def
-	-$(FILTER) $(wordlist 21,40,$(SUB_SHLOBJS)) >>$@.def
-	-$(FILTER) $(wordlist 41,60,$(SUB_SHLOBJS)) >>$@.def
-	-$(FILTER) $(wordlist 61,80,$(SUB_SHLOBJS)) >>$@.def
-	-$(FILTER) $(wordlist 81,100,$(SUB_SHLOBJS)) >>$@.def
-endif
-endif #OS2
 ifdef XP_OS2_VACPP
-	$(MKSHLIB) $(DLLFLAGS) $(LDFLAGS) $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $@.def
+	$(MKSHLIB) $(DLLFLAGS) $(LDFLAGS) $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 endif
