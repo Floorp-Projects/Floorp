@@ -63,6 +63,8 @@
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIMsgAccountManager.h"
+#include "nsMsgBaseCID.h"
 
 //
 // Header strings...
@@ -1252,6 +1254,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   char *foll = 0;
   char *priority = 0;
   char *draftInfo = 0;
+  char *identityKey = 0;
   
   PRBool xlate_p = PR_FALSE;  /* #### how do we determine this? */
   PRBool sign_p = PR_FALSE;   /* #### how do we determine this? */
@@ -1415,6 +1418,23 @@ mime_parse_stream_complete (nsMIMESession *stream)
       
     }
     
+	// identity to prefer when opening the message in the compose window?
+    identityKey = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_IDENTITY_KEY, PR_FALSE, PR_FALSE);
+    if ( identityKey && *identityKey )
+    {
+        nsresult rv = NS_OK;
+        nsCOMPtr< nsIMsgAccountManager > accountManager = 
+                do_GetService( NS_MSGACCOUNTMANAGER_CONTRACTID, &rv );
+        if ( NS_SUCCEEDED(rv) && accountManager )
+        {
+            nsCOMPtr< nsIMsgIdentity > overrulingIdentity;
+            rv = accountManager->GetIdentity( identityKey, getter_AddRefs( overrulingIdentity ) );
+
+            if ( NS_SUCCEEDED(rv) && overrulingIdentity )
+                mdd->identity = overrulingIdentity;
+        }
+    }
+
     if (mdd->messageBody) 
     {
       MSG_ComposeFormat composeFormat = nsIMsgCompFormat::Default;
@@ -1657,6 +1677,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PR_FREEIF(foll);
   PR_FREEIF(priority);
   PR_FREEIF(draftInfo);
+  PR_Free(identityKey);
 
   mime_free_attach_data(newAttachData);
 }

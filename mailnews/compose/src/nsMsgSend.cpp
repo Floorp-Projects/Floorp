@@ -4326,7 +4326,12 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // Ok, now I want to get the identity key and write it out if this is for a
   // nsMsgQueueForLater operation!
   //
-  if ( (mode == nsMsgQueueForLater) && (mUserIdentity) )
+  if (  (  ( nsMsgQueueForLater == mode )
+        || ( nsMsgSaveAsDraft == mode )
+        || ( nsMsgSaveAsTemplate == mode )
+        )
+     && ( mUserIdentity )
+     )
   {
     char    *key = nsnull;
 
