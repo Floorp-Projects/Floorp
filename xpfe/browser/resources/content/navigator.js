@@ -531,7 +531,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 		var cwindowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
 		var iwindowManager = Components.interfaces.nsIWindowMediator;
 		var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-		var searchWindow = windowManager.GetMostRecentWindow("search:window");
+		var searchWindow = windowManager.getMostRecentWindow("search:window");
 		if (searchWindow)
 		{
 			searchWindow.focus();
@@ -707,7 +707,7 @@ function BrowserEditBookmarks()
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
 
-  var bookmarksWindow = windowManager.GetMostRecentWindow('bookmarks:manager');
+  var bookmarksWindow = windowManager.getMostRecentWindow('bookmarks:manager');
 
   if (bookmarksWindow) {
     //debug("Reuse existing bookmarks window");
@@ -1014,13 +1014,13 @@ function TileWindow()
 	dump("got window Manager \n");
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	
-	var enumerator = windowManagerInterface.GetEnumerator( null );
+	var enumerator = windowManagerInterface.getEnumerator( null );
 	
 	var xOffset = screen.availLeft;
 	var yOffset = screen.availRight;
 	do
 	{
-		var currentWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+		var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
 		if ( currentWindow.screenX == screenX && currentWindow.screenY == screenY )
 		{
 			alreadyThere = true;
@@ -1030,10 +1030,10 @@ function TileWindow()
 	
 	if ( alreadyThere )
 	{
-		enumerator = windowManagerInterface.GetEnumerator( null );
+		enumerator = windowManagerInterface.getEnumerator( null );
 		do
 		{
-			var currentWindow = windowManagerInterface.ConvertISupportsToDOMWindow ( enumerator.GetNext() );
+			var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
 			if ( currentWindow.screenX == screenX+xOffset*xShift+yOffset*xShift   && currentWindow.screenY == screenY+yShift*xOffset && window != currentWindow )
 			{
 				xOffset++;
@@ -1043,7 +1043,7 @@ function TileWindow()
 					yOffset++;
 					xOffset = 0;
 				}
-				enumerator = windowManagerInterface.GetEnumerator( null );
+				enumerator = windowManagerInterface.getEnumerator( null );
 			}	
 		} while ( enumerator.HasMoreElements() )
 	}
