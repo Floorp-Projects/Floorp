@@ -2152,6 +2152,7 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 	RDF_Cursor		cursor;
 	RDF_Resource		r, selectedView;
 	PRBool			err = false, workspaceAdded;
+	char			*state = NULL;
 	uint32			workspacePos;
 
 	do
@@ -2308,6 +2309,24 @@ HT_NewView (RDF_Resource topNode, HT_Pane pane, PRBool useColumns, void *feData,
 			}
 		}
 		++(pane->viewListCount);
+
+		/* get collapsed and hidden state */
+		HT_GetNodeData (view->top, gNavCenter->RDF_collapsed, HT_COLUMN_STRING, (void *)&state);
+		if (state != NULL)
+		{
+			if (compareStrings(state, "yes"))
+			{
+				view->collapsedFlag = PR_TRUE;
+			}
+		}
+		HT_GetNodeData (view->top, gNavCenter->RDF_hidden, HT_COLUMN_STRING, (void *)&state);
+		if (state != NULL)
+		{
+			if (compareStrings(state, "yes"))
+			{
+				view->hiddenFlag = PR_TRUE;
+			}
+		}
 
 		sendNotification(view->top, HT_EVENT_VIEW_ADDED, NULL, HT_COLUMN_UNKNOWN);
 
@@ -2579,8 +2598,13 @@ HT_DeleteView (HT_View view)
 
 	XP_ASSERT(view != NULL);
 
-	if (view->top != NULL)					/* delete nodes */
+	if (view->top != NULL)
 	{
+		/* save collapsed and hidden state */
+		HT_SetNodeData (view->top, gNavCenter->RDF_collapsed, HT_COLUMN_STRING, ((view->collapsedFlag) ? "yes":"no"));
+		HT_SetNodeData (view->top, gNavCenter->RDF_hidden, HT_COLUMN_STRING, ((view->hiddenFlag) ? "yes":"no"));
+
+		/* delete nodes */
 		destroyViewInt(view->top, PR_TRUE);
 	}
 	if (view->itemList != NULL)				/* delete itemList */

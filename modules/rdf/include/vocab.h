@@ -113,6 +113,8 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_Receipts;
 #endif
   RDF_Resource RDF_Toolbar;
+  RDF_Resource RDF_collapsed;
+  RDF_Resource RDF_hidden;
   RDF_Resource RDF_JSec;
   RDF_Resource RDF_JSecPrincipal;
   RDF_Resource RDF_JSecTarget;
