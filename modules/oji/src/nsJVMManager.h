@@ -35,7 +35,7 @@
 #include "nsjvm.h"
 #include "nsAgg.h"
 #include "jsjava.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "nsILiveConnectManager.h"
 
 class nsSymantecDebugManager;
@@ -204,7 +204,7 @@ protected:
     PRBool              fRegisteredJavaPrefChanged;
     nsISupports*        fDebugManager;
     JSJavaVM *          fJSJavaVM;  
-    nsVector*           fClassPathAdditions;
+    nsVoidArray*        fClassPathAdditions;
     char*               fClassPathAdditionsString;
 };
 
