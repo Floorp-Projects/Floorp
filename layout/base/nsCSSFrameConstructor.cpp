@@ -6146,9 +6146,26 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       InitAndRestoreFrame(aPresContext, aState, aContent, 
                       geometricParent, aStyleContext, nsnull, newFrame);
 
-      // See if we need to create a view, e.g. the frame is absolutely positioned
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               aStyleContext, PR_FALSE);
+      /*
+      // if our parent is a block frame then do things the way html likes it
+      // if not then we are in a box so do what boxes like. On example is boxes
+      // do not support the absolute positioning of their children. While html blocks
+      // thats why we call different things here.
+      geometricParent->GetFrameType(&frameType);
+      if ((frameType == nsLayoutAtoms::blockFrame) ||
+          (frameType == nsLayoutAtoms::areaFrame)) {
+      */
+        // See if we need to create a view, e.g. the frame is absolutely positioned
+        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
+                                                 aStyleContext, PR_FALSE);
+
+        /*
+      } else {
+          // we are in a box so do the box thing.
+        nsBoxFrame::CreateViewForFrame(aPresContext, newFrame,
+                                                 aStyleContext, PR_FALSE);
+      }
+      */
     }
 
       // Process the child content if requested
@@ -6212,6 +6229,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 }
 #endif
 
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+
+
 
 nsresult
 nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell, 
@@ -6256,6 +6276,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
     contentStyle = scrollPseudoStyle;
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         parentFrame, contentStyle, nsnull, scrollFrame);
+
   } else {
     NS_NewScrollFrame(aPresShell, &scrollFrame);
     aNewFrame = scrollFrame;
@@ -6427,6 +6448,10 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       aParentFrame, aStyleContext, nsnull, aNewFrame);
 
+  // Create a view
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
+
   nsIFrame* scrollbox = nsnull;
   NS_NewScrollPortFrame(aPresShell, &scrollbox);
 
@@ -6515,7 +6540,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
 
     // buildscrollframe sets the primary frame.
     primaryFrameSet = PR_TRUE;
-
     
     //-----
 

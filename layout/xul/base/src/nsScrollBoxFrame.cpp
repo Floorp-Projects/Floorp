@@ -366,7 +366,7 @@ nsScrollBoxFrame::Layout(nsBoxLayoutState& aState)
 
   clientRect.Inflate(margin);
 
-  if (childRect.width < clientRect.width || childRect.height < childRect.height)
+  if (childRect.width < clientRect.width || childRect.height < clientRect.height)
   {
     if (childRect.width < clientRect.width)
        childRect.width = clientRect.width;
@@ -403,16 +403,20 @@ nsScrollBoxFrame::Layout(nsBoxLayoutState& aState)
   if (mVerticalOverflow && childRect.height <= scrollPort.height) {
     mVerticalOverflow = PR_FALSE;
     vertChanged = PR_TRUE;
-  } else if (!mVerticalOverflow && childRect.height > scrollPort.height) {
-    mVerticalOverflow = PR_TRUE;
+  } else if (childRect.height > scrollPort.height) {
+    if (!mVerticalOverflow) {
+       mVerticalOverflow = PR_TRUE;
+    }
     vertChanged = PR_TRUE;
   }
 
   if (mHorizontalOverflow && childRect.width <= scrollPort.width) {
     mHorizontalOverflow = PR_FALSE;
     horizChanged = PR_TRUE;
-  } else if (!mHorizontalOverflow && childRect.width > scrollPort.width) {
-    mHorizontalOverflow = PR_TRUE;
+  } else if (childRect.width > scrollPort.width) {
+    if (!mHorizontalOverflow) {
+      mHorizontalOverflow = PR_TRUE;
+    }
     horizChanged = PR_TRUE;
   }
 

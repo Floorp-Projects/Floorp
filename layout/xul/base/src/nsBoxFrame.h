@@ -170,6 +170,10 @@ public:
 
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
  
+  static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
+                                   nsIFrame* aChild,
+                                   nsIStyleContext* aStyleContext,
+                                   PRBool aForce);
 protected:
     virtual void GetBoxName(nsAutoString& aName);
 
