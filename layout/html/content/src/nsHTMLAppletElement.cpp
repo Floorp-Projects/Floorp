@@ -299,7 +299,7 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 		JSObject* wrappedAppletObject = nsnull;
 		nsIPluginInstance* pluginInstance = nsnull;
 		rv = NS_GetObjectFramePluginInstance(frame, pluginInstance);
-		if (nsnull != pluginInstance) {
+		if ((rv == NS_OK) && (nsnull != pluginInstance)) {
 			nsIJVMPluginInstance* javaPluginInstance = nsnull;
 			if (pluginInstance->QueryInterface(nsIJVMPluginInstance::GetIID(), (void**)&javaPluginInstance) == NS_OK) {
 				jobject appletObject = nsnull;
