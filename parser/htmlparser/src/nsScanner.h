@@ -304,7 +304,8 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      nsresult Append(const char* aBuffer, PRUint32 aLen);
+      nsresult Append(const char* aBuffer, PRUint32 aLen,
+                      nsIRequest *aRequest);
 
       /**
        *  Call this to copy bytes out of the scanner that have not yet been consumed
@@ -384,9 +385,13 @@ class nsScanner {
        */
       nsresult FillBuffer(void);
 
-      void AppendToBuffer(nsScannerString::Buffer*);
-      void AppendToBuffer(const nsAString& aStr) { AppendToBuffer(nsScannerString::AllocBufferFromString(aStr)); }
-      void AppendASCIItoBuffer(const char* aData, PRUint32 aLen);
+      void AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest);
+      void AppendToBuffer(const nsAString& aStr)
+      {
+        AppendToBuffer(nsScannerString::AllocBufferFromString(aStr), nsnull);
+      }
+      void AppendASCIItoBuffer(const char* aData, PRUint32 aLen,
+                               nsIRequest *aRequest);
 
       nsCOMPtr<nsIInputStream>     mInputStream;
       nsScannerString*             mSlidingBuffer;

@@ -389,7 +389,7 @@ class nsParser : public nsIParser,
      * Called by top-level scanners when data from necko is added to
      * the scanner.
      */
-    nsresult DataAdded(const nsSubstring& aData);
+    nsresult DataAdded(const nsSubstring& aData, nsIRequest *aRequest);
 
     static nsCOMArray<nsIUnicharStreamListener> *sParserDataListeners;
 
