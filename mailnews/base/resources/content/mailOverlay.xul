@@ -21,8 +21,13 @@
           var iwindowManager = Components.interfaces.nsIWindowMediator;
           var windowManager  = cwindowManager.QueryInterface(iwindowManager);
           var mailWindow = windowManager.getMostRecentWindow('mail:3pane');
-          mailWindow.MsgNewMessage();
-          return;
+          var folder = mailWindow.GetFirstSelectedMsgFolder();
+          var server = folder.server;
+          //if the account is a news account use default identity
+          if (server.type != "nntp"){
+            mailWindow.MsgNewMessage();
+            return;
+          }
         }
         catch(ex) {
         }
