@@ -41,6 +41,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
 #include "nsIDOMDocument.h"
+#include "nsIStyleContext.h"
 #include "prprf.h"
 #include "prtime.h"
 #include "nsVoidArray.h"
@@ -921,7 +922,20 @@ void WebWidgetImpl::DumpStyleContexts(FILE* out)
     if (nsnull == styleSet) {
       fputs("null style set\n", out);
     } else {
-      styleSet->ListContexts(out);
+      nsIFrame* root = mPresShell->GetRootFrame();
+      if (nsnull == root) {
+        fputs("null root frame\n", out);
+      } else {
+        nsIStyleContext* rootContext;
+        root->GetStyleContext(mPresContext, rootContext);
+        if (nsnull != rootContext) {
+          styleSet->ListContexts(rootContext, out);
+          NS_RELEASE(rootContext);
+        }
+        else {
+          fputs("null root context", out);
+        }
+      }
       NS_RELEASE(styleSet);
     }
   } else {
