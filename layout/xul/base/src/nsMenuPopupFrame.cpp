@@ -455,12 +455,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   viewManager->MoveViewTo(view, xpos, ypos); 
   viewManager->ResizeView(view, mRect.width, mRect.height);
   
-  // just before we show it, make sure it's been reflowed. if not, we get weird 
-  // redraw problems because of async layout
-  nsCOMPtr<nsIPresShell> myShell;
-  mPresContext->GetShell(getter_AddRefs(myShell));
-  myShell->ProcessReflowCommands ( PR_FALSE );
-      
+  nsAutoString shouldDisplay;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
+  if ( shouldDisplay.Equals("true") )
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+
   return NS_OK;
 }
 
