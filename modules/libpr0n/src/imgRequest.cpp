@@ -429,6 +429,9 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartContainer");
 
+  NS_ASSERTION(image, "imgRequest::OnStartContainer called with a null image!");
+  if (!image) return NS_ERROR_UNEXPECTED;
+
   mState |= onStartContainer;
 
   mStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
@@ -629,7 +632,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     mChannel = nsnull; // we no longer need the channel
   }
 
-  if (NS_FAILED(status)) {
+  // If mImage is still null, we didn't properly load the image.
+  if (NS_FAILED(status) || !mImage) {
     this->Cancel(status); // sets status, stops animations, removes from cache
   } else {
     mStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
