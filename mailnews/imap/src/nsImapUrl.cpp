@@ -1121,7 +1121,7 @@ void nsImapUrl::ParseSearchCriteriaString()
 {
 	if (m_tokenPlaceHolder)
 	{
-		int quotedFlag = FALSE;
+		int quotedFlag = PR_FALSE;
 
 		//skip initial separator
 		while (*m_tokenPlaceHolder == *IMAP_URL_TOKEN_SEPARATOR)

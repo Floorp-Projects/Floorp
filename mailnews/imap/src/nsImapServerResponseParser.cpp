@@ -49,8 +49,8 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fNumberOfRecentMessages(0),
     fSizeOfMostRecentMessage(0),
     fTotalDownloadSize(0),
-    fCurrentCommandTag(nil),
-    fSelectedMailboxName(nil),
+    fCurrentCommandTag(nsnull),
+    fSelectedMailboxName(nsnull),
     fIMAPstate(kNonAuthenticated),
 	fLastChunk(PR_FALSE),
 	fServerIsNetscape3xServer(PR_FALSE),
@@ -181,7 +181,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
 	{
 		char *placeInTokenString = nsnull;
 		char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
-		char *commandToken       = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
+		char *commandToken       = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
 		if (tagToken)
 		{
 			PR_FREEIF( fCurrentCommandTag );
@@ -324,13 +324,13 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
 		{
 			char *placeInTokenString = nsnull;
 			char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
-			char *uidToken           = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
-			char *fetchToken         = Imapstrtok_r(nil, WHITESPACE,&placeInTokenString);
+			char *uidToken           = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
+			char *fetchToken         = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
 			uidToken = nsnull; // use variable to quiet compiler warning
             tagToken = nsnull; // use variable to quiet compiler warning
 			if (!PL_strcasecmp(fetchToken, "FETCH") )
 			{
-				char *uidStringToken = Imapstrtok_r(nil, WHITESPACE, &placeInTokenString);
+				char *uidStringToken = Imapstrtok_r(nsnull, WHITESPACE, &placeInTokenString);
 				if (!PL_strchr(uidStringToken, ',') && !PL_strchr(uidStringToken, ':'))	// , and : are uid delimiters
 				{
 					fCurrentCommandIsSingleMessageFetch = PR_TRUE;
