@@ -55,10 +55,12 @@
 #include "nsHttpNegotiateAuth.h"
 
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIAuthModule.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIProxyInfo.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -74,6 +76,7 @@
 static const char kNegotiate[] = "Negotiate";
 static const char kNegotiateAuthTrustedURIs[] = "network.negotiate-auth.trusted-uris";
 static const char kNegotiateAuthDelegationURIs[] = "network.negotiate-auth.delegation-uris";
+static const char kNegotiateAuthAllowProxies[] = "network.negotiate-auth.allow-proxies";
 
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
 
@@ -116,10 +119,6 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
     if (module)
         return NS_OK;
 
-    // proxy auth not supported
-    if (isProxyAuth)
-        return NS_ERROR_ABORT;
-
     nsresult rv;
 
     nsCOMPtr<nsIURI> uri;
@@ -127,26 +126,44 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
     if (NS_FAILED(rv))
         return rv;
 
-    PRBool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
-    if (!allowed) {
-        LOG(("nsHttpNegotiateAuth::ChallengeReceived URI blocked\n"));
-        return NS_ERROR_ABORT;
-    }
-
     PRUint32 req_flags = nsIAuthModule::REQ_DEFAULT;
+    nsCAutoString service;
 
-    PRBool delegation = TestPref(uri, kNegotiateAuthDelegationURIs);
-    if (delegation) {
-        LOG(("  using REQ_DELEGATE\n"));
-        req_flags |= nsIAuthModule::REQ_DELEGATE;
+    if (isProxyAuth) {
+        if (!TestBoolPref(kNegotiateAuthAllowProxies)) {
+            LOG(("nsHttpNegotiateAuth::ChallengeReceived proxy auth blocked\n"));
+            return NS_ERROR_ABORT;
+        }
+
+        nsCOMPtr<nsIHttpChannelInternal> httpInternal =
+                do_QueryInterface(httpChannel);
+        NS_ENSURE_STATE(httpInternal);
+
+        nsCOMPtr<nsIProxyInfo> proxyInfo;
+        httpInternal->GetProxyInfo(getter_AddRefs(proxyInfo));
+        NS_ENSURE_STATE(proxyInfo);
+
+        service = proxyInfo->Host();
+    }
+    else {
+        PRBool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
+        if (!allowed) {
+            LOG(("nsHttpNegotiateAuth::ChallengeReceived URI blocked\n"));
+            return NS_ERROR_ABORT;
+        }
+
+        PRBool delegation = TestPref(uri, kNegotiateAuthDelegationURIs);
+        if (delegation) {
+            LOG(("  using REQ_DELEGATE\n"));
+            req_flags |= nsIAuthModule::REQ_DELEGATE;
+        }
+
+        rv = uri->GetAsciiHost(service);
+        if (NS_FAILED(rv))
+            return rv;
     }
 
-    nsCAutoString service;
-    rv = uri->GetAsciiHost(service);
-    if (NS_FAILED(rv))
-        return rv;
-
-    LOG(("  hostname = %s\n", service.get()));
+    LOG(("  service = %s\n", service.get()));
 
     //
     // The correct service name for IIS servers is "HTTP/f.q.d.n", so
@@ -283,6 +300,21 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
     PR_Free(encoded_token);
     return rv;
+}
+
+PRBool
+nsHttpNegotiateAuth::TestBoolPref(const char *pref)
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return PR_FALSE;
+
+    PRBool val;
+    nsresult rv = prefs->GetBoolPref(pref, &val);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    return val;
 }
 
 PRBool

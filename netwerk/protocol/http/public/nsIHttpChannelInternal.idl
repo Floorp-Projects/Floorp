@@ -38,13 +38,14 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIProxyInfo;
+
 /** 
  * Dumping ground for http.  This interface will never be frozen.  If you are 
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-
-[scriptable, uuid(7552588e-d018-48a2-b67c-432414d0b64c)]
+[scriptable, uuid(f3764874-ed7e-4873-883c-11d67a4e3638)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -71,4 +72,9 @@ interface nsIHttpChannelInternal : nsISupports
      *        The cookie header to be parsed.
      */
     void setCookie(in string aCookieHeader);
+
+    /**
+     * Get the proxy info in use by the channel.
+     */
+    readonly attribute nsIProxyInfo proxyInfo;
 };
