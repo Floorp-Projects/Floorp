@@ -1071,6 +1071,17 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 {
   char *cstr = aStr.ToNewCString();
   
+#ifdef XP_MAC
+  // have to convert \r to \n so that printing to the console works
+  char *c = cstr, *cEnd = cstr + aStr.Length();
+  while (c < cEnd)
+  {
+    if (*c == '\r')
+      *c = '\n';
+    c++;
+  }
+#endif
+
   if (nsnull != cstr) {
     printf("%s", cstr);
     delete [] cstr;
