@@ -41,8 +41,8 @@
     <label value="&displayFonts;"/>
 
     <box autostretch="never" valign="middle">
-      <text class="label" value="&language.label;" accesskey="&language.accesskey;" for="selectLangs"/>
-      <menulist id="selectLangs" oncommand="selectLanguage();">
+      <text class="label small-margin" value="&language.label;" accesskey="&language.accesskey;" for="selectLangs"/>
+      <menulist id="selectLangs" class="small-margin" oncommand="selectLanguage();">
         <menupopup>
           <menuitem value="x-western" label="&font.langGroup.latin1;"/>
           <menuitem value="x-central-euro" label="&font.langGroup.latin2;"/>
@@ -66,7 +66,7 @@
 
     <text class="label" value="&variableFonts.label;"/>
 
-    <grid class="indent">
+    <grid>
       <columns>
         <column/>
         <column flex="1"/>
@@ -77,12 +77,12 @@
       
       <rows>
         <row autostretch="never" valign="middle">
-          <text class="label" value="&serif.label;" accesskey="&serif.accesskey;" for="serif"/>
-          <menulist id="serif">
+          <text class="label small-margin" value="&serif.label;" accesskey="&serif.accesskey;" for="serif"/>
+          <menulist id="serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
-          <text class="label" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
-          <menulist id="sizeVar">
+          <text class="label small-margin" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
+          <menulist id="sizeVar" class="small-margin">
             <menupopup>
               <menuitem value="8" label="8"/>
               <menuitem value="9" label="9"/>
@@ -110,8 +110,8 @@
           <text class="label" value="&units.label;"/>
         </row>
         <row autostretch="never" valign="middle">
-          <text class="label" value="&sans-serif.label;" accesskey="&sans-serif.accesskey;" for="sans-serif"/>
-          <menulist id="sans-serif">
+          <text class="label small-margin" value="&sans-serif.label;" accesskey="&sans-serif.accesskey;" for="sans-serif"/>
+          <menulist id="sans-serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
           <spring/>
@@ -120,8 +120,8 @@
         </row>
         <!--
         <row autostretch="never" valign="middle">
-          <text class="label" value="&cursive.label;" accesskey="&cursive.accesskey;" for="cursive"/>
-          <menulist id="cursive">
+          <text class="label small-margin" value="&cursive.label;" accesskey="&cursive.accesskey;" for="cursive"/>
+          <menulist id="cursive" class="small-margin">
             <menupopup/>
           </menulist>
           <spring/>
@@ -129,8 +129,8 @@
           <spring/>
         </row>
         <row autostretch="never" valign="middle">
-          <text class="label" value="&fantasy.label;" accesskey="&fantasy.accesskey;" for="fantasy"/>
-          <menulist id="fantasy">
+          <text class="label small-margin" value="&fantasy.label;" accesskey="&fantasy.accesskey;" for="fantasy"/>
+          <menulist id="fantasy" class="small-margin">
             <menupopup/>
           </menulist>
           <spring/>
@@ -153,59 +153,44 @@
     
     <text class="label" value="&fixedFonts.label;"/>
     
-    <grid class="indent">
-      <columns>
-        <column/>
-        <column flex="1"/>
-        <column/>
-        <column/>
-        <column/>
-      </columns>
-      <rows>
-        <row autostretch="never" valign="middle">
-          <text class="label" value="&monospace.label;" accesskey="&monospace.accesskey;" for="monospace"/>
-          <menulist id="monospace">
-            <menupopup/>
-          </menulist>
-          <text class="label" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
-          <menulist id="sizeMono">
-            <menupopup>
-              <menuitem value="8" label="8"/>
-              <menuitem value="9" label="9"/>
-              <menuitem value="10" label="10"/>
-              <menuitem value="11" label="11"/>
-              <menuitem value="12" label="12"/>
-              <menuitem value="13" label="13"/>
-              <menuitem value="14" label="14"/>
-              <menuitem value="15" label="15"/>
-              <menuitem value="16" label="16"/>
-              <menuitem value="18" label="18"/>
-              <menuitem value="20" label="20"/>
-              <menuitem value="24" label="24"/>
-              <menuitem value="26" label="26"/>
-              <menuitem value="28" label="28"/>
-              <menuitem value="32" label="32"/>
-              <menuitem value="36" label="36"/>
-              <menuitem value="40" label="40"/>
-              <menuitem value="48" label="48"/>
-              <menuitem value="56" label="56"/>
-              <menuitem value="64" label="64"/>
-              <menuitem value="72" label="72"/>
-            </menupopup>
-          </menulist>
-          <text class="label" value="&units.label;"/>
-        </row>
-      </rows>
-    </grid>
-
-    <separator class="thin"/>
+    <hbox autostretch="never" valign="middle">
+      <text class="label small-margin" value="&monospace.label;" accesskey="&monospace.accesskey;" for="monospace"/>
+      <menulist id="monospace" class="small-margin" flex="1" style="width: 0px;" crop="right">
+        <menupopup/>
+      </menulist>
+      <text class="label small-margin" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
+      <menulist id="sizeMono" class="small-margin">
+        <menupopup>
+          <menuitem value="8" label="8"/>
+          <menuitem value="9" label="9"/>
+          <menuitem value="10" label="10"/>
+          <menuitem value="11" label="11"/>
+          <menuitem value="12" label="12"/>
+          <menuitem value="13" label="13"/>
+          <menuitem value="14" label="14"/>
+          <menuitem value="15" label="15"/>
+          <menuitem value="16" label="16"/>
+          <menuitem value="18" label="18"/>
+          <menuitem value="20" label="20"/>
+          <menuitem value="24" label="24"/>
+          <menuitem value="26" label="26"/>
+          <menuitem value="28" label="28"/>
+          <menuitem value="32" label="32"/>
+          <menuitem value="36" label="36"/>
+          <menuitem value="40" label="40"/>
+          <menuitem value="48" label="48"/>
+          <menuitem value="56" label="56"/>
+          <menuitem value="64" label="64"/>
+          <menuitem value="72" label="72"/>
+        </menupopup>
+      </menulist>
+      <text class="label" value="&units.label;"/>
+    </hbox>
     
-    <box autostretch="never">
-      <!-- note that this removes the ability to select dynamic fonts -->
-      <checkbox id="browserUseDocumentFonts" 
-                label="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
-                preftype="int" prefstring="browser.display.use_document_fonts"/>
-    </box>
+    <!-- note that this removes the ability to select dynamic fonts -->
+    <checkbox id="browserUseDocumentFonts" class="small-margin"
+              label="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
+              preftype="int" prefstring="browser.display.use_document_fonts"/>
 
   </titledbox>
 

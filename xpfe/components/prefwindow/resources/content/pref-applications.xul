@@ -41,12 +41,12 @@
         
   <box class="box-smallheader" title="&lHeader;"/>
 
-  <titledbox>
+  <titledbox flex="1">
     <label value="&descript;"/>
     
     <box orient="vertical" flex="1">
       <text class="label" value="&fileTypes.label;"/>
-      <tree id="appTree" class="inset" flex="1" 
+      <tree id="appTree" class="inset" flex="1" style="width: 0px; height: 0px;"
             datasources="rdf:null" ref="urn:mimetypes"
             onselect="selectApplication();">
         <treecolgroup>
