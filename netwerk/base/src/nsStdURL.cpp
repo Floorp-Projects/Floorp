@@ -571,8 +571,7 @@ nsStdURL::SetDirectory(const char* i_Directory)
     dir += i_Directory;
 
     // if the last slash is missing then attach it
-    char* last = (char*)i_Directory+PL_strlen(i_Directory)-1;
-    if ('/' != *last) {
+    if (dir.Last() != '/') {  
         dir += "/";
     }
 
