@@ -82,6 +82,8 @@ private:
     static nsIAtom *sCurrentProcess;
     static nsIAtom *sComponentRegistry;
     static nsIAtom *sComponentDirectory;
+    static nsIAtom *sMRE_Directory;
+    static nsIAtom *sMRE_ComponentDirectory;
     static nsIAtom *sOS_DriveDirectory;
     static nsIAtom *sOS_TemporaryDirectory;
     static nsIAtom *sOS_CurrentProcessDirectory;
