@@ -40,7 +40,7 @@ gzread
 gzwrite
 gzflush
 gzclose
-char
+gzerror
 adler32
 crc32
 deflateInit_
