@@ -27,7 +27,7 @@ TARGET = $(LIBRARY)
 LIBRARY_NAME=cache
 
 MISCDEP = 		    \
-    $(LIBNSPR)  	    \
+    $(NSPR_LIBS)  	    \
     $(DIST)/lib/dbm32.lib \
     $(DIST)/lib/libplc21.lib \
     $(DIST)/lib/xpcom32.lib \
@@ -51,14 +51,14 @@ CPPSRCS	= nsCacheObject.cpp 	\
 		  nsMemStream.cpp		\
 	 	  $(NULL)
 
-REQUIRES = dbm nspr pref js xpcom 
+REQUIRES = dbm pref js xpcom 
 
 LLIBS =				 \
     $(DIST)/lib/dbm32.lib 		\
     $(DIST)/lib/libplc21.lib 	\
  	$(DIST)/lib/xpcom32.lib  	\
  	$(DIST)/lib/libpref.lib  	\
-	$(LIBNSPR)		 			\
+	$(NSPR_LIBS)		 			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

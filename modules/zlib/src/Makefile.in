@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= zlib
 LIBRARY_NAME	= zlib
 
-REQUIRES	= nspr java
+REQUIRES	= java
 
 LCFLAGS		=
 

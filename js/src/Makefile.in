@@ -16,10 +16,12 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
 
 ifdef MOZ_OJI
 DIRS = liveconnect
@@ -32,47 +34,47 @@ ifndef XCFLAGS
 OS2_IMPLIB=1
 LIBRARY	= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 DEF_FILE	= jsos2$(VERSION_NUMBER).def
-EXTRA_LIBS	= $(LIBNSPR) $(LIBNSJAVA)
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
 else
-EXTRA_LIBS	= $(LIBNSPR) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
 endif
 endif
 
 MODULE		= js
 
-CSRCS		= jsapi.c	\
-		  jsarena.c	\
-		  jsarray.c	\
-		  jsatom.c	\
-		  jsbool.c	\
-		  jscntxt.c	\
-		  jsdate.c	\
-		  jsdbgapi.c	\
-		  jsdtoa.c	\
-		  jsemit.c	\
-		  jsexn.c	\
-		  jsfun.c	\
-		  jsgc.c	\
-		  jshash.c	\
-		  jsinterp.c	\
-		  jslock.c	\
-		  jslog2.c	\
-		  jslong.c	\
-		  jsmath.c	\
-		  jsnum.c	\
-		  jsobj.c	\
-		  jsopcode.c    \
-		  jsparse.c	\
-		  jsprf.c	\
-		  jsregexp.c	\
-		  jsscan.c	\
-		  jsscope.c	\
-		  jsscript.c	\
-		  jsstr.c	\
-		  jsutil.c      \
-		  jsxdrapi.c	\
-		  prmjtime.c	\
-		  $(NULL)
+CSRCS		= 	jsapi.c		\
+			jsarena.c	\
+			jsarray.c	\
+			jsatom.c	\
+			jsbool.c	\
+			jscntxt.c	\
+			jsdate.c	\
+			jsdbgapi.c	\
+			jsdtoa.c	\
+			jsemit.c	\
+			jsexn.c		\
+			jsfun.c		\
+			jsgc.c		\
+			jshash.c	\
+			jsinterp.c	\
+			jslock.c	\
+			jslog2.c	\
+			jslong.c	\
+			jsmath.c	\
+			jsnum.c		\
+			jsobj.c		\
+			jsopcode.c      \
+			jsparse.c	\
+			jsprf.c		\
+			jsregexp.c	\
+			jsscan.c	\
+			jsscope.c	\
+			jsscript.c	\
+			jsstr.c		\
+			jsutil.c        \
+			jsxdrapi.c	\
+			prmjtime.c	\
+			$(NULL)
 
 EXPORTS		= js.msg \
 		  jsapi.h \
@@ -116,7 +118,7 @@ EXPORTS		= js.msg \
 		  jsxdrapi.h \
 		  $(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 # when using gcc the assembly is inlined in the C-file (see jslock.c)
 ifdef NS_USE_NATIVE
@@ -171,12 +173,6 @@ endif # sparc
 
 INCLUDES	+= -I$(srcdir)
 
-ifdef NSPR20
-INCLUDES	+= -I$(DIST)/include/nspr20/pr
-else
-INCLUDES	+= -I$(XPDIST)/public/nspr
-endif
-
 ifndef NSBUILDROOT
 JSJAVA_STUBHEADERS = -I$(topsrcdir)/sun-java/include/_gen \
 		     -I$(topsrcdir)/sun-java/netscape/javascript/_jri \
@@ -189,8 +185,8 @@ JSJAVA_CFLAGS	= -I$(topsrcdir)/sun-java/md-include \
 		  -I$(topsrcdir)/sun-java/include \
 		  $(JSJAVA_STUBHEADERS)
 
-# LIBNSPR abstracts nspr version, etc. nicely.
-LDFLAGS 	= $(LIBNSPR) -lm
+# NSPR_LIBS abstracts nspr version, etc. nicely.
+LDFLAGS 	= $(NSPR_LIBS) -lm
 
 ifeq ($(OS_ARCH), OSF1)
 LDFLAGS += -lc_r
@@ -220,7 +216,7 @@ $(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
 	    $(LINK_EXE) -OUT:$@ $(OBJDIR)/js.o  $(LIBRARIES) $(EXTRA_LIBS)
 endif
 
-# hardwire dependencies on jsopcode.def
+# hardwire dependencies on jsopcode.tbl
 jsopcode.h jsopcode.c: jsopcode.tbl
 
 # this section was put in the merged by danda into the

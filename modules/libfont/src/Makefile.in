@@ -57,7 +57,7 @@ EXPORTS		= nf.h coremem.h
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= libfont java jtools dbm nspr img layer util pref js htmldlgs security
+REQUIRES	= libfont java jtools dbm img layer util pref js htmldlgs security
 
 JMC_GEN		= Mcf Mcfb Mcfmi Mcrc Mcdoer
 JMC_GEN_FLAGS	= -cimpl

@@ -35,6 +35,6 @@ CSRCS		= font_metrics.c \
 		  parseAFM.c \
 		  $(NULL)
 
-REQUIRES	= nspr dbm img util layer js pref java jtools applet
+REQUIRES	= dbm img util layer js pref java jtools applet
 
 include $(topsrcdir)/config/rules.mk

@@ -48,7 +48,7 @@ CPPSRCS		= ilNetReader.cpp \
 
 EXPORTS		= PIMGCB.h PPSIMGCB.h
 
-REQUIRES	= zlib nspr jpeg util img png xpcom
+REQUIRES	= zlib jpeg util img png xpcom
 
 ifdef NU_CACHE
 REQUIRES 	+= cache

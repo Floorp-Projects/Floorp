@@ -74,7 +74,7 @@ ifdef DOM
 CSRCS		+=laydom.c
 endif
 
-REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha oji ojiimpl xpcom mailto
+REQUIRES	= parse style js layer applet security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha oji ojiimpl xpcom mailto
 
 ifdef DOM
 REQUIRES	+= dom

@@ -28,7 +28,7 @@ MODULE		= gnuzilla
 
 LIBRARY_NAME	= gnuzilla
 
-REQUIRES	= nspr layer js jtools applet security img util parse layout hook pref java libfont ldap lay style xfeicons rdf xpcom plug mariner gnuzilla-widgets
+REQUIRES	= layer js jtools applet security img util parse layout hook pref java libfont ldap lay style xfeicons rdf xpcom plug mariner gnuzilla-widgets
 
 CSRCS		= g-bookmark-frame.c \
 		  g-bookmark-view.c \

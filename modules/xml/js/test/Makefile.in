@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-REQUIRES = xmlparse xmltok expat js xmljs nspr
+REQUIRES = xmlparse xmltok expat js xmljs 
 CSRCS = js.c \
 	$(NULL)
 
@@ -30,7 +30,7 @@ PROGRAM = xmljs
 include $(topsrcdir)/config/rules.mk
 CFLAGS += -DJSFILE -I$(srcdir)/.
 
-MYLIBS = -lxmljs -lexpat -lxmltok -ljs $(LIBNSPR) -ldl -lm
+MYLIBS = -lxmljs -lexpat -lxmltok -ljs $(NSPR_LIBS) -ldl -lm
 
 js:
 	rm -f $(PROGRAM)

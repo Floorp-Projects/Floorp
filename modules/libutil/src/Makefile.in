@@ -27,7 +27,7 @@ LIBRARY_NAME	= util
 
 CSRCS		= obs.c
 
-REQUIRES	= nspr util
+REQUIRES	= util
 
 include $(topsrcdir)/config/rules.mk
 

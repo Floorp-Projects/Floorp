@@ -17,15 +17,15 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= pref
 LIBRARY_NAME	= pref
 
-REQUIRES	= libxp js pref nspr dbm security ldap java img layer util
+REQUIRES	= libxp js pref dbm security ldap java img layer util
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 CSRCS		= unix/unixpref.c
@@ -36,13 +36,14 @@ EXPORTS		= initpref.js init/all.js init/config.js win/winpref.js os2/os2pref.js
 OS2_IMPLIB	= 1
 DEF_FILE	= xpOS2.def
 EXTRA_LIBS	= $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-		  $(LIBNSPR) \
+		  $(NSPR_LIBS) \
 		  $(DIST)/lib/libldap.lib $(DIST)/lib/liblber.lib \
 		  $(DIST)/lib/libldap.lib $(DIST)/lib/libhash.lib \
 		  $(NULL)
 endif
 
 CSRCS		+= prefapi.c
+
 
 GARBAGE		+= unix/jsbuffer.h
 
@@ -84,14 +85,13 @@ CONFIG_FILES	+= \
 
 CONFIG_FILES	:= $(addprefix $(srcdir)/, $(CONFIG_FILES))
 
-
 ##############################
 # Magic PREF_ generation hacks
 
 # put auto-generated headers in here
 HEADER_DEST_DIR = $(srcdir)/prefnames
 
-# rename .js -> .h
+# find names of files by stripping path and converting .js -> .h
 CONFIG_FILE_HEADERS = $(notdir $(CONFIG_FILES:%.js=%.h))
 
 # strip out the path and add the dest and pref_ prefix
@@ -100,22 +100,23 @@ CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS
 # export these new files so other modules can use them
 EXPORTS += $(CONFIG_FILE_EXPORTS)
 
-
 include $(topsrcdir)/config/rules.mk
 
-# VPATH allows us to make the auto-generation rule works for
-# everything in VPATH (so init/all.js -> pref_all.h etc)
-VPATH += $(srcdir)/init $(srcdir)/unix
+# VPATH allows us to make sure the auto-generation rule works for
+# everything in VPATH (so init/all.js->pref_all.h etc)
+VPATH += $(srcdir)/init/ $(srcdir)/unix/
 
 # this comes after rules.mk because rules.mk blows it away
 INCLUDES	+= -I$(srcdir)/unix -I./unix
 
 $(LIBRARY): $(OBJS)
 
+
 unix/unixpref.c: unix/jsbuffer.h
 	@if test ! -d unix; then rm -f unix && mkdir unix; fi
 	@if test ! -f $@; then $(INSTALL) $(srcdir)/unix/unixpref.c unix/; fi
- 
+
+
 unix/jsbuffer.h: Makefile $(CONFIG_FILES)
 	@if test ! -d unix; then rm -f unix && mkdir unix; fi
 	@echo "/* This is an automatically generated file */" > $@

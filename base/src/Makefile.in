@@ -17,14 +17,14 @@
 
 DEPTH=../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 DEFINES =-D_IMPL_NS_BASE
 
-ifeq ($(OS_ARCH),Rhapsody)
+ifeq ($(OS_TARGET),Rhapsody)
 DIRS = rhapsody
 else
 DIRS = unix
@@ -40,7 +40,7 @@ CPPSRCS =                       \
     nsCRT.cpp                   \
     nsDeque.cpp                 \
     nsRBTree.cpp                \
-    nsSizeOfHandler.cpp                \
+    nsSizeOfHandler.cpp		\
     nsString.cpp                \
     nsUnicharBuffer.cpp         \
     nsUnicharInputStream.cpp    \
@@ -70,7 +70,7 @@ EXPORTS =                       \
     nsUnitConversion.h          \
     $(NULL)
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = raptor
 
@@ -81,3 +81,6 @@ include $(topsrcdir)/config/config.mk
 TARGET = $(LIBARY)
 
 include $(topsrcdir)/config/rules.mk
+
+test:
+	@echo OS_ARCH = $(OS_ARCH)

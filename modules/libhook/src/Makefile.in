@@ -27,7 +27,7 @@ LIBRARY_NAME	= hook
 
 CSRCS		= hk_conf.c hk_file.c hk_hook.c hk_init.c hk_tag.c
 
-REQUIRES	= libxp util js img layer parse hook pref dbm nspr
+REQUIRES	= libxp util js img layer parse hook pref dbm 
 
 LOCAL_INCLUDES	= -I$(srcdir)
 

@@ -63,7 +63,7 @@ EXPORTS=xp_linebuf.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy parse
+REQUIRES	= js dbm security img util jtools layer java lay style pref rdf privacy parse
 
 ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c

@@ -93,7 +93,7 @@ EXPORTS = \
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= nspr htmldlgs img util layer pref security js java net progress network
+REQUIRES	= htmldlgs img util layer pref security js java net progress network
 
 
 include $(topsrcdir)/config/rules.mk

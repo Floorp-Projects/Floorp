@@ -36,6 +36,6 @@ CSRCS		= \
 		  xp_rect.c \
 		  $(NULL)
 
-REQUIRES	= layer dbm nspr img util
+REQUIRES	= layer dbm img util
 
 include $(topsrcdir)/config/rules.mk

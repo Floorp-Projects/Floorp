@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= edtplug
 LIBRARY_NAME	= edtplug
 
-REQUIRES	= java nspr edtplug
+REQUIRES	= java edtplug
 
 JRI_GEN		= netscape.plugin.composer.PluginManager \
 		  netscape.plugin.composer.MozillaCallback \

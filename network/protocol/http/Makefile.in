@@ -34,7 +34,7 @@ EXPORTS= mkaccess.h httpurl.h httpauth.h cookies.h
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= netcache network nspr2 dbm util pref js java fileurl \
+REQUIRES	= netcache network dbm util pref js java fileurl \
 	security layer img httpurl mimetype htmldlgs
 
 ifdef MOZ_SMOOTH_PROGRESS

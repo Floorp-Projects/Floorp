@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= schedulr 
 LIBRARY_NAME	= sched 
 
-REQUIRES	= nspr util
+REQUIRES	= util
 
 LOCAL_INCLUDES  = -I$(PUBLIC)/schedulr
 

@@ -31,7 +31,7 @@ LIBRARY_NAME	= xfeicons
 CSRCS		= $(ICONS_GEN_SRC)
 EXPORTS		= $(ICONS_GEN_HDR) $(srcdir)/icondata.h
 
-REQUIRES	= img java jtools layer nspr util xp xpcom
+REQUIRES	= img java jtools layer util xp xpcom
 
 REQUIRES	+= \
 			$(XFE_JPEG_REQUIRES) \
@@ -106,13 +106,20 @@ MAIL_OR_COMPOSE_ICONS = $(wildcard $(srcdir)/images/MNC*.gif \
 	$(srcdir)/images/MNTB_Next*.gif \
 	$(srcdir)/images/MNTB_Forward*.gif \
 	$(srcdir)/images/MNAB_NewPerson*.gif \
-	$(srcdir)/images/MN_*)
+	$(srcdir)/images/MN_Draft*.gif \
+	$(srcdir)/images/MN_Collect*.gif \
+	$(srcdir)/images/MN_Template*.gif ) \
+	$(addprefix $(srcdir)/, \
+		images/MN_MailAttach.gif \
+		images/MN_Person.gif \
+		images/MN_People.gif )
 
 ifdef MOZ_MAIL_NEWS
 ICONS += $(MAIL_OR_COMPOSE_ICONS) \
 	$(wildcard $(srcdir)/images/MNTB*.gif $(srcdir)/images/MNAB*.gif) \
-	$(addprefix $(srcdir)/, images/threadoff.gif \
-	images/threadon.gif
+	$(addprefix $(srcdir)/, 
+	images/threadoff.gif \
+	images/threadon.gif \
 	images/Desk_Address.gif \
 	images/Desk_Collabra.gif \
 	images/Desk_Messenger.gif \
@@ -169,7 +176,7 @@ MKICONS_DSOS = \
 			$(XFE_MKICONS_ZLIB_DSO) \
 			$(NULL)
 
-MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(MKICONS_DSOS) $(OS_LIBS) -lm
+MKICONS_EXTRA	= $(NSPR_LIBS) $(MKICONS_DSOS) $(OS_LIBS) -lm
 
 #######################################################################
 # Rules to build mkicons program and then icondata.c

@@ -33,7 +33,7 @@ EXPORTS= cstream.h strmutil.h
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl security \
+REQUIRES	= network dbm util pref js java fileurl security \
 	layer img jtools netcnvts
 
 include $(topsrcdir)/config/rules.mk

@@ -25,15 +25,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 LIBRARY_NAME	= dom
 
-REQUIRES	= js
-#ifdef MOZILLA_CLIENT
-REQUIRES       += lay img layer util
+REQUIRES	= js dom
 
-# hack until PERIGNON takes over the world
-REQUIRES       += style
-#endif
+EXPORTS         = dom.h domstyle.h
 
-EXPORTS         = $(srcdir)/dom.h $(srcdir)/domstyle.h
+EXPORTS 	:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CSRCS =	  	  domattr.c \
 		  domcore.c \

@@ -199,7 +199,7 @@ endif
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES = julian nspr nls java libmime security
+REQUIRES = julian nls java libmime security
 
 include $(topsrcdir)/config/rules.mk
 

@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xml
 LIBRARY_NAME	= $(LITE_PREFIX)xml
 
-REQUIRES	= nspr img layer util js
+REQUIRES	= img layer util js
 EXPORTS		= $(srcdir)/expat/xmlparse/xmlparse.h 
 
 CSRCS		= expat/xmltok/xmltok.c \

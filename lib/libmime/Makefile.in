@@ -63,7 +63,7 @@ CSRCS		+= \
 		  $(NULL)
 endif
 
-REQUIRES = mime nspr dbm img util layer security pref js julian nls xp network
+REQUIRES = mime dbm img util layer security pref js julian nls xp network
 
 include $(topsrcdir)/config/rules.mk
 
@@ -88,8 +88,7 @@ endif
 # Building the "mimefilt" executable, which reads a message from stdin and
 # writes HTML to stdout
 
-FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp \
-	$(NSPR_LDFLAGS) $(NSPR_LIBS)
+FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp $(NSPR_LIBS)
 
 $(OBJDIR)/mimefilt: $(FILT_OBJS) $(LIBRARY)
 	@$(MAKE_OBJDIR)

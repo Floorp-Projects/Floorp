@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= progress
 LIBRARY_NAME	= prgrss
 
-REQUIRES	= progress nspr dbm img layer util
+REQUIRES	= progress dbm img layer util
 
 ifdef MOZ_SMOOTH_PROGRESS
 REQUIRES       += raptor xpcom

@@ -39,7 +39,7 @@ CPPSRCS			= \
               nsNetFactory.cpp    \
 			  $(NULL)
 
-REQUIRES		= raptor js dbm nspr security pref xpcom util img \
+REQUIRES		= raptor js dbm security pref xpcom util img \
 			  layer network netcache fileurl ftpurl abouturl \
 			  httpurl gophurl remoturl netcnvts
 

@@ -33,6 +33,6 @@ CSRCS		= xpform.c
 #	xploele.c
 #	xptabnav.c
 
-REQUIRES	= mariner nspr util img js layer lay style
+REQUIRES	= mariner util img js layer lay style
 
 include $(topsrcdir)/config/rules.mk

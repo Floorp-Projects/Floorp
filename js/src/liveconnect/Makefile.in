@@ -33,7 +33,7 @@ endif
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet nspr img util layer
+REQUIRES	= java js applet img util layer
 ifdef MOZ_OJI
 REQUIRES	+= xpcom
 endif
@@ -58,7 +58,7 @@ CPPSRCS		=	        \
 	nsCLiveconnectFactory.cpp
 endif
 
-LLIBS=$(LIBNSPR) $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib
+LLIBS=$(NSPR_LIBS) $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib
 ifdef MOZ_OJI
 LLIBS += $(DIST)/lib/xpcom32.lib	
 endif

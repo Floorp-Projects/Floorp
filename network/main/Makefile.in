@@ -67,18 +67,18 @@ ifdef MOZ_MAIL_NEWS
 EXPORTS += mkldap.h
 endif # MOZ_MAIL_NEWS
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS	:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= ldapurl imap4url jtools progress nspr2 dbm util js parse lay style pref htmldlgs java \
+REQUIRES	= ldapurl imap4url jtools progress dbm util js parse lay style pref htmldlgs java \
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
 	mimetype ldap net
 
-ifdef MOZ_MAIL_NEWS
-REQUIRES += mailbxurl nntpurl pop3url
+ifdef NU_CACHE
+REQUIRES += cache 
 endif
 
-ifdef NU_CACHE
-REQUIRES += cache
+ifdef MOZ_MAIL_NEWS
+REQUIRES += mailbxurl nntpurl pop3url
 endif
 
 ifdef MOZ_SMOOTH_PROGRESS
@@ -93,7 +93,7 @@ TEST_LIBS	= $(LIBRARY) \
 		  $(DIST)/lib/libsec-us.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libxp.$(LIB_SUFFIX) \
-		  $(DIST)/lib/nspr.$(LIB_SUFFIX)
+		  $(NSPR_LIBS)
 
 test:
 	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS)

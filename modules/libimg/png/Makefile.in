@@ -42,7 +42,7 @@ CSRCS		= png.c \
 		  pngwutil.c \
 		  $(NULL)
 
-REQUIRES	= util nspr
+REQUIRES	= util 
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES	+= zlib

@@ -39,7 +39,6 @@ REQUIRES	=\
 			XfeToolBar \
 			XfeToolTip \
 			Microline \
-			nspr \
 			layer \
 			js \
 			jtools \

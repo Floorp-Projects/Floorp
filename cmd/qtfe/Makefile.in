@@ -76,7 +76,6 @@ REQUIRES	= \
 		  libfont \
 		  mariner \
 		  plds \
-		  nspr20 \
 		  parse \
 		  plugin   \
 		  plugimpl \
@@ -507,7 +506,7 @@ endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 
-ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS)
+ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
 
 ALL_EXPORT_DSOS	= $(ALL_EXPORT_LIBS:$(DIST)/lib/lib%.a=-l%)
 PLUGIN_DSO	= $(DIST)/bin/libnullplugin.so
@@ -600,7 +599,7 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(OTHER_LIBS)
 EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
@@ -744,7 +743,7 @@ ifeq ($(OS_ARCH),OSF1)
 # 
 OTHER_LIBS	= $(QTLIB) -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 
@@ -833,7 +832,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
+		  $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 endif
@@ -998,7 +997,7 @@ quantify:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.qu
 unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(DIST)/bin/gtscc 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
+	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
 
 ifeq ($(OS_ARCH),AIX)
 AIX_HACK	:= $(notdir $(AIX_NSPR))

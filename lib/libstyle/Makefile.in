@@ -38,7 +38,7 @@ EXPORTS		= stystack.h stystruc.h css.h
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= js nspr dbm img util layer
+REQUIRES	= js dbm img util layer
 
 include $(topsrcdir)/config/rules.mk
 
@@ -61,8 +61,8 @@ endif
 
 ifdef ENABLE_TESTS
 test:
-	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS) $(NSPR_LDFLAGS) $(NSPR_LIBS)
-	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS) $(NSPR_LDFLAGS) $(NSPR_LIBS)
+	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS) $(NSPR_LIBS)
+	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS) $(NSPR_LIBS)
 
 css_test:
 	rm -f $(OBJDIR)/css_test

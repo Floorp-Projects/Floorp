@@ -34,7 +34,7 @@ CSRCS		= \
 		dirprefs.c \
 		$(NULL)
 
-REQUIRES	= net msg js dbm nspr img util layer pref ldap security privacy
+REQUIRES	= net msg js dbm img util layer pref ldap security privacy
 
 include $(topsrcdir)/config/config.mk
 

@@ -29,7 +29,7 @@ MODULE		= rdf
 LIBRARY_NAME	= $(LITE_PREFIX)rdf
 LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
 
-REQUIRES	= nspr dbm java js htmldlgs util img layer pref ldap network parse
+REQUIRES	= dbm java js htmldlgs util img layer pref ldap network parse
 
 ifdef NU_CACHE
 REQUIRES 	+=	cache
@@ -84,8 +84,8 @@ spf2ldif:	$(OBJDIR)/spf2ldif
 
 $(OBJDIR)/test: $(OBJDIR)/test.o $(LIBRARY)
 	    @$(MAKE_OBJDIR)
-	    $(CC) -o $@ $(OBJDIR)/test.o $(LIBRARY) $(LIBNSPR) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 
+	    $(CC) -o $@ $(OBJDIR)/test.o $(LIBRARY) $(NSPR_LIBS) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 
 	    
 $(OBJDIR)/spf2ldif: $(SPF_OBJS)  $(LIBRARY)
 	    @$(MAKE_OBJDIR)
-	    $(CC) -o $@ $(SPF_OBJS) $(LIBRARY) $(LIBNSPR) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 
+	    $(CC) -o $@ $(SPF_OBJS) $(LIBRARY) $(NSPR_LIBS) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 

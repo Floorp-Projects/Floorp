@@ -27,7 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mocha
 LIBRARY_NAME	= mocha
 
-REQUIRES	= lay parse img js style layer applet dbm nspr security \
+REQUIRES	= lay parse img js style layer applet dbm security \
 		  htmldlgs util jtools pref caps java libreg softupdt jsdebug \
 		  netcache network httpurl plugin plugimpl mocha oji ojiimpl xpcom \
 		  layout rdf
