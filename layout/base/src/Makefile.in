@@ -21,26 +21,25 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = raptorlayout_s
 
-DEFINES += -D_IMPL_NS_LAYOUT
+MODULE=layout
 
-CPPSRCS =				\
+CPPSRCS = \
 	nsCommentNode.cpp		\
-	nsGenericElement.cpp		\
+	nsGenericElement.cpp	\
 	nsGenericDOMDataNode.cpp	\
 	nsGenericDOMNodeList.cpp	\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
-	nsDocumentFragment.cpp		\
+	nsDocumentFragment.cpp	\
 	nsDOMAttribute.cpp		\
-	nsDOMAttributeMap.cpp		\
-	nsFrameImageLoader.cpp		\
+	nsDOMAttributeMap.cpp	\
+	nsFrameImageLoader.cpp	\
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
-	nsNameSpaceManager.cpp		\
+	nsNameSpaceManager.cpp	\
 	nsPresContext.cpp		\
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
@@ -50,14 +49,12 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
-	nsRange.cpp			\
+	nsRange.cpp				\
 	nsRangeList.cpp			\
-	nsContentIterator.cpp		\
+	nsContentIterator.cpp	\
 	nsLayoutAtoms.cpp		\
 	nsTextNode.cpp			\
 	$(NULL)
-
-MODULE=layout
 
 EXPORTS = \
 	nsDocument.h \
@@ -66,13 +63,13 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
+include $(topsrcdir)/config/config.mk
+
+DEFINES += -D_IMPL_NS_LAYOUT
+
 INCLUDES +=  -I$(srcdir)/../../html/base/src -I$(srcdir)/../../html/style/src
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-REQUIRES = xpcom raptor dom netlib js pref
-
-TARGETS = $(LIBRARY)
 
 MKSHLIB :=
 
