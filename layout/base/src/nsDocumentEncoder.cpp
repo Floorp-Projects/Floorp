@@ -45,6 +45,7 @@
 #include "nsIDOMRange.h"
 #include "nsRange.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsHTMLAtoms.h"
 #include "nsITextContent.h"
 #include "nsIEnumerator.h"
@@ -130,6 +131,7 @@ protected:
   nsCOMPtr<nsIUnicodeEncoder>    mUnicodeEncoder;
   nsCOMPtr<nsIDOMNode>           mCommonParent;
   nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
+  nsCOMPtr<nsICharsetConverterManager2> mCharsetConverterManager;
 
   nsString          mMimeType;
   nsString          mCharset;
@@ -429,6 +431,15 @@ ConvertAndWrite(nsAReadableString& aString,
     // If the converter couldn't convert a chraacer we replace the
     // character with a characre entity.
     if (convert_rv == NS_ERROR_UENC_NOMAPPING) {
+      // Finishes the conversion. 
+      // The converter has the possibility to write some extra data and flush its final state.
+      char finish_buf[32];
+      charLength = 32;
+      rv = aEncoder->Finish(finish_buf, &charLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aStream->Write(finish_buf, charLength, &written);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       nsCAutoString entString("&#");
       entString.AppendInt(unicodeBuf[unicodeLength - 1]);
       entString.Append(';');
@@ -853,9 +864,18 @@ nsDocumentEncoder::EncodeToString(nsAWritableString& aOutputString)
   mSerializer = do_CreateInstance(NS_STATIC_CAST(const char *, progId));
   NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
 
-  mSerializer->Init(mFlags, mWrapColumn);
-
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIAtom> charsetAtom;
+  if (!mCharset.IsEmpty()) {
+    if (!mCharsetConverterManager) {
+      mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = mCharsetConverterManager->GetCharsetAtom(mCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  mSerializer->Init(mFlags, mWrapColumn, charsetAtom);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
@@ -896,16 +916,17 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager,
-                  charsetConv, 
-                  kCharsetConverterManagerCID,
-                  &rv);
+  if (!mCharsetConverterManager) {
+    mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIAtom> charsetAtom;
+  rv = mCharsetConverterManager->GetCharsetAtom(mCharset.GetUnicode(), getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString charsetStr;
-  charsetStr.Assign(mCharset);
-  rv = charsetConv->GetUnicodeEncoder(&charsetStr,
-                                      getter_AddRefs(mUnicodeEncoder));
+  rv = mCharsetConverterManager->GetUnicodeEncoder(charsetAtom,
+                                                   getter_AddRefs(mUnicodeEncoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // xxx Also make sure mString is a mime type "text/html" or "text/plain"

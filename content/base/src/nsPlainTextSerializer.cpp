@@ -126,7 +126,8 @@ NS_IMPL_ISUPPORTS4(nsPlainTextSerializer,
 
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
+nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
+                            nsIAtom* aCharSet)
 {
 #ifdef DEBUG
   // Check if the major control flags are set correctly.
@@ -185,7 +186,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::Initialize(nsAWritableString* aOutString,
                                   PRUint32 aFlags, PRUint32 aWrapCol)
 {
-  nsresult rv = Init(aFlags, aWrapCol);
+  nsresult rv = Init(aFlags, aWrapCol, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX This is wrong. It violates XPCOM string ownership rules.

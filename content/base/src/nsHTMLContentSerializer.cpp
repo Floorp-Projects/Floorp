@@ -83,7 +83,8 @@ nsHTMLContentSerializer::GetParserService(nsIParserService** aParserService)
 }
 
 NS_IMETHODIMP 
-nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
+nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
+                              nsIAtom* aCharSet)
 {
   mFlags = aFlags;
   if (!aWrapColumn) {
@@ -113,6 +114,16 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
   }
 
   mPreLevel = 0;
+
+  mIsLatin1 = PR_FALSE;
+  if (aCharSet) {
+    const PRUnichar *charset;
+    aCharSet->GetUnicode(&charset);
+
+    if (NS_LITERAL_STRING("ISO-8859-1").Equals(charset)) {
+      mIsLatin1 = PR_TRUE;
+    }
+  }
 
   return NS_OK;
 }
@@ -526,7 +537,7 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
           if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
             entityText = entityTable[val];
             break;
-          } else if (val > 127) {
+          } else if (mIsLatin1 && val > 127 && val < 256) {
             parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
 
             if (entityReplacement.Length() > 0) {
