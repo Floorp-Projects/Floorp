@@ -37,6 +37,14 @@
 #include "winbase.h"
 #endif
 
+//uncomment this to use netlib to determine what the
+//user agent string is. we really *want* to do this,
+//can't today since netlib returns 4.05, but this
+//version of plugin functionality really supports
+//5.0 level features. once netlib is returning
+//5.0x, then we can turn this on again. MMP
+//#define USE_NETLIB_FOR_USER_AGENT
+
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
@@ -696,20 +704,31 @@ nsresult nsPluginHostImpl :: ReloadPlugins(PRBool reloadPages)
 
 nsresult nsPluginHostImpl :: UserAgent(const char **retstring)
 {
+  nsresult res;
+
+#ifdef USE_NETLIB_FOR_USER_AGENT
   nsString ua;
   nsINetService *service = nsnull;
 
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                        kINetServiceIID,
-                                        (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service)) {
-      res = service->GetUserAgent(ua);
-      if (NS_OK == res)
-          *retstring = ua.ToNewCString();
-      else
-          *retstring = nsnull;
-      NS_RELEASE(service);
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
+  if ((NS_OK == res) && (nsnull != service))
+  {
+    res = service->GetUserAgent(ua);
+
+    if (NS_OK == res)
+      *retstring = ua.ToNewCString();
+    else
+      *retstring = nsnull;
+
+    NS_RELEASE(service);
   }
+#else
+  *retstring = (const char *)"Mozilla/5.0 [en] (Windows;I)";
+  res = NS_OK;
+#endif
+
   return res;
 }
 
