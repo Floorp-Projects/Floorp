@@ -131,6 +131,11 @@ SOURCES =						\
 	$(PATH_PREFIX)/optimizer/Optimizer.java		\
 	$(PATH_PREFIX)/optimizer/StmtNodeIterator.java	\
 	$(PATH_PREFIX)/optimizer/TypeEvent.java		\
+        $(PATH_PREFIX)/debug/DebugReader.java           \
+        $(PATH_PREFIX)/debug/DebuggableEngine.java      \
+        $(PATH_PREFIX)/debug/DebuggableScript.java      \
+        $(PATH_PREFIX)/debug/Debugger.java              \
+        $(PATH_PREFIX)/debug/Frame.java                 \
 	$(PATH_PREFIX)/../classfile/ByteCode.java	\
 	$(PATH_PREFIX)/../classfile/ClassFileWriter.java\
 	$(NULL)
@@ -144,6 +149,7 @@ RESOURCES = $(RESOURCEDIR)/*.properties
 # (use org/mozilla/classfile explicitly for now; should be replaced
 # with something parameterized, but jar doesn't understand ..)
 CLASSES = $(PATH_PREFIX)/*.class $(PATH_PREFIX)/regexp/*.class \
+        $(PATH_PREFIX)/debug/*.class \
 	$(PATH_PREFIX)/optimizer/*.class org/mozilla/classfile/*.class
 
 # A class or set of classes as visible from the top level.  For want
