@@ -115,6 +115,7 @@ private:
 	static PRUint32   sNumberOfScreens;       // how many screens we have.
 public:
 	static PRUint32		GetScreenResolution();
+	static PRBool     HaveFontManager90();
 };
 
 

@@ -49,6 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsDependentString.h"
 #include "nsLiteralString.h"
+#include "nsDeviceContextMac.h"
 #include <ATSTypes.h>
 #include <SFNTTypes.h>
 #include <SFNTLayoutTypes.h>
@@ -473,14 +474,16 @@ PRBool nsMacUnicodeFontInfo::HasGlyphFor(PRUnichar aChar)
   if (0xfffd == aChar)
     return PR_FALSE;
 
-  if (!gCCMap) 
-    gCCMap = InitGlobalCCMap();
+  // MacOS 8.6 do not have FMxxx etc so we have to check
+  if (nsDeviceContextMac::HaveFontManager90()) {       
+    if (!gCCMap) 
+      gCCMap = InitGlobalCCMap();
 
-  NS_ASSERTION( gCCMap, "cannot init global ccmap");
-  
-  if (gCCMap)
-    return CCMAP_HAS_CHAR(gCCMap, aChar);
-
+    NS_ASSERTION(gCCMap, "cannot init global ccmap");
+    
+    if (gCCMap)
+      return CCMAP_HAS_CHAR(gCCMap, aChar);
+ }
   return PR_FALSE;
 }
 
