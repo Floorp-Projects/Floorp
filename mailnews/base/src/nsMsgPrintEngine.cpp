@@ -304,14 +304,13 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   if (!tString)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsIMsgMessageService * messageService = nsnull;
-  rv = GetMessageServiceFromURI(tString, &messageService);
+  nsCOMPtr <nsIMsgMessageService> messageService;
+  rv = GetMessageServiceFromURI(tString, getter_AddRefs(messageService));
   
   if (NS_SUCCEEDED(rv) && messageService)
   {
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
     rv = messageService->DisplayMessageForPrinting(tString, webShell, nsnull, nsnull, nsnull);
-    ReleaseMessageServiceFromURI(tString, messageService);
   }
   //If it's not something we know about, then just load try loading it directly.
   else

@@ -58,7 +58,6 @@
 #include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kWindowMediatorCID,    NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,    NS_MSGMAILSESSION_CID);
 
 // QueryInterface, AddRef, and Release
@@ -128,7 +127,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
     }
     
 	nsCOMPtr<nsIWindowMediator> windowMediator = 
-	         do_GetService(kWindowMediatorCID, &rv);
+	         do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
 	// why use DOM window enumerator instead of XUL window...????

@@ -42,6 +42,28 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsICmdLineHandler.h"
+#include "nsIDOMWindowInternal.h"
+
+class nsMsgCachedWindowInfo
+{
+public:
+  void Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeRecyclingListener *aListener, PRBool aHtmlCompose)
+  {
+    window = aWindow;
+    listener = aListener;
+    htmlCompose = aHtmlCompose;
+  }
+    
+  void Clear()
+  {
+    window = nsnull;
+    listener = nsnull;
+  }
+  
+  nsCOMPtr<nsIDOMWindowInternal>            window;
+  nsCOMPtr<nsIMsgComposeRecyclingListener>  listener;
+  PRBool                                    htmlCompose;
+};
 
 class nsMsgComposeService : public nsIMsgComposeService, public nsICmdLineHandler
 {
@@ -59,6 +81,12 @@ public:
 
 private:
   PRBool mLogComposePerformance;
+
+  PRInt32 mMaxRecycledWindows;
+  nsMsgCachedWindowInfo *mCachedWindows;
+  
+  nsresult OpenWindow( const char *chrome, nsIMsgComposeParams *params);
+  nsresult ShowCachedComposeWindow(nsIDOMWindowInternal *aComposeWindow, PRBool aShow);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
   PRIntervalTime            mStartTime;

@@ -5409,7 +5409,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
 
     if (!m_copyState->m_msgService)
     {
-        rv = GetMessageServiceFromURI(uri, &m_copyState->m_msgService);
+        rv = GetMessageServiceFromURI(uri, getter_AddRefs(m_copyState->m_msgService));
     }
 
     if (NS_SUCCEEDED(rv) && m_copyState->m_msgService)
@@ -5426,7 +5426,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
     return rv;
 }
 
-nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
+nsImapMailCopyState::nsImapMailCopyState() :
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE),
     m_isCrossServerOp(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
@@ -5445,7 +5445,6 @@ nsImapMailCopyState::~nsImapMailCopyState()
       {
         nsXPIDLCString uri;
         srcFolder->GetUriForMsg(m_message, getter_Copies(uri));
-        ReleaseMessageServiceFromURI(uri, m_msgService);
       }
     }
     if (m_tmpFileSpec)

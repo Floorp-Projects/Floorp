@@ -120,11 +120,19 @@ native TStateListenerNotification(TStateListenerNotification);
 native nsString(nsString);
 [ref] native nsStringRef(nsString);
 
+/* recycling listener interface */
+[scriptable, uuid(0b28cc56-1dd2-11b2-bbe4-99e6a314f8ba)]
+interface nsIMsgComposeRecyclingListener : nsISupports {
+  void onClose();
+  void onReopen(in nsIMsgComposeParams params);
+};
+
+
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
 
 	/* ... */
-	void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params); 
+	void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams aParams); 
 
 	/* ... */
 	void SetDocumentCharset(in string charset);
@@ -139,7 +147,7 @@ interface nsIMsgCompose : nsISupports {
 	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgProgress progress);
 
 	/* ... */
-  void CloseWindow();
+  void CloseWindow(in boolean reclycleIt);
 
   /* ... */
   void abort();
@@ -241,9 +249,14 @@ interface nsIMsgCompose : nsISupports {
  	/* ... */
   [noscript] void getQuotingToFollow(out boolean quotingToFollow);
 
+ 	/* ... */
+  attribute nsIMsgComposeRecyclingListener recyclingListener;
+  
+ 	/* ... */
+ 	attribute boolean recycledWindow;
 };
 
-/* Listener interface */
+/* send listener interface */
 [noscript, uuid(ACC72780-2CEA-11D5-9DAA-BACDEAC1EEFC)]
 interface nsIMsgComposeSendListener : nsISupports {
 
@@ -251,5 +264,3 @@ interface nsIMsgComposeSendListener : nsISupports {
   void setDeliverMode(in MSG_DeliverMode deliverMode);
  
 };
-
-

@@ -600,8 +600,8 @@ nsMsgSendLater::StartNextMailFileSend()
   if (!mTempIFileSpec)
     return NS_ERROR_FAILURE;
 
-  nsIMsgMessageService * messageService = nsnull;
-  rv = GetMessageServiceFromURI(aMessageURI, &messageService);
+  nsCOMPtr <nsIMsgMessageService> messageService;
+	rv = GetMessageServiceFromURI(aMessageURI, getter_AddRefs(messageService));
   if (NS_FAILED(rv) && !messageService)
     return NS_ERROR_FACTORY_NOT_LOADED;
 
@@ -632,7 +632,6 @@ nsMsgSendLater::StartNextMailFileSend()
   else
     rv = NS_ERROR_FAILURE;
 
-  ReleaseMessageServiceFromURI(aMessageURI, messageService);
   Release();
 
   if (NS_FAILED(rv))

@@ -46,8 +46,7 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsIMsgWindow.h"
 #include "nsIStringBundle.h"
-
-class nsIMsgMessageService;
+#include "nsIMsgMessageService.h"
 
 class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener, public nsICopyMessageStreamListener, public nsIUrlListener
 {
@@ -88,8 +87,7 @@ public:
   nsMsgKey m_startOfNewMsg; // offset in mailbox of new message
   char m_dataBuffer[4096 + 1]; // temp data buffer for copying message
   nsresult m_status; // the status of the copying operation
-  nsIMsgMessageService* m_messageService; // message service for copying
-                                          // message 
+  nsCOMPtr <nsIMsgMessageService> m_messageService; // message service for copying 
   nsCOMPtr<nsISupportsArray> m_folderArray; // to store all the folders in case of compact all
   nsCOMPtr <nsIMsgWindow> m_window;
   PRUint32 m_folderIndex; // tells which folder to compact in case of compact all

@@ -463,7 +463,7 @@ nsresult nsMsgSearchSession::GetNextUrl()
 {
   nsCString nextUrl;
   nsCOMPtr <nsIMsgMessageService> msgService;
-  nsXPIDLCString folderUri;
+
 
   PRBool stopped = PR_FALSE;
 
@@ -477,8 +477,9 @@ nsresult nsMsgSearchSession::GetNextUrl()
   nsCOMPtr <nsIMsgFolder> folder = currentTerm->m_folder;
   if (folder)
   {
+    nsXPIDLCString folderUri;
     folder->GetURI(getter_Copies(folderUri));
-  nsresult rv = GetMessageServiceFromURI((const char *) folderUri, getter_AddRefs(msgService));
+  nsresult rv = GetMessageServiceFromURI(folderUri.get(), getter_AddRefs(msgService));
 
   if (NS_SUCCEEDED(rv) && msgService && currentTerm)
     msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.get());

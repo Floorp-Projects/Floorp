@@ -520,14 +520,13 @@ nsMessenger::OpenURL(const char * url)
 	  // for the web shell, but the message service doesn't need it unescaped.
       nsUnescape(unescapedUrl);
       
-      nsIMsgMessageService * messageService = nsnull;
-      nsresult rv = GetMessageServiceFromURI(url, &messageService);
+      nsCOMPtr <nsIMsgMessageService> messageService;
+      nsresult rv = GetMessageServiceFromURI(url, getter_AddRefs(messageService));
       
       if (NS_SUCCEEDED(rv) && messageService)
       {
         nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
         messageService->DisplayMessage(url, webShell, mMsgWindow, nsnull, nsnull, nsnull);
-        ReleaseMessageServiceFromURI(url, messageService);
         mLastDisplayURI = url; // remember the last uri we displayed....
       }
       //If it's not something we know about, then just load the url.
@@ -627,9 +626,6 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
         rv = fetchService->FetchMimePart(aURL, messageUri, convertedListener, mMsgWindow, nsnull,nsnull);
       else
         rv = messageService->DisplayMessage(messageUri, convertedListener, mMsgWindow,nsnull, nsnull, nsnull); 
-
-      if (messageService)
-       ReleaseMessageServiceFromURI(unescapedUrl, messageService);
     } // if we got a message service
   } // if we created a url
 
@@ -646,14 +642,12 @@ nsMessenger::OpenAttachment(const char * aContentType, const char * aUrl, const
                             char * aDisplayName, const char * aMessageUri)
 {
   nsresult rv = NS_OK;
-  nsIMsgMessageService * messageService = nsnull;
-  rv = GetMessageServiceFromURI(aMessageUri, &messageService);
+  nsCOMPtr <nsIMsgMessageService> messageService;
+  rv = GetMessageServiceFromURI(aMessageUri, getter_AddRefs(messageService));
   if (messageService)
   {
     rv = messageService->OpenAttachment(aContentType, aDisplayName, aUrl, aMessageUri, mDocShell, mMsgWindow, nsnull);
   }
-  if (messageService)
-     ReleaseMessageServiceFromURI(aMessageUri, messageService);
 	return rv;
 }
 
@@ -797,7 +791,7 @@ NS_IMETHODIMP
 nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, nsIMsgWindow *aMsgWindow)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    nsIMsgMessageService* messageService = nsnull;
+    nsCOMPtr<nsIMsgMessageService> messageService;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsSaveMsgListener *aListener = nsnull;
     nsCOMPtr<nsIURI> aURL;
@@ -817,7 +811,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         goto done;
     }
 
-    rv = GetMessageServiceFromURI(url, &messageService);
+    rv = GetMessageServiceFromURI(url, getter_AddRefs(messageService));
     if (NS_FAILED(rv)) goto done;
 
     if (asFile) {
@@ -978,9 +972,6 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                                canonicalLineEnding, mMsgWindow); 
     }
 done:
-    if (messageService)
-        ReleaseMessageServiceFromURI(url, messageService);
-
     if (NS_FAILED(rv)) {
         NS_IF_RELEASE(aListener);
         Alert("saveMessageFailed");
@@ -1330,14 +1321,13 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
   // redisplay to use characterSet
   if (!mLastDisplayURI.IsEmpty())
   {
-    nsIMsgMessageService * messageService = nsnull;
-    nsresult rv = GetMessageServiceFromURI(mLastDisplayURI.get(), &messageService);
+    nsCOMPtr <nsIMsgMessageService> messageService;
+    nsresult rv = GetMessageServiceFromURI(mLastDisplayURI.get(), getter_AddRefs(messageService));
     
     if (NS_SUCCEEDED(rv) && messageService)
     {
       nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
       messageService->DisplayMessage(mLastDisplayURI.get(), webShell, mMsgWindow, nsnull, characterSet, nsnull);
-      ReleaseMessageServiceFromURI(mLastDisplayURI.get(), messageService);
     }
   }
   

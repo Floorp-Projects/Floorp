@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Jean-Francois Ducarroz <ducarroz@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *  Seth Spitzer <sspitzer@netscape.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -57,6 +58,18 @@
 #include "nsIDOMWindow.h"
 #include "nsEscape.h"
 
+#include "nsIDocShell.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIXULWindow.h"
+#include "nsIWindowMediator.h"
+
+#include "nsMsgBaseCID.h"
+#include "nsIMsgAccountManager.h"
+
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 #include "prlog.h"
 #include "nsIPref.h"
@@ -64,8 +77,6 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #endif
-
-static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
 
 #ifdef NS_DEBUG
 static PRBool _just_to_be_sure_we_create_only_on_compose_service_ = PR_FALSE;
@@ -99,6 +110,8 @@ nsMsgComposeService::nsMsgComposeService()
   _just_to_be_sure_we_create_only_on_compose_service_ = PR_TRUE;
 #endif
   
+  NS_INIT_REFCNT();
+
 // Defaulting the value of mLogComposePerformance to FALSE to prevent logging.
   mLogComposePerformance = PR_FALSE;
 #ifdef MSGCOMP_TRACE_PERFORMANCE
@@ -108,7 +121,9 @@ nsMsgComposeService::nsMsgComposeService()
   mStartTime = PR_IntervalNow();
   mPreviousTime = mStartTime;
 #endif
-  NS_INIT_REFCNT();
+
+  mMaxRecycledWindows = 0;
+  mCachedWindows = nsnull;
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
@@ -116,6 +131,8 @@ NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsICmdLineHandler)
 
 nsMsgComposeService::~nsMsgComposeService()
 {
+  if (mCachedWindows)
+    delete [] mCachedWindows;
 }
 
 /* the following Init is to initialize the mLogComposePerformance variable */
@@ -126,16 +143,57 @@ nsresult nsMsgComposeService::Init()
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   if (!prefs)
     return NS_ERROR_FAILURE;
+
+  rv = prefs->GetIntPref("mail.compose.max_recycled_windows", &mMaxRecycledWindows);
+  if (mMaxRecycledWindows > 0 && !mCachedWindows)
+  {
+    mCachedWindows = new nsMsgCachedWindowInfo[mMaxRecycledWindows];
+    if (!mCachedWindows)
+      mMaxRecycledWindows = 0;
+  }
+  
   rv = prefs->GetBoolPref("mailnews.logComposePerformance", &mLogComposePerformance);
+
   return rv;
 }
 
 
 // Utility function to open a message compose window and pass an nsIMsgComposeParams parameter to it.
-static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
+nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams *params)
 {
   nsresult rv;
+  
+  //if we have a cached window for the default chrome, try to reuse it...
+  if (chrome == nsnull || nsCRT::strcasecmp(chrome, DEFAULT_CHROME) == 0)
+  {
+    MSG_ComposeFormat format;
+    params->GetFormat(&format);
 
+    nsCOMPtr<nsIMsgIdentity> identity;
+    params->GetIdentity(getter_AddRefs(identity));
+
+    PRBool composeHTML = PR_TRUE;
+    rv = DetermineComposeHTML(identity, format, &composeHTML);
+    if (NS_SUCCEEDED(rv))
+    {
+      PRInt32 i;
+      for (i = 0; i < mMaxRecycledWindows; i ++)
+      {
+        if (mCachedWindows[i].window && (mCachedWindows[i].htmlCompose == composeHTML) && mCachedWindows[i].listener)
+        {
+          mCachedWindows[i].listener->OnReopen(params);
+          rv = ShowCachedComposeWindow(mCachedWindows[i].window, PR_TRUE);
+          if (NS_SUCCEEDED(rv))
+          {
+            mCachedWindows[i].Clear();
+            return NS_OK;
+          }
+        }
+      }
+    }
+  }
+      
+  //Else, create a new one...
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!wwatch)
     return NS_ERROR_FAILURE;
@@ -153,6 +211,47 @@ static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
                  getter_AddRefs(newWindow));
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsMsgComposeService::DetermineComposeHTML(nsIMsgIdentity *aIdentity, MSG_ComposeFormat aFormat, PRBool *aComposeHTML)
+{
+  NS_ENSURE_ARG_POINTER(aComposeHTML);
+
+  *aComposeHTML = PR_TRUE;
+  switch (aFormat) {
+    case nsIMsgCompFormat::HTML: 
+      *aComposeHTML = PR_TRUE;					
+      break;
+    case nsIMsgCompFormat::PlainText:
+      *aComposeHTML = PR_FALSE;					
+      break;
+      
+    default:
+      nsCOMPtr<nsIMsgIdentity> identity = aIdentity;
+      if (!identity)
+      {
+        nsresult rv;
+        nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv) && accountManager)
+        {
+          nsCOMPtr<nsIMsgAccount> defaultAccount;
+          rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
+          if (NS_SUCCEEDED(rv) && defaultAccount)
+            defaultAccount->GetDefaultIdentity(getter_AddRefs(identity));
+        }
+      }
+      
+      if (identity)
+      {
+        identity->GetComposeHtml(aComposeHTML);
+        if (aFormat == nsIMsgCompFormat::OppositeOfDefault)
+          *aComposeHTML = !*aComposeHTML;
+      }
+      break;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -234,7 +333,8 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
         }
 #endif
       }//end if(mLogComposePerformance)
-      rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
+
+      rv = OpenWindow(msgComposeWindowURL, pMsgComposeParams);
     }
   }
   return rv;
@@ -355,7 +455,7 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgCom
         TimeStamp("Start opening the window", PR_TRUE);
 #endif
       }//end -if (mLogComposePerformance)
-      rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
+      rv = OpenWindow(msgComposeWindowURL, pMsgComposeParams);
   }
 
   return rv;
@@ -371,26 +471,26 @@ nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgCompose
     TimeStamp("Start opening the window", PR_TRUE);
 #endif
   }//end - if(mLogComposePerformance)
-  return openWindow(msgComposeWindowURL, params);
+
+  return OpenWindow(msgComposeWindowURL, params);
 }
 
-nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
+NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
                                           nsIMsgComposeParams *params,
                                           nsIMsgCompose **_retval)
 {
   nsresult rv;
-  nsIMsgCompose * msgCompose = nsnull;
   
-  rv = nsComponentManager::CreateInstance(kMsgComposeCID, nsnull,
-                                          NS_GET_IID(nsIMsgCompose),
-                                          (void **) &msgCompose);
-  if (NS_SUCCEEDED(rv) && msgCompose)
-  {
-    msgCompose->Initialize(aWindow, params);
-    *_retval = msgCompose;
-  }
-  
-  return rv;
+  nsCOMPtr <nsIMsgCompose> msgCompose = do_CreateInstance(NS_MSGCOMPOSE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+	
+  rv = msgCompose->Initialize(aWindow, params);
+  NS_ENSURE_SUCCESS(rv,rv);
+	
+	*_retval = msgCompose;
+  NS_IF_ADDREF(*_retval);
+
+ 	return rv;
 }
 
 /* readonly attribute boolean logComposePerformance; */
@@ -432,6 +532,94 @@ NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTim
 #endif
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgComposeService::IsCachedWindow(nsIDOMWindowInternal *aCachedWindow, PRBool *aIsCachedWindow)
+{
+  NS_ENSURE_ARG_POINTER(aCachedWindow);
+  NS_ENSURE_ARG_POINTER(aIsCachedWindow);
+
+  PRInt32 i;
+  for (i = 0; i < mMaxRecycledWindows; i ++)
+    if (mCachedWindows[i].window.get() == aCachedWindow)
+    {
+      *aIsCachedWindow = PR_TRUE;
+      return NS_OK;
+    }
+    
+ *aIsCachedWindow = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgComposeService::CacheWindow(nsIDOMWindowInternal *aWindow, PRBool aComposeHTML, nsIMsgComposeRecyclingListener * aListener)
+{
+  NS_ENSURE_ARG_POINTER(aWindow);
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  nsresult rv;
+
+  PRInt32 i;
+  for (i = 0; i < mMaxRecycledWindows; i ++)
+    if (!mCachedWindows[i].window)
+    {
+      rv = ShowCachedComposeWindow(aWindow, PR_FALSE);
+      if (NS_SUCCEEDED(rv))
+        mCachedWindows[i].Initialize(aWindow, aListener, aComposeHTML);
+      
+      return rv;
+    }
+  
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aComposeWindow, PRBool aShow)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(aComposeWindow, &rv);
+
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIDocShell> docShell;
+
+  rv = globalScript->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIWebShell> webShell = do_QueryInterface(docShell, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIWebShellContainer> webShellContainer;
+  rv = webShell->GetContainer(*getter_AddRefs(webShellContainer));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (webShellContainer) {
+    nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // hide (show) the cached window
+    rv = webShellWindow->Show(aShow);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // remove (add) the window from the mediator, so that it will be removed (added) from the task list
+    nsCOMPtr <nsIXULWindow> xulWindow = do_QueryInterface(webShellWindow, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIWindowMediator> windowMediator = 
+	         do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (aShow)
+      rv = windowMediator->RegisterWindow(xulWindow);
+    else
+      rv = windowMediator->UnregisterWindow(xulWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  else {
+    rv = NS_ERROR_FAILURE;
+  }
+  return rv;
+}
+
 
 CMDLINEHANDLER_IMPL(nsMsgComposeService, "-compose", "general.startup.messengercompose", DEFAULT_CHROME,
                     "Start with messenger compose.", NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID, "Messenger Compose Startup Handler",

@@ -119,7 +119,7 @@ extern void KillPopData(char* data);
 
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
-  m_messageService(nsnull), m_totalMsgCount(0), m_isMove(PR_FALSE),
+  m_totalMsgCount(0), m_isMove(PR_FALSE),
   m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE)
 {
 }
@@ -138,7 +138,6 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
     {
       nsXPIDLCString uri;
       srcFolder->GetUriForMsg(m_message, getter_Copies(uri));
-      ReleaseMessageServiceFromURI(uri, m_messageService);
     }
   }
 }
@@ -2732,7 +2731,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
   {
     nsXPIDLCString uri;
     srcFolder->GetURI(getter_Copies(uri));
-    rv = GetMessageServiceFromURI(uri, &mCopyState->m_messageService);
+    rv = GetMessageServiceFromURI(uri, getter_AddRefs(mCopyState->m_messageService));
   }
   
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
@@ -2819,7 +2818,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
   
   if (!mCopyState->m_messageService)
   {
-    rv = GetMessageServiceFromURI(uri, &mCopyState->m_messageService);
+    rv = GetMessageServiceFromURI(uri, getter_AddRefs(mCopyState->m_messageService));
   }
    
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)

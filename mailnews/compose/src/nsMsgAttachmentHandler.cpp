@@ -476,7 +476,7 @@ nsresult
 nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
 {
   nsresult rv = NS_ERROR_INVALID_ARG;
-  nsIMsgMessageService *messageService = nsnull;
+  nsCOMPtr <nsIMsgMessageService> messageService;
 
   if (PL_strcasestr(m_uri, "_message:"))
   {
@@ -528,7 +528,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     }
 
     rv = fetcher->Initialize(localFile, mOutFile, FetcherURLDoneCallback, this);
-    rv = GetMessageServiceFromURI(m_uri, &messageService);
+    rv = GetMessageServiceFromURI(m_uri, getter_AddRefs(messageService));
     if (NS_SUCCEEDED(rv) && messageService)
     {
       nsCAutoString uri(m_uri);
@@ -554,8 +554,6 @@ done:
         mFileSpec = nsnull;
       }
   }
-  if (messageService)
-      ReleaseMessageServiceFromURI(m_uri, messageService);
 
   return rv;
 }

@@ -111,7 +111,7 @@ private:
 
  private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
-	nsresult CreateMessage(const char * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
+	nsresult CreateMessage(const char * originalMsgURI, MSG_ComposeType type, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
   nsresult GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
   nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
@@ -120,30 +120,32 @@ private:
   nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
  
        // Helper function. Parameters are not checked.
-  PRBool mConvertStructs;  // for TagConvertible
+  PRBool                                    mConvertStructs;    // for TagConvertible
   
-	nsIEditorShell                    *m_editor;
-	nsIDOMWindowInternal              *m_window;
-  nsCOMPtr<nsIBaseWindow>           m_baseWindow;
-	nsMsgCompFields                   *m_compFields;
-	nsCOMPtr<nsIMsgIdentity>          m_identity;
-	PRBool						                m_composeHTML;
-	QuotingOutputStreamListener       *mQuoteStreamListener;
-	nsCOMPtr<nsIOutputStream>         mBaseStream;
+	nsIEditorShell                            *m_editor;
+	nsIDOMWindowInternal                      *m_window;
+  nsCOMPtr<nsIBaseWindow>                   m_baseWindow;
+	nsMsgCompFields                           *m_compFields;
+	nsCOMPtr<nsIMsgIdentity>                  m_identity;
+	PRBool						                        m_composeHTML;
+	QuotingOutputStreamListener               *mQuoteStreamListener;
+	nsCOMPtr<nsIOutputStream>                 mBaseStream;
 
-	nsCOMPtr<nsIMsgSend>              mMsgSend;   // for composition back end
-	nsCOMPtr<nsIMsgProgress>          mProgress;  // use by the back end to report progress to the front end
+  nsCOMPtr<nsIMsgComposeRecyclingListener>  mRecyclingListener;
+  PRBool                                    mRecycledWindow;
+	nsCOMPtr<nsIMsgSend>                      mMsgSend;           // for composition back end
+	nsCOMPtr<nsIMsgProgress>                  mProgress;          // use by the back end to report progress to the front end
 
   // Deal with quoting issues...
-  nsString                          mCiteReference;
-	nsCOMPtr<nsIMsgQuote>             mQuote;
-	PRBool						                mQuotingToFollow; // Quoting indicator
-	nsMsgDocumentStateListener        *mDocumentListener;
-	MSG_ComposeType                   mType;		//Message type
-  nsCOMPtr<nsISupportsArray>        mStateListeners;		// contents are nsISupports
+  nsString                                  mCiteReference;
+	nsCOMPtr<nsIMsgQuote>                     mQuote;
+	PRBool						                        mQuotingToFollow;   // Quoting indicator
+	nsMsgDocumentStateListener                *mDocumentListener;
+	MSG_ComposeType                           mType;		          // Message type
+  nsCOMPtr<nsISupportsArray>                mStateListeners;		// contents are nsISupports
 
-  nsCOMPtr<nsIMsgSendListener>      mExternalSendListener;
-  nsCString                         mSmtpPassword;
+  nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;
+  nsCString                                 mSmtpPassword;
     
   friend class QuotingOutputStreamListener;
 	friend class nsMsgDocumentStateListener;

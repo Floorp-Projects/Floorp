@@ -42,6 +42,7 @@
 #include "nsMsgCompose.h"
 
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -254,6 +255,7 @@ nsMsgCompose::nsMsgCompose()
     prefs->GetBoolPref("converter.html2txt.structs", &mConvertStructs);
 
   m_composeHTML = PR_FALSE;
+  mRecycledWindow = PR_TRUE;
 }
 
 
@@ -428,9 +430,9 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
   nsXPIDLCString originalHost;
   nsXPIDLCString originalPath;
 
-  // first, convert the rdf orinigal msg uri into a url that represents the message...
-  nsIMsgMessageService * msgService = nsnull;
-  rv = GetMessageServiceFromURI(mQuoteURI.get(), &msgService);
+  // first, convert the rdf original msg uri into a url that represents the message...
+  nsCOMPtr <nsIMsgMessageService> msgService;
+  rv = GetMessageServiceFromURI(mQuoteURI.get(), getter_AddRefs(msgService));
   if (NS_SUCCEEDED(rv))
   {
     rv = msgService->GetUrlForUri(mQuoteURI.get(), getter_AddRefs(originalUrl), nsnull);
@@ -440,7 +442,6 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
       originalUrl->GetHost(getter_Copies(originalHost));
       originalUrl->GetPath(getter_Copies(originalPath));
     }
-    ReleaseMessageServiceFromURI(mQuoteURI.get(), msgService);
   }
 
   // Then compare the url of each embedded objects with the original message.
@@ -637,12 +638,11 @@ nsMsgCompose::GetQuotingToFollow(PRBool* quotingToFollow)
   return NS_OK;
 }
 
-nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
-                                  nsIMsgComposeParams *params)
+NS_IMETHODIMP
+nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *params)
 {
+  NS_ENSURE_ARG_POINTER(params);
   nsresult rv;
-
-  NS_ENSURE_ARG(params);
 
   params->GetIdentity(getter_AddRefs(m_identity));
 
@@ -675,29 +675,18 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
   nsCOMPtr<nsIMsgCompFields> composeFields;
   params->GetComposeFields(getter_AddRefs(composeFields));
 
-  switch (format)
-  {
-    case nsIMsgCompFormat::HTML             : m_composeHTML = PR_TRUE;          break;
-    case nsIMsgCompFormat::PlainText        : m_composeHTML = PR_FALSE;         break;
-    case nsIMsgCompFormat::OppositeOfDefault:
-      /* ask the identity which compose to use */
-      if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
-      /* then use the opposite */
-      m_composeHTML = !m_composeHTML;
-      break;
-    default             :
-      /* ask the identity which compose format to use */
-      if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
-      break;
-
-  }
+  nsCOMPtr<nsIMsgComposeService> composeService = do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  rv = composeService->DetermineComposeHTML(m_identity, format, &m_composeHTML);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   params->GetSendListener(getter_AddRefs(mExternalSendListener));
   nsXPIDLCString smtpPassword;
   params->GetSmtpPassword(getter_Copies(smtpPassword));
   mSmtpPassword = (const char *)smtpPassword;
 
-  return CreateMessage(originalMsgURI, type, format, composeFields);
+  return CreateMessage(originalMsgURI, type, composeFields);
 }
 
 nsresult nsMsgCompose::SetDocumentCharset(const char *charset) 
@@ -1030,20 +1019,113 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 }
 
 
-nsresult nsMsgCompose::CloseWindow()
+// XXX when do we break this ref to the listener?
+NS_IMETHODIMP nsMsgCompose::SetRecyclingListener(nsIMsgComposeRecyclingListener *aRecyclingListener)
 {
-    nsresult rv = NS_OK;
+  mRecyclingListener = aRecyclingListener;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP nsMsgCompose::GetRecyclingListener(nsIMsgComposeRecyclingListener **aRecyclingListener)
+{
+  NS_ENSURE_ARG_POINTER(aRecyclingListener);
+  *aRecyclingListener = mRecyclingListener;
+  NS_IF_ADDREF(*aRecyclingListener);
+  return NS_OK;
+}
+ 
+/* attribute boolean recycledWindow; */
+NS_IMETHODIMP nsMsgCompose::GetRecycledWindow(PRBool *aRecycledWindow)
+{
+  NS_ENSURE_ARG_POINTER(aRecycledWindow);
+  *aRecycledWindow = mRecycledWindow;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgCompose::SetRecycledWindow(PRBool aRecycledWindow)
+{
+  mRecycledWindow = aRecycledWindow;
+  return NS_OK;
+}
 
-    if (m_baseWindow) {
-        m_editor = nsnull;  /* m_editor will be destroyed during the Close Window. Set it to null to */
-                            /* be sure we wont use it anymore. */
+NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
+{
+  nsresult rv;
 
-        nsIBaseWindow * aWindow = m_baseWindow;
-        m_baseWindow = nsnull;
-        rv = aWindow->Destroy();              
+  nsCOMPtr<nsIMsgComposeService> composeService = do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (recycleIt)
+  {
+    rv = composeService->CacheWindow(m_window, m_composeHTML, mRecyclingListener);
+    if (NS_SUCCEEDED(rv))
+    {
+      NS_ASSERTION(m_editor, "no editor");
+      if (m_editor)
+      {
+        m_editor->UnregisterDocumentStateListener(mDocumentListener);
+        nsCOMPtr <nsIEditor> editor;
+        rv = m_editor->GetEditor(getter_AddRefs(editor));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        // XXX clear undo txn manager?
+
+        rv = editor->EnableUndo(PR_FALSE);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = m_editor->BeginBatchChanges();
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = m_editor->SelectAll();
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = m_editor->DeleteSelection(0);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = m_editor->EndBatchChanges();
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = editor->EnableUndo(PR_TRUE);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        SetBodyModified(PR_FALSE);
+      }
+      if (mRecyclingListener)
+      {
+        mRecyclingListener->OnClose();
+        
+        /**
+         * In order to really free the memory, we need to call the JS garbage collector for our window.
+         * If we don't call GC, the nsIMsgCompose object hold by JS will not be released despite we set
+         * the JS global that hold it to null. Each time we reopen a recycled window, we allocate a new
+         * nsIMsgCompose that we really need to be releazed when we recycle the window. In fact despite
+         * we call GC here atfer the release wont occurs right away. But if we don't call it, the release
+         * will apppend only when we phisically close the window which will append only on quit.
+         */
+        nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(m_window));
+        if (sgo)
+        {
+          nsCOMPtr<nsIScriptContext> scriptContext;
+          sgo->GetContext(getter_AddRefs(scriptContext));
+          if (scriptContext)
+            scriptContext->GC();
+        }
+      }
+      return NS_OK;
     }
-
-    return rv;
+  }
+  
+  //We are going away for real, we need to do some clean up first
+  if (m_baseWindow)
+  {
+    m_editor->UnregisterDocumentStateListener(mDocumentListener);
+    m_editor = nsnull;  /* m_editor will be destroyed during yje close window. Set it to null to */
+                        /* be sure we wont uses it anymore */
+    nsIBaseWindow * aWindow = m_baseWindow;
+    m_baseWindow = nsnull;
+    rv = aWindow->Destroy();
+  }
+  
+  return rv;
 }
 
 nsresult nsMsgCompose::Abort()
@@ -1091,10 +1173,18 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
     m_editor->SetDocumentCharacterSet(msgCharSet.get());
 
-    // Now, lets init the editor here!
-    // Just get a blank editor started...
-    m_editor->LoadUrl(NS_LITERAL_STRING("about:blank").get());
-
+    if (mRecycledWindow)
+    {
+      // Editor document is already created therefore, we need to call the document
+      // listener ourself in order to make quoting works
+      mDocumentListener->NotifyDocumentCreated();
+    }
+    else
+    {
+      // Now, lets init the editor here!
+      // Just get a blank editor started...
+      m_editor->LoadUrl(NS_LITERAL_STRING("about:blank").get());
+    }
     return NS_OK;
 } 
 
@@ -1172,7 +1262,7 @@ nsresult nsMsgCompose::GetCompFields(nsIMsgCompFields * *aCompFields)
 }
 
 
-nsresult nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
+NS_IMETHODIMP nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
 {
   *aComposeHTML = m_composeHTML;
   return NS_OK;
@@ -1190,7 +1280,6 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 
 nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
                                      MSG_ComposeType type,
-                                     MSG_ComposeFormat format,
                                      nsIMsgCompFields * compFields)
 {
   nsresult rv = NS_OK;
@@ -1479,8 +1568,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
           if (NS_SUCCEEDED(nsStdEscape(unencodedURL.get(),
                    esc_FileBaseName | esc_Forced, encodedURL )))
           {
-            mCiteReference.AssignWithConversion(encodedURL.get());
-            mCiteReference.Insert(NS_LITERAL_STRING("mid:"), 0);
+            mCiteReference = NS_LITERAL_STRING("mid:");
+            mCiteReference.AppendWithConversion(encodedURL.get());
           }
           else
             mCiteReference.Truncate();
@@ -1693,8 +1782,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll || type == nsIMsgCompType::ReplyToSender ||
                      type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup))
     {
-      nsIMsgCompFields *compFields = nsnull;
-      compose->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+      nsCOMPtr<nsIMsgCompFields> compFields;
+      compose->GetCompFields(getter_AddRefs(compFields));
       if (compFields)
       {
         aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
@@ -1828,7 +1917,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         {
           //Remove duplicate addresses between TO && CC
           char * resultStr;
-          nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields;
+          nsMsgCompFields* _compFields = (nsMsgCompFields*)compFields.get();  // XXX what is this?
           if (NS_SUCCEEDED(rv))
           {
             nsCString addressToBeRemoved(_compFields->GetTo());
@@ -1848,8 +1937,6 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             }
           }
         }    
-
-        NS_RELEASE(compFields);
       }
     }
     
@@ -1858,7 +1945,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     composeService->TimeStamp("done with mime. Lets update some UI element", PR_FALSE);
 #endif
 
-    compose->NotifyStateListeners(eComposeFieldsReady,NS_OK);
+    compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     composeService->TimeStamp("addressing widget, windows title and focus are now set, time to insert the body", PR_FALSE);
@@ -2211,8 +2298,8 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
       printf("nsMsgComposeSendListener: Success on the message send operation!\n");
 #endif
-      nsIMsgCompFields *compFields = nsnull;
-      compose->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+      nsCOMPtr<nsIMsgCompFields> compFields;
+      compose->GetCompFields(getter_AddRefs(compFields));
 
       // only process the reply flags if we successfully sent the message
       compose->ProcessReplyFlags();
@@ -2230,7 +2317,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
             compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
               progress->CloseProgressDialog(PR_FALSE);
-            compose->CloseWindow();
+            compose->CloseWindow(PR_TRUE);
           }
         }
       }
@@ -2239,16 +2326,15 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
         if (progress)
           progress->CloseProgressDialog(PR_FALSE);
-        compose->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
-                                     // windows hanging around to prevent the app from exiting.
+        compose->CloseWindow(PR_TRUE);  // if we fail on the simple GetFcc call, close the window to be safe and avoid
+                                        // windows hanging around to prevent the app from exiting.
       }
 
-    // Remove the current draft msg when sending draft is done.
-    MSG_ComposeType compType = nsIMsgCompType::Draft;
-    compose->GetType(&compType);
+      // Remove the current draft msg when sending draft is done.
+      MSG_ComposeType compType = nsIMsgCompType::Draft;
+      compose->GetType(&compType);
       if (compType == nsIMsgCompType::Draft)
         RemoveCurrentDraftMessage(compose, PR_FALSE);
-      NS_IF_RELEASE(compFields);
     }
     else
     {
@@ -2264,7 +2350,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
     compose->GetExternalSendListener(getter_AddRefs(externalListener));
     if (externalListener)
       externalListener->OnStopSending(aMsgID, aStatus, aMsg, returnFileSpec);
-}
+  }
 
   return rv;
 }
@@ -2333,7 +2419,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
       // and drafts aren't done so their windows should stay open
       if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
            (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
-        compose->CloseWindow();
+        compose->CloseWindow(PR_TRUE);
       else
       {  
         compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
@@ -2630,7 +2716,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
       return compose->BuildQuotedMessageAndSignature();
     else
     {
-      compose->NotifyStateListeners(eComposeFieldsReady,NS_OK);
+      compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
       return compose->BuildBodyMessageAndSignature();
     }
   }
@@ -3691,7 +3777,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
     }
     else if (element.EqualsIgnoreCase("blockquote"))
     {
-      // Skip <blockquote type=cite>
+      // Skip <blockquote type="cite">
       *_retval = nsIMsgCompConvertible::Yes;
 
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
@@ -4096,7 +4182,6 @@ nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
     return rv;
 }
 
-
 NS_IMPL_ADDREF(nsMsgRecipient)
 NS_IMPL_RELEASE(nsMsgRecipient)
 
@@ -4123,7 +4208,6 @@ nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 pr
 nsMsgRecipient::~nsMsgRecipient()
 {
 }
-
 
 NS_IMPL_ADDREF(nsMsgMailList)
 NS_IMPL_RELEASE(nsMsgMailList)

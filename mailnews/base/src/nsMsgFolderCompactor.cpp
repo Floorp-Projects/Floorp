@@ -74,7 +74,6 @@ nsFolderCompactState::nsFolderCompactState()
   m_size = 0;
   m_curIndex = -1;
   m_status = NS_OK;
-  m_messageService = nsnull;
   m_compactAll = PR_FALSE;
   m_compactOfflineAlso = PR_FALSE;
   m_parsingFolder=PR_FALSE;
@@ -84,11 +83,6 @@ nsFolderCompactState::nsFolderCompactState()
 nsFolderCompactState::~nsFolderCompactState()
 {
   CloseOutputStream();
-  if (m_messageService)
-  {
-    ReleaseMessageServiceFromURI(m_baseMessageUri, m_messageService);
-    m_messageService = nsnull;
-  }
 
   if (m_baseMessageUri)
   {
@@ -276,7 +270,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
   else
   {
     rv = GetMessageServiceFromURI(baseMsgUri,
-                                &m_messageService);
+                                getter_AddRefs(m_messageService));
   }
   if (NS_FAILED(rv))
   {

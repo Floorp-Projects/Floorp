@@ -86,11 +86,7 @@ nsMsgDraft::nsMsgDraft()
 
 nsMsgDraft::~nsMsgDraft()
 {
-  if (mMessageService)
-  {
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
-  }
 
   PR_FREEIF(mURI);
 }
@@ -117,7 +113,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   if (!mURI)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = GetMessageServiceFromURI(mURI, &mMessageService);
+  rv = GetMessageServiceFromURI(mURI, getter_AddRefs(mMessageService));
   if (NS_FAILED(rv) && !mMessageService)
   {
     return rv;
@@ -133,7 +129,6 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   if (NS_FAILED(rv) || !mimeParser)
   {
     Release();
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
 #ifdef NS_DEBUG
     printf("Failed to create MIME stream converter...\n");
@@ -154,7 +149,6 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   if (!convertedListener)
   {
     Release();
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
 #ifdef NS_DEBUG
     printf("Unable to get the nsIStreamListener interface from libmime\n");
@@ -184,7 +178,6 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
     Release();
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
 #ifdef NS_DEBUG
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
@@ -200,7 +193,6 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   // Now, just plug the two together and get the hell out of the way!
   rv = mMessageService->DisplayMessage(mURI, convertedListener, aMsgWindow, nsnull, mailCharset, nsnull);
 
-  ReleaseMessageServiceFromURI(mURI, mMessageService);
   mMessageService = nsnull;
   Release();
 

@@ -80,34 +80,20 @@ nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractI
   return rv;
 }
 
-nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService)
+nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **aMessageService)
 {
 
 	nsCAutoString contractID;
 	nsresult rv;
 
 	rv = GetMessageServiceContractIDForURI(uri, contractID);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = nsServiceManager::GetService(contractID.get(), NS_GET_IID(nsIMsgMessageService),
-		           (nsISupports**)messageService, nsnull);
-	}
+  nsCOMPtr <nsIMsgMessageService> msgService = do_GetService(contractID.get(), &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	return rv;
-}
-
-
-nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService)
-{
-	nsCAutoString contractID;
-	nsresult rv;
-
-	rv = GetMessageServiceContractIDForURI(uri, contractID);
-	if(NS_SUCCEEDED(rv))
-  {
-		rv = nsServiceManager::ReleaseService(contractID.get(), messageService);
-  }
+  *aMessageService = msgService;
+  NS_IF_ADDREF(*aMessageService);
 	return rv;
 }
 

@@ -61,7 +61,7 @@ public:
   // Implementation data...
   //
   char                  *mURI;
-  nsIMsgMessageService  *mMessageService;
+  nsCOMPtr <nsIMsgMessageService> mMessageService;
   nsMimeOutputType      mOutType;
   PRBool                mAddInlineHeaders;
 };

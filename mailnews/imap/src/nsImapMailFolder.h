@@ -93,7 +93,7 @@ public:
     nsCOMPtr<nsIFileSpec> m_tmpFileSpec; // temp file spec for copy operation
     nsCOMPtr<nsIMsgWindow> m_msgWindow; // msg window for copy operation
 
-    nsIMsgMessageService* m_msgService; // source folder message service; can
+    nsCOMPtr<nsIMsgMessageService> m_msgService; // source folder message service; can
                                         // be Nntp, Mailbox, or Imap
     PRBool m_isMove;             // is a move
     PRBool m_selectedState;      // needs to be in selected state; append msg

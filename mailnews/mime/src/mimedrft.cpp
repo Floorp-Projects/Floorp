@@ -1951,8 +1951,8 @@ mime_bridge_create_draft_stream(
   if (NS_FAILED(uri->GetSpec(&turl)))
     return nsnull;
 
-  nsIMsgMessageService * msgService = nsnull;
-  nsresult rv = GetMessageServiceFromURI(turl, &msgService);
+  nsCOMPtr <nsIMsgMessageService> msgService;
+  nsresult rv = GetMessageServiceFromURI(turl, getter_AddRefs(msgService));
   if (NS_FAILED(rv)) 
     return nsnull;
 
@@ -1971,8 +1971,6 @@ mime_bridge_create_draft_stream(
       return nsnull;
     }
   }
-
-  ReleaseMessageServiceFromURI(turl, msgService);
 
   newPluginObj2->GetForwardInline(&mdd->forwardInline);
   newPluginObj2->GetIdentity(getter_AddRefs(mdd->identity));

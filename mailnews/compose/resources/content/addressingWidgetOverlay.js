@@ -39,14 +39,28 @@ top.MAX_RECIPIENTS = 0;
 var inputElementType = "";
 var selectElementType = "";
 var selectElementIndexTable = null;
-var gPromptService = null;
+
+/**
+ * global variable inherited from MsgComposeCommands.js
+ *
+ 
+ var sPrefs;
+ var gPromptService;
+ var gMsgCompose;
+ 
+ */
 
 var test_addresses_sequence = false;
-if (prefs)
+if (sPrefs)
   try {
-    test_addresses_sequence = prefs.getBoolPref("mail.debug.test_addresses_sequence");
+    test_addresses_sequence = sPrefs.getBoolPref("mail.debug.test_addresses_sequence");
   }
   catch (ex) {}
+
+function awGetMaxRecipients()
+{
+  return top.MAX_RECIPIENTS;
+}
 
 function awInputElementName()
 {
@@ -320,6 +334,17 @@ function awTestRowSequence()
     dump("#ERROR: treeitems.length(" + treeitems.length + ") != top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
 
   return false;
+}
+
+function awResetAllRows()
+{
+  var maxRecipients = top.MAX_RECIPIENTS;
+  
+  for (var row = 1; row <= maxRecipients ; row ++)
+  {
+    awGetInputElement(row).value = "";
+    awGetPopupElement(row).selectedIndex = 0;
+  }
 }
 
 function awCleanupRows()
@@ -641,7 +666,7 @@ function _awSetFocus()
 //temporary patch for bug 26344 & 26528
 function awFinishCopyNode(node)
 {
-    msgCompose.ResetNodeEventHandlers(node);
+    gMsgCompose.ResetNodeEventHandlers(node);
     return;
 }
 
@@ -806,15 +831,6 @@ function awRecipientErrorCommand(errItem, element)
     }
     if (specificErrString == "") {
 	specificErrString = "Internal error";
-    }
-
-    try {
-	if (!gPromptService) {
-	    gPromptService = Components.classes[
-		"@mozilla.org/embedcomp/prompt-service;1"].getService().
-		QueryInterface(Components.interfaces.nsIPromptService);
-	}
-    } catch (ex) {
     }
 
     if (gPromptService) {

@@ -79,7 +79,7 @@ struct nsLocalMailCopyState
 
   nsMsgKey m_curDstKey;
   PRUint32 m_curCopyIndex;
-  nsIMsgMessageService* m_messageService;
+  nsCOMPtr <nsIMsgMessageService> m_messageService;
   PRUint32 m_totalMsgCount;
   PRBool m_isMove;
   PRBool m_isFolder;   // isFolder move/copy

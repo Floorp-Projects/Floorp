@@ -186,8 +186,8 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   mStreamListener = aQuoteMsgStreamListener;
 
   // first, convert the rdf msg uri into a url that represents the message...
-  nsIMsgMessageService * msgService = nsnull;
-  rv = GetMessageServiceFromURI(msgURI, &msgService);
+  nsCOMPtr <nsIMsgMessageService> msgService;
+  rv = GetMessageServiceFromURI(msgURI, getter_AddRefs(msgService));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> aURL;
@@ -256,8 +256,6 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
 
   //  now try to open the channel passing in our display consumer as the listener 
   rv = mQuoteChannel->AsyncOpen(convertedListener, ctxt);
-
-  ReleaseMessageServiceFromURI(msgURI, msgService);
   return rv;
 }
 

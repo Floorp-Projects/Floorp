@@ -434,8 +434,8 @@ nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, nsIMsgWindow *aMsgWind
     return NS_ERROR_NULL_POINTER;
 
   // convert the rdf msg uri into a url that represents the message...
-  nsIMsgMessageService  *msgService = nsnull;
-  nsresult rv = GetMessageServiceFromURI(aURI, &msgService);
+  nsCOMPtr <nsIMsgMessageService> msgService;
+  nsresult rv = GetMessageServiceFromURI(aURI, getter_AddRefs(msgService));
   if (NS_FAILED(rv)) 
     return NS_ERROR_NULL_POINTER;
 
@@ -451,7 +451,5 @@ nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, nsIMsgWindow *aMsgWind
     if (!(aURL))
       return NS_ERROR_NULL_POINTER;
   }
-
-  ReleaseMessageServiceFromURI(aURI, msgService);
   return rv;
 }

@@ -39,11 +39,11 @@
 #include "nsISupports.idl"
 #include "nsIMsgCompose.idl"
 #include "nsIMsgComposeParams.idl"
-#include "nsIMsgIdentity.idl"
 
 interface nsIURI;
 interface nsIDOMWindowInternal;
 interface nsIMsgWindow;
+interface nsIMsgIdentity;
 
 [scriptable, uuid(B004F4AE-1AC2-11d3-A715-0060B0EB39B5)]
 interface nsIMsgComposeService : nsISupports {
@@ -90,5 +90,9 @@ interface nsIMsgComposeService : nsISupports {
   
   /* This attribute is use for debugging purposes for determining whether to PR_LOG or not */
   readonly attribute boolean logComposePerformance;
+
+  [noscript] boolean determineComposeHTML(in nsIMsgIdentity aIdentity, in MSG_ComposeFormat aFormat);
+  [noscript] void cacheWindow(in nsIDOMWindowInternal aWindow, in boolean aComposeHTML, in nsIMsgComposeRecyclingListener listener);
+  boolean isCachedWindow(in nsIDOMWindowInternal aWindow);
 };
 
