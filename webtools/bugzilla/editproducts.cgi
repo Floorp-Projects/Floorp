@@ -99,7 +99,7 @@ sub EmitFormElements ($$$$$$$$$)
     if (Param('usetargetmilestone')) {
         $milestoneurl = value_quote($milestoneurl);
         print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">Milestone URL:</TH>\n";
+        print "  <TH ALIGN=\"right\">URL describing milestones for this product:</TH>\n";
         print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
 
         print "</TR><TR>\n";
