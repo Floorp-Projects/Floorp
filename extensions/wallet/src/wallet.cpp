@@ -3278,6 +3278,7 @@ PUBLIC void
 WLLT_RequestToCapture(nsIPresShell* shell) {
   /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
+  PRInt32 captureCount = 0;
   if (nsnull != shell) {
     nsIDocument* doc = nsnull;
     result = shell->GetDocument(&doc);
@@ -3341,6 +3342,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                                 result = element->GetAttribute(vcardName, vcardValue);
                                 NS_RELEASE(element);
                               }
+                              captureCount++;
                               wallet_Capture(doc, field, value, vcardValue);
                             }
                           }
@@ -3364,6 +3366,14 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
       NS_RELEASE(doc);
     }
   }
+  PRUnichar * message;
+  if (captureCount) {
+    message = Wallet_Localize("Captured");
+  } else {
+    message = Wallet_Localize("NotCaptured");
+  }
+  Wallet_Alert(message);
+  Recycle(message);
 }
 
 /* should move this to an include file */
