@@ -122,6 +122,7 @@ static NS_DEFINE_IID(kCUserCID,             NS_USER_CID);
 static NS_DEFINE_IID(kCSMTPServiceCID,      NS_SMTP_SERVICE_CID);
 static NS_DEFINE_IID(kCMessageCID,          NS_MESSAGE_CID);
 static NS_DEFINE_IID(kCMIMEMessageCID,      NS_MIME_MESSAGE_CID);
+static NS_DEFINE_IID(kCMIMEBodyPartCID,     NS_MIME_BODY_PART_CID);
 static NS_DEFINE_IID(kCMIMEServiceCID,      NS_MIME_SERVICE_CID);
 
 #include "nsXPFCMethodInvokerCommand.h"
@@ -904,6 +905,7 @@ nsresult nsCalendarShell::RegisterFactories()
   nsRepository::RegisterFactory(kCMIMEServiceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMessageCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMIMEMessageCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCMIMEBodyPartCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
