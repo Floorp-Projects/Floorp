@@ -26,6 +26,7 @@ var gSearchRowContainer;
 var gSearchTermContainer;
 var gSearchRemovedTerms = new Array;
 var gSearchScope;
+var gSearchLessButton;
 
 var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
@@ -33,6 +34,9 @@ function initializeSearchWidgets() {
     gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
     gSearchRowContainer = document.getElementById("searchTermList");
     gSearchTermContainer = document.getElementById("searchterms");
+    gSearchLessButton = document.getElementById("less");
+    if (!gSearchLessButton)
+        dump("I couldn't find less button!");
 }
 
 function initializeBooleanWidgets() {
@@ -64,12 +68,17 @@ function initializeSearchRows(scope, searchTerms)
 
 function onMore(event)
 {
+    if(gTotalSearchTerms==1)
+	gSearchLessButton .removeAttribute("disabled", "false");
     createSearchRow(gTotalSearchTerms++, gSearchScope, null);
 }
 
 function onLess(event)
 {
-    removeSearchRow(--gTotalSearchTerms);
+    if (gTotalSearchTerms>1)
+        removeSearchRow(--gTotalSearchTerms);
+    if (gTotalSearchTerms==1)
+        gSearchLessButton .setAttribute("disabled", "true");
 }
 
 // set scope on all visible searhattribute tags
@@ -86,7 +95,7 @@ function setSearchScope(scope) {
 
 function booleanChanged(event) {
     // when boolean changes, we have to update all the attributes on the
-    // filter terms
+    // search terms
 
     var newBoolValue =
         (event.target.getAttribute("data") == "and") ? true : false;
@@ -263,3 +272,9 @@ function saveSearchTerms(searchTerms, termOwner)
 
 }
 
+function onReset(event)
+{
+    while (gTotalSearchTerms>0)
+        removeSearchRow(--gTotalSearchTerms);
+    onMore(event);
+}

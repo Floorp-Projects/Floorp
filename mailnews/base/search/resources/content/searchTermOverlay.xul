@@ -32,9 +32,9 @@
       <text value="&conditions.label;"/>
     </title>
     <text value="&conditionDesc.label;"/>
-    <radiogroup id="booleanAndGroup" oncommand="booleanChanged(event);">
+    <radiogroup id="booleanAndGroup" selectedItem="or" oncommand="booleanChanged(event);">
       <radio group="booleanAndGroup" data="and" value="&matchAll.label;"/>
-      <radio group="booleanAndGroup" data="or" value="&matchAny.label;"/>
+      <radio group="booleanAndGroup" checked="true" data="or" value="&matchAny.label;"/>
     </radiogroup>
 
     <spring class="spacer"/>
@@ -84,8 +84,8 @@
     </tree>
   </box>
   <box>
-    <button value="&more.label;" onclick="onMore(event);"/>
-    <button value="&less.label;" onclick="onLess(event);"/>
+    <button id="more" value="&more.label;" onclick="onMore(event);"/>
+    <button id="less" value="&less.label;" disabled="true" onclick="onLess(event);"/>
   </box>
   </titledbox>
 </overlay>
