@@ -285,7 +285,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
         // else we insert the tab straight through
         textEditor->HandleKeyPress(keyEvent);
-        aKeyEvent->PreventDefault(); // consumed
+        // let HandleKeyPress consume the event
         return NS_OK; 
 
       case nsIDOMKeyEvent::DOM_VK_RETURN:

@@ -1293,47 +1293,53 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB) character = '\t';
     else aKeyEvent->GetCharCode(&character);
     
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextMask))
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB)
     {
-      nsCOMPtr<nsISelection>selection;
-      res = GetSelection(getter_AddRefs(selection));
-      if (NS_FAILED(res)) return res;
-      PRInt32 offset;
-      nsCOMPtr<nsIDOMNode> node, blockParent;
-      res = GetStartNodeAndOffset(selection, address_of(node), &offset);
-      if (NS_FAILED(res)) return res;
-      if (!node) return NS_ERROR_FAILURE;
-
-      PRBool isBlock (PR_FALSE);
-      NodeIsBlock(node, &isBlock);
-      if (isBlock) blockParent = node;
-      else blockParent = GetBlockNodeParent(node);
-      
-      if (blockParent)
-      {
-        PRBool bHandled = PR_FALSE;
-        
-        if (nsHTMLEditUtils::IsTableElement(blockParent))
-        {
-          res = TabInTable(isShift, &bHandled);
-          if (bHandled)
-            ScrollSelectionIntoView(PR_FALSE);
-        }
-        else if (nsHTMLEditUtils::IsListItem(blockParent))
-        {
-          nsAutoString indentstr;
-          if (isShift) indentstr.Assign(NS_LITERAL_STRING("outdent"));
-          else         indentstr.Assign(NS_LITERAL_STRING("indent"));
-          res = Indent(indentstr);
-          bHandled = PR_TRUE;
-        }
+      if (!(mFlags & eEditorPlaintextMask)) {
+        nsCOMPtr<nsISelection>selection;
+        res = GetSelection(getter_AddRefs(selection));
         if (NS_FAILED(res)) return res;
-        if (bHandled) return res;
+        PRInt32 offset;
+        nsCOMPtr<nsIDOMNode> node, blockParent;
+        res = GetStartNodeAndOffset(selection, address_of(node), &offset);
+        if (NS_FAILED(res)) return res;
+        if (!node) return NS_ERROR_FAILURE;
+
+        PRBool isBlock = PR_FALSE;
+        NodeIsBlock(node, &isBlock);
+        if (isBlock) blockParent = node;
+        else blockParent = GetBlockNodeParent(node);
+        
+        if (blockParent)
+        {
+          PRBool bHandled = PR_FALSE;
+          
+          if (nsHTMLEditUtils::IsTableElement(blockParent))
+          {
+            res = TabInTable(isShift, &bHandled);
+            if (bHandled)
+              ScrollSelectionIntoView(PR_FALSE);
+          }
+          else if (nsHTMLEditUtils::IsListItem(blockParent))
+          {
+            nsAutoString indentstr;
+            if (isShift) indentstr.Assign(NS_LITERAL_STRING("outdent"));
+            else         indentstr.Assign(NS_LITERAL_STRING("indent"));
+            res = Indent(indentstr);
+            bHandled = PR_TRUE;
+          }
+          if (NS_FAILED(res)) return res;
+          if (bHandled)
+            return aKeyEvent->PreventDefault(); // consumed
+        }
       }
+      if (isShift)
+        return NS_OK; // don't type text for shift tabs
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
              || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
     {
+      aKeyEvent->PreventDefault();
       nsString empty;
       if (isShift && !(mFlags&eEditorPlaintextMask))
       {
@@ -1346,6 +1352,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
     {
+      aKeyEvent->PreventDefault();
       // pass escape keypresses through as empty strings: needed forime support
       nsString empty;
       return TypedText(empty, eTypedText);
