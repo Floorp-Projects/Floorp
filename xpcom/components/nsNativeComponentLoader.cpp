@@ -477,6 +477,10 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
         }
 #endif /* OBSOLETE_MODULE_LOADING */
 
+    // Update the timestamp and size of the dll in registry
+    dll->Sync();
+    SetRegistryDllInfo(registryLocation, dll->GetLastModifiedTime(), dll->GetSize());
+
     return res;
 }
 
@@ -646,6 +650,16 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
                     return NS_ERROR_FAILURE;
                 }
             
+            // We already have seen this dll. Check if this dll changed
+            if (!dll->HasChanged())
+                {
+                    // Dll hasn't changed. Skip.
+                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                           ("nsComponentManager: + nsDll not changed \"%s\". Skipping...",
+                            dll->GetNativePath()));
+                    return NS_OK;
+                }
+
             // Aagh! the dll has changed since the last time we saw it.
             // re-register dll
             if (dll->IsLoaded())
@@ -956,7 +970,7 @@ nsNativeComponentLoader::RegistryNameForSpec(nsIFileSpec *aSpec,
 /*
  * There are no interesting failures here, so we don't propagate errors back.
  */
-void
+nsresult
 nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
                                             PRUint32 *lastModifiedTime,
                                             PRUint32 *fileSize)
@@ -968,79 +982,104 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
 
     nsIRegistry::Key key;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
-    if (NS_FAILED(rv))
-        return;
+    if (NS_FAILED(rv)) return rv;
 
     int32 lastMod;
     rv = mRegistry->GetInt(key, lastModValueName, &lastMod);
-    if (NS_SUCCEEDED(rv))
-        *lastModifiedTime = lastMod;
+    if (NS_FAILED(rv)) return rv;
+    *lastModifiedTime = lastMod;
         
     int32 fsize;
     rv = mRegistry->GetInt(key, fileSizeValueName, &fsize);
-    if (NS_SUCCEEDED(rv))
-        *fileSize = fsize;
+    if (NS_FAILED(rv)) return rv;
+    *fileSize = fsize;
+
+    return NS_OK;
 }
 
 nsresult
-nsNativeComponentLoader::CreateDll(nsIFileSpec *spec,
+nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
+                                            PRUint32 lastModifiedTime,
+                                            PRUint32 fileSize)
+{
+    nsresult rv;
+    nsIRegistry::Key key;
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mRegistry->SetInt(key, lastModValueName, lastModifiedTime);
+    if (NS_FAILED(rv)) return rv;
+    rv = mRegistry->SetInt(key, fileSizeValueName, fileSize);
+    return rv;
+}
+ 
+nsresult
+nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
                                    const char *aLocation, nsDll **aDll)
 {
     PRUint32 modificationTime = 0, fileSize = 0;
     nsDll *dll;
     nsFileSpec dllSpec;
+    nsCOMPtr<nsIFileSpec> spec;
     nsresult rv;
 
     nsStringKey key(aLocation);
     dll = (nsDll *)mDllStore->Get(&key);
-    if (dll) {
-        *aDll = dll;
-        return NS_OK;
-    }
+    if (dll)
+        {
+            *aDll = dll;
+            return NS_OK;
+        }
 
-    if (spec) {
-        dll = new nsDll(spec, aLocation);
-        goto done;
-    }
-
-    if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4)) {
-        dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
-    } else if (!nsCRT::strncmp(aLocation, XPCOM_ABSCOMPONENT_PREFIX, 4)) {
-        if (mRegistry)
-            GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
-        else
-            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-               ("nsNativeComponentLoader: no registry, eep!"));
-        
-        rv = NS_NewFileSpec(&spec);
-        if (NS_FAILED(rv))
-            return rv;
-        rv = spec->SetPersistentDescriptorString((char *)aLocation+4);
-        if (NS_FAILED(rv))
-            return rv;
-        dll = new nsDll(spec, aLocation); // XXX modification time
-        NS_RELEASE(spec);
-    } else if (!nsCRT::strncmp(aLocation, XPCOM_RELCOMPONENT_PREFIX, 4)) {
-        dllSpec = (*mComponentsDir);
-        dllSpec += (aLocation + 4);
-
-        rv = NS_NewFileSpecWithSpec(dllSpec, &spec);
-        if (NS_FAILED(rv))
-            return rv;
-        dll = new nsDll(spec, aLocation);
-        NS_RELEASE(spec);
-    } else {
-        /* no prefix, what's with that? */
-        fprintf(stderr, "unknown type for component location %s\n",
-                aLocation);
-        return NS_ERROR_INVALID_ARG;
-    }
+    if (!aSpec)
+        {
+            if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4))
+                {
+                    dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
+                    if (!dll) return NS_ERROR_OUT_OF_MEMORY;
+                }
+            else if (!nsCRT::strncmp(aLocation, XPCOM_ABSCOMPONENT_PREFIX, 4))
+                {
+                    rv = NS_NewFileSpec(getter_AddRefs(spec));
+                    if (NS_FAILED(rv)) return rv;
+                    rv = spec->SetPersistentDescriptorString((char *)aLocation+4);
+                    if (NS_FAILED(rv)) return rv;
+                }
+            else if (!nsCRT::strncmp(aLocation, XPCOM_RELCOMPONENT_PREFIX, 4))
+                {
+                    dllSpec = (*mComponentsDir);
+                    dllSpec += (aLocation + 4);
+                    rv = NS_NewFileSpecWithSpec(dllSpec, getter_AddRefs(spec));
+                    if (NS_FAILED(rv)) return rv;
+                }
+            else
+                {
+                    /* no prefix, what's with that? */
+                    fprintf(stderr, "unknown type for component location %s\n",
+                            aLocation);
+                    return NS_ERROR_INVALID_ARG;
+                }
+        }
+    else
+        {
+            spec = aSpec;
+        }
 
 #ifdef DEBUG_shaver
     fprintf(stderr, "nNCL:CreateDll(%s) -> %s\n", aLocation,
             dll->GetNativePath());
 #endif
- done:
+
+    if (!dll)
+        {
+            rv = NS_OK;
+            if (mRegistry)
+                rv = GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
+            else
+                PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
+                       ("nsNativeComponentLoader: no registry, eep!"));
+            dll = new nsDll(spec, aLocation, modificationTime, fileSize);
+        }
     if (!dll)
         return NS_ERROR_OUT_OF_MEMORY;
 
