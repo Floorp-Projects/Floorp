@@ -39,6 +39,8 @@ RESFILE = npwinless.res
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DMOZILLA_STRICT_API
+
 LOCAL_INCLUDES = -I$(srcdir)/../../include \
                  -I$(srcdir)/../../../include \
                  $(NULL)
