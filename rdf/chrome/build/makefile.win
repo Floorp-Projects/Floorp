@@ -44,6 +44,7 @@ MISCDEP=$(LLIBS)
 LINCS=  -I$(PUBLIC)\rdf                 \
         -I$(PUBLIC)\xpcom               \
         -I$(PUBLIC)\raptor              \
+        -I$(PUBLIC)\netlib              \
 		-I$(PUBLIC)\chrome              \
         $(NULL)
 
