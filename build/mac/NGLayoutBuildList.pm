@@ -931,6 +931,7 @@ sub InstallNonChromeResources()
     my($builtin_dir) = "$resource_dir" . "builtin:";
     MakeAlias(":mozilla:layout:xbl:builtin:htmlbindings.xml",                      "$builtin_dir");
     MakeAlias(":mozilla:layout:xbl:builtin:mac:platformHTMLBindings.xml",          "$builtin_dir");
+    MakeAlias(":mozilla:layout:xbl:builtin:mac:xbl-forms.css",                     "$builtin_dir");
 
     print("--- End Resource copying ----\n");
 }

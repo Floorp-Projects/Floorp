@@ -77,12 +77,14 @@
 #include "nsInt64.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIPref.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
 static char kAllSkinsName[] = "all-skins.rdf";
 static char kAllLocalesName[] = "all-locales.rdf";
 static char kInstalledChromeFileName[] = "installed-chrome.txt";
+static char kUseXBLFormsPref[] = "nglayout.debug.enable_xbl_forms";
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -91,6 +93,7 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsChromeRegistry;
 
@@ -222,6 +225,13 @@ nsChromeRegistry::nsChromeRegistry()
 
   mInstallInitialized = PR_FALSE;
   mProfileInitialized = PR_FALSE;
+
+  mUseXBLForms = PR_FALSE;
+
+  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
+  if (prefService)
+    prefService->GetBoolPref(kUseXBLFormsPref, &mUseXBLForms);
+
   mDataSourceTable = nsnull;
 
   nsresult rv;
@@ -2462,7 +2472,8 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsCString & aURL)
 
 nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
 {
-  aURL = "resource:/res/forms.css"; // XXX This is going to get complicated.
+  aURL = mUseXBLForms ? "resource:/res/builtin/xbl-forms.css" : "resource:/res/forms.css";
+
   return NS_OK;
 }
 

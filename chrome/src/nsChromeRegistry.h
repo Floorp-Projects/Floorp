@@ -138,6 +138,9 @@ private:
 protected:
   PRBool mInstallInitialized;
   PRBool mProfileInitialized;
+  
+  PRBool mUseXBLForms;
+
   nsCString mProfileRoot;
   nsCString mInstallRoot;
 
