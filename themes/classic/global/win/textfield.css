@@ -11,7 +11,7 @@
       border-top          : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      font                : field;
+      font                : inherit;
       color               : windowtext;
       padding             : 0px;
       margin              : 1px 5px 2px 5px;
