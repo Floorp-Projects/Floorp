@@ -401,6 +401,7 @@ private:
   short mReason; //reason for notifications of selection changing
 public:
   static nsIAtom *sTableAtom;
+  static nsIAtom *sRowAtom;
   static nsIAtom *sCellAtom;
   static nsIAtom *sTbodyAtom;
   static PRInt32 sInstanceCount;
@@ -578,6 +579,7 @@ nsresult NS_NewDomSelection(nsIDOMSelection **aDomSelection)
 
 //Horrible statics but no choice
 nsIAtom *nsSelection::sTableAtom = 0;
+nsIAtom *nsSelection::sRowAtom = 0;
 nsIAtom *nsSelection::sCellAtom = 0;
 nsIAtom *nsSelection::sTbodyAtom = 0;
 PRInt32 nsSelection::sInstanceCount = 0;
@@ -797,7 +799,8 @@ nsSelection::nsSelection()
   if (sInstanceCount <= 0)
   {
     sTableAtom = NS_NewAtom("table");
-    sCellAtom = NS_NewAtom("td");
+    sRowAtom   = NS_NewAtom("tr");
+    sCellAtom  = NS_NewAtom("td");
     sTbodyAtom = NS_NewAtom("tbody");
     sTableStyleColor.mColor =  NS_RGB(128,0,0);
     sTableStyleColor.mBackgroundColor =  NS_RGB(128,0,0);
@@ -851,6 +854,7 @@ nsSelection::~nsSelection()
   if (sInstanceCount <= 1)
   {
     NS_IF_RELEASE(sTableAtom);
+    NS_IF_RELEASE(sRowAtom);
     NS_IF_RELEASE(sCellAtom);
     NS_IF_RELEASE(sTbodyAtom);
   }
@@ -4207,6 +4211,53 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
     return NS_ERROR_FAILURE;
   }
   setAnchorFocusRange(count -1);
+  
+//TABLE CELL CHECK
+  nsCOMPtr<nsIDOMNode> startNode;
+  result = aRange->GetStartParent(getter_AddRefs(startNode));
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMNode> endNode;
+    result = aRange->GetEndParent(getter_AddRefs(endNode));
+    if (NS_SUCCEEDED(result))
+    {
+      if (startNode == endNode)
+      {//check for table row
+        nsCOMPtr<nsIContent> content(do_QueryInterface(startNode));
+        if (content)
+        {
+          nsIAtom *atom;
+          if (NS_SUCCEEDED(content->GetTag(atom)) && atom == nsSelection::sRowAtom)
+          {//we are selecting a talble cell!
+            mFrameSelection->mSelectingTableCellMode = TABLESELECTION_CELL;
+          }
+          else //check to see if we are selecting a table
+          {
+            PRInt32 startOffset;
+            PRInt32 endOffset;
+            result = aRange->GetEndOffset(&endOffset);
+            result &= aRange->GetStartOffset(&startOffset);
+            if (NS_SUCCEEDED(result))
+            {
+              if ((endOffset - startOffset) == 1) //1 child selected
+              {
+                nsCOMPtr<nsIContent> childAt;
+                if (NS_SUCCEEDED(content->ChildAt(startOffset, *getter_AddRefs(childAt))))
+                {
+                  if (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom)
+                  {
+                    mFrameSelection->mSelectingTableCellMode == TABLESELECTION_TABLE;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
   nsCOMPtr<nsIPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
   selectFrames(presContext, aRange, PR_TRUE);        
