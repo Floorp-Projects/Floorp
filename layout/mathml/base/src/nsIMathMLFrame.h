@@ -18,7 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  */
-#define SHOW_BOUNDING_BOX 1
+//#define SHOW_BOUNDING_BOX 1
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 

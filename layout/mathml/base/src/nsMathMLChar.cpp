@@ -650,7 +650,7 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
  to leave the extra spacing when placing the stretched char.
 */
 
-#define SHOW_BORDERS 1
+//#define SHOW_BORDERS 1
 //#define NOISY_SEARCH 1
 
 // **********************************************************************
