@@ -209,6 +209,9 @@ Federal Information Processing Standards Publications (FIPS PUBS) 140-1 is a US 
 <p><a name="foreign_cookie"></a>
 <b>foreign cookie.</b>&nbsp;A cookie from one site that gets stored on your computer when you visit a different site. For example you might visit <tt>www.example.com</tt>, which displays an image from a different site called <tt>www.example.net</tt>. So when you visit <tt>www.example.com</tt> your browser makes a side-trip to <tt>www.example.net</tt> to get the image, and <tt>www.example.net</tt> stores the cookie at that time. <p>
 
+<p><a name="helper_application"></a>
+<b>helper application.</b>&nbsp;Any application that is used to open or view a file downloaded by the browser. A <a href="#plug-in">plug-in</a> is a special kind of helper application that installs itself into the Plugins directory of the main browser installation directory and can typically be opened within the browser itself (internally). Microsoft Word, Adobe Photoshop, and other external applications are considered helper applications but not plug-ins, since they don't install themselves into the browser directory, but can be opened from the download dialog box.
+
 <p><a name="home_page"></a>
 <b>home page.</b>&nbsp;The page your browser is set to display every time you launch it or when you click the Home button. Also used to refer to the main page for a web site, from which you can explore the rest of the site.<p>
 
@@ -309,8 +312,11 @@ The public-key cryptography standard that governs security devices such as smart
 A program on your computer that manages cryptographic services such as encryption and decryption using the PKCS #11 standard. Also called <I>cryptographic modules</I>, <I>cryptographic service providers,</I> or <I>security modules</I>, PKCS #11 modules control either hardware or software devices. A PKCS #11 module always controls one or more slots, which may be implemented as some form of physical reader (for example, for reading smart cards) or in software. Each slot for a PKCS #11 module can in turn contain a <a href="glossary.html#1028962">security device</a> (also called <I>token</I>)<B>,</B> which is the hardware or software device that provides cryptographic services and stores certificates and keys. Certificate Manager provides two built-in PKCS #11 modules. You may install additional modules on your computer to control smart card readers or other hardware devices.<P>
 </A>
 
+<p><a name="p3p"></a>
+<b>Platform for Privacy Preferences (P3P).</b>&nbsp;An industry standard published by the World Wide Web Consortium (W3C) designed to help users to gain more control over the use of personal information by Web sites they visit. For information about using cookies with web sites that support this standard, see <a href="using_priv_help.html#privacy_levels">Setting Privacy Levels</a>. For general information on the standard itself, see the online document <a href="http://www.w3.org/P3P/" target="_blank">P3P Public Overview.<p>
+
 <p><a name="plug-in"></a>
-<b>plug-in.</b>&nbsp;A small application that adds new capabilities to your browser, such as programs for playing audio or video clips. For example, an audio plug-in lets you listen to audio files on a web page or in an e-mail message.<p>
+<b>plug-in.</b>&nbsp;A type of <a href="#helper_application">helper application</a> that adds new capabilities to your browser, such as the ability to play audio or video clips. Unlike other kinds of helper applications, a plug-in application installs itself into the Plugins directory within the main browser installation directory and typically can be opened within the browser itself (internally). For example, an audio plug-in lets you listen to audio files on a web page or in an e-mail message. Macromedia Flash Player and Java are both examples of plug-in applications.<p>
 
 <p><a NAME="POP_glossary"></a>
 <b>Post Office Protocol (POP).</b>&nbsp;A standard mail server protocol that requires you to download new messages to your local computer&mdash;although you can choose to leave copies on the server. With POP, you can store all your messages, including sent mail, drafts, and custom folders, on one computer only. By contrast, <a href="#IMAP_glossary">IMAP</a> allows you to permanently store all your messages and any changes to them on the server, where you can access them from any computer. Most ISPs currently support POP. <p>
@@ -526,7 +532,7 @@ Confident reliance on a person or other entity. In the context of <a href="gloss
 </p>
 
 <hr>
-<p><i>30 April 2002</i></p>
+<p><i>9 May 2002</i></p>
 <p>Copyright &copy; 1998-2002 Netscape Communications Corporation</p>
 
 <BR>

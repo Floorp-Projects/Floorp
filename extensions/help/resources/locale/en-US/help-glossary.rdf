@@ -42,6 +42,7 @@
         <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="glossary.html#1020434"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.html#1025742"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.html#foreign_cookie"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="helper application" nc:link="glossary.html#helper_application"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.html#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language_(HTML)"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="implicit consent" nc:link="glossary.html#implicit_consent"/> </rdf:li>
@@ -62,6 +63,7 @@
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Platform for Privacy Preferences (P3P)" nc:link="glossary.html#p3p"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="plug-in" nc:link="glossary.html#plug-in"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Post Office Protocol (POP)" nc:link="glossary.html#POP_glossary"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.html#1015387"/> </rdf:li>
