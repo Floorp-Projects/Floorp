@@ -261,11 +261,15 @@ alpha*-*-osf*)
 *-irix*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
-    CFLAGS="$CFLAGS -woff 3262"
+    MKSHLIB='$(CCC) $(DSO_LDOPTS)'
+    MKSHLIB_FORCE_ALL='-all'
+    MKSHLIB_UNFORCE_ALL=
+    if test "$GCC"x != "yesx"; then
+       CFLAGS="$CFLAGS -woff 3262"
     CXXFLAGS="$CXXFLAGS -woff 3262"
-    if test -z "$GNU_CC"; then
-	MKSHLIB_FORCE_ALL=-all
-	MKSHLIB_UNFORCE_ALL=-none
+    else
+       MKSHLIB_FORCE_ALL=-Wl,-all
+       MKSHLIB_UNFORCE_ALL=-Wl,-none
     fi
     ;;
 
@@ -1214,11 +1218,19 @@ AC_ARG_WITH(nspr,
 [  --with-nspr=\$dir        location of nspr headers and libraries],
 	NSPR_DIR=$withval)
 
+AC_ARG_WITH(nsprlib,
+[  --with-nsprlib=\$dir        location of nspr libraries],
+	NSPR_LIBDIR=$withval)
+
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
-LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
+if [ test "$NSPR_LIBDIR"x = "x" ]; then
+   LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
+else
+   LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
+fi
 
 AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr21")
 LIBS="-lnspr21 $NSPR_LIBS $LIBS"
@@ -1277,7 +1289,11 @@ LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
     NSPR_CFLAGS="-I${NSPR_DIR}/include"
-    NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
+    if [ test "$NSPR_LIBDIR"x != "x" ]; then
+        NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
+    else
+        NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
+    fi
 fi
 dnl End of nspr tests
 dnl ========================================================

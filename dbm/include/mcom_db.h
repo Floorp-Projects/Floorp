@@ -56,6 +56,8 @@
 
 #ifndef HAVE_SYS_CDEFS_H
 #include "cdefs.h"
+#else
+#include <cdefs.h>
 #endif
 #include "prtypes.h"
 
