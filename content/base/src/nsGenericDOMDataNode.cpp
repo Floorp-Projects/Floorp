@@ -883,6 +883,28 @@ nsGenericDOMDataNode::GetText(const nsTextFragment*& aFragmentsResult,
 }
 
 nsresult
+nsGenericDOMDataNode::GetTextLength(PRInt32* aLengthResult)
+{
+  if (!aLengthResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aLengthResult = mText.GetLength();
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::CopyText(nsString& aResult)
+{
+  if (mText.Is2b()) {
+    aResult.SetString(mText.Get2b(), mText.GetLength());
+  }
+  else {
+    aResult.SetString(mText.Get1b(), mText.GetLength());
+  }
+  return NS_OK;
+}
+
+nsresult
 nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
                               PRBool aNotify)
 {

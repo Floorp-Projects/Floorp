@@ -209,6 +209,8 @@ struct nsGenericDOMDataNode {
 
   nsresult GetText(const nsTextFragment*& aFragmentsResult,
                    PRInt32& aNumFragmentsResult);
+  nsresult GetTextLength(PRInt32* aLengthResult);
+  nsresult CopyText(nsString& aResult);
   nsresult SetText(const PRUnichar* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
@@ -486,23 +488,29 @@ struct nsGenericDOMDataNode {
  * Implement the nsITextContent API by forwarding the methods to a
  * generic character data content object.
  */
-#define NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(_g) \
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,              \
-                     PRInt32& aNumFragmentsResult){                        \
-    return mInner.GetText(aFragmentsResult, aNumFragmentsResult);          \
-  }                                                                        \
-  NS_IMETHOD SetText(const PRUnichar* aBuffer,                             \
-                     PRInt32 aLength,                                      \
-                     PRBool aNotify){                                      \
-    return mInner.SetText(aBuffer, aLength, aNotify);                      \
-  }                                                                        \
-  NS_IMETHOD SetText(const char* aBuffer,                                  \
-                     PRInt32 aLength,                                      \
-                     PRBool aNotify){                                      \
-    return mInner.SetText(aBuffer, aLength, aNotify);                      \
-  }                                                                        \
-  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult){                            \
-    return mInner.IsOnlyWhitespace(aResult);                               \
+#define NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(_g)           \
+  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,     \
+                     PRInt32& aNumFragmentsResult){               \
+    return mInner.GetText(aFragmentsResult, aNumFragmentsResult); \
+  }                                                               \
+  NS_IMETHOD GetTextLength(PRInt32* aLengthResult) {              \
+    return mInner.GetTextLength(aLengthResult);                   \
+  }                                                               \
+  NS_IMETHOD CopyText(nsString& aResult) {                        \
+    return mInner.CopyText(aResult);                              \
+  }                                                               \
+  NS_IMETHOD SetText(const PRUnichar* aBuffer,                    \
+                     PRInt32 aLength,                             \
+                     PRBool aNotify){                             \
+    return mInner.SetText(aBuffer, aLength, aNotify);             \
+  }                                                               \
+  NS_IMETHOD SetText(const char* aBuffer,                         \
+                     PRInt32 aLength,                             \
+                     PRBool aNotify){                             \
+    return mInner.SetText(aBuffer, aLength, aNotify);             \
+  }                                                               \
+  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult){                   \
+    return mInner.IsOnlyWhitespace(aResult);                      \
   }
 
 /**
