@@ -494,6 +494,12 @@ MOZILLA_CLIENT	= 1
 MOZ_JSD		= 1
 endif
 
+MOZ_COOKIEMANAGEMENT    = 1
+ifndef MOZ_NO_WALLET_HACK
+MOZ_SINGLESIGNON        = 1
+MOZ_CLIENTWALLET        = 1
+endif
+
 ifndef USE_AUTOCONF
 ifdef MOZ_LITE
 NO_UNIX_LDAP	= 1
@@ -509,7 +515,6 @@ endif
 ifdef MOZ_MEDIUM
 ifndef MODULAR_NETLIB
 MOZ_MAIL_COMPOSE	= 1
-MOZ_SINGLESIGNON	= 1
 endif
 endif
 endif # ! USE_AUTOCONF
@@ -533,7 +538,15 @@ MOZ_TASKBAR	= 1
 endif
 
 ifdef MOZ_SINGLESIGNON
-DEFINES		+= -DSingleSignon
+DEFINES         += -DSingleSignon
+endif
+
+ifdef MOZ_COOKIEMANAGEMENT
+DEFINES         += -DCookieManagement
+endif
+
+ifdef MOZ_CLIENTWALLET
+DEFINES         += -DClientWallet
 endif
 
 ifdef MOZ_SMOOTH_PROGRESS
