@@ -31,16 +31,44 @@ CPPSRCS = \
 LIBS =	\
 		-L$(DIST)/lib			\
 		-L$(DIST)/bin			\
-		-lxpcom					\
-		-lreg					\
-		-lmsgbaseutil				\
-		-lraptorbase				\
-		-lpref					\
-		-lmozjs 				\
-		-lsecfree				\
-		$(NSPR_LIBS)			\
+		-labouturl \
+		-lfileurl \
+		-lftpurl \
+		-lgophurl \
+		-lremoturl \
+		-lhttpurl \
+		-lsockstuburl \
+		-lnetcache \
+		-lmimetype \
+		-lnetcnvts \
+		-lnetwork \
+		-lnetlib \
+		-lreg   \
+		-lxpcom \
+		-lpwcac \
+		-lmozdbm \
+		-lxp \
+		-lpref \
+		-lmozjs \
+		-lraptorbase \
+		-lgmbase$(MOZ_TOOLKIT) \
+		-lsecfree \
+		-ljsdom \
+		-ljsurl \
+		-lraptorhtml \
+		-lraptorhtmlpars \
+		-lexpat \
+		-lxmltok \
+		-lraptorgfx \
+		-limg \
+		-lmozutil \
+		-lmsgbaseutil \
+		$(JPEG_LIBS) \
+		$(PNG_LIBS)  \
+		$(ZLIB_LIBS) \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
 		$(NULL)
-
 
 include $(topsrcdir)/config/config.mk
 
