@@ -170,7 +170,7 @@ protected:
   // Data members
   PRPackedBool             mDoPaintFocus;
   nsCOMPtr<nsIViewManager> mViewManager;
-
+  nscoord                  mSavedChildWidth, mSavedChildHeight;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -572,10 +572,23 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
                                             NS_UNCONSTRAINEDSIZE),
                                      reason);
 
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      // Restore original kid desired dimensions in case it decides to
+      // reuse them during incremental reflow.
+      nsRect r;
+      kidFrame->GetRect(r);
+      r.width = mSavedChildWidth;
+      r.height = mSavedChildHeight;
+      kidFrame->SetRect(aPresContext, r);
+    }
+
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                 kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
                 0, aStatus);
+
+    mSavedChildWidth = kidDesiredSize.width;
+    mSavedChildHeight = kidDesiredSize.height;
 
     // The document element's background should cover the entire canvas, so
     // take into account the combined area and any space taken up by
