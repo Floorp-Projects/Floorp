@@ -163,6 +163,10 @@ NS_NewHTMLApplet(nsIHTMLContent** aInstancePtrResult,
                  nsIAtom* aTag);
 
 extern nsresult
+NS_NewHTMLEmbed(nsIHTMLContent** aInstancePtrResult,
+                nsIAtom* aTag);
+
+extern nsresult
 NS_NewHTMLObject(nsIHTMLContent** aInstancePtrResult,
                  nsIAtom* aTag);
 
@@ -176,5 +180,9 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
                         nsIReflowCommand::ReflowType aReflowType,
                         nsIFrame*                    aChildFrame = nsnull);
+
+extern nsresult
+NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
+                  nsIFrame* aParentFrame);
 
 #endif /* nsHTMLParts_h___ */
