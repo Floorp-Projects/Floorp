@@ -4479,9 +4479,13 @@ nsBookmarksService::ReadFavorites()
     mIEFavoritesAvailable = PR_TRUE;
     nsresult rv;
             
-#ifdef DEBUG
+#ifdef DEBUG_varga
     PRTime      now;
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now);
+#else
+    now = PR_Now();
+#endif
     printf("Start reading in IE Favorites.html\n");
 #endif
 
@@ -4511,9 +4515,13 @@ nsBookmarksService::ReadFavorites()
             rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
         }
     }
-#ifdef  DEBUG
+#ifdef DEBUG_varga
     PRTime      now2;
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now2);
+#else
+    now = PR_Now();
+#endif
     PRUint64    loadTime64;
     LL_SUB(loadTime64, now2, now);
     PRUint32    loadTime32;
@@ -4599,9 +4607,9 @@ nsBookmarksService::LoadBookmarks()
     if (prefSvc)
         prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
 
-#ifdef DEBUG
+#ifdef DEBUG_varga
     PRTime now;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now);
 #else
     now = PR_Now();
@@ -4825,9 +4833,9 @@ nsBookmarksService::LoadBookmarks()
 #endif
     }
 
-#ifdef DEBUG
+#ifdef DEBUG_varga
     PRTime      now2;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now2);
 #else
     now2 = PR_Now();
