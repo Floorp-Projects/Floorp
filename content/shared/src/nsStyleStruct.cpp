@@ -209,14 +209,11 @@ nsStyleFont::Destroy(nsIPresContext* aContext) {
 
 PRInt32 nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 {
-  if (mFlags == aOther.mFlags) {
-    PRInt32 impact = CalcFontDifference(mFont, aOther.mFont);
-    if (impact < NS_STYLE_HINT_REFLOW) {
-      impact = CalcFontDifference(mFixedFont, aOther.mFixedFont);
-    } 
-    return impact;
-  }
-  return NS_STYLE_HINT_REFLOW;
+  PRInt32 impact = CalcFontDifference(mFont, aOther.mFont);
+  if (impact < NS_STYLE_HINT_REFLOW) {
+    impact = CalcFontDifference(mFixedFont, aOther.mFixedFont);
+  } 
+  return impact;
 }
 
 PRInt32 nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
