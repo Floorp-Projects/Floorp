@@ -97,7 +97,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 static const char kNameSpaceSeparator = ':';
-static const char kNameSpaceDef[] = "xmlns";
 
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 static const char kNCNameSpaceURI[] = NC_NAMESPACE_URI;
@@ -1654,11 +1653,14 @@ RDFContentSinkImpl::PopContext(nsIRDFResource         *&aResource,
 PRBool
 RDFContentSinkImpl::IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix)
 {
+    NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
+    const size_t kNameSpaceDef_Length = sizeof("xmlns") - 1;
+
     // Look for `xmlns' at the start of the attribute name
-    if (!Substring(aAttributeKey, 0, sizeof(kNameSpaceDef) - 1).Equals(NS_LITERAL_STRING(kNameSpaceDef)))
+    if (!Substring(aAttributeKey, 0, kNameSpaceDef_Length).Equals(kNameSpaceDef))
         return PR_FALSE;
 
-    PRInt32 prefixLen = aAttributeKey.Length() - sizeof(kNameSpaceDef);
+    PRInt32 prefixLen = aAttributeKey.Length() - kNameSpaceDef_Length - 1;
     if (prefixLen <= 0) {
         // they're setting the default namespace; leave `prefix'
         // as nsnull.
@@ -1666,14 +1668,15 @@ RDFContentSinkImpl::IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** a
     else {
         // make sure there's a `:' character
         nsAString::const_iterator iter;
-        if (*aAttributeKey.BeginReading(iter).advance(sizeof(kNameSpaceDef) - 1)
+        if (*aAttributeKey.BeginReading(iter).advance(kNameSpaceDef_Length)
                 != kNameSpaceSeparator)
             return PR_FALSE;
 
         // if the caller wants the prefix back, compute it for them.
         if (aPrefix)
             *aPrefix = NS_NewAtom(Substring(aAttributeKey,
-                                            sizeof(kNameSpaceDef), prefixLen));
+                                            kNameSpaceDef_Length + 1,
+                                            prefixLen));
     }
 
     return PR_TRUE;
