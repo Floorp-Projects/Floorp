@@ -101,8 +101,8 @@ find_plugin_directory(char *path, PRInt32 size)
   PL_strcat(path, MIME_PLUGIN_DIR);
   return PR_TRUE;
 #else
-  printf("Don't know how to locate plugins directory on Unix/Mac yet...\n");
-  return PR_FALSE;
+  PL_strcat(path, "./components");
+  return PR_TRUE;
 #endif
 }
 
@@ -118,7 +118,10 @@ create_file_name(const char *path, const char *name, char *fullName)
   PL_strcat(fullName, name);
   return PR_TRUE;
 #else
-  return PR_FALSE;
+  PL_strcpy(fullName, path);
+  PL_strcat(fullName, "/");
+  PL_strcat(fullName, name);
+  return PR_TRUE;
 #endif
 }
 
