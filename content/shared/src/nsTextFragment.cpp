@@ -24,6 +24,9 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
 
 nsTextFragment::~nsTextFragment()
 {
@@ -139,9 +142,16 @@ nsTextFragment::SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease)
   mState.mLength = aLength;
 }
 
+#ifdef IBMBIDI
+PRBool
+#else
 void
+#endif
 nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 {
+#ifdef IBMBIDI
+  PRBool bidiEnabled = PR_FALSE;
+#endif // IBMBIDI
   ReleaseText();
   if (0 != aLength) {
     // See if we need to store the data in ucs2 or not
@@ -152,7 +162,14 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
       PRUnichar ch = *ucp++;
       if (ch >> 8) {
         need2 = PR_TRUE;
+#ifdef IBMBIDI
+        if (CHAR_IS_BIDI(ch) ) {
+          bidiEnabled = PR_TRUE;
+#endif // IBMBIDI
         break;
+#ifdef IBMBIDI
+        }
+#endif // IBMBIDI
       }
     }
 
@@ -189,6 +206,9 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
       }
     }
   }
+#ifdef IBMBIDI
+  return bidiEnabled;
+#endif // IBMBIDI
 }
 
 void

@@ -50,6 +50,9 @@
 #include "nsIEventStateManager.h"
 #include "nsIObserver.h"
 #include "nsILookAndFeel.h"
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext, public nsIObserver {
@@ -167,6 +170,25 @@ public:
   NS_IMETHOD Observe(nsISupports* aSubject, const PRUnichar* aTopic,
                      const PRUnichar* aData);
 
+#ifdef IBMBIDI
+  NS_IMETHOD BidiEnabled(PRBool& aBidiEnabled) const;
+  NS_IMETHOD EnableBidi(void) const;
+  NS_IMETHOD IsVisualMode(PRBool& aIsVisual) const;
+  NS_IMETHOD SetVisualMode(PRBool aIsVisual);
+  NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils);
+  NS_IMETHOD SetBidi(nsBidiOptions aSource, PRBool aForceReflow = PR_FALSE);
+  NS_IMETHOD GetBidi(nsBidiOptions * aDest);
+ //ahmed
+  NS_IMETHOD IsVisRTL(PRBool &aResult);
+  NS_IMETHOD IsArabicEncoding(PRBool &aResult);
+
+//Mohamed  17-1-01
+  NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi);
+  NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const;
+  NS_IMETHOD GetBidiCharset(nsAutoString &aCharSet);
+//Mohamed End
+#endif // IBMBIDI
+
 protected:
   nsPresContext();
   virtual ~nsPresContext();
@@ -213,8 +235,19 @@ protected:
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
   PRPackedBool          mStopped;                 // loading stopped
   PRPackedBool          mStopChrome;              // should we stop chrome?
+#ifdef IBMBIDI
+  PRPackedBool          mIsVisual;                // is the Bidi text mode visual
+  PRPackedBool          mIsBidiSystem;            // is the system capable of doing Bidi reordering
+#endif // IBMBIDI
   PRUint8               mDefaultDirection;
   PRPackedBool          mIsRenderingOnlySelection;
+
+#ifdef IBMBIDI
+  nsBidiPresUtils*      mBidiUtils;
+  nsBidiOptions         mBidi;
+  nsAutoString          mCharset;                 // the charset we are using
+#endif // IBMBIDI
+
 #ifdef DEBUG
   PRBool                mInitialized;
 #endif

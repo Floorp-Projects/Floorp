@@ -30,7 +30,7 @@
  * identified per MPL Section 3.3
  *
  * Date         Modified by     Description of modification
- * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ * 03/20/2000   IBM Corp.       Bidi - ability to change the default direction of the browser
  *
  */
  
@@ -51,6 +51,9 @@
 #include "nsLayoutAtoms.h"
 #include "prenv.h"
 
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -1022,6 +1025,9 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     }
     mTextIndent = aParent->mTextIndent;
     mWordSpacing = aParent->mWordSpacing;
+#ifdef IBMBIDI
+    mUnicodeBidi = aParent->mUnicodeBidi;
+#endif // IBMBIDI
   }
   else {
     mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
@@ -1032,6 +1038,9 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mLineHeight.SetNormalValue();
     mTextIndent.SetCoordValue(0);
     mWordSpacing.SetNormalValue();
+#ifdef IBMBIDI
+    mUnicodeBidi = NS_STYLE_UNICODE_BIDI_INHERIT;
+#endif // IBMBIDI
   }
 }
 
@@ -1054,6 +1063,9 @@ PRInt32 StyleTextImpl::CalcDifference(const StyleTextImpl& aOther) const
       (mLineHeight == aOther.mLineHeight) &&
       (mTextIndent == aOther.mTextIndent) &&
       (mWordSpacing == aOther.mWordSpacing) &&
+#ifdef IBMBIDI
+      (mUnicodeBidi == aOther.mUnicodeBidi) &&
+#endif // IBMBIDI
       (mVerticalAlign == aOther.mVerticalAlign)) {
     if (mTextDecoration == aOther.mTextDecoration) {
       return NS_STYLE_HINT_NONE;
@@ -1077,6 +1089,9 @@ PRUint32 StyleTextImpl::ComputeCRC32(PRUint32 aCrc) const
   crc = StyleCoordCRC(crc,&mTextIndent);
   crc = StyleCoordCRC(crc,&mWordSpacing);
   crc = StyleCoordCRC(crc,&mVerticalAlign);
+#ifdef IBMBIDI
+  crc = AccumulateCRC(crc,(const char *)&mUnicodeBidi,sizeof(mUnicodeBidi));
+#endif // IBMBIDI
 #endif
   return crc;
 }
@@ -1111,7 +1126,16 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
     mVisible = aParent->mVisible;
   }
   else {
+#ifdef IBMBIDI
+    nsBidiOptions mBidioptions;
+    aPresContext->GetBidi(&mBidioptions);
+    if (GET_BIDI_OPTION_DIRECTION(mBidioptions) == IBMBIDI_TEXTDIRECTION_RTL)
+      mDirection = NS_STYLE_DIRECTION_RTL;
+    else
+      mDirection = NS_STYLE_DIRECTION_LTR;
+#else // ifdef IBMBIDI
     aPresContext->GetDefaultDirection(&mDirection);
+#endif // IBMBIDI
     aPresContext->GetLanguage(getter_AddRefs(mLanguage));
     mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   }
@@ -1123,11 +1147,17 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
+#ifdef IBMBIDI
+  mExplicitDirection = NS_STYLE_DIRECTION_INHERIT;
+#endif // IBMBIDI
 }
 
 void StyleDisplayImpl::SetFrom(const nsStyleDisplay& aSource)
 {
   mDirection = aSource.mDirection;
+#ifdef IBMBIDI
+  mExplicitDirection = aSource.mExplicitDirection;
+#endif // IBMBIDI
   mDisplay = aSource.mDisplay;
   mFloats = aSource.mFloats;
   mBreakType = aSource.mBreakType;
@@ -1143,6 +1173,9 @@ void StyleDisplayImpl::SetFrom(const nsStyleDisplay& aSource)
 void StyleDisplayImpl::CopyTo(nsStyleDisplay& aDest) const
 {
   aDest.mDirection = mDirection;
+#ifdef IBMBIDI
+  aDest.mExplicitDirection = mExplicitDirection;
+#endif // IBMBIDI
   aDest.mDisplay = mDisplay;
   aDest.mFloats = mFloats;
   aDest.mBreakType = mBreakType;
@@ -1187,6 +1220,9 @@ PRUint32 StyleDisplayImpl::ComputeCRC32(PRUint32 aCrc) const
   PRUint32 crc = aCrc;
 #ifdef COMPUTE_STYLEDATA_CRC
   crc = AccumulateCRC(crc,(const char *)&mDirection,sizeof(mDirection));
+#ifdef IBMBIDI
+  crc = AccumulateCRC(crc,(const char *)&mExplicitDirection,sizeof(mExplicitDirection));
+#endif // IBMBIDI
   crc = AccumulateCRC(crc,(const char *)&mDisplay,sizeof(mDisplay));
   crc = AccumulateCRC(crc,(const char *)&mFloats,sizeof(mFloats));
   crc = AccumulateCRC(crc,(const char *)&mBreakType,sizeof(mBreakType));

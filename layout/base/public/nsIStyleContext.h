@@ -381,6 +381,9 @@ struct nsStyleText : public nsStyleStruct {
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
   PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
+#ifdef IBMBIDI
+  PRUint8 mUnicodeBidi;                 // [inherited] see nsStyleConsts.h
+#endif // IBMBIDI
 
   nsStyleCoord  mLetterSpacing;         // [inherited] 
   nsStyleCoord  mLineHeight;            // [inherited] 
@@ -398,6 +401,9 @@ struct nsStyleDisplay : public nsStyleStruct {
   ~nsStyleDisplay(void) {};
 
   PRUint8 mDirection;           // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
+#ifdef IBMBIDI
+  PRUint8 mExplicitDirection ;  // [reset] see nsStyleConsts.h NS_STYLE_DIRECTION_*
+#endif
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
   PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*

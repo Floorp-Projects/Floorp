@@ -187,6 +187,11 @@ typedef PRUint32 nsFrameState;
 // unchanged during the life-time of the frame.
 #define NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE         0x00010000
 
+#ifdef IBMBIDI
+// If this bit is set, the frame itself is a bidi continuation,
+// or is incomplete (its next sibling is a bidi continuation)
+#define NS_FRAME_IS_BIDI                              0x00200000
+#endif
 
 // The lower 20 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED                             0x000FFFFF
@@ -1117,6 +1122,20 @@ public:
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible) = 0;
+#ifdef IBMBIDI
+  /**
+   *  retrieve and set Bidi property of this frame
+   *  @lina 5/1/2000
+   */
+  NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,
+                             nsIAtom*        aPropertyName,
+                             void**          aPropertyValue,
+                             long            aSize = sizeof(void*) ) const = 0;
+  NS_IMETHOD SetBidiProperty(nsIPresContext* aPresContext,
+                             nsIAtom*        aPropertyName,
+                             void*           aPropertyValue) const = 0;
+#endif // IBMBIDI
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

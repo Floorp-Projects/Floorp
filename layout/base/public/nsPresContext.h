@@ -41,6 +41,11 @@
 #include "nsColor.h"
 #include "nsIFrameImageLoader.h"
 #include "nsILanguageAtom.h"
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+class nsAutoString;
+class nsBidiPresUtils;
+#endif // IBMBIDI
 
 struct nsFont;
 
@@ -372,6 +377,94 @@ public:
    */
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType) = 0;
+
+#ifdef IBMBIDI
+  /**
+   *  Check if bidi enabled (set depending on the presence of RTL
+   *  characters or when default directionality is RTL).
+   *  If enabled, we should apply the Unicode Bidi Algorithm
+   *
+   *  @lina 07/12/2000
+   */
+  NS_IMETHOD BidiEnabled(PRBool& aBidiEnabled) const = 0;
+
+  /**
+   *  Set bidi enabled. This means we should apply the Unicode Bidi Algorithm
+   *
+   *  @lina 07/12/2000
+   */
+  NS_IMETHOD EnableBidi(void) const  = 0;
+
+  /**
+   *  Set visual or implicit mode into the pres context.
+   *
+   *  Visual directionality is a presentation method that displays text
+   *  as if it were a uni-directional, according to the primary display
+   *  direction only. 
+   *
+   *  Implicit directionality is a presentation method in which the
+   *  direction is determined by the Bidi algorithm according to the
+   *  category of the characters and the category of the adjacent
+   *  characters, and according to their primary direction.
+   *
+   *  @lina 05/02/2000
+   */
+  NS_IMETHOD SetVisualMode(PRBool aIsVisual) = 0;
+
+  /**
+   *  Check whether the content should be treated as visual.
+   *
+   *  @lina 05/02/2000
+   */
+  NS_IMETHOD IsVisualMode(PRBool& aIsVisual) const = 0;
+
+//Mohamed
+
+  /**
+   * Get a Bidi presentation utilities object
+   */
+  NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils) = 0;
+
+  /**
+   * Set the Bidi options for the presentation context
+   */  
+  NS_IMETHOD SetBidi(nsBidiOptions Source, PRBool aForceReflow = PR_FALSE) = 0;
+
+  /**
+   * Get the Bidi options for the presentation context
+   */  
+  NS_IMETHOD GetBidi(nsBidiOptions * Dist) = 0;
+//ahmed
+
+  /**
+   * Check for Bidi text mode and direction
+   * @return aResult == TRUE if the text mode is visual and the direction is right-to-left
+   */
+  NS_IMETHOD IsVisRTL(PRBool &aResult) = 0;
+
+  /**
+   * Check for Arabic encoding
+   * @return aResult == TRUE if the document encoding is an Arabic codepage
+   */
+  NS_IMETHOD IsArabicEncoding(PRBool &aResult) = 0;
+
+  /**
+   * Set the Bidi capabilities of the system
+   * @param aIsBidi == TRUE if the system has the capability of reordering Bidi text
+   */
+  NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi) = 0;
+
+  /**
+   * Get the Bidi capabilities of the system
+   * @return aResult == TRUE if the system has the capability of reordering Bidi text
+   */
+  NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const = 0;
+
+  /**
+   * Get the document charset
+   */
+  NS_IMETHOD GetBidiCharset(nsAutoString &aCharSet) = 0;
+#endif // IBMBIDI
 
   /**
    * Render only Selection

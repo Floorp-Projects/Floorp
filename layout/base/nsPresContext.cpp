@@ -58,6 +58,9 @@
 #include "nsIBox.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
+#endif // IBMBIDI
 
 int
 PrefChangedCallback(const char* aPrefName, void* instance_data)
@@ -70,6 +73,21 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
   }
   return 0;  // PREF_OK
 }
+
+#ifdef IBMBIDI
+PRBool
+IsVisualCharset(const nsAutoString& aCharset)
+{
+  if (aCharset.EqualsIgnoreCase("ibm864")             // Arabic//ahmed
+      || aCharset.EqualsIgnoreCase("ibm862")          // Hebrew
+      || aCharset.EqualsIgnoreCase("iso-8859-8") ) {  // Hebrew
+    return PR_TRUE; // visual text type
+  }
+  else {
+    return PR_FALSE; // logical text type
+  }
+}
+#endif // IBMBIDI
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 #include "nsContentCID.h"
@@ -121,6 +139,12 @@ nsPresContext::nsPresContext()
   mDefaultDirection = NS_STYLE_DIRECTION_LTR;
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   mIsRenderingOnlySelection = PR_FALSE;
+#ifdef IBMBIDI
+  mIsVisual = PR_FALSE;
+  mBidiUtils = nsnull;
+  mIsBidiSystem = PR_FALSE;
+  mBidi = 0;
+#endif // IBMBIDI
 }
 
 nsPresContext::~nsPresContext()
@@ -155,6 +179,11 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.visited_color", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("image.animation_mode", PrefChangedCallback, (void*)this);
   }
+#ifdef IBMBIDI
+  if (mBidiUtils) {
+    delete mBidiUtils;
+  }
+#endif // IBMBIDI
 }
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
@@ -486,6 +515,12 @@ nsPresContext::UpdateCharSet(const PRUnichar* aCharSet)
       }
     }
   }
+#ifdef IBMBIDI
+  //ahmed
+  mCharset=aCharSet;
+
+  SetVisualMode(IsVisualCharset(mCharset) );
+#endif // IBMBIDI
 }
 
 NS_IMETHODIMP
@@ -1293,6 +1328,136 @@ nsPresContext::GetDefaultDirection(PRUint8* aDirection)
   return NS_OK;
 }
 
+#ifdef IBMBIDI
+//ahmed
+NS_IMETHODIMP
+nsPresContext::IsArabicEncoding(PRBool& aResult)
+{
+  aResult=PR_FALSE;
+  if ( (mCharset.EqualsIgnoreCase("ibm864") )||(mCharset.EqualsIgnoreCase("ibm864i") )||(mCharset.EqualsIgnoreCase("windows-1256") )||(mCharset.EqualsIgnoreCase("iso-8859-6") ))
+    aResult=PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::IsVisRTL(PRBool& aResult)
+{
+  aResult=PR_FALSE;
+  if ( (mIsVisual)&&(GET_BIDI_OPTION_DIRECTION(mBidi) == IBMBIDI_TEXTDIRECTION_RTL) )
+    aResult=PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::BidiEnabled(PRBool& aBidiEnabled) const
+{
+  aBidiEnabled = PR_FALSE;
+  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::BidiEnabled");
+  if (mShell) {
+    nsCOMPtr<nsIDocument> doc;
+    mShell->GetDocument(getter_AddRefs(doc) );
+    NS_ASSERTION(doc, "PresShell has no document in nsPresContext::BidiEnabled");
+    if (doc) {
+      doc->BidiEnabled(aBidiEnabled);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::EnableBidi() const
+{
+  if (mShell) {
+    nsCOMPtr<nsIDocument> doc;
+    mShell->GetDocument(getter_AddRefs(doc) );
+    if (doc) {
+      doc->EnableBidi();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetVisualMode(PRBool aIsVisual)
+{
+  mIsVisual = aIsVisual;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::IsVisualMode(PRBool& aIsVisual) const
+{
+  aIsVisual = mIsVisual;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetBidiUtils(nsBidiPresUtils** aBidiUtils)
+{
+  nsresult rv = NS_OK;
+
+  if (!mBidiUtils) {
+    mBidiUtils = new nsBidiPresUtils;
+    if (!mBidiUtils) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  *aBidiUtils = mBidiUtils;
+  return rv;
+}
+
+NS_IMETHODIMP   nsPresContext::SetBidi(nsBidiOptions aSource, PRBool aForceReflow)
+{
+  mBidi = aSource;
+  if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(mBidi)
+      || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(mBidi)) {
+    EnableBidi();
+  }
+  if (IBMBIDI_TEXTTYPE_VISUAL == GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+    SetVisualMode(PR_TRUE);
+  }
+  else if (IBMBIDI_TEXTTYPE_LOGICAL == GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+    SetVisualMode(PR_FALSE);
+  }
+  else {
+    SetVisualMode(IsVisualCharset(mCharset) );
+  }
+  if (mShell && aForceReflow) {
+    RemapStyleAndReflow();
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP   nsPresContext::GetBidi(nsBidiOptions * aDest)
+{
+  if (aDest)
+    *aDest = mBidi;
+  return NS_OK;
+}
+
+//Mohamed 17-1-01
+NS_IMETHODIMP
+nsPresContext::SetIsBidiSystem(PRBool aIsBidi)
+{
+  mIsBidiSystem = aIsBidi;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetIsBidiSystem(PRBool& aResult) const
+{
+  aResult = mIsBidiSystem;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetBidiCharset(nsAutoString &aCharSet)
+{
+  aCharSet = mCharset;
+  return NS_OK;
+}
+//Mohamed End
+
+#endif //IBMBIDI
 
 NS_IMETHODIMP
 nsPresContext::SetDefaultDirection(PRUint8 aDirection)

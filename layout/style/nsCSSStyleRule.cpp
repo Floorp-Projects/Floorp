@@ -2110,6 +2110,21 @@ MapDeclarationTextInto(nsICSSDeclaration* aDeclaration,
       // word-spacing: normal, length, inherit
       SetCoord(ourText->mWordSpacing, text->mWordSpacing, parentText->mWordSpacing,
                SETCOORD_LH | SETCOORD_NORMAL, aFont->mFont, aPresContext);
+#ifdef IBMBIDI
+      // unicode-bidi: enum, normal, inherit
+      // normal means that override prohibited
+      if (eCSSUnit_Normal == ourText->mUnicodeBidi.GetUnit() ) {
+        text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
+      }
+      else {
+        if (eCSSUnit_Enumerated == ourText->mUnicodeBidi.GetUnit() ) {
+          text->mUnicodeBidi = ourText->mUnicodeBidi.GetIntValue();
+        }
+        if (NS_STYLE_UNICODE_BIDI_INHERIT == text->mUnicodeBidi) {
+          text->mUnicodeBidi = parentText->mUnicodeBidi;
+        }
+      }
+#endif // IBMBIDI
     }
   }
 }
@@ -2145,6 +2160,13 @@ MapDeclarationDisplayInto(nsICSSDeclaration* aDeclaration,
       // direction: enum, inherit
       if (eCSSUnit_Enumerated == ourDisplay->mDirection.GetUnit()) {
         display->mDirection = ourDisplay->mDirection.GetIntValue();
+#ifdef IBMBIDI
+        display->mExplicitDirection = display->mDirection;
+
+        if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+          aPresContext->EnableBidi();
+        }
+#endif // IBMBIDI
       }
       else if (eCSSUnit_Inherit == ourDisplay->mDirection.GetUnit()) {
         display->mDirection = parentDisplay->mDirection;
