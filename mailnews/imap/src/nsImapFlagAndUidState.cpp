@@ -22,14 +22,13 @@
 #include "nsImapFlagAndUidState.h"
 
 /* amount to expand for imap entry flags when we need more */
-const PRInt32 kFlagEntrySize =	100;
 
 nsImapFlagAndUidState::nsImapFlagAndUidState(PRInt32 numberOfMessages, PRUint16 flags)
 {
 	fNumberOfMessagesAdded = 0;
 	fNumberOfMessageSlotsAllocated = numberOfMessages;
 	if (!fNumberOfMessageSlotsAllocated)
-		fNumberOfMessageSlotsAllocated = kFlagEntrySize;
+		fNumberOfMessageSlotsAllocated = kImapFlagAndUidStateSize;
 	fFlags = (imapMessageFlagsType*) PR_Malloc(sizeof(imapMessageFlagsType) * fNumberOfMessageSlotsAllocated); // new imapMessageFlagsType[fNumberOfMessageSlotsAllocated];
 	
 	fUids.SetSize(fNumberOfMessageSlotsAllocated);
@@ -100,7 +99,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	// make sure there is room for this pair
 	if (fNumberOfMessagesAdded >= fNumberOfMessageSlotsAllocated)
 	{
-		fNumberOfMessageSlotsAllocated += kFlagEntrySize;
+		fNumberOfMessageSlotsAllocated += kImapFlagAndUidStateSize;
 		fUids.SetSize(fNumberOfMessageSlotsAllocated);
 		fFlags = (imapMessageFlagsType*) PR_REALLOC(fFlags, sizeof(imapMessageFlagsType) * fNumberOfMessageSlotsAllocated); // new imapMessageFlagsType[fNumberOfMessageSlotsAllocated];
 	}

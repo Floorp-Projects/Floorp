@@ -133,6 +133,8 @@ public:
 
 	NS_IMETHOD GetImapPartToFetch(char **resultPart) const = 0;
 	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const = 0;
+
+	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const = 0;
 };
 
 #endif /* nsIImapUrl_h___ */

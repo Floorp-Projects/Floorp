@@ -21,6 +21,8 @@
 
 #include "nsMsgKeyArray.h"
 
+const PRInt32 kImapFlagAndUidStateSize =	100;
+
 class nsImapFlagAndUidState {
 public:
     nsImapFlagAndUidState(int numberOfMessages, PRUint16 flags = 0);

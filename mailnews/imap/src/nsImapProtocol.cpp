@@ -50,6 +50,8 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
 
+static const int32 kImapSleepTime = 1000000;
+
 // **** helper class for downloading line ****
 TLineDownloadCache::TLineDownloadCache()
 {
@@ -64,12 +66,12 @@ TLineDownloadCache::~TLineDownloadCache()
     PR_FREEIF( fLineInfo);
 }
 
-uint32 TLineDownloadCache::CurrentUID()
+PRUint32 TLineDownloadCache::CurrentUID()
 {
     return fLineInfo->uidOfMessage;
 }
 
-uint32 TLineDownloadCache::SpaceAvailable()
+PRUint32 TLineDownloadCache::SpaceAvailable()
 {
     return kDownLoadCacheSize - fBytesUsed;
 }
@@ -84,14 +86,14 @@ void TLineDownloadCache::ResetCache()
     fBytesUsed = 0;
 }
     
-XP_Bool TLineDownloadCache::CacheEmpty()
+PRBool TLineDownloadCache::CacheEmpty()
 {
     return fBytesUsed == 0;
 }
 
-void TLineDownloadCache::CacheLine(const char *line, uint32 uid)
+void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
 {
-    uint32 lineLength = PL_strlen(line);
+    PRUint32 lineLength = PL_strlen(line);
     NS_ASSERTION((lineLength + 1) <= SpaceAvailable(), 
                  "Oops... line length greater than space available");
     
@@ -142,7 +144,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_parser(*this), m_currentCommand(eOneByte, 0)
+    m_parser(*this), m_currentCommand(eOneByte, 0), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_runningUrl = nsnull; // initialize to NULL
@@ -163,6 +165,8 @@ nsImapProtocol::nsImapProtocol() :
 	m_dataMemberMonitor = nsnull;
 	m_threadDeathMonitor = nsnull;
     m_eventCompletionMonitor = nsnull;
+	m_waitForBodyIdsMonitor = nsnull;
+	m_fetchMsgListMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
 	m_currentServerCommandTagNumber = 0;
@@ -256,6 +260,16 @@ nsImapProtocol::~nsImapProtocol()
         PR_DestroyMonitor(m_eventCompletionMonitor);
         m_eventCompletionMonitor = nsnull;
     }
+	if (m_waitForBodyIdsMonitor)
+	{
+		PR_DestroyMonitor(m_waitForBodyIdsMonitor);
+		m_waitForBodyIdsMonitor = nsnull;
+	}
+	if (m_fetchMsgListMonitor)
+	{
+		PR_DestroyMonitor(m_fetchMsgListMonitor);
+		m_fetchMsgListMonitor = nsnull;
+	}
 }
 
 const char*
@@ -427,6 +441,8 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 		m_dataMemberMonitor = PR_NewMonitor();
 		m_threadDeathMonitor = PR_NewMonitor();
         m_eventCompletionMonitor = PR_NewMonitor();
+		m_waitForBodyIdsMonitor = PR_NewMonitor();
+		m_fetchMsgListMonitor = PR_NewMonitor();
 
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
@@ -849,19 +865,19 @@ nsImapProtocol::AdjustChunkSize()
 // message...
 
 void
-nsImapProtocol::FetchMessage(const char *messageIds, 
+nsImapProtocol::FetchMessage(nsString2 &messageIds, 
                              nsIMAPeFetchFields whatToFetch,
                              PRBool idIsUid,
-                             uint32 startByte, uint32 endByte,
+                             PRUint32 startByte, PRUint32 endByte,
                              char *part)
 {
     IncrementCommandTagNumber();
     
-    char commandString[350];
+    nsString2 commandString;
     if (idIsUid)
-    	PL_strcpy(commandString, "%s UID fetch");
+    	commandString = "%s UID fetch";
     else
-    	PL_strcpy(commandString, "%s fetch");
+    	commandString = "%s fetch";
     
     switch (whatToFetch) {
         case kEveryThingRFC822:
@@ -872,16 +888,16 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
 			{
 				if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
-					PL_strcat(commandString, " %s (XSENDER UID RFC822.SIZE BODY[]");
+					commandString.Append(" %s (XSENDER UID RFC822.SIZE BODY[]");
 				else
-					PL_strcat(commandString, " %s (UID RFC822.SIZE BODY[]");
+					commandString.Append(" %s (UID RFC822.SIZE BODY[]");
 			}
 			else
 			{
 				if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
-					PL_strcat(commandString, " %s (XSENDER UID RFC822.SIZE RFC822");
+					commandString.Append(" %s (XSENDER UID RFC822.SIZE RFC822");
 				else
-					PL_strcat(commandString, " %s (UID RFC822.SIZE RFC822");
+					commandString.Append(" %s (UID RFC822.SIZE RFC822");
 			}
 			if (endByte > 0)
 			{
@@ -889,17 +905,17 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 				char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
 				if (byterangeString)
 				{
-					PL_strcat(commandString, byterangeString);
+					commandString.Append(byterangeString);
 					PR_Free(byterangeString);
 				}
 			}
-			PL_strcat(commandString, ")");
+			commandString.Append(")");
             break;
 
         case kEveryThingRFC822Peek:
         	{
 	        	char *formatString = "";
-	        	uint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
+	        	PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
 	        	
 	        	if (server_capabilityFlags & kIMAP4rev1Capability)
 	        	{
@@ -917,7 +933,7 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 	        			formatString = " %s (UID RFC822.SIZE RFC822.peek)";
 	        	}
 	        
-				PL_strcat(commandString, formatString);
+				commandString.Append(formatString);
 			}
             break;
         case kHeadersRFC822andUid:
@@ -943,46 +959,46 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 						char *what = PR_smprintf(" BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
 						if (what)
 						{
-							PL_strcat(commandString, " %s (UID RFC822.SIZE FLAGS");
-							PL_strcat(commandString, what);
+							commandString.Append(" %s (UID RFC822.SIZE FLAGS");
+							commandString.Append(what);
 							PR_Free(what);
 						}
 						else
 						{
-							PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+							commandString.Append(" %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
 						}
 						PR_Free(headersToDL);
 					}
 					else
 					{
-						PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+						commandString.Append(" %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
 					}
 				}
 				else
-					PL_strcat(commandString, " %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
+					commandString.Append(" %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
 			}
 			else
-				PL_strcat(commandString, " %s (UID RFC822.SIZE RFC822.HEADER FLAGS)");
+				commandString.Append(" %s (UID RFC822.SIZE RFC822.HEADER FLAGS)");
             break;
         case kUid:
-			PL_strcat(commandString, " %s (UID)");
+			commandString.Append(" %s (UID)");
             break;
         case kFlags:
-			PL_strcat(commandString, " %s (FLAGS)");
+			commandString.Append(" %s (FLAGS)");
             break;
         case kRFC822Size:
-			PL_strcat(commandString, " %s (RFC822.SIZE)");
+			commandString.Append(" %s (RFC822.SIZE)");
 			break;
 		case kRFC822HeadersOnly:
 			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
 			{
 				if (part)
 				{
-					PL_strcat(commandString, " %s (BODY[");
+					commandString.Append(" %s (BODY[");
 					char *what = PR_smprintf("%s.HEADER])", part);
 					if (what)
 					{
-						PL_strcat(commandString, what);
+						commandString.Append(what);
 						PR_Free(what);
 					}
 					else
@@ -991,36 +1007,36 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 				else
 				{
 					// headers for the top-level message
-					PL_strcat(commandString, " %s (BODY[HEADER])");
+					commandString.Append(" %s (BODY[HEADER])");
 				}
 			}
 			else
-				PL_strcat(commandString, " %s (RFC822.HEADER)");
+				commandString.Append(" %s (RFC822.HEADER)");
 			break;
 		case kMIMEPart:
-			PL_strcat(commandString, " %s (BODY[%s]");
+			commandString.Append(" %s (BODY[%s]");
 			if (endByte > 0)
 			{
 				// if we are retrieving chunks
 				char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
 				if (byterangeString)
 				{
-					PL_strcat(commandString, byterangeString);
+					commandString.Append(byterangeString);
 					PR_Free(byterangeString);
 				}
 			}
-			PL_strcat(commandString, ")");
+			commandString.Append(")");
 			break;
 		case kMIMEHeader:
-			PL_strcat(commandString, " %s (BODY[%s.MIME])");
+			commandString.Append(" %s (BODY[%s.MIME])");
     		break;
 	};
 
-	PL_strcat(commandString,CRLF);
+	commandString.Append(CRLF);
 
 		// since messageIds can be infinitely long, use a dynamic buffer rather than the fixed one
 	const char *commandTag = GetServerCommandTag();
-	int protocolStringSize = PL_strlen(commandString) + PL_strlen(messageIds) + PL_strlen(commandTag) + 1 +
+	int protocolStringSize = commandString.Length() + messageIds.Length() + PL_strlen(commandTag) + 1 +
 		(part ? PL_strlen(part) : 0);
 	char *protocolString = (char *) PR_Malloc( protocolStringSize );
     
@@ -1031,18 +1047,18 @@ nsImapProtocol::FetchMessage(const char *messageIds,
 		{
 			PR_snprintf(protocolString,                                      // string to create
 					protocolStringSize,                                      // max size
-					commandString,                                   // format string
+					commandString.GetBuffer(),                                   // format string
 					commandTag,                          // command tag
-					messageIds,
+					messageIds.GetBuffer(),
 					part);
 		}
 		else
 		{
 			PR_snprintf(protocolString,                                      // string to create
 					protocolStringSize,                                      // max size
-					commandString,                                   // format string
+					commandString.GetBuffer(),                                   // format string
 					commandTag,                          // command tag
-					messageIds);
+					messageIds.GetBuffer());
 		}
 	            
 	    int                 ioStatus = SendData(protocolString);
@@ -1055,7 +1071,7 @@ nsImapProtocol::FetchMessage(const char *messageIds,
         HandleMemoryFailure();
 }
 
-void nsImapProtocol::FetchTryChunking(const char *messageIds,
+void nsImapProtocol::FetchTryChunking(nsString2 &messageIds,
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
 											char *part,
@@ -1104,7 +1120,7 @@ void nsImapProtocol::FetchTryChunking(const char *messageIds,
 }
 
 
-void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts)
+void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePartIDArray *parts)
 {
 	// assumes no chunking
 
@@ -1348,6 +1364,264 @@ void nsImapProtocol::AbortMessageDownLoad()
 }
 
 
+void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
+{
+	if (DeathSignalReceived())
+		return;
+    // fetch the flags and uids of all existing messages or new ones
+    if (!DeathSignalReceived() && GetServerStateParser().NumberOfMessages())
+    {
+    	if (handlePossibleUndo)
+    	{
+	    	// undo any delete flags we may have asked to
+	    	char *undoIds;
+			
+			GetCurrentUrl()->CreateListOfMessageIdsString(&undoIds);
+	    	if (undoIds && *undoIds)
+	    	{
+	    		// if this string started with a '-', then this is an undo of a delete
+	    		// if its a '+' its a redo
+	    		if (*undoIds == '-')
+					Store(undoIds+1, "-FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+	    		else  if (*undoIds == '+')
+					Store(undoIds+1, "+FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+				else 
+					NS_ASSERTION(FALSE, "bogus undo Id's");
+			}
+			PR_FREEIF(undoIds);
+		}
+    	
+        // make the parser record these flags
+		nsString2 fetchStr;
+		PRUint32 added = 0, deleted = 0;
+
+		added = m_flagState.GetNumberOfMessages();
+		deleted = m_flagState.GetNumberOfDeletedMessages();
+
+		if (!added || (added == deleted))
+		{
+			nsString2 idsToFetch("1:*");
+			FetchMessage(idsToFetch, kFlags, TRUE);	// id string shows uids
+			// lets see if we should expunge during a full sync of flags.
+			if (!DeathSignalReceived())	// only expunge if not reading messages manually and before fetching new
+			{
+				// ### TODO read gExpungeThreshhold from prefs.
+				if ((m_flagState.GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  /*&& 
+					GetDeleteIsMoveToTrash() */)
+					Expunge();	// might be expensive, test for user cancel
+			}
+
+		}
+		else {
+			fetchStr.Append(GetServerStateParser().HighestRecordedUID() + 1, 10);
+			fetchStr.Append(":*");
+
+			// sprintf(fetchStr, "%ld:*", GetServerStateParser().HighestRecordedUID() + 1);
+			FetchMessage(fetchStr, kFlags, TRUE);			// only new messages please
+		}
+    }
+    else if (!DeathSignalReceived())
+    	GetServerStateParser().ResetFlagInfo(0);
+        
+    mailbox_spec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
+	if (new_spec && !DeathSignalReceived())
+	{
+#if 0
+		MWContext *ct = NULL;
+		
+		LIBNET_LOCK();
+		if (!DeathSignalReceived())
+		{
+			// if this is an expunge url, libmsg will not ask for headers
+			if (fCurrentUrl->GetIMAPurlType() == TIMAPUrl::kExpungeFolder)
+				new_spec->box_flags |= kJustExpunged;
+				
+			ct = new_spec->connection->fCurrentEntry->window_id;
+			ct->imapURLPane = MSG_FindPane(fCurrentEntry->window_id, MSG_ANYPANE);
+		}
+		LIBNET_UNLOCK();
+		if (ct)
+		{
+			if (!ct->currentIMAPfolder)
+				ct->currentIMAPfolder = (MSG_IMAPFolderInfoMail *) MSG_FindImapFolder(ct->imapURLPane, fCurrentUrl->GetUrlHost(), "INBOX"); // use real folder name
+			PR_EnterMonitor(fWaitForBodyIdsMonitor);
+			UpdatedMailboxSpec(new_spec);
+		}
+#endif // 0
+	}
+	else if (!new_spec)
+		HandleMemoryFailure();
+    
+    // Block until libmsg decides whether to download headers or not.
+    PRUint32 *msgIdList = NULL;
+    PRUint32 msgCount = 0;
+    
+	if (!DeathSignalReceived())
+	{
+		WaitForPotentialListOfMsgsToFetch(&msgIdList, msgCount);
+
+		if (new_spec)
+			PR_ExitMonitor(m_waitForBodyIdsMonitor);
+
+		if (msgIdList && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
+		{
+			FolderHeaderDump(msgIdList, msgCount);
+			PR_FREEIF( msgIdList);
+		}
+			// this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
+			// headers!
+	}
+    // wait for a list of bodies to fetch. 
+    if (!DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
+    {
+        WaitForPotentialListOfMsgsToFetch(&msgIdList, msgCount);
+        if ( msgCount && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
+    	{
+    		FolderMsgDump(msgIdList, msgCount, kEveryThingRFC822Peek);
+    		PR_FREEIF(msgIdList);
+    	}
+	}
+	if (DeathSignalReceived())
+		GetServerStateParser().ResetFlagInfo(0);
+}
+
+
+void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
+{
+	FolderMsgDump(msgUids, msgCount, kHeadersRFC822andUid);
+	
+    if (GetServerStateParser().NumberOfMessages())
+        HeaderFetchCompleted();
+}
+
+void nsImapProtocol::FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
+{
+#if 0
+	// lets worry about this progress stuff later.
+	switch (fields) {
+	case TIMAP4BlockingConnection::kHeadersRFC822andUid:
+		fProgressStringId =  XP_RECEIVING_MESSAGE_HEADERS_OF;
+		break;
+	case TIMAP4BlockingConnection::kFlags:
+		fProgressStringId =  XP_RECEIVING_MESSAGE_FLAGS_OF;
+		break;
+	default:
+		fProgressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+		break;
+	}
+	
+	fProgressIndex = 0;
+	fProgressCount = msgCount;
+#endif // 0
+	FolderMsgDumpLoop(msgUids, msgCount, fields);
+	
+//	fProgressStringId = 0;
+}
+
+void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount)
+{
+	PRIntervalTime sleepTime = kImapSleepTime;
+
+    PR_EnterMonitor(m_fetchMsgListMonitor);
+    while(!m_fetchMsgListIsNew && !DeathSignalReceived())
+        PR_Wait(m_fetchMsgListMonitor, sleepTime);
+    m_fetchMsgListIsNew = FALSE;
+
+    *msgIdList = m_fetchMsgIdList;
+    msgCount   = m_fetchCount;
+    
+    PR_ExitMonitor(m_fetchMsgListMonitor);
+}
+
+
+void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
+{
+    PR_EnterMonitor(m_fetchMsgListMonitor);
+    m_fetchMsgIdList = keys;
+    m_fetchCount  	= keyCount;
+    m_fetchMsgListIsNew = TRUE;
+    PR_Notify(m_fetchMsgListMonitor);
+    PR_ExitMonitor(m_fetchMsgListMonitor);
+}
+
+void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
+{
+//   	PastPasswordCheckEvent();
+
+	PRUint32 msgCountLeft = msgCount;
+	PRUint32 msgsDownloaded = 0;
+	do 
+	{
+		nsString2 idString;
+
+		PRUint32 msgsToDownload = (msgCountLeft > 200) ? 200 : msgCountLeft;
+   		AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);	// 20 * 200
+
+		// except I don't think this works ### DB
+		FetchMessage(idString,  fields, TRUE);                  // msg ids are uids                 
+
+		msgsDownloaded += msgsToDownload;
+		msgCountLeft -= msgsDownloaded;
+
+   	}
+	while (msgCountLeft > 0);
+}   	
+   	
+
+void nsImapProtocol::HeaderFetchCompleted()
+{
+    if (m_imapMiscellaneous)
+        m_imapMiscellaneous->HeaderFetchCompleted(this);
+	// need to block until this finishes - Jeff, how does that work?
+}
+
+
+void nsImapProtocol::AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString)
+{
+	int blocksAllocated = 1;
+	
+	PRInt32 startSequence = (msgCount > 0) ? msgUids[0] : -1;
+	PRInt32 curSequenceEnd = startSequence;
+	PRUint32 total = msgCount;
+
+	for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
+	{
+		PRInt32 curKey = msgUids[keyIndex];
+		PRInt32 nextKey = (keyIndex + 1 < total) ? msgUids[keyIndex + 1] : -1;
+		PRBool lastKey = (nextKey == -1);
+
+		if (lastKey)
+			curSequenceEnd = curKey;
+		if (nextKey == curSequenceEnd + 1 && !lastKey)
+		{
+			curSequenceEnd = nextKey;
+			continue;
+		}
+		else if (curSequenceEnd > startSequence)
+		{
+			returnString.Append(startSequence, 10);
+			returnString += ':';
+			returnString.Append(curSequenceEnd, 10);
+			if (!lastKey)
+				returnString += ',';
+//			sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
+			startSequence = nextKey;
+			curSequenceEnd = startSequence;
+		}
+		else
+		{
+			startSequence = nextKey;
+			curSequenceEnd = startSequence;
+			returnString.Append(msgUids[keyIndex], 10);
+			if (!lastKey)
+				returnString += ',';
+//			sprintf(currentidString, "%ld,", msgUids[keyIndex]);
+		}
+	}
+}
+
+
+
 // log info including current state...
 void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
 {
@@ -1395,7 +1669,7 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 // In 4.5, this posted an event back to libmsg and blocked until it got a response.
 // We may still have to do this.It would be nice if we could preflight this value,
 // but we may not always know when we'll need it.
-PRUint32 nsImapProtocol::GetMessageSize(const char *messageId, PRBool idsAreUids)
+PRUint32 nsImapProtocol::GetMessageSize(nsString2 &messageId, PRBool idsAreUids)
 {
 	NS_ASSERTION(FALSE, "not implemented yet");
 	return 0;

@@ -619,12 +619,14 @@ NS_IMETHODIMP nsIMAPHostSessionList::AddShellToCacheForHost(const char *hostName
 
 NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *hostName, const char *userName, const char *mailboxName, const char *UID, nsIMAPBodyShell	&shell)
 {
+	nsString2 uidString = UID;
+
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 	{
 		if (host->fShellCache)
-			shell = *host->fShellCache->FindShellForUID(UID, mailboxName);
+			shell = *host->fShellCache->FindShellForUID(uidString, mailboxName);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;

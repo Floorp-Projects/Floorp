@@ -31,6 +31,7 @@
 
 #include "nsImapServerResponseParser.h"
 #include "nsImapProxyEvent.h"
+#include "nsImapFlagAndUidState.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -90,17 +91,17 @@ public:
     PRBool GetShouldDownloadArbitraryHeaders();
     char *GetArbitraryHeadersToDownload();
     virtual void AdjustChunkSize();
-    virtual void FetchMessage(const char *messageIds, 
+    virtual void FetchMessage(nsString2 &messageIds, 
                               nsIMAPeFetchFields whatToFetch,
-                              XP_Bool idAreUid,
-							  uint32 startByte = 0, uint32 endByte = 0,
+                              PRBool idAreUid,
+							  PRUint32 startByte = 0, PRUint32 endByte = 0,
 							  char *part = 0);
-	void FetchTryChunking(const char *messageIds,
+	void FetchTryChunking(nsString2 &messageIds,
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
 											char *part,
 											PRUint32 downloadSize);
-	virtual void PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts);
+	virtual void PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePartIDArray *parts);
 
 	// used when streaming a message fetch
     virtual void BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
@@ -111,6 +112,7 @@ public:
     virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);
 	virtual void AddXMozillaStatusLine(uint16 flags);	// for XSender auth info
     
+	virtual void ProcessMailboxUpdate(PRBool handlePossibleUndo);
 	// Send log output...
 	void	Log(const char *logSubName, const char *extraInfo, const char *logData);
 
@@ -120,7 +122,7 @@ public:
 	PRBool GetPseudoInterrupted();
 	void	PseudoInterrupt(PRBool the_interrupt);
 
-	PRUint32 GetMessageSize(const char *messageId, PRBool idsAreUids);
+	PRUint32 GetMessageSize(nsString2 &messageId, PRBool idsAreUids);
 
 	PRBool	DeathSignalReceived();
 	void	ResetProgressInfo();
@@ -215,6 +217,8 @@ private:
     PRMonitor	 *m_dataMemberMonitor;
 	PRMonitor	 *m_threadDeathMonitor;
     PRMonitor    *m_eventCompletionMonitor;
+	PRMonitor	 *m_waitForBodyIdsMonitor;
+	PRMonitor	 *m_fetchMsgListMonitor;
 
     PRBool       m_imapThreadIsRunning;
     static void ImapThreadMain(void *aParm);
@@ -241,6 +245,20 @@ private:
     virtual void ProcessCurrentURL();
     virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
 
+	// listing header functions
+	void FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount);
+	void FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
+	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
+	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
+	void NotifyKeyList(PRUint32 *keys, PRUint32 keyCount);
+	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
+	void HeaderFetchCompleted();
+
+	// header listing data
+	PRBool		m_fetchMsgListIsNew;
+	PRUint32	m_fetchCount;
+	PRUint32	*m_fetchMsgIdList;
+
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);
 
@@ -253,9 +271,10 @@ private:
 	PRInt32 SendData(const char * dataBuffer);
 
 	// state ported over from 4.5
-	PRBool m_pseudoInterrupted;
-	PRBool m_active;
-	PRBool m_threadShouldDie;
+	PRBool					m_pseudoInterrupted;
+	PRBool					m_active;
+	PRBool					m_threadShouldDie;
+	nsImapFlagAndUidState	m_flagState;
 
     // manage the IMAP server command tags
     char m_currentServerCommandTag[10];   // enough for a billion

@@ -25,6 +25,7 @@ nsIMAPBodyShell and associated classes
 
 #include "nsImapCore.h"
 #include "nsIMAPGenericParser.h"
+#include "nsString2.h"
 
 class nsImapProtocol;
 
@@ -259,7 +260,7 @@ public:
 	nsImapProtocol *GetConnection() { return m_protocolConnection; }
 	PRBool	GetPseudoInterrupted();
 	PRBool DeathSignalReceived();
-	const char	*GetUID() { return m_UID; }
+	nsString2 &GetUID() { return m_UID; }
 	const char	*GetFolderName() { return m_folderName; }
 	char	*GetGeneratingPart() { return m_generatingPart; }
 	PRBool	IsBeingGenerated() { return m_isBeingGenerated; }	// Returns TRUE if this is in the process of being
@@ -276,7 +277,7 @@ protected:
 
 	PRBool				m_isValid;
 	nsImapProtocol		*m_protocolConnection;	// Connection, for filling in parts
-	char				*m_UID;					// UID of this message
+	nsString2			m_UID;					// UID of this message
 	char				*m_folderName;			// folder that contains this message
 	char				*m_generatingPart;		// If a specific part is being generated, this is it.  Otherwise, NULL.
 	PRBool				m_isBeingGenerated;		// TRUE if this body shell is in the process of being generated
@@ -308,7 +309,7 @@ public:
 
 	PRBool			AddShellToCache(nsIMAPBodyShell *shell);		// Adds shell to cache, possibly ejecting
 																// another entry based on scheme in EjectEntry().
-	nsIMAPBodyShell	*FindShellForUID(const char *UID, const char *mailboxName);	// Looks up a shell in the cache given the message's UID.
+	nsIMAPBodyShell	*FindShellForUID(nsString2 &UID, const char *mailboxName);	// Looks up a shell in the cache given the message's UID.
 	nsIMAPBodyShell	*FindShellForUID(PRUint32 UID, const char *mailboxName);	// Looks up a shell in the cache given the message's UID.
 															// Returns the shell if found, NULL if not found.
 

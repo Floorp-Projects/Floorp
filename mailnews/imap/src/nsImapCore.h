@@ -221,7 +221,7 @@ typedef struct _TunnelInfo {
 
 typedef struct _delete_message_struct {
 	char *onlineFolderName;
-	XP_Bool		deleteAllMsgs;
+	PRBool		deleteAllMsgs;
 	char *msgIdString;
 } delete_message_struct;
 
@@ -259,8 +259,8 @@ typedef struct _MessageSizeInfo
 {
 	char *id;
 	char *folderName;
-	XP_Bool idIsUid;
-	uint32 size;
+	PRBool idIsUid;
+	PRUint32 size;
 } MessageSizeInfo;
 
 
@@ -286,17 +286,17 @@ public:
     TLineDownloadCache();
     virtual ~TLineDownloadCache();
 
-    uint32  CurrentUID();
-    uint32  SpaceAvailable();
-    XP_Bool CacheEmpty();
+    PRUint32  CurrentUID();
+    PRUint32  SpaceAvailable();
+    PRBool CacheEmpty();
     
     msg_line_info *GetCurrentLineInfo();
     
     void ResetCache();
-    void CacheLine(const char *line, uint32 uid);
+    void CacheLine(const char *line, PRUint32 uid);
 private:
     char   fLineCache[kDownLoadCacheSize];
-    uint32 fBytesUsed;
+    PRUint32 fBytesUsed;
     
     msg_line_info *fLineInfo;
     

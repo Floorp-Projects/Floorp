@@ -106,6 +106,9 @@ public:
 
 	NS_IMETHOD GetImapPartToFetch(char **result) const;
 	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const;
+
+	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const;
+
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();
@@ -125,6 +128,8 @@ protected:
 	PRUint32	 m_port;
 	char		*m_search;
 	char		*m_errorMessage;
+	char		*m_listOfMessageIds;
+
 
 	PRBool		m_runningUrl;
 

@@ -68,10 +68,8 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	NS_ASSERTION(buf, "null buffer passed to nsIMAPBodyShell constructor");
 	if (!buf)
 		return;
-	m_UID = PR_smprintf("%ld",UID);
-	NS_ASSERTION(m_UID, "out of memory in body shell");
-	if (!m_UID)
-		return;
+	m_UID = "";
+	m_UID.Append(UID, 10);
 #ifdef DEBUG_chrisf
 	NS_ASSERTION(folderName);
 #endif
@@ -95,7 +93,6 @@ nsIMAPBodyShell::~nsIMAPBodyShell()
 {
 	delete m_message;
 	delete m_prefetchQueue;
-	PR_FREEIF(m_UID);
 	PR_FREEIF(m_folderName);
 }
 
@@ -1509,7 +1506,7 @@ PRBool nsIMAPBodyShellCache::EjectEntry()
 
 	nsIMAPBodyShell *removedShell = (nsIMAPBodyShell *) (m_shellList->ElementAt(0));
 	m_shellList->RemoveElementAt(0);
-	nsCStringKey hashKey (removedShell->GetUID());
+	nsCStringKey hashKey (removedShell->GetUID().GetBuffer());
 	m_shellHash->Remove(&hashKey);
 	delete removedShell;
 
@@ -1529,11 +1526,11 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// First, for safety sake, remove any entry with the given UID,
 	// just in case we have a collision between two messages in different
 	// folders with the same UID.
-	nsCStringKey hashKey1(shell->GetUID());
+	nsCStringKey hashKey1(shell->GetUID().GetBuffer());
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey1);
 	if (foundShell)
 	{
-		nsCStringKey hashKey(foundShell->GetUID());
+		nsCStringKey hashKey(foundShell->GetUID().GetBuffer());
 		m_shellHash->Remove(&hashKey);
 		m_shellList->RemoveElement(foundShell);
 	}
@@ -1541,7 +1538,7 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// Add the new one to the cache
 	m_shellList->AppendElement(shell);
 	
-	nsCStringKey hashKey2 (shell->GetUID());
+	nsCStringKey hashKey2 (shell->GetUID().GetBuffer());
 	m_shellHash->Put(&hashKey2, shell);
 	shell->SetIsCached(TRUE);
 
@@ -1556,12 +1553,12 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 
 }
 
-nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(const char *UID, const char *mailboxName)
+nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsString2 &UID, const char *mailboxName)
 {
 	if (!UID)
 		return NULL;
 
-	nsCStringKey hashKey(UID);
+	nsCStringKey hashKey(UID.GetBuffer());
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
 
 	if (!foundShell)
@@ -1580,9 +1577,10 @@ nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(const char *UID, const ch
 
 nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(PRUint32 UID, const char *mailboxName)
 {
-	char *uidString = PR_smprintf("%ld", UID);
+	nsString2 uidString;
+	
+	uidString.Append(UID, 10);
 	nsIMAPBodyShell *rv = FindShellForUID(uidString, mailboxName);
-	PR_FREEIF(uidString);
 	return rv;
 }
 

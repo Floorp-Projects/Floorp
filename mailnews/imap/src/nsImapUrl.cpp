@@ -63,6 +63,7 @@ nsImapUrl::nsImapUrl()
     m_imapMessage = nsnull;
     m_imapExtension = nsnull;
     m_imapMiscellaneous = nsnull;
+	m_listOfMessageIds = nsnull;
 
 	m_runningUrl = PR_FALSE;
 
@@ -86,6 +87,8 @@ nsImapUrl::~nsImapUrl()
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
     PR_FREEIF(m_search);
+	PR_FREEIF(m_listOfMessageIds);
+
 }
   
 NS_IMPL_THREADSAFE_ADDREF(nsImapUrl);
@@ -730,6 +733,38 @@ NS_IMETHODIMP nsImapUrl::GetContentLength(PRInt32 *len)
     *len = m_URL_s->content_length;
     NS_UNLOCK_INSTANCE();
     return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char **aResult) const
+{
+	if (nsnull == aResult || !m_listOfMessageIds) 
+		return  NS_ERROR_NULL_POINTER;
+
+    NS_LOCK_INSTANCE();
+
+	char *returnIdString = PL_strdup(m_listOfMessageIds);
+	if (returnIdString)
+	{
+		// mime may have glommed a "&part=" for a part download
+		// we return the entire message and let mime extract
+		// the part. Pop and news work this way also.
+		// this algorithm truncates the "&part" string.
+		char *currentChar = returnIdString;
+		while (*currentChar && (*currentChar != '&'))
+			currentChar++;
+		if (*currentChar == '&')
+			*currentChar = 0;
+
+		// we should also strip off anything after "/;section="
+		// since that can specify an IMAP MIME part
+		char *wherepart = PL_strstr(returnIdString, "/;section=");
+		if (wherepart)
+			*wherepart = 0;
+	}
+	*aResult = returnIdString;
+
+    NS_UNLOCK_INSTANCE();
+	return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
