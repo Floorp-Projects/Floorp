@@ -31,6 +31,8 @@ LIBRARY_NAME	= gkview
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsViewModule
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  gfx \

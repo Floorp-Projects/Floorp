@@ -31,6 +31,8 @@ LIBRARY_NAME	= necko
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_core_and_primary_protocols
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  nkcache \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webbrowserpersist
 XPIDL_MODULE	= webbrowserpersist
+GRE_MODULE	= 1
 
 XPIDLSRCS	= nsIWebBrowserPersist.idl \
                   nsCWebBrowserPersist.idl \

@@ -36,6 +36,7 @@ LIBRARY_NAME = typeaheadfind
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = typahead
 endif
+GRE_MODULE	= 1
 
 REQUIRES        = appcomps \
 		  embedcomponents \

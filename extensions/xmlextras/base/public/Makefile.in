@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsIDOMSerializer.idl  \

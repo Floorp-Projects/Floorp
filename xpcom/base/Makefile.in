@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
+GRE_MODULE	= 1
 
 REQUIRES	= string \
 		  $(NULL)

@@ -31,6 +31,7 @@ LIBRARY_NAME	= imglib2_s
 EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsImageLib2Module
+GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
 		  string \

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= locale
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsILanguageAtom.idl \

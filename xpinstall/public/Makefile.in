@@ -30,6 +30,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsIXPIDialogService.idl \

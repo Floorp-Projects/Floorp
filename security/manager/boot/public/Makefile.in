@@ -35,14 +35,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-MODULE = pipboot
-
 DEPTH           = ../../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+MODULE = pipboot
+GRE_MODULE	= 1
 
 XPIDLSRCS = \
     nsISSLStatusProvider.idl \

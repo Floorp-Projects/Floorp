@@ -33,6 +33,8 @@ MODULE          = npmozax
 LIBRARY_NAME    = npmozax
 RESFILE         = MozActiveX.res
 DEFFILE         = npmozax.def
+GRE_MODULE	= 1
+
 REQUIRES = \
     xpcom \
     java \

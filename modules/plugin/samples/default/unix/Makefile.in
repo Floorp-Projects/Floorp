@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 #MODULE		= plugin
 LIBRARY_NAME	= nullplugin
+GRE_MODULE	= 1
+
 REQUIRES	= java \
 		  plugin \
 		  $(NULL)

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
+GRE_MODULE	= 1
 
 DIRS		= idl coreEvents base
 

@@ -34,6 +34,8 @@ SHORT_LIBNAME	= access
 endif
 IS_COMPONENT	= 1
 MODULE_NAME	= nsAccessibilityModule
+GRE_MODULE	= 1
+
 REQUIRES = \
     xpcom \
     string \

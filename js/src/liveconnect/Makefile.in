@@ -46,6 +46,7 @@ LIBRARY_NAME	= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 MAPFILE		= $(LIBRARY_NAME).map
 endif
 JNI_GEN_DIR	= _jni
+GRE_MODULE	= 1
 
 REQUIRES	= js \
 		  xpcom \

@@ -31,6 +31,8 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= docshell
 EXPORT_LIBRARY = 1
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

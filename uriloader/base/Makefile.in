@@ -28,6 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uriloader
 LIBRARY_NAME	= uriloaderbase_s
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  necko \

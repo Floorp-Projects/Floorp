@@ -33,6 +33,8 @@ ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jpeg$(MOZ_BITS)$(VERSION_NUMBER)
 endif
 
+GRE_MODULE	= 1
+
 CSRCS		= \
 		jdapimin.c \
 		jdapistd.c \

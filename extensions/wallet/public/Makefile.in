@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= wallet
+GRE_MODULE	= 1
 
 SDK_XPIDLSRCS   = \
     nsIPassword.idl    \

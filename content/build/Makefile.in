@@ -36,10 +36,13 @@ SHORT_LIBNAME	= gkcontnt
 endif
 IS_COMPONENT	= 1
 MODULE_NAME	= nsContentModule
+GRE_MODULE	= 1
+
 EXTRA_DSO_LIBS	= gkgfx
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS += mozutil_s
 endif
+
 REQUIRES	= xpcom \
 		  string \
 		  gfx \

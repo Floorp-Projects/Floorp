@@ -33,6 +33,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=typeaheadfind
 XPIDL_MODULE=typeaheadfind
+GRE_MODULE	= 1
 
 XPIDLSRCS= ./nsITypeAheadFind.idl \
   $(NULL)

@@ -46,6 +46,8 @@ LIBRARY_NAME	= profile
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsProfileModule
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  chrome \

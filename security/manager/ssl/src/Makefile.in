@@ -47,6 +47,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= NSS
 EXPORT_LIBRARY	= 1
 META_COMPONENT	= crypto
+GRE_MODULE	= 1
 
 CPPSRCS = 				\
 	nsNSSCallbacks.cpp		\

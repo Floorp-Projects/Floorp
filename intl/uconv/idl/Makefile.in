@@ -27,12 +27,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uconv
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 	nsITextToSubURI.idl \
 	nsICurrentCharsetListener.idl \
 	nsICharsetConverterManager2.idl \
- 	nsIScriptableUConv.idl \
+	nsIScriptableUConv.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -28,6 +28,8 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget_mac
+GRE_MODULE	= 1
+
 REQUIRES  = xpcom \
           gfx \
           string \
