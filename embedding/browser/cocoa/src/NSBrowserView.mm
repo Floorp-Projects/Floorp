@@ -628,11 +628,6 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   }
 }
 
-- (BOOL)isOpaque
-{
-  return YES;
-}
-
 - (void)addListener:(id <NSBrowserListener>)listener
 {
   _listener->AddListener(listener);
