@@ -196,7 +196,7 @@
           <!-- Alignment -->
           <groupbox><label value="&cellContentAlignment.label;"/>
             <grid>
-              <columns><column/><column flex="1"/><column flex="1"/></columns>
+              <columns><column/><column flex="1"/><column/></columns>
               <rows>
                 <row valign="middle" autostretch="never">
                   <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
