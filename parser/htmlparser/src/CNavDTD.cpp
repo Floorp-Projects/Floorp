@@ -233,6 +233,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
   mFilename=0;
+  mSink = nsnull;
   mDTDDebug=0;
   nsCRT::zero(mLeafBits,sizeof(mLeafBits));
   nsCRT::zero(mContextStack,sizeof(mContextStack));
