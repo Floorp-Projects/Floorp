@@ -7,7 +7,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="Account Manager">
 <box align="horizontal" style="width: 100%; height: 100%">
-  <box flex="100%" align="vertical">
+  <box flex="100%" align="vertical" class="padded">
     <box align="horizontal">
       <html:div>
         Search for messages in:
@@ -18,7 +18,7 @@
       </html:select>
     </box>
 
-    <box align="vertical" class="bigbox">
+    <box align="vertical" class="cleanborder">
     <box align="vertical">
        <html:div>
          <html:input type="radio" name="andor" value="and"/>
@@ -30,7 +30,7 @@
        </html:div>
     </box>
 
-    <box align="horizontal">
+    <box align="horizontal" class="padded">
     <html:select>
       <html:option>subject</html:option>
       <html:option>sender</html:option>
@@ -47,17 +47,17 @@
     </box>
     <spring class="spacer"/>
     <box align="horizontal">
-      <html:input type="button" value="More"/>
-      <html:input type="button" value="Fewer"/>
+      <titledbutton class="push" value="More"/>
+      <titledbutton class="push" value="Fewer"/>
       <spring flex="100%"/>
-      <html:input type="button" value="Clear"/>
+      <titledbutton class="push" value="Clear"/>
     </box>
   </box>
   </box>
-  <box align="vertical">
-    <html:input type="button" value="Search"/>
-    <html:input type="button" value="Options"/>
-    <html:input type="button" value="Cancel"/>
+  <box align="vertical" class="padded">
+    <titledbutton class="push" value="Search"/>
+    <titledbutton class="push" value="Options"/>
+    <titledbutton class="push" value="Cancel"/>
   </box>
 </box>
 </xul:window>
