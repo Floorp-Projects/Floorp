@@ -33,6 +33,68 @@
 #include <nsNetUtil.h>
 #include <nsIDOMElement.h>
 #include "nsIDocument.h"
+#include "nsIServiceManager.h"
+#include <nsIDOMNSDocument.h>
+#include <nsIDOMEventTarget.h>
+#include <nsIDOMEventListener.h>
+#include <nsIDOMLoadListener.h>
+#include "nsContentCID.h"
+static NS_DEFINE_CID( kXMLDocumentCID, NS_XMLDOCUMENT_CID );
+
+#if 0
+class nsMyListener : public nsIDOMLoadListener 
+{
+public:
+  nsMyListener() {NS_INIT_ISUPPORTS();}
+  ~nsMyListener() {}
+
+  void Start(const char *a);
+  
+  NS_DECL_ISUPPORTS
+  
+  // nsIDOMEventListener
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK;}
+
+  // nsIDOMLoadListener
+  virtual nsresult Load(nsIDOMEvent* aEvent)   {printf("Load\n"); return NS_OK;}
+  virtual nsresult Unload(nsIDOMEvent* aEvent) {printf("Unload\n"); return NS_OK;}
+  virtual nsresult Abort(nsIDOMEvent* aEvent)  {printf("Abort\n"); return NS_OK;}
+  virtual nsresult Error(nsIDOMEvent* aEvent)  {printf("Error\n"); return NS_OK;}
+};
+
+NS_IMPL_ADDREF(nsMyListener)
+NS_IMPL_RELEASE(nsMyListener)
+
+NS_INTERFACE_MAP_BEGIN(nsMyListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLoadListener)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END
+
+void nsMyListener::Start(const char *arg2)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> doc(do_CreateInstance( kXMLDocumentCID, &rv ));
+  if (NS_SUCCEEDED( rv )) {
+    nsCOMPtr<nsIDOMEventTarget> pDOMEventTarget = do_QueryInterface( doc, &rv );
+    if (NS_SUCCEEDED( rv )) {
+      nsCOMPtr<nsIDOMEventListener> pDOMEventListener = do_QueryInterface( this, &rv );
+      if (NS_SUCCEEDED( rv )) {
+        nsAutoString sLoadCommand;
+        sLoadCommand.Assign( NS_LITERAL_STRING("load") );
+        rv = pDOMEventTarget->AddEventListener( sLoadCommand, pDOMEventListener, PR_FALSE );
+        if (NS_SUCCEEDED( rv )) {
+          nsCOMPtr<nsIDOMNSDocument> pDOMNSDocument = do_QueryInterface( doc, &rv );
+          if (NS_SUCCEEDED( rv )) {
+            rv = pDOMNSDocument->Load( NS_ConvertASCIItoUCS2(arg2) );
+          }
+        }
+      }
+    }
+  }
+
+}
+#endif
 
 void usage( ) {
   printf( "\n" );
@@ -42,6 +104,8 @@ void usage( ) {
   printf( "    parse    = Invokes DOMParser against a local file\n" );
   printf( "      xmlfile  = A local XML URI (ie. file:///d:/file.xml)\n\n" );
   printf( "    syncread = Invokes XMLHttpRequest for a synchronous read\n" );
+  printf( "      xmlfile  = An XML URI (ie. http://www.w3.org/TR/P3P/base\n\n" );
+  printf( "    load       = Invokes document.load for asynchronous read\n" );
   printf( "      xmlfile  = An XML URI (ie. http://www.w3.org/TR/P3P/base\n\n" );
 
   return;
@@ -58,6 +122,11 @@ int main (int argc, char* argv[])
   nsCOMPtr<nsIDOMParser>       pDOMParser;
   nsCOMPtr<nsIDOMDocument>     pDOMDocument;
   nsCOMPtr<nsIXMLHttpRequest>  pXMLHttpRequest;
+
+  nsIServiceManager *servMgr;
+
+  rv = NS_InitXPCOM(&servMgr, nsnull);
+  if (NS_FAILED(rv)) return rv;
 
   if (argc > 2) {
     if (nsCRT::strcasecmp( argv[1], "parsestr" ) == 0) {
@@ -177,6 +246,12 @@ int main (int argc, char* argv[])
         printf( "do_CreateInstance of XMLHttpRequest failed for %s - %08X\n", argv[2], rv );
       }
     }
+#if 0
+    else if (nsCRT::strcasecmp( argv[1], "load" ) == 0) {
+      nsMyListener * listener = new nsMyListener();
+      listener->Start(argv[2]);
+    }
+#endif
     else {
       usage( );
     }
@@ -202,5 +277,8 @@ int main (int argc, char* argv[])
     }
   }
 
-  return 0;
+  if (servMgr)
+    rv = NS_ShutdownXPCOM(servMgr);
+  
+  return rv;
 }

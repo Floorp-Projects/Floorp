@@ -106,7 +106,6 @@ protected:
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIDocument> mBaseDocument;
 #ifdef IMPLEMENT_SYNC_LOAD
   nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
 #endif
@@ -134,74 +133,7 @@ protected:
     nsCString mHeaders;
   };
 
-#if 1 // When nsCString::Append()/Length() works for strings that contain nulls, remove this buffer impl
-  class ResponseBodyBuffer {
-  public:
-    ResponseBodyBuffer() 
-      : mBuffer(0), 
-        mBufferSize(0), 
-        mBufferFreeIndex(0), 
-        mCanBeString(PR_FALSE), 
-        mBufferChecked(PR_FALSE) {}
-    ~ResponseBodyBuffer() { nsMemory::Free(mBuffer); }
-    void Truncate(void) {
-      nsMemory::Free(mBuffer);
-      mBuffer=nsnull;
-      mBufferSize=mBufferFreeIndex=0;
-      mCanBeString = PR_FALSE;
-      mBufferChecked = PR_FALSE;
-    }
-    nsresult Append(const char* aBuffer, PRUint32 aBufferLen) {
-      if (aBufferLen > (mBufferSize-mBufferFreeIndex)) {
-        PRUint32 newBufferSize = (mBufferSize > aBufferLen ? mBufferSize : aBufferLen)<<1;
-        char * newBuffer = NS_STATIC_CAST(char*,nsMemory::Realloc(mBuffer,newBufferSize));
-        if (!newBuffer) {
-          nsMemory::Free(mBuffer);
-          mBuffer = nsnull;
-          mBufferChecked = PR_FALSE;
-          mCanBeString = PR_FALSE;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        mBuffer = newBuffer;
-        mBufferSize = newBufferSize;
-      }
-      memcpy(&mBuffer[mBufferFreeIndex],aBuffer,aBufferLen);
-      mBufferFreeIndex += aBufferLen;
-      mBufferChecked = PR_FALSE;
-      mCanBeString = PR_FALSE;
-      return NS_OK;
-    }
-    const char * GetBuffer(void) { return mBuffer; }
-    PRUint32 GetBufferLength(void) { return mBufferFreeIndex; }
-    PRBool CanBeString(void) {
-      if (!mBufferFreeIndex)
-        return PR_TRUE; // Perhaps this is a bit questionable...
-      if (!mBufferChecked) {
-        mBufferChecked = PR_TRUE;
-
-        mCanBeString = PR_TRUE;
-
-        PRUint32 i;
-        for (i = 0; i < mBufferFreeIndex; i++) {
-          if (!mBuffer[i]) {
-            mCanBeString = PR_FALSE;
-            break;
-          }
-        }
-      }
-      return mCanBeString;
-    }
-  private:
-    char *mBuffer;
-    PRUint32 mBufferSize;
-    PRUint32 mBufferFreeIndex;
-    PRPackedBool mCanBeString;
-    PRPackedBool mBufferChecked;
-  };
-  ResponseBodyBuffer mResponseBody;
-#else
   nsCString mResponseBody;
-#endif
   
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 

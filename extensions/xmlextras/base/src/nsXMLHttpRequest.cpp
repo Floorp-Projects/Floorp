@@ -616,7 +616,7 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
     rv = httpChannel->GetResponseHeader("content-type", getter_Copies(contenttypeheader));
     if (NS_SUCCEEDED(rv)) {
       nsAutoString contentType;
-      contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
+      contentType.AssignWithConversion( contenttypeheader.get() );
       PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
       if(start<0) {
         start += 8; // 8 = "charset=".length
@@ -652,7 +652,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
 {
   *aOutBuffer = nsnull;
 
-  PRInt32 dataLen = mResponseBody.GetBufferLength();
+  PRInt32 dataLen = mResponseBody.Length();
   if (!dataLen)
     return NS_OK;
 
@@ -673,7 +673,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   if (dataCharset.Equals(NS_LITERAL_STRING("ASCII"))) {
     // XXX There is no ASCII->Unicode decoder?
     // XXX How to do this without double allocation/copy?
-    *aOutBuffer = NS_ConvertASCIItoUCS2(mResponseBody.GetBuffer(),dataLen).ToNewUnicode();
+    *aOutBuffer = NS_ConvertASCIItoUCS2(mResponseBody.get(),dataLen).ToNewUnicode();
     if (!*aOutBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -691,7 +691,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   // This loop here is basically a copy of a similar thing in nsScanner.
   // It will exit on first iteration in normal cases, but if we get illegal
   // characters in the input we replace them and then continue.
-  const char * inBuffer = mResponseBody.GetBuffer();
+  const char * inBuffer = mResponseBody.get();
   PRUnichar * outBuffer = nsnull;
   PRInt32 outBufferIndex = 0, inBufferLength = dataLen;
   PRInt32 outLen;
@@ -739,7 +739,9 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(PRUnichar **aResponseText)
   NS_ENSURE_ARG_POINTER(aResponseText);
   *aResponseText = nsnull;
   if ((XML_HTTP_REQUEST_COMPLETED == mStatus)) {
-    if (!mResponseBody.CanBeString())
+    // First check if we can represent the data as a string - if it contains
+    // nulls we won't try. 
+    if (mResponseBody.FindChar('\0') >= 0)
       return NS_ERROR_FAILURE;
     nsresult rv = ConvertBodyToText(aResponseText);
     if (NS_FAILED(rv))
@@ -835,21 +837,14 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   
   nsresult rv;
   nsCOMPtr<nsIURI> uri; 
-  nsCOMPtr<nsILoadGroup> loadGroup;
   PRBool authp = PR_FALSE;
 
-  // Return error if we're alreday processing a request
+  // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT == mStatus) {
     return NS_ERROR_FAILURE;
   }
 
   mAsync = async;
-
-  // If we have a base document, use it for the base URL and loadgroup
-  if (mBaseDocument) {
-    rv = mBaseDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) return rv;
-  }
 
   rv = NS_NewURI(getter_AddRefs(uri), url, mBaseURI);
   if (NS_FAILED(rv)) return rv;
@@ -874,7 +869,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, loadGroup);
+  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
   
   mChannel = do_QueryInterface(channel);
@@ -923,8 +918,17 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+      if (codebase) {
+        codebase->GetURI(getter_AddRefs(mBaseURI));
+      }
+    }
+
     nsCOMPtr<nsIURI> targetURI;
-    rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull);
+    rv = NS_NewURI(getter_AddRefs(targetURI), url, mBaseURI);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest","open");
@@ -940,15 +944,6 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
       if (cc)
         cc->SetExceptionWasThrown(PR_TRUE);
       return NS_OK;
-    }
-
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-      if (codebase) {
-        codebase->GetURI(getter_AddRefs(mBaseURI));
-      }
     }
 
     if (argc > 2) {
@@ -1033,7 +1028,7 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   // Copy the post data to immediately follow the header
   nsCRT::memcpy(postData+headerSize, postData+MAX_HEADER_SIZE, charLength);
 
-  // Shove in the traling CRLF
+  // Shove in the trailing CRLF
   postData[headerSize+charLength] = nsCRT::CR;
   postData[headerSize+charLength+1] = nsCRT::LF;
   postData[headerSize+charLength+2] = '\0';
@@ -1051,10 +1046,7 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 
 
 /*
- * Principle stolen from nsParser.cpp
- *
- * This stuff allows us to read the stream without wiping it out
- * so that the XML Parser can see the data as well.
+ * "Copy" from a stream.
  */
 NS_METHOD
 nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
@@ -1065,20 +1057,39 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
                 PRUint32 *writeCount)
 {
   nsXMLHttpRequest* xmlHttpRequest = NS_STATIC_CAST(nsXMLHttpRequest*, closure);
-  if (!xmlHttpRequest) {
+  if (!xmlHttpRequest || !writeCount) {
+    NS_WARNING("XMLHttpRequest cannot read from stream: no closure or writeCount");
     return NS_ERROR_FAILURE;
   }
 
   // Copy for our own use
-  nsresult rv = xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
-  if (NS_FAILED(rv)) {
-    xmlHttpRequest->mResponseBody.Truncate();
-    return rv;
+  xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
+
+  nsresult rv;
+
+  // Give the same data to the parser.
+
+  // We need to wrap the data in a new lightweight stream and pass that
+  // to the parser, because calling ReadSegments() recursively on the same
+  // stream is not supported.
+  nsCOMPtr<nsISupports> supportsStream;
+  rv = NS_NewByteInputStream(getter_AddRefs(supportsStream),fromRawSegment,count);
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIInputStream> copyStream(do_QueryInterface(supportsStream));
+    if (copyStream) {
+      rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,copyStream,toOffset,count);
+    } else {
+      NS_ERROR("NS_NewByteInputStream did not give out nsIInputStream!");
+      rv = NS_ERROR_UNEXPECTED;
+    }
   }
 
-  rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,in,toOffset,count);
-
-  *writeCount = count; // The parser always copies the whole buffer it gets in OnDataAvailable()
+  if (NS_SUCCEEDED(rv)) {
+    *writeCount = count;
+  } else {
+    *writeCount = 0;
+  }
 
   return rv;
 }
@@ -1087,12 +1098,12 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 NS_IMETHODIMP 
 nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
-  nsresult result=NS_OK; 
+  NS_ENSURE_ARG_POINTER(inStr);
 
   NS_ABORT_IF_FALSE(mContext.get() == ctxt,"start context different from OnDataAvailable context");
 
   PRUint32 totalRead;
-  result = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
+  nsresult result = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
   if (NS_FAILED(result)) {
     mResponseBody.Truncate();
   }
@@ -1125,7 +1136,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsISupports *body)
 {
   nsresult rv;
-  nsCOMPtr<nsIInputStream> postDataStream;
 
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT == mStatus) {
@@ -1137,7 +1147,13 @@ nsXMLHttpRequest::Send(nsISupports *body)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (body) {
+  // Ignore argument if method is GET, there is no point in trying to upload anything
+  nsXPIDLCString method;
+  mChannel->GetRequestMethod(getter_Copies(method)); // If GET, method name will be uppercase
+
+  if (body && nsCRT::strcmp("GET",method.get()) != 0) {
+    nsCOMPtr<nsIInputStream> postDataStream;
+
     nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(body));
     if (doc) {
       // Get an XML serializer
@@ -1150,8 +1166,8 @@ nsXMLHttpRequest::Send(nsISupports *body)
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       
       // Convert to a byte stream
-      rv = GetStreamForWString((const PRUnichar*)serial, 
-                               nsCRT::strlen((const PRUnichar*)serial),
+      rv = GetStreamForWString(serial.get(), 
+                               nsCRT::strlen(serial.get()),
                                getter_AddRefs(postDataStream));
       if (NS_FAILED(rv)) return rv;
     }
@@ -1165,8 +1181,8 @@ nsXMLHttpRequest::Send(nsISupports *body)
         if (wstr) {
           nsXPIDLString holder;
           wstr->GetData(getter_Copies(holder));
-          rv = GetStreamForWString((const PRUnichar*)holder, 
-                                   nsCRT::strlen((const PRUnichar*)holder),
+          rv = GetStreamForWString(holder.get(), 
+                                   nsCRT::strlen(holder.get()),
                                    getter_AddRefs(postDataStream));
           if (NS_FAILED(rv)) return rv;
         }
