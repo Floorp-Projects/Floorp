@@ -1,0 +1,22 @@
+<!-- extracted from ./history.xul -->
+
+
+<!ENTITY fileMenu.label "File">
+<!ENTITY newWinCmd.label "New Window">
+<!ENTITY closeCmd.label ".Close">
+<!ENTITY editMenu.label "Edit">
+<!ENTITY undoCmd.label "Undo">
+<!ENTITY redoCmd.label "Redo">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY deleteCmd.label "Delete">
+<!ENTITY selAllCmd.label "Select All">
+<!ENTITY findHisCmd.label "Find in History...">
+<!ENTITY findAgainCmd.label "Find Again...">
+<!ENTITY historyBySite.label "History By Site">
+<!ENTITY historyByDate.label "History By Date">
+<!ENTITY historyWindowTitle.label "History">
+<!ENTITY name.column.label        "Title">
+<!ENTITY url.column.label         "URL">
+<!ENTITY lastvisited.column.label "Last Visited">
