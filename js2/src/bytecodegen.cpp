@@ -1991,7 +1991,11 @@ BinaryOpEquals:
     case ExprNode::This:
         {
             JSFunction *f = mScopeChain->getContainerFunction();
-            JSType *theClass = mScopeChain->topClass();            
+            JSType *theClass;
+			if (f) 
+				theClass = f->getClass();
+			else
+				theClass = mScopeChain->topClass();            
             // 'this' is legal in prototype functions
             // and at the script top-level
             if ( ((f == NULL) && theClass)

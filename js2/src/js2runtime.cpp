@@ -698,19 +698,22 @@ Reference *ParameterBarrel::genReference(bool /* hasBase */, const String& name,
 JSType *ScopeChain::findType(const StringAtom& typeName, size_t pos) 
 {
     JSValue v = getCompileTimeValue(typeName, NULL);
-    if (v.isType())
-        return v.type;
-    else {
-        // Allow finding a function that has the same name as it's containing class
-        // i.e. the default constructor.
-        FunctionName *fnName = v.function->getFunctionName();
-        if ((fnName->prefix == FunctionName::normal)
-                && v.isFunction() && v.function->getClass() 
-                    && (v.function->getClass()->mClassName->compare(*fnName->name) == 0))
-            return v.function->getClass();
-        m_cx->reportError(Exception::semanticError, "Unknown type", pos);
-        return NULL;
-    }
+	if (!v.isUndefined()) {
+		if (v.isType())
+			return v.type;
+		else {
+			// Allow finding a function that has the same name as it's containing class
+			// i.e. the default constructor.
+			FunctionName *fnName = v.function->getFunctionName();
+			if ((fnName->prefix == FunctionName::normal)
+					&& v.isFunction() && v.function->getClass() 
+						&& (v.function->getClass()->mClassName->compare(*fnName->name) == 0))
+				return v.function->getClass();
+			m_cx->reportError(Exception::semanticError, "Unknown type", pos);
+			return NULL;
+		}
+	}
+	return NULL;
 }
 
 // Take the specified type in 't' and see if we have a compile-time
