@@ -6737,7 +6737,7 @@ nsDocShell::EnsureEditorData()
   return mEditorData ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::EnsureTransferableHookData()
 {
     if (!mTransferableHookData) {
