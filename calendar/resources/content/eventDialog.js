@@ -508,8 +508,8 @@ function checkEndTime()
 function checkEndDate()
 {
    // Bad to get into floats.
-   var startDate = Math.floor(document.getElementById( "start-date-picker" ).value.getTime()/86400000); 
-   var endDate = Math.floor(document.getElementById( "end-date-picker" ).value.getTime()/86400000); 
+   var startDate = document.getElementById( "start-date-picker" ).value; 
+   var endDate = document.getElementById( "end-date-picker" ).value; 
    
    if( startDate.getFullYear() == endDate.getFullYear() &&
        startDate.getMonth() == endDate.getMonth() &&
