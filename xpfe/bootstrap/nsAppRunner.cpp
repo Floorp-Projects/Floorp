@@ -763,7 +763,7 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 
         PRBool exists = PR_FALSE;
 #ifdef XP_OS2
-        rv = NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(parentDir)); 
+        rv = NS_GetSpecialDirectory(NS_OS2_HOME_DIR, getter_AddRefs(parentDir)); 
       
         if (NS_SUCCEEDED(rv))
           rv = parentDir->Exists(&exists);

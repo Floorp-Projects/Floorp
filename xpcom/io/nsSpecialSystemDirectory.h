@@ -106,6 +106,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   OS2_SystemDirectory       =   501
         ,   OS2_OS2Directory          =   502
         ,   OS2_DesktopDirectory      =   503
+        ,   OS2_HomeDirectory         =   504
         };
 
                     //nsSpecialSystemDirectory();
