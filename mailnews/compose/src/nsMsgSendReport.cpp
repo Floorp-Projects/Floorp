@@ -304,7 +304,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       }
   }
   
-  if (mDeliveryMode == nsIMsgCompDeliverMode::Now)
+  if (mDeliveryMode == nsIMsgCompDeliverMode::Now || mDeliveryMode == nsIMsgCompDeliverMode::SendUnsent)
   {
     // SMTP is taking care of it's own error message and will return NS_ERROR_BUT_DONT_SHOW_ALERT as error code.
     // In that case, we must not show an alert ourself.
@@ -339,11 +339,11 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
         break;
       case process_Copy:
         preStrId = NS_MSG_FAILED_COPY_OPERATION;
-        askToGoBackToCompose = PR_TRUE;
+        askToGoBackToCompose = (mDeliveryMode == nsIMsgCompDeliverMode::Now);
         break;
       case process_FCC:
         preStrId = NS_MSG_FAILED_COPY_OPERATION;
-        askToGoBackToCompose = PR_TRUE;
+        askToGoBackToCompose = (mDeliveryMode == nsIMsgCompDeliverMode::Now);
         break;
     }
     composebundle->GetStringByID(preStrId, getter_Copies(dialogMessage));

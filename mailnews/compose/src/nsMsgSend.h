@@ -298,7 +298,7 @@ public:
   PRBool                    m_dont_deliver_p;    // If set, we just return the nsFileSpec of the file
 							                                   // created, instead of actually delivering message.
   nsMsgDeliverMode          m_deliver_mode;      // nsMsgDeliverNow, nsMsgQueueForLater, nsMsgSaveAsDraft, 
-                                                 // nsMsgSaveAsTemplate
+                                                 // nsMsgSaveAsTemplate and nsMsgSendUnsent
   nsCOMPtr<nsIMsgDBHdr>     mMsgToReplace;       // If the mode is nsMsgSaveAsDraft, this is the message it will
                                                  // replace
 

@@ -236,7 +236,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 	    return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
     } 
   }
-  else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+  else // SaveInSentFolder (Sent) -  nsMsgDeliverNow or nsMsgSendUnsent
   {
     rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
@@ -531,7 +531,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         {
           rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, 1, &numFolders, msgFolder);
         }
-      else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+      else // SaveInSentFolder (Sent) -  nsMsgDeliverNow or nsMsgSendUnsent
         {
           rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, 1, &numFolders, msgFolder);
         }

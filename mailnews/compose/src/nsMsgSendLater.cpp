@@ -541,7 +541,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                  mTempIFileSpec, // nsIFileSpec *sendFileSpec,
                                  PR_TRUE, // PRBool deleteSendFileOnCompletion,
                                  PR_FALSE, // PRBool digest_p,
-                                 nsIMsgSend::nsMsgDeliverNow, // nsMsgDeliverMode mode,
+                                 nsIMsgSend::nsMsgSendUnsent, // nsMsgDeliverMode mode,
                                  nsnull, // nsIMsgDBHdr *msgToReplace, 
                                  sendListener,
                                  nsnull); 

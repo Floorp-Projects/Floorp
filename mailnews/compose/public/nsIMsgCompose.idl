@@ -71,6 +71,7 @@ interface nsIMsgCompDeliverMode {
     const long SaveAs = 3;
     const long SaveAsDraft = 4;
     const long SaveAsTemplate = 5;
+    const long SendUnsent = 6;
 };
 
 [scriptable, uuid(f38ea280-e090-11d3-a449-e3153319347c)]

@@ -3915,7 +3915,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkeley "From - " delimiter at the head of 
   // the file for parsing...
   //
-  if (mode == nsMsgDeliverNow && fcc_header)
+  if ((mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) && fcc_header)
     turi = PL_strdup(fcc_header);
   else
     turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
@@ -3966,9 +3966,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // Need to add these lines for POP3 ONLY! IMAP servers will handle
   // this status information for summary file regeneration for us. 
   if ( (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
-        mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow) &&
-        folderIsLocal
-     )
+        mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow ||
+        mode == nsMsgSendUnsent) && folderIsLocal)
   {
     char       *buf = 0;
     PRUint16   flags = 0;

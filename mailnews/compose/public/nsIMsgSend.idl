@@ -176,12 +176,12 @@ interface nsIMsgSend : nsISupports
   //
     
     const nsMsgDeliverMode nsMsgDeliverNow = 0;
-
     const nsMsgDeliverMode nsMsgQueueForLater = 1;
     const nsMsgDeliverMode nsMsgSave = 2;
     const nsMsgDeliverMode nsMsgSaveAs = 3;
     const nsMsgDeliverMode nsMsgSaveAsDraft = 4;
     const nsMsgDeliverMode nsMsgSaveAsTemplate = 5;
+    const nsMsgDeliverMode nsMsgSendUnsent = 6;
 
     [noscript]
     void createAndSendMessage(in nsIEditorShell               aEditor,      

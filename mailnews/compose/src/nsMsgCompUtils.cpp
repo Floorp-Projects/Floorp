@@ -580,7 +580,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     // Send Later file, etc...). Because of that, we need to store what the user
     // typed in on the original composition window for use later when rebuilding
     // the headers
-    if (deliver_mode != nsIMsgSend::nsMsgDeliverNow)
+    if (deliver_mode != nsIMsgSend::nsMsgDeliverNow && deliver_mode != nsIMsgSend::nsMsgSendUnsent)
     {
       // This is going to be saved for later, that means we should just store
       // what the user typed into the "Newsgroup" line in the HEADER_X_MOZILLA_NEWSHOST
