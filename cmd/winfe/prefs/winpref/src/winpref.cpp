@@ -350,7 +350,7 @@ CWindowsPrefsDll::GetCLSIDs()
 
     if (ppRetval) {
         ppRetval[0] = &CLSID_WindowsPrefs;
-        ppRetval[2] = NULL;
+        ppRetval[1] = NULL;
     }
 
     return ppRetval;
