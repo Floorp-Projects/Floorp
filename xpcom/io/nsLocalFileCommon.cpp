@@ -419,13 +419,12 @@ nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDire
     *outFileExtension = nsnull;
     
     rv = NS_OK;    
-    char* eSpec = nsnull;
-    eSpec = nsCRT::strdup(inURL);
+    char* eSpec = nsCRT::strdup(inURL);
     if (!eSpec)
         return NS_ERROR_OUT_OF_MEMORY;
 
     // Skip leading spaces and control-characters
-    char* fwdPtr= (char*) eSpec;
+    char* fwdPtr = eSpec;
     while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
         fwdPtr++;
     // Remove trailing spaces and control-characters
@@ -440,16 +439,21 @@ nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDire
     }
 
     nsCOMPtr<nsIURLParser> parser(do_GetService(kStdURLParserCID, &rv));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        nsCRT::free(eSpec);
+        return rv;
+    }
 
     nsXPIDLCString ePath;
     nsXPIDLCString scheme, username, password, host;
     PRInt32 mPort;
     
     // Parse the spec
-    rv = parser->ParseAtScheme(eSpec, getter_Copies(scheme), getter_Copies(username), 
+    rv = parser->ParseAtScheme(eSpec, getter_Copies(scheme),
+                               getter_Copies(username), 
                                getter_Copies(password), outHost, &mPort,
                                getter_Copies(ePath));
+    nsCRT::free(eSpec);
 
     // if this isn't a file: URL, then we can't deal                                            
     if (NS_FAILED(rv) || nsCRT::strcasecmp(scheme, "file") != 0) {
