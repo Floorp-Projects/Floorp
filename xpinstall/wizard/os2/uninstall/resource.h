@@ -11,6 +11,7 @@
 #define IDS_ERROR_STRING_NULL           4
 #define IDS_ERROR_GLOBALALLOC           5
 #define IDS_ERROR_FAILED                6
+#define IDS_ERROR_NO_LONG_FILENAMES     7
 #define IDI_SETUP                       105
 #define IDI_UNINSTALL                   105
 #define DLG_MESSAGE                     110

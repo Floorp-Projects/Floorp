@@ -68,13 +68,6 @@ void ParseAllUninstallLogs()
       }
     }
 
-    /* clean up the uninstall windows registry key */
-    strcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
-    strcat(szKey, ugUninstall.szUninstallKeyDescription);
-#ifdef OLDCODE
-    RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
-#endif
-
     /* update Wininit.ini to remove itself at reboot */
     RemoveUninstaller(ugUninstall.szUninstallFilename);
   }
@@ -297,6 +290,7 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
 {
   char szBuf[MAX_BUF];
   HWND hDlg = NULL;
+  ATOM atom;
 
   hDlg = WinLoadDlg(HWND_DESKTOP, hParent, pfnwpDlgProc, 0, ulDlgID, NULL);
 
@@ -312,6 +306,9 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
 
     WinPostQueueMsg(NULL, WM_QUIT, 1, 0);
   }
+
+  atom = WinFindAtom(WinQuerySystemAtomTable(), CLASS_NAME);
+  WinSetWindowULong(hDlg, QWL_USER, atom);
 
   return(hDlg);
 }
