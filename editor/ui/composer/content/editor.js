@@ -1038,6 +1038,8 @@ function initFontFaceMenu(menuPopup)
   }
 }
 
+const kFixedFontFaceMenuItems = 7; // number of fixed font face menuitems
+
 function initLocalFontFaceMenu(menuPopup)
 {
   if (!gLocalFonts)
@@ -1049,21 +1051,31 @@ function initLocalFontFaceMenu(menuPopup)
                                  .getService(Components.interfaces.nsIFontEnumerator);
       var localFontCount = { value: 0 }
       gLocalFonts = enumerator.EnumerateAllFonts(localFontCount);
-      for (var i = 0; i < gLocalFonts.length; ++i)
-      {
-        if (gLocalFonts[i] != "")
-        {
-          var itemNode = document.createElementNS(XUL_NS, "menuitem");
-          itemNode.setAttribute("label", gLocalFonts[i]);
-          itemNode.setAttribute("value", gLocalFonts[i]);
-          itemNode.setAttribute("type", "radio");
-          itemNode.setAttribute("name", "2");
-          itemNode.setAttribute("observes", "cmd_renderedHTMLEnabler");
-          menuPopup.appendChild(itemNode);
-        }
-      }
     }
     catch(e) { }
+  }
+  
+  var useRadioMenuitems = (menuPopup.parentNode.localName == "menu"); // don't do this for menulists  
+  if (menuPopup.childNodes.length == kFixedFontFaceMenuItems) 
+  {
+    if (gLocalFonts.length == 0) {
+      menuPopup.childNodes[kFixedFontFaceMenuItems - 1].hidden = true;
+    }
+    for (var i = 0; i < gLocalFonts.length; ++i)
+    {
+      if (gLocalFonts[i] != "")
+      {
+        var itemNode = document.createElementNS(XUL_NS, "menuitem");
+        itemNode.setAttribute("label", gLocalFonts[i]);
+        itemNode.setAttribute("value", gLocalFonts[i]);
+        if (useRadioMenuitems) {
+          itemNode.setAttribute("type", "radio");
+          itemNode.setAttribute("name", "2");
+        }
+        itemNode.setAttribute("observes", "cmd_renderedHTMLEnabler");
+        menuPopup.appendChild(itemNode);
+      }
+    }
   }
 }
  
@@ -1132,7 +1144,7 @@ function initFontSizeMenu(menuPopup)
     // note that no item is checked in the case of "mixed" selection
     children[mediumIndex].setAttribute("checked", !sizeWasFound);
   }
- }
+}
 
 function onHighlightColorChange()
 {

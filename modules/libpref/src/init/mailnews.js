@@ -509,6 +509,12 @@ pref("mailnews.fakeaccount.server", "");
 pref("mailnews.message_display.disable_remote_image", false);
 pref("mailnews.message_display.allow.plugins", true);
 
+// default msg compose font prefs
+pref("msgcompose.font_face",                "");
+pref("msgcompose.font_size",                "medium");
+pref("msgcompose.text_color",               "#000000");
+pref("msgcompose.background_color",         "#FFFFFF");
+
 // When there is no disclosed recipients (only bcc), we should address the message to empty group
 // to prevent some mail server to disclose the bcc recipients
 pref("mail.compose.add_undisclosed_recipients", true);
