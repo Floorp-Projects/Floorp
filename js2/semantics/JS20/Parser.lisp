@@ -19,7 +19,6 @@
     (deftype control-transfer (union break continue return))
     (deftype semantic-exception (union object control-transfer))
     
-    
     (%heading (2 :semantics) "Extended integers and rationals")
     
     (deftag +zero)
@@ -29,7 +28,8 @@
     (deftag nan)
     (deftype extended-rational (union (exclude-zero rational) (tag +zero -zero +infinity -infinity nan)))
     (deftype extended-integer (union integer (tag +infinity -infinity nan)))
-    (deftag syntax-error)
+    (? hide
+      (deftag syntax-error))
     
     
     (%heading (2 :semantics) "Objects")
@@ -110,18 +110,19 @@
       (final boolean)
       (default-value object-opt)
       (default-hint hint :opt-const)
-      (bracket-read (-> (object class (vector object) phase) object-opt))
-      (bracket-write (-> (object class (vector object) object (tag run)) (tag none ok)))
+      (has-property (-> (object class object boolean phase) boolean))
+      (bracket-read (-> (object class (vector object) boolean phase) object-opt))
+      (bracket-write (-> (object class (vector object) object boolean (tag run)) (tag none ok)))
       (bracket-delete (-> (object class (vector object) (tag run)) boolean-opt))
-      (read (-> (object class multiname environment-opt phase) object-opt))
-      (write (-> (object class multiname environment-opt boolean object (tag run)) (tag none ok)))
+      (read (-> (object class multiname environment-opt boolean phase) object-opt))
+      (write (-> (object class multiname environment-opt object boolean (tag run)) (tag none ok)))
       (delete (-> (object class multiname environment-opt (tag run)) boolean-opt))
       (enumerate (-> (object) (list-set object)))
-      (call (-> (object (vector object) phase) object) :opt-const)
-      (construct (-> ((vector object) phase) object) :opt-const)
+      (call (-> (object class (vector object) phase) object))
+      (construct (-> (class (vector object) phase) object))
       (init (union (-> (simple-instance (vector object) (tag run)) void) (tag none)) :var)
       (is (-> (object class) boolean))
-      (as (-> (object class boolean) object)))
+      (coerce (-> (object class) object-opt)))
     (deftype class-opt (union class (tag none)))
     
     
@@ -416,6 +417,7 @@
         (<- j (- j (expt 2 64))))
       (return j))
     
+    #|
     (%text :comment (:global-call truncate-to-extended-integer x) " returns " (:local x) " converted to an integer by rounding towards zero. If " (:local x)
            " is an infinity or a NaN, the result is " (:tag +infinity) ", " (:tag -infinity) ", or " (:tag nan) ", as appropriate.")
     (define (truncate-to-extended-integer (x general-number)) extended-integer
@@ -426,14 +428,39 @@
         (:narrow finite-float32 (return (truncate-finite-float32 x)))
         (:narrow finite-float64 (return (truncate-finite-float64 x)))
         (:narrow (union long u-long) (return (& value x)))))
+    |#
     
     (%text :comment (:global-call truncate-to-integer x) " returns " (:local x) " converted to an integer by rounding towards zero. If " (:local x)
            " is an infinity or a NaN, the result is 0.")
     (define (truncate-to-integer (x general-number)) integer
-      (const i extended-integer (truncate-to-extended-integer x))
+      (case x
+        (:select (tag nan32 nan64 +infinity32 +infinity64 -infinity32 -infinity64) (return 0))
+        (:narrow finite-float32 (return (truncate-finite-float32 x)))
+        (:narrow finite-float64 (return (truncate-finite-float64 x)))
+        (:narrow (union long u-long) (return (& value x)))))
+    
+    
+    (%text :comment (:def-const limit integer) (:global-call pin-extended-integer i limit negative-from-end) " returns " (:local i) " pinned to the set "
+           (:expr (range-set integer) (range-set-of-ranges integer 0 limit)) ", where " (:local limit) " is a nonnegative integer. If "
+           (:local negative-from-end) " is " (:tag true)
+           ", then negative values of " (:local i) " from " (:expr integer (neg limit)) " through " (:expr integer -1) " are treated as 0 through "
+           (:expr integer (- limit 1)) " respectively.")
+    (define (pin-extended-integer (i extended-integer) (limit integer) (negative-from-end boolean)) integer
       (case i
-        (:select (tag +infinity -infinity nan) (return 0))
-        (:narrow integer (return i))))
+        (:select (tag nan) (throw-error -range-error))
+        (:select (tag -infinity) (return 0))
+        (:select (tag +infinity) (return limit))
+        (:narrow integer
+          (var j integer i)
+          (when (> j limit)
+            (<- j limit))
+          (when (and negative-from-end (< j 0))
+            (<- j (+ j limit)))
+          (when (< j 0)
+            (<- j 0))
+          (assert (cascade integer 0 <= j <= limit))
+          (return j))))
+
     
     (%text :comment (:global-call check-integer x) " returns " (:local x) " converted to an integer if its mathematical value is, in fact, an integer. "
            "If " (:local x) " is an infinity or a NaN or has a fractional part, the result is " (:tag none) ".")
@@ -514,6 +541,27 @@
           (return (new u-long i))
           (return (new long i))))))
     
+    
+    (define (extended-rational-to-float32 (q extended-rational)) float32
+      (case q
+        (:narrow rational (return (real-to-float32 q)))
+        (:select (tag +zero) (return +zero32))
+        (:select (tag -zero) (return -zero32))
+        (:select (tag +infinity) (return +infinity32))
+        (:select (tag -infinity) (return -infinity32))
+        (:select (tag nan) (return nan32))))
+    
+    
+    (define (extended-rational-to-float64 (q extended-rational)) float64
+      (case q
+        (:narrow rational (return (real-to-float64 q)))
+        (:select (tag +zero) (return +zero64))
+        (:select (tag -zero) (return -zero64))
+        (:select (tag +infinity) (return +infinity64))
+        (:select (tag -infinity) (return -infinity64))
+        (:select (tag nan) (return nan64))))
+    
+    
     (%text :comment (:global-call to-rational x) " returns the exact " (:type rational) " value of " (:local x) ".")
     (define (to-rational (x finite-general-number)) rational
       (case x
@@ -581,34 +629,72 @@
         (return (vector high low)))))
     
     
-    (define (char-to-lower-full (ch char16)) string
+    (define (char21-to-u-t-f16 (ch char21)) string
+      (return (integer-to-u-t-f16 (char21-to-integer ch))))
+    
+    
+    (define (surrogate-pair-to-supplementary-char (h char16) (l char16)) supplementary-char
+      (const code-point (integer-range (hex #x10000) (hex #x10FFFF))
+        (+ (+ (hex #x10000) (* (- (char16-to-integer h) (hex #xD800)) (hex #x400))) (- (char16-to-integer l) (hex #xDC00))))
+      (return (integer-to-supplementary-char code-point)))
+    
+    
+    (define (string-to-u-t-f32 (s string)) (vector char21)
+      (var i integer 0)
+      (var result (vector char21) (vector-of char21))
+      (while (/= i (length s))
+        (var ch char21)
+        (cond
+         ((and (set-in (nth s i) (range-set-of-ranges char16 #?D800 #?DBFF)) (/= (+ i 1) (length s)) (set-in (nth s (+ i 1)) (range-set-of-ranges char16 #?DC00 #?DFFF)))
+          (<- ch (surrogate-pair-to-supplementary-char (nth s i) (nth s (+ i 1))))
+          (<- i (+ i 2)))
+         (nil
+          (<- ch (nth s i))
+          (<- i (+ i 1))))
+        (<- result (append result (vector ch))))
+      (return result))
+    
+    
+    (define (char-to-lower-full (ch char21)) string
       (/* (:keyword return) " " (:local ch) " converted to a lower case character using the Unicode full, locale-independent case mapping. "
           "A single character may be converted to multiple characters. If " (:local ch) " has no lower case equivalent, then the result is the string "
-          (:expr string (vector ch)) ".")
-      (return (vector (lisp-call char-downcase (ch) char16))))
+          (:expr string (char21-to-u-t-f16 ch)) ".")
+      (cond
+       ((in ch supplementary-char :narrow-both)
+        (return (char21-to-u-t-f16 ch))) ;Don't worry for now about converting the case of these
+       (nil (return (vector (lisp-call char-downcase (ch) char16))))))
     
     
-    (define (char-to-lower-localized (ch char16)) string
+    (define (char-to-lower-localized (ch char21)) string
       (/* (:keyword return) " " (:local ch) " converted to a lower case character using the Unicode full case mapping in the host environment" :apostrophe
           "s current locale. "
           "A single character may be converted to multiple characters. If " (:local ch) " has no lower case equivalent, then the result is the string "
-          (:expr string (vector ch)) ".")
-      (return (vector (lisp-call char-downcase (ch) char16))))
+          (:expr string (char21-to-u-t-f16 ch)) ".")
+      (cond
+       ((in ch supplementary-char :narrow-both)
+        (return (char21-to-u-t-f16 ch))) ;Don't worry for now about converting the case of these
+       (nil (return (vector (lisp-call char-downcase (ch) char16))))))
     
     
-    (define (char-to-upper-full (ch char16)) string
+    (define (char-to-upper-full (ch char21)) string
       (/* (:keyword return) " " (:local ch) " converted to a upper case character using the Unicode full, locale-independent case mapping. "
           "A single character may be converted to multiple characters. If " (:local ch) " has no upper case equivalent, then the result is the string "
-          (:expr string (vector ch)) ".")
-      (return (vector (lisp-call char-upcase (ch) char16))))
+          (:expr string (char21-to-u-t-f16 ch)) ".")
+      (cond
+       ((in ch supplementary-char :narrow-both)
+        (return (char21-to-u-t-f16 ch))) ;Don't worry for now about converting the case of these
+       (nil (return (vector (lisp-call char-upcase (ch) char16))))))
     
     
-    (define (char-to-upper-localized (ch char16)) string
+    (define (char-to-upper-localized (ch char21)) string
       (/* (:keyword return) " " (:local ch) " converted to a upper case character using the Unicode full case mapping in the host environment" :apostrophe
           "s current locale. "
           "A single character may be converted to multiple characters. If " (:local ch) " has no upper case equivalent, then the result is the string "
-          (:expr string (vector ch)) ".")
-      (return (vector (lisp-call char-downcase (ch) char16))))
+          (:expr string (char21-to-u-t-f16 ch)) ".")
+      (cond
+       ((in ch supplementary-char :narrow-both)
+        (return (char21-to-u-t-f16 ch))) ;Don't worry for now about converting the case of these
+       (nil (return (vector (lisp-call char-downcase (ch) char16))))))
     
     
     (%heading (2 :semantics) "Object Utilities")
@@ -626,7 +712,7 @@
         (:select u-long (return ulong))
         (:select float32 (return float))
         (:select float64 (return -number))
-        (:select char16 (return -character))
+        (:select char16 (return char))
         (:select string (return -string))
         (:select namespace (return -namespace))
         (:select compound-attribute (return -attribute))
@@ -696,23 +782,23 @@
         (<- h (&opt default-hint c)))
       (case h
         (:select (tag hint-string)
-          (const to-string-method object-opt ((& read c) o c (list-set (new qualified-name public "toString")) none phase))
+          (const to-string-method object-opt ((& read c) o c (list-set (new qualified-name public "toString")) none false phase))
           (when (not-in to-string-method (tag none) :narrow-true)
             (const r object (call o to-string-method (vector-of object) phase))
             (rwhen (in r primitive-object :narrow-true)
               (return r)))
-          (const value-of-method object-opt ((& read c) o c (list-set (new qualified-name public "valueOf")) none phase))
+          (const value-of-method object-opt ((& read c) o c (list-set (new qualified-name public "valueOf")) none false phase))
           (when (not-in value-of-method (tag none) :narrow-true)
             (const r object (call o value-of-method (vector-of object) phase))
             (rwhen (in r primitive-object :narrow-true)
               (return r))))
         (:select (tag hint-number)
-          (const value-of-method object-opt ((& read c) o c (list-set (new qualified-name public "valueOf")) none phase))
+          (const value-of-method object-opt ((& read c) o c (list-set (new qualified-name public "valueOf")) none false phase))
           (when (not-in value-of-method (tag none) :narrow-true)
             (const r object (call o value-of-method (vector-of object) phase))
             (rwhen (in r primitive-object :narrow-true)
               (return r)))
-          (const to-string-method object-opt ((& read c) o c (list-set (new qualified-name public "toString")) none phase))
+          (const to-string-method object-opt ((& read c) o c (list-set (new qualified-name public "toString")) none false phase))
           (when (not-in to-string-method (tag none) :narrow-true)
             (const r object (call o to-string-method (vector-of object) phase))
             (rwhen (in r primitive-object :narrow-true)
@@ -724,10 +810,7 @@
     (%text :comment (:global-call object-to-general-number o phase) " returns " (:local o) " converted to a " (:global -general-number) ". If "
            (:local phase) " is " (:tag compile) ", only constant conversions are permitted.")
     (define (object-to-general-number (o object) (phase phase)) general-number
-      (var a primitive-object)
-      (if (in o primitive-object :narrow-true)
-        (<- a o)
-        (<- a (object-to-primitive o hint-number phase)))
+      (const a primitive-object (object-to-primitive o hint-number phase))
       (case a
         (:select undefined (return nan64))
         (:select (union null (tag false)) (return +zero64))
@@ -739,10 +822,7 @@
     (%text :comment (:global-call object-to-float32 o phase) " returns " (:local o) " converted to a " (:type float32) ". If "
            (:local phase) " is " (:tag compile) ", only constant conversions are permitted.")
     (define (object-to-float32 (o object) (phase phase)) float32
-      (var a primitive-object)
-      (if (in o primitive-object :narrow-true)
-        (<- a o)
-        (<- a (object-to-primitive o hint-number phase)))
+      (const a primitive-object (object-to-primitive o hint-number phase))
       (case a
         (:select undefined (return nan32))
         (:select (union null (tag false)) (return +zero32))
@@ -757,79 +837,100 @@
       (return (to-float64 (object-to-general-number o phase))))
     
 
-    (%text :comment (:global-call object-to-imprecise-integer o phase) " returns " (:local o) " converted to an " (:type extended-integer) ". If "
-           (:local o) " has a fractional part, it is truncated towards zero. If " (:local o) " is a string, then it is converted to a " (:type float64)
-           " first, which may cause loss of precision. If "
+    (%text :comment (:global-call object-to-extended-integer o phase) " returns " (:local o) " converted to an " (:type extended-integer) ". An error occurs if "
+           (:local o) " has a fractional part or is a NaN. If " (:local o) " is a string, then it is converted exactly. If "
            (:local phase) " is " (:tag compile) ", only constant conversions are permitted.")
-    (define (object-to-imprecise-integer (o object) (phase phase)) extended-integer
-      (return (truncate-to-extended-integer (object-to-general-number o phase))))
+    (define (object-to-extended-integer (o object) (phase phase)) extended-integer
+      (const a primitive-object (object-to-primitive o hint-number phase))
+      (case a
+        (:select (union null (tag false)) (return 0))
+        (:select (tag true) (return 1))
+        (:select (tag undefined nan32 nan64) (return nan))
+        (:select (tag +infinity32 +infinity64) (return +infinity))
+        (:select (tag -infinity32 -infinity64) (return -infinity))
+        (:select (tag +zero32 +zero64 -zero32 -zero64) (return 0))
+        (:narrow (union long u-long) (return (& value a)))
+        (:narrow (union nonzero-finite-float32 nonzero-finite-float64)
+          (const r rational (& value a))
+          (rwhen (not-in r integer :narrow-false)
+            (throw-error -range-error "the value " (:local a) " is not an integer"))
+          (return r))
+        (:narrow (union char16 string)
+          (return (string-to-extended-integer (to-string a))))))
     
 
-    (%text :comment (:global-call object-to-precise-integer o phase) " returns " (:local o) " converted to an " (:type integer) ". An error occurs if "
+    (%text :comment (:global-call object-to-integer o phase) " returns " (:local o) " converted to an " (:type integer) ". An error occurs if "
            (:local o) " has a fractional part or is not finite. If " (:local o) " is a string, then it is converted exactly. If "
            (:local phase) " is " (:tag compile) ", only constant conversions are permitted.")
-    (define (object-to-precise-integer (o object) (phase phase)) integer
-      (var a primitive-object)
-      (if (in o primitive-object :narrow-true)
-        (<- a o)
-        (<- a (object-to-primitive o hint-number phase)))
-      (case a
-        (:select (union undefined null null (tag false)) (return 0))
-        (:select (tag true) (return 1))
-        (:narrow general-number
-          (const i integer-opt (check-integer a))
-          (if (in i (tag none) :narrow-false)
-            (throw-error -range-error (:local a) " is not finite")
-            (return i)))
-        (:narrow (union char16 string)
-          (const i integer-opt (string-to-integer (to-string a) 10))
-          (if (in i (tag none) :narrow-false)
-            (throw-error -type-error "the string " (:local a) " does not contain an integer literal")
-            (return i)))))
+    (define (object-to-integer (o object) (phase phase)) integer
+      (const i extended-integer (object-to-extended-integer o phase))
+      (case i
+        (:select (tag +infinity -infinity nan) (throw-error -range-error (:local i) " is not an integer"))
+        (:narrow integer (return i))))
     
 
     (define (string-to-float32 (s string)) float32
+      (/* "Apply the lexer grammar with the start symbol " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " to the string " (:local s) ".")
       (const q (union extended-rational (tag syntax-error))
         (lisp-call string-to-extended-rational (s)
                    (union extended-rational (tag syntax-error))
-          "the result of parsing " (:operand 0) " using " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " as the start symbol"))
-      (case q
-        (:select (tag syntax-error) (return nan32))
-        (:narrow rational (return (real-to-float32 q)))
-        (:select (tag +zero) (return +zero32))
-        (:select (tag -zero) (return -zero32))
-        (:select (tag +infinity) (return +infinity32))
-        (:select (tag -infinity) (return -infinity32))
-        (:select (tag nan) (return nan32))))
+          "the result of lexing " (:operand 0) " using " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " as the start symbol"))
+      (*/)
+      (cond
+       ((/*/ (in q (tag syntax-error) :narrow-false)
+          "the grammar cannot interpret the entire string as an expansion of " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html"))
+        (return nan32))
+       (nil
+        (// (:local q) ":" :nbsp (:type extended-rational) " " :assign-10 " the value of the action " (:action lex) " applied to the obtained expansion of the nonterminal "
+            (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") ";")
+        (return (extended-rational-to-float32 q)))))
     
     
     (define (string-to-float64 (s string)) float64
+      (/* "Apply the lexer grammar with the start symbol " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " to the string " (:local s) ".")
       (const q (union extended-rational (tag syntax-error))
         (lisp-call string-to-extended-rational (s)
                    (union extended-rational (tag syntax-error))
-          "the result of parsing " (:operand 0) " using " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " as the start symbol"))
-      (case q
-        (:select (tag syntax-error) (return nan64))
-        (:narrow rational (return (real-to-float64 q)))
-        (:select (tag +zero) (return +zero64))
-        (:select (tag -zero) (return -zero64))
-        (:select (tag +infinity) (return +infinity64))
-        (:select (tag -infinity) (return -infinity64))
-        (:select (tag nan) (return nan64))))
+          "the result of lexing " (:operand 0) " using " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " as the start symbol"))
+      (*/)
+      (cond
+       ((/*/ (in q (tag syntax-error) :narrow-false)
+          "the grammar cannot interpret the entire string as an expansion of " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html"))
+        (return nan64))
+       (nil
+        (// (:local q) ":" :nbsp (:type extended-rational) " " :assign-10 " the value of the action " (:action lex) " applied to the obtained expansion of the nonterminal "
+            (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") ";")
+        (return (extended-rational-to-float64 q)))))
     
     
-    (define (string-to-integer (s string :unused) (radix integer :unused)) integer-opt
-      (todo))
+    (define (string-to-extended-integer (s string)) extended-integer
+      (/* "Apply the lexer grammar with the start symbol " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " to the string " (:local s) ".")
+      (const q (union extended-rational (tag syntax-error))
+        (lisp-call string-to-extended-rational (s)
+                   (union extended-rational (tag syntax-error))
+          "the result of lexing " (:operand 0) " using " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") " as the start symbol"))
+      (*/)
+      (cond
+       ((/*/ (in q (tag syntax-error) :narrow-false)
+          "the grammar cannot interpret the entire string as an expansion of " (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html"))
+        (throw-error -type-error "the string " (:local s) " does not contain a number"))
+       (nil
+        (// (:local q) ":" :nbsp (:type extended-rational) " " :assign-10 " the value of the action " (:action lex) " applied to the obtained expansion of the nonterminal "
+            (:grammar-symbol :string-numeric-literal nil "lexer-semantics.html") ";")
+        (case q
+          (:select (tag +zero -zero) (return 0))
+          (:narrow (tag +infinity -infinity nan) (return q))
+          (:narrow rational
+            (if (in q integer :narrow-true)
+              (return q)
+              (throw-error -range-error "the value should be an integer")))))))
     
     
     (%heading (3 :semantics) "Object to String Conversions")
     (%text :comment (:global-call object-to-string o phase) " returns " (:local o) " converted to a " (:global -string) ". If "
            (:local phase) " is " (:tag compile) ", only constant conversions are permitted.")
     (define (object-to-string (o object) (phase phase)) string
-      (var a primitive-object)
-      (if (in o primitive-object :narrow-true)
-        (<- a o)
-        (<- a (object-to-primitive o hint-string phase)))
+      (const a primitive-object (object-to-primitive o hint-string phase))
       (case a
         (:select undefined (return "undefined"))
         (:select null (return "null"))
@@ -874,6 +975,14 @@
         (return (cons #\- (integer-to-string (neg i))))))
     
     
+    (define (exponential-notation-string (digits string) (e integer)) string
+      (var mantissa string)
+      (if (= (length digits) 1)
+        (<- mantissa digits)
+        (<- mantissa (append (vector (nth digits 0)) "." (subseq digits 1))))
+      (return (append mantissa "e" (integer-to-string-with-sign e))))
+    
+    
     (%text :comment (:global-call float32-to-string x) " converts a " (:type float32) " " (:local x) " to a string using fixed-point notation if "
            "the absolute value of " (:local x) " is between " (:expr rational (expt 10 -6)) " inclusive and " (:expr rational (expt 10 21)) " exclusive, and "
            "exponential notation otherwise. The result has the fewest significant digits possible while still ensuring that converting the string back into a "
@@ -889,36 +998,31 @@
           (cond
            ((< r 0 rational) (return (append "-" (float32-to-string (float32-negate x)))))
            (nil
-            (/* (:def-const n integer) (:def-const k integer) (:def-const s integer)
-                "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
+            (/* (:def-const e integer) (:def-const k integer) (:def-const s integer)
+                "Let " (:local e) ", " (:local k) ", and " (:local s) " be integers such that "
                 (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
-                (:expr boolean (= (real-to-float32 (rat* s (expt 10 (- n k)))) x float32)) ", and " (:local k) " is as small as possible.")
-            (const n integer (bottom))
-            (const k integer (bottom))
-            (const s integer (bottom))
+                (:expr boolean (= (real-to-float32 (rat* s (expt 10 (- (+ e 1) k)))) x float32)) ", and " (:local k) " is as small as possible.")
+            (multiple-value-bind ((digits string) (e integer)) decompose-positive-float32 (x))
+            (const k integer (length digits))
             (*/)
             (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", " (:local s)
                   " is not divisible by 10, and the least significant digit of " (:local s)
                   " is not necessarily uniquely determined by the above criteria.")
-            (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
-                "implementations are encouraged but not required to select the one according to the following rules: "
-                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
+            (// (:def-const s integer) "When there are multiple possibilities for " (:local s) " according to the rules above, "
+                "implementations are encouraged but not required to select the one according to the following rule: "
+                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- (+ e 1) k)))) " is closest in value to " (:local r)
                 "; if there are two such possible values of " (:local s) ", choose the one that is even.")
-            (const digits string (integer-to-string s))
+            (// (:def-const s integer) (:local digits) ":" :nbsp (:type string) :nbsp :assign-10 :nbsp (:expr string (integer-to-string s)))
             (cond
-             ((cascade integer k <= n <= 21)
-              (return (append digits (repeat char16 #\0 (- n k)))))
-             ((cascade integer 0 < n <= 21)
-              (return (append (subseq digits 0 (- n 1)) "." (subseq digits n))))
-             ((cascade integer -6 < n <= 0)
-              (return (append "0." (repeat char16 #\0 (neg n)) digits)))
+             ((cascade integer (- k 1) <= e <= 20)
+              (return (append digits (repeat char16 #\0 (- (+ e 1) k)))))
+             ((cascade integer 0 <= e <= 20)
+              (return (append (subseq digits 0 e) "." (subseq digits (+ e 1)))))
+             ((cascade integer -6 <= e < 0)
+              (return (append "0." (repeat char16 #\0 (neg (+ e 1))) digits)))
              (nil
-              (var mantissa string)
-              (if (= k 1)
-                (<- mantissa digits)
-                (<- mantissa (append (subseq digits 0 0) "." (subseq digits 1))))
-              (return (append mantissa "e" (integer-to-string-with-sign (- n 1)))))))))))
-    (defprimitive float32-to-string (lambda (x) (float32-to-string x)))
+              (return (exponential-notation-string digits e)))))))))
+    ;(defprimitive float32-to-string (lambda (x) (float32-to-string x)))
     
     
     (%text :comment (:global-call float64-to-string x) " converts a " (:type float64) " " (:local x) " to a string using fixed-point notation if "
@@ -936,36 +1040,31 @@
           (cond
            ((< r 0 rational) (return (append "-" (float64-to-string (float64-negate x)))))
            (nil
-            (/* (:def-const n integer) (:def-const k integer) (:def-const s integer)
-                "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
+            (/* (:def-const e integer) (:def-const k integer) (:def-const s integer)
+                "Let " (:local e) ", " (:local k) ", and " (:local s) " be integers such that "
                 (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
-                (:expr boolean (= (real-to-float64 (rat* s (expt 10 (- n k)))) x float64)) ", and " (:local k) " is as small as possible.")
-            (const n integer (bottom))
-            (const k integer (bottom))
-            (const s integer (bottom))
+                (:expr boolean (= (real-to-float64 (rat* s (expt 10 (- (+ e 1) k)))) x float64)) ", and " (:local k) " is as small as possible.")
+            (multiple-value-bind ((digits string) (e integer)) decompose-positive-float64 (x))
+            (const k integer (length digits))
             (*/)
-            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", that " (:local s)
-                  " is not divisible by 10, and that the least significant digit of " (:local s)
+            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", " (:local s)
+                  " is not divisible by 10, and the least significant digit of " (:local s)
                   " is not necessarily uniquely determined by the above criteria.")
-            (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
-                "implementations are encouraged but not required to select the one according to the following rules: "
-                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
+            (// (:def-const s integer) "When there are multiple possibilities for " (:local s) " according to the rules above, "
+                "implementations are encouraged but not required to select the one according to the following rule: "
+                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- (+ e 1) k)))) " is closest in value to " (:local r)
                 "; if there are two such possible values of " (:local s) ", choose the one that is even.")
-            (const digits string (integer-to-string s))
+            (// (:def-const s integer) (:local digits) ":" :nbsp (:type string) :nbsp :assign-10 :nbsp (:expr string (integer-to-string s)))
             (cond
-             ((cascade integer k <= n <= 21)
-              (return (append digits (repeat char16 #\0 (- n k)))))
-             ((cascade integer 0 < n <= 21)
-              (return (append (subseq digits 0 (- n 1)) "." (subseq digits n))))
-             ((cascade integer -6 < n <= 0)
-              (return (append "0." (repeat char16 #\0 (neg n)) digits)))
+             ((cascade integer (- k 1) <= e <= 20)
+              (return (append digits (repeat char16 #\0 (- (+ e 1) k)))))
+             ((cascade integer 0 <= e <= 20)
+              (return (append (subseq digits 0 e) "." (subseq digits (+ e 1)))))
+             ((cascade integer -6 <= e < 0)
+              (return (append "0." (repeat char16 #\0 (neg (+ e 1))) digits)))
              (nil
-              (var mantissa string)
-              (if (= k 1)
-                (<- mantissa digits)
-                (<- mantissa (append (subseq digits 0 0) "." (subseq digits 1))))
-              (return (append mantissa "e" (integer-to-string-with-sign (- n 1)))))))))))
-    (defprimitive float64-to-string (lambda (x) (float64-to-string x)))
+              (return (exponential-notation-string digits e)))))))))
+    ;(defprimitive float64-to-string (lambda (x) (float64-to-string x)))
     
     
     (%heading (3 :semantics) "Object to Qualified Name Conversion")
@@ -997,23 +1096,48 @@
     
     
     (%heading (3 :semantics) "Implicit Coercions")
-    (%text :comment (:global-call as o c silent) " attempts to implicitly coerce " (:local o) " to class " (:local c) ". If the coercion succeeds, "
-           (:global as) " returns the coerced value. If not, then " (:global as) " returns " (:tag null) " if " (:local silent) " is " (:tag true)
-           " and " (:tag null) " is a member of type " (:local c) "; otherwise, " (:global as) " throws a " (:global -type-error) ".")
+    (%text :comment (:global-call coerce o c) " attempts to implicitly coerce " (:local o) " to class " (:local c) ". If the coercion succeeds, "
+           (:global coerce) " returns the coerced value. If not, " (:global coerce) " throws a " (:global -type-error) ".")
     (%text :comment "The coercion always succeeds and returns " (:local o) " unchanged if " (:local o) " is already a member of class " (:local c) ". The value returned from "
-           (:global as) " always is a member of class " (:local c) ".")
-    (define (as (o object) (c class) (silent boolean)) object
-      (return ((& as c) o c silent)))
+           (:global coerce) " always is a member of class " (:local c) ".")
+    (define (coerce (o object) (c class)) object
+      (const result object-opt ((& coerce c) o c))
+      (if (not-in result (tag none) :narrow-true)
+        (return result)
+        (throw-error -type-error "coercion failed")))
     
     
-    (%text :comment (:global-call ordinary-as o c) " is the implementation of " (:global as) " for a native class that has "
-           (:local null) " as a member, unless specified otherwise in the class" :apostrophe
-           "s definition. Host classes may define a different procedure to perform this coercion.")
-    (define (ordinary-as (o object) (c class) (silent boolean)) object
+    (%text :comment (:global-call coerce-or-null o c) " attempts to implicitly coerce " (:local o) " to class " (:local c) ". If the coercion succeeds, "
+           (:global coerce-or-null) " returns the coerced value. If not, then " (:global coerce-or-null) " returns " (:tag null) " if "
+           (:tag null) " is a member of type " (:local c) "; otherwise, " (:global coerce-or-null) " throws a " (:global -type-error) ".")
+    (%text :comment "The coercion always succeeds and returns " (:local o) " unchanged if " (:local o) " is already a member of class " (:local c) ". The value returned from "
+           (:global coerce-or-null) " always is a member of class " (:local c) ".")
+    (define (coerce-or-null (o object) (c class)) object
+      (const result object-opt ((& coerce c) o c))
       (cond
-       ((or (in o (tag null)) (is o c)) (return o))
-       (silent (return null))
-       (nil (throw-error -type-error))))
+       ((not-in result (tag none) :narrow-true)
+        (return result))
+       ((= ((& coerce c) null c) null object-opt)
+        (return null))
+       (nil (throw-error -type-error "coercion failed"))))
+    
+    
+    (%text :comment (:global-call coerce-non-null o c) " attempts to implicitly coerce " (:local o) " to class " (:local c)
+           ". If the coercion succeeds and the result is not " (:tag null) ", then "
+           (:global coerce-non-null) " returns the coerced value. If not, " (:global coerce-non-null) " throws a " (:global -type-error) ".")
+    (define (coerce-non-null (o object) (c class)) object
+      (const result object-opt ((& coerce c) o c))
+      (if (not-in result (tag none null) :narrow-true)
+        (return result)
+        (throw-error -type-error "coercion failed")))
+    
+    
+    (%text :comment (:global-call ordinary-coerce o c) " is the implementation of coercion for a native class unless specified otherwise in the class" :apostrophe
+           "s definition. Host classes may define a different procedure to perform this coercion.")
+    (define (ordinary-coerce (o object) (c class)) object-opt
+      (if (or (in o (tag null)) (is o c))
+        (return o)
+        (return none)))
     
     
     (%heading (3 :semantics) "Attributes")
@@ -1074,7 +1198,7 @@
         (:select u-long (return (&opt prototype ulong)))
         (:select float32 (return (&opt prototype float)))
         (:select float64 (return (&opt prototype -number)))
-        (:select char16 (return (&opt prototype -character)))
+        (:select char16 (return (&opt prototype char)))
         (:select string (return (&opt prototype -string)))
         (:select namespace (return (&opt prototype -namespace)))
         (:select compound-attribute (return (&opt prototype -attribute)))
@@ -1125,7 +1249,7 @@
            (:expr variable-value (& value v)) ". In all other cases the presence of an initialiser or an existing value will prevent an immutable variable" :apostrophe
            "s value from being written.")
     (define (write-variable (v variable) (new-value object) (clear-initializer boolean)) object
-      (const coerced-value object (as new-value (&opt type v) false))
+      (const coerced-value object (coerce new-value (&opt type v)))
       (when clear-initializer
         (&= initializer v none))
       (rwhen (and (& immutable v) (or (not-in (& value v) (tag none)) (not-in (& initializer v) (tag none))))
@@ -1236,7 +1360,7 @@
     (%text :comment (:global-call find-archetype-property o multiname access flat) " looks in object " (:local o)
            " for any local or inherited property with one of the names in "
            (:local multiname) " and access that includes " (:local access) ". If " (:local flat) " is " (:tag true)
-           ", then inherited properties are not considered in the search except when " (:local o) " is a class. If it finds no property, " (:global find-archetype-property)
+           ", then properties inherited from the archetype are not considered in the search. If it finds no property, " (:global find-archetype-property)
            " returns " (:tag none) ". If it finds one property, " (:global find-archetype-property)
            " returns it. If it finds more than one property, " (:global find-archetype-property) " prefers the more local one in the list of " (:local o) :apostrophe
            "s superclasses or archetypes; if two or more properties remain, the singleton one is preferred; if two or more properties still remain, "
@@ -1323,8 +1447,19 @@
       (return this))
     
     
-    (define (has-property (o object) (qname qualified-name) (flat boolean)) boolean
+    (%text :comment (:global-call has-property o property flat phase) " returns " (:tag true) " if " (:local o) " has a readable or writable property named "
+           (:local property) ". If " (:local flat) " is " (:tag true) ", then properties inherited from the archetype are not considered.")
+    (define (has-property (o object) (property object) (flat boolean) (phase phase)) boolean
       (const c class (object-type o))
+      (return ((& has-property c) o c property flat phase)))
+    
+    
+    (%text :comment (:global-call has-property o c property flat phase) " is the implementation of " (:global has-property)
+           " for a native class unless specified otherwise in the class" :apostrophe
+           "s definition. Host classes may either also use " (:global ordinary-has-property) " or define a different procedure to perform this test. "
+           (:local c) " is " (:local o) :apostrophe "s type.")
+    (define (ordinary-has-property (o object) (c class) (property object) (flat boolean) (phase phase)) boolean
+      (const qname qualified-name (object-to-qualified-name property phase))
       (return (or (not-in (find-base-instance-property c (list-set qname) read) (tag none))
                   (not-in (find-base-instance-property c (list-set qname) write) (tag none))
                   (not-in (find-archetype-property o (list-set qname) read flat) (tag none))
@@ -1341,9 +1476,9 @@
         (:narrow object (<- result r))
         (:narrow lexical-reference (<- result (lexical-read (& env r) (& variable-multiname r) phase)))
         (:narrow dot-reference
-          (<- result ((& read (& limit r)) (& base r) (& limit r) (& multiname r) none phase)))
+          (<- result ((& read (& limit r)) (& base r) (& limit r) (& multiname r) none true phase)))
         (:narrow bracket-reference
-          (<- result ((& bracket-read (& limit r)) (& base r) (& limit r) (& args r) phase))))
+          (<- result ((& bracket-read (& limit r)) (& base r) (& limit r) (& args r) true phase))))
       (if (not-in result (tag none) :narrow-true)
         (return result)
         (throw-error -reference-error "property not found, and no default value is available")))
@@ -1354,35 +1489,53 @@
     (define (dot-read (o object) (multiname multiname) (phase phase))
             object
       (const limit class (object-type o))
-      (const result object-opt ((& read limit) o limit multiname none phase))
+      (const result object-opt ((& read limit) o limit multiname none true phase))
       (rwhen (in result (tag none) :narrow-false)
         (throw-error -reference-error "property not found, and no default value is available"))
       (return result))
     
     
+    (%text :comment (:global-call read-length o phase) " reads and returns the value of the " (:character-literal "length") " property of " (:local o)
+           ", ensuring that it is an integer between 0 and " (:global array-limit) " inclusive.")
+    (define (read-length (o object) (phase phase)) integer
+      (var value object (dot-read o (list-set (new qualified-name public "length")) phase))
+      (rwhen (not-in value general-number :narrow-false)
+        (throw-error -type-error "length not an integer"))
+      (const length integer-opt (check-integer value))
+      (cond
+       ((in length (tag none) :narrow-false) (throw-error -range-error "length not an integer"))
+       ((cascade integer 0 <= length <= array-limit) (return length))
+       (nil (throw-error -range-error "length out of range"))))
+    
+    
     (%text :comment (:global-call index-read o i phase) " returns the value of " (:local o) (:character-literal "[") (:local i) (:character-literal "]")
-           " or " (:tag none) " if no such property was found. An error is thrown if " (:local i) " is not a valid array index.")
+           " or " (:tag none) " if no such property was found; unlike " (:global dot-read) ", " (:global index-read)
+           " does not return a default value for missing properties. " (:local i) " should always be a valid array index.")
     (define (index-read (o object) (i integer) (phase phase))
             object-opt
-      (rwhen (or (< i 0) (>= i array-limit))
-        (throw-error -range-error))
+      (assert (cascade integer 0 <= i < array-limit))
       (const limit class (object-type o))
-      (return ((& bracket-read limit) o limit (vector (new u-long i)) phase)))
+      (const x float64 (real-to-float64 i))
+      (const result object-opt ((& bracket-read limit) o limit (vector x) false phase))
+      (when (and (not-in result (tag none)) (not (has-property o x true phase)))
+        (// "At the implementation" :apostrophe "s discretion either do nothing, set " (:local result) " to " (:tag none) ", or "
+            (:keyword throw) " a " (:global -reference-error) "."))
+      (return result))
     
     
-    (%text :comment (:def-const o object) (:global-call ordinary-bracket-read o limit args phase) " evaluates the expression "
+    (%text :comment (:def-const o object) (:global-call ordinary-bracket-read o limit args undefined-if-missing phase) " evaluates the expression "
            (:local o) (:character-literal "[") (:local args) (:character-literal "]") " when " (:local o) " is a native object. Host objects may either also use "
            (:global ordinary-bracket-read) " or choose a different procedure " (:local -p) " to evaluate " (:local o) (:character-literal "[") (:local args) (:character-literal "]")
-           " by writing " (:local -p) " into " (:expr (-> (object class (vector object) phase) object-opt) (& bracket-read (object-type o))) ".")
+           " by writing " (:local -p) " into " (:expr (-> (object class (vector object) boolean phase) object-opt) (& bracket-read (object-type o))) ".")
     (%text :comment (:def-const o object) (:local limit) " is used to handle the expression "
            (:character-literal "super(") (:local o) (:character-literal ")[") (:local args) (:character-literal "]")
            ", in which case " (:local limit) " is the superclass of the class inside which the " (:character-literal "super") " expression appears. "
            "Otherwise, " (:local limit) " is set to " (:expr class (object-type o)) ".")
-    (define (ordinary-bracket-read (o object) (limit class) (args (vector object)) (phase phase)) object-opt
+    (define (ordinary-bracket-read (o object) (limit class) (args (vector object)) (undefined-if-missing boolean) (phase phase)) object-opt
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const qname qualified-name (object-to-qualified-name (nth args 0) phase))
-      (return ((& read limit) o limit (list-set qname) none phase)))
+      (return ((& read limit) o limit (list-set qname) none undefined-if-missing phase)))
     
     
     (define (lexical-read (env environment) (multiname multiname) (phase phase)) object
@@ -1393,7 +1546,7 @@
         (case frame
           (:narrow (union package class)
             (const limit class (object-type frame))
-            (<- result ((& read limit) frame limit multiname env phase)))
+            (<- result ((& read limit) frame limit multiname env false phase)))
           (:narrow (union parameter-frame local-frame)
             (const m singleton-property-opt (find-local-singleton-property frame multiname read))
             (when (not-in m (tag none) :narrow-true)
@@ -1403,20 +1556,20 @@
             (rwhen (in value (tag none) :narrow-false)
               (case phase
                 (:select (tag compile)
-                  (throw-error -constant-error "cannot read a " (:character-literal "with") " statement" :apostrophe "s frame from constant expressions"))
+                  (throw-error -constant-error "cannot read a " (:character-literal "with") " statement" :apostrophe "s frame from a constant expression"))
                 (:select (tag run)
                   (throw-error -uninitialized-error
                     "cannot read a " (:character-literal "with") " statement" :apostrophe "s frame before that statement" :apostrophe
                     "s expression has been evaluated"))))
             (const limit class (object-type value))
-            (<- result ((& read limit) value limit multiname env phase))))
+            (<- result ((& read limit) value limit multiname env false phase))))
         (rwhen (not-in result (tag none) :narrow-true)
           (return result))
         (<- i (+ i 1)))
       (throw-error -reference-error "no property found with the name " (:local multiname)))
     
     
-    (define (ordinary-read (o object) (limit class) (multiname multiname) (env environment-opt) (phase phase))
+    (define (ordinary-read (o object) (limit class) (multiname multiname) (env environment-opt) (undefined-if-missing boolean) (phase phase))
             object-opt
       (const m-base instance-property-opt (find-base-instance-property limit multiname read))
       (rwhen (not-in m-base (tag none) :narrow-true)
@@ -1427,11 +1580,11 @@
       (const m property-opt (find-archetype-property o multiname read flat))
       (case m
         (:select (tag none)
-          (if (and (in env (tag none))
+          (if (and undefined-if-missing
                    (in o (union simple-instance date reg-exp package) :narrow-true)
                    (not (& sealed o)))
             (case phase
-              (:select (tag compile) (throw-error -constant-error "constant expressions cannot read dynamic properties"))
+              (:select (tag compile) (throw-error -constant-error "a constant expression cannot read dynamic properties"))
               (:select (tag run) (return undefined)))
             (return none)))
         (:narrow singleton-property (return (read-singleton-property m phase)))
@@ -1459,11 +1612,11 @@
       (case m
         (:narrow instance-variable
           (rwhen (and (in phase (tag compile)) (not (& immutable m)))
-            (throw-error -constant-error "constant expressions cannot read mutable variables"))
+            (throw-error -constant-error "a constant expression cannot read mutable variables"))
           (const v object-opt (& value (find-slot this m)))
           (rwhen (in v (tag none) :narrow-false)
             (case phase
-              (:select (tag compile) (throw-error -constant-error "cannot read uninitalised " (:character-literal "const") " variables from constant expressions"))
+              (:select (tag compile) (throw-error -constant-error "cannot read uninitalised " (:character-literal "const") " variables from a constant expression"))
               (:select (tag run) (throw-error -uninitialized-error "cannot read a " (:character-literal "const") " instance variable before it is initialised"))))
           (return v))
         (:narrow instance-method
@@ -1481,14 +1634,14 @@
           (throw-error -reference-error "cannot access a property defined in a scope outside the current region if any block inside the current region shadows it"))
         (:narrow dynamic-var
           (rwhen (in phase (tag compile))
-            (throw-error -constant-error "constant expressions cannot read mutable variables"))
+            (throw-error -constant-error "a constant expression cannot read mutable variables"))
           (var value (union object uninstantiated-function) (& value m))
           (assert (not-in value uninstantiated-function :narrow-true)
             (:local value) " can be an " (:type uninstantiated-function) " only during the " (:tag compile) " phase, which was ruled out above.")
           (return value))
         (:narrow variable
           (rwhen (and (in phase (tag compile)) (not (& immutable m)))
-            (throw-error -constant-error "constant expressions cannot read mutable variables"))
+            (throw-error -constant-error "a constant expression cannot read mutable variables"))
           (const value variable-value (& value m))
           (case value
             (:narrow object (return value))
@@ -1536,9 +1689,9 @@
           (lexical-write (& env r) (& variable-multiname r) new-value (not (& strict r)) phase)
           (<- result ok))
         (:narrow dot-reference
-          (<- result ((& write (& limit r)) (& base r) (& limit r) (& multiname r) none true new-value phase)))
+          (<- result ((& write (& limit r)) (& base r) (& limit r) (& multiname r) none new-value true phase)))
         (:narrow bracket-reference
-          (<- result ((& bracket-write (& limit r)) (& base r) (& limit r) (& args r) new-value phase))))
+          (<- result ((& bracket-write (& limit r)) (& base r) (& limit r) (& args r) new-value true phase))))
       (rwhen (in result (tag none))
         (throw-error -reference-error "property not found and could not be created")))
     
@@ -1548,27 +1701,43 @@
     (define (dot-write (o object) (multiname multiname) (new-value object) (phase (tag run)))
             void
       (const limit class (object-type o))
-      (const result (tag none ok) ((& write limit) o limit multiname none true new-value phase))
+      (const result (tag none ok) ((& write limit) o limit multiname none new-value true phase))
       (rwhen (in result (tag none))
         (throw-error -reference-error "property not found and could not be created")))
     
     
-    (define (index-write (o object) (i integer) (new-value object) (phase (tag run)))
+    (%text :comment (:global-call write-length o length phase) " ensures that " (:local length) " is between 0 and " (:global array-limit)
+           " inclusive and then writes it into the " (:character-literal "length") " property of " (:local o) ". Note that if " (:local o)
+           " is an " (:character-literal "Array") ", the act of writing its " (:character-literal "length") " property will invoke the "
+           (:global -array_set-length) " setter.")
+    (define (write-length (o object) (length integer) (phase (tag run))) void
+      (rwhen (or (< length 0) (> length array-limit))
+        (throw-error -range-error "length out of range"))
+      (dot-write o (list-set (new qualified-name public "length")) (real-to-float64 length) phase))
+    
+    
+    (define (index-write (o object) (i integer) (new-value object-opt) (phase (tag run)))
             void
       (rwhen (or (< i 0) (>= i array-limit))
-        (throw-error -range-error))
+        (throw-error -range-error "index out of range"))
       (const limit class (object-type o))
-      (const result (tag none ok) ((& bracket-write limit) o limit (vector (new u-long i)) new-value phase))
-      (rwhen (in result (tag none))
-        (throw-error -reference-error "property not found and could not be created")))
+      (cond
+       ((in new-value (tag none) :narrow-false)
+        (const delete-result boolean-opt ((& bracket-delete limit) o limit (vector (real-to-float64 i)) phase))
+        (rwhen (in delete-result (tag false))
+          (throw-error -reference-error "cannot delete element")))
+       (nil
+        (const write-result (tag none ok) ((& bracket-write limit) o limit (vector (real-to-float64 i)) new-value true phase))
+        (rwhen (in write-result (tag none))
+          (throw-error -reference-error "element not found and could not be created")))))
     
     
-    (define (ordinary-bracket-write (o object) (limit class) (args (vector object)) (new-value object) (phase (tag run)))
+    (define (ordinary-bracket-write (o object) (limit class) (args (vector object)) (new-value object) (create-if-missing boolean) (phase (tag run)))
             (tag none ok)
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const qname qualified-name (object-to-qualified-name (nth args 0) phase))
-      (return ((& write limit) o limit (list-set qname) none true new-value phase)))
+      (return ((& write limit) o limit (list-set qname) none new-value create-if-missing phase)))
     
     
     (define (lexical-write (env environment) (multiname multiname) (new-value object) (create-if-missing boolean) (phase (tag run))) void
@@ -1579,7 +1748,7 @@
         (case frame
           (:narrow (union package class)
             (const limit class (object-type frame))
-            (<- result ((& write limit) frame limit multiname env false new-value phase)))
+            (<- result ((& write limit) frame limit multiname env new-value false phase)))
           (:narrow (union parameter-frame local-frame)
             (const m singleton-property-opt (find-local-singleton-property frame multiname write))
             (when (not-in m (tag none) :narrow-true)
@@ -1592,7 +1761,7 @@
                 "cannot read a " (:character-literal "with") " statement" :apostrophe "s frame before that statement" :apostrophe
                 "s expression has been evaluated"))
             (const limit class (object-type value))
-            (<- result ((& write limit) value limit multiname env false new-value phase))))
+            (<- result ((& write limit) value limit multiname env new-value false phase))))
         (rwhen (in result (tag ok))
           (return))
         (<- i (+ i 1)))
@@ -1600,13 +1769,13 @@
         (const pkg package (get-package-frame env))
         (note "Try to write the variable into " (:local pkg) " again, this time allowing new dynamic bindings to be created dynamically.")
         (const limit class (object-type pkg))
-        (const result (tag none ok) ((& write limit) pkg limit multiname env true new-value phase))
+        (const result (tag none ok) ((& write limit) pkg limit multiname env new-value true phase))
         (rwhen (in result (tag ok))
           (return)))
       (throw-error -reference-error "no existing property found with the name " (:local multiname) " and one could not be created"))
     
     
-    (define (ordinary-write (o object) (limit class) (multiname multiname) (env environment-opt) (create-if-missing boolean) (new-value object) (phase (tag run)))
+    (define (ordinary-write (o object) (limit class) (multiname multiname) (env environment-opt) (new-value object) (create-if-missing boolean) (phase (tag run)))
             (tag none ok)
       (const m-base instance-property-opt (find-base-instance-property limit multiname write))
       (rwhen (not-in m-base (tag none) :narrow-true)
@@ -1653,7 +1822,7 @@
       (case m
         (:narrow instance-variable
           (const s slot (find-slot this m))
-          (const coerced-value object (as new-value (&opt type m) false))
+          (const coerced-value object (coerce new-value (&opt type m)))
           (rwhen (and (& immutable m) (not-in (& value s) (tag none)))
             (throw-error -reference-error "cannot initialise a " (:character-literal "const") " instance variable twice"))
           (&= value s coerced-value))
@@ -1803,7 +1972,60 @@
     
     
     
+    (%heading (2 :semantics) "Calling Instances")
+    (define (call (this object) (a object) (args (vector object)) (phase phase)) object
+      (case a
+        (:select (union undefined null boolean general-number char16 string namespace compound-attribute date reg-exp package)
+          (throw-error -type-error))
+        (:narrow class
+          (return ((& call a) this a args phase)))
+        (:narrow simple-instance
+          (const f (union (-> (object simple-instance (vector object) phase) object) (tag none)) (& call a))
+          (rwhen (in f (tag none) :narrow-false)
+            (throw-error -type-error))
+          (return (f this a args phase)))
+        (:narrow method-closure
+          (const m instance-method (& method a))
+          (return ((& call m) (& this a) args phase)))))
+    
+    
+    (define (ordinary-call (this object :unused) (c class) (args (vector object)) (phase phase :unused)) object
+      (note "This function can be used in a constant expression.")
+      (rwhen (not (& complete c))
+        (throw-error -constant-error "cannot call a class before its definition has been compiled"))
+      (rwhen (/= (length args) 1)
+        (throw-error -argument-error "exactly one argument must be supplied"))
+      (return (coerce (nth args 0) c)))
+    
+    
+    (define (same-as-construct (this object :unused) (c class) (args (vector object)) (phase phase)) object
+      (return (construct c args phase)))
+    
+    
     (%heading (2 :semantics) "Creating Instances")
+    (define (construct (a object) (args (vector object)) (phase phase)) object
+      (case a
+        (:select (union undefined null boolean general-number char16 string namespace compound-attribute method-closure date reg-exp package)
+          (throw-error -type-error))
+        (:narrow class
+          (return ((& construct a) a args phase)))
+        (:narrow simple-instance
+          (const f (union (-> (simple-instance (vector object) phase) object) (tag none)) (& construct a))
+          (rwhen (in f (tag none) :narrow-false)
+            (throw-error -type-error))
+          (return (f a args phase)))))
+    
+    
+    (define (ordinary-construct (c class) (args (vector object)) (phase phase)) object
+      (rwhen (not (& complete c))
+        (throw-error -constant-error "cannot construct an instance of a class before its definition has been compiled"))
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error "a class constructor call is not a constant expression because it evaluates to a new object each time it is evaluated"))
+      (const this simple-instance (create-simple-instance c (&opt prototype c) none none none))
+      (call-init this c args phase)
+      (return this))
+    
+    
     (define (create-simple-instance (c class)
                                     (archetype object-opt)
                                     (call (union (-> (object simple-instance (vector object) phase) object) (tag none)))
@@ -1817,8 +2039,17 @@
             (const slot slot (new slot m (&opt default-value m)))
             (<- slots (set+ slots (list-set slot))))))
       (return (new simple-instance (list-set-of local-binding) archetype (not (& dynamic c)) c slots call construct env)))
-
     
+    
+    (define (call-init (this simple-instance) (c class-opt) (args (vector object)) (phase (tag run))) void
+      (var init (union (-> (simple-instance (vector object) (tag run)) void) (tag none)) none)
+      (when (not-in c (tag none) :narrow-true)
+        (<- init (& init c)))
+      (cond
+       ((not-in init (tag none) :narrow-true) (init this args phase))
+       (nil (rwhen (nonempty args)
+              (throw-error -argument-error "the default constructor does not take any arguments")))))
+
     
     (%heading (2 :semantics) "Adding Local Definitions")
     (define (define-singleton-property (env environment) (id string) (namespaces (list-set namespace)) (override-mod override-modifier) (explicit boolean)
@@ -1987,7 +2218,7 @@
       (const i simple-instance (create-simple-instance c (&opt prototype c) (& call uf) (& construct uf) env))
       (dot-write i (list-set (new qualified-name public "length")) (real-to-float64 (& length uf)) run)
       (when (= c -prototype-function class)
-        (const prototype object ((&opt construct -object) (vector-of object) run))
+        (const prototype object (construct -object (vector-of object) run))
         (dot-write prototype (list-set (new qualified-name public "constructor")) i run)
         (dot-write i (list-set (new qualified-name public "prototype")) prototype run))
       (const instantiations (list-set simple-instance) (& instantiations uf))
@@ -2113,9 +2344,12 @@
     (%heading (2 :semantics) "Standard Class Utilities")
     
     (define (default-arg (args (vector object)) (n integer) (default object)) object
-      (if (< n (length args))
-        (return (nth args n))
-        (return default)))
+      (rwhen (>= n (length args))
+        (return default))
+      (const arg object (nth args n))
+      (if (in arg (tag undefined))
+        (return default)
+        (return arg)))
     
     
     (define (std-const-binding (qname qualified-name) (type (delay class)) (value object)) local-binding
@@ -2130,6 +2364,12 @@
                 (new variable type value true none none :uninit))))
     
     
+    (define (std-var-binding (qname qualified-name) (type (delay class)) (value object)) local-binding
+      (return (new local-binding
+                qname read-write false false
+                (new variable type value false none none :uninit))))
+    
+    
     (define (std-function (qname qualified-name) (call (-> (object simple-instance (vector object) phase) object)) (length integer)) local-binding
       (const slots (list-set slot) (list-set (new slot ivar-function-length (real-to-float64 length))))
       (const f simple-instance (new simple-instance (list-set-of local-binding) (delay -function-prototype) true -function slots call none none))
@@ -2137,6 +2377,16 @@
                 qname read-write false false
                 (new variable -function f true none none :uninit))))
     
+    
+    (%text :comment (:global-call std-reserve qname archetype) " is used during the creation of system objects. It returns an alias of the local binding of "
+           (:local qname) " in " (:local archetype)
+           ", which should be the archetype of the object being created. The alias that " (:global std-reserve) " defines serves to prevent " (:local qname)
+           " from being later redefined by users in the object being created while at the same time retaining the definition of " (:local qname)
+           " that would normally be inherited from " (:local archetype) ".")
+    (define (std-reserve (qname qualified-name) (archetype simple-instance)) local-binding
+      (const matching-bindings (list-set local-binding) (map (& local-bindings archetype) b b (= (& qname b) qname qualified-name)))
+      (return (unique-elt-of matching-bindings)))
+     
     
     
     (%heading 1 "Expressions")
@@ -2167,44 +2417,42 @@
     (%print-actions)
     
     (%heading 2 "Qualified Identifiers")
-    (rule :qualifier ((open-namespaces (writable-cell (list-set namespace)))
-                      (validate (-> (context environment) void))
-                      (eval (-> (environment phase) namespace)))
-      (production :qualifier (:identifier) qualifier-identifier
-        ((validate cxt (env :unused))
-         (action<- (open-namespaces :qualifier 0) (& open-namespaces cxt)))
-        ((eval env phase)
-         (const multiname multiname (map (open-namespaces :qualifier 0) ns (new qualified-name ns (name :identifier))))
-         (const a object (lexical-read env multiname phase))
-         (rwhen (not-in a namespace :narrow-false) (throw-error -type-error "the qualifier must be a namespace"))
-         (return a)))
-      (production :qualifier (:reserved-namespace) qualifier-reserved-namespace
-        ((validate cxt env) ((validate :reserved-namespace) cxt env))
-        ((eval env phase) (return ((eval :reserved-namespace) env phase)))))
-    
     (rule :simple-qualified-identifier ((open-namespaces (writable-cell (list-set namespace)))
+                                        (strict (writable-cell boolean))
                                         (validate (-> (context environment) void))
                                         (setup (-> () void))
                                         (eval (-> (environment phase) multiname)))
       (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier
         ((validate cxt (env :unused))
-         (action<- (open-namespaces :simple-qualified-identifier 0) (& open-namespaces cxt)))
+         (action<- (open-namespaces :simple-qualified-identifier 0) (& open-namespaces cxt))
+         (action<- (strict :simple-qualified-identifier 0) (& strict cxt)))
         ((setup))
         ((eval (env :unused) (phase :unused))
          (return (map (open-namespaces :simple-qualified-identifier 0) ns (new qualified-name ns (name :identifier))))))
-      (production :simple-qualified-identifier (:qualifier \:\: :identifier) simple-qualified-identifier-qualifier
-        ((validate cxt env)
-         ((validate :qualifier) cxt env))
+      (production :simple-qualified-identifier (:identifier \:\: :identifier) simple-qualified-identifier-identifier-qualifier
+        ((validate cxt (env :unused))
+         (action<- (open-namespaces :simple-qualified-identifier 0) (& open-namespaces cxt)))
         ((setup))
         ((eval env phase)
-         (const q namespace ((eval :qualifier) env phase))
+         (const multiname multiname (map (open-namespaces :simple-qualified-identifier 0) ns (new qualified-name ns (name :identifier 1))))
+         (const a object (lexical-read env multiname phase))
+         (rwhen (not-in a namespace :narrow-false)
+           (throw-error -type-error "the qualifier must be a namespace"))
+         (return (list-set (new qualified-name a (name :identifier 2))))))
+      (production :simple-qualified-identifier (:reserved-namespace \:\: :identifier) simple-qualified-identifier-reserved-namespace-qualifier
+        ((validate cxt env) ((validate :reserved-namespace) cxt env))
+        ((setup) ((setup :reserved-namespace)))
+        ((eval env phase)
+         (const q namespace ((eval :reserved-namespace) env phase))
          (return (list-set (new qualified-name q (name :identifier)))))))
     
-    (rule :expression-qualified-identifier ((validate (-> (context environment) void))
+    (rule :expression-qualified-identifier ((strict (writable-cell boolean))
+                                            (validate (-> (context environment) void))
                                             (setup (-> () void))
                                             (eval (-> (environment phase) multiname)))
       (production :expression-qualified-identifier (:paren-expression \:\: :identifier) expression-qualified-identifier-identifier
         ((validate cxt env)
+         (action<- (strict :expression-qualified-identifier 0) (& strict cxt))
          ((validate :paren-expression) cxt env))
         ((setup) ((setup :paren-expression)))
         ((eval env phase)
@@ -2212,41 +2460,46 @@
          (rwhen (not-in q namespace :narrow-false) (throw-error -type-error "the qualifier must be a namespace"))
          (return (list-set (new qualified-name q (name :identifier)))))))
     
-    (rule :qualified-identifier ((validate (-> (context environment) void))
+    (rule :qualified-identifier ((strict (writable-cell boolean))
+                                 (validate (-> (context environment) void))
                                  (setup (-> () void))
                                  (eval (-> (environment phase) multiname)))
       (production :qualified-identifier (:simple-qualified-identifier) qualified-identifier-simple
-        ((validate cxt env) :forward)
+        ((validate cxt env)
+         (action<- (strict :qualified-identifier 0) (& strict cxt))
+         ((validate :simple-qualified-identifier) cxt env))
         ((setup) :forward)
-        ((eval env phase) (return ((eval :simple-qualified-identifier) env phase))))
+        ((eval env phase) :forward-result))
       (production :qualified-identifier (:expression-qualified-identifier) qualified-identifier-expression
-        ((validate cxt env) :forward)
+        ((validate cxt env)
+         (action<- (strict :qualified-identifier 0) (& strict cxt))
+         ((validate :expression-qualified-identifier) cxt env))
         ((setup) :forward)
-        ((eval env phase) (return ((eval :expression-qualified-identifier) env phase)))))
-    (%print-actions ("Validation" open-namespaces validate) ("Setup" setup) ("Evaluation" eval))
+        ((eval env phase) :forward-result)))
+    (%print-actions ("Validation" open-namespaces strict validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Primary Expressions")
     (rule :primary-expression ((validate (-> (context environment) void)) (setup (-> () void)) (eval (-> (environment phase) obj-or-ref)))
       (production :primary-expression (null) primary-expression-null
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return null)))
       (production :primary-expression (true) primary-expression-true
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return true)))
       (production :primary-expression (false) primary-expression-false
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return false)))
       (production :primary-expression ($number) primary-expression-number
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (value $number))))
       (production :primary-expression ($string) primary-expression-string
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (value $string))))
       (production :primary-expression (this) primary-expression-this
         ((validate cxt env)
@@ -2257,7 +2510,7 @@
              (throw-error -syntax-error (:character-literal "this") " can be used outside a function only in non-strict mode")))
           ((in (& kind frame) (tag plain-function))
            (throw-error -syntax-error "this function does not define " (:character-literal "this")))))
-        ((setup))
+        ((setup) :forward)
         ((eval env phase)
          (const frame parameter-frame-opt (get-enclosing-parameter-frame env))
          (rwhen (in frame (tag none) :narrow-false)
@@ -2273,37 +2526,39 @@
          (return this)))
       (production :primary-expression ($regular-expression) primary-expression-regular-expression
         ((validate (cxt :unused) (env :unused)))
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (append (body $regular-expression) "#" (flags $regular-expression))))) ;*****
       (production :primary-expression (:reserved-namespace) primary-expression-reserved-namespace
         ((validate cxt env) ((validate :reserved-namespace) cxt env))
-        ((setup))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :reserved-namespace) env phase))))
       (production :primary-expression (:paren-list-expression) primary-expression-paren-list-expression
         ((validate cxt env) ((validate :paren-list-expression) cxt env))
-        ((setup) ((setup :paren-list-expression)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :paren-list-expression) env phase))))
       (production :primary-expression (:array-literal) primary-expression-array-literal
         ((validate cxt env) ((validate :array-literal) cxt env))
-        ((setup) ((setup :array-literal)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :array-literal) env phase))))
       (production :primary-expression (:object-literal) primary-expression-object-literal
         ((validate cxt env) ((validate :object-literal) cxt env))
-        ((setup) ((setup :object-literal)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :object-literal) env phase))))
       (production :primary-expression (:function-expression) primary-expression-function-expression
         ((validate cxt env) ((validate :function-expression) cxt env))
-        ((setup) ((setup :function-expression)))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :function-expression) env phase)))))
     
-    (rule :reserved-namespace ((validate (-> (context environment) void)) (eval (-> (environment phase) namespace)))
+    (rule :reserved-namespace ((validate (-> (context environment) void)) (setup (-> () void)) (eval (-> (environment phase) namespace)))
       (production :reserved-namespace (public) reserved-namespace-public
         ((validate (cxt :unused) (env :unused)))
+        ((setup))
         ((eval (env :unused) (phase :unused)) (return public)))
       (production :reserved-namespace (private) reserved-namespace-private
         ((validate (cxt :unused) env)
          (rwhen (in (get-enclosing-class env) (tag none))
            (throw-error -syntax-error (:character-literal "private") " is meaningful only inside a class")))
+        ((setup))
         ((eval env (phase :unused))
          (const c class-opt (get-enclosing-class env))
          (assert (not-in c (tag none) :narrow-true)
@@ -2314,7 +2569,7 @@
       (production :paren-expression (\( (:assignment-expression allow-in) \)) paren-expression-assignment-expression
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :assignment-expression) env phase)))))
+        ((eval env phase) :forward-result)))
     
     (rule :paren-list-expression ((validate (-> (context environment) void)) (setup (-> () void))
                                   (eval (-> (environment phase) obj-or-ref))
@@ -2381,12 +2636,12 @@
     (rule :object-literal ((validate (-> (context environment) void)) (setup (-> () void))
                            (eval (-> (environment phase) obj-or-ref)))
       (production :object-literal (\{ :field-list \}) object-literal-list
-        ((validate cxt env) ((validate :field-list) cxt env))
-        ((setup) ((setup :field-list)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw-error -constant-error "an object literal is not a constant expression because it evaluates to a new object each time it is evaluated"))
-         (const o object ((&opt construct -object) (vector-of object) phase))
+         (const o object (construct -object (vector-of object) phase))
          ((eval :field-list) env o phase)
          (return o))))
     
@@ -2419,12 +2674,8 @@
                           (setup (-> () void))
                           (eval (-> (environment object (tag run)) void)))
       (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression
-        ((validate cxt env)
-         ((validate :field-name) cxt env)
-         ((validate :assignment-expression) cxt env))
-        ((setup)
-         ((setup :field-name))
-         ((setup :assignment-expression)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env o phase)
          (const multiname multiname ((eval :field-name) env phase))
          (const value object (read-reference ((eval :assignment-expression) env phase) phase))
@@ -2458,16 +2709,14 @@
     (rule :array-literal ((validate (-> (context environment) void)) (setup (-> () void))
                           (eval (-> (environment phase) obj-or-ref)))
       (production :array-literal ([ :element-list ]) array-literal-list
-        ((validate cxt env) ((validate :element-list) cxt env))
-        ((setup) ((setup :element-list)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
            (throw-error -constant-error "an array literal is not a constant expression because it evaluates to a new object each time it is evaluated"))
-         (const o object ((&opt construct -array) (vector-of object) phase))
+         (const o object (construct -array (vector-of object) phase))
          (const length integer ((eval :element-list) env 0 o phase))
-         (rwhen (> length array-limit)
-           (throw-error -range-error))
-         (dot-write o (list-set (new qualified-name array-private "length")) (new u-long length) phase)
+         (write-array-private-length o length phase)
          (return o))))
     
     
@@ -2500,8 +2749,8 @@
                             (setup (-> () void))
                             (eval (-> (environment integer object (tag run)) void)))
       (production :literal-element ((:assignment-expression allow-in)) literal-element-assignment-expression
-        ((validate cxt env) ((validate :assignment-expression) cxt env))
-        ((setup) ((setup :assignment-expression)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env length o phase)
          (const value object (read-reference ((eval :assignment-expression) env phase) phase))
          (index-write o length value phase))))
@@ -2553,7 +2802,7 @@
       (const limit class-opt (& super c))
       (assert (not-in limit (tag none) :narrow-true)
         (:action validate) " ensured that " (:local limit) " cannot be " (:tag none) " at this point.")
-      (const coerced object (as o limit false))
+      (const coerced object (coerce o limit))
       (rwhen (in coerced (tag null))
         (return null))
       (return (new limited-instance coerced limit)))
@@ -2565,38 +2814,32 @@
       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :attribute-expression) env phase))))
+        ((eval env phase) :forward-result))
       (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :full-postfix-expression) env phase))))
+        ((eval env phase) :forward-result))
       (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :short-new-expression) env phase)))))
+        ((eval env phase) :forward-result)))
     
-    (rule :attribute-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+    (rule :attribute-expression ((validate (-> (context environment) void)) (setup (-> () void))
                                  (eval (-> (environment phase) obj-or-ref)))
       (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
-        ((validate cxt env)
-         ((validate :simple-qualified-identifier) cxt env)
-         (action<- (strict :attribute-expression 0) (& strict cxt)))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const m multiname ((eval :simple-qualified-identifier) env phase))
-         (return (new lexical-reference env m (strict :attribute-expression 0)))))
+         (return (new lexical-reference env m (strict :simple-qualified-identifier)))))
       (production :attribute-expression (:attribute-expression :property-operator) attribute-expression-property-operator
-        ((validate cxt env)
-         ((validate :attribute-expression) cxt env)
-         ((validate :property-operator) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :attribute-expression) env phase) phase))
          (return ((eval :property-operator) env a phase))))
       (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call
-        ((validate cxt env)
-         ((validate :attribute-expression) cxt env)
-         ((validate :arguments) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :attribute-expression) env phase))
@@ -2608,44 +2851,36 @@
          (const args (vector object) ((eval :arguments) env phase))
          (return (call base f args phase)))))
     
-    (rule :full-postfix-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
+    (rule :full-postfix-expression ((validate (-> (context environment) void)) (setup (-> () void))
                                     (eval (-> (environment phase) obj-or-ref)))
       (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression
-        ((validate cxt env) ((validate :primary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier
-        ((validate cxt env)
-         ((validate :expression-qualified-identifier) cxt env)
-         (action<- (strict :full-postfix-expression 0) (& strict cxt)))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const m multiname ((eval :expression-qualified-identifier) env phase))
-         (return (new lexical-reference env m (strict :full-postfix-expression 0)))))
+         (return (new lexical-reference env m (strict :expression-qualified-identifier)))))
       (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression
-        ((validate cxt env) ((validate :full-new-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
       (production :full-postfix-expression (:full-postfix-expression :property-operator) full-postfix-expression-property-operator
-        ((validate cxt env)
-         ((validate :full-postfix-expression) cxt env)
-         ((validate :property-operator) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :full-postfix-expression) env phase) phase))
          (return ((eval :property-operator) env a phase))))
       (production :full-postfix-expression (:super-expression :property-operator) full-postfix-expression-super-property-operator
-        ((validate cxt env)
-         ((validate :super-expression) cxt env)
-         ((validate :property-operator) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
          (return ((eval :property-operator) env a phase))))
       (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
-        ((validate cxt env)
-         ((validate :full-postfix-expression) cxt env)
-         ((validate :arguments) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const r obj-or-ref ((eval :full-postfix-expression) env phase))
@@ -2657,11 +2892,11 @@
          (const args (vector object) ((eval :arguments) env phase))
          (return (call base f args phase))))
       (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment
-        ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error (:character-literal "++") " cannot be used in constant expressions"))
+           (throw-error -constant-error (:character-literal "++") " cannot be used in a constant expression"))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
          (const a object (read-reference r phase))
          (const b object (plus a phase))
@@ -2669,11 +2904,11 @@
          (write-reference r c phase)
          (return b)))
       (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement
-        ((validate cxt env) ((validate :postfix-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error (:character-literal "--") " cannot be used in constant expressions"))
+           (throw-error -constant-error (:character-literal "--") " cannot be used in a constant expression"))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
          (const a object (read-reference r phase))
          (const b object (plus a phase))
@@ -2691,37 +2926,30 @@
          (const args (vector object) ((eval :arguments) env phase))
          (return (construct f args phase)))))
     
-    (rule :full-new-subexpression ((strict (writable-cell boolean))
-                                   (validate (-> (context environment) void)) (setup (-> () void))
+    (rule :full-new-subexpression ((validate (-> (context environment) void)) (setup (-> () void))
                                    (eval (-> (environment phase) obj-or-ref)))
       (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression
-        ((validate cxt env) ((validate :primary-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase) (return ((eval :primary-expression) env phase))))
       (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier
-        ((validate cxt env)
-         ((validate :qualified-identifier) cxt env)
-         (action<- (strict :full-new-subexpression 0) (& strict cxt)))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const m multiname ((eval :qualified-identifier) env phase))
-         (return (new lexical-reference env m (strict :full-new-subexpression 0)))))
+         (return (new lexical-reference env m (strict :qualified-identifier)))))
       (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression
-        ((validate cxt env) ((validate :full-new-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase) (return ((eval :full-new-expression) env phase))))
       (production :full-new-subexpression (:full-new-subexpression :property-operator) full-new-subexpression-property-operator
-        ((validate cxt env)
-         ((validate :full-new-subexpression) cxt env)
-         ((validate :property-operator) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :full-new-subexpression) env phase) phase))
          (return ((eval :property-operator) env a phase))))
       (production :full-new-subexpression (:super-expression :property-operator) full-new-subexpression-super-property-operator
-        ((validate cxt env)
-         ((validate :super-expression) cxt env)
-         ((validate :property-operator) cxt env))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
@@ -2741,40 +2969,12 @@
       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :full-new-subexpression) env phase))))
+        ((eval env phase) :forward-result))
       (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval :short-new-expression) env phase)))))
-    (%print-actions ("Validation" strict validate) ("Setup" setup) ("Evaluation" eval))
-    
-    
-    (define (call (this object) (a object) (args (vector object)) (phase phase)) object
-      (case a
-        (:select (union undefined null boolean general-number char16 string namespace compound-attribute date reg-exp package)
-          (throw-error -type-error))
-        (:narrow class
-          (return ((&opt call a) this args phase)))
-        (:narrow simple-instance
-          (const f (union (-> (object simple-instance (vector object) phase) object) (tag none)) (& call a))
-          (rwhen (in f (tag none) :narrow-false)
-            (throw-error -type-error))
-          (return (f this a args phase)))
-        (:narrow method-closure
-          (const m instance-method (& method a))
-          (return ((& call m) (& this a) args phase)))))
-    
-    (define (construct (a object) (args (vector object)) (phase phase)) object
-      (case a
-        (:select (union undefined null boolean general-number char16 string namespace compound-attribute method-closure date reg-exp package)
-          (throw-error -type-error))
-        (:narrow class
-          (return ((&opt construct a) args phase)))
-        (:narrow simple-instance
-          (const f (union (-> (simple-instance (vector object) phase) object) (tag none)) (& construct a))
-          (rwhen (in f (tag none) :narrow-false)
-            (throw-error -type-error))
-          (return (f a args phase)))))
+        ((eval env phase) :forward-result)))
+    (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
     (%heading 2 "Property Operators")
@@ -2848,12 +3048,10 @@
         ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :assignment-expression) env phase) phase))
-         (rwhen (not (is a -array))
-           (throw-error -type-error "the " (:character-literal "...") " operand must be an " (:character-literal "Array")))
-         (const length u-long (assert-in (read-instance-slot a (new qualified-name array-private "length") phase) u-long))
+         (const length integer (read-length a phase))
          (var i integer 0)
          (var args (vector object) (vector-of object))
-         (while (/= i (& value length))
+         (while (/= i length)
            (const arg object-opt (index-read a i phase))
            (rwhen (in arg (tag none) :narrow-false)
              (/* "An implementation may, at its discretion, either " (:keyword throw) " a " (:global -reference-error)
@@ -2883,7 +3081,7 @@
         ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error (:character-literal "delete") " cannot be used in constant expressions"))
+           (throw-error -constant-error (:character-literal "delete") " cannot be used in a constant expression"))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
          (return (delete-reference r (strict :unary-expression 0) phase))))
       (production :unary-expression (void :unary-expression) unary-expression-void
@@ -2904,7 +3102,7 @@
         ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error (:character-literal "++") " cannot be used in constant expressions"))
+           (throw-error -constant-error (:character-literal "++") " cannot be used in a constant expression"))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
          (const a object (read-reference r phase))
          (const b object (plus a phase))
@@ -2916,7 +3114,7 @@
         ((setup) :forward)
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error (:character-literal "--") " cannot be used in constant expressions"))
+           (throw-error -constant-error (:character-literal "--") " cannot be used in a constant expression"))
          (const r obj-or-ref ((eval :postfix-expression) env phase))
          (const a object (read-reference r phase))
          (const b object (plus a phase))
@@ -3153,9 +3351,8 @@
       (var count integer (truncate-to-integer (object-to-general-number b phase)))
       (case x
         (:narrow (union float32 float64)
-          (var i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
           (<- count (bitwise-and count (hex #x1F)))
-          (<- i (signed-wrap32 (bitwise-shift i count)))
+          (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (bitwise-shift (truncate-to-integer x) count)))
           (return (real-to-float64 i)))
         (:narrow long
           (<- count (bitwise-and count (hex #x3F)))
@@ -3253,15 +3450,14 @@
          (const a object (read-reference ((eval :relational-expression) env phase) phase))
          (const b object (read-reference ((eval :shift-expression) env phase) phase))
          (const c class (object-to-class b))
-         (return (as a c true))))
+         (return (coerce-or-null a c))))
       (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression) relational-expression-in
         ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :relational-expression) env phase) phase))
          (const b object (read-reference ((eval :shift-expression) env phase) phase))
-         (const qname qualified-name (object-to-qualified-name a phase))
-         (return (has-property b qname false))))
+         (return (has-property b a false phase))))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
         ((validate cxt env) :forward)
         ((setup) :forward)
@@ -3556,7 +3752,7 @@
          ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "assignment cannot be used in constant expressions"))
+           (throw-error -constant-error "assignment cannot be used in a constant expression"))
          (const ra obj-or-ref ((eval :postfix-expression) env phase))
          (const b object (read-reference ((eval :assignment-expression) env phase) phase))
          (write-reference ra b phase)
@@ -3570,7 +3766,7 @@
          ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "assignment cannot be used in constant expressions"))
+           (throw-error -constant-error "assignment cannot be used in a constant expression"))
          (const r-left obj-or-ref ((eval :postfix-expression) env phase))
          (const o-left object (read-reference r-left phase))
          (const o-right object (read-reference ((eval :assignment-expression) env phase) phase))
@@ -3586,7 +3782,7 @@
          ((setup :assignment-expression)))
         ((eval env phase)
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "assignment cannot be used in constant expressions"))
+           (throw-error -constant-error "assignment cannot be used in a constant expression"))
          (const r-left obj-or-ref ((eval :postfix-expression) env phase))
          (const o-left object (read-reference r-left phase))
          (const b-left boolean (object-to-boolean o-left))
@@ -3656,7 +3852,7 @@
     (rule (:type-expression :beta) ((validate (-> (context environment) void))
                                     (setup-and-eval (-> (environment) class)))
       (production (:type-expression :beta) ((:non-assignment-expression :beta)) type-expression-non-assignment-expression
-        ((validate cxt env) ((validate :non-assignment-expression) cxt env))
+        ((validate cxt env) :forward)
         ((setup-and-eval env)
          ((setup :non-assignment-expression))
          (const o object (read-reference ((eval :non-assignment-expression) env compile) compile))
@@ -3824,8 +4020,8 @@
     (rule :expression-statement ((validate (-> (context environment) void)) (setup (-> () void))
                                  (eval (-> (environment) object)))
       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
-        ((validate cxt env) ((validate :list-expression) cxt env))
-        ((setup) ((setup :list-expression)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env)
          (return (read-reference ((eval :list-expression) env run) run)))))
     (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
@@ -3841,7 +4037,7 @@
            (throw-error -syntax-error "a " (:character-literal "super") " statement is meaningful only inside a constructor"))
          ((validate :arguments) cxt env)
          (&= calls-superconstructor frame true))
-        ((setup) ((setup :arguments)))
+        ((setup) :forward)
         ((eval env)
          (const frame parameter-frame-opt (get-enclosing-parameter-frame env))
          (assert (and (not-in frame (tag none) :narrow-true) (in (& kind frame) (tag constructor-function)))
@@ -3875,7 +4071,7 @@
          (action<- (compile-frame :block 0) compile-frame)
          (action<- (preinstantiate :block 0) preinst)
          ((validate-using-frame :block 0) cxt env jt preinst compile-frame))
-        ((setup) ((setup :directives)))
+        ((setup) :forward)
         ((eval env d)
          (const compile-frame local-frame (compile-frame :block 0))
          (var runtime-frame local-frame)
@@ -4370,8 +4566,8 @@
     (rule :throw-statement ((validate (-> (context environment) void)) (setup (-> () void))
                             (eval (-> (environment) object)))
       (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw
-        ((validate cxt env) ((validate :list-expression) cxt env))
-        ((setup) ((setup :list-expression)))
+        ((validate cxt env) :forward)
+        ((setup) :forward)
         ((eval env)
          (const a object (read-reference ((eval :list-expression) env run) run))
          (throw a))))
@@ -4663,21 +4859,21 @@
                       (eval (-> (environment phase) attribute)))
       (production :attribute (:attribute-expression) attribute-attribute-expression
         ((validate cxt env) :forward)
-        ((setup) ((setup :attribute-expression)))
+        ((setup) :forward)
         ((eval env phase)
          (const a object (read-reference ((eval :attribute-expression) env phase) phase))
          (return (object-to-attribute a phase))))
       (production :attribute (true) attribute-true
         ((validate cxt env) :forward)
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return true)))
       (production :attribute (false) attribute-false
         ((validate cxt env) :forward)
-        ((setup))
+        ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return false)))
       (production :attribute (:reserved-namespace) attribute-reserved-namespace
         ((validate cxt env) :forward)
-        ((setup))
+        ((setup) :forward)
         ((eval env phase) (return ((eval :reserved-namespace) env phase)))))
     (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
@@ -4808,7 +5004,7 @@
     (%heading 2 "Pragma")
     (rule :pragma ((validate (-> (context) void)))
       (production :pragma (use :pragma-items) pragma-pragma-items
-        ((validate cxt) ((validate :pragma-items) cxt))))
+        ((validate cxt) :forward)))
     
     (rule :pragma-items ((validate (-> (context) void)))
       (production :pragma-items (:pragma-item) pragma-items-one
@@ -5087,7 +5283,7 @@
              "a variable may not be defined in a substatement except inside a non-strict function or non-strict top-level code; "
              "to fix this error, place the definition inside a block"))
          ((validate :untyped-variable-binding-list) cxt env))
-        ((setup) ((setup :untyped-variable-binding-list)))
+        ((setup) :forward)
         ((eval env d)
          ((eval :untyped-variable-binding-list) env)
          (return d))))
@@ -5097,13 +5293,11 @@
       (production :untyped-variable-binding-list (:untyped-variable-binding) untyped-variable-binding-list-one
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env) ((eval :untyped-variable-binding) env)))
+        ((eval env) :forward))
       (production :untyped-variable-binding-list (:untyped-variable-binding-list \, :untyped-variable-binding) untyped-variable-binding-list-more
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env)
-         ((eval :untyped-variable-binding-list) env)
-         ((eval :untyped-variable-binding) env))))
+        ((eval env) :forward)))
     
     (rule :untyped-variable-binding ((validate (-> (context environment) void)) (setup (-> () void))
                                      (eval (-> (environment) void)))
@@ -5312,7 +5506,7 @@
         ((eval-static-call this f args phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call user-defined functions"))
+           (throw-error -constant-error "a constant expression cannot call user-defined functions"))
          (const runtime-env environment (assert-not-in (& env f) (tag none)))
          (var runtime-this object-opt none)
          (const compile-frame parameter-frame (compile-frame :function-common 0))
@@ -5328,13 +5522,12 @@
            (x) (if (in x return :narrow-true)
                  (<- result (& value x))
                  (throw x)))
-         (const coerced-result object (as result (&opt return-type runtime-frame) false))
-         (return coerced-result))
+         (return (coerce result (&opt return-type runtime-frame))))
         
         ((eval-static-get runtime-env phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call user-defined getters"))
+           (throw-error -constant-error "a constant expression cannot call user-defined getters"))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame runtime-env none))
          (assign-arguments runtime-frame none (vector-of object) phase)
@@ -5344,13 +5537,12 @@
            (x) (if (in x return :narrow-true)
                  (<- result (& value x))
                  (throw x)))
-         (const coerced-result object (as result (&opt return-type runtime-frame) false))
-         (return coerced-result))
+         (return (coerce result (&opt return-type runtime-frame))))
         
         ((eval-static-set new-value runtime-env phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call setters"))
+           (throw-error -constant-error "a constant expression cannot call setters"))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
          (const runtime-frame parameter-frame (instantiate-parameter-frame compile-frame runtime-env none))
          (assign-arguments runtime-frame none (vector new-value) phase)
@@ -5361,7 +5553,7 @@
         ((eval-instance-call this args phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call user-defined functions"))
+           (throw-error -constant-error "a constant expression cannot call user-defined functions"))
          (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
@@ -5373,13 +5565,12 @@
            (x) (if (in x return :narrow-true)
                  (<- result (& value x))
                  (throw x)))
-         (const coerced-result object (as result (&opt return-type runtime-frame) false))
-         (return coerced-result))
+         (return (coerce result (&opt return-type runtime-frame))))
         
         ((eval-instance-get this phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call user-defined getters"))
+           (throw-error -constant-error "a constant expression cannot call user-defined getters"))
          (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
@@ -5391,13 +5582,12 @@
            (x) (if (in x return :narrow-true)
                  (<- result (& value x))
                  (throw x)))
-         (const coerced-result object (as result (&opt return-type runtime-frame) false))
-         (return coerced-result))
+         (return (coerce result (&opt return-type runtime-frame))))
         
         ((eval-instance-set this new-value phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call setters"))
+           (throw-error -constant-error "a constant expression cannot call setters"))
          (note "Class frames are always preinstantiated, so the run environment is the same as compile environment.")
          (const env environment (compile-env :function-common 0))
          (const compile-frame parameter-frame (compile-frame :function-common 0))
@@ -5426,7 +5616,7 @@
         ((eval-prototype-construct f args phase)
          (note "The check that " (:expr boolean (not-in phase (tag compile))) " also ensures that " (:action setup) " has been called.")
          (rwhen (in phase (tag compile) :narrow-false)
-           (throw-error -constant-error "constant expressions cannot call user-defined prototype constructors"))
+           (throw-error -constant-error "a constant expression cannot call user-defined prototype constructors"))
          (const runtime-env environment (assert-not-in (& env f) (tag none)))
          (var archetype object (dot-read f (list-set (new qualified-name public "prototype")) phase))
          (cond
@@ -5442,7 +5632,7 @@
            (x) (if (in x return :narrow-true)
                  (<- result (& value x))
                  (throw x)))
-         (const coerced-result object (as result (&opt return-type runtime-frame) false))
+         (const coerced-result object (coerce result (&opt return-type runtime-frame)))
          (if (in coerced-result primitive-object)
            (return o)
            (return coerced-result)))
@@ -5487,16 +5677,13 @@
           "the argument count mismatch or about the type coercion error in the first argument.")
       (var arguments-object object-opt none)
       (when (in (& kind runtime-frame) (tag unchecked-function))
-        (<- arguments-object ((&opt construct -array) (vector-of object) phase))
+        (<- arguments-object (construct -array (vector-of object) phase))
         (create-dynamic-property (assert-in arguments-object simple-instance) (new qualified-name public "callee") false false (assert-not-in f (tag none)))
-        (const n-args integer (length args))
-        (rwhen (> n-args array-limit)
-          (throw-error -range-error))
-        (dot-write (assert-not-in arguments-object (tag none)) (list-set (new qualified-name array-private "length")) (new u-long n-args) phase))
+        (write-array-private-length (assert-not-in arguments-object (tag none)) (length args) phase))
       (var rest-object object-opt none)
       (const rest (union variable (tag none)) (&opt rest runtime-frame))
       (when (not-in rest (tag none) :narrow-true)
-        (<- rest-object ((&opt construct -array) (vector-of object) phase)))
+        (<- rest-object (construct -array (vector-of object) phase)))
       (const parameters (vector parameter) (&opt parameters runtime-frame))
       (var i integer 0)
       (var j integer 0)
@@ -5504,12 +5691,16 @@
         (cond
          ((< i (length parameters))
           (const parameter parameter (nth parameters i))
+          (var default object-opt (& default parameter))
+          (var arg-or-default object arg)
+          (when (and (in arg-or-default (tag undefined)) (not-in default (tag none) :narrow-true))
+            (<- arg-or-default default))
           (const v (union dynamic-var variable) (& var parameter))
-          (write-singleton-property v arg phase)
+          (write-singleton-property v arg-or-default phase)
           (when (not-in arguments-object (tag none) :narrow-true)
             (note "Create an alias of " (:local v) " as the " (:local i) "th entry of the " (:character-literal "arguments") " object.")
             (assert (in v dynamic-var))
-            (const qname qualified-name (object-to-qualified-name (new u-long i) phase))
+            (const qname qualified-name (object-to-qualified-name (real-to-float64 i) phase))
             (&= local-bindings (assert-in arguments-object simple-instance) (set+ (& local-bindings (assert-in arguments-object simple-instance))
                                                                                   (list-set (new local-binding qname read-write false false v))))))
          ((not-in rest-object (tag none) :narrow-true)
@@ -5774,26 +5965,10 @@
          (const c class (new class
                           (list-set-of local-binding) (list-set-of instance-property) super (&opt prototype super) false
                           (name :identifier) "object" private-namespace dynamic final null hint-number
-                          (& bracket-read super) (& bracket-write super) (& bracket-delete super)
+                          (& has-property super) (& bracket-read super) (& bracket-write super) (& bracket-delete super)
                           (& read super) (& write super) (& delete super)
                           (& enumerate super)
-                          :uninit :uninit none ordinary-is ordinary-as))
-         (function (c-call (this object :unused) (args (vector object)) (phase phase :unused)) object
-           (rwhen (not (& complete c))
-             (throw-error -constant-error "cannot coerce to a class before its definition has been compiled"))
-           (rwhen (/= (length args) 1)
-             (throw-error -argument-error "exactly one argument must be supplied"))
-           (return (as (nth args 0) c false)))
-         (&const= call c c-call)
-         (function (c-construct (args (vector object)) (phase phase)) object
-           (rwhen (not (& complete c))
-             (throw-error -constant-error "cannot construct an instance of a class before its definition has been compiled"))
-           (rwhen (in phase (tag compile) :narrow-false)
-             (throw-error -constant-error "a class constructor call is not a constant expression because it evaluates to a new object each time it is evaluated"))
-           (const this simple-instance (create-simple-instance c (&opt prototype c) none none none))
-           (call-init this c args phase)
-           (return this))
-         (&const= construct c c-construct)
+                          ordinary-call ordinary-construct none ordinary-is ordinary-coerce))
          (action<- (class :class-definition 0) c)
          (const v variable (new variable -class c true none none :uninit))
          (exec (define-singleton-property env (name :identifier) (& namespaces a) (& override-mod a) (& explicit a) read-write v))
@@ -5823,15 +5998,6 @@
       (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements
         ((validate (cxt :unused) (env :unused)) (return -object)))|#)
     (%print-actions ("Validation" class validate) ("Setup" setup) ("Evaluation" eval))
-    
-    (define (call-init (this simple-instance) (c class-opt) (args (vector object)) (phase (tag run))) void
-      (var init (union (-> (simple-instance (vector object) (tag run)) void) (tag none)) none)
-      (when (not-in c (tag none) :narrow-true)
-        (<- init (& init c)))
-      (cond
-       ((not-in init (tag none) :narrow-true) (init this args phase))
-       (nil (rwhen (nonempty args)
-              (throw-error -argument-error "the default constructor does not take any arguments")))))
     
     
     ;(%heading 2 "Interface Definition")
@@ -5954,6 +6120,23 @@
           (std-const-binding (new qualified-name public "unused") -attribute global_unused)
           (std-function (new qualified-name public "override") global_override 1)
           
+          (std-const-binding (new qualified-name public "NaN") -number nan64)
+          (std-const-binding (new qualified-name public "Infinity") -number +infinity64)
+          (std-const-binding (new qualified-name public "fNaN") float nan32)
+          (std-const-binding (new qualified-name public "fInfinity") float +infinity32)
+          (std-const-binding (new qualified-name public "undefined") -void undefined)
+          
+          (std-function (new qualified-name public "eval") global_eval 1)
+          (std-function (new qualified-name public "parseInt") global_parseInt 2)
+          (std-function (new qualified-name public "parseLong") global_parseLong 2)
+          (std-function (new qualified-name public "parseFloat") global_parseFloat 1)
+          (std-function (new qualified-name public "isNaN") global_isNaN 1)
+          (std-function (new qualified-name public "isFinite") global_isFinite 1)
+          (std-function (new qualified-name public "decodeURI") global_decodeURI 1)
+          (std-function (new qualified-name public "decodeURIComponent") global_decodeURIComponent 1)
+          (std-function (new qualified-name public "encodeURI") global_encodeURI 1)
+          (std-function (new qualified-name public "encodeURIComponent") global_encodeURIComponent 1)
+          
           (std-const-binding (new qualified-name public "Object") -class -object)
           (std-const-binding (new qualified-name public "Never") -class -never)
           (std-const-binding (new qualified-name public "Void") -class -void)
@@ -5970,7 +6153,7 @@
           (std-const-binding (new qualified-name public "ushort") -class ushort)
           (std-const-binding (new qualified-name public "int") -class int)
           (std-const-binding (new qualified-name public "uint") -class uint)
-          (std-const-binding (new qualified-name public "Character") -class -character)
+          (std-const-binding (new qualified-name public "char") -class char)
           (std-const-binding (new qualified-name public "String") -class -string)
           (std-const-binding (new qualified-name public "Array") -class -array)
           (std-const-binding (new qualified-name public "Namespace") -class -namespace)
@@ -6011,7 +6194,7 @@
     (define global_prototype compound-attribute (new compound-attribute (list-set-of namespace) false false false none none true false))
     (define global_unused compound-attribute (new compound-attribute (list-set-of namespace) false false false none none false true))
     (define (global_override (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase :unused)) object
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (var override-mod override-modifier)
       (cond
        ((empty args) (<- override-mod true))
@@ -6026,11 +6209,143 @@
     
     (%heading (2 :semantics) "Built-in Functions")
     
+    (define (global_eval (this object :unused) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
+      (todo))
+    
+    
+    (define (global_parseInt (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if the arguments can be converted to primitives in constant expressions.")
+      (rwhen (set-not-in (length args) (range-set-of integer 1 2))
+        (throw-error -argument-error "at least one and at most two arguments must be supplied"))
+      (const s string (object-to-string (nth args 0) phase))
+      (var radix integer (object-to-integer (default-arg args 1 +zero64) phase))
+      (var i (union (exclude-zero integer) (tag +zero -zero nan)) (string-prefix-to-integer s radix))
+      (return (extended-rational-to-float64 i)))
+    
+    (define (string-prefix-to-integer (s string) (radix integer))
+            (union (exclude-zero integer) (tag +zero -zero nan))
+      (var r integer radix)
+      (rwhen (set-not-in r (range-set-of-ranges integer 0 nil 2 36))
+        (throw-error -range-error "radix out of range"))
+      (var i integer 0)
+      (while (and (< i (length s))
+                  (lisp-call white-space-or-line-terminator-char? ((nth s i))
+                             boolean
+                    "the nonterminal " (:grammar-symbol :white-space-or-line-terminator-char nil "lexer-semantics.html") " can expand into " (:expr string (vector (nth s i)))))
+        (<- i (+ i 1)))
+      (var sign (integer-list -1 1) 1)
+      (when (< i (length s))
+        (cond
+         ((= (nth s i) #\+ char16)
+          (<- i (+ i 1)))
+         ((= (nth s i) #\- char16)
+          (<- sign -1)
+          (<- i (+ i 1)))))
+      (when (and (set-in r (list-set 0 16))
+                 (<= (+ i 2) (length s))
+                 (set-in (subseq s i (+ i 1)) (list-set "0x" "0X")))
+        (<- r 16)
+        (<- i (+ i 2)))
+      (when (= r 0)
+        (<- r 10))
+      (var n integer 0)
+      (const start integer i)
+      (var digit integer-opt 0)
+      (while (and (< i (length s)) (not-in digit (tag none)))
+        (const ch char16 (nth s i))
+        (cond
+         ((set-in ch (range-set-of-ranges char16 #\0 #\9))
+          (<- digit (- (char16-to-integer ch) (char16-to-integer #\0))))
+         ((set-in ch (range-set-of-ranges char16 #\A #\Z))
+          (<- digit (+ (- (char16-to-integer ch) (char16-to-integer #\A)) 10)))
+         ((set-in ch (range-set-of-ranges char16 #\a #\z))
+          (<- digit (+ (- (char16-to-integer ch) (char16-to-integer #\a)) 10)))
+         (nil (<- digit none)))
+        (when (and (not-in digit (tag none) :narrow-true) (>= digit r))
+          (<- digit none :end-narrow))
+        (when (not-in digit (tag none) :narrow-true)
+          (<- n (+ (* n r) digit))
+          (<- i (+ i 1))))
+      (rwhen (= i start)
+        (return nan))
+      (cond
+       ((/= n 0) (return (* n sign)))
+       ((> sign 0) (return +zero))
+       (nil (return -zero))))
+      
+    (define (global_parseLong (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) general-number
+      (note "This function can be used in a constant expression if the arguments can be converted to primitives in constant expressions.")
+      (rwhen (set-not-in (length args) (range-set-of integer 1 2))
+        (throw-error -argument-error "at least one and at most two arguments must be supplied"))
+      (const s string (object-to-string (nth args 0) phase))
+      (var radix integer (object-to-integer (default-arg args 1 +zero64) phase))
+      (var i (union (exclude-zero integer) (tag +zero -zero nan)) (string-prefix-to-integer s radix))
+      (case i
+        (:select (tag +zero -zero) (return (new long 0)))
+        (:narrow integer (return (integer-to-long i)))
+        (:select (tag nan) (return nan64))))
+    
+    
+    (define (global_parseFloat (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if its argument can be converted to a primitive in a constant expression.")
+      (rwhen (/= (length args) 1)
+        (throw-error -argument-error "exactly one argument must be supplied"))
+      (const s string (object-to-string (nth args 0) phase))
+      (/* "Apply the lexer grammar with the start symbol " (:grammar-symbol :string-decimal-literal nil "lexer-semantics.html") " to the string " (:local s)
+          ". If the grammar can interpret neither " (:local s) " nor any prefix of " (:local s) " as an expansion of "
+          (:grammar-symbol :string-decimal-literal nil "lexer-semantics.html") ", then " (:keyword return) :nbsp (:tag nan64)
+          ". Otherwise, let " (:local p) " be the longest prefix of " (:local s) " (possibly " (:local s) " itself) such that " (:local p)
+          " is an expansion of " (:grammar-symbol :string-decimal-literal nil "lexer-semantics.html") ".")
+      (const q (union extended-rational (tag syntax-error))
+        (lisp-call string-prefix-to-float (s)
+                   (union extended-rational (tag syntax-error))
+          "the result of lexing the longest possible prefix of " (:operand 0) " using " (:grammar-symbol :string-decimal-literal nil "lexer-semantics.html")
+          " as the start symbol"))
+      (rwhen (in q (tag syntax-error) :narrow-false)
+        (return nan64))
+      (*/)
+      (// (:local q) ":" :nbsp (:type extended-rational) " " :assign-10 " the value of the action " (:action lex) " applied to "
+          (:local p) :apostrophe "s expansion of the nonterminal " (:grammar-symbol :string-decimal-literal nil "lexer-semantics.html") ";")
+      (return (extended-rational-to-float64 q)))
+    
+    
+    (define (global_isNaN (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) \#boolean
+      (note "This function can be used in a constant expression if its argument can be converted to a primitive in a constant expression.")
+      (rwhen (/= (length args) 1)
+        (throw-error -argument-error "exactly one argument must be supplied"))
+      (const x general-number (object-to-general-number (nth args 0) phase))
+      (return (in x (tag nan32 nan64))))
+    
+    
+    (define (global_isFinite (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) \#boolean
+      (note "This function can be used in a constant expression if its argument can be converted to a primitive in a constant expression.")
+      (rwhen (/= (length args) 1)
+        (throw-error -argument-error "exactly one argument must be supplied"))
+      (const x general-number (object-to-general-number (nth args 0) phase))
+      (return (not-in x (tag nan32 nan64 +infinity32 +infinity64 -infinity32 -infinity64))))
+    
+    
+    (define (global_decodeURI (this object :unused) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
+      (todo))
+    
+    
+    (define (global_decodeURIComponent (this object :unused) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
+      (todo))
+    
+    
+    (define (global_encodeURI (this object :unused) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
+      (todo))
+    
+    
+    (define (global_encodeURIComponent (this object :unused) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
+      (todo))
+    
+    
     
     (%heading (1 :semantics) "Built-in Classes")
-    (define (dummy-call (this object :unused) (args (vector object) :unused) (phase phase :unused)) object
+    (define (dummy-call (this object :unused) (c class :unused) (args (vector object) :unused) (phase phase :unused)) object
       (todo))
-    (define (dummy-construct (args (vector object) :unused) (phase phase :unused)) object
+    (define (dummy-construct (c class :unused) (args (vector object) :unused) (phase phase :unused)) object
       (todo))
     
     
@@ -6040,21 +6355,30 @@
     (%heading (2 :semantics) "Object")
     (define -object class
       (new class
-        (list-set-of local-binding) (list-set-of instance-property) none (delay -object-prototype) true
+        (list-set-of local-binding)
+        (list-set-of instance-property)
+        none (delay -object-prototype) true
         "Object" "object" :uninit true false undefined hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-object construct-object none ordinary-is as-object))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        call-object construct-object none ordinary-is coerce-object))
     
-    (define (call-object (this object :unused) (args (vector object)) (phase phase :unused)) object
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (call-object (this object :unused) (c class :unused) (args (vector object)) (phase phase :unused)) object
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
+      (cond
+       ((= (length args) 0) (return undefined))
+       ((= (length args) 1) (return (nth args 0)))
+       (nil (throw-error -argument-error "at most one argument can be supplied"))))
+    
+    (define (construct-object (c class :unused) (args (vector object)) (phase phase :unused)) object
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
-      (return (default-arg args 0 undefined)))
+      (const o object (default-arg args 0 undefined))
+      (if (in o (tag null undefined))
+        (return (create-simple-instance -object -object-prototype none none none))
+        (return o)))
     
-    (define (construct-object (args (vector object)) (phase phase)) object
-      (return (call-object null args phase)))
-    
-    (define (as-object (o object) (c class :unused) (silent boolean :unused)) object
+    (define (coerce-object (o object) (c class :unused)) object-opt
       (return o))
     
     (define -object-prototype simple-instance
@@ -6072,8 +6396,8 @@
         (list-set-of slot) none none none))
     
     
-    (define (-object_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (-object_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) string
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (note "This function ignores any arguments passed to it in " (:local args) ".")
       (const c class (object-type this))
       (return (append "[object " (& name c) "]")))
@@ -6081,38 +6405,37 @@
     
     (define (-object_to-locale-string (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "toLocaleString") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "toLocaleString") " cannot be called from a constant expression"))
       (const to-string-method object (dot-read this (list-set (new qualified-name public "toString")) phase))
       (return (call this to-string-method args phase)))
     
     
     (define (-object_value-of (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) object
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (note "This function ignores any arguments passed to it in " (:local args) ".")
       (return this))
     
     
-    (define (-object_has-own-property (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+    (define (-object_has-own-property (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) \#boolean
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "hasOwnProperty") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "hasOwnProperty") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
-      (const qname qualified-name (object-to-qualified-name (nth args 0) phase))
-      (return (has-property this qname true)))
+      (return (has-property this (nth args 0) true phase)))
     
     
-    (define (-object_is-prototype-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+    (define (-object_is-prototype-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) \#boolean
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "isPrototypeOf") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "isPrototypeOf") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const o object (nth args 0))
       (return (set-in this (archetypes o))))
     
     
-    (define (-object_property-is-enumerable (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+    (define (-object_property-is-enumerable (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) \#boolean
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "propertyIsEnumerable") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "propertyIsEnumerable") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const qname qualified-name (object-to-qualified-name (nth args 0) phase))
@@ -6132,9 +6455,9 @@
       (return (some (& local-bindings this) b (and (= (& qname b) qname qualified-name) (& enumerable b)))))
     
     
-    (define (-object_seal-property (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+    (define (-object_seal-property (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) undefined
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "sealProperty") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "sealProperty") " cannot be called from a constant expression"))
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const arg object (default-arg args 0 true))
@@ -6145,9 +6468,9 @@
         (seal-object this)
         (seal-all-local-properties this))
        ((in arg (union char16 string))
-        (const qname qualified-name (object-to-qualified-name arg phase))
-        (rwhen (not (has-property this qname true))
+        (rwhen (not (has-property this arg true phase))
           (throw-error -reference-error "property not found"))
+        (const qname qualified-name (object-to-qualified-name arg phase))
         (seal-local-property this qname)))
       (return undefined))
 
@@ -6158,19 +6481,16 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object none true
         "Never" "" :uninit false true none :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-never construct-never none ordinary-is as-never))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-never none ordinary-is coerce-never))
     
-    (define (call-never (this object :unused) (args (vector object)) (phase phase :unused)) object
+    (define (construct-never (c class :unused) (args (vector object)) (phase phase :unused)) object
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (throw-error -type-error "no coercions to " (:character-literal "Never") " are possible"))
     
-    (define (construct-never (args (vector object)) (phase phase)) object
-      (return (call-never null args phase)))
-    
-    (define (as-never (o object :unused) (c class :unused) (silent boolean :unused)) object
-      (throw-error -type-error "no coercions to " (:character-literal "Never") " are possible"))
+    (define (coerce-never (o object :unused) (c class :unused)) (tag none)
+      (return none))
     
     
     (%heading (2 :semantics) "Void")
@@ -6178,25 +6498,25 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object none true
         "Void" "undefined" :uninit false true undefined :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-void construct-void none ordinary-is as-void))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        call-void construct-void none ordinary-is coerce-void))
     
-    (define (call-void (this object :unused) (args (vector object)) (phase phase :unused)) undefined
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (call-void (this object :unused) (c class :unused) (args (vector object)) (phase phase :unused)) undefined
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (return undefined))
     
-    (define (construct-void (args (vector object)) (phase phase :unused)) undefined
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (construct-void (c class :unused) (args (vector object)) (phase phase :unused)) undefined
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (/= (length args) 0)
         (throw-error -argument-error "no arguments can be supplied"))
       (return undefined))
     
-    (define (as-void (o object) (c class :unused) (silent boolean :unused)) undefined
+    (define (coerce-void (o object) (c class :unused)) (tag undefined none)
       (if (in o (union null undefined))
         (return undefined)
-        (throw-error -type-error)))
+        (return none)))
     
     
     (%heading (2 :semantics) "Null")
@@ -6204,25 +6524,25 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object none true
         "Null" "object" :uninit false true null :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-null construct-null none ordinary-is as-null))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        call-null construct-null none ordinary-is coerce-null))
     
-    (define (call-null (this object :unused) (args (vector object)) (phase phase :unused)) null
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (call-null (this object :unused) (c class :unused) (args (vector object)) (phase phase :unused)) null
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (return null))
     
-    (define (construct-null (args (vector object)) (phase phase :unused)) null
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (construct-null (c class :unused) (args (vector object)) (phase phase :unused)) null
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (/= (length args) 0)
         (throw-error -argument-error "no arguments can be supplied"))
       (return null))
     
-    (define (as-null (o object) (c class :unused) (silent boolean :unused)) null
+    (define (coerce-null (o object) (c class :unused)) (tag null none)
       (if (in o (tag null) :narrow-true)
         (return o)
-        (throw-error -type-error)))
+        (return none)))
     
     
     (%heading (2 :semantics) "Boolean")
@@ -6230,34 +6550,32 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -boolean-prototype) true
         "Boolean" "boolean" :uninit false true false :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-boolean construct-boolean none ordinary-is as-boolean))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-boolean none ordinary-is coerce-boolean))
     
-    (define (call-boolean (this object :unused) (args (vector object)) (phase phase :unused)) object
-      (note "This function does not check " (:local phase) " and therefore can be used in constant expressions.")
+    (define (construct-boolean (c class :unused) (args (vector object)) (phase phase :unused)) \#boolean
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (return (object-to-boolean (default-arg args 0 false))))
     
-    (define (construct-boolean (args (vector object)) (phase phase)) object
-      (return (call-boolean null args phase)))
-    
-    (define (as-boolean (o object) (c class :unused) (silent boolean :unused)) object
+    (define (coerce-boolean (o object) (c class :unused)) boolean-opt
       (if (in o boolean :narrow-true)
         (return o)
-        (throw-error -type-error)))
+        (return none)))
     
     (define -boolean-prototype simple-instance
       (new simple-instance
         (%list-set
          (std-const-binding (new qualified-name public "constructor") -class -boolean)
-         (std-function (new qualified-name public "toString") -boolean_to-string 0))
+         (std-function (new qualified-name public "toString") -boolean_to-string 0)
+         (std-reserve (new qualified-name public "valueOf") -object-prototype))
         -object-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
     
-    (define (-boolean_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
-      (note "This function can be used in constant expressions.")
+    (define (-boolean_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (note "This function can be used in a constant expression.")
       (note "This function ignores any arguments passed to it in " (:local args) ".")
       (const a boolean (object-to-boolean this))
       (return (object-to-string a phase)))
@@ -6267,30 +6585,28 @@
     (define -general-number class
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -general-number-prototype) true
-        "GeneralNumber" "object" :uninit false false nan64 hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-general-number construct-general-number none ordinary-is as-general-number))
+        "GeneralNumber" "object" :uninit false true nan64 hint-number
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-general-number none ordinary-is coerce-general-number))
     
-    (define (call-general-number (this object :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
-      (rwhen (> (length args) 1)
-        (throw-error -argument-error "at most one argument can be supplied"))
-      (const arg object (default-arg args 0 +zero64))
-      (return (object-to-general-number arg phase)))
+    (define (construct-general-number (c class :unused) (args (vector object)) (phase phase)) general-number
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
+      (cond
+       ((= (length args) 0) (return +zero64))
+       ((= (length args) 1) (return (object-to-general-number (nth args 0) phase)))
+       (nil (throw-error -argument-error "at most one argument can be supplied"))))
     
-    (define (construct-general-number (args (vector object)) (phase phase)) object
-      (return (call-general-number null args phase)))
-    
-    (define (as-general-number (o object) (c class :unused) (silent boolean :unused)) general-number
+    (define (coerce-general-number (o object) (c class :unused)) (union general-number (tag none))
       (if (in o general-number :narrow-true)
         (return o)
-        (throw-error -type-error)))
+        (return none)))
     
     (define -general-number-prototype simple-instance
       (new simple-instance
         (%list-set
          (std-const-binding (new qualified-name public "constructor") -class -general-number)
          (std-function (new qualified-name public "toString") -general-number_to-string 1)
+         (std-reserve (new qualified-name public "valueOf") -object-prototype)
          (std-function (new qualified-name public "toFixed") -general-number_to-fixed 1)
          (std-function (new qualified-name public "toExponential") -general-number_to-exponential 1)
          (std-function (new qualified-name public "toPrecision") -general-number_to-precision 1))
@@ -6298,15 +6614,12 @@
         (list-set-of slot) none none none))
     
     
-    (define (-general-number_to-string (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-general-number_to-string (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a general number.")
       (const x general-number (object-to-general-number this phase))
-      (var radix extended-integer (object-to-imprecise-integer (default-arg args 0 10.0) phase))
-      (when (in radix (tag nan))
-        (<- radix 10))
-      (quiet-assert (not-in radix (tag nan) :narrow-true))
-      (rwhen (or (in radix (tag +infinity -infinity) :narrow-false) (< radix 2) (> radix 36))
+      (var radix integer (object-to-integer (default-arg args 0 10.0) phase))
+      (rwhen (or (< radix 2) (> radix 36))
         (throw-error -range-error "bad radix"))
       (if (= radix 10)
         (return (general-number-to-string x))
@@ -6315,17 +6628,14 @@
     
     (define precision-limit integer (/*/ 100 "an implementation-defined integer not less than 20"))
     
-    (define (-general-number_to-fixed (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-general-number_to-fixed (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a general number.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const x general-number (object-to-general-number this phase))
-      (var fraction-digits extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (when (in fraction-digits (tag nan))
-        (<- fraction-digits 0))
-      (quiet-assert (not-in fraction-digits (tag nan) :narrow-true))
-      (rwhen (or (in fraction-digits (tag +infinity -infinity) :narrow-false) (< fraction-digits 0) (> fraction-digits precision-limit))
+      (var fraction-digits integer (object-to-integer (default-arg args 0 +zero64) phase))
+      (rwhen (or (< fraction-digits 0) (> fraction-digits precision-limit))
         (throw-error -range-error))
       (rwhen (not-in x finite-general-number :narrow-false)
         (return (general-number-to-string x)))
@@ -6338,48 +6648,140 @@
         (<- r (rat-neg r)))
       (const n integer (floor (rat+ (rat* r (expt 10 fraction-digits)) (rat/ 1 2))))
       (var digits string (integer-to-string n))
-      (when (> fraction-digits 0)
+      (cond
+       ((= fraction-digits 0)
+        (return (append sign digits)))
+       (nil
         (when (<= (length digits) fraction-digits)
           (<- digits (append (repeat char16 #\0 (- (+ fraction-digits 1) (length digits))) digits)))
         (const k integer (- (length digits) fraction-digits))
-        (<- digits (append (subseq digits 0 (- k 1)) "." (subseq digits k))))
-      (return (append sign digits)))
+        (return (append sign (subseq digits 0 (- k 1)) "." (subseq digits k))))))
     
     
-    (define (-general-number_to-exponential (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-general-number_to-exponential (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a general number.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const x general-number (object-to-general-number this phase))
-      (var fraction-digits extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (when (in fraction-digits (tag nan))
-        (todo))
-      (quiet-assert (not-in fraction-digits (tag nan) :narrow-true))
-      (rwhen (or (in fraction-digits (tag +infinity -infinity) :narrow-false) (< fraction-digits 0) (> fraction-digits precision-limit))
+      (var fraction-digits extended-integer (object-to-extended-integer (default-arg args 0 nan64) phase))
+      (rwhen (or (in fraction-digits (tag +infinity -infinity) :narrow-false) (and (not-in fraction-digits (tag nan) :narrow-true)
+                                                                                   (or (< fraction-digits 0) (> fraction-digits precision-limit))))
         (throw-error -range-error))
       (rwhen (not-in x finite-general-number :narrow-false)
         (return (general-number-to-string x)))
       (var r rational (to-rational x))
-      (todo))
+      (var sign string "")
+      (when (< r 0 rational)
+        (<- sign "-")
+        (<- r (rat-neg r)))
+      (var digits string)
+      (var e integer)
+      (cond
+       ((not-in fraction-digits (tag nan) :narrow-true)
+        (cond
+         ((= r 0 rational)
+          (<- digits (repeat char16 #\0 (+ fraction-digits 1)))
+          (<- e 0))
+         (nil
+          (<- e (floor-log10 r))
+          (var n integer (floor (rat+ (rat* r (expt 10 (- fraction-digits e))) (rat/ 1 2))))
+          (assert (cascade rational (expt 10 fraction-digits) <= n <= (expt 10 (+ fraction-digits 1))) "At this point " (:assertion))
+          (when (= n (expt 10 (+ fraction-digits 1)) rational)
+            (<- n (int/ n 10))
+            (<- e (+ e 1)))
+          (<- digits (integer-to-string n))))
+        (assert (= (length digits) (+ fraction-digits 1)) "At this point the string " (:local digits) " has exactly " (:expr integer (+ fraction-digits 1)) " digits"))
+       ((= r 0 rational)
+        (<- digits "0")
+        (<- e 0))
+       ((in x (union long u-long) :narrow-false)
+        (<- digits (integer-to-string (assert-in r integer)))
+        (<- e (- (length digits) 1))
+        (while (= (nth digits (- (length digits) 1)) #\0 char16)
+          (<- digits (subseq digits 0 (- (length digits) 2)))))
+       (nil
+        (quiet-assert (not-in x (tag +zero32 -zero32 +zero64 -zero64) :narrow-true))
+        (var k integer)
+        (var s integer)
+        (case x
+          (:narrow nonzero-finite-float32
+            (/* (:initialize e) (:initialize k) (:initialize s)
+                "Let " (:local e) ", " (:local k) ", and " (:local s) " be integers such that "
+                (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
+                (:expr boolean (= (real-to-float32 (rat* s (expt 10 (- (+ e 1) k)))) x float32)) ", and " (:local k) " is as small as possible.")
+            (multiple-value-bind ((digits2 string) (e2 integer)) decompose-positive-float32 ((if (< r 0 rational) (float32-negate x) x)))
+            (<- digits digits2)
+            (<- e e2)
+            (<- k (length digits))
+            (<- s k) ;Shut up unreference variable warnings
+            (<- k s)
+            (*/))
+          (:narrow nonzero-finite-float64
+            (/* (:initialize e) (:initialize k) (:initialize s)
+                "Let " (:local e) ", " (:local k) ", and " (:local s) " be integers such that "
+                (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
+                (:expr boolean (= (real-to-float64 (rat* s (expt 10 (- (+ e 1) k)))) x float64)) ", and " (:local k) " is as small as possible.")
+            (multiple-value-bind ((digits2 string) (e2 integer)) decompose-positive-float64 ((if (< r 0 rational) (float64-negate x) x)))
+            (<- digits digits2)
+            (<- e e2)
+            (<- k (length digits))
+            (<- s k) ;Shut up unreference variable warnings
+            (<- k s)
+            (*/)))
+        (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", " (:local s)
+              " is not divisible by 10, and the least significant digit of " (:local s)
+              " is not necessarily uniquely determined by the above criteria.")
+        (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
+            "implementations are encouraged but not required to select the one according to the following rules: "
+            "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- (+ e 1) k)))) " is closest in value to " (:local r)
+            "; if there are two such possible values of " (:local s) ", choose the one that is even.")
+        (// (:local digits) :nbsp :assign-10 :nbsp (:expr string (integer-to-string s)))))
+      (return (append sign (exponential-notation-string digits e))))
     
     
-    (define (-general-number_to-precision (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-general-number_to-precision (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a general number.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const x general-number (object-to-general-number this phase))
-      (var fraction-digits extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (when (in fraction-digits (tag nan))
-        (todo))
-      (quiet-assert (not-in fraction-digits (tag nan) :narrow-true))
-      (rwhen (or (in fraction-digits (tag +infinity -infinity) :narrow-false) (< fraction-digits 0) (> fraction-digits precision-limit))
+      (var precision extended-integer (object-to-extended-integer (default-arg args 0 nan64) phase))
+      (rwhen (in precision (tag nan) :narrow-false)
+        (return (general-number-to-string x)))
+      (rwhen (or (in precision (tag +infinity -infinity) :narrow-false) (< precision 1) (> precision (+ precision-limit 1)))
         (throw-error -range-error))
       (rwhen (not-in x finite-general-number :narrow-false)
         (return (general-number-to-string x)))
       (var r rational (to-rational x))
-      (todo))
+      (var sign string "")
+      (when (< r 0 rational)
+        (<- sign "-")
+        (<- r (rat-neg r)))
+      (var digits string)
+      (var e integer)
+      (cond
+       ((= r 0 rational)
+        (<- digits (repeat char16 #\0 precision))
+        (<- e 0))
+       (nil
+        (<- e (floor-log10 r))
+        (var n integer (floor (rat+ (rat* r (expt 10 (- (- precision 1) e))) (rat/ 1 2))))
+        (assert (cascade rational (expt 10 (- precision 1)) <= n <= (expt 10 precision)) "At this point " (:assertion))
+        (when (= n (expt 10 precision) rational)
+          (<- n (int/ n 10))
+          (<- e (+ e 1)))
+        (<- digits (integer-to-string n))))
+      (assert (= (length digits) precision) "At this point the string " (:local digits) " has exactly " (:local precision) " digits")
+      (cond
+       ((or (< e -6) (>= e precision))
+        (return (append sign (exponential-notation-string digits e))))
+       ((= e (- precision 1))
+        (return (append sign digits)))
+       ((>= e 0)
+        (return (append sign (subseq digits 0 e) "." (subseq digits (+ e 1)))))
+       (nil
+        (return (append sign "0." (repeat char16 #\0 (neg (+ e 1))) digits)))))
     
     
     (%heading (2 :semantics) "long")
@@ -6390,25 +6792,22 @@
          (std-const-binding (new qualified-name public "MIN_VALUE") (delay ulong) (new long (neg (expt 2 63)))))
         (list-set-of instance-property) -general-number (delay long-prototype) true
         "long" "long" :uninit false true (new long 0) :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-long construct-long none ordinary-is as-long))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-long none ordinary-is coerce-long))
     
-    (define (call-long (this object :unused) (args (vector object)) (phase phase)) long
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    (define (construct-long (c class :unused) (args (vector object)) (phase phase)) long
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const arg object (default-arg args 0 +zero64))
-      (const i integer (object-to-precise-integer arg phase))
+      (const i integer (object-to-integer arg phase))
       (if (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 63) 1))
         (return (new long i))
         (throw-error -range-error (:local i) " is out of the " (:type long) " range")))
     
-    (define (construct-long (args (vector object)) (phase phase)) long
-      (return (call-long null args phase)))
-    
-    (define (as-long (o object) (c class :unused) (silent boolean :unused)) long
+    (define (coerce-long (o object) (c class :unused)) (union long (tag none))
       (rwhen (not-in o general-number :narrow-false)
-        (throw-error -type-error))
+        (return none))
       (const i integer-opt (check-integer o))
       (if (and (not-in i (tag none) :narrow-true) (cascade integer (neg (expt 2 63)) <= i <= (- (expt 2 63) 1)))
         (return (new long i))
@@ -6416,7 +6815,10 @@
     
     (define long-prototype simple-instance
       (new simple-instance
-        (%list-set (std-const-binding (new qualified-name public "constructor") -class \#long))
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class \#long)
+         (std-reserve (new qualified-name public "toString") -general-number-prototype)
+         (std-reserve (new qualified-name public "valueOf") -general-number-prototype))
         -general-number-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
@@ -6429,25 +6831,22 @@
          (std-const-binding (new qualified-name public "MIN_VALUE") (delay ulong) (new u-long 0)))
         (list-set-of instance-property) -general-number (delay ulong-prototype) true
         "ulong" "ulong" :uninit false true (new u-long 0) :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-u-long construct-u-long none ordinary-is as-u-long))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-u-long none ordinary-is coerce-u-long))
     
-    (define (call-u-long (this object :unused) (args (vector object)) (phase phase)) u-long
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    (define (construct-u-long (c class :unused) (args (vector object)) (phase phase)) u-long
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const arg object (default-arg args 0 +zero64))
-      (const i integer (object-to-precise-integer arg phase))
+      (const i integer (object-to-integer arg phase))
       (if (cascade integer 0 <= i <= (- (expt 2 64) 1))
         (return (new u-long i))
         (throw-error -range-error (:local i) " is out of the " (:type u-long) " range")))
     
-    (define (construct-u-long (args (vector object)) (phase phase)) u-long
-      (return (call-u-long null args phase)))
-    
-    (define (as-u-long (o object) (c class :unused) (silent boolean :unused)) u-long
+    (define (coerce-u-long (o object) (c class :unused)) (union u-long (tag none))
       (rwhen (not-in o general-number :narrow-false)
-        (throw-error -type-error))
+        (return none))
       (const i integer-opt (check-integer o))
       (if (and (not-in i (tag none) :narrow-true) (cascade integer 0 <= i <= (- (expt 2 64) 1)))
         (return (new u-long i))
@@ -6455,7 +6854,10 @@
     
     (define ulong-prototype simple-instance
       (new simple-instance
-        (%list-set (std-const-binding (new qualified-name public "constructor") -class ulong))
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class ulong)
+         (std-reserve (new qualified-name public "toString") -general-number-prototype)
+         (std-reserve (new qualified-name public "valueOf") -general-number-prototype))
         -general-number-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
@@ -6471,27 +6873,27 @@
          (std-const-binding (new qualified-name public "POSITIVE_INFINITY") (delay float) +infinity32))
         (list-set-of instance-property) -general-number (delay float-prototype) true
         "float" "float" :uninit false true nan32 :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-float construct-float none ordinary-is as-float))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-float none ordinary-is coerce-float))
     
-    (define (call-float (this object :unused) (args (vector object)) (phase phase)) float32
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
-      (rwhen (> (length args) 1)
-        (throw-error -argument-error "at most one argument can be supplied"))
-      (const arg object (default-arg args 0 +zero32))
-      (return (object-to-float32 arg phase)))
+    (define (construct-float (c class :unused) (args (vector object)) (phase phase)) float32
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
+      (cond
+       ((= (length args) 0) (return +zero32))
+       ((= (length args) 1) (return (object-to-float32 (nth args 0) phase)))
+       (nil (throw-error -argument-error "at most one argument can be supplied"))))
     
-    (define (construct-float (args (vector object)) (phase phase)) float32
-      (return (call-float null args phase)))
-    
-    (define (as-float (o object) (c class :unused) (silent boolean :unused)) float32
+    (define (coerce-float (o object) (c class :unused)) (union float32 (tag none))
       (if (in o general-number :narrow-true)
         (return (to-float32 o))
-        (throw-error -type-error)))
+        (return none)))
     
     (define float-prototype simple-instance
       (new simple-instance
-        (%list-set (std-const-binding (new qualified-name public "constructor") -class float))
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class float)
+         (std-reserve (new qualified-name public "toString") -general-number-prototype)
+         (std-reserve (new qualified-name public "valueOf") -general-number-prototype))
         -general-number-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
@@ -6507,36 +6909,35 @@
          (std-const-binding (new qualified-name public "POSITIVE_INFINITY") (delay -number) +infinity64))
         (list-set-of instance-property) -general-number (delay -number-prototype) true
         "Number" "number" :uninit false true nan64 :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-number construct-number none ordinary-is as-number))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-number none ordinary-is coerce-number))
     
-    (define (call-number (this object :unused) (args (vector object)) (phase phase)) float64
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
-      (rwhen (> (length args) 1)
-        (throw-error -argument-error "at most one argument can be supplied"))
-      (const arg object (default-arg args 0 +zero64))
-      (return (object-to-float64 arg phase)))
+    (define (construct-number (c class :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
+      (cond
+       ((= (length args) 0) (return +zero64))
+       ((= (length args) 1) (return (object-to-float64 (nth args 0) phase)))
+       (nil (throw-error -argument-error "at most one argument can be supplied"))))
     
-    (define (construct-number (args (vector object)) (phase phase)) float64
-      (return (call-number null args phase)))
-    
-    (define (as-number (o object) (c class :unused) (silent boolean :unused)) float64
+    (define (coerce-number (o object) (c class :unused)) (union float64 (tag none))
       (if (in o general-number :narrow-true)
         (return (to-float64 o))
-        (throw-error -type-error)))
+        (return none)))
     
     (define -number-prototype simple-instance
       (new simple-instance
         (%list-set
-         (std-const-binding (new qualified-name public "constructor") -class -number))
+         (std-const-binding (new qualified-name public "constructor") -class -number)
+         (std-reserve (new qualified-name public "toString") -general-number-prototype)
+         (std-reserve (new qualified-name public "valueOf") -general-number-prototype))
         -general-number-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
     
     
     (define (make-built-in-integer-class (name string) (low integer) (high integer)) class
-      (function (call (this object :unused) (args (vector object)) (phase phase)) object
-        (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+      (function (construct (c class :unused) (args (vector object)) (phase phase)) float64
+        (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
         (rwhen (> (length args) 1)
           (throw-error -argument-error "at most one argument can be supplied"))
         (const arg object (default-arg args 0 +zero64))
@@ -6546,16 +6947,14 @@
           (note (:tag -zero64) " is coerced to " (:tag +zero64) ".")
           (return (real-to-float64 i)))
         (throw-error -range-error))
-      (function (construct (args (vector object)) (phase phase)) object
-        (return (call null args phase)))
       (function (is (o object) (c class :unused)) boolean
         (rwhen (not-in o float64 :narrow-false)
           (return false))
         (const i integer-opt (check-integer o))
         (return (and (not-in i (tag none) :narrow-true) (cascade integer low <= i <= high))))
-      (function (as (o object) (c class :unused) (silent boolean :unused)) object
+      (function (coerce (o object) (c class :unused)) (union float64 (tag none))
         (rwhen (not-in o general-number :narrow-false)
-          (throw-error -type-error))
+          (return none))
         (const i integer-opt (check-integer o))
         (rwhen (and (not-in i (tag none) :narrow-true) (cascade integer low <= i <= high))
           (note (:tag -zero32) ", " (:tag +zero32) ", and " (:tag -zero64) " are all coerced to " (:tag +zero64) ".")
@@ -6567,10 +6966,10 @@
                  (std-const-binding (new qualified-name public "MIN_VALUE") -number (real-to-float64 low)))
                 (list-set-of instance-property) -number (&opt prototype -number) true
                 name "number" :uninit false true +zero64 :uninit
-                (& bracket-read -number) (& bracket-write -number) (& bracket-delete -number)
+                (& has-property -number) (& bracket-read -number) (& bracket-write -number) (& bracket-delete -number)
                 (& read -number) (& write -number) (& delete -number)
                 (& enumerate -number)
-                call construct none is as)))
+                same-as-construct construct none is coerce)))
     
     (define sbyte class (make-built-in-integer-class "sbyte" -128 127))
     (define byte class (make-built-in-integer-class "byte" 0 255))
@@ -6581,17 +6980,17 @@
     
     
     
-    (%heading (2 :semantics) "Character")
-    (define -character class
+    (%heading (2 :semantics) "char")
+    (define char class
       (new class
-        (list-set (std-function (new qualified-name public "fromCharCode") -character_from-char-code 1))
-        (list-set-of instance-property) -object (delay -character-prototype) true
-        "Character" "character" :uninit false true #?0000 :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        call-character construct-character none ordinary-is as-character))
+        (list-set (std-function (new qualified-name public "fromCharCode") char_from-char-code 1))
+        (list-set-of instance-property) -object (delay char-prototype) true
+        "char" "char" :uninit false true #?0000 :uninit
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-char none ordinary-is coerce-char))
     
-    (define (call-character (this object :unused) (args (vector object)) (phase phase)) char16
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    (define (call-char (this object :unused) (c class :unused) (args (vector object)) (phase phase)) char16
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const s string (object-to-string (nth args 0) phase))
@@ -6599,30 +6998,42 @@
         (throw-error -range-error "only one character may be given"))
       (return (nth s 0)))
     
-    (define (construct-character (args (vector object)) (phase phase)) char16
-      (if (= (length args) 0)
-        (return #?0000)
-        (return (call-character null args phase))))
+    (define (construct-char (c class :unused) (args (vector object)) (phase phase)) char16
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
+      (rwhen (> (length args) 1)
+        (throw-error -argument-error "at most one argument can be supplied"))
+      (const arg object (default-arg args 0 undefined))
+      (cond
+       ((in arg (tag undefined)) (return #?0000))
+       ((in arg char16 :narrow-true) (return arg))
+       (nil
+        (const s string (object-to-string (nth args 0) phase))
+        (rwhen (/= (length s) 1)
+          (throw-error -range-error "only one character may be given"))
+        (return (nth s 0)))))
     
-    (define (as-character (o object) (c class :unused) (silent boolean :unused)) char16
+    (define (coerce-char (o object) (c class :unused)) (union char16 (tag none))
       (if (in o char16 :narrow-true)
         (return o)
-        (throw-error -type-error)))
+        (return none)))
     
     
-    (define (-character_from-char-code (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if the argument can be converted to a primitive in constant expressions.")
+    (define (char_from-char-code (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
-      (const i extended-integer (object-to-imprecise-integer (nth args 0) phase))
-      (if (and (not-in i (tag +infinity -infinity nan) :narrow-true) (cascade integer 0 <= i <= (hex #xFFFF)))
+      (const i integer (object-to-integer (nth args 0) phase))
+      (if (cascade integer 0 <= i <= (hex #xFFFF))
         (return (integer-to-char16 i))
         (throw-error -range-error "character code out of range")))
     
     
-    (define -character-prototype simple-instance
+    (define char-prototype simple-instance
       (new simple-instance
-        (list-set (std-const-binding (new qualified-name public "constructor") -class -character))
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class char)
+         (std-reserve (new qualified-name public "toString") -string-prototype)
+         (std-reserve (new qualified-name public "valueOf") -string-prototype))
         -string-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
@@ -6632,39 +7043,53 @@
     (define -string class
       (new class
         (list-set (std-function (new qualified-name public "fromCharCode") -string_from-char-code 1))
-        (list-set-of instance-property string-length-getter)
+        (%list-set-of instance-property
+          (new instance-getter (list-set (new qualified-name public "length")) true false :uninit -string_length))
         -object (delay -string-prototype) true
-        "String" "string" :uninit false true "" :uninit
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete read-string ordinary-write ordinary-delete ordinary-enumerate
-        call-string construct-string none ordinary-is as-string))
+        "String" "string" :uninit false true null :uninit
+        string-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete read-string ordinary-write ordinary-delete ordinary-enumerate
+        same-as-construct construct-string none ordinary-is coerce-string))
     
-    (define (read-string (o object) (limit class) (multiname multiname) (env environment-opt) (phase phase))
+    (define (string-has-property (o object) (c class) (property object) (flat boolean) (phase phase)) boolean
+      (assert (in o string :narrow-true) (:assertion) " because " (:global string-has-property) " is only called on instances of class " (:character-literal "String") ".")
+      (const qname qualified-name (object-to-qualified-name property phase))
+      (const i integer-opt (multiname-to-unsigned-integer (list-set qname)))
+      (cond
+       ((not-in i (tag none) :narrow-true)
+        (return (< i (length o))))
+       (nil
+        (return (or (not-in (find-base-instance-property c (list-set qname) read) (tag none))
+                    (not-in (find-base-instance-property c (list-set qname) write) (tag none))
+                    (not-in (find-archetype-property o (list-set qname) read flat) (tag none))
+                    (not-in (find-archetype-property o (list-set qname) write flat) (tag none)))))))
+    
+    (define (read-string (o object) (limit class) (multiname multiname) (env environment-opt) (undefined-if-missing boolean) (phase phase))
             object-opt
       (assert (in o string :narrow-true) (:assertion) " because " (:global read-string) " is only called on instances of class " (:character-literal "String") ".")
       (when (= limit -string class)
-        (const i integer-opt (multiname-to-array-index multiname))
+        (const i integer-opt (multiname-to-unsigned-integer multiname))
         (when (not-in i (tag none) :narrow-true)
-          (if (< i (length o))
-            (return (nth o i))
-            (return undefined))))
-      (return (ordinary-read o limit multiname env phase)))
+          (cond
+           ((< i (length o)) (return (nth o i)))
+           (undefined-if-missing (return undefined))
+           (nil (return none)))))
+      (return (ordinary-read o limit multiname env undefined-if-missing phase)))
     
-    (define (call-string (this object :unused) (args (vector object)) (phase phase)) string
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
-      (rwhen (> (length args) 1)
-        (throw-error -argument-error "at most one argument can be supplied"))
-      (return (object-to-string (default-arg args 0 "") phase)))
+    (define (construct-string (c class :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if the argument can be converted to a primitive in a constant expression.")
+      (cond
+       ((= (length args) 0) (return ""))
+       ((= (length args) 1) (return (object-to-string (nth args 0) phase)))
+       (nil (throw-error -argument-error "at most one argument can be supplied"))))
     
-    (define (construct-string (args (vector object)) (phase phase)) string
-      (return (call-string null args phase)))
+    (define (coerce-string (o object) (c class :unused)) (union string null (tag none))
+      (cond
+       ((in o (union null string) :narrow-true) (return o))
+       ((in o char16 :narrow-true)
+        (return (vector o)))
+       (nil (return none))))
     
-    (define (as-string (o object) (c class :unused) (silent boolean :unused)) string
-      (if (in o (union char16 string) :narrow-true)
-        (return (to-string o))
-        (throw-error -type-error)))
     
-    
-    (define string-length-getter instance-getter (new instance-getter (list-set (new qualified-name public "length")) true false :uninit -string_length))
     (define (-string_length (this object) (phase phase :unused)) object
       (assert (in this string :narrow-true) (:assertion) " because this getter cannot be extracted from the " (:character-literal "String") " class.")
       (const length integer (length this))
@@ -6672,11 +7097,11 @@
     
     
     (define (-string_from-char-code (this object :unused) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if the arguments can be converted to primitives in constant expressions.")
+      (note "This function can be used in a constant expression if the arguments can be converted to primitives in constant expressions.")
       (var s string "")
       (for-each args arg
-        (const i extended-integer (object-to-imprecise-integer arg phase))
-        (if (and (not-in i (tag +infinity -infinity nan) :narrow-true) (cascade integer 0 <= i <= (hex #x10FFFF)))
+        (const i integer (object-to-integer arg phase))
+        (if (cascade integer 0 <= i <= (hex #x10FFFF))
           (<- s (append s (integer-to-u-t-f16 i)))
           (throw-error -range-error "character code out of range")))
       (return s))
@@ -6687,6 +7112,7 @@
         (%list-set
          (std-const-binding (new qualified-name public "constructor") -class -string)
          (std-function (new qualified-name public "toString") -string_to-string 0)
+         (std-reserve (new qualified-name public "valueOf") -object-prototype)
          (std-function (new qualified-name public "charAt") -string_char-at 1)
          (std-function (new qualified-name public "charCodeAt") -string_char-code-at 1)
          (std-function (new qualified-name public "concat") -string_concat 1)
@@ -6707,45 +7133,43 @@
         (list-set-of slot) none none none))
     
     
-    (define (-string_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    (define (-string_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " can be converted to a primitive in a constant expression.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (note "This function ignores any arguments passed to it in " (:local args) ".")
       (return (object-to-string this phase)))
     
     
-    (define (-string_char-at (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-string_char-at (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const s string (object-to-string this phase))
-      (var position extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (when (in position (tag nan))
-        (<- position 0))
-      (quiet-assert (not-in position (tag nan) :narrow-true))
-      (if (and (not-in position (tag +infinity -infinity) :narrow-true) (cascade integer 0 <= position < (length s)))
-        (return (vector (nth s position)))
-        (return "")))
+      (var position extended-integer (object-to-extended-integer (default-arg args 0 +zero64) phase))
+      (cond
+       ((in position (tag nan) :narrow-false) (throw-error -range-error))
+       ((and (not-in position (tag +infinity -infinity) :narrow-true) (cascade integer 0 <= position < (length s)))
+        (return (vector (nth s position))))
+       (nil (return ""))))
     
     
-    (define (-string_char-code-at (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-string_char-code-at (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const s string (object-to-string this phase))
-      (var position extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (when (in position (tag nan))
-        (<- position 0))
-      (quiet-assert (not-in position (tag nan) :narrow-true))
-      (if (and (not-in position (tag +infinity -infinity) :narrow-true) (cascade integer 0 <= position < (length s)))
-        (return (real-to-float64 (char16-to-integer (nth s position))))
-        (return nan64)))
+      (var position extended-integer (object-to-extended-integer (default-arg args 0 +zero64) phase))
+      (cond
+       ((in position (tag nan) :narrow-false) (throw-error -range-error))
+       ((and (not-in position (tag +infinity -infinity) :narrow-true) (cascade integer 0 <= position < (length s)))
+        (return (real-to-float64 (char16-to-integer (nth s position)))))
+       (nil (return nan64))))
     
     
-    (define (-string_concat (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the argument can be converted to primitives in constant expressions.")
+    (define (-string_concat (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the argument can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (var s string (object-to-string this phase))
       (for-each args arg
@@ -6753,22 +7177,15 @@
       (return s))
     
     
-    (define (-string_index-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
+    (define (-string_index-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (set-not-in (length args) (range-set-of integer 1 2))
         (throw-error -argument-error "at least one and at most two arguments must be supplied"))
       (const s string (object-to-string this phase))
       (const pattern string (object-to-string (nth args 0) phase))
-      (var position extended-integer (object-to-imprecise-integer (default-arg args 1 +zero64) phase))
-      (cond
-       ((in position (tag -infinity nan) :narrow-false)
-        (<- position 0))
-       ((or (in position (tag +infinity) :narrow-false) (> position (length s)))
-        (<- position (length s)))
-       ((< position 0)
-        (<- position 0)))
-      (quiet-assert (not-in position (tag +infinity -infinity nan) :narrow-true))
+      (const arg object (default-arg args 1 +zero64))
+      (var position integer (pin-extended-integer (object-to-extended-integer arg phase) (length s) false))
       (while (<= (+ position (length pattern)) (length s))
         (rwhen (= (subseq s position (+ position (- (length pattern) 1))) pattern string)
           (return (real-to-float64 position)))
@@ -6776,22 +7193,15 @@
       (return -1.0))
     
     
-    (define (-string_last-index-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
+    (define (-string_last-index-of (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (note "This function can be used in a constant expression if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (set-not-in (length args) (range-set-of integer 1 2))
         (throw-error -argument-error "at least one and at most two arguments must be supplied"))
       (const s string (object-to-string this phase))
       (const pattern string (object-to-string (nth args 0) phase))
-      (var position extended-integer (object-to-imprecise-integer (default-arg args 1 +infinity64) phase))
-      (cond
-       ((in position (tag -infinity) :narrow-false)
-        (<- position 0))
-       ((or (in position (tag +infinity nan) :narrow-false) (> position (length s)))
-        (<- position (length s)))
-       ((< position 0)
-        (<- position 0)))
-      (quiet-assert (not-in position (tag +infinity -infinity nan) :narrow-true))
+      (const arg object (default-arg args 1 +infinity64))
+      (var position integer (pin-extended-integer (object-to-extended-integer arg phase) (length s) false))
       (when (> (+ position (length pattern)) (length s))
         (<- position (- (length s) (length pattern))))
       (while (>= position 0)
@@ -6801,20 +7211,20 @@
       (return -1.0))
     
    
-    (define (-string_locale-compare (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+    (define (-string_locale-compare (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "localeCompare") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "localeCompare") " cannot be called from a constant expression"))
       (rwhen (< (length args) 1)
         (throw-error -argument-error "at least one argument must be supplied"))
       (const s1 string (object-to-string this phase))
       (const s2 string (object-to-string (nth args 0) phase))
       (/* "Let " (:local result) ":" :nbsp (:type object) " be a value of type " (:global -number) " that is the result of a locale-sensitive string comparison of "
-          (:local s1) " and " (:local s2) ". The two strings are compared in an implementation-defined fashion. The result is intended to order string in the sort order "
+          (:local s1) " and " (:local s2) ". The two strings are compared in an implementation-defined fashion. The result is intended to order strings in the sort order "
           "specified by the system default locale, and will be negative, zero, or positive, depending on whether " (:local s1) " comes before " (:local s2)
-          " in the sort order, the strings are equal, or " (:local s1) " comes after " (:local s2) " in the sort order, respectively. The result shall not be "
+          " in the sort order, they are equal, or " (:local s1) " comes after " (:local s2) " in the sort order, respectively. The result shall not be "
           (:tag nan64) ". The comparison shall be a consistent comparison function on the set of all strings.")
-      (var result object)
+      (var result float64)
       (cond
        ((< s1 s2 string) (<- result -1.0))
        ((> s1 s2 string) (<- result +1.0))
@@ -6826,7 +7236,7 @@
     (define (-string_match (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "match") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "match") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const s string (object-to-string this phase))
@@ -6836,7 +7246,7 @@
     (define (-string_replace (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "replace") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "replace") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 2)
         (throw-error -argument-error "exactly two arguments must be supplied"))
       (const s string (object-to-string this phase))
@@ -6846,41 +7256,23 @@
     (define (-string_search (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "search") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "search") " cannot be called from a constant expression"))
       (rwhen (/= (length args) 1)
         (throw-error -argument-error "exactly one argument must be supplied"))
       (const s string (object-to-string this phase))
       (todo))
     
     
-    (define (-string_slice (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
+    (define (-string_slice (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (> (length args) 2)
         (throw-error -argument-error "at most two arguments can be supplied"))
       (const s string (object-to-string this phase))
-      (var start extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (var end extended-integer (object-to-imprecise-integer (default-arg args 0 +infinity64) phase))
-      (cond
-       ((in start (tag -infinity nan) :narrow-false)
-        (<- start 0))
-       ((or (in start (tag +infinity) :narrow-false) (> start (length s)))
-        (<- start (length s)))
-       ((< start 0)
-        (<- start (+ start (length s)))
-        (when (< start 0)
-          (<- start 0))))
-      (quiet-assert (not-in start (tag +infinity -infinity nan) :narrow-true))
-      (cond
-       ((in end (tag -infinity) :narrow-false)
-        (<- end 0))
-       ((or (in end (tag +infinity nan) :narrow-false) (> end (length s)))
-        (<- end (length s)))
-       ((< end 0)
-        (<- end (+ end (length s)))
-        (when (< end 0)
-          (<- end 0))))
-      (quiet-assert (not-in end (tag +infinity -infinity nan) :narrow-true))
+      (const start-arg object (default-arg args 0 +zero64))
+      (const end-arg object (default-arg args 1 +infinity64))
+      (const start integer (pin-extended-integer (object-to-extended-integer start-arg phase) (length s) true))
+      (const end integer (pin-extended-integer (object-to-extended-integer end-arg phase) (length s) true))
       (if (< start end)
         (return (subseq s start (- end 1)))
         (return "")))
@@ -6889,80 +7281,70 @@
     (define (-string_split (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "split") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "split") " cannot be called from a constant expression"))
       (rwhen (> (length args) 2)
         (throw-error -argument-error "at most two arguments can be supplied"))
       (const s string (object-to-string this phase))
       (todo))
     
     
-    (define (-string_substring (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
+    (define (-string_substring (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " and the arguments can be converted to primitives in constant expressions.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (> (length args) 2)
         (throw-error -argument-error "at most two arguments can be supplied"))
       (const s string (object-to-string this phase))
-      (var start extended-integer (object-to-imprecise-integer (default-arg args 0 +zero64) phase))
-      (var end extended-integer (object-to-imprecise-integer (default-arg args 0 +infinity64) phase))
-      (cond
-       ((in start (tag -infinity nan) :narrow-false)
-        (<- start 0))
-       ((or (in start (tag +infinity) :narrow-false) (> start (length s)))
-        (<- start (length s)))
-       ((< start 0)
-        (<- start 0)))
-      (quiet-assert (not-in start (tag +infinity -infinity nan) :narrow-true))
-      (cond
-       ((in end (tag -infinity) :narrow-false)
-        (<- end 0))
-       ((or (in end (tag +infinity nan) :narrow-false) (> end (length s)))
-        (<- end (length s)))
-       ((< end 0)
-        (<- end 0)))
-      (quiet-assert (not-in end (tag +infinity -infinity nan) :narrow-true))
+      (const start-arg object (default-arg args 0 +zero64))
+      (const end-arg object (default-arg args 1 +infinity64))
+      (const start integer (pin-extended-integer (object-to-extended-integer start-arg phase) (length s) false))
+      (const end integer (pin-extended-integer (object-to-extended-integer end-arg phase) (length s) false))
       (if (<= start end)
         (return (subseq s start (- end 1)))
         (return (subseq s end (- start 1)))))
     
-   
-    (define (-string_to-lower-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    
+    (define (-string_to-lower-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " can be converted to a primitive in a constant expression.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (const s string (object-to-string this phase))
+      (const s32 (vector char21) (string-to-u-t-f32 s))
       (var r string "")
-      (for-each s ch
+      (for-each s32 ch
         (<- r (append r (char-to-lower-full ch))))
       (return r))
     
-   
-    (define (-string_to-locale-lower-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
+    
+    (define (-string_to-locale-lower-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "toLocaleLowerCase") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "toLocaleLowerCase") " cannot be called from a constant expression"))
       (const s string (object-to-string this phase))
+      (const s32 (vector char21) (string-to-u-t-f32 s))
       (var r string "")
-      (for-each s ch
+      (for-each s32 ch
         (<- r (append r (char-to-lower-localized ch))))
       (return r))
     
-   
-    (define (-string_to-upper-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
-      (note "This function can be used in constant expressions if " (:local this) " can be converted to a primitive in constant expressions.")
+    
+    (define (-string_to-upper-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (note "This function can be used in a constant expression if " (:local this) " can be converted to a primitive in a constant expression.")
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (const s string (object-to-string this phase))
+      (const s32 (vector char21) (string-to-u-t-f32 s))
       (var r string "")
-      (for-each s ch
+      (for-each s32 ch
         (<- r (append r (char-to-upper-full ch))))
       (return r))
     
-   
-    (define (-string_to-locale-upper-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) object
+    
+    (define (-string_to-locale-upper-case (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
       (note "This function is generic and can be applied even if " (:local this) " is not a string.")
       (rwhen (in phase (tag compile))
-        (throw-error -constant-error (:character-literal "toLocaleUpperCase") " cannot be called from constant expressions"))
+        (throw-error -constant-error (:character-literal "toLocaleUpperCase") " cannot be called from a constant expression"))
       (const s string (object-to-string this phase))
+      (const s32 (vector char21) (string-to-u-t-f32 s))
       (var r string "")
-      (for-each s ch
+      (for-each s32 ch
         (<- r (append r (char-to-upper-localized ch))))
       (return r))
     
@@ -6971,27 +7353,52 @@
     (%heading (2 :semantics) "Array")
     (define -array class
       (new class
-        (list-set-of local-binding) (list-set-of instance-property) -object (delay -array-prototype) true
+        (list-set-of local-binding)
+        (%list-set-of instance-property
+          (new instance-variable (list-set (new qualified-name array-private "length")) true false -number +zero64 false)
+          (new instance-getter (list-set (new qualified-name public "length")) true false :uninit -array_get-length)
+          (new instance-setter (list-set (new qualified-name public "length")) true false :uninit -array_set-length))
+        -object (delay -array-prototype) true
         "Array" "object" array-private true true null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read write-array ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read write-array ordinary-delete ordinary-enumerate
+        same-as-construct ordinary-construct init-array ordinary-is ordinary-coerce))
     
-    (define array-limit integer (- (expt 2 64) 1))
+    (define array-limit integer (/*/ (expt 2 53) "an implementation-defined integer value between " (:expr integer (- (expt 2 32) 1)) " and "
+                                     (:expr integer (expt 2 53)) " inclusive"))
     (define array-private namespace (new namespace "private"))
     
-    (define (write-array (o object) (limit class) (multiname multiname) (env environment-opt) (create-if-missing boolean) (new-value object) (phase (tag run)))
+    (define (write-array (o object) (limit class) (multiname multiname) (env environment-opt) (new-value object) (create-if-missing boolean) (phase (tag run)))
             (tag none ok)
-      (const result (tag none ok) (ordinary-write o limit multiname env create-if-missing new-value phase))
+      (const result (tag none ok) (ordinary-write o limit multiname env new-value create-if-missing phase))
       (when (in result (tag ok))
-        (const i integer-opt (multiname-to-array-index multiname))
+        (const i integer-opt (multiname-to-unsigned-integer multiname))
         (when (not-in i (tag none) :narrow-true)
-          (var length u-long (assert-in (read-instance-slot o (new qualified-name array-private "length") phase) u-long))
-          (when (>= i (& value length))
-            (<- length (new u-long (+ i 1)))
-            (dot-write o (list-set (new qualified-name array-private "length")) length phase))))
+          (rwhen (>= i array-limit)
+            (throw-error -range-error "array index out of range"))
+          (var length integer (read-array-private-length o phase))
+          (when (>= i length)
+            (<- length (+ i 1))
+            (write-array-private-length o length phase))))
       (return result))
     
-    (define (multiname-to-array-index (multiname multiname)) integer-opt
+    (%text :comment (:global-call read-array-private-length array phase) " returns an " (:character-literal "Array") :apostrophe
+           "s private length. See also " (:global read-length) ", which can work on non-" (:character-literal "Array") " objects.")
+    (define (read-array-private-length (array object) (phase phase)) integer
+      (const length float64 (assert-in (read-instance-slot array (new qualified-name array-private "length") phase) float64))
+      (assert (not-in length (tag nan64 +infinity64 -infinity64) :narrow-true))
+      (var n rational (to-rational length))
+      (assert (and (in n integer :narrow-true) (cascade integer 0 <= n <= array-limit)))
+      (return n))
+    
+    (%text :comment (:global-call write-array-private-length array length phase) " sets an " (:character-literal "Array") :apostrophe
+           "s private length to " (:local length) " after ensuring that " (:local length) " is between 0 and " (:global array-limit)
+           " inclusive. See also " (:global write-length) ", which can work on non-" (:character-literal "Array") " objects.")
+    (define (write-array-private-length (array object) (length integer) (phase (tag run))) void
+      (rwhen (or (< length 0) (> length array-limit))
+        (throw-error -range-error "array length out of range"))
+      (dot-write array (list-set (new qualified-name array-private "length")) (real-to-float64 length) phase))
+    
+    (define (multiname-to-unsigned-integer (multiname multiname)) integer-opt
       (rwhen (/= (length multiname) 1)
         (return none))
       (const qname qualified-name (unique-elt-of multiname))
@@ -7002,18 +7409,320 @@
         (cond
          ((= name "0" string) (return 0))
          ((and (/= (nth name 0) #\0 char16) (every name ch (set-in ch (range-set-of-ranges char16 #\0 #\9))))
-          (const i integer (assert-not-in (string-to-integer name 10) (tag none)))
-          (rwhen (< i array-limit)
-            (return i)))))
+          (return (assert-in (string-to-extended-integer name) integer)))))
       (return none))
+    
+    (define (init-array (this simple-instance) (args (vector object)) (phase (tag run))) void
+      (when (= (length args) 1)
+        (const arg object (nth args 0))
+        (rwhen (in arg general-number :narrow-true)
+          (const length integer-opt (check-integer arg))
+          (rwhen (in length (tag none) :narrow-false)
+            (throw-error -range-error "array length must be an integer"))
+          (write-array-private-length this length phase)
+          (return)))
+      (var i integer 0)
+      (for-each args arg
+        (index-write this i arg phase)
+        (<- i (+ i 1)))
+      (note "The call to " (:global index-write) " above also set the array" :apostrophe "s length to " (:local i) "."))
+    
+    
+    (define (-array_get-length (this object) (phase phase)) float64
+      (assert (is this -array) (:assertion) " because this getter cannot be extracted from the " (:character-literal "Array") " class.")
+      (note "An array" :apostrophe "s length is mutable, so reading it will throw " (:global -constant-error) " when " (:expr boolean (in phase (tag compile))) ".")
+      (return (assert-in (read-instance-slot this (new qualified-name array-private "length") phase) float64)))
+    
+    (define (-array_set-length (this object) (length object) (phase phase)) void
+      (assert (is this -array) (:assertion) " because this setter cannot be extracted from the " (:character-literal "Array") " class.")
+      (quiet-assert (in this simple-instance :narrow-true))
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error "an array" :apostrophe "s " (:character-literal "length") " cannot be set from a constant expression"))
+      (const new-length integer-opt (check-integer (object-to-general-number length phase)))
+      (rwhen (or (in new-length (tag none) :narrow-false) (< new-length 0) (> new-length array-limit))
+        (throw-error -range-error "array length out of range or not an integer"))
+      (const old-length integer (read-array-private-length this phase))
+      (when (< new-length old-length)
+        (note "Delete all indexed properties greater than or equal to the new length")
+        (function (qname-in-deleted-range (qname qualified-name)) boolean
+          (const i integer-opt (multiname-to-unsigned-integer (list-set qname)))
+          (return (and (not-in i (tag none) :narrow-true) (cascade integer new-length <= i < old-length))))
+        (&= local-bindings this
+            (map (& local-bindings this)
+                 b b (not (qname-in-deleted-range (& qname b))))))
+      (write-array-private-length this new-length phase))
     
     
     (define -array-prototype simple-instance
       (new simple-instance
-        (list-set-of local-binding)
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class -array)
+         (std-function (new qualified-name public "toString") -array_to-string 0)
+         (std-function (new qualified-name public "toLocaleString") -array_to-locale-string 0)
+         (std-function (new qualified-name public "concat") -array_concat 1)
+         (std-function (new qualified-name public "join") -array_join 1)
+         (std-function (new qualified-name public "pop") -array_pop 0)
+         (std-function (new qualified-name public "push") -array_push 1)
+         (std-function (new qualified-name public "reverse") -array_reverse 0)
+         (std-function (new qualified-name public "shift") -array_shift 0)
+         (std-function (new qualified-name public "slice") -array_slice 2)
+         (std-function (new qualified-name public "sort") -array_sort 1)
+         (std-function (new qualified-name public "splice") -array_splice 2)
+         (std-function (new qualified-name public "unshift") -array_unshift 1))
         -object-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     ;***** Add some properties here
+    
+    
+    (define (-array_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "toString") " cannot be called on an " (:character-literal "Array") " from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (note "This function ignores any arguments passed to it in " (:local args) ".")
+      (return (internal-join this "," phase)))
+    
+    
+    (define (-array_to-locale-string (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "toLocaleString") " cannot be called on an " (:character-literal "Array") " from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (note "This function passes any arguments passed to it in " (:local args) " to " (:character-literal "toLocaleString") " applied to the elements of the array.")
+      (const separator string (/*/ "," "the list-separator string appropriate for the host" :apostrophe "s current locale, derived in an implementation-defined way"))
+      (const length integer (read-length this phase))
+      (var result string "")
+      (var i integer 0)
+      (while (/= i length)
+        (const elt object-opt (index-read this i phase))
+        (when (not-in elt (tag undefined null none) :narrow-true)
+          (const to-locale-string-method object (dot-read elt (list-set (new qualified-name public "toLocaleString")) phase))
+          (const s object (call elt to-locale-string-method args phase))
+          (rwhen (not-in s (union char16 string) :narrow-false)
+            (throw-error -type-error (:character-literal "toLocaleString") " should return a string"))
+          (<- result (append result (to-string s))))
+        (<- i (+ i 1))
+        (when (/= i length)
+          (<- result (append result separator))))
+      (return result))
+    
+    
+    (define (-array_concat (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "concat") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (const constituents (vector object) (append (vector this) args))
+      (const array object (construct -array (vector-of object) phase))
+      (var i integer 0)
+      (for-each constituents o
+        (cond
+         ((is o -array)
+          (const o-length integer (read-length o phase))
+          (var k integer 0)
+          (while (/= k o-length)
+            (const elt object-opt (index-read o k phase))
+            (when (not-in elt (tag none) :narrow-true)
+              (index-write array i elt phase))
+            (<- k (+ k 1))
+            (<- i (+ i 1))))
+         (nil
+          (index-write array i o phase)
+          (<- i (+ i 1)))))
+      (write-array-private-length array i phase)
+      (return array))
+    
+    
+    (define (-array_join (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) string
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "join") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (> (length args) 1)
+        (throw-error -argument-error "at most one argument can be supplied"))
+      (const arg object (default-arg args 0 undefined))
+      (var separator string ",")
+      (when (not-in arg (tag undefined))
+        (<- separator (object-to-string arg phase)))
+      (return (internal-join this separator phase)))
+    
+    
+    (define (internal-join (this object) (separator string) (phase (tag run))) string
+      (const length integer (read-length this phase))
+      (var result string "")
+      (var i integer 0)
+      (while (/= i length)
+        (const elt object-opt (index-read this i phase))
+        (when (not-in elt (tag undefined null none) :narrow-true)
+          (<- result (append result (object-to-string elt phase))))
+        (<- i (+ i 1))
+        (when (/= i length)
+          (<- result (append result separator))))
+      (return result))
+    
+    
+    (define (-array_pop (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "pop") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (/= (length args) 0)
+        (throw-error -argument-error "no arguments can be supplied"))
+      (var length integer (read-length this phase))
+      (var result object undefined)
+      (when (/= length 0)
+        (<- length (- length 1))
+        (const elt object-opt (index-read this length phase))
+        (when (not-in elt (tag none) :narrow-true)
+          (<- result elt)
+          (index-write this length none phase)))
+      (write-length this length phase)
+      (return result))
+    
+    
+    (define (-array_push (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "push") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (var length integer (read-length this phase))
+      (for-each args arg
+        (index-write this length arg phase)
+        (<- length (+ length 1)))
+      (write-length this length phase)
+      (return (real-to-float64 length)))
+    
+    
+    (define (-array_reverse (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "reverse") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (/= (length args) 0)
+        (throw-error -argument-error "no arguments can be supplied"))
+      (const length integer (read-length this phase))
+      (var lo integer 0)
+      (var hi integer (- length 1))
+      (while (< lo hi)
+        (const lo-elt object-opt (index-read this lo phase))
+        (const hi-elt object-opt (index-read this hi phase))
+        (index-write this lo hi-elt phase)
+        (index-write this hi lo-elt phase)
+        (<- lo (+ lo 1))
+        (<- hi (- hi 1)))
+      (return this))
+    
+    
+    (define (-array_shift (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "shift") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (/= (length args) 0)
+        (throw-error -argument-error "no arguments can be supplied"))
+      (var length integer (read-length this phase))
+      (var result object undefined)
+      (when (/= length 0)
+        (var elt object-opt (index-read this 0 phase))
+        (when (not-in elt (tag none) :narrow-true)
+          (<- result elt))
+        (var i integer 1)
+        (while (/= i length)
+          (<- elt (index-read this i phase))
+          (index-write this (- i 1) elt phase)
+          (<- i (+ i 1)))
+        (<- length (- length 1))
+        (index-write this length none phase))
+      (write-length this length phase)
+      (return result))
+    
+    
+    (define (-array_slice (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "slice") " cannot be called on an " (:character-literal "Array") " from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (> (length args) 2)
+        (throw-error -argument-error "at most two arguments can be supplied"))
+      (const length integer (read-length this phase))
+      (const start-arg object (default-arg args 0 +zero64))
+      (const end-arg object (default-arg args 1 +infinity64))
+      (const start integer (pin-extended-integer (object-to-extended-integer start-arg phase) length true))
+      (const end integer (pin-extended-integer (object-to-extended-integer end-arg phase) length true))
+      (return (make-array-slice this start end phase)))
+    
+    (define (make-array-slice (array object) (start integer) (end integer) (phase (tag run))) object
+      (const slice object (construct -array (vector-of object) phase))
+      (var i integer start)
+      (var j integer 0)
+      (while (< i end)
+        (const elt object-opt (index-read array i phase))
+        (index-write slice j elt phase)
+        (<- i (+ i 1))
+        (<- j (+ j 1)))
+      (write-length slice j phase)
+      (return slice))
+
+    
+    (define (-array_sort (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "sort") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (> (length args) 1)
+        (throw-error -argument-error "at most one argument can be supplied"))
+      (todo))
+    
+    
+    (define (-array_splice (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) object
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "splice") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (rwhen (< (length args) 2)
+        (throw-error -argument-error "at least two arguments must be supplied"))
+      (const length integer (read-length this phase))
+      (const start-arg object (default-arg args 0 +zero64))
+      (const delete-count-arg object (default-arg args 1 +zero64))
+      (const start integer (pin-extended-integer (object-to-extended-integer start-arg phase) length true))
+      (const delete-count integer (pin-extended-integer (object-to-extended-integer delete-count-arg phase) (- length start) false))
+      (const deleted-slice object (make-array-slice this start (+ start delete-count) phase))
+      (const new-elts (vector object) (subseq args 2))
+      (const new-elt-count integer (length new-elts))
+      (const count-diff integer (- new-elt-count delete-count))
+      (var i integer)
+      (cond
+       ((< count-diff 0)
+        (<- i (+ start delete-count))
+        (while (/= i length)
+          (const elt object-opt (index-read this i phase))
+          (index-write this (+ i count-diff) elt phase)
+          (<- i (+ i 1)))
+        (<- i 0)
+        (while (/= i count-diff)
+          (<- i (- i 1))
+          (index-write this (+ length i) none phase)))
+       ((> count-diff 0)
+        (<- i length)
+        (while (/= i (+ start delete-count))
+          (<- i (- i 1))
+          (const elt object-opt (index-read this i phase))
+          (index-write this (+ i count-diff) elt phase))))
+      (write-length this (+ length count-diff) phase)
+      (<- i start)
+      (for-each new-elts arg
+        (index-write this i arg phase)
+        (<- i (+ i 1)))
+      (return deleted-slice))
+    
+    
+    (define (-array_unshift (this object) (f simple-instance :unused) (args (vector object)) (phase phase)) float64
+      (rwhen (in phase (tag compile) :narrow-false)
+        (throw-error -constant-error (:character-literal "unshift") " cannot be called from a constant expression"))
+      (note "This function is generic and can be applied even if " (:local this) " is not an " (:character-literal "Array") ".")
+      (var i integer (read-length this phase))
+      (const n-args integer (length args))
+      (const new-length integer (+ n-args i))
+      (when (= n-args 0)
+        (// "At the implementation" :apostrophe "s discretion, either do nothing or " (:keyword return) :nbsp (:expr float64 (real-to-float64 new-length))))
+      (write-length this new-length phase)
+      (while (/= i 0)
+        (<- i (- i 1))
+        (const elt object-opt (index-read this i phase))
+        (index-write this (+ i n-args) elt phase))
+      (for-each args arg
+        (index-write this i arg phase)
+        (<- i (+ i 1)))
+      (return (real-to-float64 new-length)))
     
     
     
@@ -7022,52 +7731,46 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -namespace-prototype) true
         "Namespace" "namespace" :uninit false true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        ordinary-call construct-namespace none ordinary-is ordinary-coerce))
     
-    (define (call-namespace (this object :unused) (args (vector object)) (phase phase)) (union namespace null)
-      (note "This function can be used in constant expressions.")
-      (rwhen (/= (length args) 1)
-        (throw-error -argument-error "exactly one argument must be supplied"))
-      (const arg object (nth args 0))
-      (if (in arg (union namespace null) :narrow-true)
-        (return arg)
-        (throw-error -type-error)))
-    
-    (define (construct-namespace (args (vector object)) (phase phase)) namespace
-      (note "This function can be used in constant expressions if its argument is a string.")
+    (define (construct-namespace (c class :unused) (args (vector object)) (phase phase)) namespace
+      (note "This function can be used in a constant expression if its argument is a string.")
       (rwhen (> (length args) 1)
         (throw-error -argument-error "at most one argument can be supplied"))
       (const arg object (default-arg args 0 undefined))
       (cond
        ((in arg (union null undefined))
         (rwhen (in phase (tag compile))
-          (throw-error -constant-error "constant expressions cannot construct new anonymous namespaces"))
+          (throw-error -constant-error "a constant expression cannot construct new anonymous namespaces"))
         (return (new namespace "anonymous")))
        ((in arg (union char16 string) :narrow-true)
         (const name string (to-string arg))
+        (reserve ns)
         (cond
          ((= name "" string)
           (return public))
+         ((some named-namespaces ns (= (& name ns) name string) :define-true)
+          (return ns))
          (nil
-          (/* (:keyword return) " a namespace generated from the URI in " (:local name) " in an implementation-defined manner. "
-              "Constructing a namespace twice using the same " (:local name) " shall return the same namespace. Constructing namespaces using different values of "
-              (:local name) " may or may not return the same namespace, depending on whether the implementation considers the differences in the names to be significant. "
-              "Constructing a namespace from " (:local name) " shall not return any of the private or internal namespaces that are constructed elsewhere in this specification.")
-          (return uri-namespace))))
+          (const ns2 namespace (new namespace name))
+          (<- named-namespaces (set+ named-namespaces (list-set ns2)))
+          (return ns2))))
        (nil (throw-error -type-error))))
     
-    (define uri-namespace namespace (new namespace "URI Namespace")) ;*****
+    (defvar named-namespaces (list-set namespace) (list-set-of namespace))
     
     (define -namespace-prototype simple-instance
       (new simple-instance
-        (%list-set (std-function (new qualified-name public "toString") -namespace_to-string 0))
+        (%list-set
+         (std-function (new qualified-name public "toString") -namespace_to-string 0)
+         (std-reserve (new qualified-name public "valueOf") -object-prototype))
         -object-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
     
     
-    (define (-namespace_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
-      (note "This function can be used in constant expressions.")
+    (define (-namespace_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) string
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
       (note "This function ignores any arguments passed to it in " (:local args) ".")
       (rwhen (not-in this namespace :narrow-false)
         (throw-error -type-error))
@@ -7079,8 +7782,8 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -object-prototype) true
         "Attribute" "object" :uninit false true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     
     (%heading (2 :semantics) "Date")
@@ -7088,8 +7791,8 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -date-prototype) true
         "Date" "object" :uninit true true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     (define -date-prototype simple-instance
       (new simple-instance
@@ -7104,8 +7807,8 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -reg-exp-prototype) true
         "RegExp" "object" :uninit true true null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     (define -reg-exp-prototype simple-instance
       (new simple-instance
@@ -7122,8 +7825,8 @@
         (list-set-of instance-property class-prototype-getter)
         -object (delay -class-prototype) true
         "Class" "function" :uninit false true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     (define class-prototype-getter instance-getter (new instance-getter (list-set (new qualified-name public "prototype")) true false :uninit -class_prototype))
     (define (-class_prototype (this object) (phase phase :unused)) object
@@ -7135,10 +7838,20 @@
     
     (define -class-prototype simple-instance
       (new simple-instance
-        (list-set-of local-binding)
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class -class)
+         (std-function (new qualified-name public "toString") -class_to-string 0)
+         (std-reserve (new qualified-name public "valueOf") -object-prototype)
+         (std-const-binding (new qualified-name public "length") -number 1.0))
         -object-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
-    ;***** Add some properties here
+    
+    
+    (define (-class_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase :unused)) string
+      (note "This function does not check " (:local phase) " and therefore can be used in a constant expression.")
+      (note "This function ignores any arguments passed to it in " (:local args) ".")
+      (const c class (object-to-class this))
+      (return (append "[class " (& name c) "]")))
     
     
     (%heading (2 :semantics) "Function")
@@ -7148,8 +7861,8 @@
         (list-set-of instance-property ivar-function-length)
         -object (delay -function-prototype) true
         "Function" "function" :uninit false true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     (define ivar-function-length instance-variable (new instance-variable (list-set (new qualified-name public "length")) true false -number none true))
     
@@ -7169,8 +7882,8 @@
           (new instance-variable (list-set (new qualified-name public "prototype")) true false -object undefined false))
         -function (delay -function-prototype) true
         "Function" "function" :uninit true true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as)) ;***** Need to set prototype here.
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce)) ;***** Need to set prototype here.
     
     
     (%heading (2 :semantics) "Package")
@@ -7178,211 +7891,161 @@
       (new class
         (list-set-of local-binding) (list-set-of instance-property) -object (delay -object-prototype) true
         "Package" "object" :uninit true true null hint-string
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        dummy-call dummy-construct none ordinary-is ordinary-coerce))
     
     
     (%heading (2 :semantics) "Error")
     (define -error class
       (new class
-        (list-set-of local-binding) (list-set-of instance-property) -object (delay -error-prototype) true
+        (list-set-of local-binding)
+        (%list-set-of instance-property
+          (new instance-variable (list-set (new qualified-name public "name")) false true -string null false)
+          (new instance-variable (list-set (new qualified-name public "message")) false true -string null false))
+        -object (delay -error-prototype) true
         "Error" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
+        ordinary-has-property ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
+        call-error ordinary-construct init-error ordinary-is ordinary-coerce))
+    
+    (define (call-error (this object :unused) (c class) (args (vector object)) (phase phase)) object
+      (rwhen (> (length args) 1)
+        (throw-error -argument-error "at most one argument can be supplied"))
+      (const arg object (default-arg args 0 undefined))
+      (if (or (in arg (tag null)) (is arg -error))
+        (return arg)
+        (return (construct c args phase))))
+    
+    (define (init-error (this simple-instance) (args (vector object)) (phase (tag run))) void
+      (rwhen (> (length args) 1)
+        (throw-error -argument-error "at most one argument can be supplied"))
+      (const name (union string null) (assert-in (dot-read -error-prototype (list-set (new qualified-name public "name")) phase) (union string null)))
+      (dot-write this (list-set (new qualified-name public "name")) name phase)
+      (const arg object (default-arg args 0 undefined))
+      (var message (union string null))
+      (if (in arg (tag undefined))
+        (<- message (assert-in (dot-read -error-prototype (list-set (new qualified-name public "message")) phase) (union string null)))
+        (<- message (object-to-string arg phase)))
+      (dot-write this (list-set (new qualified-name public "message")) message phase))
     
     
     (define -error-prototype simple-instance
       (new simple-instance
-        (list-set-of local-binding)
+        (%list-set
+         (std-const-binding (new qualified-name public "constructor") -class -error)
+         (std-function (new qualified-name public "toString") -error_to-string 1)
+         (std-var-binding (new qualified-name public "name") -string "Error")
+         (std-var-binding (new qualified-name public "message") -string (/*/ "ErrorPrototypeMessage" "an implementation-defined string")))
         -object-prototype prototypes-sealed -object
         (list-set-of slot) none none none))
-    ;***** Add some properties here
     
     
+    (define (-error_to-string (this object) (f simple-instance :unused) (args (vector object) :unused) (phase phase)) string
+      (rwhen (in phase (tag compile))
+        (throw-error -constant-error (:character-literal "toString") " cannot be called on an " (:character-literal "Error") " from a constant expression"))
+      (note "This function ignores any arguments passed to it in " (:local args) ".")
+      (const err object (coerce-non-null this -error))
+      (const name (union string null) (assert-in (dot-read err (list-set (new qualified-name public "name")) phase) (union string null)))
+      (const message (union string null) (assert-in (dot-read err (list-set (new qualified-name public "message")) phase) (union string null)))
+      (return (/*/ (append (object-to-string name phase) ": " (object-to-string message phase))
+                "an implementation-defined string derived from " (:local name) ", " (:local message) ", and optionally other properties of " (:local err))))
+    
+    
+    
+    ;***** Describe what I do.
     (define (system-error (e class) (msg (union string undefined))) object
-      (return ((&opt construct e) (vector-of object msg) run)))
+      (return (construct e (vector-of object msg) run)))
     
     
-    (%heading (3 :semantics) "ArgumentError")
-    (define -argument-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -argument-error-prototype) true
-        "ArgumentError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -argument-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "AttributeError")
-    (define -attribute-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -attribute-error-prototype) true
-        "AttributeError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -attribute-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "ConstantError")
-    (define -constant-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -constant-error-prototype) true
-        "ConstantError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -constant-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
+    (%heading (3 :semantics) "Error Subclasses")
+    (define (make-built-in-error-subclass (name string)) class
+      (function (call (this object :unused) (c class) (args (vector object)) (phase phase)) object
+        (rwhen (> (length args) 1)
+          (throw-error -argument-error "at most one argument can be supplied"))
+        (const arg object (default-arg args 0 undefined))
+        (if (or (in arg (tag null)) (is arg -error))
+          (return (coerce arg c))
+          (return (construct c args phase))))
+      (const c class
+        (new class
+          (list-set-of local-binding) (list-set-of instance-property) -error :uninit false
+          name "object" :uninit true false null hint-number
+          (& has-property -error) (& bracket-read -error) (& bracket-write -error) (& bracket-delete -error)
+          (& read -error) (& write -error) (& delete -error)
+          (& enumerate -error)
+          call ordinary-construct none ordinary-is ordinary-coerce))
+      (const prototype simple-instance
+        (new simple-instance
+          (%list-set
+           (std-const-binding (new qualified-name public "constructor") -class c)
+           (std-var-binding (new qualified-name public "name") -string name)
+           (std-var-binding (new qualified-name public "message") -string (/*/ (append name "PrototypeMessage") "an implementation-defined string")))
+          -error-prototype prototypes-sealed -object
+          (list-set-of slot) none none none))
+      (function (init (this simple-instance) (args (vector object)) (phase (tag run))) void
+        (rwhen (> (length args) 1)
+          (throw-error -argument-error "at most one argument can be supplied"))
+        (const name2 (union string null) (assert-in (dot-read prototype (list-set (new qualified-name public "name")) phase) (union string null)))
+        (dot-write this (list-set (new qualified-name public "name")) name2 phase)
+        (const arg object (default-arg args 0 undefined))
+        (var message (union string null))
+        (if (in arg (tag undefined))
+          (<- message (assert-in (dot-read prototype (list-set (new qualified-name public "message")) phase) (union string null)))
+          (<- message (object-to-string arg phase)))
+        (dot-write this (list-set (new qualified-name public "message")) message phase))
+      (&const= prototype c prototype)
+      (&= init c init)
+      (&= complete c true)
+      (return c))
     
     
-    (%heading (3 :semantics) "DefinitionError")
-    (define -definition-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -definition-error-prototype) true
-        "DefinitionError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -definition-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
+    (define -argument-error class (make-built-in-error-subclass "ArgumentError"))
+    (define -attribute-error class (make-built-in-error-subclass "AttributeError"))
+    (define -constant-error class (make-built-in-error-subclass "ConstantError"))
+    (define -definition-error class (make-built-in-error-subclass "DefinitionError"))
+    (define -eval-error class (make-built-in-error-subclass "EvalError"))
+    (define -range-error class (make-built-in-error-subclass "RangeError"))
+    (define -reference-error class (make-built-in-error-subclass "ReferenceError"))
+    (define -syntax-error class (make-built-in-error-subclass "SyntaxError"))
+    (define -type-error class (make-built-in-error-subclass "TypeError"))
+    (define -uninitialized-error class (make-built-in-error-subclass "UninitializedError"))
+    (define -u-r-i-error class (make-built-in-error-subclass "URIError"))
     
     
-    (%heading (3 :semantics) "EvalError")
-    (define -eval-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -eval-error-prototype) true
-        "EvalError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -eval-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "RangeError")
-    (define -range-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -range-error-prototype) true
-        "RangeError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -range-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "ReferenceError")
-    (define -reference-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -reference-error-prototype) true
-        "ReferenceError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -reference-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "SyntaxError")
-    (define -syntax-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -syntax-error-prototype) true
-        "SyntaxError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -syntax-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "TypeError")
-    (define -type-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -type-error-prototype) true
-        "TypeError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -type-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "UninitializedError")
-    (define -uninitialized-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -uninitialized-error-prototype) true
-        "UninitializedError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -uninitialized-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
-    
-    (%heading (3 :semantics) "URIError")
-    (define -u-r-i-error class
-      (new class
-        (list-set-of local-binding) (list-set-of instance-property) -error (delay -u-r-i-error-prototype) true
-        "URIError" "object" :uninit true false null hint-number
-        ordinary-bracket-read ordinary-bracket-write ordinary-bracket-delete ordinary-read ordinary-write ordinary-delete ordinary-enumerate
-        dummy-call dummy-construct none ordinary-is ordinary-as))
-    
-    (define -u-r-i-error-prototype simple-instance
-      (new simple-instance
-        (list-set-of local-binding)
-        -error-prototype prototypes-sealed -object
-        (list-set-of slot) none none none))
-    ;***** Add some properties here
-    
+    (? hide
+      (%heading (1 :semantics) "Pretty Printing")
+      
+      (define (object-to-source (o object)) string
+        (case o
+          (:narrow (union undefined null boolean) (return (object-to-string o run)))
+          (:narrow long (return (append (general-number-to-string o) "L")))
+          (:narrow u-long (return (append (general-number-to-string o) "UL")))
+          (:select (tag nan32) (return "NaN_f"))
+          (:select (tag +zero32) (return "+0.0f"))
+          (:select (tag -zero32) (return "-0.0f"))
+          (:select (tag +infinity32) (return "Infinity_f"))
+          (:select (tag -infinity32) (return "-Infinity_f"))
+          (:narrow nonzero-finite-float32 (return (append (general-number-to-string o) "f")))
+          (:select (tag nan64) (return "NaN"))
+          (:select (tag +zero64) (return "+0.0"))
+          (:select (tag -zero64) (return "-0.0"))
+          (:select (tag +infinity64) (return "Infinity"))
+          (:select (tag -infinity64) (return "-Infinity"))
+          (:narrow nonzero-finite-float64 (return (general-number-to-string o)))
+          (:narrow char16 (return (vector #\' o #\')))
+          (:narrow string (return (append "\"" o "\"")))
+          (:narrow namespace (return (append "Namespace \"" (object-to-string o run) "\"")))
+          (:narrow compound-attribute (return (append "CompoundAttribute \"" (object-to-string o run) "\"")))
+          (:narrow class (return (append "Class " (& name o))))
+          (:narrow simple-instance (return (append "SimpleInstance \"" (object-to-string o run) "\"")))
+          (:narrow method-closure (return "MethodClosure"))
+          (:narrow date (return (append "Date \"" (object-to-string o run) "\"")))
+          (:narrow reg-exp (return (append "RegExp \"" (object-to-string o run) "\"")))
+          (:narrow package (return (append "Package \"" (object-to-string o run) "\""))))))
     
     ))
 
 
-(defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4))))
+(defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4) (hide . :hide))))
 (defparameter *jg* (world-grammar *jw* 'code-grammar))
 (ensure-lf-subset *jg*)
 (forward-parser-states *jg*)
@@ -7393,7 +8056,7 @@
 
 (defun compute-ecma-subset ()
   (unless *ew*
-    (setq *ew* (generate-world "E" *jw-source* '((js2 . delete) (es4 . nil))))
+    (setq *ew* (generate-world "E" *jw-source* '((js2 . delete) (es4 . nil) (hide . :hide))))
     (setq *eg* (world-grammar *ew* 'code-grammar))
     (ensure-lf-subset *eg*)
     (forward-parser-states *eg*))
