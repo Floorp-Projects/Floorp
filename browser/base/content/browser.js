@@ -3236,7 +3236,7 @@ nsContextMenu.prototype = {
     //selected text.   Only use the first 15 chars.
     isTextSelection : function() {
         var result = false;
-        var selection = this.searchSelected();
+        var selection = this.searchSelected(16);
 
         var searchSelectText;
         if (selection != "") {
@@ -3252,13 +3252,21 @@ nsContextMenu.prototype = {
         return result;
     },
     
-    searchSelected : function() {
+    searchSelected : function( charlen ) {
         var focusedWindow = document.commandDispatcher.focusedWindow;
         var searchStr = focusedWindow.__proto__.getSelection.call(focusedWindow);
         searchStr = searchStr.toString();
-        searchStr = searchStr.replace( /^\s+/, "" );
-        searchStr = searchStr.replace(/(\n|\r|\t)+/g, " ");
-        searchStr = searchStr.replace(/\s+$/,"");
+        // searching for more than 150 chars makes no sense
+        if (!charlen)
+            charlen = 150;
+        if (charlen < searchStr.length) {
+            // only use the first charlen important chars. see bug 221361
+            var pattern = new RegExp("^(?:\\s*.){0," + charlen + "}");
+            pattern.test(searchStr);
+            searchStr = RegExp.lastMatch;
+        }
+        searchStr = searchStr.replace(/\s*(.*?)\s*$/, "$1");
+        searchStr = searchStr.replace(/\s+/g, " ");
         return searchStr;
     },
     
