@@ -89,10 +89,12 @@ public:
     PRUint32 MaxReuseCount() { return mMaxReuseCount; }
     PRUint32 IdleTimeout()   { return mIdleTimeout; }
 
+    void DropTransaction();
     void ReportProgress(PRUint32 progress, PRInt32 progressMax);
 
-    nsHttpTransaction    *Transaction()     { return mTransaction; }
-    nsHttpConnectionInfo *ConnectionInfo()  { return mConnectionInfo; }
+    nsHttpTransaction    *Transaction()    { return mTransaction; }
+    nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
+    nsIEventQueue        *ConsumerEventQ() { return mConsumerEventQ; }
 
 private:
     enum {
@@ -117,7 +119,7 @@ private:
     nsCOMPtr<nsIRequest>            mReadRequest;
 
     nsCOMPtr<nsIProgressEventSink>  mProgressSink;
-    nsCOMPtr<nsIEventQueue>         mEventQ;
+    nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
 
     nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
 

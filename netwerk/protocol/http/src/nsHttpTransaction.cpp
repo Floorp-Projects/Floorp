@@ -30,6 +30,46 @@
 #include "nsHttpChunkedDecoder.h"
 #include "nsIStringStream.h"
 #include "pratom.h"
+#include "plevent.h"
+
+//-----------------------------------------------------------------------------
+// helpers...
+//-----------------------------------------------------------------------------
+
+static void *PR_CALLBACK
+TransactionRestartEventHandler(PLEvent *ev)
+{
+    nsHttpTransaction *trans =
+            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
+
+    LOG(("TransactionRestartEventHandler [trans=%x]\n", trans));
+
+    NS_PRECONDITION(trans->Connection() &&
+                    trans->Connection()->ConnectionInfo(), "oops");
+
+    if (trans->Connection()) {
+        nsHttpConnectionInfo *ci = trans->Connection()->ConnectionInfo();
+        if (ci) {
+            NS_ADDREF(ci);
+
+            // clean up the old connection
+            nsHttpHandler::get()->ReclaimConnection(trans->Connection());
+            trans->SetConnection(nsnull);
+
+            // initiate the transaction again
+            nsHttpHandler::get()->InitiateTransaction(trans, ci);
+            NS_RELEASE(ci);
+        }
+    }
+    NS_RELEASE(trans);
+    return 0;
+}
+
+static void PR_CALLBACK
+TransactionRestartDestroyHandler(PLEvent *ev)
+{
+    delete ev;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction
@@ -50,6 +90,7 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
     , mHaveAllHeaders(PR_FALSE)
     , mFiredOnStart(PR_FALSE)
     , mNoContent(PR_FALSE)
+    , mPrematureEOF(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
 
@@ -106,12 +147,8 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
 nsresult
 nsHttpTransaction::SetConnection(nsHttpConnection *conn)
 {
-    NS_ENSURE_ARG_POINTER(conn);
-    NS_ENSURE_TRUE(!mConnection, NS_ERROR_ALREADY_INITIALIZED);
-
     mConnection = conn;
-    NS_ADDREF(mConnection);
-
+    NS_IF_ADDREF(mConnection);
     return NS_OK;
 }
 
@@ -176,6 +213,28 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
     LOG(("nsHttpTransaction: listener returned [rv=%x]\n", rv));
 
     mSource = 0;
+
+    // check if this transaction needs to be restarted
+    if (mPrematureEOF) {
+        mPrematureEOF = PR_FALSE;
+
+        LOG(("restarting transaction @%x\n", this));
+
+        // just in case the connection is holding the last reference to us...
+        NS_ADDREF_THIS();
+
+        // we don't want the connection to send anymore notifications to us.
+        mConnection->DropTransaction();
+
+        // the transaction needs to be restarted from the thread on which
+        // it was created.
+        rv = ProxyRestartTransaction(mConnection->ConsumerEventQ());
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ProxyRestartTransaction failed");
+
+        NS_RELEASE_THIS();
+        return NS_BINDING_ABORTED;
+    }
+
     return rv;
 }
 
@@ -447,6 +506,27 @@ nsHttpTransaction::HandleContent(char *buf,
     return (!mNoContent && !*countRead) ? NS_BASE_STREAM_WOULD_BLOCK : NS_OK;
 }
 
+nsresult
+nsHttpTransaction::ProxyRestartTransaction(nsIEventQueue *eventQ)
+{
+    LOG(("nsHttpTransaction::ProxyRestartTransaction [this=%x]\n", this));
+
+    NS_ENSURE_ARG_POINTER(eventQ);
+    NS_PRECONDITION(!mResponseHead, "already received a (partial) response!");
+
+    PLEvent *event = new PLEvent;
+    if (!event)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF_THIS();
+
+    PL_InitEvent(event, this,
+                 TransactionRestartEventHandler,
+                 TransactionRestartDestroyHandler);
+
+    return eventQ->PostEvent(event);
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsISupports
 //-----------------------------------------------------------------------------
@@ -577,10 +657,23 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
     if (mTransactionDone)
         return NS_BASE_STREAM_CLOSED;
 
+    *bytesWritten = 0;
+
     // read some data from our source and put it in the given buf
     rv = mSource->Read(buf, count, bytesWritten);
-    if (NS_FAILED(rv) || (*bytesWritten == 0)) {
+    LOG(("mSource->Read [rv=%x count=%u countRead=%u]\n", rv, count, *bytesWritten));
+    if (NS_FAILED(rv)) {
         LOG(("nsHttpTransaction: mSource->Read() returned [rv=%x]\n", rv));
+        return rv;
+    }
+    if (NS_SUCCEEDED(rv) && (*bytesWritten == 0)) {
+        LOG(("nsHttpTransaction: reached EOF\n"));
+        if (!mHaveStatusLine) {
+            // we've read nothing from the socket...
+            mPrematureEOF = PR_TRUE;
+            // return would block to prevent being called again.
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
         return rv;
     }
 
