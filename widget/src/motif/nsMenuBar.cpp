@@ -118,7 +118,6 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
 {
-
   NS_IF_RELEASE(mParent);
   mParent = aParent;
   NS_IF_ADDREF(mParent);

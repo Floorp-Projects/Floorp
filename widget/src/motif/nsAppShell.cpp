@@ -31,6 +31,8 @@
 #include <X11/Xmu/Editres.h>
 #endif
 
+#include "nsIPref.h"
+
 XtAppContext gAppContext;
 
 //-------------------------------------------------------------------------
@@ -38,8 +40,9 @@ XtAppContext gAppContext;
 // XPCOM CIDs
 //
 //-------------------------------------------------------------------------
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //-------------------------------------------------------------------------
 //
@@ -64,8 +67,8 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
-  char *home=nsnull;
-  char *path=nsnull;
+  //char *home=nsnull;
+  //char *path=nsnull;
 
   int argc = bac ? *bac : 0;
   char **argv = bav;
@@ -222,30 +225,27 @@ done:
   return NS_OK;
 }
 
-
-//This one put here by ZuperDee.
-
 NS_METHOD nsAppShell::Spinup()
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsAppShell::Spindown()
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
 
@@ -268,7 +268,8 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 { 
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
+  //mRefCnt = 0;
   mDispatchListener = 0;
 }
 
@@ -297,6 +298,6 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                             PRBool *aForWindow)
 {
-  //FIXME: Need to implement.  --ZuperDee
+  //XXX:Implement this.
   return NS_OK;
 }
