@@ -21,14 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: LocationStep.cpp,v 1.1 2000/04/06 07:45:31 kvisco%ziplink.net Exp $
+ * $Id: LocationStep.cpp,v 1.2 2000/05/24 04:29:00 kvisco%ziplink.net Exp $
  */
 
-/**
- * LocationStep
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:31 $
-**/
+/*
+  Implementation of an XPath LocationStep
+  @version $Revision: 1.2 $ $Date: 2000/05/24 04:29:00 $
+*/
 
 #include "Expr.h"
 
@@ -84,6 +83,8 @@ void LocationStep::setAxisIdentifier(short axisIdentifier) {
  * @param nodeExpr the NodeExpr to use when matching nodes
 **/
 void LocationStep::setNodeExpr(NodeExpr* nodeExpr) {
+    // delete current NodeExpr
+    if (this->nodeExpr) delete this->nodeExpr;
     this->nodeExpr = nodeExpr;
 } //-- setNodeExpr
 
