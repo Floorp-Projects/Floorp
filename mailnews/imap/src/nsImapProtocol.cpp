@@ -1933,13 +1933,11 @@ void nsImapProtocol::ProcessSelectedStateURL()
       // go to selected state
       AutoSubscribeToMailboxIfNecessary(mailboxName);
       SelectMailbox(mailboxName);
-      selectIssued = PR_TRUE;
+      selectIssued = GetServerStateParser().LastCommandSuccessful();
     }
     
     if (selectIssued)
-    {
       RefreshACLForFolderIfNecessary(mailboxName);
-    }
     
     PRBool uidValidityOk = PR_TRUE;
     if (GetServerStateParser().LastCommandSuccessful() && selectIssued && 
