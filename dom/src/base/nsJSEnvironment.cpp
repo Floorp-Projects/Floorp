@@ -34,6 +34,7 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIScriptSecurityManager.h"
@@ -582,6 +583,7 @@ nsJSContext::InitClasses()
       NS_OK == NS_InitAttrClass(this, nsnull) &&
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
+      NS_OK == NS_InitEventClass(this, nsnull) &&
       NS_OK == InitializeExternalClasses() &&
       NS_OK == InitializeLiveConnectClasses() &&
       // XXX Temporarily here. These shouldn't be hardcoded.
