@@ -30,6 +30,7 @@
 #include "nsReadableUtils.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsIHttpHeaderVisitor.h"
 
 // nsViewSourceChannel methods
 nsViewSourceChannel::nsViewSourceChannel() :
@@ -467,11 +468,6 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     mCachingChannel = do_QueryInterface(aRequest);
     mUploadChannel = do_QueryInterface(aRequest);
     
-    if (mHttpChannel) {
-      // we don't want view-source following Refresh: headers, so clear it
-      mHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING("Refresh"),
-                                      NS_LITERAL_CSTRING(""), PR_FALSE);
-    }
     return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
                                                     this),
                                      aContext);
@@ -512,3 +508,164 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest, nsISupports* aContext
                                       aContext, aInputStream,
                                       aSourceOffset, aLength);
 }
+
+
+// nsIHttpChannel methods
+
+// We want to forward most of nsIHttpChannel over to mHttpChannel, but we want
+// to override GetRequestHeader and VisitHeaders. The reason is that we don't
+// want various headers like Link: and Refresh: applying to view-source.
+NS_IMETHODIMP
+nsViewSourceChannel::GetRequestMethod(nsACString & aRequestMethod)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetRequestMethod(aRequestMethod);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetRequestMethod(const nsACString & aRequestMethod)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetRequestMethod(aRequestMethod);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetReferrer(nsIURI * *aReferrer)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetReferrer(aReferrer);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetReferrer(nsIURI * aReferrer)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetReferrer(aReferrer);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetRequestHeader(const nsACString & aHeader,
+                                      nsACString & aValue)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetRequestHeader(aHeader, aValue);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetRequestHeader(const nsACString & aHeader,
+                                      const nsACString & aValue,
+                                      PRBool aMerge)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetRequestHeader(aHeader, aValue, aMerge);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->VisitRequestHeaders(aVisitor);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetAllowPipelining(PRBool *aAllowPipelining)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetAllowPipelining(aAllowPipelining);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetAllowPipelining(PRBool aAllowPipelining)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetAllowPipelining(aAllowPipelining);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetRedirectionLimit(PRUint32 *aRedirectionLimit)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetRedirectionLimit(aRedirectionLimit);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetRedirectionLimit(PRUint32 aRedirectionLimit)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetRedirectionLimit(aRedirectionLimit);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetResponseStatus(PRUint32 *aResponseStatus)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetResponseStatus(aResponseStatus);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetResponseStatusText(nsACString & aResponseStatusText)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetResponseStatusText(aResponseStatusText);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetRequestSucceeded(PRBool *aRequestSucceeded)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetRequestSucceeded(aRequestSucceeded);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetResponseHeader(const nsACString & aHeader,
+                                       nsACString & aValue)
+{
+    if (!mHttpChannel)
+        return NS_ERROR_NULL_POINTER;
+
+    if (!aHeader.Equals(NS_LITERAL_CSTRING("Content-Type"),
+                        nsCaseInsensitiveCStringComparator())) {
+        aValue.Truncate();
+        return NS_OK;
+    }
+        
+    return mHttpChannel->GetResponseHeader(aHeader, aValue);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetResponseHeader(const nsACString & header,
+                                       const nsACString & value, PRBool merge)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetResponseHeader(header, value, merge);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+    if (!mHttpChannel)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_NAMED_LITERAL_CSTRING(contentTypeStr, "Content-Type");
+    nsCAutoString contentType;
+    nsresult rv =
+        mHttpChannel->GetResponseHeader(contentTypeStr, contentType);
+    if (NS_SUCCEEDED(rv))
+        aVisitor->VisitHeader(contentTypeStr, contentType);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::IsNoStoreResponse(PRBool *_retval)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->IsNoStoreResponse(_retval);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::IsNoCacheResponse(PRBool *_retval)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->IsNoCacheResponse(_retval);
+} 
+
