@@ -41,21 +41,12 @@
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
 pref("browser.chromeURL","chrome://browser/content/");
 
-pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
-
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?hl=en&lr=&ie=UTF-8&oe=UTF-8&q=");
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.misc", "rv:1.1b");
-
-pref("general.startup.browser",             true);
-pref("general.startup.mail",                false);
-pref("general.startup.news",                false);
-pref("general.startup.editor",              false);
-pref("general.startup.compose",             false);
-pref("general.startup.addressbook",         false);
 
 pref("backups.number_of_prefs_copies", 1);
 
@@ -64,7 +55,6 @@ pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
-pref("browser.startup.autoload_homepage",   true);
 
 pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
@@ -120,18 +110,11 @@ pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
 
-// Dialog modality issues
-pref("browser.prefWindowModal", true);
-
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://navigator-region/locale/region.properties");
-pref("browser.search.opensidebarsearchpanel", true);
-pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
-pref("browser.search.mode", 0);
-pref("browser.search.powermode", 0);
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
@@ -142,11 +125,7 @@ pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
-
-// Translation service
-pref("browser.translation.service", "http://www.teletranslator.com:8120/?AlisUI=frames_ex/moz_home&alis_info=moz&AlisTargetURI=");
-pref("browser.translation.serviceDomain", "teletranslator.com");
-  
+ 
 // Platform for Internet Content Selection
 pref("browser.PICS.ratings_enabled", false);
 pref("browser.PICS.pages_must_be_rated", false);
@@ -323,7 +302,6 @@ pref("dom.disable_window_open_feature.minimizable", false);
 pref("dom.disable_window_open_feature.status",      false);
 
 pref("javascript.enabled",                  true);
-pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.showInConsole",    true);
 
@@ -333,12 +311,6 @@ pref("security.enable_java",                true);
 pref("css.allow",                           true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
-
-pref("offline.startup_state",            0);
-pref("offline.send.unsent_messages",            0);
-pref("offline.download.download_messages",  0);
-pref("offline.prompt_synch_on_exit",            true);
-pref("offline.news.download.use_days",          0);
 
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 
@@ -483,8 +455,6 @@ pref("network.cookie.lifetime.days",        90);
 pref("network.cookie.p3p",                  "ffffaaaa");
 pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=custom
 
-pref("signon.rememberSignons",              true);
-pref("signon.expireMasterPassword",         false);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
