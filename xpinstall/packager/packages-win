@@ -74,10 +74,6 @@ bin\components\necko_file.dll
 bin\components\necko_file.xpt
 bin\components\necko_ftp.xpt
 bin\components\necko_ftp.dll
-bin\components\necko_http.xpt
-bin\components\necko_http.dll
-bin\components\necko_resource.dll
-bin\components\nsgif3250.dll
 bin\components\nsjpg3250.dll
 bin\components\nslocale.dll
 bin\components\nspng3250.dll
