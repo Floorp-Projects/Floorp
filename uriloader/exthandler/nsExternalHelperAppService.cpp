@@ -1930,6 +1930,40 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   
   mFinalFileDestination = do_QueryInterface(fileToUse);
 
+  // Move what we have in the final directory, but append .part
+  // to it, to indicate that it's unfinished.
+  // do not do that if we're already done
+  if (mFinalFileDestination && !mStopRequestIssued)
+  {
+    nsCOMPtr<nsIFile> movedFile;
+    mFinalFileDestination->Clone(getter_AddRefs(movedFile));
+    if (movedFile) {
+      // Get the old leaf name and append .part to it
+      nsCAutoString name;
+      mFinalFileDestination->GetNativeLeafName(name);
+      name.Append(NS_LITERAL_CSTRING(".part"));
+      movedFile->SetNativeLeafName(name);
+
+      nsCOMPtr<nsIFile> dir;
+      movedFile->GetParent(getter_AddRefs(dir));
+
+      mOutStream->Close();
+
+      rv = mTempFile->MoveTo(dir, name);
+      if (NS_SUCCEEDED(rv)) // if it failed, we just continue with $TEMP
+        mTempFile = movedFile;
+      rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
+                                         PR_WRONLY | PR_APPEND, 0600);
+      if (NS_FAILED(rv)) { // (Re-)opening the output stream failed. bad luck.
+        nsAutoString path;
+        mTempFile->GetPath(path);
+        SendStatusChange(kWriteError, rv, nsnull, path);
+        Cancel();
+        return NS_OK;
+      }
+    }
+  }
+
   if (!mProgressListenerInitialized)
     CreateProgressListener();
 
