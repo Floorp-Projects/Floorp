@@ -19,6 +19,7 @@ messenger.jar:
 *+  content/messenger/subscribe.xul                 (content/subscribe.xul)
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)
+*+  content/messenger/junkMail.js                   (content/junkMail.js)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     
 classic.jar:
@@ -68,6 +69,7 @@ en-US.jar:
     locale/en-US/messenger/h2.png                   (locale/h2.png)
     locale/en-US/messenger/back.png                 (locale/back.png)
     locale/en-US/messenger/aboutDialog.dtd          (locale/aboutDialog.dtd)
++   locale/en-US/messenger/junkMail.dtd             (locale/junkMail.dtd)
 +   locale/en-US/messenger/messenger.dtd            (locale/messenger.dtd)
 +   locale/en-US/messenger/mailTasksOverlay.dtd     (locale/mailTasksOverlay.dtd)
 +   locale/en-US/messenger/msgAccountCentral.dtd    (locale/msgAccountCentral.dtd)

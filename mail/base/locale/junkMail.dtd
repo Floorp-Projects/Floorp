@@ -1,0 +1,45 @@
+<!ENTITY window.title "Junk Mail Controls">
+<!ENTITY mainDescription.label "&brandShortName; has several ways to detect junk mail, or unsolicited mail. These controls evaluate incoming messages and identify those that are most likely to be junk mail.  A junk icon is displayed if the message is identified as junk mail.">
+
+<!-- Tab titles -->
+<!ENTITY settingsTab.label "Settings">
+<!ENTITY whiteListTab.label "White Lists">
+<!ENTITY adaptiveTab.label "Adaptive Filters">
+<!ENTITY blackListsTab.label "Black Lists">
+
+<!-- Settings tab -->
+<!ENTITY settingsInfo.label "For each mail account, determine what &brandShortName; should do with messages identified as junk:">
+
+<!ENTITY move.label "Move incoming messages determined to be junk mail to:">
+<!ENTITY otherFolder.label "Other:">
+<!ENTITY junkFolderOn.label "&quot;Junk&quot; folder on:">
+<!ENTITY purge1.label "Automatically delete junk messages older than">
+<!ENTITY purge1.accesskey "u">
+<!ENTITY purge2.label "days from this folder">
+<!ENTITY manualMark.label "When I manually mark messages as Junk:">
+<!ENTITY manualMarkModeMove.label "Move them to the &quot;Junk&quot; folder">
+<!ENTITY manualMarkModeDelete.label "Delete them">
+<!ENTITY renderWithSafeHtml.label "When displaying HTML messages marked as junk, sanitize the HTML">
+
+<!ENTITY account.label "Account:">
+<!ENTITY account.accesskey "A">
+<!ENTITY viewLog.label "Junk Mail Log">
+<!ENTITY viewLog.accesskey "j">
+
+<!ENTITY loggingDescription.label "View and configure junk mail logging.">
+
+<!-- Adaptive Filter tab -->
+
+<!ENTITY adaptiveInfo.label "&brandShortName; can be trained to analyze the contents of your incoming messages and identify those that are most likely to be junk. This can be an extremely effective tool for detecting junk mail.">
+<!ENTITY adaptiveCaption.label "Adaptive Filters">
+<!ENTITY trainingWarning.label "If enabled, you must first train &brandShortName; to identify junk mail by using the Junk toolbar button to mark messages as junk or not. You need to identify both junk and non junk messages.">
+<!ENTITY level.label "Enable adaptive junk mail detection">
+<!ENTITY level.accesskey "E">
+
+<!-- White List tab -->
+<!ENTITY whiteListCaption.label "White Lists">
+<!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is in my address book:">
+<!ENTITY whitelist.accesskey "D">
+
+<!-- Black List tab -->
+
