@@ -32,6 +32,8 @@ CPPSRCS=				\
 	nsHTMLTitle.cpp			\
 	nsObjectContent.cpp		\
 	nsHTMLLayer.cpp			\
+	nsHTMLGenericContent.cpp	\
+	nsHTMLHR.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
@@ -44,6 +46,8 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLTitle.obj		\
 	.\$(OBJDIR)\nsObjectContent.obj		\
 	.\$(OBJDIR)\nsHTMLLayer.obj		\
+	.\$(OBJDIR)\nsHTMLGenericContent.obj	\
+	.\$(OBJDIR)\nsHTMLHR.obj		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
