@@ -331,8 +331,8 @@ protected:
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
 	PRInt32	mFileType;
 
-    nsresult ParseTabFile(PRFileDesc* file);
-    nsresult ParseLdifFile(PRFileDesc* file);
+    nsresult ParseTabFile();
+    nsresult ParseLdifFile();
 	void AddTabRowToDatabase();
 	void AddLdifRowToDatabase();
 	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot);
@@ -345,7 +345,7 @@ public:
     AddressBookParser(nsIFileSpecWithUI* fileSpec);
     ~AddressBookParser();
 
-    nsresult ParseFile(PRFileDesc* file);
+    nsresult ParseFile();
 };
 
 AddressBookParser::AddressBookParser(nsIFileSpecWithUI* fileSpec)
@@ -369,11 +369,8 @@ AddressBookParser::~AddressBookParser(void)
 const char *kTabExtension = ".txt";  
 const char *kLdifExtension = ".ldi";  
 
-nsresult AddressBookParser::ParseFile(PRFileDesc* file)
+nsresult AddressBookParser::ParseFile()
 {
-    if (! file)
-        return NS_ERROR_NULL_POINTER;
-
 	/* Get database file name */
 	char *leafName = nsnull;
 	nsString fileString;
@@ -427,9 +424,9 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
     mLine.Truncate();
 
 	if (mFileType == TABFile)
-		rv = ParseTabFile(file);
+		rv = ParseTabFile();
 	if (mFileType == LDIFFile)
-		rv = ParseLdifFile(file);
+		rv = ParseLdifFile();
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -455,30 +452,32 @@ nsresult AddressBookParser::ParseFile(PRFileDesc* file)
    return NS_OK;
 }
 
-nsresult AddressBookParser::ParseTabFile(PRFileDesc* file)
+nsresult AddressBookParser::ParseTabFile()
 {
-    if (! file)
-        return NS_ERROR_NULL_POINTER;
-
     char buf[1024];
-    PRInt32 len;
+	char* pBuf = &buf[0];
+    PRInt32 len = 0;
+	PRBool bEof = PR_FALSE;
 
-    while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
+	while (NS_SUCCEEDED(mFileSpec->Eof(&bEof)) && !bEof)
 	{
-		for (PRInt32 i = 0; i < len; i++) 
+		if (NS_SUCCEEDED(mFileSpec->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
 		{
-			char c = buf[i];
-			if (c != '\r' && c != '\n')
+			for (PRInt32 i = 0; i < len; i++) 
 			{
-         		mLine.Append(c);
-			}
-			else
-			{
-				if (mLine.Length())
+				char c = buf[i];
+				if (c != '\r' && c != '\n')
 				{
-					if (mDatabase)
+         			mLine.Append(c);
+				}
+				else
+				{
+					if (mLine.Length())
 					{
-						AddTabRowToDatabase();
+						if (mDatabase)
+						{
+							AddTabRowToDatabase();
+						}
 					}
 				}
 			}
@@ -517,14 +516,11 @@ void AddressBookParser::AddTabRowToDatabase()
 	if (!newRow)
 		return;
 
-//	const PRUnichar *str = nsnull;
-//	const char *str = nsnull;
 	int nCol = 0;
 	int nSize = mLine.Length();
 
 	for (int i = 0; i < nSize; i++)
 	{
-//        PRUnichar c = mLine[i];
         char c = (mLine.GetBuffer())[i];
 		while (c != '\t')
 		{
@@ -788,7 +784,6 @@ char * AddressBookParser::str_getline( char **next )
 			*(*next)++ = '\0';
 			break;
 		}
-/*		*(*next)++; Linux complaint it is never used, comment out */
 	}
 
 	return( lineStr );
@@ -840,22 +835,24 @@ nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32*
 		return NS_ERROR_FAILURE;
 }
 
-nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
+nsresult AddressBookParser::ParseLdifFile()
 {
-    if (! file)
-        return NS_ERROR_NULL_POINTER;
-
     char buf[1024];
+	char* pBuf = &buf[0];
 	PRInt32 startPos = 0;
     PRInt32 len = 0;
+	PRBool bEof = PR_FALSE;
 
-    while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
+	while (NS_SUCCEEDED(mFileSpec->Eof(&bEof)) && !bEof)
 	{
-		startPos = 0;
-
-		while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+		if (NS_SUCCEEDED(mFileSpec->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
 		{
-			AddLdifRowToDatabase();
+			startPos = 0;
+
+			while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+			{
+				AddLdifRowToDatabase();
+			}
 		}
 	}
 	//last row
@@ -1242,18 +1239,13 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	if (NS_FAILED(rv))
 		return rv;
 
-	char* filePath;
-	rv = fileSpec->GetNativePath(&filePath);
-	if (NS_FAILED(rv))
-		return rv;
-
-    PRFileDesc* abFile;
-    if ((abFile = PR_Open(filePath, PR_RDONLY, 0644))) {
-        AddressBookParser abParser(fileSpec);
-        rv = abParser.ParseFile(abFile);
-        PR_Close(abFile);
-    }
-	nsCRT::free(filePath);
+	rv = fileSpec->OpenStreamForReading();
+	if (NS_SUCCEEDED(rv))
+	{
+		AddressBookParser abParser(fileSpec);
+		rv = abParser.ParseFile();
+		rv = fileSpec->CloseStream();
+	}
 
 	return rv;
 }
