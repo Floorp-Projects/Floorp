@@ -45,6 +45,21 @@ function addCommands(commandObject)
          "<network-name>",
          "Sets the current network to <network-name>");
 
+    add ("server", "onInputServer",
+         "<server-hostname> [<port>]",
+         "Connects to server <server-hostname> on <port>, or 6667 if " +
+         "<port> is not specified.");
+
+    add ("quit", "onInputQuit", "[<reason>]",
+         "Disconnects from the server represented by the view active when " +
+         "the command is executed with <reason> if it is specified, or the " +
+         "default reason if not.");
+
+    add ("exit", "onInputExit", "[<reason>]",
+         "Disconnects from the all connected servers with <reason> if it is " +
+         "specified, or the default reason if not.  Exits ChatZilla after " +
+         "disconnecting.");
+    
     add ("attach", "onInputAttach",
          "[<network-name>]",
          "Attaches to the network specified by <network-name>, " +

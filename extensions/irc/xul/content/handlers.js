@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -429,7 +429,7 @@ function cli_testdisplay (e)
 }   
 
 client.onInputNetwork =
-function clie_inetwork (e)
+function cli_inetwork (e)
 {
     if (!e.inputData)
         return false;
@@ -449,6 +449,62 @@ function clie_inetwork (e)
     }
     
     return true;
+    
+}
+
+client.onInputServer =
+function cli_iserver (e)
+{
+    if (!e.inputData)
+        return false;
+
+    var ary = e.inputData.match(/^(\S+) ?(\d+)?$/);
+    
+    if (ary == null)
+        return false;
+
+    if (!ary[2])
+        ary[2] = 6667;
+    
+    client.networks[ary[1]] =
+        new CIRCNetwork (ary[1], [{name: ary[1], port: ary[2]}],
+                         client.eventPump);
+    
+    client.onInputAttach ({inputData: ary[1]});
+    
+    return true;
+
+}
+
+client.onInputQuit =
+function cli_quit (e)
+{
+    if (!e.server)
+    {
+        client.currentObject.display ("Quit can only be used in the context " +
+                                      "of a network, perhaps you meant /exit?",
+                                      "ERROR");
+        return false;
+    }
+
+    if (!e.server.connection.isConnected)
+    {
+        client.currentObject.display ("Not connected", "ERROR");
+        return false;
+    }
+
+    e.server.logout (e.inputData);
+
+    return true;
+    
+}
+
+client.onInputExit =
+function cli_exit (e)
+{
+    
+    client.quit(e.inputData);    
+    window.close();
     
 }
 

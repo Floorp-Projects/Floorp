@@ -24,6 +24,8 @@
  */
 
 @import url(chrome://communicator/skin/);
+/*@import url(chrome://global/skin/global.css);*/
+
 
 window {
 
