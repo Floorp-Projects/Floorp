@@ -243,7 +243,7 @@ protected:
     NS_IMETHOD SetupNewViewer(nsIContentViewer * aNewViewer);
 
     NS_IMETHOD GetEldestPresContext(nsIPresContext** aPresContext);
-    NS_IMETHOD GetCurrentDocumentOwner(nsISupports ** aOwner);
+    void GetCurrentDocumentOwner(nsISupports ** aOwner);
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
                                nsISupports * aOwner,
@@ -326,7 +326,7 @@ protected:
                                  nsIChannel * aChannel,
                                  nsresult aResult);
 
-    nsresult CheckLoadingPermissions(nsISupports *aOwner);
+    nsresult CheckLoadingPermissions();
 
 protected:
     PRPackedBool               mAllowSubframes;

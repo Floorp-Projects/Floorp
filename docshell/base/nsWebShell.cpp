@@ -58,7 +58,6 @@
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPresContext.h"
 #include "nsIComponentManager.h"
@@ -424,17 +423,15 @@ nsWebShell::SetRendering(PRBool aRender)
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
                    nsLinkVerb aVerb, nsIURI* aURI,
-                   const PRUnichar* aTargetSpec,
-                   nsIInputStream* aPostDataStream, 
-                   nsIInputStream* aHeadersDataStream,
-                   nsISupports *aOwner);
+                   const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0, 
+                   nsIInputStream* aHeadersDataStream = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->OnLinkClickSyncInternal(mContent, mVerb, mURI,
-                                      mTargetSpec.get(), mPostDataStream,
-                                      mHeadersDataStream,
-                                      nsnull, nsnull, mOwner);
+    mHandler->OnLinkClickSync(mContent, mVerb, mURI,
+                              mTargetSpec.get(), mPostDataStream,
+                              mHeadersDataStream,
+                              nsnull, nsnull);
   }
 
   nsWebShell*              mHandler;
@@ -444,7 +441,6 @@ struct OnLinkClickEvent : public PLEvent {
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent>     mContent;
   nsLinkVerb               mVerb;
-  nsCOMPtr<nsISupports>    mOwner;
 };
 
 static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
@@ -463,8 +459,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsIURI* aURI,
                                    const PRUnichar* aTargetSpec,
                                    nsIInputStream* aPostDataStream,
-                                   nsIInputStream* aHeadersDataStream,
-                                   nsISupports *aOwner)
+                                   nsIInputStream* aHeadersDataStream)
 {
   mHandler = aHandler;
   NS_ADDREF(aHandler);
@@ -474,7 +469,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   mHeadersDataStream = aHeadersDataStream;
   mContent = aContent;
   mVerb = aVerb;
-  mOwner = aOwner;
 
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,
@@ -502,20 +496,10 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsIInputStream* aPostDataStream,
                         nsIInputStream* aHeadersDataStream)
 {
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_UNEXPECTED);
+  OnLinkClickEvent* ev;
 
-  nsCOMPtr<nsIPrincipal> principal;
-  securityManager->GetSubjectPrincipal(getter_AddRefs(principal));
-
-  if (!principal && aContent && aContent->GetDocument()) {
-    principal = aContent->GetDocument()->GetPrincipal();
-  }
-
-  OnLinkClickEvent* ev =
-    new OnLinkClickEvent(this, aContent, aVerb, aURI, aTargetSpec,
-                         aPostDataStream, aHeadersDataStream, principal);
+  ev = new OnLinkClickEvent(this, aContent, aVerb, aURI,
+                            aTargetSpec, aPostDataStream, aHeadersDataStream);
   if (!ev) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -534,7 +518,7 @@ nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
   return *aQueue ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
+NS_IMETHODIMP
 nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsLinkVerb aVerb,
                             nsIURI* aURI,
@@ -544,33 +528,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  securityManager->GetSubjectPrincipal(getter_AddRefs(principal));
-
-  if (!principal && aContent && aContent->GetDocument()) {
-    principal = aContent->GetDocument()->GetPrincipal();
-  }
-
-  return OnLinkClickSyncInternal(aContent, aVerb, aURI, aTargetSpec,
-                                 aPostDataStream, aHeadersDataStream,
-                                 aDocShell, aRequest, principal);
-}
-
-nsresult
-nsWebShell::OnLinkClickSyncInternal(nsIContent *aContent,
-                                    nsLinkVerb aVerb,
-                                    nsIURI* aURI,
-                                    const PRUnichar* aTargetSpec,
-                                    nsIInputStream* aPostDataStream,
-                                    nsIInputStream* aHeadersDataStream,
-                                    nsIDocShell** aDocShell,
-                                    nsIRequest** aRequest,
-                                    nsISupports *aOwner)
-{
+  PRBool earlyReturn = PR_FALSE;
   {
     // defer to an external protocol handler if necessary...
     nsCOMPtr<nsIExternalProtocolService> extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
@@ -584,15 +542,16 @@ nsWebShell::OnLinkClickSyncInternal(nsIContent *aContent,
         nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
         if (NS_SUCCEEDED(rv) && !isExposed) {
           rv = extProtService->LoadUrl(aURI);
-
           if (NS_SUCCEEDED(rv))
-            return NS_OK;
-
-          NS_WARNING("failed to launch external protocol handler");
+            earlyReturn = PR_TRUE;
+          else
+            NS_WARNING("failed to launch external protocol handler");
         }
       }
     }
   }
+  if (earlyReturn)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
@@ -604,7 +563,7 @@ nsWebShell::OnLinkClickSyncInternal(nsIContent *aContent,
   aURI->SchemeIs("data", &isData);
 
   if (isJS || isData) {
-    nsIDocument *sourceDoc = aContent->GetDocument();
+    nsCOMPtr<nsIDocument> sourceDoc = aContent->GetDocument();
 
     if (!sourceDoc) {
       // The source is in a 'zombie' document, or not part of a
@@ -672,7 +631,7 @@ nsWebShell::OnLinkClickSyncInternal(nsIContent *aContent,
       {
         return InternalLoad(aURI,               // New URI
                             referer,            // Referer URI
-                            aOwner,             // Owner (nsIPrincipal)
+                            nsnull,             // No onwer
                             PR_TRUE,            // Inherit owner from document
                             target.get(),       // Window target
                             NS_LossyConvertUCS2toASCII(typeHint).get(),
