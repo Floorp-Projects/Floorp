@@ -55,20 +55,6 @@ CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
                   -DJSFILE $(XCFLAGS)
 LDFLAGS		= -lm $(XLDFLAGS)
 
-#
-# Ask perl what flags it was built with, so we can build js with similar flags
-# and link properly.  Viva gmake.
-#
-ifdef JS_PERLCONNECT
-DEFINES += -DPERLCONNECT
-
-PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
-PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
-
-CFLAGS += $(PERLCFLAGS)
-LDFLAGS += $(PERLLDFLAGS)
-endif
-
 # For purify
 PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
                   $(INCLUDES) $(XCFLAGS)
@@ -160,7 +146,7 @@ DIRS      += liveconnect
 endif
 
 ifdef JS_PERLCONNECT
-JS_CFILES += jsperl.c
+DIRS      += perlconnect
 endif
 
 ifdef JS_HAS_FILE_OBJECT

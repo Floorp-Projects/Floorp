@@ -1,0 +1,119 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+#
+# Makefile for the perlconnect extension to javascript.
+#
+
+#
+# Stolen with apologies to liveconnect.
+#
+
+DEPTH = ..
+
+#
+# XCFLAGS may be set in the environment or on the gmake command line
+#
+CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
+                  -DJSFILE $(XCFLAGS)
+LDFLAGS		+= -lm $(XLDFLAGS)
+
+#
+# Ask perl what flags it was built with, so we can build js with similar flags
+# and link properly.  Viva gmake.
+#
+PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
+PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
+
+# perl erroneously reports compiler flag -rdynamic (interpreted by ld
+# as -r) when it really meant -export-dynamic.
+PERLLDFLAGS := $(subst -rdynamic,-export-dynamic,$(PERLLDFLAGS))
+
+CFLAGS += $(PERLCFLAGS)
+LDFLAGS += $(PERLLDFLAGS)
+
+
+# For purify
+PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
+                  $(INCLUDES) $(XCFLAGS)
+
+#
+# perlconnect file lists
+#
+PC_HFILES =		\
+	jsperl.h	\
+	$(NULL)
+
+HFILES = $(PC_HFILES)
+
+# also make JS.c from JS.xs here?
+PC_CFILES =	\
+	jsperl.c \
+	$(NULL)
+
+LIB_CFILES  = $(PC_CFILES)
+
+PROG_FILE = js
+
+include $(DEPTH)/config.mk
+
+# uncomment this if we decide we need a local config dir...
+#include config/$(OS_CONFIG).mk
+
+INCLUDES   += -I. -I.. -I../$(OBJDIR)
+
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/fdlibm/$(OBJDIR)/fdlibm.lib
+else
+OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm
+endif
+
+ifdef JS_THREADSAFE
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/nspr3.lib
+else
+OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr3
+endif
+endif
+
+ifdef USE_MSVC
+LIBRARY = $(OBJDIR)/jsperl.lib
+SHARED_LIBRARY = $(OBJDIR)/jsperl.dll
+PROGRAM = $(OBJDIR)/jsperl.exe
+else
+LIBRARY = $(OBJDIR)/jsperl.a
+SHARED_LIBRARY = $(OBJDIR)/jsperl.so
+PROGRAM = $(OBJDIR)/jsperl
+endif
+
+include $(DEPTH)/rules.mk
+
+ifdef USE_MSVC
+$(OBJDIR)/$(PROG_FILE)_lc.obj: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(CFLAGS) -DPERLCONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE)_lc.obj $(LIBRARY)
+	link.exe -out:"$@" /pdb:"$(OBJDIR)/$(@F:.exe=.pdb)" $(EXE_LINK_FLAGS) ../$(OBJDIR)/js32.lib $?
+else
+$(OBJDIR)/$(PROG_FILE).o: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) -DPERLCONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE).o
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(CFLAGS) $+ $(LIBRARY) ../$(OBJDIR)/libjs.a $(LDFLAGS) $(OTHER_LIBS)
+endif
