@@ -27,7 +27,10 @@
 #endif
 
 #include "prtypes.h"
+
+#ifdef __cplusplus
 #include "nsDebug.h"
+#endif
 
 /** ucs2 datatype for 2 byte unicode characters */
 typedef PRUint16 PRUcs2;
