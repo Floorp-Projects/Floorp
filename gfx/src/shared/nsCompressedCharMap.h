@@ -104,9 +104,12 @@ public:
   void      SetChars(PRUint32*);
 
 protected:
+  union {
+    PRUint16 mCCMap[CCMAP_MAX_LEN];
+    ALU_TYPE dummy;
+  } u;
   PRUint16 mUsedLen;   // in PRUint16
   PRUint16 mAllOnesPage;
-  PRUint16 mCCMap[CCMAP_MAX_LEN];
 
 };
 
