@@ -55,7 +55,7 @@ protected:
 private:
    
    PRInt8 mPrivBlockToScript [kUnicodeBlockVarScriptMax] ;
-   short  mScriptFallbackFontIDs [32] ;
+   short  mScriptFallbackFontIDs [smPseudoTotalScripts] ;
    static nsUnicodeMappingUtil* gUtil;
    static nsUnicodeFontMappingCache* gCache;
 };

@@ -23,6 +23,14 @@
 #ifndef nsUnicodeBlock_h__
 #define nsUnicodeBlock_h__
 
+#include <Script.h>
+
+enum
+{
+	smPseudoUnicode			= smUninterp + 0,
+	smPseudoUserDef			= smUninterp + 1,
+	smPseudoTotalScripts	= smUninterp + 2
+};
 
 typedef enum {
  // blocks which always use the same script to render, regardless of the order of fonts
@@ -46,6 +54,7 @@ typedef enum {
  kGeorgian,
  kHangul,
  kBopomofo,
+ kUserDefinedEncoding,
  
  kUnicodeBlockFixedScriptMax,	
  

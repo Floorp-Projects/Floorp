@@ -64,7 +64,7 @@ void nsUnicodeMappingUtil::Init()
 }
 void nsUnicodeMappingUtil::CleanUp()
 {
-	for(int i= 0 ; i < 32; i ++) {
+	for(int i= 0 ; i < smPseudoTotalScripts; i ++) {
 		for(int j=0; j < 5; j++) {
 			if(mGenericFontMapping[i][j])
 	  		 nsString::Recycle(mGenericFontMapping[i][j]);
@@ -95,7 +95,7 @@ void nsUnicodeMappingUtil::InitScriptEnabled()
 	mScriptEnabled = 0;
 	PRUint32 scriptMask = 1;
 	for(script = gotScripts = 0; 
-		((script < 32) && ( gotScripts < numOfScripts)) ; 
+		((script < smUninterp) && ( gotScripts < numOfScripts)) ; 
 			script++, scriptMask <<= 1)
 	{
 		if(::GetScriptVariable(script, smScriptEnabled))
@@ -106,7 +106,7 @@ void nsUnicodeMappingUtil::InitScriptEnabled()
 
 void nsUnicodeMappingUtil::InitGenericFontMapping()
 {
-	for(int i= 0 ; i < 32; i ++)
+	for(int i= 0 ; i < smPseudoTotalScripts; i ++)
 		for(int j=0; j < 5; j++)
 	  		 mGenericFontMapping[i][j] = nsnull;
 
@@ -207,6 +207,12 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 }
 //--------------------------------------------------------------------------
 
+//--------------------------------------------------------------------------
+//	nsUnicodeMappingUtil::MapLangGroupToScriptCode
+//
+//	This method normally returns ScriptCode values, but CAN RETURN pseudo-
+//	ScriptCode values for Unicode (32) and User-Defined (33)
+//--------------------------------------------------------------------------
 ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup)
 {
 	if(0==nsCRT::strcmp(aLangGroup,  "x-western")) {
@@ -248,6 +254,12 @@ ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup
 	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
 		return smTradChinese;
 	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-unicode")) {
+		return (smPseudoUnicode);
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-user-def")) {
+		return (smPseudoUserDef);
+	} else 
 	{
 		return smRoman;
 	}
@@ -274,17 +286,19 @@ PrefEnumCallback(const char* aName, void* aClosure)
   curPrefName.Mid(langGroup,  p1+1, curPrefName.Length()-p1-1);
   curPrefName.Mid(genName, p2+1, p1-p2-1);
   
-  if(langGroup.Equals(nsCAutoString("x-unicode")))
-  	return;
   ScriptCode script = Self->MapLangGroupToScriptCode(langGroup);
-  if(script >= smUninterp)
+  if(script >= (smPseudoTotalScripts))
+  {
+  	// Because of the pseudo-scripts of Unicode and User-Defined, we have to handle
+  	// the expanded ScriptCode value.
   	return;
+  }
   if((script == smRoman) && !langGroup.Equals(nsCAutoString("x-western"))) {
   	// need special processing for t,r x-baltic, x-usr-defined
   	return;
   }
   
-  nsString genNameString; genNameString.AssignWithConversion(genName);
+  nsString genNameString ((const nsString &)genName);
   nsGenericFontNameType type = Self->MapGenericFontNameType(genNameString);
   if(type >= kUknownGenericFontName)
   	return;
@@ -307,7 +321,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
   	return;
   short fontID=0;
   if( (! nsDeviceContextMac::GetMacFontNumber(*fontname, fontID)) ||
-  	  ( ::FontToScript(fontID) != script ))
+  	  ((script < smUninterp) && (::FontToScript(fontID) != script)))
   {
   	nsString::Recycle(fontname);
   	return;
@@ -339,11 +353,49 @@ void nsUnicodeMappingUtil::InitFromPref()
 void nsUnicodeMappingUtil::InitScriptFontMapping()
 {
 	// Get font from Script manager
-	for(ScriptCode script = 0; script< 32 ; script++)
+	for(ScriptCode script = 0; script< smPseudoTotalScripts ; script++)
 	{
 		mScriptFontMapping[script] = BAD_FONT_NUM;			
 		short fontNum;
-		if(ScriptEnabled(script)) {
+		if ((smPseudoUnicode == script) || (smPseudoUserDef == script))
+		{
+			char	*theNeededPreference;
+
+			if (smPseudoUnicode == script)
+				theNeededPreference = "font.name.serif.x-unicode";
+			else
+				theNeededPreference = "font.name.serif.x-user-def";
+
+			char	*valueInUTF8 = nsnull;
+
+			gPref->CopyCharPref (theNeededPreference,&valueInUTF8);
+
+			if ((nsnull == valueInUTF8) || (PL_strlen (valueInUTF8) == 0))
+				Recycle (valueInUTF8);
+			else
+			{
+				PRUnichar	valueInUCS2[FACESIZE]= { 0 };
+				PRUnichar	format[] = { '%', 's', 0 };
+				PRUint32	n = nsTextFormatter::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
+
+				Recycle (valueInUTF8);
+				if (n != 0)
+				{
+					nsString	*fontname = new nsAutoString (valueInUCS2);
+
+					if (nsnull != fontname)
+					{
+						short	fontID = 0;
+
+						if (nsDeviceContextMac::GetMacFontNumber (*fontname,fontID))
+							mScriptFontMapping[script] = fontID;
+
+						nsString::Recycle (fontname);
+					}
+				}
+			}
+		}
+		else if(ScriptEnabled(script)) {
 			long fondsize = ::GetScriptVariable(script, smScriptPrefFondSize);
 			if((fondsize) && ((fondsize >> 16))) {
 				fontNum = (fondsize >> 16);
@@ -364,6 +416,7 @@ void nsUnicodeMappingUtil::InitBlockToScriptMapping()
 		smTelugu, 	smKannada,	smMalayalam,	smThai,
 		smLao,		smTibetan,	smGeorgian,		smKorean,
 		smTradChinese,
+		smPseudoUserDef,
 		
 		// start the variable section
 		smRoman, 	smRoman,	smJapanese,	smJapanese,		smJapanese,
@@ -374,7 +427,9 @@ void nsUnicodeMappingUtil::InitBlockToScriptMapping()
 		if( ScriptEnabled(prebuildMapping[i]) ) {
 			mBlockToScriptMapping[i] = prebuildMapping[i];
 		} else {
-			if(i < kUnicodeBlockFixedScriptMax) {
+			if (i == kUserDefinedEncoding)
+				mBlockToScriptMapping[i] = prebuildMapping[i];
+			else if(i < kUnicodeBlockFixedScriptMax) {
 				mBlockToScriptMapping[i] = (PRInt8) smRoman;
 			} else {
 				if( (kCJKMisc == i) || (kHiraganaKatakana == i) || (kCJKIdeographs == i) ) {

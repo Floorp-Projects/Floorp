@@ -111,14 +111,14 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
 }
 
 
-static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFontFace)
+static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFontFace, ScriptCode aScriptCode)
 {
   // the CSS generic names (conversions from the old Mac Mozilla code for now)
   nsUnicodeMappingUtil* unicodeMappingUtil = nsUnicodeMappingUtil::GetSingleton();
   if (unicodeMappingUtil)
   {
     nsString*   foundFont = unicodeMappingUtil->GenericFontNameForScript(
-          smRoman,      // should we be looking at a language-group here?
+          aScriptCode,
           unicodeMappingUtil->MapGenericFontNameType(aGenericFamily));
     if (foundFont)
     {
@@ -160,11 +160,12 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
 }
 
 struct FontEnumData {
-  FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
-    : mContext(aDC), mFaceName(aFaceName)
+  FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName, ScriptCode aScriptCode)
+    : mContext(aDC), mFaceName(aFaceName), mScriptCode(aScriptCode)
   {}
   nsIDeviceContext* mContext;
   nsString&         mFaceName;
+  ScriptCode		mScriptCode;
 };
 
 static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
@@ -173,7 +174,7 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
   if (aGeneric)
   {
     nsAutoString realFace;
-    MapGenericFamilyToFont(aFamily, realFace);
+    MapGenericFamilyToFont(aFamily, realFace, data->mScriptCode);
     data->mFaceName = realFace;
     return PR_FALSE;  // stop
   }
@@ -194,10 +195,37 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 void nsFontMetricsMac::RealizeFont()
 {
 	nsAutoString	fontName;
-  FontEnumData  fontData(mContext, fontName);
-  mFont->EnumerateFamilies(FontEnumCallback, &fontData);
+	nsUnicodeMappingUtil	*unicodeMappingUtil;
+	ScriptCode				theScriptCode;
+
+	unicodeMappingUtil = nsUnicodeMappingUtil::GetSingleton ();
+	if (unicodeMappingUtil)
+	{
+		const char		*theCString;
+		nsAutoString	theLangGroupString;
+
+		if (mLangGroup)
+			mLangGroup->ToString(theLangGroupString);
+		else
+			theLangGroupString.AssignWithConversion("ja");
+		theCString = theLangGroupString.GetBuffer ();
+		if (theCString)
+			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode (theCString);
+		else
+		{
+			NS_ConvertUCS2toUTF8	theUnicodeString (theLangGroupString.GetUnicode ());
+
+			theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode (theUnicodeString);
+		}
+
+	}
+	else
+		theScriptCode = GetScriptManagerVariable (smSysScript);
+
+	FontEnumData  fontData(mContext, fontName, theScriptCode);
+	mFont->EnumerateFamilies(FontEnumCallback, &fontData);
   
-  nsDeviceContextMac::GetMacFontNumber(fontName, mFontNum);
+	nsDeviceContextMac::GetMacFontNumber(fontName, mFontNum);
 }
 
 

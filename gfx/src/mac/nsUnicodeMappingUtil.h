@@ -56,13 +56,13 @@ public:
 		};
 	inline short ScriptFont(ScriptCode script) 
 		{ 
-			NS_PRECONDITION(script < 32, "bad script code");
+			NS_PRECONDITION(script < smPseudoTotalScripts, "bad script code");
 			return  mScriptFontMapping[script]; 
 		};		
 	nsGenericFontNameType MapGenericFontNameType(const nsString& aGenericName);
 	inline nsString* GenericFontNameForScript(ScriptCode aScript, nsGenericFontNameType aType) const 
 	{
-			NS_PRECONDITION(aScript < 32, "bad script code");
+			NS_PRECONDITION(aScript < smPseudoTotalScripts, "bad script code");
 			NS_PRECONDITION(aType <= kUknownGenericFontName, "illegal value");
 			if( aType >= kUknownGenericFontName)
 				return nsnull;
@@ -73,7 +73,7 @@ public:
 	
   ScriptCode MapLangGroupToScriptCode(const char* aLangGroup);
 	static nsUnicodeMappingUtil* GetSingleton();
-	nsString *mGenericFontMapping[smUninterp][kUknownGenericFontName];
+	nsString *mGenericFontMapping[smPseudoTotalScripts][kUknownGenericFontName];
 	
 protected:
 	void InitScriptEnabled();
@@ -84,7 +84,7 @@ protected:
    
 private:
 	PRUint32 mScriptEnabled;
-	short 	 mScriptFontMapping[smUninterp];
+	short 	 mScriptFontMapping[smPseudoTotalScripts];
 	PRInt8   mBlockToScriptMapping[kUnicodeBlockSize];
 	nsUnicodeFontMappingCache*	gCache;
 	
