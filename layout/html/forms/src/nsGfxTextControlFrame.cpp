@@ -89,7 +89,6 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -169,26 +168,10 @@ nsGfxTextControlFrame::InitTextControl()
   mDocObserver->SetFrame(this);
   NS_ADDREF(mDocObserver);
 
-/*
-  if (PR_TRUE==IsPlainTextControl())
-  {
-    nsCOMPtr<nsITextEditor> theEditor;
-    result = nsComponentManager::CreateInstance(kTextEditorCID,
-                                                nsnull,
-                                                kITextEditorIID, 
-                                                getter_AddRefs(theEditor));
-    if (NS_FAILED(result)) { return result; }
-    if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
-    mEditor = do_QueryInterface(theEditor);
-    if (!mEditor) { return NS_ERROR_NO_INTERFACE; }
-  }
-  else
-  {
-*/
   nsCOMPtr<nsIEditor> theEditor;
-  result = nsComponentManager::CreateInstance(kEditorCID,
+  result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                               nsnull,
-                                              nsIEditor::GetIID(), getter_AddRefs(theEditor));
+                                              nsIHTMLEditor::GetIID(), getter_AddRefs(theEditor));
   if (NS_FAILED(result)) { return result; }
   if (!theEditor) { return NS_ERROR_OUT_OF_MEMORY; }
   mEditor = do_QueryInterface(theEditor);
