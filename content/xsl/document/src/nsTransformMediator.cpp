@@ -98,13 +98,13 @@ void
 nsTransformMediator::TryToTransform()
 {
   nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
-  if (mSourceDOM && mStyleDOM && mResultDoc && observer) 
+  if (mSourceDOM && mStyleDOM && observer) 
   {
     if (mEnabled && mTransformer) {
       mTransformer->TransformDocument(mSourceDOM, 
                                       mStyleDOM,
-                                      mResultDoc,
-                                      observer);
+                                      observer,
+                                      getter_AddRefs(mResultDoc));
     }
     else if (mStyleInvalid) {
       // Avoid recursion.
@@ -140,14 +140,6 @@ NS_IMETHODIMP
 nsTransformMediator::SetStyleSheetContentModel(nsIDOMNode* aStyle)
 {
   mStyleDOM = aStyle;
-  TryToTransform();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTransformMediator::SetResultDocument(nsIDOMDocument* aDoc)
-{
-  mResultDoc = aDoc;
   TryToTransform();
   return NS_OK;
 }

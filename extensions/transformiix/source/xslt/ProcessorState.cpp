@@ -44,17 +44,15 @@
 #include "XMLParser.h"
 #include "TxLog.h"
 #include "txAtoms.h"
-#include "XSLTProcessor.h"
 #include "txSingleNodeContext.h"
 #include "txVariableMap.h"
+#include "XSLTProcessor.h"
 
 /**
  * Creates a new ProcessorState for the given XSL document
- * and resultDocument
 **/
 ProcessorState::ProcessorState(Document* aSourceDocument,
-                               Document* aXslDocument,
-                               Document* aResultDocument)
+                               Document* aXslDocument)
     : mXslKeys(MB_TRUE),
       mDecimalFormats(MB_TRUE),
       mEvalContext(0),
@@ -62,11 +60,13 @@ ProcessorState::ProcessorState(Document* aSourceDocument,
       mGlobalVariableValues(MB_TRUE),
       mSourceDocument(aSourceDocument),
       xslDocument(aXslDocument),
-      resultDocument(aResultDocument)
+      mRTFDocument(0),
+      mOutputHandler(0),
+      mResultHandler(0),
+      mOutputHandlerFactory(0)
 {
     NS_ASSERTION(aSourceDocument, "missing source document");
     NS_ASSERTION(aXslDocument, "missing xslt document");
-    NS_ASSERTION(aResultDocument, "missing result document");
 
     /* turn object deletion on for some of the Maps (NamedMap) */
     mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
@@ -104,6 +104,10 @@ ProcessorState::~ProcessorState()
   if (mSourceDocument)
       loadedDocuments.remove(mSourceDocument->getBaseURI());
 
+  // in module the outputhandler is refcounted
+#ifdef TX_EXE
+  delete mOutputHandler;
+#endif
 } //-- ~ProcessorState
 
 
@@ -635,26 +639,48 @@ txOutputFormat* ProcessorState::getOutputFormat()
     return &mOutputFormat;
 }
 
-Document* ProcessorState::getResultDocument()
+Document* ProcessorState::getRTFDocument()
 {
-    return resultDocument;
+    return mRTFDocument;
+}
+
+void ProcessorState::setRTFDocument(Document* aDoc)
+{
+    mRTFDocument = aDoc;
+}
+
+Document* ProcessorState::getStylesheetDocument()
+{
+    NS_ASSERTION(xslDocument, "missing stylesheet document");
+    return xslDocument;
 }
 
 /*
  * Add a global variable
  */
-nsresult ProcessorState::addGlobalVariable(Element* aVarElem,
-                                           ImportFrame* aImportFrame)
+nsresult ProcessorState::addGlobalVariable(const txExpandedName& aVarName,
+                                           Element* aVarElem,
+                                           ImportFrame* aImportFrame,
+                                           ExprResult* aDefaultValue)
 {
-    nsresult rv;
-    txExpandedName varName;
-    String qName;
-    aVarElem->getAttr(txXSLTAtoms::name, kNameSpaceID_None, qName);
-    rv = varName.init(qName, aVarElem, MB_FALSE);
-    if (NS_FAILED(rv))
-        return rv;
+    // If we don't know the value, it's a plain global var, add it
+    // to the import frame for late evaluation.
+    if (!aDefaultValue) {
+        return aImportFrame->mVariables.add(aVarName, aVarElem);
+    }
+    // Otherwise, add a GlobalVariableValue not owning the value.
+    GlobalVariableValue* var =
+        (GlobalVariableValue*)mGlobalVariableValues.get(aVarName);
+    if (var) {
+        // we set this parameter twice, we should set it to the same
+        // value;
+        NS_ENSURE_TRUE(var->mValue == aDefaultValue, NS_ERROR_UNEXPECTED);
+        return NS_OK;
+    }
+    var = new GlobalVariableValue(aDefaultValue);
+    NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
 
-    return aImportFrame->mVariables.add(varName, aVarElem);
+    return mGlobalVariableValues.add(aVarName, var);
 }
 
 /*
@@ -950,7 +976,7 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     GlobalVariableValue* globVar;
     globVar = (GlobalVariableValue*)mGlobalVariableValues.get(varName);
     if (globVar) {
-        if (globVar->mEvaluating) {
+        if (globVar->mFlags == GlobalVariableValue::evaluating) {
             String err("Cyclic variable-value detected");
             receiveError(err, NS_ERROR_FAILURE);
             return NS_ERROR_FAILURE;
@@ -975,7 +1001,6 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     globVar = new GlobalVariableValue();
     if (!globVar)
         return NS_ERROR_OUT_OF_MEMORY;
-    globVar->mEvaluating = MB_TRUE;
     rv = mGlobalVariableValues.add(varName, globVar);
     if (NS_FAILED(rv)) {
         delete globVar;
@@ -987,12 +1012,14 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     mLocalVariables = 0;
     txSingleNodeContext evalContext(mSourceDocument, this);
     txIEvalContext* priorEC = setEvalContext(&evalContext);
-    XSLTProcessor processor;
-    globVar->mValue = processor.processVariable(varElem, this);
+    // Compute the variable value
+    globVar->mFlags = GlobalVariableValue::evaluating;
+    globVar->mValue = txXSLTProcessor::processVariable(varElem, this);
     setEvalContext(priorEC);
     mLocalVariables = oldVars;
 
-    globVar->mEvaluating = MB_FALSE;
+    // evaluation is over, the gvv now owns the ExprResult
+    globVar->mFlags = GlobalVariableValue::owned;
     aResult = globVar->mValue;
     return NS_OK;
 }
@@ -1178,5 +1205,8 @@ void txPSParseContext::receiveError(const String& aMsg, nsresult aRes)
 
 ProcessorState::GlobalVariableValue::~GlobalVariableValue()
 {
-    delete mValue;
+    NS_ASSERTION(mFlags != evaluating, "deleted while evaluating");
+    if (mFlags == owned) {
+        delete mValue;
+    }
 }

@@ -25,14 +25,20 @@
 #define TRANSFRMX_XML_EVENT_HANDLER_H
 
 #include "baseutils.h"
+#include "txError.h"
 class String;
 class txOutputFormat;
 #ifdef TX_EXE
 #include <iostream.h>
 #else
+#include "nsISupports.h"
+#define kTXNameSpaceURI "http://www.mozilla.org/TransforMiix"
+#define kTXWrapper "transformiix:result"
+
 class nsIContent;
 class nsIDOMDocument;
 class nsIDOMHTMLScriptElement;
+class nsITransformObserver;
 #endif
 
 /**
@@ -109,79 +115,84 @@ public:
                               const PRInt32 aNsID) = 0;
 };
 
-class txOutputXMLEventHandler : public txXMLEventHandler
-{
-public:
-    /**
-     * Sets the output format.
-     *
-     * @param aOutputFormat the output format
-     */
-    virtual void setOutputFormat(txOutputFormat* aOutputFormat) = 0;
-};
-
 #ifdef TX_EXE
-class txStreamXMLEventHandler : public txOutputXMLEventHandler
+class txIOutputXMLEventHandler : public txXMLEventHandler
+#else
+#define TX_IOUTPUTXMLEVENTHANDLER_IID \
+{ 0x80e5e802, 0x8c88, 0x11d6, \
+  { 0xa7, 0xf2, 0xc5, 0xc3, 0x85, 0x6b, 0xbb, 0xbc }}
+
+class txIOutputXMLEventHandler : public nsISupports,
+                                 public txXMLEventHandler
+#endif
 {
 public:
-    /**
-     * Get the output stream.
-     *
-     * @param aOutputStream the current output stream
-     */
-    virtual void getOutputStream(ostream** aOutputStream) = 0;
-
-    /**
-     * Sets the output stream.
-     *
-     * @param aOutputStream the output stream
-     */
-    virtual void setOutputStream(ostream* aOutputStream) = 0;
-
     /**
      * Signals to receive characters that don't need output escaping.
      *
      * @param aData the characters to receive
      */
     virtual void charactersNoOutputEscaping(const String& aData) = 0;
-};
-#else
-class txMozillaXMLEventHandler : public txOutputXMLEventHandler
-{
-public:
-    /**
-     * Disables loading of stylesheets.
-     */
-    virtual void disableStylesheetLoad() = 0;
 
     /**
-     * Returns the root content of the result.
+     * Returns whether the output handler supports
+     * disable-output-escaping.
      *
-     * @param aReturn the root content
+     * @return MB_TRUE if this handler supports
+     *                 disable-output-escaping
      */
-    virtual nsresult getRootContent(nsIContent** aReturn) = 0;
+    virtual MBool hasDisableOutputEscaping() = 0;
+
+#ifndef TX_EXE
+    NS_DEFINE_STATIC_IID_ACCESSOR(TX_IOUTPUTXMLEVENTHANDLER_IID)
 
     /**
-     * Returns PR_TRUE if the event handler has finished anything
-     * extra that had to happen after the transform has finished.
-     */
-    virtual PRBool isDone() = 0;
-
-    /**
-     * Removes a script element from the array of elements that are
-     * still loading.
-     *
-     * @param aReturn the script element to remove
-     */
-    virtual void removeScriptElement(nsIDOMHTMLScriptElement *aElement) = 0;
-
-    /**
-     * Sets the Mozilla output document.
+     * Gets the Mozilla output document
      *
      * @param aDocument the Mozilla output document
      */
-    virtual void setOutputDocument(nsIDOMDocument* aDocument) = 0;
-};
+    virtual void getOutputDocument(nsIDOMDocument** aDocument) = 0;
 #endif
+};
+
+/**
+ * Interface used to create the appropriate outputhandler
+ */
+class txIOutputHandlerFactory
+{
+public:
+    virtual ~txIOutputHandlerFactory() {};
+
+    /**
+     * Creates an outputhandler for the specified format.
+     * @param aFromat  format to get handler for
+     * @param aHandler outparam. The created handler
+     */
+    virtual nsresult
+    createHandlerWith(txOutputFormat* aFormat,
+                      txIOutputXMLEventHandler** aHandler) = 0;
+
+    /**
+     * Creates an outputhandler for the specified format, with the specified
+     * name and namespace for the root element.
+     * @param aFromat  format to get handler for
+     * @param aName    name of the root element
+     * @param aNsID    namespace-id of the root element
+     * @param aHandler outparam. The created handler
+     */
+    virtual nsresult
+    createHandlerWith(txOutputFormat* aFormat,
+                      const String& aName,
+                      PRInt32 aNsID,
+                      txIOutputXMLEventHandler** aHandler) = 0;
+};
+
+#define TX_DECL_TXIOUTPUTHANDLERFACTORY                               \
+    nsresult createHandlerWith(txOutputFormat* aFormat,               \
+                               txIOutputXMLEventHandler** aHandler);  \
+    nsresult createHandlerWith(txOutputFormat* aFormat,               \
+                               const String& aName,                   \
+                               PRInt32 aNsID,                         \
+                               txIOutputXMLEventHandler** aHandler)   \
 
 #endif

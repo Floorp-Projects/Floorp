@@ -39,6 +39,7 @@
 #include "Map.h"
 #include "txIXPathContext.h"
 #include "txExpandedNameMap.h"
+#include "txXMLEventHandler.h"
 #include "XSLTFunctions.h"
 #include "txError.h"
 
@@ -56,8 +57,7 @@ public:
      * And result Document
      */
     ProcessorState(Document* aSourceDocument,
-                   Document* aXslDocument,
-                   Document* aResultDocument);
+                   Document* aXslDocument);
 
     /**
      * Destroys this ProcessorState
@@ -135,11 +135,6 @@ public:
     NodeSet* getAttributeSet(const txExpandedName& aName);
 
     /**
-     * Returns the source node currently being processed
-     */
-    Node* getCurrentNode();
-
-    /**
      * Returns the template associated with the given name, or
      * null if not template is found
      */
@@ -154,8 +149,10 @@ public:
     /**
      * Add a global variable
      */
-    nsresult addGlobalVariable(Element* aVarElem,
-                               ImportFrame* aImportFrame);
+    nsresult addGlobalVariable(const txExpandedName& aVarName,
+                               Element* aVarElem,
+                               ImportFrame* aImportFrame,
+                               ExprResult* aDefaultValue);
 
     /**
      * Returns map on top of the stack of local variable-bindings
@@ -183,11 +180,6 @@ public:
 
     Expr* getExpr(Element* aElem, ExprAttr aAttr);
     txPattern* getPattern(Element* aElem, PatternAttr aAttr);
-
-    /**
-     * Returns a pointer to the result document
-     */
-    Document* getResultDocument();
 
     /**
      * Retrieve the document designated by the URI uri, using baseUri as base URI.
@@ -304,6 +296,21 @@ public:
     txDecimalFormat* getDecimalFormat(const txExpandedName& name);
 
     /**
+     * Returns a pointer to a document that can be used to create RTFs
+     */
+    Document* getRTFDocument();
+
+    /**
+     * Sets a new document to be used for creating RTFs
+     */
+    void setRTFDocument(Document* aDoc);
+
+    /**
+     * Returns the stylesheet document
+     */
+    Document* getStylesheetDocument();
+
+    /**
      * Virtual methods from txIEvalContext
      */
 
@@ -343,6 +350,15 @@ public:
     nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
                                  Element* aElem, FunctionCall*& aFunction);
 
+#ifdef TX_EXE
+    txIOutputXMLEventHandler* mOutputHandler;
+#else
+    nsCOMPtr<txIOutputXMLEventHandler> mOutputHandler;
+#endif
+    txXMLEventHandler* mResultHandler;
+    
+    txIOutputHandlerFactory* mOutputHandlerFactory;
+
 private:
 
     class MatchableTemplate {
@@ -359,10 +375,20 @@ private:
     
     class GlobalVariableValue : public TxObject {
     public:
+        GlobalVariableValue(ExprResult* aValue = 0)
+            : mValue(aValue), mFlags(nonOwned)
+        {
+        }
         virtual ~GlobalVariableValue();
       
         ExprResult* mValue;
-        MBool mEvaluating;
+        char mFlags;
+        enum _flags 
+        {
+            nonOwned = 0,
+            evaluating,
+            owned
+        };
     };
 
     /**
@@ -440,7 +466,11 @@ private:
 
     Document*      mSourceDocument;
     Document*      xslDocument;
-    Document*      resultDocument;
+    
+    /**
+     * Document used to create RTFs
+     */
+    Document* mRTFDocument;
 };
 
 /**

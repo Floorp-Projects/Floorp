@@ -43,16 +43,14 @@
   <xsl:output method="xml"/>
 
   <xsl:template match="/">
-    <div>
-      <link href="chrome://communicator/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
-      <div id="header">
-        <p>
-          This XML file does not appear to have any style information
-          associated with it. The document tree is shown below.
-        </p>
-      </div>
-      <xsl:apply-templates/>
+    <link href="chrome://communicator/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
+    <div id="header">
+      <p>
+        This XML file does not appear to have any style information
+        associated with it. The document tree is shown below.
+      </p>
     </div>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="*">

@@ -28,354 +28,247 @@
 #ifndef TRANSFRMX_XSLTPROCESSOR_H
 #define TRANSFRMX_XSLTPROCESSOR_H
 
-#ifndef __BORLANDC__
-#ifdef TX_EXE
-#include <iostream.h>
-#include <fstream.h>
-#endif
-#endif
-
-
-#ifndef TX_EXE
-#include "nsICSSStyleSheet.h"
-#include "nsICSSLoaderObserver.h"
-#include "nsIDocumentTransformer.h"
-#include "nsIDOMHTMLScriptElement.h"
-#include "nsIScriptLoader.h"
-#include "nsIScriptLoaderObserver.h"
-#include "nsITransformObserver.h"
-#include "nsWeakPtr.h"
-#include "txMozillaTextOutput.h"
-#include "txMozillaXMLOutput.h"
-#endif
-
-#include "dom.h"
-#include "ExprParser.h"
-#include "TxObject.h"
-#include "NamedMap.h"
 #include "ProcessorState.h"
-#include "TxString.h"
-#include "ErrorObserver.h"
-#include "List.h"
-#include "txTextHandler.h"
 
-#ifndef TX_EXE
-/* bacd8ad0-552f-11d3-a9f7-000064657374 */
-#define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
-{ 0xbacd8ad0, 0x552f, 0x11d3, { 0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } }
-
-#define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
-"@mozilla.org/document-transformer;1?type=text/xsl"
-
-#else
-
-/*
- * Initialisation and shutdown routines for standalone
- * Allocate and free static atoms.
- */
-MBool txInit();
-MBool txShutdown();
-
-#endif
+class txIGlobalParameter : public TxObject
+{
+public:
+    virtual nsresult getValue(ExprResult** aValue) = 0;
+};
 
 /**
- * A class for Processing XSL Stylesheets
-**/
-class XSLTProcessor
-#ifndef TX_EXE
-: public nsIDocumentTransformer,
-  public nsIScriptLoaderObserver
-#endif
+ * A class for Processing XSLT Stylesheets
+ */
+class txXSLTProcessor
 {
-    friend class ProcessorState;
-
 public:
-#ifndef TX_EXE
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIDocumentTransformer interface
-    NS_DECL_NSIDOCUMENTTRANSFORMER
-
-    NS_DECL_NSISCRIPTLOADEROBSERVER
-#endif
+    /**
+     * Initialisation and shutdown routines
+     * Allocate and free static atoms.
+     */
+    static MBool txInit();
+    static MBool txShutdown();
 
     /**
-     * A warning message used by all templates that do not allow non character
-     * data to be generated
-    **/
-    static const String NON_TEXT_TEMPLATE_WARNING;
+     * Processes a stylesheet document.
+     *
+     * @param aStylesheet the stylesheet document to process
+     * @param aPs the current ProcessorState
+     */
+    static nsresult processStylesheet(Document* aStylesheet,
+                                      txExpandedNameMap* aGlobalParams,
+                                      ProcessorState* aPs);
 
     /**
-     * Creates a new XSLTProcessor
-    **/
-    XSLTProcessor();
+     * Processes a stylesheet element.
+     *
+     * @param aStylesheet the stylesheet element to process
+     * @param aPs the current ProcessorState
+     */
+    static nsresult processTopLevel(Element* aStylesheet,
+                                    txExpandedNameMap* aGlobalParams,
+                                    ProcessorState* aPs);
 
     /**
-     * Default destructor for XSLTProcessor
-    **/
-    virtual ~XSLTProcessor();
-
-    /**
-     * Registers the given ErrorObserver with this XSLTProcessor
-    **/
-    void addErrorObserver(ErrorObserver& errorObserver);
-
-    /**
-     * Returns the name of this XSLT processor
-    **/
-    String& getAppName();
-
-    /**
-     * Returns the version of this XSLT processor
-    **/
-    String& getAppVersion();
-
-      //--------------------------------------------/
-     //-- Methods that return the Result Document -/
-    //--------------------------------------------/
-#ifdef TX_EXE
-    /**
-     * Parses all XML Stylesheet PIs associated with the
-     * given XML document. If any stylesheet PIs are found with
-     * type="text/xsl" the href psuedo attribute value will be
-     * added to the given href argument. If multiple text/xsl stylesheet PIs
-     * are found, the one closest to the end of the document is used.
-    **/
-    void getHrefFromStylesheetPI(Document& xmlDocument, String& href);
-
-    /**
-     * Processes the given XML Document, the XSL stylesheet
-     * will be retrieved from the XML Stylesheet Processing instruction,
-     * otherwise an empty document will be returned.
-     * @param xmlDocument the XML document to process
-     * @return the result tree.
-    **/
-    Document* process(Document& xmlDocument);
-
-#endif
-
-    /**
-     * Processes the given XML Document using the given XSL document
-     * @return the result tree.
-     * @param documentBase the document base for resolving relative URIs.
-    **/
-    Document* process
-         (Document& xmlDocument, Document& xslDocument);
-
-    /**
-     * Reads an XML Document from the given XML input stream, and
-     * processes the document using the XSL document derived from
-     * the given XSL input stream.
-     * @param documentBase the document base for resolving relative URIs.
-     * @return the result tree.
-    **/
-    Document* process(istream& xmlInput, String& xmlFilename,
-                      istream& xslInput, String& xslFilename);
-
-#ifdef TX_EXE
-    /**
-     * Reads an XML document from the given XML input stream. The
-     * XML document is processed using the associated XSL document
-     * retrieved from the XML document's Stylesheet Processing Instruction,
-     * otherwise an empty document will be returned.
-     * @param xmlDocument the XML document to process
-     * @param documentBase the document base of the XML document, for
-     * resolving relative URIs
-     * @return the result tree.
-    **/
-    Document* process(istream& xmlInput, String& xmlFilename);
-
-       //----------------------------------------------/
-      //-- Methods that print the result to a stream -/
-     //----------------------------------------------/
-
-    /**
-     * Reads an XML Document from the given XML input stream.
-     * The XSL Stylesheet is obtained from the XML Documents stylesheet PI.
-     * If no Stylesheet is found, an empty document will be the result;
-     * otherwise the XML Document is processed using the stylesheet.
-     * The result tree is printed to the given ostream argument,
-     * will not close the ostream argument
-    **/
-    void process(istream& xmlInput, String& xmlFilename, ostream& out);
-
-    /**
-     * Processes the given XML Document using the given XSL document.
-     * The result tree is printed to the given ostream argument,
-     * will not close the ostream argument
-     * @param documentBase the document base for resolving relative URIs.
-    **/
-    void process(Document& aXMLDocument, Node& aStylesheet,
-                 ostream& aOut);
-
-    /**
-     * Reads an XML Document from the given XML input stream, and
-     * processes the document using the XSL document derived from
-     * the given XSL input stream.
-     * The result tree is printed to the given ostream argument,
-     * will not close the ostream argument
-     * @param documentBase the document base for resolving relative URIs.
-    **/
-    void process(istream& xmlInput, String& xmlFilename,
-                 istream& xslInput, String& xslFilename,
-                 ostream& out);
-
-#endif
+     * Transforms a node.
+     *
+     * @param aPs the current ProcessorState with the node
+     *            as current node and the desired templates
+     */
+    static void transform(ProcessorState* aPs);
 
 private:
-
-
     /**
-     * Application Name and version
-    **/
-    String appName;
-    String appVersion;
-
-    /**
-     * The list of ErrorObservers
-    **/
-    List   errorObservers;
-
-    /**
-     * Fatal ErrorObserver
-    **/
-    SimpleErrorObserver fatalObserver;
-
-    /**
-     * The version of XSL which this Processes
-    **/
-    String xslVersion;
-
-    /*
-     * Used as default expression for some elements
-     */
-    Expr* mNodeExpr;
-
-#ifdef TX_EXE
-    /**
-     * Parses the contents of data, and returns the type and href psuedo attributes
-    **/
-    void parseStylesheetPI(String& data, String& type, String& href);
-#endif
-
-    void process(Node* node,
-                 const String& mode,
-                 ProcessorState* ps);
-
-    /*
      * Copy a node. For document nodes, copy the children.
+     *
+     * @param aSourceNode node to copy
+     * @param aPs the current ProcessorState
      */
-    void copyNode(Node* aNode, ProcessorState* aPs);
-
-    void processAction(Node* aAction, ProcessorState* aPs);
+    static void copyNode(Node* aSourceNode, ProcessorState* aPs);
 
     /**
-     * Processes the attribute sets specified in the use-attribute-sets attribute
-     * of the element specified in aElement
-    **/
-    void processAttributeSets(Element* aElement, ProcessorState* aPs,
-                              Stack* aRecursionStack = 0);
-
-    /**
-     * Processes the children of the specified element using the given context node
-     * and ProcessorState
-     * @param aElement    template to be processed. Must be != NULL
-     * @param aPs         current ProcessorState
-    **/
-    void processChildren(Element* aElement,
-                         ProcessorState* aPs);
-
-    void processChildrenAsValue(Element* aElement,
-                                ProcessorState* aPs,
-                                MBool aOnlyText,
-                                String& aValue);
-
-    /**
-     * Invokes the default template for the specified node
-     * @param aPs    current ProcessorState
-     * @param aMode  template mode
-    **/
-    void processDefaultTemplate(ProcessorState* aPs,
-                                const txExpandedName& aMode);
-
-    /*
-     * Processes an include or import stylesheet
-     * @param aHref    URI of stylesheet to process
-     * @param aImportFrame current importFrame iterator
-     * @param aPs      current ProcessorState
+     * Create the document we will use to create result tree fragments.
+     *
+     * @param aMethod the output method indicating which type of 
+     *        document to create
+     * @returns a document to create RTF nodes
      */
-    void processInclude(String& aHref,
-                        txListIterator* aImportFrame,
-                        ProcessorState* aPs);
+    static Document* createRTFDocument(txOutputMethod aMethod);
 
-    void processMatchedTemplate(Node* aTemplate,
-                                txVariableMap* aParams,
-                                const txExpandedName& aMode,
-                                ProcessorState::ImportFrame* aFrame,
+    /**
+     * Log a message.
+     *
+     * @param aMessage the message to log
+     */
+    static void logMessage(const String& aMessage);
+
+    /**
+     * Instantiate aAction in the result tree.
+     * Either perform the action associated with the element in the
+     * XSLT namespace, or copy the element as literal result element.
+     *
+     * @param aAction literal result element or XSLT element
+     * @param aPs the current ProcessorState
+     */
+    static void processAction(Node* aAction,
+                              ProcessorState* aPs);
+
+    /**
+     * Processes the attribute sets specified in the use-attribute-sets
+     * attribute of the element specified in aElement.
+     *
+     * @param aElement Element specifying the attribute sets
+     * @param aPs the current ProcessorState
+     * @param aRecursionStack recursion stack to track attribute sets
+     *                        including themselves, even indirectly
+     */
+    static void processAttributeSets(Element* aElement, ProcessorState* aPs,
+                                     Stack* aRecursionStack = 0);
+
+    /**
+     * Processes the children of the specified element using the given
+     * context node and ProcessorState.
+     *
+     * @param aElement the template to be processed. Must be != NULL
+     * @param aPs the current ProcessorState
+     */
+    static void processChildren(Element* aElement,
                                 ProcessorState* aPs);
 
-    /*
+    /**
+     * Processes the children of the specified element using the given
+     * context node and ProcessorState and append the text data to 
+     * aValue.
+     *
+     * @param aElement the template to be processed. Must be != NULL
+     * @param aPs the current ProcessorState
+     * @param aOnlyText if true, don't allow for nested content
+     * @param aValue String reference to append the result to
+     */
+    static void processChildrenAsValue(Element* aElement,
+                                       ProcessorState* aPs,
+                                       MBool aOnlyText,
+                                       String& aValue);
+
+    /**
+     * Invokes the default template for the specified node.
+     *
+     * @param aPs the current ProcessorState
+     * @param aMode template mode
+     */
+    static void processDefaultTemplate(ProcessorState* aPs,
+                                       const txExpandedName& aMode);
+
+    /**
+     * Processes an include or import stylesheet.
+     *
+     * @param aHref URI of stylesheet to process
+     * @param aImportFrame current importFrame iterator
+     * @param aPs the current ProcessorState
+     */
+    static void processInclude(String& aHref,
+                               txListIterator* aImportFrame,
+                               ProcessorState* aPs);
+
+    /**
+     * Instantiate the children of the template aTemplate with the
+     * parameters aParams and the mode aMode.
+     *
+     * @param aTemplate xsl:template to instantiate
+     * @param aParams txVariableMap holding the params, if given
+     * @param aMode mode of this template
+     * @param aFrame the current import frame, needed for apply-templates
+     * @param aPs the current ProcessorState
+     */
+    static void processMatchedTemplate(Node* aTemplate,
+                                       txVariableMap* aParams,
+                                       const txExpandedName& aMode,
+                                       ProcessorState::ImportFrame* aFrame,
+                                       ProcessorState* aPs);
+
+    /**
      * Processes the xsl:with-param child elements of the given xsl action.
+     *
      * @param aAction  the action node that takes parameters (xsl:call-template
-     *                 or xsl:apply-templates
+     *                 or xsl:apply-templates)
      * @param aMap     map to place parsed variables in
      * @param aPs      the current ProcessorState
      * @return         errorcode
      */
-    nsresult processParameters(Element* aAction, txVariableMap* aMap,
-                               ProcessorState* aPs);
+    static nsresult processParameters(Element* aAction, txVariableMap* aMap,
+                                      ProcessorState* aPs);
 
-    void processStylesheet(Document* aStylesheet,
-                           txListIterator* aImportFrame,
-                           ProcessorState* aPs);
+    /**
+     * Add a stylesheet to the processorstate. If the document element
+     * is a LRE, just add one template with pattern "/". Otherwise,
+     * call processTopLevel with the document element.
+     *
+     * @param aStylesheet the document to be added to the ps
+     * @param aImportFrame the import frame to add the stylesheet to
+     * @param aPs the current ProcessorState
+     */
+    static void processStylesheet(Document* aStylesheet,
+                                  txExpandedNameMap* aGlobalParams,
+                                  txListIterator* aImportFrame,
+                                  ProcessorState* aPs);
 
-    /*
+    /**
      * Processes the specified template using the given context,
-     * ProcessorState, and parameters.
-     * @param aTemplate the node in the xslt document that contains the
-     *                  template
-     * @param aParams   map with parameters to the template
-     * @param aPs       the current ProcessorState
+     * ProcessorState, and parameters. Iterates through the
+     * |xsl:param|s and then calls processAction.
+     *
+     * @param aTemplate xsl:template to process
+     * @param aParams variable map with xsl:with-param values
+     * @param aPs the current ProcessorState
      */
-    void processTemplate(Node* aTemplate, txVariableMap* aParams,
-                         ProcessorState* aPs);
+    static void processTemplate(Node* aTemplate, txVariableMap* aParams,
+                                ProcessorState* aPs);
 
-    void processTopLevel(Element* aStylesheet,
-                         txListIterator* importFrame,
-                         ProcessorState* aPs);
-
-    ExprResult* processVariable(Element* aVariable, ProcessorState* aPs);
-
-    void startTransform(Node* aNode, ProcessorState* aPs);
-
-    MBool initializeHandlers(ProcessorState* aPs);
-
-    /*
-     * Performs the xsl:copy action as specified in the XSLT specification
+    /**
+     * Processes the top-level children of xsl:stylesheet.
+     *
+     * @param aStylesheet the stylesheet
+     * @param aImportFrame the import frame of the stylesheet
+     * @param aPs the current ProcessorState
      */
-    void xslCopy(Element* aAction, ProcessorState* aPs);
+    static void processTopLevel(Element* aStylesheet,
+                                txExpandedNameMap* aGlobalParams,
+                                txListIterator* aImportFrame,
+                                ProcessorState* aPs);
 
-    /*
-     * Performs the xsl:copy-of action as specified in the XSLT specification
+    /**
+     * Processes the given xsl:variable.
+     *
+     * @param aVariable the variable element
+     * @param aPs the current ProcessorState
      */
-    void xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs);
+    static ExprResult* processVariable(Element* aVariable,
+                                       ProcessorState* aPs);
 
-    void startElement(const String& aName, const PRInt32 aNsID, ProcessorState* aPs);
+    /**
+     * Performs the xsl:copy action as specified in the XSLT specification.
+     *
+     * @param aAction element to copy
+     * @param aPs the current ProcessorState
+     */
+    static void xslCopy(Element* aAction,
+                        ProcessorState* aPs);
 
-#ifdef TX_EXE
-    txStreamXMLEventHandler* mOutputHandler;
-#else
-    txMozillaXMLEventHandler* mOutputHandler;
-#endif
-    txXMLEventHandler* mResultHandler;
-    MBool mHaveDocumentElement;
-#ifndef TX_EXE
-    void SignalTransformEnd();
+    /**
+     * Performs the xsl:copy-of action as specified in the XSLT specification.
+     *
+     * @param aExprResult expression result to copy
+     * @param aPs the current ProcessorState
+     */
+    static void xslCopyOf(ExprResult* aExprResult,
+                          ProcessorState* aPs);
 
-    nsCOMPtr<nsIScriptLoader> mScriptLoader;
-    nsWeakPtr mObserver;
-#endif
-}; //-- XSLTProcessor
+    /**
+     * Used as default expression for some elements
+     */
+    static Expr* gNodeExpr;
+
+    friend class ProcessorState;
+};
 
 #endif

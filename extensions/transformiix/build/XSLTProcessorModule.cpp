@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -36,7 +37,7 @@
 #include "nsXPathResult.h"
 #include "nsXPIDLString.h"
 #include "txAtoms.h"
-#include "XSLTProcessor.h"
+#include "txMozillaXSLTProcessor.h"
 #include "TxLog.h"
 #include "nsCRT.h"
 #include "nsIScriptSecurityManager.h"
@@ -49,13 +50,13 @@
 #define TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID \
 "@mozilla.org/transformiix-domci-extender;1"
 
-
 NS_DOMCI_EXTENSION(Transformiix)
     static NS_DEFINE_CID(kXSLTProcessorCID, TRANSFORMIIX_XSLT_PROCESSOR_CID);
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(XSLTProcessor)
-        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDocumentTransformer)
-    NS_DOMCI_EXTENSION_ENTRY_END(XSLTProcessor, nsIDocumentTransformer,
-                                 PR_FALSE, &kXSLTProcessorCID)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXSLTProcessor)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXSLTProcessorObsolete) // XXX DEPRECATED
+    NS_DOMCI_EXTENSION_ENTRY_END(XSLTProcessor, nsIXSLTProcessor, PR_TRUE,
+                                 &kXSLTProcessorCID)
 
     static NS_DEFINE_CID(kXPathEvaluatorCID, TRANSFORMIIX_XPATH_EVALUATOR_CID);
     NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathEvaluator)
@@ -86,7 +87,7 @@ NS_DOMCI_EXTENSION(Transformiix)
 NS_DOMCI_EXTENSION_END
 
 // Factory Constructor
-NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
+NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPathEvaluator)
 
 NS_DECL_DOM_CLASSINFO(XSLTProcessor)
@@ -148,11 +149,21 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    char* iidString = NS_GET_IID(nsIDocumentTransformer).ToString();
+    char* iidString = NS_GET_IID(nsIXSLTProcessorObsolete).ToString();
     if (!iidString)
       return NS_ERROR_OUT_OF_MEMORY;
     rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
-                                  "nsIDocumentTransformer",
+                                  "nsIXSLTProcessorObsolete",
+                                  iidString,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    nsCRT::free(iidString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    iidString = NS_GET_IID(nsIXSLTProcessor).ToString();
+    if (!iidString)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                  "nsIXSLTProcessor",
                                   iidString,
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
     nsCRT::free(iidString);
@@ -169,7 +180,6 @@ PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* aSelf)
 {
     NS_PRECONDITION(!gInitialized, "module already initialized");
-    nsresult rv = NS_OK;
     if (gInitialized)
         return NS_OK;
 
@@ -185,16 +195,12 @@ Initialize(nsIModule* aSelf)
         xs->RegisterExceptionProvider(sXPathExceptionProvider,
                                       NS_ERROR_MODULE_DOM_XPATH);
 
-    if (!txXMLAtoms::init())
+    if (!txXSLTProcessor::txInit()) {
         return NS_ERROR_OUT_OF_MEMORY;
-    if (!txXPathAtoms::init())
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (!txXSLTAtoms::init())
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (!txHTMLAtoms::init())
-        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &gTxSecurityManager);
+    nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                                 &gTxSecurityManager);
     if (NS_FAILED(rv)) {
         gTxSecurityManager = nsnull;
         return rv;
@@ -230,10 +236,7 @@ Shutdown(nsIModule* aSelf)
     NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathNSResolver));
     NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathResult));
 
-    txXMLAtoms::shutdown();
-    txXPathAtoms::shutdown();
-    txXSLTAtoms::shutdown();
-    txHTMLAtoms::shutdown();
+    txXSLTProcessor::txShutdown();
 
     NS_IF_RELEASE(gTxSecurityManager);
 
@@ -245,7 +248,7 @@ static const nsModuleComponentInfo gComponents[] = {
     { "XSLTProcessor",
       TRANSFORMIIX_XSLT_PROCESSOR_CID,
       TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
-      XSLTProcessorConstructor,
+      txMozillaXSLTProcessorConstructor,
       RegisterTransformiix },
     { "XPathEvaluator",
       TRANSFORMIIX_XPATH_EVALUATOR_CID,

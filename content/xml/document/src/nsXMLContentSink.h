@@ -57,7 +57,7 @@ class nsICSSStyleSheet;
 #include "nsIScriptLoaderObserver.h"
 #include "nsSupportsArray.h"
 #include "nsIExpatSink.h"
-#include "nsITransformObserver.h"
+#include "nsIDocumentTransformer.h"
 
 class nsIDocument;
 class nsIURI;
@@ -99,7 +99,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTLOADEROBSERVER
-  NS_DECL_NSITRANSFORMOBSERVER
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
@@ -113,6 +112,10 @@ public:
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+
+  // nsITransformObserver
+  NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
+  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument);
 
 protected:
   void StartLayout();
