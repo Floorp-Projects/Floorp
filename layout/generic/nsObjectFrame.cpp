@@ -1195,7 +1195,6 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
 
-#ifdef _NEW_METHOD_ADDED_
 //~~~
 #ifdef XP_WIN
     nsIPluginInstance * inst;
@@ -1208,12 +1207,11 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
       if(window->type == nsPluginWindowType_Drawable)
       {
         PRUint32 hdc;
-        aRenderingContext.RetrieveCurrentNativeDC(&hdc);
+        aRenderingContext.RetrieveCurrentNativeGraphicData(&hdc);
         mInstanceOwner->Paint(aDirtyRect, hdc);
         return NS_OK;
       }
     }
-#endif
 #endif
 
     const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
