@@ -61,8 +61,8 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListen
 
 ////////////////////////////////////////////////////////////////////////
 
-nsMenuBarListener::mAccessKey = -1;
-nsMenuBarListener::mAccessKeyFocuses = PR_FALSE;
+PRInt32 nsMenuBarListener::mAccessKey = -1;
+PRBool nsMenuBarListener::mAccessKeyFocuses = PR_FALSE;
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
   :mAccessKeyDown(PR_FALSE)
