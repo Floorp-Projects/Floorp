@@ -72,16 +72,16 @@ inline void GetWindowUpdateRegion ( WindowPtr window, RgnHandle outUpdateRgn )
 	#endif
 }
 
-inline void SetControlPopupMenuStuff ( ControlHandle control, MenuHandle menu, short id )
+inline void SetControlPopupMenuStuff ( ControlHandle control, MenuHandle menu, short aID )
 {
 	#if TARGET_CARBON
 		::SetControlPopupMenuHandle ( control, menu );
-		::SetControlPopupMenuID ( control, id );
+		::SetControlPopupMenuID ( control, aID );
 	#else
 		PopupPrivateData* popupData = (PopupPrivateData*)*((*control)->contrlData);
 		if (popupData) {
 			popupData->mHandle = menu;
-			popupData->mID = id;
+			popupData->mID = aID;
 		}
 	#endif
 }
