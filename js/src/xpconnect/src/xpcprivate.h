@@ -52,9 +52,9 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 
-extern const char* XPC_VAL_STR;        // 'value' property name for out params
-extern const char* XPC_COMPONENTS_STR; // 'Components' property name
-extern const char* XPC_ARG_FORMATTER_FORMAT_STR;
+extern const char XPC_VAL_STR[];        // 'value' property name for out params
+extern const char XPC_COMPONENTS_STR[]; // 'Components' property name
+extern const char XPC_ARG_FORMATTER_FORMAT_STR[]; // format string
 
 /***************************************************************************/
 

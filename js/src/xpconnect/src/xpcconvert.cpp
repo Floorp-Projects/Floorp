@@ -659,7 +659,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
     return JS_TRUE;
 }
 
-const char* XPC_ARG_FORMATTER_FORMAT_STR = "%ip";
+const char XPC_ARG_FORMATTER_FORMAT_STR[] = "%ip";
 
 JSBool JS_DLL_CALLBACK
 XPC_JSArgumentFormatter(JSContext *cx, const char *format,
