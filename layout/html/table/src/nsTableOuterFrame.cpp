@@ -132,11 +132,11 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-PRBool nsTableOuterFrame::NeedsReflow(const nsSize& aMaxSize)
+PRBool nsTableOuterFrame::NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize)
 {
   PRBool result=PR_TRUE;
   if (nsnull!=mInnerTableFrame)
-    result = ((nsTableFrame *)mInnerTableFrame)->NeedsReflow(aMaxSize);
+    result = ((nsTableFrame *)mInnerTableFrame)->NeedsReflow(aReflowState, aMaxSize);
   return result;
 }
 

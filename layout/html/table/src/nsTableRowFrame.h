@@ -38,8 +38,13 @@ struct RowReflowState;
 class nsTableRowFrame : public nsContainerFrame
 {
 public:
-  /** Initialization procedure */
-  void Init(PRInt32 aRowIndex);
+  /** Initialization of frame as a row */
+  void InitRowData(PRInt32 aRowIndex);
+
+  /** Initialization of data */
+  NS_IMETHOD InitChildren(PRInt32 aRowIndex=-1);
+
+  void ResetInitChildren();
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aResult    the new object is returned in this out-param
@@ -126,6 +131,64 @@ protected:
   /** destructor */
   virtual ~nsTableRowFrame();
 
+  /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
+    * commands to child elements.  This is done by processing the reflow command,
+    * rebalancing column widths (if necessary), then comparing the resulting column widths
+    * to the prior column widths and reflowing only those cells that require a reflow.
+    *
+    * @see Reflow
+    */
+  NS_IMETHOD IncrementalReflow(nsIPresContext&       aPresContext,
+                               nsHTMLReflowMetrics&  aDesiredSize,
+                               RowReflowState&       aReflowState,
+                               nsReflowStatus&       aStatus);
+
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext&      aPresContext,
+                              nsHTMLReflowMetrics& aDesiredSize,
+                              RowReflowState&      aReflowState,
+                              nsReflowStatus&      aStatus,
+                              nsIFrame *           aNextFrame);
+
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext&      aPresContext,
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           RowReflowState&      aReflowState,
+                           nsReflowStatus&      aStatus);
+
+  NS_IMETHOD IR_CellInserted(nsIPresContext&     aPresContext,
+                            nsHTMLReflowMetrics& aDesiredSize,
+                            RowReflowState&      aReflowState,
+                            nsReflowStatus&      aStatus,
+                            nsIFrame *           aInsertedFrame,
+                            PRBool               aReplace);
+
+  NS_IMETHOD IR_CellAppended(nsIPresContext&     aPresContext,
+                            nsHTMLReflowMetrics& aDesiredSize,
+                            RowReflowState&      aReflowState,
+                            nsReflowStatus&      aStatus,
+                            nsIFrame *           aAppendedFrame);
+
+  NS_IMETHOD IR_DidAppendCell(nsTableRowFrame *aRowFrame);
+
+  NS_IMETHOD IR_CellRemoved(nsIPresContext&     aPresContext,
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           RowReflowState&      aReflowState,
+                           nsReflowStatus&      aStatus,
+                           nsIFrame *           aDeletedFrame);
+  
+  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
+                                     nsHTMLReflowMetrics& aDesiredSize,
+                                     RowReflowState&      aReflowState,
+                                     nsReflowStatus&      aStatus,
+                                     nsIFrame *           aInsertedFrame,
+                                     PRBool               aReplace);
+
+  NS_IMETHOD IR_UnknownFrameRemoved(nsIPresContext&      aPresContext,
+                                    nsHTMLReflowMetrics& aDesiredSize,
+                                    RowReflowState&      aReflowState,
+                                    nsReflowStatus&      aStatus,
+                                    nsIFrame *           aDeletedFrame);
+
+
   // row-specific methods
 
   void GetMinRowSpan(nsTableFrame *aTableFrame);
@@ -180,11 +243,14 @@ private:
   nscoord  mCellMaxTopMargin;
   nscoord  mCellMaxBottomMargin;
   PRInt32  mMinRowSpan;           // the smallest row span among all my child cells
+  PRBool   mInitializedChildren;  // PR_TRUE if child cells have been initialized 
+                                  // (for now, that means "added to the table", and
+                                  // is NOT the same as having nsIFrame::Init() called.)
 
 };
 
 
-inline void nsTableRowFrame::Init(PRInt32 aRowIndex)
+inline void nsTableRowFrame::InitRowData(PRInt32 aRowIndex)
 {
   NS_ASSERTION(0<=aRowIndex, "bad param row index");
   mRowIndex = aRowIndex;
@@ -195,5 +261,8 @@ inline PRInt32 nsTableRowFrame::GetRowIndex() const
   NS_ASSERTION(0<=mRowIndex, "bad state: row index");
   return (mRowIndex);
 }
+
+inline void nsTableRowFrame::ResetInitChildren()
+{ mInitializedChildren=PR_FALSE; } 
 
 #endif

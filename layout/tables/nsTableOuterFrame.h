@@ -85,7 +85,7 @@ protected:
     * or if the table style attributes or parent max height/width have
     * changed.
     */
-  PRBool NeedsReflow(const nsSize& aMaxSize);
+  PRBool NeedsReflow(const nsHTMLReflowState& aReflowState, const nsSize& aMaxSize);
 
   void PlaceChild(OuterTableReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
