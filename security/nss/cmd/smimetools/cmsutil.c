@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.43 2003/10/28 02:34:15 jpierre%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.44 2003/11/13 23:03:12 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -61,7 +61,6 @@
 #include <stdio.h>
 #include <string.h>
 
-extern void SEC_Init(void);		/* XXX */
 char *progName = NULL;
 static int cms_verbose = 0;
 static secuPWData pwdata = { PW_NONE, 0 };
@@ -103,14 +102,16 @@ static void
 Usage(char *progName)
 {
     fprintf(stderr, 
-"Usage:  %s [-D|-S|-E] [<options>] [-d dbdir] [-u certusage]\n", 
-	    progName);
-    fprintf(stderr, 
+"Usage:  %s [-C|-D|-E|-O|-S] [<options>] [-d dbdir] [-u certusage]\n"
+" -C            create a CMS encrypted data message\n"
 " -D            decode a CMS message\n"
 "  -c content   use this detached content\n"
 "  -n           suppress output of content\n"
-"  -h num       generate email headers with info about CMS message\n"
-" -S            create a CMS signed message\n"
+"  -h num       display num levels of CMS message info as email headers\n"
+" -E            create a CMS enveloped data message\n"
+"  -r id,...    create envelope for these recipients,\n"
+"               where id can be a certificate nickname or email address\n"
+" -S            create a CMS signed data message\n"
 "  -G           include a signing time attribute\n"
 "  -H hash      use hash (default:SHA1)\n"
 "  -N nick      use certificate named \"nick\" for signing\n"
@@ -118,16 +119,18 @@ Usage(char *progName)
 "  -T           do not include content in CMS message\n"
 "  -Y nick      include a EncryptionKeyPreference attribute with cert\n"
 "                 (use \"NONE\" to omit)\n"
-" -E            create a CMS enveloped message (NYI)\n"
-"  -r id,...    create envelope for these recipients,\n"
-"               where id can be a certificate nickname or email address\n"
+" -O            create a CMS signed message containing only certificates\n"
+" General Options:\n"
 " -d dbdir      key/cert database directory (default: ~/.netscape)\n"
+" -e envelope   enveloped data message in this file is used for bulk key\n"
 " -i infile     use infile as source of data (default: stdin)\n"
 " -o outfile    use outfile as destination of data (default: stdout)\n"
 " -p password   use password as key db password (default: prompt)\n"
 " -u certusage  set type of certificate usage (default: certUsageEmailSigner)\n"
 " -v            print debugging information\n"
-"\nCert usage codes:\n");
+"\n"
+"Cert usage codes:\n",
+	    progName);
     fprintf(stderr, "%-25s  0 - certUsageSSLClient\n", " ");
     fprintf(stderr, "%-25s  1 - certUsageSSLServer\n", " ");
     fprintf(stderr, "%-25s  2 - certUsageSSLServerWithStepUp\n", " ");
@@ -201,19 +204,12 @@ decode(FILE *out, SECItem *output, SECItem *input,
     NSSCMSSignedData *sigd = NULL;
     NSSCMSEnvelopedData *envd;
     NSSCMSEncryptedData *encd;
-    SECAlgorithmID **digestalgs;
     int nlevels, i, nsigners, j;
     char *signercn;
     NSSCMSSignerInfo *si;
     SECOidTag typetag;
     SECItem **digests;
-    PLArenaPool *poolp;
-    SECItem *item, sitem = { 0, 0, 0 };
-
-    if (decodeOptions->contentFile) {
-	/* detached content: grab content file */
-	SECU_FileToItem(&sitem, decodeOptions->contentFile);
-    }
+    SECItem sitem = { 0, 0, 0 };
 
     dcx = NSS_CMSDecoder_Start(NULL, 
                                NULL, NULL,         /* content callback     */
@@ -252,7 +248,16 @@ decode(FILE *out, SECItem *output, SECItem *input,
 	    }
 
 	    /* if we have a content file, but no digests for this signedData */
-	    if (decodeOptions->contentFile != NULL && !NSS_CMSSignedData_HasDigests(sigd)) {
+	    if (decodeOptions->contentFile != NULL && 
+	        !NSS_CMSSignedData_HasDigests(sigd)) {
+		PLArenaPool     *poolp;
+		SECAlgorithmID **digestalgs;
+
+		/* detached content: grab content file */
+		if (!sitem.data) {
+		    SECU_FileToItem(&sitem, decodeOptions->contentFile);
+		}
+
 		if ((poolp = PORT_NewArena(1024)) == NULL) {
 		    fprintf(stderr, "cmsutil: Out of memory.\n");
 		    goto loser;
@@ -264,7 +269,8 @@ decode(FILE *out, SECItem *output, SECItem *input,
 		                    "problem computing message digest");
 		    goto loser;
 		}
-		if (NSS_CMSSignedData_SetDigests(sigd, digestalgs, digests) != SECSuccess) {
+		if (NSS_CMSSignedData_SetDigests(sigd, digestalgs, digests) 
+		    != SECSuccess) {
 		    
 		    SECU_PrintError(progName, 
 		                    "problem setting message digests");
@@ -312,20 +318,28 @@ decode(FILE *out, SECItem *output, SECItem *input,
 	    }
 
 	    for (j = 0; j < nsigners; j++) {
+		SECStatus bad;
+		NSSCMSVerificationStatus vs;
+		const char * svs;
+
 		si = NSS_CMSSignedData_GetSignerInfo(sigd, j);
 		signercn = NSS_CMSSignerInfo_GetSignerCommonName(si);
 		if (signercn == NULL)
 		    signercn = "";
 		if (decodeOptions->headerLevel >= 0)
 		    fprintf(out, "\n\t\tsigner%d.id=\"%s\"; ", j, signercn);
-		(void)NSS_CMSSignedData_VerifySignerInfo(sigd, j, 
+		bad = NSS_CMSSignedData_VerifySignerInfo(sigd, j, 
 		                           decodeOptions->options->certHandle, 
 		                           decodeOptions->options->certUsage);
-		if (decodeOptions->headerLevel >= 0)
-		    fprintf(out, "signer%d.status=%s; ", j, 
-		            NSS_CMSUtil_VerificationStatusToString(
-		                  NSS_CMSSignerInfo_GetVerificationStatus(si)));
-		    /* XXX what do we do if we don't print headers? */
+		vs  = NSS_CMSSignerInfo_GetVerificationStatus(si);
+		svs = NSS_CMSUtil_VerificationStatusToString(vs);
+		if (decodeOptions->headerLevel >= 0) {
+		    fprintf(out, "signer%d.status=%s; ", j, svs);
+		    /* goto loser ? */
+		} else if (bad && out) {
+		    fprintf(stderr, "signer %d status = %s\n", j, svs);
+		    goto loser;
+		}
 	    }
 	    break;
 	case SEC_OID_PKCS7_ENVELOPED_DATA:
@@ -350,12 +364,13 @@ decode(FILE *out, SECItem *output, SECItem *input,
     }
 
     if (!decodeOptions->suppressContent) {
-	item = decodeOptions->contentFile ? &sitem :
-	    NSS_CMSMessage_GetContent(cmsg);
+	SECItem *item = (sitem.data) 
+	                    ? &sitem 
+	                    : NSS_CMSMessage_GetContent(cmsg);
 	SECITEM_CopyItem(NULL, output, item);
     }
-
     return cmsg;
+
 loser:
     if (cmsg)
 	NSS_CMSMessage_Destroy(cmsg);
@@ -864,14 +879,11 @@ signed_data_certsonly(struct certsonlyOptionsStr *certsonlyOptions)
         "ERROR: please indicate the nickname of a certificate to sign with.\n");
 	goto loser;
     }
-    if ((tmppoolp = PORT_NewArena (1024)) == NULL) {
+    if (!(tmppoolp = PORT_NewArena(1024))) {
 	fprintf(stderr, "ERROR: out of memory.\n");
 	goto loser;
     }
-    if ((certs = 
-         (CERTCertificate **)PORT_ArenaZAlloc(tmppoolp, 
-					     (cnt+1)*sizeof(CERTCertificate*)))
-            == NULL) {
+    if (!(certs = PORT_ArenaZNewArray(tmppoolp, CERTCertificate *, cnt + 1))) {
 	fprintf(stderr, "ERROR: out of memory.\n");
 	goto loser;
     }
@@ -1269,7 +1281,7 @@ main(int argc, char **argv)
 
     exitstatus = 0;
     switch (mode) {
-    case DECODE:
+    case DECODE:       /* -D */
 	decodeOptions.options = &options;
 	if (encryptOptions.envFile) {
 	    /* Decoding encrypted-data, so get the bulkkey from an
@@ -1295,7 +1307,7 @@ main(int argc, char **argv)
 	}
 	fwrite(output.data, output.len, 1, outFile);
 	break;
-    case SIGN:
+    case SIGN:         /* -S */
 	signOptions.options = &options;
 	cmsg = signed_data(&signOptions);
 	if (!cmsg) {
@@ -1303,7 +1315,7 @@ main(int argc, char **argv)
 	    exitstatus = 1;
 	}
 	break;
-    case ENCRYPT:
+    case ENCRYPT:      /* -C */
 	if (!envFileName) {
 	    fprintf(stderr, "%s: you must specify an envelope file with -e.\n",
 	            progName);
@@ -1312,6 +1324,9 @@ main(int argc, char **argv)
 	encryptOptions.options = &options;
 	encryptOptions.input = &input;
 	encryptOptions.outfile = outFile;
+	/* decode an enveloped-data message to get the bulkkey (create
+	 * a new one if neccessary)
+	 */
 	if (!encryptOptions.envFile) {
 	    encryptOptions.envFile = PR_Open(envFileName, 
 	                                     PR_WRONLY|PR_CREATE_FILE, 00660);
@@ -1331,9 +1346,6 @@ main(int argc, char **argv)
 	    	break;
 	    }
 	}
-	/* decode an enveloped-data message to get the bulkkey (create
-	 * a new one if neccessary)
-	 */
 	rv = get_enc_params(&encryptOptions);
 	/* create the encrypted-data message */
 	cmsg = encrypted_data(&encryptOptions);
@@ -1346,7 +1358,7 @@ main(int argc, char **argv)
 	    encryptOptions.bulkkey = NULL;
 	}
 	break;
-    case ENVELOPE:
+    case ENVELOPE:     /* -E */
 	envelopeOptions.options = &options;
 	cmsg = enveloped_data(&envelopeOptions);
 	if (!cmsg) {
@@ -1354,7 +1366,7 @@ main(int argc, char **argv)
 	    exitstatus = 1;
 	}
 	break;
-    case CERTSONLY:
+    case CERTSONLY:    /* -O */
 	certsonlyOptions.options = &options;
 	cmsg = signed_data_certsonly(&certsonlyOptions);
 	if (!cmsg) {
