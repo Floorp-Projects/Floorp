@@ -355,12 +355,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::OnLocationChange(nsIWebProgress *aWebProgress
   if (!mWeakShell || !mDocument) {
     return NS_OK;
   }
-  
-  PRBool isLoadingDocument;
-  aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
-  if (isLoadingDocument) {
-    return nsDocAccessible::OnLocationChange(aWebProgress, aRequest, location);
-  }
 
   FireAnchorJumpEvent();
   return NS_OK;
