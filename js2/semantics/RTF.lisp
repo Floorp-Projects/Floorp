@@ -261,186 +261,226 @@
     (:algorithm-0 s :algorithm-0-num fi -480 li 720 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-0 sbasedon :normal-num snext :algorithm-0-num "Algorithm 0;"))
     
-    (:algorithm-0-last-num 18)
+    (:algorithm-0-wide-num 18)
+    (:algorithm-0-wide s :algorithm-0-wide-num fi -480 li 720 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-0-wide sbasedon :algorithm-0-num snext :algorithm-0-num "Algorithm 0 Wide;"))
+    
+    (:algorithm-0-last-num 19)
     (:algorithm-0-last s :algorithm-0-last-num fi -480 li 720 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-0-last sbasedon :algorithm-0-num snext :body-text-num "Algorithm 0 Last;"))
     (:algorithm-stmt :algorithm-0-last)
     
-    (:algorithm-1-num 19)
+    (:algorithm-1-num 20)
     (:algorithm-1 s :algorithm-1-num fi -480 li 960 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-1 sbasedon :algorithm-0-num snext :algorithm-1-num "Algorithm 1;"))
     
-    (:algorithm-1-last-num 20)
-    (:algorithm-1-last s :algorithm-1-last-num fi -480 li 960 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-1-last sbasedon :algorithm-1-num snext :body-text-num "Algorithm 1 Last;"))
-    
-    (:algorithm-2-num 21)
-    (:algorithm-2 s :algorithm-2-num fi -480 li 1200 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-2 sbasedon :algorithm-1-num snext :algorithm-2-num "Algorithm 2;"))
-    
-    (:algorithm-2-last-num 22)
-    (:algorithm-2-last s :algorithm-2-last-num fi -480 li 1200 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-2-last sbasedon :algorithm-2-num snext :body-text-num "Algorithm 2 Last;"))
-    
-    (:algorithm-3-num 23)
-    (:algorithm-3 s :algorithm-3-num fi -480 li 1440 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-3 sbasedon :algorithm-2-num snext :algorithm-3-num "Algorithm 3;"))
-    
-    (:algorithm-4-num 24)
-    (:algorithm-4 s :algorithm-4-num fi -480 li 1680 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-4 sbasedon :algorithm-3-num snext :algorithm-4-num "Algorithm 4;"))
-    
-    (:algorithm-5-num 25)
-    (:algorithm-5 s :algorithm-5-num fi -480 li 1920 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-5 sbasedon :algorithm-4-num snext :algorithm-5-num "Algorithm 5;"))
-    
-    (:algorithm-6-num 26)
-    (:algorithm-6 s :algorithm-6-num fi -480 li 2160 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-6 sbasedon :algorithm-5-num snext :algorithm-6-num "Algorithm 6;"))
-    
-    (:algorithm-7-num 27)
-    (:algorithm-7 s :algorithm-7-num fi -480 li 2400 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-7 sbasedon :algorithm-6-num snext :algorithm-7-num "Algorithm 7;"))
-    
-    (:algorithm-8-num 28)
-    (:algorithm-8 s :algorithm-8-num fi -480 li 2640 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-8 sbasedon :algorithm-7-num snext :algorithm-8-num "Algorithm 8;"))
-    
-    (:algorithm-9-num 29)
-    (:algorithm-9 s :algorithm-9-num fi -480 li 2880 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-9 sbasedon :algorithm-8-num snext :algorithm-9-num "Algorithm 9;"))
-    
-    (:algorithm-0-wide-num 30)
-    (:algorithm-0-wide s :algorithm-0-wide-num fi -480 li 720 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:algorithm-0-wide sbasedon :algorithm-0-num snext :algorithm-0-num "Algorithm 0 Wide;"))
-    
-    (:algorithm-1-wide-num 31)
+    (:algorithm-1-wide-num 21)
     (:algorithm-1-wide s :algorithm-1-wide-num fi -480 li 960 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-1-wide sbasedon :algorithm-1-num snext :algorithm-1-num "Algorithm 1 Wide;"))
     
-    (:algorithm-2-wide-num 32)
+    (:algorithm-1-last-num 22)
+    (:algorithm-1-last s :algorithm-1-last-num fi -480 li 960 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-1-last sbasedon :algorithm-1-num snext :body-text-num "Algorithm 1 Last;"))
+    
+    (:algorithm-2-num 23)
+    (:algorithm-2 s :algorithm-2-num fi -480 li 1200 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-2 sbasedon :algorithm-1-num snext :algorithm-2-num "Algorithm 2;"))
+    
+    (:algorithm-2-wide-num 24)
     (:algorithm-2-wide s :algorithm-2-wide-num fi -480 li 1200 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-2-wide sbasedon :algorithm-2-num snext :algorithm-2-num "Algorithm 2 Wide;"))
     
-    (:algorithm-3-wide-num 33)
+    (:algorithm-2-last-num 25)
+    (:algorithm-2-last s :algorithm-2-last-num fi -480 li 1200 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-2-last sbasedon :algorithm-2-num snext :body-text-num "Algorithm 2 Last;"))
+    
+    (:algorithm-3-num 26)
+    (:algorithm-3 s :algorithm-3-num fi -480 li 1440 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-3 sbasedon :algorithm-2-num snext :algorithm-3-num "Algorithm 3;"))
+    
+    (:algorithm-3-wide-num 27)
     (:algorithm-3-wide s :algorithm-3-wide-num fi -480 li 1440 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-3-wide sbasedon :algorithm-3-num snext :algorithm-3-num "Algorithm 3 Wide;"))
     
-    (:algorithm-4-wide-num 34)
+    (:algorithm-4-num 28)
+    (:algorithm-4 s :algorithm-4-num fi -480 li 1680 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-4 sbasedon :algorithm-3-num snext :algorithm-4-num "Algorithm 4;"))
+    
+    (:algorithm-4-wide-num 29)
     (:algorithm-4-wide s :algorithm-4-wide-num fi -480 li 1680 sa 40 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:algorithm-4-wide sbasedon :algorithm-4-num snext :algorithm-4-num "Algorithm 4 Wide;"))
     
-    (:default-paragraph-font-num 40)
+    (:algorithm-5-num 30)
+    (:algorithm-5 s :algorithm-5-num fi -480 li 1920 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-5 sbasedon :algorithm-4-num snext :algorithm-5-num "Algorithm 5;"))
+    
+    (:algorithm-6-num 31)
+    (:algorithm-6 s :algorithm-6-num fi -480 li 2160 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-6 sbasedon :algorithm-5-num snext :algorithm-6-num "Algorithm 6;"))
+    
+    (:algorithm-7-num 32)
+    (:algorithm-7 s :algorithm-7-num fi -480 li 2400 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-7 sbasedon :algorithm-6-num snext :algorithm-7-num "Algorithm 7;"))
+    
+    (:algorithm-8-num 33)
+    (:algorithm-8 s :algorithm-8-num fi -480 li 2640 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-8 sbasedon :algorithm-7-num snext :algorithm-8-num "Algorithm 8;"))
+    
+    (:algorithm-9-num 34)
+    (:algorithm-9 s :algorithm-9-num fi -480 li 2880 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:algorithm-9 sbasedon :algorithm-8-num snext :algorithm-9-num "Algorithm 9;"))
+    
+    (:algorithm-text-0-num 40)
+    (:algorithm-text-0 s :algorithm-text-0-num li 240 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-0 sbasedon normal snext :algorithm-text-0-num "Algorithm Text 0;"))
+    
+    (:algorithm-text-1-num 41)
+    (:algorithm-text-1 s :algorithm-text-1-num li 480 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-1 sbasedon :algorithm-text-0-num snext :algorithm-text-1-num "Algorithm Text 1;"))
+    
+    (:algorithm-text-2-num 42)
+    (:algorithm-text-2 s :algorithm-text-2-num li 720 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-2 sbasedon :algorithm-text-1-num snext :algorithm-text-2-num "Algorithm Text 2;"))
+    
+    (:algorithm-text-3-num 43)
+    (:algorithm-text-3 s :algorithm-text-3-num li 960 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-3 sbasedon :algorithm-text-2-num snext :algorithm-text-3-num "Algorithm Text 3;"))
+    
+    (:algorithm-text-4-num 44)
+    (:algorithm-text-4 s :algorithm-text-4-num li 1200 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-4 sbasedon :algorithm-text-3-num snext :algorithm-text-4-num "Algorithm Text 4;"))
+    
+    (:algorithm-text-5-num 45)
+    (:algorithm-text-5 s :algorithm-text-5-num li 1440 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-5 sbasedon :algorithm-text-4-num snext :algorithm-text-5-num "Algorithm Text 5;"))
+    
+    (:algorithm-text-6-num 46)
+    (:algorithm-text-6 s :algorithm-text-6-num li 1680 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-6 sbasedon :algorithm-text-5-num snext :algorithm-text-6-num "Algorithm Text 6;"))
+    
+    (:algorithm-text-7-num 47)
+    (:algorithm-text-7 s :algorithm-text-7-num li 1920 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-7 sbasedon :algorithm-text-6-num snext :algorithm-text-7-num "Algorithm Text 7;"))
+    
+    (:algorithm-text-8-num 48)
+    (:algorithm-text-8 s :algorithm-text-8-num li 2160 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-8 sbasedon :algorithm-text-7-num snext :algorithm-text-8-num "Algorithm Text 8;"))
+    
+    (:algorithm-text-9-num 49)
+    (:algorithm-text-9 s :algorithm-text-9-num li 2400 keep keepn nowidctlpar :asian-keywords :10-pt :english)
+    ((+ :styles) (:algorithm-text-9 sbasedon :algorithm-text-8-num snext :algorithm-text-9-num "Algorithm Text 9;"))
+    
+    (:default-paragraph-font-num 60)
     (:default-paragraph-font cs :default-paragraph-font-num)
     ((+ :styles) (* :default-paragraph-font additive "Default Paragraph Font;"))
     
-    (:page-number-num 41)
+    (:page-number-num 61)
     (:page-number cs :page-number-num)
     ((+ :styles) (* :page-number additive sbasedon :default-paragraph-font-num "page number;"))
     
-    (:character-literal-num 42)
+    (:character-literal-num 62)
     (:character-literal cs :character-literal-num :courier :navy :no-language)
     ((+ :styles) (* :character-literal additive sbasedon :default-paragraph-font-num "Character Literal;"))
     
-    (:character-literal-control-num 43)
+    (:character-literal-control-num 63)
     (:character-literal-control cs :character-literal-control-num :times :navy :no-language)
     ((+ :styles) (* :character-literal-control additive sbasedon :default-paragraph-font-num "Character Literal Control;"))
     
-    (:terminal-num 44)
+    (:terminal-num 64)
     (:terminal cs :terminal-num b :palatino :teal :no-language)
     ((+ :styles) (* :terminal additive sbasedon :default-paragraph-font-num "Terminal;"))
     
-    (:terminal-keyword-num 45)
+    (:terminal-keyword-num 65)
     (:terminal-keyword cs :terminal-keyword-num b :courier :blue :no-language)
     ((+ :styles) (* :terminal-keyword additive sbasedon :terminal-num "Terminal Keyword;"))
     
-    (:terminal-sub-num 46)
+    (:terminal-sub-num 66)
     (:terminal-sub cs :terminal-sub-num :teal)
     ((+ :styles) (* :terminal-sub additive sbasedon :default-paragraph-font-num "Terminal Sub;"))
     
-    (:nonterminal-num 47)
+    (:nonterminal-num 67)
     (:nonterminal cs :nonterminal-num i :palatino :maroon :no-language)
     ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
     (:nonterminal-index-entry v i :palatino :maroon :no-language)
     
-    (:nonterminal-attribute-num 48)
+    (:nonterminal-attribute-num 68)
     (:nonterminal-attribute cs :nonterminal-attribute-num :helvetica :maroon :no-language)
     ((+ :styles) (* :nonterminal-attribute additive sbasedon :default-paragraph-font-num "Nonterminal Attribute;"))
     
-    (:nonterminal-argument-num 49)
+    (:nonterminal-argument-num 69)
     (:nonterminal-argument cs :nonterminal-argument-num :maroon :no-language)
     ((+ :styles) (* :nonterminal-argument additive sbasedon :default-paragraph-font-num "Nonterminal Argument;"))
     
-    (:nonterminal-sub-num 50)
+    (:nonterminal-sub-num 70)
     (:nonterminal-sub cs :nonterminal-sub-num :maroon)
     ((+ :styles) (* :nonterminal-sub additive sbasedon :default-paragraph-font-num "Nonterminal Sub;"))
     
-    (:semantic-keyword-num 51)
+    (:semantic-keyword-num 71)
     (:semantic-keyword cs :semantic-keyword-num b :times)
     ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
     
-    (:domain-name-num 52)
+    (:domain-name-num 72)
     (:domain-name cs :domain-name-num scaps :times :red :no-language)
     ((+ :styles) (* :domain-name additive sbasedon :default-paragraph-font-num "Domain Name;"))
     (:domain-name-index-entry v scaps :times :red :no-language)
     
-    (:domain-sub-num 53)
+    (:domain-sub-num 73)
     (:domain-sub cs :domain-sub-num :red)
     ((+ :styles) (* :domain-sub additive sbasedon :default-paragraph-font-num "Domain Sub;"))
     
-    (:field-name-num 54)
+    (:field-name-num 74)
     (:field-name cs :field-name-num :helvetica :no-language)
     ((+ :styles) (* :field-name additive sbasedon :default-paragraph-font-num "Field Name;"))
     
-    (:field-sub-num 55)
+    (:field-sub-num 75)
     (:field-sub cs :field-sub-num :maroon)
     ((+ :styles) (* :field-sub additive sbasedon :default-paragraph-font-num "Field Sub;"))
     
-    (:tag-name-num 56)
+    (:tag-name-num 76)
     (:tag-name cs :tag-name-num b :helvetica :no-language)
     ((+ :styles) (* :tag-name additive sbasedon :default-paragraph-font-num "Tag Name;"))
     (:tag-name-index-entry v b :helvetica :no-language)
     
-    (:global-variable-num 57)
+    (:global-variable-num 77)
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     (:global-variable-index-entry v i :times :dark-green :no-language)
     
-    (:variable-num 58)
+    (:variable-num 78)
     (:variable cs :variable-num i :times :green :no-language)
     ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
     
-    (:variable-sub-num 59)
+    (:variable-sub-num 79)
     (:variable-sub cs :variable-sub-num :green)
     ((+ :styles) (* :variable-sub additive sbasedon :default-paragraph-font-num "Variable Sub;"))
     
-    (:action-name-num 60)
+    (:action-name-num 80)
     (:action-name cs :action-name-num :comic-sans-ms :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
     
-    (:heading1-num 61)
+    (:heading1-num 81)
     (:heading1 s :heading1-num qj fi -720 li 720 sb 360 sa 180 keep keepn widctlpar :asian-keywords hyphpar 0 level 1 b :18-pt :english)
     ((+ :styles) (:heading1 sbasedon :normal-num snext :body-text-num "heading 1;"))
     
-    (:heading2-num 62)
+    (:heading2-num 82)
     (:heading2 s :heading2-num qj fi -720 li 720 sb 120 sa 180 keep keepn widctlpar :asian-keywords hyphpar 0 level 2 b :14-pt :english)
     ((+ :styles) (:heading2 sbasedon :heading1-num snext :body-text-num "heading 2;"))
     
-    (:heading3-num 63)
+    (:heading3-num 83)
     (:heading3 s :heading3-num qj fi -720 li 720 sb 60 sa 120 keep keepn widctlpar :asian-keywords hyphpar 0 level 3 b :12-pt :english)
     ((+ :styles) (:heading3 sbasedon :heading2-num snext :body-text-num "heading 3;"))
 
-    (:heading4-num 64)
+    (:heading4-num 84)
     (:heading4 s :heading4-num qj fi -720 li 720 sa 120 keep keepn widctlpar :asian-keywords hyphpar 0 level 4 b :10-pt :english)
     ((+ :styles) (:heading4 sbasedon :heading3-num snext :body-text-num "heading 4;"))
 
 
-    (:sample-code-num 70)
+    (:sample-code-num 90)
     (:sample-code s :sample-code-num li 1440 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 b :courier :blue :10-pt :no-language)
     ((+ :styles) (:sample-code sbasedon :normal-num snext :body-text-num "Sample Code;"))
     
-    (:external-name-num 71)
+    (:external-name-num 91)
     (:external-name cs :external-name-num :arial :no-language)
     ((+ :styles) (* :external-name additive sbasedon :default-paragraph-font-num "External Name;"))
     
@@ -531,7 +571,16 @@
             (:statement-last . :statement-1-last)
             (:statement-1-last . :statement-2-last)
             (:statement-2-last . :statement-3-last)
-            (:statement-3-last . :statement-4-last))
+            (:statement-3-last . :statement-4-last)
+            (:text-statement . :text-statement-1)
+            (:text-statement-1 . :text-statement-2)
+            (:text-statement-2 . :text-statement-3)
+            (:text-statement-3 . :text-statement-4)
+            (:text-statement-4 . :text-statement-5)
+            (:text-statement-5 . :text-statement-6)
+            (:text-statement-6 . :text-statement-7)
+            (:text-statement-7 . :text-statement-8)
+            (:text-statement-8 . :text-statement-9))
     (:level-wide (:statement . :statement-1)
                  (:statement-1 . :statement-2)
                  (:statement-2 . :statement-3)
@@ -544,7 +593,16 @@
                  (:statement-last . :statement-1-wide)
                  (:statement-1-last . :statement-2-wide)
                  (:statement-2-last . :statement-3-wide)
-                 (:statement-3-last . :statement-4-wide))
+                 (:statement-3-last . :statement-4-wide)
+                 (:text-statement . :text-statement-1)
+                 (:text-statement-1 . :text-statement-2)
+                 (:text-statement-2 . :text-statement-3)
+                 (:text-statement-3 . :text-statement-4)
+                 (:text-statement-4 . :text-statement-5)
+                 (:text-statement-5 . :text-statement-6)
+                 (:text-statement-6 . :text-statement-7)
+                 (:text-statement-7 . :text-statement-8)
+                 (:text-statement-8 . :text-statement-9))
     (:algorithm (:statement . :algorithm-0)
                 (:statement-1 . :algorithm-1)
                 (:statement-2 . :algorithm-2)
@@ -561,7 +619,17 @@
                 (:statement-1-wide . :algorithm-1-wide)
                 (:statement-2-wide . :algorithm-2-wide)
                 (:statement-3-wide . :algorithm-3-wide)
-                (:statement-4-wide . :algorithm-4-wide))
+                (:statement-4-wide . :algorithm-4-wide)
+                (:text-statement . :algorithm-text-0)
+                (:text-statement-1 . :algorithm-text-1)
+                (:text-statement-2 . :algorithm-text-2)
+                (:text-statement-3 . :algorithm-text-3)
+                (:text-statement-4 . :algorithm-text-4)
+                (:text-statement-5 . :algorithm-text-5)
+                (:text-statement-6 . :algorithm-text-6)
+                (:text-statement-7 . :algorithm-text-7)
+                (:text-statement-8 . :algorithm-text-8)
+                (:text-statement-9 . :algorithm-text-9))
     (:grammar-rule . t)
     (:js2 . t)
     (:es4 . t)))

@@ -503,6 +503,8 @@
     ((:level-wide 4) (div (class "lvl-wide")))
     (:statement (div (class "stmt")))
     (:statement-last :statement)
+    (:text-statement (div (class "text-stmt")))
+    (:text-statement-last :text-statement)
     
     ;Inline Styles
     (:script (script (type "text/javascript")))
