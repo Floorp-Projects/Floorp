@@ -84,9 +84,7 @@ PR_EXTERN(nsresult) XPI_Init(
 #else
                               const char*       aProgramDir,
 #endif
-                              pfnXPIStart       startCB, 
-                              pfnXPIProgress    progressCB,
-                              pfnXPIFinal       finalCB     );
+                              pfnXPIProgress    progressCB );
 
 /** XPI_Install
  *
@@ -95,8 +93,10 @@ PR_EXTERN(nsresult) XPI_Init(
  *  @param file     Native filename of XPI archive
  *  @param args     Install.arguments, if any
  *  @param flags    the old SmartUpdate trigger flags. This may go away
+ *
+ *  @returns status  Status from the installed archive
  */
-PR_EXTERN(nsresult) XPI_Install( 
+PR_EXTERN(PRInt32) XPI_Install( 
 #ifdef XP_MAC
                                  const FSSpec& file,
 #else

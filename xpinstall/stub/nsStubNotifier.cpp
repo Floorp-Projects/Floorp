@@ -25,11 +25,10 @@
 #include "nsString.h"
 #include "nsStubNotifier.h"
 
+extern PRInt32 gInstallStatus;
 
-nsStubNotifier::nsStubNotifier( pfnXPIStart aStart, 
-                                pfnXPIProgress aProgress, 
-                                pfnXPIFinal aFinal)
-    : m_start(aStart), m_progress(aProgress), m_final(aFinal)
+nsStubNotifier::nsStubNotifier( pfnXPIProgress aProgress )
+    : m_progress(aProgress)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -57,8 +56,7 @@ nsStubNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 NS_IMETHODIMP
 nsStubNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
-    if (m_start)
-        m_start(nsCAutoString(URL), nsCAutoString(UIPackageName));
+    // we're not interested in this one
     return NS_OK;
 }
 
@@ -81,9 +79,9 @@ nsStubNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRIn
 NS_IMETHODIMP
 nsStubNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
-    if (m_final)
-        m_final( nsCAutoString(URL), status );
-
+//    if (m_final)
+//        m_final( nsCAutoString(URL), status );
+    gInstallStatus = status;
     return NS_OK;
 }
 

@@ -62,6 +62,8 @@ static nsIServiceManager   *gServiceMgr = 0;
 
 static NS_DEFINE_IID(kSoftwareUpdateCID, NS_SoftwareUpdate_CID);
 
+PRInt32 gInstallStatus;
+
 
 
 //------------------------------------------------------------------------
@@ -74,9 +76,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 #else
                                     const char*         aProgramDir,
 #endif
-                                    pfnXPIStart         startCB, 
-                                    pfnXPIProgress      progressCB,
-                                    pfnXPIFinal         finalCB     )
+                                    pfnXPIProgress      progressCB )
 {
     nsresult              rv;
     nsCOMPtr<nsIFileSpec> nsIfsDirectory;
@@ -154,7 +154,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     // Save the install wizard's callbacks as a nsIXPINotifer for later
     //--------------------------------------------------------------------
-    nsStubNotifier* stub = new nsStubNotifier( startCB, progressCB, finalCB );
+    nsStubNotifier* stub = new nsStubNotifier( progressCB );
     if (!stub)
     {
         gXPI->Release();
@@ -190,7 +190,7 @@ PR_PUBLIC_API(void) XPI_Exit()
 //------------------------------------------------------------------------
 //          XPI_Install()
 //------------------------------------------------------------------------
-PR_PUBLIC_API(nsresult) XPI_Install(
+PR_PUBLIC_API(PRInt32) XPI_Install(
 #ifdef XP_MAC
                                     const FSSpec& aFile,
 #else
@@ -206,11 +206,13 @@ PR_PUBLIC_API(nsresult) XPI_Install(
     nsFileURL               URL(file);
     nsString                URLstr(URL.GetURLString());
 
+    gInstallStatus = -201; // nsInstall::UNEXPECTED_ERROR
+
     NS_NewFileSpecWithSpec( file, getter_AddRefs(iFile) );
 
     if (iFile && gXPI)
         rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 
                                (aFlags | XPI_NO_NEW_THREAD), gNotifier );
 
-    return rv;
+    return gInstallStatus;
 }
