@@ -88,6 +88,7 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
 .treecell-inset-header,
 .treecell-header-image
   { 
+    -moz-appearance       : treeheadercell;
     border-left           : 1px solid ThreeDHighlight !important;
     border-top            : 1px solid ThreeDHighlight !important;
     border-right          : 1px solid ThreeDDarkShadow !important;
@@ -220,6 +221,7 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
   {
+    -moz-appearance       : treetwistyopen;
     list-style-image      : url("chrome://global/skin/tree/twisty-open.gif");
   }
 
@@ -236,11 +238,13 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 
 .sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection 
   {
+    -moz-appearance       : treeheadersortarrow;
     list-style-image      : url("chrome://global/skin/tree/sort-asc.gif");
   }
 
 .sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection 
   {
+    -moz-appearance       : treeheadersortarrow;
     list-style-image      : url("chrome://global/skin/tree/sort-dsc.gif");
   }
 
