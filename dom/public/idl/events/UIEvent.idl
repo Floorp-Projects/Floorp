@@ -189,6 +189,4 @@
 	      readonly    attribute   unsigned long which;
 		    readonly	  attribute   Node		  	  rangeParent;
 		    readonly	  attribute   int           rangeOffset;
-
-	      readonly    attribute RenderingContext rc;
       };
