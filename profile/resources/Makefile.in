@@ -37,9 +37,6 @@ FILES		= \
 		pmrename.xul \
 		test-content1_1.xul \
 		test-content1_2.xul \
-		test-tab2.xul \
-		test-tab3.xul \
-		test-tab4.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
