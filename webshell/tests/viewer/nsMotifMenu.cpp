@@ -34,7 +34,6 @@
 //==============================================================
 void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
-  fprintf(stderr, "Menu Selected 0x%x 0x%x\n", p, call_data);
 
   MenuCallbackStruct * cbs = (MenuCallbackStruct *)p;
   if (cbs != NULL) {
