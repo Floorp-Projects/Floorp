@@ -4,20 +4,20 @@
 [
 <!ENTITY tasksMenu.label				"Tasks">
 <!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					"Messenger">  
+<!ENTITY messengerCmd.label					"Messenger">
+<!ENTITY editorCmd.label "Editor">
+<!ENTITY textEditorCmd.label "Plaintext Editor">
+
 <!ENTITY addressBookCmd.label				"Address Book">  
-<!ENTITY bookmarkMenu.label					".Bookmarks"> 
-<!ENTITY addBookmarkCmd.label					".Add Bookmark">  
-<!ENTITY fileBookmarkCmd.label					".File Bookmark">  
-<!ENTITY editBookmarkCmd.label					".Edit Bookmark">  
-<!ENTITY newsgroupsCmd.label				".Newsgroups">  
+ 
+<!ENTITY newsgroupsCmd.label				"Newsgroups">  
 <!ENTITY toolsMenu.label					".Tools"> 
-<!ENTITY historyCmd.label						".History">  
+<!ENTITY historyCmd.label						"History">  
 <!ENTITY securityInfoCmd.label					".Security Info">  
 <!ENTITY messageCenterCmd.label					".Message Center">  
 <!ENTITY importUtilCmd.label					".Import Utility">  
 <!ENTITY javaConsoleCmd.label					".Java Console">
-<!ENTITY windowMenu.label					".Window">
+
 ]> 
 
 
@@ -28,16 +28,13 @@
 <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
 	<!-- Tasks Menu -->
-	<menu id="tasksMenu" name="&tasksMenu.label;">
-		<menuitem name="&navigatorCmd.label;" onclick="toNavigatorWindow()"/>
+	<menu id="tasksMenu" name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+		<menuitem name="&navigatorCmd.label;" onclick="toNavigator()"/>
 		<menuitem name="&messengerCmd.label;" onclick="toMessengerWindow()"/>
-		<menuitem name="&addressBookCmd.label;" onclick="toAddressBook()"/>
+		<menuitem name="&editorCmd.label;"    onclick="toEditor();" />
+        <menuitem name="&textEditorCmd.label;"    onclick="toNewTextEditorWindow();" />
 		<separator/>
-		<menu name="&bookmarkMenu.label;">
-			<menuitem name="&addBookmarkCmd.label;" onclick="toAddBookmark()"/>
-			<menuitem name="&fileBookmarkCmd.label;" onclick="toFileBookmark()"/>
-			<menuitem name="&editBookmarkCmd.label;" onclick="toEditBookmark()"/>
-		</menu>
+		<menuitem name="&addressBookCmd.label;" onclick="toAddressBook()"/>
 		<menuitem name="&newsgroupsCmd.label;" onclick="toNewsgroups()"/>
 		<separator/>
 		<menu name="&toolsMenu.label;">
@@ -47,9 +44,9 @@
 			<menuitem name="&importUtilCmd.label;" onclick="toImport()"/>
 			<menuitem name="&javaConsoleCmd.label;" onclick="toJavaConsole()"/>
 		</menu>
+		
 		<separator/>
-		<menu name="&windowMenu.label;">
-		</menu>
+	
 	</menu>
 
 </overlay>		

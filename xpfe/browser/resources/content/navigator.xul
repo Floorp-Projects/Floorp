@@ -24,6 +24,8 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window
 [
@@ -172,18 +174,7 @@ Contributor(s): ______________________________________. -->
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY addCurPageCmd.label "Add Current Page">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
-<!ENTITY tasksMenu.label "Tasks">
-<!ENTITY navigatorCmd.label "Navigator">
-<!ENTITY messengerCmd.label "Messenger">
-<!ENTITY editorCmd.label "Editor">
-<!ENTITY textEditorCmd.label "Plaintext Editor">
-<!ENTITY manageHistoryCmd.label "Manage History">
-<!ENTITY toolsMenu.label "Tools">
-<!ENTITY toolsPluginsInfoCmd.label "Plugins Info">
-<!ENTITY toolsJavaConsoleCmd.label "Java/JS Console">
-<!ENTITY toolsServerToolsCmd.label "Server Tools">
-<!ENTITY toolsJsDebuggerCmd.label "JavaScipt Debugger">
-<!ENTITY securityInfo.label "Security Info">
+
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpContentsCmd.label "Help Contents">
 <!ENTITY howTutorialCmd.label "How to Tutorial">
@@ -627,40 +618,8 @@ Contributor(s): ______________________________________. -->
 		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
-	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" id="NC:WindowMediatorRoot" open="true" >
-      <menuitem name="&navigatorCmd.label;" onclick="CycleWindow('navigator:browser', 'chrome://navigator/content/');"/>
-      <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
-      <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
-      <menuitem name="&textEditorCmd.label;"    onclick="BrowserNewTextEditorWindow();" />
-      <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
-      <separator />
-      <menu name="&toolsMenu.label;">
-	      <menuitem name="&toolsPluginsInfoCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&toolsJavaConsoleCmd.label;" onclick="BrowserReload();" />
-	      <menuitem name="&toolsServerToolsCmd.label;" onclick="BrowserReload();"/>
-	      <menuitem name="&toolsJsDebuggerCmd.label;" onclick="BrowserReload();"/>
-      </menu>
-      <separator />
-      <menuitem name="&securityInfo.label;" onclick="BrowserReload();"/>
-      <separator/>
-      
-    </menu>
-    
-     <menu name="&helpMenuCmd.label;">
-      <menuitem name="&helpContentsCmd.label;" onclick="window.content.location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
-      <separator />
-      <menuitem name="&howTutorialCmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&helpChannelCmd.label;" onclick="BrowserReload();" />
-      <separator />
-      <menuitem name="&softwareUpdatesCmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&technicalSupportCmd.label;" onclick="BrowserReload();"/>
-      <menuitem name="&releaseNotesCmd.label;" 
-	            onclick="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
-      
-      <separator />
-      <menuitem name="&aboutCommunicatorCmd.label;" 
-	            onclick="window.content.location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
-    </menu>
+	<menu id="tasksMenu"/>
+  <menu id="helpMenu"/>
 
     // Menu for testing.
     <menu name="&debugMenu.label;">
@@ -835,6 +794,9 @@ Contributor(s): ______________________________________. -->
 		  <popup id="samplePopup">
 		    <menu><menuitem name="Sample Item One"/><menuitem name="Sample Item Two"/></menu>
 		  </popup>
+		  
+		
+		  
 	  	  <box align="horizontal">
   	 	     <titledbutton align="left" class="button"
 			   popupanchor="topleft" popupalign="bottomleft" value="&webButton.label;" />
@@ -845,8 +807,10 @@ Contributor(s): ______________________________________. -->
 	 	  <box align="horizontal">
   	 		<titledbutton align="left"  class="popup" popup="samplePopup" tooltip="aTooltip" tooltiptext="This is a toolbar"
 			   popupanchor="topleft" popupalign="bottomleft" value="&dayplannerButton.label;" />
+  	 		
   	 		<titledbutton align="left"  class="popup" popup="samplePopup"
 			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
+  	 		
   	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
 			   popupanchor="topleft" popupalign="bottomleft" 
 			   value="&myDeskButton.label;" />
