@@ -79,7 +79,7 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
                                        PRBool aTranslateEntities,
                                        PRBool aIncrColumn)
 {
-  nsCOMPtr<nsITextContent> content = do_QueryInterface(aNode);
+  nsCOMPtr<nsITextContent> content(do_QueryInterface(aNode));
   if (!content) return NS_ERROR_FAILURE;
   
   const nsTextFragment* frag;
@@ -154,7 +154,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction*
     AppendToString(NS_LITERAL_STRING(" "), aStr);
     AppendToString(data, aStr);
   }
-  AppendToString(NS_LITERAL_STRING(">"), aStr);
+  AppendToString(NS_LITERAL_STRING("?>"), aStr);
   
   return NS_OK;
 }
@@ -283,18 +283,19 @@ nsXMLContentSerializer::PopNameSpaceDeclsFor(nsIDOMElement* aOwner)
   PRInt32 index, count;
 
   count = mNameSpaceStack.Count();
-  for (index = count; index >= 0; index--) {
+  for (index = count - 1; index >= 0; index--) {
     NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
-    if (decl) {
-      if (decl->mOwner != aOwner) {
-        break;
-      }
-      mNameSpaceStack.RemoveElementAt(index);
-      delete decl;
+    if (decl->mOwner != aOwner) {
+      break;
     }
+    mNameSpaceStack.RemoveElementAt(index);
+    delete decl;
   }
 }
 
+/* ConfirmPrefix() is needed for cases where scripts have 
+ * moved/modified elements/attributes 
+ */
 PRBool
 nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
                                       const nsAReadableString& aURI)
@@ -311,26 +312,24 @@ nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
   PRBool uriMatch = PR_FALSE;
 
   count = mNameSpaceStack.Count();
-  for (index = count; index >= 0; index--) {
+  for (index = count - 1; index >= 0; index--) {
     NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
-    if (decl) {
-      // Check if we've found a prefix match
-      if (aPrefix.Equals(decl->mPrefix)) {
-        
-        // If the URI's match, we don't have to add a namespace decl
-        if (aURI.Equals(decl->mURI)) {
-          return PR_FALSE;
-        }
-        // If they don't, we can't use this prefix
-        else {
-          aPrefix.Truncate();
-        }
+    // Check if we've found a prefix match
+    if (aPrefix.Equals(decl->mPrefix)) {
+      
+      // If the URI's match, we don't have to add a namespace decl
+      if (aURI.Equals(decl->mURI)) {
+        return PR_FALSE;
       }
-      // If we've found a URI match, then record the first one
-      else if (!uriMatch && aURI.Equals(decl->mURI)) {
-        uriMatch = PR_TRUE;
-        closestURIMatch.Assign(decl->mPrefix);
+      // If they don't, we can't use this prefix
+      else {
+        aPrefix.Truncate();
       }
+    }
+    // If we've found a URI match, then record the first one
+    else if (!uriMatch && aURI.Equals(decl->mURI)) {
+      uriMatch = PR_TRUE;
+      closestURIMatch.Assign(decl->mPrefix);
     }
   }
 
@@ -382,20 +381,23 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   NS_ENSURE_ARG(aElement);
 
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
-  nsAutoString xmlnsStr, defaultnsStr;
+  nsAutoString xmlnsStr;
   xmlnsStr.Assign(kXMLNS);
-  defaultnsStr.Assign(NS_LITERAL_STRING(""));
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  if (!content) return NS_ERROR_FAILURE;
 
   aElement->GetPrefix(tagPrefix);
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
-    
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  if (!content) return NS_ERROR_FAILURE;
 
+  PRInt32 namespaceID, elementNamespaceID;
+  content->GetNameSpaceID(elementNamespaceID);
+  if (elementNamespaceID == kNameSpaceID_HTML)
+    tagLocalName.ToLowerCase(); // XXX We shouldn't need this hack
+    
   PRInt32 index, count;
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
-  PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
   content->GetAttributeCount(count);
@@ -408,30 +410,38 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                                 *getter_AddRefs(attrName),
                                 *getter_AddRefs(attrPrefix));
     
-    if (attrPrefix) { 
-      attrPrefix->ToString(prefixStr);
-    }
-    else {
-      prefixStr.Truncate();
-    }
-    attrName->ToString(nameStr);
-    
-    content->GetAttribute(namespaceID, attrName, uriStr);
-    if ((namespaceID == kNameSpaceID_XMLNS) ||
-        prefixStr.Equals(kXMLNS)) {
-      PushNameSpaceDecl(nameStr, uriStr, aElement);
-    }
-    else if (nameStr.Equals(kXMLNS)) {
-      PushNameSpaceDecl(defaultnsStr, uriStr, aElement);
+    if (namespaceID == kNameSpaceID_XMLNS ||
+      elementNamespaceID == kNameSpaceID_HTML /*XXX Hack*/) {
+      PRBool hasPrefix = attrPrefix ? PR_TRUE : PR_FALSE;
+      content->GetAttribute(namespaceID, attrName, uriStr);
+
+      attrName->ToString(nameStr);
+      // XXX We shouldn't need this hack
+      if (elementNamespaceID == kNameSpaceID_HTML) {
+        if (nameStr.EqualsWithConversion("xmlns:",PR_FALSE,6)) {
+          nameStr.Cut(0,6);
+          hasPrefix = PR_TRUE;
+        } else if (!nameStr.Equals(kXMLNS)) {
+          continue;
+        }
+      }
+
+      if (!hasPrefix) {
+        // Default NS attribute does not have prefix (and the name is "xmlns")
+        PushNameSpaceDecl(nsString(), uriStr, aElement);
+      } else {
+        PushNameSpaceDecl(nameStr, uriStr, aElement);
+      }
     }
   }
 
   PRBool addNSAttr;
     
-  // Serialize the qualified name of the element
   addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI);
+  // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
-  if (tagPrefix.Length() > 0) {
+  if (tagPrefix.Length() > 0 &&
+    !(elementNamespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
   }
@@ -467,17 +477,16 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     }
 
     addNSAttr = PR_FALSE;
-    if (kNameSpaceID_XMLNS == namespaceID) {
-      prefixStr.Assign(kXMLNS);
-    }
-    else if (nsmanager) {
+    if (kNameSpaceID_XMLNS != namespaceID && nsmanager) {
       nsmanager->GetNameSpaceURI(namespaceID, uriStr);
       addNSAttr = ConfirmPrefix(prefixStr, uriStr);
     }
-        
+    
     content->GetAttribute(namespaceID, attrName, valueStr);
     attrName->ToString(nameStr);
     
+    if (elementNamespaceID == kNameSpaceID_HTML && nameStr.Equals(NS_LITERAL_STRING("xmlns:xmlns")))
+      nameStr.Assign(kXMLNS); // XXX Shouldn't need this hack, breaks case where there really is xmlns:xmlns
     SerializeAttr(prefixStr, nameStr, valueStr, aStr);
     
     if (addNSAttr) {
@@ -486,7 +495,14 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     }
   }
 
-  AppendToString(NS_LITERAL_STRING(">"), aStr);    
+  // We don't output a separate end tag for empty element
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
+  PRBool hasChildren;
+  if (NS_SUCCEEDED(node->HasChildNodes(&hasChildren)) && !hasChildren) {
+    AppendToString(NS_LITERAL_STRING("/>"), aStr);    
+  } else {
+    AppendToString(NS_LITERAL_STRING(">"), aStr);    
+  }
   
   return NS_OK;
 }
@@ -497,15 +513,32 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 {
   NS_ENSURE_ARG(aElement);
 
+  // We don't output a separate end tag for empty element
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
+  PRBool hasChildren;
+  if (NS_SUCCEEDED(node->HasChildNodes(&hasChildren)) && !hasChildren) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+  if (!content) return NS_ERROR_FAILURE;
+
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
   
   aElement->GetPrefix(tagPrefix);
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
 
+  PRInt32 namespaceID;
+  content->GetNameSpaceID(namespaceID);
+  if (namespaceID == kNameSpaceID_HTML)
+    tagLocalName.ToLowerCase(); // XXX We shouldn't need this hack
+
   ConfirmPrefix(tagPrefix, tagNamespaceURI);
+
   AppendToString(NS_LITERAL_STRING("</"), aStr);
-  if (tagPrefix.Length() > 0) {
+  if (tagPrefix.Length() > 0 &&
+    !(namespaceID == kNameSpaceID_HTML && tagPrefix.Equals(kXMLNS) /*XXX Hack*/)) {
     AppendToString(tagPrefix, aStr);
     AppendToString(NS_LITERAL_STRING(":"), aStr);
   }
