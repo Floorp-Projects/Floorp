@@ -14,7 +14,6 @@ IS_COMPONENT = 1
 REQUIRES = \
 	xpcom \
 	string \
-	history \
 	autocomplete \
 	mork \
 	pref \
@@ -35,12 +34,10 @@ CPPSRCS = nsModule.cpp \
           $(NULL)
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../history/src \
 	-I$(srcdir)/../downloads/src \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
 	$(NULL)
 

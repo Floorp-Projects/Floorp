@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,14 +16,13 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -35,5 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/////////////////////////////////////////////////////////////////////////////
+/**
+ * The interface to global history.
+ *
+ * @status FROZEN
+ * @version 1.0
+ */
 
+#include "nsISupports.idl"
+
+[scriptable, uuid(9491C383-E3C4-11d2-BDBE-0050040A9B44)]
+interface nsIGlobalHistory : nsISupports
+{
+    /**
+     * addPage
+     * Add a page to the history
+     *
+     * @param aURL the url to the page
+     */
+
+    void addPage(in string aURL);
+
+    /**
+     * isVisited
+     * Checks to see if the given page is in history
+     *
+     * @return true if a page has been passed into addPage().
+     * @param aURL the url to the page
+     */
+    boolean isVisited(in string aURL);
+};

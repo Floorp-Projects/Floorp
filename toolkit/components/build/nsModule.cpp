@@ -42,6 +42,7 @@
 #include "nsAutoCompleteMdbResult.h"
 #include "nsFormHistory.h"
 #include "nsFormFillController.h"
+#include "nsGlobalHistory.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +50,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 
 /////////////////////////////////////////////////////////////////////////////
 //// Module Destructor
@@ -85,7 +87,22 @@ static const nsModuleComponentInfo components[] =
   { "HTML Form History AutoComplete",
     NS_FORMFILLCONTROLLER_CID, 
     NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
-    nsFormFillControllerConstructor }
+    nsFormFillControllerConstructor },
+
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY_CONTRACTID,
+    nsGlobalHistoryConstructor },
+    
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
+    nsGlobalHistoryConstructor },
+    
+  { "Global History",
+    NS_GLOBALHISTORY_CID,
+    NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
+    nsGlobalHistoryConstructor },
 };
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsToolkitCompsModule, components, nsToolkitCompModuleDtor)

@@ -37,8 +37,12 @@ REQUIRES = xpcom \
 		       layout \
 		       dom \
 		       mork \
+		       pref \
+		       rdf \
+		       intl \
 		       docshell \
 		       autocomplete \
+		       history \
 		       satchel \
 		       $(NULL)
 
@@ -49,10 +53,12 @@ CPPSRCS = nsModule.cpp \
 
 LOCAL_INCLUDES = \
     -I$(srcdir)/../autocomplete/src \
+    -I$(srcdir)/../history/src \
     -I$(srcdir)/../satchel/src \
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
 		$(NULL)
 
