@@ -27,7 +27,11 @@ generator:
 	javac -d classes -classpath classes ../../src/java/generator/*.java 
 
 sanity:
-	java -classpath classes Main -d ../../test/sanity.js
+	java -classpath classes Main -a ../../test/sanity.js
+
+testgen:
+	java -classpath classes Main -d ../../test/ecma-e4/02.expressions/primary.1.js
+	java -classpath classes Main -d ../../test/ecma-e4/06.functions/function.1.js
 
 test:
 	java -classpath classes Main -d ../../test/ecma-e4/02.expressions/primary.1.js
@@ -49,3 +53,7 @@ test:
 	java -classpath classes Main -d ../../test/ecma-e4/03.statements/with.1.js
 	java -classpath classes Main -d ../../test/ecma-e4/04.definitions/definition.1.js
 	java -classpath classes Main -d ../../test/ecma-e4/04.definitions/definition.2.js
+
+test_functions:
+	java -classpath classes Main -debug -asm ../../test/ecma-e4/06.functions/function.1.js
+

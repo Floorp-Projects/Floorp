@@ -102,9 +102,6 @@ public final class NodeFactory {
     static SuperExpressionNode SuperExpression() {
         return new SuperExpressionNode();
     }
-    static EvalExpressionNode EvalExpression( Node expr ) {
-        return new EvalExpressionNode(expr);
-    }
     static ListNode List( Node list, Node item ) {
         return new ListNode(list,item,item.pos());
     }

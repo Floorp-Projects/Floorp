@@ -1,14 +1,13 @@
 J S C   R E A D M E   F I L E
 Jeff Dyer, Mountain View Compiler Company
-Dec-15-2000
+Jan-26-2001
 
 OVERVIEW
 
 JSC (JavaScript Compiler) is a stand-alone front-end implementation
 of the JS2 language specification. Its purpose is to demonstrate how
 JS2 programs are statically prepared for execution by a JS2 interpreter. 
-Its output is a psuedo intermediate language suitable for reading by
-human beings.
+Its output is assembly code that is assembled by the JS engine.
 
 BUILDING JSC
 
@@ -31,7 +30,7 @@ utility, such as:
 If all goes well, the sanity test will run and you will see something
 like
 
-	../../test/sanity.js: 0 errors [120 msec] --> completion( 0, okay, null )
+	../../test/sanity.js: 0 errors [120 msec]
 
 on the last line of the console output. To run more extensive tests, 
 use the build command:
@@ -61,21 +60,14 @@ produce a new file given the name of the original source file
 with the suffix '.jsil' appended to it. Errors are written to a 
 file with the suffix '.err' appended to it.
 
-
-STATUS OF JSC
-
-Dec-1-2000
-----------
-Signficant portions of the type system, compile-time constant evaluator,
-and name management systems are working. Missing are semantics for 
-using, import, export, and unit parsing. More tests are also needed.
-
-
-ISSUES
-
-* Intermediate form of references, classes, and interfaces.
-
 CHANGES
+
+Jan-26-2001
+-----------
+Added first cut at xml icode generation. In particular function definitions,
+call and binary expressions are implemented. Object and array literals are
+also implemented. Many of the tests used for verifying the parser and semantic
+analyzer, are not yet working.
 
 Dec-15-2000
 -----------

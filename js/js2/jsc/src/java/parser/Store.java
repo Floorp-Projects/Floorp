@@ -23,18 +23,20 @@
 package com.compilercompany.ecmascript;
 
 /**
- * A slot.
+ * Represents an abstract unit of storage.
  */
 
-public class Slot {
-    Value attrs;
-    Value type;
-    Value value;
-    Block block;
-	Store store;
+public class Store {
+    Scope scope;
+    int   index;
+
+    Store(Scope scope, int index) {
+        this.scope = scope;
+        this.index = index;
+    }
 
     public String toString() {
-        return "{ "+attrs+", "+type+", "+value+", "+store+" }";
+        return "store( " + index + " )";
     }
 }
 

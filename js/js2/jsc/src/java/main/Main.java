@@ -47,6 +47,7 @@ public class Main {
 	private static boolean traceInput  = false;
     private static boolean traceLexer  = false;
 	private static boolean traceParser = false;
+	private static boolean doASM       = false;
 	private static boolean debug       = false;
 
 
@@ -67,6 +68,8 @@ public class Main {
 				traceParser = true;
 			} else if (args[i].equals("-d")||args[i].equals("-debug")) {
 				debug = true;
+			} else if (args[i].equals("-a")||args[i].equals("-asm")) {
+				doASM = true;
 			} else if (args[i].charAt(0) == '-') {
 				System.out.println("Unknown.option "+ args[i]);
 			} else {
@@ -148,7 +151,7 @@ public class Main {
 					if( traceParser ) {
 						Debugger.trace("setting parser output to " + input[i]);
 						JSILGenerator.setOut( input[i]+".par" );
-						node.evaluate(context,new JSILGenerator());
+						node.evaluate(context,new JSILGenerator(false));
 					}
 
 					//Evaluator evaluator;
@@ -157,14 +160,14 @@ public class Main {
 					context.setEvaluator(new BlockEvaluator());
 					node.evaluate(context, context.getEvaluator());
 
-					JSILGenerator.setOut( input[i]+".blocks" );
-					context.setEvaluator(new JSILGenerator());
-					node.evaluate(context, context.getEvaluator());
+					//JSILGenerator.setOut( input[i]+".blocks" );
+					//context.setEvaluator(new JSILGenerator(false));
+					//node.evaluate(context, context.getEvaluator());
 
 					context.setEvaluator(new ConstantEvaluator());
 					value = node.evaluate(context, context.getEvaluator());
 
-					context.setEvaluator(new JSILGenerator());
+					context.setEvaluator(new JSILGenerator(doASM));
 					JSILGenerator.setOut( input[i]+".jsil" );
 					node.evaluate(context, context.getEvaluator());
 					errorCount = context.errorCount();
@@ -172,7 +175,7 @@ public class Main {
 
 	            t = System.currentTimeMillis() - t;
                 //Debugger.trace(""+global);
-                System.out.println(input[i] + ": "+ errorCount +" errors [" + Long.toString(t) + " msec] --> " + value.getValue(context) );
+                System.out.println(input[i] + ": "+ errorCount +" errors [" + Long.toString(t) + " msec]");
 
             } catch( Exception x ) {
                 x.printStackTrace();
