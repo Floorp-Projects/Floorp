@@ -26,6 +26,7 @@ LIBRARY_NAME	= lwbrk
 IS_COMPONENT	= 1
 
 CSRCS		= \
+                  rulebrk.c \
 		  $(NULL)
 
 CPPSRCS		=  \
