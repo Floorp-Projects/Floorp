@@ -91,7 +91,8 @@ public:
 
   nsTimerImpl();
 
-  static void Shutdown();
+  static NS_HIDDEN_(nsresult) Startup();
+  static NS_HIDDEN_(void) Shutdown();
 
   friend class TimerThread;
 

@@ -265,12 +265,6 @@ nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsIProperties     *gDirectoryService = NULL;
 PRBool gXPCOMShuttingDown = PR_FALSE;
 
-// If XPCOM is unloaded, we need a way to ensure that all statics have been 
-// reinitalized when reloading.  Here we create a boolean which is initialized
-// to true.  During shutdown, this boolean with set to false.  When we startup,
-// this boolean will be checked and if the value is not true, startup will fail.
-static PRBool gXPCOMHasGlobalsBeenInitalized = PR_TRUE;
-
 // For each class that wishes to support nsIClassInfo, add a line like this
 // NS_DECL_CLASSINFO(nsMyClass)
 
@@ -425,10 +419,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
-
-    if (!gXPCOMHasGlobalsBeenInitalized)
-        return NS_ERROR_NOT_INITIALIZED;
-
     nsresult rv = NS_OK;
 
      // We are not shutting down
@@ -441,6 +431,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     // Establish the main thread here.
     rv = nsIThread::SetMainThread();
     if (NS_FAILED(rv)) return rv;
+
+    // Set up the timer globals/timer thread
+    rv = nsTimerImpl::Startup();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Startup the memory manager
     rv = nsMemoryImpl::Startup();
@@ -842,7 +836,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_ShutdownLeakDetector();
 #endif
 
-    gXPCOMHasGlobalsBeenInitalized = PR_FALSE;
     return NS_OK;
 }
 

@@ -62,13 +62,14 @@ class TimerThread : public nsSupportsWeakReference,
 {
 public:
   TimerThread();
+  NS_HIDDEN_(nsresult) InitLocks();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
   
-  nsresult Init();
-  nsresult Shutdown();
+  NS_HIDDEN_(nsresult) Init();
+  NS_HIDDEN_(nsresult) Shutdown();
 
   nsresult AddTimer(nsTimerImpl *aTimer);
   nsresult TimerDelayChanged(nsTimerImpl *aTimer);
@@ -88,6 +89,9 @@ public:
 
 private:
   ~TimerThread();
+
+  PRInt32 mInitInProgress;
+  PRBool  mInitialized;
 
   // These two internal helper methods must be called while mLock is held.
   // AddTimerInternal returns the position where the timer was added in the
