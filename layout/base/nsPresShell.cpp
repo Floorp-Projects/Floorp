@@ -2605,6 +2605,11 @@ PresShell::BeginObservingDocument()
 {
   if (mDocument) {
     mDocument->AddObserver(this);
+    if (mIsDocumentGone) {
+      NS_WARNING("Adding a presshell that was disconnected from the document "
+                 "as a document observer?  Sounds wrong...");
+      mIsDocumentGone = PR_FALSE;
+    }
   }
   return NS_OK;
 }
@@ -5134,7 +5139,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
                                 PRBool aAppend)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   WillCauseReflow();
@@ -5166,7 +5171,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   // XXXwaterson it might be more elegant to wait until after the
@@ -5211,7 +5216,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
                            nsIContent*  aChild,
                            PRInt32      aIndexInContainer)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   if (!mDidInitialReflow) {
@@ -5231,7 +5236,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aChild,
                           PRInt32     aIndexInContainer)
 {
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   // Notify the ESM that the content has been removed, so that
