@@ -2264,7 +2264,6 @@ nsHTMLReflowState::UseComputedHeight()
   return useComputedHeight;
 }
 
-#ifdef NEW_FONT_HEIGHT_APIS
 #define NORMAL_LINE_HEIGHT_FACTOR 1.2f    // in term of emHeight 
 // For "normal" we use the font's normal line height (em height + leading).
 // If both internal leading and  external leading specified by font itself
@@ -2305,7 +2304,6 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
 #endif // FONT_LEADING_APIS_V2
   return normalLineHeight;
 }
-#endif // NEW_FONT_HEIGHT_APIS
 
 static nscoord
 ComputeLineHeight(nsIPresContext* aPresContext,
@@ -2349,20 +2347,16 @@ ComputeLineHeight(nsIPresContext* aPresContext,
       // little hack lets us override that behavior to allow for more
       // precise layout in the face of imprecise fonts.
       nscoord emHeight = font->mFont.size;
-#ifdef NEW_FONT_HEIGHT_APIS
       if (!nsHTMLReflowState::UseComputedHeight()) {
         fm->GetEmHeight(emHeight);
       }
-#endif
       lineHeight = NSToCoordRound(factor * emHeight);
     } else {
       NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
       lineHeight = font->mFont.size;
-#ifdef NEW_FONT_HEIGHT_APIS
       if (!nsHTMLReflowState::UseComputedHeight()) {
         lineHeight = GetNormalLineHeight(fm);
       }
-#endif
     }
   }
   return lineHeight;
@@ -2391,11 +2385,9 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
       SetFontFromStyle(aRenderingContext, sc);
       nsCOMPtr<nsIFontMetrics> fm;
       aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
-#ifdef NEW_FONT_HEIGHT_APIS
       if (fm) {
         lineHeight = GetNormalLineHeight(fm);
       }
-#endif
     }
   }
   return lineHeight;
