@@ -91,10 +91,20 @@ SUMMARYFILE="$3"
 OSTYPE=`uname -s`
 
 #
+#   On Mac OS X, use the --zerodrift option to maptsvdifftool
+#
+if [ $OSTYPE == "Darwin" ]; then
+ZERODRIFT="--zerodrift"
+else
+ZERODRIFT=""
+fi
+
+#
 #   Create our temporary directory.
 #   mktemp on Darwin doesn't support -d (suckage)
 #
 if [ $OSTYPE == "Darwin" ]; then
+ZERODRIFT="--zerodrift"
 MYTMPDIR=`mktemp ./codesighs.tmp.XXXXXXXX`
 rm $MYTMPDIR
 mkdir $MYTMPDIR
@@ -148,11 +158,12 @@ sort -r $RAWTSVFILE > $COPYSORTTSV
 #       level report.
 #   Otherwise, generate the module level report from our new data.
 #
+
 rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool --input $DIFFFILE >> $SUMMARYFILE
+  ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --input $DIFFFILE >> $SUMMARYFILE
 else
   ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
 fi
@@ -175,7 +186,7 @@ if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesizeDiff:"
 fi
-    ./mozilla/dist/bin/maptsvdifftool --summary --input $DIFFFILE
+    ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --summary --input $DIFFFILE
 fi
 
 #
