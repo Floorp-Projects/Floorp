@@ -111,6 +111,16 @@ sub dbh {
     return $_dbh;
 }
 
+my $_batch;
+sub batch {
+    my $class = shift;
+    my $newval = shift;
+    if ($newval) {
+        $_batch = $newval;
+    }
+    return $_batch || 0;
+}
+
 sub dbwritesallowed {
     my $class = shift;
 
@@ -281,6 +291,13 @@ Bugzilla::User instance.
 Essentially, causes calls to C<Bugzilla->user> to return C<undef>. This has the
 effect of logging out a user for the current request only; cookies and
 database sessions are left intact.
+
+=item C<batch>
+
+Set to true, by calling Bugzilla->batch(1), to indicate that Bugzilla is
+being called in a non-interactive manner and errors should be passed to 
+die() rather than being sent to a browser and finished with an exit().
+Bugzilla->batch will return the current state of this flag.
 
 =item C<dbh>
 

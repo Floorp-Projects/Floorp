@@ -69,12 +69,17 @@ sub _throw_error {
         close ERRORLOGFID;
     }
 
-    print Bugzilla->cgi->header();
-
     my $template = Bugzilla->template;
-    $template->process($name, $vars)
-      || ThrowTemplateError($template->error());
-
+    if (Bugzilla->batch) {
+        my $message;
+        $template->process($name, $vars, \$message)
+          || ThrowTemplateError($template->error());
+        die("$message");
+    } else {
+        print Bugzilla->cgi->header();
+        $template->process($name, $vars)
+          || ThrowTemplateError($template->error());
+    }
     exit;
 }
 
@@ -90,6 +95,9 @@ sub ThrowTemplateError {
     my ($template_err) = @_;
 
     my $vars = {};
+    if (Bugzilla->batch) {
+        die("error: template error: $template_err");
+    }
 
     $vars->{'template_error_msg'} = $template_err;
     $vars->{'error'} = "template_error";
