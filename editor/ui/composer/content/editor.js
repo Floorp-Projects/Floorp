@@ -1751,7 +1751,10 @@ function InitObjectPropertiesMenuitem(id)
     switch (name)
     {
       case "img":
-        objStr = GetString("Image");
+        if (editorShell.GetElementOrParentByTagName("href", element))
+          objStr = GetString("ImageAndLink");
+        else
+          objStr = GetString("Image");
         break;
       case "hr":
         objStr = GetString("HLine");
