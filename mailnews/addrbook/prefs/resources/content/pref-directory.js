@@ -8,11 +8,17 @@ var gNewServerString = null;
 var gFromGlobalPref = false;
 var gUpdate = false;
 var gDeletedDirectories = new Array();
+var gLDAPPrefsService;
 
-var gLDAPPrefsService = Components.classes[
-                        "@mozilla.org/ldapprefs-service;1"].getService();
-gLDAPPrefsService = gLDAPPrefsService.QueryInterface(
-                    Components.interfaces.nsILDAPPrefsService);
+function initLDAPPrefsService()
+{
+  if (gLDAPPrefsService)
+    return;
+
+  const LDAP_PREF_CONTRACT="@mozilla.org/ldapprefs-service;1";
+  if (LDAP_PREF_CONTRACT in Components.classes)
+    gLDAPPrefsService = Components.classes[LDAP_PREF_CONTRACT].getService(Components.interfaces.nsILDAPPrefsService);
+}
 
 function onEditDirectories()
 {
@@ -62,7 +68,7 @@ function enableAutocomplete()
 //    autocompleteSkipDirectory.setAttribute("disabled", true);
   }
   // if we do not have any directories disable the dropdown list box
-  if (gAvailDirectories.length < 1)
+  if (!gAvailDirectories || (gAvailDirectories.length < 1))
     directoriesList.setAttribute("disabled", true);
   gFromGlobalPref = true;
   LoadDirectories(directoriesListPopup);
@@ -136,12 +142,13 @@ function LoadDirectories(popup)
     }
   }
   if (!gAvailDirectories) {
-  try {
-    arrayOfDirectories = gLDAPPrefsService.getServerList(gPrefInt, prefCount);
-  }
-  catch (ex) {
-    arrayOfDirectories = null;
-  }
+    try {
+      initLDAPPrefsService();
+      if (gLDAPPrefsService)
+        arrayOfDirectories = gLDAPPrefsService.getServerList(gPrefInt, prefCount);
+    }
+    catch (ex) {
+    }
   if (arrayOfDirectories) {
     gAvailDirectories = new Array();
     for (var i = 0; i < prefCount.value; i++)
