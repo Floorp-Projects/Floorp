@@ -312,6 +312,15 @@ nsHttpChannel::SetupTransaction()
     // set the request time for cache expiration calculations
     mRequestTime = NowInSeconds();
 
+    // if doing a reload, force end-to-end
+    if (mLoadFlags & LOAD_BYPASS_CACHE) {
+        // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
+        // no proxy is configured since we might be talking with a transparent
+        // proxy, i.e. one that operates at the network level.  See bug #14772
+        mRequestHead.SetHeader(nsHttp::Pragma, "no-cache");
+        mRequestHead.SetHeader(nsHttp::Cache_Control, "max-age=0");
+    }
+
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream);
 }
 
