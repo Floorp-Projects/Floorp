@@ -196,6 +196,7 @@ my $emailinput2 = GenerateEmailInput(2);
 PutHeader("Bugzilla Query Page", "Query Page");
 
 push @::legal_resolution, "---"; # Oy, what a hack.
+push @::legal_target_milestone, "---"; # Oy, what a hack.
 
 print "
 <FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
