@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIRequest.idl"
 
 interface nsIRequest;
 interface nsIRequestObserver;
@@ -53,14 +54,21 @@ interface nsIURIChecker : nsISupports
    *   NS_BINDING_FAILED:      link is invalid (gave an error)
    *   NS_BINDING_ABORTED:     timed out, or cancelled
    *
-   * @param aURI      The URI to be checked.
-   * @param aObserver The object to notify when the link is verified.
-   *                  We will call aObserver.OnStartRequest followed
-   *                  immediately by aObserver.OnStopRequest.
-   *                  It is recommended that the caller use
-   *                  OnStopRequest to act on the link's status.
+   * @param aURI        The URI to be checked.
+   * @param aObserver   The object to notify when the link is verified.
+   *                    We will call aObserver.OnStartRequest followed
+   *                    immediately by aObserver.OnStopRequest.
+   *                    It is recommended that the caller use
+   *                    OnStopRequest to act on the link's status.
+   *                    The underlying request will not be cancelled
+   *                    until after OnStopRequest has been called.
+   * @param aCtxt       A closure that will be passed back to the
+   *                    nsIRequestObserver methods
+   * @param aLoadFlags  Load flags to set on the base request.
    */
   nsIRequest asyncCheckURI(in string uri, in nsIRequestObserver aObserver,
-                           in nsISupports aCtxt);
+                           in nsISupports aCtxt, in nsLoadFlags aLoadFlags);
+
+  readonly attribute nsIRequest baseRequest;
 };
 

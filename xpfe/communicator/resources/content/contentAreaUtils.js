@@ -264,52 +264,68 @@ function foundHeaderInfo(aSniffer, aData)
 
 function nsHeaderSniffer(aURL, aCallback, aData)
 {
-  this.mPersist = makeWebBrowserPersist();
   this.mCallback = aCallback;
   this.mData = aData;
-  
-  this.mPersist.progressListener = this;
-
-  this.mTempFile = makeTempFile();
-  while (this.mTempFile.exists())
-    this.mTempFile = makeTempFile();    
   
   const stdURLContractID = "@mozilla.org/network/standard-url;1";
   const stdURLIID = Components.interfaces.nsIURI;
   this.uri = Components.classes[stdURLContractID].createInstance(stdURLIID);
   this.uri.spec = aURL;
   
-  this.mPersist.saveURI(this.uri, null, this.mTempFile);
+  this.linkChecker = Components.classes["@mozilla.org/network/urichecker;1"]
+    .createInstance().QueryInterface(Components.interfaces.nsIURIChecker);
+
+  var flags;
+  if (aData.bypassCache) {
+    flags = Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+  } else {
+    flags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
+  }
+
+  this.linkChecker.asyncCheckURI(aURL, this, null, flags);
 }
 
 nsHeaderSniffer.prototype = {
-  onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus)
-  {
-    if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START) {
-      try {
-        var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+  onStartRequest: function (aRequest, aContext) { },
+  
+  onStopRequest: function (aRequest, aContext, aStatus) {
+    try {
+      if (aStatus == 0) { // NS_BINDING_SUCCEEDED, so there's something there
+        var linkChecker = aRequest.QueryInterface(Components.interfaces.nsIURIChecker);
+        var channel = linkChecker.baseRequest.QueryInterface(Components.interfaces.nsIChannel);
         this.contentType = channel.contentType;
         try {
-          var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
+          var httpChannel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
           this.mContentDisposition = httpChannel.getResponseHeader("content-disposition");
         }
         catch (e) {
         }
-        this.mPersist.cancelSave();
-        if (this.mTempFile.exists())
-          this.mTempFile.remove(false);
-        this.mCallback(this, this.mData);
-      }
-      catch (e) {
+      } else {
+        // Failed the link check.  This could be due to an issue with
+        // the link checker, though.  Throw an exception and let the
+        // catch() deal with it as it would with any other link check
+        // failure.
+        throw("Link check failed");
       }
     }
+    catch (e) {
+      if (this.mData.document) {
+        this.contentType = this.mData.document.contentType;
+      } else {
+        try {
+          var url = this.uri.QueryInterface(Components.interfaces.nsIURL);
+          var ext = url.fileExtension;
+          if (ext) {
+            this.contentType = getMIMEInfoForExtension(ext).MIMEType;
+          }
+        }
+        catch (e) {
+          // Not much we can do here.  Give up.
+        }
+      }
+    }
+    this.mCallback(this, this.mData);
   },
-  onLocationChange: function (aWebProgress, aRequest, aLocation) { },
-  onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) { },
-  onSecurityChange: function (aWebProgress, aRequest, aState) { },
-  onProgressChange: function (aWebProgress, aRequest, aCurSelfProgress, 
-                              aMaxSelfProgress, aCurTotalProgress, 
-                              aMaxTotalProgress) { },
   
   get suggestedFileName()
   {
@@ -425,14 +441,28 @@ function makeTempFile()
   return tempFile;
 }
 
-function getMIMEInfoForType(aMIMEType)
+function getMIMEService()
 {
   const mimeSvcContractID = "@mozilla.org/mime;1";
   const mimeSvcIID = Components.interfaces.nsIMIMEService;
   const mimeSvc = Components.classes[mimeSvcContractID].getService(mimeSvcIID);
+  return mimeSvc;
+}
 
+function getMIMEInfoForExtension(aExtension)
+{
   try {  
-    return mimeSvc.GetFromMIMEType(aMIMEType);
+    return getMIMEService().GetFromExtension(aExtension);
+  }
+  catch (e) {
+  }
+  return null;
+}
+
+function getMIMEInfoForType(aMIMEType)
+{
+  try {  
+    return getMIMEService().GetFromMIMEType(aMIMEType);
   }
   catch (e) {
   }
