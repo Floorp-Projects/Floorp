@@ -486,7 +486,7 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     }
 
     if (mListener) {
-        rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
+        rv = mListener->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
     if (mLoadGroup) {
