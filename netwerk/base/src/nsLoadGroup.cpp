@@ -29,8 +29,9 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
-    : mChannels(nsnull), mSubGroups(nsnull), 
-      mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL)
+    : mChannels(nsnull), mSubGroups(nsnull), mObservers(nsnull),
+      mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
+      mParent(nsnull), mObserver(nsnull)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -41,6 +42,9 @@ nsLoadGroup::~nsLoadGroup()
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
     NS_IF_RELEASE(mChannels);
     NS_IF_RELEASE(mSubGroups);
+    NS_IF_RELEASE(mObservers);
+    NS_IF_RELEASE(mObserver);
+    NS_IF_RELEASE(mParent);
 }
     
 NS_METHOD
@@ -79,9 +83,11 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
 {
     nsresult rv;
     PRUint32 i;
-    PRUint32 count;
-    rv = mChannels->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 count = 0;
+    if (mChannels) {
+        rv = mChannels->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+    }
     for (i = 0; i < count; i++) {
         nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mChannels->ElementAt(i));
         if (req == nsnull)
@@ -91,8 +97,11 @@ nsLoadGroup::PropagateDown(PropagateDownFun fun)
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = mSubGroups->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    count = 0;
+    if (mSubGroups) {
+        rv = mSubGroups->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+    }
     for (i = 0; i < count; i++) {
         nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mSubGroups->ElementAt(i));
         if (req == nsnull)
@@ -108,16 +117,22 @@ NS_IMETHODIMP
 nsLoadGroup::IsPending(PRBool *result)
 {
     nsresult rv;
-    PRUint32 count;
-    rv = mChannels->Count(&count);
+    PRUint32 count = 0;
+    if (mChannels) {
+        rv = mChannels->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+    }
     if (count > 0) {
         *result = PR_FALSE;
         return NS_OK;
     }
 
     PRUint32 i;
-    rv = mSubGroups->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    count = 0;
+    if (mSubGroups) {
+        rv = mSubGroups->Count(&count);
+        if (NS_FAILED(rv)) return rv;
+    }
     for (i = 0; i < count; i++) {
         nsIRequest* req = NS_STATIC_CAST(nsIRequest*, mSubGroups->ElementAt(i));
         if (req == nsnull)
@@ -179,9 +194,12 @@ NS_IMETHODIMP
 nsLoadGroup::Init(nsILoadGroup *parent)
 {
 //    mParent = parent;   // weak ref
-    if (!parent)
-        return NS_ERROR_NULL_POINTER;
-    parent->AddSubGroup(this);  // XXX
+    nsresult rv;
+
+    if (parent) {
+        rv = parent->AddSubGroup(this);  // XXX
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_OK;
 }
     
@@ -202,7 +220,12 @@ nsLoadGroup::SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes)
 NS_IMETHODIMP
 nsLoadGroup::AddChannel(nsIChannel *channel)
 {
-    nsresult rv = mChannels->AppendElement(channel);
+    nsresult rv;
+    if (mChannels == nsnull) {
+        rv = NS_NewISupportsArray(&mChannels);
+        if (NS_FAILED(rv)) return rv;
+    }
+    rv = mChannels->AppendElement(channel);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetLoadAttributes(mDefaultLoadAttributes);
@@ -212,30 +235,47 @@ nsLoadGroup::AddChannel(nsIChannel *channel)
 NS_IMETHODIMP
 nsLoadGroup::RemoveChannel(nsIChannel *channel)
 {
+    NS_ASSERTION(mChannels, "Forgot to call AddChannel");
     return mChannels->RemoveElement(channel);
 }
 
 NS_IMETHODIMP
 nsLoadGroup::GetChannels(nsISimpleEnumerator * *aChannels)
 {
+    nsresult rv;
+    if (mChannels == nsnull) {
+        rv = NS_NewISupportsArray(&mChannels);
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_NewArrayEnumerator(aChannels, mChannels);
 }
 
 NS_IMETHODIMP
 nsLoadGroup::AddObserver(nsIStreamObserver *observer)
 {
+    nsresult rv;
+    if (mObservers == nsnull) {
+        rv = NS_NewISupportsArray(&mObservers);
+        if (NS_FAILED(rv)) return rv;
+    }
     return mObservers->AppendElement(observer);
 }
 
 NS_IMETHODIMP
 nsLoadGroup::RemoveObserver(nsIStreamObserver *observer)
 {
+    NS_ASSERTION(mObservers, "Forgot to call AddObserver");
     return mObservers->RemoveElement(observer);
 }
 
 NS_IMETHODIMP
 nsLoadGroup::GetObservers(nsISimpleEnumerator * *aObservers)
 {
+    nsresult rv;
+    if (mObservers == nsnull) {
+        rv = NS_NewISupportsArray(&mObservers);
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_NewArrayEnumerator(aObservers, mObservers);
 }
 
@@ -243,12 +283,18 @@ NS_IMETHODIMP
 nsLoadGroup::AddSubGroup(nsILoadGroup *group)
 {
 //    group->mParent = this;    // XXX
+    nsresult rv;
+    if (mSubGroups == nsnull) {
+        rv = NS_NewISupportsArray(&mSubGroups);
+        if (NS_FAILED(rv)) return rv;
+    }
     return mSubGroups->AppendElement(group);
 }
 
 NS_IMETHODIMP
 nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
 {
+    NS_ASSERTION(mSubGroups, "Forgot to call AddSubGroup");
 //    group->mParent = nsnull;  // XXX
     return mSubGroups->RemoveElement(group);
 }
@@ -256,6 +302,11 @@ nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
 NS_IMETHODIMP
 nsLoadGroup::GetSubGroups(nsISimpleEnumerator * *aSubGroups)
 {
+    nsresult rv;
+    if (mSubGroups == nsnull) {
+        rv = NS_NewISupportsArray(&mSubGroups);
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_NewArrayEnumerator(aSubGroups, mSubGroups);
 }
 
@@ -267,11 +318,13 @@ nsLoadGroup::PropagateUp(PropagateUpFun fun, void* closure)
 {
     nsresult rv;
     PRUint32 i;
-    PRUint32 count;
 
     for (nsLoadGroup* group = this; group != nsnull; group = group->mParent) {
-        rv = group->mObservers->Count(&count);
-        if (NS_FAILED(rv)) return rv;
+        PRUint32 count = 0;
+        if (group->mObservers) {
+            rv = group->mObservers->Count(&count);
+            if (NS_FAILED(rv)) return rv;
+        }
         for (i = 0; i < count; i++) {
             nsIStreamObserver* obs =
                 NS_STATIC_CAST(nsIStreamObserver*, group->mObservers->ElementAt(i));
