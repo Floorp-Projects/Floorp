@@ -797,7 +797,7 @@ function OpenSearch(tabName, searchStr)
   function BrowserOpenWindow()
   {
     //opens a window where users can select a web location to open
-    window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome", appCore );
+    window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", appCore );
   }
   
   function createInstance( progid, iidName ) {
