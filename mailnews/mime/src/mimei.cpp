@@ -82,6 +82,18 @@
 #include "nsIPref.h"
 #include "imgILoader.h"
 
+#ifdef MOZ_THUNDERBIRD
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgHdr.h"
+#endif
+
+#ifdef MOZ_THUNDERBIRD
+
+// forward declaration
+void getMsgHdrForCurrentURL(MimeDisplayOptions *opts, nsIMsgDBHdr ** aMsgHdr);
+
+#endif
+
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -359,6 +371,46 @@ PRBool mime_is_allowed_class(const MimeObjectClass *clazz,
 }
 
 
+#ifdef MOZ_THUNDERBIRD
+
+void getMsgHdrForCurrentURL(MimeDisplayOptions *opts, nsIMsgDBHdr ** aMsgHdr)
+{
+  *aMsgHdr = nsnull;
+
+  if (!opts)
+    return; 
+  
+  mime_stream_data *msd = (mime_stream_data *) (opts->stream_closure);
+  if (!msd)
+    return;
+
+  nsIChannel *channel = msd->channel;  // note the lack of ref counting...
+  if (channel)
+  {
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIMsgMessageUrl> msgURI;
+    channel->GetURI(getter_AddRefs(uri));
+    if (uri)
+    {
+      msgURI = do_QueryInterface(uri);
+      if (msgURI)
+      {
+        nsXPIDLCString rdfURI;
+        msgURI->GetUri(getter_Copies(rdfURI));
+        if (rdfURI.get())
+        {
+          nsCOMPtr<nsIMsgDBHdr> msgHdr;
+          GetMsgDBHdrFromURI(rdfURI, getter_AddRefs(msgHdr));
+          NS_IF_ADDREF(*aMsgHdr = msgHdr);
+        }
+      }
+    }
+  }
+
+  return;
+}
+#endif
+
 MimeObjectClass *
 mime_find_class (const char *content_type, MimeHeaders *hdrs,
 				 MimeDisplayOptions *opts, PRBool exact_match_p)
@@ -394,6 +446,30 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
            // We have non-sensical prefs. Do some fixup.
         html_as = 1;
     }
+
+#ifdef MOZ_THUNDERBIRD
+  // first, check to see if the message has been marked as JUNK. If it has, 
+  // then force the message to be rendered as simple.
+  PRBool sanitizeJunkMail = PR_FALSE;
+
+  // it is faster to read the pref first then figure out the msg hdr for the current url only if we have to
+  // XXX instead of reading this pref every time, part of mime should be an observer listening to this pref change
+  // and updating internal state accordingly. But none of the other prefs in this file seem to be doing that...=(
+  pref->GetBoolPref("mailnews.display.sanitizeJunkMail", &sanitizeJunkMail);
+
+  if (sanitizeJunkMail)
+  {
+    nsCOMPtr<nsIMsgDBHdr> msgHdr;
+    getMsgHdrForCurrentURL(opts, getter_AddRefs(msgHdr));
+    if (msgHdr)
+    {
+      nsXPIDLCString junkScoreStr;
+      (void) msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+      if (html_as == 0 && junkScoreStr.get() && atoi(junkScoreStr.get()) > 50)
+        html_as = 3; // 3 == Simple HTML
+    } // if msgHdr
+  } // if we are supposed to sanitize junk mail
+#endif
 
   /*
   * What we do first is check for an external content handler plugin. 
