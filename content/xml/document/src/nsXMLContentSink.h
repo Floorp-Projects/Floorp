@@ -186,15 +186,13 @@ protected:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
   PRPackedBool mConstrainSize;
-
-  PRPackedBool mInScript;
   PRPackedBool mInTitle;
-  nsString mStyleText;
-  PRUint32 mScriptLineNo;
 
-  PRBool mNeedToBlockParser;
+  PRPackedBool mNeedToBlockParser;
+  PRUint32 mScriptLineNo;
   nsSupportsArray mScriptElements;
 
+  nsString mStyleText;
   nsString  mPreferredStyle;
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
@@ -204,6 +202,7 @@ protected:
   nsString mRef; // ScrollTo #ref
   nsString mTitleText; 
   nsString mTextareaText; 
+
   nsCOMPtr<nsIDOMHTMLTextAreaElement> mTextAreaElement;
   nsCOMPtr<nsIHTMLContent> mStyleElement;
   nsCOMPtr<nsIHTMLContent> mBaseElement;
