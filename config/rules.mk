@@ -558,11 +558,6 @@ $(OBJDIR)/Makefile: Makefile.in
 	@echo Updating $@
 	$(topsrcdir)/build/autoconf/update-makefile.sh
 
-makefile: $(OBJDIR)/Makefile
-
-Makefiles makefiles:: $(OBJDIR)/Makefile
-	+$(LOOP_OVER_DIRS)
-
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
 ###############################################################################
@@ -963,7 +958,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs makefiles Makefiles realclean $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean $(OBJDIR) $(DIRS)
 
 envirocheck::
 	@echo -----------------------------------
