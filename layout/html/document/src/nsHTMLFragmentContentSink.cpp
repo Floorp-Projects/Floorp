@@ -533,30 +533,31 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         }
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        result =
-          mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
-                                        *getter_AddRefs(nodeInfo));
+        result = mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
+                                               *getter_AddRefs(nodeInfo));
 
-        result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
+        if(NS_SUCCEEDED(result)) {
+          result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
 
-        if (NS_OK == result) {
-          result = AddAttributes(aNode, content);
           if (NS_OK == result) {
-            nsIContent *parent = GetCurrentContent();
+            result = AddAttributes(aNode, content);
+            if (NS_OK == result) {
+              nsIContent *parent = GetCurrentContent();
             
-            if (nsnull == parent) {
-              parent = mRoot;
+              if (nsnull == parent) {
+                parent = mRoot;
+              }
+            
+              parent->AppendChildTo(content, PR_FALSE);
             }
-            
-            parent->AppendChildTo(content, PR_FALSE);
           }
-        }
 
-        if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
-            || nodeType == eHTMLTag_input)    // elements with 'SRC='
-            AddBaseTagInfo(content);
-        else if (nodeType == eHTMLTag_base)
-            ProcessBaseTag(content);
+          if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
+              || nodeType == eHTMLTag_input)    // elements with 'SRC='
+              AddBaseTagInfo(content);
+          else if (nodeType == eHTMLTag_base)
+              ProcessBaseTag(content);
+        }
       }
       break;
     case eToken_text:
