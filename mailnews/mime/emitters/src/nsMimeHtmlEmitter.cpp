@@ -271,14 +271,17 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, n
   nsAutoString formattedDateString;
   nsresult rv = NS_OK;
 
-  if (!mDateFormater)
-    mDateFormater = do_CreateInstance(kDateTimeFormatCID);
+  if (!mDateFormater) {
+    mDateFormater = do_CreateInstance(kDateTimeFormatCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   PRTime messageTime;
   PR_ParseTimeString(dateString, PR_FALSE, &messageTime);
 
   PRTime currentTime = PR_Now();
-	PRExplodedTime explodedCurrentTime;
+  PRExplodedTime explodedCurrentTime;
   PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
   PRExplodedTime explodedMsgTime;
   PR_ExplodeTime(messageTime, PR_LocalTimeParameters, &explodedMsgTime);
@@ -320,7 +323,7 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, n
                                       formattedDateString);
 
   if (NS_SUCCEEDED(rv))
-    formattedDate = NS_ConvertUCS2toUTF8(formattedDateString);
+    CopyUTF16toUTF8(formattedDateString, formattedDate);
 
   return rv;
 }
