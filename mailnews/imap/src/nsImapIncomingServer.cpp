@@ -1749,9 +1749,11 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
           for (PRUint32 i = 0; i < numFolders; i++)
           {
             nsXPIDLString folderName;
-            if (NS_SUCCEEDED(trashFolders[i]->GetName(getter_Copies(folderName))) && 
-                  !folderName.Equals(trashName))
-              trashFolders[i]->ClearFlag(MSG_FOLDER_FLAG_TRASH);
+            if (NS_SUCCEEDED(trashFolders[i]->GetName(getter_Copies(folderName))))
+            {
+              if (!folderName.Equals(trashName))
+                trashFolders[i]->ClearFlag(MSG_FOLDER_FLAG_TRASH);
+            }
 
             NS_RELEASE(trashFolders[i]);
           }

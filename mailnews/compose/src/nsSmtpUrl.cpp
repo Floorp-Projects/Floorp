@@ -195,7 +195,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 	} // if rest && *rest
 
   nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
-  nsXPIDLCString decodedString;
+  char *decodedString;
 
   // Now unescape any fields that need escaped...
 	if (!m_toPart.IsEmpty())
@@ -204,10 +204,10 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_toPart.get(),
-                                                       getter_Copies(decodedString),
+                                                       &decodedString,
                                                        "UTF-8", PR_FALSE))
                                                        && decodedString)
-        m_toPart = decodedString;
+        m_toPart.Adopt(decodedString);
     }
   }
 	if (!m_ccPart.IsEmpty())
@@ -216,10 +216,10 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_ccPart.get(),
-                                                       getter_Copies(decodedString),
+                                                       &decodedString,
                                                        "UTF-8", PR_FALSE))
                                                        && decodedString)
-        m_ccPart = decodedString;
+        m_ccPart.Adopt(decodedString);
     }
   }
 	if (!m_subjectPart.IsEmpty())
@@ -228,10 +228,10 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_subjectPart.get(),
-                                                       getter_Copies(decodedString),
+                                                       &decodedString,
                                                        "UTF-8", PR_FALSE))
                                                        && decodedString)
-        m_subjectPart = decodedString;
+        m_subjectPart.Adopt(decodedString);
     }
   }
 	if (!m_newsgroupPart.IsEmpty())
@@ -244,11 +244,11 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
     if (mimeConverter)
     {
       if (NS_SUCCEEDED(mimeConverter->DecodeMimeHeader(m_bodyPart.get(),
-                                                       getter_Copies(decodedString),
+                                                       &decodedString,
                                                        "UTF-8", PR_FALSE,
                                                        PR_FALSE))
                                                        && decodedString)
-        m_bodyPart = decodedString;
+        m_bodyPart.Adopt(decodedString);
     }
   }
 	if (!m_newsHostPart.IsEmpty())

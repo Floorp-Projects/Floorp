@@ -4084,9 +4084,9 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
     if (flags & kImapMsgCustomKeywordFlag)
     {
       nsXPIDLCString keywords;
-      if (NS_SUCCEEDED(flagState->GetCustomFlags(uidOfMessage, getter_Copies(keywords))) && !keywords.IsEmpty())
+      if (NS_SUCCEEDED(flagState->GetCustomFlags(uidOfMessage, getter_Copies(keywords))))
       {
-        if (dbHdr && NS_SUCCEEDED(rv))
+        if (!keywords.IsEmpty() && dbHdr && NS_SUCCEEDED(rv))
         {
           HandleCustomFlags(uidOfMessage, dbHdr, keywords);
         }
