@@ -1583,10 +1583,6 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 	nsIRDFLiteral		*literal = nsnull;
 	nsresult		rv;
 
-#ifdef	DEBUG
-	printf("SearchDataSourceCallback::OnStopBinding entered.\n");
-#endif
-
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
 	{
 		mDataSource->Unassert(mParent, kNC_loading, literal);
@@ -1698,15 +1694,11 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		}
 	}
 
-#ifdef	DEBUG
-	char *html = htmlResults.ToNewCString();
-	if (html)
+	// if resultItemEndStr is not specified, try making it the same as resultItemStartStr
+	if (resultItemEndStr.Length() < 1)
 	{
-		printf("-----\nHTML: %s\n-----\n", html);
-		delete [] html;
-		html = nsnull;
+		resultItemEndStr = resultItemStartStr;
 	}
-#endif
 
 	PRInt32	resultItemStart;
 	while((resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE)) >= 0)
@@ -1718,17 +1710,14 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		{
 			resultItemEnd = htmlResults.Length()-1;
 		}
-		if (resultItemStart >= resultItemEnd)	break;
 
 		nsAutoString	resultItem("");
-//		htmlResults.Mid(resultItem, resultItemStart + resultItemStartStr.Length(), resultItemEnd - resultItemStart - resultItemStartStr.Length());
 		htmlResults.Left(resultItem, resultItemEnd);
 
 		if (resultItem.Length() < 1)	break;
-//		htmlResults.Truncate(resultItemStart);
 		htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
 
-#ifdef	DEBUG
+#if 0
 		char	*results = resultItem.ToNewCString();
 		if (results)
 		{
@@ -1739,22 +1728,9 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 #endif
 
 		// look for href
-		// XXX need to make this more resilient
 		PRInt32	hrefOffset = resultItem.Find("<A HREF=", PR_TRUE);
 		if (hrefOffset < 0)
 		{
-#ifdef	DEBUG
-			printf("***** unable to find <A HREF=\n");
-			printf("-------------------\n");
-			char *html = resultItem.ToNewCString();
-			if (html)
-			{
-				printf("%s\n", html);
-				delete []html;
-				html = nsnull;
-			}
-			printf("-------------------\n");
-#endif
 			continue;
 		}
 
@@ -1848,7 +1824,6 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		// look for name
 		PRInt32	anchorEnd = resultItem.FindCharInSet(">", quoteEndOffset);
 		if (anchorEnd < quoteEndOffset)	continue;
-		// XXX need to make this more resilient
 		PRInt32	anchorStop = resultItem.Find("</A>", PR_TRUE);
 		if (anchorStop < anchorEnd)	continue;
 		
@@ -1878,6 +1853,22 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 			nameStr.Cut(nbspOffset, strlen("&nbsp;"));
 			nameStr.Insert(PRUnichar(' '), nbspOffset);
 		}
+
+		// munge any "&lt;" in name
+		PRInt32	ltOffset;
+		while ((ltOffset = nameStr.Find("&lt;", PR_TRUE)) >= 0)
+		{
+			nameStr.Cut(ltOffset, strlen("&lt;"));
+			nameStr.Insert(PRUnichar('<'), ltOffset);
+		}
+
+		// munge any "&gt;" in name
+		PRInt32	gtOffset;
+		while ((gtOffset = nameStr.Find("&gt;", PR_TRUE)) >= 0)
+		{
+			nameStr.Cut(gtOffset, strlen("&gt;"));
+			nameStr.Insert(PRUnichar('>'), gtOffset);
+		}
 		
 		// munge out anything inside of HTML "<" / ">" tags
 		PRInt32 tagStartOffset;
@@ -1888,12 +1879,14 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 			nameStr.Cut(tagStartOffset, tagEndOffset - tagStartOffset + 1);
 		}
 
-		// cut off anything after a CR or LF
+		// cut out any CRs or LFs
 		PRInt32	eolOffset;
-		if ((eolOffset = nameStr.FindCharInSet("\n\r")) >= 0)
+		while ((eolOffset = nameStr.FindCharInSet("\n\r")) >= 0)
 		{
-			nameStr.Truncate(eolOffset);
+			nameStr.Cut(eolOffset, 1);
 		}
+		// and trim name
+		nameStr = nameStr.Trim(" \t");
 
 		// look for Name (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldNameRes = nsnull;
