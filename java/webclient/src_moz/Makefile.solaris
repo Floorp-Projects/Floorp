@@ -46,8 +46,8 @@ components:
 libwebclientstub.so: NativeLoaderStub.o MotifBrowserControlCanvasStub.o
 	${MKSHLIB} -o ${DLLNAMESTUB} NativeLoaderStub.o MotifBrowserControlCanvasStub.o ${STUBLIBS}
 
-libwebclient.so: jni_util.o rdf_util.o NativeEventThread.o BookmarksImpl.o CurrentPageImpl.o HistoryImpl.o ISupportsPeer.o NavigationImpl.o RDFEnumeration.o RDFTreeNode.o WindowControlImpl.o WrapperFactoryImpl.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentLoaderObserverImpl.o EventRegistration.o 
-	${MKSHLIB} -o ${DLLNAME} jni_util.o rdf_util.o NativeEventThread.o BookmarksImpl.o CurrentPageImpl.o HistoryImpl.o ISupportsPeer.o NavigationImpl.o RDFEnumeration.o RDFTreeNode.o WindowControlImpl.o WrapperFactoryImpl.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentLoaderObserverImpl.o EventRegistration.o ${LIBS}
+libwebclient.so: jni_util.o jni_util_export.o rdf_util.o NativeEventThread.o BookmarksImpl.o CurrentPageImpl.o HistoryImpl.o ISupportsPeer.o NavigationImpl.o RDFEnumeration.o RDFTreeNode.o WindowControlImpl.o WrapperFactoryImpl.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentLoaderObserverImpl.o EventRegistration.o 
+	${MKSHLIB} -o ${DLLNAME} jni_util.o jni_util_export.o rdf_util.o NativeEventThread.o BookmarksImpl.o CurrentPageImpl.o HistoryImpl.o ISupportsPeer.o NavigationImpl.o RDFEnumeration.o RDFTreeNode.o WindowControlImpl.o WrapperFactoryImpl.o MotifBrowserControlCanvas.o gtkmozilla.o nsActions.o nsSetupRegistry.o DocumentLoaderObserverImpl.o EventRegistration.o ${LIBS}
 
 gtkmozilla.o: motif/gtkmozilla.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c motif/gtkmozilla.cpp
@@ -97,8 +97,8 @@ motif/nsSetupRegistry.cpp:
 	cd ..
 
 #PENDING(mark): I think we should use this for the Win32 version as well...
-nsSetupRegistry.o: nsSetupRegistry.cpp
-	${CC} ${DEFINES} ${INCLUDE} -c nsSetupRegistry.cpp
+nsSetupRegistry.o: motif/nsSetupRegistry.cpp
+	${CC} ${DEFINES} ${INCLUDE} -c motif/nsSetupRegistry.cpp
 
 nsActions.o: nsActions.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c nsActions.cpp
@@ -111,6 +111,9 @@ EventRegistration.o: EventRegistration.cpp
 
 jni_util.o: jni_util.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c jni_util.cpp
+
+jni_util_export.o: jni_util_export.cpp
+	${CC} ${DEFINES} ${INCLUDE} -c jni_util_export.cpp
 
 rdf_util.o: rdf_util.cpp
 	${CC} ${DEFINES} ${INCLUDE} -c rdf_util.cpp
