@@ -932,7 +932,8 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 NS_IMETHODIMP
 nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                               PRInt32 aXPos, PRInt32 aYPos, 
-                              const nsString& aPopupType, const nsString& aPopupAlignment)
+                              const nsString& aPopupType, const nsString& aPopupAlignment,
+                              nsIDOMWindow* aWindow)
 {
   nsresult rv = NS_OK;
 
@@ -950,9 +951,8 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     nsCOMPtr<nsIDOMNode> menuItem;
     menuNodes->Item(0, getter_AddRefs(menuItem));
     if (menuItem) {
-      //nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuItem);
-
-      // XXX Call the context menu creation method
+      
+      // XXX Need to distinguish between popup menus and context menus?
       DoContextMenu(
         nsnull,
         menuItem, 
@@ -968,9 +968,28 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   
   // (1) Create a top-level chromeless window. The size of the window can be specified
   // on the window tag contained inside.  Retrieve the webshell from the new nsWebShellWindow.
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIWebShellWindow> newWindow;
+  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
+                                 nsnull, nsnull, 200, 300);
+  // Move the window to aXPos and aYPos
+  nsCOMPtr<nsIBrowserWindow> browserWindow = do_QueryInterface(newWindow);
+  browserWindow->MoveTo(aXPos, aYPos);
+
+  // Get the webshell
+  nsCOMPtr<nsIWebShell> newShell;
+  newWindow->GetWebShell(*getter_AddRefs(newShell));
   
   // (2) Set the opener property to link the popup to the parent.
-
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(newShell, getter_AddRefs(domWindow)))) {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+  
   // (3) We need to create a new document that clones the original document's popup
   // content.  This new document must use the different root and a different global script 
   // context (window object) but everything else about it is the same (namespaces, URLs,
@@ -996,7 +1015,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // (10) Show the window, and give the window the focus.
 
   // (11) Return the new popup object.
-
+  
   // (12) Perform cleanup
 
   return rv;

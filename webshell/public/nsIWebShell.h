@@ -27,6 +27,7 @@
 #include "nsIScrollableView.h"
 
 class nsIDOMElement;
+class nsIDOMWindow;
 class nsIFactory;
 class nsIPostData;
 class nsIStreamObserver;
@@ -101,7 +102,8 @@ public:
 
   NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& aPopupAlignment) = 0;
+                         const nsString& aPopupType, const nsString& aPopupAlignment,
+                         nsIDOMWindow* aWindow) = 0;
 
   /**
    * Notify the WebShellContainer that a contained webshell is
