@@ -500,7 +500,7 @@ protected:
     nsDTDContext*       mFormContext;
     nsDTDContext*       mMapContext;
     nsDTDContext*       mTempContext;
-    PRInt32             mHasOpenForm;
+    PRBool              mHasOpenForm;
     PRInt32             mOpenMapCount;
     PRInt32             mHasOpenHead;
     PRBool              mHasOpenBody;
