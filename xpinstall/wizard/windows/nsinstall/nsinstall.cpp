@@ -891,14 +891,13 @@ RunInstaller()
   WaitForInputIdle(pi.hProcess, 3000);  // wait up to 3 seconds
   if(dwMode != SILENT)
   {
-    ShowWindow(dlgInfo.hWndDlg, SW_HIDE);
+    DestroyWindow(dlgInfo.hWndDlg);
   }
 
   // Wait for the installer to complete
   WaitForSingleObject(pi.hProcess, INFINITE);
   CloseHandle(pi.hProcess);
 
-  DestroyWindow(dlgInfo.hWndDlg);
 
   // Delete the files from the temp directory
   EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)DeleteTempFilesProc, 0);
