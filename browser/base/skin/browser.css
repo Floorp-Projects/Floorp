@@ -529,13 +529,13 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:
 }
 
 #minimize-button {
-  list-style-image: url("chrome://navigator/skin/icons/minimize.gif");
+  list-style-image: url("chrome://global/skin/icons/Minimize.gif");
 }
 #restore-button {
-  list-style-image: url("chrome://navigator/skin/icons/restore.gif");
+  list-style-image: url("chrome://global/skin/icons/Restore.gif");
 }
 #close-button {
-  list-style-image: url("chrome://navigator/skin/icons/close.gif");
+  list-style-image: url("chrome://global/skin/icons/Close.gif");
 }
 
 /* ::::: nav-bar-inner ::::: */

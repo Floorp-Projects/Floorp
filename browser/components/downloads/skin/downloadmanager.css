@@ -50,5 +50,5 @@ listcell {
 }
 
 #close-button {
-  list-style-image: url("chrome://navigator/skin/icons/close.gif");
+  list-style-image: url("chrome://global/skin/icons/Close.gif");
 }
