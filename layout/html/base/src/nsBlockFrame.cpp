@@ -75,7 +75,9 @@
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
