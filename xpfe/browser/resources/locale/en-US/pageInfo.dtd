@@ -86,8 +86,6 @@
 <!ENTITY  mediaHeader           "Images on this page">
 <!ENTITY  mediaURL              "URL:">
 <!ENTITY  mediaBase             "Base URL:">
-<!ENTITY  mediaWidth            "W:">
-<!ENTITY  mediaHeight           "H:">
 <!ENTITY  mediaAlt              "Alternate Text:">
 <!ENTITY  mediaNo               "No.">
 <!ENTITY  mediaName             "Name">
