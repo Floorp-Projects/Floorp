@@ -78,6 +78,8 @@ protected:
     nsresult ParseHTTPHeader(nsIBuffer* aBuffer, PRUint32 aLength, 
                              PRUint32* aBytesRead);
 
+    nsresult FinishedResponseHeaders();
+
     nsresult ProcessStatusCode();
     nsresult ProcessRedirection(PRInt32 aStatusCode);
 
