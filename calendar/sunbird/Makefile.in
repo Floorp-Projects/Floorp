@@ -289,51 +289,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/proxyObj*.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsd*$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/docshell*.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gkgfx$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)mozz$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpcom_compat_c$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)uconv$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)ucvmath$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)i18n$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)oji$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)necko$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)necko2$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)caps$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)chrome$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)rdf$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)imglib2$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gkplugin$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsdom$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gklayout$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)mork$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)docshell$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)profile$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)nsprefm$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)embedcomponents$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)webbrwsr$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)editor$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)txmgr$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)composer$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)accessibility$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)mozfind$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)appcomps$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)cookie$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xmlextras$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)p3p$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)autoconfig$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)transformiix$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)universalchardet$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)typeaheadfind$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)websrvcs$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)pipboot$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)pipnss$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)pippki$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpical$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*appshell$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*gfx*$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*pars*$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*widget*$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*pref*$(DLL_SUFFIX) ./MozillaSunbird/components
 
 sunbirdunix::
 	cp $(topsrcdir)/dist/bin/components/filepicker.xpt ./MozillaSunbird/components
