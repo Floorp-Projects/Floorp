@@ -25,9 +25,11 @@ sub checkout {
   # chdir to build directory
   chdir "$mozilla_build_dir";
 
+  # Hack to get around po/ChangeLog cvs conflict bug in gettext lib.
+  my $status = TinderUtils::run_shell_command("\\rm -f galeon/po/ChangeLog");
+
   # checkout galeon source
   $ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
-
   my $status = TinderUtils::run_shell_command("$Settings::CVS checkout galeon");
 
   # hack in the galeon prefs, if needed
