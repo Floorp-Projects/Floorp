@@ -422,10 +422,10 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
   // load up commands
   int endCount = 0;
   nsCOMPtr<nsIDOMNode> parentCmd ( dont_AddRef(FindNamedDOMNode(nsAutoString("commands"), window, endCount, 1)) );
-  if (nsnull != parentCmd) {
+  if ( parentCmd ) {
     nsCOMPtr<nsIDOMNode> node;
     parentCmd->GetFirstChild(getter_AddRefs(node));
-    while (nsnull != node) {
+    while ( node ) {
       nsString value;
       nsString nodeType;
       nsString name;
@@ -455,58 +455,58 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
   }
 
   // Now install the commands onto the Toolbar GUI Nodes for each toolbar in the toolbox
-  PRUint32 count = 1;
-  nsCOMPtr<nsIDOMNode> toolbar;
-  do {
-	  toolbar = dont_AddRef(FindNamedDOMNode(nsAutoString("toolbar"), window, endCount, count)); 
-	  if (nsnull != toolbar) {
-	    nsAutoString cmdAtom("cmd");
-	    nsCOMPtr<nsIDOMNode> node;
-	    toolbar->GetFirstChild(getter_AddRefs(node));
-	    while (nsnull != node) {
-	      nsAutoString value;
-	      nsString nodeCmd;
-	      nsCOMPtr<nsIDOMElement> element ( node );
-	      if ( element ) {
-	        nsString name;
-	        element->GetNodeName(name);
-	        if (name.Equals(nsAutoString("BUTTON"))) {
-	          element->GetAttribute(cmdAtom, nodeCmd);
-	          PRInt32 i, n = mCommands.Count();
-	          for (i = 0; i < n; i++) {
-	            nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
-	            nsAutoString cmdName;
-	            cmd->GetName(cmdName);
-	            //printf("Cmd [%s] Node[%s]\n", cmdName.ToNewCString(), nodeCmd.ToNewCString());
-	            if (nodeCmd.Equals(cmdName)) {
-	              printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
-	              cmd->AddUINode(node);
-	            }
-	          }
-	        } else if (name.Equals(nsAutoString("INPUT"))) {
-	          nsXULCommand * xulCmd = new nsXULCommand();
-	          xulCmd->SetName(name);
-	          xulCmd->SetCommand(value);
-	          xulCmd->SetWebShell(aWebShell);
-	          xulCmd->SetDOMElement(element);
-	          nsIXULCommand * icmd;
-	          if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
-	            mCommands.AppendElement(icmd);
-	          }
-	          xulCmd->AddUINode(node);
-	          //printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
-	        }
-	      }
+  int count = 1;
+  endCount = 0;
+  nsCOMPtr<nsIDOMNode> toolbar ( dont_AddRef(FindNamedDOMNode(nsAutoString("toolbar"), window, endCount, count)) ); 
+  while ( toolbar ) {
+    nsAutoString cmdAtom("cmd");
+    nsCOMPtr<nsIDOMNode> node;
+    toolbar->GetFirstChild(getter_AddRefs(node));
+    while ( node ) {
+      nsAutoString value;
+      nsString nodeCmd;
+      nsCOMPtr<nsIDOMElement> element ( node );
+      if ( element ) {
+        nsString name;
+        element->GetNodeName(name);
+        if (name.Equals(nsAutoString("BUTTON"))) {
+          element->GetAttribute(cmdAtom, nodeCmd);
+          PRInt32 i, n = mCommands.Count();
+          for (i = 0; i < n; i++) {
+            nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
+            nsAutoString cmdName;
+            cmd->GetName(cmdName);
+            //printf("Cmd [%s] Node[%s]\n", cmdName.ToNewCString(), nodeCmd.ToNewCString());
+            if (nodeCmd.Equals(cmdName)) {
+              printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
+              cmd->AddUINode(node);
+            }
+          }
+        } else if (name.Equals(nsAutoString("INPUT"))) {
+          nsXULCommand * xulCmd = new nsXULCommand();
+          xulCmd->SetName(name);
+          xulCmd->SetCommand(value);
+          xulCmd->SetWebShell(aWebShell);
+          xulCmd->SetDOMElement(element);
+          nsIXULCommand * icmd;
+          if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+            mCommands.AppendElement(icmd);
+          }
+          xulCmd->AddUINode(node);
+          //printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
+        }
+      }
 
-	      nsCOMPtr<nsIDOMNode> oldNode ( node );
-	      oldNode->GetNextSibling(getter_AddRefs(node));
-	    }
+      nsCOMPtr<nsIDOMNode> oldNode ( node );
+      oldNode->GetNextSibling(getter_AddRefs(node));
+    }
 
-	  }
+	// find the next toolbar
+    endCount = 0;
+    toolbar = dont_AddRef(FindNamedDOMNode(nsAutoString("toolbar"), window, endCount, count)); 
+    ++count;
 	  
-	  ++count;
-	  
-  } while ( toolbar ) ;
+  } // for each toolbar
   
   /*PRInt32 i, n = mCommands.Count();
   for (i = 0; i < n; i++) {
@@ -529,7 +529,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   nsresult rv;
   int endCount = 0;
   nsCOMPtr<nsIDOMNode> menubarNode ( dont_AddRef(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1)) );
-  if (nsnull != menubarNode) {
+  if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsRepository::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID,
             (void**)&pnsMenuBar);
