@@ -193,7 +193,15 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     
         
     nsCAutoString newPath("");
-	NS_MsgCreatePathStringFromFolderURI(curPos, newPath);
+    char *unescaped = nsCRT::strdup(curPos);  
+    // Unescape folder name
+    if (unescaped) {
+      nsUnescape(unescaped);
+      NS_MsgCreatePathStringFromFolderURI(unescaped, newPath);
+      PR_Free(unescaped);
+    }
+    else
+      NS_MsgCreatePathStringFromFolderURI(curPos, newPath);
 
     pathResult+=newPath.GetBuffer();
   }
