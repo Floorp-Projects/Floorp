@@ -745,17 +745,27 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 #endif
 
 static JSAtom *
-GetSlotAtom(JSScope *scope, JSPropertyOp getter, uintN slot)
+GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
 {
+    JSScope *scope;
     JSScopeProperty *sprop;
+    JSObject *obj, *proto;
 
-    if (!scope)
-	return NULL;
-    for (sprop = scope->props; sprop; sprop = sprop->next) {
-	if (SPROP_GETTER_SCOPE(sprop, scope) != getter)
-	    continue;
-	if ((uintN)JSVAL_TO_INT(sprop->id) == slot)
-	    return sym_atom(sprop->symbols);
+    scope = jp->scope;
+    while (scope) {
+        for (sprop = scope->props; sprop; sprop = sprop->next) {
+            if (SPROP_GETTER_SCOPE(sprop, scope) != getter)
+                continue;
+            if ((uintN)JSVAL_TO_INT(sprop->id) == slot)
+                return sym_atom(sprop->symbols);
+        }
+        obj = scope->object;
+        if (!obj)
+            break;
+        proto = OBJ_GET_PROTO(jp->sprinter.context, obj);
+        if (!proto)
+            break;
+        scope = OBJ_SCOPE(proto);
     }
     return NULL;
 }
@@ -1398,12 +1408,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case JSOP_SETARG:
-		atom = GetSlotAtom(jp->scope, js_GetArgument, GET_ARGNO(pc));
+		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_setname;
 
 	      case JSOP_SETVAR:
-		atom = GetSlotAtom(jp->scope, js_GetLocalVariable, GET_VARNO(pc));
+		atom = GetSlotAtom(jp, js_GetLocalVariable, GET_VARNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_setname;
 
@@ -1514,13 +1524,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_INCARG:
 	      case JSOP_DECARG:
-		atom = GetSlotAtom(jp->scope, js_GetArgument, GET_ARGNO(pc));
+		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_incatom;
 
 	      case JSOP_INCVAR:
 	      case JSOP_DECVAR:
-		atom = GetSlotAtom(jp->scope, js_GetLocalVariable, GET_VARNO(pc));
+		atom = GetSlotAtom(jp, js_GetLocalVariable, GET_VARNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_incatom;
 
@@ -1553,13 +1563,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_ARGINC:
 	      case JSOP_ARGDEC:
-		atom = GetSlotAtom(jp->scope, js_GetArgument, GET_ARGNO(pc));
+		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_atominc;
 
 	      case JSOP_VARINC:
 	      case JSOP_VARDEC:
-		atom = GetSlotAtom(jp->scope, js_GetLocalVariable, GET_VARNO(pc));
+		atom = GetSlotAtom(jp, js_GetLocalVariable, GET_VARNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_atominc;
 
@@ -1647,12 +1657,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case JSOP_GETARG:
-		atom = GetSlotAtom(jp->scope, js_GetArgument, GET_ARGNO(pc));
+		atom = GetSlotAtom(jp, js_GetArgument, GET_ARGNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_name;
 
 	      case JSOP_GETVAR:
-		atom = GetSlotAtom(jp->scope, js_GetLocalVariable, GET_VARNO(pc));
+		atom = GetSlotAtom(jp, js_GetLocalVariable, GET_VARNO(pc));
 		LOCAL_ASSERT(atom);
 		goto do_name;
 
