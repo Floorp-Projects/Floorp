@@ -241,17 +241,6 @@
       </hbox>
   </groupbox>
 
-  <separator class="thin"/>
-  
-  <hbox align="center">
-    <label value="Always use my: "/>
-    <!-- Unchecking this removes the ability to select dynamic fonts -->
-    <checkbox id="useMyFonts" 
-              label="&useMyFonts.label;" 
-              accesskey="&useMyFonts.accesskey;"/>
-    <checkbox id="useMyColors" label="&useMyColors.label;"
-              accesskey="&useMyColors.accesskey;"/>
-  </hbox>
   <hbox>
     <groupbox flex="1" id="pageColours">
       <caption label="&color;"/>
@@ -294,5 +283,14 @@
                   prefstring="browser.underline_anchors"/>
       </hbox>
     </groupbox>
+  </hbox>
+  <hbox align="center">
+    <label value="Always use my: "/>
+    <!-- Unchecking this removes the ability to select dynamic fonts -->
+    <checkbox id="useMyFonts" 
+              label="&useMyFonts.label;" 
+              accesskey="&useMyFonts.accesskey;"/>
+    <checkbox id="useMyColors" label="&useMyColors.label;"
+              accesskey="&useMyColors.accesskey;"/>
   </hbox>
 </page>
