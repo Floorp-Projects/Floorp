@@ -211,18 +211,19 @@ NPP_SetWindow(NPP instance, NPWindow* window)
         return NPERR_NO_ERROR;
     } else {
 
-    This->window = (Window) window->window;
-    This->x = window->x;
-    This->y = window->y;
-    This->width = window->width;
-    This->height = window->height;
-    This->display = ws_info->display;
-    This->visual = ws_info->visual;
-    This->depth = ws_info->depth;
-    This->colormap = ws_info->colormap;
-    This->exists = FALSE;
-    makeWidget(This);
-
+      This->window = (Window) window->window;
+      This->x = window->x;
+      This->y = window->y;
+      This->width = window->width;
+      This->height = window->height;
+      This->display = ws_info->display;
+      This->visual = ws_info->visual;
+      This->depth = ws_info->depth;
+      This->colormap = ws_info->colormap;
+      if (This->exists != TRUE) {
+          This->exists = FALSE;
+          makeWidget(This);
+      }
     }
     return NPERR_NO_ERROR;
 }

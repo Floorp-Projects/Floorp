@@ -202,9 +202,11 @@ makeWidget(PluginInstance *This)
     char message[1024];
 
     if (!This) return;
+    if (This->exists == TRUE) return;
 
     dialogWindow = gtk_dialog_new();
     This->dialogBox = dialogWindow;
+    This->exists = TRUE;
     gtk_window_set_title(GTK_WINDOW(dialogWindow), PLUGIN_NAME);
     /* gtk_window_set_position(GTK_WINDOW(dialogWindow), GTK_WIN_POS_CENTER); */
     gtk_window_set_modal(GTK_WINDOW(dialogWindow), TRUE);
