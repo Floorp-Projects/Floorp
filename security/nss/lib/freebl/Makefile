@@ -56,6 +56,10 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 -include config.mk
 
+ifdef USE_64
+	DEFINES += -DNSS_USE_64
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

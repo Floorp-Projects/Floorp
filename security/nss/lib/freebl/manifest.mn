@@ -61,6 +61,7 @@ CSRCS = \
 	md2.c \
 	md5.c \
 	alg2268.c \
+	arcfour.c \
 	$(NULL)
 endif
 
