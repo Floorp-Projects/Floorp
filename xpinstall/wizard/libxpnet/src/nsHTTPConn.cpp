@@ -221,7 +221,7 @@ nsHTTPConn::Request()
     {
         char *usrPsd = (char *) malloc(strlen(mProxyUser) +
                                        strlen(":")        +
-                                       strlen(mProxyPswd));
+                                       strlen(mProxyPswd) + 1);
         if (!usrPsd)
             return E_MEM;
         sprintf(usrPsd, "%s:%s", mProxyUser, mProxyPswd);
@@ -369,10 +369,10 @@ nsHTTPConn::ParseURL(const char *aProto, char *aURL, char **aHost,
         else
             portStrLen = strlen(nextColon);
 
-        char *portStr = (char *) malloc(portStrLen);
+        char *portStr = (char *) malloc(portStrLen + 1);
         if (!portStr)
             return E_MEM;
-        memset(portStr, 0, portStrLen);
+        memset(portStr, 0, portStrLen + 1);
         strncpy(portStr, nextColon+1, portStrLen);
         *aPort = atoi(portStr);
         free(portStr);

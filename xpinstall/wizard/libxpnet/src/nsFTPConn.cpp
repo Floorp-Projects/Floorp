@@ -344,7 +344,7 @@ nsFTPConn::ParseAddr(char *aBuf, char **aHost, int *aPort)
         &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]) != 6)
         return E_INVALID_ADDR;
 
-    *aHost = (char *)malloc(strlen("XXX.XXX.XXX.XXX"));
+    *aHost = (char *)malloc(strlen("XXX.XXX.XXX.XXX") + 1);
     sprintf(*aHost, "%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
 
     *aPort = ((addr[4] & 0xFF) << 8) | (addr[5] & 0xFF);

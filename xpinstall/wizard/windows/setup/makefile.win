@@ -37,6 +37,8 @@ OBJS =                          \
     .\$(OBJDIR)\shortcut.obj    \
     .\$(OBJDIR)\xpi.obj         \
     .\$(OBJDIR)\xpnetHook.obj   \
+    .\$(OBJDIR)\logging.obj     \
+    .\$(OBJDIR)\nsEscape.obj    \
     $(NULL)
 
 LLIBS=                          \

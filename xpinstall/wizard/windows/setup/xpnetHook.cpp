@@ -22,6 +22,7 @@
 
 #include <windows.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -39,6 +40,9 @@ extern "C"
 
 #include "nsFTPConn.h"
 #include "nsHTTPConn.h"
+
+#define UPDATE_INTERVAL_STATUS          1
+#define UPDATE_INTERVAL_PROGRESS_BAR    1
 
 const int  kProxySrvrLen = 1024;
 const char kHTTP[8]      = "http://";
@@ -85,45 +89,36 @@ struct ExtractFilesDlgInfo
 } dlgInfo;
 
 
-#if 0
-void ParseURLServerAndPath(char *szInURL, char *szOutServer, DWORD dwOutServerBufSize, char *szOutPath, DWORD dwOutPathBufSize)
+BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
-  DWORD dwOutServerLen;
-  char  cDelimiter   = '/';
-  char  *ptrChar     = NULL;
-  char  *ptrLastChar = NULL;
+  BOOL bRv = FALSE;
+  long lModCurrentValue;
 
-  lstrcpy(szOutServer, szInURL);
-  ZeroMemory(szOutPath, dwOutPathBufSize);
-  dwOutServerLen = lstrlen(szOutServer);
-  ptrLastChar    = CharPrev(szOutServer, &szOutServer[dwOutServerLen]);
-  ptrChar        = CharNext(szOutServer);
-
-  iFoundDelimiter = 0;
-  ptrChar = szOutput;
-  while(!bDone)
+  if(iInterval == 1)
   {
-    if(*ptrChar == cDelimiter)
-      ++iFoundDelimiter;
-
-    if(iFoundDelimiter == 3)
-    {
-      lstrcpy(szOutPath, CharNext(prtChar));
-      *CharNext(ptrChar) = '\0';
-      bDone = TRUE;
-    }
-    else if(ptrChar == ptrLastChar)
-      bDone = TRUE;
-    else
-      ptrChar = CharNext(ptrChar);
+    lModCurrentValue = time(NULL);
+    if(lModCurrentValue != *lModLastValue)
+      bRv = TRUE;
   }
+  else
+  {
+    lModCurrentValue = time(NULL) % iInterval;
+    if((lModCurrentValue == 0) && (*lModLastValue != 0))
+      bRv = TRUE;
+  }
+
+  *lModLastValue = lModCurrentValue;
+  return(bRv);
 }
-#endif
 
 void SetStatusStatus(void)
 {
-  char szStatusStatusLine[MAX_BUF_MEDIUM];
-  char szCurrentStatusInfo[MAX_BUF_MEDIUM];
+  char        szStatusStatusLine[MAX_BUF_MEDIUM];
+  char        szCurrentStatusInfo[MAX_BUF_MEDIUM];
+  static long lModLastValue = 0;
+
+  if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
+    return;
 
   if(!gbShowDownloadRetryMsg)
   {
@@ -216,33 +211,58 @@ void SetRestoredDownloadTitle(void)
 void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, DWORD *dwTotalEstDownloadSize)
 {
   int  iIndex = 0;
-  char szIndex[MAX_ITOA];
   char szUrl[MAX_BUF];
   char szSection[MAX_INI_SK];
   char szDownloadSize[MAX_ITOA];
 
   *dwTotalEstDownloadSize = 0;
   iIndex = 0;
-  itoa(iIndex, szIndex, 10);
-  lstrcpy(szSection, "File");
-  lstrcat(szSection, szIndex);
-  GetPrivateProfileString(szSection, "url", "", szUrl, sizeof(szUrl), gszConfigIniFile);
+  wsprintf(szSection, "File%d", iIndex);
+  GetPrivateProfileString(szSection,
+                          "url0",
+                          "",
+                          szUrl,
+                          sizeof(szUrl),
+                          gszConfigIniFile);
   while(*szUrl != '\0')
   {
     GetPrivateProfileString(szSection, "size", "", szDownloadSize, sizeof(szDownloadSize), gszConfigIniFile);
-    itoa(iIndex, szIndex, 10);
-
     if((lstrlen(szDownloadSize) < 32) && (*szDownloadSize != '\0'))
       /* size will be in kb.  31 bits (int minus the signed bit) of precision should sufice */
       *dwTotalEstDownloadSize += atoi(szDownloadSize);
 
     ++iIndex;
-    itoa(iIndex, szIndex, 10);
-    lstrcpy(szSection, "File");
-    lstrcat(szSection, szIndex);
-    GetPrivateProfileString(szSection, "url", "", szUrl, sizeof(szUrl), gszConfigIniFile);
+    wsprintf(szSection, "File%d", iIndex);
+    GetPrivateProfileString(szSection,
+                            "url0",
+                            "",
+                            szUrl,
+                            sizeof(szUrl),
+                            gszConfigIniFile);
   }
   *iTotalArchivesToDownload = iIndex;
+}
+
+/* Function used only to send the message stream error */
+int WGet(char *szUrl)
+{
+  int rv;
+
+  nsHTTPConn *conn = new nsHTTPConn(szUrl);
+  if(conn == NULL)
+    return(WIZ_OUT_OF_MEMORY);
+  
+  rv = conn->Open();
+  if(rv == WIZ_OK)
+  {
+    rv = conn->Get(NULL, NULL);
+    conn->Close();
+  }
+
+  if(conn)
+    delete(conn);
+
+  return(rv);
 }
 
 int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
@@ -349,14 +369,27 @@ int DownloadViaFTP(char *szUrl)
   return(rv);
 }
 
-int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bShowRetryMsg, BOOL bIgnoreNetworkError, char *szFailedFile, DWORD dwFailedFileSize)
+int DownloadFiles(char *szInputIniFile,
+                  char *szDownloadDir,
+                  char *szProxyServer,
+                  char *szProxyPort,
+                  char *szProxyUser,
+                  char *szProxyPasswd,
+                  BOOL bShowRetryMsg,
+                  int *iNetRetries,
+                  BOOL bIgnoreAllNetworkErrors,
+                  char *szFailedFile,
+                  DWORD dwFailedFileSize)
 {
+  char      szBuf[MAX_BUF];
   char      szCurrentFile[MAX_BUF];
-  char      szIndex[MAX_ITOA];
   char      szSection[MAX_INI_SK];
+  char      szKey[MAX_INI_SK];
   char      szSavedCwd[MAX_BUF_MEDIUM];
+  int       iCounter;
   int       rv;
   int       iFileDownloadRetries;
+  int       iIgnoreFileNetworkError;
   DWORD     dwTotalEstDownloadSize;
 
   if(szInputIniFile == NULL)
@@ -380,22 +413,39 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
   gbShowDownloadRetryMsg    = bShowRetryMsg;
   gszConfigIniFile          = szInputIniFile;
 
-  GetTotalArchivesToDownload(&giTotalArchivesToDownload, &dwTotalEstDownloadSize);
+  GetTotalArchivesToDownload(&giTotalArchivesToDownload,
+                             &dwTotalEstDownloadSize);
   glTotalKb                 = dwTotalEstDownloadSize;
 
   InitDownloadDlg();
 
   for(giIndex = 0; giIndex < giTotalArchivesToDownload; giIndex++)
   {
-    gbUrlChanged = TRUE;
-    itoa(giIndex, szIndex, 10);
-    lstrcpy(szSection, "File");
-    lstrcat(szSection, szIndex);
-    GetPrivateProfileString(szSection, "url", "", gszUrl, sizeof(gszUrl), gszConfigIniFile);
+    /* set (or reset) the counter to 0 in order to read the
+     * next files's 0'th url from the .idi file */
+    iCounter     = 0;
+    gbUrlChanged = TRUE; /* Update the download dialog with new URL */
+    wsprintf(szSection, "File%d", giIndex);
+    wsprintf(szKey,     "url%d",  iCounter);
+    GetPrivateProfileString(szSection,
+                            szKey,
+                            "",
+                            gszUrl,
+                            sizeof(gszUrl),
+                            gszConfigIniFile);
     if(*gszUrl == '\0')
       continue;
 
-    GetPrivateProfileString(szSection, "desc", "", gszCurrentDownloadFileDescription, sizeof(gszCurrentDownloadFileDescription), gszConfigIniFile);
+    GetPrivateProfileString(szSection,
+                            "desc",
+                            "",
+                            gszCurrentDownloadFileDescription,
+                            sizeof(gszCurrentDownloadFileDescription),
+                            gszConfigIniFile);
+    iIgnoreFileNetworkError = GetPrivateProfileInt(szSection,
+                            "Ignore File Network Error",
+                            0,
+                            gszConfigIniFile);
 
     if(gbDlgDownloadMinimized)
       SetMinimizedDownloadTitle((int)GetPercentSoFar());
@@ -409,13 +459,21 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
     do
     {
       /* save the file name to be downloaded */
-      ParsePath(gszUrl, szCurrentFile, sizeof(szCurrentFile), TRUE, PP_FILENAME_ONLY);
+      ParsePath(gszUrl,
+                szCurrentFile,
+                sizeof(szCurrentFile),
+                TRUE,
+                PP_FILENAME_ONLY);
 
       /* Download starts here */
       if((szProxyServer != NULL) && (szProxyPort != NULL) &&
          (*szProxyServer != '\0') && (*szProxyPort != '\0'))
         /* If proxy info is provided, use HTTP proxy */
-        rv = DownloadViaProxy(gszUrl, szProxyServer, szProxyPort, szProxyUser, szProxyPasswd);
+        rv = DownloadViaProxy(gszUrl,
+                              szProxyServer,
+                              szProxyPort,
+                              szProxyUser,
+                              szProxyPasswd);
       else
       {
         /* is this an HTTP URL? */
@@ -440,25 +498,69 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
         /* break out of the do loop */
         break;
       }
-    } while((rv != nsFTPConn::E_USER_CANCEL) && (rv != nsFTPConn::OK) && (iFileDownloadRetries++ < MAX_FILE_DOWNLOAD_RETRIES));
+
+      ++iFileDownloadRetries;
+      if(iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES)
+      {
+        /* since the download retries maxed out, increment the counter
+         * to read the next url for the current file */
+        ++iCounter;
+        wsprintf(szKey, "url%d",  iCounter);
+        GetPrivateProfileString(szSection,
+                                szKey,
+                                "",
+                                gszUrl,
+                                sizeof(gszUrl),
+                                gszConfigIniFile);
+        if(*gszUrl != '\0')
+        {
+          /* Found more urls to download from for the current file.
+           * Update the dialog to show the new url and reset the
+           * file download retries to 0 since it's a new url. */
+          gbUrlChanged = TRUE;
+          iFileDownloadRetries = 0;
+        }
+      }
+
+    } while((rv != nsFTPConn::E_USER_CANCEL) &&
+            (rv != nsFTPConn::OK) &&
+            (iFileDownloadRetries <= MAX_FILE_DOWNLOAD_RETRIES));
+
+    if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) && iNetRetries)
+      /* Keep track of how many retries for only the file that had
+       * too many retries.
+       * We don't care about retries unless it's reached the limit
+       * because each retry should not count as a new download. */
+      *iNetRetries = iFileDownloadRetries - 1;
 
     if(rv == nsFTPConn::E_USER_CANCEL)
+    {
+      if(szFailedFile && ((DWORD)lstrlen(szCurrentFile) <= dwFailedFileSize))
+        lstrcpy(szFailedFile, gszCurrentDownloadFileDescription);
+
       /* break out of for() loop */
       break;
+    }
 
-    if((rv != nsFTPConn::OK) && (iFileDownloadRetries >= MAX_FILE_DOWNLOAD_RETRIES) && !bIgnoreNetworkError)
+    if((rv != nsFTPConn::OK) &&
+       (iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) &&
+       !bIgnoreAllNetworkErrors &&
+       !iIgnoreFileNetworkError)
     {
       /* too many retries from failed downloads */
       char szMsg[MAX_BUF];
 
       if(szFailedFile && ((DWORD)lstrlen(szCurrentFile) <= dwFailedFileSize))
-        lstrcpy(szFailedFile, szCurrentFile);
+        lstrcpy(szFailedFile, gszCurrentDownloadFileDescription);
 
-      GetPrivateProfileString("Strings", "Error Too Many Network Errors", "", szMsg, sizeof(szMsg), szFileIniConfig);
+      GetPrivateProfileString("Strings",
+                              "Error Too Many Network Errors",
+                              "",
+                              szMsg,
+                              sizeof(szMsg),
+                              szFileIniConfig);
       if(*szMsg != '\0')
       {
-        char szBuf[MAX_BUF];
-
         wsprintf(szBuf, szMsg, szCurrentFile);
         PrintError(szBuf, ERROR_CODE_HIDE);
       }
@@ -469,6 +571,8 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
       rv = WIZ_TOO_MANY_NETWORK_ERRORS;
       break;
     }
+    else if(bIgnoreAllNetworkErrors || iIgnoreFileNetworkError)
+      rv = nsFTPConn::OK;
   }
 
   DeInitDownloadDlg();
@@ -586,10 +690,14 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 static void
 UpdateGaugeFileProgressBar(double value)
 {
-	int	nBars;
+	int	        nBars;
+  static long lModLastValue = 0;
 
   if(sgProduct.dwMode != SILENT)
   {
+    if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_PROGRESS_BAR))
+      return;
+
     // Figure out how many bars should be displayed
     nBars = (int)(dlgInfo.nMaxFileBars * value / 100);
 

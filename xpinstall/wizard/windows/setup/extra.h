@@ -25,29 +25,14 @@
 #ifndef _EXTRA_H_
 #define _EXTRA_H_
 
-typedef struct diskSpaceNode dsN;
-struct diskSpaceNode
-{
-  ULONGLONG       ullSpaceRequired;
-  LPSTR           szPath;
-  LPSTR           szVDSPath;
-  dsN             *Next;
-  dsN             *Prev;
-};
-
-typedef struct structVer
-{
-  ULONGLONG ullMajor;
-  ULONGLONG ullMinor;
-  ULONGLONG ullRelease;
-  ULONGLONG ullBuild;
-} verBlock;
-
 BOOL              InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
 void              PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
 void              FreeMemory(void **vPointer);
+void              *NS_GlobalReAlloc(HGLOBAL hgMemory,
+                                    DWORD dwMemoryBufSize,
+                                    DWORD dwNewSize);
 void              *NS_GlobalAlloc(DWORD dwMaxBuf);
 HRESULT           Initialize(HINSTANCE hInstance);
 HRESULT           NS_LoadStringAlloc(HANDLE hInstance, DWORD dwID, LPSTR *szStringBuf, DWORD dwStringBuf);
@@ -129,7 +114,9 @@ HRESULT           LaunchApps(void);
 HRESULT           FileExists(LPSTR szFile);
 int               ExtractDirEntries(char* directory,void* vZip);
 int               LocateJar(siC *siCObject, LPSTR szPath, int dwPathSize, BOOL bIncludeTempDir);
-HRESULT           AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArchives);
+HRESULT           AddArchiveToIdiFile(siC *siCObject,
+                                      char *szSFile,
+                                      char *szFileIdiGetArchives);
 int               SiCNodeGetIndexDS(char *szInDescriptionShort);
 int               SiCNodeGetIndexRN(char *szInReferenceName);
 void              ViewSiComponentsDependency(char *szBuffer, char *szIndentation, siC *siCNode);
@@ -156,10 +143,7 @@ void              UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullInstall
 HRESULT           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
 HRESULT           CheckInstances();
 long              RandomSelect(void);
-void              TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
-BOOL              GetFileVersion(LPSTR szFile, verBlock *vbVersion);
 BOOL              CheckLegacy(HWND hDlg);
-int               CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 COLORREF          DecryptFontColor(LPSTR szColor);
 ssi               *CreateSsiSiteSelectorNode();
 void              SsiSiteSelectorNodeInsert(ssi **ssiHead, ssi *ssiTemp);
@@ -171,7 +155,10 @@ DWORD             GetTotalArchivesToDownload();
 void              RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize);
 LPSTR             GetFirstNonSpace(LPSTR lpszString);
 int               GetArgC(LPSTR lpszCommandLine);
-LPSTR             GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize);
+LPSTR             GetArgV(LPSTR lpszCommandLine,
+                          int iIndex,
+                          LPSTR lpszDest,
+                          int iDestSize);
 DWORD             ParseCommandLine(LPSTR lpszCmdLine);
 void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
@@ -180,32 +167,33 @@ void              UpdateWininit(LPSTR szUninstallFilename);
 char              *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize);
 void              SaveInstallerFiles(void);
 void              ResetComponentAttributes(char *szFileIni);
-BOOL              IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected);
-int               LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathSize);
-BOOL              ContainsReparseTag(char *szPath, char *szReparsePath, DWORD dwReparsePathSize);
+BOOL              IsInList(DWORD dwCurrentItem,
+                           DWORD dwItems,
+                           DWORD *dwItemsSelected);
+int               LocateExistingPath(char *szPath,
+                                     char *szExistingPath,
+                                     DWORD dwExistingPathSize);
+BOOL              ContainsReparseTag(char *szPath,
+                                     char *szReparsePath,
+                                     DWORD dwReparsePathSize);
 BOOL              DeleteInstallLogFile(char *szFile);
-int               CRCCheckDownloadedArchives(char *szCorruptedArchiveList, DWORD dwCorruptedArchivelistSize, char *szFileIdiGetArchives);
-int               CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchiveListSize, BOOL bIncludeTempPath);
+int               CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
+                                             DWORD dwCorruptedArchivelistSize,
+                                             char *szFileIdiGetArchives);
+int               CRCCheckArchivesStartup(char *szCorruptedArchiveList,
+                                          DWORD dwCorruptedArchiveListSize,
+                                          BOOL bIncludeTempPath);
 BOOL              ResolveForceUpgrade(siC *siCObject);
-void              LogISTime(int iType);
-void              LogISProductInfo(void);
-void              LogISDestinationPath(void);
-void              LogISSetupType(void);
-void              LogISComponentsSelected(void);
-void              LogISComponentsToDownload(void);
-void              LogISComponentsFailedCRC(char *szList, int iWhen);
-void              LogISDownloadStatus(char *szStatus, char *szFailedFile);
-void              LogISXPInstall(int iWhen);
-void              LogISXPInstallComponent(char *szComponentName);
-void              LogISXPInstallComponentResult(DWORD dwErrorNumber);
-void              LogISLaunchApps(int iWhen);
-void              LogISLaunchAppsComponent(char *szComponentName);
-void              LogISProcessXpcomFile(int iStatus, int iResult);
-void              LogISDiskSpace(void);
 void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
 void              ClearWinRegUninstallFileDeletion(void);
-
-BOOL              bSDInit;
+int               AppendToGlobalMessageStream(char *szInfo);
+char              *GetOSTypeString(char *szOSType, DWORD dwOSTypeBufSize);
+int               UpdateIdiFile(char  *szPartialUrl,
+                                DWORD dwPartialUrlBufSize,
+                                siC   *siCObject,
+                                char  *szSection,
+                                char  *szKey,
+                                char  *szFileIdiGetArchives);
 
 #endif /* _EXTRA_H_ */
 
