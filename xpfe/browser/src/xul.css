@@ -72,6 +72,7 @@ toolbox {
 window { 
   background-color:#CCCCCC;
   display: block; 
+  overflow: hidden;
 }
 
 broadcaster {
