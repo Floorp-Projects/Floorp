@@ -54,6 +54,7 @@ class nsIDocument;
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsIZipReader.h"
+#include "nsICSSLoader.h"
      
 // for component registration
 // {D8C7D8A2-E84C-11d2-BF87-00105A1B0627}
@@ -246,6 +247,8 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
   nsCOMPtr<nsICSSStyleSheet> mFormSheet;
 
+  nsCOMPtr<nsICSSLoader> mCSSLoader;
+  
   nsCOMPtr<nsIZipReader> mOverrideJAR;
   nsCString              mOverrideJARURL;
   

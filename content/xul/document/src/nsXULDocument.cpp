@@ -6292,37 +6292,35 @@ nsXULDocument::AddPrototypeSheets()
         nsCOMPtr<nsIURI> uri = do_QueryInterface(isupports);
         NS_IF_RELEASE(isupports);
 
-        NS_ASSERTION(uri != nsnull, "not a URI!!!");
+        NS_ASSERTION(uri, "not a URI!!!");
         if (! uri)
             return NS_ERROR_UNEXPECTED;
 
-        nsCOMPtr<nsICSSStyleSheet> sheet;
-        rv = gXULCache->GetStyleSheet(uri, getter_AddRefs(sheet));
-        if (NS_FAILED(rv)) return rv;
-
-        if (!sheet) {
-            if (!IsChromeURI(uri))
-                continue;
-
-            // If the sheet is a chrome URL, then we can refetch the
-            // sheet synchronously, since we know the sheet is local.  
-            // It's not too late! :)  
-            // Otherwise we just bail.  It shouldn't currently
-            // be possible to get into this situation for any reason
-            // other than a skin switch anyway (since skin switching is the
-            // only system that partially invalidates the XUL cache).
-            // - dwh
-            nsCOMPtr<nsICSSLoader> loader;
-            GetCSSLoader(*getter_AddRefs(loader));
-            rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
-            if (NS_FAILED(rv)) return rv;
+        if (!IsChromeURI(uri)) {
+            // These don't get to be in the prototype cache anyway...
+            // and we can't load non-chrome sheets synchronously
+            continue;
         }
-     
-        nsCOMPtr<nsICSSStyleSheet> newsheet;
-        rv = sheet->Clone(*getter_AddRefs(newsheet));
-        if (NS_FAILED(rv)) return rv;
 
-        AddStyleSheet(newsheet, 0);
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+
+        // If the sheet is a chrome URL, then we can refetch the sheet
+        // synchronously, since we know the sheet is local.  It's not
+        // too late! :) If we're lucky, the loader will just pull it
+        // from the prototype cache anyway.
+        // Otherwise we just bail.  It shouldn't currently
+        // be possible to get into this situation for any reason
+        // other than a skin switch anyway (since skin switching is the
+        // only system that partially invalidates the XUL cache).
+        // - dwh
+        //XXXbz we hit this code from fastload all the time.  Bug 183505.
+        nsCOMPtr<nsICSSLoader> loader;
+        rv = GetCSSLoader(*getter_AddRefs(loader));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        AddStyleSheet(sheet, 0);
     }
 
     return NS_OK;
