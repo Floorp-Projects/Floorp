@@ -30,10 +30,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFFactory.obj    \
 	$(NULL)
 
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
-
 LLIBS=\
  $(DIST)\lib\rdfbase_s.lib       \
  $(DIST)\lib\rdfutil_s.lib       \
@@ -43,8 +39,7 @@ LLIBS=\
  $(DIST)\lib\raptorbase.lib      \
  $(DIST)\lib\raptorgfxwin.lib    \
  $(DIST)\lib\netlib.lib          \
- $(DIST)\lib\plc3.lib        \
- $(DIST)\lib\raptorhtml.lib      \
+ $(DIST)\lib\plc3.lib            \
  $(DIST)\lib\jsdom.lib           \
  $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  
