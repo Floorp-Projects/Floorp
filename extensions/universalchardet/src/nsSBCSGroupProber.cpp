@@ -55,8 +55,11 @@ nsSBCSGroupProber::nsSBCSGroupProber()
   mProbers[7] = new nsSingleByteCharSetProber(&Win1253Model);
   mProbers[8] = new nsSingleByteCharSetProber(&Latin5BulgarianModel);
   mProbers[9] = new nsSingleByteCharSetProber(&Win1251BulgarianModel);
-  mProbers[10] = new nsSingleByteCharSetProber(&Latin2HungarianModel);
-  mProbers[11] = new nsSingleByteCharSetProber(&Win1250HungarianModel);
+
+  // disable latin2 before latin1 is available, otherwise all latin1 
+  // will be detected as latin2 because of their similarity.
+  //mProbers[10] = new nsSingleByteCharSetProber(&Latin2HungarianModel);
+  //mProbers[11] = new nsSingleByteCharSetProber(&Win1250HungarianModel);
 
   Reset();
 }
