@@ -30,8 +30,8 @@
 
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/10 21:46:25 $ 
+# $Revision: 1.12 $ 
+# $Date: 2003/06/18 15:49:50 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time.pm,v $ 
 # $Name:  $ 
@@ -48,7 +48,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.11 $ )[1];
+$VERSION = ( qw $Revision: 1.12 $ )[1];
 
 
 sub new {
@@ -100,7 +100,7 @@ sub apply_db_updates {
 # Really this is the names the columns produced by this DB
 
 sub notice_association {
-    return ;
+    return '';
 }
 
 sub status_table_header {
