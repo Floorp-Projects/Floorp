@@ -26,9 +26,13 @@
 
 #include <Gestalt.h>
 #include <Appearance.h>
+
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+
+
+//#define MAC_PL_EVENT_TWEAKING
 
 // Class IDs...
 static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
@@ -91,15 +95,44 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
 //-------------------------------------------------------------------------
 void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 {
-	nsresult		rv;
+	ProcessPLEventQueue();
+}
 
-	NS_WITH_SERVICE(nsIEventQueueService, qServ, kEventQueueServiceCID, &rv);
-	if (NS_SUCCEEDED(rv) && qServ) {
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
+{
+	nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID);
+	if (eventQService)
+	{
 		nsCOMPtr<nsIEventQueue> queue;
-		qServ->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+		eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+	
+#ifdef MAC_PL_EVENT_TWEAKING
+		// just handle one event at a time
+		if (queue)
+		{
+			PRBool plEventAvail = PR_FALSE;
+			queue->EventAvailable(plEventAvail);
+			if (plEventAvail)
+			{
+				PLEvent* thisEvent;
+				if (NS_SUCCEEDED(queue->GetEvent(&thisEvent)))
+				{
+					queue->HandleEvent(thisEvent);
+				}
+			}
+		}
+
+#else
+		// the old way
 		if (queue)
 			queue->ProcessPendingEvents();
+#endif	
 	}
+
 }
 
 
