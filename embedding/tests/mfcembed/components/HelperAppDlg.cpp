@@ -256,7 +256,8 @@ NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher,
 // We prompt the user for the filename to which the content
 // will be saved into
 //
-NS_IMETHODIMP CHelperAppLauncherDialog::PromptForSaveToFile(nsISupports *aWindowContext, 
+NS_IMETHODIMP CHelperAppLauncherDialog::PromptForSaveToFile(nsIHelperAppLauncher* aLauncher,
+                                                             nsISupports *aWindowContext, 
                                                              const PRUnichar *aDefaultFile, 
                                                              const PRUnichar *aSuggestedFileExtension, 
                                                              nsILocalFile **_retval)
