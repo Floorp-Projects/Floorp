@@ -11,7 +11,7 @@ interface BrowserAppCore : BaseAppCore
 	void loadUrl(in wstring url);
 	void loadInitialPage();
 
-	void walletEditor();
+	void walletEditor(in Window win);
 	void walletChangePassword();
 	void walletQuickFillin(in Window win);
 	void walletSamples();
