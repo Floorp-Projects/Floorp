@@ -3,3 +3,4 @@ toolkit.jar:
 	content/global/platformDialogOverlay.xul
 	content/global/printdialog.js
 	content/global/printdialog.xul
+  content/global/platformXUL.css

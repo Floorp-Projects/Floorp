@@ -355,7 +355,6 @@ Contributor(s): ______________________________________. -->
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
-        <resizer class="window-diagonal"/>
   </statusbar> 
 
 </window>
