@@ -12,7 +12,7 @@
 
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (progressMsg):
 
     This string is used to generate the status message used during
     file download.
@@ -22,12 +22,12 @@
     #3 will be replaced by the download rate (in Kbytes per second) -->
 <!ENTITY progressMsg "#1K of #2K bytes (at #3K bytes/sec)">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (unknownTime):
     
     This string is used when the time remaining is unknown. -->
 <!ENTITY unknownTime "">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (longTimeFormat):
 
     This string is used to format elapsed/remaining times when the
     time exceeds 1 hour in length.
@@ -37,7 +37,7 @@
     #3 will be replaced by the number of seconds -->
 <!ENTITY longTimeFormat "#1:#2:#3">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (shortTimeFormat):
 
     This string is used to format elapsed/remaining times when the
     time is less than 1 hour in length.  Note that you can leave
@@ -48,7 +48,7 @@
     #3 will be replaced by the number of seconds -->
 <!ENTITY shortTimeFormat "#2:#3">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (completeMsg):
 
     This string is displayed when the download is complete.  The insert
     "#1" is replaced by the elapsed time, formatted according to the
@@ -58,7 +58,7 @@
     #1 will be replaced by the elapsed time -->
 <!ENTITY completeMsg "Download complete (elapsed time was #1)">
 
-<!-- LOCALIZATION NOTE
+<!-- LOCALIZATION NOTE (percentMsg):
 
     This string is used to format the text to the right of the progress
     meter.
