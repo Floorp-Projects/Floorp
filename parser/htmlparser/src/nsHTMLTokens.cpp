@@ -547,6 +547,7 @@ PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *------------------------------------------------------*/
 CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_comment;
+  mTagType=eHTMLTag_comment;
 }
 
 /**-------------------------------------------------------
@@ -561,11 +562,11 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
 PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   PRUnichar ch,ch2;
+  PRInt32   result;
   
   static nsAutoString terminals(">");
   
   aScanner.GetChar(ch);
-  PRInt32 result=aScanner.GetChar(ch);
   mTextValue="<!";
   if(kMinus==ch) {
     aScanner.GetChar(ch2);
@@ -1285,7 +1286,7 @@ eHTMLTags DetermineHTMLTagType(const nsString& aString)
  * @param 
  * @return
  */
-const char* GetTagName(eHTMLTags aTag) {
+const char* GetTagName(PRInt32 aTag) {
   const char* result=0;
   PRInt32     cnt=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
 

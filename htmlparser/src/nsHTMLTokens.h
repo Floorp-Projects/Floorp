@@ -58,9 +58,10 @@ enum eHTMLTags
   eHTMLTag_blink,       eHTMLTag_blockquote,  eHTMLTag_body,      eHTMLTag_br,          
   eHTMLTag_button,      eHTMLTag_caption,     eHTMLTag_center,    
   eHTMLTag_certificate, eHTMLTag_cite,
-  eHTMLTag_code,        eHTMLTag_col,         eHTMLTag_colgroup,  eHTMLTag_dd,
-  eHTMLTag_del,         eHTMLTag_dfn,         eHTMLTag_div,       eHTMLTag_dir,       
-  eHTMLTag_dl,          eHTMLTag_dt,          eHTMLTag_em,        eHTMLTag_embed,
+  eHTMLTag_code,        eHTMLTag_col,         eHTMLTag_colgroup,  eHTMLTag_comment,
+  eHTMLTag_dd,          eHTMLTag_del,         eHTMLTag_dfn,       eHTMLTag_div,       
+  eHTMLTag_dir,         eHTMLTag_dl,          eHTMLTag_dt,        
+  eHTMLTag_em,          eHTMLTag_embed,
   eHTMLTag_fieldset,    eHTMLTag_font,        eHTMLTag_footer,  
   eHTMLTag_form,        eHTMLTag_frame,       eHTMLTag_frameset,
   eHTMLTag_h1,          eHTMLTag_h2,          eHTMLTag_h3,        eHTMLTag_h4,
@@ -77,7 +78,7 @@ enum eHTMLTags
   eHTMLTag_option,      eHTMLTag_paragraph,   eHTMLTag_param,     eHTMLTag_plaintext,   
   eHTMLTag_pre,         eHTMLTag_quotation,   eHTMLTag_strike,    eHTMLTag_samp,        
   eHTMLTag_script,      eHTMLTag_select,      
-  eHTMLTag_server,    eHTMLTag_small,     
+  eHTMLTag_server,      eHTMLTag_small,     
   eHTMLTag_spacer,      eHTMLTag_span,
   eHTMLTag_strong,      eHTMLTag_style,       eHTMLTag_sub,       eHTMLTag_sup,         
   eHTMLTag_table,       eHTMLTag_tbody,       eHTMLTag_td,        
@@ -113,7 +114,7 @@ PRInt32         ConsumeAttributeText(PRUnichar aChar,nsString& aString,CScanner&
 PRInt32         FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
 eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 eHTMLTokenTypes DetermineTokenType(const nsString& aString);
-const char*     GetTagName(eHTMLTags aTag);
+const char*     GetTagName(PRInt32 aTag);
 
 
 /** -----------------------------------------------------

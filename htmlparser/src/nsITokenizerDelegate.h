@@ -48,13 +48,13 @@ class CToken;
 class ITokenizerDelegate {
   public:
 
-      virtual  PRBool      WillTokenize()=0;
-      virtual  PRBool      DidTokenize()=0;
+      virtual PRBool      WillTokenize()=0;
+      virtual PRBool      DidTokenize()=0;
 
-      virtual  CToken*      GetToken(CScanner& aScanner,PRInt32& anErrorCode)=0;
+      virtual CToken*     GetToken(CScanner& aScanner,PRInt32& anErrorCode)=0;
       virtual PRBool      WillAddToken(CToken& aToken)=0;
 
-      virtual eParseMode  GetParseMode() const=0;
+      virtual eParseMode  GetParseMode(void) const=0;
       virtual nsIDTD*     GetDTD(void) const=0;
 };
 

@@ -37,6 +37,7 @@
 
 
 
+class nsIParser;
 
 class COtherDTD : public nsIDTD {
             
@@ -52,7 +53,7 @@ class COtherDTD : public nsIDTD {
      *  @param   
      *  @return  
      */
-            COtherDTD();
+      COtherDTD();
 
     /**
      *  
@@ -62,6 +63,16 @@ class COtherDTD : public nsIDTD {
      *  @return  
      */
     virtual ~COtherDTD();
+
+
+    /**
+     * 
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return 
+     */
+    virtual void SetParser(nsIParser* aParser);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -153,6 +164,8 @@ class COtherDTD : public nsIDTD {
      */
     virtual PRBool BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const;
 
+protected:
+    nsIParser*  mParser;
 };
 
 

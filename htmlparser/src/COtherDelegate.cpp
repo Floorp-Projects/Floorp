@@ -62,7 +62,7 @@ COtherDelegate::COtherDelegate(COtherDelegate& aDelegate) :
  * @param 
  * @return
  */
-eParseMode COtherDelegate::GetParseMode() const {
+eParseMode COtherDelegate::GetParseMode(void) const {
   return eParseMode_unknown;
 }
 
@@ -104,7 +104,7 @@ CToken* COtherDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& a
     default:
       if(nsString::IsAlpha(aChar))
         return ConsumeStartTag(aChar,aScanner,anErrorCode);
-      else if(kNotFound!=aChar) {
+      else if(kEOF!=aChar) {
         nsAutoString temp("<");
         return ConsumeText(temp,aScanner,anErrorCode);
       }

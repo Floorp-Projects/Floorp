@@ -35,6 +35,7 @@
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
 
+class nsIParser;
 
 class nsIDTD : public nsISupports {
             
@@ -49,7 +50,18 @@ class nsIDTD : public nsISupports {
      *  @param   aChild -- tag enum of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool  CanContain(PRInt32 aParent,PRInt32 aChild) const =0;
+    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const=0;
+
+    /**
+     *  This method is called to determine whether or not a tag
+     *  of one type can contain a tag of another type.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aParent -- tag enum of parent container
+     *  @param   aChild -- tag enum of child container
+     *  @return  PR_TRUE if parent can contain child
+     */
+    virtual void SetParser(nsIParser* aParser)=0;
 
     /**
      *  This method is called to determine whether or not a tag

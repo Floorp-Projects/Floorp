@@ -27,6 +27,7 @@
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParserTypes.h"
+#include "nsIParser.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -98,6 +99,7 @@ NS_IMPL_RELEASE(CNavDTD)
  *  @return  
  */
 CNavDTD::CNavDTD() : nsIDTD() {
+  mParser=0;
 }
 
 /**
@@ -110,6 +112,36 @@ CNavDTD::CNavDTD() : nsIDTD() {
 CNavDTD::~CNavDTD(){
 }
 
+/**
+ * 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return 
+ */
+void CNavDTD::SetParser(nsIParser* aParser) {
+  mParser=aParser;
+}
+
+
+static char formElementTags[]= {  
+    eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
+    eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
+    eHTMLTag_select,  eHTMLTag_textarea,0};
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  of one type can contain a tag of another type.
+ *  
+ *  @update  gess 4/8/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if parent can contain child
+ */
+PRBool CNavDTD::CanContainFormElement(PRInt32 aParent,PRInt32 aChild) const {
+  PRBool result=(mParser) ? mParser->HasOpenForm() : PR_FALSE;
+  return result;
+}
 
 /**
  *  This method is called to determine whether or not a tag
@@ -121,6 +153,7 @@ CNavDTD::~CNavDTD(){
  *  @return  PR_TRUE if parent can contain child
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
+
   PRBool result=PR_FALSE;
 
     //tagset1 has 64 members...
@@ -194,6 +227,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   if(eHTMLTag_userdefined==aChild)  // XXX Hack: For now...
     result=PR_TRUE;
 
+    //handle form elements (this is very much a WIP!!!)
+  if(0!=strchr(formElementTags,aChild)){
+    return CanContainFormElement(aParent,aChild);
+  }
+  
   switch(aParent) {
     case eHTMLTag_a:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
@@ -302,7 +340,15 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_h1: case eHTMLTag_h2:
     case eHTMLTag_h3: case eHTMLTag_h4:
     case eHTMLTag_h5: case eHTMLTag_h6:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      {
+        static char  badTags[]={
+          eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
+          eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6, 0};
+        if(0!=strchr(badTags,aChild))
+          result=PR_FALSE;
+        else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      }
+      break;
 
     case eHTMLTag_head:
       {
@@ -418,7 +464,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       break; //unadorned script text...
 
     case eHTMLTag_select:
-      result=PRBool(eHTMLTag_option==aChild); break;
+      result=PR_TRUE; break; //for now, allow select to contain anything...
 
     case eHTMLTag_small:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
@@ -483,7 +529,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_userdefined:
       result=PR_TRUE; break; //XXX for now...
 
-    case eHTMLTag_xmp:
+    case eHTMLTag_xmp: 
     default:
       break;
   } //switch
@@ -529,6 +575,8 @@ PRBool CNavDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
       }
       break;
 
+      result=PR_TRUE; break;
+
     default:
       break;
   }
@@ -546,29 +594,43 @@ PRBool CNavDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
 PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
-  switch((eHTMLTags)aParent) {
-    case eHTMLTag_html:
-    case eHTMLTag_body:
-    case eHTMLTag_head:
-    case eHTMLTag_title:
- 
-    case eHTMLTag_tr:
-//    case eHTMLTag_td:
-    case eHTMLTag_table:
-    case eHTMLTag_thead:
-    case eHTMLTag_tfoot: 
-    case eHTMLTag_tbody:
-    case eHTMLTag_col:
-    case eHTMLTag_colgroup:
-      if((aChild==eHTMLTag_newline) ||
-         (aChild==eHTMLTag_whitespace))
-        result=PR_TRUE;
+  //begin with some simple (and obvious) cases...
+  switch((eHTMLTags)aChild) {
+
+    case eHTMLTag_userdefined:
+    case eHTMLTag_comment:
+      result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_button:       case eHTMLTag_fieldset:
+    case eHTMLTag_input:        case eHTMLTag_isindex:
+    case eHTMLTag_label:        case eHTMLTag_legend:
+    case eHTMLTag_select:       case eHTMLTag_textarea:
+      if(PR_FALSE==mParser->HasOpenForm())
+        result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_newline:    
+    case eHTMLTag_whitespace:
+
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_html:     case eHTMLTag_head:   
+        case eHTMLTag_title:    case eHTMLTag_map:    
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    case eHTMLTag_col:    
+        case eHTMLTag_colgroup: case eHTMLTag_unknown:
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
       break;
 
     default:
-      result=PR_FALSE;
+      if(eHTMLTag_unknown==aParent)
+        result=PRBool(eHTMLTag_html!=aChild);
       break;
-  }
+  } //switch
   return result;
 }
 

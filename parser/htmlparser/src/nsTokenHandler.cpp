@@ -325,7 +325,7 @@ CWhitespaceTokenHandler::~CWhitespaceTokenHandler(){
 PRBool CWhitespaceTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleSimpleContentToken(aToken);
+    return aParser->HandleStartToken(aToken);
   }
   return PR_FALSE;
 }
@@ -375,7 +375,7 @@ CNewlineTokenHandler::~CNewlineTokenHandler(){
 PRBool CNewlineTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleSimpleContentToken(aToken);
+    return aParser->HandleStartToken(aToken);
   }
   return PR_FALSE;
 }
@@ -424,7 +424,7 @@ CTextTokenHandler::~CTextTokenHandler(){
 PRBool CTextTokenHandler::operator()(CToken* aToken,nsHTMLParser* aParser){
   NS_ASSERTION(0!=aParser,kNullParserGiven);
   if(aParser){
-    return aParser->HandleSimpleContentToken(aToken);
+    return aParser->HandleStartToken(aToken);
   }
   return PR_FALSE;
 }

@@ -36,6 +36,7 @@
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
 
+class nsIParser;
 
 class CNavDTD : public nsIDTD {
             
@@ -72,6 +73,15 @@ class CNavDTD : public nsIDTD {
      *  @return  PR_TRUE if parent can contain child
      */
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
+
+    /**
+     * 
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return 
+     */
+    virtual void SetParser(nsIParser* aParser);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -150,6 +160,11 @@ class CNavDTD : public nsIDTD {
      */
     virtual PRBool BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const;
 
+protected:
+
+    PRBool CanContainFormElement(PRInt32 aParent,PRInt32 aChild) const;
+
+    nsIParser*  mParser;
 };
 
 

@@ -61,7 +61,7 @@ CNavDelegate::CNavDelegate(CNavDelegate& aDelegate) :
  * @param 
  * @return
  */
-eParseMode CNavDelegate::GetParseMode() const {
+eParseMode CNavDelegate::GetParseMode(void) const {
   return eParseMode_unknown;
 }
 
@@ -104,7 +104,7 @@ CToken* CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anE
     default:
       if(nsString::IsAlpha(aChar))
         return ConsumeStartTag(aChar,aScanner,anErrorCode);
-      else if(kNotFound!=aChar) {
+      else if(kEOF!=aChar) {
         nsAutoString temp("<");
         return ConsumeText(temp,aScanner,anErrorCode);
       }

@@ -87,13 +87,15 @@ friend class CTokenHandler;
     virtual PRBool              Parse(nsIURL* aURL);
     virtual PRBool              Parse(nsIURL* aURL,eParseMode aMode);
     virtual PRBool              ResumeParse();
+    virtual PRInt32             GetStack(PRInt32* aStackPtr);
+    virtual PRBool              HasOpenForm() const;
 
 
             PRBool              HandleStartToken(CToken* aToken);
+            PRBool              HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
             PRBool              HandleEndToken(CToken* aToken);
             PRBool              HandleEntityToken(CToken* aToken);
             PRBool              HandleCommentToken(CToken* aToken);
-            PRBool              HandleSimpleContentToken(CToken* aToken);
             PRBool              HandleSkippedContentToken(CToken* aToken);
             PRBool              HandleAttributeToken(CToken* aToken);
             PRBool              HandleScriptToken(CToken* aToken);
@@ -140,12 +142,12 @@ friend class CTokenHandler;
             PRInt32             GetTopmostIndex(eHTMLTags aTag) const;
             PRBool              ReduceContextStackFor(PRInt32 aChildTag);
             PRBool              CreateContextStackFor(PRInt32 aChildTag);
-            PRBool              HandleDefaultStartToken(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode);
 
             nsIHTMLContentSink* mSink;
             CTokenizer*         mTokenizer;
 
-            eHTMLTags           mContextStack[50];
+//            eHTMLTags           mContextStack[50];
+            PRInt32             mContextStack[50];
             PRInt32             mContextStackPos;
 
             CTokenHandler*      mTokenHandlers[100];
@@ -154,6 +156,7 @@ friend class CTokenHandler;
 
             nsIDTD*             mDTD;
             eParseMode          mParseMode;
+            PRBool              mHasOpenForm;
 };
 
 
