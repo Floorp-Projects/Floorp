@@ -38,7 +38,7 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'output.generic.email' or
-            $service eq 'protocol.smtp' or
+            $service eq 'protocol.email' or
             $service eq 'setup.configure' or
             $service eq 'dataSource.configuration.client' or
             $class->SUPER::provides($service));
@@ -49,7 +49,7 @@ sub init {
     my($app) = @_;
     $self->SUPER::init(@_);
     eval {
-        $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.smtp');
+        $app->getService('dataSource.configuration')->getSettings($app, $self, 'protocol.email');
     };
     if ($@) {
         $self->dump(9, "failed to get the SMTP configuration, not going to bother to connect: $@");
@@ -85,7 +85,7 @@ sub output {
     $self->assert($self->handle->data($string), 1, 'Could not send mail body');
 }
 
-# protocol.smtp
+# protocol.email
 sub checkAddress {
     my $self = shift;
     my($app, $username) = @_;
@@ -108,8 +108,8 @@ sub settings {
 sub setupConfigure {
     my $self = shift;
     my($app) = @_;
-    $self->dump(9, 'about to configure protocol.smtp...');
-    $app->output->setupProgress('protocol.smtp');
+    $self->dump(9, 'about to configure protocol.email...');
+    $app->output->setupProgress('protocol.email');
     $self->close();
 
     my $value;
@@ -118,29 +118,29 @@ sub setupConfigure {
     if (not defined($value)) {
         $value = 'localhost';
     }
-    $value = $app->input->getArgument('protocol.smtp.host', $value);
+    $value = $app->input->getArgument('protocol.email.host', $value);
     if (not defined($value)) {
-        return 'protocol.smtp.host';
+        return 'protocol.email.host';
     }
     $self->host($value);
 
     $value = $self->address;
     if (defined($value)) {
         # default to existing value
-        $value = $app->input->getArgument('protocol.smtp.address', $value);
+        $value = $app->input->getArgument('protocol.email.address', $value);
     } else {
         # don't default to anything as our guess is most likely going
         # to be wrong: "$USER@`hostname`" is rarely correct.
-        $value = $app->input->getArgument('protocol.smtp.address');
+        $value = $app->input->getArgument('protocol.email.address');
     }
     if (not defined($value)) {
-        return 'protocol.smtp.address';
+        return 'protocol.email.address';
     }
     $self->address($value);
 
     $self->open();
-    $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.smtp');
-    $self->dump(9, 'done configuring protocol.smtp');
+    $app->getService('dataSource.configuration')->setSettings($app, $self, 'protocol.email');
+    $self->dump(9, 'done configuring protocol.email');
     return;
 }
 
