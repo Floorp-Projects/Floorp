@@ -419,12 +419,17 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 {
   switch (mEvent->message) {
   case NS_KEY_UP:
-  case NS_KEY_PRESS:
   case NS_KEY_DOWN:
+#ifdef NS_DEBUG
+    printf("GetCharCode used for wrong key event; should use onkeypress.\n");
+#endif
+    *aCharCode = 0;
+    break;
+  case NS_KEY_PRESS:
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
     if (0==*aCharCode)
-      printf("key event broken, GetCharChode returning 0x0 as the char code.\n");
+      printf("GetCharCode used correctly but no valid key!\n");
 #endif
     break;
   default:
