@@ -82,7 +82,8 @@ bin\components\editor.xpt
 bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
-bin\components\gkhtml.dll
+bin\components\gkcontent.dll
+bin\components\gklayout.dll
 bin\components\gkparser.dll
 bin\components\gkplugin.dll
 bin\components\gkview.dll

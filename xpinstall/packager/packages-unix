@@ -103,6 +103,7 @@ bin/components/liboji.so
 bin/components/libpsmglue.so
 bin/components/libpref.so
 bin/components/libprofile.so
+bin/components/libgkcontent.so
 bin/components/libgklayout.so
 bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
