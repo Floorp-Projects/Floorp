@@ -5859,11 +5859,6 @@ PresShell::HandleEvent(nsIView         *aView,
          aEvent->message == NS_CONTEXTMENU_KEY) &&
         NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(manager)))) {
 
-      // XXXldb Perhaps there should be an
-      // NS_IF_RELEASE(mCurrentEventContent) here.  This might prevent
-      // the need for it before |CallQueryInterface| into
-      // |mCurrentEventContent| below and also prevent the need for the
-      // |IsZombieDocument| test a little below that.
       manager->GetFocusedFrame(&mCurrentEventFrame);
       if (!mCurrentEventFrame) {
 #if defined(MOZ_X11)
@@ -5888,7 +5883,6 @@ PresShell::HandleEvent(nsIView         *aView,
                 focusController->GetFocusedElement(getter_AddRefs(focusedElement));
                 if (focusedElement) {
                   // get mCurrentEventContent from focusedElement
-                  NS_IF_RELEASE(mCurrentEventContent);
                   CallQueryInterface(focusedElement, &mCurrentEventContent);
                 }
               }
@@ -5901,8 +5895,6 @@ PresShell::HandleEvent(nsIView         *aView,
         }
         mCurrentEventFrame = nsnull; // XXXldb Isn't it already?
       }
-      // XXXldb Is the need for this just a side-effect of forgetting to
-      // release above?  See comment above.
       if (mCurrentEventContent && InZombieDocument(mCurrentEventContent)) {
         return RetargetEventToParent(aView, aEvent, aEventStatus, aForceHandle,
                                      aHandled, mCurrentEventContent);
