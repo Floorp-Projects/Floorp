@@ -19,10 +19,11 @@
  *
  * Contributor(s): Kirk Baker <kbaker@eb.com>
  *               Ian Wilkinson <iw@ennoble.com>
- *               Ann Sunhachawee
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
 package org.mozilla.webclient;
+
 
 // BrowserControl.java
 
@@ -35,7 +36,7 @@ package org.mozilla.webclient;
 
 
  *
- * @version $Id: BrowserControl.java,v 1.2 2001/05/24 21:13:30 ashuk%eng.sun.com Exp $
+ * @version $Id: BrowserControl.java,v 1.3 2001/07/27 20:57:51 ashuk%eng.sun.com Exp $
  * 
  * @see org.mozilla.webclient.BrowserControlFactory
  * */
@@ -43,6 +44,7 @@ package org.mozilla.webclient;
 public interface BrowserControl 
 {
 
+public static String BROWSER_TYPE_NAME = "webclient.BrowserType";
 public static String BOOKMARKS_NAME = "webclient.Bookmarks";
 public static String BROWSER_CONTROL_CANVAS_NAME = "webclient.BrowserControlCanvas";
 public static String CURRENT_PAGE_NAME = "webclient.CurrentPage";
@@ -56,6 +58,8 @@ public static String PRINT_NAME = "webclient.Print";
 public static String WINDOW_CONTROL_NAME = "webclient.WindowControl";
 public static String PROFILE_MANAGER_NAME = "webclient.ProfileManager";
 
+public static String BROWSER_TYPE_NATIVE = "native";
+public static String BROWSER_TYPE_NON_NATIVE = "nonnative";
 
     /**
 

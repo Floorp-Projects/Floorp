@@ -29,11 +29,14 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 import org.mozilla.util.Utilities;
 
+
+
 class BrowserControlImpl extends Object implements BrowserControl
 {
 //
 // Protected Constants
 //
+
 
 //
 // Class Variables
@@ -64,6 +67,7 @@ private static WrapperFactory wrapperFactory = null;
 
 
 private BrowserControlCanvas myCanvas = null;
+private BrowserType myType = null;
 private CurrentPage currentPage = null;
 private EventRegistration eventRegistration = null;
 private WindowControl windowControl = null;
@@ -72,17 +76,22 @@ private History history = null;
 private static Bookmarks bookmarks = null;
 private static Preferences prefs = null;
 private static ProfileManager profileManager = null;
+private static String browserType = null;
+
 
 //
 // Constructors and Initializers    
 //
 
-public BrowserControlImpl(BrowserControlCanvas yourCanvas)
+public BrowserControlImpl(String myBrowserType, BrowserControlCanvas yourCanvas)
 {
     super();
-    ParameterCheck.nonNull(yourCanvas);
-    myCanvas = yourCanvas;
+    if (browserType.equals(BrowserControl.BROWSER_TYPE_NATIVE)) {
+        ParameterCheck.nonNull(yourCanvas);
+        myCanvas = yourCanvas;
+    }
 }
+
 
 /**
 
@@ -137,11 +146,13 @@ void delete()
 // Class methods
 //
 
-static void appInitialize(String verifiedBinDirAbsolutePath) throws Exception 
+static void appInitialize(String myBrowserType, String verifiedBinDirAbsolutePath) throws Exception 
 {
-    ParameterCheck.nonNull(verifiedBinDirAbsolutePath);
+    browserType = myBrowserType;
     if (null == wrapperFactory) {
+        System.out.println("\n+++ In appInitialize - before createWrapperFactory +++ \n");
         wrapperFactory = createWrapperFactory();
+        System.out.println("\n+++ In appInitialize - after createWrapperFactory +++ \n");
     }
     wrapperFactory.initialize(verifiedBinDirAbsolutePath);
 }
@@ -188,17 +199,25 @@ private static WrapperFactory createWrapperFactory() throws ClassNotFoundExcepti
         throw new ClassNotFoundException("Can't determine current class name");
     }
 
-
     // PENDING(edburns): when we have a java implementation, this is
     // where you'll replace the string "native" with either "native" or
     // "nonnative".
+    String PARAMETERIZED_VALUE = "";
 
-    String PARAMETERIZED_VALUE = "native";
-
+    System.out.println("\n+++ browserType is - " + browserType + " +++\n");
+    if (browserType.equals(BrowserControl.BROWSER_TYPE_NATIVE)) {
+        PARAMETERIZED_VALUE = "native";
+    }
+    else {
+        PARAMETERIZED_VALUE = "nonnative";
+    }
     
+     System.out.println("\n+++ PARAMETERIZED_VALUE is " + PARAMETERIZED_VALUE + " +++\n");
     // tack on the appropriate stuff
     wrapperFactoryClassName = wrapperFactoryClassName + "wrapper_" + 
         PARAMETERIZED_VALUE + "." + WrapperFactory.IMPL_NAME;
+
+    System.out.println("\n+++ WrapperFactory classname is " + wrapperFactoryClassName + " +++\n");
 
     wrapperFactoryClass = Class.forName(wrapperFactoryClassName);
 
@@ -224,7 +243,7 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
     ParameterCheck.nonNull(interfaceName);
     
     Assert.assert_it(null != wrapperFactory);
-    wrapperFactory.throwExceptionIfNotInitialized();
+    //    wrapperFactory.throwExceptionIfNotInitialized();
 
     // At some point, it has to come down to hard coded string names,
     // right?  Well, that point is here.  There is an extensibility
@@ -247,6 +266,13 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
     if (BROWSER_CONTROL_CANVAS_NAME.equals(interfaceName)) {
         Assert.assert_it(null != myCanvas);
         return myCanvas;
+    }
+    if (BROWSER_TYPE_NAME.equals(interfaceName)) {
+        if (null == myType) {
+            myType = (BrowserType) wrapperFactory.newImpl(BROWSER_TYPE_NAME, 
+                                                          this);
+        }
+        return myType;
     }
     if (CURRENT_PAGE_NAME.equals(interfaceName)) {
         if (null == currentPage) {
@@ -308,7 +334,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.6 2001/05/29 18:34:19 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.7 2001/07/27 20:57:52 ashuk%eng.sun.com Exp $");
     
 }
 

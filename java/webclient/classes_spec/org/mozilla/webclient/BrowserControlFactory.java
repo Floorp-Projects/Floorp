@@ -21,6 +21,7 @@
  *               Ian Wilkinson <iw@ennoble.com>
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
 package org.mozilla.webclient;
@@ -43,7 +44,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.4 2001/05/29 18:34:19 ashuk%eng.sun.com Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.5 2001/07/27 20:57:51 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -62,6 +63,7 @@ public class BrowserControlFactory extends Object
     private static boolean appDataHasBeenSet = false;
     private static Class browserControlCanvasClass = null;
     private static String platformCanvasClassName = null;
+    private static String browserType = null;
 
 //
 // Instance Variables
@@ -84,10 +86,18 @@ public BrowserControlFactory()
 // Class methods
 //
 
+public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
+{
+    BrowserControlFactory.setAppData(BrowserControl.BROWSER_TYPE_NATIVE, absolutePathToNativeBrowserBinDir);
+}
+
+
     /**
 
      * This method is used to set per-application instance data, such as
      * the location of the browser binary.
+
+     * @param myBrowserType.  Either "native" or "nonnative"
 
      * @param absolutePathToNativeBrowserBinDir the path to the bin dir
      * of the native browser, including the bin.  ie:
@@ -95,69 +105,37 @@ public BrowserControlFactory()
 
      */
 
-public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
+public static void setAppData(String myBrowserType, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {
+    browserType = myBrowserType;
     if (!appDataHasBeenSet) {
-        ParameterCheck.nonNull(absolutePathToNativeBrowserBinDir);
-        
-        // verify that the directory exists:
-        File binDir = new File(absolutePathToNativeBrowserBinDir);
-        if (!binDir.exists()) {
-            throw new FileNotFoundException("Directory " + absolutePathToNativeBrowserBinDir + " is not found.");
+        // figure out the correct value for platformCanvasClassName
+        if (browserType.equals(BrowserControl.BROWSER_TYPE_NON_NATIVE)) {
+            platformCanvasClassName = "org.mozilla.webclient.wrapper_nonnative.JavaBrowserControlCanvas";
         }
-
-        // This hack is necessary for Sun Bug #4303996
-        java.awt.Canvas c = new java.awt.Canvas();
-
-        // cause the native library to be loaded
-        // PENDING(edburns): do some magic to determine the right kind of
-        // MozWebShellCanvas to instantiate
-        
-        // How about this:
-        // I try loading sun.awt.windows.WDrawingSurfaceInfo. If it doesn't
-        // load, then I try loading sun.awt.motif.MDrawingSufaceInfo. If
-        // none loads, then I return a error message.
-        // If you think up of a better way, let me know.
-        // -- Mark
-
-
-        Class win32DrawingSurfaceInfoClass;
-        
-        try {
-            win32DrawingSurfaceInfoClass = 
-                Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
-        }
-        catch (Exception e) {
-            win32DrawingSurfaceInfoClass = null;
-        }
-        
-        if (win32DrawingSurfaceInfoClass != null) {
-            platformCanvasClassName = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
-        }
-        
-        if (null == platformCanvasClassName) {
-            Class motifDrawingSurfaceInfoClass; 
-            try {
-                motifDrawingSurfaceInfoClass = 
-                    Class.forName("sun.awt.motif.MDrawingSurfaceInfo");
-            }
-            catch (Exception e) {
-                motifDrawingSurfaceInfoClass = null;
+        else {
+            ParameterCheck.nonNull(absolutePathToNativeBrowserBinDir);
+            
+            // verify that the directory exists:
+            File binDir = new File(absolutePathToNativeBrowserBinDir);
+            if (!binDir.exists()) {
+                throw new FileNotFoundException("Directory " + absolutePathToNativeBrowserBinDir + " is not found.");
             }
             
-            if (motifDrawingSurfaceInfoClass != null) {
-                platformCanvasClassName = "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas";
-            }
+            // This hack is necessary for Sun Bug #4303996
+            java.awt.Canvas c = new java.awt.Canvas();
+            platformCanvasClassName = determinePlatformCanvasClassName();
         }
+        // end of figuring out the correct value for platformCanvasClassName
         if (platformCanvasClassName != null) {
             browserControlCanvasClass = Class.forName(platformCanvasClassName);
         }
         else {
-            throw new ClassNotFoundException("Could not determine WebShellCanvas class to load\n");
+            throw new ClassNotFoundException("Could not determine BrowserControlCanvas class to load\n");
         }
         
         try {
-            BrowserControlImpl.appInitialize(absolutePathToNativeBrowserBinDir);
+            BrowserControlImpl.appInitialize(browserType, absolutePathToNativeBrowserBinDir);
         }
         catch (Exception e) {
             throw new ClassNotFoundException("Can't initialize native browser: " + 
@@ -183,7 +161,7 @@ public static BrowserControl newBrowserControl() throws InstantiationException, 
     BrowserControl result = null; 
     newCanvas = (BrowserControlCanvas) browserControlCanvasClass.newInstance();
     if (null != newCanvas &&
-        null != (result = new BrowserControlImpl(newCanvas))) {
+        null != (result = new BrowserControlImpl(browserType, newCanvas))) {
         newCanvas.initialize(result);
     }
 
@@ -213,6 +191,63 @@ public static void deleteBrowserControl(BrowserControl toDelete)
 // General Methods
 //
 
+/**
+
+ * Called from setAppData() in the native case.  This method simply
+ * figures out the proper name for the class that is the
+ * BrowserControlCanvas. 
+
+ * @return  "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas" or "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas"
+
+ */
+
+private static String determinePlatformCanvasClassName()
+{
+    String result = null;
+    // cause the native library to be loaded
+    // PENDING(edburns): do some magic to determine the right kind of
+    // MozWebShellCanvas to instantiate
+    
+    // How about this:
+    // I try loading sun.awt.windows.WDrawingSurfaceInfo. If it doesn't
+    // load, then I try loading sun.awt.motif.MDrawingSufaceInfo. If
+    // none loads, then I return a error message.
+    // If you think up of a better way, let me know.
+    // -- Mark
+    
+    
+    Class win32DrawingSurfaceInfoClass;
+    
+    try {
+        win32DrawingSurfaceInfoClass = 
+            Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
+    }
+    catch (Exception e) {
+        win32DrawingSurfaceInfoClass = null;
+    }
+    
+    if (win32DrawingSurfaceInfoClass != null) {
+        result = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
+    }
+    
+    if (null == result) {
+        Class motifDrawingSurfaceInfoClass; 
+        try {
+            motifDrawingSurfaceInfoClass = 
+                Class.forName("sun.awt.motif.MDrawingSurfaceInfo");
+        }
+        catch (Exception e) {
+            motifDrawingSurfaceInfoClass = null;
+        }
+        
+        if (motifDrawingSurfaceInfoClass != null) {
+            result = "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas";
+        }
+    }
+    
+    return result;
+}
+
 // ----UNIT_TEST_START
 
 //
@@ -225,18 +260,19 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.4 2001/05/29 18:34:19 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.5 2001/07/27 20:57:51 ashuk%eng.sun.com Exp $");
 
     BrowserControlCanvas canvas = null;
     BrowserControl control = null;
     try {
-        BrowserControlFactory.setAppData(args[0]);
+        BrowserControlFactory.setAppData("nonnative", args[0]);
         control = BrowserControlFactory.newBrowserControl();
         Assert.assert_it(control != null);
         canvas = (BrowserControlCanvas) control.queryInterface("webclient.BrowserControlCanvas");
         Assert.assert_it(canvas != null);
     }
     catch (Exception e) {
+        System.out.println("\n BrowserControl not getting created \n");
         System.out.println(e.getMessage());
     }
 }
