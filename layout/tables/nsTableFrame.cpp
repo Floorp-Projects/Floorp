@@ -1176,7 +1176,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
                          PRBool                aConsiderSpans)
 {
   //printf("insertRowsBefore firstRow=%d \n", aRowIndex);
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  //Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
 
   PRInt32 numColsToAdd = 0;
   nsTableCellMap* cellMap = GetCellMap();
@@ -1207,8 +1207,8 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
     }
   }
 
-  //printf("insertRowsAfter \n");
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  printf("insertRowsAfter \n");
+  Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
 
   return numColsToAdd;
 }
@@ -1220,7 +1220,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
                               PRBool           aConsiderSpans)
 {
   //printf("removeRowsBefore firstRow=%d numRows=%d\n", aFirstRowIndex, aNumRowsToRemove);
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  //Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
 
   
 #ifdef TBD_OPTIMIZATION
@@ -1263,7 +1263,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
   }
   AdjustRowIndices(&aPresContext, firstRowIndex, -aNumRowsToRemove);
   //printf("removeRowsAfter\n");
-  //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
+  //Dump(&aPresContext, PR_TRUE, PR_FALSE, PR_TRUE);
 }
 
 void nsTableFrame::AppendRowGroups(nsIPresContext& aPresContext,
@@ -3442,7 +3442,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext*          aPresContext,
   // default case, get 100% of available space
 
   mTableLayoutStrategy->BalanceColumnWidths(aPresContext, aReflowState);
-  //Dump(PR_TRUE, PR_TRUE);
+  //Dump(&aPresContext, PR_TRUE, PR_TRUE);
   SetNeedStrategyBalance(PR_FALSE);                    // we have just balanced
   // cache the min, desired, and preferred widths
   nscoord minWidth, prefWidth;
@@ -6267,9 +6267,10 @@ BCMapBorderIterator::Reset(nsTableFrame&         aTable,
 {
   atEnd = PR_TRUE; // gets reset when First() is called
 
-  table = &aTable;
-  rg    = &aRowGroup;                
-  row   = &aRow;                     
+  table   = &aTable;
+  rg      = &aRowGroup; 
+  prevRow = nsnull;
+  row     = &aRow;                     
 
   nsTableFrame* tableFif = (nsTableFrame*)table->GetFirstInFlow(); if (!tableFif) ABORT0();
   tableCellMap = tableFif->GetCellMap();
@@ -6284,8 +6285,11 @@ BCMapBorderIterator::Reset(nsTableFrame&         aTable,
   numCols       = tableFif->GetColCount();
   x             = 0;
   rowGroupIndex = -1;
+  prevCell      = nsnull;
   cell          = nsnull;
+  prevCellData  = nsnull;
   cellData      = nsnull;
+  bcData        = nsnull;
 
   // Get the ordered row groups 
   PRUint32 numRowGroups;
@@ -6909,7 +6913,7 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
     }
     cornerSubWidth = (iter.bcData) ? iter.bcData->GetCorner(ownerSide, bevel) : 0;
     nscoord verWidth = PR_MAX(verInfo[xAdj].segWidth, leftSegWidth);
-    if (iter.isNewRow || (iter.IsLeftMost() && iter.IsBottomMostTable())) {
+    if (iter.isNewRow || (iter.IsLeftMost() && iter.IsBottomMost())) {
       iter.row->GetRect(rowRect);
       horSeg.y = nextY;
       nextY    = nextY + rowRect.height;
