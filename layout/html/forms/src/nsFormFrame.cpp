@@ -25,6 +25,7 @@
 
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS 
 
@@ -970,7 +971,49 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first
   // see 17.3 The FORM element in HTML 4 for details
-
+  nsresult result = NS_OK;
+  nsAutoString acceptCharsetValue;
+  if (mContent) {
+    nsIHTMLContent* form = nsnull;
+    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&form);
+    if (NS_SUCCEEDED(result) && (nsnull != form)) {
+      nsHTMLValue value;
+      result = form->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(acceptCharsetValue);
+        }
+      }
+      NS_RELEASE(form);
+    }
+  }
+#ifdef DEBUG_ftang
+  printf("accept-charset = %s\n", acceptCharsetValue.ToNewUTF8String());
+#endif
+  PRInt32 l = acceptCharsetValue.Length();
+  if(l > 0 ) {
+    PRInt32 offset=0;
+    PRInt32 spPos=0;
+    // get charset from charsets one by one
+    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+    if(NS_SUCCEEDED(rv) && (nsnull != calias)) {
+      do {
+        spPos = acceptCharsetValue.FindChar(PRUnichar(' '),PR_TRUE, offset);
+        PRInt32 cnt = ((-1==spPos)?(l-offset):(spPos-offset));
+        if(cnt > 0) {
+          nsAutoString charset;
+          acceptCharsetValue.Mid(charset, offset, cnt);
+#ifdef DEBUG_ftang
+          printf("charset[i] = %s\n",charset.ToNewUTF8String());
+#endif
+          if(NS_SUCCEEDED(calias->GetPreferred(charset,oCharset)))
+            return;
+        }
+        offset = spPos + 1;
+      } while(spPos != -1);
+    }
+  }
+  // if there are no accept-charset or all the charset are not supported
   // Get the charset from document
   nsIDocument* doc = nsnull;
   mContent->GetDocument(doc);
@@ -987,6 +1030,9 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   nsAutoString charset;
   nsresult rv = NS_OK;
   GetSubmitCharset(charset);
+#ifdef DEBUG_ftang
+  printf("charset=%s\n", charset.ToNewCString());
+#endif
   
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
