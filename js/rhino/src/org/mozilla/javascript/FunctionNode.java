@@ -38,15 +38,16 @@ package org.mozilla.javascript;
 
 import java.util.*;
 
-public class FunctionNode extends Node.StringNode {
+public class FunctionNode extends Node {
 
     public FunctionNode(String name, Node left, Node right) {
-        super(TokenStream.FUNCTION, left, right, name);
+        super(TokenStream.FUNCTION, left, right);
+        functionName = name;
         itsVariableTable = new VariableTable();
     }
 
     public String getFunctionName() {
-        return str;
+        return functionName;
     }
 
     public VariableTable getVariableTable() {
@@ -100,4 +101,5 @@ public class FunctionNode extends Node.StringNode {
     protected boolean itsNeedsActivation;
     protected boolean itsCheckThis;
     protected int itsFunctionType;
+    private String functionName;
 }

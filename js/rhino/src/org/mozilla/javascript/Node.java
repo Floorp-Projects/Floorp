@@ -56,15 +56,10 @@ public class Node implements Cloneable {
         double number;
     }
 
-    static class StringNode extends Node {
+    private static class StringNode extends Node {
 
         StringNode(int type, String str) {
             super(type);
-            this.str = str;
-        }
-
-        StringNode(int nodeType, Node left, Node right, String str) {
-            super(nodeType, left, right);
             this.str = str;
         }
 
@@ -442,7 +437,7 @@ public class Node implements Cloneable {
         return ((NumberNode)this).number;
     }
 
-    /** Can only be called when <tt>this instanceof StringNode</tt> */
+    /** Can only be called when node has String context. */
     public String getString() {
         return ((StringNode)this).str;
     }
@@ -465,9 +460,8 @@ public class Node implements Cloneable {
         if (Context.printTrees) {
             StringBuffer sb = new StringBuffer(TokenStream.tokenToName(type));
             if (this instanceof StringNode) {
-                   sb.append(' ');
-                   sb.append(getString());
-
+                sb.append(' ');
+                sb.append(getString());
             } else {
                 switch (type) {
                     case TokenStream.TARGET:
@@ -499,10 +493,10 @@ public class Node implements Cloneable {
                 sb.append(propToString(key));
                 sb.append(": ");
                 switch (key) {
-                    case FIXUPS_PROP :      // can't add this as it recurses
+                    case FIXUPS_PROP : // can't add this as it recurses
                         sb.append("fixups property");
                         break;
-                    case SOURCE_PROP :      // can't add this as it has unprintables
+                    case SOURCE_PROP : // can't add this as it has unprintables
                         sb.append("source property");
                         break;
                     case TARGETBLOCK_PROP : // can't add this as it recurses
@@ -515,7 +509,7 @@ public class Node implements Cloneable {
                         Object obj = props.getObject(key);
                         if (obj != null) {
                             sb.append(obj.toString());
-                        }else {
+                        } else {
                             sb.append(props.getExistingInt(key));
                         }
                         break;
