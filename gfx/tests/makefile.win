@@ -21,9 +21,6 @@
 
 DEPTH=..\..
 
-
-DIRS = btest
-
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestRect.exe
 PROG2 = .\$(OBJDIR)\TestColorNames.exe

@@ -56,10 +56,6 @@ public:
 
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
-
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
-
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
@@ -93,7 +89,6 @@ protected:
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
-  nsPaletteInfo         mPaletteInfo;
   float                 mPixelScale;
   PRInt32               mWidth;
   PRInt32               mHeight;

@@ -6698,7 +6698,6 @@ PresShell::VerifyIncrementalReflow()
     }
   }
 
-  cx->Stop();
   cx->SetContainer(nsnull);
   NS_RELEASE(cx);
   sh->EndObservingDocument();

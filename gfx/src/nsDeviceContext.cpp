@@ -32,10 +32,7 @@
 #include "nsFont.h"
 #include "nsIView.h"
 #include "nsGfxCIID.h"
-#include "nsImageNet.h"
-#include "nsImageRequest.h"
-#include "nsIImageGroup.h"
-#include "il_util.h"
+#include "nsVoidArray.h"
 #include "nsIFontMetrics.h"
 #include "nsHashtable.h"
 #include "nsILanguageAtomService.h"
@@ -69,12 +66,7 @@ DeviceContextImpl :: DeviceContextImpl()
   mZoom = 1.0f;
   mTextZoom = 1.0f;
   mWidget = nsnull;
-  mIconImageGroup = nsnull;
-  for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
-    mIcons[i] = nsnull;
-  }
   mFontAliasTable = nsnull;
-  mColorSpace = nsnull;
 }
 
 static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
@@ -97,25 +89,9 @@ DeviceContextImpl :: ~DeviceContextImpl()
     mGammaTable = nsnull;
   }
 
-  for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
-    NS_IF_RELEASE(mIcons[i]);
-  }
-
-  /*
-   * Destroy the GroupContext after releasing the ImageRequests
-   * since IL_DestroyGroupContext(...) will destroy any IL_ImageReq
-   * for the context.  These are the same IL_ImgReq being referenced
-   * by mIcons[...]
-   */
-  IL_DestroyGroupContext(mIconImageGroup);
-
   if (nsnull != mFontAliasTable) {
     mFontAliasTable->Enumerate(DeleteValue);
     delete mFontAliasTable;
-  }
-
-  if (nsnull != mColorSpace) {
-    IL_ReleaseColorSpace(mColorSpace);
   }
 }
 
@@ -357,108 +333,6 @@ NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)
   return NS_OK;
 }
 
-nsresult DeviceContextImpl::CreateIconILGroupContext()
-{
-  ilIImageRenderer* renderer;
-  nsresult          result;
-   
-  // Create an image renderer
-  result = NS_NewImageRenderer(&renderer);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  // Create an image group context. The image renderer code expects the
-  // display_context to be a pointer to a device context
-  mIconImageGroup = IL_NewGroupContext((void*)this, renderer);
-  if (nsnull == mIconImageGroup) {
-    NS_RELEASE(renderer);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Initialize the image group context.
-  IL_ColorSpace* colorSpace;
-  result = GetILColorSpace(colorSpace);
-  if (NS_FAILED(result)) {
-    NS_RELEASE(renderer);
-    IL_DestroyGroupContext(mIconImageGroup);
-    return result;
-  }
-
-  // Icon loading is synchronous, so don't waste time with progressive display
-  IL_DisplayData displayData;
-  displayData.dither_mode = IL_Auto;
-  displayData.color_space = colorSpace;
-  displayData.progressive_display = PR_FALSE;
-  IL_SetDisplayMode(mIconImageGroup, IL_COLOR_SPACE | IL_DITHER_MODE, &displayData);
-  IL_ReleaseColorSpace(colorSpace);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
-{
-  nsresult  result;
-
-  // Initialize out parameter
-  aImage = nsnull;
-
-  // Make sure the icon number is valid
-  if ((aId < 0) || (aId >= NS_NUMBER_OF_ICONS)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  // See if the icon is already loaded
-  if (nsnull != mIcons[aId]) {
-    aImage = mIcons[aId]->GetImage();
-    return NS_OK;
-  }
-
-  // Make sure we have an image group context
-  if (nsnull == mIconImageGroup) {
-    result = CreateIconILGroupContext();
-    if (NS_FAILED(result)) {
-      return result;
-    }
-  }
-
-  // Build the URL string
-  char  url[128];
-  sprintf(url, "resource:/res/gfx/icon_%d.gif", aId);
-
-  // Use a sync net context
-  nsCOMPtr<ilINetContext> netContext;
-  result = NS_NewImageNetContextSync(getter_AddRefs(netContext));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  // Create an image request object which will do the actual load
-  ImageRequestImpl* imageReq = new ImageRequestImpl();
-  if (nsnull == imageReq) {
-    result = NS_ERROR_OUT_OF_MEMORY;
-
-  } else {
-    // addref so it has nonzero refcount
-    NS_ADDREF(imageReq);
-    
-    // Load the image
-    result = imageReq->Init(mIconImageGroup, url, nsnull, nsnull, 0, 0,
-                            nsImageLoadFlags_kHighPriority, netContext);
-    aImage = imageReq->GetImage();
-    if(!aImage) {
-      // XXX This happens more often than just when out of memory.
-      NS_RELEASE(imageReq);
-      return NS_ERROR_OUT_OF_MEMORY; //ptn some error msg
-    }
-
-    // Keep the image request object around and avoid reloading the image
-    mIcons[aId] = imageReq; // owns reference from addref above
-  }
-  
-  return result;
-}
-
 struct FontEnumData {
   FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
     : mDC(aDC), mFaceName(aFaceName)
@@ -629,41 +503,6 @@ NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
   if (nsnull != mFontCache)
     mFontCache->Flush();
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  if (nsnull == mColorSpace) {
-    IL_RGBBits colorRGBBits;
-  
-    // Default is to create a 24-bit color space
-    colorRGBBits.red_shift = 16;  
-    colorRGBBits.red_bits = 8;
-    colorRGBBits.green_shift = 8;
-    colorRGBBits.green_bits = 8; 
-    colorRGBBits.blue_shift = 0; 
-    colorRGBBits.blue_bits = 8;  
-  
-    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-  aPaletteInfo.isPaletteDevice = PR_FALSE;
-  aPaletteInfo.sizePalette = 0;
-  aPaletteInfo.numReserved = 0;
-  aPaletteInfo.palette = nsnull;
   return NS_OK;
 }
 

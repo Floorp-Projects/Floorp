@@ -27,7 +27,6 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
-#include "nsIFrameImageLoader.h"
 #include "nsAWritableString.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -36,13 +35,14 @@ class nsBidiPresUtils;
 struct nsFont;
 struct nsRect;
 
+class imgIRequest;
+
 class nsIContent;
 class nsIDocument;
 class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
 class nsIImage;
-class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
 class nsIPref;
@@ -88,6 +88,13 @@ enum nsLanguageSpecificTransformType {
   eLanguageSpecificTransformType_Korean
 };
 
+
+enum nsImageAnimation {
+  eImageAnimation_Normal      = 0,            // looping controlled by image
+  eImageAnimation_None        = 1,            // don't loop; just show first frame
+  eImageAnimation_LoopOnce    = 2             // loop just once
+}; 
+
 // supported values for cached bool types
 const PRUint32 kPresContext_UseDocumentColors = 0x01;
 const PRUint32 kPresContext_UseDocumentFonts = 0x02;
@@ -103,12 +110,6 @@ public:
    * Initialize the presentation context from a particular device.
    */
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext) = 0;
-
-  /**
-   * Stop the presentation in preperation for destruction.
-   * @param aStopChrome PR_TRUE to stop chrome as well.
-   */
-  NS_IMETHOD Stop(PRBool aStopChrome = PR_TRUE) = 0;
 
   /**
    * Set the presentation shell that this context is bound to.
@@ -277,42 +278,22 @@ public:
   NS_IMETHOD SetDefaultLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor) = 0;
 
-  NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult) = 0;
-
   /**
    * Load an image for the target frame. This call can be made
-   * repeated with only a single image ever being loaded. If
-   * aNeedSizeUpdate is PR_TRUE, then when the image's size is
-   * determined the target frame will be reflowed (via a
-   * ContentChanged notification on the presentation shell). When the
+   * repeated with only a single image ever being loaded. When the
    * image's data is ready for rendering the target frame's Paint()
    * method will be invoked (via the ViewManager) so that the
    * appropriate damage repair is done.
-   *
-   * @param aBackgroundColor - If the background color is NULL, a mask
-   *      will be generated for transparent images. If the background
-   *      color is non-NULL, it indicates the RGB value to be folded
-   *      into the transparent areas of the image and no mask is created.
    */
-  NS_IMETHOD StartLoadImage(const nsString& aURL,
-                            const nscolor* aBackgroundColor,
-                            const nsSize* aDesiredSize,
-                            nsIFrame* aTargetFrame,
-                            nsIFrameImageLoaderCB aCallBack,
-                            void* aClosure,
-                            void* aKey,
-                            nsIFrameImageLoader** aResult) = 0;
+  NS_IMETHOD LoadImage(const nsString& aURL,
+                       nsIFrame* aTargetFrame,
+                       imgIRequest **aRequest) = 0;
 
   /**
-   * Stop a specific image load being done on behalf of the argument frame.
+   * This method is called when a frame is being destroyed to
+   * ensure that the image load gets disassociated from the prescontext
    */
-  NS_IMETHOD StopLoadImage(void* aKey,
-                           nsIFrameImageLoader* aLoader) = 0;
-
-  /**
-   * Stop any image loading being done on behalf of the argument frame.
-   */
-  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aTargetFrame, void* aKey) = 0;
+  NS_IMETHOD StopImagesFor(nsIFrame* aTargetFrame) = 0;
 
   NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 

@@ -79,7 +79,6 @@ protected:
 
 private:
   void                 CommonInit(void);
-  nsPaletteInfo        mPaletteInfo;
   PRBool               mWriteable;
   PRUint32             mNumCells;
   nsDrawingSurface     mSurface;

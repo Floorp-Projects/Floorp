@@ -25,7 +25,6 @@
 #include "nsIImage.h"
 #include "nsTransform2D.h"
 #include <stdlib.h>
-#include "il_util.h"
 
 
 const nsPoint *gPts;
@@ -55,6 +54,8 @@ nsRenderingContextImpl :: ~nsRenderingContextImpl()
 
 }
 
+
+#if 0
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -151,6 +152,7 @@ nsTransform2D       *theTransform;
   return NS_OK;
 }
 
+
 NS_IMETHODIMP 
 nsRenderingContextImpl::DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
                                  nscoord aSrcYOffset,
@@ -158,6 +160,10 @@ nsRenderingContextImpl::DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
 {
   return NS_OK;
 }
+
+
+#endif
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -747,7 +753,26 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawScaledImage(imgIContainer *aImage, con
 /* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
 NS_IMETHODIMP nsRenderingContextImpl::DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsRect dr(*aTargetRect);
+  nsRect so(0, 0, aXOffset, aYOffset);
+
+  mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+
+  // i want one of these...
+  mTranMatrix->TransformCoord(&so.x, &so.y, &so.width, &so.height);
+
+  nsCOMPtr<gfxIImageFrame> iframe;
+  aImage->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img) return NS_ERROR_FAILURE;
+
+  nsIDrawingSurface *surface = nsnull;
+  GetDrawingSurface((void**)&surface);
+  if (!surface) return NS_ERROR_FAILURE;
+
+  return img->DrawTile(*this, surface, so.width, so.height, dr);
 }
 
 /* [noscript] void drawScaledTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, in nscoord aTileWidth, in nscoord aTileHeight, [const] in nsRect aTargetRect); */

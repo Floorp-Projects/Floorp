@@ -49,7 +49,6 @@ CPPSRCS		= \
 		nsHTMLContainerFrame.cpp \
 		nsHTMLIIDs.cpp \
 		nsHTMLFrame.cpp \
-		nsHTMLImageLoader.cpp \
 		nsHTMLReflowCommand.cpp \
 		nsHTMLReflowState.cpp \
 		nsImageFrame.cpp \

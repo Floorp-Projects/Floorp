@@ -25,7 +25,6 @@
 #include "nsRenderingContextPS.h"
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
-#include "il_util.h"
 #include "nsPostScriptObj.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -160,55 +159,6 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
   return(1);    // postscript is 1 bit
-}
-
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-#ifdef NOTNOW
-  if (nsnull == mColorSpace) {
-    mColorSpace = IL_CreateGreyScaleColorSpace(1, 1);
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-#endif
-
-  if(nsnull==mColorSpace) {
-      IL_RGBBits colorRGBBits;
-    
-      // Create a 24-bit color space
-      colorRGBBits.red_shift = 16;  
-      colorRGBBits.red_bits = 8;
-      colorRGBBits.green_shift = 8;
-      colorRGBBits.green_bits = 8; 
-      colorRGBBits.blue_shift = 0; 
-      colorRGBBits.blue_bits = 8;  
-    
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-
-  return NS_OK;
 }
 
 /** ---------------------------------------------------

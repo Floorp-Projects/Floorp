@@ -14,10 +14,6 @@ nsMargin.h
 nsTransform2D.h
 nsIRenderingContext.h
 nsIFontMetrics.h
-nsIImageManager.h
-nsIImageGroup.h
-nsIImageRequest.h
-nsIImageObserver.h
 nsIDeviceContext.h
 nsIImage.h
 nsIBlender.h

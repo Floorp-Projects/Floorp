@@ -608,8 +608,6 @@ sub BuildClientDist()
     #LIBIMAGE
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",                    "$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",                    "$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",                 "$distdirectory:libimg:");
-    InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",             "$distdirectory:libimg:");
 
     if ($main::options{useimg2}) {
 	    #GFX2
@@ -1322,16 +1320,11 @@ sub BuildImglibProjects()
 
     BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",                          "JPEG$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:modules:libimg:macbuild:png.mcp",                 "png$D.o", 0, 0, 0);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",              "libimg$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",          "gifdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",          "pngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",          "jpgdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # MNG
     if ($main::options{mng})
     {
         BuildOneProject(":mozilla:modules:libimg:macbuild:mng.mcp",                 "mng$D.o", 0, 0, 0);
-        BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
 
     EndBuildModule("imglib");

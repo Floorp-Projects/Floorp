@@ -43,7 +43,7 @@ struct nsSize;
 
 class nsImageFrame;
 
-class nsImageListener : imgIDecoderObserver
+class nsImageListener : public imgIDecoderObserver
 {
 public:
   nsImageListener(nsImageFrame *aFrame);

@@ -22,10 +22,8 @@
 #ifndef nsImageBoxFrame_h___
 #define nsImageBoxFrame_h___
 
-#include "nsHTMLImageLoader.h"
 #include "nsLeafBoxFrame.h"
 
-#ifdef USE_IMG2
 #include "imgILoader.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -48,7 +46,6 @@ public:
 private:
   nsImageBoxFrame *mFrame;
 };
-#endif
 
 class nsImageBoxFrame : public nsLeafBoxFrame
 {
@@ -92,8 +89,6 @@ public:
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
-
-#ifdef USE_IMG2
   NS_IMETHOD OnStartDecode(imgIRequest *request, nsIPresContext *cx);
   NS_IMETHOD OnStartContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
   NS_IMETHOD OnStartFrame(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame);
@@ -102,9 +97,6 @@ public:
   NS_IMETHOD OnStopContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
   NS_IMETHOD OnStopDecode(imgIRequest *request, nsIPresContext *cx, nsresult status, const PRUnichar *statusArg);
   NS_IMETHOD FrameChanged(imgIContainer *container, nsIPresContext *cx, gfxIImageFrame *newframe, nsRect * dirtyRect);
-#endif
-
-
 
   virtual ~nsImageBoxFrame();
 protected:
@@ -119,32 +111,20 @@ protected:
 
   nsImageBoxFrame(nsIPresShell* aShell);
 
-  static nsresult UpdateImageFrame(nsIPresContext* aPresContext,
-                                   nsHTMLImageLoader* aLoader,
-                                   nsIFrame* aFrame,
-                                   void* aClosure,
-                                   PRUint32 aStatus);
-
   void GetImageSource(nsString& aResult);
 
   void GetBaseURI(nsIURI **uri);
 
-#ifdef USE_IMG2
   void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **group);
-#endif
 
   virtual void GetImageSize(nsIPresContext* aPresContext);
 
 private:
 
-#ifdef USE_IMG2
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsSize mIntrinsicSize;
-#else
-  nsHTMLImageLoader mImageLoader;
-#endif
 
   PRBool mSizeFrozen;
   nsSize mImageSize;

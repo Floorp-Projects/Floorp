@@ -629,11 +629,45 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
  *  See documentation in nsIRenderingContext.h
  *  @update 3/16/00 dwc
  */
-PRBool 
-nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                                nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
 {
+  PRInt32
+    validX = 0,
+    validY = 0,
+    validWidth  = mBHead->biWidth,
+    validHeight = mBHead->biHeight;
+  
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if (mDecodedY2 < mBHead->biHeight) {
+    validHeight = mDecodedY2 - mDecodedY1;
+  }
+  if (mDecodedX2 < mBHead->biWidth) {
+    validWidth = mDecodedX2 - mDecodedX1;
+  }
+  if (mDecodedY1 > 0) {   
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+  }
+  if (mDecodedX1 > 0) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1; 
+  }
+
+  PRInt32 aY0 = aTileRect.y - aSYOffset,
+          aX0 = aTileRect.x - aSXOffset,
+          aY1 = aTileRect.y + aTileRect.height,
+          aX1 = aTileRect.x + aTileRect.width;
+
+  nscoord aWidth = mBHead->biWidth;
+  nscoord aHeight = mBHead->biHeight;
+
+  nscoord tileWidth = aTileRect.width;
+  nscoord tileHeight = aTileRect.height;
+
   nsRect              destRect,srcRect,tvrect;
   HDC                 TheHDC,offDC,maskDC;
   PRInt32             x,y,width,height,canRaster,TileBufferWidth,TileBufferHeight;
@@ -650,7 +684,9 @@ nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       || (aWidth>MAX_BUFFER_WIDTH) || (aHeight>MAX_BUFFER_HEIGHT)){
     for(y=aY0;y<aY1;y+=aHeight){
       for(x=aX0;x<aX1;x+=aWidth){
-        this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
+      Draw(aContext, aSurface,
+           0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),
+           x, y, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y));
       }
     } 
     return(PR_TRUE);
@@ -670,16 +706,16 @@ nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     return (PR_FALSE);
   }
 
-  if (aWidth < tvrect.width){
+  if (tileWidth < tvrect.width){
     TileBufferWidth = MAX_BUFFER_WIDTH;
   } else {
-    TileBufferWidth = aWidth;
+    TileBufferWidth = tileWidth;
   }
 
-  if (aHeight < tvrect.height){
+  if (tileHeight < tvrect.height){
     TileBufferHeight = MAX_BUFFER_HEIGHT;
   } else {
-    TileBufferHeight = aHeight;
+    TileBufferHeight = tileHeight;
   }
 
   tileBits = ::CreateCompatibleBitmap(TheHDC, TileBufferWidth,TileBufferHeight);
@@ -769,7 +805,7 @@ nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   ::DeleteObject(tileBits);
   ::DeleteObject(offDC);
 
-  return (PR_TRUE);
+  return NS_OK;
 }
 
 /** ---------------------------------------------------

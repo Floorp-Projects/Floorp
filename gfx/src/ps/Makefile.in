@@ -31,8 +31,8 @@ LIBRARY_NAME	= gfxps
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPSModule
-EXTRA_DSO_LIBS = img_s mozutil_s
-REQUIRES	= xpcom string img widget util pref uconv view gfx2 necko imglib2 intl
+EXTRA_DSO_LIBS = mozutil_s
+REQUIRES	= xpcom string widget util pref uconv view gfx2 necko imglib2 intl
 EXTRA_DSO_LIBS += gkgfx
 
 CSRCS		= font_metrics.c

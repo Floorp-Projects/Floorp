@@ -33,7 +33,6 @@
 #include "nsDeviceContextSpecWin.h"
 #include "nsDeviceContextSpecFactoryW.h"
 #include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #include "nsScreenManagerWin.h"
 #include "nsPrintOptionsWin.h"
 #include "nsFontList.h"
@@ -49,7 +48,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageManagerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
@@ -151,24 +149,6 @@ nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult
   return rv;
 }
 
-static NS_IMETHODIMP
-nsImageManagerImplConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  *aResult = nsnull;
-
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv;
-  nsCOMPtr<nsIImageManager> result;
-  rv = NS_NewImageManager(getter_AddRefs(result));
-
-  if (result)
-    rv = result->QueryInterface(aIID, aResult);
-
-  return rv;
-}
-
 static nsModuleComponentInfo components[] =
 {
   { "nsFontMetricsWin",
@@ -220,11 +200,6 @@ static nsModuleComponentInfo components[] =
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",
     nsScriptableRegionConstructor },
-
-  { "nsImageManagerImpl",
-    NS_IMAGEMANAGER_CID,
-    "@mozilla.org/gfx/imagemanager;1",
-    nsImageManagerImplConstructor },
 
   { "nsPrintOptionsWin",
     NS_PRINTOPTIONS_CID,

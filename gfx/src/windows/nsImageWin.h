@@ -103,17 +103,11 @@ public:
   virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
 
-  /** 
-   * Draw a tiled version of the bitmap
-   * @update - dwc 3/30/00
-   * @param aSurface  the surface to blit to
-   * @param aX The destination horizontal location
-   * @param aY The destination vertical location
-   * @param aWidth The destination width of the pixelmap
-   * @param aHeight The destination height of the pixelmap
-   * @return if TRUE, no errors
-   */
-  PRBool  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
+
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      PRInt32 aSXOffset, PRInt32 aSYOffset,
+                      const nsRect &aTileRect);
 
   /** 
    * Draw a tiled version of the bitmap, but use the windows specific highly optimized PatBlt

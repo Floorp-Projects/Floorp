@@ -56,14 +56,6 @@ public:
    *  See documentation in nsIRenderingContext.h
    *	@update 03/29/00 dwc
    */
-  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                      nscoord aWidth,nscoord aHeight);
-  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
-                      nscoord aSrcYOffset, const nsRect &aTileRect);
-  /** ---------------------------------------------------
-   *  See documentation in nsIRenderingContext.h
-   *	@update 03/29/00 dwc
-   */
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
 
     /** ---------------------------------------------------

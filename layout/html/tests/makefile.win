@@ -62,7 +62,6 @@ LLIBS=				\
  $(DIST)\lib\layoutsvgbase_s.lib      \
  $(DIST)\lib\layoutsvgcontent_s.lib   \
 !endif
- $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\timer_s.lib \

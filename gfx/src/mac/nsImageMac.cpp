@@ -812,4 +812,45 @@ nsImageMac::GetPixMap ( PixMap** aPixMap )
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+  // XXX this code below is quite slow.  need to make it faster
+  PRInt32
+    validX = 0,
+    validY = 0,
+    validWidth  = mWidth,
+    validHeight = mHeight;
+  
+  // limit the image rectangle to the size of the image data which
+  // has been validated.
+  if (mDecodedY2 < mHeight) {
+    validHeight = mDecodedY2 - mDecodedY1;
+  }
+  if (mDecodedX2 < mWidth) {
+    validWidth = mDecodedX2 - mDecodedX1;
+  }
+  if (mDecodedY1 > 0) {   
+    validHeight -= mDecodedY1;
+    validY = mDecodedY1;
+  }
+  if (mDecodedX1 > 0) {
+    validWidth -= mDecodedX1;
+    validX = mDecodedX1; 
+  }
 
+  PRInt32 aY0 = aTileRect.y - aSYOffset,
+          aX0 = aTileRect.x - aSXOffset,
+          aY1 = aTileRect.y + aTileRect.height,
+          aX1 = aTileRect.x + aTileRect.width;
+
+  for (PRInt32 y = aY0; y < aY1; y += mHeight)
+    for (PRInt32 x = aX0; x < aX1; x += mWidth)
+      Draw(aContext, aSurface,
+           0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),
+           x, y, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y));
+
+  return NS_OK;
+}

@@ -27,9 +27,8 @@
 #include "nsILinkHandler.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIStyleSet.h"
-#include "nsFrameImageLoader.h"
 #include "nsIFrameManager.h"
-#include "nsIImageGroup.h"
+#include "nsImageLoader.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
@@ -96,6 +95,15 @@ IsVisualCharset(const nsAutoString& aCharset)
 }
 #endif // IBMBIDI
 
+
+static PRBool destroy_loads(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsISupports *sup = NS_REINTERPRET_CAST(nsISupports*, aData);
+  nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, sup);
+  loader->Destroy();
+  return PR_TRUE;
+}
+
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kEventStateManagerCID, NS_EVENTSTATEMANAGER_CID);
@@ -121,7 +129,7 @@ nsPresContext::nsPresContext()
 
   mStopped = PR_FALSE;
   mStopChrome = PR_TRUE;
-  
+
   mShell = nsnull;
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
@@ -161,6 +169,8 @@ nsPresContext::nsPresContext()
 
 nsPresContext::~nsPresContext()
 {
+  mImageLoaders.Enumerate(destroy_loads);
+
   if (mShell) {
     nsCOMPtr<nsIDocument> doc;
     mShell->GetDocument(getter_AddRefs(doc));
@@ -170,14 +180,6 @@ nsPresContext::~nsPresContext()
   }
 
   mShell = nsnull;
-
-  Stop();
-
-  if (mImageGroup) {
-    // Interrupt any loading images. This also stops all looping
-    // image animations.
-    mImageGroup->Interrupt();
-  }
 
   if (mEventManager)
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
@@ -1168,60 +1170,30 @@ nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
 }
 
 NS_IMETHODIMP
-nsPresContext::GetImageGroup(nsIImageGroup** aResult)
+nsPresContext::LoadImage(const nsString& aURL,
+                         nsIFrame* aTargetFrame,
+                         imgIRequest **aRequest)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  // look and see if we have a loader for the target frame.
 
-  if (!mImageGroup) {
-    // Create image group
-    nsresult rv = NS_NewImageGroup(getter_AddRefs(mImageGroup));
-    if (NS_OK != rv) {
-      return rv;
-    }
+  nsVoidKey key(aTargetFrame);
+  nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
 
-    // Initialize the image group
-    nsCOMPtr<nsIURIContentListener> loadHandler (do_GetInterface(mContainer, &rv));
-    if (NS_SUCCEEDED(rv) && loadHandler)
-    {
-      nsCOMPtr<nsISupports> loadContext;
-      loadHandler->GetLoadCookie(getter_AddRefs(loadContext));
-      rv = mImageGroup->Init(mDeviceContext, loadContext);
-    }
+  if (!loader) {
+    nsImageLoader *newLoader = new nsImageLoader();
+    if (!newLoader)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
+    NS_ADDREF(newLoader); // new
 
-  *aResult = mImageGroup;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
+    nsCOMPtr<nsISupports> sup;
+    newLoader->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(sup));
 
-NS_IMETHODIMP
-nsPresContext::StartLoadImage(const nsString& aURL,
-                              const nscolor* aBackgroundColor,
-                              const nsSize* aDesiredSize,
-                              nsIFrame* aTargetFrame,
-                              nsIFrameImageLoaderCB aCallBack,
-                              void* aClosure,
-                              void* aKey,
-                              nsIFrameImageLoader** aResult)
-{
-  if (mStopped) {
-      // if we are stopped and the image is not chrome
-      // don't load.
-      // If we are chrome don't load if we 
-      // were told to stop chrome
-      if (!aURL.EqualsWithConversion("chrome:", PR_TRUE, 7) || mStopChrome) {
-          if (aResult) {
-            *aResult = nsnull;
-          }    
-          return NS_OK;
-      }
+    loader = NS_REINTERPRET_CAST(nsImageLoader*, sup.get());
+
+    loader->Init(aTargetFrame, this);
+
+    mImageLoaders.Put(&key, sup);
   }
 
   // Allow for a null target frame argument (for precached images)
@@ -1233,173 +1205,32 @@ nsPresContext::StartLoadImage(const nsString& aURL,
     aTargetFrame->SetFrameState(state);
   }
 
-  // Lookup image request in our loaders array (maybe the load request
-  // has already been made for that url at the desired size).
-  PRInt32 i, n = mImageLoaders.Count();
-  nsIFrameImageLoader* loader;
-  for (i = 0; i < n; i++) {
-    PRBool same;
-    loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    loader->IsSameImageRequest(aURL, aBackgroundColor, aDesiredSize, &same);
-    if (same) {
-      // This is pretty sick, but because we can get a notification
-      // *before* the caller has returned we have to store into
-      // aResult before calling the AddFrame method.
-      if (aResult) {
-        NS_ADDREF(loader);
-        *aResult = loader;
-      }
+  loader->Load(aURL);
 
-      // Add frame to list of interested frames for this loader
-      loader->AddFrame(aTargetFrame, aCallBack, aClosure, aKey);
-      return NS_OK;
-    }
-  }
-  
-  // Check with the content-policy things to make sure this load is permitted.
-  PRBool shouldLoad = PR_TRUE; // default permit
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIDOMElement> element;
-  if (aTargetFrame &&
-      NS_SUCCEEDED(aTargetFrame->GetContent(getter_AddRefs(content)))) {
-    element = do_QueryInterface(content);
-  }
+  loader->GetRequest(aRequest);
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
-  if (NS_FAILED(rv)) {
-      NS_ASSERTION(0, "was expecting a URI");
-      return NS_OK;
-  }
-  
-  nsCOMPtr<nsIDocument> document;
-  rv = mShell->GetDocument(getter_AddRefs(document));
-  if (NS_FAILED(rv)) return rv;
+  NS_RELEASE(loader);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalScript;
-  rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
-  if (NS_FAILED(rv)) return rv;
+  return NS_OK;
+}
 
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
-  if (NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                             uri, element, domWin, &shouldLoad))
-      && !shouldLoad) {
-    return NS_OK;
-  }
+NS_IMETHODIMP
+nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
+{
+  nsVoidKey key(aTargetFrame);
+  nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
 
-  // Create image group if needed
-  if (!mImageGroup) {
-    nsCOMPtr<nsIImageGroup> group;
-    rv = GetImageGroup(getter_AddRefs(group));   // sets mImageGroup as side effect
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
-
-  // We haven't seen that image before. Create a new loader and
-  // start it going.
-  rv = NS_NewFrameImageLoader(&loader);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mImageLoaders.AppendElement(loader);
-
-  // This is pretty sick, but because we can get a notification
-  // *before* the caller has returned we have to store into aResult
-  // before calling the loaders init method.
-  if (aResult) {
-    *aResult = loader;
-    NS_ADDREF(loader);
-  }
-
-  rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aDesiredSize,
-                    aTargetFrame, mImageAnimationMode, aCallBack, aClosure,
-                    aKey);
-  if (NS_OK != rv) {
-    mImageLoaders.RemoveElement(loader);
-    loader->StopImageLoad();
+  if (loader) {
+    loader->Destroy();
     NS_RELEASE(loader);
 
-    // Undo premature store of reslut
-    if (aResult) {
-      *aResult = nsnull;
-      NS_RELEASE(loader);
-    }
-    return rv;
+    mImageLoaders.Remove(&key);
   }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::Stop(PRBool aStopChrome)
-{
-  mStopChrome = aStopChrome;
-  PRInt32 n = mImageLoaders.Count();
-  for (PRInt32 i = n-1; i >= 0; i--) {
-    nsIFrameImageLoader* loader;
-    loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    if (NS_SUCCEEDED(loader->StopImageLoad(aStopChrome))) {
-       mImageLoaders.RemoveElementAt(i);
-       NS_RELEASE(loader);
-    }  
-  }
-
-  mStopped = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::StopLoadImage(void* aKey, nsIFrameImageLoader* aLoader)
-{
-  PRInt32 i, n = mImageLoaders.Count();
-  nsIFrameImageLoader* loader;
-  for (i = 0; i < n; i++) {
-    loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    if (loader == aLoader) {
-      // Remove frame from list of interested frames for this loader
-      loader->RemoveFrame(aKey);
-
-      // If loader is no longer loading for anybody and its safe to
-      // nuke it, nuke it.
-      PRBool safe;
-      loader->SafeToDestroy(&safe);
-      if (safe) {
-        loader->StopImageLoad();
-        NS_RELEASE(loader);
-        mImageLoaders.RemoveElementAt(i);
-        n--;
-        i--;
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame, void *aKey)
-{
-  nsFrameState state;
-  aTargetFrame->GetFrameState(&state);
-  if (NS_FRAME_HAS_LOADED_IMAGES & state) {
-    nsIFrameImageLoader* loader;
-    PRInt32 i, n = mImageLoaders.Count();
-    for (i = 0; i < n; i++) {
-      PRBool safe;
-      loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-      loader->RemoveFrame(aKey);
-      loader->SafeToDestroy(&safe);
-      if (safe) {
-        loader->StopImageLoad();
-        NS_RELEASE(loader);
-        mImageLoaders.RemoveElementAt(i);
-        n--;
-        i--;
-      }
-    }
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)

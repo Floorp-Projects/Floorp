@@ -22,7 +22,6 @@
 
 #include "nsBlender.h"
 #include "nsIDeviceContext.h"
-#include "il_util.h"
 #include "nsCRT.h"
 
 /** ---------------------------------------------------
@@ -243,6 +242,7 @@ nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
 
     case 8:
     {
+#if 0
       IL_ColorSpace *thespace = nsnull;
 
       if ((result = mContext->GetILColorSpace(thespace)) == NS_OK) {
@@ -251,6 +251,7 @@ nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
           nsHighQual);
         IL_ReleaseColorSpace(thespace);
       }
+#endif
       break;
     }
   }
@@ -651,6 +652,7 @@ nsBlender::Do8Blend(float aOpacity, PRInt32 aNumlines, PRInt32 aNumbytes,
                     PRInt32 aSLSpan, PRInt32 aDLSpan, IL_ColorSpace *aColorMap,
                     nsBlendQuality aBlendQuality)
 {
+#if 0
 PRUint32  r,g,b,r1,g1,b1,i;
 PRUint8   *d1,*d2,*s1,*s2;
 PRInt32   x,y,val1,val2,numlines;
@@ -756,6 +758,7 @@ NI_RGB    *map;
 
   delete[] distbuffer;
   delete[] invermap;
+#endif
 }
 
 //------------------------------------------------------------

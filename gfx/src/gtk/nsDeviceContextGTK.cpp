@@ -25,7 +25,6 @@
 #include "nspr.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "il_util.h"
 #include "nsCRT.h"
 
 #include "nsDeviceContextGTK.h"
@@ -69,10 +68,6 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mDepth = 0 ;
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette = 0;
-  mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = NULL;
   mNumCells = 0;
 
   mWidthFloat = 0.0f;

@@ -40,7 +40,6 @@
 #include <Fonts.h>
 #include <Resources.h>
 #include <MacWindows.h>
-#include "il_util.h"
 #include <FixMath.h>
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -440,49 +439,6 @@ NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 NS_IMETHODIMP nsDeviceContextMac :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   aPixel = aColor;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  nsresult result = NS_OK;
-
-
-  return result;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextMac::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-
-  if (nsnull == mColorSpace) {
-    IL_RGBBits colorRGBBits;
-  
-    // Default is to create a 32-bit color space
-    colorRGBBits.red_shift = 16;  
-    colorRGBBits.red_bits = 8;
-    colorRGBBits.green_shift = 8;
-    colorRGBBits.green_bits = 8; 
-    colorRGBBits.blue_shift = 0; 
-    colorRGBBits.blue_bits = 8;  
-  
-    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 32);
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
   return NS_OK;
 }
 

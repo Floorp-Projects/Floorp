@@ -80,7 +80,6 @@
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
 #include "nsGfxCIID.h"
-#include "nsIImageManager.h"
 #include "nsIBindingManager.h"
 #include "prio.h"
 #include "nsInt64.h"
@@ -105,7 +104,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
-static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -1136,16 +1134,9 @@ nsresult nsChromeRegistry::FlushCaches()
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
-  
-  // Flush the old image cache.
-  nsCOMPtr<nsIImageManager> imageManager = 
-           do_GetService(kImageManagerCID, &rv);
-  if (imageManager)
-    rv = imageManager->FlushCache(1);
 
   // Flush the new imagelib image chrome cache.
-  nsCOMPtr<imgICache> imageCache = 
-           do_GetService("@mozilla.org/image/cache;1", &rv);
+  nsCOMPtr<imgICache> imageCache(do_GetService("@mozilla.org/image/cache;1", &rv));
   if (NS_SUCCEEDED(rv) && imageCache) {
     imageCache->ClearCache(PR_TRUE);
   }
