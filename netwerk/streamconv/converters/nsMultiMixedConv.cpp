@@ -468,11 +468,10 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             memcpy(buffer, mBuffer, mBufLen);
             free(mBuffer);
             mBuffer = 0;
+            mBufLen = 0;
         }
         
-        rv = inStr->Read(buffer + mBufLen, count, &read);
-
-        mBufLen = 0;
+        rv = inStr->Read(buffer + (bufLen - count), count, &read);
 
         if (NS_FAILED(rv) || read == 0) return rv;
         NS_ASSERTION(read == count, "poor data size assumption");
@@ -502,7 +501,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             if (!buffer)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            memmove(buffer+mTokenLen+1, buffer, bufLen);
+            memmove(buffer + mTokenLen + 1, buffer, bufLen);
             memcpy(buffer, token, mTokenLen);
             buffer[mTokenLen] = '\n';
 
@@ -520,8 +519,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         // for this "part" given the previous buffer given to 
         // us in the previous OnDataAvailable callback.
         PRBool done = PR_FALSE;
-		rv = ParseHeaders(channel, cursor, bufLen, &done);
-		if (NS_FAILED(rv)) ERR_OUT
+        rv = ParseHeaders(channel, cursor, bufLen, &done);
+        if (NS_FAILED(rv)) ERR_OUT
 
         if (done) {
             mProcessingHeaders = PR_FALSE;
@@ -534,7 +533,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     while ( (token = FindToken(cursor, bufLen)) ) {
 
         if (*(token+mTokenLen+1) == '-') {
-			// This was the last delimiter so we can stop processing
+            // This was the last delimiter so we can stop processing
             rv = SendData(cursor, LengthToToken(cursor, token));
             free(buffer);
             if (NS_FAILED(rv)) return rv;
@@ -542,8 +541,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         }
 
         if (!mNewPart && token > cursor) {
-			// headers are processed, we're pushing data now.
-			NS_ASSERTION(!mProcessingHeaders, "we should be pushing raw data");
+            // headers are processed, we're pushing data now.
+            NS_ASSERTION(!mProcessingHeaders, "we should be pushing raw data");
             rv = SendData(cursor, LengthToToken(cursor, token));
             bufLen -= token - cursor;
             if (NS_FAILED(rv)) ERR_OUT
@@ -629,8 +628,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
 // nsIRequestObserver implementation
 NS_IMETHODIMP
 nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
-	// we're assuming the content-type is available at this stage
-	NS_ASSERTION(mToken.IsEmpty(), "a second on start???");
+    // we're assuming the content-type is available at this stage
+    NS_ASSERTION(mToken.IsEmpty(), "a second on start???");
     const char *bndry = nsnull;
     nsCAutoString delimiter;
     nsresult rv = NS_OK;
@@ -980,7 +979,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     aPtr = cursor;
     aLen = cursorLen;
 
-	*_retval = done;
+    *_retval = done;
     return rv;
 }
 
