@@ -31,8 +31,6 @@
 #include "nsRegion.h"
 #include "xlibrgb.h"
 
-// class nsDrawingSurfaceXlib;
-
 class nsImageXlib : public nsIImage {
 public:
   nsImageXlib();
@@ -70,10 +68,8 @@ public:
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
-#ifdef USE_IMG2
   NS_IMETHOD DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,
                          nscoord aDWidth, nscoord aDHeight);
-#endif
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
                       nsDrawingSurface aSurface,
@@ -200,7 +196,7 @@ private:
   nsRegion      mUpdateRegion;
 
   static XlibRgbHandle *mXlibRgbHandle;
-  Display      *mDisplay;
+  static Display       *mDisplay;
 
   // alpha layer members
   PRInt8        mAlphaDepth;        // alpha layer depth
@@ -214,4 +210,4 @@ private:
   PRUint8       mFlags;             // flags set by ImageUpdated
 };
 
-#endif
+#endif /* !nsImageXlib_h__ */

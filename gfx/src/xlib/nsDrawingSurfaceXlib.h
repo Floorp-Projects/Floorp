@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDrawingSurfaceXlib_h__
@@ -27,11 +28,32 @@
 #include "nsGCCache.h"
 #include "xlibrgb.h"
 
-class nsDrawingSurfaceXlib : public nsIDrawingSurface
+/* common interface for both nsDrawingSurfaceXlibImpl (drawing surface for
+ * normal displays) and nsXPrintContext (drawing surface for printers) 
+ */
+class nsIDrawingSurfaceXlib : public nsIDrawingSurface
 {
 public:
-  nsDrawingSurfaceXlib();
-  virtual ~nsDrawingSurfaceXlib();
+  NS_IMETHOD Lock(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
+                  void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
+                  PRUint32 aFlags) = 0;
+  NS_IMETHOD Unlock(void) = 0;
+  NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight) = 0;
+  NS_IMETHOD IsOffscreen(PRBool *aOffScreen) = 0;
+  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable) = 0;
+  NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat) = 0;
+
+  NS_IMETHOD GetDrawable(Drawable &aDrawable) = 0;
+  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) = 0;
+  NS_IMETHOD GetGC(xGC *&aXGC) = 0;
+};
+
+
+class nsDrawingSurfaceXlibImpl : public nsIDrawingSurfaceXlib
+{
+public:
+  nsDrawingSurfaceXlibImpl();
+  virtual ~nsDrawingSurfaceXlibImpl();
 
   NS_DECL_ISUPPORTS
   
@@ -54,14 +76,9 @@ public:
                    PRUint32  aHeight, 
                    PRUint32  aFlags);
 
-  Drawable   GetDrawable() { return mDrawable; }  
-  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
-  Display *  GetDisplay() { return mDisplay; }
-  Screen *   GetScreen() { return mScreen; }
-  Visual *   GetVisual() { return mVisual; }
-  int        GetDepth() { return mDepth; }
-  int        GetScreenNumber() { return XScreenNumberOfScreen(mScreen); }
-  xGC *      GetGC() { mGC->AddRef(); return mGC; }
+  NS_IMETHOD GetDrawable(Drawable &aDrawable) { aDrawable = mDrawable; return NS_OK; }
+  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) { aHandle = mXlibRgbHandle; return NS_OK; }
+  NS_IMETHOD GetGC(xGC *&aXGC) { mGC->AddRef(); aXGC = mGC; return NS_OK; }
 
 private:
   void       CommonInit();
@@ -92,11 +109,10 @@ private:
   PRBool         mIsOffscreen;
   PRBool         mDestroyDrawable;
 
-
 private:
-
   static PRUint8 ConvertMaskToCount(unsigned long val);
   static PRUint8 GetShiftForMask(unsigned long val);
 };
 
-#endif
+#endif /* !nsDrawingSurfaceXlib_h__ */
+

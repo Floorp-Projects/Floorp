@@ -38,7 +38,6 @@
 #include "nsDrawingSurfaceXlib.h"
 #ifdef USE_XPRINT
 #include "nsDeviceContextXP.h"
-#include "nsXPrintContext.h"
 #endif /* USE_XPRINT */
 #include "nsFont.h"
 #include "nsRenderingContextXlib.h"
@@ -82,19 +81,10 @@ public:
     
   virtual PRBool GetXlibFontIs10646(void);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
-#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsDrawingSurfaceXlib* aSurface,
+                         nsIDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength) = 0;
-#endif /* !_IMPL_NS_XPRINT */
-#ifdef USE_XPRINT
-   virtual int DrawString(nsRenderingContextXlib* aContext,
-                          nsXPrintContext* aSurface,
-                          nscoord aX,
-                          nscoord aY, const PRUnichar* aString,
-                          PRUint32 aLength) = 0;      
-#endif /* USE_XPRINT */
 
 #ifdef MOZ_MATHML
   // bounding metrics for a string 
@@ -205,11 +195,8 @@ public:
 protected:
   void RealizeFont();
 
-#ifdef _IMPL_NS_XPRINT
-  nsDeviceContextXp   *mDeviceContext;
-#else
-  nsDeviceContextXlib *mDeviceContext;
-#endif /* _IMPL_NS_XPRINT */ 
+  nsIDeviceContext    *mDeviceContext;
+
   nsFont              *mFont;
   XFontStruct         *mFontHandle;
   XFontStruct         *mFontStruct;

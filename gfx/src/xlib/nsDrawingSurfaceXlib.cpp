@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   David Smith <david@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsDrawingSurfaceXlib.h"
@@ -31,10 +32,10 @@
 static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
 #endif /* PR_LOGGING */ 
 
-nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
+nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()
 {
   NS_INIT_REFCNT();
-  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()\n"));
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl()\n"));
   mDrawable = 0;
   mDestroyDrawable = PR_FALSE;
   mImage = nsnull;
@@ -57,9 +58,9 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
   mIsOffscreen = PR_FALSE;
 }
 
-nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
+nsDrawingSurfaceXlibImpl::~nsDrawingSurfaceXlibImpl()
 {
-  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n"));
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::~nsDrawingSurfaceXlibImpl()\n"));
   // if it's been labeled as destroy, it's a pixmap.
   if (mDestroyDrawable) {
     XFreePixmap(mDisplay, mDrawable);
@@ -75,14 +76,14 @@ nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsDrawingSurfaceXlib, nsIDrawingSurface)
+NS_IMPL_ISUPPORTS1(nsDrawingSurfaceXlibImpl, nsIDrawingSurfaceXlib)
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Init(XlibRgbHandle *aXlibRgbHandle,
-                           Drawable  aDrawable, 
-                           xGC        *aGC) 
+nsDrawingSurfaceXlibImpl::Init(XlibRgbHandle *aXlibRgbHandle,
+                               Drawable       aDrawable, 
+                               xGC           *aGC) 
 {
-  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Init()\n"));
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::Init()\n"));
 
   mXlibRgbHandle = aXlibRgbHandle;
   mDrawable      = aDrawable;
@@ -99,11 +100,11 @@ nsDrawingSurfaceXlib::Init(XlibRgbHandle *aXlibRgbHandle,
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Init (XlibRgbHandle *aXlibRgbHandle,
-                            xGC     * aGC,
-                            PRUint32  aWidth, 
-                            PRUint32  aHeight, 
-                            PRUint32  aFlags) 
+nsDrawingSurfaceXlibImpl::Init(XlibRgbHandle *aXlibRgbHandle,
+                               xGC     * aGC,
+                               PRUint32  aWidth, 
+                               PRUint32  aHeight, 
+                               PRUint32  aFlags) 
 {
   mXlibRgbHandle = aXlibRgbHandle;
   mWidth = aWidth;
@@ -120,7 +121,7 @@ nsDrawingSurfaceXlib::Init (XlibRgbHandle *aXlibRgbHandle,
   mIsOffscreen = PR_TRUE;
 
   mDrawable = XCreatePixmap(mDisplay, 
-                            XRootWindow(mDisplay, GetScreenNumber()),
+                            XRootWindow(mDisplay, XScreenNumberOfScreen(mScreen)),
                             mWidth, 
                             mHeight, 
                             mDepth);
@@ -128,12 +129,12 @@ nsDrawingSurfaceXlib::Init (XlibRgbHandle *aXlibRgbHandle,
 }
 
 void 
-nsDrawingSurfaceXlib::CommonInit()
+nsDrawingSurfaceXlibImpl::CommonInit()
 {
-  mDisplay  = xxlib_rgb_get_display(mXlibRgbHandle);
-  mScreen   = xxlib_rgb_get_screen(mXlibRgbHandle);
-  mVisual   = xxlib_rgb_get_visual(mXlibRgbHandle);
-  mDepth    = xxlib_rgb_get_depth(mXlibRgbHandle);
+  mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
+  mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
+  mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);
+  mDepth   = xxlib_rgb_get_depth(mXlibRgbHandle);
 
   XVisualInfo *x_visual_info = xxlib_rgb_get_visual_info(mXlibRgbHandle);
   NS_ASSERTION(nsnull != x_visual_info, "Visual info from xlibrgb is null.");
@@ -158,12 +159,12 @@ nsDrawingSurfaceXlib::CommonInit()
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
-                           PRUint32 aWidth, PRUint32 aHeight,
-                           void **aBits, PRInt32 *aStride,
-                           PRInt32 *aWidthBytes, PRUint32 aFlags)
+nsDrawingSurfaceXlibImpl::Lock(PRInt32 aX, PRInt32 aY,
+                               PRUint32 aWidth, PRUint32 aHeight,
+                               void **aBits, PRInt32 *aStride,
+                               PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::Lock()\n"));
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::Lock()\n"));
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -198,9 +199,9 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::Unlock(void)
+nsDrawingSurfaceXlibImpl::Unlock(void)
 {
-  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlib::UnLock()\n"));
+  PR_LOG(DrawingSurfaceXlibLM, PR_LOG_DEBUG, ("nsDrawingSurfaceXlibImpl::UnLock()\n"));
   if (!mLocked) {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
@@ -221,7 +222,7 @@ nsDrawingSurfaceXlib::Unlock(void)
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
+nsDrawingSurfaceXlibImpl::GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 {
   *aWidth = mWidth;
   *aHeight = mHeight;
@@ -229,28 +230,28 @@ nsDrawingSurfaceXlib::GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::IsOffscreen(PRBool *aOffScreen)
+nsDrawingSurfaceXlibImpl::IsOffscreen(PRBool *aOffScreen)
 {
   *aOffScreen = mIsOffscreen;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::IsPixelAddressable(PRBool *aAddressable)
+nsDrawingSurfaceXlibImpl::IsPixelAddressable(PRBool *aAddressable)
 {
   *aAddressable = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDrawingSurfaceXlib::GetPixelFormat(nsPixelFormat *aFormat)
+nsDrawingSurfaceXlibImpl::GetPixelFormat(nsPixelFormat *aFormat)
 {
   *aFormat = mPixFormat;
   return NS_OK;
 }
 
 PRUint8 
-nsDrawingSurfaceXlib::ConvertMaskToCount(unsigned long val)
+nsDrawingSurfaceXlibImpl::ConvertMaskToCount(unsigned long val)
 {
   PRUint8 retval = 0;
   PRUint8 cur_bit = 0;
@@ -266,7 +267,7 @@ nsDrawingSurfaceXlib::ConvertMaskToCount(unsigned long val)
 }
 
 PRUint8 
-nsDrawingSurfaceXlib::GetShiftForMask(unsigned long val)
+nsDrawingSurfaceXlibImpl::GetShiftForMask(unsigned long val)
 {
   PRUint8 cur_bit = 0;
   // walk through the number, looking for the first 1

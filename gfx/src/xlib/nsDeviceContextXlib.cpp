@@ -65,7 +65,6 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   : DeviceContextImpl()
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::nsDeviceContextXlib()\n"));
-  NS_INIT_REFCNT();
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mNumCells = 0;
@@ -86,7 +85,7 @@ nsDeviceContextXlib::nsDeviceContextXlib()
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
 {
-  nsDrawingSurfaceXlib *surf = (nsDrawingSurfaceXlib *)mSurface;
+  nsIDrawingSurfaceXlib *surf = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, mSurface);
   NS_IF_RELEASE(surf);
   mSurface = nsnull;
 }
@@ -165,7 +164,7 @@ nsDeviceContextXlib::CommonInit(void)
 
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
 
-  mWidthFloat = (float) XWidthOfScreen(mScreen);
+  mWidthFloat  = (float) XWidthOfScreen(mScreen);
   mHeightFloat = (float) XHeightOfScreen(mScreen);
 
   DeviceContextImpl::CommonInit();
@@ -175,22 +174,22 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::CreateRenderingContext()\n"));
 
-  nsIRenderingContext  *context = nsnull;
-  nsDrawingSurfaceXlib *surface = nsnull;
+  nsIRenderingContext      *context;
+  nsDrawingSurfaceXlibImpl *surface = nsnull;
   nsresult                  rv;
 
   context = new nsRenderingContextXlib();
 
   if (nsnull != context) {
     NS_ADDREF(context);
-    surface = new nsDrawingSurfaceXlib();
+    surface = new nsDrawingSurfaceXlibImpl();
     if (nsnull != surface) {
-      xGC *gc = new xGC(mDisplay,(Drawable) mWidget, 0, NULL);
+      xGC *gc = new xGC(mDisplay, (Drawable)mWidget, 0, nsnull);
       rv = surface->Init(mXlibRgbHandle,
-                         (Drawable) mWidget, 
+                         (Drawable)mWidget, 
                          gc);
 
-      if (NS_OK == rv) {
+      if (NS_SUCCEEDED(rv)) {
         rv = context->Init(this, surface);
       }
     }
@@ -202,7 +201,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
   
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     NS_IF_RELEASE(context);
   }
   aContext = context;
@@ -320,12 +319,11 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
       aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
       aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
 
-
       if (!mDefaultFont)
         return NS_ERROR_FAILURE;
       else
       {
-        char *fontName = (char *)NULL;
+        char *fontName = nsnull;
         unsigned long pr = 0;
 
         ::XGetFontProperty(mDefaultFont, XA_FULL_NAME, &pr);
@@ -366,7 +364,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
 NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDrawingSurface()\n"));
-  if (NULL == mSurface) {
+  if (nsnull == mSurface) {
     aContext.CreateDrawingSurface(nsnull, 0, mSurface);
   }
   aSurface = mSurface;

@@ -69,6 +69,7 @@ int xerror_handler( Display *display, XErrorEvent *ev )
  */
 nsXPrintContext::nsXPrintContext()
 {
+  NS_INIT_REFCNT();
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
   
   mXlibRgbHandle = (XlibRgbHandle *)nsnull;
@@ -92,10 +93,16 @@ nsXPrintContext::nsXPrintContext()
 nsXPrintContext::~nsXPrintContext()
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::~nsXPrintContext()\n"));
-
+ 
   // end the document
   if( mPDisplay != nsnull )
   {
+    if (mGC)
+    {
+      mGC->Release();
+      mGC = nsnull;
+    }
+    
     XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
 
     // Cleanup things allocated along the way
@@ -110,6 +117,8 @@ nsXPrintContext::~nsXPrintContext()
   
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::~nsXPrintContext() done.\n"));
 }
+
+NS_IMPL_ISUPPORTS1(nsXPrintContext, nsIDrawingSurfaceXlib)
 
 NS_IMETHODIMP 
 nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)

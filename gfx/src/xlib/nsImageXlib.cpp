@@ -49,6 +49,7 @@ static GC s1bitGC = 0;
 static GC sXbitGC = 0;
 
 XlibRgbHandle *nsImageXlib::mXlibRgbHandle = nsnull;
+Display       *nsImageXlib::mDisplay       = nsnull;
 
 nsImageXlib::nsImageXlib()
 {
@@ -70,15 +71,17 @@ nsImageXlib::nsImageXlib()
   mAlphaHeight = 0;
   mAlphaValid = PR_FALSE;
   mIsSpacer = PR_TRUE;
-  mDisplay = nsnull;
   mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
   mPendingUpdate = PR_FALSE;
 
-  if (!mXlibRgbHandle)
+  if (!mXlibRgbHandle) {
     mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
-  if (!mXlibRgbHandle)
+    mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
+  }  
+  
+  if (!mXlibRgbHandle || !mDisplay)
     abort();
 }
 
@@ -461,7 +464,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
   if ((aDWidth <= 0 || aDHeight <= 0) || (aSWidth <= 0 || aSHeight <= 0))
     return NS_OK;
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
 
   if (mAlphaDepth == 1)
     CreateAlphaBitmap(mWidth, mHeight);
@@ -480,7 +483,8 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
     PRBool succeeded = PR_FALSE;
 
     xGC *xiegc = ((nsRenderingContextXlib&)aContext).GetGC();
-    succeeded = DrawScaledImageXIE(mDisplay, drawing->GetDrawable(),
+    Drawable drawable; drawing->GetDrawable(drawable);
+    succeeded = DrawScaledImageXIE(mDisplay, drawable,
                                    *xiegc,
                                    mImagePixmap,
                                    mWidth, mHeight,
@@ -557,7 +561,8 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
     values.clip_x_origin = aDX;
     values.clip_y_origin = aDY;
     values.clip_mask = pixmap;
-    gc = XCreateGC(mDisplay, drawing->GetDrawable(),
+    Drawable drawable; drawing->GetDrawable(drawable);
+    gc = XCreateGC(mDisplay, drawable,
                    GCClipXOrigin | GCClipYOrigin | GCClipMask,
                    &values);
   } else {
@@ -571,7 +576,8 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
                 0, 0, aDWidth-1, aDHeight-1,
                 mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
 
-    xxlib_draw_rgb_image(mXlibRgbHandle, drawing->GetDrawable(), gc,
+    Drawable drawable; drawing->GetDrawable(drawable);
+    xxlib_draw_rgb_image(mXlibRgbHandle, drawable, gc,
                          aDX, aDY, aDWidth, aDHeight,
                          XLIB_RGB_DITHER_MAX,
                          scaledRGB, 3*aDWidth);
@@ -651,9 +657,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     return NS_OK;
   }
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-  if (mDisplay == nsnull)
-    mDisplay = drawing->GetDisplay();
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
 
   if (mAlphaDepth == 1)
     CreateAlphaBitmap(mWidth, mHeight);
@@ -676,14 +680,16 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
         xvalues.clip_mask = mAlphaPixmap;
       }
-      mGC = XCreateGC(mDisplay, drawing->GetDrawable(), xvalues_mask , &xvalues);
+      Drawable drawable; drawing->GetDrawable(drawable);
+      mGC = XCreateGC(mDisplay, drawable, xvalues_mask , &xvalues);
       copyGC = mGC;
     }
   } else {  /* !mAlphaPixmap */
     copyGC = *gc;
   }
 
-  XCopyArea(mDisplay, mImagePixmap, drawing->GetDrawable(),
+  Drawable drawable; drawing->GetDrawable(drawable);
+  XCopyArea(mDisplay, mImagePixmap, drawable,
         copyGC, aSX, aSY, aSWidth, aSHeight, aDX, aDY);
 
   gc->Release();
@@ -998,9 +1004,8 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   if ((aDWidth==0) || (aDHeight==0))
     return;
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-  mDisplay          = drawing->GetDisplay(); 
-  Drawable drawable = drawing->GetDrawable();
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
+  Drawable drawable; drawing->GetDrawable(drawable);
   Visual  *visual   = xxlib_rgb_get_visual(mXlibRgbHandle);
 
   // I hate clipping... too!
@@ -1137,7 +1142,7 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
                      readWidth, readHeight, ximage, readData);
 
   xGC *imageGC = ((nsRenderingContextXlib&)aContext).GetGC();
-  xxlib_draw_rgb_image(mXlibRgbHandle, drawing->GetDrawable(), *imageGC,
+  xxlib_draw_rgb_image(mXlibRgbHandle, drawable, *imageGC,
                        readX, readY, readWidth, readHeight,
                        XLIB_RGB_DITHER_MAX,
                        readData, 3*readWidth);
@@ -1155,9 +1160,6 @@ void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
 {
   XImage *x_image = nsnull;
   XGCValues gcv;
-
-  if (mDisplay == nsnull)
-    mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
   /* Create gc clip-mask on demand */
   if (mAlphaBits && IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
@@ -1215,9 +1217,6 @@ void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
 void nsImageXlib::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
 {
   if (mImagePixmap == nsnull) {
-    if (mDisplay == nsnull)
-      mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
-
     mImagePixmap = XCreatePixmap(mDisplay, XDefaultRootWindow(mDisplay),
                                  aWidth, aHeight,
                                  xxlib_rgb_get_depth(mXlibRgbHandle));
@@ -1270,9 +1269,7 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
     aHeight = mHeight;
   }
 
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-  if (mDisplay == nsnull)
-    mDisplay = drawing->GetDisplay();
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
   
   PRInt32
     validX = 0,
@@ -1315,14 +1312,16 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
         xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
         xvalues.clip_mask = mAlphaPixmap;
       }
-      mGC = XCreateGC(mDisplay, drawing->GetDrawable(), xvalues_mask , &xvalues);
+      Drawable drawable; drawing->GetDrawable(drawable);
+      mGC = XCreateGC(mDisplay, drawable, xvalues_mask , &xvalues);
       copyGC = mGC;
     }
   } else {  /* !mAlphaPixmap */
     copyGC = *gc;
   }
 
-  XCopyArea(mDisplay, mImagePixmap, drawing->GetDrawable(),
+  Drawable drawable; drawing->GetDrawable(drawable);
+  XCopyArea(mDisplay, mImagePixmap, drawable,
             copyGC, validX, validY,
             validWidth, validHeight,
             validX + aX, validY + aY);
@@ -1374,7 +1373,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
   if ((mAlphaDepth == 1) && mIsSpacer)
     return NS_OK;
   
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
   PRBool partial = PR_FALSE;
   
   PRInt32
@@ -1403,9 +1402,12 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     validX = mDecodedX1; 
     partial = PR_TRUE;
   }
+  
+  XlibRgbHandle *drawingXHandle; 
+  drawing->GetXlibRgbHandle(drawingXHandle);
 
   if (partial || 
-      (drawing->GetDepth() == 8) ||
+      (xxlib_rgb_get_depth(drawingXHandle) == 8) ||
       ((mAlphaDepth == 8) && mAlphaValid)) {
     PRInt32 aY0 = aTileRect.y,
     aX0 = aTileRect.x,
@@ -1453,10 +1455,11 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     values.clip_x_origin = aTileRect.x;
     values.clip_y_origin = aTileRect.y;
     valuesMask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
-    fgc = XCreateGC(mDisplay, drawing->GetDrawable(), valuesMask, &values);
+    Drawable drawable; drawing->GetDrawable(drawable);
+    fgc = XCreateGC(mDisplay, drawable, valuesMask, &values);
 
     // and copy it back
-    XCopyArea(mDisplay, tileImg, drawing->GetDrawable(),
+    XCopyArea(mDisplay, tileImg, drawable,
               fgc, 0,0,
               aTileRect.width, aTileRect.height,
               aTileRect.x, aTileRect.y);
@@ -1471,7 +1474,8 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     nsRect clipRect;
     PRBool isValid;
     aContext.GetClipRect(clipRect, isValid);
-    TilePixmap(mImagePixmap, drawing->GetDrawable(), aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
+    Drawable drawable; drawing->GetDrawable(drawable);
+    TilePixmap(mImagePixmap, drawable, aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
   }
   return NS_OK;
 }
@@ -1493,9 +1497,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
   
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-  if (mDisplay == nsnull)
-    mDisplay = drawing->GetDisplay();
+  nsIDrawingSurfaceXlib *drawing = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aSurface);
 
   PRBool partial = PR_FALSE;
 
@@ -1559,9 +1561,11 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
 
     nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
 
+    XlibRgbHandle *drawingXHandle; 
+    drawing->GetXlibRgbHandle(drawingXHandle);
     tileImg = XCreatePixmap(mDisplay, mImagePixmap,
                             aTileRect.width, aTileRect.height,
-                            drawing->GetDepth());
+                            xxlib_rgb_get_depth(drawingXHandle));
     TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
                tmpRect, PR_FALSE);
 
@@ -1575,14 +1579,15 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     XGCValues values;
     unsigned long valuesMask;
 
+    Drawable drawable; drawing->GetDrawable(drawable);
     memset(&values, 0, sizeof(XGCValues));
     values.clip_mask = tileMask;
     values.clip_x_origin = aTileRect.x;
     values.clip_y_origin = aTileRect.y;
     valuesMask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
-    fgc = XCreateGC(mDisplay, drawing->GetDrawable(), valuesMask, &values);
+    fgc = XCreateGC(mDisplay, drawable, valuesMask, &values);
 
-    XCopyArea(mDisplay, tileImg, drawing->GetDrawable(),
+    XCopyArea(mDisplay, tileImg, drawable,
               fgc, 0,0,
               aTileRect.width, aTileRect.height,
               aTileRect.x, aTileRect.y);
@@ -1598,7 +1603,8 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
 
     aContext.GetClipRect(clipRect, isValid);
 
-    TilePixmap(mImagePixmap, drawing->GetDrawable(), aSXOffset, aSYOffset,
+    Drawable drawable; drawing->GetDrawable(drawable);
+    TilePixmap(mImagePixmap, drawable, aSXOffset, aSYOffset,
                aTileRect, clipRect, PR_FALSE);
   }
 
@@ -1642,7 +1648,6 @@ nsImageXlib::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   return NS_OK;
 }
 
-#ifdef USE_IMG2
 NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
                                        nscoord aDX, nscoord aDY,
                                        nscoord aDWidth, nscoord aDHeight)
@@ -1659,9 +1664,6 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
   
   if (!dest->mImagePixmap || !mImagePixmap)
     return NS_ERROR_FAILURE;
-
-  if (!mDisplay)
-    mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
   GC gc = XCreateGC(mDisplay, dest->mImagePixmap, 0, NULL);
 
@@ -1777,4 +1779,5 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
 
   return NS_OK;
 }
-#endif // USE_IMG2
+
+

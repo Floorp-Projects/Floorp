@@ -41,8 +41,10 @@ CSRCS		= \
 		xprintutil_printtofile.c \
 		$(NULL)
 
+# nsDrawingSurfaceXlib only required for staticbuild 
 CPPSRCS		= \
 		nsDeviceContextXP.cpp \
+		nsDrawingSurfaceXlib.cpp \
 		nsFontMetricsXlib.cpp \
 		nsRenderingContextXlib.cpp \
 		nsGfxFactoryXP.cpp \
@@ -69,7 +71,7 @@ MDDEPDIR       := $(MDDEPDIR)_vpath
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES -DUSE_XPRINT -D_IMPL_NS_XPRINT
+DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES -DUSE_XPRINT
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
@@ -88,4 +90,5 @@ INCLUDES	+= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
+		-I$(srcdir)/.. \
 		$(NULL)

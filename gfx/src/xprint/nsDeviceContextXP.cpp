@@ -94,9 +94,7 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   float t2d, a2d;
   int   print_resolution;
 
-  mPrintContext->GetPrintResolution(print_resolution);  
-  mScreen  = mPrintContext->GetScreen();
-  mDisplay = mPrintContext->GetDisplay();
+  mPrintContext->GetPrintResolution(print_resolution);
 
   mPixelsToTwips = (float)NSIntPointsToTwips(72) / (float)print_resolution;
   mTwipsToPixels = 1.0f / mPixelsToTwips;
@@ -128,9 +126,9 @@ NS_IMETHODIMP nsDeviceContextXp :: CreateRenderingContext(nsIRenderingContext *&
 {
    nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
 
-   nsCOMPtr<nsRenderingContextXlib> xpContext;
+   nsCOMPtr<nsRenderingContextXp> xpContext;
 
-   xpContext = new nsRenderingContextXlib();
+   xpContext = new nsRenderingContextXp();
    if (xpContext) {
      rv = xpContext->Init(this);
    }
@@ -265,8 +263,7 @@ void nsDeviceContextXp::DestroyXPContext()
     nsRenderingContextXlib::Shutdown();
     nsFontMetricsXlib::FreeGlobals();
     
-    delete mPrintContext;
-    mPrintContext = nsnull;
+    mPrintContext = nsnull; // nsCOMPtr will call |delete mPrintContext;|
   } 
 }
 
@@ -319,30 +316,10 @@ NS_IMETHODIMP nsDeviceContextXp :: ConvertPixel(nscolor aColor,
                                                         PRUint32 & aPixel)
 {
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::ConvertPixel()\n"));
-  aPixel = xxlib_rgb_xpixel_from_rgb(mPrintContext->GetXlibRgbHandle(),
+  aPixel = xxlib_rgb_xpixel_from_rgb(GetXlibRgbHandle(),
                                      NS_RGB(NS_GET_B(aColor),
                                             NS_GET_G(aColor),
                                             NS_GET_R(aColor)));
-  return NS_OK;
-}
-
-Display *
-nsDeviceContextXp::GetDisplay() 
-{
-  if (mPrintContext != nsnull) {
-    return mDisplay; 
-  } else {
-    return (Display *)nsnull;
-  }
-}
-
-NS_IMETHODIMP nsDeviceContextXp::GetDepth(PRUint32& aDepth)
-{
-  if (mPrintContext != nsnull) {
-    aDepth = mPrintContext->GetDepth(); 
-  } else {
-    aDepth = 0; 
-  }
   return NS_OK;
 }
 

@@ -66,15 +66,10 @@ public:
 
   NS_IMETHOD CreateFontCache();
 
-  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }  
-  Display   *GetDisplay() { return mDisplay; }
-  Screen    *GetScreen() { return mScreen; }
-  Visual    *GetVisual() { return mVisual; }
-  int        GetDepth() { return mDepth; }
-  NS_IMETHOD GetDepth( PRUint32 &depth ) { depth=(PRUint32)mDepth;return NS_OK; }
+  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
+  NS_IMETHOD GetDepth( PRUint32 &depth ) { depth = (PRUint32)mDepth; return NS_OK; }
 
 protected:
-
   virtual ~nsDeviceContextXlib();
 
 private:

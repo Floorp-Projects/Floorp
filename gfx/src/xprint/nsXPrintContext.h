@@ -35,31 +35,43 @@
 #include "nsIImage.h"
 #include "nsGCCache.h"
 #include "nsIDeviceContextSpecXPrint.h"
+#include "nsDrawingSurfaceXlib.h"
 #include "xlibrgb.h"
 
 class nsDeviceContextXp;
 
-class nsXPrintContext
+class nsXPrintContext : public nsIDrawingSurfaceXlib
 {
 public:
   nsXPrintContext();
   virtual ~nsXPrintContext();
-  
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Lock(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
+                  void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
+                  PRUint32 aFlags)  { return NS_OK; };
+  NS_IMETHOD Unlock(void)  { return NS_OK; };
+  NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)  { return NS_OK; };
+  NS_IMETHOD IsOffscreen(PRBool *aOffScreen) { return NS_OK; };
+  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable) { return NS_OK; };
+  NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat) { return NS_OK; };
+ 
   NS_IMETHOD Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
   NS_IMETHOD BeginDocument(PRUnichar *aTitle);
   NS_IMETHOD EndDocument();
  
-  Drawable   GetDrawable() { return (mDrawable); }
-  Screen *   GetScreen() { return mScreen; }
-  Visual *   GetVisual() { return mVisual; }
-  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
-  int        GetDepth() { return mDepth; }
-  int        GetHeight() { return mHeight; }
-  int        GetWidth() { return mWidth; }
+
+  int                     GetHeight() { return mHeight; }
+  int                     GetWidth() { return mWidth; }
+  NS_IMETHOD GetDrawable(Drawable &aDrawable) { aDrawable = mDrawable; return NS_OK; }
+  NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) { aHandle = mXlibRgbHandle; return NS_OK; }
+  NS_IMETHOD GetGC(xGC *&aXGC) { mGC->AddRef(); aXGC = mGC; return NS_OK; }
   
-  Display *  GetDisplay() { return mPDisplay; }
+  void                    SetGC(xGC *aGC) { mGC = aGC; mGC->AddRef(); }
+
   NS_IMETHOD GetPrintResolution(int &aPrintResolution);
 
   NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
@@ -86,6 +98,7 @@ private:
   Screen       *mScreen;
   Visual       *mVisual;
   Drawable      mDrawable; /* window */
+  xGC          *mGC;
   int           mDepth;
   int           mScreenNumber;
   int           mWidth;
