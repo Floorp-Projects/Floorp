@@ -37,13 +37,15 @@ typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProg
 typedef 	nsresult (*XPI_InstallProc)(const FSSpec& file, const char* args,long flags);
 typedef		nsresult (*XPI_ExitProc)();
 
-/* XPI Stub Load/Unload */
+/* XPI Run APIs */
 OSErr		LoadXPIStub(XPI_InitProc* pfnInit, 
 						XPI_InstallProc* pfnInstall, 
 						XPI_ExitProc* pfnExit, 
 						CFragConnectionID* connID,
 						FSSpec& aTargetDir);
 Boolean		UnloadXPIStub(CFragConnectionID* connID);
+OSErr		RunXPI(FSSpec&, XPI_InstallProc*);
+Boolean		IsArchiveXPI(StringPtr archive);
 
 /* Progress Bar Callbacks */
 void 		xpicbStart(const char *URL, const char* UIName);
@@ -185,7 +187,6 @@ void
 xpicbFinal(const char *URL, PRInt32 finalStatus)
 {
 	// TO DO
-	// SysBeep(10);
 	
 	bMaxDiscovered = false;
 	return;
@@ -194,43 +195,70 @@ xpicbFinal(const char *URL, PRInt32 finalStatus)
 OSErr
 RunAllXPIs(short vRefNum, long dirID)
 {
-	OSErr 	err = noErr;
-	FSSpec	tgtDirSpec, xpiStubDirSpec, xpiSpec;
-
-	err = FSMakeFSSpec(vRefNum, dirID, 0, &xpiStubDirSpec); /* temp dir */
-	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
-	
-	// TO DO
-	//		enumerate through all .xpi's
-	err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec); // XXX change
-
-	if (err==noErr)
-		err =  RunXPI(xpiSpec, xpiStubDirSpec, tgtDirSpec);
-	else
-		ErrorHandler(); 
-		
-	return err;
-}
-
-OSErr
-RunXPI(FSSpec& aXPI, FSSpec& aXPIStubDir, FSSpec& aTargetDir)
-{	
-	nsresult			rv;
-	OSErr	 			err = noErr;
-	long				flags = 0x0000;
+	OSErr 				err = noErr;
+	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec;
 	XPI_InitProc		xpi_initProc;
 	XPI_InstallProc		xpi_installProc;
 	XPI_ExitProc		xpi_exitProc;
 	CFragConnectionID	connID;
+	nsresult 			rv = NS_OK;
+	StringPtr			pcurrArchive;
+	int					i, compsDone = 0, instChoice = gControls->opt->instChoice-1;;
+	Boolean				isCurrXPI = false;
 	
-	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, aXPIStubDir), err);
+	err = FSMakeFSSpec(vRefNum, dirID, 0, &xpiStubDirSpec); /* temp dir */
+	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
 	
-	XPI_ERR_CHECK(xpi_initProc( aXPIStubDir, aTargetDir, xpicbStart, xpicbProgress, xpicbFinal ));
-
-	XPI_ERR_CHECK(xpi_installProc( aXPI, "", flags ));
+	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
+	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbStart, xpicbProgress, xpicbFinal ));
 	
-	xpi_exitProc();
+	// enumerate through all .xpi's
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected, or not custom setup type
+			// add file to buffer
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{
+				HLock(gControls->cfg->comp[i].archive);
+				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
+				HUnlock(gControls->cfg->comp[i].archive);
+	
+				isCurrXPI = IsArchiveXPI(pcurrArchive);
+							
+				err = FSMakeFSSpec(vRefNum, dirID, pcurrArchive, &xpiSpec);
+				if (err==noErr && isCurrXPI)
+					RunXPI(xpiSpec, &xpi_installProc);
+				if (pcurrArchive)
+					DisposePtr((Ptr) pcurrArchive);
+				compsDone++;
+			}
+		}
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+			break;  
+	}
+	
+	xpi_exitProc();	
 	UnloadXPIStub(&connID);
+	return err;
+}
+
+OSErr
+RunXPI(FSSpec& aXPI, XPI_InstallProc *xpi_installProc)
+{	
+	nsresult	rv;
+	OSErr	 	err = noErr;
+	long		flags = 0x1000; /* XPI_NO_NEW_THREAD = 0x1000 from nsISoftwareUpdate.h */
+
+	rv = (*xpi_installProc)( aXPI, "", flags );
+	if (NS_FAILED(rv))
+		return -1;
 
 	return err;
 }
@@ -289,4 +317,16 @@ UnloadXPIStub(CFragConnectionID* connID)
 	}
 	
 	return false; 
+}
+
+Boolean 
+IsArchiveXPI(StringPtr archive)
+{
+	long 	len = *archive;
+	char 	*extStart = (char*)(&archive[1] + len - 4); /* extension length of ".xpi" = 4 */
+	
+	if (strncmp(extStart, ".xpi", 4) == 0)
+		return true;
+	
+	return false;
 }
