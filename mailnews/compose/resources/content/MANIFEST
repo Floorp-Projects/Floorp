@@ -21,9 +21,6 @@
 #
 
 MsgComposeCommands.js
-defaultHtmlBody.html
-defaultTextBody.html
-defaultTextBody.txt
 messengercompose.xul
 addressAutoComplete.js
 MsgAttachPage.js
