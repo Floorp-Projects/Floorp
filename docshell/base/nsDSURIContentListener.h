@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIURIContentListener.h"
+#include "nsICategoryManager.h"
 
 class nsDocShell;
 
@@ -36,6 +37,8 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIURICONTENTLISTENER
+
+    nsresult Init();
 
 protected:
     nsDSURIContentListener();
@@ -48,6 +51,7 @@ protected:
     nsDocShell*                      mDocShell;
 
     nsIURIContentListener*           mParentContentListener;  // Weak Reference
+    nsCOMPtr<nsICategoryManager>     mCatMgr;
 };
 
 #endif /* nsDSURIContentListener_h__ */

@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutModule.h"
 #include "nsIComponentManager.h"
+#include "nsICategoryManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
@@ -181,38 +182,8 @@ nsLayoutDLF::~nsLayoutDLF()
 {
 }
 
-NS_IMPL_ADDREF(nsLayoutDLF)
-NS_IMPL_RELEASE(nsLayoutDLF)
-
-NS_IMETHODIMP
-nsLayoutDLF::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderFactory))) {
-    nsIDocumentLoaderFactory *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDocStreamLoaderFactory))) {
-    nsIDocStreamLoaderFactory *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDocumentLoaderFactory *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsLayoutDLF, nsIDocumentLoaderFactory,
+                                nsIDocStreamLoaderFactory);
 
 NS_IMETHODIMP
 nsLayoutDLF::CreateInstance(const char *aCommand,
@@ -550,6 +521,7 @@ static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_
 
 static nsresult
 RegisterTypes(nsIComponentManager* aCompMgr,
+              nsICategoryManager* aCatMgr,
               const char* aCommand,
               nsIFile* aPath,
               char** aTypes)
@@ -566,9 +538,16 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 #endif
     rv = aCompMgr->RegisterComponentSpec(kDocumentFactoryImplCID, "Layout",
                                          contractid, aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      break;
-    }
+    if (NS_FAILED(rv)) break;
+
+    // add the MIME types layotu can handle to the handlers category.
+    // this allows users of layout's viewers (the docshell for example)
+    // to query the types of viewers layout can create.
+    nsXPIDLCString previous;
+    rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
+			                    contractid,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+    if (NS_FAILED(rv)) break;
   }
   return rv;
 }
@@ -579,26 +558,29 @@ nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
 {
   nsresult rv;
 
+  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
   do {
-    rv = RegisterTypes(aCompMgr, "view", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view-source", aPath, gHTMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view-source", aPath, gXMLTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view", aPath, gImageTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gImageTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, gRDFTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, "view-source", aPath, gRDFTypes);
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, gRDFTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);

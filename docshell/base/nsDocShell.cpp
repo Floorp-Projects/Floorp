@@ -4407,6 +4407,7 @@ NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollVi
 
 NS_IMETHODIMP nsDocShell::EnsureContentListener()
 {
+   nsresult rv = NS_OK;
    if(mContentListener)
       return NS_OK;
    
@@ -4414,6 +4415,10 @@ NS_IMETHODIMP nsDocShell::EnsureContentListener()
    NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
 
    NS_ADDREF(mContentListener);
+
+   rv = mContentListener->Init();
+   if (NS_FAILED(rv)) return rv;
+
    mContentListener->DocShell(this);
 
    return NS_OK;
