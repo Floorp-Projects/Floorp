@@ -1162,36 +1162,11 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       XtVaSetValues(children[i], XmNx, x + aDx, XmNy, y + aDy, nsnull);
     } 
   }
-  
-  Window  win      = XtWindow(mWidget);
-  Display *display = XtDisplay(mWidget);
-  
-  if (nsnull != aClipRect) {
-    XCopyArea(display, win, win, XDefaultGC(display, 0), 
-            aClipRect->x, aClipRect->y, 
-            aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
-  }
 
-   // Force a repaint
-  XEvent evt;
-  evt.xgraphicsexpose.type       = GraphicsExpose;
-  evt.xgraphicsexpose.send_event = False;
-  evt.xgraphicsexpose.display    = display;
-  evt.xgraphicsexpose.drawable   = win;
-  if (aDy < 0) {
-    evt.xgraphicsexpose.x          = 0;
-    evt.xgraphicsexpose.y          = mBounds.height+aDy;
-    evt.xgraphicsexpose.width      = mBounds.width;
-    evt.xgraphicsexpose.height     = -aDy;
-  } else {
-    evt.xgraphicsexpose.x          = 0;
-    evt.xgraphicsexpose.y          = 0;
-    evt.xgraphicsexpose.width      = mBounds.width;
-    evt.xgraphicsexpose.height     = aDy;
-  }
-  evt.xgraphicsexpose.count      = 0;
-  XSendEvent(display, win, False, ExposureMask, &evt);
-  XFlush(display);
+  if (aClipRect)
+    Invalidate(*aClipRect, PR_TRUE);
+  else
+    Invalidate(PR_TRUE);
   return NS_OK;
 }
 
@@ -1413,37 +1388,32 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-  nsresult result ;
+  nsresult result;
 
-  // call the event callback 
+  // call the event callback
   if (mEventCallback) {
-
-    nsRect rr ;
-
-    /* 
-     * Maybe  ... some day ... somone will pull the invalid rect
-     * out of the paint message rather than drawing the whole thing...
-     */
-    GetBounds(rr);
-
-    rr.x = 0;
-    rr.y = 0;
-    
-    event.rect = &rr;
-
     event.renderingContext = nsnull;
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, 
-					      nsnull, 
-					      kRenderingContextIID, 
+#if 0
+    if (event.rect) {
+    printf("nsWindow::OnPaint(this=%p, {%i,%i,%i,%i})\n", this,
+            event.rect->x, event.rect->y,
+            event.rect->width, event.rect->height);
+    }
+    else {
+      printf("nsWindow::OnPaint(this=%p, NO RECT)\n", this);
+    }
+#endif
+    static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
+                                              nsnull,
+                                              nsIRenderingContext::GetIID(),
 					      (void **)&event.renderingContext))
       {
         event.renderingContext->Init(mContext, this);
         result = DispatchWindowEvent(&event);
         NS_RELEASE(event.renderingContext);
       }
-    else 
+    else
       {
         result = PR_FALSE;
       }
@@ -1713,23 +1683,6 @@ NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 
   aWidth  = rectWin.width - rectClient.width;
   aHeight = rectWin.height - rectClient.height;
-
-  return NS_OK;
-}
-
-/**
- * Paints default border (XXX - this should be done by CSS)
- * (This method is in nsBaseWidget)
- *
- **/
-NS_METHOD nsWindow::Paint(nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect)
-{
-  nsRect rect;
-  GetBounds(rect);
-  aRenderingContext.SetColor(NS_RGB(0,0,0));
-
-  aRenderingContext.DrawRect(rect);
 
   return NS_OK;
 }

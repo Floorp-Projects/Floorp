@@ -164,25 +164,3 @@ NS_METHOD nsButton::GetLabel(nsString& aBuffer)
   return (NS_OK);
 
 }
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsButton::OnResize(nsSizeEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-

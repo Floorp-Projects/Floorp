@@ -189,28 +189,6 @@ typedef struct COLLAPSE_INFO {
 } CollapseInfo;
 
 //==============================================================
-static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data) 
-{
-    CollapseInfo *cinfo = (CollapseInfo*)client_data; 
-
-    if ((evt->type == Expose && evt->xexpose.window == cinfo->win &&
-         INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
-                    evt->xexpose.x, evt->xexpose.y, 
-                    evt->xexpose.x + evt->xexpose.width, 
-                    evt->xexpose.y + evt->xexpose.height)) ||
-         (evt->type == GraphicsExpose && evt->xgraphicsexpose.drawable == cinfo->win &&
-         INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
-                    evt->xgraphicsexpose.x, evt->xgraphicsexpose.y, 
-                    evt->xgraphicsexpose.x + evt->xgraphicsexpose.width, 
-                    evt->xgraphicsexpose.y + evt->xgraphicsexpose.height))) {
-
-        return True;
-    }
-    return False;
-}
-
-
-//==============================================================
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
@@ -317,19 +295,9 @@ void nsXtWidget_Focus_Callback(Widget w, XtPointer p, XtPointer call_data)
 }
 
 //==============================================================
-void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data)
-{
-  nsWindow * widgetWindow = (nsWindow *) p;
-  if (DBG) fprintf(stderr, "***************** nsXtWidget_Scrollbar_Callback\n");
-
-  nsScrollbarEvent sevent;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-}
-
-//==============================================================
 void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
 {
-  nsCheckButton * checkBtn = (nsCheckButton *) p ;
+  nsCheckButton * checkBtn = (nsCheckButton *) p;
 
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   
@@ -341,9 +309,7 @@ void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
 {
-  nsCheckButton * checkBtn = (nsCheckButton *) p ;
-  nsScrollbarEvent sevent;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
+  nsCheckButton * checkBtn = (nsCheckButton *) p;
   checkBtn->DisArmed();
 }
 
@@ -362,7 +328,6 @@ void nsXtWidget_RadioButton_ArmCallback(Widget w, XtPointer p, XtPointer call_da
 void nsXtWidget_RadioButton_DisArmCallback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsRadioButton * radioBtn = (nsRadioButton *) p ;
-  nsScrollbarEvent sevent;
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
   radioBtn->DisArmed();
   nsMouseEvent mevent;
@@ -447,7 +412,6 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
-  nsWindow * widgetWindow = (nsWindow *) p ;
   int len;
   XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *) call_data;
   PasswordData * data;
@@ -505,7 +469,6 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
 //==============================================================
 void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
-  nsWindow * widgetWindow = (nsWindow *) p ;
   Modifiers modout = 0;
   KeySym res;
 

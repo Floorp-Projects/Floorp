@@ -15,11 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 /* 
    nsXtManageWidget.h --- defines a subclass of XmManager
    Lifted from xfe code 9/10/98. Modified to support resize.
  */
-
 
 #ifndef _FE_NEWMANAGE_H_
 #define _FE_NEWMANAGE_H_

@@ -125,7 +125,6 @@ public:
     NS_IMETHOD            SetVerticalScrollbar(nsIWidget * aScrollbar);
     NS_IMETHOD            GetClientBounds(nsRect &aRect);
     NS_IMETHOD            GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
-    NS_IMETHOD            Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
     NS_IMETHOD            EnableFileDrop(PRBool aEnable);
     NS_IMETHOD            CaptureMouse(PRBool aCapture);
 

@@ -19,7 +19,7 @@
 #ifndef __nsXtEventHandler_h      
 #define __nsXtEventHandler_h
 
-#include "Xm/Xm.h"
+#include <Xm/Xm.h>
 
 class nsIWidget;
 class nsIMenuItem;
@@ -41,7 +41,6 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data);
 //----------------------------------------------------
 void nsXtWidget_Focus_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_RadioButton_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
@@ -58,8 +57,3 @@ void nsXtWidget_ResetResize_Callback(XtPointer call_data);
 void nsXtWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data);
 
 #endif  // __nsXtEventHandler.h
-
-
-
-
-
