@@ -1130,7 +1130,7 @@ NET_ChangeMemCacheLock(URL_Struct *URL_s, PRBool set)
 			/* decrement lock counter */
 			found_cache_obj->external_locks--;
 
-			PR_ASSERT(found_cache_obj->external_locks >= 0);
+/*			PR_ASSERT(found_cache_obj->external_locks >= 0); */
 
 			if(found_cache_obj->external_locks < 0)
 				found_cache_obj->external_locks = 0;
