@@ -47,7 +47,8 @@ interface nsIMsgSearchSession :  nsISupports {
 
 	void AddSearchTermArray (in nsISupportsArray searchTerms);
 
-	void CreateSearchTerm (out nsIMsgSearchTerm searchTerm);
+	nsIMsgSearchTerm createTerm ();
+    void appendTerm(in nsIMsgSearchTerm term);
 
 	void RegisterListener (in nsIMsgSearchNotify listener);
 	void UnregisterListener (in nsIMsgSearchNotify listener);

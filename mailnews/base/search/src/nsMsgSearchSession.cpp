@@ -73,6 +73,14 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
 }
 
 NS_IMETHODIMP
+nsMsgSearchSession::AppendTerm(nsIMsgSearchTerm *aTerm)
+{
+    NS_ENSURE_ARG_POINTER(aTerm);
+    NS_ENSURE_TRUE(m_termList, NS_ERROR_NOT_INITIALIZED);
+    return m_termList->AppendElement(aTerm);
+}
+
+NS_IMETHODIMP
 nsMsgSearchSession::AddSearchTermArray(nsISupportsArray *searchTerms)
 {
   m_termList = searchTerms;
@@ -80,7 +88,7 @@ nsMsgSearchSession::AddSearchTermArray(nsISupportsArray *searchTerms)
 }
 
 NS_IMETHODIMP
-nsMsgSearchSession::CreateSearchTerm(nsIMsgSearchTerm **aResult)
+nsMsgSearchSession::CreateTerm(nsIMsgSearchTerm **aResult)
 {
     nsMsgSearchTerm *term = new nsMsgSearchTerm;
     NS_ENSURE_TRUE(term, NS_ERROR_OUT_OF_MEMORY);
