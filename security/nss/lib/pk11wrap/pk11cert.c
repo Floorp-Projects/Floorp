@@ -1400,7 +1400,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	    }
 	}
 	/* find best cert on token */
-	if (!nssToken_SearchCerts(token)) {
+	if (!nssToken_SearchCerts(token, NULL)) {
 	    /* token certs are in cache, filter the list of token certs to
 	     * match the nickname
 	     */
@@ -1443,7 +1443,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	}
 	/* if it wasn't found, repeat the process for email address */
 	if (!cert) {
-	    if (!nssToken_SearchCerts(token)) {
+	    if (!nssToken_SearchCerts(token, NULL)) {
 		certList = filter_token_certs_email(token, nickname);
 		if (certList) {
 		    nssCertificateList_DoCallback(certList, 
@@ -1540,7 +1540,11 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	*delimit = '\0';
 	/* find token by name */
 	token = NSSTrustDomain_FindTokenByName(defaultTD, (NSSUTF8 *)tokenName);
-	slot = PK11_ReferenceSlot(token->pk11slot);
+	if (token) {
+	    slot = PK11_ReferenceSlot(token->pk11slot);
+	} else {
+	    slot = NULL;
+	}
 	*delimit = ':';
     } else {
 	slot = PK11_GetInternalKeySlot();
@@ -1556,7 +1560,7 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 		return NULL;
 	    }
 	}
-	if (!nssToken_SearchCerts(token)) {
+	if (!nssToken_SearchCerts(token, NULL)) {
 	    nameList = filter_token_certs_nickname(token, nickname);
 	} else {
 	    nameList = nssList_Create(NULL, PR_FALSE);
@@ -2716,7 +2720,7 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
     td = STAN_GetDefaultTrustDomain();
     NSSITEM_FROM_SECITEM(&subject, &cert->derSubject);
     token = PK11Slot_GetNSSToken(slot);
-    if (!nssToken_SearchCerts(token)) {
+    if (!nssToken_SearchCerts(token, NULL)) {
 	subjectList = filter_token_certs_subject(token, &subject);
 	if (subjectList) {
 	    nssrv = nssCertificateList_DoCallback(subjectList, 
@@ -2807,7 +2811,7 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     }
     td = STAN_GetDefaultTrustDomain();
     token = PK11Slot_GetNSSToken(slot);
-    if (!nssToken_SearchCerts(token)) {
+    if (!nssToken_SearchCerts(token, NULL)) {
 	nameList = filter_token_certs_nickname(token, nick);
 	if (nameList) {
 	    nssrv = nssCertificateList_DoCallback(nameList, 
@@ -2878,7 +2882,7 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
     pk11cb.callback = callback;
     pk11cb.arg = arg;
     tok = PK11Slot_GetNSSToken(slot);
-    if (!nssToken_SearchCerts(tok)) {
+    if (!nssToken_SearchCerts(tok, NULL)) {
 	certList = tok->certList;
 	nssrv = nssCertificateList_DoCallback(certList, convert_cert, &pk11cb);
     } else {
@@ -2973,7 +2977,13 @@ PK11_FindCertFromDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     tok = PK11Slot_GetNSSToken(slot);
     NSSITEM_FROM_SECITEM(&derCert, &cert->derCert);
-    if (!nssToken_SearchCerts(tok)) {
+    if (!PK11_IsFriendly(slot)) {
+	if (PK11_Authenticate(slot, PR_TRUE, wincx) != SECSuccess) {
+	    PK11_FreeSlot(slot);
+	    return NULL;
+	}
+    }
+    if (!nssToken_SearchCerts(tok, NULL)) {
 	c = filter_token_certs_DER(tok, &derCert);
     } else {
 	c = nssTrustDomain_GetCertByDERFromCache(td, &derCert);

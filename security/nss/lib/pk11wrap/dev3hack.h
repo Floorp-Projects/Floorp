@@ -35,7 +35,7 @@
 #define DEVNSS3HACK_H
 
 #ifdef DEBUG
-static const char DEVNSS3HACK_CVS_ID[] = "@(#) $RCSfile: dev3hack.h,v $ $Revision: 1.2 $ $Date: 2002/02/01 17:25:13 $ $Name:  $";
+static const char DEVNSS3HACK_CVS_ID[] = "@(#) $RCSfile: dev3hack.h,v $ $Revision: 1.3 $ $Date: 2002/02/27 22:41:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "cert.h"
@@ -51,9 +51,6 @@ nssToken_GetTrustDomain(NSSToken *token);
 void PK11Slot_SetNSSToken(PK11SlotInfo *sl, NSSToken *nsst);
 
 NSSToken * PK11Slot_GetNSSToken(PK11SlotInfo *sl);
-
-NSS_EXTERN void
-nssToken_DestroyCertList(NSSToken *token);
 
 NSS_IMPLEMENT PRStatus
 nssToken_LoadCerts(NSSToken *token);

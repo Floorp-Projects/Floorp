@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.34 $ $Date: 2002/02/27 21:36:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.35 $ $Date: 2002/02/27 22:41:56 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -108,12 +108,16 @@ cache_token_cert(NSSCertificate *c, void *arg)
 {
     NSSToken *token = (NSSToken *)arg;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    NSSCertificate *cp = nssCertificate_AddRef(c);
     if (nssList_Count(token->certList) > NSSTOKEN_MAX_LOCAL_CERTS) {
 	nssToken_DestroyCertList(token);
 	/* terminate the traversal */
 	return PR_FAILURE;
     }
     nssTrustDomain_AddCertsToCache(td, &c, 1);
+    if (cp == c) {
+	NSSCertificate_Destroy(cp);
+    }
     /* This list reference persists with the token */
     nssList_Add(token->certList, nssCertificate_AddRef(c));
     /* The cert needs to become external (made into a CERTCertificate)
@@ -123,11 +127,77 @@ cache_token_cert(NSSCertificate *c, void *arg)
     return PR_SUCCESS;
 }
 
-static void cert_destructor(void *el)
+static void remove_token_instance(NSSCertificate *c, NSSToken *token)
 {
-    NSSCertificate *c = (NSSCertificate *)el;
+    nssListIterator *instances;
+    nssCryptokiInstance *instance, *rmInstance = NULL;
+    instances = c->object.instances;
+    for (instance  = (nssCryptokiInstance *)nssListIterator_Start(instances);
+         instance != (nssCryptokiInstance *)NULL;
+         instance  = (nssCryptokiInstance *)nssListIterator_Next(instances))
+    {
+	if (instance->token == token) {
+	    rmInstance = instance;
+	    break;
+	}
+    }
+    nssListIterator_Finish(instances);
+    if (rmInstance) {
+	nssList_Remove(c->object.instanceList, rmInstance);
+	nssListIterator_Destroy(instances);
+	c->object.instances = nssList_CreateIterator(c->object.instanceList);
+    }
+}
+
+static PRBool instance_destructor(NSSCertificate *c, NSSToken *token)
+{
     CERTCertificate *cert = STAN_GetCERTCertificate(c);
-    CERT_DestroyCertificate(cert);
+    remove_token_instance(c, token);
+    if (nssList_Count(c->object.instanceList) == 0) {
+	return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
+NSS_IMPLEMENT void
+nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRBool removeIt;
+    certs = nssList_CreateIterator(certList);
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	removeIt = instance_destructor(cert, token);
+	if (removeIt) {
+	    nssList_Remove(certList, cert);
+	    CERT_DestroyCertificate(STAN_GetCERTCertificate(cert));
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
+}
+
+NSS_IMPLEMENT void
+nssCertificateList_RemoveTokenCerts(nssList *certList, NSSToken *token)
+{
+    nssListIterator *certs;
+    NSSCertificate *cert;
+    PRBool removeIt;
+    certs = nssList_CreateIterator(certList);
+    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
+         cert != (NSSCertificate *)NULL;
+         cert  = (NSSCertificate *)nssListIterator_Next(certs))
+    {
+	removeIt = instance_destructor(cert, token);
+	if (removeIt) {
+	    nssList_Remove(certList, cert);
+	}
+    }
+    nssListIterator_Finish(certs);
+    nssListIterator_Destroy(certs);
 }
 
 /* destroy the list of certs on a token */
@@ -137,9 +207,9 @@ nssToken_DestroyCertList(NSSToken *token)
     if (!token->certList) {
 	return;
     }
-    nssList_Clear(token->certList, cert_destructor);
-    nssList_Destroy(token->certList);
-    token->certList = NULL;
+    nssCertificateList_DestroyTokenCerts(token->certList, token);
+    nssList_Clear(token->certList, NULL);
+    /* leave the list non-null to prevent it from being searched */
 }
 
 /* create a list of local cert references for certain tokens */
@@ -183,11 +253,18 @@ nssToken_LoadCerts(NSSToken *token)
 NSS_IMPLEMENT PRBool
 nssToken_SearchCerts
 (
-  NSSToken *token
+  NSSToken *token,
+  PRBool *notPresentOpt
 )
 {
+    if (notPresentOpt) {
+	*notPresentOpt = PR_FALSE;
+    }
     if (!nssToken_IsPresent(token)) {
 	nssToken_DestroyCertList(token); /* will free cached certs */
+	if (notPresentOpt) {
+	    *notPresentOpt = PR_TRUE;
+	}
     } else if (token->certList && 
 	       nssList_Count(token->certList) == 0 &&
 	       !token->loggedIn) {
