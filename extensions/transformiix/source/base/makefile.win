@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..\..
 
 LIBRARY_NAME=transformix_base
 MODULE=transformix
@@ -28,29 +28,39 @@ REQUIRES=xpcom raptor
 DEFINES=-DMOZILLA
 
 CPPSRCS=								\
+	ArrayList.cpp \
 	CommandLineUtils.cpp				\
+	DefaultStringComparator.cpp				\
 	Double.cpp							\
+	HashTable.cpp \
 	Integer.cpp							\
 	List.cpp							\
 	MITREObjectWrapper.cpp				\
+	MozillaString.cpp				\
 	NamedMap.cpp						\
 	SimpleErrorObserver.cpp				\
 	Stack.cpp							\
-	String.cpp							\
+	TxString.cpp							\
+	StringComparator.cpp							\
 	StringList.cpp						\
 	Tokenizer.cpp						\
 	$(NULL)
 
 CPP_OBJS=							        \
+	.\$(OBJDIR)\ArrayList.obj \
 	.\$(OBJDIR)\CommandLineUtils.obj		\
+	.\$(OBJDIR)\DefaultStringComparator.obj					\
 	.\$(OBJDIR)\Double.obj					\
+	.\$(OBJDIR)\HashTable.obj					\
 	.\$(OBJDIR)\Integer.obj					\
 	.\$(OBJDIR)\List.obj					\
 	.\$(OBJDIR)\MITREObjectWrapper.obj		\
+	.\$(OBJDIR)\MozillaString.obj		\
 	.\$(OBJDIR)\NamedMap.obj				\
     .\$(OBJDIR)\SimpleErrorObserver.obj		\
 	.\$(OBJDIR)\Stack.obj					\
-	.\$(OBJDIR)\String.obj					\
+	.\$(OBJDIR)\TxString.obj					\
+	.\$(OBJDIR)\StringComparator.obj					\
 	.\$(OBJDIR)\StringList.obj				\
 	.\$(OBJDIR)\Tokenizer.obj				\
 	$(NULL)

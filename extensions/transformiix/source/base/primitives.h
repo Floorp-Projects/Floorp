@@ -28,7 +28,7 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: primitives.h,v 1.4 2000/04/06 22:36:39 Peter.VanderBeken%pandora.be Exp $
+ * $Id: primitives.h,v 1.5 2000/04/12 22:31:09 nisheeth%netscape.com Exp $
  */
 
 
@@ -37,7 +37,7 @@
 
 #include "MITREObject.h"
 #include "baseutils.h"
-#include "String.h"
+#include "TxString.h"
 #include  <math.h>
 
 #ifdef WIN32

@@ -19,8 +19,8 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..
 
-DIRS=base main net xml xpath xslt
+DIRS=base xml xpath xslt
 
 include <$(DEPTH)\config\rules.mak>

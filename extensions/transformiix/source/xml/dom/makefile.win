@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
+DEPTH=..\..\..\..\..
 
 DIRS=mozImpl
 

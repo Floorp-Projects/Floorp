@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..\..
 
 LIBRARY_NAME=transformix_xpath
 MODULE=transformix
@@ -98,8 +98,8 @@ CPP_OBJS=						\
 EXPORTS = \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\util -I..\..\xml\dom \
-      -I..\..\xml -I ..\..\xsl
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\base -I..\util -I..\xml\dom \
+      -I..\xml -I ..\xslt
 
 LCFLAGS = \
         $(LCFLAGS) \

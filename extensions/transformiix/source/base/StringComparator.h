@@ -20,10 +20,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: StringComparator.h,v 1.1 2000/04/12 10:49:39 kvisco%ziplink.net Exp $
+ * $Id: StringComparator.h,v 1.2 2000/04/12 22:30:54 nisheeth%netscape.com Exp $
  */
 
- #include "String.h"
+ #include "TxString.h"
  #include "TxObject.h"
 
  #ifndef TRANSFRMX_STRING_COMPARATOR_H

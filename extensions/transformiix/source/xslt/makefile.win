@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..\..
 
 DIRS=util
 
@@ -30,7 +30,7 @@ REQUIRES=xpcom raptor
 DEFINES=-DMOZILLA
 
 CPPSRCS=						\
-	XSLProcessor.cpp			\
+	XSLTProcessor.cpp			\
 	ProcessorState.cpp			\
 	Names.cpp					\
 	$(NULL)
@@ -42,7 +42,7 @@ CPP_OBJS=					\
 	$(NULL)
 
 EXPORTS = 					\
-	XSLProcessor.h			\
+	XSLTProcessor.h			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I.\expr -I.\util -I..\xml\dom \

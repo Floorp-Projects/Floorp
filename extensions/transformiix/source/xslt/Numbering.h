@@ -21,20 +21,20 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Numbering.h,v 1.1 2000/04/06 07:46:34 kvisco%ziplink.net Exp $
+ * $Id: Numbering.h,v 1.2 2000/04/12 22:33:34 nisheeth%netscape.com Exp $
  */
 
 /**
  * Numbering methods
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:34 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 22:33:34 $
 **/
 
 #ifndef MITREXSL_NUMBERING_H
 #define MITREXSL_NUMBERING_H
 
 #include "baseutils.h"
-#include "String.h"
+#include "TxString.h"
 #include "dom.h"
 #include "ProcessorState.h"
 #include "Expr.h"

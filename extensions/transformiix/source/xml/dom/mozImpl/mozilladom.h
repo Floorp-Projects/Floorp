@@ -1,4 +1,5 @@
 /*
+
  * (C) Copyright The MITRE Corporation 1999  All rights reserved. 
  * 
  * The contents of this file are subject to the Mozilla Public License 
@@ -43,13 +44,13 @@
 // TK   02/11/2000  Added a default constructor for the Document class.  Simply 
 //                  create an nsXMLDocument object is one is not provided. 
  
-#ifndef MOZILLA_MITRE_DOM 
-#define MOZILLA_MITRE_DOM 
- 
+#ifndef MOZILLA_MITRE_DOM
+#define MOZILLA_MITRE_DOM
+
 #ifdef __BORLANDC__ 
 #include <stdlib.h> 
 #endif 
- 
+
 #include "MozillaString.h" 
 #include "baseutils.h" 
 #include "HashTable.h" 
@@ -72,7 +73,7 @@
 #include "nsIDOMEntity.h" 
 #include "nsIDOMNamedNodeMap.h" 
 #include "nsIDOMCharacterData.h" 
- 
+
 #ifndef NULL 
 typedef 0 NULL; 
 #endif 

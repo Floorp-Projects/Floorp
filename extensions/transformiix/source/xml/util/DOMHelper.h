@@ -19,14 +19,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.h,v 1.1 2000/02/22 11:12:57 kvisco%ziplink.net Exp $
+ * $Id: DOMHelper.h,v 1.2 2000/04/12 22:32:17 nisheeth%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_DOMHELPER_H
 #define TRANSFRMX_DOMHELPER_H
 
 #include "baseutils.h"
-#include "String.h"
+#include "TxString.h"
 #include "List.h"
 #include "dom.h"
 #include "HashTable.h"
@@ -59,7 +59,7 @@ class OrderInfo : public MITREObject {
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/22 11:12:57 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 22:32:17 $
 **/
 class DOMHelper {
 

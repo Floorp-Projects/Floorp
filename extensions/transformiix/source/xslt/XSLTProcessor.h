@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.5 2000/04/12 11:00:56 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.h,v 1.6 2000/04/12 22:33:43 nisheeth%netscape.com Exp $
  */
 
 
@@ -53,7 +53,7 @@
 #include "Names.h"
 #include "NodeSet.h"
 #include "ProcessorState.h"
-#include "String.h"
+#include "TxString.h"
 #include "Tokenizer.h"
 #include "ErrorObserver.h"
 #include "List.h"
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/04/12 11:00:56 $
+ * @version $Revision: 1.6 $ $Date: 2000/04/12 22:33:43 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA

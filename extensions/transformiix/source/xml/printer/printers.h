@@ -23,12 +23,12 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: printers.h,v 1.3 1999/11/25 03:03:05 kvisco%ziplink.net Exp $
+ * $Id: printers.h,v 1.4 2000/04/12 22:32:13 nisheeth%netscape.com Exp $
  */
 
 
 #include "dom.h"
-#include "String.h"
+#include "TxString.h"
 #include "baseutils.h"
 #include "NamedMap.h"
 #include <iostream.h>
@@ -41,7 +41,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/12 22:32:13 $
 **/
 class XMLPrinter {
 
@@ -244,7 +244,7 @@ private:
  * A class for printing an XML node as non-well-formed HTML
  * This class was ported from XSL:P Java source
  * @author Keith Visco (kvisco@ziplink.net)
- * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/12 22:32:13 $
 **/
 class HTMLPrinter : public XMLPrinter {
 

@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DocumentHandler.h,v 1.1 1999/11/25 03:03:04 kvisco%ziplink.net Exp $
+ * $Id: DocumentHandler.h,v 1.2 2000/04/12 22:31:33 nisheeth%netscape.com Exp $
  */
 
 
@@ -27,7 +27,7 @@
 #define TRANSFRMX_DOCUMENT_HANDLER_H
 
 
-#include "String.h"
+#include "TxString.h"
 
 
 #ifndef UNICODE_CHAR
@@ -41,7 +41,7 @@ typedef unsigned short UNICODE_CHAR
  * I apologize for not throwing SAXExceptions, I am trying
  * to follow Mozilla.org's guidelines for writing portable C++.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 1999/11/25 03:03:04 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/12 22:31:33 $
 **/
 class DocumentHandler {
 

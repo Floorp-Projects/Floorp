@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
+DEPTH=..\..\..\..\..
 
 LIBRARY_NAME=transformix_xslt_util
 MODULE=transformix
@@ -27,17 +27,19 @@ REQUIRES=xpcom raptor
 
 CPPSRCS=			\
 	NodeStack.cpp		\
+	NodeSorter.cpp		\
 	$(NULL)
 
 CPP_OBJS=				\
 	.\$(OBJDIR)\NodeStack.obj	\
+	.\$(OBJDIR)\NodeSorter.obj	\
 	$(NULL)
 
 EXPORTS =	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-      -I..\expr -I..\..\xml
+      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util
 
 LCFLAGS = \
         $(LCFLAGS) \

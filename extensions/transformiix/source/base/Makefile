@@ -14,7 +14,7 @@ BASE_OBJS = ArrayList.o               \
             NamedMap.o \
             SimpleErrorObserver.o \
             Stack.o \
-            String.o \
+            TxString.o \
             StringComparator.o \
             StringList.o \
             Tokenizer.o
@@ -48,22 +48,22 @@ Map.o: Map.h Map.cpp
 MITREObjectWrapper.o: MITREObject.h MITREObjectWrapper.cpp
 	$(CC) -c MITREObjectWrapper.cpp
 
-NamedMap.o: String.h NamedMap.h NamedMap.cpp
+NamedMap.o: TxString.h NamedMap.h NamedMap.cpp
 	$(CC) -c NamedMap.cpp
 
-SimpleErrorObserver.o: String.h baseutils.h ErrorObserver.h SimpleErrorObserver.cpp
+SimpleErrorObserver.o: TxString.h baseutils.h ErrorObserver.h SimpleErrorObserver.cpp
 	$(CC) -c SimpleErrorObserver.cpp
 
 Stack.o: List.h Stack.h Stack.cpp
 	$(CC) -c Stack.cpp
 
-String.o: String.h String.cpp
-	$(CC) -c String.cpp
+TxString.o: TxString.h TxString.cpp
+	$(CC) -c TxString.cpp
 
 StringComparator.o: StringComparator.h StringComparator.cpp
 	$(CC) -c StringComparator.cpp
 
-StringList.o: String.h StringList.h StringList.cpp
+StringList.o: TxString.h StringList.h StringList.cpp
 	$(CC) -c StringList.cpp
 
 Tokenizer.o: Tokenizer.h Tokenizer.cpp
