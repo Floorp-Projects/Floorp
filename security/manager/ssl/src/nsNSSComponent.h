@@ -33,6 +33,7 @@
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
+#include "nsIPref.h"
 
 #include "nsNSSHelper.h"
 
@@ -102,9 +103,12 @@ private:
   nsresult ConfigureInternalPKCS11Token();
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
   nsresult RegisterCertContentListener();
+  static int PrefChangedCallback(const char* aPrefName, void* data);
+  void PrefChanged(const char* aPrefName);
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIURIContentListener> mCertContentListener;
+  nsCOMPtr<nsIPref> mPref;
   static PRBool mNSSInitialized;
 };
 

@@ -59,16 +59,12 @@
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
-#include "nsIPref.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsNSSHelper.h"
 
 #include "nsINSSDialogs.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-#define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
 
 #if defined(PR_LOGGING)
 //
@@ -117,9 +113,6 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
   nsresult rv = NS_OK;
   mSecurityButton = button;
   mWindow = window;
-
-  mPref = do_GetService(kPrefCID, &rv);
-  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -280,7 +273,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 {
   nsresult res = NS_OK;
 
-  if (!aRequest || !mPref)
+  if (!aRequest)
     return NS_ERROR_NULL_POINTER;
   
   // Get the channel from the request...

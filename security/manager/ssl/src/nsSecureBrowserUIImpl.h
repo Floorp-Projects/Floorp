@@ -36,7 +36,6 @@
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
-#include "nsIPref.h"
 #include "nsIWebProgressListener.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIURI.h"
@@ -72,7 +71,6 @@ protected:
   nsCOMPtr<nsIDOMWindowInternal> mWindow;
   nsCOMPtr<nsIDOMElement> mSecurityButton;
   nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
-  nsCOMPtr<nsIPref> mPref;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
   
