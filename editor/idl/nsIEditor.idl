@@ -22,7 +22,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIFile;
+interface nsIURI;
 interface nsIAtom;
 interface nsISelection;
 interface nsISelectionController;
@@ -170,7 +170,7 @@ interface nsIEditor  : nsISupports
    *  @param aFormat
    *          Mime type to save (text/plain or text/html)
    */
-  void SaveFile(in nsIFile fileSpec, in boolean replaceExisting, in boolean saveCopy, in DOMString format);
+  void SaveFile(in nsIURI fileSpec, in boolean replaceExisting, in boolean saveCopy, in DOMString format);
 
   /* ------------ Transaction methods -------------- */
 
@@ -447,7 +447,7 @@ interface nsIEditor  : nsISupports
   void OutputToString(out DOMString outputString,
                             [const]in DOMString formatType,
                             in unsigned long flags);
-  void OutputToStream(in nsIOutputStream outputStream,
+  void OutputToStream(in nsIOutputStream aStream,
                             [const] in DOMString formatType,
                             [const] in DOMString charsetOverride,
                             in unsigned long flags);
