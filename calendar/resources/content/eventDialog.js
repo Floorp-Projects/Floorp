@@ -82,18 +82,9 @@
 
 var gDebugEnabled=true;
 
-var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
-var gDuration = -1;   // used to preserve duration when changing event start.
-
 const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
-
-var gStartDate = new Date( );
-// Note: gEndDate is *exclusive* end date, so duration = end - start.
-// For all-day(s) events (no times), displayed end date is one day earlier.
-var gEndDate = new Date( ); // for events
-var gDueDate = new Date( ); // for todos
 
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
@@ -102,16 +93,12 @@ var gDueDate = new Date( ); // for todos
 /**
 *   Called when the dialog is loaded.
 */
-
 function loadCalendarEventDialog()
 {
     // Get arguments, see description at top of file
     var args = window.arguments[0];
 
     gOnOkFunction = args.onOk;
-
-    // XXX I want to get rid of the use of gEvent
-    gEvent = args.calendarEvent;
 
     var event = args.calendarEvent;
 
@@ -131,98 +118,88 @@ function loadCalendarEventDialog()
 
     debug("-----");
     debug("event: "+event);
-    debug("-----");
     debug("event.startDate: "+event.startDate);
     debug("-----");
 
     // fill in fields from the event
     switch(componentType) {
     case "event":
-        gStartDate = event.startDate.jsDate;
-        document.getElementById("start-datetime").value = gStartDate;
+        startDate = event.startDate.jsDate;
+        setElementValue("start-datetime", startDate);
 
         // only events have end dates. todos have due dates
-        gEndDate = event.endDate.jsDate;
-        var displayEndDate = new Date(gEndDate);
+        var endDate   = event.endDate.jsDate;
+        var displayEndDate = new Date(endDate);
         /*
         if (event.isAllDay) {
             //displayEndDate == icalEndDate - 1, in the case of allday events
             displayEndDate.setDate(displayEndDate.getDate() - 1);
         }
         */
-        document.getElementById("end-datetime").value = displayEndDate;
-
-        gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
+        setElementValue("end-datetime", displayEndDate);
 
         // event status fields
         switch(event.status) {
         case "TENTATIVE":
-            setFieldValue("event-status-field", "TENTATIVE");
+            setElementValue("event-status-field", "TENTATIVE");
             break;
         case "CONFIRMED":
-            setFieldValue("event-status-field", "CONFIRMED");
+            setElementValue("event-status-field", "CONFIRMED");
             break;
         case "CANCELLED":
-            setFieldValue("event-status-field", "CANCELLED");
+            setElementValue("event-status-field", "CANCELLED");
             break;
+        default:
+            dump("loadCalendarEventDialog: ERROR! Got an invalid status: " +
+                  event.status + "\n");
         }
         
-        setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
+        setElementValue("all-day-event-checkbox", event.isAllDay, "checked");
         break;
     case "todo":
         var hasStart = event.start && event.start.isSet;
         if (hasStart) 
-            gStartDate = event.startDate.jsDate;
+            var startDate = event.startDate.jsDate;
         else
-            gStartDate = null;
+            startDate = null;
 
-        var startPicker = document.getElementById( "start-datetime" );
-        startPicker.value = gStartDate;
-        startPicker.disabled = !hasStart;
-        document.getElementById("start-checkbox").checked = hasStart;
+        setElementValue("start-datetime", startDate);
+        setElementValue("start-datetime", !hasStart, "disabled");
+        setElementValue("start-checkbox", hasStart,  "checked");
 
         var hasDue = event.due && event.due.isSet;
         if (hasDue)
-            gDueDate = event.dueDate.jsDate;
+            var dueDate = event.dueDate.jsDate;
         else
-            gDueDate = null;
+            dueDate = null;
 
-        var duePicker = document.getElementById( "due-datetime" );
-        duePicker.value = gDueDate;
-        duePicker.disabled = !hasDue;
-        document.getElementById("due-checkbox").checked = hasDue;
+        setElementValue("due-datetime", dueDate);
+        setElementValue("due-datetime", !hasDue, "disabled");
+        setElementValue("due-checkbox", hasDue,  "checked" );
 
-        if (hasStart && hasDue) {
-            gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
-        } else {
-            gDuration = 0;
-        }
+        /*integrate this into onDateTimePick()
+        if (hasStart && hasDue)
+            duration = dueDate.getTime() - startDate.getTime(); //in ms
+        else
+            duration = 0;*/
+
+        setElementValue("percent-complete-menulist", event.percentComplete);
 
         // todo status fields
-        processToDoStatus(event.status);
-
-        var completedDatePicker = document.getElementById( "completed-date-picker" );
-        if (event.completedDate) {
-            var completedDate = event.completedDate.jsDate;
-            completedDatePicker.value = completedDate;
-        } else {
-            completedDatePicker.value = null;
-        }
-
-        if (event.percentComplete && event.status == "IN-PROCESS" ) {
-            setFieldValue( "percent-complete-menulist", event.percentComplete );
-        }
-        break;
+        if (event.completedDate)
+            processToDoStatus(event.status, event.completedDate.jsDate);
+        else
+            processToDoStatus(event.status);
     }
 
 
     // GENERAL -----------------------------------------------------------
-    setFieldValue("title-field",       event.title  );
-    setFieldValue("description-field", event.getProperty("DESCRIPTION"));
-    setFieldValue("location-field",    event.getProperty("LOCATION"));
-    setFieldValue("uri-field",         event.getProperty("URL"));
+    setElementValue("title-field",       event.title  );
+    setElementValue("description-field", event.getProperty("DESCRIPTION"));
+    setElementValue("location-field",    event.getProperty("LOCATION"));
+    setElementValue("uri-field",         event.getProperty("URL"));
     // only enable "Go" button if there's a url
-    processTextboxWithButton( "uri-field", "load-url-button" );
+    processTextboxWithButton("uri-field", "load-url-button");
 
 
     // PRIVACY -----------------------------------------------------------
@@ -230,10 +207,10 @@ function loadCalendarEventDialog()
     case "PUBLIC":
     case "PRIVATE":
     case "CONFIDENTIAL":
-        setFieldValue("privacy-menulist", event.privacy);
+        setElementValue("privacy-menulist", event.privacy);
         break;
     case "":
-        setFieldValue("private-menulist", "PUBLIC");
+        setElementValue("private-menulist", "PUBLIC");
         break;
     default:  // bogus value
         dump("loadCalendarEventDialog: ERROR! Event has invalid privacy string: " + event.privacy + "\n");
@@ -260,15 +237,15 @@ function loadCalendarEventDialog()
     if (!event.hasAlarm) {
         menuListSelectItem("alarm-type", "none");
     } else {
-        setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
-        setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
+        setElementValue("alarm-length-field", event.getProperty("alarmLength"));
+        setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
         if (componentType == "event" ||
            (componentType == "todo" && !(startPicker.disabled && duePicker.disabled) ) ) {
             // If the event has an alarm email address, assume email alarm type
             var alarmEmailAddress = event.getProperty("alarmEmailAddress");
             if (alarmEmailAddress && alarmEmailAddress != "") {
                 menuListSelectItem("alarm-type", "email");
-                setFieldValue("alarm-email-field", alarmEmailAddress);
+                setElementValue("alarm-email-field", alarmEmailAddress);
             } else {
                 menuListSelectItem("alarm-type", "popup");
                 /* XXX lilmatt: finish this by selection between popup and 
@@ -285,7 +262,7 @@ function loadCalendarEventDialog()
                          !duePicker.disabled && alarmRelated == "END")  ||
                      (componentType == "todo" && !startPicker.disabled && !duePicker.disabled) )
                 {
-                     setFieldValue("alarm-trigger-relation", alarmRelated);
+                     setElementValue("alarm-trigger-relation", alarmRelated);
                 } else {
                      dump("loadCalendarEventDialog: ERROR! alarmRelated: " +
                            alarmRelated + " is invalid! (trying to set " +
@@ -301,8 +278,8 @@ function loadCalendarEventDialog()
 
     // RECURRENCE --------------------------------------------------------
     // Set up widgets so they're not empty. Event values will override.
-    document.getElementById("repeat-end-date-picker").value = new Date();
-    document.getElementById("exceptions-date-picker").value = new Date();
+    setElementValue("repeat-end-date-picker", new Date() );
+    setElementValue("exceptions-date-picker", new Date() );
 
     if (event.recurrenceInfo) {
         // we can only display at most one rule and one set of exceptions;
@@ -324,50 +301,48 @@ function loadCalendarEventDialog()
                 }
             } else if (ritems[i] instanceof calIRecurrenceDate) {
                 var exc = ritems[i].QueryInterface(calIRecurrenceDate);
-                if (exc.isNegative) {
+                if (exc.isNegative)
                     theExceptions.push(exc);
-                } else {
+                else
                     dump ("eventDialog.js: found a calIRecurrenceDate that wasn't an exception!\n");
-                }
             }
         }
 
         if (theRule) {
-            setFieldValue("repeat-checkbox", true, "checked");
-            setFieldValue("repeat-length-field", theRule.interval);
+            setElementValue("repeat-checkbox", true, "checked");
+            setElementValue("repeat-length-field", theRule.interval);
             menuListSelectItem("repeat-length-units", theRule.type);
 
             switch(theRule.type) {
             case "WEEKLY":
                 var recurWeekdays = theRule.getComponent("BYDAY", {});
                 for (i = 0; i < 7; i++ ) {
-                    setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
-                    setFieldValue( "advanced-repeat-week-"+i, false, "today" );
+                    setElementValue("advanced-repeat-week-" + i, false, "checked");
+                    setElementValue("advanced-repeat-week-" + i, false, "today"  );
                     for (var j = 0; j < recurWeekdays.length; j++) {
                         //libical day #s are one more than ours
-                        if ((i + 1) == recurWeekdays[j]) {
-                            setFieldValue( "advanced-repeat-week-"+i, true, "checked" );
-                        }
+                        if ((i + 1) == recurWeekdays[j])
+                            setElementValue("advanced-repeat-week-"+i, true, "checked");
                     }
                 }
 
                 //get day number for event's start date, and check and disable it
-                var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "checked" );
-                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "disabled" );
-                setFieldValue( "advanced-repeat-week-"+dayNumber, true, "today" );
+                var dayNumber = getElementValue("start-datetime").getDay();
+                setElementValue("advanced-repeat-week-"+dayNumber, true, "checked" );
+                setElementValue("advanced-repeat-week-"+dayNumber, true, "disabled");
+                setElementValue("advanced-repeat-week-"+dayNumber, true, "today"   );
                 break;
             }
 
             if (theRule.count == -1) {
-                setFieldValue("repeat-forever-radio", true, "selected");
+                setElementValue("repeat-forever-radio", true, "selected");
             } else {
                 if (theRule.isByCount) {
-                    setFieldValue("repeat-numberoftimes-radio", true, "selected");
-                    setFieldValue("repeat-numberoftimes-textbox", theRule.count);
+                    setElementValue("repeat-numberoftimes-radio", true, "selected");
+                    setElementValue("repeat-numberoftimes-textbox", theRule.count );
                 } else {
-                    setFieldValue("repeat-until-radio", true, "selected" );
-                    document.getElementById("repeat-end-date-picker").value = theRule.endDate.jsDate;
+                    setElementValue("repeat-until-radio", true, "selected");
+                    setElementValue("repeat-end-date-picker", theRule.endDate.jsDate);
                 }
             }
         } else {
@@ -383,20 +358,24 @@ function loadCalendarEventDialog()
         }
     }
 
+    // Only show Add/Delete Exception buttons when appropriate
+    updateAddExceptionButton();
+    updateDeleteExceptionButton();
+
     /* Old crap:
-    setFieldValue("advanced-repeat-dayofmonth", (gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined), "selected");
-    setFieldValue("advanced-repeat-dayofweek", (gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5), "selected");
-    setFieldValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
+    setElementValue("advanced-repeat-dayofmonth", (gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined), "selected");
+    setElementValue("advanced-repeat-dayofweek", (gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5), "selected");
+    setElementValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
     */
 
 
     // INVITEES ----------------------------------------------------------
     var inviteEmailAddress = event.getProperty("inviteEmailAddress");
     if (inviteEmailAddress != undefined && inviteEmailAddress != "") {
-        setFieldValue("invite-checkbox", true, "checked");
-        setFieldValue("invite-email-field", inviteEmailAddress);
+        setElementValue("invite-checkbox", true, "checked");
+        setElementValue("invite-email-field", inviteEmailAddress);
     } else {
-        setFieldValue("invite-checkbox", false, "checked");
+        setElementValue("invite-checkbox", false, "checked");
     }
     processInviteCheckbox();
 
@@ -411,11 +390,13 @@ function loadCalendarEventDialog()
     // ATTACHMENTS -------------------------------------------------------
     /* XXX this could work when attachments are supported by calItemBase
     var count = event.attachments.length;
-    for(var i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
         var thisAttachment = event.attachments.queryElementAt(i, Components.interfaces.calIAttachment);
         addAttachment(thisAttachment);
     }
     */
+    // Only show the Remove Attachment button if there are attachments
+    updateRemoveAttachmentButton();
 
 
     // CATEGORIES --------------------------------------------------------
@@ -435,13 +416,13 @@ function loadCalendarEventDialog()
     while( oldMenulist.hasChildNodes() )
         oldMenulist.removeChild( oldMenulist.lastChild );
     for (i = 0; i < categoriesList.length ; i++) {
-        document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
+        document.getElementById("categories-field").appendItem(categoriesList[i], categoriesList[i]);
     }
-    if (categories) {
-        menuListSelectItem("categories-field", categories );
-    } else {
-        document.getElementById( "categories-field" ).selectedIndex = -1;
-    }
+    if (categories)
+        menuListSelectItem("categories-field", categories);
+    else
+        document.getElementById("categories-field").selectedIndex = -1;
+
 
     /* XXX
     // Server stuff
@@ -450,34 +431,31 @@ function loadCalendarEventDialog()
    
     if (args.mode == "new") {
         if ("server" in args)
-            setFieldValue( "server-field", args.server );
+            setElementValue( "server-field", args.server );
         else
             document.getElementById( "server-field" ).selectedIndex = 1;
     } else {
         if (gEvent.parent)
-            setFieldValue( "server-field", gEvent.parent.server );
+            setElementValue( "server-field", gEvent.parent.server );
         else
             document.getElementById( "server-field" ).selectedIndex = 1;
           
         //for now you can't edit which file the event is in.
-        setFieldValue( "server-field", "true", "disabled" );
-        setFieldValue( "server-field-label", "true", "disabled" );
+        setElementValue( "server-field", "true", "disabled" );
+        setElementValue( "server-field-label", "true", "disabled" );
     }
     */
 
     // update enabling and disabling
     updateRepeatItemEnabled();
     updateStartEndItemEnabled();
-    updateAddExceptionButton();
-    updateDeleteExceptionButton();
-    updateRemoveAttachmentButton();
 
     // start focus on title
     var firstFocus = document.getElementById("title-field");
     firstFocus.focus();
 
     // revert cursor from "wait" set in calendar.js editEvent, editNewEvent
-    opener.setCursor( "auto" );
+    opener.setCursor("auto");
 
     self.focus();
 
@@ -492,28 +470,29 @@ function loadCalendarEventDialog()
 
 function onOKCommand()
 {
-    var event = gEvent;
+    // Get arguments, see description at top of file
+    var args = window.arguments[0];
+    var event = args.calendarEvent;
 
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = event;
-    // get values from the form and put them into the event
 
-    var componentType;
+    // get values from the form and put them into the event
+    var componentType = getElementValue("component-type");
 
     var tzid = calendarDefaultTimezone();
 
     // calIEvent properties
-    if (isEvent(event)) {
-        componentType = "event";
+    if (componentType == "event") {
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
-        event.startDate.jsDate = gStartDate;
+        event.startDate.jsDate = getElementValue("start-datetime");
         event.startDate.timezone = tzid;
-        event.endDate.jsDate   = gEndDate;
+        event.endDate.jsDate   = getElementValue("end-datetime");
         event.endDate.timezone = tzid;
-        event.isAllDay = getFieldValue("all-day-event-checkbox", "checked");
-        var status = getFieldValue("event-status-field");
+        event.isAllDay = getElementValue("all-day-event-checkbox", "checked");
+        var status = getElementValue("event-status-field");
         if (status)
             event.status = status;
     } else if (isToDo(event)) {
@@ -521,50 +500,51 @@ function onOKCommand()
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
-        dump ("this todo is: " + event + "\n");
-        if (gStartDate) {
-            event.entryDate.jsDate = gStartDate;
+        if ( getElementValue("start-datetime") ) {
+            event.entryDate.jsdate = getElementValue("start-datetime");
             event.entryDate.timezone = tzid;
         } else {
             event.entryDate.reset();
-        }
 
-        if (gDueDate) {
-            event.dueDate.jsDate = gDueDate;
+        if ( getElementValue("due-datetime") ) {
+            event.dueDate.jsdate = getElementValue("due-datetime");
             event.dueDate.timezone = tzid;
         } else {
             event.dueDate.reset();
-        }
-        event.status          = getFieldValue("todo-status-field");
-        event.percentComplete = getFieldValue("percent-complete-menulist");
+
+        event.isAllDay.reset();
+        event.status          = getElementValue("todo-status-field");
+        event.percentComplete = getElementValue("percent-complete-menulist");
+    } else {
+        dump("eventDialog.js: ERROR! onOKCommand() found neither an event nor a todo!\n");
     }
 
     // XXX should do an idiot check here to see if duration is negative
 
     // calIItemBase properties
-    event.title    = getFieldValue("title-field");
-    event.priority = getFieldValue("priority-levels");
+    event.title    = getElementValue("title-field");
+    event.priority = getElementValue("priority-levels");
 
     // other properties
-    var cats = getFieldValue("categories-field");
+    var cats = getElementValue("categories-field");
     if (cats)
         event.setProperty("CATEGORIES", cats);
 
-    var desc = getFieldValue("description-field");
+    var desc = getElementValue("description-field");
     if (desc)
         event.setProperty("DESCRIPTION", desc);
 
-    var location = getFieldValue("location-field");
+    var location = getElementValue("location-field");
     if (location)
         event.setProperty("LOCATION", location);
 
-    var url = getFieldValue("uri-field") ;
+    var url = getElementValue("uri-field") ;
     if (url)
         event.setProperty("URL", url);
 
 
     // PRIVACY -----------------------------------------------------------
-    var privacyValue = getFieldValue( "privacy-menulist" );
+    var privacyValue = getElementValue("privacy-menulist");
     switch(privacyValue) {
     case "PUBLIC":
     case "PRIVATE":
@@ -572,23 +552,23 @@ function onOKCommand()
         event.privacy = privacyValue;
         break;
     default:  // bogus value
-        dump( "onOKCommand: ERROR! Event has invalid privacy-menulist value: " +
-             privacyValue + "\n" );
+        dump("onOKCommand: ERROR! Event has invalid privacy-menulist value: " +
+             privacyValue + "\n");
         break;
     }
 
 
     // ALARMS ------------------------------------------------------------
-    var alarmType = getFieldValue( "alarm-type" );
+    var alarmType = getElementValue("alarm-type");
     if (alarmType != "" && alarmType != "none") {
         event.hasAlarm = true;
-        event.setProperty("alarmLength",  getFieldValue("alarm-length-field"));
-        event.setProperty("alarmUnits",   getFieldValue("alarm-length-units"));
-        event.setProperty("alarmRelated", getFieldValue("alarm-trigger-relation"));
+        event.setProperty("alarmLength",  getElementValue("alarm-length-field"));
+        event.setProperty("alarmUnits",   getElementValue("alarm-length-units"));
+        event.setProperty("alarmRelated", getElementValue("alarm-trigger-relation"));
         //event.alarmTime = ...
     }
-    if (alarmType == "email" )
-        event.setProperty("alarmEmailAddress", getFieldValue("alarm-email-field"));
+    if (alarmType == "email")
+        event.setProperty("alarmEmailAddress", getElementValue("alarm-email-field"));
     else
         event.deleteProperty("alarmEmailAddress");
 
@@ -596,47 +576,47 @@ function onOKCommand()
     // RECURRENCE --------------------------------------------------------
     event.recurrenceInfo = null;
     
-    if (getFieldValue("repeat-checkbox", "checked")) {
+    if (getElementValue("repeat-checkbox", "checked")) {
         var recurrenceInfo = createRecurrenceInfo();
-        debug("** recurrenceInfo: " + recurrenceInfo );
+        debug("** recurrenceInfo: " + recurrenceInfo);
         recurrenceInfo.initialize(event);
 
         var recRule = new calRecurrenceRule();
 
-        if (getFieldValue("repeat-forever-radio", "selected")) {
+        if (getElementValue("repeat-forever-radio", "selected")) {
             recRule.count = -1;
-        } else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
-            recRule.count = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"));
-        } else if (getFieldValue("repeat-until-radio", "selected")) {
-            var recurEndDate = document.getElementById("repeat-end-date-picker").value;
+        } else if (getElementValue("repeat-numberoftimes-radio", "selected")) {
+            recRule.count = Math.max(1, getElementValue("repeat-numberoftimes-textbox"));
+        } else if (getElementValue("repeat-until-radio", "selected")) {
+            var recurEndDate = getElementValue("repeat-end-date-picker");
             recRule.endDate = jsDateToDateTime(recurEndDate);
         }
 
         // don't allow for a null interval here; js
         // silently converts that to 0, which confuses
         // libical.
-        var recurInterval = getFieldValue("repeat-length-field");
+        var recurInterval = getElementValue("repeat-length-field");
         if (recurInterval == null)
             recurInterval = 1;
         recRule.interval = recurInterval;
-        recRule.type     = getFieldValue("repeat-length-units");
+        recRule.type     = getElementValue("repeat-length-units");
 
         // XXX need to do extra work for weeks here and for months incase 
         // extra things are checked
-
-
         switch(recRule.type) {
         case "WEEKLY":
             var checkedState;
             var byDay = new Array();
             for (var i = 0; i < 7; i++) {
-                checkedState = getFieldValue( "advanced-repeat-week-"+i, "checked" );
+                checkedState = getElementValue("advanced-repeat-week-" + i, "checked");
                 if (checkedState) {
-                    byDay.push(i+1);
+                    byDay.push(i + 1);
                 }
             }
             recRule.setComponent("BYDAY", byDay.length, byDay);
             break;
+        //case "MONTHLY":
+        //case "YEARLY":
         }
 
         recurrenceInfo.appendRecurrenceItem(recRule);
@@ -660,7 +640,7 @@ function onOKCommand()
         // Finally, set the recurrenceInfo
         event.recurrenceInfo = recurrenceInfo;
     }
-    debug("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo );
+    debug("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo);
 
 
     // INVITEES ----------------------------------------------------------
@@ -673,8 +653,8 @@ function onOKCommand()
         event.addAttendee(attendee);
     }
 
-    if (getFieldValue("invite-checkbox", "checked"))
-        event.setProperty("inviteEmailAddress", getFieldValue("invite-email-field"));
+    if (getElementValue("invite-checkbox", "checked"))
+        event.setProperty("inviteEmailAddress", getElementValue("invite-email-field"));
     else
         event.deleteProperty("inviteEmailAddress");
 
@@ -682,7 +662,6 @@ function onOKCommand()
     // ATTACHMENTS -------------------------------------------------------
     /* XXX this could will work when attachments are supported by calItemBase
     var attachmentListbox = documentgetElementById("attachmentBucket");
-
     var attachments = event.attachments.QueryInterface(Components.interfaces.nsIMutableArray);
 
     attachments.clear();
@@ -694,10 +673,10 @@ function onOKCommand()
     */
 
 
-   var Server = getFieldValue( "server-field" );
+    var Server = getElementValue("server-field");
 
-   // :TODO: REALLY only do this if the alarm or start settings change.?
-   //if the end time is later than the start time... alert the user using text from the dtd.
+   // :TODO: REALLY only do this if the alarm or start settings change.
+   // if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
 
    gOnOkFunction(event, Server, originalEvent);
@@ -715,7 +694,6 @@ function onOKCommand()
  *    0 if dateA == dateB (ignoring time of day)
  *   +1 if dateA >  dateB (ignoring time of day)
  */
-
 function compareIgnoringTimeOfDay(dateA, dateB)
 {
   if (dateA.getFullYear() == dateB.getFullYear() &&
@@ -734,33 +712,28 @@ function compareIgnoringTimeOfDay(dateA, dateB)
  * Check that end date is not before start date, and update warning message
  * Return true if problem found.
  */
-
 function checkSetTimeDate()
 {
-   var dateComparison = compareIgnoringTimeOfDay(gEndDate, gStartDate);
+   var startDate      = getElementValue("start-datetime");
+   var endDate        = getElementValue("end-datetime");
+   var dateComparison = compareIgnoringTimeOfDay(endDate, startDate);
 
-   if (dateComparison < 0 ||
-       (dateComparison == 0 && getFieldValue( "all-day-event-checkbox",
-                                              "checked" )))
+   if (dateComparison < 0 || (dateComparison == 0 &&
+       getElementValue("all-day-event-checkbox", "checked") ) )
    {
       // end before start, or all day event and end date is not exclusive.
       setDateError(true);
-      //showElement("end-date-warning");
       setTimeError(false);
-      //hideElement("end-time-warning");
       return false;
    } else if (dateComparison == 0) {
       setDateError(false);
-      //hideElement("end-date-warning");
       // start & end date same, so compare entire time (ms since 1970)
-      var isBadEndTime = gEndDate.getTime() < gStartDate.getTime();
+      var isBadEndTime = endDate.getTime() < startDate.getTime();
       setTimeError(isBadEndTime);
       return !isBadEndTime;
    } else {
       setDateError(false);
-      //hideElement("end-date-warning");
       setTimeError(false);
-      //hideElement("end-time-warning");
       return true;
    }
 }
@@ -771,24 +744,24 @@ function checkSetTimeDate()
  * Unlike the time/date versions this one sets the error message too as it
  * doesn't depend on the outcome of any of the other tests
  */
-
 function checkSetRecur()
 {
-   var recur = getFieldValue( "repeat-checkbox", "checked" );
-   var recurUntil = getFieldValue( "repeat-until-radio", "selected" );
-   var recurUntilDate = document.getElementById("repeat-end-date-picker").value;
-   
-   var untilDateIsBeforeEndDate =
-     ( recur && recurUntil && 
-       // until date is less than end date if total milliseconds time is less
-       recurUntilDate.getTime() < gEndDate.getTime() && 
-       // if on same day, ignore time of day for now
-       // (may change in future for repeats within a day, such as hourly)
-       !( recurUntilDate.getFullYear() == gEndDate.getFullYear() &&
-          recurUntilDate.getMonth() == gEndDate.getMonth() &&
-          recurUntilDate.getDate() == gEndDate.getDate() ));
-   setRecurError(untilDateIsBeforeEndDate);
-   return(!untilDateIsBeforeEndDate);
+    var endDate        = getElementValue("end-datetime");
+    var recur          = getElementValue("repeat-checkbox", "checked");
+    var recurUntil     = getElementValue("repeat-until-radio", "selected");
+    var recurUntilDate = getElementValue("repeat-end-date-picker");
+
+    var untilDateIsBeforeEndDate =
+      ( recur && recurUntil && 
+        // until date is less than end date if total milliseconds time is less
+        recurUntilDate.getTime() < endDate.getTime() && 
+        // if on same day, ignore time of day for now
+        // (may change in future for repeats within a day, such as hourly)
+        !( recurUntilDate.getFullYear() == endDate.getFullYear() &&
+           recurUntilDate.getMonth() == endDate.getMonth() &&
+           recurUntilDate.getDate() == endDate.getDate() ) );
+    setRecurError(untilDateIsBeforeEndDate);
+    return(!untilDateIsBeforeEndDate);
 }
 
 
@@ -796,12 +769,9 @@ function checkSetRecur()
  * Called when the start or due datetime checkbox is clicked.
  * Enables/disables corresponding datetime picker and alarm relation.
  */
-
 function onDateTimeCheckbox(checkbox, pickerId)
 {
-    var picker = document.getElementById( pickerId );
-    picker.disabled = !checkbox.checked;
-
+    setElementValue(pickerId, !checkbox.checked, "disabled");
     processAlarmType();
     updateOKButton();
 }
@@ -809,19 +779,19 @@ function onDateTimeCheckbox(checkbox, pickerId)
 
 function setRecurError(state)
 {
-   document.getElementById("repeat-time-warning" ).setAttribute( "hidden", !state);
+    setElementValue("repeat-time-warning", !state, "hidden");
 }
 
 
 function setDateError(state)
 { 
-   document.getElementById( "end-date-warning" ).setAttribute( "hidden", !state );
+    setElementValue("end-date-warning", !state, "hidden");
 }
 
 
 function setTimeError(state)
 { 
-   document.getElementById( "end-time-warning" ).setAttribute( "hidden", !state );
+    setElementValue("end-time-warning", !state, "hidden");
 }
 
 
@@ -829,12 +799,11 @@ function setTimeError(state)
  * Check that the due date is after the start date, if they are the same day
  * then the checkDueTime function should catch the problem (if there is one).
  */
-
 function checkDueDate()
 {
-  var startDate = document.getElementById( "start-datetime" ).value;
-  var dueDate = document.getElementById( "due-datetime" ).value;
-  compareIgnoringTimeOfDay(dueDate, startDate);
+   var startDate = getElementValue("start-datetime");
+   var dueDate   = getElementValue("due-datetime");
+   compareIgnoringTimeOfDay(dueDate, startDate);
 }
 
 
@@ -843,51 +812,50 @@ function checkDueDate()
  * Provide separate error message for startDate > dueDate or
  * startDate == dueDate && startTime > dueTime.
  */
-
 function checkDueSetTimeDate()
 {
-  var startCheckBox = document.getElementById( "start-checkbox" );
-  var dueCheckBox = document.getElementById( "due-checkbox" );
-  if (startCheckBox.checked && dueCheckBox.checked) {
-    var CheckDueDate = checkDueDate();
+    var startCheckbox = getElementValue("start-checkbox", "checked");
+    var dueCheckbox   = getElementValue("due-checkbox", "checked");
 
-    if ( CheckDueDate < 0 ) {
-      // due before start
-      setDueDateError(true);
-      setDueTimeError(false);
-      return false;
-    } else if ( CheckDueDate == 0 ) {
-      setDueDateError(false);
-      // start & due same
-      var CheckDueTime = checkDueTime();
-      setDueTimeError(CheckDueTime);
-      return !CheckDueTime;
+    if (startCheckbox && dueCheckBox) {
+        var CheckDueDate = checkDueDate();
+        if ( CheckDueDate < 0 ) {
+            // due before start
+            setDueDateError(true);
+            setDueTimeError(false);
+            return false;
+        } else if ( CheckDueDate == 0 ) {
+            setDueDateError(false);
+            // start & due same
+            var CheckDueTime = checkDueTime();
+            setDueTimeError(CheckDueTime);
+            return !CheckDueTime;
+        }
     }
-  }
-  setDueDateError(false);
-  setDueTimeError(false);
-  return true;
+    setDueDateError(false);
+    setDueTimeError(false);
+    return true;
 }
 
 
 function setDueDateError(state)
 {
-    document.getElementById( "due-date-warning" ).setAttribute( "hidden", !state );
+    setElementValue("due-date-warning", !state, "hidden");
 }
 
 
 function setDueTimeError(state)
 {
-    document.getElementById( "due-time-warning" ).setAttribute( "hidden", !state );
+    setElementValue("due-time-warning", !state, "hidden");
 }
 
 
 function setOkButton(state)
 {
    if (state == false)
-      document.getElementById( "calendar-new-component-window" ).getButton( "accept" ).setAttribute( "disabled", true );
+      document.getElementById("calendar-new-component-window").getButton("accept").setAttribute("disabled", true);
    else
-      document.getElementById( "calendar-new-component-window" ).getButton( "accept" ).removeAttribute( "disabled" );
+      document.getElementById("calendar-new-component-window").getButton("accept").removeAttribute("disabled");
 }
 
 
@@ -901,59 +869,62 @@ function updateOKButton()
 
 
 /*
- * Called when a datepicker is finished, and a date was picked.
+ * Called when an event datepicker is finished, and a date was picked.
  */
-
-function onDateTimePick( dateTimePicker )
+function onDateTimePick(dateTimePicker)
 {
-   var pickedDateTime = new Date( dateTimePicker.value );
+    var startDate      = getElementValue("start-datetime");
+    var endDate        = getElementValue("end-datetime");
+    var pickedDateTime = new Date(dateTimePicker.value);
+    var duration       = ( endDate.getTime() - startDate.getTime() );
 
-   if( dateTimePicker.id == "end-datetime" ) {
-     if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-       //display enddate == ical enddate - 1 (for allday events)
-       pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
-     }
-     gEndDate = pickedDateTime;
-     // save the duration
-     gDuration = gEndDate.getTime() - gStartDate.getTime();
+    if (dateTimePicker.id == "end-datetime") {
+        if (getElementValue("all-day-event-checkbox", "checked")) {
+          //display enddate == ical enddate - 1 (for allday events)
+          pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
+        }
+        setElementValue("end-datetime", pickedDateTime);
+        endDate = getElementValue("end-datetime");
+        // save the duration
+        duration = endDate.getTime() - startDate.getTime();
 
-     updateOKButton();
-     return;
-   }
+        updateOKButton();
+        return;
+    }
 
-   if( dateTimePicker.id == "start-datetime" ) {
-     gStartDate = pickedDateTime;
-     // preserve the previous duration by changing end
-     gEndDate.setTime( gStartDate.getTime() + gDuration );
-     
-     var displayEndDate = new Date(gEndDate)
-     if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-       //display enddate == ical enddate - 1 (for allday events)
-       displayEndDate.setDate( displayEndDate.getDate() - 1 );
-     }
-     document.getElementById( "end-datetime" ).value = displayEndDate;
-   }
+    if (dateTimePicker.id == "start-datetime") {
+        setElementValue("start-datetime", pickedDateTime);
+        startDate = getElementValue("start-datetime");
+        // preserve the previous duration by changing end
+        endDate.setTime(startDate.getTime() + duration );
+        
+        var displayEndDate = new Date(endDate)
+        if (getElementValue("all-day-event-checkbox", "checked")) {
+          //display enddate == ical enddate - 1 (for allday events)
+          displayEndDate.setDate( displayEndDate.getDate() - 1 );
+        }
+        setElementValue("end-datetime", displayEndDate);
+    }
 
-   var now = new Date();
+    var now = new Date();
 
-   // change the end date of recurring events to today, 
-   // if the new date is after today and repeat is not checked.
-   if ( pickedDateTime.getTime() > now.getTime() &&
-        !getFieldValue( "repeat-checkbox", "checked" ) ) 
-   {
-     document.getElementById( "repeat-end-date-picker" ).value = pickedDateTime;
-   }
-   updateAdvancedWeekRepeat();
-   updateAdvancedRepeatDayOfMonth();
-   updateAddExceptionButton();
-   updateOKButton();
+    // change the end date of recurring events to today, 
+    // if the new date is after today and repeat is not checked.
+    if (pickedDateTime.getTime() > now.getTime() &&
+        !getElementValue("repeat-checkbox", "checked") ) 
+    {
+        setElementValue("repeat-end-date-picker") = pickedDateTime;
+    }
+    updateAdvancedWeekRepeat();
+    updateAdvancedRepeatDayOfMonth();
+    updateAddExceptionButton();
+    updateOKButton();
 }
 
 
 /*
  * Called when the repeat checkbox is clicked.
  */
-
 function commandRepeat()
 {
    updateRepeatItemEnabled();
@@ -963,7 +934,6 @@ function commandRepeat()
 /*
  * Called when the until radio is clicked.
  */
-
 function commandUntil()
 {
    updateUntilItemEnabled();
@@ -975,60 +945,54 @@ function commandUntil()
 /*
  * Called when the all day checkbox is clicked.
  */
-
 function commandAllDay()
 {
-  //user enddate == ical enddate - 1 (for allday events)
-  if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
-    gEndDate.setDate( gEndDate.getDate() + 1 );
-  } else { 
-    gEndDate.setDate( gEndDate.getDate() - 1 );
-  }
-  // update the duration
-  gDuration = gEndDate.getTime() - gStartDate.getTime();
+    var endDate = getElementValue("end-datetime");
 
-   updateStartEndItemEnabled();
-   updateOKButton();
+    //user enddate == ical enddate - 1 (for allday events)
+    if (getElementValue("all-day-event-checkbox", "checked") )
+        endDate.setDate(endDate.getDate() + 1);
+    else
+        endDate.setDate(endDate.getDate() - 1);
+
+    updateStartEndItemEnabled();
+    updateOKButton();
 }
 
 
 /*
  * Called when the invite checkbox is clicked.
  */
-
 function processInviteCheckbox()
 {
-    processEnableCheckbox( "invite-checkbox" , "invite-email-field" );
+    processEnableCheckbox("invite-checkbox" , "invite-email-field");
 }
 
 
 /*
  * Enable/Disable Repeat items
  */
-
 function updateRepeatItemEnabled()
 {
-   var repeatCheckBox    = document.getElementById( "repeat-checkbox" );
-   var repeatDisableList = document.getElementsByAttribute( "disable-controller", "repeat" );
+   var repeatDisableList = document.getElementsByAttribute("disable-controller", "repeat");
 
-   if( repeatCheckBox.checked ) {
+   if ( getElementValue("repeat-checkbox", "checked") ) {
       for( var i = 0; i < repeatDisableList.length; ++i ) {
-         if( repeatDisableList[i].getAttribute( "today" ) != "true" )
-            repeatDisableList[i].removeAttribute( "disabled" );
+         if( repeatDisableList[i].getAttribute("today") != "true" )
+            repeatDisableList[i].removeAttribute("disabled");
       }
    } else {
       for( var j = 0; j < repeatDisableList.length; ++j )
-         repeatDisableList[j].setAttribute( "disabled", "true" );
+         repeatDisableList[j].setAttribute("disabled", "true");
    }
-   
+
    // udpate plural/singular
    updateRepeatPlural();
-   
    updateAlarmPlural();
-   
+
    // update until items whenever repeat changes
    updateUntilItemEnabled();
-   
+
    // extra interface depending on units
    updateRepeatUnitExtensions();
 
@@ -1041,37 +1005,33 @@ function updateRepeatItemEnabled()
 /*
  * Update plural singular menu items
  */
-
 function updateRepeatPlural()
 {
-    updateMenuLabels( "repeat-length-field", "repeat-length-units" );
+    updateMenuLabels("repeat-length-field", "repeat-length-units");
 }
 
 
 function updateAlarmPlural()
 {
-    updateMenuLabels( "alarm-length-field", "alarm-length-units" );
+    updateMenuLabels("alarm-length-field", "alarm-length-units");
 }
 
 
 /*
  * Enable/Disable Until items
  */
-
 function updateUntilItemEnabled()
 {
-    var repeatCheckBox = document.getElementById("repeat-checkbox");
-    var numberRadio    = document.getElementById("repeat-numberoftimes-radio");
-    var untilRadio     = document.getElementById("repeat-until-radio");
-
-    if( repeatCheckBox.checked && numberRadio.selected  )
+    if (getElementValue("repeat-checkbox", "checked") &&
+        getElementValue("repeat-numberoftimes-radio", "selected") ) {
         enableElement("repeat-numberoftimes-textbox");
-    else
+    } else
         disableElement("repeat-numberoftimes-textbox");
 
-    if( repeatCheckBox.checked && untilRadio.selected )
+    if (getElementValue("repeat-checkbox", "checked") &&
+        getElementValue("repeat-until-radio", "selected") ) {
         enableElement("repeat-end-date-picker");
-    else
+    } else
         disableElement("repeat-end-date-picker");
 }
 
@@ -1108,24 +1068,17 @@ function updateRepeatUnitExtensions()
 /*
  * Enable/Disable Start/End items
  */
-
 function updateStartEndItemEnabled()
 {
-   var allDayCheckBox = document.getElementById( "all-day-event-checkbox" );
-   var editTimeDisabled = allDayCheckBox.checked;
-   
-   var startTimePicker = document.getElementById( "start-datetime" );
-   var endTimePicker = document.getElementById( "end-datetime" );
-
-   startTimePicker.timepickerdisabled = editTimeDisabled;
-   endTimePicker.timepickerdisabled = editTimeDisabled;
+   var editTimeDisabled = getElementValue("all-day-event-checkbox", "checked");
+   setElementValue("start-datetime", editTimeDisabled, "timepickerdisabled");
+   setElementValue("end-datetime",   editTimeDisabled, "timepickerdisabled");
 }
 
 
 /*
  * Handle key down in repeat field
  */
-
 function repeatLengthKeyDown( repeatField )
 {
     updateRepeatPlural();
@@ -1135,7 +1088,6 @@ function repeatLengthKeyDown( repeatField )
 /*
  * Handle key down in alarm field
  */
-
 function alarmLengthKeyDown( repeatField )
 {
     updateAlarmPlural();
@@ -1151,55 +1103,53 @@ function repeatUnitCommand( repeatMenu )
 /*
  * function to set the menu items text
  */
-
 function updateAdvancedWeekRepeat()
 {
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-   
+   var dayNumber = getElementValue("start-datetime").getDay();
+
    //uncheck them all if the repeat checkbox is checked
-   var repeatCheckBox = document.getElementById( "repeat-checkbox" );
-   
-   if( repeatCheckBox.checked ) {
+   var repeatCheckBox = getElementValue("repeat-checkbox", "checkbox");
+
+   if(repeatCheckBox) {
       //uncheck them all
       for( var i = 0; i < 7; i++ ) {
-         setFieldValue( "advanced-repeat-week-"+i, false, "disabled" );
-         setFieldValue( "advanced-repeat-week-"+i, false, "today" );
+         setElementValue("advanced-repeat-week-"+i, false, "disabled");
+         setElementValue("advanced-repeat-week-"+i, false, "today");
       }
    }
 
-   if( !repeatCheckBox.checked ) {
+   if(!repeatCheckBox) {
       for( i = 0; i < 7; i++ ) {
-         setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
+         setElementValue("advanced-repeat-week-"+i, false, "checked");
       }
    }
 
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
-   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
+   setElementValue("advanced-repeat-week-"+dayNumber, "true", "checked" );
+   setElementValue("advanced-repeat-week-"+dayNumber, "true", "disabled");
+   setElementValue("advanced-repeat-week-"+dayNumber, "true", "today"   );
 }
 
 
 /*
  * function to set the menu items text
  */
-
 function updateAdvancedRepeatDayOfMonth()
 {
     //get the day number for today.
-    var dayNumber      = document.getElementById( "start-datetime" ).value.getDate();
-    var dayExtension   = getDayExtension( dayNumber );
+    var dayNumber      = getElementValue("start-datetime").getDate();
+    var dayExtension   = getDayExtension(dayNumber);
     var weekNumber     = getWeekNumberOfMonth();
     var calStrings     = document.getElementById("bundle_calendar");
-    var weekNumberText = getWeekNumberText( weekNumber );
-    var dayOfWeekText  = getDayOfWeek( dayNumber );
-    var ofTheMonthText = document.getElementById( "ofthemonth-text" ).getAttribute( "value" );
-    var lastText       = document.getElementById( "last-text" ).getAttribute( "value" );
-    var onTheText      = document.getElementById( "onthe-text" ).getAttribute( "value" );
+    var weekNumberText = getWeekNumberText(weekNumber);
+    var dayOfWeekText  = getDayOfWeek(dayNumber);
+    var ofTheMonthText = document.getElementById("ofthemonth-text" ).getAttribute("value");
+    var lastText       = document.getElementById("last-text" ).getAttribute("value");
+    var onTheText      = document.getElementById("onthe-text").getAttribute("value");
     var dayNumberWithOrdinal = dayNumber + dayExtension;
     var repeatSentence = calStrings.getFormattedString( "weekDayMonthLabel", [onTheText, dayNumberWithOrdinal, ofTheMonthText] );
 
-    document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", repeatSentence );
+    document.getElementById("advanced-repeat-dayofmonth").setAttribute("label", repeatSentence);
 
     if( weekNumber == 4 && isLastDayOfWeekOfMonth() ) {
         document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
@@ -1222,23 +1172,18 @@ function updateAdvancedRepeatDayOfMonth()
 function updateAddExceptionButton()
 {
     //get the date from the picker
-    var datePickerValue = document.getElementById( "exceptions-date-picker" ).value;
+    var datePickerValue = getElementValue("exceptions-date-picker");
 
-    if( isAlreadyException( datePickerValue ) ||
-        document.getElementById( "repeat-checkbox" ).getAttribute( "checked" ) != "true" )
-    {
+    if( isAlreadyException( datePickerValue ) || !getElementValue("repeat-checkbox", "checked") )
         disableElement("exception-add-button");
-    } else {
+    else
         enableElement("exception-add-button");
-    }
 }
 
 
 function updateDeleteExceptionButton()
 {
-    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
-
-    if ( !repeatCheckBox.checked )
+    if (!getElementValue("repeat-checkbox", "checked"))
         disableElement("delete-exception-button");
     else
         updateListboxDeleteButton("exception-dates-listbox", "delete-exception-button");
@@ -1247,7 +1192,7 @@ function updateDeleteExceptionButton()
 
 function removeSelectedExceptionDate()
 {
-    var exceptionsListbox = document.getElementById( "exception-dates-listbox" );
+    var exceptionsListbox = document.getElementById("exception-dates-listbox");
     var SelectedItem = exceptionsListbox.selectedItem;
 
     if ( SelectedItem )
@@ -1259,21 +1204,21 @@ function removeSelectedExceptionDate()
 }
 
 
-function addException( dateToAdd )
+function addException(dateToAdd)
 {
-    if ( !dateToAdd ) {
+    if (!dateToAdd) {
        // get the date from the date and time box.
        // returns a date object
-       dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
+       getElementValue("exceptions-date-picker");
     }
-   
+
     if ( isAlreadyException( dateToAdd ) )
        return;
 
-    var DateLabel = formatDate( dateToAdd );
+    var DateLabel = formatDate(dateToAdd);
 
     // add a row to the listbox.
-    var listbox = document.getElementById( "exception-dates-listbox" );
+    var listbox = document.getElementById("exception-dates-listbox");
     // ensure user can see that add occurred (also, avoid bug 231765, bug 250123)
     listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
@@ -1283,14 +1228,14 @@ function addException( dateToAdd )
 }
 
 
-function isAlreadyException( dateObj )
+function isAlreadyException(dateObj)
 {
    //check to make sure that the date is not already added.
    var listbox = document.getElementById( "exception-dates-listbox" );
 
    for( var i = 0; i < listbox.childNodes.length; i++ ) {
       var dateToMatch = new Date( );
-      
+
       dateToMatch.setTime( listbox.childNodes[i].value );
       if( dateToMatch.getMonth() == dateObj.getMonth() && dateToMatch.getFullYear() == dateObj.getFullYear() && dateToMatch.getDate() == dateObj.getDate() )
          return true;
@@ -1299,7 +1244,7 @@ function isAlreadyException( dateObj )
 }
 
 
-function getDayExtension( dayNumber )
+function getDayExtension(dayNumber)
 {
    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
@@ -1312,75 +1257,75 @@ function getDayExtension( dayNumber )
 }
 
 
-function getDayOfWeek( )
+function getDayOfWeek()
 {
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-   
+   var dayNumber = getElementValue("start-datetime").getDay();
+
    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
    //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
-   var oneBasedDayNumber = parseInt( dayNumber ) + 1;
-   
-   return( dateStringBundle.GetStringFromName( "day."+oneBasedDayNumber+".name" ) );
+   var oneBasedDayNumber = parseInt(dayNumber) + 1;
+
+   return(dateStringBundle.GetStringFromName("day." + oneBasedDayNumber + ".name") );
 }
 
 
 function getWeekNumberOfMonth()
 {
-   //get the day number for today.
-   var startTime = document.getElementById( "start-datetime" ).value;
-   
-   var oldStartTime = startTime;
+    //get the day number for today.
+    var startTime = getElementValue("start-datetime");
+    var oldStartTime = startTime;
+    var thisMonth = startTime.getMonth();
+    var monthToCompare = thisMonth;
+    var weekNumber = 0;
 
-   var thisMonth = startTime.getMonth();
-   
-   var monthToCompare = thisMonth;
+    while(monthToCompare == thisMonth) {
+        startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
+        monthToCompare = startTime.getMonth();
+        weekNumber++;
+    }
 
-   var weekNumber = 0;
-
-   while( monthToCompare == thisMonth ) {
-      startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
-
-      monthToCompare = startTime.getMonth();
-      
-      weekNumber++;
-   }
-   
-   return( weekNumber );
+    return(weekNumber);
 }
 
 
 function isLastDayOfWeekOfMonth()
 {
-   //get the day number for today.
-   var startTime = document.getElementById( "start-datetime" ).value;
-   
-   var oldStartTime = startTime;
+    //get the day number for today.
+    var startTime = getElementValue("start-datetime");
+    var oldStartTime = startTime;
+    var thisMonth = startTime.getMonth();
+    var monthToCompare = thisMonth;
+    var weekNumber = 0;
 
-   var thisMonth = startTime.getMonth();
-   
-   var monthToCompare = thisMonth;
+    while(monthToCompare == thisMonth) {
+        startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
+        monthToCompare = startTime.getMonth();
+        weekNumber++;
+    }
 
-   var weekNumber = 0;
+    if (weekNumber > 3) {
+        var nextWeek = new Date( oldStartTime.getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
 
-   while( monthToCompare == thisMonth ) {
-      startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
+        if (nextWeek.getMonth() != thisMonth) {
+            //its the last week of the month
+            return(true);
+        }
+    }
+    return(false);
+}
 
-      monthToCompare = startTime.getMonth();
 
-      weekNumber++;
-   }
-
-   if( weekNumber > 3 ) {
-      var nextWeek = new Date( oldStartTime.getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
-
-      if( nextWeek.getMonth() != thisMonth ) {
-         //its the last week of the month
-         return( true );
-      }
-   }
-   return( false );
+function getWeekNumberText(weekNumber)
+{
+    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+    if ( weekNumber >= 1 && weekNumber <= 4 )
+        return( dateStringBundle.GetStringFromName( "ordinal.name."+weekNumber) );
+    else if ( weekNumber == 5 )
+        return( dateStringBundle.GetStringFromName( "ordinal.name.last" ) );
+    else
+        return(false);
 }
 
 
@@ -1429,176 +1374,36 @@ function updateRemoveAttachmentButton()
 }
 
 
-function getWeekNumberText( weekNumber )
-{
-    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
-    if ( weekNumber >= 1 && weekNumber <= 4 )
-        return( dateStringBundle.GetStringFromName( "ordinal.name."+weekNumber) );
-    else if( weekNumber == 5 )
-        return( dateStringBundle.GetStringFromName( "ordinal.name.last" ) );
-    else
-        return( false );
-}
-
-
 /* URL */
 
 var launch = true;
 
 function loadURL()
 {
-   if( launch == false ) //stops them from clicking on it twice
-      return;
+    if( launch == false ) //stops them from clicking on it twice
+       return;
 
-   launch = false;
-   //get the URL from the text box
-   var UrlToGoTo = document.getElementById( "uri-field" ).value;
-   
-   if( UrlToGoTo.length < 4 ) //it has to be > 4, since it needs at least 1 letter, a . and a two letter domain name.
-      return;
+    launch = false;
+    //get the URL from the text box
+    var UrlToGoTo = getElementValue("uri-field");
 
-   //check if it has a : in it
-   if( UrlToGoTo.indexOf( ":" ) == -1 )
-      UrlToGoTo = "http://"+UrlToGoTo;
+    //it has to be > 4, since it needs at least 1 letter, a . and a two letter domain name.
+    if(UrlToGoTo.length < 4)
+       return;
 
-   //launch the browser to that URL
-   launchBrowser( UrlToGoTo );
+    //check if it has a : in it
+    if(UrlToGoTo.indexOf( ":" ) == -1)
+       UrlToGoTo = "http://"+UrlToGoTo;
 
-   launch = true;
-}
-
-
-/**
-*   Helper function for filling the form, set the value of a property of a XUL element
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to set 
-*      newValue      - value to set property to ( if undefined no change is made )
-*      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
-*                               radios & checkboxes, "data" for drop-downs
-*/
-
-function setFieldValue( elementId, newValue, propertyName  )
-{
-    var undefined;
-
-    if( newValue !== undefined ) {
-        var field = document.getElementById( elementId );
-
-        if( newValue === false ) {
-            try {
-                field.removeAttribute( propertyName );
-            } catch (e) {
-                dump("setFieldValue: field.removeAttribute couldn't remove "+propertyName+
-                     " from "+elementId+" e: "+e+"\n");
-            }
-        } else if( propertyName ) {
-            try {
-                field.setAttribute( propertyName, newValue );
-            } catch (e) {
-                dump("setFieldValue: field.setAttribute couldn't set "+propertyName+
-                     " from "+elementId+" to "+newValue+" e: "+e+"\n");
-            }
-        } else {
-            field.value = newValue;
-        }
-    }
-}
-
-
-/**
-*   Helper function for getting data from the form, 
-*   Get the value of a property of a XUL element
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to get from 
-*      propertyName  - OPTIONAL name of property to set, default is "value", use "checked" for 
-*                               radios & checkboxes, "data" for drop-downs
-*   RETURN
-*      newValue      - value of property
-*/
-
-function getFieldValue( elementId, propertyName )
-{
-    var field = document.getElementById( elementId );
-
-    if( propertyName )
-        return field[ propertyName ];
-    else
-        return field.value;
-}
-
-
-/**
-*   Helper function for getting a date/time from the form.
-*   The element must have been set up with  setDateFieldValue or setTimeFieldValue.
-*
-* PARAMETERS
-*      elementId     - ID of XUL element to get from 
-* RETURN
-*      newValue      - Date value of element
-*/
-
-function getDateTimeFieldValue( elementId )
-{
-   var field = document.getElementById( elementId );
-   return field.editDate;
-}
-
-
-/**
-*   Helper function for filling the form, set the value of a date field
-*
-* PARAMETERS
-*      elementId     - ID of time textbox to set 
-*      newDate       - Date Object to use
-*/
-
-function setDateFieldValue( elementId, newDate  )
-{
-   // set the value to a formatted date string
-   
-   var field = document.getElementById( elementId );
-   field.value = formatDate( newDate );
-   
-   // add an editDate property to the item to hold the Date object
-   // used in onDatePick to update the date from the date picker.
-   // used in getDateTimeFieldValue to get the Date back out.
-   
-   // we clone the date object so changes made in place do not propagte
-   
-   field.editDate = new Date( newDate );
-}
-
-
-/**
-*   Helper function for filling the form, set the value of a time field
-*
-* PARAMETERS
-*      elementId     - ID of time textbox to set 
-*      newDate       - Date Object to use
-*/
-
-function setTimeFieldValue( elementId, newDate  )
-{
-   // set the value to a formatted time string 
-   var field = document.getElementById( elementId );
-   field.value = formatTime( newDate );
-   
-   // add an editDate property to the item to hold the Date object
-   // used in onTimePick to update the date from the time picker.
-   // used in getDateTimeFieldValue to get the Date back out.
-   
-   // we clone the date object so changes made in place do not propagte
-   
-   field.editDate = new Date( newDate );
+    //launch the browser to that URL
+    launchBrowser( UrlToGoTo );
+    launch = true;
 }
 
 
 /*
  * Take a Date object and return a displayable date string i.e.: May 5, 1959
  */
-
 function formatDate( date )
 {
    return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
@@ -1608,7 +1413,6 @@ function formatDate( date )
 /*
  * Take a Date object and return a displayable time string i.e.: 12:30 PM
  */
-
 function formatTime( time )
 {
    var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( time );
@@ -1616,13 +1420,9 @@ function formatTime( time )
 }
 
 
-// XXX lilmatt's new crap for the new XUL
-
-
 /*
  *  A textbox changed - see if its button needs to be enabled or disabled
  */
-
 function processTextboxWithButton( textboxId, buttonId )
 {
     var theTextbox = document.getElementById( textboxId );
@@ -1640,7 +1440,7 @@ function processTextboxWithButton( textboxId, buttonId )
 function processAlarmType()
 {
     var alarmMenu = document.getElementById("alarm-type");
-    var componentType = getFieldValue("component-type");
+    var componentType = getElementValue("component-type");
     if( alarmMenu.selectedItem ) {
         if( componentType == "event" ) {
             debug("processAlarmType: EVENT " + alarmMenu.selectedItem.value );
@@ -1673,8 +1473,8 @@ function processAlarmType()
             }
         } else if( componentType == "todo" ) {
             debug("processAlarmType: TODO " + alarmMenu.selectedItem.value );
-            var startChecked = getFieldValue("start-checkbox", "checked");
-            var dueChecked = getFieldValue("due-checkbox", "checked");
+            var startChecked = getElementValue("start-checkbox", "checked");
+            var dueChecked = getElementValue("due-checkbox", "checked");
 
             // disable alarms if and only if neither checked
             if ( (!startChecked && !dueChecked) ) {
@@ -1749,11 +1549,11 @@ function processComponentType(componentType)
          // Set the menu properly if it isn't already
         menuListSelectItem("component-type", "event");
          // calling just enableElement _should_ work here, but it doesn't
-        document.getElementById("start-datetime").setAttribute( "disabled", "false" );
+        setElementValue("start-datetime", false, "disabled");
         enableElement("start-datetime");
         enableElement("end-datetime");
          // Set alarm trigger menulist text correctly (using singular/plural code)
-        setFieldValue("alarm-trigger-text-kludge", "2"); // event text is "plural"
+        setElementValue("alarm-trigger-text-kludge", "2"); // event text is "plural"
         updateMenuLabels("alarm-trigger-text-kludge", "alarm-trigger-relation");
         enableElement("alarm-type")
          // Set menubar title correctly
@@ -1768,7 +1568,7 @@ function processComponentType(componentType)
         onDateTimeCheckbox("start-checkbox", "start-datetime");
         onDateTimeCheckbox("due-checkbox", "due-datetime");
          // Set alarm trigger menulist text correctly (using singular/plural code)
-        setFieldValue("alarm-trigger-text-kludge", "1"); // todo text is "singular"
+        setElementValue("alarm-trigger-text-kludge", "1"); // todo text is "singular"
         updateMenuLabels("alarm-trigger-text-kludge", "alarm-trigger-relation");
         // Set menubar title correctly
         changeTitleBar("todo");
@@ -1787,7 +1587,6 @@ function processComponentType(componentType)
  *  Hides/shows/enables/disables fields and widgets using "hidden-controller"
  *  and "disable-controller" in the .xul
  */
-
 function changeMenuState(hiddenController, showController, disableController, enableController)
 {
     var hiddenList  = document.getElementsByAttribute( "hidden-controller",  hiddenController );
@@ -1816,7 +1615,6 @@ function changeMenuState(hiddenController, showController, disableController, en
 /*
  *  Changes window title bar title ("New Event", "Edit Task", etc.)
  */
-
 function changeTitleBar(componentType)
 {
     var title;
@@ -1825,10 +1623,10 @@ function changeTitleBar(componentType)
         var args = window.arguments[0];
 
         // Is this a NEW event/todo, or are we EDITing an existing event/todo?
-        if( "new" == args.mode )
-          title = document.getElementById( "data-"+componentType+"-title-new" ).getAttribute("value");
+        if("new" == args.mode)
+          title = document.getElementById("data-" + componentType + "-title-new" ).getAttribute("value");
         else
-          title = document.getElementById( "data-"+componentType+"-title-edit" ).getAttribute("value");
+          title = document.getElementById("data-" + componentType + "-title-edit").getAttribute("value");
         debug("changeTitleBar: "+title);
         document.title = title;
     } else {
@@ -1837,50 +1635,73 @@ function changeTitleBar(componentType)
 }
 
 
-function processToDoStatus(status)
+function processToDoStatus(status, passedInCompletedDate)
 {
-    var completedDatePicker = document.getElementById( "completed-date-picker" );
+    // RFC2445 doesn't support completedDates without the todo's status
+    // being "COMPLETED", however twiddling the status menulist shouldn't
+    // nuking that information at this point (in case you change status
+    // back to COMPLETED). When we go to store this VTODO as .ics the
+    // date will get lost.
+
+    var completedDate;
+    if (passedInCompletedDate)
+        completedDate = passedInCompletedDate;
+    else
+        completedDate = null;
+
+    // remember the original values
+    var oldPercentComplete = getElementValue("percent-complete-menulist", "data");
+    var oldCompletedDate   = getElementValue("completed-date-picker");
+
     switch(status) {
     case "":
     case "None":
         menuListSelectItem("todo-status-field", "None");
-        disableElement( "completed-date-picker" );
-        disableElement( "percent-complete-menulist" );
-        disableElement( "percent-complete-label" );
+        disableElement("completed-date-picker");
+        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-label");
         break;
     case "CANCELLED":
         menuListSelectItem("todo-status-field", "CANCELLED");
-        disableElement( "completed-date-picker" );
-        disableElement( "percent-complete-menulist" );
-        disableElement( "percent-complete-label" );
+        disableElement("completed-date-picker");
+        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-label");
         break;
     case "COMPLETED":
         menuListSelectItem("todo-status-field", "COMPLETED");
-        enableElement( "completed-date-picker" );
-        enableElement( "percent-complete-menulist" );
-        enableElement( "percent-complete-label" );
-        completedDatePicker.value = new Date();
-        setFieldValue( "percent-complete-menulist", "100" );
+        enableElement("completed-date-picker");
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
+        // if there isn't a completedDate, set it to now
+        if (!completedDate)
+            completedDate = new Date();
         break;
     case "IN-PROCESS":
         menuListSelectItem("todo-status-field", "IN-PROCESS");
-        enableElement( "completed-date-picker" );
-        enableElement( "percent-complete-menulist" );
-        enableElement( "percent-complete-label" );
+        disableElement("completed-date-picker");
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
         break;
     case "NEEDS-ACTION":
         menuListSelectItem("todo-status-field", "NEEDS-ACTION");
-        enableElement( "percent-complete-menulist" );
-        enableElement( "percent-complete-label" );
+        disableElement("completed-date-picker");
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
         break;
+    }
+    if (status == "COMPLETED") {
+        setElementValue("percent-complete-menulist", "100");
+        setElementValue("completed-date-picker", completedDate);
+    } else {
+        setElementValue("percent-complete-menulist", oldPercentComplete);
+        setElementValue("completed-date-picker", oldCompletedDate);
     }
 }
 
 
 function onInviteeAdd()
 {
-    textBox = document.getElementById("invite-email-field");
-    var email = "mailto:" + textBox.value;
+    var email = "mailto:" + getElementValue("invite-email-field");
     addAttendee(email);
 }
 

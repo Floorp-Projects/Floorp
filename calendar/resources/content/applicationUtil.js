@@ -37,18 +37,16 @@
 
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 
-function toOpenWindowByType( inType, uri )
+function toOpenWindowByType(inType, uri)
 {
     var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-
     var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+    var topWindow = windowManagerInterface.getMostRecentWindow(inType);
 
-    var topWindow = windowManagerInterface.getMostRecentWindow( inType );
-
-    if ( topWindow )
-            topWindow.focus();
+    if (topWindow)
+        topWindow.focus();
     else
-            window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+        window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
 function toBrowser()
@@ -61,6 +59,7 @@ function toJavaScriptConsole()
     toOpenWindowByType("global:console", "chrome://global/content/console.xul");
 }
 
+#ifndef MOZ_SUNBIRD
 function toMessengerWindow()
 {
     toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
@@ -70,8 +69,9 @@ function toAddressBook()
 {
     toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
 }
+#endif
 
-function launchBrowser( UrlToGoTo )
+function launchBrowser(UrlToGoTo)
 {
    if( navigator.vendor != "Mozilla Sunbird" ) {
      var navWindow;
@@ -82,7 +82,7 @@ function launchBrowser( UrlToGoTo )
            .getService(Components.interfaces.nsIWindowMediator);
          navWindow = wm.getMostRecentWindow("navigator:browser");
        } catch (e) {
-         dump("launchBrowser: Exception: "+e+"\n");
+         dump("launchBrowser: Exception: " + e + "\n");
        }
      
      if (navWindow) {
@@ -117,7 +117,7 @@ function launchBrowser( UrlToGoTo )
 }
 
 
-function goToggleToolbar( id, elementID )
+function goToggleToolbar(id, elementID)
 {
     var toolbar = document.getElementById(id);
     var element = document.getElementById(elementID);
@@ -160,80 +160,145 @@ function goOpenExtensions(aOpenMode)
 }
 
 
-function showElement( elementId )
+function showElement(elementId)
 {
     try {
-        debug("showElement: showing " + elementId );
-        document.getElementById( elementId ).removeAttribute( "hidden" );
+        debug("showElement: showing " + elementId);
+        document.getElementById(elementId).removeAttribute("hidden");
     } catch (e) {
         dump("showElement: Couldn't remove hidden attribute from " + elementId + "\n");
     }
 }
 
 
-function hideElement( elementId )
+function hideElement(elementId)
 {
     try {
-        debug("hideElement: hiding " + elementId );
-        document.getElementById( elementId ).setAttribute( "hidden", "true" );
+        debug("hideElement: hiding " + elementId);
+        document.getElementById(elementId).setAttribute("hidden", "true");
     } catch (e) {
         dump("hideElement: Couldn't set hidden attribute on " + elementId + "\n");
     }
 }
 
 
-function enableElement( elementId )
+function enableElement(elementId)
 {
     try {
-        debug("enableElement: enabling " + elementId );
-        //document.getElementById( elementId ).setAttribute( "disabled", "false" );
+        debug("enableElement: enabling " + elementId);
+        //document.getElementById(elementId).setAttribute("disabled", "false");
 
         // call remove attribute beacuse some widget code checks for the presense of a 
         // disabled attribute, not the value.
-        document.getElementById( elementId ).removeAttribute( "disabled" );
+        document.getElementById(elementId).removeAttribute("disabled");
     } catch (e) {
         dump("enableElement: Couldn't remove disabled attribute on " + elementId + "\n");
     }
 }
 
 
-function disableElement( elementId )
+function disableElement(elementId)
 {
     try {
-        debug("disableElement: disabling " + elementId );
-        document.getElementById( elementId ).setAttribute( "disabled", "true" );
+        debug("disableElement: disabling " + elementId);
+        document.getElementById(elementId).setAttribute( "disabled", "true");
     } catch (e) {
-        dump("disableElement: Couldn't set disabled attribute to true on " + elementId + "\n");
+        dump("disableElement: Couldn't set disabled attribute to true on " +
+             elementId + "\n");
     }
 }
 
 
-function processEnableCheckbox( checkboxId, elementId )
+/**
+*   Helper function for filling the form,
+*   Set the value of a property of a XUL element
+*
+* PARAMETERS
+*      elementId     - ID of XUL element to set
+*      newValue      - value to set property to ( if undefined no change is made )
+*      propertyName  - OPTIONAL name of property to set, default is "value",
+*                      use "checked" for radios & checkboxes, "data" for
+*                      drop-downs
+*/
+function setElementValue(elementId, newValue, propertyName)
 {
-    if( document.getElementById( checkboxId ).checked )
-        enableElement( elementId );
-    else
-        disableElement( elementId );
+    var undefined;
+
+    if (newValue !== undefined) {
+        var field = document.getElementById(elementId);
+
+        if (newValue === false) {
+            try {
+                field.removeAttribute(propertyName);
+            } catch (e) {
+                dump("setFieldValue: field.removeAttribute couldn't remove " +
+                propertyName + " from " + elementId + " e: " + e + "\n");
+            }
+        } else if (propertyName) {
+            try {
+                field.setAttribute(propertyName, newValue);
+            } catch (e) {
+                dump("setFieldValue: field.setAttribute couldn't set " +
+                propertyName + " from " + elementId + " to " + newValue +
+                " e: " + e + "\n");
+            }
+        } else {
+            field.value = newValue;
+        }
+    }
 }
 
 
-function updateListboxDeleteButton( listboxId, buttonId )
+/**
+*   Helper function for getting data from the form,
+*   Get the value of a property of a XUL element
+*
+* PARAMETERS
+*      elementId     - ID of XUL element to get from
+*      propertyName  - OPTIONAL name of property to set, default is "value",
+*                      use "checked" for radios & checkboxes, "data" for
+*                      drop-downs
+*   RETURN
+*      newValue      - value of property
+*/
+function getElementValue(elementId, propertyName)
 {
-    if ( document.getElementById( listboxId ).getRowCount() > 0 )
-        enableElement( buttonId );
+    var field = document.getElementById(elementId);
+
+    if (propertyName)
+        return field[propertyName];
+    return field.value;
+}
+
+
+function processEnableCheckbox(checkboxId, elementId)
+{
+    if (document.getElementById(checkboxId).checked)
+        enableElement(elementId);
     else
-        disableElement( buttonId );
+        disableElement(elementId);
 }
 
 
 /*
- *   Update plural singular menu items
+ *  Enable/disable button if there are children in a listbox
  */
-
-function updateMenuLabels( lengthFieldId, menuId )
+function updateListboxDeleteButton(listboxId, buttonId)
 {
-    var field = document.getElementById( lengthFieldId );
-    var menu = document.getElementById( menuId );
+    if ( document.getElementById(listboxId).getRowCount() > 0 )
+        enableElement(buttonId);
+    else
+        disableElement(buttonId);
+}
+
+
+/*
+ *  Update plural singular menu items
+ */
+function updateMenuLabels(lengthFieldId, menuId )
+{
+    var field = document.getElementById(lengthFieldId);
+    var menu  = document.getElementById(menuId);
 
     // figure out whether we should use singular or plural
     var length = field.value;
@@ -241,26 +306,26 @@ function updateMenuLabels( lengthFieldId, menuId )
     var newLabelNumber;
 
     // XXX This assumes that "0 days, minutes, etc." is plural in other languages.
-    if( ( Number( length ) == 0 ) || ( Number( length ) > 1 ) )
+    if ( ( Number(length) == 0 ) || ( Number(length) > 1 ) )
         newLabelNumber = "label2"
     else
         newLabelNumber = "label1"
 
     // see what we currently show and change it if required
-    var oldLabelNumber = menu.getAttribute( "labelnumber" );
+    var oldLabelNumber = menu.getAttribute("labelnumber");
 
-    if( newLabelNumber != oldLabelNumber ) {
+    if ( newLabelNumber != oldLabelNumber ) {
         // remember what we are showing now
-        menu.setAttribute( "labelnumber", newLabelNumber );
+        menu.setAttribute("labelnumber", newLabelNumber);
 
         // update the menu items
-        var items = menu.getElementsByTagName( "menuitem" );
+        var items = menu.getElementsByTagName("menuitem");
 
         for( var i = 0; i < items.length; ++i ) {
             var menuItem = items[i];
-            var newLabel = menuItem.getAttribute( newLabelNumber );
+            var newLabel = menuItem.getAttribute(newLabelNumber);
             menuItem.label = newLabel;
-            menuItem.setAttribute( "label", newLabel );
+            menuItem.setAttribute("label", newLabel);
         }
 
         // force the menu selection to redraw
@@ -291,7 +356,7 @@ function menuListIndexOf(menuList, value)
 {
     var items = menuList.menupopup.childNodes;
     var index = -1;
-    for (var i = 0; i < items.length; i++) {
+    for ( var i = 0; i < items.length; i++ ) {
         var element = items[i];
         if (element.nodeName == "menuitem")
             index++;
@@ -302,17 +367,17 @@ function menuListIndexOf(menuList, value)
 }
 
 
-function debug( text )
+function debug(text)
 {
-    if( gDebugEnabled )
-        dump( text + "\n");
+    if(gDebugEnabled)
+        dump(text + "\n");
 }
 
 
-function debugVar( variable )
+function debugVar(variable)
 {
-    if( gDebugEnabled )
-        dump( variable + ": " + variable + "\n");
+    if(gDebugEnabled)
+        dump(variable + ": " + variable + "\n");
 }
 
 
