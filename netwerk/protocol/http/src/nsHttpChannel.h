@@ -51,6 +51,7 @@
 #include "nsIOutputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamPump.h"
+#include "nsIPrompt.h"
 
 class nsHttpResponseHead;
 class nsHttpAuthCache;
@@ -117,6 +118,8 @@ private:
     nsresult ProcessNotModified();
     nsresult ProcessRedirection(PRUint32 httpStatus);
     nsresult ProcessAuthentication(PRUint32 httpStatus);
+    nsresult GetCallback(const nsIID &aIID, void **aResult);
+    nsresult PromptTempRedirect();
 
     // cache specific methods
     nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
