@@ -106,8 +106,17 @@ JS::String JS::operator+(const char *cstr, const String &str)
 // for a maximum of count characters and return true or false if the regions match
 bool JS::regionMatches(const String &str1, uint32 offset1, const String &str2, uint32 offset2, uint32 count, bool ignoreCase)
 {
-    if (!ignoreCase)
-        return (str1.compare(offset1, count, str2, offset2, count) == 0);
+    if (!ignoreCase) {
+        while ((count > 0) && (offset1 < str1.size()) && (offset2 < str2.size())) {
+	    if (str1[offset1] != str2[offset2]) {
+		break;
+	    }
+	    offset1++;
+	    offset2++;
+	    count--;
+        }        
+        return (count == 0);
+    }
     else {
         while ((count > 0) && (offset1 < str1.size()) && (offset2 < str2.size())) {
 	    if (toLower(str1[offset1]) != toLower(str2[offset2])) {
