@@ -170,30 +170,21 @@
 //
 
 static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
-static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kEventListenerManagerCID,   NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,         NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kLWBrkCID,                  NS_LWBRK_CID);
-static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
 static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
 static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
-static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
-static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
-static NS_DEFINE_CID(kXULOutlinerBuilderCID,     NS_XULOUTLINERBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kRangeCID,                  NS_RANGE_CID);
 
