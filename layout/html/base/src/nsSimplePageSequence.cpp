@@ -35,6 +35,16 @@
 #include "nsIPrintOptions.h"
 #include "nsPageFrame.h"
 
+// DateTime Includes
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
+#include "nsIServiceManager.h"
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+
 #define OFFSET_NOT_SET -1
 
 // This is for localization of the "x of n" pages string
@@ -364,6 +374,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
       kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
       //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
+      PRINT_DEBUG_MSG3("AV W: %d   H: %d\n", kidReflowState.availableWidth, kidReflowState.availableHeight);
 
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
@@ -403,6 +414,49 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
       // Get the next page
       kidFrame->GetNextSibling(&kidFrame);
     }
+
+    // Get Total Page Count
+    nsIFrame* page;
+    PRInt32 pageTot = 0;
+    for (page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
+      pageTot++;
+    }
+
+    // Set Page Number Info
+    PRInt32 pageNum = 1;
+    for (page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
+      nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, page);
+      if (pf != nsnull) {
+        //pf->SetPrintOptions(aPrintOptions);
+        pf->SetPageNumInfo(pageNum, pageTot);
+      }
+      pageNum++;
+    }
+
+    // Create current Date/Time String
+    nsresult rv;
+    nsCOMPtr<nsILocale> locale; 
+    nsCOMPtr<nsILocaleService> localeSvc = do_GetService(kLocaleServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+      if (NS_SUCCEEDED(rv) && locale) {
+        nsCOMPtr<nsIDateTimeFormat> dateTime;
+        rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
+                                               NULL,
+                                               NS_GET_IID(nsIDateTimeFormat),
+                                               (void**) getter_AddRefs(dateTime));
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString dateString;
+          time_t ltime;
+          time( &ltime );
+          if (NS_SUCCEEDED(dateTime->FormatTime(locale, kDateFormatShort, kTimeFormatNoSeconds, ltime, dateString))) {
+            PRUnichar * uStr = dateString.ToNewUnicode();
+            nsPageFrame::SetDateTimeStr(uStr); // nsPageFrame will own memory
+          }
+        }
+      }
+    }
+
   }
 
   // Return our desired size
@@ -501,6 +555,30 @@ nsSimplePageSequenceFrame::GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage)
   return NS_OK;
 }
 
+// Helper Function
+void 
+nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, PRBool aPageNumOnly)
+{
+  // Doing this here so we only have to go get these formats once
+  nsAutoString pageNumberFormat;
+  // Now go get the Localized Page Formating String
+  nsAutoString propName;
+  propName.AssignWithConversion(aPropName);
+  PRUnichar* uPropName = propName.ToNewUnicode();
+  if (uPropName != nsnull) {
+    nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, uPropName, pageNumberFormat);
+    if (NS_FAILED(rv)) { // back stop formatting
+      pageNumberFormat.AssignWithConversion(aDefPropVal);
+    }
+    nsMemory::Free(uPropName);
+  }
+  // Sets the format into a static data memeber which will own the memory and free it
+  PRUnichar* uStr = pageNumberFormat.ToNewUnicode();
+  if (uStr != nsnull) {
+    nsPageFrame::SetPageNumberFormat(uStr, aPageNumOnly); // nsPageFrame will own the memory
+  }
+
+}
 
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
@@ -649,19 +727,9 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
   }
   aPrintOptions->SetFontNamePointSize(fontName, pointSize);
 
-  // Now go get the Localized Page Formating String
-  PRBool doingPageTotals = PR_TRUE;
-  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintPageTotal, &doingPageTotals);
-
-  nsAutoString pageFormatStr;
-  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, 
-                                               doingPageTotals? NS_LITERAL_STRING("pageofpages").get():NS_LITERAL_STRING("pagenumber").get(),
-                                               pageFormatStr);
-  if (NS_FAILED(rv)) { // back stop formatting
-    pageFormatStr.AssignWithConversion(doingPageTotals?"%ld of %ld":"%ld");
-  }
-  // Sets the format into a static data memeber which will own the memory and free it
-  nsPageFrame::SetPageNumberFormat(pageFormatStr.ToNewUnicode());
+  // Doing this here so we only have to go get these formats once
+  SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
+  SetPageNumberFormat("pageofpages", "%1$d of %2$d", PR_FALSE);
 
   mPageNum          = 1;
   mPrintedPageNum   = 1;
@@ -870,3 +938,29 @@ nsSimplePageSequenceFrame::SetDebugFD(FILE* aFD)
   return NS_OK;
 }
 #endif
+
+//------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::Paint(nsIPresContext*      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect&        aDirtyRect,
+                                 nsFramePaintLayer    aWhichLayer)
+{
+  aRenderingContext.PushState();
+  aRenderingContext.SetColor(NS_RGB(255,255,255));
+
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsRect rect = mRect;
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    rect.x = 0;
+    rect.y = 0;
+    aRenderingContext.FillRect(rect);
+  }
+
+  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  PRBool clipEmpty;
+  aRenderingContext.PopState(clipEmpty);
+  return rv;
+}
