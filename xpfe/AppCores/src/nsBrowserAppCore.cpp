@@ -122,6 +122,11 @@ static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
 static nsresult
 FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
 
+
+static nsresult setAttribute( nsIWebShell *shell,
+                              const char *id,
+                              const char *name,
+                              const nsString &value );
 /////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
@@ -311,6 +316,15 @@ nsBrowserAppCore::Forward()
   mContentAreaWebShell->Forward();
 	return NS_OK;
 }
+
+#if 0
+NS_IMETHODIMP    
+nsBrowserAppCore::Stop()
+{
+  mContentAreaWebShell->Stop();
+	return NS_OK;
+}
+#endif   /*  0 */
 
 #ifdef ClientWallet
 //#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
@@ -552,6 +566,11 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
   if (!urlstr)
     return NS_OK;
 
+#if NOT_YET
+  printf("Enabling stop button\n");
+  //Enable the Stop buton
+  setAttribute(mWebShell, "canStop", "disabled", "false");
+#endif  /* NOT_YET  */
 
   /* Ask nsWebShell to load the URl */
   nsString id;
@@ -806,9 +825,13 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
 {
 
     const char* spec =nsnull;
-    
-    aUrl->GetSpec(&spec);
 
+	aUrl->GetSpec(&spec);
+
+    if (aStatus != NS_OK) {
+		goto done;
+	}
+    
     // Update global history.
     NS_ASSERTION(mGHistory != nsnull, "history not initialized");
     if (mGHistory && mWebShell) {
@@ -880,6 +903,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
     	}
     }
     
+done:
      // Stop the throbber and set the urlbar string
     setAttribute( mWebShell, "urlbar", "value", spec );
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
@@ -892,9 +916,19 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
     rv = mContentAreaWebShell->CanBack();
     setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
 
+	//Disable the Stop button
+//	setAttribute(mWebShell, "canStop", "disabled", "true");
+
     /* To satisfy a request from the QA group */
-    fprintf(stdout, "Document %s loaded successfully\n", spec);
-    fflush(stdout);
+	if (aStatus == NS_OK) {
+      fprintf(stdout, "Document %s loaded successfully\n", spec);
+      fflush(stdout);
+	}
+	else {
+      fprintf(stdout, "Error loading URL %s \n", spec);
+      fflush(stdout);
+	}
+
    return NS_OK;
 }
 
