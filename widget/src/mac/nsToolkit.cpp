@@ -334,7 +334,7 @@ void nsMacMemoryCushion::RepeatAction(const EventRecord &aMacEvent)
     nsCOMPtr<nsIImageManager> imageManager = do_GetService(kImageManagerCID);
     if (imageManager)
     {
-      imageManager->FlushCache();
+      imageManager->FlushCache(1);
     }
   }
 
