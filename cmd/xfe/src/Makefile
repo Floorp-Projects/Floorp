@@ -115,6 +115,7 @@ CPPSRCS		= \
 		  Menu.cpp \
 		  MenuBar.cpp \
 		  Minibuffer.cpp \
+		  MenuUtils.cpp \
 		  MozillaApp.cpp \
 		  NavCenterFrame.cpp \
 		  NavCenterView.cpp \
