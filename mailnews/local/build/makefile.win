@@ -48,6 +48,7 @@ LLIBS=\
     $(DIST)\lib\raptorbase.lib  \
     $(DIST)\lib\rdfutil_s.lib	\
 	$(DIST)\lib\xplib.lib       	\
+	$(DIST)\lib\mork.lib       	\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
