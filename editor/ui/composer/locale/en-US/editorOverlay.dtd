@@ -22,6 +22,7 @@
    -    Blake Ross
    -    Ryan Cassin (rcassin@supernova.org)
    -    Daniel Glazman (glazman@netscape.com)
+   -    Stephen Donner (technutz@netscape.net)
   -->
 
 <!-- Attn: Localization - some of the menus in this dialog directly affect mail also. -->
@@ -101,8 +102,6 @@
      Set to: "Table" or "Nested Table" depending on context 
      This accesskey must be in both strings -->
 <!ENTITY pasteTable.accesskey "a">
-
-
 <!ENTITY pasteLinkCmd.label "Link">
 <!ENTITY editpastelink.accesskey "l">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
@@ -143,7 +142,6 @@
 <!ENTITY viewpagesource.accesskey "s">
 <!ENTITY viewParagraphMarks.label "Paragraph Marks">
 <!ENTITY viewparagraphmarks.accesskey "p">
-
 
 <!-- Insert menu items -->
 <!ENTITY insertMenu.label "Insert">
@@ -388,6 +386,11 @@
 <!ENTITY alignjustify.accesskey "j">
 <!ENTITY alignJustify.tooltip "Align Justified">
 
+<!-- Layer toolbar items -->
+<!ENTITY layer.tooltip "Layer">
+<!ENTITY layerSendToBack.tooltip "Send to Back">
+<!ENTITY layerBringToFront.tooltip "Bring to Front">
+
 <!ENTITY increaseIndent.label "Increase Indent">
 <!ENTITY increaseindent.accesskey "i">
 <!ENTITY increaseindentkb "=">
@@ -406,7 +409,7 @@
 <!-- Table Menu -->
 <!ENTITY tableMenu.label "Table">
 <!ENTITY tablemenu.accesskey "b">
-<!-- Select submenu -->
+<!-- Select Submenu -->
 <!ENTITY tableSelectMenu.label "Select">
 <!ENTITY tableselectmenu.accesskey "s">
 
@@ -464,14 +467,13 @@
 <!ENTITY tableProperties.label "Table Properties...">
 <!ENTITY tableProperties.accesskey "o">
 
-<!-- Tools Menu -->
+<!-- Tools menu -->
 <!ENTITY toolsmenu.accesskey "l">
 <!ENTITY toolbrowser.accesskey "b">
 <!ENTITY toolplaineditor.accesskey "p">
 <!ENTITY toolsetfocus.accesskey "f">
 
-
-<!-- debug menu items -->
+<!-- Debug menu items -->
 <!ENTITY debugMenu.label "Debug">
 <!ENTITY newEditorTestPage.label "Composer with Test Page">
 <!ENTITY textEditorCmd.label "Plaintext Editor">
@@ -493,7 +495,7 @@
 <!ENTITY runLogCmd.label "Run Log">
 <!ENTITY setFocusCmd.label "Set Focus">
 
-<!-- toolbar-only items -->
+<!-- Toolbar-only items -->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY compositionToolbar.tooltip "Composition Toolbar">
 <!ENTITY formatToolbar.tooltip "Formatting Toolbar">
@@ -526,7 +528,7 @@
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 <!ENTITY HighlightColorButton.tooltip "Choose highlight color for text">
 
-<!-- editor toolbar -->
+<!-- Editor toolbar -->
 <!ENTITY decreaseFontSizeToolbarCmd.tooltip "Smaller font size">
 <!ENTITY increaseFontSizeToolbarCmd.tooltip "Larger font size">
 <!ENTITY boldToolbarCmd.tooltip "Bold">
@@ -543,7 +545,7 @@
 <!ENTITY alignRightButton.tooltip "Align text along right margin">
 <!ENTITY alignjustifyButton.tooltip "Align text along left and right margins">
 
-<!-- formatting toolbar not used, but may be in future -->
+<!-- Formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
@@ -554,7 +556,7 @@
 <!ENTITY colorLabel.label "Color:">
 <!ENTITY ok.label "OK">
 
-<!-- Display Mode Toolbar and View Menu items -->
+<!-- Display Mode toolbar and View menu items -->
 <!ENTITY NormalModeTab.label "Normal">
 <!ENTITY NormalMode.label "Normal Edit Mode">
 <!ENTITY NormalMode.accesskey "n">
