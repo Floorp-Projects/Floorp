@@ -53,7 +53,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
-#undef NOISY_MAX_ELEMENT_SIZE
+#define NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_INCREMENTAL_REFLOW
@@ -773,6 +773,7 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
 
   // Special check for zero sized content: If our content is zero
   // sized then we collapse into nothingness.
+  PRBool emptyFrame = PR_FALSE;
   if ((eHTMLFrameConstraint_Unconstrained == aState.widthConstraint) &&
       (eHTMLFrameConstraint_Unconstrained == aState.heightConstraint) &&
       ((0 == aState.mKidXMost - aState.mBorderPadding.left) &&
@@ -781,6 +782,7 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     aMetrics.height = 0;
     aState.mAscent = 0;
     aState.mDescent = 0;
+    emptyFrame = PR_TRUE;
   }
 
   if (0 == (BLOCK_IS_INLINE & mFlags)) {
@@ -792,83 +794,29 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     aMetrics.descent = aState.mDescent;
   }
 
-  // XXX this needs ALOT OF REWORKING
   if (aState.mComputeMaxElementSize) {
     nscoord maxWidth, maxHeight;
-
-    if (aState.mNoWrap) {
-      maxWidth = 0;
-      maxHeight = 0;
-
-      // Find the maximum line-box width and use that as the
-      // max-element width
-      nsLineBox* line = mLines;
-      while (nsnull != line) {
-        nscoord xm = line->mBounds.XMost();
-        if (xm > maxWidth) {
-          maxWidth = xm;
-        }
-        line = line->mNext;
-      }
-
-      // XXX winging it!
-      maxHeight = aState.mMaxElementSize.height +
-        aState.mBorderPadding.top + aState.mBorderPadding.bottom;
+    if (emptyFrame) {
+      // When a frame is empty it must not provide any
+      // max-element-size information.
+      maxWidth = maxHeight = 0;
     }
     else {
-      maxWidth = aState.mMaxElementSize.width +
-        aState.mBorderPadding.left + aState.mBorderPadding.right;
+      if (aState.mNoWrap) {
+        // When no-wrap is true the max-element-size.width is the
+        // width of the widest line plus the right border. Note that
+        // aState.mKidXMost already has the left border factored into
+        // it
+        maxWidth = aState.mKidXMost + aState.mBorderPadding.right;
+      }
+      else {
+        // Add in border and padding dimensions to already computed
+        // max-element-size values.
+        maxWidth = aState.mMaxElementSize.width +
+          aState.mBorderPadding.left + aState.mBorderPadding.right;
+      }
       maxHeight = aState.mMaxElementSize.height +
         aState.mBorderPadding.top + aState.mBorderPadding.bottom;
-
-      // XXX This is still an approximation of the truth:
-
-      // 1. it doesn't take into account that after a floater is
-      // placed we always place at least *something* on the line.
-
-      // 2. if a floater doesn't start at the left margin (because
-      // it's placed relative to a floater on a preceeding line, say),
-      // then we get the wrong answer.
-
-      nsLineBox* line = mLines;
-      while (nsnull != line) {
-        if (nsnull != line->mFloaters) {
-          nsRect r;
-          nsMargin floaterMargin;
-
-          // Sum up the widths of the floaters on this line
-          PRInt32 sum = 0;
-          PRInt32 n = line->mFloaters->Count();
-          for (PRInt32 i = 0; i < n; i++) {
-            nsPlaceholderFrame* placeholder = (nsPlaceholderFrame*)
-              line->mFloaters->ElementAt(i);
-            nsIFrame* floater = placeholder->GetAnchoredItem();
-            floater->GetRect(r);
-            const nsStyleDisplay* floaterDisplay;
-            const nsStyleSpacing* floaterSpacing;
-            floater->GetStyleData(eStyleStruct_Display,
-                                  (const nsStyleStruct*&)floaterDisplay);
-            floater->GetStyleData(eStyleStruct_Spacing,
-                                  (const nsStyleStruct*&)floaterSpacing);
-
-            // Compute the margin for the floater (again!)
-            nsHTMLReflowState::ComputeMarginFor(floater, &aState,
-                                                floaterMargin);
-
-            nscoord width = r.width + floaterMargin.left + floaterMargin.right;
-            NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
-                         (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
-                         "invalid float type");
-            sum += width;
-          }
-
-          // See if we need a larger max-element width
-          if (sum > maxWidth) {
-            maxWidth = sum;
-          }
-        }
-        line = line->mNext;
-      }
     }
 
     // Store away the final value
@@ -876,8 +824,9 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     aMetrics.maxElementSize->height = maxHeight;
 #ifdef NOISY_MAX_ELEMENT_SIZE
     ListTag(stdout);
-    printf(": max-element-size:%d,%d desired:%d,%d\n",
-           maxWidth, maxHeight, aMetrics.width, aMetrics.height);
+    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.maxSize.width, aState.maxSize.height);
 #endif
   }
 
@@ -936,137 +885,6 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
 ListTag(stdout);
 printf(": => carried=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 #endif
-}
-
-nsresult
-nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
-                              nsIFrame* aNewFrame)
-{
-  // Get our last line and then get its last child
-  nsIFrame* lastFrame;
-  nsLineBox* lastLine = nsLineBox::LastLine(mLines);
-  if (nsnull != lastLine) {
-    lastFrame = lastLine->LastChild();
-  } else {
-    lastFrame = nsnull;
-  }
-
-  // Add the new frames to the sibling list; wrap any frames that
-  // require wrapping
-  if (nsnull != lastFrame) {
-    lastFrame->SetNextSibling(aNewFrame);
-  }
-  nsresult rv;
-
-  // Make sure that new inlines go onto the end of the lastLine when
-  // the lastLine is mapping inline frames.
-  PRInt32 pendingInlines = 0;
-  if (nsnull != lastLine) {
-    if (!lastLine->IsBlock()) {
-      pendingInlines = 1;
-    }
-  }
-
-  // Now create some lines for the new frames
-  nsIFrame* prevFrame = lastFrame;
-  for (nsIFrame* frame = aNewFrame; nsnull != frame; frame->GetNextSibling(frame)) {
-    // See if the child is a block or non-block
-    const nsStyleDisplay* kidDisplay;
-    rv = frame->GetStyleData(eStyleStruct_Display,
-                             (const nsStyleStruct*&) kidDisplay);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    const nsStylePosition* kidPosition;
-    rv = frame->GetStyleData(eStyleStruct_Position,
-                             (const nsStyleStruct*&) kidPosition);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    PRBool isBlock =
-      nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
-
-    // See if we need to move the frame outside of the flow, and insert a
-    // placeholder frame in its place
-    nsIFrame* placeholder;
-    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition,
-                           placeholder)) {
-      // Reset the previous frame's next sibling pointer
-      if (nsnull != prevFrame) {
-        prevFrame->SetNextSibling(placeholder);
-      }
-
-      // The placeholder frame is always inline
-      frame = placeholder;
-      isBlock = PR_FALSE;
-    }
-    else {
-      // Wrap the frame in a view if necessary
-      nsIStyleContext* kidSC;
-      frame->GetStyleContext(kidSC);
-      rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
-      NS_RELEASE(kidSC);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-
-    // If the child is an inline then add it to the lastLine (if it's
-    // an inline line, otherwise make a new line). If the child is a
-    // block then make a new line and put the child in that line.
-    if (isBlock) {
-      // If the previous line has pending inline data to be reflowed,
-      // do so now.
-      if (0 != pendingInlines) {
-        // Set this to true in case we don't end up reflowing all of the
-        // frames on the line (because they end up being pushed).
-        lastLine->MarkDirty();
-        pendingInlines = 0;
-      }
-
-      // Create a line for the block
-      nsLineBox* line = new nsLineBox(frame, 1, LINE_IS_BLOCK);
-      if (nsnull == line) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      if (nsnull == lastLine) {
-        mLines = line;
-      }
-      else {
-        lastLine->mNext = line;
-      }
-      lastLine = line;
-    }
-    else {
-      // Queue up the inlines for reflow later on
-      if (0 == pendingInlines) {
-        nsLineBox* line = new nsLineBox(frame, 0, 0);
-        if (nsnull == line) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        if (nsnull == lastLine) {
-          mLines = line;
-        }
-        else {
-          lastLine->mNext = line;
-        }
-        lastLine = line;
-      }
-      lastLine->mChildCount++;
-      pendingInlines++;
-    }
-
-    // Remember the previous frame
-    prevFrame = frame;
-  }
-
-  if (0 != pendingInlines) {
-    // Set this to true in case we don't end up reflowing all of the
-    // frames on the line (because they end up being pushed).
-    lastLine->MarkDirty();
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -2187,7 +2005,8 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsRect availSpace(availX, aState.mY, availWidth, availHeight);
   WillReflowFrame(aState, aLine, frame);
   nsReflowStatus frameReflowStatus;
-  rv = brc.ReflowBlock(frame, availSpace, aState.IsAdjacentWithTop(), frameReflowStatus);
+  rv = brc.ReflowBlock(frame, availSpace, aState.IsAdjacentWithTop(),
+                       frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2730,6 +2549,8 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
   }
   aState.mY = newY;
 
+  PostPlaceLine(aState, aLine, ir.GetMaxElementSize());
+
   // Any below current line floaters to place?
   if (0 != aState.mPendingFloaters.Count()) {
     aState.PlaceFloaters(&aState.mPendingFloaters, PR_FALSE);
@@ -2746,12 +2567,33 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
     break;
   }
 
-  PostPlaceLine(aState, aLine, ir.GetMaxElementSize());
-
   // Notify anyone who cares that the line has been placed
   DidPlaceLine(aState, aLine, topMargin, bottomMargin, aKeepReflowGoing);
 
   return rv;
+}
+
+// Compute the line's max-element-size by adding into the raw value
+// computed by reflowing the contents of the line (aMaxElementSize)
+// the impact of floaters on this line or the preceeding lines.
+void
+nsBaseIBFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
+                                         nsLineBox* aLine,
+                                         nsSize* aMaxElementSize)
+{
+  nscoord maxWidth, maxHeight;
+  aState.mCurrentBand.GetMaxElementSize(&maxWidth, &maxHeight);
+
+  // Add in the maximum width of any floaters in the band because we
+  // always place some non-floating content with a floater.
+  aMaxElementSize->width += maxWidth;
+
+  // If the maximum-height of the tallest floater is larger than the
+  // maximum-height of the content then update the max-element-size
+  // height
+  if (maxHeight > aMaxElementSize->height) {
+    aMaxElementSize->height = maxHeight;
+  }
 }
 
 void
@@ -2761,11 +2603,17 @@ nsBaseIBFrame::PostPlaceLine(nsBlockReflowState& aState,
 {
   // Update max-element-size
   if (aState.mComputeMaxElementSize) {
-    if (aMaxElementSize.width > aState.mMaxElementSize.width) {
-      aState.mMaxElementSize.width = aMaxElementSize.width;
+    nsSize lineMaxElementSize(aMaxElementSize);
+    if ((0 == (BLOCK_IS_INLINE & mFlags)) &&
+        (0 != aState.mCurrentBand.GetFloaterCount())) {
+      // Add in floater impacts to the lines max-element-size
+      ComputeLineMaxElementSize(aState, aLine, &lineMaxElementSize);
     }
-    if (aMaxElementSize.height > aState.mMaxElementSize.height) {
-      aState.mMaxElementSize.height = aMaxElementSize.height;
+    if (lineMaxElementSize.width > aState.mMaxElementSize.width) {
+      aState.mMaxElementSize.width = lineMaxElementSize.width;
+    }
+    if (lineMaxElementSize.height > aState.mMaxElementSize.height) {
+      aState.mMaxElementSize.height = lineMaxElementSize.height;
     }
   }
 
@@ -2968,11 +2816,145 @@ nsBaseIBFrame::DrainOverflowLines()
   return drained;
 }
 
+//////////////////////////////////////////////////////////////////////
+// Frame list manipulation routines
+
+nsresult
+nsBaseIBFrame::AppendNewFrames(nsIPresContext& aPresContext,
+                               nsIFrame* aNewFrame)
+{
+  // Get our last line and then get its last child
+  nsIFrame* lastFrame;
+  nsLineBox* lastLine = nsLineBox::LastLine(mLines);
+  if (nsnull != lastLine) {
+    lastFrame = lastLine->LastChild();
+  } else {
+    lastFrame = nsnull;
+  }
+
+  // Add the new frames to the sibling list; wrap any frames that
+  // require wrapping
+  if (nsnull != lastFrame) {
+    lastFrame->SetNextSibling(aNewFrame);
+  }
+  nsresult rv;
+
+  // Make sure that new inlines go onto the end of the lastLine when
+  // the lastLine is mapping inline frames.
+  PRInt32 pendingInlines = 0;
+  if (nsnull != lastLine) {
+    if (!lastLine->IsBlock()) {
+      pendingInlines = 1;
+    }
+  }
+
+  // Now create some lines for the new frames
+  nsIFrame* prevFrame = lastFrame;
+  for (nsIFrame* frame = aNewFrame; nsnull != frame;
+       frame->GetNextSibling(frame)) {
+    // See if the child is a block or non-block
+    const nsStyleDisplay* kidDisplay;
+    rv = frame->GetStyleData(eStyleStruct_Display,
+                             (const nsStyleStruct*&) kidDisplay);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    const nsStylePosition* kidPosition;
+    rv = frame->GetStyleData(eStyleStruct_Position,
+                             (const nsStyleStruct*&) kidPosition);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    PRBool isBlock = nsLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
+
+    // See if we need to move the frame outside of the flow, and insert a
+    // placeholder frame in its place
+    nsIFrame* placeholder;
+    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition,
+                           placeholder)) {
+      // Reset the previous frame's next sibling pointer
+      if (nsnull != prevFrame) {
+        prevFrame->SetNextSibling(placeholder);
+      }
+
+      // The placeholder frame is always inline
+      frame = placeholder;
+      isBlock = PR_FALSE;
+    }
+    else {
+      // Wrap the frame in a view if necessary
+      nsIStyleContext* kidSC;
+      frame->GetStyleContext(kidSC);
+      rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
+      NS_RELEASE(kidSC);
+      if (NS_OK != rv) {
+        return rv;
+      }
+    }
+
+    // If the child is an inline then add it to the lastLine (if it's
+    // an inline line, otherwise make a new line). If the child is a
+    // block then make a new line and put the child in that line.
+    if (isBlock) {
+      // If the previous line has pending inline data to be reflowed,
+      // do so now.
+      if (0 != pendingInlines) {
+        // Set this to true in case we don't end up reflowing all of the
+        // frames on the line (because they end up being pushed).
+        lastLine->MarkDirty();
+        pendingInlines = 0;
+      }
+
+      // Create a line for the block
+      nsLineBox* line = new nsLineBox(frame, 1, LINE_IS_BLOCK);
+      if (nsnull == line) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (nsnull == lastLine) {
+        mLines = line;
+      }
+      else {
+        lastLine->mNext = line;
+      }
+      lastLine = line;
+    }
+    else {
+      if (0 == pendingInlines) {
+        nsLineBox* line = new nsLineBox(frame, 0, 0);
+        if (nsnull == line) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (nsnull == lastLine) {
+          mLines = line;
+        }
+        else {
+          lastLine->mNext = line;
+        }
+        lastLine = line;
+      }
+      lastLine->mChildCount++;
+      pendingInlines++;
+    }
+
+    // Remember the previous frame
+    prevFrame = frame;
+  }
+
+  if (0 != pendingInlines) {
+    // Set this to true in case we don't end up reflowing all of the
+    // frames on the line (because they end up being pushed).
+    lastLine->MarkDirty();
+  }
+
+//XXX  RemoveEmptyLines(aPresContext);
+  return NS_OK;
+}
+
 nsresult
 nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
-                             nsBaseIBFrame*   aParentFrame,
-                             nsIFrame*       aNewFrame,
-                             nsIFrame*       aPrevSibling)
+                              nsBaseIBFrame*   aParentFrame,
+                              nsIFrame*       aNewFrame,
+                              nsIFrame*       aPrevSibling)
 {
   if (nsnull == mLines) {
     NS_ASSERTION(nsnull == aPrevSibling, "prev-sibling and empty line list!");
@@ -3107,15 +3089,16 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
     aPrevSibling->SetNextSibling(aNewFrame);
   }
 
+//XXX  RemoveEmptyLines(aPresContext);
   return NS_OK;
 }
 
 // XXX this code can't work...rewrite it!
 nsresult
 nsBaseIBFrame::RemoveFrame(nsBlockReflowState& aState,
-                          nsBaseIBFrame* aParentFrame,
-                          nsIFrame* aDeletedFrame,
-                          nsIFrame* aPrevSibling)
+                           nsBaseIBFrame* aParentFrame,
+                           nsIFrame* aDeletedFrame,
+                           nsIFrame* aPrevSibling)
 {
   // Find the line that contains deletedFrame; we also find the pointer to
   // the line.
@@ -3214,6 +3197,153 @@ nsBaseIBFrame::RemoveFrame(nsBlockReflowState& aState,
   }
   return NS_OK;
 }
+
+// XXX UNUSED code to remove "empty lines" from line list.
+#if XXX_use_this_hack
+// XXX
+#define XP_IS_SPACE(_ch) \
+  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
+
+#include "nsTextFragment.h"
+
+static PRBool
+IsEmptyLine(nsIPresContext& aPresContext, nsLineBox* aLine)
+{
+  PRInt32 i, n = aLine->ChildCount();
+  nsIFrame* frame = aLine->mFirstChild;
+  for (i = 0; i < n; i++) {
+    nsIContent* content;
+    nsresult rv = frame->GetContent(content);
+    if (NS_FAILED(rv) || (nsnull == content)) {
+      // If it doesn't have any content then this can't be an empty line
+      return PR_FALSE;
+    }
+    nsITextContent* tc;
+    rv = content->QueryInterface(kITextContentIID, (void**) &tc);
+    if (NS_FAILED(rv) || (nsnull == tc)) {
+      // If it's not text content then this can't be an empty line
+      NS_RELEASE(content);
+      return PR_FALSE;
+    }
+
+    const nsTextFragment* frag;
+    PRInt32 numFrags;
+    rv = tc->GetText(frag, numFrags);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(content);
+      NS_RELEASE(tc);
+      return PR_FALSE;
+    }
+
+    // If the text has any non-whitespace characters in it then the
+    // line is not an empty line.
+    while (--numFrags >= 0) {
+      PRInt32 len = frag->GetLength();
+      if (frag->Is2b()) {
+        const PRUnichar* cp = frag->Get2b();
+        const PRUnichar* end = cp + len;
+        while (cp < end) {
+          PRUnichar ch = *cp++;
+          if (!XP_IS_SPACE(ch)) {
+            NS_RELEASE(tc);
+            NS_RELEASE(content);
+            return PR_FALSE;
+          }
+        }
+      }
+      else {
+        const char* cp = frag->Get1b();
+        const char* end = cp + len;
+        while (cp < end) {
+          char ch = *cp++;
+          if (!XP_IS_SPACE(ch)) {
+            NS_RELEASE(tc);
+            NS_RELEASE(content);
+            return PR_FALSE;
+          }
+        }
+      }
+      frag++;
+    }
+
+    NS_RELEASE(tc);
+    NS_RELEASE(content);
+    frame->GetNextSibling(frame);
+  }
+  return PR_TRUE;
+}
+
+PRInt32 gDeletedFrameCount;
+PRInt32 gDeletedLineCount;
+
+void
+nsBaseIBFrame::RemoveEmptyLines(nsIPresContext& aPresContext)
+{
+  // Inline frames do not have empty lines, so don't bother
+  if (BLOCK_IS_INLINE & mFlags) return;
+
+  // PRE-formatted content considers whitespace significant, so don't
+  // remove the empty frames either.
+  const nsStyleText* text;
+  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) text);
+  if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
+    return;
+  }
+
+  PRBool afterBlock = PR_TRUE;
+  nsLineBox* prevLine = nsnull;
+  nsLineBox* line = mLines;
+  nsIFrame* prevFrame = nsnull;
+  while (nsnull != line) {
+    if (line->IsBlock()) {
+      afterBlock = PR_TRUE;
+      prevFrame = line->mFirstChild;
+    }
+    else if (afterBlock) {
+      afterBlock = PR_FALSE;
+
+      // This is an inline line and it is immediately after a block
+      // (or its our first line). See if it contains nothing but
+      // collapsible text.
+      if (IsEmptyLine(aPresContext, line)) {
+        // Take line out of the list
+        nsLineBox* next = line->mNext;
+        if (nsnull == prevLine) {
+          mLines = next;
+        }
+        else {
+          prevLine->mNext = next;
+        }
+
+        // Delete the frames on the line
+        nsIFrame* frame = line->mFirstChild;
+        PRInt32 n = line->ChildCount();
+        while (--n >= 0) {
+          nsIFrame* next;
+          frame->GetNextSibling(next);
+          frame->DeleteFrame(aPresContext);
+          frame = next;
+          gDeletedFrameCount++;
+          if ((0 == n) && (nsnull != prevFrame)) {
+            prevFrame->SetNextSibling(next);
+          }
+        }
+
+        // And delete the line
+        gDeletedLineCount++;
+        delete line;
+        line = next;
+        continue;
+      }
+    }
+    else {
+      prevFrame = line->LastChild();
+    }
+    prevLine = line;
+    line = line->mNext;
+  }
+}
+#endif
 
 PRBool
 nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,

@@ -121,6 +121,10 @@ protected:
   virtual void ComputeFinalSize(nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
+  void RemoveEmptyLines(nsIPresContext& aPresContext);
+
+  nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
+
   nsresult InsertNewFrame(nsIPresContext&  aPresContext,
                           nsBaseIBFrame* aParentFrame,
                           nsIFrame* aNewFrame,
@@ -173,6 +177,10 @@ protected:
   void PostPlaceLine(nsBlockReflowState& aState,
                      nsLineBox* aLine,
                      const nsSize& aMaxElementSize);
+
+  void ComputeLineMaxElementSize(nsBlockReflowState& aState,
+                                 nsLineBox* aLine,
+                                 nsSize* aMaxElementSize);
 
   virtual void DidPlaceLine(nsBlockReflowState& aState,
                             nsLineBox* aLine,
@@ -248,8 +256,6 @@ protected:
   void PaintFloaters(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
-
-  nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
   nsLineBox* FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult);
 
