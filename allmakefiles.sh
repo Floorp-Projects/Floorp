@@ -313,6 +313,8 @@ netwerk/protocol/datetime/Makefile
 netwerk/protocol/file/Makefile
 netwerk/protocol/file/public/Makefile
 netwerk/protocol/file/src/Makefile
+netwerk/protocol/finger/Makefile
+netwerk/protocol/finger/src/Makefile
 netwerk/protocol/ftp/Makefile
 netwerk/protocol/ftp/public/Makefile
 netwerk/protocol/ftp/src/Makefile
