@@ -174,7 +174,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.properties";
-
+static const char *kDOMSecurityWarningsBundleURL = "chrome://communicator/locale/dom/dom.properties";
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
@@ -3041,14 +3041,42 @@ GlobalWindowImpl::Close()
   // that were not opened by script
   nsresult rv;
   if (!mOpener) {
-      nsCOMPtr<nsIScriptSecurityManager> secMan(
-        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv)) {
-          PRBool inChrome = PR_TRUE;
-          rv = secMan->SubjectPrincipalIsSystem(&inChrome);
-          if (NS_SUCCEEDED(rv) && !inChrome)
-              return NS_OK;
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+      PRBool inChrome = PR_TRUE;
+      rv = secMan->SubjectPrincipalIsSystem(&inChrome);
+      if (NS_SUCCEEDED(rv) && !inChrome) {
+        PRBool allowClose = PR_TRUE;
+        gPrefBranch->GetBoolPref("dom.allow_scripts_to_close_windows",
+                                 &allowClose);
+        if (!allowClose) {
+          // We're blocking the close operation
+          // report localized error msg in JS console
+          nsCOMPtr<nsIStringBundleService> stringBundleService(
+            do_GetService(kCStringBundleServiceCID));
+          if (stringBundleService) {
+            nsCOMPtr<nsIStringBundle> stringBundle;
+            rv = stringBundleService->CreateBundle(
+                                        kDOMSecurityWarningsBundleURL,
+                                        getter_AddRefs(stringBundle));
+            if (NS_SUCCEEDED(rv) && stringBundle) {
+              nsXPIDLString errorMsg;
+              rv = stringBundle->GetStringFromName(
+                                   NS_LITERAL_STRING("WindowCloseBlockedWarning").get(),
+                                   getter_Copies(errorMsg));
+              if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIConsoleService> console(
+                  do_GetService("@mozilla.org/consoleservice;1"));
+                if (console)
+                  console->LogStringMessage(errorMsg.get());
+              }
+            }
+          }
+          return NS_OK;
+        }
       }
+    }
   }
 
   // Fire a DOM event notifying listeners that this window is about to
