@@ -31,7 +31,7 @@ CPPSRCS =	\
 	$(NULL)
 
 EXPORTS =	\
-	nsMsgAppCore.h	\
+	nsComposeAppCore.h	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
