@@ -44,9 +44,10 @@
 
 // Weird color computing code stolen from winfe which was stolen
 // from the xfe which was written originally by Eric Bina. So there.
-void NS_Get3DColors(nscolor aResult[2], nscolor aColor);
-
 // To determin colors based on the background brightness
+void NS_Get3DColors(nscolor aResult[2], nscolor aBackgroundColor);
+
+// To determine colors based on the background brightness and border color
 void NS_GetSpecial3DColors(nscolor aResult[2],
 											   nscolor aBackgroundColor,
 											   nscolor aBorderColor);
