@@ -211,9 +211,10 @@ pref("ldap_1.directory6.attributes.telephoneNumber", "Phone Number:homephone");
 pref("ldap_1.directory6.attributes.street", "State:st");
 pref("ldap_1.directory6.filter1.repeatFilterForWords", false);
 
-pref("ldap_2.autoComplete.interval",							650);
-pref("ldap_2.autoComplete.enabled",								true);
+pref("ldap_2.autoComplete.interval", 650);
+pref("ldap_2.autoComplete.enabled", true);
 pref("ldap_2.autoComplete.useDirectory", false);
+pref("ldap_2.autoComplete.useAddressBooks", true);
 pref("ldap_2.autoComplete.skipDirectoryIfLocalMatchFound", true);
 pref("ldap_2.autoComplete.directoryServer", "");
 
