@@ -60,7 +60,6 @@
                     <children includes="unifinder-button" />
                 </xul:box>
                 <spacer flex="1"/>
-                <xul:unifinder-button class="unifinder-menu-box unifinder-options-button-1" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.options.tooltip;" label="&unifinder.menu.label;" inherits="popup=menu-popup"/>
             </xul:toolbar>
           </xul:toolbox>
         </xul:box>
