@@ -241,7 +241,7 @@ interface nsIPref : nsISupports {
   [noscript] void RegisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
   [noscript] void UnregisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
 
-  void CreateChildList(in string parent_node,out string childList);
+  string CreateChildList(in string parent_node);
   [noscript] string NextChild(in string child_list, inout short index);
 
 
