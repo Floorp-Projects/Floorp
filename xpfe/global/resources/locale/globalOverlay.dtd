@@ -43,6 +43,10 @@
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 
+<!ENTITY viewToolbarsMenu.label				"Toolbars"> 
+<!ENTITY viewToolbarsMenu.accesskey			"t"> 
+<!ENTITY showTaskbarCmd.label					"Show Taskbar">  
+<!ENTITY showTaskbarCmd.accesskey				"t"> 
 
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpMenu.accesskey				"h"> 
