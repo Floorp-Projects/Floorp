@@ -407,7 +407,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
       tag = our_gdk_input_add(aQueue->GetEventQueueSelectFD(),
                               event_processor_callback,
                               aQueue,
-                              G_PRIORITY_DEFAULT);
+                              G_PRIORITY_HIGH_IDLE);
       if (tag >= 0) {
         PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key), GINT_TO_POINTER(tag));
       }
