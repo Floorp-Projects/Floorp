@@ -640,7 +640,7 @@ nsWebCrawler::FindMoreURLs()
   mBrowser->GetWebShell(shell);
   if (nsnull != shell) {
     nsIContentViewer* cv = nsnull;
-    shell->GetContentViewer(cv);
+    shell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -739,7 +739,7 @@ nsWebCrawler::GetPresShell()
   nsIPresShell* shell = nsnull;
   if (nsnull != webShell) {
     nsIContentViewer* cv = nsnull;
-    webShell->GetContentViewer(cv);
+    webShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
