@@ -123,7 +123,7 @@ const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
 
 #ifdef NS_DEBUG_EDITOR
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
