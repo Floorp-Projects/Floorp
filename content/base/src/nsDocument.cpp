@@ -998,19 +998,26 @@ nsDocument::CreateShell(nsIPresContext* aContext,
   }
 
   nsresult rv;
-  nsIPresShell* shell = do_CreateInstance(kPresShellCID,&rv);
+  nsCOMPtr<nsIPresShell> shell(do_CreateInstance(kPresShellCID,&rv));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (NS_OK != shell->Init(this, aContext, aViewManager, aStyleSet)) {
-    NS_RELEASE(shell);
+  rv = shell->Init(this, aContext, aViewManager, aStyleSet);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShells.AppendElement(shell);
-  *aInstancePtrResult = shell;
+  *aInstancePtrResult = shell.get();
+  NS_ADDREF(*aInstancePtrResult);
+
+  // tell the context the mode we want (always standard, which
+  // should be correct for everything except HTML)
+  // nsHTMLDocument overrides this method and sets it differently
+  aContext->SetCompatibilityMode(eCompatibility_Standard);
+
   return NS_OK;
 }
 #endif

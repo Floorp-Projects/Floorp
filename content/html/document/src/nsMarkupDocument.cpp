@@ -26,6 +26,7 @@
 
 #include "nsLayoutCID.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 
 
@@ -56,7 +57,8 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
     return rv;
   }
 
-  if (NS_OK != (rv = shell->Init(this, aContext, aViewManager, aStyleSet))) {
+  rv = shell->Init(this, aContext, aViewManager, aStyleSet);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -64,6 +66,12 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
   mPresShells.AppendElement(shell);
   *aInstancePtrResult = shell.get();
   NS_ADDREF(*aInstancePtrResult);
+
+  // tell the context the mode we want (always standard, which
+  // should be correct for everything except HTML)
+  // nsHTMLDocument overrides this method and sets it differently
+  aContext->SetCompatibilityMode(eCompatibility_Standard);
+
   return NS_OK;
 }
 
