@@ -506,7 +506,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     for (i = 0; i < bandData.count; i++) {
       nsBandTrapezoid*  trapezoid = &trapezoids[i];
 
-      if (trapezoid->state != nsBandTrapezoid::smAvailable) {
+      if (trapezoid->state != nsBandTrapezoid::Available) {
         nsStyleDisplay* display;
       
         // XXX Handle the case of multiple frames
@@ -522,7 +522,7 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     }
   }
 
-  if (nsBandTrapezoid::smAvailable == trapezoid->state) {
+  if (nsBandTrapezoid::Available == trapezoid->state) {
     // The trapezoid is available
     trapezoid->GetRect(availBand);
   } else {

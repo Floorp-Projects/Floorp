@@ -41,7 +41,7 @@ struct nsSize;
  * </ul>
  */
 struct nsBandTrapezoid {
-  enum State {smAvailable, smOccupied, smOccupiedMultiple};
+  enum State {Available, Occupied, OccupiedMultiple};
 
   nscoord   yTop, yBottom;            // top and bottom y-coordinates
   nscoord   xTopLeft, xBottomLeft;    // left edge x-coordinates
