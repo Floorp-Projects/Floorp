@@ -56,7 +56,6 @@
 #include "prio.h"
 #include "plstr.h"
 #include "nsDTDUtils.h"
-#include "nsTagHandler.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
 #include "nsViewSourceHTML.h"
