@@ -53,10 +53,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIStreamObserver.h"
 
-#ifdef MOZ_FULLCIRCLE
-#include "fullsoft.h"
-#endif
-
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"
 
@@ -131,10 +127,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
 {
   nsresult rv;
   
-#ifdef MOZ_FULLCIRCLE
-  FCInitialize();
-#endif
-
   // Remember cmd line service.
   mCmdLineService = aCmdLineService;
   NS_IF_ADDREF( mCmdLineService );
