@@ -410,11 +410,11 @@ NS_IMETHODIMP nsPlaintextEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDr
     nsCOMPtr<nsIDOMNode> eventTargetDomNode = do_QueryInterface(eventTarget);
     if ( eventTargetDomNode )
     {
-      PRBool amTargettedCorrectly = PR_FALSE;
-      res = selection->ContainsNode(eventTargetDomNode, PR_FALSE, &amTargettedCorrectly);
+      PRBool isTargetedCorrectly = PR_FALSE;
+      res = selection->ContainsNode(eventTargetDomNode, PR_FALSE, &isTargetedCorrectly);
       if (NS_FAILED(res)) return res;
 
-    	*aCanDrag = amTargettedCorrectly;
+      *aCanDrag = isTargetedCorrectly;
     }
   }
 
