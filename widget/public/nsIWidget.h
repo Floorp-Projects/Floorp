@@ -280,6 +280,9 @@ class nsIWidget : public nsISupports {
      * calling code must handle paint messages and clear the background 
      * itself. 
      *
+     * aInitData cannot be eWindowType_popup here; popups cannot be
+     * hooked into the nsIWidget hierarchy.
+     *
      * @param     parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
