@@ -129,8 +129,11 @@ function serverPageInit() {
   gPrefsBundle = document.getElementById("bundle_prefs");
   var smtpServer = null;
   try {
-    smtpServer = parent.smtpService.defaultServer;
-    setPageData(pageData, "identity", "smtpServerKey", smtpServer.key);
+    // don't use the default smtp server if it has a redirector type
+    if (!parent.smtpService.defaultServer.redirectorType) {
+      smtpServer = parent.smtpService.defaultServer;
+      setPageData(pageData, "identity", "smtpServerKey", smtpServer.key);
+    }
   }
   catch(ex){}
 
