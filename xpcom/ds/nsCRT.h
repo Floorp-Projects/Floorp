@@ -29,16 +29,6 @@
 #include "prtypes.h"
 #include "nsCppSharedAllocator.h"
 
-#define CR '\015'       // \r
-#define LF '\012'       // \n
-#define VTAB '\013'
-#define FF '\014'
-#define TAB '\011'
-
-#define CRSTR "\015"
-#define LFSTR "\012"
-#define CRLF "\015\012"     /* A CR LF equivalent string */
-
 #ifdef XP_MAC
 #  define NS_LINEBREAK             "\015"
 #  define NS_LINEBREAK_LEN 1
@@ -54,9 +44,7 @@
 #  endif /* XP_PC */
 #endif /* XP_MAC */
 
-
 extern const PRUnichar kIsoLatin1ToUCS2[256];
-
 
 // This macro can be used in a class declaration for classes that want
 // to ensure that their instance memory is zeroed.
@@ -97,6 +85,13 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 
 class NS_COM nsCRT {
 public:
+  enum {
+    TAB='\t'  /* Horizontal Tab */,
+    LF='\n'   /* Line Feed */,
+    VTAB='\v' /* Vertical Tab */,
+    FF='\f'   /* Form Feed */,
+    CR='\r'   /* Carriage Return */
+  };
 
   /** Copy bytes from aSrc to aDest.
     @param aDest the destination address
@@ -274,6 +269,11 @@ public:
   static PRBool IsAsciiSpace(PRUnichar aChar);
 };
 
+#define FF '\014'
+#define TAB '\011'
+
+#define CRSTR "\015"
+#define LFSTR "\012"
+#define CRLF "\015\012"     /* A CR LF equivalent string */
+
 #endif /* nsCRT_h___ */
-
-

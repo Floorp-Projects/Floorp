@@ -723,7 +723,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 
   /* terminate at any carriage return or linefeed */
   for(ptr=setCookieHeaderInternal; *ptr; ptr++) {
-    if(*ptr == LF || *ptr == CR) {
+    if(*ptr == nsCRT::LF || *ptr == nsCRT::CR) {
       *ptr = '\0';
       break;
     }
@@ -1248,8 +1248,8 @@ COOKIE_Read() {
 
     if ( !buffer.IsEmpty() ) {
       PRUnichar firstChar = buffer.CharAt(0);
-      if (firstChar == '#' || firstChar == CR ||
-          firstChar == LF || firstChar == 0) {
+      if (firstChar == '#' || firstChar == nsCRT::CR ||
+          firstChar == nsCRT::LF || firstChar == 0) {
         continue;
       }
     }

@@ -235,9 +235,9 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
 
   while (src < srcEnd)
   {
-    if (*src == CR)
+    if (*src == nsCRT::CR)
     {
-      if (src < srcEnd && src[1] == LF)
+      if (src < srcEnd && src[1] == nsCRT::LF)
       {
         // CRLF
         finalLen += destBreakLen;
@@ -249,7 +249,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
         finalLen += destBreakLen;
       }
     }
-    else if (*src == LF)
+    else if (*src == nsCRT::LF)
     {
       // Lone LF
       finalLen += destBreakLen;
@@ -271,9 +271,9 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
   
   while (src < srcEnd)
   {
-    if (*src == CR)
+    if (*src == nsCRT::CR)
     {
-      if (src < srcEnd && src[1] == LF)
+      if (src < srcEnd && src[1] == nsCRT::LF)
       {
         // CRLF
         AppendLinebreak(dst, destBreak);
@@ -285,7 +285,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
         AppendLinebreak(dst, destBreak);
       }
     }
-    else if (*src == LF)
+    else if (*src == nsCRT::LF)
     {
       // Lone LF
       AppendLinebreak(dst, destBreak);

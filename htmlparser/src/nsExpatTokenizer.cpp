@@ -588,7 +588,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
 
     switch(((PRUnichar*)s)[0]){
       case kNewLine:
-      case CR:
+      case nsCRT::CR:
         newToken = state->tokenAllocator->CreateTokenOfType(eToken_newline,eHTMLTag_unknown); 
         break;
       case kSpace:
