@@ -72,7 +72,7 @@ SDK_HEADERS = \
 		nsParserDataListener.h      \
 		$(NULL)
 
-ifdef MOZ_DEBUG
+ifneq ($(MOZ_DEBUG)$(MOZ_PERF_METRICS),)
 EXPORTS += \
 		nsILoggingSink.h \
 		$(NULL)

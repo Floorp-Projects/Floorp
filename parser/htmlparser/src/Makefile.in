@@ -101,7 +101,7 @@ CPPSRCS += \
 		$(NULL)
 endif
 
-ifdef MOZ_DEBUG
+ifneq ($(MOZ_DEBUG)$(MOZ_PERF_METRICS),)
 CPPSRCS += \
 		nsLoggingSink.cpp   \
 		$(NULL)
