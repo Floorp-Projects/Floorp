@@ -1223,124 +1223,129 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult  result=NS_OK;
-
-  PRBool  theChildAgrees=PR_TRUE;
-  PRInt32 theIndex=mBodyContext->GetCount();
   PRBool  theChildIsContainer=nsHTMLElement::IsContainer(aChildTag);
-  PRBool  theParentContains=-1;
-  
-  do {
- 
-    eHTMLTags theParentTag=mBodyContext->TagAt(--theIndex);
-    theParentContains=CanContain(theParentTag,aChildTag);  //precompute containment, and pass it to CanOmit()...
 
-    if(CanOmit(theParentTag,aChildTag,theParentContains)) {
-      result=HandleOmittedTag(aToken,aChildTag,theParentTag,aNode);
-      return result;
-    }
+  // client of parser is spefically trying to parse a fragment that 
+  // may lack required context.  Suspend containment rules if so.
+  if (mParserCommand != eViewFragment)
+  {
+    PRBool  theChildAgrees=PR_TRUE;
+    PRInt32 theIndex=mBodyContext->GetCount();
+    PRBool  theParentContains=-1;
+    
+    do {
+   
+      eHTMLTags theParentTag=mBodyContext->TagAt(--theIndex);
+      theParentContains=CanContain(theParentTag,aChildTag);  //precompute containment, and pass it to CanOmit()...
 
-    eProcessRule theRule=eNormalOp; 
+      if(CanOmit(theParentTag,aChildTag,theParentContains)) {
+        result=HandleOmittedTag(aToken,aChildTag,theParentTag,aNode);
+        return result;
+      }
 
-    if((!theParentContains) &&
-       (IsBlockElement(aChildTag,theParentTag) &&
-       IsInlineElement(theParentTag,theParentTag))) { //broaden this to fix <inline><block></block></inline>
+      eProcessRule theRule=eNormalOp; 
 
-      if(eHTMLTag_li!=aChildTag) {  //remove test for table to fix 57554
-        nsCParserNode* theParentNode= NS_STATIC_CAST(nsCParserNode*, mBodyContext->PeekNode());
-        if(theParentNode->mToken->IsWellFormed()) {
-          theRule=eLetInlineContainBlock;
+      if((!theParentContains) &&
+         (IsBlockElement(aChildTag,theParentTag) &&
+         IsInlineElement(theParentTag,theParentTag))) { //broaden this to fix <inline><block></block></inline>
+
+        if(eHTMLTag_li!=aChildTag) {  //remove test for table to fix 57554
+          nsCParserNode* theParentNode= NS_STATIC_CAST(nsCParserNode*, mBodyContext->PeekNode());
+          if(theParentNode->mToken->IsWellFormed()) {
+            theRule=eLetInlineContainBlock;
+          }
         }
       }
-    }
 
-    switch(theRule){
+      switch(theRule){
 
-      case eNormalOp:        
+        case eNormalOp:        
 
-        theChildAgrees=PR_TRUE;
-        if(theParentContains) {
+          theChildAgrees=PR_TRUE;
+          if(theParentContains) {
 
-          eHTMLTags theAncestor=gHTMLElements[aChildTag].mRequiredAncestor;
-          if(eHTMLTag_unknown!=theAncestor){
-            theChildAgrees=HasOpenContainer(theAncestor);
-          }
-          
-          if(theChildAgrees && theChildIsContainer) {
-            if(theParentTag!=aChildTag) {             
-              // Double check the power structure a
-              // Note: The bit is currently set on <A> and <LI>.
-              if(gHTMLElements[aChildTag].ShouldVerifyHierarchy()){
-                PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+            eHTMLTags theAncestor=gHTMLElements[aChildTag].mRequiredAncestor;
+            if(eHTMLTag_unknown!=theAncestor){
+              theChildAgrees=HasOpenContainer(theAncestor);
+            }
             
-                if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
-                 
-                /*-------------------------------------------------------------------------------------
-                   1  Here's a tricky case from bug 22596:  <h5><li><h5>
-                      How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
-                      (Afterall, the <h5> is a legal child of the <LI>).
-            
-                      The way you know is that there is no root between the two, so the <h5> binds more
-                      tightly to the 1st <h5> than to the <LI>.
-                   2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
-                      From this case we learned not to execute this logic if the parent is a block.
-                  
-                   3. Fix for 26583
-                      Ex. <A href=foo.html><B>foo<A href-bar.html>bar</A></B></A>  <-- A legal HTML
-                      In the above example clicking on "foo" or "bar" should link to
-                      foo.html or bar.html respectively. That is, the inner <A> should be informed
-                      about the presence of an open <A> above <B>..so that the inner <A> can close out
-                      the outer <A>. The following code does it for us.
+            if(theChildAgrees && theChildIsContainer) {
+              if(theParentTag!=aChildTag) {             
+                // Double check the power structure a
+                // Note: The bit is currently set on <A> and <LI>.
+                if(gHTMLElements[aChildTag].ShouldVerifyHierarchy()){
+                  PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+              
+                  if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
                    
-                   4. Fix for 27865 [ similer to 22596 ]. Ex: <DL><DD><LI>one<DD><LI>two
-                 -------------------------------------------------------------------------------------*/
-                   
-                  theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-                } //if
-              }//if
+                  /*-------------------------------------------------------------------------------------
+                     1  Here's a tricky case from bug 22596:  <h5><li><h5>
+                        How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
+                        (Afterall, the <h5> is a legal child of the <LI>).
+              
+                        The way you know is that there is no root between the two, so the <h5> binds more
+                        tightly to the 1st <h5> than to the <LI>.
+                     2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
+                        From this case we learned not to execute this logic if the parent is a block.
+                    
+                     3. Fix for 26583
+                        Ex. <A href=foo.html><B>foo<A href-bar.html>bar</A></B></A>  <-- A legal HTML
+                        In the above example clicking on "foo" or "bar" should link to
+                        foo.html or bar.html respectively. That is, the inner <A> should be informed
+                        about the presence of an open <A> above <B>..so that the inner <A> can close out
+                        the outer <A>. The following code does it for us.
+                     
+                     4. Fix for 27865 [ similer to 22596 ]. Ex: <DL><DD><LI>one<DD><LI>two
+                   -------------------------------------------------------------------------------------*/
+                     
+                    theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
+                  } //if
+                }//if
+              } //if
             } //if
-          } //if
-        } //if parentcontains
+          } //if parentcontains
 
-        if(!(theParentContains && theChildAgrees)) {
-          if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
-            if(theChildIsContainer || (!theParentContains)){ 
-              if(!theChildAgrees && !gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) {
-                // Closing the tags above might cause non-compatible results.
-                // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
-                // In the example above <TBODY> is badly misplaced, but 
-                // we should not attempt to close the tags above it, 
-                // The safest thing to do is to discard this tag.
-                return result;
-              }
-              else if (mBodyContext->mContextTopIndex > 0 && theIndex <= mBodyContext->mContextTopIndex) {
-                // Looks like the parent tag does not want to contain the current tag ( aChildTag ). 
-                // However, we have to force the containment, when handling misplaced content, to avoid data loss.
-                // Ref. bug 138577.
-                theParentContains = PR_TRUE;
-              }
-              else {
-                CloseContainersTo(theIndex,aChildTag,PR_TRUE);
-              }
+          if(!(theParentContains && theChildAgrees)) {
+            if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
+              if(theChildIsContainer || (!theParentContains)){ 
+                if(!theChildAgrees && !gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) {
+                  // Closing the tags above might cause non-compatible results.
+                  // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
+                  // In the example above <TBODY> is badly misplaced, but 
+                  // we should not attempt to close the tags above it, 
+                  // The safest thing to do is to discard this tag.
+                  return result;
+                }
+                else if (mBodyContext->mContextTopIndex > 0 && theIndex <= mBodyContext->mContextTopIndex) {
+                  // Looks like the parent tag does not want to contain the current tag ( aChildTag ). 
+                  // However, we have to force the containment, when handling misplaced content, to avoid data loss.
+                  // Ref. bug 138577.
+                  theParentContains = PR_TRUE;
+                }
+                else {
+                  CloseContainersTo(theIndex,aChildTag,PR_TRUE);
+                }
+              }//if
+              else break;
             }//if
-            else break;
+            else {
+              CreateContextStackFor(aChildTag);
+              theIndex=mBodyContext->GetCount();
+            }
           }//if
-          else {
-            CreateContextStackFor(aChildTag);
-            theIndex=mBodyContext->GetCount();
-          }
-        }//if
-        break;
+          break;
 
-      case eLetInlineContainBlock:
-        theParentContains=theChildAgrees=PR_TRUE; //cause us to fall out of loop and open the block.
-        break;
+        case eLetInlineContainBlock:
+          theParentContains=theChildAgrees=PR_TRUE; //cause us to fall out of loop and open the block.
+          break;
 
-      default:
-        break;
+        default:
+          break;
 
-    }//switch
-  } while(!(theParentContains && theChildAgrees));
-
+      }//switch
+    } while(!(theParentContains && theChildAgrees));
+  }
+  
   if(theChildIsContainer){
     result=OpenContainer(aNode,aChildTag,PR_TRUE);
   }
@@ -2502,8 +2507,8 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
-    
+PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const 
+{
   PRBool result=gHTMLElements[aParent].CanContain((eHTMLTags)aChild);
 
 #ifdef ALLOW_TR_AS_CHILD_OF_TABLE
