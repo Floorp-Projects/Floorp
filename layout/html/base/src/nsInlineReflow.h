@@ -60,6 +60,8 @@ public:
 
   void HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify);
 
+  void TrimTrailingWhiteSpace(nsRect& aLineBox);
+
   void RelativePositionFrames(nsRect& aCombinedArea);
 
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
