@@ -423,7 +423,7 @@ nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset,
 
   // set checkmark value
   nsCOMPtr<nsIRDFLiteral> checkedLiteral;
-  nsAutoString checked((aValue == PR_TRUE) ? "true" : "false");
+  nsAutoString checked; checked.AssignWithConversion((aValue == PR_TRUE) ? "true" : "false");
   res = rdfServ->GetLiteral(checked.GetUnicode(), getter_AddRefs(checkedLiteral));
   if (NS_FAILED(res)) return res;
   res = Assert(node, kNC_Checked, checkedLiteral, PR_TRUE);
@@ -560,7 +560,7 @@ nsresult nsCharsetMenu::InitBrowserMoreMenu(nsIRDFService * aRDFServ,
   if (NS_FAILED(res)) return res;
 
   // remove charsets "not for browser"
-  nsAutoString prop(".notForBrowser");
+  nsAutoString prop; prop.AssignWithConversion(".notForBrowser");
   RemoveFlaggedCharsets(aDecs, aCount, aCCMan, &prop);
 
   for (i = 0; i < aCount; i++) if (aDecs[i] != NULL)
@@ -646,7 +646,8 @@ nsresult nsCharsetMenu::AddItemToArray(nsICharsetConverterManager * aCCMan,
 
   // XXX positively hacky
   if (aObjectArray == &mBrowserMenu) {
-    item->mName = new nsString("charset.");
+    item->mName = new nsString;
+    item->mName->AssignWithConversion("charset.");
     item->mName->Append(*aCharset);
   } else {
     item->mName = new nsString(*aCharset);
@@ -726,7 +727,7 @@ nsresult nsCharsetMenu::AddSeparatorToContainer(nsIRDFService * aRDFServ,
   res = aRDFServ->GetResource(csID, getter_AddRefs(node));
   if (NS_FAILED(res)) return res;
 
-  nsAutoString str(csID);
+  nsAutoString str; str.AssignWithConversion(csID);
 
   // set node's title
   nsCOMPtr<nsIRDFLiteral> titleLiteral;
@@ -758,7 +759,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(char * aCharsetList,
     char temp = *q;
     *q = 0;
 
-    nsAutoString str(p);
+    nsAutoString str; str.AssignWithConversion(p);
 
     // if this charset is not on accepted list of charsets, ignore it
     PRInt32 i;
@@ -810,7 +811,7 @@ nsresult nsCharsetMenu::AddCharsetToCache(nsObjectArray * aArray,
   PRInt32 i;
   nsresult res = NS_OK;
 
-  nsAutoString charset("charset.");
+  nsAutoString charset; charset.AssignWithConversion("charset.");
   charset.Append(*aCharset);
   i = FindItem(aArray, &charset, NULL);
   if (i >= 0) return res;
