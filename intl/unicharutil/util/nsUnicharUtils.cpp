@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Alec Flett <alecf@netscape.com>
  */
+#include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtilCIID.h"
@@ -98,6 +99,21 @@ ToLowerCase( nsAString& aString )
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
   }
 
+void
+ToLowerCase( nsASingleFragmentString& aString )
+  {
+    ConvertToLowerCase converter;
+    PRUnichar* start;
+    converter.write(aString.BeginWriting(start), aString.Length());
+  }
+
+void
+ToLowerCase( nsString& aString )
+  {
+    ConvertToLowerCase converter;
+    converter.write(aString.mUStr, aString.mLength);
+  }
+
 class CopyToLowerCase
   {
     public:
@@ -155,6 +171,21 @@ ToUpperCase( nsAString& aString )
     nsAString::iterator fromBegin, fromEnd;
     ConvertToUpperCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+  }
+
+void
+ToUpperCase( nsASingleFragmentString& aString )
+  {
+    ConvertToUpperCase converter;
+    PRUnichar* start;
+    converter.write(aString.BeginWriting(start), aString.Length());
+  }
+
+void
+ToUpperCase( nsString& aString )
+  {
+    ConvertToUpperCase converter;
+    converter.write(aString.mUStr, aString.mLength);
   }
 
 class CopyToUpperCase

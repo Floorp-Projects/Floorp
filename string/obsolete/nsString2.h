@@ -98,6 +98,8 @@ class NS_COM nsString :
 public:
   friend class nsCString;
   friend class nsLinebreakConverter;
+  friend void ToLowerCase( nsString& );
+  friend void ToUpperCase( nsString& );
 
 protected:
   virtual const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const;

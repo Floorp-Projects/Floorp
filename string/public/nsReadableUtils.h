@@ -39,6 +39,8 @@
 #include "nsAStringGenerator.h"
 #endif
 
+class nsASingleFragmentCString;
+class nsCString;
 
 NS_COM size_t Distance( const nsAString::const_iterator&, const nsAString::const_iterator& );
 NS_COM size_t Distance( const nsACString::const_iterator&, const nsACString::const_iterator& );
@@ -173,6 +175,14 @@ NS_COM PRBool IsASCII( const nsAString& aString );
 NS_COM void ToUpperCase( nsACString& );
 
 NS_COM void ToLowerCase( nsACString& );
+
+NS_COM void ToUpperCase( nsASingleFragmentCString& );
+
+NS_COM void ToLowerCase( nsASingleFragmentCString& );
+
+NS_COM void ToUpperCase( nsCString& );
+
+NS_COM void ToLowerCase( nsCString& );
 
   /**
    * Converts case from string aSource to aDest.
