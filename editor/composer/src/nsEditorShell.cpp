@@ -4930,11 +4930,20 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
     nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
 
     // Execute the command
-    nsAutoString commandName(NS_ConvertASCIItoUCS2("cmd_advancedProperties"));
+    nsAutoString commandName;
+
+    // In "All Tags" mode, use AdvancedProperties,
+    //  in others use appriate object property dialog
+    if (mDisplayMode != eDisplayModeAllTags) 
+      commandName = NS_ConvertASCIItoUCS2("cmd_objectProperties");
+    else
+      commandName = NS_ConvertASCIItoUCS2("cmd_advancedProperties");
+
     rv = composerController->DoCommand(commandName.GetUnicode());
 
+    // We handled the message -- don't propogate to frames
     if (NS_SUCCEEDED(rv))
-      *_retval = PR_FALSE;
+      *_retval = PR_TRUE;
   }
 
   return rv;

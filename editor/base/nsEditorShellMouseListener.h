@@ -25,11 +25,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-
-
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIEditorShell.h"
+
+class nsString;
 
 class nsEditorShellMouseListener : public nsIDOMMouseListener,
                                    public nsSupportsWeakReference 
@@ -62,7 +62,6 @@ public:
 
 protected:
   nsIEditorShell*   mEditorShell; // weak reference
-
 };
 
 /** factory for the mouse listener
