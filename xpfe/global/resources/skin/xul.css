@@ -587,6 +587,10 @@ xpmenubar > xpmenu[menuactive="true"] {
   color:#333366;
 }
 
+xpmenubar > xpmenu[menuactive="true"][open="true"] {
+  border: 1px inset;
+}
+
 xpmenuchildren > xpmenu[menuactive="true"] {
   background-color: #666699;
   color: white;
