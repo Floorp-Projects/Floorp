@@ -41,6 +41,8 @@
  #pragma warning(disable: 4786)
 #endif
 
+#define MAX_UINT16 (65535)
+
 // Define int8, int16, int32, int64, uint8, uint16, uint32, uint64, and uint.
 typedef unsigned int uint;
 typedef unsigned char uchar;
@@ -49,19 +51,18 @@ typedef signed char int8;
 typedef unsigned char uint8;
 typedef short int16;
 typedef unsigned short uint16;
-#if !defined(XP_MAC) && !defined(_WIN32)
- typedef int int32;
- typedef unsigned int uint32;
-#else
+#ifdef _WIN32
  typedef long int32;
  typedef unsigned long uint32;
-#endif
-#ifdef _WIN32
  typedef __int64 int64;
  typedef unsigned __int64 uint64;
 #else
+ typedef int int32;
+ typedef unsigned int uint32;
  typedef long long int64;
  typedef unsigned long long uint64;
+ using std::size_t;
+ using std::ptrdiff_t;
 #endif
 
 // Define this if the machine natively supports 64-bit integers
@@ -81,11 +82,7 @@ typedef float float32;
  typedef uint16 uchar16;
 #else
  typedef wchar_t char16;
- #ifndef _WIN32 // Microsoft VC6 bug: wchar_t should be a built-in type, not a typedef
-  typedef wchar_t uchar16;
- #else
-  typedef wchar_t uchar16;
- #endif
+ typedef wchar_t uchar16;
 #endif
 
 #ifdef _WIN32

@@ -34,26 +34,28 @@
 #ifdef _WIN32
  // Turn off warnings about identifiers too long in browser information
  #pragma warning(disable: 4786)
+//#pragma warning(disable: 4711)
+//#pragma warning(disable: 4710)
 #endif
 
 #include "world.h"
 
-namespace JavaScript 
-{
-// Return an existing StringAtom corresponding to the String s if there is
-// one; if not, create a new StringAtom with String s and return that StringAtom.
-    StringAtom &
-    StringAtomTable::operator[](const String &s)
-    {
-        HT::Reference r(ht, s);
-        if (r)
-            return *r;
-        else
-            return ht.insert(r, s);
-    }
+namespace JS = JavaScript;
 
-    World::World()
-    {
-        Token::initKeywords(*this);
-    }
+
+// Return an existing StringAtom corresponding to the String s if there is one;
+// if not, create a new StringAtom with String s and return that StringAtom.
+JS::StringAtom &JS::StringAtomTable::operator[](const String &s)
+{
+    HT::Reference r(ht, s);
+    if (r)
+        return *r;
+    else
+        return ht.insert(r, s);
+}
+
+
+JS::World::World()
+{
+    Token::initKeywords(*this);
 }

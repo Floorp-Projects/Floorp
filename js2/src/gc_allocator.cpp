@@ -119,7 +119,7 @@ int main(int /* argc */, char* /* argv[] */)
 		int value = rand() % 32767;
 		values.push_back(value);
 		// allocate a random amount of garbage.
-		if (!GC_malloc(static_cast<size_t>(value)))
+		if (!GC_malloc(toSize_t(value)))
 			cerr << "GC_malloc failed." << endl;
 		// allocate an object that has a finalizer to call its destructor.
 		A* a = new A();

@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -33,158 +33,153 @@
 
 #include "hash.h"
 #include <new>
-namespace JavaScript
-{
+
+namespace JS = JavaScript;
+
 
 //
 // Hash Codes
 //
 
+
 // General-purpose null-terminated C string hash function
-    HashNumber
-    hashString(const char *s)
-    {
-        HashNumber h = 0;
-        uchar ch;
-        
-        while ((ch = (uchar)*s++) != 0)
-            h = (h >> 28) ^ (h << 4) ^ ch;
-        return h;
-    }
+JS::HashNumber JS::hashString(const char *s)
+{
+    HashNumber h = 0;
+    uchar ch;
+    
+    while ((ch = (uchar)*s++) != 0)
+        h = (h >> 28) ^ (h << 4) ^ ch;
+    return h;
+}
 
 // General-purpose String hash function
-    HashNumber
-    hashString(const String &s)
-    {
-        HashNumber h = 0;
-        String::const_iterator p = s.begin();
-        String::size_type n = s.size();
-        
-        if (n < 16)
-            // Hash every character in a short string.
-            while (n--)
-                h = (h >> 28) ^ (h << 4) ^ *p++;
-        else
-            // Sample a la java.lang.String.hash().
-            for (String::size_type m = n / 8; n >= m; p += m, n -= m)
-                h = (h >> 28) ^ (h << 4) ^ *p;
-        return h;
-    }
+JS::HashNumber JS::hashString(const String &s)
+{
+    HashNumber h = 0;
+    String::const_iterator p = s.begin();
+    String::size_type n = s.size();
+    
+    if (n < 16)
+        // Hash every character in a short string.
+        while (n--)
+            h = (h >> 28) ^ (h << 4) ^ *p++;
+    else
+        // Sample a la java.lang.String.hash().
+        for (String::size_type m = n / 8; n >= m; p += m, n -= m)
+            h = (h >> 28) ^ (h << 4) ^ *p;
+    return h;
+}
+
 
 //
 // Hash Tables
 //
 
-    const uint minLgNBuckets = 4;
+const uint minLgNBuckets = 4;
 
-    GenericHashTableIterator::GenericHashTableIterator(GenericHashTable &ht):
-            ht(ht), entry(0), nextBucket(ht.buckets)
-    {
-        DEBUG_ONLY(++ht.nReferences);
-        operator++();
+JS::GenericHashTableIterator::GenericHashTableIterator(GenericHashTable &ht):
+        ht(ht), entry(0), nextBucket(ht.buckets)
+{
+    DEBUG_ONLY(++ht.nReferences);
+    operator++();
+}
+
+
+
+JS::GenericHashTableIterator &JS::GenericHashTableIterator::operator++()
+{
+    GenericHashEntry *e = entry;
+
+    if (e) {
+        backpointer = &e->next;
+        e = e->next;
     }
+    if (!e) {
+        GenericHashEntry **const bucketsEnd = ht.bucketsEnd;
+        GenericHashEntry **bucket = nextBucket;
 
-
-
-    GenericHashTableIterator &
-    GenericHashTableIterator::operator++()
-    {
-        GenericHashEntry *e = entry;
-
-        if (e) {
-            backpointer = &e->next;
-            e = e->next;
-        }
-        if (!e) {
-            GenericHashEntry **const bucketsEnd = ht.bucketsEnd;
-            GenericHashEntry **bucket = nextBucket;
-
-            while (bucket != bucketsEnd) {
-                e = *bucket++;
-                if (e) {
-                    backpointer = bucket-1;
-                    break;
-                }
+        while (bucket != bucketsEnd) {
+            e = *bucket++;
+            if (e) {
+                backpointer = bucket-1;
+                break;
             }
-            nextBucket = bucket;
         }
-        entry = e;
-        return *this;
+        nextBucket = bucket;
     }
-    
-    
-    GenericHashTable::GenericHashTable(uint32 nEntriesDefault) :
-            nEntries(0)
-    {
-        DEBUG_ONLY(nReferences = 0);
+    entry = e;
+    return *this;
+}
 
-        uint lgNBuckets = ceilingLog2(nEntriesDefault);
-        if (lgNBuckets < minLgNBuckets)
-            lgNBuckets = minLgNBuckets;
-        defaultLgNBuckets = lgNBuckets;
 
-        recomputeMinMaxNEntries(lgNBuckets);
-        uint32 nBuckets = JS_BIT(lgNBuckets);
-        buckets = new GenericHashEntry*[nBuckets];
-        // No exceptions after this point unless buckets is deleted.
+JS::GenericHashTable::GenericHashTable(uint32 nEntriesDefault):
+        nEntries(0)
+{
+    DEBUG_ONLY(nReferences = 0);
 
-        bucketsEnd = buckets + nBuckets;
-        zero(buckets, bucketsEnd);
-    }
+    uint lgNBuckets = ceilingLog2(nEntriesDefault);
+    if (lgNBuckets < minLgNBuckets)
+        lgNBuckets = minLgNBuckets;
+    defaultLgNBuckets = lgNBuckets;
+
+    recomputeMinMaxNEntries(lgNBuckets);
+    uint32 nBuckets = JS_BIT(lgNBuckets);
+    buckets = new GenericHashEntry*[nBuckets];
+    // No exceptions after this point unless buckets is deleted.
+
+    bucketsEnd = buckets + nBuckets;
+    zero(buckets, bucketsEnd);
+}
 
 
 // Initialize shift, minNEntries, and maxNEntries based on the lg2 of the
 // number of buckets.
-    void
-    GenericHashTable::recomputeMinMaxNEntries(uint lgNBuckets)
-    {
-        uint32 nBuckets = JS_BIT(lgNBuckets);
-        shift = 32 - lgNBuckets;
-        maxNEntries = nBuckets;   // Maximum ratio is 100%
-        // Minimum ratio is 37.5%
-        minNEntries = lgNBuckets <= defaultLgNBuckets ? 0 : 3*(nBuckets>>3);
-    }
+void JS::GenericHashTable::recomputeMinMaxNEntries(uint lgNBuckets)
+{
+    uint32 nBuckets = JS_BIT(lgNBuckets);
+    shift = 32 - lgNBuckets;
+    maxNEntries = nBuckets;   // Maximum ratio is 100%
+    // Minimum ratio is 37.5%
+    minNEntries = lgNBuckets <= defaultLgNBuckets ? 0 : 3*(nBuckets>>3);
+}
 
 
 // Rehash the table.  This method cannot throw out-of-memory exceptions, so it is
 // safe to call from a destructor.
-    void
-    GenericHashTable::rehash()
-    {
-        uint32 newLgNBuckets = ceilingLog2(nEntries);
-        if (newLgNBuckets < defaultLgNBuckets)
-            newLgNBuckets = defaultLgNBuckets;
-        uint32 newNBuckets = JS_BIT(newLgNBuckets);
-        try {
-            GenericHashEntry **newBuckets = new GenericHashEntry*[newNBuckets];
-            // No exceptions after this point.
+void JS::GenericHashTable::rehash()
+{
+    uint32 newLgNBuckets = ceilingLog2(nEntries);
+    if (newLgNBuckets < defaultLgNBuckets)
+        newLgNBuckets = defaultLgNBuckets;
+    uint32 newNBuckets = JS_BIT(newLgNBuckets);
+    try {
+        GenericHashEntry **newBuckets = new GenericHashEntry*[newNBuckets];
+        // No exceptions after this point.
 
-            GenericHashEntry **newBucketsEnd = newBuckets + newNBuckets;
-            zero(newBuckets, newBucketsEnd);
-            recomputeMinMaxNEntries(newLgNBuckets);
-            GenericHashEntry **be = bucketsEnd;
-            for (GenericHashEntry **b = buckets; b != be; b++) {
-                GenericHashEntry *e = *b;
-                while (e) {
-                    GenericHashEntry *next = e->next;
-                    // Place e in the new set of buckets.
-                    GenericHashEntry **nb =
-                        newBuckets + (e->keyHash*goldenRatio >> shift);
-                    e->next = *nb;
-                    *nb = e;
-                    e = next;
-                }
+        GenericHashEntry **newBucketsEnd = newBuckets + newNBuckets;
+        zero(newBuckets, newBucketsEnd);
+        recomputeMinMaxNEntries(newLgNBuckets);
+        GenericHashEntry **be = bucketsEnd;
+        for (GenericHashEntry **b = buckets; b != be; b++) {
+            GenericHashEntry *e = *b;
+            while (e) {
+                GenericHashEntry *next = e->next;
+                // Place e in the new set of buckets.
+                GenericHashEntry **nb = newBuckets + (e->keyHash*goldenRatio >> shift);
+                e->next = *nb;
+                *nb = e;
+                e = next;
             }
-            delete[] buckets;
-            buckets = newBuckets;
-            bucketsEnd = newBucketsEnd;
-        } catch (std::bad_alloc) {
-            // Out of memory.  Ignore the error and just relax the resizing
-            // boundaries.
-            if (buckets + JS_BIT(newLgNBuckets) > bucketsEnd)
-                maxNEntries >>= 1;
-            else
-                minNEntries <<= 1;
         }
+        delete[] buckets;
+        buckets = newBuckets;
+        bucketsEnd = newBucketsEnd;
+    } catch (std::bad_alloc) {
+        // Out of memory.  Ignore the error and just relax the resizing boundaries.
+        if (buckets + JS_BIT(newLgNBuckets) > bucketsEnd)
+            maxNEntries >>= 1;
+        else
+            minNEntries <<= 1;
     }
 }

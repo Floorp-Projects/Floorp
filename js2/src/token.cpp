@@ -6,7 +6,7 @@
 * the License at http://www.mozilla.org/NPL/
 *
 * Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 * implied. See the License for the specific language governing
 * rights and limitations under the License.
 *
@@ -136,6 +136,7 @@ const char *const JS::Token::kindNames[kindsEnd] = {
     "in",                           // In
     "instanceof",                   // Instanceof
     "interface",                    // Interface
+    "is",                           // Is
     "namespace",                    // Namespace
     "native",                       // Native
     "new",                          // New
@@ -164,18 +165,22 @@ const char *const JS::Token::kindNames[kindsEnd] = {
     "with",                         // With
 
 // Non-reserved words
+    "ecmascript",                   // Ecmascript
     "eval",                         // Eval
     "exclude",                      // Exclude
     "get",                          // Get
     "include",                      // Include
-    "set"                           // Set
+    "javascript",                   // Javascript
+    "set",                          // Set
+    "strict"                        // Strict
 };
 
 
-static const uchar followRet = 1<<JS::Token::canFollowReturn;
-static const uchar isAttr = 1<<JS::Token::isAttribute | 1<<JS::Token::canFollowAttribute;
+static const uchar nonreserved = 1<<JS::Token::isNonreserved;
 static const uchar followAttr = 1<<JS::Token::canFollowAttribute;
-static const uchar followGet = 1<<JS::Token::canFollowGet;
+static const uchar isAttr = 1<<JS::Token::isAttribute | followAttr;
+static const uchar isNEAttr = 1<<JS::Token::isNonExpressionAttribute | isAttr;
+static const uchar followRet = 1<<JS::Token::canFollowReturn;
 
 const uchar JS::Token::kindFlags[kindsEnd] = {
     // Special
@@ -246,7 +251,7 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
     0,                    // question
 
     // Reserved words
-    isAttr,               // Abstract
+    isNEAttr,             // Abstract
     0,                    // As
     0,                    // Break
     0,                    // Case
@@ -263,27 +268,28 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
     followAttr,           // Export
     0,                    // Extends
     isAttr,               // False
-    isAttr,               // Final
+    isNEAttr,             // Final
     0,                    // Finally
     0,                    // For
     followAttr,           // Function
     0,                    // Goto
     0,                    // If
     0,                    // Implements
-    0,                    // Import
+    followAttr,           // Import
     0,                    // In
     0,                    // Instanceof
     followAttr,           // Interface
+    0,                    // Is
     followAttr,           // Namespace
     followAttr,           // Native
     0,                    // New
     0,                    // Null
-    isAttr,               // Package
+    0,                    // Package
     isAttr,               // Private
     followAttr,           // Protected
     isAttr,               // Public
     0,                    // Return
-    isAttr,               // Static
+    isNEAttr,             // Static
     0,                    // Super
     0,                    // Switch
     followAttr,           // Synchronized
@@ -294,21 +300,24 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
     isAttr,               // True
     0,                    // Try
     0,                    // Typeof
-    0,                    // Use
+    followAttr,           // Use
     followAttr,           // Var
     0,                    // Void
-    isAttr,               // Volatile
+    isNEAttr,             // Volatile
     followRet,            // While
     0,                    // With
 
     // Non-reserved words
-    isAttr|followGet,     // Eval
-    isAttr|followGet,     // Exclude
-    isAttr|followGet,     // Get
-    isAttr|followGet,     // Include
-    isAttr|followGet,     // Set
+    isAttr|nonreserved,   // Ecmascript
+    isAttr|nonreserved,   // Eval
+    isAttr|nonreserved,   // Exclude
+    isAttr|nonreserved,   // Get
+    isAttr|nonreserved,   // Include
+    isAttr|nonreserved,   // Javascript
+    isAttr|nonreserved,   // Set
+    isAttr|nonreserved,   // Strict
 
-    isAttr|followGet      // identifier
+    isAttr|nonreserved    // identifier
 };
 
 
@@ -316,8 +325,7 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
 void JS::Token::initKeywords(World &world)
 {
     const char *const*keywordName = kindNames + keywordsBegin;
-    for (Kind kind = keywordsBegin; kind != keywordsEnd;
-         kind = Kind(kind+1))
+    for (Kind kind = keywordsBegin; kind != keywordsEnd; kind = Kind(kind+1))
         world.identifiers[widenCString(*keywordName++)].tokenKind = kind;
 }
 

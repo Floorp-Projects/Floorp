@@ -6,14 +6,14 @@
 * the License at http://www.mozilla.org/NPL/
 *
 * Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 * implied. See the License for the specific language governing
 * rights and limitations under the License.
 *
 * The Original Code is the JavaScript 2 Prototype.
 *
 * The Initial Developer of the Original Code is Netscape
-* Communications Corporation.	Portions created by Netscape are
+* Communications Corporation.   Portions created by Netscape are
 * Copyright (C) 1998 Netscape Communications Corporation. All
 * Rights Reserved.
 *
@@ -44,52 +44,52 @@ static const char controlCharNames[6] = {'b', 't', 'n', 'v', 'f', 'r'};
 // quote (which should be either '\'' or '"').
 void JS::escapeString(Formatter &f, const char16 *begin, const char16 *end, char16 quote)
 {
-	ASSERT(begin <= end);
+    ASSERT(begin <= end);
 
-	const char16 *chunk = begin;
-	while (begin != end) {
-			char16 ch = *begin++;
-			CharInfo ci(ch);
-			if (char16Value(ch) < 0x20 || isLineBreak(ci) || isFormat(ci) || ch == '\\' || ch == quote) {
-				if (begin-1 != chunk)
-					printString(f, chunk, begin-1);
-				chunk = begin;
+    const char16 *chunk = begin;
+    while (begin != end) {
+        char16 ch = *begin++;
+        CharInfo ci(ch);
+        if (char16Value(ch) < 0x20 || isLineBreak(ci) || isFormat(ci) || ch == '\\' || ch == quote) {
+            if (begin-1 != chunk)
+                printString(f, chunk, begin-1);
+            chunk = begin;
 
-				f << '\\';
-				switch (ch) {
-				  case 0x0008:
-				  case 0x0009:
-				  case 0x000A:
-				  case 0x000B:
-				  case 0x000C:
-				  case 0x000D:
-					f << controlCharNames[ch - 0x0008];
-					break;
+            f << '\\';
+            switch (ch) {
+              case 0x0008:
+              case 0x0009:
+              case 0x000A:
+              case 0x000B:
+              case 0x000C:
+              case 0x000D:
+                f << controlCharNames[ch - 0x0008];
+                break;
 
-				  case '\'':
-				  case '"':
-				  case '\\':
-					f << ch;
-					break;
+              case '\'':
+              case '"':
+              case '\\':
+                f << ch;
+                break;
 
-				  case 0x0000:
-					if (begin == end || char16Value(*begin) < '0' || char16Value(*begin) > '9') {
-						f << '0';
-						break;
-					}
-				  default:
-					if (char16Value(ch) <= 0xFF) {
-						f << 'x';
-						printHex(f, static_cast<uint32>(char16Value(ch)), 2);
-					} else {
-						f << 'u';
-						printHex(f, static_cast<uint32>(char16Value(ch)), 4);
-					}
-				}
-			}
-	}
-	if (begin != chunk)
-		printString(f, chunk, begin);
+              case 0x0000:
+                if (begin == end || char16Value(*begin) < '0' || char16Value(*begin) > '9') {
+                    f << '0';
+                    break;
+                }
+              default:
+                if (char16Value(ch) <= 0xFF) {
+                    f << 'x';
+                    printHex(f, static_cast<uint32>(char16Value(ch)), 2);
+                } else {
+                    f << 'u';
+                    printHex(f, static_cast<uint32>(char16Value(ch)), 4);
+                }
+            }
+        }
+    }
+    if (begin != chunk)
+        printString(f, chunk, begin);
 }
 
 
@@ -97,10 +97,10 @@ void JS::escapeString(Formatter &f, const char16 *begin, const char16 *end, char
 // either '\'' or '"').
 void JS::quoteString(Formatter &f, const String &s, char16 quote)
 {
-	f << quote;
-	const char16 *begin = s.data();
-	escapeString(f, begin, begin + s.size(), quote);
-	f << quote;
+    f << quote;
+    const char16 *begin = s.data();
+    escapeString(f, begin, begin + s.size(), quote);
+    f << quote;
 }
 
 
@@ -110,64 +110,64 @@ void JS::quoteString(Formatter &f, const String &s, char16 quote)
 // reason.
 static void translateLFtoCR(char *begin, char *end)
 {
-	while (begin != end) {
-		if (*begin == '\n')
-			*begin = '\r';
-		++begin;
-	}
+    while (begin != end) {
+        if (*begin == '\n')
+            *begin = '\r';
+        ++begin;
+    }
 }
 
 
 size_t JS::printChars(FILE *file, const char *begin, const char *end)
 {
-	ASSERT(end >= begin);
-	size_t n = static_cast<size_t>(end - begin);
-	size_t extra = 0;
-	char buffer[1024];
+    ASSERT(end >= begin);
+    size_t n = toSize_t(end - begin);
+    size_t extra = 0;
+    char buffer[1024];
 
-	while (n > sizeof buffer) {
-		std::memcpy(buffer, begin, sizeof buffer);
-		translateLFtoCR(buffer, buffer + sizeof buffer);
-		extra += fwrite(buffer, 1, sizeof buffer, file);
-		n -= sizeof buffer;
-		begin += sizeof buffer;
-	}
-	std::memcpy(buffer, begin, n);
-	translateLFtoCR(buffer, buffer + n);
-	return extra + fwrite(buffer, 1, n, file);
+    while (n > sizeof buffer) {
+        std::memcpy(buffer, begin, sizeof buffer);
+        translateLFtoCR(buffer, buffer + sizeof buffer);
+        extra += fwrite(buffer, 1, sizeof buffer, file);
+        n -= sizeof buffer;
+        begin += sizeof buffer;
+    }
+    std::memcpy(buffer, begin, n);
+    translateLFtoCR(buffer, buffer + n);
+    return extra + fwrite(buffer, 1, n, file);
 }
 
 
 int std::fputc(int c, FILE *file)
 {
-	char buffer = static_cast<char>(c);
-	if (buffer == '\n')
-		buffer = '\r';
-	return static_cast<int>(fwrite(&buffer, 1, 1, file));
+    char buffer = static_cast<char>(c);
+    if (buffer == '\n')
+        buffer = '\r';
+    return static_cast<int>(fwrite(&buffer, 1, 1, file));
 }
 
 
 int std::fputs(const char *s, FILE *file)
 {
-	return static_cast<int>(printChars(file, s, s + strlen(s)));
+    return static_cast<int>(printChars(file, s, s + strlen(s)));
 }
 
 
 int std::fprintf(FILE* file, const char *format, ...)
 {
-	Buffer<char, 1024> b;
+    Buffer<char, 1024> b;
 
-	while (true) {
-		va_list args;
-		va_start(args, format);
-		int n = vsnprintf(b.buffer, b.size, format, args);
-		va_end(args);
-		if (n >= 0 && n < b.size) {
-			translateLFtoCR(b.buffer, b.buffer + n);
-			return static_cast<int>(fwrite(b.buffer, 1, static_cast<size_t>(n), file));
-		}
-		b.expand(b.size*2);
-	}
+    while (true) {
+        va_list args;
+        va_start(args, format);
+        int n = vsnprintf(b.buffer, b.size, format, args);
+        va_end(args);
+        if (n >= 0 && n < b.size) {
+            translateLFtoCR(b.buffer, b.buffer + n);
+            return static_cast<int>(fwrite(b.buffer, 1, toSize_t(n), file));
+        }
+        b.expand(b.size*2);
+    }
 }
 #endif // XP_MAC_MPW
 
@@ -175,45 +175,63 @@ int std::fprintf(FILE* file, const char *format, ...)
 // Write ch.
 void JS::Formatter::printChar8(char ch)
 {
-	printStr8(&ch, &ch + 1);
+    printStr8(&ch, &ch + 1);
 }
 
 
 // Write ch.
 void JS::Formatter::printChar16(char16 ch)
 {
-	printStr16(&ch, &ch + 1);
+    printStr16(&ch, &ch + 1);
 }
 
 
 // Write the null-terminated string str.
 void JS::Formatter::printZStr8(const char *str)
 {
-	printStr8(str, str + strlen(str));
+    printStr8(str, str + strlen(str));
 }
 
 
 // Write the String s.
 void JS::Formatter::printString16(const String &s)
 {
-	const char16 *begin = s.data();
-	printStr16(begin, begin + s.size());
+    const char16 *begin = s.data();
+    printStr16(begin, begin + s.size());
 }
 
 
 // Write the printf format using the supplied args.
 void JS::Formatter::printVFormat8(const char *format, va_list args)
 {
-	Buffer<char, 1024> b;
+    Buffer<char, 1024> b;
 
-	while (true) {
-		int n = vsnprintf(b.buffer, b.size, format, args);
-		if (n >= 0 && static_cast<uint>(n) < b.size) {
-			printStr8(b.buffer, b.buffer + n);
-			return;
-		}
-		b.expand(b.size*2);
-	}
+    while (true) {
+        int n = vsnprintf(b.buffer, b.size, format, args);
+        if (n >= 0 && static_cast<uint>(n) < b.size) {
+            printStr8(b.buffer, b.buffer + n);
+            return;
+        }
+        b.expand(b.size*2);
+    }
+}
+
+
+// Write either "true" or "false".
+JS::Formatter &JS::Formatter::operator<<(bool b)
+{
+    printZStr8(b ? "true" : "false");
+    return *this;
+}
+
+
+// Write the printf format using the supplied args.
+void JS::printFormat(Formatter &f, const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    f.printVFormat8(format, args);
+    va_end(args);
 }
 
 
@@ -222,33 +240,33 @@ static const int printCharBufferSize = 64;
 // Print ch count times.
 void JS::printChar(Formatter &f, char ch, int count)
 {
-	char str[printCharBufferSize];
+    char str[printCharBufferSize];
 
-	while (count > 0) {
-		int c = count;
-		if (c > printCharBufferSize)
-			c = printCharBufferSize;
-		count -= c;
-		STD::memset(str, ch, static_cast<size_t>(c));
-		printString(f, str, str+c);
-	}
+    while (count > 0) {
+        int c = count;
+        if (c > printCharBufferSize)
+            c = printCharBufferSize;
+        count -= c;
+        STD::memset(str, ch, toSize_t(c));
+        printString(f, str, str+c);
+    }
 }
 
 
 // Print ch count times.
 void JS::printChar(Formatter &f, char16 ch, int count)
 {
-	char16 str[printCharBufferSize];
+    char16 str[printCharBufferSize];
 
-	while (count > 0) {
-		int c = count;
-		if (c > printCharBufferSize)
-			c = printCharBufferSize;
-		count -= c;
-		char16 *strEnd = str + c;
-		std::fill(str, strEnd, ch);
-		printString(f, str, strEnd);
-	}
+    while (count > 0) {
+        int c = count;
+        if (c > printCharBufferSize)
+            c = printCharBufferSize;
+        count -= c;
+        char16 *strEnd = str + c;
+        std::fill(str, strEnd, ch);
+        printString(f, str, strEnd);
+    }
 }
 
 
@@ -256,20 +274,20 @@ void JS::printChar(Formatter &f, char16 ch, int count)
 // characters to use at least nDigits characters.
 void JS::printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format)
 {
-	char str[20];
-	int n = sprintf(str, format, i);
-	if (n < nDigits)
-		printChar(f, pad, nDigits - n);
-	printString(f, str, str+n);
+    char str[20];
+    int n = sprintf(str, format, i);
+    if (n < nDigits)
+        printChar(f, pad, nDigits - n);
+    printString(f, str, str+n);
 }
 
 
 // Print p as a pointer.
 void JS::printPtr(Formatter &f, void *p)
 {
-	char str[20];
-	int n = sprintf(str, "%p", p);
-	printString(f, str, str+n);
+    char str[20];
+    int n = sprintf(str, "%p", p);
+    printString(f, str, str+n);
 }
 
 
@@ -284,10 +302,10 @@ static const char unprintableFormat[] = "<%.4X>";
 
 
 static const uint16 defaultFilterRanges[] = {
-	0x00, 0x09,		// Filter all control characters except \t and \n
-	0x0B, 0x20,
-	0x7F, 0x100,	// Filter all non-ASCII characters
-	0, 0
+    0x00, 0x09,     // Filter all control characters except \t and \n
+    0x0B, 0x20,
+    0x7F, 0x100,    // Filter all non-ASCII characters
+    0, 0
 };
 
 JS::BitSet<256> JS::AsciiFileFormatter::defaultFilter(defaultFilterRanges);
@@ -296,100 +314,100 @@ JS::BitSet<256> JS::AsciiFileFormatter::defaultFilter(defaultFilterRanges);
 // Construct an AsciiFileFormatter using the given file and filter f.
 // If f is nil, use the default filter.
 JS::AsciiFileFormatter::AsciiFileFormatter(FILE *file, BitSet<256> *f): file(file)
-#ifndef _WIN32	// Microsoft Visual C++ 6.0 bug
-	, filter(f ? *f : defaultFilter)
+#ifndef _WIN32  // Microsoft Visual C++ 6.0 bug
+    , filter(f ? *f : defaultFilter)
 #endif
 {
-#ifdef _WIN32		// Microsoft Visual C++ 6.0 bug
-	if (f)
-		filter = *f;
-	else
-		filter = defaultFilter;
+#ifdef _WIN32       // Microsoft Visual C++ 6.0 bug
+    if (f)
+        filter = *f;
+    else
+        filter = defaultFilter;
 #endif
-	filterEmpty = filter.none();
+    filterEmpty = filter.none();
 }
 
 
 // Write ch, escaping non-ASCII characters.
 void JS::AsciiFileFormatter::printChar8(char ch)
 {
-	if (filterChar(ch))
-		fprintf(file, unprintableFormat, static_cast<uchar>(ch));
-	else
-		fputc(ch, file);
+    if (filterChar(ch))
+        fprintf(file, unprintableFormat, static_cast<uchar>(ch));
+    else
+        fputc(ch, file);
 }
 
 
 // Write ch, escaping non-ASCII characters.
 void JS::AsciiFileFormatter::printChar16(char16 ch)
 {
-	if (filterChar(ch))
-		fprintf(file, unprintableFormat, char16Value(ch));
-	else
-		fputc(static_cast<char>(ch), file);
+    if (filterChar(ch))
+        fprintf(file, unprintableFormat, char16Value(ch));
+    else
+        fputc(static_cast<char>(ch), file);
 }
 
 
 // Write the null-terminated string str, escaping non-ASCII characters.
 void JS::AsciiFileFormatter::printZStr8(const char *str)
 {
-	if (filterEmpty)
-		fputs(str, file);
-	else
-		printStr8(str, str + strlen(str));
+    if (filterEmpty)
+        fputs(str, file);
+    else
+        printStr8(str, str + strlen(str));
 }
 
 
 // Write the string between strBegin and strEnd, escaping non-ASCII characters.
 void JS::AsciiFileFormatter::printStr8(const char *strBegin, const char *strEnd)
 {
-	if (filterEmpty)
-		printChars(file, strBegin, strEnd);
-	else {
-		ASSERT(strEnd >= strBegin);
-		const char *p = strBegin;
-		while (strBegin != strEnd) {
-			char ch = *strBegin;
-			if (filterChar(ch)) {
-				if (p != strBegin) {
-					printChars(file, p, strBegin);
-					p = strBegin;
-				}
-				fprintf(file, unprintableFormat, static_cast<uchar>(ch));
-			}
-			++strBegin;
-		}
-		if (p != strBegin)
-			printChars(file, p, strBegin);
-	}
+    if (filterEmpty)
+        printChars(file, strBegin, strEnd);
+    else {
+        ASSERT(strEnd >= strBegin);
+        const char *p = strBegin;
+        while (strBegin != strEnd) {
+            char ch = *strBegin;
+            if (filterChar(ch)) {
+                if (p != strBegin) {
+                    printChars(file, p, strBegin);
+                    p = strBegin;
+                }
+                fprintf(file, unprintableFormat, static_cast<uchar>(ch));
+            }
+            ++strBegin;
+        }
+        if (p != strBegin)
+            printChars(file, p, strBegin);
+    }
 }
 
 
 // Write the string between strBegin and strEnd, escaping non-ASCII characters.
 void JS::AsciiFileFormatter::printStr16(const char16 *strBegin, const char16 *strEnd)
 {
-	char buffer[512];
+    char buffer[512];
 
-	ASSERT(strEnd >= strBegin);
-	char *q = buffer;
-	while (strBegin != strEnd) {
-		char16 ch = *strBegin++;
-		if (filterChar(ch)) {
-			if (q != buffer) {
-				printChars(file, buffer, q);
-				q = buffer;
-			}
-			fprintf(file, unprintableFormat, char16Value(ch));
-		} else {
-			*q++ = static_cast<char>(ch);
-			if (q == buffer + sizeof buffer) {
-				printChars(file, buffer, buffer + sizeof buffer);
-				q = buffer;
-			}
-		}
-	}
-	if (q != buffer)
-		printChars(file, buffer, q);
+    ASSERT(strEnd >= strBegin);
+    char *q = buffer;
+    while (strBegin != strEnd) {
+        char16 ch = *strBegin++;
+        if (filterChar(ch)) {
+            if (q != buffer) {
+                printChars(file, buffer, q);
+                q = buffer;
+            }
+            fprintf(file, unprintableFormat, char16Value(ch));
+        } else {
+            *q++ = static_cast<char>(ch);
+            if (q == buffer + sizeof buffer) {
+                printChars(file, buffer, buffer + sizeof buffer);
+                q = buffer;
+            }
+        }
+    }
+    if (q != buffer)
+        printChars(file, buffer, q);
 }
 
 
@@ -400,42 +418,42 @@ JS::AsciiFileFormatter JS::stdErr(stderr);
 // Write ch.
 void JS::StringFormatter::printChar8(char ch)
 {
-	s += ch;
+    s += ch;
 }
 
 
 // Write ch.
 void JS::StringFormatter::printChar16(char16 ch)
 {
-	s += ch;
+    s += ch;
 }
 
 
 // Write the null-terminated string str.
 void JS::StringFormatter::printZStr8(const char *str)
 {
-	s += str;
+    s += str;
 }
 
 
 // Write the string between strBegin and strEnd.
 void JS::StringFormatter::printStr8(const char *strBegin, const char *strEnd)
 {
-	appendChars(s, strBegin, strEnd);
+    appendChars(s, strBegin, strEnd);
 }
 
 
 // Write the string between strBegin and strEnd.
 void JS::StringFormatter::printStr16(const char16 *strBegin, const char16 *strEnd)
 {
-	s.append(strBegin, strEnd);
+    s.append(strBegin, strEnd);
 }
 
 
 // Write the String str.
 void JS::StringFormatter::printString16(const String &str)
 {
-	s += str;
+    s += str;
 }
 
 
@@ -451,25 +469,25 @@ void JS::StringFormatter::printString16(const String &str)
 uint32 JS::PrettyPrinter::defaultLineWidth = 20;
 
 
-// Create a PrettyPrinter that outputs to Formatter f.	The PrettyPrinter
+// Create a PrettyPrinter that outputs to Formatter f.  The PrettyPrinter
 // breaks lines at optional breaks so as to try not to exceed lines of width
-// lineWidth, although it may not always be able to do so.	Formatter f should
+// lineWidth, although it may not always be able to do so.  Formatter f should
 // be at the beginning of a line. Call end before destroying the Formatter;
 // otherwise the last line may not be output to f.
 JS::PrettyPrinter::PrettyPrinter(Formatter &f, uint32 lineWidth):
-		lineWidth(min(lineWidth, static_cast<uint32>(unlimitedLineWidth))),
-		outputFormatter(f),
-		outputPos(0),
-		lineNum(0),
-		lastBreak(0),
-		margin(0),
-		nNestedBlocks(0),
-		leftSerialPos(0),
-		rightSerialPos(0),
-		itemPool(20)
+        lineWidth(min(lineWidth, static_cast<uint32>(unlimitedLineWidth))),
+        outputFormatter(f),
+        outputPos(0),
+        lineNum(0),
+        lastBreak(0),
+        margin(0),
+        nNestedBlocks(0),
+        leftSerialPos(0),
+        rightSerialPos(0),
+        itemPool(20)
 {
 #ifdef DEBUG
-	topRegion = 0;
+    topRegion = 0;
 #endif
 }
 
@@ -479,7 +497,7 @@ JS::PrettyPrinter::PrettyPrinter(Formatter &f, uint32 lineWidth):
 // end just before destroying the PrettyPrinter to do that.
 JS::PrettyPrinter::~PrettyPrinter()
 {
-	ASSERT(!topRegion && !nNestedBlocks);
+    ASSERT(!topRegion && !nNestedBlocks);
 }
 
 
@@ -491,19 +509,19 @@ JS::PrettyPrinter::~PrettyPrinter()
 // output to outputFormatter.
 void JS::PrettyPrinter::outputBreak(bool sameLine, uint32 length)
 {
-	leftSerialPos += length;
+    leftSerialPos += length;
 
-	if (sameLine) {
-		outputPos += length;
-			// Exceptions may be thrown below.
-		printChar(outputFormatter, ' ', static_cast<int>(length));
-	} else {
-		lastBreak = ++lineNum;
-		outputPos = margin;
-			// Exceptions may be thrown below.
-		outputFormatter << '\n';
-		printChar(outputFormatter, ' ', static_cast<int>(margin));
-	}
+    if (sameLine) {
+        outputPos += length;
+        // Exceptions may be thrown below.
+        printChar(outputFormatter, ' ', static_cast<int>(length));
+    } else {
+        lastBreak = ++lineNum;
+        outputPos = margin;
+        // Exceptions may be thrown below.
+        outputFormatter << '\n';
+        printChar(outputFormatter, ' ', static_cast<int>(margin));
+    }
 }
 
 
@@ -516,83 +534,83 @@ void JS::PrettyPrinter::outputBreak(bool sameLine, uint32 length)
 // atomically popped off one or more items from the left end of activeItems.
 bool JS::PrettyPrinter::reduceLeftActiveItems(uint32 rightOffset)
 {
-	uint32 newRightSerialPos = rightSerialPos + rightOffset;
-	while (activeItems) {
-		Item *leftItem = &activeItems.front();
-		if (itemStack && leftItem == itemStack.front()) {
-			if (outputPos + newRightSerialPos - leftSerialPos > lineWidth) {
-				itemStack.pop_front();
-				leftItem->lengthKnown = true;
-				leftItem->totalLength = infiniteLength;
-			} else if (leftItem->lengthKnown)
-				itemStack.pop_front();
-		}
+    uint32 newRightSerialPos = rightSerialPos + rightOffset;
+    while (activeItems) {
+        Item *leftItem = &activeItems.front();
+        if (itemStack && leftItem == itemStack.front()) {
+            if (outputPos + newRightSerialPos - leftSerialPos > lineWidth) {
+                itemStack.pop_front();
+                leftItem->lengthKnown = true;
+                leftItem->totalLength = infiniteLength;
+            } else if (leftItem->lengthKnown)
+                itemStack.pop_front();
+        }
 
-		if (!leftItem->lengthKnown)
-			return true;
+        if (!leftItem->lengthKnown)
+            return true;
 
-		activeItems.pop_front();
-		try {
-			uint32 length = leftItem->length;
-			switch (leftItem->kind) {
-			  case Item::text:
-				{
-					outputPos += length;
-					leftSerialPos += length;
-						// Exceptions may be thrown below.
-					char16 *textBegin;
-					char16 *textEnd;
-					do {
-						length -= itemText.pop_front(length, textBegin, textEnd);
-						printString(outputFormatter, textBegin, textEnd);
-					} while (length);
-				}
-				break;
+        activeItems.pop_front();
+        try {
+            uint32 length = leftItem->length;
+            switch (leftItem->kind) {
+              case Item::text:
+                {
+                    outputPos += length;
+                    leftSerialPos += length;
+                        // Exceptions may be thrown below.
+                    char16 *textBegin;
+                    char16 *textEnd;
+                    do {
+                        length -= itemText.pop_front(length, textBegin, textEnd);
+                        printString(outputFormatter, textBegin, textEnd);
+                    } while (length);
+                }
+                break;
 
-			  case Item::blockBegin:
-			  case Item::indentBlockBegin:
-				{
-					BlockInfo *b = savedBlocks.advance_back();
-					b->margin = margin;
-					b->lastBreak = lastBreak;
-					b->fits = outputPos + leftItem->totalLength <= lineWidth;
-					if (leftItem->hasKind(Item::blockBegin))
-						margin = outputPos;
-					else
-						margin += length;
-				}
-				break;
+              case Item::blockBegin:
+              case Item::indentBlockBegin:
+                {
+                    BlockInfo *b = savedBlocks.advance_back();
+                    b->margin = margin;
+                    b->lastBreak = lastBreak;
+                    b->fits = outputPos + leftItem->totalLength <= lineWidth;
+                    if (leftItem->hasKind(Item::blockBegin))
+                        margin = outputPos;
+                    else
+                        margin += length;
+                }
+                break;
 
-			  case Item::blockEnd:
-				{
-					BlockInfo &b = savedBlocks.pop_back();
-					margin = b.margin;
-					lastBreak = b.lastBreak;
-				}
-				break;
+              case Item::blockEnd:
+                {
+                    BlockInfo &b = savedBlocks.pop_back();
+                    margin = b.margin;
+                    lastBreak = b.lastBreak;
+                }
+                break;
 
-			  case Item::indent:
-				margin += length;
-				ASSERT(static_cast<int32>(margin) >= 0);
-				break;
+              case Item::indent:
+                margin += length;
+                ASSERT(static_cast<int32>(margin) >= 0);
+                break;
 
-			  case Item::linearBreak:
-				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
-				outputBreak(savedBlocks.back().fits, length);
-				break;
+              case Item::linearBreak:
+                // Exceptions may be thrown below, but only after updating the PrettyPrinter.
+                outputBreak(savedBlocks.back().fits, length);
+                break;
 
-			  case Item::fillBreak:
-				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
-				outputBreak(lastBreak == lineNum && outputPos + leftItem->totalLength <= lineWidth, length);
-				break;
-			}
-		} catch (...) {
-			itemPool.destroy(leftItem);
-			throw;
-		}
-		itemPool.destroy(leftItem);
-	}
-	return false;
+              case Item::fillBreak:
+                // Exceptions may be thrown below, but only after updating the PrettyPrinter.
+                outputBreak(lastBreak == lineNum && outputPos + leftItem->totalLength <= lineWidth, length);
+                break;
+            }
+        } catch (...) {
+            itemPool.destroy(leftItem);
+            throw;
+        }
+        itemPool.destroy(leftItem);
+    }
+    return false;
 }
 
 
@@ -604,36 +622,36 @@ bool JS::PrettyPrinter::reduceLeftActiveItems(uint32 rightOffset)
 // This method can't throw exceptions.
 void JS::PrettyPrinter::reduceRightActiveItems()
 {
-	uint32 nUnmatchedBlockEnds = 0;
-	while (itemStack) {
-		Item *rightItem = itemStack.pop_back();
-		switch (rightItem->kind) {
-		  case Item::blockBegin:
-		  case Item::indentBlockBegin:
-			if (!nUnmatchedBlockEnds) {
-				itemStack.fast_push_back(rightItem);
-				return;
-			}
-			rightItem->computeTotalLength(rightSerialPos);
-			--nUnmatchedBlockEnds;
-			break;
+    uint32 nUnmatchedBlockEnds = 0;
+    while (itemStack) {
+        Item *rightItem = itemStack.pop_back();
+        switch (rightItem->kind) {
+          case Item::blockBegin:
+          case Item::indentBlockBegin:
+            if (!nUnmatchedBlockEnds) {
+                itemStack.fast_push_back(rightItem);
+                return;
+            }
+            rightItem->computeTotalLength(rightSerialPos);
+            --nUnmatchedBlockEnds;
+            break;
 
-		  case Item::blockEnd:
-			++nUnmatchedBlockEnds;
-			break;
+          case Item::blockEnd:
+            ++nUnmatchedBlockEnds;
+            break;
 
-		  case Item::linearBreak:
-		  case Item::fillBreak:
-			rightItem->computeTotalLength(rightSerialPos);
-			if (!nUnmatchedBlockEnds)
-				// There can be at most one consecutive break posted on the itemStack.
-				return;
-			break;
+          case Item::linearBreak:
+          case Item::fillBreak:
+            rightItem->computeTotalLength(rightSerialPos);
+            if (!nUnmatchedBlockEnds)
+                // There can be at most one consecutive break posted on the itemStack.
+                return;
+            break;
 
-		  default:
-			ASSERT(false);	// Other kinds can't be pushed onto the itemStack.
-		}
-	}
+          default:
+            ASSERT(false);  // Other kinds can't be pushed onto the itemStack.
+        }
+    }
 }
 
 
@@ -643,33 +661,33 @@ void JS::PrettyPrinter::reduceRightActiveItems()
 // PrettyPrinter is left unchanged.
 JS::PrettyPrinter::Item &JS::PrettyPrinter::beginIndent(int32 offset)
 {
-	Item *unindent = new(itemPool) Item(Item::indent, static_cast<uint32>(-offset));
-	if (activeItems) {
-		try {
-			activeItems.push_back(*new(itemPool) Item(Item::indent, static_cast<uint32>(offset)));
-		} catch (...) {
-			itemPool.destroy(unindent);
-			throw;
-		}
-	} else {
-		margin += offset;
-		ASSERT(static_cast<int32>(margin) >= 0);
-	}
-	return *unindent;
+    Item *unindent = new(itemPool) Item(Item::indent, static_cast<uint32>(-offset));
+    if (activeItems) {
+        try {
+            activeItems.push_back(*new(itemPool) Item(Item::indent, static_cast<uint32>(offset)));
+        } catch (...) {
+            itemPool.destroy(unindent);
+            throw;
+        }
+    } else {
+        margin += offset;
+        ASSERT(static_cast<int32>(margin) >= 0);
+    }
+    return *unindent;
 }
 
 
-// End an indent began by beginIndent.	i should be the result of a beginIndent.
+// End an indent began by beginIndent.  i should be the result of a beginIndent.
 // This method can't throw exceptions (it's called by the Indent destructor).
 void JS::PrettyPrinter::endIndent(Item &i)
 {
-	if (activeItems)
-		activeItems.push_back(i);
-	else {
-		margin += i.length;
-		ASSERT(static_cast<int32>(margin) >= 0);
-		itemPool.destroy(&i);
-	}
+    if (activeItems)
+        activeItems.push_back(i);
+    else {
+        margin += i.length;
+        ASSERT(static_cast<int32>(margin) >= 0);
+        itemPool.destroy(&i);
+    }
 }
 
 
@@ -680,23 +698,23 @@ void JS::PrettyPrinter::endIndent(Item &i)
 // unchanged.
 JS::PrettyPrinter::Item &JS::PrettyPrinter::beginBlock(Item::Kind kind, int32 offset)
 {
-	uint32 newNNestedBlocks = nNestedBlocks + 1;
-	savedBlocks.reserve(newNNestedBlocks);
-	itemStack.reserve_back(1 + newNNestedBlocks);
-	Item *endItem = new(itemPool) Item(Item::blockEnd);
-	Item *beginItem;
-	try {
-		beginItem = new(itemPool) Item(kind, static_cast<uint32>(offset), rightSerialPos);
-	} catch (...) {
-		itemPool.destroy(endItem);
-		throw;
-	}
-	// No state modifications before this point.
-	// No exceptions after this point.
-	activeItems.push_back(*beginItem);
-	itemStack.fast_push_back(beginItem);
-	nNestedBlocks = newNNestedBlocks;
-	return *endItem;
+    uint32 newNNestedBlocks = nNestedBlocks + 1;
+    savedBlocks.reserve(newNNestedBlocks);
+    itemStack.reserve_back(1 + newNNestedBlocks);
+    Item *endItem = new(itemPool) Item(Item::blockEnd);
+    Item *beginItem;
+    try {
+        beginItem = new(itemPool) Item(kind, static_cast<uint32>(offset), rightSerialPos);
+    } catch (...) {
+        itemPool.destroy(endItem);
+        throw;
+    }
+    // No state modifications before this point.
+    // No exceptions after this point.
+    activeItems.push_back(*beginItem);
+    itemStack.fast_push_back(beginItem);
+    nNestedBlocks = newNNestedBlocks;
+    return *endItem;
 }
 
 
@@ -705,13 +723,13 @@ JS::PrettyPrinter::Item &JS::PrettyPrinter::beginBlock(Item::Kind kind, int32 of
 // This method can't throw exceptions (it's called by the Block destructor).
 void JS::PrettyPrinter::endBlock(Item &i)
 {
-	activeItems.push_back(i);
-	itemStack.fast_push_back(&i);
-	--nNestedBlocks;
+    activeItems.push_back(i);
+    itemStack.fast_push_back(&i);
+    --nNestedBlocks;
 }
 
 
-// Write a conditional line break.	This kind of a line break can only be
+// Write a conditional line break.  This kind of a line break can only be
 // emitted inside a block.
 // A linear line break starts a new line if the containing block cannot be put
 // all one one line; otherwise the line break is replaced by nSpaces spaces.
@@ -730,17 +748,17 @@ void JS::PrettyPrinter::endBlock(Item &i)
 // consistent state.
 void JS::PrettyPrinter::conditionalBreak(uint32 nSpaces, Item::Kind kind)
 {
-	ASSERT(nSpaces <= unlimitedLineWidth && nNestedBlocks);
-	reduceRightActiveItems();
-	itemStack.reserve_back(1 + nNestedBlocks);
-	// Begin of exception-atomic stack update.	Only new(itemPool) can throw
-	// an exception here, in which case nothing is updated.
-	Item *i = new(itemPool) Item(kind, nSpaces, rightSerialPos);
-	activeItems.push_back(*i);
-	itemStack.fast_push_back(i);
-	rightSerialPos += nSpaces;
-	// End of exception-atomic stack update.
-	reduceLeftActiveItems(0);
+    ASSERT(nSpaces <= unlimitedLineWidth && nNestedBlocks);
+    reduceRightActiveItems();
+    itemStack.reserve_back(1 + nNestedBlocks);
+    // Begin of exception-atomic stack update.  Only new(itemPool) can throw
+    // an exception here, in which case nothing is updated.
+    Item *i = new(itemPool) Item(kind, nSpaces, rightSerialPos);
+    activeItems.push_back(*i);
+    itemStack.fast_push_back(i);
+    rightSerialPos += nSpaces;
+    // End of exception-atomic stack update.
+    reduceLeftActiveItems(0);
 }
 
 
@@ -751,34 +769,34 @@ void JS::PrettyPrinter::conditionalBreak(uint32 nSpaces, Item::Kind kind)
 // string but leaves the PrettyPrinter in a consistent state.
 void JS::PrettyPrinter::printStr8(const char *strBegin, const char *strEnd)
 {
-	while (strBegin != strEnd) {
-		const char *sectionEnd = findValue(strBegin, strEnd, '\n');
-		uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
-		if (sectionLength) {
-			if (reduceLeftActiveItems(sectionLength)) {
-				itemText.reserve_back(sectionLength);
-				Item &backItem = activeItems.back();
-				// Begin of exception-atomic update.  Only new(itemPool) can throw an exception here,
-				// in which case nothing is updated.
-				if (backItem.hasKind(Item::text))
-					backItem.length += sectionLength;
-				else
-					activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
-				rightSerialPos += sectionLength;
-				itemText.fast_append(reinterpret_cast<const uchar *>(strBegin), reinterpret_cast<const uchar *>(sectionEnd));
-				// End of exception-atomic update.
-			} else {
-				ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
-				outputPos += sectionLength;
-				printString(outputFormatter, strBegin, sectionEnd);
-			}
-			strBegin = sectionEnd;
-			if (strBegin == strEnd)
-				break;
-		}
-		requiredBreak();
-		++strBegin;
-	}
+    while (strBegin != strEnd) {
+        const char *sectionEnd = findValue(strBegin, strEnd, '\n');
+        uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
+        if (sectionLength) {
+            if (reduceLeftActiveItems(sectionLength)) {
+                itemText.reserve_back(sectionLength);
+                Item &backItem = activeItems.back();
+                // Begin of exception-atomic update.  Only new(itemPool) can throw an exception here,
+                // in which case nothing is updated.
+                if (backItem.hasKind(Item::text))
+                    backItem.length += sectionLength;
+                else
+                    activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
+                rightSerialPos += sectionLength;
+                itemText.fast_append(reinterpret_cast<const uchar *>(strBegin), reinterpret_cast<const uchar *>(sectionEnd));
+                // End of exception-atomic update.
+            } else {
+                ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+                outputPos += sectionLength;
+                printString(outputFormatter, strBegin, sectionEnd);
+            }
+            strBegin = sectionEnd;
+            if (strBegin == strEnd)
+                break;
+        }
+        requiredBreak();
+        ++strBegin;
+    }
 }
 
 
@@ -789,34 +807,34 @@ void JS::PrettyPrinter::printStr8(const char *strBegin, const char *strEnd)
 // string but leaves the PrettyPrinter in a consistent state.
 void JS::PrettyPrinter::printStr16(const char16 *strBegin, const char16 *strEnd)
 {
-	while (strBegin != strEnd) {
-		const char16 *sectionEnd = findValue(strBegin, strEnd, uni::lf);
-		uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
-		if (sectionLength) {
-			if (reduceLeftActiveItems(sectionLength)) {
-				itemText.reserve_back(sectionLength);
-				Item &backItem = activeItems.back();
-				// Begin of exception-atomic update.  Only new(itemPool) can throw an exception here,
-				// in which case nothing is updated.
-				if (backItem.hasKind(Item::text))
-					backItem.length += sectionLength;
-				else
-					activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
-				rightSerialPos += sectionLength;
-				itemText.fast_append(strBegin, sectionEnd);
-				// End of exception-atomic update.
-			} else {
-				ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
-				outputPos += sectionLength;
-				printString(outputFormatter, strBegin, sectionEnd);
-			}
-			strBegin = sectionEnd;
-			if (strBegin == strEnd)
-				break;
-		}
-		requiredBreak();
-		++strBegin;
-	}
+    while (strBegin != strEnd) {
+        const char16 *sectionEnd = findValue(strBegin, strEnd, uni::lf);
+        uint32 sectionLength = static_cast<uint32>(sectionEnd - strBegin);
+        if (sectionLength) {
+            if (reduceLeftActiveItems(sectionLength)) {
+                itemText.reserve_back(sectionLength);
+                Item &backItem = activeItems.back();
+                // Begin of exception-atomic update.  Only new(itemPool) can throw an exception here,
+                // in which case nothing is updated.
+                if (backItem.hasKind(Item::text))
+                    backItem.length += sectionLength;
+                else
+                    activeItems.push_back(*new(itemPool) Item(Item::text, sectionLength));
+                rightSerialPos += sectionLength;
+                itemText.fast_append(strBegin, sectionEnd);
+                // End of exception-atomic update.
+            } else {
+                ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+                outputPos += sectionLength;
+                printString(outputFormatter, strBegin, sectionEnd);
+            }
+            strBegin = sectionEnd;
+            if (strBegin == strEnd)
+                break;
+        }
+        requiredBreak();
+        ++strBegin;
+    }
 }
 
 
@@ -826,11 +844,10 @@ void JS::PrettyPrinter::printStr16(const char16 *strBegin, const char16 *strEnd)
 // leaves the PrettyPrinter in a consistent state.
 void JS::PrettyPrinter::requiredBreak()
 {
-	reduceRightActiveItems();
-	reduceLeftActiveItems(infiniteLength);
-	ASSERT(!itemStack && !activeItems && !itemText &&
-		   leftSerialPos == rightSerialPos);
-	outputBreak(false, 0);
+    reduceRightActiveItems();
+    reduceLeftActiveItems(infiniteLength);
+    ASSERT(!itemStack && !activeItems && !itemText && leftSerialPos == rightSerialPos);
+    outputBreak(false, 0);
 }
 
 
@@ -841,10 +858,10 @@ void JS::PrettyPrinter::requiredBreak()
 // leaves the PrettyPrinter in a consistent state.
 void JS::PrettyPrinter::linearBreak(uint32 nSpaces, bool required)
 {
-	if (required)
-		requiredBreak();
-	else
-		linearBreak(nSpaces);
+    if (required)
+        requiredBreak();
+    else
+        linearBreak(nSpaces);
 }
 
 
@@ -856,10 +873,8 @@ void JS::PrettyPrinter::linearBreak(uint32 nSpaces, bool required)
 // leaves the PrettyPrinter in a consistent state.
 void JS::PrettyPrinter::end()
 {
-	ASSERT(!topRegion);
-	reduceRightActiveItems();
-	reduceLeftActiveItems(infiniteLength);
-	ASSERT(!savedBlocks && !itemStack && !activeItems && !itemText &&
-		   rightSerialPos == leftSerialPos && !margin);
+    ASSERT(!topRegion);
+    reduceRightActiveItems();
+    reduceLeftActiveItems(infiniteLength);
+    ASSERT(!savedBlocks && !itemStack && !activeItems && !itemText && rightSerialPos == leftSerialPos && !margin);
 }
-

@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -47,7 +47,7 @@ namespace JavaScript
     class Token {
       public:
         enum Kind {
-            // Keep synchronized with kindNames, kindFlags, and tokenBinaryOperatorInfos tables
+            // Keep synchronized with the kindNames, kindFlags, and tokenBinaryOperatorInfos tables
 
             // Special
             end,                        // End of token stream
@@ -151,6 +151,7 @@ namespace JavaScript
             In,                         // in
             Instanceof,                 // instanceof
             Interface,                  // interface
+            Is,                         // is
             Namespace,                  // namespace
             Native,                     // native
             New,                        // new
@@ -179,44 +180,61 @@ namespace JavaScript
             With,                       // with
 
             // Non-reserved words
+            Ecmascript,                 // ecmascript
             Eval,                       // eval
             Exclude,                    // exclude
             Get,                        // get
             Include,                    // include
+            Javascript,                 // javascript
             Set,                        // set
+            Strict,                     // strict
 
             identifier,                 // Non-keyword identifier (may be same as a keyword if it contains an escape code)
-            kindsEnd,                   // End of token kinds
+            kindsEnd,                     // End of token kinds
 
-            keywordsBegin = Abstract,   // Beginning of range of special identifier tokens
-            keywordsEnd = identifier,   // End of range of special identifier tokens
-            nonreservedBegin = Eval,    // Beginning of range of non-reserved words
+            keywordsBegin = Abstract,     // Beginning of range of special identifier tokens
+            keywordsEnd = identifier,     // End of range of special identifier tokens
+            nonreservedBegin = Ecmascript,// Beginning of range of non-reserved words
             nonreservedEnd = identifier,  // End of range of non-reserved words
             kindsWithCharsBegin = number, // Beginning of range of tokens for which the chars field (below) is valid
             kindsWithCharsEnd = regExp+1  // End of range of tokens for which the chars field (below) is valid
         };
 
-#define CASE_TOKEN_ATTRIBUTE_IDENTIFIER \
-        Token::Eval:               \
+// Keep synchronized with isNonreserved below
+#define CASE_TOKEN_NONRESERVED     \
+             Token::Ecmascript:    \
+        case Token::Eval:          \
         case Token::Exclude:       \
         case Token::Get:           \
         case Token::Include:       \
+        case Token::Javascript:    \
         case Token::Set:           \
+        case Token::Strict:        \
         case Token::identifier
 
-#define CASE_TOKEN_NONRESERVED     \
-        Token::Eval:               \
+#define CASE_TOKEN_NONRESERVED_NONINCLUDE \
+             Token::Ecmascript:    \
+        case Token::Eval:          \
         case Token::Exclude:       \
         case Token::Get:           \
-        case Token::Include:       \
+        case Token::Javascript:    \
         case Token::Set:           \
+        case Token::Strict:        \
         case Token::identifier
+
+// Keep synchronized with isNonExpressionAttribute below
+#define CASE_TOKEN_NONEXPRESSION_ATTRIBUTE \
+             Token::Abstract:      \
+        case Token::Final:         \
+        case Token::Static:        \
+        case Token::Volatile
 
         enum Flag {
+            isNonreserved,              // True if this token is a non-reserved identifier
             isAttribute,                // True if this token is an attribute
+            isNonExpressionAttribute,   // True if this token is an attribute but not an expression
             canFollowAttribute,         // True if this token is an attribute or can follow an attribute
-            canFollowReturn,            // True if this token can follow a return without an expression
-            canFollowGet                // True if this token can follow a get or set in a FunctionName
+            canFollowReturn             // True if this token can follow a return without an expression
         };
 
       private:
@@ -228,7 +246,7 @@ namespace JavaScript
 #endif
         Kind kind;              // The token's kind
         bool lineBreak;         // True if line break precedes this token
-        uint32 pos;             // Source position of this token
+        size_t pos;             // Source position of this token
         const StringAtom *id;   // The token's characters; non-nil for identifiers, keywords, and regular expressions only
         String chars;           // The token's characters; valid for strings, units, numbers, and regular expression flags only
         float64 value;          // The token's value (numbers only)
@@ -246,7 +264,7 @@ namespace JavaScript
         bool hasIdentifierKind() const {ASSERT(nonreservedEnd == identifier && kindsEnd == identifier+1); return kind >= nonreservedBegin;}
         bool getFlag(Flag f) const {ASSERT(valid); return (kindFlags[kind] & 1<<f) != 0;}
         bool getLineBreak() const {ASSERT(valid); return lineBreak;}
-        uint32 getPos() const {ASSERT(valid); return pos;}
+        size_t getPos() const {ASSERT(valid); return pos;}
         const StringAtom &getIdentifier() const {ASSERT(valid && id); return *id;}
         const String &getChars() const {ASSERT(valid && kind >= kindsWithCharsBegin && kind < kindsWithCharsEnd); return chars;}
         float64 getValue() const {ASSERT(valid && kind == number); return value;}

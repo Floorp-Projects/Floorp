@@ -34,8 +34,6 @@
 #ifndef numerics_h
 #define numerics_h
 
-#include <cmath>
-
 #include "systemtypes.h"
 #include "utilities.h"
 #include "strings.h"

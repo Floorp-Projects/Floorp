@@ -31,28 +31,11 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef jsmath_h
-#define jsmath_h
+namespace JavaScript {    
+namespace JS2Runtime {
 
-#include "jstypes.h"
-
-namespace JavaScript {
-namespace JSMathClass {
-
-    using JSTypes::JSObject;
-    using JSTypes::JSString;
-    using JSTypes::JSScope;
-
-    class JSMath : public JSObject {
-    private:
-        JSMath()    { }
-    public:
-        static void initMathObject(JSScope *g);
-    };
-    
-
-}   /* JSMathClass */
-}   /* JavaScript */
+    void initMathObject(Context *cx, JSObject *mathObj);
 
 
-#endif jsmath_h
+}
+}

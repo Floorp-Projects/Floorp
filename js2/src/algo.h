@@ -36,16 +36,14 @@
 
 namespace JavaScript
 {
-    
 //
 // Algorithms
 //
 
-// Assign zero to every element between first inclusive and last
-// exclusive.
-// This is equivalent ot fill(first, last, 0) but may be more efficient.
+    // Assign zero to every element between first inclusive and last exclusive.
+    // This is equivalent ot fill(first, last, 0) but may be more efficient.
     template<class ForwardIterator>
-        inline void zero(ForwardIterator first, ForwardIterator last)
+    inline void zero(ForwardIterator first, ForwardIterator last)
     {
         while (first != last) {
             *first = 0;
@@ -53,17 +51,15 @@ namespace JavaScript
         }
     }
 
-// Same as find(first, last, value) but may be more efficient because
-// it doesn't use a reference for value.
-        template<class InputIterator, class T>
-        inline InputIterator findValue(InputIterator first, InputIterator last, T value)
-        {
-                while (first != last && !(*first == value))
-                        ++first;
-                return first;
-        }
 
-
+    // Same as find(first, last, value) but may be more efficient because
+    // it doesn't use a reference for value.
+    template<class InputIterator, class T>
+    inline InputIterator findValue(InputIterator first, InputIterator last, T value)
+    {
+        while (first != last && !(*first == value))
+            ++first;
+        return first;
+    }
 }
-
 #endif /* algo_h___ */

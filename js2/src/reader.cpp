@@ -62,18 +62,27 @@ void JS::Reader::beginLine()
     linePositions.push_back(p);
 }
 
+// Fully process the source in order to fill in the line start table.
+void JS::Reader::fillLineStartsTable()
+{
+    char16 ch;
+    do {
+        ch = get();
+        if (isLineBreak(ch))
+            beginLine();        
+    } while (!getEof(ch));
+}
 
 // Return the number of the line containing the given character position.
 // The line starts should have been recorded by calling beginLine.
-uint32 JS::Reader::posToLineNum(uint32 pos) const
+uint32 JS::Reader::posToLineNum(size_t pos) const
 {
     ASSERT(pos <= getPos());
     std::vector<const char16 *>::const_iterator i =
         std::upper_bound(linePositions.begin(), linePositions.end(), begin + pos);
     ASSERT(i != linePositions.begin());
 
-    return static_cast<uint32>(i-1 - linePositions.begin()) +
-        initialLineNum;
+    return static_cast<uint32>(i-1 - linePositions.begin()) + initialLineNum;
 }
 
 
@@ -84,7 +93,7 @@ uint32 JS::Reader::posToLineNum(uint32 pos) const
 // manually finds the line ending by searching for a line break; otherwise,
 // getLine assumes that the line ends one character before the beginning
 // of the next line.
-uint32 JS::Reader::getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const
+size_t JS::Reader::getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const
 {
     lineBegin = 0;
     lineEnd = 0;
@@ -106,7 +115,7 @@ uint32 JS::Reader::getLine(uint32 lineNum, const char16 *&lineBegin, const char1
             ++e;
     }
     lineEnd = e;
-    return static_cast<uint32>(lineBegin - begin);
+    return toSize_t(lineBegin - begin);
 }
 
 
@@ -156,12 +165,12 @@ JS::String &JS::Reader::endRecording()
 
 
 // Report an error at the given character position in the source code.
-void JS::Reader::error(Exception::Kind kind, const String &message, uint32 pos)
+void JS::Reader::error(Exception::Kind kind, const String &message, size_t pos)
 {
     uint32 lineNum = posToLineNum(pos);
     const char16 *lineBegin;
     const char16 *lineEnd;
-    uint32 linePos = getLine(lineNum, lineBegin, lineEnd);
+    size_t linePos = getLine(lineNum, lineBegin, lineEnd);
     ASSERT(lineBegin && lineEnd && linePos <= pos);
 
     throw Exception(kind, message, sourceLocation, lineNum, pos - linePos, pos, lineBegin, lineEnd);

@@ -34,16 +34,19 @@
 #ifndef utilities_h___
 #define utilities_h___
 
-#ifdef MSC_VER
-// disable long identifier warnings
-#    pragma warning(disable: 4786)
-#endif
-
 #include "systemtypes.h"
 
 namespace JavaScript
 {
-    
+
+#ifndef _WIN32
+ #define STATIC_CONST(type, expr) static const type expr
+#else
+ // Microsoft Visual C++ 6.0 bug: constants not supported
+ #define STATIC_CONST(type, expr) enum {expr}
+#endif
+
+
 //
 // Assertions
 //
@@ -51,15 +54,27 @@ namespace JavaScript
 #ifdef DEBUG
     void Assert(const char *s, const char *file, int line);
 
-#   define ASSERT(_expr)                                                       \
-        ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-#   define NOT_REACHED(_reasonStr)                                             \
-        JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
-#   define DEBUG_ONLY(_stmt) _stmt
+ #define ASSERT(_expr) ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
+ #define NOT_REACHED(_reasonStr) JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
+ #define DEBUG_ONLY(_stmt) _stmt
 #else
-#   define ASSERT(expr)
-#   define NOT_REACHED(reasonStr)
-#   define DEBUG_ONLY(_stmt)
+ #define ASSERT(expr) (void)0
+ #define NOT_REACHED(reasonStr) (void)0
+ #define DEBUG_ONLY(_stmt)
+#endif
+
+
+    // A checked_cast acts as a static_cast that is checked in DEBUG mode.
+    // It can only be used to downcast a class hierarchy that has at least one virtual function.
+#ifdef DEBUG
+    template <class Target, class Source> inline Target checked_cast(Source *s)
+    {
+        Target t = dynamic_cast<Target>(s);
+        ASSERT(t);
+        return t;
+    }
+#else
+ #define checked_cast static_cast
 #endif
 
 
@@ -67,10 +82,33 @@ namespace JavaScript
 // Mathematics
 //
 
-    template<class N> N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
+    template<class N> inline N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
+    template<class N> inline N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
 
     uint ceilingLog2(uint32 n);
     uint floorLog2(uint32 n);
+
+
+//
+// Flag Bitmaps
+//
+
+    template<class F> inline F setFlag(F flags, F flag) {return static_cast<F>(flags | flag);}
+    template<class F> inline F clearFlag(F flags, F flag) {return static_cast<F>(flags & ~flag);}
+    template<class F> inline bool testFlag(F flags, F flag) {return (flags & flag) != 0;}
+
+
+//
+// Signed/Unsigned Conversions
+//
+
+    // Use these instead of type casts to safely convert between signed and unsigned
+    // integers of the same size.
+
+    inline uint32 toUInt32(int32 x) {return static_cast<uint32>(x);}
+    inline int32 toInt32(uint32 x) {return static_cast<int32>(x);}
+    inline size_t toSize_t(ptrdiff_t x) {return static_cast<size_t>(x);}
+    inline ptrdiff_t toPtrdiff_t(size_t x) {return static_cast<ptrdiff_t>(x);}
+
 }
 #endif /* utilities_h___ */

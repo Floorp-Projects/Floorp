@@ -38,55 +38,58 @@
 
 namespace JavaScript
 {
-    
+
 //
 // Exceptions
 //
 
-// A JavaScript exception (other than out-of-memory, for which we use the
-// standard C++ exception bad_alloc).
+    // A JavaScript exception (other than out-of-memory, for which we use the
+    // standard C++ exception bad_alloc).
     struct Exception {
         enum Kind {
             syntaxError,
-            stackOverflow
+            stackOverflow,
+            internalError,
+            runtimeError,
+            referenceError,
+            rangeError,
+            typeError,
+            uncaughtError,
+            semanticError
         };
         
-        Kind kind;         // The exception's kind
-        String message;    // The detailed message
-        String sourceFile; // A description of the source code that caused the
-                           // error
-        uint32 lineNum;    // Number of line that caused the error
-        uint32 charNum;    // Character offset within the line that caused the
-                           // error
-        uint32 pos;        // Offset within the input of the error
-        String sourceLine; // The text of the source line
+        Kind kind;              // The exception's kind
+        String message;         // The detailed message
+        String sourceFile;      // A description of the source code that caused the error
+        uint32 lineNum;         // Number of line that caused the error
+        size_t charNum;         // Character offset within the line that caused the error
+        size_t pos;             // Offset within the input of the error
+        String sourceLine;      // The text of the source line
 
-        Exception (Kind kind, const String &message) :
+        Exception (Kind kind, const char *message):
+                kind(kind), message(widenCString(message)), lineNum(0), charNum(0) {}
+        
+        Exception (Kind kind, const String &message):
                 kind(kind), message(message), lineNum(0), charNum(0) {}
         
-        Exception(Kind kind, const String &message, const String &sourceFile,
-                  uint32 lineNum, uint32 charNum, uint32 pos,
-                  const String &sourceLine) :
-                kind(kind), message(message), sourceFile(sourceFile),
-            lineNum(lineNum), charNum(charNum), pos(pos), sourceLine(sourceLine)
-            {}
+        Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, size_t charNum,
+                  size_t pos, const String &sourceLine):
+                kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos),
+                sourceLine(sourceLine) {}
         
-        Exception(Kind kind, const String &message, const String &sourceFile,
-                  uint32 lineNum, uint32 charNum, uint32 pos,
-                  const char16 *sourceLineBegin, const char16 *sourceLineEnd) :
-                kind(kind), message(message), sourceFile(sourceFile),
-            lineNum(lineNum), charNum(charNum), pos(pos),
-            sourceLine(sourceLineBegin, sourceLineEnd) {}
+        Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, size_t charNum,
+                  size_t pos, const char16 *sourceLineBegin, const char16 *sourceLineEnd):
+                kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos),
+                sourceLine(sourceLineBegin, sourceLineEnd) {}
 
         bool hasKind(Kind k) const {return kind == k;}
         const char *kindString() const;
         String fullMessage() const;
     };
 
-    
-// Throw a stackOverflow exception if the execution stack has gotten too large.
+
+    // Throw a stackOverflow exception if the execution stack has gotten too large.
     inline void checkStackSize() {}
-    
 }
 
 #endif /* exception_h___ */

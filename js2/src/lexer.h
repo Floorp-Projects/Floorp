@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -66,12 +66,13 @@ namespace JavaScript
 
         Lexer(World &world, const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
 
+        void skip();
         const Token &get(bool preferRegExp);
         const Token *eat(bool preferRegExp, Token::Kind kind);
         const Token &peek(bool preferRegExp);
         void redesignate(bool preferRegExp);
         void unget();
-        uint32 getPos() const;
+        size_t getPos() const;
 
       private:
         void syntaxError(const char *message, uint backUp = 1);
@@ -95,7 +96,7 @@ namespace JavaScript
 #endif
 
     // Return the position of the first character of the next token, which must have been peeked.
-    inline uint32 Lexer::getPos() const
+    inline size_t Lexer::getPos() const
     {
         ASSERT(nTokensFwd);
         return nextToken->getPos();

@@ -69,9 +69,9 @@ namespace JavaScript {
 
         char16 get() {ASSERT(p <= end);return *p++;}
         char16 peek() {ASSERT(p <= end); return *p;}
-        void unget(uint32 n = 1) {ASSERT(p >= begin + n); p -= n;}
-        uint32 getPos() const {return static_cast<uint32>(p - begin);}
-        void setPos(uint32 pos) {ASSERT(pos <= getPos()); p = begin + pos;}
+        void unget(size_t n = 1) {ASSERT(p >= begin + n); p -= n;}
+        size_t getPos() const {return toSize_t(p - begin);}
+        void setPos(size_t pos) {ASSERT(pos <= getPos()); p = begin + pos;}
 
         bool eof() const {ASSERT(p <= end); return p == end;}
         bool peekEof(char16 ch) const {
@@ -85,13 +85,14 @@ namespace JavaScript {
             ASSERT(p[-1] == ch); return !ch && p == end+1;
         }
         void beginLine();
-        uint32 posToLineNum(uint32 pos) const;
-        uint32 getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const;
+        void fillLineStartsTable();
+        uint32 posToLineNum(size_t pos) const;
+        size_t getLine(uint32 lineNum, const char16 *&lineBegin, const char16 *&lineEnd) const;
         void beginRecording(String &recordString);
         void recordChar(char16 ch);
         String &endRecording();
 
-        void error(Exception::Kind kind, const String &message, uint32 pos);
+        void error(Exception::Kind kind, const String &message, size_t pos);
     };
 
 
@@ -107,5 +108,4 @@ namespace JavaScript {
         };
 
 }
-
 #endif /* reader_h___ */

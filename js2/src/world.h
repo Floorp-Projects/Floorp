@@ -39,44 +39,43 @@
 #include "hash.h"
 
 namespace JavaScript {
-
+    
 //
 // String atom management
 //
 
-// A StringAtom is a String for which the following guarantee applies:
-// StringAtoms A and B have the same character sequences if and only if A and
-// B are the same StringAtom.
-
+    // A StringAtom is a String for which the following guarantee applies:
+    // StringAtoms A and B have the same character sequences if and only if A and
+    // B are the same StringAtom.
     class StringAtom: public String {
       public:
-        // Token::Kind if this is a keyword; Token::identifier if not
-        Token::Kind tokenKind;
-        
+        Token::Kind tokenKind;          // Token::Kind if this is a keyword; Token::identifier if not
+
         explicit StringAtom(const String &s): String(s), tokenKind(Token::identifier) {}
       private:
-        StringAtom(const StringAtom&);      // No copy constructor
-        void operator=(const StringAtom&);  // No assignment operator
+        StringAtom(const StringAtom &);     // No copy constructor
+        void operator=(const StringAtom &); // No assignment operator
     };
-    
+
     inline bool operator==(const StringAtom &s1, const StringAtom &s2) {return &s1 == &s2;}
     inline bool operator!=(const StringAtom &s1, const StringAtom &s2) {return &s1 != &s2;}
 
+
     class StringAtomTable {
-        typedef HashTable<StringAtom, const String&> HT;
+        typedef HashTable<StringAtom, const String &> HT;
         HT ht;
-        
+
       public:
         StringAtom &operator[](const String &s);
         StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
-    };    
-    
+    };
+
+
     class World {
-    public:
+      public:
         StringAtomTable identifiers;
-        
+
         World();
     };
 }
-
 #endif

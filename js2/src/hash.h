@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -61,8 +61,8 @@ namespace JavaScript {
         return hashString(key);
     }
 
-
     const HashNumber goldenRatio = 0x9E3779B9U;
+
 
 //
 // Private
@@ -76,35 +76,30 @@ namespace JavaScript {
         const HashNumber keyHash;       // This entry's hash value
 
     protected:
-        explicit GenericHashEntry(HashNumber keyHash) :
-                next(0), keyHash(keyHash) {}
+        explicit GenericHashEntry(HashNumber keyHash): next(0), keyHash(keyHash) {}
 
         friend class GenericHashTable;
     };
 
 
-        // private
+    // private
     class GenericHashTableIterator;
     class GenericHashTable {
-    protected:
+      protected:
         GenericHashEntry **buckets;     // Vector of hash buckets
-        GenericHashEntry **bucketsEnd;  // Pointer past end of vector of hash
-                                        // buckets
-        uint defaultLgNBuckets;         // lg2 of minimum number of buckets for
-                                        // which to size the table
+        GenericHashEntry **bucketsEnd;  // Pointer past end of vector of hash buckets
+        uint defaultLgNBuckets;         // lg2 of minimum number of buckets for which to size the table
         uint32 nEntries;                // Number of entries in table
-        uint32 minNEntries;             // Minimum number of entries without
-                                        // rehashing
-        uint32 maxNEntries;             // Maximum number of entries without
-                                        // rehashing
+        uint32 minNEntries;             // Minimum number of entries without rehashing
+        uint32 maxNEntries;             // Maximum number of entries without rehashing
         uint32 shift;                   // 32 - lg2(number of buckets)
 #ifdef DEBUG
-    public:
+      public:
         uint32 nReferences;             // Number of iterators and references
                                         // currently pointing to this hash table
 #endif
 
-    public:
+      public:
         explicit GenericHashTable(uint32 nEntriesDefault);
         ~GenericHashTable() {
 #ifndef _WIN32
@@ -123,20 +118,18 @@ namespace JavaScript {
         typedef GenericHashTableIterator Iterator;
     };
 
-        // This ought to be GenericHashTable::Iterator, but this doesn't work
-        // due to a Microsoft VC6 bug.
+
+    // This ought to be GenericHashTable::Iterator, but this doesn't work
+    // due to a Microsoft VC6 bug.
     class GenericHashTableIterator {
-    protected:
+      protected:
         GenericHashTable &ht;           // Hash table being iterated
         GenericHashEntry *entry;        // Current entry; nil if done
         GenericHashEntry **backpointer; // Pointer to pointer to current entry
-        GenericHashEntry **nextBucket;  // Next bucket; pointer past end of
-                                        // vector of hash buckets if done
+        GenericHashEntry **nextBucket;  // Next bucket; pointer past end of vector of hash buckets if done
     public:
         explicit GenericHashTableIterator(GenericHashTable &ht);
-        ~GenericHashTableIterator() {
-            ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);
-        }
+        ~GenericHashTableIterator() {ht.maybeShrink(); DEBUG_ONLY(--ht.nReferences);}
 
         // Return true if there are entries left.
         operator bool() const {return entry != 0;}
@@ -156,35 +149,29 @@ namespace JavaScript {
         struct Entry: public GenericHashEntry {
             Data data;
             
-            Entry(HashNumber keyHash, Key key) :
-                    GenericHashEntry(keyHash), data(key) {}
+            Entry(HashNumber keyHash, Key key): GenericHashEntry(keyHash), data(key) {}
             template<class Value>
-            Entry(HashNumber keyHash, Key key, Value value) :
-                    GenericHashEntry(keyHash), data(key, value) {}
+            Entry(HashNumber keyHash, Key key, Value value): GenericHashEntry(keyHash), data(key, value) {}
         };
 
-    public:
+      public:
         class Reference {
 #ifdef _WIN32
         // Microsoft VC6 bug: friend declarations to inner classes don't work
-        public:
+          public:
 #endif
             Entry *entry;                   // Current entry; nil if done
-            GenericHashEntry **backpointer; // Pointer to pointer to current
-                                            // entry
+            GenericHashEntry **backpointer; // Pointer to pointer to current entry
             const HashNumber keyHash;       // This entry's key's hash value
 #ifdef DEBUG
-            GenericHashTable *ht;           // Hash table to which this
-                                            // Reference points
+            GenericHashTable *ht;           // Hash table to which this Reference points
 #endif
 
-        public:
+          public:
 #ifndef _WIN32
-            Reference(HashTable &ht, Key key);  // Search for an entry with the
-                                                // given key.
+            Reference(HashTable &ht, Key key);  // Search for an entry with the given key.
 #else
-            // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside
-            // the class
+            // Microsoft VC6 bug: VC6 doesn't allow this to be defined outside the class
             Reference(HashTable &ht, Key key): keyHash(ht.hasher(key)) {
 #ifdef DEBUG
                 Reference::ht = &ht;
@@ -195,17 +182,16 @@ namespace JavaScript {
                 GenericHashEntry **bp = ht.buckets + h;
                 Entry *e;
 
-                while ((e = static_cast<Entry *>(*bp)) != 0 &&
-                       !(e->keyHash == kh && e->data == key))
+                while ((e = static_cast<Entry *>(*bp)) != 0 && !(e->keyHash == kh && e->data == key))
                     bp = &e->next;
                 entry = e;
                 backpointer = bp;
             }
 #endif
-        private:
+          private:
             Reference(const Reference&);        // No copy constructor
             void operator=(const Reference&);   // No assignment operator
-        public:
+          public:
 #if defined(DEBUG) && !defined(_WIN32)
             ~Reference() {if (ht) --ht->nReferences;}
 #endif
@@ -219,29 +205,23 @@ namespace JavaScript {
         };
 
         class Iterator: public GenericHashTableIterator {
-        public:
+          public:
             explicit Iterator(HashTable &ht): GenericHashTableIterator(ht) {}
-        private:
+          private:
             Iterator(const Iterator&);          // No copy constructor
             void operator=(const Iterator&);    // No assignment operator
-        public:
+          public:
 
-                // Go to next entry.
-            Iterator &operator++() {
-                return *static_cast<Iterator*>(&GenericHashTableIterator::operator++());
-            }
-            Data &operator*() const {
-                // Return current entry's data.
-                ASSERT(entry);
-                return static_cast<Entry *>(entry)->data;
-            }
+            // Go to next entry.
+            Iterator &operator++() {return *static_cast<Iterator*>(&GenericHashTableIterator::operator++());}
+            // Return current entry's data.
+            Data &operator*() const {ASSERT(entry); return static_cast<Entry *>(entry)->data;}
             
             void erase();
             
         };
 
-        HashTable(uint32 nEntriesDefault = 0, const H &hasher = H()) :
-                GenericHashTable(nEntriesDefault), hasher(hasher) {}
+        HashTable(uint32 nEntriesDefault = 0, const H &hasher = H()): GenericHashTable(nEntriesDefault), hasher(hasher) {}
         ~HashTable();
 
         template<class Value> Data &insert(Reference &r, Key key, Value value);

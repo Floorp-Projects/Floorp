@@ -6,7 +6,7 @@
 * the License at http://www.mozilla.org/NPL/
 *
 * Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 * implied. See the License for the specific language governing
 * rights and limitations under the License.
 *
@@ -49,6 +49,18 @@ JS::Lexer::Lexer(World &world, const String &source, const String &sourceLocatio
     nTokensBack = 0;
 #endif
     lexingUnit = false;
+}
+
+
+// Skip past the next token, which must have been either peeked or read and then unread.
+// skip is faster than get but must not be called if the next token has not been seen yet.
+void JS::Lexer::skip()
+{
+    ASSERT(nTokensFwd);
+    if (++nextToken == tokens + tokenBufferSize)
+        nextToken = tokens;
+    --nTokensFwd;
+    DEBUG_ONLY(++nTokensBack);
 }
 
 
@@ -333,7 +345,7 @@ bool JS::Lexer::lexNumeral()
         reader.recordChar('0');
         ch = getChar();
         if ((ch&~0x20) == 'X') {
-            uint32 pos = reader.getPos();
+            size_t pos = reader.getPos();
             char16 ch2 = getChar();
             if (isASCIIHexDigit(ch2, digit)) {
                 reader.recordChar(ch);
@@ -354,7 +366,7 @@ bool JS::Lexer::lexNumeral()
         ch = getChar();
     }
     if ((ch&~0x20) == 'E') {
-        uint32 pos = reader.getPos();
+        size_t pos = reader.getPos();
         char16 ch2 = getChar();
         char16 sign = 0;
         if (ch2 == '+' || ch2 == '-') {
