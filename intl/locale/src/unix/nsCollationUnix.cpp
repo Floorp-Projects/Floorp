@@ -66,7 +66,7 @@ nsCollationUnix::nsCollationUnix()
 {
   NS_INIT_REFCNT(); 
   mCollation = NULL;
-  mKeyAsCodePoint = PR_FALSE;
+  mUseCodePointOrder = PR_FALSE;
 }
 
 nsCollationUnix::~nsCollationUnix() 
@@ -84,7 +84,12 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   if (prefs) {
-    res = prefs->GetBoolPref("intl.collationKeyAsCodePoint", &mKeyAsCodePoint);
+    PRUnichar *prefValue;
+    res = prefs->GetLocalizedUnicharPref("intl.collationOption", &prefValue);
+    if (NS_SUCCEEDED(res)) {
+      mUseCodePointOrder = !nsCRT::strcasecmp(prefValue, NS_LITERAL_STRING("useCodePointOrder"));
+      nsMemory::Free(prefValue);
+    }
   }
 
   mCollation = new nsCollation;
@@ -184,7 +189,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    if (mKeyAsCodePoint) {
+    if (mUseCodePointOrder) {
       *outLen = nsCRT::strlen(str);
     }
     else {
@@ -214,7 +219,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    if (mKeyAsCodePoint) {
+    if (mUseCodePointOrder) {
       *outLen = nsCRT::strlen(str);
       nsCRT::memcpy(key, str, *outLen);
     }
