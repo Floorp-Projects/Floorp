@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  mime \
 		  uriloader \
 		  mailnews \
+          addrbook \
 		  mork \
 		  txmgr \
 		  pref \

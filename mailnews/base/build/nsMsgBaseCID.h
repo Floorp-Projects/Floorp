@@ -138,6 +138,13 @@
 #define NS_MSGSEARCHSESSION_CONTRACTID \
   "@mozilla.org/messenger/searchSession;1"
 
+/* E1DA397D-FDC5-4b23-A6FE-D46A034D80B3 */
+#define NS_MSGSEARCHTERM_CID						  \
+{ 0xe1da397d, 0xfdc5, 0x4b23,                 \
+    { 0xa6, 0xfe, 0xd4, 0x6a, 0x3, 0x4d, 0x80, 0xb3 } }
+
+#define NS_MSGSEARCHTERM_CONTRACTID \
+  "@mozilla.org/messenger/searchTerm;1"
 
 //
 // nsMsgSearchValidityManager
