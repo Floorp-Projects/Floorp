@@ -35,7 +35,7 @@
 #include "nsCRT.h"
 #include "xpcompat.h" //temporary, for timers
 
-#define PIN_CHROME 
+#undef PIN_CHROME 
 /* Note that default cache size is set in 
    src/gfx/nsImageManager.cpp, ~line 62.
 */
