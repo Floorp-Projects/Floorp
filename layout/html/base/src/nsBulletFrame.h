@@ -19,7 +19,8 @@
 #ifndef nsBulletFrame_h___
 #define nsBulletFrame_h___
 
-#include "nsHTMLImage.h"
+#include "nsFrame.h"
+#include "nsHTMLImageLoader.h"
 #include "nsIStyleContext.h"
 
 /**
@@ -32,6 +33,11 @@ public:
   virtual ~nsBulletFrame();
 
   // nsIFrame
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
@@ -56,6 +62,12 @@ protected:
   void GetListItemText(nsIPresContext& aCX,
                        const nsStyleList& aStyleList,
                        nsString& aResult);
+
+  static nsresult UpdateBulletCB(nsIPresContext* aPresContext,
+                                 nsHTMLImageLoader* aLoader,
+                                 nsIFrame* aFrame,
+                                 void* aClosure,
+                                 PRUint32 aStatus);
 
   PRInt32 mOrdinal;
   nsMargin mPadding;
