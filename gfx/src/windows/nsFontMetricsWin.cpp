@@ -3869,6 +3869,9 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     // we better get all glyph indices in one swoop
     ps = GetGlyphIndices(aDC, &mCMAP, pstr, aLength, s, CHAR_BUFFER_SIZE);
     if (!ps) {
+      if (pstr != str) {
+        delete[] pstr;
+      }
       return NS_ERROR_UNEXPECTED;
     }
   }
