@@ -55,7 +55,7 @@ namespace JavaScript {
 	
 	typedef vector<JSValue, gc_allocator<JSValue> > JSValues;
 
-	JSValue interpret(InstructionStream& iCode, const JSValues& args);
+	JSValue interpret(ICodeModule *iCode, const JSValues& args);
 }
 
 #endif /* interpreter_h */

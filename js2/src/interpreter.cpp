@@ -63,15 +63,17 @@ gc_allocator<JSObject> JSObject::alloc;
 #define op2(i) (i->itsOperand2)
 #define op3(i) (i->itsOperand3)
 
-JSValue interpret(InstructionStream& iCode, const JSValues& args)
+JSValue interpret(ICodeModule *iCode, const JSValues& args)
 {
 	JSValue result;
 	JSValues frame(args);
-	JSValues registers(32);
+	JSValues registers(iCode->itsMaxRegister + 1);
 	static JSObject globals;
 	
-	InstructionIterator pc = iCode.begin();
-    while (pc != iCode.end()) {
+	InstructionIterator begin_pc = iCode->its_iCode->begin();
+        InstructionIterator end_pc = iCode->its_iCode->end();
+        InstructionIterator pc = begin_pc;
+    while (pc != end_pc) {
         Instruction* instruction = *pc;
 	    switch (instruction->opcode()) {
 		case MOVE_TO:
@@ -133,7 +135,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 		case BRANCH:
 			{
 				ResolvedBranch* bra = static_cast<ResolvedBranch*>(instruction);
-				pc = iCode.begin() + op1(bra);
+				pc = begin_pc + op1(bra);
 				continue;
 			}
 			break;
@@ -141,7 +143,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 < 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}
@@ -150,7 +152,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 <= 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}
@@ -159,7 +161,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 == 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}
@@ -168,7 +170,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 != 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}
@@ -177,7 +179,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 >= 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}
@@ -186,7 +188,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 			{
 				ResolvedBranchCond* bc = static_cast<ResolvedBranchCond*>(instruction);
 				if (registers[op2(bc)].i32 > 0) {
-					pc = iCode.begin() + op1(bc);
+					pc = begin_pc + op1(bc);
 					continue;
 				}
 			}

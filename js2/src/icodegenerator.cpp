@@ -37,7 +37,7 @@ namespace JavaScript {
     // ICodeGenerator
     //
 
-    InstructionStream *ICodeGenerator::complete()
+    ICodeModule *ICodeGenerator::complete()
     {
     #ifdef DEBUG
         ASSERT(stitcher.empty());
@@ -62,18 +62,27 @@ namespace JavaScript {
                     delete t;
                 }
         }
+        markMaxRegister();
 
-        return iCode;
+        return new ICodeModule(iCode, maxRegister, maxVariable);
     }
     
     /***********************************************************************************************/
 
     Register ICodeGenerator::loadVariable(uint32 frameIndex)
     {
+        markMaxVariable(frameIndex);
         Register dest = getRegister();
         LoadVar *instr = new LoadVar(LOAD_VAR, dest, frameIndex);
         iCode->push_back(instr);
         return dest;
+    }
+
+    void ICodeGenerator::saveVariable(uint32 frameIndex, Register value)
+    {
+        markMaxVariable(frameIndex);
+        SaveVar *instr = new SaveVar(SAVE_VAR, frameIndex, value);
+        iCode->push_back(instr);
     }
 
     Register ICodeGenerator::loadImmediate(double value)
@@ -117,12 +126,6 @@ namespace JavaScript {
     void ICodeGenerator::setProperty(StringAtom &name, Register base, Register value)
     {
         SetProp *instr = new SetProp(SET_PROP, &name, base, value);
-        iCode->push_back(instr);
-    }
-
-    void ICodeGenerator::saveVariable(uint32 frameIndex, Register value)
-    {
-        SaveVar *instr = new SaveVar(SAVE_VAR, frameIndex, value);
         iCode->push_back(instr);
     }
 
@@ -585,7 +588,7 @@ namespace JavaScript {
         for (InstructionIterator i = iCode->begin(); i != iCode->end(); i++) {
 
             for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
-                if ((*k)->itsOffset == (i - iCode->begin())) {
+                if ((*k)->itsOffset == (ptrdiff_t)(i - iCode->begin())) {
                     //s << "label #" << (k - labels.begin()) << ":\n";
                     s << "#" << (i - iCode->begin());
                     break;
@@ -691,7 +694,7 @@ namespace JavaScript {
             s << "\n";
         }
         for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
-            if ((*k)->itsOffset == (iCode->end() - iCode->begin())) {
+            if ((*k)->itsOffset == (ptrdiff_t)(iCode->end() - iCode->begin())) {
 //                s << "label #" << (k - labels.begin()) << ":\n";
 //                s << "#" << (i - iCode->begin());
             }

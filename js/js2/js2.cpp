@@ -342,9 +342,24 @@ static void testICG(World &world)
         icg.saveVariable(0, icg.loadImmediate(99));
     icg.endForStatement();
 
-    InstructionStream *iCode = icg.complete();
+    ICodeModule *icm = icg.complete();
 
     std::cout << icg;
+
+    delete icm;
+}
+
+static float64 testFunctionCall(float64 n)
+{
+    uint32 position = 0;
+    ICodeGenerator icg;
+
+    // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
+    // n is bound to var #0.
+    icg.beginStatement(position);
+    icg.loadVariable(0);
+
+    
 }
 
 static float64 testFactorial(float64 n)
@@ -384,15 +399,17 @@ static float64 testFactorial(float64 n)
 	
 	// return result;
     icg.returnStatement(icg.loadVariable(1));
-    InstructionStream *iCode = icg.complete();
-    // std::cout << icg;
+    ICodeModule *icm = icg.complete();
+    std::cout << icg;
 
     // test the iCode interpreter.
     JSValues args(32);
     args[0] = JSValue(n);
-    JSValue result = interpret(*iCode, args);
+    JSValue result = interpret(icm, args);
     std::cout << "fact(" << n << ") = " << result.f64 << std::endl;
     
+    delete icm;
+
     return result.f64;
 }
 
@@ -412,7 +429,7 @@ static float64 testObjects(World &world, int32 n)
     initCG.beginStatement(position);
     initCG.setProperty(counter, initCG.loadName(global), initCG.loadImmediate(0.0));
 
-    InstructionStream* initCode = initCG.complete();
+    ICodeModule* initCode = initCG.complete();
     
     std::cout << initCG;
 
@@ -428,20 +445,23 @@ static float64 testObjects(World &world, int32 n)
     incrCG.setProperty(counter, robject, rvalue);
     incrCG.returnStatement(rvalue);
 
-    InstructionStream* incrCode = incrCG.complete();
+    ICodeModule* incrCode = incrCG.complete();
 
     std::cout << incrCG;
 
     // run initialization code.
     JSValues args(32);
-    interpret(*initCode, args);
+    interpret(initCode, args);
 
     // call the increment function some number of times.
     JSValue result;
     while (n-- > 0)
-        result = interpret(*incrCode, args);
+        result = interpret(incrCode, args);
 
     std::cout << "result = " << result.f64 << std::endl;
+
+    delete initCode;
+    delete incrCode;
 
     return result.f64;
 }
@@ -452,7 +472,7 @@ int main(int argc, char **argv)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
   #endif
 	World world;
-  #if 0
+  #if 1
     assert(testFactorial(5) == 120);
     assert(testObjects(world, 5) == 5);
     testICG(world);
