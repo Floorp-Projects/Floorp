@@ -490,11 +490,13 @@ txXSLTProcessor::processAction(Node* aAction,
         if (NS_SUCCEEDED(rv)) {
             Element* xslTemplate = aPs->getNamedTemplate(templateName);
             if (xslTemplate) {
+#ifdef PR_LOGGING
+                String baseURI = xslTemplate->getBaseURI();
                 PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                        ("CallTemplate, Name %s, Stylesheet %s\n",
                         NS_LossyConvertUCS2toASCII(nameStr).get(),
-                        NS_LossyConvertUCS2toASCII(xslTemplate->getBaseURI())
-                        .get()));
+                        NS_LossyConvertUCS2toASCII(baseURI).get()));
+#endif
                 txVariableMap params(0);
                 processParameters(actionElement, &params, aPs);
                 processTemplate(xslTemplate, &params, aPs);

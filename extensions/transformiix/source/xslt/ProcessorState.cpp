@@ -358,6 +358,12 @@ Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
     URIUtils::resolveHref(uri, baseUri, absUrl);
     URIUtils::getFragmentIdentifier(absUrl, frag);
     URIUtils::getDocumentURI(absUrl, docUrl);
+    PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+           ("Retrieve Document %s, uri %s, baseUri %s, fragment %s\n", 
+            NS_LossyConvertUCS2toASCII(docUrl).get(),
+            NS_LossyConvertUCS2toASCII(uri).get(),
+            NS_LossyConvertUCS2toASCII(baseUri).get(),
+            NS_LossyConvertUCS2toASCII(frag).get()));
 
     // try to get already loaded document
     Document* xmlDoc = (Document*)loadedDocuments.get(docUrl);
@@ -480,12 +486,13 @@ Node* ProcessorState::findTemplate(Node* aNode,
                                                kNameSpaceID_None,
                                                matchAttr);
         }
+        String baseURI = matchTemplate->getBaseURI();
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("MatchTemplate, Pattern %s, Mode %s, Stylesheet %s, " \
                 "Node %s\n",
                 NS_LossyConvertUCS2toASCII(matchAttr).get(),
                 NS_LossyConvertUCS2toASCII(mode).get(),
-                NS_LossyConvertUCS2toASCII(matchTemplate->getBaseURI()).get(),
+                NS_LossyConvertUCS2toASCII(baseURI).get(),
                 NS_LossyConvertUCS2toASCII(aNode->getNodeName()).get()));
     }
     else {
