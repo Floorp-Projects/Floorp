@@ -288,7 +288,49 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  // The Areaframe takes care of all our reflow 
+  // except for when style is used to change its size.
+  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(rv)) {
+    nsIFrame * child;
+    FirstChild(aPresContext, nsnull, &child);
+    while (child == mTextFrame) {
+      child->GetNextSibling(&child);
+    }
+    if (child != nsnull) {
+      nsRect buttonRect;
+      nsRect txtRect;
+      mTextFrame->GetRect(txtRect);
+      child->GetRect(buttonRect);
+
+      // check to see if we must reflow just the texField
+      // because style width or height was set.
+      if (txtRect.width + buttonRect.width != aDesiredSize.width ||
+          txtRect.height != aDesiredSize.height) {
+
+        nsSize txtAvailSize(aDesiredSize.width - buttonRect.width, aDesiredSize.height);
+        nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
+        nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, mTextFrame, txtAvailSize);
+        txtKidReflowState.mComputedWidth  = txtAvailSize.width;
+        txtKidReflowState.mComputedHeight = txtAvailSize.height;
+        mTextFrame->WillReflow(aPresContext);
+        nsReflowStatus status;
+        rv = mTextFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
+        if (NS_FAILED(rv)) return rv;
+        rv = mTextFrame->DidReflow(aPresContext, aStatus);
+        if (NS_FAILED(rv)) return rv;
+
+        // now adjust the frame positions
+        buttonRect.x = aDesiredSize.width - buttonRect.width + aReflowState.mComputedBorderPadding.left;
+        child->SetRect(aPresContext, buttonRect);
+        txtRect.y      = aReflowState.mComputedBorderPadding.top;
+        txtRect.height = aDesiredSize.height;
+        txtRect.width  = aDesiredSize.width - buttonRect.width;
+        mTextFrame->SetRect(aPresContext, txtRect);
+      }
+    }
+  }
+  return rv;
 }
 
 /*
