@@ -21,13 +21,19 @@
 *
 * SUMMARY: A [DontEnum] prop, if overridden, should appear in uneval().
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=90596
+*
+* NOTE: some inefficiencies in the test are made for the sake of readability.
+* Sorting properties alphabetically is done for definiteness in comparisons.
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 90596;
 var summary = 'A [DontEnum] prop, if overridden, should appear in uneval()';
-var LParen = '(';
-var RParen = ')';
+var cnCOMMA = ',';
+var cnLBRACE = '{';
+var cnRBRACE = '}';
+var cnLPAREN = '(';
+var cnRPAREN = ')';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -35,61 +41,62 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 var obj = {};
-var s = '';
 
 
 status = inSection(1);
 obj = {toString:9};
 actual = uneval(obj);
-expect = addParens('{toString:9}');
+expect = '({toString:9})';
 addThis();
 
 status = inSection(2);
 obj = {hasOwnProperty:"Hi"};
 actual = uneval(obj);
-expect = addParens('{hasOwnProperty:"Hi"}');
+expect = '({hasOwnProperty:"Hi"})';
 addThis();
 
 status = inSection(3);
 obj = {toString:9, hasOwnProperty:"Hi"};
 actual = uneval(obj);
-expect = addParens('{toString:9, hasOwnProperty:"Hi"}');
+expect = '({toString:9, hasOwnProperty:"Hi"})';
 addThis();
 
 status = inSection(4);
 obj = {prop1:1, toString:9, hasOwnProperty:"Hi"};
 actual = uneval(obj);
-expect = addParens('{prop1:1, toString:9, hasOwnProperty:"Hi"}');
+expect = '({prop1:1, toString:9, hasOwnProperty:"Hi"})';
 addThis();
 
 
 // TRY THE SAME THING IN EVAL CODE
+var s = '';
+
 status = inSection(5);
 s = 'obj = {toString:9}';
 eval(s);
 actual = uneval(obj);
-expect = addParens('{toString:9}');
+expect = '({toString:9})';
 addThis();
 
 status = inSection(6);
 s = 'obj = {hasOwnProperty:"Hi"}';
 eval(s);
 actual = uneval(obj);
-expect = addParens('{hasOwnProperty:"Hi"}');
+expect = '({hasOwnProperty:"Hi"})';
 addThis();
 
 status = inSection(7);
 s = 'obj = {toString:9, hasOwnProperty:"Hi"}';
 eval(s);
 actual = uneval(obj);
-expect = addParens('{toString:9, hasOwnProperty:"Hi"}');
+expect = '({toString:9, hasOwnProperty:"Hi"})';
 addThis();
 
 status = inSection(8);
 s = 'obj = {prop1:1, toString:9, hasOwnProperty:"Hi"}';
 eval(s);
 actual = uneval(obj);
-expect = addParens('{prop1:1, toString:9, hasOwnProperty:"Hi"}');
+expect = '({prop1:1, toString:9, hasOwnProperty:"Hi"})';
 addThis();
 
 
@@ -100,7 +107,7 @@ function A()
   var s = 'obj = {toString:9}';
   eval(s);
   actual = uneval(obj);
-  expect = addParens('{toString:9}');
+  expect = '({toString:9})';
   addThis();
 }
 A();
@@ -111,7 +118,7 @@ function B()
   var s = 'obj = {hasOwnProperty:"Hi"}';
   eval(s);
   actual = uneval(obj);
-  expect = addParens('{hasOwnProperty:"Hi"}');
+  expect = '({hasOwnProperty:"Hi"})';
   addThis();
 }
 B();
@@ -122,7 +129,7 @@ function C()
   var s = 'obj = {toString:9, hasOwnProperty:"Hi"}';
   eval(s);
   actual = uneval(obj);
-  expect = addParens('{toString:9, hasOwnProperty:"Hi"}');
+  expect = '({toString:9, hasOwnProperty:"Hi"})';
   addThis();
 }
 C();
@@ -133,7 +140,7 @@ function D()
   var s = 'obj = {prop1:1, toString:9, hasOwnProperty:"Hi"}';
   eval(s);
   actual = uneval(obj);
-  expect = addParens('{prop1:1, toString:9, hasOwnProperty:"Hi"}');
+  expect = '({prop1:1, toString:9, hasOwnProperty:"Hi"})';
   addThis();
 }
 D();
@@ -146,31 +153,51 @@ test();
 
 
 
-function addParens(text)
-{
-  return LParen + text + RParen;
-}
-
-
+/*
+ * Sort properties alphabetically -
+ */
 function addThis()
 {
   statusitems[UBound] = status;
-  actualvalues[UBound] = stripSpaces(actual);
-  expectedvalues[UBound] = stripSpaces(expect);
+  actualvalues[UBound] = sortThis(actual);
+  expectedvalues[UBound] = sortThis(expect);
   UBound++;
 }
 
 
-function stripSpaces(text)
+/*
+ * Takes string of form '({"c", "b", "a", 2})' and returns '({"a","b","c",2})'
+ */
+function sortThis(sList)
 {
+  sList = compactThis(sList);
+  sList = stripParens(sList);
+  sList = stripBraces(sList);
+  var arr = sList.split(cnCOMMA);
+  arr = arr.sort();
+  var ret = String(arr);
+  ret = addBraces(ret);
+  ret = addParens(ret);
+  return ret;
+}
+
+
+/*
+ * Strips out any whitespace from the text -
+ */
+function compactThis(text)
+{
+  var charCode = 0;
   var ret = '';
+
   for (var i=0; i<text.length; i++)
   {
-    if (!isWhiteSpace(text.charCodeAt(i)))
-    {
+    charCode = text.charCodeAt(i);
+
+    if (!isWhiteSpace(charCode))
       ret += text.charAt(i);
-    }
   }
+
   return ret;
 }
 
@@ -194,13 +221,55 @@ function isWhiteSpace(charCode)
 }
 
 
+/*
+ * strips off parens at beginning and end of text -
+ */
+function stripParens(text)
+{
+  // remember to escape the parens...
+  var arr = text.match(/^\((.*)\)$/);
+
+  // defend against a null match...
+  if (arr != null && arr[1] != null)
+    return arr[1];
+  return text;
+}
+
+
+/*
+ * strips off braces at beginning and end of text -
+ */
+function stripBraces(text)
+{
+  // remember to escape the braces...
+  var arr = text.match(/^\{(.*)\}$/);
+
+  // defend against a null match...
+  if (arr != null && arr[1] != null)
+    return arr[1];
+  return text;
+}
+
+
+function addBraces(text)
+{
+  return cnLBRACE + text + cnRBRACE;
+}
+
+
+function addParens(text)
+{
+  return cnLPAREN + text + cnRPAREN;
+}
+
+
 function test()
 {
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
 
-  for (var i = 0; i < UBound; i++)
+  for (var i=0; i<UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
   }
