@@ -25,7 +25,9 @@ install::
 	$(MAKE_INSTALL) newcard.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) newlist.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) property.gif 	$(DIST)\bin\chrome\addressbook\skin\default
+	$(MAKE_INSTALL) edit.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) abnewmsg.gif 	$(DIST)\bin\chrome\addressbook\skin\default
+	$(MAKE_INSTALL) newmsgab.gif 	$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) person.gif 		$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) list.gif 		$(DIST)\bin\chrome\addressbook\skin\default
 	$(MAKE_INSTALL) myaddrbk.gif 	$(DIST)\bin\chrome\addressbook\skin\default
@@ -36,7 +38,9 @@ clobber::
 	rm -f $(DIST)\chrome\addressbook\skin\default\newcard.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\newlist.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\property.gif
+	rm -f $(DIST)\chrome\addressbook\skin\default\edit.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\abnewmsg.gif
+	rm -f $(DIST)\chrome\addressbook\skin\default\newmsgab.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\person.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\list.gif
 	rm -f $(DIST)\chrome\addressbook\skin\default\myaddrbk.gif

@@ -26,41 +26,34 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:div id="folder-panel" flex="100%" style="width: 100px; height: 600px">
-<tree style="height: 100%"
-      rdf:datasources="rdf:null"
-      id="folderTree" class="mail-folders"
-      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-	  onselect="top.FolderPaneSelectionChange()">
+	<tree style="height: 100%"
+	      rdf:datasources="rdf:null"
+	      id="folderTree" class="mail-folders"
+	      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+		  onselect="top.FolderPaneSelectionChange()">
 
-  <template>
-  	<rule>
-      <treechildren>
-		<treeitem uri="..." 
-		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-		  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-	  	  <treerow >
-				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
-	  		</treerow>
-		</treeitem>
-       </treechildren>
-	</rule>
-  </template>
+	  <template>
+	  	<rule>
+	      <treechildren>
+			<treeitem uri="..." 
+			  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+		  	  <treerow >
+					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+		  		</treerow>
+			</treeitem>
+	       </treechildren>
+		</rule>
+	  </template>
 
-  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
-  <treehead>
-    <treerow>
-      <treecell value="&nameColumn.label;"/>
-      <treecell value="&unreadColumn.label;"/>
-      <treecell value="&totalColumn.label;"/>
-    </treerow>
-  </treehead>
+	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+	  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+	  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 
-</tree>
+	</tree>
 </html:div>
 </overlay>

@@ -59,6 +59,8 @@ Rights Reserved.
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
+
+	<broadcaster id="broadcaster_throbber" busy="false"/>
 </broadcasterset>
 
 <broadcaster id="args" value="editorType=default"/>
@@ -288,18 +290,23 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	<spring flex="100%"/>
   </menubar>
 
-    <toolbar id="composeToolbar" persist="collapsed">
- 		<titledbutton src="&sendButton.img;" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
- 		<html:div class="separator" align="vertical"/>
- 		<titledbutton src="&addressButton.img;" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
- 		<titledbutton src="&attachButton.img;" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
- 		<titledbutton src="&quoteButton.img;" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
- 		<titledbutton src="&spellingButton.img;" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
- 		<html:div class="separator" align="vertical"/>
- 		<titledbutton src="&saveButton.img;" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
- 		<titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="Stop()"/>
-	    <spring flex="100%"/>
-		<titledbutton id="Throbber" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
+    <toolbar id="composeToolbar" class="standard" persist="collapsed">
+		<box id="toolbar_button_box">
+	 		<titledbutton id="button_send" class="button28" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
+	 		<titledbutton id="button_address" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
+	 		<titledbutton id="button_attach" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
+	 		<titledbutton id="button_quote" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+	 		<titledbutton id="button_spelling" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
+	 		<titledbutton id="button_save" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
+	 		<titledbutton id="button_stop" align="top" value="&stopButton.label;" onclick="Stop()"/>
+	    	<spring flex="100%"/>
+		</box>
+
+		<box id="toolbar_throbber_box" align="vertical">
+			<titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
+				<observes element="broadcaster_throbber" attribute="busy"/>
+			</titledbutton>
+		</box>
 	</toolbar>
 
 	<toolbar>
@@ -326,8 +333,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 					<html:div flex="20%">&subject.label;</html:div>
 				    <html:input id="msgSubject" type="text" flex="80%"
 						onkeyup="SetComposeWindowTitle(event.which);"
-						onblur="ShouldITabIntoBody(0);"
-						/>
+						onblur="ShouldITabIntoBody(0);"/>
 				</box>
 				<spring style="height:0.5em"/>
 			</box>
@@ -400,22 +406,17 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
     <!-- The main mail three pane frame -->
     <html:iframe type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"/>
 
-    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-    <box align="horizontal" id="status-bar">
- 
-    <titledbutton value="[Notification Component]" onclick="doTests()"/>
-	<box align="vertical" style="width:100px">
-		<spring flex="100%"/>
-		<progressmeter mode="normal" value="0">
-		</progressmeter>
-		<spring flex="100%"/>
-	</box>
-
-	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
-	</titledbutton>
+    <box id="status-bar">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter mode="normal" value="0">
+			</progressmeter>
+			<spring flex="100%"/>
+		</box>
+		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done"/>
     </box>
 
 <!-- /box -->
-	<toolbox id="taskbox"/>
+	<toolbar id="taskbar"/>
 </window>
 

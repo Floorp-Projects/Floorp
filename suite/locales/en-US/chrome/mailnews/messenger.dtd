@@ -259,36 +259,23 @@ Rights Reserved.
 <!ENTITY ignoreThreadCmd.label ".Ignore Thread">  
 <!ENTITY watchThreadCmd.label ".Watch Thread">  
 
+<!-- Sidebar -->
+<!ENTITY mail-sidebar-header.label "Mail Folders">
+
 <!-- Toolbar items -->  
-<!-- LOCALIZATION NOTE (getMsgButton.img) : Do not translate below line. -->
-<!ENTITY getMsgButton.img "chrome://messenger/skin/getmsg.gif">
 <!ENTITY getMsgButton.label "Get Msg">  
-<!-- LOCALIZATION NOTE (newMsgButton.img) : Do not translate below line. -->
-<!ENTITY newMsgButton.img "chrome://messenger/skin/newmsg.gif">
 <!ENTITY newMsgButton.label "New Msg">  
-<!-- LOCALIZATION NOTE (replyButton.img) : Do not translate below line. -->
-<!ENTITY replyButton.img "chrome://messenger/skin/reply.gif">
 <!ENTITY replyButton.label "Reply">  
-<!-- LOCALIZATION NOTE (replyAllButton.img) : Do not translate below line. -->
-<!ENTITY replyAllButton.img "chrome://messenger/skin/replyall.gif">
 <!ENTITY replyAllButton.label "Reply All">  
-<!-- LOCALIZATION NOTE (forwardButton.img) : Do not translate below line. -->
-<!ENTITY forwardButton.img "chrome://messenger/skin/forward.gif">
 <!ENTITY forwardButton.label "Forward">  
-<!-- LOCALIZATION NOTE (nextButton.img) : Do not translate below line. -->
-<!ENTITY nextButton.img "chrome://messenger/skin/next.gif">
 <!ENTITY nextButton.label "Next">  
-<!-- LOCALIZATION NOTE (deleteButton.img) : Do not translate below line. -->
-<!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
-<!-- LOCALIZATION NOTE (printButton.img) : Do not translate below line. -->
-<!ENTITY printButton.img "chrome://global/skin/print.gif">
 <!ENTITY printButton.label "Print">  
-<!-- LOCALIZATION NOTE (stopButton.img) : Do not translate below line. -->
-<!ENTITY stopButton.img "chrome://global/skin/stop.gif">
 <!ENTITY stopButton.label "Stop">  
-<!-- LOCALIZATION NOTE (throbber.url) : Do not translate below line. -->
-<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">
+
+<!-- Destination for click on throbber button -->
+<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
+

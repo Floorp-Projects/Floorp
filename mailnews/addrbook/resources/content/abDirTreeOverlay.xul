@@ -49,12 +49,6 @@ Rights Reserved.
 
 		<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
 
-		<treehead>
-			<treerow>
-				<treecell>&directoryColumn.label;</treecell>
-			</treerow>
-		</treehead>
-
 		<treechildren id="dirTreeBody"
 					  rdf:containment="http://home.netscape.com/NC-rdf#child"
 					  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">

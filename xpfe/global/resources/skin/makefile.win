@@ -79,5 +79,25 @@ install::
 	$(MAKE_INSTALL) stop.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) print.gif $(DISTBROWSER)
 
+	$(MAKE_INSTALL) button28-bg-active.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button28-bg-disabled.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button28-bg-hover.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button28-bg.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button32-bg-active.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button32-bg-disabled.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button32-bg-hover.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) button32-bg.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) gray-bottomleft.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) gray-bottomright.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) gray-topright.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) otherbutton28-bg-hover.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) otherbutton28-bg-active.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) toolbar-begincap.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) toolbar-endcap.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) n-box.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) search.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) animthrob.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) animthrob_single.gif $(DISTBROWSER)
+	
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

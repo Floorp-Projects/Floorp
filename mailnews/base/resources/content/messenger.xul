@@ -26,7 +26,6 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
-<?xml-stylesheet href="chrome://sidebar/skin/sidebarOverlay.css" type="text/css"?> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      
@@ -39,8 +38,8 @@ Rights Reserved.
 		onload="OnLoadMessenger()"
 		onunload="OnUnloadMessenger()"
 		align="vertical"
-        width="640"
-        height="480"
+        width="750"
+        height="500"
         persist="width height x y"
 		windowtype="mail:3pane">
 
@@ -97,8 +96,6 @@ Rights Reserved.
 	<key id="key_preferences"/>
 </keyset>
 
-  <!-- The main mail three pane frame -->
-      <toolbox>
         <menubar>
           <menu id="menu_File">
             <menupopup id="menu_FilePopup">
@@ -471,48 +468,58 @@ Rights Reserved.
 	<spring flex="100%"/>
   </menubar>
 
-        <toolbar id="msgToolbar" persist="collapsed">
-		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
-		  <html:div class="separator" align="vertical"/> 
-		  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
-		  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
-		  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
-		  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-		  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
-		  <html:div class="separator" align="vertical"/> 
-		  <titledbutton src="&printButton.img;" align="top" value="&printButton.label;" onclick="Print()"/>
-		  <titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
-		  <spring flex="100%"/>
-		  <titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
-			 <observes element="Messenger:Throbber" attribute="busy"/>
-		  </titledbutton>
+      <toolbox>
+        <toolbar id="msgToolbar" class="standard" persist="collapsed">
+          <box id="toolbar_button_box">
+            <titledbutton id="button_getmsg" class="button28" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+            <titledbutton id="button_newmsg" class="button28" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+            <titledbutton id="button_reply" class="button28" align="top" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
+            <titledbutton id="button_replyall" class="button28" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
+            <titledbutton id="button_forward" class="button28" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
+            <titledbutton id="button_next" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+            <titledbutton id="button_delete" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+            <titledbutton id="button_print" align="top" value="&printButton.label;" onclick="Print()"/>
+            <titledbutton id="button_stop" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
+            <spring flex="100%"/>
+          </box>
 
-		  </toolbar>
-		</toolbox>
+		  <box id="toolbar_throbber_box" align="vertical">
+			  <titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
+				  <observes element="Messenger:Throbber" attribute="busy"/>
+			  </titledbutton>
+		  </box>
+		
+		</toolbar>
+      </toolbox>
+
+  <!-- The main mail three pane frame -->
 
 
         <box align="horizontal" style="height:100px" flex="1">
+          
           <box id="sidebar-box">
+		    <splitter class="sidebar-main-header" collapse="after"
+		              onclick="sidebarOpenClosePanel(this)"> 
+		 		<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
+		    </splitter>
             <html:div id="folder-panel"/>
-           </box>
+          </box>
+          
           <splitter id="sidebar-splitter" collapse="before" persist="state"/>
-          <box align="vertical"  flex="1"  style="border-left:solid black 1px">
+          
+          <box align="vertical" flex="1">
+     
 
-
-		<html:div style="width:100px;height:0px" flex="2" >
+		<html:div id="results_box" style="width:100px;height:0px" flex="2" >
 		  <tree id="threadTree"/>
 		 </html:div>
 
-	    <splitter id="messagePaneSplitter" collapse="after" persist="state"
-                  style="border-top:solid black 1px; border-bottom:solid black 1px;" />
+	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
 			
     	<!-- message view -->
 		  <html:iframe flex="3" style="height:0px" name="messagepane" src="about:blank"/>
-		<!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-		<box align="horizontal" id="status-bar">
- 
-          <titledbutton value="[Notification Component]" onclick="doTests()"/>
+
+		<box id="status-bar">
 		  <box align="vertical" style="width:100px">
 		    <spring flex="100%"/>
 			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
@@ -523,15 +530,15 @@ Rights Reserved.
 			<spring flex="100%"/>
 		  </box>
 
-		  <titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
-                       <observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
+		  <titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;">
+              <observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
 		  </titledbutton>
 		 </box>
 
       </box>
     </box>
 
-	<toolbox id="taskbox"/>
+	<toolbar id="taskbar"/>
 
 </window>
 

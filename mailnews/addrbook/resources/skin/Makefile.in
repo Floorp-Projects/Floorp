@@ -28,8 +28,10 @@ EXPORT_RESOURCE_SAMPLES = \
 		addressbook.css \
 		newcard.gif \
 		newlist.gif \
+		edit.gif \
 		property.gif \
 		abnewmsg.gif \
+		newmsgab.gif \
 		person.gif \
 		list.gif \
 		myaddrbk.gif \

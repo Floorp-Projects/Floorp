@@ -18,6 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 */
  
+ 
 /* CardEdit styles - used in the Card Edit Dialog */
 
 box[class="CardEditWidth"] {
@@ -38,20 +39,30 @@ input[class="CardEdit"] {
 
 /* CardView styles - used in the Card View Pane*/
 
+box#CardViewBox {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding-left: 8px;
+	padding-right: 8px;
+	background-color: #EEEEEE;
+}
+
+box.cardviewgroup {
+	margin-top: 8px;
+	padding-bottom: 5px;
+}
+
 div[class="CardViewHeading"] {
 	padding: 1px;
 	padding-left: 5px;
-	color: white;
-	background-color: #5050ff;
+	background-color: #99CCCC;
+	color: black;
 	font-weight: bold;
-	margin-top: 8px;
-	margin-bottom: 3px;
 }
 
 div[class="CardViewText"] {
 	padding-left: 20px;
 	padding-right: 2px;
-	color:inherit;
 }
 
 
@@ -68,11 +79,52 @@ tree[class="abResults"] treeitem > treerow > treecell > .tree-icon {
 
 /* Address Book specific style */
 
+#results_box {
+	border-left: 8px solid #CCCCCC;
+}
+ 
 [hide] {
 	display: none;
 }
 
-titledbutton#Throbber
-{
-        list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
-} 
+#button_newcard {
+	list-style-image:url("chrome://addressbook/skin/newcard.gif");
+}
+
+#button_newlist {
+	list-style-image:url("chrome://addressbook/skin/newlist.gif");
+}
+
+#button_editcard {
+	list-style-image:url("chrome://addressbook/skin/edit.gif");
+}
+
+#button_newmessage {
+	list-style-image:url("chrome://addressbook/skin/newmsgab.gif");
+}
+
+#button_delete {
+	list-style-image:url("chrome://messenger/skin/trash.gif");
+}
+
+#button_stop {
+	list-style-image:url("chrome://global/skin/stop.gif");
+}
+
+#button_search {
+	list-style-image:url("chrome://global/skin/search.gif");
+}
+
+#searchlabel {
+	padding: 0px;
+	padding-left: 5px;
+	padding-bottom:2px;
+	white-space: nowrap;
+	font-size: smaller;
+}
+
+#searchtext {
+	min-width: 40px;
+	padding: 0px;
+}
+

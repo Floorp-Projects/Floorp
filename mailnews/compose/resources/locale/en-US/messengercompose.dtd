@@ -106,24 +106,19 @@
 
 <!--LOCALIZATION NOTE Toolbar items Don't change any "chrome://" URLs -->
 <!-- Toolbar items -->
-<!ENTITY sendButton.img "chrome://messengercompose/skin/send.gif">
 <!ENTITY sendButton.label "Send">
-<!ENTITY quoteButton.img "chrome://messengercompose/skin/quote.gif">
 <!ENTITY quoteButton.label "Quote">
-<!ENTITY addressButton.img "chrome://messengercompose/skin/address.gif">
 <!ENTITY addressButton.label "Address">
-<!ENTITY attachButton.img "chrome://messengercompose/skin/attach.gif">
 <!ENTITY attachButton.label "Attach">
-<!ENTITY spellingButton.img "chrome://messengercompose/skin/spelling.gif">
 <!ENTITY spellingButton.label "Spelling">
-<!ENTITY saveButton.img "chrome://messengercompose/skin/save.gif">
 <!ENTITY saveButton.label "Save">
-<!ENTITY stopButton.img "chrome://messengercompose/skin/stop.gif">
 <!ENTITY stopButton.label "Stop">
-<!ENTITY throbberButton.url "http://www.mozilla.org/">
 
 <!-- Toolbar items, imported from editorAppShell.xul -->
 <!--LOCALIZATION NOTE formatToolbar. Don't change any of these Style Characters -->
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
+
+<!-- Destination for click on throbber button -->
+<!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 

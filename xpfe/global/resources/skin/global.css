@@ -6,8 +6,8 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
-@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to HTML */
-@namespace html url(http://www.w3.org/TR/REC-html40); /* namespace for XUL elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
 
 /**********************************
  * Window
@@ -18,8 +18,8 @@
  * content will be inside it.
  */
 window { 
-  background-color:#CCCCDD;
-  font: 3mm tahoma,arial,helvetica,sans-serif;
+  background-color: white;
+  font: 3mm arial,helvetica,sans-serif;
   padding: 0px;
 }
 
@@ -27,6 +27,7 @@ window {
  * This is a special class of window used for dialogs
  */
 window.dialog { 
+  background-color: #CCCCCC;
   /* There is a bug preventing this so this will not work property.
   padding-left: 11px;
   padding-right: 10px;
@@ -38,8 +39,6 @@ window.dialog {
 /**********************************
  * XUL widgets
  **********************************/
-
-/******** Browser, editor, iframe ********/
 
 /******** Box *********/
 
@@ -101,29 +100,204 @@ window.dialog {
 /******* ToolBox & ToolBar *******/
 
 toolbox { 
-      background-color:darkgray;
+      background-color:#999999; 
+} 
+
+:toolbox-normal { 
+ background-color: #003366; 
+ background-image: url("chrome://global/skin/taskbar-tab.gif"); 
+ background-repeat: no-repeat; 
+ color: lightgray; 
+ border: solid #003366 1px; 
+
+} 
+
+:toolbox-rollover { 
+ background-color: #99cccc; 
+ background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
+ background-repeat: no-repeat; 
+ color: green; 
+ border: outset #99cccc 1px; 
+} 
+
+toolbar.standard {
+	color: white;
+	background-color: #003366;
+	padding: 0px;
+	margin: 0px;
+	border: none;
+	min-height: 46px;
 }
 
-:toolbox-normal {
-	background-color: #666699;
-	background-image: url("chrome://global/skin/taskbar-tab.gif");
+/**
+ * normal buttons used in 'standard toolbar'
+ */
+toolbar.standard titledbutton {
+	background-image:none;
 	background-repeat: no-repeat;
-	color: lightgray;
-	border: solid darkGray 1px;
-
+	background-position: 50% 4px;
+	background-color: transparent;
+	color: #CCFFFF;
+	border: none;
+	padding: 0px;
+	min-width: 28px;
+	margin: 3px 7px 1px 1px;
+	font-size: smaller;
 }
 
-:toolbox-rollover {
-	background-color: #ccccff;
-	background-image: url("chrome://global/skin/taskbar-tab-hover.gif");
+toolbar.standard titledbutton:hover {
+	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
+	color: #FFFFFF;
+	text-decoration: none;
+	border: none;
+}
+
+toolbar.standard titledbutton:active {
+	background-image:url("chrome://global/skin/otherbutton28-bg-active.gif");
+	color: #FFFFFF;
+	text-decoration: none;
+	margin: 4px 6px 0px 2px;
+}
+
+toolbar.standard titledbutton[disabled="true"] { 
+	margin: 3px 7px 1px 1px;
+}
+
+/**
+ * round buttons used in 'standard toolbar'
+ */
+toolbar titledbutton.button28 {
+	background-image:url("chrome://global/skin/button28-bg.gif");
+}
+
+toolbar titledbutton.button28[disabled="true"] {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+}
+
+toolbar titledbutton.button28[disabled="true"]:hover {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+}
+
+toolbar titledbutton.button28[disabled="true"]:active {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+}
+
+toolbar titledbutton.button28:hover {
+	background-image:url("chrome://global/skin/button28-bg-hover.gif");
+}
+
+toolbar titledbutton.button28:active {
+	background-image:url("chrome://global/skin/button28-bg-active.gif");
+}
+
+
+/**
+ * 32px round buttons (used in Navigation Toolbar)
+ */
+/* have to explicitly set the border and padding to ensure that more specific rules 
+   for disabled and active titledbuttons don't apply */
+toolbar titledbutton.button32 {
 	background-repeat: no-repeat;
-	color: green;
-	border: outset #ccccff 1px;
+	background-position: 50% 0px;
+	background-color: transparent;
+	color: #CCFFFF;
+	min-width: 36px;
+	min-height: 36px;
+
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+
+	font-size: smaller;
+	background-image:url("chrome://global/skin/button32-bg.gif");
 }
 
-toolbar,menubar {
-    background-color: #CCCCDD;
-    border-bottom: 1px solid #9999cc;
+toolbar titledbutton.button32[disabled="true"] {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
+}
+
+toolbar titledbutton.button32[disabled="true"]:hover {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
+}
+
+toolbar titledbutton.button32[disabled="true"]:active {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
+}
+
+toolbar titledbutton.button32:hover {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-hover.gif");
+}
+
+toolbar titledbutton.button32:active {
+	border: none;
+	padding: 0px;
+	margin-top: 7px;
+	margin-left: 2px;
+	margin-bottom: 0px;
+	margin-right: 5px;
+	background-image:url("chrome://global/skin/button32-bg-active.gif");
+}
+
+/**
+ * Throbber
+ */
+/* FIX ME - move these gifs to global */
+titledbutton#Throbber {
+	border: none;
+	margin-top: 8px;
+	margin-left: 9px;
+	list-style-image: url("chrome://global/skin/animthrob_single.gif");
+	background-image: none;
+}
+
+titledbutton#Throbber:active {
+	margin-top: 9px;
+	margin-left: 10px;
+}
+
+titledbutton#Throbber[busy="true"] {
+	list-style-image:url("chrome://global/skin/animthrob.gif");
+}
+
+
+toolbar.standard #toolbar_throbber_box { 
+	background-color: #CCCCCC;
+	min-width: 59px;
+	max-width: 59px;
+	background-image: url("chrome://global/skin/n-box.gif");
+	background-repeat: no-repeat;
+	background-position: 100% 0%;
+}
+
+toolbar {
+    background-color: #CCCCCC;
 }
 
 toolbar titledbutton {
@@ -166,15 +340,145 @@ toolbar titledbutton[disabled="true"]:active {
 	padding: 2px;
 }
 
+/**
+ * status-bar
+ */
+box#status-bar {
+	min-width: 1em;
+	background-color: #CCCCCC;
+}
+
+box#status-bar titledbutton {
+	border: none;
+	padding: 0px;
+	margin: 0px;
+	min-width: 3em;
+}
+
+box#status-bar titledbutton:hover {
+     text-decoration: none;
+}
+
+#status-bar-leftcap {
+	min-width: 8px;
+	max-width: 8px;
+	background-image: url("chrome://global/skin/gray-bottomleft.gif");
+	background-position: 0% 100%;
+	background-repeat: no-repeat;
+}
+
+#status-bar-rightcap {
+	min-width: 8px;
+	max-width: 8px;
+	background-image: url("chrome://global/skin/gray-bottomright.gif");
+	background-position: 100% 100%;
+	background-repeat: no-repeat;
+}
+
+/* removing margin and padding from normal mousedown titledbutton behavior */
+box#status-bar titledbutton:active {
+	border: none;
+	padding: 0px;
+	margin: 0px;
+}
+
+/******* Splitters *******/
+
+splitter {
+   cursor: arrow;
+   min-width: 5px;
+   min-height: 5px;
+}
+
+grippy{
+	margin: 0px;
+	border: 2px solid #003366;
+	padding: 0px;
+	background-color: #6699CC;
+	list-style-image: none;
+}
+
+grippy:hover{
+	background-color: #99CCFF;
+}
+
+grippy:active{
+	background-color: #99CCFF;
+}
+
+box[align="vertical"]>splitter grippy {
+	/* a horizontal splitter */
+	min-width: 60px;
+	max-height: 4px;
+}
+
+box[align="horizontal"]>splitter grippy {
+	/* a vertical splitter */
+	max-width: 4px;
+	min-height: 60px;
+}
+
+window[align="vertical"]>splitter grippy {
+	/* a horizontal splitter */
+	min-width: 60px;
+	max-height: 4px;
+}
+
+window[align="horizontal"]>splitter grippy {
+	/* a vertical splitter */
+	max-width: 4px;
+	min-height: 60px;
+}
+
+
+/**
+ * gray horizontal splitter for pane views
+ */
+splitter.gray-horizontal-splitter { 
+	min-height: 8px;
+	background-color: #CCCCCC;
+	border: none;
+	padding: 0px;
+}
+
+splitter.gray-horizontal-splitter grippy { 
+	margin: 0px;
+	border: 2px solid #CCCCCC;
+	padding: 0px;
+	background-color: #6699CC;
+	list-style-image: none;
+}
+splitter.gray-horizontal-splitter grippy:hover { 
+	background-color: #003366;
+}
+
+splitter.gray-horizontal-splitter grippy:active { 
+	background-color: #003366;
+}
+
+splitter.gray-horizontal-splitter #begincap { 
+	min-width: 8px;
+	max-width: 8px;
+	background-image: url("chrome://global/skin/gray-bottomleft.gif");
+	background-repeat: no-repeat;
+	background-position: 0% 100%;
+}
+
+splitter.gray-horizontal-splitter #endcap { 
+	min-width: 8px;
+	max-width: 8px;
+}
+
+
 /****** Progress Meter ********/
 
 progressmeter[align="horizontal"] {
-	height: 1em;        
+	height: 1em;
 }
 
 progressmeter {
-	color : #9999CC; 
-	background-color: #CCCCDD;        
+	color : #9999CC;
+	background-color: #999999;
 }
 
 :progressmeter-stripe {
@@ -192,7 +496,6 @@ menu[disabled="true"] {
 }
 
 menuitem {
-	display: block;
 	color: black;
 }
 
@@ -200,9 +503,14 @@ menuitem[disabled="true"] {
 	color: #999999;
 }
 
+/* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup {
-  background-color: #CCCCDD;
+  background-color: white;
   border: 1px white outset;
+}
+
+popup {
+  background-color: white;
 }
 
 menupopup > menu {
@@ -282,22 +590,22 @@ menubar > menu[menuactive="true"][open="true"] {
 }
 
 menupopup > menu[menuactive="true"] {
-  background-color: #666699;
+  background-color: #003366;
   color: white;
 }
 
 popup > menu[menuactive="true"] {
-  background-color: #666699;
+  background-color: #003366;
   color: white;
 }
 
 menupopup > menuitem[menuactive="true"] {
-  background-color: #666699;
+  background-color: #003366;
   color: white;
 }
 
 popup > menuitem[menuactive="true"] {
-  background-color: #666699;
+  background-color: #003366;
   color: white;
 }
 
@@ -305,6 +613,8 @@ popup > menuitem[menuactive="true"] {
   padding: 0px;
   border: 0px;
   width: 10px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-left: 6px;
   margin-right: 0px;
 }
@@ -314,6 +624,8 @@ popup > menuitem[menuactive="true"] {
   padding: 0px;
   border: 0px;
   width: 13px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-right: 2px;
 }
 
@@ -321,6 +633,8 @@ popup > menuitem[menuactive="true"] {
   color: inherit;
   padding: 0px;
   border: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-right: 2px;
 }
 
@@ -328,6 +642,8 @@ popup > menuitem[menuactive="true"] {
   color: inherit;
   padding: 0px;
   border: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-right: 2px;
 }
 
@@ -335,6 +651,8 @@ popup > menuitem[menuactive="true"] {
   color: inherit;
   padding: 0px;
   border: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-right: 2px;
 }
 
@@ -389,15 +707,15 @@ titledbutton[class~=popup] {
 }
 
 titledbutton:hover {
-  border: 1px outset white;
-	color:#333366;
+	border: 1px outset white;
+	color:#003366;
 	text-decoration:underline;
-  padding: 2px;
+	padding: 2px;
 }
  
 titledbutton:hover:-moz-outline {
    border : 1px solid black;
-   color:#666699;
+   color:#003366;
    padding: 2px;
 }
  
@@ -465,37 +783,36 @@ titledbutton[disabled="true"]:active {
 
 /* special class for plain titledbuttons */
 
-titledbutton[class~=plain] {
-  border: 1px solid transparent;
-  padding: 2px;
-  font: inherit;
+titledbutton[class~="plain"] {
+	border: 1px solid transparent;
+	padding: 2px;
 }
 
-titledbutton[class~=plain]:hover {
-  border: 1px solid transparent;
-  padding: 2px;
-  text-decoration: none;
-  color: inherit;
+titledbutton[class~="plain"]:hover {
+	border: 1px solid transparent;
+	padding: 2px;
+	text-decoration: none;
+	color: inherit;
 }
  
-titledbutton[class~=plain]:active {
-  border: 1px solid transparent;
-  padding: 2px;
-   text-decoration: none;
-  color: inherit;
+titledbutton[class~="plain"]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+	text-decoration: none;
+	color: inherit;
 }
 
-titledbutton[class~=plain][disabled] {
+titledbutton[class~="plain"][disabled] {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
-titledbutton[class~=plain][disabled]:hover {
+titledbutton[class~="plain"][disabled]:hover {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
-titledbutton[class~=plain][disabled]:active {
+titledbutton[class~="plain"][disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
@@ -504,38 +821,38 @@ titledbutton[class~=plain][disabled]:active {
 /* special class for borderless buttons */
 /* titled button on toolbars are automatically set to be borderless (see below) */
 
-titledbutton[class~=borderless] {
+titledbutton[class~="borderless"] {
   border: 1px solid transparent;
 }
  
-titledbutton[class~=borderless]:hover {
+titledbutton[class~="borderless"]:hover {
   border: 1px outset white;
   color:#333366;
   text-decoration: underline;
 }
   
-titledbutton[class~=borderless]:hover:-moz-outline {
+titledbutton[class~="borderless"]:hover:-moz-outline {
   border : 1px solid black;
 }
 
-titledbutton[class~=borderless]:active {
+titledbutton[class~="borderless"]:active {
   text-decoration:none;
   border: 1px inset;
 }
  
-titledbutton[class~=borderless]:active:-moz-outline {
+titledbutton[class~="borderless"]:active:-moz-outline {
   border : 1px solid black;
 }
  
-titledbutton[class~=borderless][disabled] {
+titledbutton[class~="borderless"][disabled] {
   border: 1px solid transparent;
 }
 
-titledbutton[class~=borderless][disabled]:hover {
+titledbutton[class~="borderless"][disabled]:hover {
   border: 1px solid transparent;
 }
 
-titledbutton[class~=borderless][disabled]:active {
+titledbutton[class~="borderless"][disabled]:active {
   border: 1px solid transparent;
   padding: 2px;
 }
@@ -551,7 +868,7 @@ tree {
 
 treeitem[selected="true"] > treerow { 
  color: white;
- background-color: #666699;
+ background-color: #336699;
 }
 
 treecell { 
@@ -560,14 +877,10 @@ treecell {
 } 
 
 treehead treerow treecell { 
- background-color: #666699; 
- border: thin darkgray solid; 
- color: white;
+ background-color: #CCCCCC; 
+ /*border: thin darkgray solid; */
+ color: black;
 } 
-
-.tree-button {
-  color: inherit;
-}
 
 treecell.image > titledbutton {
   border: 1px solid transparent;
@@ -741,9 +1054,9 @@ tabcontrol {
 /********* XP Scrollbar *********/
 
 thumb {
-   background-color: rgb(206, 207, 206);
+   background-color: #CCCCCC;
    border: 1px outset white;
-   list-style-image: url(chrome://global/skin/scroll-thumb-horiz.gif)
+   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
 }
 
 /*
@@ -754,11 +1067,11 @@ thumb:hover {
 */
 
 thumb[disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-disabled.gif);
+   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
 }
 
 slider[align="vertical"] thumb {
-   list-style-image: url(chrome://global/skin/scroll-thumb-vert.gif)
+   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
 }
 
 /*
@@ -770,22 +1083,20 @@ slider[align="vertical"] thumb:hover {
 */
 
 slider[align="vertical"] thumb[disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-thumb-vert-disabled.gif);
+   list-style-image: url("chrome://global/skin/scroll-thumb-vert-disabled.gif");
 }
 
 thumb:active {
-   background-color: rgb(220, 210, 210);
+   background-color: #CCCCCC;
 }
 
 slider[align="vertical"] thumb:active {
-   background-color: rgb(220, 210, 210);
+   background-color: #CCCCCC;
 }
 
 
 slider {
-   display: block;
-   border: 1px solid black;
-   background-color: rgb(240,240,240);
+   background-color: #999999;
 }
 
 scrollbarbutton {
@@ -793,7 +1104,7 @@ scrollbarbutton {
   cursor: default;
 
   border: 1px outset white;
-  background-color: rgb(206, 207, 206);
+  background-color: #CCCCCC;
   color:black; 
 
   padding: 1px;
@@ -809,7 +1120,7 @@ scrollbarbutton:active {
 }
 
 scrollbarbutton[type="decrement"] {
-   list-style-image: url(chrome://global/skin/scroll-left.gif)
+   list-style-image: url("chrome://global/skin/scroll-left.gif")
 }
 
 /*
@@ -820,11 +1131,11 @@ scrollbarbutton[type="decrement"]:hover {
 */
 
 scrollbarbutton[type="decrement"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-left-disabled.gif) 
+   list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
 }
 
 scrollbarbutton[type="increment"] {
-   list-style-image: url(chrome://global/skin/scroll-right.gif)
+   list-style-image: url("chrome://global/skin/scroll-right.gif")
 }
 
 /*
@@ -835,12 +1146,12 @@ scrollbarbutton[type="increment"]:hover {
 */
 
 scrollbarbutton[type="increment"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-right-disabled.gif) 
+   list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
 }
 
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
-   list-style-image: url(chrome://global/skin/scroll-up.gif)
+   list-style-image: url("chrome://global/skin/scroll-up.gif")
 }
 
 /*
@@ -851,11 +1162,11 @@ scrollbar[align="vertical"] scrollbarbutton[type="decrement"]:hover {
 */
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-up-disabled.gif) 
+   list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
 }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
-   list-style-image: url(chrome://global/skin/scroll-down.gif)
+   list-style-image: url("chrome://global/skin/scroll-down.gif")
 }
 
 /*
@@ -866,103 +1177,26 @@ scrollbar[align="vertical"] scrollbarbutton[type="increment"]:hover {
 */
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scroll-down-disabled.gif) 
+   list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
 }
 
 
-/********* Splitter ********/
-
-splitter {
-   display: block;
-   cursor: arrow;
-   min-width: 5px;
-   min-height: 5px;
-}
-
-splitter[state="dragging"] {
-   background-color: rgb(150,150,150);
-}
-
-grippy {
-   border: 1px outset white;
-   list-style-image: url(chrome://global/skin/grippy-horizontal-before.gif);
-   background-color: rgb(198,198,198);
-   display: block;
-}
-
-grippy:hover {
-   background-color: rgb(220, 210, 210);
-}
-
-window > splitter > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-before.gif);
-}
-
-window > splitter[state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-after.gif);
-}
-
-window > splitter[collapse="after"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-after.gif);
-}
-
-window > splitter[collapse="after"][state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-before.gif);
-}
-
-window[align="vertical"] > splitter > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-before.gif);
-}
-
-window[align="vertical"] > splitter[collapse="after"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-after.gif);
-}
-
-window[align="vertical"] > splitter[state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-after.gif);
-}
-
-window[align="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-before.gif);
-}
-
-box > splitter > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-before.gif);
-}
-
-box > splitter[state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-after.gif);
-}
-
-
-box > splitter[collapse="after"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-after.gif);
-}
-
-box > splitter[collapse="after"][state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-horizontal-before.gif);
-}
-
-box[align="vertical"] > splitter > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-before.gif);
-}
-
-box[align="vertical"] > splitter[collapse="after"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-after.gif);
-}
-
-box[align="vertical"] > splitter[state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-after.gif);
-}
-
-box[align="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy {
-   list-style-image: url(chrome://global/skin/grippy-vertical-before.gif);
-}
 
 
 /**********************************
  * HTML components in the window tag
  **********************************/
+
+/**
+ * removed 2px black border from iframe
+ */
+window html|iframe {
+ min-width: 10px;
+ min-height: 10px;
+ width: 100px;
+ height: 100px;
+ border: none;
+}
 
 window html|div.separator[align="horizontal"] { 
 	 width: 100%; 
@@ -1006,7 +1240,6 @@ window html|legend {
 }
 
 window html|label {
-	display: inline;
 	padding-bottom: 4px;
 	background-color: transparent;
 	white-space: nowrap;

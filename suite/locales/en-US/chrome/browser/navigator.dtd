@@ -283,14 +283,13 @@
 <!-- Toolbar items --> 
 <!ENTITY  homeButton.label "Home">
 <!-- LOCALIZATION NOTE  netscapeButton.label: Do NOT localize below line -->
-<!ENTITY  netscapeButton.label "Netscape">
+<!ENTITY  netscapeButton.label "My Netscape">
 <!-- LOCALIZATION NOTE  bugzillaButton.label: Do NOT localize below line -->
 <!ENTITY  bugzillaButton.label "Bugzilla">
 <!-- LOCALIZATION NOTE  tinderboxButton.label: Do NOT localize below line -->
 <!ENTITY  tinderboxButton.label "Tinderbox">
 
 <!-- Statusbar -->
-<!ENTITY  notifCom.label "[Context Menu Proxy]">
 <!ENTITY  statusText.label "Document: Done">
 <!ENTITY  buildId.label "Build ID: 1999082316">
 

@@ -43,15 +43,56 @@ iframe {
  height: 100px;
 }
 
-
-titledbutton#Throbber
-{
-	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+/**
+ * boxes
+ */
+#results_box {
+	border-left: 8px solid #CCCCCC;
+}
+ 
+/**
+ * toolbar button images
+ */
+#getmsg-btn {
+	list-style-image:url("chrome://messenger/skin/getmsg.gif");
 }
 
-titledbutton#Throbber[busy="true"] {
-	list-style-image:url(chrome://navigator/skin/animthrob.gif);
+#newmsg-btn{
+	list-style-image:url("chrome://messenger/skin/newmsg.gif");
 }
+
+#reply-btn{
+	list-style-image:url("chrome://messenger/skin/reply.gif");
+}
+
+#replyall-btn{
+	list-style-image:url("chrome://messenger/skin/replyall.gif");
+}
+
+#forward-btn{
+	list-style-image:url("chrome://messenger/skin/forward.gif");
+}
+
+#file-btn{
+	list-style-image:url("chrome://messenger/skin/file.gif");
+}
+
+#next-btn{
+	list-style-image:url("chrome://messenger/skin/next.gif");
+}
+
+#delete-btn{
+	list-style-image:url("chrome://messenger/skin/trash.gif");
+}
+
+#print-btn{
+	list-style-image:url("chrome://messenger/skin/print.gif");
+}
+
+#stop-btn{
+	list-style-image:url("chrome://messenger/skin/stop.gif");
+}
+
 
 .folderMenuItem > .menu-left {
  list-style-image: url("chrome://messenger/skin/Folder.gif");
@@ -139,3 +180,39 @@ titledbutton#Throbber[busy="true"] {
     list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 
+
+#button_getmsg {
+	list-style-image:url("chrome://messenger/skin/getmsg.gif");
+}
+
+#button_newmsg {
+	list-style-image:url("chrome://messenger/skin/newmsg.gif");
+}
+
+#button_reply {
+	list-style-image:url("chrome://messenger/skin/reply.gif");
+}
+
+#button_replyall {
+	list-style-image:url("chrome://messenger/skin/replyall.gif");
+}
+
+#button_forward {
+	list-style-image:url("chrome://messenger/skin/forward.gif");
+}
+
+#button_next {
+	list-style-image:url("chrome://messenger/skin/next.gif");
+}
+
+#button_delete {
+	list-style-image:url("chrome://messenger/skin/trash.gif");
+}
+
+#button_print {
+	list-style-image:url("chrome://global/skin/print.gif");
+}
+
+#button_stop {
+	list-style-image:url("chrome://global/skin/stop.gif");
+}
