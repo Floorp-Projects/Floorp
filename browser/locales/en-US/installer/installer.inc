@@ -112,6 +112,9 @@
 #define QFA_SHORT Quality Feedback Agent
 #define QFA_LONG for reporting $ProductShortName$ crash information
 
+#define RPT_SHORT Website Reporter
+#define RPT_LONG for reporting $ProductShortName$ website compatibility problems
+
 #define CORE_PREPARING Preparing Install, please wait...
 #define INST_UNINST Installing the uninstaller, please wait...
 
