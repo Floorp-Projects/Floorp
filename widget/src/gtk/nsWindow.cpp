@@ -803,14 +803,6 @@ nsWindow::DoPaint (nsIRegion *aClipRegion)
   if (!mEventCallback)
     return;
 
-  nsPaintEvent event(NS_PAINT, this);
- 
-  event.time = GDK_CURRENT_TIME; // No time in EXPOSE events
-
-  nsRect boundsRect;
-  aClipRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y, &boundsRect.width, &boundsRect.height);
-  event.rect = &boundsRect;
-  
   // Don't paint anything if our window isn't visible.
   if (!mSuperWin)
     return;
@@ -826,10 +818,31 @@ nsWindow::DoPaint (nsIRegion *aClipRegion)
       return;
   }
 
-  event.renderingContext = GetRenderingContext();
-  if (!event.renderingContext)
+  nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+  if (!rc)
     return;
 
+// defining NS_PAINT_SEPARATELY is useful for debugging invalidation
+// problems since it limits repainting to the rects that were actually
+// invalidated.
+#undef  NS_PAINT_SEPARATELY
+
+#ifdef NS_PAINT_SEPARATELY
+  nsRegionRectSet *regionRectSet = nsnull;
+  aClipRegion->GetRects(&regionRectSet);
+  for (nsRegionRect *r = regionRectSet->mRects,
+                *r_end = r + regionRectSet->mNumRects; r < r_end; ++r) {
+  nsRect boundsRect(r->x, r->y, r->width, r->height);
+#else
+  nsRect boundsRect;
+  aClipRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y, &boundsRect.width, &boundsRect.height);
+#endif
+
+  nsPaintEvent event(NS_PAINT, this);
+  event.renderingContext = rc;
+  event.time = GDK_CURRENT_TIME; // No time in EXPOSE events
+  event.rect = &boundsRect;
+  
 #ifdef DEBUG
   GdkWindow *gw = GetRenderWindow(GTK_OBJECT(mSuperWin));
   if (WANT_PAINT_FLASHING && gw)
@@ -846,9 +859,11 @@ nsWindow::DoPaint (nsIRegion *aClipRegion)
                          debug_GetName(GTK_OBJECT(mSuperWin)),
                          (PRInt32) debug_GetRenderXID(GTK_OBJECT(mSuperWin)));
 #endif // DEBUG
-      
+
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.renderingContext);
+#ifdef NS_PAINT_SEPARATELY
+  }
+#endif
 }
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
