@@ -125,6 +125,9 @@ js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
 # js/src/xpcom/Makefile
 js/src/xpconnect/Makefile
+js/src/xpconnect/md/Makefile
+js/src/xpconnect/md/unix/Makefile
+js/src/xpconnect/test/Makefile
 layout/Makefile
 layout/base/Makefile
 layout/base/public/Makefile
