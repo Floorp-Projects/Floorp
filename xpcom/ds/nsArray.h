@@ -57,6 +57,9 @@ class nsArray : public nsIMutableArray
 {
 public:
     nsArray() { NS_INIT_ISUPPORTS(); }
+    nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
+    { NS_INIT_ISUPPORTS(); }
+    
     virtual ~nsArray();
 
     NS_DECL_ISUPPORTS
@@ -64,10 +67,17 @@ public:
     NS_DECL_NSIMUTABLEARRAY
 
 private:
-    static PRBool FindElementCallback(void* aElement, void* aClosure);
     nsCOMArray<nsISupports> mArray;
 };
 
 
+// create a new, empty array
+nsresult NS_COM
+NS_NewArray(nsIArray** aResult);
+
+// makes a copy of an nsCOMArray<T> - any further changes to the base
+// array will not affect the new array
+nsresult NS_COM
+NS_NewArray(const nsCOMArray_base& base, nsIArray** aResult);
 
 #endif

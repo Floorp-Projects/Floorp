@@ -101,7 +101,7 @@ interface nsIArray : nsISupports
 
 /**
  * nsIMutableArray
- * A seperate set of methods that will act on the array. Consumers of
+ * A separate set of methods that will act on the array. Consumers of
  * nsIArray should not QueryInterface to nsIMutableArray unless they
  * own the array.
  *
