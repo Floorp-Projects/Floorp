@@ -52,6 +52,7 @@ public:
   virtual PRBool operator==(const nsIURL& aURL) const;
   virtual nsresult Set(const char *aNewSpec);
   virtual nsresult SetReloadType(const PRInt32 type);
+  virtual nsresult SetLoadAttribs(nsILoadAttribs *aLoadAttrib);
 
   virtual const char* GetProtocol() const;
   virtual const char* GetHost() const;
@@ -62,6 +63,7 @@ public:
   virtual PRInt32 GetPort() const;
   virtual nsISupports* GetContainer() const;
   virtual PRInt32 GetReloadType() const;
+  virtual nsILoadAttribs* GetLoadAttribs() const;
 
   virtual void ToString(nsString& aString) const;
 
@@ -72,6 +74,7 @@ public:
   char* mRef;
   char* mSearch;
   nsISupports* mContainer;
+  nsILoadAttribs* mLoadAttribs;
 
   // The reload type can be set to one of the following.
   // 0 - normal reload (uses cache) (defined as nsReload in nsIWebShell.h)
@@ -101,6 +104,7 @@ URLImpl::URLImpl(const nsString& aSpec)
   mSpec = nsnull;
   mContainer = nsnull;
   mReloadType = 0;
+  mLoadAttribs = nsnull;
 
   ParseURL(nsnull, aSpec);
 }
@@ -123,6 +127,7 @@ URLImpl::URLImpl(const nsString& aSpec, nsISupports* container)
   } else {
     mContainer = nsnull;
   }
+  mLoadAttribs = nsnull;
 
   ParseURL(nsnull, aSpec);
 }
@@ -141,6 +146,7 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
   mSpec = nsnull;
   mContainer = nsnull;
   mReloadType = 0;
+  mLoadAttribs = nsnull;
 
   ParseURL(aURL, aSpec);
 }
@@ -180,6 +186,7 @@ URLImpl::~URLImpl()
 {
   NS_IF_RELEASE(mProtocolUrl);
   NS_IF_RELEASE(mContainer);
+  NS_IF_RELEASE(mLoadAttribs);
 
   PR_FREEIF(mSpec);
   PR_FREEIF(mProtocol);
@@ -199,6 +206,14 @@ nsresult URLImpl::SetReloadType(const PRInt32 type)
     if ( !((type >= 0) && (type <= 2)) )
         return NS_ERROR_ILLEGAL_VALUE;
     mReloadType = type;
+    return NS_OK;
+}
+
+nsresult URLImpl::SetLoadAttribs(nsILoadAttribs *aLoadAttrib)
+{
+    NS_PRECONDITION( (aLoadAttrib != nsnull), "Null pointer.");
+    mLoadAttribs = aLoadAttrib;
+    NS_ADDREF(mLoadAttribs);
     return NS_OK;
 }
 
@@ -254,6 +269,11 @@ nsISupports* URLImpl::GetContainer() const
 PRInt32 URLImpl::GetReloadType() const
 {
     return mReloadType;
+}
+
+nsILoadAttribs* URLImpl::GetLoadAttribs() const
+{
+    return mLoadAttribs;
 }
 
 void URLImpl::ToString(nsString& aString) const

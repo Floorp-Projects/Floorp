@@ -1412,7 +1412,8 @@ net_ProcessMailto (ActiveEntry *cur_entry)
 										CE_WINDOW_ID,
 										&CE_URL_S->error_msg,
 										 cur_entry->socks_host,
-										 cur_entry->socks_port);
+										 cur_entry->socks_port,
+                                         ce->URL_s->localIP);
             CD_PAUSE_FOR_READ = TRUE;
             if(CE_STATUS == MK_CONNECTED)
               {
@@ -1435,7 +1436,8 @@ net_ProcessMailto (ActiveEntry *cur_entry)
 										  &CE_SOCK, 
 										  &CD_TCP_CON_DATA, 
 										  CE_WINDOW_ID,
-										  &CE_URL_S->error_msg);
+										  &CE_URL_S->error_msg,
+                                          ce->URL_s->localIP);
 
             CD_PAUSE_FOR_READ = TRUE;
 HG18931

@@ -29,6 +29,7 @@ CPPSRCS			= \
 			  nsStubContext.cpp   \
 			  nsNetStubs.cpp      \
 			  nsNetIDs.cpp        \
+              nsLoadAttribs.cpp   \
 			  $(NULL)
 
 REQUIRES		= raptor js dbm nspr security pref xpcom util img \
@@ -44,7 +45,8 @@ EXPORTS = nsIStreamListener.h           \
           nsIHttpUrl.h                  \
           nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
-	  nsIConnectionInfo.h		\
+	      nsIConnectionInfo.h		\
+          nsILoadAttribs.h          \
           $(NULL)
 
 include $(DEPTH)/config/config.mk

@@ -20,7 +20,6 @@
 #include "nsITimer.h"
 #include "nsNetService.h"
 #include "nsNetStream.h"
-#include "net.h"
 #include "nsNetFile.h"
 extern "C" {
 #include "mkutils.h"
@@ -204,6 +203,43 @@ nsNetlibService::~nsNetlibService()
     NET_ShutdownNetLib();
 }
 
+void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) {
+    nsresult result;
+    NET_ReloadMethod reloadType;
+    nsILoadAttribs* loadAttribs = aUrl->GetLoadAttribs();
+    PRInt32 type = aUrl->GetReloadType();
+
+    /* Set the NET_ReloadMethod to correspond with what we've 
+     * been asked to do.
+     *
+     * 0 = nsReload (normal)
+     * 1 = nsReloadBypassCache
+     * 2 = nsReloadBypassProxy
+     * 3 = nsReloadBypassCacheAndProxy
+     */
+    if (type == 1 || type == 3) {
+        reloadType = NET_SUPER_RELOAD;
+    } else {
+        reloadType = NET_NORMAL_RELOAD;
+    }
+
+
+    /* If this url has load attributes, setup the underlying url struct
+     * accordingly. */
+    if (loadAttribs) {
+        PRUint32 localIP = 0;
+        if (type == 2 || type == 3) {
+            result = loadAttribs->GetBypassProxy((int *)&(aURL_s->bypassProxy));
+            if (result != NS_OK)
+                aURL_s->bypassProxy = FALSE;
+        }
+
+        result = loadAttribs->GetLocalIP(&localIP);
+        if (result != NS_OK)
+            localIP = 0;
+        aURL_s->localIP = localIP;
+    }
+}
 
 nsresult nsNetlibService::OpenStream(nsIURL *aUrl, 
                                      nsIStreamListener *aConsumer)
@@ -213,6 +249,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsIProtocolConnection *pProtocol;
     nsresult result;
     NET_ReloadMethod reloadType;
+    nsILoadAttribs* loadAttribs = nsnull;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
         return NS_FALSE;
@@ -235,22 +272,13 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     /* Create the URLStruct... */
 
-    /* Set the NET_ReloadMethod to correspond with what we've 
-     * been asked to do.
-     *
-     * 0 = nsReload (normal)
-     * 1 = nsReloadBypassCache
-     * 2 = nsReloadBypassProxy
-     */
-    if (aUrl->GetReloadType() == 1)
-        reloadType = NET_SUPER_RELOAD;
-    else
-        reloadType = NET_NORMAL_RELOAD;
     URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
     if (NULL == URL_s) {
         pConn->Release();
         return NS_FALSE;
     }
+
+    SetupURLStruct(aUrl, URL_s);
 
     /* 
      * Mark the URL as background loading.  This prevents many
@@ -313,6 +341,8 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     nsNetlibStream *pBlockingStream;
     nsIProtocolConnection *pProtocol;
     nsresult result;
+    nsILoadAttribs* loadAttribs = nsnull;
+
 
 
     if (NULL == aNewStream) {
@@ -351,24 +381,14 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
         /* Create the URLStruct... */
 
-        /* Set the NET_ReloadMethod to correspond with what we've 
-         * been asked to do.
-         *
-         * 0 = nsReload (normal)
-         * 1 = nsReloadBypassCache
-         * 2 = nsReloadBypassProxy
-         */
-        if (aUrl->GetReloadType() == 1)
-            reloadType = NET_SUPER_RELOAD;
-        else
-            reloadType = NET_NORMAL_RELOAD;
-
         URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
         if (NULL == URL_s) {
             pBlockingStream->Release();
             pConn->Release();
             goto loser;
         }
+
+        SetupURLStruct(aUrl, URL_s);
 
 #if defined(XP_WIN)
         /*

@@ -2768,7 +2768,8 @@ net_ProcessPop3 (ActiveEntry *ce)
                                          	ce->window_id,
                                          	&ce->URL_s->error_msg,
 											 ce->socks_host,
-											 ce->socks_port);
+											 ce->socks_port,
+                                             ce->URL_s->localIP);
 	
 				if ((ce->status == MK_UNABLE_TO_CONNECT) ||
 					(ce->status == MK_CONNECTION_TIMED_OUT) ||
@@ -2835,7 +2836,8 @@ net_ProcessPop3 (ActiveEntry *ce)
                                           	&ce->socket,
                                           	&cd->tcp_con_data,
                                           	ce->window_id,
-                                          	&ce->URL_s->error_msg);
+                                          	&ce->URL_s->error_msg,
+                                            ce->URL_s->localIP);
 
             	cd->pause_for_read = TRUE;
 

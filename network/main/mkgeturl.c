@@ -2973,8 +2973,17 @@ redo_load_switch:   /* come here on file/ftp retry */
       } 
 	else
 	  {
-		  char *proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
-		
+        char *proxy_address = NULL;
+#ifdef MODULAR_NETLIB
+        // If this url struct indicates that it doesn't want to use a proxy,
+        // skip it.
+        if (!this_entry->URL_s->bypassProxy) {
+            proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
+        }
+#else
+        proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
+#endif /* MODULAR_NETLIB */
+
   		  if(proxy_address)
 			{
 				this_entry->protocol = HTTP_TYPE_URL;
