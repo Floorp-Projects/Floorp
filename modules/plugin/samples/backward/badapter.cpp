@@ -26,9 +26,9 @@
 // SECTION 1 - Includes
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" {
+// extern "C" {
 #include "npapi.h"
-};
+// }
 #include "nsplugin.h"
 #include "nsDebug.h"
 
@@ -299,6 +299,11 @@ protected:
 #define TRACE(foo) trace(foo)
 #endif
 
+#ifdef XP_MAC
+#undef assert
+#define assert(cond)
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -307,7 +312,7 @@ extern "C" {
 // SECTION 1 - Includes
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_MAC)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -316,7 +321,7 @@ extern "C" {
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-// SECTION 2 - Globar Variables
+// SECTION 2 - Global Variables
 ////////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1068,7 +1073,7 @@ CPluginInstancePeer::CPluginInstancePeer(NPP npp,
                                          nsMIMEType typeString, 
                                          nsPluginMode type,
                                          PRUint16 attr_cnt, 
-                                         const char** attr_list, 
+                                         const char** attr_list,
                                          const char** val_list)
     : npp(npp), typeString(typeString), type(type), attribute_cnt(attr_cnt),
     attribute_list(NULL), values_list(NULL)
@@ -1079,24 +1084,30 @@ CPluginInstancePeer::CPluginInstancePeer(NPP npp,
 	attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
 	values_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
 
-	for (int i=0; i < attribute_cnt; i++)   {
-		attribute_list[i] = (char*) NPN_MemAlloc(sizeof(char) + strlen(attr_list[i] + 1));
-		values_list[i] = (char*) NPN_MemAlloc(sizeof(char) + strlen(val_list[i] + 1));
+	if (attribute_list != NULL && values_list != NULL) {
+		for (int i = 0; i < attribute_cnt; i++)   {
+			attribute_list[i] = (char*) NPN_MemAlloc(strlen(attr_list[i]) + 1);
+			if (attribute_list[i] != NULL)
+				strcpy(attribute_list[i], attr_list[i]);
 
-		strcpy(attribute_list[i], attr_list[i]);
-		strcpy(values_list[i], val_list[i]);
+			values_list[i] = (char*) NPN_MemAlloc(strlen(val_list[i]) + 1);
+			if (values_list[i] != NULL)
+				strcpy(values_list[i], val_list[i]);
+		}
 	}
 }
 
 CPluginInstancePeer::~CPluginInstancePeer(void) 
 {
-	for (int i=0; i < attribute_cnt; i++)   {
-		NPN_MemFree(attribute_list[i]);
-		NPN_MemFree(values_list[i]);
-	}
+	if (attribute_list != NULL && values_list != NULL) {
+		for (int i = 0; i < attribute_cnt; i++)   {
+			NPN_MemFree(attribute_list[i]);
+			NPN_MemFree(values_list[i]);
+		}
 
-	NPN_MemFree(attribute_list);
-	NPN_MemFree(values_list);
+		NPN_MemFree(attribute_list);
+		NPN_MemFree(values_list);
+	}
 }   
 
 
@@ -1167,6 +1178,41 @@ CPluginInstancePeer::GetAttributes(PRUint16& n, const char* const*& names, const
 	return NS_OK;
 }
 
+#if defined(XP_MAC)
+
+inline unsigned char toupper(unsigned char c)
+{
+	return (c >= 'a' && c <= 'z') ? (c - ('a' - 'A')) : c;
+}
+
+static int strcasecmp(const char * str1, const char * str2)
+{
+#if __POWERPC__
+	
+	const	unsigned char * p1 = (unsigned char *) str1 - 1;
+	const	unsigned char * p2 = (unsigned char *) str2 - 1;
+				unsigned long		c1, c2;
+		
+	while (toupper(c1 = *++p1) == toupper(c2 = *++p2))
+		if (!c1)
+			return(0);
+
+#else
+	
+	const	unsigned char * p1 = (unsigned char *) str1;
+	const	unsigned char * p2 = (unsigned char *) str2;
+				unsigned char		c1, c2;
+	
+	while (toupper(c1 = *p1++) == toupper(c2 = *p2++))
+		if (!c1)
+			return(0);
+
+#endif
+	
+	return(toupper(c1) - toupper(c2));
+}
+
+#endif /* XP_MAC */
 
 // Get the value for the named attribute.  Returns null
 // if the attribute was not set.
@@ -1174,7 +1220,7 @@ NS_METHOD
 CPluginInstancePeer::GetAttribute(const char* name, const char* *result) 
 {
 	for (int i=0; i < attribute_cnt; i++)  {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_MAC)
 		if (strcasecmp(name, attribute_list[i]) == 0)
 #else
         if (stricmp(name, attribute_list[i]) == 0) 
