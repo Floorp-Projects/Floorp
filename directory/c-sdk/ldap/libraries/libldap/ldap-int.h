@@ -381,7 +381,7 @@ struct ldap {
 	void 			*ld_mutex_threadid[LDAP_MAX_LOCK];
 	unsigned long		ld_mutex_refcnt[LDAP_MAX_LOCK];
 
-	/* connect timeout value */
+	/* connect timeout value (milliseconds) */
 	int				ld_connect_timeout;
 };
 

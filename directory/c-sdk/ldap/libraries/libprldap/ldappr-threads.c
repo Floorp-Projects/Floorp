@@ -384,7 +384,7 @@ prldap_allocate_map( LDAP *ld )
     }
 
     /*
-     * if none we found (map == NULL), try to allocate a new one and add it
+     * if none was found (map == NULL), try to allocate a new one and add it
      * to the end of our global list.
      */
     if ( map == NULL ) {
