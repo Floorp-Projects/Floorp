@@ -74,10 +74,8 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   result = nsEditor::SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (NS_SUCCEEDED(result) && mNewLeftNode)
   {
-#ifdef DEBUG_akkana
     // Insert formatting whitespace for the new node:
     mEditor->InsertFormattingForNode(mExistingRightNode);
-#endif
 
     nsCOMPtr<nsIDOMSelection>selection;
     mEditor->GetSelection(getter_AddRefs(selection));
