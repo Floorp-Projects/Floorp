@@ -1349,37 +1349,13 @@ if (regexp.anchorCh >= 0) {
         return pc;
     }
 
-    private static REBackTrackData
+    private static void
     pushBackTrackState(REGlobalData gData, byte op, int target, REMatchState x)
     {
-        REBackTrackData result;
-        if (gData.backTrackStackTop == gData.maxBackTrack) {
-            gData.maxBackTrack <<= 1;
-            REBackTrackData[] newStack = new REBackTrackData[gData.maxBackTrack];
-            for (int i = 0; i < gData.backTrackStackTop; i++)
-                newStack[i] = gData.backTrackStack[i];
-            for (int i = gData.backTrackStackTop; i < gData.maxBackTrack; i++)
-                newStack[i] = new REBackTrackData(x);
-            gData.backTrackStack = newStack;
-        }
-        result = new REBackTrackData(x);
-        gData.backTrackStack[gData.backTrackStackTop++] = result;
-        result.continuation_op = op;
-        result.continuation_pc = target;
-        result.lastParen = gData.lastParen;
-        result.currentState = new REProgState(gData.stateStack[gData.stateStackTop - 1]);
-        if (gData.stateStackTop > 1) {
-            result.precedingStateTop = gData.stateStackTop - 1;
-            result.precedingState = new REProgState[result.precedingStateTop];
-            for (int i = 0; i < result.precedingStateTop; i++)
-                result.precedingState[i] = new REProgState(gData.stateStack[i]);
-        }
-        else {
-            result.precedingStateTop = 0;
-            result.precedingState = null;
-        }
-
-        return result;
+        REBackTrackData backTrack = new REBackTrackData(gData, op, target, x);
+        ++gData.backTrackSize;
+        backTrack.previous = gData.backTrackLast;
+        gData.backTrackLast = backTrack;
     }
 
     /*
@@ -1730,7 +1706,6 @@ if (regexp.anchorCh >= 0) {
         int currentContinuation_op;
         int currentContinuation_pc;
         REMatchState result = null;
-        REBackTrackData backTrackData;
         int k, length, offset, parenIndex, parenCount, index;
         char matchCh;
         int nextpc;
@@ -1959,7 +1934,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 curState = gData.stateStack[gData.stateStackTop];
                 curState.continuation_pc = currentContinuation_pc;
                 curState.continuation_op = currentContinuation_op;
-                curState.max = gData.backTrackStackTop;
+                curState.backTrackDepth = gData.backTrackSize;
                 curState.index = x.cp;
                 ++gData.stateStackTop;
                 pushBackTrackState(gData, REOP_ASSERTTEST,
@@ -1971,7 +1946,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 curState = gData.stateStack[gData.stateStackTop];
                 curState.continuation_pc = currentContinuation_pc;
                 curState.continuation_op = currentContinuation_op;
-                curState.max = gData.backTrackStackTop;
+                curState.backTrackDepth = gData.backTrackSize;
                 curState.index = x.cp;
                 ++gData.stateStackTop;
                 pushBackTrackState(gData, REOP_ASSERTNOTTEST,
@@ -1983,7 +1958,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 --gData.stateStackTop;
                 curState = gData.stateStack[gData.stateStackTop];
                 x.cp = curState.index;
-                gData.backTrackStackTop = curState.max;
+                while (gData.backTrackSize != curState.backTrackDepth) {
+                    gData.backTrackLast = gData.backTrackLast.previous;
+                    --gData.backTrackSize;
+                }
                 currentContinuation_pc = curState.continuation_pc;
                 currentContinuation_op = curState.continuation_op;
                 if (result != null)
@@ -1993,7 +1971,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 --gData.stateStackTop;
                 curState = gData.stateStack[gData.stateStackTop];
                 x.cp = curState.index;
-                gData.backTrackStackTop = curState.max;
+                while (gData.backTrackSize != curState.backTrackDepth) {
+                    gData.backTrackLast = gData.backTrackLast.previous;
+                    --gData.backTrackSize;
+                }
                 currentContinuation_pc = curState.continuation_pc;
                 currentContinuation_op = curState.continuation_op;
                 if (result == null)
@@ -2321,10 +2302,11 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
              *  Otherwise this is a complete and utter failure.
              */
             if (result == null) {
-                if (gData.backTrackStackTop > 0) {
-                    gData.backTrackStackTop--;
-                    backTrackData
-                              = gData.backTrackStack[gData.backTrackStackTop];
+                if (gData.backTrackSize != 0) {
+                    REBackTrackData backTrackData = gData.backTrackLast;
+                    gData.backTrackLast = backTrackData.previous;
+                    --gData.backTrackSize;
+
                     gData.lastParen = backTrackData.lastParen;
 
                     x = new REMatchState(backTrackData.state);
@@ -2370,13 +2352,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
         REMatchState x = new REMatchState(re.parenCount);
 
-        gData.maxBackTrack = INITIAL_BACKTRACK;
-        gData.backTrackStack = new REBackTrackData[INITIAL_BACKTRACK];
-        for (int i = 0; i < INITIAL_STATESTACK; i++)
-            gData.backTrackStack[i] = new REBackTrackData(x);
-        gData.backTrackStackTop = 0;
+        gData.backTrackSize = 0;
+        gData.backTrackLast = null;
 
-        gData.maxStateStack = INITIAL_STATESTACK;
         gData.stateStack = new REProgState[INITIAL_STATESTACK];
         for (int i = 0; i < INITIAL_STATESTACK; i++)
             gData.stateStack[i] = new REProgState();
@@ -2419,7 +2397,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             }
             result = executeREBytecode(gData, x, chars, end);
 
-            gData.backTrackStackTop = 0;
+            gData.backTrackSize = 0;
+            gData.backTrackLast = null;
             gData.stateStackTop = 0;
             if (result != null) {
                 gData.skipped = i - start;
@@ -2893,20 +2872,37 @@ class REProgState {
         index = other.index;
         continuation_op = other.continuation_op;
         continuation_pc = other.continuation_pc;
+        backTrackDepth = other.backTrackDepth;
     }
 
-    int min;                      /* current quantifier limits */
-    int max;                      /* also used for stacktop by ASSERT */
+    int min;                      /* current quantifier min */
+    int max;                      /* current quantifier max */
     int index;                    /* progress in text */
     int continuation_op;
     int continuation_pc;
-};
+
+    int backTrackDepth; /* used by ASSERT_  to recover state */
+}
 
 class REBackTrackData {
 
-    REBackTrackData(REMatchState x)
+    REBackTrackData(REGlobalData gData, int op, int pc, REMatchState x)
     {
         state = new REMatchState(x);
+        continuation_op = op;
+        continuation_pc = pc;
+        lastParen = gData.lastParen;
+        currentState = new REProgState(gData.stateStack[gData.stateStackTop - 1]);
+        if (gData.stateStackTop > 1) {
+            precedingStateTop = gData.stateStackTop - 1;
+            precedingState = new REProgState[precedingStateTop];
+            for (int i = 0; i < precedingStateTop; i++)
+                precedingState[i] = new REProgState(gData.stateStack[i]);
+        }
+        else {
+            precedingStateTop = 0;
+            precedingState = null;
+        }
     }
 
     int continuation_op;                /* where to backtrack to */
@@ -2916,7 +2912,9 @@ class REBackTrackData {
     REProgState currentState;           /* state of op that backtracked */
     REProgState[] precedingState;
     int precedingStateTop;
-};
+    REBackTrackData previous;
+    int stackDepth;
+}
 
 class REGlobalData {
     boolean multiline;
@@ -2926,11 +2924,9 @@ class REGlobalData {
 
     REProgState[] stateStack;         /* stack of state of current ancestors */
     int stateStackTop;
-    int maxStateStack;
 
-    REBackTrackData[] backTrackStack; /* stack of matched-so-far positions */
-    int backTrackStackTop;
-    int maxBackTrack;
+    REBackTrackData backTrackLast; /* last matched-so-far position */
+    int backTrackSize;
 };
 
 /*
