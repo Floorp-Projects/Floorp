@@ -1,0 +1,86 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+LIBRARY_NAME = rdf
+IS_COMPONENT = 1
+
+CPPSRCS =				\
+	dlldeps.cpp			\
+        nsRDFFactory.cpp                \
+	$(NULL)
+
+EXPORTS = \
+        nsRDFCID.h			\
+	$(NULL)
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+MODULE = rdf
+
+REQUIRES = dom js netlib rdf raptor xpcom
+
+# XXX Note dependencies on implementation headers for factory functions
+
+INCLUDES += -I$(srcdir)/../base/src       \
+	    -I$(srcdir)/../content/src    \
+	    -I$(srcdir)/../datasource/src \
+	    $(NULL)
+
+SHARED_LIBRARY_LIBS =			 \
+	$(DIST)/lib/librdfbase_s.a	 \
+	$(DIST)/lib/librdfcontent_s.a	 \
+	$(DIST)/lib/librdfdatasource_s.a \
+	$(DIST)/lib/librdfutil_s.a	 \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	-L$(DIST)/bin	       \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+
+install:: $(TARGETS)
+	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmark-item.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmark-folder-closed.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmark-folder-open.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/personal-folder-closed.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/personal-folder-open.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/folder-open.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/folder-closed.gif $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
+	$(INSTALL) $(srcdir)/../resources/dom-test-1.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/dom-test-1.css $(DIST)/bin/res/rdf
+
