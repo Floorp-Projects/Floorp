@@ -190,8 +190,9 @@ public:
 protected:  
   void ConstructAttributeTable(nsIContent* aElement);
   void ConstructInsertionTable(nsIContent* aElement);
-  void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
-                         nsISupportsArray** aList);
+  void GetNestedChildren(nsIAtom* aTag, PRInt32 aNamespace,
+                         nsIContent* aContent,
+                         nsCOMArray<nsIContent> & aList);
   void CreateKeyHandlers();
 
 protected:
