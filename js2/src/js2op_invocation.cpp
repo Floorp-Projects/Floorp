@@ -155,7 +155,10 @@
                     }
                     else {
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);   // seems out of order, but we need to catch the current top frame 
-                        meta->env->addFrame(fWrap->compileFrame);
+                        // XXX constructing a parameterFrame only for the purpose of holding the 'this'
+                        // need to find a more efficient way of stashing 'this'
+                        // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
+                        meta->env->addFrame(new ParameterFrame(a, fWrap->compileFrame->prototype));
                     }
                 }
             }

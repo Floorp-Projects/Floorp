@@ -141,6 +141,7 @@ namespace MetaData {
                             curAct = --activationStackTop;
                             localFrame = activationStackTop->localFrame;
                             parameterFrame = activationStackTop->parameterFrame;
+                            bCon = activationStackTop->bCon;
                             if (hndlr->mActivation != curAct) {
                                 while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
                                     activationStackTop->newEnv->removeTopFrame();
@@ -153,6 +154,9 @@ namespace MetaData {
                             x = pop();
                         activationStackTop = prev;      // need the one before the target function to 
                                                         // be at the top, because of postincrement
+                        localFrame = activationStackTop->localFrame;
+                        parameterFrame = activationStackTop->parameterFrame;
+                        bCon = activationStackTop->bCon;
                         meta->env = activationStackTop->env;
                     }
                     else {
@@ -858,7 +862,7 @@ namespace MetaData {
         case eBracketWrite:
             return -2;      // pop a base and an index, leave the value
         case eBracketRef:
-            return 1;       // leave the base, pop the index, push the value
+            return 0;       // leave the base, pop the index, push the value
         case eBracketDelete:
             return -1;      // pop base and index, push boolean result
 

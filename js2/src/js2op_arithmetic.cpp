@@ -854,35 +854,38 @@
             bool rval;
             b = pop();
             a = pop();
-            if (meta->objectType(a) != meta->objectType(b))
+            if (JS2VAL_IS_PRIMITIVE(a) != JS2VAL_IS_PRIMITIVE(b))
                 rval = false;
-            else {
-                if (JS2VAL_IS_UNDEFINED(a) || JS2VAL_IS_NULL(a))
-                    rval = true;
-                if (JS2VAL_IS_NUMBER(a)) {
-                    float64 x = meta->toFloat64(a);
-                    float64 y = meta->toFloat64(b);
-                    if ((x != x) || (y != y))
-                        rval = false;
-                    else
-                        if (x == y)
-                            rval = true;
+            else
+                if (meta->objectType(a) != meta->objectType(b))
+                    rval = false;
+                else {
+                    if (JS2VAL_IS_UNDEFINED(a) || JS2VAL_IS_NULL(a))
+                        rval = true;
+                    if (JS2VAL_IS_NUMBER(a)) {
+                        float64 x = meta->toFloat64(a);
+                        float64 y = meta->toFloat64(b);
+                        if ((x != x) || (y != y))
+                            rval = false;
                         else
-                            if ((x == 0) && (y == 0))
+                            if (x == y)
                                 rval = true;
                             else
-                                rval = false;
-                }
-                else {
-                    if (JS2VAL_IS_STRING(a))
-                        rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
-                    else
-                        if (JS2VAL_IS_BOOLEAN(a))
-                            rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
+                                if ((x == 0) && (y == 0))
+                                    rval = true;
+                                else
+                                    rval = false;
+                    }
+                    else {
+                        if (JS2VAL_IS_STRING(a))
+                            rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(b));
                         else
-                            rval = (a == b);
+                            if (JS2VAL_IS_BOOLEAN(a))
+                                rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
+                            else
+                                rval = (a == b);
+                    }
                 }
-            }
             if (op == eIdentical)
                 push(BOOLEAN_TO_JS2VAL(rval));
             else

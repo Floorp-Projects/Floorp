@@ -156,12 +156,7 @@ namespace MetaData {
                 {
                     LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
                     l->labelID = bCon->getLabel();
-    /*
-        A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
-        contained iteration statements. (i.e. one can 'break' out of a labelled statement, but not 'continue'
-        one, however the statement label becomes a 'continuable' label for all contained iteration statements.)
-    */
-                    // Make sure there is no existing break target with the same name
+                    // Make sure there is no existing target with the same name
                     for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
                         switch ((*si)->getKind()) {
                         case StmtNode::label:
@@ -248,6 +243,92 @@ namespace MetaData {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                     g->blockCount = 0;
                     g->tgtID = -1;
+                    if (g->name) {
+                        // need to find the closest 'breakable' statement covered by the named label
+                        LabelID tgt = -1;
+                        bool foundit = false;
+                        for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                                    ((g->tgtID == -1) && (si != end) && !foundit); si++)
+                        {
+                            switch ((*si)->getKind()) {
+                            case StmtNode::label:
+                                {
+                                    LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                    if (l->name == *g->name) {
+                                        g->tgtID = l->labelID;
+                                        foundit = true;
+                                    }
+                                }
+                                break;
+                            case StmtNode::block:
+                                g->blockCount++;
+                                break;
+/*
+                            case StmtNode::While:
+                            case StmtNode::DoWhile:
+                                {
+                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                    tgt = w->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::For:
+                            case StmtNode::ForIn:
+                                {
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
+                                    tgt = f->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::Switch:
+                                {
+                                    SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
+                                    tgt = s->breakLabelID;
+                                }
+                                break;
+*/
+                            }
+                        }
+                    }
+                    else {
+                        // un-labelled, just find the closest breakable statement
+                        for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                                        ((g->tgtID == -1) && (si != end)); si++) {
+                            switch ((*si)->getKind()) {
+                            case StmtNode::block:
+                                g->blockCount++;
+                                break;
+                            case StmtNode::While:
+                            case StmtNode::DoWhile:
+                                {
+                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                    g->tgtID = w->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::For:
+                            case StmtNode::ForIn:
+                                {
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
+                                    g->tgtID = f->breakLabelID;
+                                }
+                                break;
+                            case StmtNode::Switch:
+                                {
+                                    SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
+                                    g->tgtID = s->breakLabelID;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (g->tgtID == -1) 
+                        reportError(Exception::syntaxError, "No break target available", p->pos);
+                }
+                break;
+
+/*                
+                {
+                    GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                    g->blockCount = 0;
+                    g->tgtID = -1;
                     for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
                                 ((g->tgtID == -1) && (si != end)); si++) {
                         if (g->name) {
@@ -297,27 +378,56 @@ namespace MetaData {
                         }
                     }
                     if (g->tgtID == -1) 
-                        reportError(Exception::syntaxError, "No such break target available", p->pos);
+                        reportError(Exception::syntaxError, "No break target available", p->pos);
                 }
                 break;
+*/
             case StmtNode::Continue:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                     g->blockCount = 0;
                     g->tgtID = -1;
-                    for (TargetListIterator si = targetList.begin(), end = targetList.end();
-                                    ((g->tgtID == -1) && (si != end)); si++) {
-                        if (g->name) {
-                            // Make sure the name is on the targetList as a viable continue target...
-                            if ((*si)->getKind() == StmtNode::label) {
-                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
-                                if (l->name == *g->name) {
-                                    g->tgtID = l->labelID;
-                                    break;
+                    if (g->name) {
+                        // need to find the closest 'continuable' statement covered by the named label
+                        LabelID tgt = -1;
+                        bool foundit = false;
+                        for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                                    ((g->tgtID == -1) && (si != end) && !foundit); si++)
+                        {
+                            switch ((*si)->getKind()) {
+                            case StmtNode::label:
+                                {
+                                    LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                    if (l->name == *g->name) {
+                                        g->tgtID = tgt;
+                                        foundit = true;
+                                    }
                                 }
+                                break;
+                            case StmtNode::block:
+                                g->blockCount++;
+                                break;
+                            case StmtNode::While:
+                            case StmtNode::DoWhile:
+                                {
+                                    UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                    tgt = w->continueLabelID;
+                                }
+                                break;
+                            case StmtNode::For:
+                            case StmtNode::ForIn:
+                                {
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
+                                    tgt = f->continueLabelID;
+                                }
+                                break;
                             }
                         }
-                        else {
+                    }
+                    else {
+                        // un-labelled, just find the closest breakable statement
+                        for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                                        ((g->tgtID == -1) && (si != end)); si++) {
                             // only some non-label statements will do
                             switch ((*si)->getKind()) {
                             case StmtNode::block:
@@ -336,11 +446,12 @@ namespace MetaData {
                                     ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
                                     g->tgtID = f->continueLabelID;
                                 }
+                                break;
                             }
                         }
                     }
                     if (g->tgtID == -1) 
-                        reportError(Exception::syntaxError, "No such break target available", p->pos);
+                        reportError(Exception::syntaxError, "No continue target available", p->pos);
                 }
                 break;
             case StmtNode::Throw:
@@ -822,8 +933,9 @@ namespace MetaData {
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                bCon->setLabel(l->labelID);
                 SetupStmt(env, phase, l->stmt);
+                // labelled statements target are break targets
+                bCon->setLabel(l->labelID);
             }
             break;
         case StmtNode::If:
@@ -999,12 +1111,16 @@ namespace MetaData {
                     regionalFrame = checked_cast<NonWithFrame *>(*--fi);
                 FrameVariable *frV = makeFrameVariable(regionalFrame);
                 ASSERT(frV->kind != FrameVariable::Parameter);
+                Reference *switchTemp;
+                if (frV->kind == FrameVariable::Package)
+                    switchTemp = new (*referenceArena) PackageSlotReference(frV->frameSlot);
+                else
+                    switchTemp = new (*referenceArena) FrameSlotReference(frV->frameSlot);
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
                 Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eFrameSlotWrite, p->pos);
-                bCon->addShort(frV->frameSlot);
+                switchTemp->emitWriteBytecode(bCon, p->pos);
 
                 // First time through, generate the conditional waterfall 
                 StmtNode *s = sw->statements;
@@ -1012,11 +1128,10 @@ namespace MetaData {
                     if (s->getKind() == StmtNode::Case) {
                         ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
                         if (c->expr) {
-                            bCon->emitOp(eFrameSlotRead, c->pos);
-                            bCon->addShort(frV->frameSlot);
+                            switchTemp->emitReadBytecode(bCon, p->pos);
                             Reference *r = SetupExprNode(env, phase, c->expr, &exprType);
                             if (r) r->emitReadBytecode(bCon, c->pos);
-                            bCon->emitOp(eEqual, c->pos);
+                            bCon->emitOp(eIdentical, c->pos);
                             bCon->emitBranch(eBranchTrue, c->labelID, c->pos);
                         }
                         else
@@ -1969,10 +2084,10 @@ doAssignBinary:
             op = eNotEqual;
             goto boolBinary;
         case ExprNode::identical:
-            op = eEqual;
+            op = eIdentical;
             goto boolBinary;
         case ExprNode::notIdentical:
-            op = eNotEqual;
+            op = eNotIdentical;
             goto boolBinary;
 boolBinary:
             *exprType = booleanClass;
@@ -3574,6 +3689,12 @@ static const uint8 urlCharType[256] =
 			return meta->engine->nanValue;
     }
 
+
+    static js2val GlobalObject_version(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        return meta->engine->allocNumber(1.5);
+    }
+
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
@@ -3694,7 +3815,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         createDynamicProperty(glob, &world.identifiers["NaN"], engine->nanValue, ReadAccess, true, false);
         createDynamicProperty(glob, &world.identifiers["Infinity"], engine->posInfValue, ReadAccess, true, false);
         // XXX add 'version()' 
-        createDynamicProperty(glob, &world.identifiers["version"], INT_TO_JS2VAL(0), ReadAccess, true, false);
+//        createDynamicProperty(glob, &world.identifiers["version"], INT_TO_JS2VAL(0), ReadAccess, true, false);
 
 
 /*** ECMA 3  Object Class ***/
@@ -3720,10 +3841,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
         addGlobalObjectFunction("eval", GlobalObject_eval, 1);
         addGlobalObjectFunction("toString", GlobalObject_toString, 1);
+        addGlobalObjectFunction("valueOf", GlobalObject_toString, 1);
         addGlobalObjectFunction("unescape", GlobalObject_unescape, 1);
         addGlobalObjectFunction("escape", GlobalObject_escape, 1);
         addGlobalObjectFunction("parseInt", GlobalObject_parseInt, 2);
         addGlobalObjectFunction("parseFloat", GlobalObject_parseFloat, 1);
+        addGlobalObjectFunction("version", GlobalObject_version, 1);
 
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
