@@ -168,7 +168,6 @@ PRInt32
 _PR_MD_BIND(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
 {
     PRInt32 rv;
-    int one = 1;
 
     rv = bind(fd->secret->md.osfd, (const struct sockaddr *)&(addr->inet), addrlen);
 
@@ -180,6 +179,20 @@ _PR_MD_BIND(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
     return 0;
 }
 
+PRInt32
+_PR_MD_LISTEN(PRFileDesc *fd, PRIntn backlog)
+{
+    PRInt32 rv;
+
+    rv = listen(fd->secret->md.osfd, backlog);
+
+    if (rv == SOCKET_ERROR)  {
+        _PR_MD_MAP_DEFAULT_ERROR(WSAGetLastError());
+        return -1;
+    }
+
+    return 0;
+}
 
 PRInt32
 _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, 
