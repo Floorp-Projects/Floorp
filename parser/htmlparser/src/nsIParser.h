@@ -102,6 +102,7 @@ class nsIParser : public nsISupports {
      *  until you wind up being emitted to the given contentsink (which may or may not
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
+    virtual PRBool  EnableParser(PRBool aState) = 0;
     virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual PRInt32 Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE) = 0;

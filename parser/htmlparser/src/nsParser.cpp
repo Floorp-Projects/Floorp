@@ -439,6 +439,20 @@ CParserContext* nsParser::PopContext() {
   return oldContext;
 }
 
+/**
+ *  Call this when you want control whether or not the parser will parse
+ *  and tokenize input (TRUE), or whether it just caches input to be 
+ *  parsed later (FALSE).
+ *  
+ *  @update  gess 9/1/98
+ *  @param   aState determines whether we parse/tokenize or just cache.
+ *  @return  current state
+ */
+PRBool nsParser::EnableParser(PRBool aState){
+  mParserEnabled=aState;
+  return mParserEnabled;
+}
+
 
 /**
  *  This is the main controlling routine in the parsing process. 
@@ -528,6 +542,7 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
   delete pc;
   return result;
 }
+
 
 /**
  *  This routine is called to cause the parser to continue
