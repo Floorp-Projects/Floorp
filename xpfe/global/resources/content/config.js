@@ -58,10 +58,12 @@ var view = ({
 
 function onConfigLoad()
 {
+    document.title = "about:config";
     var prefCount = {value:0};
     var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
     var prefBranch = prefService.getBranch(null);
     var prefArray = prefBranch.getChildList("" , prefCount);
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
     var prefName, prefType, prefTypeName, prefValue, prefIndex, prefLockState;
 
     var i = 0;
@@ -90,16 +92,16 @@ function onConfigLoad()
         prefType = prefBranch.getPrefType(prefArray[i]);
         switch(prefType)
         {
-            case 32:
+            case nsIPrefBranch.PREF_STRING:
                 prefTypeName = "string";
                 prefValue = prefBranch.getCharPref(prefArray[i]);
                 prefValue = htmlEscape(prefValue);
                 break;
-            case 64:
+            case nsIPrefBranch.PREF_INT:
                 prefTypeName = "int";
                 prefValue = prefBranch.getIntPref(prefArray[i]);
                 break;
-            case 128:
+            case nsIPrefBranch.PREF_BOOL:
                 prefTypeName = "bool";
                 prefValue = prefBranch.getBoolPref(prefArray[i]);
                 break;
