@@ -1111,7 +1111,7 @@ NS_IMETHODIMP
 nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
   
   const nsString&   name = aNode.GetText();
-  if (name.Equals("XIF_DOC_INFO"))
+  if (name.Equals("document_info"))
   {
     PRInt32 count=aNode.GetAttributeCount();
     for(PRInt32 i=0;i<count;i++)

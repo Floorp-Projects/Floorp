@@ -182,6 +182,7 @@ static RTFEntry gRTFTable[] = {
  * @param 
  * @return
  */
+#if 0
 static const char* GetTagName(eRTFTags aTag) {
   PRInt32  cnt=sizeof(gRTFTable)/sizeof(RTFEntry);
   PRInt32  low=0; 
@@ -198,6 +199,7 @@ static const char* GetTagName(eRTFTags aTag) {
   }
   return "";
 }
+#endif
 
 /**
  * 
@@ -674,7 +676,6 @@ nsresult CRtfDTD::EmitStyleContainer(CToken* aToken,eRTFTags aTag,PRBool aState)
   nsresult result=NS_OK;
 
   CRTFControlWord* theToken=(CRTFControlWord*)aToken;
-  PRUnichar theChar=theToken->mArgument.CharAt(0);
   const char* theTag=0;
   eHTMLTags   theID=eHTMLTag_unknown;
 
@@ -752,8 +753,8 @@ nsresult CRtfDTD::HandleControlWord(CToken* aToken){
             break;
           case eRTFCtrl_tab:
             {
-              CTextToken theToken("   ");
-              result=HandleContent(&theToken);
+              CTextToken theToken2("   ");
+              result=HandleContent(&theToken2);
             }
             break;
           case eRTFCtrl_bold:
@@ -888,7 +889,7 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
   
   if(NS_SUCCEEDED(result)) {
     if(('a'<=theChar) && (theChar<='z')) {
-      PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
+      result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
       if(NS_OK==result) {
         //ok, now look for an option parameter...
 
