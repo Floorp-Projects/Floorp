@@ -1041,6 +1041,14 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
 PRBool
 nsObjectFrame::IsHidden() const
 {
+	// check the style visibility first
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+	if (disp != nsnull)
+  {
+    if(!disp->IsVisibleOrCollapsed())
+      return PR_TRUE;
+  }
+
   nsCOMPtr<nsIAtom> tag;
   mContent->GetTag(*getter_AddRefs(tag));
 
