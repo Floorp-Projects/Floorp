@@ -85,6 +85,7 @@ header_prolog(TreeState *state)
         if (i > 0)
             fputc('\n', state->file);
     }
+#if 0
     /*
      * Support IDL files that don't include a root IDL file that defines
      * NS_NO_VTABLE.
@@ -94,7 +95,7 @@ header_prolog(TreeState *state)
             "#ifndef NS_NO_VTABLE\n"
             "#define NS_NO_VTABLE\n"
             "#endif\n");
-    
+#endif    
     return TRUE;
 }
 
