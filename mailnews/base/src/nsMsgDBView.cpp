@@ -4254,7 +4254,15 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   msgHdr->GetMessageKey(&msgKey);
   msgHdr->GetThreadId(&threadId);
   msgHdr->GetThreadParent(&threadParent);
-  
+
+  nsCOMPtr <nsIMsgThread> thread;
+  m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
+  if (thread)
+  {
+    PRUint32 threadFlags;
+    thread->GetFlags(&threadFlags);
+    flags |= threadFlags;
+  }
   // ### this isn't quite right, is it? Should be checking that our thread parent key is none?
   if (threadParent == nsMsgKey_None) 
     flags |= MSG_VIEW_FLAG_ISTHREAD;
