@@ -438,7 +438,7 @@ sub last_good_time {
                     isbusted => $isbusted };
             }
             elsif( ($build_table->[$t][$row]->{buildstatus} eq 'busted') ||
-                   ($build_table->[$t][$row]->{buildstatus} eq 'testfailed'){
+                   ($build_table->[$t][$row]->{buildstatus} eq 'testfailed')){
                 $isbusted = 1;
             }
             else {
