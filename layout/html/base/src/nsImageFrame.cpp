@@ -329,11 +329,14 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   }
   // If we already have an image container, OnStartContainer won't be called
   // Set the animation mode here
-  nsCOMPtr<imgIContainer> image;
   if (currentRequest) {
+    nsCOMPtr<imgIContainer> image;
     currentRequest->GetImage(getter_AddRefs(image));
-    if (image)
+    if (image) {
       image->SetAnimationMode(mPresContext->ImageAnimationMode());
+      // Ensure the animation (if any) is started.
+      image->StartAnimation();
+    }
   }
 
   return rv;
@@ -538,6 +541,8 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    *   one loop = 2
    */
   aImage->SetAnimationMode(mPresContext->ImageAnimationMode());
+  // Ensure the animation (if any) is started.
+  aImage->StartAnimation();
 
   if (IsPendingLoad(aRequest)) {
     // We don't care

@@ -3904,6 +3904,8 @@ NS_IMETHODIMP nsTreeImageListener::OnStartDecode(imgIRequest *aRequest)
 NS_IMETHODIMP nsTreeImageListener::OnStartContainer(imgIRequest *aRequest,
                                                     imgIContainer *aImage)
 {
+  // Ensure the animation (if any) is started
+  aImage->StartAnimation();
   return NS_OK;
 }
 

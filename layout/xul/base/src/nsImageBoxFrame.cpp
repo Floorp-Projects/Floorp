@@ -724,6 +724,9 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   // If we have no prescontext, what's going on?
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);
 
+  // Ensure the animation (if any) is started
+  image->StartAnimation();
+
   mHasImage = PR_TRUE;
   mSizeFrozen = PR_FALSE;
 

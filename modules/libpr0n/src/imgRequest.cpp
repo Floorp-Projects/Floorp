@@ -223,10 +223,9 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
     proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
 
   if (mImage && (mObservers.Count() == 1)) {
-    LOG_MSG(gImgLog, "imgRequest::AddProxy", "starting animation");
+    LOG_MSG(gImgLog, "imgRequest::AddProxy", "resetting animation");
 
     mImage->ResetAnimation();
-    mImage->StartAnimation();
   }
 
   if (mState & onStopRequest) {
