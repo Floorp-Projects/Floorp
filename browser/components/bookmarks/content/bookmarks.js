@@ -663,7 +663,7 @@ var BookmarksCommand = {
 
     var transaction = new BookmarkImportTransaction("import");
     for (var index = countBefore; index < countAfter; index++) {
-      var nChildArc = RDF.GetResource(RDF_NS+"_"+String(index));
+      var nChildArc = RDFCU.IndexToOrdinalResource(index);
       var rChild    = BMDS.GetTarget(rTarget, nChildArc, true);
       transaction.item   .push(rChild);
       transaction.parent .push(rTarget);
@@ -1103,18 +1103,15 @@ var BookmarksUtils = {
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns the container of a given container
-  getParentOfContainer: function(aChildURI)
+  getParentOfContainer: function(aChild)
   {
-    var rChild = RDF.GetResource(aChildURI);
-    var arcsIn = BMDS.ArcLabelsIn(rChild);
+    var arcsIn = BMDS.ArcLabelsIn(aChild);
     var containerArc;
-    var splitUri;
     while (arcsIn.hasMoreElements()) {
       containerArc = arcsIn.getNext();
-      splitUri     = containerArc.QueryInterface(kRDFRSCIID).Value.split("#");
-      if (splitUri[0]+"#" == RDF_NS && /^_[0-9]+$/.test(splitUri[1])) {
-        return BMDS.GetSources(containerArc, rChild, true).getNext()
-                   .QueryInterface(kRDFRSCIID).Value;
+      if (RDFCU.IsOrdinalProperty(containerArc)) {
+        return BMDS.GetSources(containerArc, aChild, true).getNext()
+                   .QueryInterface(kRDFRSCIID);
       }
     }
     return null;
