@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "gtklayout.h"
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
