@@ -756,7 +756,7 @@ nsRDFElement::ChildCount(PRInt32& aResult) const
 {
     nsresult rv;
     if (!mChildren) {
-        nsRDFElement* unconstThis = const_cast<nsRDFElement*>(this);
+        nsRDFElement* unconstThis = NS_CONST_CAST(nsRDFElement*, this);
         if (NS_FAILED(rv = unconstThis->GenerateChildren()))
             return rv;
     }
@@ -770,7 +770,7 @@ nsRDFElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
     nsresult rv;
     if (!mChildren) {
-        nsRDFElement* unconstThis = const_cast<nsRDFElement*>(this);
+        nsRDFElement* unconstThis = NS_CONST_CAST(nsRDFElement*, this);
         if (NS_FAILED(rv = unconstThis->GenerateChildren()))
             return rv;
     }
@@ -787,8 +787,15 @@ nsRDFElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 NS_IMETHODIMP
 nsRDFElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    if (! mChildren) {
+        nsRDFElement* unconstThis = NS_CONST_CAST(nsRDFElement*, this);
+        if (NS_FAILED(rv = unconstThis->GenerateChildren()))
+            return rv;
+    }
+
+    aResult = mChildren->IndexOf(aPossibleChild);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1368,7 +1375,7 @@ nsRDFElement::CreateChild(nsIRDFNode* value,
     child->mResource = value;
     NS_ADDREF(child->mResource);
 
-    child->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(this));
+    child->mParent   = NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsRDFElement*, this));
     NS_ADDREF(child->mParent);
 
     result = child;
@@ -1400,7 +1407,7 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
     NS_ADDREF(child);
     child->mDocument = mDocument;
     child->mResource = property;
-    child->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(this));
+    child->mParent   = NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsRDFElement*, this));
 
     NS_ADDREF(child->mDocument);
     NS_ADDREF(child->mResource);
@@ -1453,7 +1460,7 @@ nsRDFElement::CreateChild(nsIRDFNode* property,
 
     grandchild->mDocument = mDocument;
     grandchild->mResource = value;
-    grandchild->mParent   = NS_STATIC_CAST(nsIContent*, const_cast<nsRDFElement*>(child));
+    grandchild->mParent   = NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsRDFElement*, child));
 
     NS_ADDREF(grandchild->mDocument);
     NS_ADDREF(grandchild->mResource);

@@ -106,8 +106,7 @@ public:
     virtual PRBool Equals(const nsHashKey* aKey) const {
         ResourceHashKey* that;
 
-        //if (! (that = dynamic_cast<ResourceHashKey*>(aKey)))
-        if (! (that = (ResourceHashKey*)(aKey)))
+        if (! (that = NS_DYNAMIC_CAST(ResourceHashKey*, aKey)))
             return PR_FALSE;
 
         return (that->mResource == this->mResource);
