@@ -36,6 +36,7 @@ XPIDLSRCS = \
 	nsIRDFService.idl		\
 	nsIRDFXMLDataSource.idl		\
 	nsIRDFXMLSource.idl		\
+	xulstubs.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
