@@ -458,7 +458,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::h3 ||
            tag == nsAccessibilityAtoms::h4 ||
            tag == nsAccessibilityAtoms::h5 ||
-           tag == nsAccessibilityAtoms::h6
+           tag == nsAccessibilityAtoms::h6 ||
+           tag == nsAccessibilityAtoms::q
 #endif
            ) {
     *aAccessible = new nsGenericAccessible(node, weakShell);
