@@ -56,6 +56,7 @@ typedef nsID nsIID;
 #define NS_ERROR_NOT_INITIALIZED (NS_ERROR_BASE + 4)
 #define NS_ERROR_ALREADY_INITIALIZED (NS_ERROR_BASE + 5)
 #define NS_ERROR_NOT_IMPLEMENTED (NS_ERROR_BASE + 6)
+#define NS_ERROR_FAILURE (NS_ERROR_BASE + 7)
 
 // Generic result data type
 typedef PRUint32 nsresult;
