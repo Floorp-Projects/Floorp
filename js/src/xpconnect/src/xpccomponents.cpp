@@ -246,8 +246,8 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, nsid,
-                                                nsIJSIID::GetIID(),
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, NS_STATIC_CAST(nsIJSID*,nsid),
+                                                NS_GET_IID(nsIJSIID),
                                                 &nsid_wrapper)))
                 {
                     JSObject* idobj;
@@ -788,6 +788,9 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
 }
 
 /***************************************************************************/
+
+// Currently the possible results do not change at runtime, so they are only
+// cached once (unlike ProgIDs, CLSIDs, and IIDs)
 
 class nsXPCResults : public nsIXPCResults, public nsIXPCScriptable
 {

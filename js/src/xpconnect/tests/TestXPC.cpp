@@ -824,13 +824,13 @@ int main()
 
             if(JS_GetProperty(jscontext, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
-                JSObject* bar = JSVAL_TO_OBJECT(v);
-                nsISupports* wrapper3;
+//                JSObject* bar = JSVAL_TO_OBJECT(v);
+                nsISupports* wrapper4;
                 if(NS_SUCCEEDED(xpc->WrapJS(jscontext,
                                        JSVAL_TO_OBJECT(v),
-                                       nsITestXPCFoo::GetIID(), &wrapper3)))
+                                       nsITestXPCFoo::GetIID(), &wrapper4)))
                 {
-                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper3;
+                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper4;
                     int result;
                     JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
@@ -839,7 +839,7 @@ int main()
 
                     nsIXPConnectWrappedJSMethods* methods;
 
-                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
+                    wrapper4->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 
@@ -864,7 +864,7 @@ int main()
 //                    XPC_DUMP(xpc, 50);
 
                     NS_RELEASE(methods);
-                    NS_RELEASE(wrapper3);
+                    NS_RELEASE(wrapper4);
 
                 }
             }

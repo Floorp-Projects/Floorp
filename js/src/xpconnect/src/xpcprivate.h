@@ -534,10 +534,16 @@ public:
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
 
+    static JSBool GetConstantAsJSVal(JSContext *cx,
+                                     nsIInterfaceInfo* iinfo,
+                                     PRUint16 index,
+                                     jsval* vp);
+
     JSBool GetConstantAsJSVal(JSContext* cx,
                               nsXPCWrappedNative* wrapper,
                               const XPCNativeMemberDescriptor* desc,
-                              jsval* vp);
+                              jsval* vp)
+        {return GetConstantAsJSVal(cx, mInfo, desc->index, vp);}
 
     enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
 
@@ -760,7 +766,7 @@ protected:
 
 // nsJSIID
 
-class nsJSIID : public nsIJSIID
+class nsJSIID : public nsIJSIID, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -770,6 +776,7 @@ public:
 
     // we implement the rest...
     NS_DECL_NSIJSIID
+    XPC_DECLARE_IXPCSCRIPTABLE
 
     static nsJSIID* NewID(const char* str);
 
@@ -779,8 +786,13 @@ public:
 private:
     void ResolveName();
 
+    void FillCache(JSContext *cx, JSObject *obj,
+                   nsIXPConnectWrappedNative *wrapper,
+                   nsIXPCScriptable *arbitrary);
+
 private:
     nsJSID mDetails;
+    JSBool mCacheFilled;
 };
 
 // nsJSCID
