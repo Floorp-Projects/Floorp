@@ -1320,6 +1320,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
             contentType.get(),
             charType,
             mEncodingFlags);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
 
     mCurrentBaseURI = oldBaseURI;
@@ -1376,6 +1377,8 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         SetDocumentBase(docData->mDocument, docData->mBaseURI);
 
         delete docData;
+
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     }
 
     // Empty list
@@ -1887,11 +1890,24 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
     return NS_OK;
 }
 
+nsresult
+nsWebBrowserPersist::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
+{
+    if (!(mPersistFlags & PERSIST_FLAGS_FIXUP_ORIGINAL_DOM))
+    {
+        return aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+    }
+
+    *aNodeOut = aNodeIn;
+    NS_ADDREF((*aNodeOut));
+    return NS_OK;
+}
 
 nsresult
 nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
     nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
 {
+    nsresult rv;
     *aNodeOut = nsnull;
 
     // Fix up href and file links in the elements
@@ -1899,76 +1915,103 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
     nsCOMPtr<nsIDOMHTMLAnchorElement> nodeAsAnchor = do_QueryInterface(aNodeIn);
     if (nodeAsAnchor)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupAnchor(*aNodeOut);
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupAnchor(*aNodeOut);
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLAreaElement> nodeAsArea = do_QueryInterface(aNodeIn);
     if (nodeAsArea)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupAnchor(*aNodeOut);
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupAnchor(*aNodeOut);
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNodeIn);
     if (nodeAsBody)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "background");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "background");
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNodeIn);
     if (nodeAsImage)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupAnchor(*aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "src");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupAnchor(*aNodeOut);
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
     }
     
     nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNodeIn);
     if (nodeAsScript)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "src");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
     }
     
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNodeIn);
     if (nodeAsLink)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "href");
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "href");
         // TODO if "type" attribute == "text/css"
         //        fixup stylesheet
-        return NS_OK;
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLFrameElement> nodeAsFrame = do_QueryInterface(aNodeIn);
     if (nodeAsFrame)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "src");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLIFrameElement> nodeAsIFrame = do_QueryInterface(aNodeIn);
     if (nodeAsIFrame)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "src");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
     }
 
     nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNodeIn);
     if (nodeAsInput)
     {
-        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
-        FixupNodeAttribute(*aNodeOut, "src");
-        return NS_OK;
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
     }
 
     return NS_OK;
@@ -2524,7 +2567,7 @@ NS_IMETHODIMP nsEncoderNodeFixup::FixupNode(
     aNode->GetNodeType(&type);
     if (type == nsIDOMNode::ELEMENT_NODE)
     {
-        mWebBrowserPersist->CloneNodeWithFixedUpURIAttributes(aNode, aOutNode);
+        return mWebBrowserPersist->CloneNodeWithFixedUpURIAttributes(aNode, aOutNode);
     }
 
     return NS_OK;
