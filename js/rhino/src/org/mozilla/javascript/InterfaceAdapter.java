@@ -177,8 +177,7 @@ public class InterfaceAdapter implements Cloneable, Callable
                 // Avoid an error for an undefined value; return null instead.
                 result = null;
             } else {
-                result = NativeJavaObject.coerceType(nonPrimitiveResultClass,
-                                                     result, true);
+                result = Context.jsToJava(result, nonPrimitiveResultClass);
             }
         }
         return result;

@@ -215,7 +215,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         Object[] origArgs = args;
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
-            Object x = NativeJavaObject.coerceType(argTypes[i], arg, true);
+            Object x = Context.jsToJava(arg, argTypes[i]);
             if (x != arg) {
                 if (args == origArgs) {
                     args = (Object[])origArgs.clone();

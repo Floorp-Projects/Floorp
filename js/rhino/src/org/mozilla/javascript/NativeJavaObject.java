@@ -239,9 +239,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     private static final int JSTYPE_JAVA_ARRAY  = 7; // JavaArray
     private static final int JSTYPE_OBJECT      = 8; // Scriptable
 
-    public static final byte CONVERSION_TRIVIAL      = 1;
-    public static final byte CONVERSION_NONTRIVIAL   = 0;
-    public static final byte CONVERSION_NONE         = 99;
+    static final byte CONVERSION_TRIVIAL      = 1;
+    static final byte CONVERSION_NONTRIVIAL   = 0;
+    static final byte CONVERSION_NONE         = 99;
 
     /**
      * Derive a ranking based on how "natural" the conversion is.
@@ -252,7 +252,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
      * <a href="http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html">
      * "preferred method conversions" from Live Connect 3</a>
      */
-    public static int getConversionWeight(Object fromObj, Class to) {
+    static int getConversionWeight(Object fromObj, Class to) {
         int fromCode = getJSTypeCode(fromObj);
 
         switch (fromCode) {
@@ -479,19 +479,19 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     /**
      * Not intended for public use. Callers should use the
      * public API Context.toType.
-     * @see org.mozilla.javascript.Context#toType.
+     * @see org.mozilla.javascript.Context#jsToJava(Object, Class).
      * @deprecated as of 1.5 Release 4
      */
-    public static Object coerceType(Class type, Object value) {
-        return coerceType(type, value, true);
+    public static Object coerceType(Class type, Object value)
+    {
+        return coerceTypeImpl(type, value);
     }
 
     /**
      * Type-munging for field setting and method invocation.
      * Conforms to LC3 specification
      */
-    static Object coerceType(Class type, Object value,
-                             boolean useErrorHandler)
+    static Object coerceTypeImpl(Class type, Object value)
     {
         if (value != null && value.getClass() == type) {
             return value;
@@ -502,7 +502,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         case JSTYPE_NULL:
             // raise error if type.isPrimitive()
             if (type.isPrimitive()) {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             return null;
 
@@ -512,7 +512,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return "undefined";
             }
             else {
-                reportConversionError("undefined", type, !useErrorHandler);
+                reportConversionError("undefined", type);
             }
             break;
 
@@ -527,7 +527,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return value.toString();
             }
             else {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             break;
 
@@ -536,14 +536,14 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return ScriptRuntime.toString(value);
             }
             else if (type == ScriptRuntime.ObjectClass) {
-                return coerceToNumber(Double.TYPE, value, useErrorHandler);
+                return coerceToNumber(Double.TYPE, value);
             }
             else if ((type.isPrimitive() && type != Boolean.TYPE) ||
                      ScriptRuntime.NumberClass.isAssignableFrom(type)) {
-                return coerceToNumber(type, value, useErrorHandler);
+                return coerceToNumber(type, value);
             }
             else {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             break;
 
@@ -562,16 +562,16 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     return new Character(((String)value).charAt(0));
                 }
                 else {
-                    return coerceToNumber(type, value, useErrorHandler);
+                    return coerceToNumber(type, value);
                 }
             }
             else if ((type.isPrimitive() && type != Boolean.TYPE)
                      || ScriptRuntime.NumberClass.isAssignableFrom(type))
             {
-                return coerceToNumber(type, value, useErrorHandler);
+                return coerceToNumber(type, value);
             }
             else {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             break;
 
@@ -588,7 +588,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return value.toString();
             }
             else {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             break;
 
@@ -596,9 +596,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         case JSTYPE_JAVA_ARRAY:
             if (type.isPrimitive()) {
                 if (type == Boolean.TYPE) {
-                    reportConversionError(value, type, !useErrorHandler);
+                    reportConversionError(value, type);
                 }
-                return coerceToNumber(type, value, useErrorHandler);
+                return coerceToNumber(type, value);
             }
             else {
                 if (value instanceof Wrapper) {
@@ -612,7 +612,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                         return value;
                     }
                     else {
-                        reportConversionError(value, type, !useErrorHandler);
+                        reportConversionError(value, type);
                     }
                 }
             }
@@ -624,9 +624,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             }
             else if (type.isPrimitive()) {
                 if (type == Boolean.TYPE) {
-                    reportConversionError(value, type, !useErrorHandler);
+                    reportConversionError(value, type);
                 }
-                return coerceToNumber(type, value, useErrorHandler);
+                return coerceToNumber(type, value);
             }
             else if (type.isInstance(value)) {
                 return value;
@@ -648,11 +648,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 for (int i = 0 ; i < length ; ++i) {
                     try  {
                         Array.set(Result, i, coerceType(arrayType,
-                                                        array.get(i, array),
-                                                        useErrorHandler));
+                                                        array.get(i, array)));
                     }
                     catch (EvaluatorException ee) {
-                        reportConversionError(value, type, !useErrorHandler);
+                        reportConversionError(value, type);
                     }
                 }
 
@@ -662,7 +661,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 value = ((Wrapper)value).unwrap();
                 if (type.isInstance(value))
                     return value;
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             else if (type.isInterface()) {
                 if (value instanceof Function
@@ -700,10 +699,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                         }
                     }
                 }
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             else {
-                reportConversionError(value, type, !useErrorHandler);
+                reportConversionError(value, type);
             }
             break;
         }
@@ -711,7 +710,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         return value;
     }
 
-    static Object coerceToNumber(Class type, Object value, boolean useErrorHandler) {
+    private static Object coerceToNumber(Class type, Object value)
+    {
         Class valueClass = value.getClass();
 
         // Character
@@ -722,8 +722,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             return new Character((char)toInteger(value,
                                                  ScriptRuntime.CharacterClass,
                                                  (double)Character.MIN_VALUE,
-                                                 (double)Character.MAX_VALUE,
-                                                 useErrorHandler));
+                                                 (double)Character.MAX_VALUE));
         }
 
         // Double, Float
@@ -731,7 +730,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
             return valueClass == ScriptRuntime.DoubleClass
                 ? value
-                : new Double(toDouble(value, useErrorHandler));
+                : new Double(toDouble(value));
         }
 
         if (type == ScriptRuntime.FloatClass || type == Float.TYPE) {
@@ -739,7 +738,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return value;
             }
             else {
-                double number = toDouble(value, useErrorHandler);
+                double number = toDouble(value);
                 if (Double.isInfinite(number) || Double.isNaN(number)
                     || number == 0.0) {
                     return new Float((float)number);
@@ -770,8 +769,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return new Integer((int)toInteger(value,
                                                   ScriptRuntime.IntegerClass,
                                                   (double)Integer.MIN_VALUE,
-                                                  (double)Integer.MAX_VALUE,
-                                                  useErrorHandler));
+                                                  (double)Integer.MAX_VALUE));
             }
         }
 
@@ -792,8 +790,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return new Long(toInteger(value,
                                           ScriptRuntime.LongClass,
                                           min,
-                                          max,
-                                          useErrorHandler));
+                                          max));
             }
         }
 
@@ -805,8 +802,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return new Short((short)toInteger(value,
                                                   ScriptRuntime.ShortClass,
                                                   (double)Short.MIN_VALUE,
-                                                  (double)Short.MAX_VALUE,
-                                                  useErrorHandler));
+                                                  (double)Short.MAX_VALUE));
             }
         }
 
@@ -818,16 +814,16 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 return new Byte((byte)toInteger(value,
                                                 ScriptRuntime.ByteClass,
                                                 (double)Byte.MIN_VALUE,
-                                                (double)Byte.MAX_VALUE,
-                                                useErrorHandler));
+                                                (double)Byte.MAX_VALUE));
             }
         }
 
-        return new Double(toDouble(value, useErrorHandler));
+        return new Double(toDouble(value));
     }
 
 
-    static double toDouble(Object value, boolean useErrorHandler) {
+    private static double toDouble(Object value)
+    {
         if (value instanceof Number) {
             return ((Number)value).doubleValue();
         }
@@ -837,7 +833,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         else if (value instanceof Scriptable) {
             if (value instanceof Wrapper) {
                 // XXX: optimize tail-recursion?
-                return toDouble(((Wrapper)value).unwrap(), useErrorHandler);
+                return toDouble(((Wrapper)value).unwrap());
             }
             else {
                 return ScriptRuntime.toNumber(value);
@@ -860,26 +856,25 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 }
                 catch (IllegalAccessException e) {
                     // XXX: ignore, or error message?
-                    reportConversionError(value, Double.TYPE, !useErrorHandler);
+                    reportConversionError(value, Double.TYPE);
                 }
                 catch (InvocationTargetException e) {
                     // XXX: ignore, or error message?
-                    reportConversionError(value, Double.TYPE, !useErrorHandler);
+                    reportConversionError(value, Double.TYPE);
                 }
             }
             return ScriptRuntime.toNumber(value.toString());
         }
     }
 
-    static long toInteger(Object value, Class type, double min, double max,
-                          boolean useErrorHandler)
+    private static long toInteger(Object value, Class type,
+                                  double min, double max)
     {
-        double d = toDouble(value, useErrorHandler);
+        double d = toDouble(value);
 
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type,
-                                  !useErrorHandler);
+            reportConversionError(ScriptRuntime.toString(value), type);
         }
 
         if (d > 0.0) {
@@ -891,19 +886,13 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         if (d < min || d > max) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type,
-                                  !useErrorHandler);
+            reportConversionError(ScriptRuntime.toString(value), type);
         }
         return (long)d;
     }
 
-    static void reportConversionError(Object value, Class type,
-                                      boolean throwIllegalArg)
+    static void reportConversionError(Object value, Class type)
     {
-        if (throwIllegalArg) {
-            throw new IllegalArgumentException("Cannot convert " + value +
-                                               " to type " + type);
-        }
         throw Context.reportRuntimeError2
             ("msg.conversion.not.allowed",
              value.toString(), JavaMembers.javaSignature(type));

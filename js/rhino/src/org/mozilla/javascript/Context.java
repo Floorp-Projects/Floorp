@@ -1733,12 +1733,32 @@ public class Context
      *        types are represented using the TYPE fields in the corresponding
      *        wrapper class in java.lang.
      * @return the converted value
-     * @throws IllegalArgumentException if the conversion cannot be performed
+     * @throws EvaluatorException if the conversion cannot be performed
+     */
+    public static Object jsToJava(Object value, Class desiredType)
+        throws EvaluatorException
+    {
+        return NativeJavaObject.coerceTypeImpl(desiredType, value);
+    }
+
+    /**
+     * @deprecated.
+     * Use {@link #jsToJava(Object, Class)} instead which throws
+     * {@link EvaluatorException} and not
+     * {@link java.lang.IllegalArgumentException} which allows to properly
+     * process exceptions in the script code.
      */
     public static Object toType(Object value, Class desiredType)
         throws IllegalArgumentException
     {
-        return NativeJavaObject.coerceType(desiredType, value, false);
+        try {
+            return jsToJava(value, desiredType);
+        } catch (EvaluatorException ex) {
+            IllegalArgumentException
+                ex2 = new IllegalArgumentException(ex.getMessage());
+            Kit.initCause(ex2, ex);
+            throw ex2;
+        }
     }
 
     /**

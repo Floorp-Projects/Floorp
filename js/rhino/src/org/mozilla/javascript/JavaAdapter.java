@@ -132,7 +132,7 @@ public final class JavaAdapter implements IdFunctionCall
             // Avoid an error for an undefined value; return null instead.
             return null;
         }
-        return NativeJavaObject.coerceType(c, result, true);
+        return Context.jsToJava(result, c);
     }
 
     public static Scriptable createAdapterWrapper(Scriptable obj,

@@ -133,8 +133,7 @@ class JavaMembers
                 throw reportMemberNotFound(name);
             }
             Class setType = bp.setter.argTypes[0];
-            Object[] args = { NativeJavaObject.coerceType(setType, value,
-                                                          true) };
+            Object[] args = { Context.jsToJava(value, setType) };
             try {
                 bp.setter.invoke(javaObject, args);
             } catch (Exception ex) {
@@ -148,8 +147,7 @@ class JavaMembers
                 throw Context.reportRuntimeError1(str, name);
             }
             Field field = (Field)member;
-            Object javaValue = NativeJavaObject.coerceType(field.getType(),
-                                                           value, true);
+            Object javaValue = Context.jsToJava(value, field.getType());
             try {
                 field.set(javaObject, javaValue);
             } catch (IllegalAccessException accessEx) {
