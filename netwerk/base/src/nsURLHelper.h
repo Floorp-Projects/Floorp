@@ -81,6 +81,9 @@ NS_NET void ToLowerCase(char* str);
 NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
                                  PRUint32 *endPos, char* *scheme);
 
+/* Convert the URI string to a known case (or nsIURI::UNKNOWN) */
+NS_NET PRUint32 SchemeTypeFor(const char* iScheme);
+
 #ifdef __cplusplus
 }
 #endif

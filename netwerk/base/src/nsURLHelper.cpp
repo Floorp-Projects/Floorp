@@ -395,3 +395,40 @@ NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
     }
     return NS_ERROR_MALFORMED_URI;
 }
+
+/* Convert the URI string to a known case (or nsIURI::UNKNOWN) */
+NS_NET PRUint32 SchemeTypeFor(const char* i_scheme)
+{
+    // This order is a speculation on what gets used more (or needs more
+    // help in optimizing) 
+    if (!i_scheme)
+        return nsIURI::UNKNOWN;
+    if (0 == PL_strcasecmp("chrome", i_scheme))
+        return nsIURI::ABOUT;
+    else if (0 == PL_strcasecmp("resource", i_scheme))
+        return nsIURI::CHROME;
+    else if (0 == PL_strcasecmp("jar", i_scheme))
+        return nsIURI::JAR;
+    else if (0 == PL_strcasecmp("file", i_scheme))
+        return nsIURI::FILE;
+    else if (0 == PL_strcasecmp("http", i_scheme))
+        return nsIURI::HTTP;
+    else if (0 == PL_strcasecmp("ftp", i_scheme))
+        return nsIURI::FTP;
+    else if (0 == PL_strcasecmp("https", i_scheme))
+        return nsIURI::HTTPS;
+    else if (0 == PL_strcasecmp("mailbox", i_scheme))
+        return nsIURI::MAILBOX;
+    else if (0 == PL_strcasecmp("imap", i_scheme))
+        return nsIURI::IMAP;
+    else if (0 == PL_strcasecmp("javascript", i_scheme))
+        return nsIURI::JAVASCRIPT;
+    else if (0 == PL_strcasecmp("about", i_scheme))
+        return nsIURI::RESOURCE;
+    else if (0 == PL_strcasecmp("mailto", i_scheme))
+        return nsIURI::MAILTO;
+    else if (0 == PL_strcasecmp("news", i_scheme))
+        return nsIURI::NEWS;
+    else
+        return nsIURI::UNKNOWN;
+}
