@@ -246,6 +246,7 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 	break;
     }
 
+    PR_fprintf(PR_STDERR, "Password check failed:  No password found.\n");
     return NULL;
 }
 
