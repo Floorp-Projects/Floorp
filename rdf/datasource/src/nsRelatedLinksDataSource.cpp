@@ -215,7 +215,7 @@ RelatedLinksDataSource::RelatedLinksDataSource(void)
                                                    (nsISupports**) &gRDFService);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksRoot", &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name", &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL", &kNC_URL);
@@ -450,7 +450,7 @@ RelatedLinksDataSourceCallback::RelatedLinksDataSourceCallback(nsIRDFDataSource 
 
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksRoot", &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
 		
 		if (nsnull != (mParentArray = new nsVoidArray()))
 		{
@@ -628,7 +628,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 					}
 
 					nsCOMPtr<nsIRDFResource>	newTopic;
-					nsAutoString			rlRoot(NC_NAMESPACE_URI "RelatedLinksRoot");
+					nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
 					if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(rlRoot, getter_AddRefs(newTopic))))
 					{
 						if (title.Length() > 0)
@@ -686,7 +686,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 					PRInt32		numParents = mParentArray->Count();
 					if (numParents > 1)
 					{
-						nsAutoString	rlRoot(NC_NAMESPACE_URI "RelatedLinksRoot");
+						nsAutoString	rlRoot(kURINC_RelatedLinksRoot);
 						rv = rdf_CreateAnonymousResource(rlRoot, getter_AddRefs(relatedLinksChild));
 					}
 					else
@@ -780,7 +780,7 @@ RelatedLinksDataSource::GetTargets(nsIRDFResource *source,
 	*targets = nsnull;
 	if ((tv) && (source == kNC_RelatedLinksRoot))
 	{
-		if (property == kNC_Child)
+		if ((property == kNC_Child) && (mPerformQuery == PR_TRUE))
 		{
 			rv = GetRelatedLinksListing(source);
             if (NS_FAILED(rv)) return rv;
