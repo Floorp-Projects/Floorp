@@ -36,10 +36,12 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
 #include "nsRDFCID.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsString.h"
@@ -1430,7 +1432,8 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 class nsBookmarksService : public nsIBookmarksService,
 			   public nsIRDFDataSource,
 			   public nsIRDFRemoteDataSource,
-			   public nsIStreamListener
+			   public nsIStreamListener,
+			   public nsIRDFObserver
 {
 protected:
 	nsCOMPtr<nsIRDFDataSource>	mInner;
@@ -1440,6 +1443,7 @@ protected:
 	PRBool				busySchedule;
 	nsCOMPtr<nsIRDFResource>	busyResource;
 	PRUint32			htmlSize;
+	nsCOMPtr<nsISupportsArray>      mObservers;
 #ifdef	XP_MAC
 	PRBool				mIEFavoritesAvailable;
 
@@ -1465,10 +1469,8 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
 
-	nsresult ChangeURL(nsIRDFResource* aSource,
-                           nsIRDFResource* aProperty,
-                           nsIRDFNode* aOldTarget,
-                           nsIRDFNode* aNewTarget);
+	nsresult ChangeURL(nsIRDFResource* aOldURL,
+                           nsIRDFResource* aNewURL);
 
 	nsBookmarksService();
 	virtual ~nsBookmarksService();
@@ -1546,13 +1548,8 @@ public:
 		return mInner->HasAssertion(source, property, target, tv, hasAssertion);
 	}
 
-	NS_IMETHOD AddObserver(nsIRDFObserver* aObserver) {
-		return mInner->AddObserver(aObserver);
-	}
-
-	NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver) {
-		return mInner->RemoveObserver(aObserver);
-	}
+	NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
+	NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
 
 	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
 			       nsISimpleEnumerator** labels) {
@@ -1603,6 +1600,9 @@ public:
 
 	// nsIRDFRemoteDataSource
 	NS_DECL_NSIRDFREMOTEDATASOURCE
+
+	// nsIRDFObserver
+	NS_DECL_NSIRDFOBSERVER
 };
 
 
@@ -2396,22 +2396,21 @@ NS_NewBookmarksService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 	if (aOuter)
 		return NS_ERROR_NO_AGGREGATION;
 
-	nsresult rv = NS_OK;
+	*aResult = nsnull;
 
 	nsBookmarksService* result = new nsBookmarksService();
 	if (! result)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = result->Init();
-	if (NS_SUCCEEDED(rv))
-		rv = result->QueryInterface(aIID, aResult);
+	NS_ADDREF(result);
 
-	if (NS_FAILED(rv)) {
-		delete result;
-		*aResult = nsnull;
-		return rv;
+	nsresult rv;
+	rv = result->Init();
+	if (NS_SUCCEEDED(rv)) {
+		rv = result->QueryInterface(aIID, aResult);
 	}
 
+	NS_RELEASE(result);
 	return rv;
 }
 
@@ -2422,7 +2421,29 @@ NS_NewBookmarksService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 
 NS_IMPL_ADDREF(nsBookmarksService);
-NS_IMPL_RELEASE(nsBookmarksService);
+
+NS_IMETHODIMP_(nsrefcnt)
+nsBookmarksService::Release()
+{
+	// We need a special implementation of Release() because our mInner
+	// holds a Circular References back to us.
+	NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+	--mRefCnt;
+	NS_LOG_RELEASE(this, mRefCnt, "nsBookmarksService");
+
+	if (mInner && mRefCnt == 1) {
+		mInner = nsnull;
+		return 0;
+	}
+	else if (mRefCnt == 0) {
+		delete this;
+		return 0;
+	}
+	else {
+		return mRefCnt;
+	}
+}
+
 
 
 
@@ -2753,7 +2774,15 @@ nsBookmarksService::Assert(nsIRDFResource* aSource,
 
 	if (CanAccept(aSource, aProperty, aTarget))
 	{
-		if (NS_SUCCEEDED(rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue)))
+		if (aProperty == kNC_URL)
+		{
+			nsCOMPtr<nsIRDFResource> newURL;
+			rv = getResourceFromLiteralNode(aTarget, getter_AddRefs(newURL));
+			if (NS_FAILED(rv)) return rv;
+			
+			rv = ChangeURL(aSource, newURL);
+		}
+		else if (NS_SUCCEEDED(rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue)))
 		{
 			UpdateBookmarkLastModifiedDate(aSource);
 		}
@@ -2770,7 +2799,10 @@ nsBookmarksService::Unassert(nsIRDFResource* aSource,
 {
 	nsresult	rv = NS_RDF_ASSERTION_REJECTED;
 
-	if (CanAccept(aSource, aProperty, aTarget))
+	if (aProperty == kNC_URL) {
+		// We can't accept somebody trying to remove a URL. Sorry!
+	}
+	else if (CanAccept(aSource, aProperty, aTarget))
 	{
 		if (NS_SUCCEEDED(rv = mInner->Unassert(aSource, aProperty, aTarget)))
 		{
@@ -2812,102 +2844,139 @@ nsBookmarksService::getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource 
 
 
 nsresult
-nsBookmarksService::ChangeURL(nsIRDFResource *aSource, nsIRDFResource *aProperty,
-                           nsIRDFNode *aOldTarget, nsIRDFNode *aNewTarget)
+nsBookmarksService::ChangeURL(nsIRDFResource* aOldURL,
+			      nsIRDFResource* aNewURL)
 {
-	nsresult			rv;
-	nsCOMPtr<nsIRDFResource>	newURLRes, oldURLRes;
+	nsresult rv;
 
-	if (NS_FAILED(rv = getResourceFromLiteralNode(aOldTarget, getter_AddRefs(oldURLRes))))
-		return(rv);
-	if (NS_FAILED(rv = getResourceFromLiteralNode(aNewTarget, getter_AddRefs(newURLRes))))
-		return(rv);
-	
-	// make all arcs coming out of oldURLRes also come out of newURLRes
-	// (if aNewTarget doesn't already have a value for the arc)
+	// Make all arcs coming out of aOldURL also come out of
+	// aNewURL.  Wallop any previous values.
 	
 	nsCOMPtr<nsISimpleEnumerator>	arcsOut;
-	if (NS_FAILED(rv = ArcLabelsOut(oldURLRes, getter_AddRefs(arcsOut))))
-	{
-		return(rv);
-	}
-	PRBool		hasMoreArcsOut = PR_TRUE;
-	while(hasMoreArcsOut == PR_TRUE)
-	{
-		if (NS_FAILED(rv = arcsOut->HasMoreElements(&hasMoreArcsOut)))
-			break;
-		if (hasMoreArcsOut == PR_FALSE)	break;
+	rv = mInner->ArcLabelsOut(aOldURL, getter_AddRefs(arcsOut));
+	if (NS_FAILED(rv)) return(rv);
 
-		nsCOMPtr<nsISupports>	aArc;
-		if (NS_FAILED(rv = arcsOut->GetNext(getter_AddRefs(aArc))))
+	while (1)
+	{
+		PRBool hasMoreArcsOut;
+		rv = arcsOut->HasMoreElements(&hasMoreArcsOut);
+		if (NS_FAILED(rv)) return rv;
+
+		if (! hasMoreArcsOut)
 			break;
-		nsCOMPtr<nsIRDFResource>	aProperty = do_QueryInterface(aArc);
-		if (!aProperty)	continue;
+
+		nsCOMPtr<nsISupports> arc;
+		rv = arcsOut->GetNext(getter_AddRefs(arc));
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIRDFResource> property = do_QueryInterface(arc);
+		NS_ASSERTION(property != nsnull, "arc is not a property");
+		if (!property)
+			return NS_ERROR_UNEXPECTED;
 
 		// don't copy URL property as it is special
-		if (aProperty.get() == kNC_URL)	continue;
+		if (property.get() == kNC_URL)
+			continue;
 
-		nsCOMPtr<nsIRDFNode>	aValue;
-		if (NS_SUCCEEDED(rv = GetTarget(newURLRes, aProperty, PR_TRUE, getter_AddRefs(aValue)))
-			&& (rv == NS_RDF_NO_VALUE))
-		{
-			if (NS_SUCCEEDED(rv = GetTarget(oldURLRes, aProperty, PR_TRUE, getter_AddRefs(aValue)))
-				&& (rv != NS_RDF_NO_VALUE))
-			{
-				if (NS_FAILED(rv = Assert(newURLRes, aProperty, aValue, PR_TRUE)))
-				{
-					continue;
-				}
+		// XXX What if more than one target?
+		nsCOMPtr<nsIRDFNode> oldvalue;
+		rv = mInner->GetTarget(aNewURL, property, PR_TRUE, getter_AddRefs(oldvalue));
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIRDFNode> newvalue;
+		rv = mInner->GetTarget(aOldURL, property, PR_TRUE, getter_AddRefs(newvalue));
+		if (NS_FAILED(rv)) return rv;
+
+		if (oldvalue) {
+			if (newvalue) {
+				rv = mInner->Change(aNewURL, property, oldvalue, newvalue);
+			}
+			else {
+				rv = mInner->Unassert(aNewURL, property, oldvalue);
 			}
 		}
+		else if (newvalue) {
+			rv = mInner->Assert(aNewURL, property, newvalue, PR_TRUE);
+		}
+		else {
+			// do nothing
+			rv = NS_OK;
+		}
+
+		if (NS_FAILED(rv)) return rv;
 	}
 	
-	// make all arcs pointing to oldURLRes now point to newURLRes
+	// Make all arcs pointing to aOldURL now point to aNewURL
+	nsCOMPtr<nsISimpleEnumerator> arcsIn;
+	rv = mInner->ArcLabelsIn(aOldURL, getter_AddRefs(arcsIn));
+	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsISimpleEnumerator>	arcsIn;
-	if (NS_FAILED(rv = ArcLabelsIn(oldURLRes, getter_AddRefs(arcsIn))))
+	while (1)
 	{
-		return(rv);
-	}
-	PRBool		hasMoreArcsIn = PR_TRUE;
-	while(hasMoreArcsIn == PR_TRUE)
-	{
-		if (NS_FAILED(rv = arcsIn->HasMoreElements(&hasMoreArcsIn)))
-			break;
-		if (hasMoreArcsIn == PR_FALSE)	break;
-		
-		nsCOMPtr<nsISupports>	aArc;
-		if (NS_FAILED(rv = arcsIn->GetNext(getter_AddRefs(aArc))))
-			break;
-		nsCOMPtr<nsIRDFResource>	aProperty = do_QueryInterface(aArc);
-		if (!aProperty)	continue;
+		PRBool hasMoreArcsIn;
+		rv = arcsIn->HasMoreElements(&hasMoreArcsIn);
+		if (NS_FAILED(rv)) return rv;
 
-		// don't copy URL property as it is special
-		if (aProperty.get() == kNC_URL)	continue;
-
-		nsCOMPtr<nsISimpleEnumerator>	srcList;
-		if (NS_FAILED(rv = GetSources(aProperty, oldURLRes, PR_TRUE,
-			getter_AddRefs(srcList))))
+		if (! hasMoreArcsIn)
 			break;
 		
-		PRBool	hasMoreSrcs = PR_TRUE;
-		while(hasMoreSrcs == PR_TRUE)
+		nsCOMPtr<nsIRDFResource> property;
+
 		{
-			if (NS_FAILED(rv = srcList->HasMoreElements(&hasMoreSrcs)))
-				break;
-			if (hasMoreSrcs == PR_FALSE)	break;
+			nsCOMPtr<nsISupports> isupports;
+			rv = arcsIn->GetNext(getter_AddRefs(isupports));
+			if (NS_FAILED(rv)) return rv;
 
-			nsCOMPtr<nsISupports>	aSrc;
-			if (NS_FAILED(rv = srcList->GetNext(getter_AddRefs(aSrc))))
-				break;
-			nsCOMPtr<nsIRDFResource>	aSource = do_QueryInterface(aSrc);
-			if (!aSource)	continue;
+			property = do_QueryInterface(isupports);
+			NS_ASSERTION(property != nsnull, "arc is not a property");
+			if (! property)
+				return NS_ERROR_UNEXPECTED;
+		}
 
-			if (NS_FAILED(rv = Change(aSource, aProperty, oldURLRes, newURLRes)))
+		nsCOMPtr<nsISimpleEnumerator> sources;
+		rv = GetSources(property, aOldURL, PR_TRUE, getter_AddRefs(sources));
+		if (NS_FAILED(rv)) return rv;
+		
+		while (1)
+		{
+			PRBool hasMoreSrcs;
+			rv = sources->HasMoreElements(&hasMoreSrcs);
+			if (NS_FAILED(rv)) return rv;
+
+			if (! hasMoreSrcs)
 				break;
+
+			nsCOMPtr<nsISupports> isupports;
+			rv = sources->GetNext(getter_AddRefs(isupports));
+			if (NS_FAILED(rv)) return rv;
+
+			nsCOMPtr<nsIRDFResource> source = do_QueryInterface(isupports);
+			NS_ASSERTION(source != nsnull, "source is not a resource");
+			if (! source)
+				return NS_ERROR_UNEXPECTED;
+
+			rv = mInner->Change(source, property, aOldURL, aNewURL);
+			if (NS_FAILED(rv)) return rv;
 		}
 	}
-	return(rv);
+
+	// Set a notification that the URL property changed, so that
+	// anyone observing it'll update correctly.
+	{
+		const char* uri;
+		rv = aNewURL->GetValueConst(&uri);
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIRDFLiteral> literal;
+		rv = gRDF->GetLiteral(nsAutoString(uri).GetUnicode(), getter_AddRefs(literal));
+		if (NS_FAILED(rv)) return rv;
+
+		rv = OnAssert(aNewURL, kNC_URL, literal);
+		if (NS_FAILED(rv)) return rv;
+	}
+
+
+	return NS_OK;
 }
 
 
@@ -2924,10 +2993,14 @@ nsBookmarksService::Change(nsIRDFResource* aSource,
 	{
 		if (aProperty == kNC_URL)
 		{
-			if (NS_SUCCEEDED(rv = ChangeURL(aSource, aProperty, aOldTarget, aNewTarget)))
-			{
-				// should we update the last modified date on aNewTarget?
-			}
+			// It should be the case that aOldTarget
+			// points to a literal whose value is the same
+			// as aSource's URI.
+			nsCOMPtr<nsIRDFResource> newURL;
+			rv = getResourceFromLiteralNode(aNewTarget, getter_AddRefs(newURL));
+			if (NS_FAILED(rv)) return rv;
+			
+			rv = ChangeURL(aSource, newURL);
 		}
 		else if (NS_SUCCEEDED(rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget)))
 		{
@@ -2956,6 +3029,37 @@ nsBookmarksService::Move(nsIRDFResource* aOldSource,
 		}
 	}
 	return(rv);
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::AddObserver(nsIRDFObserver* aObserver)
+{
+	if (! aObserver)
+		return NS_ERROR_NULL_POINTER;
+
+	if (! mObservers) {
+		nsresult rv;
+		rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+		if (NS_FAILED(rv)) return rv;
+	}
+
+	mObservers->AppendElement(aObserver);
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
+{
+	if (! aObserver)
+		return NS_ERROR_NULL_POINTER;
+
+	if (mObservers) {
+		mObservers->RemoveElement(aObserver);
+	}
+
+	return NS_OK;
 }
 
 
@@ -3367,8 +3471,11 @@ nsBookmarksService::ReadBookmarks()
 	// so we need to forget about any previous bookmarks
 	mInner = nsnull;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-				nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner)))
+				nsnull, nsIRDFDataSource::GetIID(), getter_AddRefs(mInner))))
 		return(rv);
+
+	rv = mInner->AddObserver(this);
+	if (NS_FAILED(rv)) return rv;
 
 	nsFileSpec	bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
@@ -3926,6 +4033,109 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 }
 
 
+//----------------------------------------------------------------------
+//
+// nsIRDFObserver interface
+//
+
+NS_IMETHODIMP
+nsBookmarksService::OnAssert(nsIRDFResource* aSource,
+			     nsIRDFResource* aProperty,
+			     nsIRDFNode* aTarget)
+{
+	if (mObservers) {
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->OnAssert(aSource, aProperty, aTarget);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::OnUnassert(nsIRDFResource* aSource,
+			       nsIRDFResource* aProperty,
+			       nsIRDFNode* aTarget)
+{
+	if (mObservers) {
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->OnUnassert(aSource, aProperty, aTarget);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::OnChange(nsIRDFResource* aSource,
+			     nsIRDFResource* aProperty,
+			     nsIRDFNode* aOldTarget,
+			     nsIRDFNode* aNewTarget)
+{
+	if (mObservers) {
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::OnMove(nsIRDFResource* aOldSource,
+			   nsIRDFResource* aNewSource,
+			   nsIRDFResource* aProperty,
+			   nsIRDFNode* aTarget)
+{
+	if (mObservers) {
+		nsresult rv;
+
+		PRUint32 count;
+		rv = mObservers->Count(&count);
+		if (NS_FAILED(rv)) return rv;
+
+		for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+			nsIRDFObserver* obs =
+				NS_REINTERPRET_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+			(void) obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+			NS_RELEASE(obs);
+		}
+	}
+
+	return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Component Exports
