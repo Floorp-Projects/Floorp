@@ -5159,13 +5159,15 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsIScriptContext* aContext,
                                 nsISupportsArray* aNodeInfos)
 {
+    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
+                 "script source still loading when serializing?!");
+    if (!mJSObject)
+        return NS_ERROR_FAILURE;
+
     nsresult rv;
 
     // Write basic prototype data
     aStream->Write16(mLineNo);
-
-    NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
-                 "script source still loading when serializing?!");
 
     JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                         aContext->GetNativeContext());
