@@ -122,6 +122,7 @@ GECKO_LIBS =			\
 	-lexpat			\
 	-lxmltok		\
 	-ljsdom			\
+	-lcaps          \
 	$(NULL)
 
 IMGLIB_LIBS =	     \
