@@ -2916,9 +2916,20 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
                         nsCSSProps::kFloatEdgeKTable);
   case eCSSProperty_font_family:
     return ParseFamily(aErrorCode, aValue);
-  case eCSSProperty_font_size:
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
-                        nsCSSProps::kFontSizeKTable);
+  case eCSSProperty_font_size: 
+    {
+      // NONSTANDARD: *** Nav 4 ignores font-size values with no units ***
+      //              if quirk mode AND the value had no units (type=Number) and
+      //              it was otherwise successful, we need to ignore it
+      PRBool bRetVal = ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+                                            nsCSSProps::kFontSizeKTable);
+      if (bRetVal == PR_TRUE &&
+          mNavQuirkMode == PR_TRUE && 
+          mToken.mType == eCSSToken_Number){
+        return bRetVal = PR_FALSE;
+      }
+      return bRetVal;
+    }
   case eCSSProperty_font_size_adjust:
     return ParseVariant(aErrorCode, aValue, VARIANT_HON,
                         nsnull);
