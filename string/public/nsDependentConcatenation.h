@@ -65,20 +65,20 @@ class NS_COM nsDependentConcatenation
       int
       GetCurrentStringFromFragment( const nsReadableFragment<char_type>& aFragment ) const
         {
-          return (NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & mFragmentIdentifierMask) ? kRightString : kLeftString;
+          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kRightString : kLeftString;
         }
 
       int
       SetLeftStringInFragment( nsReadableFragment<char_type>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & ~mFragmentIdentifierMask);
+          aFragment.SetID(aFragment.GetIDAsInt() & ~mFragmentIdentifierMask);
           return kLeftString;
         }
 
       int
       SetRightStringInFragment( nsReadableFragment<char_type>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) | mFragmentIdentifierMask);
+          aFragment.SetID(aFragment.GetIDAsInt() | mFragmentIdentifierMask);
           return kRightString;
         }
 
@@ -142,20 +142,20 @@ class NS_COM nsDependentCConcatenation
       int
       GetCurrentStringFromFragment( const nsReadableFragment<char_type>& aFragment ) const
         {
-          return (NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & mFragmentIdentifierMask) ? kRightString : kLeftString;
+          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kRightString : kLeftString;
         }
 
       int
       SetLeftStringInFragment( nsReadableFragment<char_type>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) & ~mFragmentIdentifierMask);
+          aFragment.SetID(aFragment.GetIDAsInt() & ~mFragmentIdentifierMask);
           return kLeftString;
         }
 
       int
       SetRightStringInFragment( nsReadableFragment<char_type>& aFragment ) const
         {
-          aFragment.mFragmentIdentifier = NS_REINTERPRET_CAST(void*, NS_REINTERPRET_CAST(PRUint32, aFragment.mFragmentIdentifier) | mFragmentIdentifierMask);
+          aFragment.SetID(aFragment.GetIDAsInt() | mFragmentIdentifierMask);
           return kRightString;
         }
 
