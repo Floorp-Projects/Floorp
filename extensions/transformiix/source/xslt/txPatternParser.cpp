@@ -41,6 +41,7 @@
 #include "txAtoms.h"
 #include "txStringUtils.h"
 #include "txXSLTPatterns.h"
+#include "txIXPathContext.h"
 
 txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
                                           txIParseContext* aContext,
@@ -304,7 +305,7 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
         nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
         rv = resolveQName(tok->value, getter_AddRefs(prefix), aContext,
-                          getter_AddRefs(lName), nspace);
+                          getter_AddRefs(lName), nspace, PR_TRUE);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
             return rv;

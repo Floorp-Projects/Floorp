@@ -49,6 +49,7 @@
 #include "ExprParser.h"
 #include "nsDOMError.h"
 #include "txURIUtils.h"
+#include "nsIHTMLDocument.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -56,6 +57,7 @@ NS_IMPL_ADDREF(nsXPathEvaluator)
 NS_IMPL_RELEASE(nsXPathEvaluator)
 NS_INTERFACE_MAP_BEGIN(nsXPathEvaluator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
+  NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathEvaluator)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathEvaluator)
 NS_INTERFACE_MAP_END
@@ -73,7 +75,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    ParseContextImpl pContext(aResolver);
+    nsCOMPtr<nsIHTMLDocument> html = do_QueryInterface(mDocument);
+    ParseContextImpl pContext(aResolver, !!html);
     Expr* expression = ExprParser::createExpr(PromiseFlatString(aExpression),
                                               &pContext);
     if (!expression)
@@ -123,6 +126,14 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
     return expression->Evaluate(aContextNode, aType, aInResult, aResult);
 }
 
+
+NS_IMETHODIMP
+nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
+{
+    mDocument = aDocument;
+    return NS_OK;
+}
+
 /*
  * Implementation of txIParseContext private to nsXPathEvaluator
  * ParseContextImpl bases on a nsIDOMXPathNSResolver
@@ -160,6 +171,11 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(nsIAtom* aName,
                                                                  FunctionCall*& aFn)
 {
     return NS_ERROR_XPATH_PARSE_FAILED;
+}
+
+PRBool nsXPathEvaluator::ParseContextImpl::caseInsensitiveNameTests()
+{
+    return mIsHTML;
 }
 
 void nsXPathEvaluator::ParseContextImpl::receiveError(const nsAString& aMsg,

@@ -1270,6 +1270,11 @@ nsresult txPSParseContext::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
     return mPS->resolveFunctionCall(aName, aID, mStyle, aFunction);
 }
 
+PRBool txPSParseContext::caseInsensitiveNameTests()
+{
+    return PR_FALSE;
+}
+
 void txPSParseContext::receiveError(const nsAString& aMsg, nsresult aRes)
 {
     mPS->receiveError(aMsg, aRes);

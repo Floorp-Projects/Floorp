@@ -38,6 +38,7 @@ REQUIRES +=	  dom \
 		  xpconnect \
 		  js \
 		  unicharutil \
+		  layout \
 		  $(NULL)
 endif
 
