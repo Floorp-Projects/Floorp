@@ -73,7 +73,7 @@
 #include "nsITimerInternal.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif

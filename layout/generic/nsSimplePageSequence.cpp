@@ -51,7 +51,7 @@
 #include "nsStyleConsts.h"
 #include "nsRegion.h"
 #include "nsLayoutAtoms.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 
 // for header/footer gap & ExtraMargin for Print Preview
 #include "nsIPrefBranch.h"

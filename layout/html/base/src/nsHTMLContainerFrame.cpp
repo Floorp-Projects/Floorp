@@ -62,7 +62,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsReflowPath.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 

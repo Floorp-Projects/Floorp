@@ -34,7 +34,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsStyleContext.h"
 #include "nsStyleChangeList.h"
 #include "nsIEventQueueService.h"

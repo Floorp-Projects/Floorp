@@ -43,7 +43,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintPreviewContext.h"
