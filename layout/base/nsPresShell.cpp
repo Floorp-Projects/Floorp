@@ -180,20 +180,6 @@ static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 
-// supporting bugs 31816, 20760, 22963
-// define USE_OVERRIDE to put prefs in as an override stylesheet
-// otherwise they go in as a Agent stylesheets
-//  - OVERRIDE is better for text and bg colors, but bad for link colors,
-//    so eventually, we should probably have an agent and an override and 
-//    put the link colors in the agent and the text and bg colors in the override,
-//    but using the agent stylesheet with !important rules solves 95% of the 
-//    problem and should suffice for RTM
-//
-// XXX: use agent stylesheet of link colors and link underline, 
-//      user override stylesheet for forcing background and text colors, post RTM
-//
-// #define PREFS_USE_OVERRIDE
-
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
@@ -2106,28 +2092,14 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       // remove the sheet from the styleset: 
       // - note that we have to check for success by comparing the count before and after...
 #ifdef NS_DEBUG
- #ifdef PREFS_USE_OVERRIDE
-      PRInt32 numBefore = mStyleSet->GetNumberOfOverrideStyleSheets();
- #else
-      PRInt32 numBefore = mStyleSet->GetNumberOfAgentStyleSheets();
- #endif
-      NS_ASSERTION(numBefore > 0, "no override stylesheets in styleset, but we have one!");
+      PRInt32 numBefore = mStyleSet->GetNumberOfUserStyleSheets();
+      NS_ASSERTION(numBefore > 0, "no user stylesheets in styleset, but we have one!");
 #endif
-
- #ifdef PREFS_USE_OVERRIDE
-      mStyleSet->RemoveOverrideStyleSheet(mPrefStyleSheet);
- #else 
-      mStyleSet->RemoveAgentStyleSheet(mPrefStyleSheet);
- #endif
+      mStyleSet->RemoveUserStyleSheet(mPrefStyleSheet);
 
 #ifdef DEBUG_attinasi
- #ifdef PREFS_USE_OVERRIDE
-      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfOverrideStyleSheets(),
+      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfUserStyleSheets(),
                    "Pref stylesheet was not removed");
- #else
-      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfAgentStyleSheets(),
-                   "Pref stylesheet was not removed");
- #endif
       printf("PrefStyleSheet removed\n");
 #endif
       // clear the sheet pointer: it is strictly historical now
@@ -2152,11 +2124,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
       result = mPrefStyleSheet->Init(uri);
       if (NS_SUCCEEDED(result)) {
         mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_HTML);
- #ifdef PREFS_USE_OVERRIDE
-        mStyleSet->AppendOverrideStyleSheet(mPrefStyleSheet);
- #else
-        mStyleSet->AppendAgentStyleSheet(mPrefStyleSheet);
- #endif
+        mStyleSet->InsertUserStyleSheetBefore(mPrefStyleSheet, nsnull);
       }
     }
   } else {
