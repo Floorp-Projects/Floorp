@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -24,9 +25,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvlatin
 LIBRARY_NAME	= ucvlatin
 IS_COMPONENT	= 1
-
-CSRCS		=  \
-		  $(NULL)
 
 CPPSRCS		= \
                   nsAsciiToUnicode.cpp \
@@ -61,17 +59,17 @@ CPPSRCS		= \
                   nsMacCEToUnicode.cpp \
                   nsMacGreekToUnicode.cpp \
                   nsMacTurkishToUnicode.cpp \
-                  nsMacCroatianToUnicode.cpp      \
-                  nsMacRomanianToUnicode.cpp      \
-                  nsMacCyrillicToUnicode.cpp      \
-                  nsMacUkrainianToUnicode.cpp     \
-                  nsMacIcelandicToUnicode.cpp     \
-                  nsARMSCII8ToUnicode.cpp         \
-                  nsTCVN5712ToUnicode.cpp         \
-                  nsVISCIIToUnicode.cpp           \
-                  nsVPSToUnicode.cpp              \
-                  nsVIQRToUnicode.cpp              \
-                  nsVNIToUnicode.cpp              \
+                  nsMacCroatianToUnicode.cpp \
+                  nsMacRomanianToUnicode.cpp \
+                  nsMacCyrillicToUnicode.cpp \
+                  nsMacUkrainianToUnicode.cpp \
+                  nsMacIcelandicToUnicode.cpp \
+                  nsARMSCII8ToUnicode.cpp \
+                  nsTCVN5712ToUnicode.cpp \
+                  nsVISCIIToUnicode.cpp \
+                  nsVPSToUnicode.cpp \
+                  nsVIQRToUnicode.cpp \
+                  nsVNIToUnicode.cpp \
                   nsUTF8ToUnicode.cpp \
                   nsUTF7ToUnicode.cpp \
                   nsMUTF7ToUnicode.cpp \
@@ -91,11 +89,11 @@ CPPSRCS		= \
                   nsUnicodeToISO88597.cpp \
                   nsUnicodeToISO88598.cpp \
                   nsUnicodeToISO88599.cpp \
-                  nsUnicodeToISO885910.cpp        \
-                  nsUnicodeToISO885913.cpp        \
-                  nsUnicodeToISO885914.cpp        \
-                  nsUnicodeToISO885915.cpp        \
-                  nsUnicodeToISOIR111.cpp        \
+                  nsUnicodeToISO885910.cpp \
+                  nsUnicodeToISO885913.cpp \
+                  nsUnicodeToISO885914.cpp \
+                  nsUnicodeToISO885915.cpp \
+                  nsUnicodeToISOIR111.cpp \
                   nsUnicodeToCP1250.cpp \
                   nsUnicodeToCP1251.cpp \
                   nsUnicodeToCP1252.cpp \
@@ -104,26 +102,26 @@ CPPSRCS		= \
                   nsUnicodeToCP1255.cpp \
                   nsUnicodeToCP1256.cpp \
                   nsUnicodeToCP1257.cpp \
-                  nsUnicodeToCP1258.cpp           \
-                  nsUnicodeToCP874.cpp            \
-                  nsUnicodeToCP866.cpp            \
-                  nsUnicodeToKOI8R.cpp           \
-                  nsUnicodeToKOI8U.cpp            \
+                  nsUnicodeToCP1258.cpp \
+                  nsUnicodeToCP874.cpp \
+                  nsUnicodeToCP866.cpp \
+                  nsUnicodeToKOI8R.cpp \
+                  nsUnicodeToKOI8U.cpp \
                   nsUnicodeToMacRoman.cpp \
                   nsUnicodeToMacCE.cpp \
                   nsUnicodeToMacGreek.cpp \
                   nsUnicodeToMacTurkish.cpp \
-                  nsUnicodeToMacCroatian.cpp      \
-                  nsUnicodeToMacRomanian.cpp      \
-                  nsUnicodeToMacCyrillic.cpp      \
-                  nsUnicodeToMacUkrainian.cpp     \
-                  nsUnicodeToMacIcelandic.cpp     \
-                  nsUnicodeToARMSCII8.cpp         \
-                  nsUnicodeToTCVN5712.cpp         \
-                  nsUnicodeToVISCII.cpp           \
-                  nsUnicodeToVPS.cpp              \
-                  nsUnicodeToVIQR.cpp              \
-                  nsUnicodeToVNI.cpp              \
+                  nsUnicodeToMacCroatian.cpp \
+                  nsUnicodeToMacRomanian.cpp \
+                  nsUnicodeToMacCyrillic.cpp \
+                  nsUnicodeToMacUkrainian.cpp \
+                  nsUnicodeToMacIcelandic.cpp \
+                  nsUnicodeToARMSCII8.cpp \
+                  nsUnicodeToTCVN5712.cpp \
+                  nsUnicodeToVISCII.cpp \
+                  nsUnicodeToVPS.cpp \
+                  nsUnicodeToVIQR.cpp \
+                  nsUnicodeToVNI.cpp \
                   nsUnicodeToUTF8.cpp \
                   nsUnicodeToUTF7.cpp \
                   nsUnicodeToMUTF7.cpp \
@@ -149,3 +147,15 @@ CFLAGS		+= -DUSE_NSREG -D__STDC__
 REQUIRES	= $(MODULE) libxpcom 
 
 include $(topsrcdir)/config/rules.mk
+
+#
+# This is here because AIX can't handle really long arg lists, like
+# the list of all .o files in this directory.  So break it into two
+# distinct commands.
+#
+avoid_arglist_probs: FORCE
+	rm -f core nsU*.o
+
+clean realclean distclean: avoid_arglist_probs
+
+.PHONY: avoid_arglist_probs
