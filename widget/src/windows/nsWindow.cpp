@@ -80,6 +80,12 @@
 #include "nsITimer.h"
 #include "nsITimerQueue.h"
 
+// For SetIcon
+#include "nsSpecialSystemDirectory.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsXPIDLString.h"
+#include "nsIFile.h"
+
 #define kWindowPositionSlop 10
 
 #ifndef SPI_GETWHEELSCROLLLINES
@@ -4295,6 +4301,72 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
     ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)title);
     delete [] title;
   }
+  return NS_OK;
+} 
+
+NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec) 
+{
+  // Start at app chrome directory.
+  nsCOMPtr<nsIFile> chromeDir;
+  if ( NS_FAILED( NS_GetSpecialDirectory( NS_APP_CHROME_DIR,
+                                          getter_AddRefs( chromeDir ) ) ) ) {
+      return NS_ERROR_FAILURE;
+  }
+  // Get native file name of that directory.
+  nsXPIDLString rootPath;
+  chromeDir->GetUnicodePath( getter_Copies( rootPath ) );
+
+  // Start there.
+  nsAutoString iconPath( rootPath );
+
+  // Now take input path...
+  nsAutoString iconSpec( anIconSpec );
+  // ...append ".ico" to that.
+  iconSpec.Append( NS_LITERAL_STRING(".ico") );
+  // ...and figure out where /chrome/... is within that
+  // (and skip the "resource:///chrome" part).
+  nsAutoString key(NS_LITERAL_STRING("/chrome/"));
+  PRInt32 n = iconSpec.Find( key ) + key.Length();
+  // Convert / to \.
+  nsAutoString slash(NS_LITERAL_STRING("/"));
+  nsAutoString bslash(NS_LITERAL_STRING("\\"));
+  iconSpec.ReplaceChar( *(slash.GetUnicode()), *(bslash.GetUnicode()) );
+
+  // Append that to icon resource path.
+  iconPath.Append( iconSpec.GetUnicode() + n - 1 );
+
+  HICON bigIcon = (HICON)::LoadImageW( NULL,
+                                       (LPCWSTR)iconPath.GetUnicode(),
+                                       IMAGE_ICON,
+                                       ::GetSystemMetrics(SM_CXICON),
+                                       ::GetSystemMetrics(SM_CYICON),
+                                       LR_LOADFROMFILE | LR_SHARED );
+  HICON smallIcon = (HICON)::LoadImageW( NULL,
+                                         (LPCWSTR)iconPath.GetUnicode(),
+                                         IMAGE_ICON,
+                                         ::GetSystemMetrics(SM_CXSMICON),
+                                         ::GetSystemMetrics(SM_CYSMICON),
+                                         LR_LOADFROMFILE | LR_SHARED );
+  if ( bigIcon ) {
+      LRESULT rv = 0;
+      rv = ::SendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
+  }
+#ifdef DEBUG_law
+  else {
+    nsCAutoString cPath; cPath.AssignWithConversion(iconPath);
+    printf( "\nIcon load error; icon=%s, rc=0x%08X\n\n", (const char*)cPath, ::GetLastError() );
+  }
+#endif
+  if ( smallIcon ) {
+      LRESULT rv = 0;
+      rv = ::SendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
+  }
+#ifdef DEBUG_law
+  else {
+    nsCAutoString cPath; cPath.AssignWithConversion(iconPath);
+    printf( "\nSmall icon load error; icon=%s, rc=0x%08X\n\n", (const char*)cPath, ::GetLastError() );
+  }
+#endif
   return NS_OK;
 } 
 

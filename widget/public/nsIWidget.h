@@ -670,6 +670,17 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
 
     /**
+     * Set the widget's icon.
+     * Must be called after Create.
+     *
+     * @param anIconSpec string specifying the icon to use; convention is to pass
+     *                   a resource: URL from which a platform-dependent resource
+     *                   file name will be constructed
+     */
+
+    NS_IMETHOD SetIcon(const nsAReadableString& anIconSpec) = 0;
+
+    /**
      * Set the widget's MenuBar.
      * Must be called after Create.
      *
