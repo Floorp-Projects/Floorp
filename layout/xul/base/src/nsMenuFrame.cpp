@@ -72,7 +72,7 @@ nsMenuFrame::AddRef(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
+NS_IMETHODIMP_(nsrefcnt)
 nsMenuFrame::Release(void)
 {
     return NS_OK;
@@ -221,15 +221,17 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    PRBool isMenuBar = PR_TRUE;
+    PRBool isMenuBar = PR_FALSE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(isMenuBar);
-    
-    if (isMenuBar && mIsMenu) {
-      // The menu item was selected. Bring up the menu.
-      
-      // We have children.
+
+    // The menu item was selected. Bring up the menu.
+    // We have children.
+    if (mIsMenu)
       ToggleMenuState();
+
+    if (isMenuBar && mIsMenu) {
+
       if (!IsOpen()) {
         // We closed up. The menu bar should always be
         // deactivated when this happens.
@@ -274,7 +276,9 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
       return NS_OK;
     }
 
-    PRBool isMenuBar = PR_TRUE;
+    // we checked for mMenuParent right above
+
+    PRBool isMenuBar = PR_FALSE;
     mMenuParent->IsMenuBar(isMenuBar);
 
     // Let the menu parent know we're the new item.
@@ -393,7 +397,8 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     ActivateMenu(PR_TRUE);
     if (menuPopup) {
       // Tell the menu bar we're active.
-      mMenuParent->SetActive(PR_TRUE);
+      if (mMenuParent)
+        mMenuParent->SetActive(PR_TRUE);
 
       // Sync up the view.
       PRBool onMenuBar = PR_FALSE;
