@@ -1672,7 +1672,7 @@ java_constructor_wrapper(JSContext *cx, JSJavaThreadState *jsj_env,
                                               class_descriptor, argc, argv, vp);
 }
 
-JSBool JS_DLL_CALLBACK
+JS_EXPORT_API(JSBool)
 jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
                            uintN argc, jsval *argv, jsval *vp)
 {
@@ -1728,7 +1728,7 @@ static_method_wrapper(JSContext *cx, JSJavaThreadState *jsj_env,
                                     class_descriptor, argc, argv, vp);
 }
 
-JSBool JS_DLL_CALLBACK
+JS_EXTERN_API(JSBool)
 jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
                             uintN argc, jsval *argv, jsval *vp)
 {
@@ -1759,7 +1759,7 @@ jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
     return result;
 }
 
-JSBool JS_DLL_CALLBACK
+JS_EXPORT_API(JSBool)
 jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
                               uintN argc, jsval *argv, jsval *vp)
 {
