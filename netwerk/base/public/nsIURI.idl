@@ -83,6 +83,7 @@ interface nsIURI : nsISupports
     const PRUint32 MAILTO       = 11;
     const PRUint32 NEWS         = 12;
     const PRUint32 RESOURCE     = 13;
+    const PRUint32 LDAP         = 14;
 
     /**
      * Returns a string representation of the URI. Setting the spec 
