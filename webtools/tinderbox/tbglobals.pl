@@ -32,6 +32,7 @@ use Backwards;
 
 # From load_data()
 $ignore_builds = {};
+$scrape_builds = {};
 
 # From get_build_name_index()
 $build_name_index = {};     
@@ -114,15 +115,17 @@ BEGIN {
 }
 
 sub tb_load_data {
-  $tree = $form{'tree'};
+  $tree = $form{'tree'};  # Testing: $tree = "SeaMonkey";
 
   return undef unless $tree;
   
   tb_load_treedata($tree);
         
   $ignore_builds = {};
+  $scrape_builds = {};
 
   require "$tree/ignorebuilds.pl" if -r "$tree/ignorebuilds.pl";
+  require "$tree/scrapebuilds.pl" if -r "$tree/scrapebuilds.pl";
         
   $td = {};
   $td->{name} = $tree;
@@ -130,6 +133,7 @@ sub tb_load_data {
   $td->{cvs_module} = $cvs_module;
   $td->{cvs_branch} = $cvs_branch;
   $td->{ignore_builds} = $ignore_builds;
+  $td->{scrape_builds} = $scrape_builds;
   $cvs_root = '/m/src' if $cvs_root eq '';
   $td->{cvs_root} = $cvs_root;
 
@@ -231,6 +235,9 @@ sub tb_check_password {
       return;
     }
   }
+
+  # Force a return here to test w/o a password.
+  # return;
 
   require 'header.pl';
 

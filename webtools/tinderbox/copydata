@@ -72,7 +72,7 @@ do
 
   cd $tinderbox_dir/$tree
   
-  for file in build.dat status.pl rules.pl sheriff.pl notes.txt treedata.pl who.dat ignorebuilds.pl bloat.dat pageloader.dat startup.dat scrape.dat
+  for file in build.dat status.pl rules.pl sheriff.pl notes.txt treedata.pl who.dat ignorebuilds.pl scrapebuilds.pl bloat.dat pageloader.dat startup.dat scrape.dat
   do
     rm -f $file
     wget $tinderbox_link/$tree/$file
