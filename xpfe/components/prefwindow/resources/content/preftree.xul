@@ -11,9 +11,6 @@
 <!ENTITY applications.label "Applications">
 <!ENTITY smartBrowse.label "Smart Browsing">
 <!ENTITY mail.label "Mail &amp; Newsgroups">
-<!ENTITY identity.label "Identity">
-<!ENTITY mailServer.label "Mail Servers">
-<!ENTITY newsServer.label "News Servers">
 <!ENTITY address.label "Addressing">
 <!ENTITY mess.label "Messages">
 <!ENTITY windowSet.label "Window Settings">
@@ -123,24 +120,6 @@
       </treerow>
 
       <treechildren>
-        <treeitem open="true">
-          <treerow>
-            <treecell name="chrome://messenger/content/pref-identity.html"><treeindentation/>&identity.label;</treecell>
-          </treerow>
-        </treeitem>
-
-        <treeitem open="true">
-          <treerow>
-            <treecell name="chrome://messenger/content/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
-          </treerow>
-        </treeitem>
-
-        <treeitem open="true">
-          <treerow>
-            <treecell name="chrome://messenger/content/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
-          </treerow>
-        </treeitem>
-
         <treeitem open="true">
           <treerow>
             <treecell name="chrome://addressbook/content/pref-addressing.html"><treeindentation/>&address.label;</treecell>
