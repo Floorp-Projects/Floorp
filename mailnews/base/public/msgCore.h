@@ -107,8 +107,8 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #define NS_MSG_PASSWORD_PROMPT_CANCELLED NS_MSG_GENERATE_SUCCESS(1)
 
-/* is this where we define our errors? Obviously, there has to be a central
-	place so we don't use the same error codes.
+/* This is where we define our errors. There has to be a central
+   place so we don't use the same error codes for different errors.
 */
 #define NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE NS_MSG_GENERATE_FAILURE(5)
 #define NS_MSG_ERROR_FOLDER_SUMMARY_MISSING NS_MSG_GENERATE_FAILURE(6)
@@ -149,7 +149,10 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_NEWS_ARTICLE_NOT_FOUND NS_MSG_GENERATE_FAILURE(25)
 
 #define NS_MSG_ERROR_COPY_FOLDER_ABORTED NS_MSG_GENERATE_FAILURE(26)
-
+// this error means a url was queued but never run because one of the urls
+// it was queued after failed. We send an OnStopRunningUrl with this error code 
+// so the listeners can know that we didn't run the url.
+#define NS_MSG_ERROR_URL_ABORTED NS_MSG_GENERATE_FAILURE(27)
 /* ducarroz: error codes for message compose are defined into compose\src\nsMsgComposeStringBundle.h.
              Message compose use the same error code space than other mailnews modules. To avoid any
              conflict, I reserve values between 12500 and 12999 for it.
