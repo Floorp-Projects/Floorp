@@ -71,8 +71,41 @@ function startupTests()
 function cont ()
 {
     console._stackOutlinerView.setStack(null);
+    disableDebugCommands()
     console.jsds.exitNestedEventLoop();
     return true;
+}
+
+function step ()
+{
+    console.jsds.interruptHook = console._executionHook;
+    var topFrame = console.frames[0];
+    console._stepPast = topFrame.script.fileName + topFrame.line;
+    disableDebugCommands()
+    console.jsds.exitNestedEventLoop();
+}
+
+function enableDebugCommands()
+{
+    var cmds = document.getElementById("venkmanDebuggerCommands");
+    var sib = cmds.firstChild;
+
+    while (sib)
+    {
+        sib.removeAttribute ("disabled");
+        sib = sib.nextSibling;
+    }
+}
+
+function disableDebugCommands()
+{
+    var cmds = document.getElementById("venkmanDebuggerCommands");
+    var sib = cmds.firstChild;
+    while (sib)
+    {
+        sib.setAttribute ("disabled", "true");
+        sib = sib.nextSibling;
+    }
 }
 
 function dispatchCommand (text)
@@ -261,6 +294,8 @@ function init()
     initCommands();
     initDebugger();
     initOutliners();
+    
+    disableDebugCommands();
     
     window._content = console._outputDocument = 
         document.getElementById("output-iframe").contentDocument;
