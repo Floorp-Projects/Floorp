@@ -184,7 +184,7 @@ nsDataChannel::ParseData() {
         char * decodedData = PL_Base64Decode(dataBuffer, dataLen, nsnull);
         if (!decodedData) return NS_ERROR_OUT_OF_MEMORY;
 
-        dataToWrite->dataLen = resultLen;
+        dataToWrite->dataLen = PL_strlen(decodedData);
         dataToWrite->data = decodedData;
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataToWrite->dataLen, &wrote);
