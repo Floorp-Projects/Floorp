@@ -467,8 +467,6 @@ void* EventHandler(PLEvent *self)
             return NULL;
        }
 
-       eventQ->EnterMonitor();
-
        // invoke the magic of xptc...
        nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
                                          info->GetMethodIndex(),
@@ -477,7 +475,6 @@ void* EventHandler(PLEvent *self)
     
        info->SetResult(rv);
        
-       eventQ->ExitMonitor();
     }
     return NULL;
 }
