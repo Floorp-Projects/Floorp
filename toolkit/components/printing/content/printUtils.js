@@ -53,12 +53,9 @@ var PrintUtils = {
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
       didOK = PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
+      if (didOK)
+        this.savePrintSettings();
 
-      if (didOK) {
-        var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                              .getService(Components.interfaces.nsIPrintSettingsService);
-        PSSVC.savePrintSettingsToPrefs(printSettings, false, printSettings.kInitSaveNativeData);
-      }
     } catch (e) {
       dump("showPageSetup "+e+"\n");
     }
@@ -119,6 +116,13 @@ var PrintUtils = {
   {
     return _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  },
+
+  savePrintSettings: function (aPrintSettings)
+  {
+    var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                          .getService(Components.interfaces.nsIPrintSettingsService);
+    PSSVC.savePrintSettingsToPrefs(printSettings, false, aPrintSettings.kInitSaveNativeData);
   },
 
   ////////////////////////////////////////
