@@ -43,57 +43,66 @@
 
 #include "nsWatchTask.h"
 
+
+//
+// StControlActionProcOwner
+//
+// A class that wraps a control action proc so that it is disposed of
+// correctly when the shared library shuts down
+//
+class StControlActionProcOwner {
+public:
+  
+  StControlActionProcOwner (  )
+  {
+    sControlActionProc = NewControlActionUPP(nsScrollbar::ScrollActionProc);
+    NS_ASSERTION(sControlActionProc, "Couldn't create live scrolling action proc");
+  }
+  ~StControlActionProcOwner ( )
+  {
+    if ( sControlActionProc )
+      DisposeControlActionUPP(sControlActionProc);
+  }
+
+  ControlActionUPP ActionProc() { return sControlActionProc; }
+  
+private:
+  ControlActionUPP sControlActionProc;  
+};
+
+
+static ControlActionUPP ScrollbarActionProc();
+
+static ControlActionUPP ScrollbarActionProc()
+{
+  static StControlActionProcOwner sActionProcOwner;
+  return sActionProcOwner.ActionProc();
+}
+
+
 NS_IMPL_ADDREF(nsScrollbar);
 NS_IMPL_RELEASE(nsScrollbar);
 
-ControlActionUPP nsScrollbar::sControlActionProc = nsnull;
+NS_INTERFACE_MAP_BEGIN(nsScrollbar)
+  NS_INTERFACE_MAP_ENTRY(nsIScrollbar)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
+
 
 /**-------------------------------------------------------------------------------
  * nsScrollbar Constructor
  *	@update  dc 10/31/98
  * @param aIsVertical -- Tells if the scrollbar had a vertical or horizontal orientation
  */
-nsScrollbar::nsScrollbar(PRBool /*aIsVertical*/)
+nsScrollbar::nsScrollbar()
 	:	nsMacControl()
-	,	nsIScrollbar()
 	,	mLineIncrement(0)
 	,	mFullImageSize(0)
 	,	mVisibleImageSize(0)
 	,	mMouseDownInScroll(PR_FALSE)
 	,	mClickedPartCode(0)
 {
-	NS_INIT_REFCNT();
 	WIDGET_SET_CLASSNAME("nsScrollbar");
 	SetControlType(kControlScrollBarLiveProc);
-	if (!sControlActionProc)
-		sControlActionProc = NewControlActionUPP(nsScrollbar::ScrollActionProc);
-	// Unfortunately, not disposed when the app quits, but that's still a non-issue.
-}
-
-/**-------------------------------------------------------------------------------
- * The create method for a scrollbar, using a nsIWidget as the parent
- * @update  dc 08/31/98
- * @param  aParent -- the widget which will be this widgets parent in the tree
- * @param  aRect -- The bounds in parental coordinates of this widget
- * @param  aHandleEventFunction -- Procedures to be executed for this widget
- * @param  aContext -- device context to be used by this widget
- * @param  aAppShell -- 
- * @param  aToolkit -- toolkit to be used by this widget
- * @param  aInitData -- Initialization data used by frames
- * @return -- NS_OK if everything was created correctly
- */ 
-NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
-								const nsRect &aRect,
-								EVENT_CALLBACK aHandleEventFunction,
-								nsIDeviceContext *aContext,
-								nsIAppShell *aAppShell,
-								nsIToolkit *aToolkit,
-								nsWidgetInitData *aInitData)
-{
-	Inherited::Create(aParent, aRect, aHandleEventFunction,
-						aContext, aAppShell, aToolkit, aInitData);
-
-	return NS_OK;
 }
 
 /**-------------------------------------------------------------------------------
@@ -104,9 +113,6 @@ nsScrollbar::~nsScrollbar()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsScrollbar)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollbar)
-NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 /**-------------------------------------------------------------------------------
  * ScrollActionProc Callback for TrackControl
@@ -221,32 +227,14 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 						// for the thumb (this was illegal in previous
 						// versions of the defproc).
 						nsWatchTask::GetTask().Suspend();
-						::TrackControl(mControl, thePoint, sControlActionProc);
+						::TrackControl(mControl, thePoint,  ScrollbarActionProc());
 						nsWatchTask::GetTask().Resume();
+            ::HiliteControl(mControl, 0);
 						// We don't dispatch the mouseDown event because mouseUp is eaten
 						// by TrackControl anyway and the only messages the app really
 						// cares about are the NS_SCROLLBAR_xxx messages.
 						eatEvent = PR_TRUE;
 						break;
-#if 0
-					case kControlIndicatorPart:
-						// This is what you have to do for appearance 1.0 or
-						// no appearance.
-						::TrackControl(mControl, thePoint, nsnull);
-						mValue = ::GetControl32BitValue(mControl);
-						EndDraw();
-						nsScrollbarEvent scrollBarEvent;
-						scrollBarEvent.eventStructType = NS_GUI_EVENT;
-						scrollBarEvent.widget = this;
-						scrollBarEvent.message = NS_SCROLLBAR_POS;
-						scrollBarEvent.position = mValue;
-						DispatchWindowEvent(scrollBarEvent);
-						nsIWidget* parent = GetParent();
-						parent->Update();
-						NS_RELEASE(parent);
-						StartDraw();
-						break;
-#endif
 				}
 				SetPosition(mValue);
 			}

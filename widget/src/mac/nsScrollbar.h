@@ -42,7 +42,6 @@
 #include "nsIScrollbar.h"
 #include <Controls.h>
 
-
 /**
  * Mac Scrollbar. 
  */
@@ -53,22 +52,11 @@ private:
 	typedef nsMacControl Inherited;
 
 public:
-								nsScrollbar(PRBool aIsVertical);
+								nsScrollbar();
 	virtual						~nsScrollbar();
 
-	// nsISupports
-	NS_IMETHOD_(nsrefcnt)		AddRef();
-	NS_IMETHOD_(nsrefcnt)		Release();
-	NS_IMETHOD					QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-	NS_IMETHODIMP				Create(nsIWidget *aParent,
-									const nsRect &aRect,
-									EVENT_CALLBACK aHandleEventFunction,
-									nsIDeviceContext *aContext = nsnull,
-									nsIAppShell *aAppShell = nsnull,
-									nsIToolkit *aToolkit = nsnull,
-									nsWidgetInitData *aInitData = nsnull);
-
+  NS_DECL_ISUPPORTS_INHERITED
+  
 	// nsWindow Interface
 	virtual PRBool				DispatchMouseEvent(nsMouseEvent &aEvent);
 
@@ -102,6 +90,8 @@ protected:
 
 private:
 
+  friend class StControlActionProcOwner;
+  
 	static pascal void				ScrollActionProc(ControlHandle, ControlPartCode);
 	void							DoScrollAction(ControlPartCode);
 
@@ -113,22 +103,8 @@ private:
 	PRUint32 					mLineIncrement;
 	PRBool						mMouseDownInScroll;
 	ControlPartCode				mClickedPartCode;
-	static ControlActionUPP		sControlActionProc; // we only need one of these
 };
 
-
-
-class nsHorizScrollbar : public nsScrollbar
-{
-public:
-		nsHorizScrollbar() : nsScrollbar(PR_FALSE) {}
-};
-
-class nsVertScrollbar : public nsScrollbar
-{
-public:
-		nsVertScrollbar() : nsScrollbar(PR_TRUE) {}								
-};
 
 
 #endif // nsScrollbar_
