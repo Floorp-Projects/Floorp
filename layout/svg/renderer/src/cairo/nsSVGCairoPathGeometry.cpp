@@ -1,0 +1,332 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla SVG Cairo Renderer project.
+ *
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Parts of this file contain code derived from the following files(s)
+ * of the Mozilla SVG project (these parts are Copyright (C) by their
+ * respective copyright-holders):
+ *    layout/svg/renderer/src/libart/nsSVGLibartPathGeometry.cpp
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex.fritze@crocodile-clips.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsCOMPtr.h"
+#include "nsSVGCairoPathGeometry.h"
+#include "nsISVGRendererPathGeometry.h"
+#include "nsISVGCairoCanvas.h"
+#include "nsIDOMSVGMatrix.h"
+#include "nsISVGRendererRegion.h"
+#include "nsISVGPathGeometrySource.h"
+#include "nsISVGRendererPathBuilder.h"
+#include "nsSVGCairoPathBuilder.h"
+#include "nsMemory.h"
+#include <cairo.h>
+#include "nsSVGCairoRegion.h"
+
+/**
+ * \addtogroup cairo_renderer Cairo Rendering Engine
+ * @{
+ */
+////////////////////////////////////////////////////////////////////////
+/**
+ * Cairo path geometry implementation
+ */
+class nsSVGCairoPathGeometry : public nsISVGRendererPathGeometry
+{
+protected:
+  friend nsresult NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result,
+                                             nsISVGPathGeometrySource *src);
+
+  nsSVGCairoPathGeometry();
+  ~nsSVGCairoPathGeometry();
+  nsresult Init(nsISVGPathGeometrySource* src);
+
+public:
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+  
+  // nsISVGRendererPathGeometry interface:
+  NS_DECL_NSISVGRENDERERPATHGEOMETRY
+  
+private:
+  nsCOMPtr<nsISVGPathGeometrySource> mSource;
+  nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
+
+  void GeneratePath(cairo_t *ctx);
+};
+
+/** @} */
+
+
+//----------------------------------------------------------------------
+// implementation:
+
+nsSVGCairoPathGeometry::nsSVGCairoPathGeometry()
+{
+}
+
+nsSVGCairoPathGeometry::~nsSVGCairoPathGeometry()
+{
+}
+
+nsresult nsSVGCairoPathGeometry::Init(nsISVGPathGeometrySource* src)
+{
+  mSource = src;
+  return NS_OK;
+}
+
+
+nsresult
+NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result,
+                           nsISVGPathGeometrySource *src)
+{
+  nsSVGCairoPathGeometry* pg = new nsSVGCairoPathGeometry();
+  if (!pg) return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(pg);
+
+  nsresult rv = pg->Init(src);
+
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(pg);
+    return rv;
+  }
+  
+  *result = pg;
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsISupports methods:
+
+NS_IMPL_ADDREF(nsSVGCairoPathGeometry)
+NS_IMPL_RELEASE(nsSVGCairoPathGeometry)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGCairoPathGeometry)
+NS_INTERFACE_MAP_ENTRY(nsISVGRendererPathGeometry)
+NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+//----------------------------------------------------------------------
+
+void
+nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx)
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  mSource->GetCTM(getter_AddRefs(ctm));
+  NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
+
+  float m[6];
+  float val;
+  ctm->GetA(&val);
+  m[0] = val;
+    
+  ctm->GetB(&val);
+  m[1] = val;
+    
+  ctm->GetC(&val);  
+  m[2] = val;  
+    
+  ctm->GetD(&val);  
+  m[3] = val;  
+  
+  ctm->GetE(&val);
+  m[4] = val;
+  
+  ctm->GetF(&val);
+  m[5] = val;
+
+  cairo_matrix_t *matrix = cairo_matrix_create();
+  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
+  cairo_concat_matrix(ctx, matrix);
+
+  nsCOMPtr<nsISVGRendererPathBuilder> builder;
+  NS_NewSVGCairoPathBuilder(getter_AddRefs(builder), ctx);
+  mSource->ConstructPath(builder);
+  builder->EndPath();
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGRendererPathGeometry methods:
+
+/** Implements void render(in nsISVGRendererCanvas canvas); */
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
+{
+  nsCOMPtr<nsISVGCairoCanvas> cairoCanvas = do_QueryInterface(canvas);
+  NS_ASSERTION(cairoCanvas, "wrong svg render context for geometry!");
+  if (!cairoCanvas) return NS_ERROR_FAILURE;
+
+  cairo_t *ctx = cairoCanvas->GetContext();
+
+  /* save/pop the state so we don't screw up the xform */
+  cairo_save(ctx);
+
+  GeneratePath(ctx);
+
+  PRUint16 type;
+
+  PRBool bStroking = PR_FALSE;
+  mSource->GetStrokePaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+    bStroking = PR_TRUE;
+
+  mSource->GetFillPaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+    if (bStroking)
+      cairo_save(ctx);
+
+    nscolor rgb;
+    mSource->GetFillPaint(&rgb);
+    float opacity;
+    mSource->GetFillOpacity(&opacity);
+
+    cairo_set_rgb_color(ctx,
+                        NS_GET_R(rgb)/255.0,
+                        NS_GET_G(rgb)/255.0,
+                        NS_GET_B(rgb)/255.0);
+    cairo_set_alpha(ctx, double(opacity));
+
+    cairo_fill(ctx);
+
+    if (bStroking)
+      cairo_restore(ctx);
+  }
+
+  if (bStroking) {
+    nscolor rgb;
+    mSource->GetStrokePaint(&rgb);
+    float opacity;
+    mSource->GetStrokeOpacity(&opacity);
+    cairo_set_rgb_color(ctx,
+                        NS_GET_R(rgb)/255.0,
+                        NS_GET_G(rgb)/255.0,
+                        NS_GET_B(rgb)/255.0);
+    cairo_set_alpha(ctx, double(opacity));
+
+    float width;
+    mSource->GetStrokeWidth(&width);
+    cairo_set_line_width(ctx, double(width));
+
+    PRUint16 capStyle;
+    mSource->GetStrokeLinecap(&capStyle);
+    switch (capStyle) {
+    case nsISVGGeometrySource::STROKE_LINECAP_BUTT:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_BUTT);
+      break;
+    case nsISVGGeometrySource::STROKE_LINECAP_ROUND:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_ROUND);
+      break;
+    case nsISVGGeometrySource::STROKE_LINECAP_SQUARE:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_SQUARE);
+      break;
+    }
+
+    float miterlimit;
+    mSource->GetStrokeMiterlimit(&miterlimit);
+    cairo_set_miter_limit(ctx, double(miterlimit));
+
+    PRUint16 joinStyle;
+    mSource->GetStrokeLinejoin(&joinStyle);
+    switch(joinStyle) {
+    case nsISVGGeometrySource::STROKE_LINEJOIN_MITER:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_MITER);
+      break;
+    case nsISVGGeometrySource::STROKE_LINEJOIN_ROUND:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_ROUND);
+      break;
+    case nsISVGGeometrySource::STROKE_LINEJOIN_BEVEL:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_BEVEL);
+      break;
+    }
+
+    float *dashArray, offset;
+    PRUint32 count;
+    mSource->GetStrokeDashArray(&dashArray, &count);
+    if (count > 0) {
+      double *dashes = new double[count];
+      for (unsigned i=0; i<count; i++)
+        dashes[i] = dashArray[i];
+      mSource->GetStrokeDashoffset(&offset);
+      cairo_set_dash(ctx, dashes, count, double(offset));
+      nsMemory::Free(dashArray);
+      delete [] dashes;
+    }
+
+    cairo_stroke(ctx);
+  }
+
+  cairo_restore(ctx);
+
+  return NS_OK;
+}
+
+/** Implements nsISVGRendererRegion update(in unsigned long updatemask); */
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retval)
+{
+  // XXX just return a large region for now:
+  return NS_NewSVGCairoRectRegion(_retval, -10000, -10000, 20000, 20000);
+}
+
+/** Implements nsISVGRendererRegion getCoveredRegion(); */
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
+{
+  // XXX just return a large region for now:
+  return NS_NewSVGCairoRectRegion(_retval, -10000, -10000, 20000, 20000);
+}
+
+/** Implements boolean containsPoint(in float x, in float y); */
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+  cairo_t *ctx = cairo_create();
+
+  GeneratePath(ctx);
+  cairo_default_matrix(ctx);
+
+  PRUint16 mask = 0;
+  mSource->GetHittestMask(&mask);
+  if (mask & nsISVGPathGeometrySource::HITTEST_MASK_FILL)
+    *_retval = cairo_in_fill(ctx, x, y);
+  if (!*_retval & mask & nsISVGPathGeometrySource::HITTEST_MASK_STROKE)
+    *_retval = cairo_in_stroke(ctx, x, y);
+
+  cairo_destroy(ctx);
+
+  return NS_OK;
+}
