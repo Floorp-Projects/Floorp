@@ -134,7 +134,6 @@ static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
 #define EDITOR_BUNDLE_URL "chrome://editor/content/editor.properties"
-EDITOR_BUNDLE_URL
 
 const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
