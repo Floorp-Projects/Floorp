@@ -1731,6 +1731,12 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const nsACString& aLocale
   return SetProvider(NS_LITERAL_CSTRING("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
 }
 
+NS_IMETHODIMP nsChromeRegistry::SelectSkinForProfile(const nsACString& aSkin,
+                                                     const PRUnichar *aProfilePath)
+{
+  return SetProvider(NS_LITERAL_CSTRING("skin"), mSelectedSkin, aSkin, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath).get(), PR_TRUE);
+}
+
 /* void setRuntimeProvider (in boolean runtimeProvider); */
 // should we inline this one?
 NS_IMETHODIMP nsChromeRegistry::SetRuntimeProvider(PRBool runtimeProvider)

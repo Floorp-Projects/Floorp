@@ -1731,6 +1731,14 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             }
         }
 
+        //need to set skin info here
+        nsCAutoString currentSkinName;
+        rv = packageRegistry->GetSelectedSkin(NS_LITERAL_CSTRING("global"),currentSkinName);
+        if (!currentSkinName.IsEmpty()) {
+            rv = chromeRegistry->SelectSkinForProfile(currentSkinName,
+                                         NS_ConvertUTF8toUCS2(fileStr).get());
+        }
+
         if (!contentLocale.IsEmpty()) {
             // caller prefers locale subdir
             nsCOMPtr<nsIFile> locProfDefaultsDir;
