@@ -19,11 +19,11 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 
-EXPORTS =       nsIInterfaceInfoManager.h       \
-                nsIInterfaceInfo.h              \
-                xptinfo.h                       \
-                xpt_cpp.h                       \
-		$(NULL)
+EXPORTS = \
+    xptinfo.h                       \
+    nsIInterfaceInfoManager.h       \
+    nsIInterfaceInfo.h              \
+	$(NULL)
 
 MODULE	=	xptinfo
 
