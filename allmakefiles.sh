@@ -291,6 +291,7 @@ profile/src/Makefile
 profile/public/Makefile
 profile/resources/Makefile
 profile/defaults/Makefile
+profile/idlservices/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
