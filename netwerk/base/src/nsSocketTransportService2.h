@@ -91,10 +91,9 @@ public:
     // params:
     //   socketRef - socket identifier
     //   fd        - socket file descriptor
-    //   pollFlags - poll "in-flags"
+    //   outFlags  - value of PR_PollDesc::out_flags after PR_Poll returns
     //
-    virtual void OnSocketReady(PRFileDesc *fd,
-                               PRInt16 pollFlags) = 0;
+    virtual void OnSocketReady(PRFileDesc *fd, PRInt16 outFlags) = 0;
 
     //
     // called when a socket is no longer under the control of the socket
@@ -223,13 +222,15 @@ private:
 
     nsresult MoveToIdleList(SocketContext *sock)
     {
+        nsresult rv = AddToIdleList(sock);
         RemoveFromPollList(sock);
-        return AddToIdleList(sock);
+        return rv;
     }
     nsresult MoveToPollList(SocketContext *sock)
     {
+        nsresult rv = AddToPollList(sock);
         RemoveFromIdleList(sock);
-        return AddToPollList(sock);
+        return rv;
     }
     
     // returns PR_FALSE to stop processing the main loop

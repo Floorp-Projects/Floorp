@@ -139,7 +139,7 @@ public:
                   nsIProxyInfo *proxyInfo);
 
     // nsASocketHandler methods:
-    void OnSocketReady(PRFileDesc *, PRInt16 pollFlags); 
+    void OnSocketReady(PRFileDesc *, PRInt16 outFlags); 
     void OnSocketDetached(PRFileDesc *);
 
 private:
