@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.11 2000/10/06 23:26:08 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.12 2000/10/11 06:52:06 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1050,7 +1050,12 @@ main(int argc, char **argv)
 	    break;
 
 	case 'o':
-	    if ((outFile = fopen(optstate->value, "w")) == NULL) {
+	    if (mode == DECODE) {
+		outFile = fopen(optstate->value, "w");
+	    } else {
+		outFile = fopen(optstate->value, "wb");
+	    }
+	    if (outFile == NULL) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
 			progName, optstate->value);
 		exit(1);
@@ -1113,6 +1118,21 @@ main(int argc, char **argv)
 	SECU_PrintError(progName, "No default cert DB");
 	exit(1);
     }
+
+#if defined(WIN32)
+    if (outFile == stdout && mode != DECODE) {
+	/* If we're going to write binary data to stdout, we must put stdout
+	** into O_BINARY mode or else incoming \r\n's will become \n's.
+	*/
+	int smrv = _setmode(_fileno(stdout), _O_BINARY);
+	if (smrv == -1) {
+	    fprintf(stderr,
+	    "%s: Cannot change stdout to binary mode. Use -o option instead.\n",
+	            progName);
+	    return smrv;
+	}
+    }
+#endif
 
     exitstatus = 0;
     switch (mode) {
