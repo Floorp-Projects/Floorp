@@ -339,19 +339,13 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     else {
       switch (intValue) {
         case NS_COLOR_MOZ_HYPERLINKTEXT:
-          if (NS_SUCCEEDED(aPresContext->GetDefaultLinkColor(&aResult))) {
-            result = PR_TRUE;
-          }
+          aResult = aPresContext->DefaultLinkColor();
           break;
         case NS_COLOR_MOZ_VISITEDHYPERLINKTEXT:
-          if (NS_SUCCEEDED(aPresContext->GetDefaultVisitedLinkColor(&aResult))) {
-            result = PR_TRUE;
-          }
+          aResult = aPresContext->DefaultVisitedLinkColor();
           break;
         case NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT:
-          if (NS_SUCCEEDED(aPresContext->GetDefaultActiveLinkColor(&aResult))) {
-            result = PR_TRUE;
-          }
+          aResult = aPresContext->DefaultActiveLinkColor();
           break;
         default:
           NS_NOTREACHED("Should never have an unknown negative colorID.");
@@ -1518,10 +1512,11 @@ nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
                     const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
                     nsStyleFont* aFont, PRBool& aInherited)
 {
-  const nsFont* defaultVariableFont;
-  const nsFont* defaultFixedFont;
-  aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultVariableFont);
-  aPresContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID, &defaultFixedFont);
+  const nsFont* defaultVariableFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
+
+  const nsFont* defaultFixedFont =
+    aPresContext->GetDefaultFont(kPresContext_DefaultFixedFont_ID);
 
   // font-family: string list, enum, inherit
   if (eCSSUnit_String == aFontData.mFamily.GetUnit()) {
@@ -1680,8 +1675,7 @@ nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   PRBool zoom = PR_FALSE;
   if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
     PRInt32 value = aFontData.mSize.GetIntValue();
-    PRInt32 scaler;
-    aPresContext->GetFontScaler(&scaler);
+    PRInt32 scaler = aPresContext->FontScaler();
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
 
     zoom = PR_TRUE;
@@ -1790,8 +1784,7 @@ nsRuleNode::SetGenericFont(nsIPresContext* aPresContext,
   // If we stopped earlier because we reached the root of the style tree,
   // we will start with the default generic font from the presentation
   // context. Otherwise we start with the higher context.
-  const nsFont* defaultFont;
-  aPresContext->GetDefaultFont(aGenericFontID, &defaultFont);
+  const nsFont* defaultFont = aPresContext->GetDefaultFont(aGenericFontID);
   nsStyleFont parentFont(*defaultFont);
   parentFont.mSize = parentFont.mFont.size
       = nsStyleFont::ZoomText(aPresContext, parentFont.mSize);
@@ -1944,9 +1937,9 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
     // our default font is the most recent generic font
-    const nsFont* defaultFont;
-    mPresContext->GetDefaultFont(parentFont->mFlags & NS_STYLE_FONT_FACE_MASK,
-                                 &defaultFont);
+    const nsFont* defaultFont =
+      mPresContext->GetDefaultFont(parentFont->mFlags & NS_STYLE_FONT_FACE_MASK);
+
     nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize,
                         useDocumentFonts, PR_FALSE,
                         fontData, *defaultFont, parentFont, font, inherited);

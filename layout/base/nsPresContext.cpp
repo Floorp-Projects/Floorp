@@ -169,7 +169,7 @@ nsPresContext::nsPresContext()
 
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
-  mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+  mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
   
   mUseDocumentColors = PR_TRUE;
   mUseDocumentFonts = PR_TRUE;
@@ -184,7 +184,7 @@ nsPresContext::nsPresContext()
 
   mUseFocusColors = PR_FALSE;
   mFocusTextColor = mDefaultColor;
-  mFocusBackgroundColor = mDefaultBackgroundColor;
+  mFocusBackgroundColor = mBackgroundColor;
   mFocusRingWidth = 1;
   mFocusRingOnAnything = PR_FALSE;
 
@@ -425,16 +425,16 @@ nsPresContext::GetDocumentColorPreferences()
       mDefaultColor = MakeColorPref(colorStr);
     }
     if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.background_color", getter_Copies(colorStr)))) {
-      mDefaultBackgroundColor = MakeColorPref(colorStr);
+      mBackgroundColor = MakeColorPref(colorStr);
     }
   }
   else {
     mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
-    mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+    mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
     mLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowForeground,
                            mDefaultColor);
     mLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
-                           mDefaultBackgroundColor);
+                           mBackgroundColor);
   }
 
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
@@ -474,7 +474,7 @@ nsPresContext::GetUserPreferences()
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_focus_colors", &boolPref))) {
     mUseFocusColors = boolPref;
     mFocusTextColor = mDefaultColor;
-    mFocusBackgroundColor = mDefaultBackgroundColor;
+    mFocusBackgroundColor = mBackgroundColor;
     if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.focus_text_color", getter_Copies(colorStr)))) {
       mFocusTextColor = MakeColorPref(colorStr);
     }
@@ -850,23 +850,6 @@ nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::ReParentStyleContext(nsIFrame* aFrame, 
-                                    nsStyleContext* aNewParentContext)
-{
-  NS_PRECONDITION(aFrame, "null ptr");
-  if (! aFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsCOMPtr<nsIFrameManager> manager;
-  nsresult rv = mShell->GetFrameManager(getter_AddRefs(manager));
-  if (NS_SUCCEEDED(rv) && manager) {
-    rv = manager->ReParentStyleContext(aFrame, aNewParentContext);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsPresContext::AllocateFromShell(size_t aSize, void** aResult)
 {
   if (mShell)
@@ -899,136 +882,41 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetDefaultFont(PRUint8 aFontID, const nsFont** aResult)
+const nsFont*
+nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 {
-  nsresult rv = NS_OK;
+  const nsFont *font;
   switch (aFontID) {
     // Special (our default variable width font and fixed width font)
     case kPresContext_DefaultVariableFont_ID:
-      *aResult = &mDefaultVariableFont;
+      font = &mDefaultVariableFont;
       break;
     case kPresContext_DefaultFixedFont_ID:
-      *aResult = &mDefaultFixedFont;
+      font = &mDefaultFixedFont;
       break;
     // CSS
     case kGenericFont_serif:
-      *aResult = &mDefaultSerifFont;
+      font = &mDefaultSerifFont;
       break;
     case kGenericFont_sans_serif:
-      *aResult = &mDefaultSansSerifFont;
+      font = &mDefaultSansSerifFont;
       break;
     case kGenericFont_monospace:
-      *aResult = &mDefaultMonospaceFont;
+      font = &mDefaultMonospaceFont;
       break;
     case kGenericFont_cursive:
-      *aResult = &mDefaultCursiveFont;
+      font = &mDefaultCursiveFont;
       break;
     case kGenericFont_fantasy: 
-      *aResult = &mDefaultFantasyFont;
+      font = &mDefaultFantasyFont;
       break;
     default:
-      rv = NS_ERROR_INVALID_ARG;
+      font = nsnull;
       NS_ERROR("invalid arg");
       break;
   }
-  return rv;
+  return font;
 }
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultFont(PRUint8 aFontID, const nsFont& aFont)
-{
-  nsresult rv = NS_OK;
-  switch (aFontID) {
-    // Special (our default variable width font and fixed width font)
-    case kPresContext_DefaultVariableFont_ID: 
-      mDefaultVariableFont = aFont;
-      break;
-    case kPresContext_DefaultFixedFont_ID:
-      mDefaultFixedFont = aFont;
-      break;
-    // CSS
-    case kGenericFont_serif:
-      mDefaultSerifFont = aFont;
-      break;
-    case kGenericFont_sans_serif:
-      mDefaultSansSerifFont = aFont;
-      break;
-    case kGenericFont_monospace:
-      mDefaultMonospaceFont = aFont;
-      break;
-    case kGenericFont_cursive:
-      mDefaultCursiveFont = aFont;
-      break;
-    case kGenericFont_fantasy: 
-      mDefaultFantasyFont = aFont;
-      break;
-    default:
-      rv = NS_ERROR_INVALID_ARG;
-      NS_ERROR("invalid arg");
-      break;
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetFontScaler(PRInt32* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-
-  *aResult = mFontScaler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::SetFontScaler(PRInt32 aScaler)
-{
-  mFontScaler = aScaler;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultColor(nscolor* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-
-  *aResult = mDefaultColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::GetDefaultBackgroundColor(nscolor* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-
-  *aResult = mDefaultBackgroundColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetDefaultLinkColor(nscolor* aColor)
-{
-  NS_PRECONDITION(aColor, "null out param");
-  *aColor = mLinkColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::GetDefaultActiveLinkColor(nscolor* aColor)
-{
-  NS_PRECONDITION(aColor, "null out param");
-  *aColor = mActiveLinkColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::GetDefaultVisitedLinkColor(nscolor* aColor)
-{
-  NS_PRECONDITION(aColor, "null out param");
-  *aColor = mVisitedLinkColor;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsPresContext::GetFocusRingOnAnything(PRBool& aFocusRingOnAnything)
@@ -1045,67 +933,6 @@ nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsPresContext::GetFocusTextColor(nscolor* aColor)
-{
-  NS_PRECONDITION(aColor, "null out param");
-  *aColor = mFocusTextColor;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPresContext::GetFocusBackgroundColor(nscolor* aColor)
-{
-  NS_PRECONDITION(aColor, "null out param");
-  *aColor = mFocusBackgroundColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetFocusRingWidth(PRUint8 *aFocusRingWidth)
-{
-  NS_PRECONDITION(aFocusRingWidth, "null out param");
-  *aFocusRingWidth = mFocusRingWidth;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultColor(nscolor aColor)
-{
-  mDefaultColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultBackgroundColor(nscolor aColor)
-{
-  mDefaultBackgroundColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::SetDefaultLinkColor(nscolor aColor)
-{
-  mLinkColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::SetDefaultActiveLinkColor(nscolor aColor)
-{
-  mActiveLinkColor = aColor;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPresContext::SetDefaultVisitedLinkColor(nscolor aColor)
-{
-  mVisitedLinkColor = aColor;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPresContext::GetVisibleArea(nsRect& aResult)

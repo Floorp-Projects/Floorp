@@ -701,6 +701,8 @@ nsresult
 nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
 {
   nsIFrame* next = mFrames.FirstChild();
+  nsIFrameManager *frameManager = aPresContext->GetFrameManager();
+
   while (next) {
     nsIFrame* child = next;
     next = next->GetNextSibling();
@@ -725,7 +727,7 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
       mFrames.ReplaceFrame(aPresContext, this, child, wrapper, PR_FALSE);
       child->SetParent(wrapper);
       child->SetNextSibling(nsnull);
-      aPresContext->ReParentStyleContext(child, newStyleContext);
+      frameManager->ReParentStyleContext(child, newStyleContext);
       wrapper->SetInitialChildList(aPresContext, nsnull, child);
     }
   }

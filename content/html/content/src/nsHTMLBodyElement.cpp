@@ -390,7 +390,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
     GetPresContext(this, getter_AddRefs(presContext));              \
                                                                     \
     if (presContext) {                                              \
-      presContext->GetDefault##default_(&attrColor);                \
+      attrColor = presContext->Default##default_();                 \
       nsHTMLValue(attrColor).ToString(aColor);                      \
     }                                                               \
   } else if (NS_ColorNameToRGB(color, &attrColor)) {                \

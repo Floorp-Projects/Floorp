@@ -687,9 +687,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 
   // This may be overridden by the docshell with the background color
   // for the last document loaded into the docshell
-  nscolor bgcolor = NS_RGB(0, 0, 0);
-  mPresContext->GetDefaultBackgroundColor(&bgcolor);
-  mViewManager->SetDefaultBackgroundColor(bgcolor);
+  mViewManager->SetDefaultBackgroundColor(mPresContext->DefaultBackgroundColor());
 
   if (aDoInitialReflow) {
     nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mContainer);

@@ -2825,7 +2825,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
         // Ensure that we always paint a color for the root (in case there's
         // no background at all or a partly transparent image).
         canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-        aPresContext->GetDefaultBackgroundColor(&canvasColor.mBackgroundColor);
+        canvasColor.mBackgroundColor = aPresContext->DefaultBackgroundColor();
       }
     }
   }
