@@ -56,7 +56,7 @@ public:
   // aApplicationToUse --> the application the user wishes to launch with the incoming data
   // aFileExtensionForData --> the extension we are going to use for the temp file in the external app handler
   // aStreamListener --> the stream listener (really a external app handler) we're going to use for retrieving the data
-  virtual nsresult CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtensionForData, nsIStreamListener ** aStreamListener);f
+  virtual nsresult CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtensionForData, nsIStreamListener ** aStreamListener);
 
 
 protected:
