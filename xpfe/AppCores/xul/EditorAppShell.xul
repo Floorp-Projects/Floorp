@@ -20,11 +20,11 @@
       if (appCore != null) {
         dump("EditorAppCore has been created.\n");
 		appCore.Init("EditorAppCore");
+		appCore.setEditorType("text");
 		appCore.setContentWindow(window.frames[0]);
 		appCore.setWebShellWindow(window);
 		appCore.setToolbarWindow(window);
 		dump("Adding EditorAppCore to AppCoreManager...\n");
-		/* XPAppCoresManager.Add(appCore);  */
       }
     } else {
       dump("EditorAppCore has already been created! Why?\n");
