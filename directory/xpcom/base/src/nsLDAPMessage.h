@@ -70,8 +70,11 @@ class nsLDAPMessage : public nsILDAPMessage
     int Type(void);
 
   protected:
+    nsresult IterateAttrErrHandler(PRInt32 aLderrno, PRUint32 *aAttrCount, 
+			    char** *aAttributes, BerElement *position);
+    nsresult IterateAttributes(PRUint32 *aAttrCount, char** *aAttributes, 
+			      PRBool getP);
     LDAPMessage *mMsgHandle; // the message we're wrapping
-    BerElement *mPosition; // position in the associated attr list
     nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
     nsCOMPtr<nsILDAPConnection> mConnection; // cached connection this op is on
     LDAP *mConnectionHandle; // cached connection handle
