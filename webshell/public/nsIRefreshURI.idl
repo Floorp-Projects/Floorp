@@ -21,6 +21,7 @@
 
 #include "nsISupports.idl"
 #include "nsIURI.idl"
+interface nsIChannel;
 
 [scriptable, uuid(69EFC430-2EFE-11d2-9E5D-006008BF092E)]
 interface nsIRefreshURI : nsISupports {
@@ -32,6 +33,12 @@ interface nsIRefreshURI : nsISupports {
       * @param repeat Do you want the uri to be repeatedly refreshed every millis milliseconds.
       */
 	void refreshURI(in nsIURI aURI, in long aMillis, in boolean aRepeat);
+
+    /**
+	  * Checks the passed in channel to see if there is a refresh header, if there is, 
+	  * will setup a refreahURI by calling refreshURI
+	  */
+	void setupRefreshURI(in nsIChannel aChannel); 
 
     /**
       * Cancels all timer loads.
