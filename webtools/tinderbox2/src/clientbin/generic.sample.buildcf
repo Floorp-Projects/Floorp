@@ -2,7 +2,7 @@
 
 # generic.sample.buildcf - this is an example buildcf which should be
 # useful to most people.  Your needs may be different from this script
-# especially if you are running builds on many different OS platforms
+# especially if you are running builds on many different OS and platforms
 # which require different command sequences.  Each build type
 # (construct, test, lint) defines a sequence of commands which is the
 # same on all build machines.  They types each have different commands
@@ -11,7 +11,7 @@
 # on the tinderbox server for each type of build.  This cf file will
 # need a copy of the TreeData file on the build machine in order to
 # translate the treename into the name of the module and branch and
-# correctly set the CVSROOT environemental variable.
+# correctly set the CVSROOT environment variable.
 
 # Run:
 
@@ -21,11 +21,11 @@
 				--tree seamonkey
 
 # to see the completed build script which has all the perl
-# vairiables substituted.
+# variables substituted.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/11/14 21:22:13 $ 
+# $Revision: 1.5 $ 
+# $Date: 2002/01/02 18:09:58 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -112,7 +112,7 @@ sub filename_time_str {
 # The environmental variables for building at mozilla/netscape are
 # quite complicated, your needs may be much simpler. Putting all
 # environmental variable differences into a single function makes it
-# clearer exactly how the environment differes on different platforms.
+# clearer exactly how the environment differs on different platforms.
 
 sub build_environment{
 
@@ -151,7 +151,7 @@ sub build_scripts {
     # pick a time earlier then the current time. Check out the sources
     # as of that time and use that time as the name of the tar
     # file. Now anyone who wants to recreate the sources of the binary
-    # tar can use the tarfile name to checkout the souces as if we had
+    # tar can use the tarfile name to checkout the sources as if we had
     # tagged them.  We use a few minutes ago as the checkout time to
     # ensure that the CVS server has time to settle down from any
     # large checkins which may be in progress.
@@ -198,7 +198,7 @@ sub build_scripts {
     $ENV{'BUILD_MODULE'} = $module;
 
 
-# builds discribe a sequence of steps needed to perform a "build".
+# builds describe a sequence of steps needed to perform a "build".
 # Each build either succeeds or fails.  Builds can be used for running
 # tests and checking source code style in addition to creating binaries.
 
@@ -218,12 +218,12 @@ sub build_scripts {
 
 # Each phase must have the following entries:
 
-#	 phase_name: which discribes what the phase is.
+#	 phase_name: which describes what the phase is.
 
 #	 error_status: the tinderbox status which should be returned
 #	 if the phase fails.
 
-#	 script: a list of shell commands to be exectued in order
+#	 script: a list of shell commands to be executed in order
 #	 until one fails (each command in a separate shell, similar to make).
 
 #	 dir: the directory which will be local while the script is
@@ -339,8 +339,8 @@ sub error_parser_name {
 # hostname and OS name (and a few other details). We are running the
 # same build instructions on each architecture so it makes sense to
 # speak of the 'Solaris Build'.  Other users who do not worry about
-# porability may use the buildscript buildname.  These users will have
-# tinderbox colums with names like: "seamonkey", "grendel", "aurora"
+# portability may use the buildscript buildname.  These users will have
+# tinderbox columns with names like: "seamonkey", "grendel", "aurora"
 # (these are the names of the 'type' of build).
 
 sub build_name {

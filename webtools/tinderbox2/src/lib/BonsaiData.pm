@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/08/13 19:50:46 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/01/02 18:09:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -74,7 +74,7 @@ sub load_bonsai_libs {
   # bonsai must be both loaded and run from the bonsai dir.
 
   chdir ($BONSAI_DIR)	||
-    die("Could not cd to /. $!\n");
+    die("Could not cd to $BONSAI_DIR. $!\n");
 
   # Hide the use libs from the perl compiler.  This is neccessary or
   # it will be evaluated before BONSAI_DIR is defined.

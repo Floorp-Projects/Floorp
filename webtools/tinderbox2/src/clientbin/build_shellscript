@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.13 $
-# $Date: 2001/11/14 21:21:02 $
+# $Revision: 1.14 $
+# $Date: 2002/01/02 18:09:59 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -52,7 +52,7 @@ use IPC::Open3;
 
 #  The build script does not use the normal tinderbox libraries, it
 #  does need its own local configuration file though.  We find that
-#  file via the normal libarary search path.
+#  file via the normal library search path.
 
 use lib '#tinder_libdir#';
 
@@ -67,8 +67,8 @@ Global Options:
 (These options apply to all builds)
 
   --daemonize		Run program in the background.
-  --once                 Do not loop repeadly.
-  --noreport             Do not mail status reorts to the tinderbox server.
+  --once                 Do not loop repeatedly.
+  --noreport             Do not mail status reports to the tinderbox server.
   --test                 Print the build commands, do not run the build 
 			     commands or mail logs.
   --build BUILDTYPE      The name of the build type to run. You may specify
@@ -100,7 +100,7 @@ Build Options:
    your configuration.  They are listed here as a suggestion only.)
 
   --depend               Build depend (must have this option or clobber).
-  --clobber              Build clobber (the oposite of depend).
+  --clobber              Build clobber (the opposite of depend).
   --tag TREETAG          Checkout CVS sources by tag (-r TREETAG).
 
 Summary:
@@ -137,12 +137,12 @@ Makefile).
 Different sequences of build instructions have different 'build
 names'.  How you name your builds depends on the type of build testing
 you are performing.  You may have architecture build names:
-(Macintosh, Solaris, NT,) or project/subsystem specific build names
+(Macintosh, Solaris, NT) or project/subsystem specific build names
 (Sendmail, SeaMonkey, Apache) or functionality specific build names
 (Construct, Lint_Test, Functionality_Test, Coverage_Test,
 Performance_Test) or some combination of the above.
 
-What make this a bit compilcated is that several different parameters
+What make this a bit complicated is that several different parameters
 (clobber/dep, the branch name to checkout from version control,
 optimize/debug compilation flags, other application specific compile
 time flags) will likely be tested by the same build script so our
@@ -153,7 +153,7 @@ defines the builds.
 
 It is assumed that each line in the build script can be safely
 executed in its own shell and that if any command fails it will exit
-with a non zero exit code.  This is similar to the behahvior of
+with a non zero exit code.  This is similar to the behavior of
 make. Failed builds are started again from the beginning during the
 next build cycle.
 
@@ -163,11 +163,11 @@ but the list of commands that would be run when the '--test' argument
 is removed is sent to STDOUT for examination.
 
 Before the logs can be mailed to tinderbox there must be information
-discribing how to display this information.  Tinderbox maintains two
+describing how to display this information.  Tinderbox maintains two
 variables for this purpose.  The tinderbox tree name picks which web
 page the information will be displayed on.  The tinderbox build name
 is the name used for the column that the data will be displayed in.
-Typically there is one deamon running continually for each column of
+Typically there is one daemon running continually for each column of
 each page. It may be clearer to have different build names display on
 the tinderbox columns then are used by this build script.
 
@@ -196,7 +196,7 @@ sub set_static_vars {
 
   # This functions sets all the static variables which are often
   # configuration parameters.  Since it only sets variables to static
-  # quantites it can not fail at run time. Some of these variables are
+  # quantities it can not fail at run time. Some of these variables are
   # adjusted by parse_args() but aside from that none of these
   # variables are ever written to. All global variables are defined here
   # so we have a list of them and a comment of what they are for.
@@ -222,15 +222,15 @@ sub set_static_vars {
   $BUILDCF = "buildcf";
 
   # minimum time between the start of consecutive builds.  Tinderbox
-  # requires this to be grater then 5 mintues.
+  # requires this to be grater then 5 minutes.
 
   $MINIMUM_BUILD_SECONDS = 8*60;
 
   # The maximum amount of time between tinderbox reports.  These can
   # be as frequent as you like but more frequent will chew up your
-  # disk space, network bandwith and processor time.  People do not
+  # disk space, network bandwidth and processor time.  People do not
   # need to know exactly where tinderbox is in a build, it only makes
-  # sense to make this about the same size as the tinderbox referesh
+  # sense to make this about the same size as the tinderbox refresh
   # rate.
 
   $REPORT_TINDERBOX_EVERY_SECONDS = 5*60;
@@ -250,7 +250,7 @@ sub set_static_vars {
   #                 '');
   
   # taint perl requires we clean up these bad environmental variables
-  # and it dos not hurt to do it here.
+  # and it does not hurt to do it here.
 
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
 
@@ -275,7 +275,7 @@ sub get_env {
 # handling, should things fail.
 
 # This function should run as early as possible (directly after
-# set_static_vars) so that the error environment is setup incase of
+# set_static_vars) so that the error environment is setup in case of
 # problems.
 
   umask 0022; 
@@ -436,7 +436,7 @@ sub set_server_args {
     die("Must define an error parser.\n");
   
   ($ADMINISTRATOR) ||
-    die("Must define a build adminstrator.\n");
+    die("Must define a build administrator.\n");
 
   ($MAIL_FROM) ||
     die("Must define a mailing address to send builds to.\n");
@@ -449,7 +449,7 @@ sub set_server_args {
 }
 
 
-# Ensure that user defined build structure has all the manditory
+# Ensure that user defined build structure has all the mandatory
 # parts.
 
 sub check_builds {
@@ -596,7 +596,7 @@ sub nonblock {
 
 sub system3 {
 
-# Lanuch a new child and wait for it to die.  This is like a call to
+# Launch a new child and wait for it to die.  This is like a call to
 # system but we get the stdout and stderr in addition to $?.
 
 # call the function like this 
@@ -709,7 +709,7 @@ sub system3 {
   } # while pid
   
   ($reaped_pid != $child_pid) && 
-    warn("No Child pid recived. ".
+    warn("No Child pid received. ".
 	 "reaped_pid: $reaped_pid, ".
 	 "child_pid: $child_pid, ".
 	 "wait_status: $wait_status, ".
@@ -868,7 +868,7 @@ sub slow_build_speed {
           foreach $tree_name (split(/:/, $TREE_NAME)) {
 
               # We need to rerun the user code each iteration so that
-              # they can set file names with embeded dates.  This
+              # they can set file names with embedded dates.  This
               # allows each build to be saved in a separate tar file
               # like: binaries.20010814.13:42:16.tar.gz
 
