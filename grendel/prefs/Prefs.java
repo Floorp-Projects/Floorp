@@ -36,6 +36,7 @@ import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
 import grendel.ui.StoreFactory;
+import java.util.Vector;
 
 public class Prefs {
   static Preferences   fPrefs = PreferencesFactory.Get();
@@ -52,9 +53,19 @@ public class Prefs {
 
   static final String kLocalProtocol = "berkeley";
   static final String kUserPrefsCount = "mail.identities";
+
+  Vector ids = new Vector();
+
+  public Prefs() {
+    int total = getUserPrefsCount();
+    System.out.println("Total is " + total);
+    for (int i = 0; i < total; i++) {
+      addUserPrefs(readUserPrefs(i));
+    }
+  }
   
   public int getUserPrefsCount() {
-    return Integer.parseInt(fPrefs.getString(kUserPrefsCount, "0"));
+    return Integer.parseInt(fPrefs.getString(kUserPrefsCount, "1"));
   }
   
 
@@ -63,23 +74,45 @@ public class Prefs {
   }
 
   public UserPrefs getUserPrefs(int count) {
-    UserPrefs res = new UserPrefs();
-    res.setUserName(fPrefs.getString(kUserName + count, 
-				     "John Doe"));
-    res.setUserName(fPrefs.getString(kEmailAddress + count, 
-				     "john@doe.com"));
-    res.setUserName(fPrefs.getString(kOrganization + count, 
-				     ""));
-
-    return res;    
+    return (UserPrefs)ids.elementAt(count);
   }
   
 
-  public void setUserPrefs(UserPrefs aPrefs) {
-    fPrefs.putString(kUserName, aPrefs.getUserName());
-    fPrefs.putString(kEmailAddress, aPrefs.getUserEmailAddress());
-    fPrefs.putString(kOrganization, aPrefs.getUserOrganization());
-    fPrefs.putString(kSignatureFile, aPrefs.getSignatureFile());
+  public UserPrefs readUserPrefs(int count) {
+    UserPrefs res = new UserPrefs();
+    res.setUserName(fPrefs.getString(kUserName + count, 
+				     "John Doe"));
+    res.setUserEmailAddress(fPrefs.getString(kEmailAddress + count, 
+                                             "john@doe.com"));
+    res.setUserOrganization(fPrefs.getString(kOrganization + count, 
+                                             ""));
+
+    return res;    
+  }  
+
+  public synchronized void setUserPrefs(UserPrefs aPrefs) {
+    addUserPrefs(aPrefs);
+  }
+
+  public synchronized void addUserPrefs(UserPrefs aPrefs) {
+    int location = 0;
+
+    // we need to find out where the object is located for its suffix
+    if (ids.contains(aPrefs)) {
+      location = ids.indexOf(aPrefs);
+    } else {
+      location = ids.size() - 1;
+    }
+    
+    fPrefs.putString(kUserName + location,
+                     aPrefs.getUserName());
+    fPrefs.putString(kEmailAddress + location, 
+                     aPrefs.getUserEmailAddress());
+    fPrefs.putString(kOrganization + location, 
+                     aPrefs.getUserOrganization());
+    fPrefs.putString(kSignatureFile + location, 
+                     aPrefs.getSignatureFile());    
+    ids.addElement(aPrefs);
   }
 
   public MailServerPrefs getMailServerPrefs() {
@@ -161,7 +194,6 @@ public class Prefs {
   public void setUIPrefs(UIPrefs aUIPrefs) {
     if (aUIPrefs.getLAF() != null) {
       try {
-        System.out.println("Setting L&F to " + aUIPrefs.getLAF());
         UIManager.setLookAndFeel(aUIPrefs.getLAF());
       } catch (UnsupportedLookAndFeelException e) {
         e.printStackTrace();

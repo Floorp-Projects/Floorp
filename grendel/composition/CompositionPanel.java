@@ -454,8 +454,11 @@ public class CompositionPanel extends GeneralPanel {
         //get the sending identity
         Preferences prefs = PreferencesFactory.Get();
         int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
-	String userName = prefs.getString("mail.identity-" + ident + ".username", "Nobody") + " <" 
-	                + prefs.getString("mail.identity-" + ident + ".email", "nobody@localhost") + ">";
+	String userName = 
+	  prefs.getString("mail.identity.username." + ident,
+			  "Nobody") + " <" 	
+	  + prefs.getString("mail.identity.email." + ident,
+			    "nobody@localhost") + ">";
 
         if (userName != null) {
           //create a mime message
