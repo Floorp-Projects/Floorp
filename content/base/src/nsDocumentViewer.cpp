@@ -3770,13 +3770,28 @@ DocumentViewerImpl::InstallNewPresentation()
 }
 
 //------------------------------------------------------------
+// This called ONLY when printing has completed and the DV
+// is being notified that it should get rid of the PrintEngine.
+//
+// BUT, if we are in Print Preview then we want to ignore the 
+// notification (we do not get rid of the PrintEngine)
+// 
+// One small caveat: 
+//   This IS called from two places in this module for cleaning
+//   up when an error occurred during the start up printing 
+//   and print preview
+//
 void
 DocumentViewerImpl::OnDonePrinting() 
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (mPrintEngine) {
-    mPrintEngine->Destroy();
-    NS_RELEASE(mPrintEngine);
+    if (GetIsPrintPreview()) {
+      mPrintEngine->DestroyPrintingData();
+    } else {
+      mPrintEngine->Destroy();
+      NS_RELEASE(mPrintEngine);
+    }
   }
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
 }

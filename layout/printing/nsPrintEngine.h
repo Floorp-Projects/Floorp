@@ -107,9 +107,10 @@ public:
 
 
   nsPrintEngine();
-  ~nsPrintEngine(); // non-virtual
+  virtual ~nsPrintEngine();
 
   void Destroy();
+  void DestroyPrintingData();
 
   nsresult Initialize(nsIDocumentViewer*      aDocViewer, 
                       nsIDocumentViewerPrint* aDocViewerPrint, 

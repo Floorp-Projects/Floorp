@@ -316,6 +316,15 @@ void nsPrintEngine::Destroy()
 
 }
 
+//-------------------------------------------------------
+void nsPrintEngine::DestroyPrintingData()
+{
+  if (mPrt) {
+    delete mPrt;
+    mPrt = nsnull;
+  }
+}
+
 //---------------------------------------------------------------------------------
 //-- Section: Methods needed by the DocViewer
 //---------------------------------------------------------------------------------
@@ -2237,10 +2246,6 @@ nsresult nsPrintEngine::CleanupOnFailure(nsresult aResult, PRBool aIsPrinting)
     NS_RELEASE(mPagePrintTimer);
   }
   
-  //if (mPrt) {
-  //  delete mPrt;
-  //  mPrt = nsnull;
-  //}
   SetIsPrinting(PR_FALSE);
 
   /* cleanup done, let's fire-up an error dialog to notify the user
