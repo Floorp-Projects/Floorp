@@ -17,6 +17,7 @@
  */
 
 #include "nsFileControlFrame.h"
+#include "nsFormControlHelper.h"
 #include "nsButtonControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIRenderingContext.h"
@@ -205,8 +206,6 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       }
     } else if (nsHTMLAtoms::size == aAttribute) {
       nsFormFrame::StyleChangeReflow(aPresContext, this);
-    } else {
-      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
     }
   }
   return result;
@@ -260,8 +259,9 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     }
     NS_IF_RELEASE(formContent);
   } 
-  else if ((NS_FORM_BROWSE == type) && mFileControlFrame) {
-    mFileControlFrame->MouseClicked(aPresContext);
+  //else if ((NS_FORM_BROWSE == type) && mMouseListener) {
+  else if (nsnull != mMouseListener) {
+    mMouseListener->MouseClicked(aPresContext);
   }
 }
 
@@ -321,7 +321,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     GetDefaultLabel(defaultLabel);
     nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
                               &defaultLabel, 1, PR_FALSE, nsnull, 1);
-    CalculateSize(aPresContext, this, styleSize, spec, size, 
+    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, spec, size, 
                   widthExplicit, heightExplicit, ignore,
                   aReflowState.rendContext);
     aDesiredLayoutSize.width = size.width;
@@ -394,7 +394,7 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
 
   nsString label;
   nsresult result = GetValue(&label);
-  nsFormControlFrame::PaintRectangularButton(aPresContext,
+  nsFormControlHelper::PaintRectangularButton(aPresContext,
                             aRenderingContext,
                             aDirtyRect, mRect.width, 
                             mRect.height,PR_FALSE, PR_FALSE,

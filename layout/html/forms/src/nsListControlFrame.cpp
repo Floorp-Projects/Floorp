@@ -279,9 +279,11 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.width += lineEndPadding;
 
   desiredSize = aDesiredSize;
-  nsHTMLReflowState   reflowState(aPresContext, mFirstChild, aReflowState, maxSize);
+  nsIFrame * firstChild = mFrames.FirstChild();
+
+  nsHTMLReflowState   reflowState(aPresContext, firstChild, aReflowState, maxSize);
   nsIHTMLReflow*      htmlReflow;
-  if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+  if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(aPresContext);
     nsresult result = htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
@@ -562,7 +564,10 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
       //mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
       mSelectedContent = mHitContent;
       mSelectedFrame   = mHitFrame;
+      aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
+  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+    aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
   return NS_OK;
 }
@@ -750,12 +755,11 @@ nsListControlFrame::DoRemoveFrame(nsBlockReflowState& aState,
 //----------------------------------------------------------------------
 NS_IMETHODIMP  
 nsListControlFrame::Init(nsIPresContext&  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aGeometricParent,
-                  nsIFrame*        aContentParent,
-                  nsIStyleContext* aContext)
+                        nsIContent*      aContent,
+                        nsIFrame*        aParent,
+                        nsIStyleContext* aContext)
 {
-  nsresult result = nsScrollFrame::Init(aPresContext, aContent, aGeometricParent, aContentParent, aContext);
+  nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext);
   /*if (NS_OK == result) {
     nsIDOMNode* node;
     if (mContent && (NS_OK == mContent->QueryInterface(kIDOMNodeIID, (void**) &node))) {

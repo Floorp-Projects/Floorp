@@ -20,9 +20,12 @@
 #define nsIFormControlFrame_h___
 
 #include "nsISupports.h"
+#include "nsFont.h"
 class nsFormFrame;
 class nsIPresContext;
 class nsString;
+class nsIContent;
+
 
 // IID for the nsIFormControlFrame class
 #define NS_IFORMCONTROLFRAME_IID    \
@@ -56,6 +59,24 @@ public:
                                  nsString* aValues, nsString* aNames) = 0;
 
   virtual void SetFormFrame(nsFormFrame* aFrame) = 0;
+
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const = 0;
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const = 0;
+
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
+                    nsFont&         aFont) = 0;
+  /**
+   * Get the content object associated with this frame. Adds a reference to
+   * the content object so the caller must do a release.
+   *
+   * @see nsISupports#Release()
+   */
+  NS_IMETHOD GetFormContent(nsIContent*& aContent) const = 0;
+
 };
 
 #endif

@@ -254,15 +254,15 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     //}
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, PR_FALSE, nsnull, 1);
-    CalculateSize(aPresContext, this, styleSize, textSpec, size, 
-                  widthExplicit, heightExplicit, ignore,
-                  aReflowState.rendContext);
+    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, textSpec, size, 
+                                       widthExplicit, heightExplicit, ignore,
+                                       aReflowState.rendContext);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, 20, 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
-    CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
-                  widthExplicit, heightExplicit, ignore,
-                  aReflowState.rendContext);
+    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
+                                      widthExplicit, heightExplicit, ignore,
+                                      aReflowState.rendContext);
   }
 
   if (NS_FORM_TEXTAREA == type) {
@@ -687,12 +687,12 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
       nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);
 
-      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
-																    scrollbarStyle, arrowStyle, this, mRect);   
+      nsFormControlHelper::PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
+																          scrollbarStyle, arrowStyle, this, mRect);   
       // Horizontal
       srect.SetRect(2*onePixel, mRect.height-scrollbarScaledHeight-(2*onePixel), mRect.width-(onePixel*4)-scrollbarScaledHeight, scrollbarScaledHeight);
-      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_TRUE, onePixel, 
-																    scrollbarStyle, arrowStyle, this, mRect);   
+      nsFormControlHelper::PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_TRUE, onePixel, 
+																        scrollbarStyle, arrowStyle, this, mRect);   
 
       // Draw the small rect "gap" in the bottom right that the two scrollbars don't cover
       const nsStyleColor*   sbColor   = (const nsStyleColor*)scrollbarStyle->GetStyleData(eStyleStruct_Color);

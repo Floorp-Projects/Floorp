@@ -102,7 +102,7 @@ nsFileControlFrame::GetType(PRInt32* aType) const
 // XXX this should be removed when nsView exposes it
 nsIWidget* GetWindowTemp(nsIView *aView);
 nsIWidget*
-GetWindowTemp(nsIView *aView)
+nsFileControlFrame::GetWindowTemp(nsIView *aView)
 {
   nsIWidget *window = nsnull;
 
@@ -209,7 +209,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
       browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX should be "empty"
     }
     NS_NewButtonControlFrame(childFrame);
-    ((nsButtonControlFrame*)childFrame)->SetFileControlFrame(this);
+    ((nsButtonControlFrame*)childFrame)->SetMouseListener((nsIFormControlFrame*)this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
     childFrame->Init(aPresContext, browse, this, mStyleContext);
 
@@ -322,4 +322,33 @@ NS_IMETHODIMP
 nsFileControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FileControl", aResult);
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
+{
+  return GetContent(aContent);
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::GetFont(nsIPresContext*        aPresContext, 
+                             nsFont&                aFont)
+{
+  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
+  return NS_OK;
+}
+nscoord 
+nsFileControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               nscoord aInnerHeight) const
+{
+   return 0;
+}
+
+nscoord 
+nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
+{
+  return 0;
 }

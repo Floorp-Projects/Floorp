@@ -20,7 +20,6 @@
 #define nsButtonControlFrame_h___
 
 #include "nsFormControlFrame.h"
-class nsFileControlFrame;
 
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
@@ -59,8 +58,7 @@ public:
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
-  nsFileControlFrame* GetFileControlFrame() { return mFileControlFrame; }
-  void SetFileControlFrame(nsFileControlFrame* aFrame) { mFileControlFrame = aFrame; }
+  //nsFileControlFrame* GetFileControlFrame() { return mFileControlFrame; }
   void GetDefaultLabel(nsString& aLabel);
 
   PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
@@ -68,6 +66,9 @@ public:
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
+
+  // Sets listener for button click
+  void SetMouseListener(nsIFormControlFrame* aListener) { mMouseListener = aListener; }
 
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
@@ -85,7 +86,7 @@ protected:
 
   // XXX: End of the temporary methods
 
-  nsFileControlFrame* mFileControlFrame; // for browse buttons only
+  nsIFormControlFrame* mMouseListener; // for browse buttons only
 };
 
 

@@ -294,7 +294,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       }
       nsSize textSize;
       // use the style for the select rather that the option, since widgets don't support it
-      nsFormControlFrame::GetTextSize(*aPresContext, this, text, textSize, aReflowState.rendContext); 
+      nsFormControlHelper::GetTextSize(*aPresContext, this, text, textSize, aReflowState.rendContext); 
       if (textSize.width > maxWidth) {
         maxWidth = textSize.width;
       }
@@ -308,9 +308,9 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
-  mNumRows = (PRUint32)CalculateSize(aPresContext, this, styleSize, textSpec, 
-                                     calcSize, widthExplicit, heightExplicit, rowHeight,
-                                     aReflowState.rendContext);
+  mNumRows = (PRUint32)nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, textSpec, 
+                                                           calcSize, widthExplicit, heightExplicit, rowHeight,
+                                                           aReflowState.rendContext);
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr;
@@ -797,7 +797,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
     y = inside.y;
   }
 
-  PRInt32 selectedIndex = -1;
+  PRUint32 selectedIndex = -1;
   // XXX Get Selected index out of Content model
   selectedIndex = 1;
 
@@ -857,12 +857,12 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
       const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
 
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
-        PaintArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
+      nsFormControlHelper::PaintArrow(nsFormControlHelper::eArrowDirection_Down, aRenderingContext,aPresContext, 
                       aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
     } else {
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
 
-      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
+      nsFormControlHelper::PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
                                                                     scrollbarStyle, arrowStyle, this, mRect);   
     }
   }

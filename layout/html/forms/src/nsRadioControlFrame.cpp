@@ -298,7 +298,7 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 {
   aRenderingContext.PushState();
 
-  nsFormControlFrame::PaintCircularBorder(aPresContext,aRenderingContext,
+  nsFormControlHelper::PaintCircularBorder(aPresContext,aRenderingContext,
                          aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
 
   PRBool checked = PR_TRUE;
