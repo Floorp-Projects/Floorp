@@ -18,10 +18,7 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Mike Potter <mikep@oeone.com>
-   -                 ArentJan Banck <ajbanck@planet.nl>
-   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
-   - Polish translation: Kacper Mikke <kacper@k-raj.com.pl>             
+   - Contributor(s): Kacper Mikke <kacper@k-raj.com.pl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,13 +50,13 @@
 <!ENTITY pref.showalarmbox    "Pokaż alarmy" >
 <!ENTITY pref.defaultemail.label "Domyślny adres do wysyłania alarmów:">
 <!ENTITY pref.defaulttext.label "Domyślny tekst dla alarmów:">
-<!ENTITY pref.missedalarms    "Show missed alarms" >
-<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
-<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
-<!ENTITY pref.alarm.on "On">
-<!ENTITY pref.alarm.off "Off">
-<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
-<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
+<!ENTITY pref.missedalarms    "Pokoż niezauważone alarmy" >
+<!ENTITY pref.defalarm4events.label "Domyślne ustawienie alarmów dla wydarzeń:">
+<!ENTITY pref.defalarm4todos.label "Domyślne ustawienie alarmów dla zadań:">
+<!ENTITY pref.alarm.on "Wł.">
+<!ENTITY pref.alarm.off "Wył.">
+<!ENTITY pref.defalarmlen4events.label "Domyślny czas wyłączenia alarmu przed wydarzeniem:">
+<!ENTITY pref.defalarmlen4todos.label "Domyślny czas wyłączenia alarmu przed zadaniem:">
 
 <!ENTITY pref.dateformat.label      "Tekstowy format daty:" >
 <!ENTITY pref.dateformat.long       "Długi" >
@@ -85,7 +82,6 @@
 <!ENTITY pref.numberofweeks.5      "5 Tygodni" >
 <!ENTITY pref.numberofweeks.6      "6 Tygodni" >
 <!ENTITY pref.numberofpreviousweeks.label     "Liczba poprzednich tygodni:" >
-
 
 <!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
 <!ENTITY pref.hour.00    "00:00" >
@@ -113,16 +109,16 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
-<!ENTITY pref.calendar.view.allview.caption "General">
-<!ENTITY pref.calendar.view.dayview.caption "Widok dnia"> 
-<!ENTITY pref.calendar.view.weekview.caption "Widok tygodnia"> 
-<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
-<!ENTITY pref.calendar.view.monthview.caption "Month View">
-<!ENTITY pref.calendar.view.multiweekview.caption "Widok wielkotygodniaowy"> 
+<!ENTITY pref.calendar.view.allview.caption "Ogólny">
+<!ENTITY pref.calendar.view.dayview.caption "Widok dnia">
+<!ENTITY pref.calendar.view.weekview.caption "Widok tygodnia">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Widoki dnia i tygodnia">
+<!ENTITY pref.calendar.view.monthview.caption "Widok miesiąca">
+<!ENTITY pref.calendar.view.multiweekview.caption "Widok wielkotygodniaowy">
 
-<!ENTITY pref.calendar.view.restrict.label "Ogranicz widoki do "> 
-<!ENTITY pref.calendar.view.starttime.label "Początek:"> 
-<!ENTITY pref.calendar.view.endtime.label   "koniec:"> 
+<!ENTITY pref.calendar.view.restrict.label "Ogranicz widoki do ">
+<!ENTITY pref.calendar.view.starttime.label "Początek:">
+<!ENTITY pref.calendar.view.endtime.label   "koniec:">
 
 <!ENTITY pref.categories.label   "Kategorie" >
 
@@ -138,15 +134,14 @@
 <!ENTITY pref.minutes.label "Minuty">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "Moja strefa czasowa">
 <!ENTITY pref.calendar.timezone.caption "Strefa czasowa">
 <!ENTITY pref.defaultzone.label     "Domyślna strefa czasowa:" >
 
-<!ENTITY pref.timezone.Africa.Abidjan "Afryka/Abidjan" >
+<!ENTITY pref.timezone.Africa.Abidjan "Afryka/Abidżan" >
 <!ENTITY pref.timezone.Africa.Accra "Afryka/Accra" >
-<!ENTITY pref.timezone.Africa.Addis_Ababa "Afryka/Addis_Ababa" >
-<!ENTITY pref.timezone.Africa.Algiers "Afryka/Algiers" >
+<!ENTITY pref.timezone.Africa.Addis_Ababa "Afryka/Addis_Abeba" >
+<!ENTITY pref.timezone.Africa.Algiers "Afryka/Algier" >
 <!ENTITY pref.timezone.Africa.Asmera "Afryka/Asmera" >
 <!ENTITY pref.timezone.Africa.Bamako "Afryka/Bamako" >
 <!ENTITY pref.timezone.Africa.Bangui "Afryka/Bangui" >
@@ -155,13 +150,13 @@
 <!ENTITY pref.timezone.Africa.Blantyre "Afryka/Blantyre" >
 <!ENTITY pref.timezone.Africa.Brazzaville "Afryka/Brazzaville" >
 <!ENTITY pref.timezone.Africa.Bujumbura "Afryka/Bujumbura" >
-<!ENTITY pref.timezone.Africa.Cairo "Afryka/Cairo" >
+<!ENTITY pref.timezone.Africa.Cairo "Afryka/Kair" >
 <!ENTITY pref.timezone.Africa.Casablanca "Afryka/Casablanca" >
 <!ENTITY pref.timezone.Africa.Ceuta "Afryka/Ceuta" >
 <!ENTITY pref.timezone.Africa.Conakry "Afryka/Conakry" >
 <!ENTITY pref.timezone.Africa.Dakar "Afryka/Dakar" >
 <!ENTITY pref.timezone.Africa.Dar_es_Salaam "Afryka/Dar_es_Salaam" >
-<!ENTITY pref.timezone.Africa.Djibouti "Afryka/Djibouti" >
+<!ENTITY pref.timezone.Africa.Djibouti "Afryka/Dżibuti" >
 <!ENTITY pref.timezone.Africa.Douala "Afryka/Douala" >
 <!ENTITY pref.timezone.Africa.El_Aaiun "Afryka/El_Aaiun" >
 <!ENTITY pref.timezone.Africa.Freetown "Afryka/Freetown" >
@@ -171,7 +166,7 @@
 <!ENTITY pref.timezone.Africa.Kampala "Afryka/Kampala" >
 <!ENTITY pref.timezone.Africa.Khartoum "Afryka/Khartoum" >
 <!ENTITY pref.timezone.Africa.Kigali "Afryka/Kigali" >
-<!ENTITY pref.timezone.Africa.Kinshasa "Afryka/Kinshasa" >
+<!ENTITY pref.timezone.Africa.Kinshasa "Afryka/Kinszasa" >
 <!ENTITY pref.timezone.Africa.Lagos "Afryka/Lagos" >
 <!ENTITY pref.timezone.Africa.Libreville "Afryka/Libreville" >
 <!ENTITY pref.timezone.Africa.Lome "Afryka/Lome" >

@@ -18,12 +18,7 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
-   -                 Mike Potter <mikep@oeone.com>
-   -                 Chris Charabaruk <coldacid@meldstar.com>
-   -                 ArentJan Banck <ajbanck@planet.nl>
-   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
-   - Polish translation: Kacper Mikke <kacper@k-raj.com.pl>
+   - Contributor(s): Kacper Mikke <kacper@k-raj.com.pl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +35,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- General -->
-<!ENTITY calendar.file.default.name  "My Calendar" >
+<!ENTITY calendar.file.default.name  "Kalendarz" >
 
 <!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Minuty" >
@@ -89,7 +84,7 @@
 <!ENTITY newevent.invite.label       "Zaproś" >
 <!ENTITY newevent.email.label        "Wyślij powiadomienie do" >
 <!ENTITY newevent.beforealarm.label  "przed rozpoczęciem" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarmends.label  "przed zakończeniem zadania" >
 <!ENTITY newevent.repeat.label       "Powtarzaj co" >
 <!ENTITY newevent.until.label        "Do" >
 <!ENTITY newevent.forever.label      "Zawsze" >
@@ -103,7 +98,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Wybierz datę zakończenia" >
 <!ENTITY newevent.recurend.warning    "Czas powtarzania kończy się przed czasem zakończenia.">
 <!ENTITY newevent.endtime.tooltip    "Wybierz czas zakończenia dla tego wydarzenia" >
-<!ENTITY newevent.starttimeerror.alertmessage "Wydarzenie nie może skończyć się zanim się zaczęło. Proszę popraw czas początku bądź końca wydarzenia." >        
+<!ENTITY newevent.starttimeerror.alertmessage "Wydarzenie nie może skończyć się zanim się zaczęło. Proszę popraw czas początku bądź końca wydarzenia." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Czas powtarzania nie może byc przed końcem wydarzenia. Proszę popraw to lub wyłącz powtarzanie." >
 <!ENTITY newevent.newevent.tab.label "Wydarzenie" >
 <!ENTITY newevent.recurrence.tab.label "Powtarzanie" >
@@ -111,28 +106,28 @@
 <!ENTITY newevent.files.tab.label "Pliki" >
 <!ENTITY newevent.status.label "Status" >
 <!ENTITY newevent.status.longlabel "Status wydarzenia">
-<!ENTITY newevent.status.needsaction.label "Needs Action" >
+<!ENTITY newevent.status.needsaction.label "Wymaga działania" >
 <!ENTITY newevent.status.inprogress.label  "Trwa" >
 <!ENTITY newevent.status.completed.label   "Wykonane" >
 <!ENTITY newevent.status.cancelled.label   "Anulowane" >
 <!ENTITY newevent.status.tentative.label   "Wstępne" >
 <!ENTITY newevent.status.confirmed.label   "Potwierdzone" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "X dnia miesiąca">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "4-ty wtorek miesiąca">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Ostatni wtorek miesiąca">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "x dnia miesiąca">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4-ty wtorek miesiąca">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Ostatni wtorek miesiąca">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Last ">          
-<!ENTITY newevent.advanced.repeat.first.label "First"> 
-<!ENTITY newevent.advanced.repeat.second.label "Second"> 
-<!ENTITY newevent.advanced.repeat.third.label "Third"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.first.extension "st"> 
-<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
-<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
-<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
+<!ENTITY newevent.advanced.repeat.onthe.label "W ">
+<!ENTITY newevent.advanced.repeat.last.label "Ostatni ">
+<!ENTITY newevent.advanced.repeat.first.label "Pierwszy">
+<!ENTITY newevent.advanced.repeat.second.label "Drugi">
+<!ENTITY newevent.advanced.repeat.third.label "Tzeci">
+<!ENTITY newevent.advanced.repeat.fourth.label "Czwarty">
+<!ENTITY newevent.advanced.repeat.first.extension "-szy">
+<!ENTITY newevent.advanced.repeat.second.extension "-gi">
+<!ENTITY newevent.advanced.repeat.third.extension "-ci">
+<!ENTITY newevent.advanced.repeat.nth.extension "-ty">
 
 <!ENTITY newevent.choosefile.label "Wybierz plik">
 <!ENTITY newevent.removeselectedfile.label "Usuń wybrany plik">
@@ -146,14 +141,14 @@
 <!ENTITY newtodo.starttime.warning "Data rozpoczęcia wydaje się być po terminie wykonania.">
 <!ENTITY newtodo.cancelled.label "Anulowane">
 <!ENTITY newtodo.status.label "Status">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
-<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
-<!ENTITY newtodo.newtodo.tab.label "Task" >
-<!ENTITY newtodo.status.longlabel "Task Status">
-<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
-<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.beforealarm.label  "przed rozpoczęciem zadania" >
+<!ENTITY newtodo.beforealarmends.label  "przed zakończeniem zadania" >
+<!ENTITY newtodo.newtodo.tab.label "Zadanie" >
+<!ENTITY newtodo.status.longlabel "Status zadania">
+<!ENTITY newtodo.duetime.warning    "Godzina rozpoczęcia zadania jest po jego zakończeniu.">
+<!ENTITY newtodo.duedate.warning    "Data rozpoczęcia zadania jest po jego zakończeniu.">
 
-<!ENTITY calendar.confirm.deleteevent "Jesteś pewien, że chcesz usunąć wydarzenie zatytułowane: " >        
+<!ENTITY calendar.confirm.deleteevent "Jesteś pewien, że chcesz usunąć wydarzenie zatytułowane: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Jesteś pewien, że chcesz usunąć to niezatytułowane wydarzenie?" >
 
 <!ENTITY event.alarm.checkbox.label "Przypomnij mi znów " >
@@ -239,17 +234,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Następny Dzień" >
 <!ENTITY calendar.prevday.button.tooltip        "Poprzedni Dzień" >
-<!ENTITY calendar.nextweek.button.tooltip        "Następny tydzień" >
-<!ENTITY calendar.prevweek.button.tooltip        "Poprzedni tydzień" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Następny miesiąc" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Poprzedni miesiąc" >
+<!ENTITY calendar.nextweek.button.tooltip       "Następny tydzień" >
+<!ENTITY calendar.prevweek.button.tooltip       "Poprzedni tydzień" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Następny miesiąc" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Poprzedni miesiąc" >
 
 <!ENTITY calendar.newtask.button.label          "Nowe zadanie" >
 <!ENTITY calendar.newevent.button.label         "Nowe wydarzenie" >
 <!ENTITY calendar.delete.button.label           "Usuń" >
 <!ENTITY calendar.edit.button.label             "Edytuj" >
 
-<!ENTITY calendar.gototoday.button.label        "Idź do dziś" >
 <!ENTITY calendar.choosedate.button.label       "Wybierz Dzień" >
 
 <!ENTITY calendar.dayview.button.label          "Dzień" >
@@ -267,9 +261,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Wydarzenia" >
-<!ENTITY calendar.search.tab.label			        "Szukaj">
+<!ENTITY calendar.search.tab.label      "Szukaj">
 
-<!ENTITY calendar.search.options.searchfor			" zawiera">
+<!ENTITY calendar.search.options.searchfor " zawiera">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Liczba tygodni" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 tyDzień" >
@@ -374,13 +368,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Potwierdź" >
 <!ENTITY calendar.alarm.editevent.label             "Edytuj wydarzenie" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Potwierdź wszystkie alarmy" >
 <!ENTITY calendar.alarm.snooze.label                "Powtarzaj" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Dodaj nowy kalendarz">
 <!ENTITY calendar.server.dialog.title.edit          "Edytuj kalendarz">
@@ -406,8 +399,8 @@
 <!ENTITY calendar.publish.password.label            "Hasło">
 <!ENTITY calendar.publish.username.description      "(Opcjonalne) Nazwa użytkownika do wysłania pliku na ten serwer">
 <!ENTITY calendar.publish.password.description      "(Opcjonalne) Hasło użytkownika do wysłania pliku na ten serwer">
-<!ENTITY calendar.publish.publish.button      "Publish">
-<!ENTITY calendar.publish.close.button      "Close">
+<!ENTITY calendar.publish.publish.button      "Publikuj">
+<!ENTITY calendar.publish.close.button      "Zamknij">
 
 <!ENTITY calendar.publish.example.url.description   "Podobnie do http://www.myserver.com/webdav/test.ics">
 
@@ -426,11 +419,10 @@
 <!ENTITY calendar.importdupes.adddupes.label "Dodaj duplikaty">
 <!ENTITY calendar.importdupes.prompt.label "Pytaj za każdym razem">
 
-
 <!-- Calendar Printing -->
-<!ENTITY calendar.print.window.title "Print A Calendar">
-<!ENTITY calendar.print.selectoptions.label "Select your options below, and use OK to print">
-<!ENTITY calendar.print.selectviews.label "Select View to Print">
-<!ENTITY calendar.print.listselected.label "List Selected Events">
-<!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
-<!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
+<!ENTITY calendar.print.window.title "Drukuj kalendarz">
+<!ENTITY calendar.print.selectoptions.label "Wybierz opcje poniżej i wciśnij OK by drukować">
+<!ENTITY calendar.print.selectviews.label "Wybierz Widok do druku">
+<!ENTITY calendar.print.listselected.label "Wyświetl wybrane wydarzenia">
+<!ENTITY calendar.print.onlyitemsstatus.label "Drukuj tylko pozycje o statusie:">
+<!ENTITY calendar.print.onlyitemscategory.label "Drukuj tylko pozycje o kategorii:">
