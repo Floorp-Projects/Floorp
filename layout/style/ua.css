@@ -479,7 +479,7 @@ NOFRAMES {
   display: none;
 }
 
-// Pseudo-classes
+// Pseudo-element style
 
 :SCROLLED-CONTENT {
   background: inherit;

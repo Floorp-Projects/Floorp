@@ -1521,7 +1521,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   
             if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
               // The scroll frame gets the original style context, and the scrolled
-              // frame gets a SCROLLED-CONTENT pseudo class style context.
+              // frame gets a SCROLLED-CONTENT pseudo element style context.
               scrollFrame->SetStyleContext(aPresContext, styleContext);
 
               nsIStyleContext*  pseudoStyle;
