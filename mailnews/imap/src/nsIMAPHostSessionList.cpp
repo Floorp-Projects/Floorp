@@ -465,8 +465,6 @@ NS_IMETHODIMP nsIMAPHostSessionList::ClearServerAdvertisedNamespacesForHost(cons
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetDefaultNamespaceOfTypeForHost(const char *hostName, const char *userName, EIMAPNamespaceType type, nsIMAPNamespace * &result)
 {
-	nsIMAPNamespace *ret = NULL;
-
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
