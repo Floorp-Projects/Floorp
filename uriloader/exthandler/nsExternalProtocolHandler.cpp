@@ -214,7 +214,7 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI)
                                 getter_Copies(launchBtn));
 
   nsXPIDLString message;
-  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get(), desc.get() };
+  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get() };
   appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
                                    msgArgs,
                                    NS_ARRAY_LENGTH(msgArgs),
