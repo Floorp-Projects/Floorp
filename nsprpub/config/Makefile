@@ -84,6 +84,13 @@ PROGS	+= $(OBJDIR)/nsinstall$(PROG_SUFFIX)
 TARGETS = $(PROGS) $(PLSRCS:.pl=)
 endif
 
+OUTOPTION = -o
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(CPU_ARCH),ALPHA)
+OUTOPTION = /link /out:
+endif
+endif
+
 # Redefine MAKE_OBJDIR for just this directory
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
@@ -96,5 +103,6 @@ $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LINK) $(EXEFLAGS) $<
 else
-	$(CC) $(XCFLAGS) $< $(XLDOPTS) -o $@
+	$(CC) $(XCFLAGS) $< $(XLDOPTS) $(OUTOPTION)$@
 endif
+
