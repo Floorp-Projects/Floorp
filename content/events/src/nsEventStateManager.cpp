@@ -1004,7 +1004,15 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
       if (subDS && IsShellVisible(subDS)) {
         subDS->GetPresShell(getter_AddRefs(subPS));
 
+        // Docshells need not have a presshell (eg. display:none
+        // iframes, docshells in transition between documents, etc).
+        if (!subPS) {
+          // Oh, well.  Just move on to the next child
+          continue;
+        }
+
         subPS->GetPresContext(getter_AddRefs(subPC));
+        NS_ASSERTION(subPC, "PresShell without PresContext");
 
         subPC->GetEventStateManager(getter_AddRefs(subESM));
 
@@ -1039,8 +1047,10 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
       nsCOMPtr<nsIEventStateManager> parentESM;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
+      NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
 
       parentPS->GetPresContext(getter_AddRefs(parentPC));
+      NS_ASSERTION(parentPC, "PresShell without PresContext");
 
       parentPC->GetEventStateManager(getter_AddRefs(parentESM));
 
