@@ -53,18 +53,6 @@ nsWelcomeDlg::~nsWelcomeDlg()
         free (mReadmeFile);
 }
 
-void 
-nsWelcomeDlg::Back(GtkWidget *aWidget, gpointer aData)
-{
-    DUMP("Back");
-    if (aData != gCtx->wdlg) return;
-    if (gCtx->bMoving) 
-    {
-        gCtx->bMoving = FALSE;
-        return;
-    }
-}
-
 void
 nsWelcomeDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
@@ -77,14 +65,10 @@ nsWelcomeDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 
     // hide this notebook page
-    gCtx->wdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
-
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gCtx->wdlg->Hide();
 
     // show the next dlg
-    gCtx->ldlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+    gCtx->ldlg->Show();
     gCtx->bMoving = TRUE;
 }
 
@@ -126,7 +110,7 @@ BAIL:
 }
 
 int
-nsWelcomeDlg::Show(int aDirection)
+nsWelcomeDlg::Show()
 {
     int err = 0;
     char *readmeContents = NULL;
@@ -184,31 +168,17 @@ nsWelcomeDlg::Show(int aDirection)
     }
 
     // signal connect the buttons
-    gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
-                   GTK_SIGNAL_FUNC(nsWelcomeDlg::Back), gCtx->wdlg);
     gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
                    GTK_SIGNAL_FUNC(nsWelcomeDlg::Next), gCtx->wdlg);
-
-    if (gCtx->back)
-        gtk_widget_hide(gCtx->back);
 
     GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(gCtx->next);
 
-    if (aDirection == nsXInstallerDlg::BACKWARD_MOVE)
-    {
-        // change the button titles back to Back/Next
-        gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
-        gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->declineLabel);
-        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
-        gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
-        gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
-        gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
-        gtk_widget_show(gCtx->nextLabel);
-        gtk_widget_show(gCtx->backLabel);
-        gtk_widget_show(gCtx->next);
-        gtk_widget_show(gCtx->back);
-    }
+    // show the Next button
+    gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
+    gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
+    gtk_widget_show(gCtx->nextLabel);
+    gtk_widget_show(gCtx->next);
 
 BAIL:
     XI_IF_FREE(readmeContents);
@@ -217,10 +187,15 @@ BAIL:
 }
 
 int 
-nsWelcomeDlg::Hide(int aDirection)
+nsWelcomeDlg::Hide()
 {
     // hide all this dlg's widgets
     gtk_widget_hide(mTable);
+
+    // disconnect and remove this dlg's nav btn
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
+    gtk_widget_hide(gCtx->next);
 
     return OK;
 }

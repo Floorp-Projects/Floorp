@@ -106,21 +106,19 @@ nsInstallDlg::Back(GtkWidget *aWidget, gpointer aData)
     }
 
     // hide this notebook page
-    gCtx->idlg->Hide(nsXInstallerDlg::BACKWARD_MOVE);
-
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
-
-    if (bDownload && sDLTable)
-        gtk_widget_hide(sDLTable);
+    gCtx->idlg->Hide();
 
     // show the last dlg
     if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
-        gCtx->cdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
+    {
+        gCtx->cdlg->Show();
+        // only set bMoving for component dlg since setuptype has no "back"
+        gCtx->bMoving = TRUE;
+    }
     else
-        gCtx->sdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
-    gCtx->bMoving = TRUE;
+    {
+        gCtx->sdlg->Show();
+    }
 }
 
 void
@@ -383,7 +381,7 @@ nsInstallDlg::RunApps(nsRunApp *aRunAppList, int aSequential)
 }
 
 int
-nsInstallDlg::Show(int aDirection)
+nsInstallDlg::Show()
 {
     int err = OK;
     int totalComps = 0;
@@ -512,20 +510,36 @@ nsInstallDlg::Show(int aDirection)
         gtk_widget_show(gCtx->back);
     }
 
-    // always change title of next button to "Install"
-    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel); 
+    // show back and next button, but make title of next button "Install"
+    gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
     gCtx->installLabel = gtk_label_new(gCtx->Res("INSTALL"));
+    gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
     gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
+    gtk_widget_show(gCtx->backLabel);
     gtk_widget_show(gCtx->installLabel);
+    gtk_widget_show(gCtx->back);
     gtk_widget_show(gCtx->next);
 
     return err;
 }
 
 int
-nsInstallDlg::Hide(int aDirection)
+nsInstallDlg::Hide()
 {
+    if (bDownload && sDLTable)
+        gtk_widget_hide(sDLTable);
+
     gtk_widget_hide(mTable);
+
+    // disconnect and remove this dlg's nav btns
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+
+    gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel); 
+    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel); 
+
+    gtk_widget_hide(gCtx->back);
+    gtk_widget_hide(gCtx->next);
 
     return OK;
 }

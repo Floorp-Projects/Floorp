@@ -55,13 +55,12 @@ public:
 /*---------------------------------------------------------------------*
  *   Navigation
  *---------------------------------------------------------------------*/
-    static void         Back(GtkWidget *aWidget, gpointer aData);
     static void         Next(GtkWidget *aWidget, gpointer aData);
 
     int                 Parse(nsINIParser *aParser);
 
-    int                 Show(int aDirection);
-    int                 Hide(int aDirection);
+    int                 Show();
+    int                 Hide();
 
     static void         SelectFolder(GtkWidget *aWidget, gpointer aData);
     static void         SelectFolderOK(GtkWidget *aWidget, 
