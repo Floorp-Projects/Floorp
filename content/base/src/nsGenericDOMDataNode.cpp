@@ -655,6 +655,11 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool a
         // XXX: Root!
       }
     }
+#ifdef IBMBIDI
+    if (mText.IsBidi()) {
+      mDocument->SetBidiEnabled(PR_TRUE);
+    }
+#endif
   }
 
   return NS_OK;
@@ -961,16 +966,10 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
   if (aNotify && (nsnull != mDocument)) {
     mDocument->BeginUpdate();
   }
-#ifdef IBMBIDI
-  if (mDocument != nsnull) {
-    PRBool bidiEnabled = mText.SetTo(aBuffer, aLength);
-    if (bidiEnabled) {
-      mDocument->SetBidiEnabled(PR_TRUE);
-    }
-  }
-  else
-#endif // IBMBIDI
   mText.SetTo(aBuffer, aLength);
+#ifdef IBMBIDI
+  SetBidiStatus();
+#endif // IBMBIDI
 
   if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aOuterContent));
@@ -1045,6 +1044,9 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
     mDocument->BeginUpdate();
   }
   mText = aStr;
+#ifdef IBMBIDI
+  SetBidiStatus();
+#endif // IBMBIDI
 
   if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aOuterContent));
@@ -1101,3 +1103,21 @@ nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)
   *aResult = PR_TRUE;
   return NS_OK;
 }
+
+#ifdef IBMBIDI
+void nsGenericDOMDataNode::SetBidiStatus()
+{
+  PRBool isBidiDocument = PR_FALSE;
+  if (mDocument) {
+    mDocument->GetBidiEnabled(&isBidiDocument);
+    if (isBidiDocument) {
+      // OK, we already know it's Bidi, so we won't test again
+      return;
+    }
+  }
+  mText.SetBidiFlag();
+  if (mDocument && mText.IsBidi()) {
+    mDocument->SetBidiEnabled(PR_TRUE);
+  }
+}
+#endif // IBMBIDI
