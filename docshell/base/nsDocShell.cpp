@@ -2451,7 +2451,6 @@ nsDocShell::Destroy()
         docShellParentAsNode->RemoveChild(this);
 
     if (mContentViewer) {
-        mContentViewer->Close();
         mContentViewer->Destroy();
         mContentViewer = nsnull;
     }
@@ -4107,7 +4106,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             }
         }
 
-        mContentViewer->Close();
+        mContentViewer->Destroy();
         aNewViewer->SetPreviousViewer(mContentViewer);
         mContentViewer = nsnull;
     }
