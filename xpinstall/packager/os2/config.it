@@ -765,7 +765,7 @@ Key=Install Directory
 ;
 ; Default value is TRUE if nothing is set.
 ;
-; When creating objects, you can specify Attribute=UPDATE or FAIL
+; When creating objects, you can specify Attributes=UPDATE or FAIL
 ; FAIL will fail when trying to create the object, UPDATE will replace it
 
 [Program Folder0]
@@ -776,6 +776,7 @@ ClassName=WPFolder
 Title=$ProductName$
 Location=[DESKTOP]
 Object ID=<MOZILLAFLDR>
+Attributes=FAIL
 
 [Component Navigator-Program Folder0]
 Timing=post smartupdate
@@ -789,6 +790,7 @@ Location=[Default Folder]
 Association Filters=*.HTM,*.HTML
 Association Types=HTML,text/html
 Object ID=<MOZILLAEXE>
+Attributes=UPDATE
 
 [Component Navigator-Program Folder0-Object1]
 ClassName=WPProgram
@@ -798,6 +800,7 @@ Parameters=-ProfileManager
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Object ID=<MOZILLAPROFMANAGER>
+Attributes=UPDATE
 
 [Component Uninstaller-Program Folder0]
 Timing=post smartupdate
@@ -810,6 +813,7 @@ Parameters=/ua \"$UserAgent$\"
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Object ID=<MOZILLA_UNINSTALL>
+Attributes=UPDATE
 
 [Component MailNews-Program Folder0]
 Timing=post smartupdate
@@ -822,6 +826,7 @@ Parameters=-mail
 Working Dir=[SETUP PATH]
 Location=[Default Folder]
 Object ID=<MOZILLAMAIL>
+Attributes=UPDATE
 
 [Strings]
 ;*** LOCALIZE ME BABY ***
