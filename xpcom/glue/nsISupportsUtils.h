@@ -792,7 +792,8 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 } // extern "C++"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Macros for checking state and arguments upon entering interface boundaries
+// Macros for checking the trueness of an expression passed in	within an 
+// interface implementation.
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_ENSURE(x, ret)							\
@@ -806,6 +807,17 @@ PR_END_MACRO
 
 #define NS_ENSURE_NOT(x, ret) \
 NS_ENSURE(!(x), ret)
+
+////////////////////////////////////////////////////////////////////////////////
+// Macros for checking results
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_ENSURE_SUCCESS(res, ret)				\
+NS_ENSURE(NS_SUCCEEDED(res), ret)
+
+////////////////////////////////////////////////////////////////////////////////
+// Macros for checking state and arguments upon entering interface boundaries
+////////////////////////////////////////////////////////////////////////////////
 
 #define NS_ENSURE_ARG(arg) \
 NS_ENSURE(arg, NS_ERROR_INVALID_ARG)
@@ -824,6 +836,9 @@ NS_ENSURE(((arg) >= min) && ((arg) <= max), NS_ERROR_INVALID_ARG)
 
 #define NS_ENSURE_STATE(state) \
 NS_ENSURE(state, NS_ERROR_UNEXPECTED)
+
+#define NS_ENSURE_NO_AGGREGATION(outer) \
+NS_ENSURE_NOT(outer, NS_ERROR_NO_AGGREGATION)
 
 #define NS_ENSURE_PROPER_AGGREGATION(outer, iid) \
 NS_ENSURE_NOT(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
