@@ -101,7 +101,7 @@ public:
     NS_DECL_NSIFILEOUTPUTSTREAM
 
     nsFileOutputStream() : nsFileStream() {}
-    virtual ~nsFileOutputStream() {}
+    virtual ~nsFileOutputStream() { nsFileOutputStream::Close(); }
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
