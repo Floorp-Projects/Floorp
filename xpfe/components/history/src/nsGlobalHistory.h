@@ -29,6 +29,7 @@
 #include "nsMdbPtr.h"
 #include "mdb.h"
 #include "nsIGlobalHistory.h"
+#include "nsIBrowserHistory.h"
 #include "nsIObserver.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -94,6 +95,7 @@ class searchTerm;
 
 class nsGlobalHistory : nsSupportsWeakReference,
                         public nsIGlobalHistory,
+                        public nsIBrowserHistory,
                         public nsIObserver,
                         public nsIRDFDataSource,
                         public nsIRDFRemoteDataSource
@@ -102,16 +104,10 @@ public:
   // nsISupports methods 
   NS_DECL_ISUPPORTS
 
-  // nsIGlobalHistory
   NS_DECL_NSIGLOBALHISTORY
-
-  // nsIObserver - for observing prefs changes
+  NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
-
-  // nsIRDFDataSource
   NS_DECL_NSIRDFDATASOURCE
-
-  // nsIRDFRemoteDataSource
   NS_DECL_NSIRDFREMOTEDATASOURCE
 
   NS_METHOD Init();
