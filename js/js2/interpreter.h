@@ -37,7 +37,6 @@ namespace JavaScript {
 		
 		JSValue() : i64(0) {}
 		
-		explicit JSValue(int8 i8) : i8(i8) {}
 		explicit JSValue(float64 f64) : f64(f64) {}
 	};
 	
@@ -45,7 +44,7 @@ namespace JavaScript {
 	
 	typedef vector<JSValue> JSValues;
 
-	JSValue interpret(InstructionStream& iCode, const JSValues& args);
+	JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& args);
 }
 
 #endif /* interpreter_h */
