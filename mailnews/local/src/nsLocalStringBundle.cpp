@@ -22,6 +22,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsLocalStringBundle.h"
 #include "nsIServiceManager.h"
