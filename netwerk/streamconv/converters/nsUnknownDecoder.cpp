@@ -286,15 +286,21 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
     mContentType = APPLICATION_POSTSCRIPT;
   }
   //
-  // If the buffer begins with "#!" or "%!" then it is a script of some
-  // sort...
+  // If the buffer begins with "#!" or "%!" then it is a script of
+  // some sort...  "Scripts" can include arbitrary data to be passed
+  // to an interpreter, so we check the buffer for nulls.
   //
   // This false match happened all the time...  For example, CGI scripts
   // written in sh or perl that emit HTML.
   //
   else if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
            str.EqualsWithConversion("%!", PR_FALSE, 2)) {
-    mContentType = TEXT_PLAIN;
+    for (i=0; i<mBufferLen && mBuffer[i]; i++);
+    if (i == mBufferLen) {
+      mContentType = TEXT_PLAIN;
+    } else {
+      mContentType = APPLICATION_OCTET_STREAM;
+    }
   }
   //
   // If the buffer begins with a mailbox delimiter then it is not HTML
