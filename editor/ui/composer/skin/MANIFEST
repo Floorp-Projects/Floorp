@@ -19,7 +19,7 @@ images:ED_Center.gif
 images:ED_ClearStyle.gif
 images:ED_Copy.gif
 images:ED_Cut.gif
-images:ED_Dedent.gif
+images:ED_Outdent.gif
 images:ED_Find.gif
 images:ED_HLine.gif
 images:ED_Image.gif
@@ -39,5 +39,5 @@ images:ED_Undo.gif
 images:ED_Bold.gif
 images:ED_TextColor.gif
 images:ED_BackColor.gif
-images:ED_AlignPopup.gif
+images:ED_Align.gif
 images:ED_ObjectPopup.gif
