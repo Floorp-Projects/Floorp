@@ -349,6 +349,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
     NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
+    NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
@@ -7248,4 +7249,27 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
         }
     }
     return rv;
+}
+
+//*****************************************************************************
+// nsDocShell::nsIAuthPromptProvider
+//*****************************************************************************   
+
+nsresult
+nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
+{
+    // a priority prompt request will override a false mAllowAuth setting
+    PRBool priorityPrompt = (aPromptReason == nsIAuthPromptProvider::PROMPT_PROXY);
+
+    if (!mAllowAuth && !priorityPrompt)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    // we're either allowing auth, or it's a proxy request
+    nsCOMPtr<nsIAuthPrompt> authPrompter(do_GetInterface(mTreeOwner));
+    if (!authPrompter)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    *aResult = authPrompter;
+    NS_ADDREF(*aResult);
+    return NS_OK;
 }
