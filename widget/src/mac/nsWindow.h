@@ -112,7 +112,10 @@ public:
     virtual nsIWidget*    	GetParent(void);
 
     NS_IMETHOD              Show(PRBool aState);
-    NS_IMETHOD 							IsVisible(PRBool & aState);
+    NS_IMETHOD              IsVisible(PRBool & aState);
+
+    NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                             PRBool *aForWindow);
 
     NS_IMETHOD            	Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD            	Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);

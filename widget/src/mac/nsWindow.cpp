@@ -392,6 +392,75 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 }
 
     
+NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                         PRBool *aForWindow)
+{
+	*aForWindow = PR_FALSE;
+	EventRecord *theEvent = (EventRecord *) aEvent;
+
+	if (aRealEvent && theEvent->what != nullEvent ) {
+
+		WindowPtr window = (WindowPtr) GetNativeData(NS_NATIVE_DISPLAY),
+		          rollupWindow = gRollupWidget ? (WindowPtr) gRollupWidget->GetNativeData(NS_NATIVE_DISPLAY) : 0;
+		WindowPtr eventWindow = nsnull;
+		PRInt16 where = ::FindWindow ( theEvent->where, &eventWindow );
+		bool inWindow = eventWindow && (eventWindow == window || eventWindow == rollupWindow);
+
+		switch ( theEvent->what ) {
+			// is it a mouse event?
+			case mouseDown:
+			case mouseUp:
+				// is it in the given window?
+				// (note we also let some events questionable for modal dialogs pass through.
+				// but it makes sense that the draggability et.al. of a modal window should
+				// be controlled by whether the window has a drag bar).
+				if ( inWindow &&
+				     ( where == inContent || where == inDrag || where == inGrow ||
+				       where == inGoAway || where == inZoomIn || where == inZoomOut ))
+					*aForWindow = PR_TRUE;
+				break;
+			case keyDown:
+			case keyUp:
+			case autoKey:
+				if ( inWindow )
+					*aForWindow = PR_TRUE;
+				break;
+
+			case diskEvt:
+			    // I think dialogs might want to support floppy insertion, and it doesn't
+			    // interfere with modality...
+			case updateEvt:
+				// always let update events through, because if we don't handle them, we're
+				// doomed!
+			case activateEvt:
+				// certainly we have to let the obvious activate events through. hopefully
+				// our consumption of other events will keep any unwanted activate events
+				// from even getting this far
+				*aForWindow = PR_TRUE;
+				break;
+
+			case osEvt:
+				// check for mouseMoved or suspend/resume events. We especially need to
+				// let suspend/resume events through in order to make sure the clipboard is
+				// converted correctly.
+				unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
+				if (eventType == mouseMovedMessage) {
+					// I'm guessing we don't want to let these through unless the mouse is
+					// in the modal dialog so we don't see rollover feedback in windows behind
+					// the dialog.
+					if ( where == inContent && inWindow )
+						*aForWindow = PR_TRUE;
+				}
+				if ( eventType == suspendResumeMessage )
+					*aForWindow = PR_TRUE;
+				break;
+		} // case of which event type
+	} else
+		*aForWindow = PR_TRUE;
+
+	return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Enable/disable this component

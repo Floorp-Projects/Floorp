@@ -89,7 +89,9 @@ public:
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
     NS_IMETHOD              IsVisible(PRBool & aState);
-    HWND                    mBorderlessParent;
+
+    NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                             PRBool *aForWindow);
 
     NS_IMETHOD              CaptureMouse(PRBool aCapture);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
@@ -132,6 +134,8 @@ public:
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
     NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+
+    HWND                    mBorderlessParent;
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);
