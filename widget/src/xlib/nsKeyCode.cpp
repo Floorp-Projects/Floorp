@@ -71,6 +71,7 @@ struct nsKeyConverter nsKeycodes[] =
   { NS_VK_CAPS_LOCK,     XK_Caps_Lock},
   { NS_VK_ESCAPE,        XK_Escape},
   { NS_VK_SPACE,         XK_KP_Space},
+  { NS_VK_SPACE,         XK_space},
   { NS_VK_PAGE_UP,       XK_Page_Up},
   { NS_VK_PAGE_UP,       XK_KP_Page_Up},
   { NS_VK_PAGE_DOWN,     XK_Page_Down},
