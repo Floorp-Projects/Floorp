@@ -167,7 +167,8 @@ public:
   static PRBool ParseValue(const nsString& aString, PRInt32 aMin, PRInt32 aMax,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static PRBool ParseColor(const nsString& aString, nsHTMLValue& aResult);
+  static PRBool ParseColor(const nsString& aString, nsIDocument* aDocument,
+                           nsHTMLValue& aResult);
 
   static PRBool ColorToString(const nsHTMLValue& aValue,
                               nsString& aResult);

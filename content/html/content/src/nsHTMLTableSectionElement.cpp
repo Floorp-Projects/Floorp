@@ -246,7 +246,7 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::valign) {

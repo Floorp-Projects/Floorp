@@ -395,6 +395,9 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 nsresult
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+  if (aDocument == mDocument) {
+    return NS_OK; // short circuit useless work
+  }
   nsresult result = nsGenericElement::SetDocument(aDocument, aDeep);
   
   if (NS_OK != result) {
@@ -791,12 +794,13 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 
     // Provide default conversions for most everything
     switch (value.GetUnit()) {
+    case eHTMLUnit_Null:
     case eHTMLUnit_Empty:
       aResult.Truncate();
       break;
 
     case eHTMLUnit_String:
-    case eHTMLUnit_Null:
+    case eHTMLUnit_ColorName:
       value.GetStringValue(aResult);
       break;
 
@@ -811,7 +815,7 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       break;
 
     case eHTMLUnit_Percent:
-      aResult.Truncate(0);
+      aResult.Truncate();
       aResult.Append(PRInt32(value.GetPercentValue() * 100.0f), 10);
       aResult.Append('%');
       break;
@@ -820,7 +824,7 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       color = nscolor(value.GetColorValue());
       PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
                   NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-      aResult.Truncate(0);
+      aResult.Truncate();
       aResult.Append(cbuf);
       break;
 
@@ -989,7 +993,6 @@ nsresult
 nsGenericHTMLElement::GetBaseTarget(nsString& aBaseTarget) const
 {
   nsresult  result = NS_OK;
-  PRBool    hasLocal = PR_FALSE;
 
   if (nsnull != mAttributes) {
     nsHTMLValue value;
@@ -1392,24 +1395,22 @@ nsGenericHTMLElement::ParseValue(const nsString& aString, PRInt32 aMin,
 
 PRBool
 nsGenericHTMLElement::ParseColor(const nsString& aString,
+                                 nsIDocument* aDocument,
                                  nsHTMLValue& aResult)
 {
   if (aString.Length() > 0) {
     nsAutoString  colorStr (aString);
     colorStr.CompressWhitespace();
-    char cbuf[40];
-    colorStr.ToCString(cbuf, sizeof(cbuf));
     nscolor color = 0;
-    if (NS_ColorNameToRGB(cbuf, &color)) {
+    if (NS_ColorNameToRGB(colorStr, &color)) {
       aResult.SetStringValue(colorStr, eHTMLUnit_ColorName);
       return PR_TRUE;
     }
-#if 0
     nsDTDMode mode = eDTDMode_NoQuirks;
-    if (mDocument) {
+    if (aDocument) {
       nsIHTMLDocument* htmlDoc;
       nsresult         result;
-      result = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+      result = aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
       if (NS_SUCCEEDED(result)) {
         // Check the compatibility mode
         result = htmlDoc->GetDTDMode(mode);
@@ -1418,21 +1419,20 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
     }
 
     if (eDTDMode_NoQuirks == mode) {
-      if (('#' == cbuf[0]) && NS_HexToRGB(&(cbuf[1]), &color)) {
-        aResult.SetColorValue(color);
-        return PR_TRUE;
+      if (colorStr.CharAt(0) == '#') {
+        colorStr.Cut(0, 1);
+        if (NS_HexToRGB(colorStr, &color)) {
+          aResult.SetColorValue(color);
+          return PR_TRUE;
+        }
       }
     }
     else {
-#endif
-      aString.ToCString(cbuf, sizeof(cbuf));  // no space compression
-      if (NS_LooseHexToRGB(cbuf, &color)) {
+      if (NS_LooseHexToRGB(aString, &color)) {  // no space compression
         aResult.SetColorValue(color);
         return PR_TRUE;
       }
-#if 0
     }
-#endif
   }
 
   // Illegal values are mapped to empty
@@ -1453,7 +1453,8 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
     aResult.Append(buf);
     return PR_TRUE;
   }
-  if (aValue.GetUnit() == eHTMLUnit_String) {
+  if ((aValue.GetUnit() == eHTMLUnit_ColorName) || 
+      (aValue.GetUnit() == eHTMLUnit_String)) {
     aValue.GetStringValue(aResult);
     return PR_TRUE;
   }
