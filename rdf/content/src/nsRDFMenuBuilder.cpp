@@ -277,6 +277,10 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "arc-out with no target: fix your arcs-out cursor!");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
+
         nsCOMPtr<nsIRDFResource> resource;
         nsCOMPtr<nsIRDFLiteral> literal;
 

@@ -1214,6 +1214,10 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
         if (NS_FAILED(rv = cursor->GetTarget(&node)))
             break;
 
+        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null item in cursor");
+        if (rv == NS_RDF_NO_VALUE)
+            continue;
+
         // If it's a resource, then output a "<RDF:li resource=... />"
         // tag, because we'll be dumping the resource separately. (We
         // iterate thru all the resources in the datasource,
