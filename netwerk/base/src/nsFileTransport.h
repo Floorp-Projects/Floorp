@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #ifndef nsFileTransport_h__
