@@ -68,6 +68,7 @@ public:
   static nsIAtom* pageFrame;
   static nsIAtom* rootFrame;
   static nsIAtom* scrollFrame;
+  static nsIAtom* textFrame;
   static nsIAtom* viewportFrame;
 };
 

@@ -47,6 +47,7 @@
 #include "nsTextReflow.h"/* XXX rename to nsTextRun */
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -115,6 +116,13 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::textFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
@@ -2570,6 +2578,15 @@ TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
       fragOffset = 0;
     }
   }
+}
+
+NS_IMETHODIMP
+TextFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::textFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
