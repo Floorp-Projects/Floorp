@@ -196,10 +196,6 @@ function UpdatePageReport(event)
   if (gBrowser.mCurrentBrowser.pageReport) {
     gReportButton.setAttribute("blocked", "true");
     if (pref && pref.getBoolPref("privacy.popups.firstTime")) {
-      // Force a reflow. Gross.
-      var x = gReportButton.boxObject.width;
-
-      // Now display a dialog.
       displayPageReportFirstTime();
     }
   }
