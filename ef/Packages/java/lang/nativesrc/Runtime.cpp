@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "java_lang_Runtime.h"
+#include "java_lang_String.h"
 #include <stdio.h>
 #include "Thread.h"
 

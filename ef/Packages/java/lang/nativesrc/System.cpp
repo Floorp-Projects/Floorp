@@ -265,7 +265,7 @@ Netscape_Java_java_lang_System_initProperties(Java_java_util_Properties *props)
 	/* system */
 	PUTPROP("java.library.path", "???");
     PUTPROP("java.home", "???");
-    PUTPROP("java.class.path", "\ns\dist\classes");
+    PUTPROP("java.class.path", "\\ns\\dist\\classes");
     PUTPROP("user.name", "???");
     PUTPROP("user.home", "???");
     PUTPROP("user.timezone", "???");
