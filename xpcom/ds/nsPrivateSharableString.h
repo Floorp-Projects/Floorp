@@ -25,7 +25,9 @@
 #ifndef nsPrivateSharableString_h___
 #define nsPrivateSharableString_h___
 
+#ifndef nsBufferHandle_h___
 #include "nsBufferHandle.h"
+#endif
 
   /**
    * This class is (will be) part of the machinery that makes
@@ -42,17 +44,17 @@ class nsPrivateSharableString
   };
 
 template <class CharT>
-nsBufferHandle<CharT>*
-nsPrivateSharableString<CharT>::GetBufferHandle() const
-  {
-    return GetSharedBufferHandle();
-  }
-
-template <class CharT>
-nsBufferHandle<CharT>*
+const nsSharedBufferHandle<CharT>*
 nsPrivateSharableString<CharT>::GetSharedBufferHandle() const
   {
     return 0;
+  }
+
+template <class CharT>
+const nsBufferHandle<CharT>*
+nsPrivateSharableString<CharT>::GetBufferHandle() const
+  {
+    return GetSharedBufferHandle();
   }
 
 #endif // !defined(nsPrivateSharableString_h___)
