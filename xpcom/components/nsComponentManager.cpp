@@ -2120,7 +2120,7 @@ AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
     return PR_TRUE;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 AutoUnregisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
     PRBool didUnregister;
