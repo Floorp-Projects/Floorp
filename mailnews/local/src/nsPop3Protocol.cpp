@@ -188,7 +188,8 @@ FreeUidlInfo(void * /* pool */, PLHashEntry *he, PRUintn flag)
     Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) he->value;
     if (uidlEntry)
     {
-      PR_Free(uidlEntry->uidl);
+      if (uidlEntry->uidl)
+        PR_Free(uidlEntry->uidl);
       PR_Free(uidlEntry);
     }
     PR_Free(he);
