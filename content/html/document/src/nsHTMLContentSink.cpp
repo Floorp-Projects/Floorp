@@ -383,7 +383,7 @@ CreateContentObject(const nsIParserNode& aNode,
     rv = NS_NewHTMLFrameset(aResult, atom, aWebShell);
     break;
   case eHTMLTag_hr:
-    rv = NS_NewHRulePart(aResult, atom);
+    rv = NS_NewHTMLHR(aResult, atom);
     break;
   case eHTMLTag_iframe:
     rv = NS_NewHTMLIFrame(aResult, atom, aWebShell);
