@@ -5145,7 +5145,7 @@ EOF
     if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
         { echo "configure: error: cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS" 1>&2; exit 1; }
     fi
-    if test `echo ${PATH}: | grep -c "$MOZ_TOOLS_DIR/bin:"` = 0; then
+    if test `echo ${PATH}: | grep -ic "$MOZ_TOOLS_DIR/bin:"` = 0; then
         { echo "configure: error: \$MOZ_TOOLS\\bin must be in your path." 1>&2; exit 1; }
     fi
     MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
@@ -5153,7 +5153,7 @@ EOF
     if test -n "$GLIB_PREFIX"; then
         _GLIB_PREFIX_DIR=`cd $GLIB_PREFIX && pwd`
         if test "$?" = "0"; then
-            if test `echo ${PATH}: | grep -c "$_GLIB_PREFIX_DIR/bin:"` = 0; then
+            if test `echo ${PATH}: | grep -ic "$_GLIB_PREFIX_DIR/bin:"` = 0; then
                 { echo "configure: error: GLIB_PREFIX must be in your \$PATH." 1>&2; exit 1; }
             fi
             _GLIB_PREFIX_DIR=`cygpath -w $_GLIB_PREFIX_DIR | sed -e 's|\\\\|/|g'`
@@ -5172,7 +5172,7 @@ EOF
     if test -n "$LIBIDL_PREFIX"; then
         _LIBIDL_PREFIX_DIR=`cd $LIBIDL_PREFIX && pwd`
         if test "$?" = "0"; then
-            if test `echo ${PATH}: | grep -c "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
+            if test `echo ${PATH}: | grep -ic "$_LIBIDL_PREFIX_DIR/bin:"` = 0; then
                 { echo "configure: error: LIBIDL_PREFIX must be in your \$PATH." 1>&2; exit 1; }
             fi
             _LIBIDL_PREFIX_DIR=`cygpath -w $_LIBIDL_PREFIX_DIR | sed -e 's|\\\\|/|g'`
