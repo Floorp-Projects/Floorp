@@ -31,6 +31,6 @@ function clearLog()
   gSpamSettings.clearLog();
 
   // reload the newly truncated file
-  gLogView.setAttribute("src", gSpamSettings.logURL);
+  gLogView.reload();
 }
 

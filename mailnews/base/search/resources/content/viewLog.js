@@ -31,6 +31,6 @@ function clearLog()
   gFilterList.clearLog();
 
   // reload the newly truncated file
-  gLogView.setAttribute("src", gFilterList.logURL);
+  gLogView.reload();
 }
 
