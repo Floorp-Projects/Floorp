@@ -49,7 +49,10 @@ nsMsgDBFolder::nsMsgDBFolder(void)
 nsMsgDBFolder::~nsMsgDBFolder(void)
 {
 	if(mDatabase)
+	{
+		mDatabase->RemoveListener(this);
 		mDatabase->Close(PR_TRUE);
+	}
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsIEnumerator** threadEnumerator)
@@ -149,7 +152,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	
 }
 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {
 	return NS_OK;
