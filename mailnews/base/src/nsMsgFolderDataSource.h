@@ -107,6 +107,8 @@ public:
 
   NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
 
+  NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+                            nsIEnumerator/*<nsIRDFResource>*/** commands);
   NS_IMETHOD GetAllCmds(nsIRDFResource* source,
                             nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
 

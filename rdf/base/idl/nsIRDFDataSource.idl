@@ -188,6 +188,11 @@ interface nsIRDFDataSource : nsISupports
     nsISimpleEnumerator GetAllResources();
 
     /**
+     * Returns the set of all commands defined for a given source.
+     */
+    nsIEnumerator GetAllCommands(in nsIRDFResource aSource);
+
+    /**
      * Returns whether a given command is enabled for a set of sources. 
      */
     boolean IsCommandEnabled(in nsISupportsArray aSources,

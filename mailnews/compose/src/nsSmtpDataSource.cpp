@@ -404,6 +404,12 @@ NS_IMETHODIMP nsSmtpDataSource::GetAllResources(nsISimpleEnumerator **aResult)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
+NS_IMETHODIMP nsSmtpDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **aResult)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
 NS_IMETHODIMP nsSmtpDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *aResult)
 {

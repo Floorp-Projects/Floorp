@@ -956,6 +956,15 @@ LocalSearchDataSource::RemoveObserver(nsIRDFObserver *n)
 
 
 NS_IMETHODIMP
+LocalSearchDataSource::GetAllCommands(nsIRDFResource* source,nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
 LocalSearchDataSource::GetAllCmds(nsIRDFResource* source, nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
 	return(NS_NewEmptyEnumerator(commands));

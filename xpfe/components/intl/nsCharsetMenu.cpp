@@ -1962,6 +1962,14 @@ NS_IMETHODIMP nsCharsetMenu::GetAllResources(nsISimpleEnumerator** aCursor)
   return mInner->GetAllResources(aCursor);
 }
 
+NS_IMETHODIMP nsCharsetMenu::GetAllCommands(
+                             nsIRDFResource* source,
+                             nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsCharsetMenu::GetAllCmds(
                              nsIRDFResource* source,
                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands)

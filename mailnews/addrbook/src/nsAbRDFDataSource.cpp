@@ -490,6 +490,13 @@ NS_IMETHODIMP nsAbRDFDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 }
 
 NS_IMETHODIMP
+nsAbRDFDataSource::GetAllCommands(nsIRDFResource* source,
+                                     nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+    return NS_RDF_NO_VALUE;
+}
+
+NS_IMETHODIMP
 nsAbRDFDataSource::GetAllCmds(nsIRDFResource* source,
                                       nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {

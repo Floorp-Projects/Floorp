@@ -1713,6 +1713,16 @@ InternetSearchDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 
 
 NS_IMETHODIMP
+InternetSearchDataSource::GetAllCommands(nsIRDFResource* source,
+                                     nsIEnumerator/*<nsIRDFResource>*/** commands)
+{
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
 InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {

@@ -98,6 +98,8 @@ public:
 	NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
 						  nsISimpleEnumerator** labels); 
 
+	NS_IMETHOD GetAllCommands(nsIRDFResource* source,
+							nsIEnumerator/*<nsIRDFResource>*/** commands);
 	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 							  nsIRDFResource*   aCommand,
 							  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
