@@ -53,7 +53,6 @@ C_OBJS=                                     \
 
 CPP_OBJS=                                    \
     .\$(OBJDIR)\mozJSComponentLoader.obj     	\
-    .\$(OBJDIR)\mozJSComponentLoaderFactory.obj	\
      $(NULL)
 
 #//------------------------------------------------------------------------
