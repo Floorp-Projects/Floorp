@@ -20,8 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *    
- * $Id: FilterExpr.cpp,v 1.2 1999/11/15 07:13:11 nisheeth%netscape.com Exp $
+ * $Id: FilterExpr.cpp,v 1.3 1999/11/25 03:03:07 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -29,7 +31,7 @@
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:11 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:07 $
 **/
 //-- Implementation of FilterExpr --/
 
@@ -76,10 +78,7 @@ void FilterExpr::setExpr(Expr* expr) {
 **/
 ExprResult* FilterExpr::evaluate(Node* context, ContextState* cs) {
 
-   NodeSet* nodes = new NodeSet();
-
-   if (( !context ) || (! expr )) return nodes;
-
+   if (( !context ) || (! expr )) return new NodeSet;
 
     ExprResult* exprResult = expr->evaluate(context, cs);
     NodeSet* nodeSet = 0;

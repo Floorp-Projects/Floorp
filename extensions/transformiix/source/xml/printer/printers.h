@@ -20,8 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *
- * $Id: printers.h,v 1.2 1999/11/18 04:39:54 kvisco%ziplink.net Exp $
+ * $Id: printers.h,v 1.3 1999/11/25 03:03:05 kvisco%ziplink.net Exp $
  */
 
 
@@ -39,7 +41,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/18 04:39:54 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
 **/
 class XMLPrinter {
 
@@ -58,6 +60,12 @@ public:
      * Default constructor. Uses stdout as the default ostream
     **/
     XMLPrinter();
+
+    /**
+     * Destructor must be virtual so subclasses are destroyed.
+    **/
+
+    virtual ~XMLPrinter();
 
     /**
      * Creates a new XML Printer using the given PrintWriter
@@ -236,7 +244,7 @@ private:
  * A class for printing an XML node as non-well-formed HTML
  * This class was ported from XSL:P Java source
  * @author Keith Visco (kvisco@ziplink.net)
- * @version $Revision: 1.2 $ $Date: 1999/11/18 04:39:54 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:05 $
 **/
 class HTMLPrinter : public XMLPrinter {
 

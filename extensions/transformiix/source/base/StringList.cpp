@@ -20,14 +20,16 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ * Bob Miller, kbob@oblix.com
+ *    -- plugged core leak.
  *
- * $Id: StringList.cpp,v 1.2 1999/11/15 07:12:42 nisheeth%netscape.com Exp $
+ * $Id: StringList.cpp,v 1.3 1999/11/25 03:03:03 kvisco%ziplink.net Exp $
  */
 
 /**
  * StringList
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:42 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/25 03:03:03 $
 **/
 
 #include <iostream.h>
@@ -150,8 +152,8 @@ void StringList::insertBefore(String* strptr, StringListItem* refItem) {
 /**
  * Returns a StringListIterator for this StringList
 **/
-StringListIterator& StringList::iterator() {
-   return *(new StringListIterator(this));
+StringListIterator StringList::iterator() {
+   return StringListIterator(this);
 }
 
 String* StringList::remove(String* strptr) {
