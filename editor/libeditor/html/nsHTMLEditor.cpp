@@ -1244,6 +1244,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     // Either way, treat as normal character.
     if (character && !altKey && !ctrlKey && !isShift && !metaKey)
     {
+      aKeyEvent->PreventDefault();
       nsAutoString key(character);
       return TypedText(key, eTypedText);
     }
