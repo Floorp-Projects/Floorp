@@ -73,10 +73,8 @@
 
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kDateTimeFormatIID,    NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kTextNodeCID,          NS_TEXTNODE_CID);
 
 //------------------------------------------------------------------------
 
