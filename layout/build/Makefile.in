@@ -60,7 +60,9 @@ GRE_MODULE	= 1
 PACKAGE_FILE = layout.pkg
 PACKAGE_VARS += MOZ_XUL
 
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
+endif
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
 endif

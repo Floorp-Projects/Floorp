@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Gecko embedding code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Benjamin Smedberg <benjamin@smedbergs.us>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,20 +34,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Force references to all of the symbols that we want exported from
-// the dll that are located in the .lib files we link with
+#include "nsRegion.h"
 
-#include "zlib.h"
-
-void xxxNeverCalledZLib()
+void xxxGFXNeverCalled()
 {
-    deflate(0, 0);
-    deflateInit(0, 0);
-	deflateInit2(0, 0, 0, 0, 0, 0);
-    deflateEnd(0);
-    inflate(0, 0);
-    inflateInit(0);
-    inflateInit2(0, 0);
-    inflateEnd(0);
-    inflateReset(0);
+    nsRegion a;
+    nsRect r;
+    nsRegion b(r);
+    nsRegion c(a);
+    c.And(a,b);
+    c.And(a,r);
+    c.And(r,a);
+    c.Or(a,b);
+    c.Or(a,r);
+    c.Sub(a,b);
+    c.Sub(r,a);
+    c.IsEmpty();
+    c.GetBounds();
+    c.GetNumRects();
+    c.MoveBy(0,0);
+    c.MoveBy(nsPoint());
+    c.SetEmpty();
+    c.SimplifyInward(0);
+    c.SimplifyOutward(0);
+    
+    
+    nsRegionRectIterator i(a);
+    i.Next();
+    i.Prev();
+    i.Reset();
 }

@@ -50,15 +50,16 @@ ifdef MOZ_JSLOADER
 DIRS         +=  loader
 endif
 
-DIRS         += src shell
+DIRS         += src
+
+TOOL_DIRS    += shell
 
 ifdef ENABLE_TESTS
-DIRS		+= tests
+TOOL_DIRS    += tests
 endif
 
 ifdef MOZ_XPCTOOLS
-DIRS         +=  tools 
+TOOL_DIRS    +=  tools 
 endif
 
 include $(topsrcdir)/config/rules.mk
-

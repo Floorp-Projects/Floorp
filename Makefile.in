@@ -142,15 +142,8 @@ tier_2_dirs	= \
 		xpcom/obsolete \
 		$(NULL)
 
-ifdef MOZ_ENABLE_LIBXUL
-tier_2_dirs += \
-		toolkit/library \
-		xpcom/stub \
-		$(NULL)
-endif
-
 ifdef NS_TRACE_MALLOC
-tier_2_dirs	+= tools/trace-malloc/lib tools/trace-malloc
+tier_2_dirs	+= tools/trace-malloc/lib
 endif
 
 #
@@ -161,13 +154,6 @@ tier_9_dirs += \
 		js/src/xpconnect \
 		intl \
 		$(NULL)
-
-ifdef MOZ_OJI
-tier_9_dirs	+= \
-		js/src/liveconnect \
-		modules/oji \
-		$(NULL)
-endif
 
 ifdef MOZ_ENABLE_XLIB
 tier_9_dirs	+= gfx/src/xlibrgb widget/src/xlibxtbin
@@ -203,6 +189,16 @@ tier_9_dirs	+= \
 		dom \
 		view \
 		widget \
+		$(NULL)
+
+ifdef MOZ_ENABLE_LIBXUL
+tier_9_dirs += \
+		toolkit/library \
+		xpcom/stub \
+		$(NULL)
+endif
+
+tier_9_dirs += \
 		content \
 		layout \
 		db \
@@ -213,16 +209,11 @@ tier_9_dirs	+= \
 		editor \
 		$(NULL)
 
-ifdef MOZ_THUNDERBIRD
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_9_dirs  += other-licenses/branding/thunderbird
-endif
-endif
-
-ifdef MOZ_PHOENIX
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_9_dirs  += other-licenses/branding/firefox
-endif
+ifdef MOZ_OJI
+tier_9_dirs	+= \
+		js/src/liveconnect \
+		modules/oji \
+		$(NULL)
 endif
 
 tier_9_dirs	+= \
@@ -298,19 +289,8 @@ ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
 
-# Many standalone tools/test can't be built until after libxul is available.
-ifdef MOZ_ENABLE_LIBXUL
-tier_50_dirs += xpcom/tools
-ifdef ENABLE_TESTS
-tier_50_dirs += \
-	xpcom/tests \
-	xpcom/sample \
-	xpcom/typelib/xpt/tests \
-	xpcom/reflect/xptinfo/tests \
-	xpcom/reflect/xptcall/tests \
-	xpcom/proxy/tests \
-	$(NULL)
-endif
+ifdef NS_TRACE_MALLOC
+tier_50_dirs += tools/trace-malloc
 endif
 
 #
@@ -348,6 +328,9 @@ endif
 endif
 
 ifdef MOZ_PHOENIX
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_99_dirs  += other-licenses/branding/firefox
+endif
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
 ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_99_dirs  += other-licenses/branding/firefox/content
@@ -359,6 +342,9 @@ tier_99_dirs	+= xulrunner
 endif
 
 ifdef MOZ_THUNDERBIRD
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_99_dirs  += other-licenses/branding/thunderbird
+endif
 tier_99_dirs	+= mail xpfe/bootstrap/init.d
 ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_99_dirs  += other-licenses/branding/thunderbird/content
@@ -393,7 +379,9 @@ endif
 
 # viewer
 ifneq (,$(ENABLE_TESTS))
+ifndef MOZ_ENABLE_LIBXUL
 tier_99_dirs += webshell/tests
+endif
 endif
 
 # winembed, mfcembed
@@ -477,6 +465,27 @@ ifndef MOZ_NATIVE_NSPR
 endif
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk $@
+endif
+
+ifdef MOZ_ENABLE_LIBXUL
+tier_50:
+	@echo "tier_50: $(tier_50_dirs)"
+	@$(EXIT_ON_ERROR) \
+	for d in $(tier_50_dirs); do \
+	    $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d export; \
+	done ; \
+	$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
+	for d in $(tier_50_dirs); do \
+	    $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d libs; \
+	done
+	@echo "Building tools from tier 2/9/50"
+	@$(EXIT_ON_ERROR) \
+	for d in $(tier_2_dirs) $(tier_9_dirs) $(tier_50_dirs); do \
+	    $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d tools; \
+	done;
 endif
 
 tier_%: 

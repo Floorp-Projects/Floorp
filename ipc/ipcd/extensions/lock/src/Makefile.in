@@ -49,7 +49,7 @@ MODULE				= ipcd
 LIBRARY_NAME		= ipcdlock_s
 FORCE_STATIC_LIB	= 1
 MODULE_NAME			= ipcd
-
+LIBXUL_LIBRARY = 1
 FORCE_USE_PIC	= 1
 
 REQUIRES	= \

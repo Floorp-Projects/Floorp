@@ -71,7 +71,7 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_TESTS
-DIRS		+= tests
+TOOL_DIRS = tests
 endif
 endif
 

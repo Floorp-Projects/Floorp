@@ -40,22 +40,21 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE=unicharutil
+include $(DEPTH)/config/autoconf.mk
 
+MODULE=unicharutil
+LIBRARY_NAME=unicharutil_s
 EXPORT_LIBRARY=1
 
-include $(DEPTH)/config/autoconf.mk
+REQUIRES=xpcom \
+		string \
+		uconv \
+		$(NULL)
 
 EXPORTS = \
 	nsUnicharUtils.h \
 	nsCompressedCharMap.h \
 	$(NULL)
-
-LIBRARY_NAME=unicharutil_s
-REQUIRES=xpcom \
-		string \
-		uconv \
-		$(NULL)
 
 CPPSRCS	= \
 	nsUnicharUtils.cpp \

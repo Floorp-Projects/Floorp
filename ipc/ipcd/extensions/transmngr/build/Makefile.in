@@ -47,6 +47,7 @@ LIBRARY_NAME = transmngr_client
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = transmngr
+LIBXUL_LIBRARY = 1
 
 REQUIRES	= ipcd \
 		  string \

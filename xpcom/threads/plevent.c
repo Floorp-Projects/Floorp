@@ -1383,11 +1383,11 @@ PL_IsQueueNative(PLEventQueue *queue)
 ** In Win32 this is the module handle of the DLL.
 **
 */
-static HINSTANCE _pr_hInstance;
+HINSTANCE _pr_hInstance;
 #endif
 
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(MOZ_ENABLE_LIBXUL)
 
 /*
 ** Initialization routine for the DLL...

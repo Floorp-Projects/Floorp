@@ -47,6 +47,7 @@ LIBRARY_NAME	= xremote_client
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= XRemoteClientModule
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = xremoteclient.pkg
 

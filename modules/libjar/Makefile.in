@@ -50,9 +50,11 @@ DIRS		= standalone
 
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer
+ifndef MOZ_ENABLE_LIBXUL
 MOZ_STATIC_COMPONENT_LIBS=
 BUILD_STATIC_LIBS=
 BUILD_SHARED_LIBS=1
+endif
 endif
 
 MODULE		= jar
@@ -61,6 +63,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJarModule
 GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = libjar.pkg
 
