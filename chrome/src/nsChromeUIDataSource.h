@@ -47,6 +47,7 @@ class nsIDocument;
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
+#include "nsCOMArray.h"
 
 class nsChromeUIDataSource : public nsIRDFDataSource, public nsIRDFObserver
 {
@@ -65,7 +66,7 @@ public:
 
 protected:
   nsCOMPtr<nsIRDFDataSource>  mComposite;
-  nsCOMPtr<nsISupportsArray>	mObservers;
+  nsCOMArray<nsIRDFObserver>  mObservers;
   nsIRDFService* mRDFService;
 };
 
