@@ -632,7 +632,8 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)
       widgetInitData.mWindowType = eWindowType_popup;
 
-
+    widgetInitData.mContentType = nsIDocShellTreeItem::typeChrome;
+    
     // note default chrome overrides other OS chrome settings, but
     // not internal chrome
     if (aChromeMask & nsIWebBrowserChrome::CHROME_DEFAULT)

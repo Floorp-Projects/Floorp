@@ -1035,6 +1035,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
       nsWidgetInitData  widgetInit;
 
       widgetInit.clipChildren = PR_TRUE;
+      widgetInit.mContentType = mContentType;
       widgetInit.mWindowType = eWindowType_child;
       nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       

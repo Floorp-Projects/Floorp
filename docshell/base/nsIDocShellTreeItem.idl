@@ -51,10 +51,10 @@ interface nsIDocShellTreeItem : nsISupports
 	/*
 	Definitions for the item types.
 	*/
-	const long typeChrome=0;
-	const long typeContent=1;
-	const long typeContentWrapper=2;
-	const long typeChromeWrapper=3;
+	const long typeChrome=0;            // typeChrome must equal 0
+	const long typeContent=1;           // typeContent must equal 1
+	const long typeContentWrapper=2;    // typeContentWrapper must equal 2
+	const long typeChromeWrapper=3;     // typeChromeWrapper must equal 3
 
 	const long typeAll=0x7FFFFFFF;
 
