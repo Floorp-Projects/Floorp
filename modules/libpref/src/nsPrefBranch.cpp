@@ -602,6 +602,12 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aChildArray);
 
+  if (!gHashTable.ops) {
+    *aChildArray = nsnull;
+    *aCount = 0;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // this will contain a list of all the pref name strings
   // allocate on the stack for speed
 
