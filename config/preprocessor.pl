@@ -447,6 +447,12 @@ sub unfilter {
 
 package filter;
 
+sub emptyLines {
+    my($stack, $text) = @_;
+    $text = "" if $text eq "\n";
+    return $text;
+}
+
 sub spaces {
     my($stack, $text) = @_;
     $text =~ s/ +/ /gos; # middle spaces

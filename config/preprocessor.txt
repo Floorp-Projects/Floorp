@@ -177,6 +177,9 @@ Filters
 
 The following filters are supported:
 
+   emptyLines
+     Strips blank lines from the output.
+
    slashslash
      Strips everything from the first two consecutive slash (/)
      characters until the end of the line.
