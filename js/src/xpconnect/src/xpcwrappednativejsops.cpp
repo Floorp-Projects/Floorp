@@ -441,7 +441,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
             JSObject* realObject = GetDoubleWrappedJSObject(cx, wrapper, id);
             if(realObject)
             {
-                *objp = realObject;
+                *objp = obj;
                 *propp = XPC_BUILT_IN_PROPERTY;
                 return JS_TRUE;
             }
