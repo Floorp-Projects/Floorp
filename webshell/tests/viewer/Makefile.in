@@ -24,7 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-
 TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
 TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
 TOOLKIT_BASE_LIB	= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
@@ -135,14 +134,7 @@ EX_LIBS = \
 	-lraptorplugin \
 	$(NULL)
 
-ifeq ($(OS_ARCH),Linux)
-EX_LIBS += \
-	-lpwcac \
-	-ldbm \
-	$(NULL)
-endif
-
-ifeq ($(OS_ARCH),SunOS)
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
 	-lpwcac \
 	-ldbm \
