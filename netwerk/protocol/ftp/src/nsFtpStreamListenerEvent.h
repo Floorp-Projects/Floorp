@@ -64,14 +64,32 @@ public:
           mIStream(nsnull), mLength(0) {}
     virtual ~nsFtpOnDataAvailableEvent();
 
-    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset, PRUint32 aLength, char *aBuffer=nsnull);
+    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset, PRUint32 aLength);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsIInputStream*             mIStream;
     PRUint32                    mSourceOffset;
     PRUint32                    mLength;
-    char *                      mUnderlyingBuffer;
+};
+
+class nsFtpListOnDataAvailableEvent : public nsFtpStreamListenerEvent
+{
+public:
+    nsFtpListOnDataAvailableEvent(nsIStreamListener* listener,
+                              nsIChannel* channel, nsISupports* context)
+        : nsFtpStreamListenerEvent(listener, channel, context),
+          mIStream(nsnull), mLength(0), mBuffer(nsnull) {}
+    virtual ~nsFtpListOnDataAvailableEvent();
+
+    nsresult Init(PRUint32 aSourceOffset, PRUint32 aLength, char *aBuffer);
+    NS_IMETHOD HandleEvent();
+
+protected:
+    nsIInputStream*             mIStream;
+    PRUint32                    mSourceOffset;
+    PRUint32                    mLength;
+    char                        *mBuffer;
 };
 
 
