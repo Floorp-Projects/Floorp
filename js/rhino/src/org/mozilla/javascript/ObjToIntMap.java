@@ -259,7 +259,7 @@ public class ObjToIntMap implements Serializable {
             int hash = key.hashCode();
             int fraction = hash * A;
             int index = fraction >>> (32 - power);
-               Object test = keys[index];
+            Object test = keys[index];
             if (test != null) {
                 int N = 1 << power;
                 if (test == key
