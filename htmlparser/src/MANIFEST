@@ -18,3 +18,4 @@ nsXIFDTD.h
 nsHTMLTags.h
 nsParserCIID.h
 nsHTMLEntities.h
+nsWellFormedDTD.h
