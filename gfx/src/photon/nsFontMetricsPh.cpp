@@ -111,8 +111,6 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 		delete [] str;
 	}
 
-//brianeprint
-	printf("nsFontMetricsPh::Init, %s\n", str);
 	if (!str || !str[0])
 	{
 		delete [] str;
@@ -206,10 +204,6 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
         PfExtentText(&extent, NULL, NSFullFontName, " ", 1);
 //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont mSpaceWidth=<%d> font=<%s> f=<%f> \n", (extent.lr.x - extent.ul.x + 1),  NSFullFontName, f ));
         mSpaceWidth = (int) ((extent.lr.x - extent.ul.x + 1) * f);
-	// brianeprint
-	printf("FONTINFO: %d, %d, %d, %d, %d\n", fontInfo.size, fontInfo.style, fontInfo.ascender, fontInfo.descender, fontInfo.width);
-	printf("FONT: %s, %f, %f, %d\n", NSFullFontName, height, f, mHeight);
-    
 
 		/****** stolen from GTK *******/
 		// 56% of ascent, best guess for non-true type

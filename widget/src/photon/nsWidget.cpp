@@ -90,7 +90,7 @@ extern unsigned long		IgnoreEvent;
 #define ENABLE_DAMAGE_QUEUE
 
 /* Enable this causing extra redraw when the RELEASE is called */
-#define ENABLE_DAMAGE_QUEUE_HOLDOFF
+//#define ENABLE_DAMAGE_QUEUE_HOLDOFF
 
 
 /* Enable experimental direct draw code, this bypasses PtDamageExtent */
@@ -756,7 +756,7 @@ NS_METHOD nsWidget::SetBackgroundColor( const nscolor &aColor )
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
-  unsigned short curs;
+  unsigned short curs = 0;
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetCursor to <%d> was <%d>\n", aCursor, mCursor));
 
@@ -764,6 +764,52 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
   if (aCursor != mCursor) {
     switch( aCursor )
     {
+	case eCursor_sizeNW:
+		curs = Ph_CURSOR_DRAG_TL;
+		break;
+	case eCursor_sizeSE:
+		curs = Ph_CURSOR_DRAG_BR;
+		break;
+	case eCursor_sizeNE:
+		curs = Ph_CURSOR_DRAG_TL;
+		break;
+	case eCursor_sizeSW:
+		curs = Ph_CURSOR_DRAG_BL;
+		break;
+
+	case eCursor_crosshair:
+		curs = Ph_CURSOR_CROSSHAIR;
+		break;
+
+	case eCursor_copy:
+	case eCursor_alias:
+	case eCursor_context_menu:
+		break;
+
+	case eCursor_cell:
+		break;
+
+	case eCursor_spinning:
+		break;
+
+	case eCursor_count_up:
+	case eCursor_count_down:
+	case eCursor_count_up_down:
+		break;
+
+  case eCursor_move:
+    curs = Ph_CURSOR_MOVE;
+    break;
+      
+  case eCursor_help:
+    curs = Ph_CURSOR_QUESTION_POINT;
+    break;
+      
+  case eCursor_grab:
+  case eCursor_grabbing:
+    curs = Ph_CURSOR_FINGER;
+    break;
+      
   case eCursor_select:
     curs = Ph_CURSOR_INSERT;
     break;
@@ -814,7 +860,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
     break;
   }
 
-  if( mWidget )
+  if( mWidget && curs)
   {
     PtArg_t arg;
 
@@ -885,9 +931,7 @@ NS_METHOD nsWidget::doPaint()
 
         PtWidget_t *widget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
 
-        printf("nsWidget::doPaint mWidget before RawDrawFunc mWidget=<%p> widget=<%p>\n", mWidget, widget);
         nsWindow::RawDrawFunc(widget, PhCopyTiles(nativeRegion));
-        printf("nsWidget::doPaint mWidget after RawDrawFunc\n");
     }
 	else
 	{
@@ -901,14 +945,12 @@ NS_METHOD nsWidget::doPaint()
 	  nativeRegion->rect.lr.y = mBounds.height - 1;
 	  nativeRegion->next = NULL;
 
-        printf("nsWidget::doPaint WHOLE mWidget before RawDrawFunc tile=(%d,%d,%d,%d)\n", mBounds.x, mBounds.y, mBounds.width-1, mBounds.height-1);
         nsWindow::RawDrawFunc(widget, nativeRegion);
-        printf("nsWidget::doPaint WHOLE mWidget after RawDrawFunc\n");
 	}
   }
   else
   {
-    printf("nsWidget::doPaint ERROR widget=<%p> PtWidgetIsRealized(widget)=<%d>\n", widget, PtWidgetIsRealized(widget));
+    //printf("nsWidget::doPaint ERROR widget=<%p> PtWidgetIsRealized(widget)=<%d>\n", widget, PtWidgetIsRealized(widget));
   }
 
   return res;
@@ -957,9 +999,10 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 //      UpdateWidgetDamage();
 //    }
 //    else
-      {
-        QueueWidgetDamage();
-      }
+    {
+      QueueWidgetDamage();
+    }
+
     }
 
   return NS_OK;
@@ -1290,15 +1333,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   			
   PtWidget_t *parentWidget = nsnull;
 
-  nsIWidget *baseParent = aInitData &&
-    (aInitData->mWindowType == eWindowType_dialog ||
-    aInitData->mWindowType == eWindowType_toplevel ) ?
-    nsnull : aParent;
+  nsIWidget *baseParent = aInitData && (aInitData->mWindowType == eWindowType_dialog ||
+    	aInitData->mWindowType == eWindowType_toplevel ) ?  nsnull : aParent;
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before BaseCreate this=<%p> mParent=<%p> baseParent=<%p>\n", this, mParent, baseParent));
 
-  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
-             aAppShell, aToolkit, aInitData);
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 
   mParent = aParent;
 
@@ -2164,7 +2204,9 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
             result = DispatchStandardEvent( NS_MOUSE_ENTER );
             break;
           case Ph_EV_PTR_LEAVE:
-            result = DispatchStandardEvent( NS_MOUSE_EXIT );
+            //result = DispatchStandardEvent( NS_MOUSE_EXIT );
+            break;
+          default:
             break;
         }
         break;
@@ -2600,7 +2642,7 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GotFocusCallback pWidget=<%p>\n", pWidget));
-
+printf("GOTFOCUS %X\n ", widget);
   pWidget->DispatchStandardEvent(NS_GOTFOCUS);
 
   return Pt_CONTINUE;

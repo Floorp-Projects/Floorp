@@ -177,7 +177,7 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     mAlphaHeight = aHeight;
     break;
 
-     case nsMaskRequirements_kNeeds8Bit:
+  case nsMaskRequirements_kNeeds8Bit:
       mARowBytes = aWidth;
       mAlphaDepth = 8;
 
@@ -294,6 +294,7 @@ nsIImage *nsImagePh::DuplicateImage()
 void nsImagePh::SetAlphaLevel(PRInt32 aAlphaLevel)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::SetAlphaLevel\n" ));
+  printf("Set Alpha\n");
   mAlphaLevel=aAlphaLevel;
 }
 
@@ -360,9 +361,9 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
 
 
-  if( mAlphaBits )
-  {
-    err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+if( mAlphaBits )
+{
+    err=PgDrawTImagemx( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
@@ -391,8 +392,6 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p> nsImageUpdateFlags_kBitsChanged flags=<%d>\n",
    this, aX, aY, aWidth, aHeight, aSurface, IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags) ));
-//  printf("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p> nsImageUpdateFlags_kBitsChanged flags=<%d>\n",
-//   this, aX, aY, aWidth, aHeight, aSurface, IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags) );
 
   if( !mImage.image )
   {
@@ -421,151 +420,15 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 //    aHeight = mHeight;
   }
 
-#if defined(DEBUG) && 0
-{
-  /* Print out all the clipping that applies */
-  PhRect_t  *rect;
-  int       rect_count;
-  PhGC_t    *gc;
-
-  gc = PgGetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   CurrentGC gc=<%p> Information: rid=<%d> target_rid=<%d>\n", gc, gc->rid, gc->target_rid));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
-  rect_count=gc->n_clip_rects;
-  rect = gc->clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
-  rect_count=gc->n_user_clip_rects;
-  rect = gc->user_clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
-
-
-/* drawing surface GC */
-
-  gc = drawing->GetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   aSurface->GetGC gc=<%p> Information: rid=<%d> target_rid=<%d>\n", gc, gc->rid, gc->target_rid));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
-  rect_count=gc->n_clip_rects;
-  rect = gc->clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
-  rect_count=gc->n_user_clip_rects;
-  rect = gc->user_clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
-}
-#endif
-
-#if defined(DEBUG) && 0
-{
-  nsRect aRect;
-  PRBool isValid;
-  
-  aContext.GetClipRect(aRect, isValid); 
-  if (isValid)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<%d,%d,%d,%d>\n",aRect.x,aRect.y, aRect.width, aRect.height));
-  }
-  else
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<not valid>\n"));
-  }
-}
-#endif
-
-//#define CREATE_NEW_GC
-
-#ifdef CREATE_NEW_GC
-  /* Create a new GC just for this image */
-  PhGC_t *newGC = PgCreateGC(0);
-  PgDefaultGC(newGC);
-  PhGC_t *previousGC = PgSetGC(newGC);
-  nsRect aRect;
-  PRBool isValid;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   oldGC=<%p> newGC=<%p>\n", previousGC, newGC));
-
-#if 0  
-  aContext.GetClipRect(aRect, isValid); 
-  if (isValid)
-  {
-    PhRect_t rect = { {aRect.x,aRect.y}, {aRect.x+aRect.width-1,aRect.y+aRect.height-1}};
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2  ClipRect=<%d,%d,%d,%d>\n",aRect.x,aRect.y, aRect.width, aRect.height));
-
-    PgSetMultiClip(1,&rect);  
-  }
-#else
-  newGC->n_user_clip_rects = previousGC->n_user_clip_rects;
-  newGC->user_clip_rects   = previousGC->user_clip_rects;
-#endif
-
-  newGC->translation = previousGC->translation;
-  newGC->rid = previousGC->rid;
-  newGC->target_rid = previousGC->target_rid;
-
-#endif
-#if 0
-{  /* Print out all the clipping that applies */
-  PhRect_t  *rect;
-  int       rect_count;
-  PhGC_t    *gc;
-
-  gc = PgGetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   GC Information: rid=<%d> target_rid=<%d>\n", gc->rid, gc->target_rid));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
-  printf("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects);
-  rect_count=gc->n_clip_rects;
-  rect = gc->clip_rects;
-  while(rect_count--) 
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    printf("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y);
-    rect++;
-  }
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
-  rect_count=gc->n_user_clip_rects;
-  rect = gc->user_clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
-}
-#endif
 
   PhPoint_t pos = { aX, aY };
   int       err;
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
-  //printf("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl);
 
   if( mAlphaBits )
   {
-    err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+    err=PgDrawTImagemx( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
@@ -583,35 +446,69 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	  return NS_ERROR_FAILURE;
     }
 
-#if defined(DEBUG) && 0
-    /* Try to dump the image to a BMP file */
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image to BMP\n"));
-
-     char *ptr;
-     ptr = (char *) mImage.image;  
- 
-     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image info w,h,d=(%d,%d,%d) mColorMap=<%p> \n",
-	   mWidth, mHeight, mDepth, mColorMap));
-
-    do_bmp(ptr, mImage.bpl/3, mImage.size.w, mImage.size.h);
-#endif
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
 
-#ifdef CREATE_NEW_GC
-  /* Restore the old GC */
-  PgSetGC(previousGC);
+  PgFLUSH();	//kedl
+  return NS_OK;
+}
 
-  newGC->n_user_clip_rects = 0;
-  newGC->user_clip_rects   = NULL;
-  
-  PgDestroyGC(newGC);
-#endif
+/* New Tile code *********************************************************************/
+NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+  PhPoint_t pos;
+  int       err;
+  PhPoint_t space, rep;
+  int x, y;
+
+	// since there is an offset into the image and I only want to draw full
+	// images, shift the position back and set clipping so that it looks right
+	pos.x = aTileRect.x - aSXOffset;
+	pos.y = aTileRect.y - aSYOffset;
+
+	space.x = mImage.size.w;
+	space.y = mImage.size.h;
+	rep.x = (aTileRect.width + aSXOffset + space.x - 1)/space.x;
+	rep.y = (aTileRect.height + aSYOffset + space.y - 1)/space.y;
+
+  PhRect_t clip;
+  clip.ul.x = aTileRect.x;
+  clip.ul.y = aTileRect.y;
+  clip.lr.x = aTileRect.x + aTileRect.width;
+  clip.lr.y = aTileRect.y + aTileRect.height;
+  PgSetMultiClip(1, &clip);
+    //for (y = 0; y < rep.y; y++, pos.y += space.y)
+    for (; pos.y < clip.lr.y; pos.y += space.y)
+    {
+		//for (x = 0, pos.x = aTileRect.x/* - aSXOffset*/; x < rep.x; x++, pos.x += space.x)
+		for (pos.x = aTileRect.x - aSXOffset; pos.x < clip.lr.x; pos.x += space.x)
+		{
+			if (mAlphaBits)
+    			err=PgDrawTImagemx( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+    		else
+    			err=PgDrawImagemx( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0);
+
+			if (err == -1)
+			{
+			  NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
+			  abort();
+			  return NS_ERROR_FAILURE;
+			}
+		}
+	}
+  PgSetMultiClip(0, NULL);
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
 
   PgFLUSH();	//kedl
   return NS_OK;
 }
+/* End New Tile code *****************************************************************/
+
 
 //------------------------------------------------------------
 

@@ -171,7 +171,18 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
 
   /* Go back to the default Photon DrawContext */
   /* This allows the photon widgets under Viewer to work right */
+
+#if 1 // briane
+	PhDrawContext_t *dc;
+	dc = PhDCGetCurrent();
+	if (mSurface && (dc == mSurface->GetDC()))
+	{
+		PhDCSetCurrent(NULL);
+  		//printf("PhDCSetCurrent (~nsRenderingContextPh): NULL\n");
+  	}
+#else
   PhDCSetCurrent(NULL);
+#endif // briane  
   PgSetGC(mPtGC);
   PgSetRegion(mPtGC->rid);
   
@@ -247,6 +258,7 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
     mSurface = new nsDrawingSurfacePh();
     if (mSurface)
     {
+    //printf("New nsDrawingSurfacePh\n");
       res = mSurface->Init(mGC);
       if (res != NS_OK)
       {
@@ -386,6 +398,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
     mSurface = (nsDrawingSurfacePh *) aSurface;
   }
 
+//printf("SelectOffScreenDrawingSurface\n");
   mSurface->Select();
 
 #if 0
@@ -878,6 +891,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
   {
     NS_ADDREF(surf);
     PhGC_t *gc = mSurface->GetGC();
+    //printf("CreateDrawingSurface\n");
     surf->Init(gc, aBounds->width, aBounds->height, aSurfFlags);
   }
   else
@@ -913,6 +927,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
   nscoord x0,y0,x1,y1;
+  int err = 0;
 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
@@ -932,10 +947,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
 
   SELECT(mSurface);
-
-  //SetPhLineStyle();
-  
-  int err = 0;
   
   err = PgDrawILine( x0, y0, x1, y1 );
   if (err == -1)
@@ -944,12 +955,46 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 	abort();
 	return NS_ERROR_FAILURE;  
   }
-  
+
   PgFLUSH();	//kedl
 
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
+  nscoord x0,y0,x1,y1;
+  int err = 0;
+
+  if (aY0 != aY1) 
+    aY1--;
+  if (aX0 != aX1)
+    aX1--;
+
+  x0 = aX0;
+  y0 = aY0;
+  x1 = aX1;
+  y1 = aY1;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
+
+  SELECT(mSurface);
+  
+  err = PgDrawILine( x0, y0, x1, y1 );
+  if (err == -1)
+  {
+	NS_ASSERTION(0, "nsRenderingContextPh::DrawLine failed");
+	abort();
+	return NS_ERROR_FAILURE;  
+  }
+
+printf("DrawStdLine\n");
+
+  PgFLUSH();	//kedl
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
@@ -961,6 +1006,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRIn
   if( nsLineStyle_kNone == mCurrentLineStyle )
     return NS_OK;
 
+printf("DrawPolyLine\n");
   PhPoint_t *pts;
 
   if(( pts = new PhPoint_t [aNumPoints] ) != NULL )
@@ -1012,9 +1058,13 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord a
 
   SELECT(mSurface);
 
+
   if (w && h)
   {
+// briane  
     PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_STROKE );
+    //PgDrawIRect( x, y, x + w, y + h, Pg_DRAW_STROKE );
+//briane 
   }
   
   PgFLUSH();	//kedl
@@ -1033,9 +1083,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(const nsRect& aRect)
 NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect 2 (%i,%i,%i,%i)\n", aX, aY, aWidth, aHeight ));
-//  printf ("nsRenderingContextPh::FillRect 2 %p (%i,%i,%i,%i)\n", 
-//((nsDrawingSurfacePh *)mSurface)->GetDC(),
-//aX, aY, aWidth, aHeight );
   nscoord x,y,w,h;
 
   x = aX;
@@ -1047,9 +1094,10 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 
   SELECT(mSurface);
   if (w && h)
-  {
+// briane
+    //PgDrawIRect( x, y, x + w, y + h, Pg_DRAW_FILL);
     PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL);
-  }
+// briane
 
   PgFLUSH();	//kedl
 
@@ -1092,7 +1140,10 @@ nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 
   PgSetFillColor(Pg_INVERT_COLOR);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
+//briane
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
+  //PgDrawIRect( x, y, x + w , y + h , Pg_DRAW_FILL );
+//briane
   PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
 
   /* To Fix a PHOTON BUG draw anything after changing back to OPAQUE */
@@ -1433,9 +1484,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString,
     if (PfExtentText(&extent, NULL, mPhotonFontName, aString, aLength))
     {
       aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
-
-//	printf("lrx: %d, ulx: %d, total: %d, %d %s\n", extent.lr.x, extent.ul.x, (extent.lr.x - extent.ul.x + 1),aLength,aString);
-
       ret_code = NS_OK;
     }
   }
@@ -1551,16 +1599,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
  	
     SELECT(mSurface);
 
-#if 0
-  /* This dumps the actual Bytes out to the screen for debug */
-  printf("nsRenderingContextPh::DrawString1 buffer=");
-  for(int i=0; i<(aLength*2); i++)
-  {
-    printf("%X,", *(aString+i));  
-  }
-  printf("\n");
-#endif
-
     err=PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
     if ( err == -1)
 	{
@@ -1668,6 +1706,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
 {
   nscoord x, y, w, h;
   nsresult res = NS_OK;
+
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 this=<%p> coords=(%d,%d,%d,%d)\n", this, aX, aY, aWidth, aHeight));
   //printf("nsRenderingContextPh::DrawImage2 this=<%p> coords=(%d,%d,%d,%d)\n", this, aX, aY, aWidth, aHeight);
@@ -1796,7 +1835,6 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
   return res;
 }
 
-
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
@@ -1805,10 +1843,24 @@ NS_IMETHODIMP
 nsRenderingContextPh::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
-
+printf("DRAWTILE: %d, %d\n", aWidth, aHeight);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextPh::DrawTile(nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset,
+                                const nsRect &aTileRect)
+{
+	nsRect tileRect(aTileRect);
+	nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
+	mTMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width, &srcRect.height);
+	mTMatrix->TransformCoord(&tileRect.x, &tileRect.y, &tileRect.width, &tileRect.height);
+
+	if ((tileRect.width > 0) && (tileRect.height > 0))
+  		((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect.width, srcRect.height, tileRect);
+
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
@@ -1818,8 +1870,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits this=<%p> mBufferIsEmpty=<%d> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
      this, mBufferIsEmpty, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height));
-
-//printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
+//  printf("CopyOffScreenBits this=<%p> mBufferIsEmpty=<%d> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
+  //   this, mBufferIsEmpty, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height);
 
   PhArea_t              area;
   PRInt32               srcX = aSrcX;
@@ -1837,14 +1889,6 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
     return NS_ERROR_FAILURE;  
   }
-  
-#if 0
-  if (mBufferIsEmpty)
-  {
-    NS_WARNING("nsRenderingContextPh::CopyOffScreenBits skipping buffer is empty\n");
-    return NS_OK;
-  }
-#endif
   
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
@@ -1981,6 +2025,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 	  
    if (aSrcSurf != destsurf)
    {
+   //printf("CopyOffScreenBits\n");
      destsurf->Select();
    }
 {//xyz
@@ -2008,7 +2053,8 @@ int rid;
 	else
 	{
 //		printf ("really onscreen\n");
-		d=0;
+		d=NULL;
+  //printf("PhDCSetCurrent (CopyOffScreenBits): NULL\n");
  		PhDCSetCurrent(NULL);
 		(PgGetGC())->target_rid = 0;	// kedl, fix the animations showing thru all regions
 						// darrin will fix in the photon lib shortly
@@ -2043,9 +2089,10 @@ int rid;
 	rdst.lr.y = pos.y+size.h-1;		// kedl, fixes rip under blue bar for back/forward/etc
 
 	rid = PtWidgetRid(mWidget);
-//	printf ("the magic region is: %d\n",rid);
-//	printf ("kedl: blit: %p %p\n", ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(),d);
   	PgSetRegion(rid);
+	//printf("COPY: RID=%d SRC: (%d, %d) (%d, %d)\n", rid, rsrc.ul.x, rsrc.ul.y, rsrc.lr.x, rsrc.lr.y);
+	//printf("\tDC=%X DST: (%d, %d) (%d, %d)\n", d, rdst.ul.x, rdst.ul.y, rdst.lr.x, rdst.lr.y);
+  	//sleep(2);
 	PgContextBlit((PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &rsrc, d, &rdst);
 	PgSetRegion(oldrid);
 	PgSetGC(oldgc);
