@@ -367,8 +367,7 @@
                  ontextreverted="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);"
-		 ondblclick="URLBarDblClickHandler(event, this);">
+                 onclick="URLBarClickHandler(event, this);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
