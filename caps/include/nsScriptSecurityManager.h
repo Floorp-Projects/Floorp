@@ -335,7 +335,7 @@ private:
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,
-                 char* aClassName, jsval aProperty,
+                 const char* aClassName, jsval aProperty,
                  PRUint32 aAction,
                  ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);
