@@ -28,6 +28,7 @@ use lib qw(.);
 use vars qw ($template $vars);
 
 require "CGI.pl";
+my $cgi = Bugzilla->cgi;
 
 ConnectToDatabase();
 
@@ -40,16 +41,17 @@ quietly_check_login();
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-ValidateBugID($::FORM{'id'});
+my $bug_id = $cgi->param('id');
+ValidateBugID($bug_id);
 
 ###############################################################################
 # End Data/Security Validation
 ###############################################################################
 
 ($vars->{'operations'}, $vars->{'incomplete_data'}) = 
-                                                 GetBugActivity($::FORM{'id'});
+                                                 GetBugActivity($bug_id);
 
-$vars->{'bug_id'} = $::FORM{'id'};
+$vars->{'bug_id'} = $bug_id;
 
 print Bugzilla->cgi->header();
 
