@@ -1122,7 +1122,7 @@ void nsPersistentFileDescriptor::SetData(const char* inData, PRInt32 inSize)
 nsAutoCString::~nsAutoCString()
 //----------------------------------------------------------------------------------------
 {
-    nsAllocator::Free(mCString);
+    nsAllocator::Free((void*)mCString);
 }
 
 //========================================================================================
