@@ -1395,32 +1395,45 @@ public class Codegen extends Interpreter {
             Node def = (Node) fns.elementAt(i);
             Codegen codegen = new Codegen();
             String fnClassName = codegen.generateCode(def, results, itsNameHelper);
-            // initialize a property by that name, and push the object
-            //  as a result
+            
+            addByteCode(ByteCode.NEW, fnClassName);
+            addByteCode(ByteCode.DUP);
             if (inFunction) {
                 addByteCode(ByteCode.ALOAD_0); // load "this" argument
             } else {
                 aload(variableObjectLocal);
             }
-            push(fnClassName);
+            aload(contextLocal);           // load 'cx'
+            addSpecialInvoke(fnClassName, "<init>", 
+                             "(Lorg/mozilla/javascript/Scriptable;" +
+                              "Lorg/mozilla/javascript/Context;)",
+                             "V");
+                
+            // 'fn' still on stack
+            // load 'scope'
+            if (inFunction) {
+                addByteCode(ByteCode.ALOAD_0); // load "this" argument
+            } else {
+                aload(variableObjectLocal);
+            }
+            // load 'fnName'
             String str = def.getString();
             if (str != null) {
                 push(str);
             } else {
                 addByteCode(ByteCode.ACONST_NULL);
             }
-            addByteCode(ByteCode.ALOAD_0); // load 'this'
-            aload(contextLocal);           // load 'cx'
-            addScriptRuntimeInvoke("defineFunction",
-                          "(Lorg/mozilla/javascript/Scriptable;" +
-                          "Ljava/lang/String;" +
-                          "Ljava/lang/String;" +
-                          "Ljava/lang/Object;" +
-                          "Lorg/mozilla/javascript/Context;)",
-                          "Lorg/mozilla/javascript/NativeFunction;");
+            // load 'cx'
+            aload(contextLocal);           
+            addScriptRuntimeInvoke("initFunction",
+                                   "(Lorg/mozilla/javascript/NativeFunction;" +
+                                    "Lorg/mozilla/javascript/Scriptable;" +
+                                    "Ljava/lang/String;" +
+                                    "Lorg/mozilla/javascript/Context;)",
+                                   "Lorg/mozilla/javascript/NativeFunction;");
             def.putProp(Node.FUNCTION_PROP, new Short(i));
             addByteCode(ByteCode.AASTORE);    // store NativeFunction
-                                                // instance to array
+                                              // instance to array
         }
 
         // add the array as the nestedFunctions field; array should

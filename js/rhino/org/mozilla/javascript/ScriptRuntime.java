@@ -2033,26 +2033,15 @@ public class ScriptRuntime {
         return scope.getParentScope();
     }
 
-    public static NativeFunction defineFunction(Scriptable scope,
-                                                String className,
-                                                String fnName,
-                                                Object loadingObject,
-                                                Context cx)
-        throws ClassNotFoundException
+    public static NativeFunction initFunction(NativeFunction fn,
+                                              Scriptable scope,
+                                              String fnName,
+                                              Context cx)
     {
-        NativeFunction fn;
-        try {
-            ClassLoader loader = loadingObject.getClass().getClassLoader();
-            Class clazz = (loader == null) ? Class.forName(className)
-                                           : loader.loadClass(className);
-            fn = createFunctionObject(scope, clazz, cx);
-        }
-        catch (ClassNotFoundException e) {
-            throw WrappedException.wrapException(e);
-        }
+        fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
+        fn.setParentScope(scope);
         if (fnName != null && fnName.length() != 0)
-               setName(scope, fn, scope, fnName);
-
+            setName(scope, fn, scope, fnName);
         return fn;
     }
 
