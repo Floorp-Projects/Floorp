@@ -20,6 +20,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Yannick Koehler <koehler@mythrium.com>
+ *   Christian M Hoffman <chrmhoffmann@web.de>
+ *   Makoto hamanaka <VYA04230@nifty.com>
+ *   Paul Ashford <arougthopher@lizardland.net>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -55,7 +59,10 @@
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 nsFontMetricsBeOS::nsFontMetricsBeOS()
+  :mEmulateBold(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -92,71 +99,133 @@ IsASCIIFontName(const nsString& aName)
   return PR_TRUE; 
 } 
 
+// a structure to hold a font family list
+typedef struct nsFontEnumParamsBeOS {
+  nsFontMetricsBeOS *metrics;
+  nsStringArray family;
+  nsVoidArray isgeneric;
+} NS_FONT_ENUM_PARAMS_BEOS;
+
+// a callback func to get a font family list from a nsFont object
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  NS_FONT_ENUM_PARAMS_BEOS *param = (NS_FONT_ENUM_PARAMS_BEOS *) aData;
+  param->family.AppendString(aFamily);
+  param->isgeneric.AppendElement((void*) aGeneric);
+  if (aGeneric)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
-  nsAutoString  firstFace;
   mLangGroup = aLangGroup;
   mDeviceContext = aContext;
-  if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) {
-    aFont.GetFirstFamily(firstFace);
-  }
 
-//  PRInt32     namelen = MAX( firstFace.Length() + 1, sizeof(font_family) );
-  font_family wildstring;
-  PRInt16	  face = B_REGULAR_FACE;
+  // get font family list
+  NS_FONT_ENUM_PARAMS_BEOS param;
+  param.metrics = this;
+  aFont.EnumerateFamilies(FontEnumCallback, &param);
+ 
+  PRInt16  face = 0;
 
   mFont = new nsFont(aFont);
 
   float       app2dev, app2twip;
   aContext->GetAppUnitsToDevUnits(app2dev);
   aContext->GetDevUnitsToTwips(app2twip);
+  float textZoom = 1.0;
+  aContext->GetTextZoom(textZoom);
 
   app2twip *= app2dev;
-  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
-#if 0
-  nsNativeWidget widget = nsnull;
-  aContext->GetNativeWidget(widget);
-  if( widget ) {
-    BView *view = dynamic_cast<BView*>( (BView*)widget );
-    view->GetFont( &mFontHandle );
+  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * textZoom)))) / app2twip;
+
+
+  // process specified fonts from first item of the array.
+  // stop processing next when a real font found;
+  PRBool fontfound = PR_FALSE;
+  for (int i=0 ; i<param.family.Count() && !fontfound ; i++) {
+    nsString *fam = param.family.StringAt(i);
+    PRBool isgeneric = ( param.isgeneric[i] ) ? PR_TRUE: PR_FALSE;
+    char *family = ToNewUTF8String(*fam);
+    if (!isgeneric) {
+      // non-generic font
+      if ( count_font_styles((font_family)family) <= 0) {
+        // the specified font is not exist in this computer.
+        nsMemory::Free(family);
+        continue;
+      }
+      mFontHandle.SetFamilyAndStyle( (font_family)family, NULL );
+      nsMemory::Free(family);
+      fontfound = PR_TRUE;
+      break;
+    } 
+    else {
+      // family is generic string like 
+      // "serif" "sans-serif" "cursive" "fantasy" "monospace" "-moz-fixed"
+      // so look up preferences and get real family name
+      const PRUnichar *langGroup;
+      aLangGroup->GetUnicode( &langGroup );
+      char *lang = ToNewUTF8String(nsDependentString(langGroup));
+
+      char prop[256];
+      sprintf( prop, "font.name.%s.%s", family, lang );
+
+      nsMemory::Free(lang);
+      nsMemory::Free(family);
+
+      // look up prefs
+      char *real_family = NULL;
+      nsresult res = NS_ERROR_FAILURE;
+      //NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
+      nsCOMPtr<nsIPref> prefs = do_GetService( kPrefCID, &res );
+      if( res == NS_OK ) {
+        prefs->CopyCharPref( prop, &real_family );
+        if ( (real_family) && count_font_styles((font_family)real_family) > 0) {
+          mFontHandle.SetFamilyAndStyle( (font_family)real_family, NULL );
+          fontfound = PR_TRUE;
+          break;        
+        } 
+      } 
+      // not successful. use normal font.
+      mFontHandle = be_plain_font;
+      fontfound = PR_TRUE; 
+      break;
+    } 
   }
 
-  firstFace.ToCString(wildstring, namelen);
-
-#if 1 
-   int32 numFamilies = count_font_families(); 
-   for ( int32 i = 0; i < numFamilies; i++ ) { 
-       font_family family; 
-       uint32 flags; 
-       if ( get_font_family(i, &family, &flags) == B_OK ) { 
-           int32 numStyles = count_font_styles(family); 
-           for ( int32 j = 0; j < numStyles; j++ ) { 
-               font_style style; 
-               if ( get_font_style(family, j, &style, &flags) 
-                                                 == B_OK ) { 
-               } 
-           } 
-       } 
-   }
-#endif
-
+  // if got no font, then use system font.
+  if (!fontfound)
+    mFontHandle = be_plain_font;
+ 
   if (aFont.style == NS_FONT_STYLE_ITALIC)
-    face = B_ITALIC_FACE;
+    face |= B_ITALIC_FACE;
 
   if( aFont.weight > NS_FONT_WEIGHT_NORMAL )
   	face |= B_BOLD_FACE;
-  	
+        
+  // I don't think B_UNDERSCORE_FACE and B_STRIKEOUT_FACE really works...
+  // instead, nsTextFrame do them for us. ( my guess... Makoto Hamanaka )
   if( aFont.decorations & NS_FONT_DECORATION_UNDERLINE )
   	face |= B_UNDERSCORE_FACE;
   	
   if( aFont.decorations & NS_FONT_DECORATION_LINE_THROUGH )
   	face |= B_STRIKEOUT_FACE;
-#endif
   	
-  mFontHandle.SetFamilyAndFace( wildstring, face );
+  mFontHandle.SetFace( face );
+  // emulate italic and bold if the selected family has no such style
+  if (aFont.style == NS_FONT_STYLE_ITALIC
+    && !(mFontHandle.Face() & B_ITALIC_FACE)) {
+    mFontHandle.SetShear(105.0);
+  }
+  if ( aFont.weight > NS_FONT_WEIGHT_NORMAL
+    && !(mFontHandle.Face() & B_BOLD_FACE)) {
+    mEmulateBold = PR_TRUE;
+  }
   mFontHandle.SetSize( rounded * app2dev );
  
 #ifdef NOISY_FONTS
@@ -256,10 +325,10 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-//  aOffset = mUnderlineOffset;
-//  aSize = mUnderlineSize;
-  aOffset = nscoord( 0 ); // FIXME
-  aSize = nscoord( 20 );  // FIXME
+  aOffset = mUnderlineOffset;
+  aSize = mUnderlineSize;
+  //aOffset = nscoord( 0 ); // FIXME
+  //aSize = nscoord( 20 );  // FIXME
   return NS_OK;
 }
 
@@ -368,22 +437,19 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
  
   char* cStr = ToNewCString(name); 
  
-       int32 numFamilies = count_font_families(); 
-       for(int32 i = 0; i < numFamilies; i++) 
-       { 
-               font_family family; 
-               uint32 flags; 
-               if(get_font_family(i, &family, &flags) == B_OK) 
-               { 
-                       if(strcmp(family, cStr) == 0) 
-                       { 
-                               isthere = PR_TRUE; 
-                               break; 
-                       } 
-               } 
-       } 
+  int32 numFamilies = count_font_families(); 
+  for(int32 i = 0; i < numFamilies; i++) { 
+    font_family family; 
+    uint32 flags; 
+    if(get_font_family(i, &family, &flags) == B_OK) { 
+      if(strcmp(family, cStr) == 0) {
+        isthere = PR_TRUE; 
+        break; 
+      } 
+    } 
+  } 
  
-       //printf("%s there? %s\n", cStr, isthere?"Yes":"No" ); 
+  //printf("%s there? %s\n", cStr, isthere?"Yes":"No" ); 
        
   delete[] cStr; 
  
@@ -427,16 +493,14 @@ EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount,
     return NS_ERROR_OUT_OF_MEMORY; 
   } 
  
-       for(int32 i = 0; i < numFamilies; i++) 
-       { 
-               font_family family; 
-               uint32 flags; 
-               if(get_font_family(i, &family, &flags) == B_OK) 
-               { 
-                       font_name.AssignWithConversion(family); 
-                       array[i] = ToNewUnicode(font_name); 
-               } 
-       } 
+  for(int32 i = 0; i < numFamilies; i++) {
+    font_family family; 
+    uint32 flags; 
+    if(get_font_family(i, &family, &flags) == B_OK) {
+      font_name.AssignWithConversion(family); 
+      array[i] = ToNewUnicode(font_name); 
+    } 
+  } 
  
   NS_QuickSort(array, numFamilies, sizeof(PRUnichar*), CompareFontNames, 
                nsnull); 

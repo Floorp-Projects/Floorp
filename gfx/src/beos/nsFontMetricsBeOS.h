@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Paul Ashford <arougthopher@lizardland.net>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -90,6 +91,7 @@ public:
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth); 
  
   static nsresult FamilyExists(const nsString& aFontName); 
+  inline PRBool   GetEmulateBold() { return mEmulateBold; }
  
   nsCOMPtr<nsIAtom>   mLangGroup; 
  
@@ -120,6 +122,8 @@ protected:
   PRUint16            mPixelSize; 
   PRUint8             mStretchIndex; 
   PRUint8             mStyleIndex;  
+  
+  PRBool              mEmulateBold;
 }; 
  
 class nsFontEnumeratorBeOS : public nsIFontEnumerator 
