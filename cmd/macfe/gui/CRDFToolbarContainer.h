@@ -46,6 +46,14 @@ class CRDFToolbarContainer
 			CRDFToolbarContainer( LStream* );
 			// virtual ~CRDFToolbarContainer(); -- already virtual from bases, |auto_ptr| member means no destructor needed
 
+				// call when a toolbar has changed in some way to readjust the container
+				// and all the bars w/in it.
+			virtual void ToolbarChanged ( ) ;
+
+				// execute a command we know to be an HT command. |inPPCommand| should be what
+				// we get from PowerPlant, not adjusted to HT's version.
+			virtual void HandleHTCommand ( CommandT inPPCommand ) ;
+			
 		private: // Pass-by-value is not allowed.  A single |CRDFToolbarContainer| corresponds to a single on-screen object; copying doesn't make sense.
 			CRDFToolbarContainer( const CRDFToolbarContainer& );						// DON'T IMPLEMENT
 			CRDFToolbarContainer& operator=( const CRDFToolbarContainer& );	// DON'T IMPLEMENT

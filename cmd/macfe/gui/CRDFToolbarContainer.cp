@@ -58,6 +58,15 @@ CRDFToolbarContainer::RestorePlace( LStream *inPlace )
 
 
 void
+CRDFToolbarContainer :: HandleHTCommand ( CommandT inPPCommand )
+{
+	HT_Error err = HT_DoMenuCmd ( _ht_root.get(), (HT_MenuCmd)(inPPCommand - cmd_NavCenterBase) );
+	Assert_( err == HT_NoErr );
+
+} // HandleHTCommand
+
+
+void
 CRDFToolbarContainer::HandleNotification( HT_Notification notification, HT_Resource node, HT_Event event, void* token, uint32 tokenType )
 	{
 		HT_View ht_view = HT_GetView(node);
@@ -69,8 +78,11 @@ CRDFToolbarContainer::HandleNotification( HT_Notification notification, HT_Resou
 					break;
 
 				case HT_EVENT_VIEW_DELETED:	// i.e., destroy a toolbar
-					if( CRDFToolbar* toolbar = reinterpret_cast<CRDFToolbar*>(HT_GetViewFEData(ht_view)) )
+					if( CRDFToolbar* toolbar = reinterpret_cast<CRDFToolbar*>(HT_GetViewFEData(ht_view)) ) {
+						mBars.Remove(&toolbar);
 						delete toolbar;
+					}
+					ToolbarChanged();
 					break;
 
 #if 0
@@ -105,3 +117,20 @@ CRDFToolbarContainer::HandleNotification( HT_Notification notification, HT_Resou
 						toolbar->HandleNotification(notification, node, event, token, tokenType);
 			}
 	}
+
+
+//
+// ToolbarChanged
+//
+// One of the toolbars w/in us has changed in such a way that it's height is
+// different than before. Readjust our size as well as all the other toolbars
+// to accomodate.
+//
+void
+CRDFToolbarContainer :: ToolbarChanged ( )
+{	
+	AdjustDock();
+	RepositionBars();
+	AdjustContainer();
+
+} // ResizeFrameBy
