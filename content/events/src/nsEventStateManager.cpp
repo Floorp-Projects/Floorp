@@ -81,7 +81,7 @@
 #include "nsIContentViewer.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsIScriptSecurityManager.h"
 
 #include "nsIChromeEventHandler.h"
@@ -132,7 +132,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsIContent * gLastFocusedContent = 0; // Strong reference
@@ -211,12 +210,17 @@ nsEventStateManager::Init()
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
   }
 
-  rv = getPrefService();
+  rv = getPrefBranch();
 
   if (NS_SUCCEEDED(rv)) {
-    mPrefService->GetBoolPref("nglayout.events.dispatchLeftClickOnly", &mLeftClickOnly);
-    if (nsEventStateManager::gGeneralAccesskeyModifier == -1)  // magic value of -1 means uninitialized
-      mPrefService->GetIntPref("ui.key.generalAccessKey", &nsEventStateManager::gGeneralAccesskeyModifier);
+    mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
+                             &mLeftClickOnly);
+
+    // magic value of -1 means uninitialized
+    if (nsEventStateManager::gGeneralAccesskeyModifier == -1) {
+      mPrefBranch->GetIntPref("ui.key.generalAccessKey",
+                              &nsEventStateManager::gGeneralAccesskeyModifier);
+    }
   }
 
   if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
@@ -290,8 +294,8 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  if (mPrefService) {
-    mPrefService = nsnull;
+  if (mPrefBranch) {
+    mPrefBranch = nsnull;
   }
 
   m_haveShutdown = PR_TRUE;
@@ -299,17 +303,17 @@ nsEventStateManager::Shutdown()
 }
 
 nsresult
-nsEventStateManager::getPrefService()
+nsEventStateManager::getPrefBranch()
 {
   nsresult rv = NS_OK;
 
-  if (!mPrefService) {
-    mPrefService = do_GetService(kPrefCID, &rv);
+  if (!mPrefBranch) {
+    mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   }
 
   if (NS_FAILED(rv)) return rv;
 
-  if (!mPrefService) return NS_ERROR_FAILURE;
+  if (!mPrefBranch) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -960,11 +964,11 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         // So for now we'll settle for A) Set focus
         ChangeFocus(content, eEventFocusedByKey);
 
-        nsresult rv = getPrefService();
+        nsresult rv = getPrefBranch();
         PRBool activate = PR_TRUE;
 
         if (NS_SUCCEEDED(rv)) {
-          mPrefService->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
+          mPrefBranch->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
         }
 
         if (activate) {
@@ -1878,7 +1882,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_SCROLL:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
       nsresult rv;
-      rv = getPrefService();
+      rv = getPrefBranch();
       if (NS_FAILED(rv)) return rv;
 
       nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
@@ -1886,50 +1890,50 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       PRInt32 numLines = 0;
       PRBool aBool;
       if (msEvent->isShift) {
-        mPrefService->GetIntPref("mousewheel.withshiftkey.action", &action);
-        mPrefService->GetBoolPref("mousewheel.withshiftkey.sysnumlines",
-                                  &aBool);
+        mPrefBranch->GetIntPref("mousewheel.withshiftkey.action", &action);
+        mPrefBranch->GetBoolPref("mousewheel.withshiftkey.sysnumlines",
+                                 &aBool);
         if (aBool) {
           numLines = msEvent->delta;
           if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
-          mPrefService->GetIntPref("mousewheel.withshiftkey.numlines",
-                                   &numLines);
+          mPrefBranch->GetIntPref("mousewheel.withshiftkey.numlines",
+                                  &numLines);
       } else if (msEvent->isControl) {
-        mPrefService->GetIntPref("mousewheel.withcontrolkey.action", &action);
-        mPrefService->GetBoolPref("mousewheel.withcontrolkey.sysnumlines",
-                                  &aBool);
+        mPrefBranch->GetIntPref("mousewheel.withcontrolkey.action", &action);
+        mPrefBranch->GetBoolPref("mousewheel.withcontrolkey.sysnumlines",
+                                 &aBool);
         if (aBool) {
           numLines = msEvent->delta;
           if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;          
         }
         else
-          mPrefService->GetIntPref("mousewheel.withcontrolkey.numlines",
-                                   &numLines);
+          mPrefBranch->GetIntPref("mousewheel.withcontrolkey.numlines",
+                                  &numLines);
       } else if (msEvent->isAlt) {
-        mPrefService->GetIntPref("mousewheel.withaltkey.action", &action);
-        mPrefService->GetBoolPref("mousewheel.withaltkey.sysnumlines", &aBool);
+        mPrefBranch->GetIntPref("mousewheel.withaltkey.action", &action);
+        mPrefBranch->GetBoolPref("mousewheel.withaltkey.sysnumlines", &aBool);
         if (aBool) {
           numLines = msEvent->delta;
           if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
-          mPrefService->GetIntPref("mousewheel.withaltkey.numlines",
-                                   &numLines);
+          mPrefBranch->GetIntPref("mousewheel.withaltkey.numlines",
+                                  &numLines);
       } else {
-        mPrefService->GetIntPref("mousewheel.withnokey.action", &action);
-        mPrefService->GetBoolPref("mousewheel.withnokey.sysnumlines", &aBool);
+        mPrefBranch->GetIntPref("mousewheel.withnokey.action", &action);
+        mPrefBranch->GetBoolPref("mousewheel.withnokey.sysnumlines", &aBool);
         if (aBool) {
           numLines = msEvent->delta;
           if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
-          mPrefService->GetIntPref("mousewheel.withnokey.numlines", &numLines);
+          mPrefBranch->GetIntPref("mousewheel.withnokey.numlines", &numLines);
       }
 
       if ((msEvent->delta < 0) && (numLines > 0))
@@ -3392,9 +3396,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         sTabFocusModel = (eTabFocus_textControlsMask
                           | eTabFocus_formElementsMask
                           | eTabFocus_linksMask);
-        nsresult rv = getPrefService();
+        nsresult rv = getPrefBranch();
         if (NS_SUCCEEDED(rv))
-          mPrefService->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+          mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
       }
 
       child->GetTag(*getter_AddRefs(tag));
@@ -4958,7 +4962,7 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   if (itemType == nsIDocShellTreeItem::typeChrome) 
     return NS_OK;  // Never browse with caret in chrome
 
-  mPrefService->GetBoolPref("accessibility.browsewithcaret", aBrowseWithCaret);
+  mPrefBranch->GetBoolPref("accessibility.browsewithcaret", aBrowseWithCaret);
 
   if (mBrowseWithCaret == *aBrowseWithCaret)
     return NS_OK; // already set this way, don't change caret at all
