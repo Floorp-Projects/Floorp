@@ -234,7 +234,7 @@
                 var location = aRequest.QueryInterface(nsIChannel).URI;
                 if (this.mIcon) {
                   this.mTab.setAttribute("image", this.mIcon);
-                  mIcon = "";
+                  this.mIcon = "";
                 }
                 else if (this.mTabBrowser.shouldLoadFavIcon(location))
                   this.mTabBrowser.loadFavIcon(location, "image", this.mTab);
