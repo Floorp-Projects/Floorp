@@ -458,6 +458,12 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                         }
 
                         OnStartRequest (nsnull, nsnull);
+                        
+                        PRUint32 streamLen = 0;
+                        i_pStream -> Available (&streamLen);
+
+                        if (streamLen > 0)
+                            OnDataAvailable (channel, context, i_pStream, 0, streamLen);
                     }
 				}
             }
