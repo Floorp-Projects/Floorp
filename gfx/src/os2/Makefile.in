@@ -32,6 +32,12 @@ LIBRARY_NAME	= gfx_os2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxOS2Module
+REQUIRES = xpcom \
+		  string \
+		  widget \
+		  pref \
+		  uconv \
+		  $(NULL)
 
 DIRS			= res
 
