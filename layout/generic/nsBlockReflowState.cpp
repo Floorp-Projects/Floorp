@@ -478,7 +478,6 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
                                nsReflowStatus&      aStatus)
 {
   nsIRunaround*   reflowRunaround;
-  nsReflowStatus  status;
 
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
 #ifdef NS_DEBUG
@@ -565,7 +564,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
     // Yes, the child frame wants to interact directly with the space
     // manager.
     reflowRunaround->Reflow(aPresContext, aSpaceManager, aDesiredSize, aReflowState,
-                            aDesiredRect, status);
+                            aDesiredRect, aStatus);
   } else {
     // No, use interface nsIFrame instead.
     if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
@@ -576,7 +575,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
     }
 
     // XXX FIX ME
-    aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, status);
+    aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
     // Return the desired rect
     aDesiredRect.x = availBand.x;
@@ -585,7 +584,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
     aDesiredRect.height = aDesiredSize.height;
   }
 
-  if (NS_FRAME_IS_COMPLETE(status)) {
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
     nsIFrame* kidNextInFlow;
      
     aKidFrame->GetNextInFlow(kidNextInFlow);
@@ -599,7 +598,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
     }
   }
 
-  return status;
+  return NS_OK;
 }
 
 nsLineData*
@@ -1540,6 +1539,12 @@ nsBlockFrame::Reflow(nsIPresContext*      aPresContext,
         rv = ReflowUnmapped(state);
       }
     }
+
+#ifdef NS_DEBUG
+    if (0 != mContent->ChildCount()) {
+      NS_ASSERTION(nsnull != mLines, "reflowed zero children");
+    }
+#endif
 
     // Return our desired rect
     ComputeDesiredRect(state, aReflowState.maxSize, aDesiredRect);
