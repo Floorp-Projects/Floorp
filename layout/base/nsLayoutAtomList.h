@@ -100,8 +100,9 @@ LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
   // Alphabetical list of frame property names
-LAYOUT_ATOM(overflowProperty, "OverflowProperty")
+LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")
+LAYOUT_ATOM(overflowProperty, "OverflowProperty")
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code

@@ -2655,7 +2655,8 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame,
   return NS_OK;
 }
 
-NS_METHOD nsTableFrame::CollapseRowGroup(nsIFrame* aRowGroupFrame,
+NS_METHOD nsTableFrame::CollapseRowGroup(nsIPresContext* aPresContext,
+                                         nsIFrame* aRowGroupFrame,
                                          const nscoord& aYTotalOffset,
                                          nscoord& aYGroupOffset, PRInt32& aRowX)
 {
@@ -2670,7 +2671,7 @@ NS_METHOD nsTableFrame::CollapseRowGroup(nsIFrame* aRowGroupFrame,
     const nsStyleDisplay* rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
-      CollapseRowGroup(rowFrame, aYTotalOffset, aYGroupOffset, aRowX);
+      CollapseRowGroup(aPresContext, rowFrame, aYTotalOffset, aYGroupOffset, aRowX);
     }
     else if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
       nsRect rowRect;
@@ -2689,7 +2690,7 @@ NS_METHOD nsTableFrame::CollapseRowGroup(nsIFrame* aRowGroupFrame,
             nsRect cRect;
             cFrame->GetRect(cRect);
             cRect.height -= rowRect.height;
-            cFrame->SetCollapseOffsetY(-aYGroupOffset);
+            cFrame->SetCollapseOffsetY(aPresContext, -aYGroupOffset);
             cFrame->SetRect(cRect);
           }
           cellFrame->GetNextSibling(&cellFrame);
@@ -2763,7 +2764,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext& aPresContext,
     const nsStyleDisplay* groupDisplay;
     groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
     if (IsRowGroup(groupDisplay->mDisplay)) {
-      CollapseRowGroup(groupFrame, yTotalOffset, yGroupOffset, rowX);
+      CollapseRowGroup(&aPresContext, groupFrame, yTotalOffset, yGroupOffset, rowX);
     }
     yTotalOffset += yGroupOffset;
     yGroupOffset = 0;
@@ -2844,7 +2845,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
                 if (collapseGroup || collapseCol) {
                   if (lastCell != cellFrame) { // do it only once if there is a row span
                     cellRect.width -= colWidth;
-                    cellFrame->SetCollapseOffsetX(-xOffset);
+                    cellFrame->SetCollapseOffsetX(&aPresContext, -xOffset);
                   }
                 } else { // the cell is not in a collapsed col but needs to move
                   cellRect.x -= xOffset;

@@ -193,9 +193,9 @@ public:
   void SetContentEmpty(PRBool aContentEmpty);
 
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
-  void    SetCollapseOffsetX(nscoord aXOffset);
-  void    SetCollapseOffsetY(nscoord aYOffset);
-  nsPoint GetCollapseOffset();
+  void    SetCollapseOffsetX(nsIPresContext* aPresContext, nscoord aXOffset);
+  void    SetCollapseOffsetY(nsIPresContext* aPresContext, nscoord aYOffset);
+  void    GetCollapseOffset(nsIPresContext* aPresContext, nsPoint& aOffset);
 
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
@@ -245,8 +245,6 @@ protected:
   /** these are the Pass 1 unconstrained desired and max element sizes */
   nsSize       mPass1DesiredSize;
   nsSize       mPass1MaxElementSize;
-
-  nsPoint      mCollapseOffset;
 
 public:
   nsBorderEdges *mBorderEdges;      // one list of border segments for each side of the table frame

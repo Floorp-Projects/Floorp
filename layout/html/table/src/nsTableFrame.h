@@ -565,7 +565,8 @@ protected:
   NS_METHOD AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame, 
                                         PRInt32& aRowX);
 
-  NS_METHOD CollapseRowGroup(nsIFrame* aRowGroupFrame,
+  NS_METHOD CollapseRowGroup(nsIPresContext* aPresContext,
+                             nsIFrame* aRowGroupFrame,
                              const nscoord& aYTotalOffset,
                              nscoord& aYGroupOffset, PRInt32& aRowX);
 
