@@ -174,11 +174,13 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (event == nsnull) 
     {
         mDestQueue->ExitMonitor();
-        return NS_ERROR_OUT_OF_MEMORY;   
+            return NS_ERROR_OUT_OF_MEMORY;   
     }
 
     nsProxyObjectCallInfo *proxyInfo = new nsProxyObjectCallInfo(this, methodIndex, fullParam, paramCount, event);
     
+    if (proxyInfo == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;  
 
     PL_InitEvent(event, 
                  proxyInfo,
