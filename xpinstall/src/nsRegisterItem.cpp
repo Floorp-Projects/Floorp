@@ -38,18 +38,14 @@ nsRegisterItem:: nsRegisterItem(  nsInstall* inInstall,
                                   nsIFile* chrome,
                                   PRUint32 chromeType,
                                   const char* path )
-: nsInstallObject(inInstall), mChrome(chrome), mChromeType(chromeType), mPath(nsnull)
+: nsInstallObject(inInstall), mChrome(chrome), mChromeType(chromeType), mPath(path)
 {
-    if (path) {
-        mPath = nsCRT::strdup(path);
-    }
     MOZ_COUNT_CTOR(nsRegisterItem);
 }
 
 
 nsRegisterItem::~nsRegisterItem()
 {
-    if (mPath) nsCRT::free(mPath);
     MOZ_COUNT_DTOR(nsRegisterItem);
 }
 
@@ -133,51 +129,107 @@ PRInt32 nsRegisterItem::Prepare()
 {
     // The chrome must exist
     PRBool exists;
-    mChrome->Exists(&exists);
+    nsresult rv = mChrome->Exists(&exists);
+    if (NS_FAILED(rv))
+        return nsInstall::UNEXPECTED_ERROR;
     if (!exists)
         return nsInstall::DOES_NOT_EXIST;
 
-    // if we're registering now we need to make sure we can construct a URL
-//    if ( mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED) )
-//    {
-        // If not a directory then it's an archive and we need a jar: URL
-        nsCOMPtr<nsIURI> pURL;
-        PRBool isDir;
 
-        mURL.SetCapacity(200);
+    // Are we dealing with a directory (flat chrome) or an archive?
+    PRBool isDir;
+    rv = mChrome->IsDirectory(&isDir);
+    if (NS_FAILED(rv))
+        return nsInstall::UNEXPECTED_ERROR;
 
-        mChrome->IsDirectory(&isDir);
+
+    // Can we construct a resource: URL or do we need a file: URL instead?
+    // find the xpcom directory and see if mChrome is a child
+    PRBool isChild = PR_FALSE;
+    mProgDir = nsSoftwareUpdate::GetProgramDirectory();
+    if (!mProgDir)
+    {
+        // not in the wizard, so ask the directory service where it is
+        nsCOMPtr<nsIProperties> dirService(
+                do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+        if(NS_SUCCEEDED(rv))
+        {
+            NS_ASSERTION(dirService,"directory service lied to us");
+            rv = dirService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                        NS_GET_IID(nsIFile), getter_AddRefs(mProgDir));
+        }
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_ASSERTION(mProgDir,"NS_SUCCESS but no mProgDir");
+        rv = mProgDir->Contains(mChrome, PR_TRUE, &isChild);
+        if (NS_FAILED(rv)) 
+            return nsInstall::UNEXPECTED_ERROR;
+    }
+    else
+        return nsInstall::UNEXPECTED_ERROR;
+
+
+    // Either way we need the file: URL to the chrome
+    nsXPIDLCString localURL;
+    rv = GetURLFromIFile( mChrome, getter_Copies(localURL) );
+    if (NS_FAILED(rv))
+        return nsInstall::UNEXPECTED_ERROR;
+
+    // see what kind of URL we have to construct
+    if (!isChild)
+    {
+        // Not relative so use the file:// URL we got above
+        PRInt32 urlLen = nsCRT::strlen(localURL) + mPath.Length();
+
+        if (isDir)
+        {
+            // "flat" chrome, urlLen is suffient
+            mURL.SetCapacity( urlLen );
+        }
+        else
+        {
+            // archive, add room for jar: syntax (over by one, but harmless)
+            mURL.SetCapacity( urlLen + sizeof("jar:") + sizeof('!') );
+            mURL = "jar:";
+        }
+        mURL.Append(localURL);
+    }
+    else
+    {
+        // we can construct a resource: URL to chrome in a subdir
+        nsXPIDLCString binURL;
+        rv = GetURLFromIFile( mProgDir, getter_Copies(binURL) );
+        if (NS_FAILED(rv))
+            return nsInstall::UNEXPECTED_ERROR;
+
+        PRInt32 binLen = nsCRT::strlen(binURL);
+        const char *subURL = localURL + binLen;
+        PRInt32 padding = sizeof("resource:/") + sizeof("jar:!/");
+
+        mURL.SetCapacity( nsCRT::strlen(subURL) + mPath.Length() + padding );
+
         if (!isDir)
             mURL = "jar:";
 
-        nsXPIDLCString localURL;
-        nsresult rv = hack_nsIFile2URL(mChrome, getter_Copies(localURL));
-        mURL.Append(localURL);
-#if 0
-        nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
-        if (NS_SUCCEEDED(rv)) 
-        {
-            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
-            if (fileURL)
-            {
-                rv = fileURL->SetFile(mChrome);
-                if (NS_SUCCEEDED(rv))
-                {
-                    rv = fileURL->GetSpec(getter_Copies(localURL));
-                    mURL.Append(localURL);
-                }
-            }
-        }
-#endif
+        mURL.Append("resource:/");
+        mURL.Append(subURL);
+    }
 
-        if (!localURL)
-            return nsInstall::UNEXPECTED_ERROR;
+        
+    if (!isDir)
+    {
+        // need jar: URL closing bang-slash
+        mURL.Append("!/");
+    }
+    else
+    {
+        // Necko should already slash-terminate directory file:// URLs
+        NS_ASSERTION(mURL[mURL.Length()-1] == '/', "Necko changed the rules");
+    }
 
-        if (!isDir) {
-            mURL.Append("!/");
-            mURL.Append(mPath);
-        }
-//    }
+    // add on "extra" subpath to new content.rdf
+    mURL.Append(mPath);
 
     return nsInstall::SUCCESS;
 }
@@ -191,47 +243,30 @@ PRInt32 nsRegisterItem::Complete()
 
     if ( reg && !(mChromeType & CHROME_DELAYED) )
     {
+        // We can register right away
         if (mChromeType & CHROME_SKIN)
             rv = reg->InstallSkin(mURL.GetBuffer(), isProfile, PR_TRUE);
 
-        if (mChromeType & CHROME_LOCALE)
+        if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_LOCALE))
             rv = reg->InstallLocale(mURL.GetBuffer(), isProfile);
 
-        if (mChromeType & CHROME_CONTENT)
+        if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_CONTENT))
             rv = reg->InstallPackage(mURL.GetBuffer(), isProfile);
     }
     else
     {
-        // Unless the script explicitly told us to register later
-        // return the REBOOT_NEEDED status. If the script requested
-        // it then we assume it knows what it's doing.
-        if (!(mChromeType & CHROME_DELAYED))
-            result = nsInstall::REBOOT_NEEDED;
+        // Either script asked for delayed chrome or we can't find
+        // the chrome registry to do it now.
+        NS_ASSERTION(mProgDir, "this.Prepare() failed to set mProgDir");
 
-        // First find the "bin" diretory of the install
+        // construct a reference to the magic file
         PRFileDesc* fd = nsnull;
-        nsCOMPtr<nsILocalFile> startupFile;
-        nsCOMPtr<nsIFile> progDir = nsSoftwareUpdate::GetProgramDirectory();
-        if (!progDir)
+        nsCOMPtr<nsIFile> tmp;
+        PRBool bExists = PR_FALSE;
+        rv = mProgDir->Clone(getter_AddRefs(tmp));
+        if (NS_SUCCEEDED(rv))
         {
-            // not in the wizard, so ask the directory service where it is
-            NS_WITH_SERVICE(nsIProperties, directoryService,
-                            NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-            if(NS_SUCCEEDED(rv) && directoryService)
-            {
-                directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
-                            NS_GET_IID(nsIFile), getter_AddRefs(progDir));
-            }
-        }
-
-        if (progDir)
-        {
-            // we got one... construct a reference to the magic file
-            nsCOMPtr<nsIFile> tmp;
-            PRBool bExists = PR_FALSE;
-            rv = progDir->Clone(getter_AddRefs(tmp));
-            if (NS_SUCCEEDED(rv))
-                startupFile = do_QueryInterface(tmp, &rv);
+            nsCOMPtr<nsILocalFile> startupFile( do_QueryInterface(tmp, &rv) );
 
             if (NS_SUCCEEDED(rv))
             {
@@ -261,8 +296,6 @@ PRInt32 nsRegisterItem::Complete()
             PR_Seek(fd, 0, PR_SEEK_END);
             const char* location = (mChromeType & CHROME_PROFILE) ? "profile" : "install";
 
-//            nsXPIDLCString path;
-//            rv = mChrome->GetPath(getter_Copies(path));
             if (NS_SUCCEEDED(rv)/* && path*/)
             {
                 PRInt32 written, actual;
@@ -326,6 +359,10 @@ PRInt32 nsRegisterItem::Complete()
             }
             PR_Close(fd);
         }
+        else
+        {
+            result = nsInstall::CHROME_REGISTRY_ERROR;
+        }
     }
 
     if (NS_FAILED(rv))
@@ -336,6 +373,7 @@ PRInt32 nsRegisterItem::Complete()
 
 void nsRegisterItem::Abort()
 {
+    // nothing to undo
 }
 
 char* nsRegisterItem::toString()
@@ -369,17 +407,7 @@ char* nsRegisterItem::toString()
 
     if (rsrcVal)
     {
-        if (mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED))
-            PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
-        else
-        {
-            nsXPIDLCString path;
-            nsresult rv = mChrome->GetPath(getter_Copies(path));
-            if (NS_SUCCEEDED(rv) && path)
-            {
-                PR_snprintf(buffer, 1024, rsrcVal, (const char*)path);
-            }
-        }
+        PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
         nsCRT::free(rsrcVal);
     }
 
@@ -399,3 +427,40 @@ nsRegisterItem::RegisterPackageNode()
     return PR_FALSE;
 }
 
+nsresult
+nsRegisterItem::GetURLFromIFile(nsIFile* aFile, char** aOutURL)
+{
+    if (!aFile || !aOutURL)
+    {
+        NS_WARNING("bogus arg passed to nsRegisterItem::GetURLFromIFile()");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aOutURL = nsnull;
+
+    // try to use Necko to create the URL; if that fails (as
+    // it will for the install wizards which don't have Necko)
+    // then use warren's local hack.
+
+    nsCOMPtr<nsIURI> pURL;
+    nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
+    if (NS_SUCCEEDED(rv)) 
+    {
+        nsCOMPtr<nsIFileURL> fileURL( do_QueryInterface(pURL) );
+        if (fileURL)
+        {
+            rv = fileURL->SetFile(aFile);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = fileURL->GetSpec(aOutURL);
+            }
+        }
+    }
+
+    if ( NS_FAILED(rv))
+    {
+        // Necko couldn't do it (wasn't present?), try the hack
+        rv = hack_nsIFile2URL(aFile, aOutURL);
+    }
+
+    return rv;
+}
