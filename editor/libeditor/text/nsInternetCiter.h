@@ -27,7 +27,7 @@
 
 #include "nsString.h"
 
-/** Mail citations using the AOL style >> This is a citation <<
+/** Mail citations using standard Internet style.
   */
 class nsInternetCiter  : public nsICiter
 {
@@ -44,7 +44,12 @@ public:
 
   NS_IMETHOD Rewrap(const nsString& aInString,
                     PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                    PRBool aRespectNewlines,
                     nsString& aOutString);
+
+protected:
+  nsresult StripCitesAndLinebreaks(const nsString& aInString, nsString& aOutString,
+                                   PRBool aLinebreaksToo, PRInt32* aCiteLevel);
 };
 
 #endif //nsInternetCiter_h__

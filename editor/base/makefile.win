@@ -58,6 +58,7 @@ CPPSRCS =				\
       nsTableEditor.cpp      \
       nsInternetCiter.cpp    \
       nsAOLCiter.cpp         \
+      nsWrapUtils.cpp        \
       nsInterfaceState.cpp   \
       nsEditorShell.cpp      \
 	   IMETextTxn.cpp			     \
@@ -97,6 +98,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsTableEditor.obj       \
   .\$(OBJDIR)\nsInternetCiter.obj     \
   .\$(OBJDIR)\nsAOLCiter.obj          \
+  .\$(OBJDIR)\nsWrapUtils.obj         \
   .\$(OBJDIR)\nsInterfaceState.obj    \
   .\$(OBJDIR)\nsEditorShell.obj       \
   .\$(OBJDIR)\IMETextTxn.obj          \

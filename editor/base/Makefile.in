@@ -63,6 +63,7 @@ CPPSRCS		= \
 		TypeInState.cpp \
 		nsInternetCiter.cpp \
 		nsAOLCiter.cpp \
+		nsWrapUtils.cpp \
 		nsInterfaceState.cpp \
 		nsEditorShell.cpp \
 		IMETextTxn.cpp \
