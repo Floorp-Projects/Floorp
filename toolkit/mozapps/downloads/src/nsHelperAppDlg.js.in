@@ -350,13 +350,14 @@ nsUnknownContentTypeDialog.prototype = {
 
       if (suggestedFileName)
         fname = suggestedFileName;
-        
+      
+      var displayName = fname.replace(/ +/g, " ");
 
-      this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
+      this.mTitle = this.dialogElement("strings").getFormattedString("title", [displayName]);
       win.setAttribute( "title", this.mTitle );
 
       // Put content type, filename and location into intro.
-      this.initIntro(url, fname);
+      this.initIntro(url, fname, displayName);
 
       var iconString = "moz-icon://" + fname + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
       this.dialogElement("contentTypeImage").setAttribute("src", iconString);
@@ -418,8 +419,9 @@ nsUnknownContentTypeDialog.prototype = {
     },
 
     // initIntro:
-    initIntro: function(url, filename) {
-        this.dialogElement( "location" ).value = filename;
+    initIntro: function(url, filename, displayname) {
+        this.dialogElement( "location" ).value = displayname;
+        this.dialogElement( "location" ).setAttribute("realname", filename);
 
         // if mSourcePath is a local file, then let's use the pretty path name instead of an ugly
         // url...
@@ -749,7 +751,7 @@ nsUnknownContentTypeDialog.prototype = {
           try {
             targetFile = prefs.getComplexValue("browser.download.defaultFolder", 
                                                Components.interfaces.nsILocalFile);
-            var leafName = this.dialogElement("location").value;                                               
+            var leafName = this.dialogElement("location").getAttribute("realname");
             // Ensure that we don't overwrite any existing files here. 
             targetFile = this.validateLeafName(targetFile, leafName, null);
           }
