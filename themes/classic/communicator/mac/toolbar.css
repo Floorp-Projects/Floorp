@@ -1,17 +1,24 @@
  
-/******* ToolBox & ToolBar *******/
+/******* ToolBox & ToolBar *****
 
 toolbar
   {
     background-color      : #DDDDDD;
-    border-bottom         : 1px solid #003366;
+    border-top            : 1px solid #FFFFFF;
+    border-left           : 1px solid #FFFFFF;
+    border-right          : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #9D9D9D;
   }
 
 toolbargrippy 
   { 
     background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
     background-repeat     : no-repeat;
-    border-right          : 1px solid #003366;
+    border-top            : 1px solid #FFFFFF;
+    border-left           : 1px solid #FFFFFF;
+    border-right          : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #9D9D9D;
+    background-color      : #DDDDDD;
     width                 : 10px;
     height                : 10px;
   } 
@@ -23,34 +30,7 @@ toolbar[collapsed="true"] > toolbargrippy
 
 toolbargrippy:hover 
   {
-    background-color      : #003366 !important; 
+    background-color      : #CCCCFF !important; 
     background-image      : url("chrome://global/skin/taskbar-tab-trans.gif") !important;
   } 
-
-  
-.toolbar-primary 
-  {
-    background-color      : #DDDDDD;
-    padding               : 0px;
-    min-height            : 47px;
-    border                : none;
-  }
-  
-.toolbar-primary > toolbargrippy, .toolbar-standard > toolbargrippy
-  {
-    background-color      : #DDDDDD; 
-    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
-    background-repeat     : no-repeat;
-  }
-  
-.toolbar-standard 
-  {
-	  color                 : white;
-	  background-color      : #DDDDDD;
-	  padding               : 0px;
-	  margin                : 0px;
-	  border                : none;
-	  min-height            : 22px;
-  }
-
-
+*/

@@ -7,19 +7,14 @@
 
 #content
   {
-    border-left           : 1px solid threeddarkshadow;
-    border-top            : 1px solid threeddarkshadow;
-    border-right          : 1px solid threedface;
-    border-bottom         : 1px solid threedface;
+    border-top            : 1px solid #000000;
   }
-
+  
 #browser
   {
-    border-left           : 1px solid threedshadow;
-    border-top            : 1px solid threedshadow;
-    border-right          : 1px solid threedhighlight;
-    border-bottom         : 1px solid threedhighlight;
-  }  
+    border-top            : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #000000;
+  }
   
 /*
  * Rules for 'hiding' portions of the chrome for special

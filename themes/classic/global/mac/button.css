@@ -10,7 +10,7 @@
       border              : 1px solid #000000;
       -moz-border-radius  : 3px 2px 2px 3px;
       margin              : 1px 5px 2px 5px;
-      background-color    : #CCCCCC;
+      background-color    : #DDDDDD;
     }
   
   button[disabled="true"],
@@ -26,13 +26,19 @@
     {
       vertical-align      : middle;
       text-align          : center;
-      border              : 1px outset #CCCCCC;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
       padding             : 2px;
     }
     
   button:hover:active > .button-internal-box 
     {
-      border              : 1px inset #CCCCCC;
+      border-left         : 1px solid #9D9D9D;
+      border-top          : 1px solid #9D9D9D;
+      border-right        : 1px solid #FFFFFF;
+      border-bottom       : 1px solid #FFFFFF;
       padding             : 3px 1px 1px 3px;  
     }
   
@@ -40,7 +46,10 @@
   button[disabled="true"]:hover > .button-internal-box,
   button[disabled="true"]:hover:active > .button-internal-box 
     {
-      border              : 1px outset #CCCCCC;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
       -moz-border-radius  : 0px;
       padding             : 2px;
     }
@@ -108,7 +117,7 @@
  **/ 
   .button-borderless 
     {
-      border              : 1px solid #CCCCCC;
+      border              : 1px solid #DDDDDD;
     }
   
   .button-borderless:hover
@@ -118,17 +127,23 @@
     
   .button-borderless > .button-internal-box 
     {
-      border              : 1px solid #CCCCCC;
+      border              : 1px solid #DDDDDD;
     }
   
   .button-borderless:hover > .button-internal-box 
     {
-      border              : 1px outset #CCCCCC;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
     }
   
   .button-borderless:hover:active > .button-internal-box 
-    {
-      border              : 1px inset #CCCCCC;
+    { 
+      border-left         : 1px solid #9D9D9D;
+      border-top          : 1px solid #9D9D9D;
+      border-right        : 1px solid #FFFFFF;
+      border-bottom       : 1px solid #FFFFFF;
     }
 
 /** plain (raw) buttons, class="plain" **/

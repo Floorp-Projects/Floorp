@@ -25,8 +25,11 @@ menuitem[menuactive="true"][disabled="true"]
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {
-    background-color      : #CCCCCC;
-    border                : 1px solid #336699;
+    background-color      : #DDDDDD;
+    border-left           : 1px solid #FFFFFF;
+    border-top            : 1px solid #FFFFFF;
+    border-right          : 1px solid #9D9D9D;
+    border-bottom         : 1px solid #9D9D9D;
   }
 
 menupopup > menu, popup > menu,
