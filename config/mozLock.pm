@@ -52,7 +52,7 @@ sub priv_abspath($) {
     $file =~ s/\\/\//g;
 
     # Check if file is already absolute
-    if ($file =~ m/^\// || substr($file, 1, 0) eq ':') {
+    if ($file =~ m/^\// || substr($file, 1, 1) eq ':') {
 	return $file;
     }
     $out = cwd . "/$file";

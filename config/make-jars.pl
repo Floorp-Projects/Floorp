@@ -2,6 +2,10 @@
 
 # make-jars [-f] [-v] [-l] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
 
+# we'll be pulling in some stuff from the script directory
+use FindBin;
+push @INC, $FindBin::Bin;
+
 use strict;
 
 use Getopt::Std;
@@ -12,7 +16,8 @@ use Cwd;
 use File::Copy;
 use File::Path;
 use IO::File;
-use mozLock;
+require mozLock;
+import mozLock;
 
 my $objdir = getcwd;
 
@@ -154,7 +159,7 @@ sub RegIt
 {
     my ($chromeDir, $jarFileName, $chromeType, $pkgName) = @_;\
     chop($pkgName) if ($pkgName =~ m/\/$/);
-    #print "RegIt:  $jarFileName, $chromeType, $pkgName\n";
+    #print "RegIt:  $chromeDir, $jarFileName, $chromeType, $pkgName\n";
 
     my $line;
     if ($fileformat eq "flat")  {
