@@ -233,6 +233,7 @@ bin/res/rdf/folder-closed.gif
 bin/res/rdf/folder-open.gif
 bin/res/rdf/loading.gif
 bin/res/ua.css
+bin/res/forms.css
 ;debug menus reference samples dir - remove for actual releases:
 bin/res/samples/*
 bin/res/builtin/htmlBindings.xml

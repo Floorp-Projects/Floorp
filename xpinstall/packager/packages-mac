@@ -241,6 +241,7 @@ viewer:res:strres-test.js
 viewer:res:strres-test.xul
 viewer:res:throbber:*
 viewer:res:ua.css
+viewer:res:forms.css
 
 [mail] 
 viewer:chrome:messenger.jar
