@@ -2436,8 +2436,9 @@ public class Interpreter {
         break;
     case TokenStream.CLOSURE : {
         int i = getIndex(iCode, pc + 1);
-        InterpretedFunction f = idata.itsNestedFunctions[i];
-        InterpretedFunction closure = new InterpretedFunction(f, scope, cx);
+        InterpreterData closureData = idata.itsNestedFunctions[i].itsData;
+        InterpretedFunction closure = new InterpretedFunction(cx, closureData);
+        closure.itsClosure = scope;
         createFunctionObject(closure, scope, idata.itsFromEvalCode);
         stack[++stackTop] = closure;
         pc += 2;

@@ -53,13 +53,6 @@ final class InterpretedFunction extends NativeFunction
         argCount = (short)itsData.argCount;
     }
 
-    InterpretedFunction(InterpretedFunction theOther,
-                        Scriptable theScope, Context cx)
-    {
-        this(cx, theOther.itsData);
-        itsClosure = theScope;
-    }
-
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
         throws JavaScriptException
