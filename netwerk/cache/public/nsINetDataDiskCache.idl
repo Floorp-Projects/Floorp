@@ -25,7 +25,6 @@
 interface nsIFileSpec;
 
 /**
-/**
  * A network-data disk cache is used to persistently cache the responses to
  * network retrieval commands.  Each cache entry may contain both content,
  * e.g. GIF image data, and associated metadata, e.g. HTTP headers.
