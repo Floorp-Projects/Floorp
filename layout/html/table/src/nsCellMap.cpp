@@ -409,7 +409,7 @@ nsTableCellMap::Dump() const
   printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
   // output col info
   PRInt32 colCount = mCols.Count();
-	printf ("cols array orig/span-> ", this);
+	printf ("cols array orig/span-> %p", this);
 	for (PRInt32 colX = 0; colX < colCount; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
 		printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
@@ -532,7 +532,7 @@ void nsTableCellMap::SizeOf(nsISizeOfHandler* aHandler,
 // nsCellMap
 
 nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup)
-  : mRowCount(0), mNextSibling(nsnull), mRowGroupFrame(&aRowGroup)
+  : mRowCount(0), mRowGroupFrame(&aRowGroup), mNextSibling(nsnull)
 {
   MOZ_COUNT_CTOR(nsCellMap);
 }
@@ -923,7 +923,6 @@ nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
                           PRInt32         aStartRowIndex)
 {
   PRInt32 numNewRows  = aRowFrames.Count();
-  PRInt32 origNumCols = aMap.GetColCount();
   PRInt32 endRowIndex = aStartRowIndex + numNewRows - 1;
 
   // create the new rows first
@@ -1177,7 +1176,6 @@ PRInt32 nsCellMap::GetRowSpan(nsTableCellMap& aMap,
   PRInt32 rowCount = (aGetEffective) ? mRowCount : mRows.Count();
   PRInt32 rowX;
   for (rowX = aRowIndex + 1; rowX < rowCount; rowX++) {
-    nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
     CellData* data = GetMapCellAt(aMap, rowX, aColIndex, PR_TRUE);
     if (data) {
       if (data->IsRowSpan()) {
@@ -1615,8 +1613,8 @@ nsCellMap::AdjustForZeroSpan(nsTableCellMap& aMap,
     PRBool cellsOrig = PR_FALSE;
     if (colX >= aColIndex + MIN_NUM_COLS_FOR_ZERO_COLSPAN - 1) {
       for (rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
-        CellData* data = GetMapCellAt(aMap, rowX, colX, PR_FALSE);
-        if (data && data->IsOrig()) {
+        CellData* cellData = GetMapCellAt(aMap, rowX, colX, PR_FALSE);
+        if (cellData && cellData->IsOrig()) {
           cellsOrig = PR_TRUE;
           break; // there are cells in this col, so don't consider it
         }
@@ -1669,7 +1667,6 @@ nsCellMap::GetMapCellAt(nsTableCellMap& aMap,
       nsVoidArray* prevRow = (nsVoidArray *)(mRows.ElementAt(prevRowX));
       CellData* prevData = (CellData *)(prevRow->ElementAt(aColIndex));
       if (prevData) {
-        nsTableCellFrame* origCell = nsnull;
         if (prevData->IsZeroRowSpan()) {
           PRInt32 rowIndex = prevRowX - prevData->GetRowSpanOffset();
           PRInt32 colIndex = 0;
