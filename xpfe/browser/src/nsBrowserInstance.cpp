@@ -949,7 +949,7 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
 #ifdef DEBUG
 #include "nsProxyObjectManager.h"
 
-class PageCycler : public nsIObserver, public nsSupportsWeakReference {
+class PageCycler : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
@@ -993,6 +993,7 @@ public:
     if (NS_FAILED(rv)) return rv;
     nsString topic("EndDocumentLoad");
     rv = obsServ->AddObserver(this, topic.GetUnicode());
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
     return rv; 
   }
 
@@ -1065,7 +1066,6 @@ NS_IMPL_RELEASE(PageCycler)
 
 NS_INTERFACE_MAP_BEGIN(PageCycler)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
 
