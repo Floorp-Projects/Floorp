@@ -141,9 +141,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
     // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
     // Stylesheet info!
-    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
-    // Make it look consistent...
-    UtilityWriteCRLF("<LINK REL=\"STYLESHEET\" HREF=\"chrome://global/skin\">");
+    UtilityWriteCRLF("<LINK REL=\"IMPORTANT STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
 
     UtilityWriteCRLF("</HEAD>");
     UtilityWriteCRLF("<BODY>");
