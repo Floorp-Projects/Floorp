@@ -41,6 +41,16 @@ nsIRDFResource* nsRDFXMLSerializer::kRDF_Bag;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_Seq;
 nsIRDFResource* nsRDFXMLSerializer::kRDF_Alt;
 
+static const char kRDFDescriptionOpen[]      = "  <RDF:Description";
+static const char kIDAttr[]                  = " RDF:ID=\"";
+static const char kAboutAttr[]               = " RDF:about=\"";
+static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
+static const char kRDFResource1[] = " RDF:resource=\"";
+static const char kRDFResource2[] = "\"/>\n";
+static const char kRDFParseTypeInteger[] = " NC:parseType=\"Integer\">";
+static const char kRDFParseTypeDate[] = " NC:parseType=\"Date\">";
+static const char kRDFUnknown[] = "><!-- unknown node type -->";
+
 NS_IMETHODIMP
 nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -392,8 +402,6 @@ nsRDFXMLSerializer::SerializeChildAssertion(nsIOutputStream* aStream,
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
         rdf_EscapeAttributeValue(uri);
 
-static const char kRDFResource1[] = " resource=\"";
-static const char kRDFResource2[] = "\"/>\n";
         rdf_BlockingWrite(aStream, kRDFResource1, sizeof(kRDFResource1) - 1);
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, kRDFResource2, sizeof(kRDFResource2) - 1);
@@ -417,8 +425,8 @@ static const char kRDFResource2[] = "\"/>\n";
         nsAutoString n;
         n.AppendInt(value);
 
-static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
-        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, kRDFParseTypeInteger, 
+                          sizeof(kRDFParseTypeInteger) - 1);
         rdf_BlockingWrite(aStream, n);
     }
     else if ((date = do_QueryInterface(aValue)) != nsnull) {
@@ -428,8 +436,8 @@ static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
         nsCAutoString s;
         rdf_FormatDate(value, s);
 
-static const char kRDFParseType[] = " NC:parseType=\"Date\">";
-        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, kRDFParseTypeDate, 
+                          sizeof(kRDFParseTypeDate) - 1);
         rdf_BlockingWrite(aStream, s.get(), s.Length());
     }
     else {
@@ -437,7 +445,6 @@ static const char kRDFParseType[] = " NC:parseType=\"Date\">";
         // We should serialize nsIRDFInt, nsIRDFDate, etc...
         NS_WARNING("unknown RDF node type");
 
-static const char kRDFUnknown[] = "><!-- unknown node type -->";
         rdf_BlockingWrite(aStream, kRDFUnknown, sizeof(kRDFUnknown) - 1);
     }
 
@@ -523,11 +530,6 @@ nsresult
 nsRDFXMLSerializer::SerializeDescription(nsIOutputStream* aStream,
                                          nsIRDFResource* aResource)
 {
-static const char kRDFDescriptionOpen[]      = "  <RDF:Description";
-static const char kIDAttr[]                  = " ID=\"";
-static const char kAboutAttr[]               = " about=\"";
-static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
-
     nsresult rv;
 
     PRBool isTypedNode = PR_FALSE;
@@ -695,7 +697,7 @@ nsRDFXMLSerializer::SerializeMember(nsIOutputStream* aStream,
                                       nsIRDFResource* aContainer,
                                       nsIRDFNode* aMember)
 {
-    // If it's a resource, then output a "<RDF:li resource=... />"
+    // If it's a resource, then output a "<RDF:li RDF:resource=... />"
     // tag, because we'll be dumping the resource separately. (We
     // iterate thru all the resources in the datasource,
     // remember?) Otherwise, output the literal value.
@@ -711,16 +713,14 @@ static const char kRDFLIOpen[] = "    <RDF:li";
     if ((resource = do_QueryInterface(aMember)) != nsnull) {
         const char *s;
         resource->GetValueConst(&s);
-static const char kRDFLIResource1[] = " resource=\"";
-static const char kRDFLIResource2[] = "\"/>\n";
 
         NS_ConvertUTF8toUTF16 uri(s);
         rdf_MakeRelativeRef(NS_ConvertUTF8toUCS2(mBaseURLSpec.get()), uri);
         rdf_EscapeAttributeValue(uri);
 
-        rdf_BlockingWrite(aStream, kRDFLIResource1, sizeof(kRDFLIResource1) - 1);
+        rdf_BlockingWrite(aStream, kRDFResource1, sizeof(kRDFResource1) - 1);
         rdf_BlockingWrite(aStream, uri);
-        rdf_BlockingWrite(aStream, kRDFLIResource2, sizeof(kRDFLIResource2) - 1);
+        rdf_BlockingWrite(aStream, kRDFResource2, sizeof(kRDFResource2) - 1);
 
         goto no_close_tag;
     }
@@ -743,8 +743,8 @@ static const char kRDFLIOpenGT[] = ">";
         nsAutoString n;
         n.AppendInt(value);
 
-static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
-        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, kRDFParseTypeInteger, 
+                                   sizeof(kRDFParseTypeInteger) - 1);
         rdf_BlockingWrite(aStream, n);
     }
     else if ((date = do_QueryInterface(aMember)) != nsnull) {
@@ -754,8 +754,8 @@ static const char kRDFParseType[] = " NC:parseType=\"Integer\">";
         nsCAutoString s;
         rdf_FormatDate(value, s);
 
-static const char kRDFParseType[] = " NC:parseType=\"Date\">";
-        rdf_BlockingWrite(aStream, kRDFParseType, sizeof(kRDFParseType) - 1);
+        rdf_BlockingWrite(aStream, kRDFParseTypeDate, 
+                          sizeof(kRDFParseTypeDate) - 1);
         rdf_BlockingWrite(aStream, s.get(), s.Length());
     }
     else {
@@ -763,7 +763,6 @@ static const char kRDFParseType[] = " NC:parseType=\"Date\">";
         // We should serialize nsIRDFInt, nsIRDFDate, etc...
         NS_WARNING("unknown RDF node type");
 
-static const char kRDFUnknown[] = "><!-- unknown node type -->";
         rdf_BlockingWrite(aStream, kRDFUnknown, sizeof(kRDFUnknown) - 1);
     }
 
@@ -821,16 +820,14 @@ nsRDFXMLSerializer::SerializeContainer(nsIOutputStream* aStream,
             // Okay, it's actually identified as an element in the
             // current document, not trying to decorate some absolute
             // URI. We can use the 'ID=' attribute...
-            static const char kIDEquals[] = " ID=\"";
 
             uri.Cut(0, 1); // chop the '#'
-            rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
+            rdf_BlockingWrite(aStream, kIDAttr, sizeof(kIDAttr) - 1);
         }
         else {
             // We need to cheat and spit out an illegal 'about=' on
             // the sequence. 
-            static const char kAboutEquals[] = " about=\"";
-            rdf_BlockingWrite(aStream, kAboutEquals, sizeof(kAboutEquals) - 1);
+            rdf_BlockingWrite(aStream, kAboutAttr, sizeof(kAboutAttr) - 1);
         }
 
         rdf_BlockingWrite(aStream, uri);
