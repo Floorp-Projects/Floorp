@@ -74,7 +74,11 @@ function InitDialog()
   else
   {
     FillSiteList();
-    InitSiteSettings(gDefaultSiteIndex);
+
+    // uncomment next code line if you want preselection of the default
+    // publishing site
+    //InitSiteSettings(gDefaultSiteIndex);
+
     SetTextboxFocus(gDialog.SiteNameInput);
   }
 }
