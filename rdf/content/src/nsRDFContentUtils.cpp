@@ -202,19 +202,7 @@ nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     if (! doc)
         return NS_ERROR_FAILURE;
 
-    char buf[256];
-    nsCAutoString uri;
-    nsStr::Initialize(uri, buf, sizeof(buf) - 1, 0, eOneByte, PR_FALSE);
-    buf[0] = 0;
-
-    rv = nsRDFContentUtils::MakeElementURI(doc, id, uri);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = rdf->GetResource(uri, aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
+    rv = nsRDFContentUtils::MakeElementResource(doc, id, aResult);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -475,9 +463,9 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         aURI = spec;
 
         if (aElementID.First() != '#') {
-            aURI += '#';
+            aURI.Append('#');
         }
-        aURI += aElementID;
+        aURI.Append(nsCAutoString(aElementID));
 #else
         nsXPIDLCString spec;
         rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
@@ -499,7 +487,9 @@ nsresult
 nsRDFContentUtils::MakeElementResource(nsIDocument* aDocument, const nsString& aID, nsIRDFResource** aResult)
 {
     nsresult rv;
-    nsCAutoString uri;
+
+    char buf[256];
+    nsCAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf)));
     rv = MakeElementURI(aDocument, aID, uri);
     if (NS_FAILED(rv)) return rv;
 
