@@ -214,6 +214,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
   mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
   mSurface = (nsIDrawingSurfaceXlib *)aSurface;
+  mOffscreenSurface = mSurface;
 
   return CommonInit();
 }
