@@ -597,7 +597,7 @@ nsListControlFrame::DisplayDeselected(nsIContent* aContent)
 
 //---------------------------------------------------------
 PRInt32 
-nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame) 
+nsListControlFrame::GetSelectedIndexFromFrame(nsIFrame *aHitFrame) 
 {
   PRInt32 index   = kNothingSelected;
   // Get the content of the frame that was selected
@@ -690,7 +690,7 @@ nsListControlFrame::SingleSelection()
      // Store previous selection
     PRInt32 oldSelectedIndex = mSelectedIndex;
      // Get Current selection
-    PRInt32 newSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
+    PRInt32 newSelectedIndex = (PRInt32)GetSelectedIndexFromFrame(mHitFrame);
     if (newSelectedIndex != kNothingSelected) {
       if (oldSelectedIndex != newSelectedIndex) {
           // Deselect the previous selection if there is one
@@ -712,7 +712,7 @@ void
 nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
 {
   if (nsnull != mHitFrame) {
-  mSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
+  mSelectedIndex = (PRInt32)GetSelectedIndexFromFrame(mHitFrame);
   if (kNothingSelected != mSelectedIndex) {
       if ((aIsShift) || (mButtonDown && (!aIsControl))) {
           // Shift is held down
@@ -943,7 +943,7 @@ nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext,
    
     if (nsnull != mHitFrame) {
       PRInt32 oldSelectedIndex = mSelectedIndex;
-      PRInt32 newSelectedIndex = GetSelectedIndex(mHitFrame);
+      PRInt32 newSelectedIndex = GetSelectedIndexFromFrame(mHitFrame);
       if (kNothingSelected != newSelectedIndex) {
         if (oldSelectedIndex != newSelectedIndex) {
           if (oldSelectedIndex != kNothingSelected) {
@@ -957,7 +957,7 @@ nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext,
   } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
     // Start by finding the newly "hit" content from the hit frame
       if (nsnull != mHitFrame) {
-        PRInt32 index = GetSelectedIndex(mHitFrame);
+        PRInt32 index = GetSelectedIndexFromFrame(mHitFrame);
         if (kNothingSelected != index) {
           SetFrameSelected(index, PR_TRUE);  
           mSelectedIndex = index;
@@ -1142,7 +1142,7 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint3
   nsIDOMHTMLOptionElement* optionElement = GetOption(*aCollection, aIndex);
   if (nsnull != optionElement) {
     content = nsnull;
-    nsresult result = optionElement->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(),(void**) &content);
+    optionElement->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(),(void**) &content);
     NS_RELEASE(optionElement);
   }
  
@@ -1497,6 +1497,14 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
   }
 
   return rv;
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP 
+nsListControlFrame::GetSelectedIndex(PRInt32 * aIndex)
+{
+  *aIndex = mSelectedIndex;
+  return NS_OK;
 }
 
 //---------------------------------------------------------

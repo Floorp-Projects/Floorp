@@ -99,6 +99,7 @@ public:
     // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedItem(nsString & aStr);
+  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex);
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
@@ -164,7 +165,7 @@ protected:
   nsresult HandleLikeListEvent(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus);
-  PRInt32  GetSelectedIndex(nsIFrame *aHitFrame);
+  PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
 
   // Data Members
   nscoord      mBorderOffsetY;
