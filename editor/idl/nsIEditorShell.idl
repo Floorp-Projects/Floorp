@@ -49,6 +49,7 @@ interface nsIEditorShell : nsISupports
   
            attribute nsIDOMWindow      webShellWindow;
            attribute nsIDOMWindow      contentWindow;
+           attribute wstring           editorType;
            
   [noscript] readonly attribute nsIEditor         editor;
   
@@ -73,8 +74,6 @@ interface nsIEditorShell : nsISupports
   attribute long                          wrapColumn;
    
   /* Setup */
-  void SetEditorType(in wstring editorType);
-
   void LoadUrl(in wstring url);
 
   /* Set the value of the <title> tag in the <head> of a document

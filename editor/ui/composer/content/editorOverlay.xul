@@ -53,6 +53,7 @@
   <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
 
   <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
+  <key id="removelinkskb"      shift="true" xulkey="true" key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks" />
   <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
   <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont" />
 
@@ -68,7 +69,6 @@
     <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" shift="false" observes="cmd_close" />
     <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" shift="false" observes="cmd_print" />
     <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;"  shift="false" observes="cmd_quit" />
-
     <key id="key_undo"/>
     <key id="key_redo"/>
     <key id="key_cut"/>
@@ -91,9 +91,10 @@
     <key id="decreaseindentkb"/>
 
     <key id="removestyleskb"/>
+    <key id="removelinkskb"/>
+
     <key id="decreasefontsizekb"/>
     <key id="increasefontsizekb"/>
-
   </keyset>
 
   <!-- commands updated when the editor gets created -->
@@ -130,7 +131,6 @@
     <command id="cmd_table"            oncommand="goDoCommand('cmd_table')"/>
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
-    <command id="cmd_editTable"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     value="&insertHTMLCmd.label;"/>
     
     <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     value="&NormalMode.label;"/>
@@ -207,10 +207,15 @@
     <command id="cmd_outdent"                         oncommand="goDoCommand('cmd_outdent')"/>
 
     <!-- the state attribute gets filled with the paragraph format before the command is exectued -->
-    <command id="cmd_paragraphState" state=""         oncommand="goDoCommand('cmd_paragraphState')"/>
-    <command id="cmd_fontFace"       state=""         oncommand="goDoCommand('cmd_fontFace')"/>
-    <command id="cmd_fontSize"       state=""         oncommand="goDoCommand('cmd_fontSize')"/>
-    <command id="cmd_align"          state=""         oncommand="goDoCommand('cmd_align')"/>
+    <command id="cmd_paragraphState"  state=""         oncommand="goDoCommand('cmd_paragraphState')"/>
+    <command id="cmd_fontFace"        state=""         oncommand="goDoCommand('cmd_fontFace')"/>
+
+    <!-- No "oncommand", use EditorSelectColor() to bring up color dialog -->
+    <command id="cmd_fontColor"       state=""/>
+    <command id="cmd_backgroundColor" state=""/>
+
+    <command id="cmd_fontSize"        state=""         oncommand="goDoCommand('cmd_fontSize')"/>
+    <command id="cmd_align"           state=""         oncommand="goDoCommand('cmd_align')"/>
     
     <command id="cmd_advancedProperties"              oncommand="goDoCommand('cmd_advancedProperties')"/>
 
@@ -218,6 +223,7 @@
     <command id="cmd_decreaseFont"                    oncommand="goDoCommand('cmd_decreaseFont')"/>
     
     <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
+    <command id="cmd_removeLinks"                     oncommand="goDoCommand('cmd_removeLinks')"/>
   </commandset>
 
   <!-- commands updated only when the menu gets created -->
@@ -226,6 +232,7 @@
     <command id="cmd_dt"                  oncommand="goDoCommand('cmd_dt')"/>
     <command id="cmd_dd"                  oncommand="goDoCommand('cmd_dd')"/>
     <command id="cmd_removeList"          oncommand="goDoCommand('cmd_removeList')"/>
+    <!-- cmd_ul and cmd_ol are shared with toolbar and are in composerStyleMenuItems commandset -->
   </commandset>
   <commandset id="composerTableMenuItems" oncommandupdate="goUpdateTableMenuItems(this)">
     <!-- Table menu -->
@@ -257,6 +264,8 @@
     <!-- Broadcasters/commands with no other home -->
     <!-- view menu -->
     <command id="cmd_newNavigator"/>
+  	<broadcaster id="cmd_newMessage"/>
+	  <broadcaster id="cmd_newCard"/>
     <command id="cmd_newMessage"/>
     <command id="cmd_newCard"/>
     <command id="cmd_newEditor"/>
@@ -425,108 +434,41 @@
     </menupopup>
     </menu>
     
-    <!-- Font color submenu -->
-    <menu id="fontColorMenu" value="&fontColorMenu.label;"
-          accesskey="&formatcolormenu.accesskey;"
-          position="4">
-      <menupopup>
-         <menuitem value="&colorBlackCmd.label;"   accesskey="&colorblack.accesskey;"   oncommand="EditorSetFontColor('black')"/>
-         <menuitem value="&colorGrayCmd.label;"    accesskey="&colorgray.accesskey;"    oncommand="EditorSetFontColor('gray')"/>
-         <menuitem value="&colorSilverCmd.label;"  accesskey="&colorsilver.accesskey;"  oncommand="EditorSetFontColor('silver')"/>
-         <menuitem value="&colorWhiteCmd.label;"   accesskey="&colorwhite.accesskey;"   oncommand="EditorSetFontColor('white')"/>
-         <menuitem value="&colorRedCmd.label;"     accesskey="&colorred.accesskey;"     oncommand="EditorSetFontColor('red')"/>
-         <menuitem value="&colorBlueCmd.label;"    accesskey="&colorblue.accesskey;"    oncommand="EditorSetFontColor('blue')"/>
-         <menuitem value="&colorGreenCmd.label;"   accesskey="&colorgreen.accesskey;"   oncommand="EditorSetFontColor('green')"/>
-         <menuitem value="&colorCyanCmd.label;"    accesskey="&colorcyan.accesskey;"    oncommand="EditorSetFontColor('cyan')"/>
-         <menuitem value="&colorYellowCmd.label;"  accesskey="&coloryellow.accesskey;"  oncommand="EditorSetFontColor('yellow')"/>
-         <menuitem value="&colorMagentaCmd.label;" accesskey="&colormagenta.accesskey;" oncommand="EditorSetFontColor('magenta')"/>
-      </menupopup>
-    </menu>
-
-    <!-- Background color submenu. "value" is set in InitFormatMenu() -->
-<!-- this menu to be moved to Table menu
-    <menu id="backgroundColorMenu"
-         accesskey="&formatbkgdcolormenu.accesskey;"
-         position="5">
-      <menupopup>
-       <menuitem value="&colorBlackCmd.label;"     accesskey="&colorblack.accesskey;"    oncommand="EditorSetBackgroundColor('black')"/>
-       <menuitem value="&colorGrayCmd.label;"      accesskey="&colorgray.accesskey;"     oncommand="EditorSetBackgroundColor('gray')"/>
-       <menuitem value="&colorSilverCmd.label;"    accesskey="&colorsilver.accesskey;"   oncommand="EditorSetBackgroundColor('silver')"/>
-       <menuitem value="&colorWhiteCmd.label;"     accesskey="&colorwhite.accesskey;"    oncommand="EditorSetBackgroundColor('white')"/>
-       <menuitem value="&colorRedCmd.label;"       accesskey="&colorred.accesskey;"      oncommand="EditorSetBackgroundColor('red')"/>
-       <menuitem value="&colorBlueCmd.label;"      accesskey="&colorblue.accesskey;"     oncommand="EditorSetBackgroundColor('blue')"/>
-       <menuitem value="&colorGreenCmd.label;"     accesskey="&colorgreen.accesskey;"    oncommand="EditorSetBackgroundColor('green')"/>
-       <menuitem value="&colorCyanCmd.label;"      accesskey="&colorcyan.accesskey;"     oncommand="EditorSetBackgroundColor('cyan')"/>
-       <menuitem value="&colorYellowCmd.label;"    accesskey="&coloryellow.accesskey;"   oncommand="EditorSetBackgroundColor('yellow')"/>
-       <menuitem value="&colorMagentaCmd.label;"   accesskey="&colormagenta.accesskey;"  oncommand="EditorSetBackgroundColor('magenta')"/>
-      </menupopup>
-    </menu>
--->
-
-<!-- Font color submenu
-     THIS WORKS ONLY IN Windows/Linux (use arbitrary XUL in submenu)
-    <menu id="fontColorMenu" value="&fontColorMenu.label;"
-          accesskey="&formatcolormenu.accesskey;"
-          position="4">
-    	<menupopup>
-        <colorpicker id="menuTextCP" palettename="standard"
-          oncommand="EditorSelectTextColor('menuTextCP',null);"/>
-        <menuitem value="&colorPicker.default.label;" 
-          accesskey="&colorPicker.default.accesskey;" 
-          oncommand="EditorRemoveTextColor(null)"/>
-    	</menupopup>
-    </menu>
-
-    <menu id="backgroundColorMenu"
-          accesskey="&formatbkgdcolormenu.accesskey;"
-          position="5">
-    	<menupopup>
-        <colorpicker id="menuBackCP" palettename="standard"
-          oncommand="EditorSelectBackColor('menuBackCP',null);"/>
-        <menuitem value="&colorPicker.default.label;"
-          accesskey="&colorPicker.default.accesskey;" 
-          oncommand="EditorRemoveBackColor(null)"/>
-    	</menupopup>
-    </menu>
--->
-
+    <menuitem id="fontColor" value="&formatFontColor.label;" 
+          accesskey="&formatfontcolor.accesskey;"
+          oncommand="EditorSelectColor('Text')"
+          position="4"/>
     <menuseparator position="5"/>
+
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
-                accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-                oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
+          accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
+          oncommand="goDoCommand('cmd_removeStyles')"
+          position="6"/>
     <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
-                accesskey="&formatremovelinks.accesskey;"
-                oncommand="EditorRemoveLinks()" position="7"/>
+          accesskey="&formatremovelinks.accesskey;" key="removelinkskb"
+          oncommand="goDoCommand('cmd_removeLinks')"
+          position="7"/>
     <menuseparator position="8"/>
 
-    <!-- Note: the 'Init' menu methods for Heading, Paragraph, and List 
+    <!-- Note: the 'Init' menu methods for Paragraph and List 
          assume that the id = 'menu_'+tagName (the 'data' value),
          except for the first ('none') item
      -->
-    <!-- Heading Style submenu -->
-    <menu id="headingMenu" value="&headingMenu.label;"
-          accesskey="&formatheadingmenu.accesskey;"
-          position="9" oncreate="InitHeadingMenu()">
-      <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem id="menu_noHeading" type="radio" value="&noneCmd.label;"     accesskey="&none.accesskey;"     data=""/>
-        <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="h1"/>
-        <menuitem id="menu_h2"        type="radio" value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="h2"/>
-        <menuitem id="menu_h3"        type="radio" value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="h3"/>
-        <menuitem id="menu_h4"        type="radio" value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="h4"/>
-        <menuitem id="menu_h5"        type="radio" value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="h5"/>
-        <menuitem id="menu_h6"        type="radio" value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="h6"/>
-      </menupopup>
-    </menu>
-
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="10" oncreate="InitParagraphMenu()">
+          position="9" oncreate="InitParagraphMenu()">
       <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem id="menu_normal"  type="radio" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
-        <menuitem id="menu_p"       type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
-        <menuitem id="menu_address" type="radio" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
-        <menuitem id="menu_pre"     type="radio" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="pre"/>       
+        <menuitem id="menu_bodyText"  type="radio" value="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"              data=""/>
+        <menuitem id="menu_p"         type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
+        <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;"             accesskey="&heading1.accesskey;"            data="h1"/>
+        <menuitem id="menu_h2"        type="radio" value="&heading2Cmd.label;"             accesskey="&heading2.accesskey;"            data="h2"/>
+        <menuitem id="menu_h3"        type="radio" value="&heading3Cmd.label;"             accesskey="&heading3.accesskey;"            data="h3"/>
+        <menuitem id="menu_h4"        type="radio" value="&heading4Cmd.label;"             accesskey="&heading4.accesskey;"            data="h4"/>
+        <menuitem id="menu_h5"        type="radio" value="&heading5Cmd.label;"             accesskey="&heading5.accesskey;"            data="h5"/>
+        <menuitem id="menu_h6"        type="radio" value="&heading6Cmd.label;"             accesskey="&heading6.accesskey;"            data="h6"/>
+        <menuitem id="menu_address"   type="radio" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
+        <menuitem id="menu_pre"       type="radio" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="pre"/>       
         <menuseparator/>
         <menuitem id="menu_blockquote" type="checkbox" value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="blockquote"/>
       </menupopup>
@@ -535,7 +477,7 @@
     <!-- List Style submenu -->
     <menu id="listMenu" value="&formatlistMenu.label;"
           accesskey="&formatlistmenu.accesskey;"
-          position="11" oncreate="InitListMenu()">
+          position="10" oncreate="InitListMenu()">
       <menupopup>
         <menuitem id="menu_noList" type="radio" value="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
         <menuitem id="menu_ul"     type="radio" value="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
@@ -546,15 +488,15 @@
         <menuitem id="listProps" value="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
     </menu>
-    <menuseparator position="12"/>
+    <menuseparator position="11"/>
 
     <menuitem id="increaseIndent" value="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
-                observes="cmd_indent" position="13"/>
+                observes="cmd_indent" position="12"/>
     <menuitem id="decreaseIndent" value="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
-              observes="cmd_outdent"  position="14"/>
+              observes="cmd_outdent"  position="13"/>
 
     <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
-        position="15">
+        position="14">
       <!-- Align submenu -->
       <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('data'))">
         <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
@@ -563,7 +505,7 @@
         <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" data="justify"/>
       </menupopup>
     </menu>
-    <menuseparator position="16"/>
+    <menuseparator position="15"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
@@ -621,47 +563,11 @@
       <menuitem id="menu_JoinTableCells"   value="&tableJoinCells.label;"   accesskey="&tablejoincells.accesskey;"   observes="cmd_JoinTableCells"/>
       <menuitem id="menu_SlitTableCell"    value="&tableSplitCell.label;"   accesskey="&tablesplitcell.accesskey;"   observes="cmd_SplitTableCell"/>
       <menuseparator />
-      <!-- value is changed in InitTableMenu -->
-      <menuitem id="menu_TableOrCellColor" value="&tableOrCellColor.label;" accesskey="&formatbkgdcolormenu.accesskey;" observes="cmd_TableOrCellColor"/>
+      <menuitem id="menu_TableOrCellColor" value="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
       <!-- this is shared with Format Menu -->
       <menuitem id="menu_tableProperties"  value="&tableProperties.label;"  accesskey="&properties.accesskey;"     observes="cmd_editTable"/>
     </menupopup>
   </menu>
-
-  <popup id="TextColorPopup"  popupanchor="bottomleft" ignorekeys="true">
-    <text class="ColorPickerLabel" id="TextColorCaption" value="&textColorCaption.label;" flex="1"/>
-    <!-- TODO: Add "Last color picked" button and text -->
-    <box valign="middle" autostretch="never">
-      <text class="color-button"/>
-      <text class="label" value="&lastPickedColor.label;"/>
-    </box>
-    <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
-<!--
-    <box valign="middle" autostretch="never">
-      <text class="label" value="&colorLabel.label;"/>
-      <button class="dialog" value="&ok.label;" oncommand="SetManualTextColor()"/>
-    </box>
--->
-    <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
-  </popup>
-
-  <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup(true)" ignorekeys="true">
-    <!-- Text is filled in at runtime according to what background element will be set -->
-    <text class="ColorPickerLabel" id="BackColorCaption" value="Background Color" flex="1"/>
-    <!-- TODO: Add "Last color picked" button and text -->
-    <box valign="middle" autostretch="never">
-      <text class="color-button"/>
-      <text class="label" value="&lastPickedColor.label;"/>
-    </box>
-    <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
-<!--
-    <box valign="middle" autostretch="never">
-      <text class="label" value="&colorLabel.label;"/>
-      <button class="dialog" value="Ok" oncommand="SetManualBackColor()"/>
-    </box>
--->
-    <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
-  </popup>
 
   <!-- this is only used in mailnews -->
   <menupopup id="AlignmentPopup">
@@ -750,7 +656,7 @@
   <menulist id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
     <menupopup id="ParagraphPopup" oncommand="doStatefulCommand('cmd_paragraphState', event.target.data)">
-      <menuitem value="&normalCmd.label;"              data=""/>
+      <menuitem value="&bodyTextCmd.label;"            data=""/>
       <menuitem value="&paragraphParagraphCmd.label;"  data="p"/>
       <menuitem value="&heading1Cmd.label;"            data="h1"/>
       <menuitem value="&heading2Cmd.label;"            data="h2"/>
@@ -793,10 +699,14 @@
   </menulist>          
 
   <stack id="ColorButtons" autostretch="never">
-    <text class="color-button" id="BackColorPopupButton" popup="BackColorPopup"
-          tooltip="aTooltip"   tooltiptext="&BackColorPopupButton.tooltip;"/>
-    <text class="color-button" id="TextColorPopupButton" popup="TextColorPopup"
-          tooltip="aTooltip"   tooltiptext="&TextColorPopupButton.tooltip;"/>
+    <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
+    <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
+    <text class="color-button" id="BackgroundColorButton"
+          onclick="EditorSelectColor('')"
+          tooltip="aTooltip"   tooltiptext="&BackgroundColorButton.tooltip;"/>
+    <text class="color-button" id="TextColorButton"
+          onclick="EditorSelectColor('Text')"
+          tooltip="aTooltip"   tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
 
 <!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->

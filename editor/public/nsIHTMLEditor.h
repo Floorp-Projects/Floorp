@@ -301,25 +301,40 @@ public:
   NS_IMETHOD SetCaretToDocumentStart()=0;
 
   /**
-   * Document me!
-   * 
+   * SetParagraphFormat       Insert a block paragraph tag around selection
+   * @param aParagraphFormat  "p", "h1" to "h6", "address", "pre", or "blockquote"
    */
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat)=0;
 
   /**
-   * Document me!
-   * 
+   * GetParagraphState returns what block tag paragraph format is in the selection.
+   * @param aMixed     True if there is more than one format
+   * @param outState   Name of block tag. "" is returned for none.
    */
-  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFace)=0;
+  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outState)=0;
 
   /** 
    * GetFontFaceState returns what font face is in the selection.
    * @param aMixed    True if there is more than one font face
-   * @param outFace   name of face.  Note: "tt" is returned for
+   * @param outFace   Name of face.  Note: "tt" is returned for
    *                  tt tag.  "" is returned for none.
    */
   NS_IMETHOD GetFontFaceState(PRBool &aMixed, nsString &outFont)=0;
   
+  /** 
+   * GetFontColorState returns what font face is in the selection.
+   * @param aMixed     True if there is more than one font color
+   * @param outColor   Color string. "" is returned for none.
+   */
+  NS_IMETHOD GetFontColorState(PRBool &aMixed, nsString &outColor)=0;
+
+  /** 
+   * GetFontColorState returns what font face is in the selection.
+   * @param aMixed     True if there is more than one font color
+   * @param outColor   Color string. "" is returned for none.
+   */
+  NS_IMETHOD GetBackgroundColorState(PRBool &aMixed, nsString &outColor)=0;
+
   /** 
    * GetListState returns what list type is in the selection.
    * @param aMixed    True if there is more than one type of list, or

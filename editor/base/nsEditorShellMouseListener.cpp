@@ -234,20 +234,13 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   else if (buttonNumber == 1)
   {
 #ifdef DEBUG_cmanske
-    printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
+//    printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
 #endif
 
     if (tableMode && clickCount == 2)
     {
-#ifdef DEBUG_cmanske
-printf("nsEditorShellMouseListener:MouseDown-DoubleClick in TableMode\n");
-#endif
       if (!GetParentCell(aMouseEvent, getter_AddRefs(element)))
         GetParentTable(aMouseEvent, getter_AddRefs(element));
-#ifdef DEBUG_cmanske
-      else 
-printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
-#endif
     }
     // No table or cell -- look for other element (ignore text nodes)
     if (element)
@@ -274,6 +267,9 @@ printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
 nsresult
 nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+#ifdef DEBUG_cmanske
+printf("* nsEditorShellMouseListener::MouseUp message\n");
+#endif
   return NS_OK; // didn't handle event
 }
 

@@ -41,9 +41,6 @@ function Startup()
   // The word to add word is passed as the 2nd extra parameter in window.openDialog()
   WordToAdd = window.arguments[1];
   
-  //XXX CAN'T GET Enter or Esc keys to bind to "Close" button!
-  doSetOKCancel(Close, Close);
-
   WordInput = document.getElementById("WordInput");
   DictionaryList = document.getElementById("DictionaryList");
   
@@ -53,6 +50,8 @@ function Startup()
   // Select the supplied word if it is already in the list
   SelectWordToAddInList();
   SetTextfieldFocus(WordInput);
+
+  SetWindowLocation();
 }
 
 function ValidateWordToAdd()
@@ -186,8 +185,8 @@ dump("ResetSelectedItem to index="+index+"\n");
 
 function Close()
 {
-dump("Closing spelling dictionary dialog\n");
   // Shutdown the spell check and close the dialog
   spellChecker.UninitSpellChecker();
+  SaveWindowLocation();
   window.close();
 }

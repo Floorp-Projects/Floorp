@@ -46,10 +46,15 @@ var gOutputEncodeEntities = 256;
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
 var gPercent = 1;
+var gLocation;
 
 var maxPixels  = 10000;
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
 var SeeMore = false;
+
+// A XUL element with id="location" for managing 
+// dialog location relative to parent window
+var gLocation;
 
 // The element being edited - so AdvancedEdit can have access to it
 var globalElement;
@@ -104,12 +109,17 @@ function ValidateNumberString(value, minValue, maxValue)
   // Return an empty string to indicate error
   return "";
 }
+
 function SetTextfieldFocus(textfield)
 {
   if (textfield)
   {
     // Select entire contents
-    textfield.select(); //setSelectionRange(0, -1);
+    // This "fixes" bug 48400 temporarily by 
+    //   not calling "select" on empty textfields
+    if (textfield.value.length > 0)
+      textfield.select();
+
     textfield.focus();
   }
 }
@@ -576,11 +586,6 @@ function onAdvancedEdit()
   }
 }
 
-function onCancel()
-{
-  window.close();
-}
-
 function GetSelectionAsText()
 {
   return editorShell.GetContentsAs("text/plain", gOutputSelectionOnly);
@@ -918,4 +923,37 @@ function AppendHeadElement(element)
   var head = GetHeadElement();
   if (head)
     head.appendChild(element);
+}
+
+function SetWindowLocation()
+{
+  gLocation = document.getElementById("location");
+  if (gLocation)
+  {
+    offsetX = Number(gLocation.getAttribute("offsetX"));
+    offsetY = Number(gLocation.getAttribute("offsetY"));
+dump(" *** Dialog offsets: x="+offsetY+", y="+offsetY+"\n");
+    var newX = Math.min(window.opener.screenX + offsetX, screen.availWidth - window.outerWidth);
+    var newY = Math.min(window.opener.screenY + offsetY, screen.availHeight - window.outerHeight)
+    window.screenX = Math.max(0, newX);
+    window.screenY = Math.max(0, newY);
+  }
+}
+
+function SaveWindowLocation()
+{
+  if (gLocation)
+  {
+    var newOffsetX = window.screenX - window.opener.screenX;
+    var newOffsetY = window.screenY - window.opener.screenY;
+dump("*** New offsets saved: x="+newOffsetX+", y="+newOffsetY+"\n");
+    gLocation.setAttribute("offsetX", window.screenX - window.opener.screenX);
+    gLocation.setAttribute("offsetY", window.screenY - window.opener.screenY);
+  }
+}
+
+function onCancel()
+{
+  SaveWindowLocation();
+  window.close();
 }

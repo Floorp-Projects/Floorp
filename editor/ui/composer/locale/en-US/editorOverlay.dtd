@@ -248,6 +248,7 @@
 <!ENTITY insertmenu.accesskey "i">
 <!ENTITY insertLinkCmd.label "Link...">
 <!ENTITY insertlink.accesskey "l">
+<!ENTITY link.keybinding "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
 <!ENTITY insertanchor.accesskey "a">
 <!ENTITY insertCharsCmd.label "Characters and Symbols...">
@@ -345,46 +346,22 @@
 <!ENTITY styleVar.label "Variable">
 <!ENTITY styleVar.accesskey "v">
 
-<!ENTITY fontColorMenu.label "Text Color">
-<!ENTITY formatcolormenu.accesskey "c">
-<!ENTITY colorBlackCmd.label "Black">
-<!ENTITY colorblack.accesskey "l">
-<!ENTITY colorGrayCmd.label "Gray">
-<!ENTITY colorgray.accesskey "a">
-<!ENTITY colorSilverCmd.label "Silver">
-<!ENTITY colorsilver.accesskey "s">
-<!ENTITY colorWhiteCmd.label "White">
-<!ENTITY colorwhite.accesskey "w">
-<!ENTITY colorRedCmd.label "Red">
-<!ENTITY colorred.accesskey "r">
-<!ENTITY colorBlueCmd.label "Blue">
-<!ENTITY colorblue.accesskey "b">
-<!ENTITY colorGreenCmd.label "Green">
-<!ENTITY colorgreen.accesskey "g">
-<!ENTITY colorCyanCmd.label "Cyan">
-<!ENTITY colorcyan.accesskey "c">
-<!ENTITY colorYellowCmd.label "Yellow">
-<!ENTITY coloryellow.accesskey "y">
-<!ENTITY colorMagentaCmd.label "Magenta">
-<!ENTITY colormagenta.accesskey "m">
-<!-- LOCALIZATION NOTE ( formatbkgdcolormenu ):
- Menu item text for "[Page|Table|Cell] Background color" is filled from 
- editor.properties strings, so accesskey should be compatible with those
--->
-<!ENTITY formatbkgdcolormenu.accesskey "b">
-<!-- This shares formatbkgdcolormenu.accesskey, so it must contain that letter -->
-<!ENTITY tableOrCellColor.label "Table Background Color">
-
+<!ENTITY formatFontColor.label "Text Color...">
+<!ENTITY formatfontcolor.accesskey "c">
+<!ENTITY tableOrCellColor.label "Table or Cell Background Color...">
+<!ENTITY tableOrCellColor.accesskey "b">
 <!ENTITY removeAllStylesCmd.label "Remove All Text Styles">
 <!ENTITY formatremovestyles.accesskey "r">
 <!ENTITY formatremovestyles.keybinding "k">
 <!ENTITY removeLinksCmd.label "Remove Link(s)">
 <!ENTITY formatremovelinks.accesskey "m">
+<!ENTITY formatremovelinks.keybinding "l">
 <!ENTITY formatindent.keybinding "=">
 <!ENTITY formatoutdent.keybinding "-">
-<!ENTITY headingMenu.label "Heading">
-<!ENTITY formatheadingmenu.accesskey "h">
-
+<!ENTITY paragraphMenu.label "Paragraph">
+<!ENTITY formatparagraphmenu.accesskey "p">
+<!ENTITY paragraphParagraphCmd.label "Paragraph">  
+<!ENTITY paragraphparagraph.accesskey "p">
 <!ENTITY heading1Cmd.label "Heading 1">
 <!ENTITY heading1.accesskey "1">
 <!ENTITY heading2Cmd.label "Heading 2">
@@ -397,22 +374,18 @@
 <!ENTITY heading5.accesskey "5">
 <!ENTITY heading6Cmd.label "Heading 6">
 <!ENTITY heading6.accesskey "6">
-
-<!ENTITY paragraphMenu.label "Paragraph">
-<!ENTITY formatparagraphmenu.accesskey "p">
-<!ENTITY paragraphParagraphCmd.label "Paragraph">  
-<!ENTITY paragraphparagraph.accesskey "p">
-<!ENTITY paragraphBlockquoteCmd.label "Blockquote">
-<!ENTITY paragraphblockquote.accesskey "b">
 <!ENTITY paragraphAddressCmd.label "Address">
 <!ENTITY paragraphaddress.accesskey "a">
 <!ENTITY paragraphPreformatCmd.label "Preformat">
 <!ENTITY paragraphpreformat.accesskey "f">
-
+<!ENTITY paragraphBlockquoteCmd.label "Blockquote">
+<!ENTITY paragraphblockquote.accesskey "b">
 
 <!-- List menu items -->
 <!ENTITY formatlistMenu.label "List">
 <!ENTITY formatlistmenu.accesskey "l">
+<!ENTITY noneCmd.label "None">
+<!ENTITY none.accesskey "n">
 <!ENTITY listBulletCmd.label "Bulleted">
 <!ENTITY listbullet.accesskey "b">
 <!ENTITY listNumberedCmd.label "Numbered">
@@ -424,12 +397,10 @@
 <!ENTITY listProps.label "List Properties">
 <!ENTITY listprops.accesskey "l">
 
-<!-- Shared among Heading, Paragraph, and List submenus, and in toolbar menulist -->
 <!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
-<!ENTITY normalCmd.label "Body Text">
-<!ENTITY normal.accesskey "t">
-<!ENTITY noneCmd.label "None">
-<!ENTITY none.accesskey "n">
+<!-- Shared in Paragraph, and Toolbar menulist -->
+<!ENTITY bodyTextCmd.label "Body Text">
+<!ENTITY bodytext.accesskey "t">
 <!-- isn't used in menu now, but may be added in future -->
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
 <!ENTITY advancedproperties.accesskey "v">
@@ -572,18 +543,18 @@
 <!ENTITY spellToolbarCmd.label "Spell">
 <!ENTITY spellToolbarCmd.tooltip "Check spelling of selection or entire page">
 <!ENTITY imageToolbarCmd.label "Image">
-<!ENTITY imageToolbarCmd.tooltip "Insert new image or edit selected image properties">
+<!ENTITY imageToolbarCmd.tooltip "Insert new image or edit selected image's properties">
 <!ENTITY hruleToolbarCmd.label "H.Line">
-<!ENTITY hruleToolbarCmd.tooltip "Insert horizontal line or edit selected line properties">
+<!ENTITY hruleToolbarCmd.tooltip "Insert horizontal line or edit selected line's properties">
 <!ENTITY tableToolbarCmd.label "Table">
-<!ENTITY tableToolbarCmd.tooltip "Insert new table or edit selected table properties">
+<!ENTITY tableToolbarCmd.tooltip "Insert new table or edit selected table's properties">
 <!ENTITY linkToolbarCmd.label "Link">
-<!ENTITY linkToolbarCmd.tooltip "Insert new link or edit selected link properties">
+<!ENTITY linkToolbarCmd.tooltip "Insert new link or edit selected link's properties">
 <!ENTITY anchorToolbarCmd.label "Anchor">
-<!ENTITY anchorToolbarCmd.tooltip "Insert new anchor (target) or edit anchor properties">
+<!ENTITY anchorToolbarCmd.tooltip "Insert new named anchor or edit selected anchor's properties">
 <!ENTITY textColorCaption.label "Text Color">
-<!ENTITY TextColorPopupButton.tooltip "Choose color for text">
-<!ENTITY BackColorPopupButton.tooltip "Choose color for background">
+<!ENTITY TextColorButton.tooltip "Choose color for text">
+<!ENTITY BackgroundColorButton.tooltip "Choose color for background">
 
 <!-- editor toolbar -->
 <!ENTITY decreaseFontSizeToolbarCmd.tooltip "Smaller font size">
@@ -611,8 +582,6 @@
 <!ENTITY colorPicker.default.accesskey "r">
 <!ENTITY colorLabel.label "Color:">
 <!ENTITY ok.label "OK">
-<!ENTITY lastPickedColor.label "Last-picked color">
-
 
 <!-- Display Mode Toolbar and View Menu items -->
 <!ENTITY NormalModeTab.label "Normal">

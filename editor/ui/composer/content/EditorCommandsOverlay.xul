@@ -55,7 +55,7 @@
 
   <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
               accesskey="&formatremovelinks.accesskey;"
-              oncommand="EditorRemoveLinks()"/>
+              observes="cmd_RemoveLinks"/>
 
   <menuitem id="menu_preview" value="&previewCmd.label;"
               accesskey="&filepreview.accesskey;"

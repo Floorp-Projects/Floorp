@@ -37,7 +37,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   tableElement = editorShell.CreateElementWithDefaults(tagName);
   if(!tableElement)
@@ -80,6 +80,8 @@ function Startup()
   window.sizeToContent();
 
   SetTextfieldFocus(dialog.rowsInput);
+
+  SetWindowLocation();
 }
 
 // Set dialog widgets with attribute data
@@ -218,6 +220,7 @@ function onOK()
     } catch (e) {
       dump("Exception occured in InsertElementAtSelection\n");
     }
+    SaveWindowLocation();
     return true;
   }
   return false;

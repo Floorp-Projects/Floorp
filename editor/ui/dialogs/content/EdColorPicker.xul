@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+  -->
+
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EdColorPicker.dtd">
+<window class="dialog"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()"
+    orient="vertical"
+    >
+
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdColorPicker.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+
+  <broadcaster id="args" value=""/>
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+
+  <keyset id="keyset"/>
+  <!-- Weird, but using radiogroup makes radio buttons disappear -->
+  <!-- <radiogroup id="1" orient="horizontal"> -->
+  <box id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
+    <text value="&background.label;"/>
+    <radio group="1" id="TableRadio" value="&table.label;" oncommand="document.getElementById('CellRadio').checked=false"/>
+    <radio group="1" id="CellRadio"  value="&cell.label;"  oncommand="document.getElementById('TableRadio').checked=false"/>
+  </box>
+  <!-- </radiogroup> -->
+  <colorpicker id="ColorPicker" palettename="standard" 
+    persist="palettename"
+    onclick="SelectColor()"/>
+<!-- Web palette is not implemented???
+  <box valign="middle" autostretch="never">
+    <text class="label" value="&palette.label;"/>
+    <radio id="StandardPalette" value="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
+    <radio id="WebPalette" value="&webPalette.label;" oncommand="ChangePalette('web')"/>
+  </box>
+-->
+  <spring class="spacer"/>
+  <box orient="vertical" flex="1">
+    <stack valign="middle" autostretch="never">
+      <box style="margin-left: 5px" allowevents="true">
+        <box orient="vertical" autostretch="never">
+          <spring flex="1"/>
+          <spring id="LastPickedColor" onclick="SelectLastPickedColor()"
+                      LastTextColor="" LastBackgroundColor=""
+                      persist="LastTextColor LastBackgroundColor"/>
+          <spring flex="1"/>
+        </box>
+        <spring flex="1" allowevents="true"/>
+      </box>
+      <button id="LastPickedButton" class="dialog" value="&lastPickedColor.label;" 
+        style="min-height: 15px; margin-left:0px; margin-right: 0px; background: transparent"
+        onclick="SelectLastPickedColor()"/>
+    </stack>
+    <html  class="wrap" flex="1" style="width: 1em">&setColor.label;</html>
+    <box valign="middle" autostretch="never" flex="1=">
+      <textfield id="ColorInput" style="width: 10em" onkeyup="SetColorSwatch()"/>
+      <spring flex="1"/>
+      <spring id="ColorPickerSwatch"/>
+      <spring flex="1"/>
+      <button class="dialog" value="&default.label;" 
+        style="margin-right:0px;" oncommand="RemoveColor()"/>
+    </box>
+  </box>
+  <separator class="groove"/>
+  <!-- from global dialogOverlay -->
+	<box id="okCancelButtons"/> 
+</window>

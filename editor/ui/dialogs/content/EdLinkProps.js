@@ -44,7 +44,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   dialog = new Object;
   if (!dialog)
@@ -72,10 +72,8 @@ function Startup()
 
   // See if we have a single selected image
   imageElement = editorShell.GetSelectedElement("img");
-  
   if (imageElement)
   {
-dump("Selected imageElement="+imageElement+"\n");
     // Get the parent link if it exists -- more efficient than GetSelectedElement()
     anchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
     if (anchorElement)
@@ -96,8 +94,6 @@ dump("Selected imageElement="+imageElement+"\n");
     // Get an anchor element if caret or
     //   entire selection is within the link.
     anchorElement = editorShell.GetSelectedElement(tagName);
-
-dump("Selected element="+anchorElement+"\n");
 
     if (anchorElement)
     {
@@ -207,11 +203,9 @@ dump("Selected element="+anchorElement+"\n");
 
   // Set initial focus
   if (insertLinkAtCaret) {
-    dump("Setting focus to dialog.linkTextInput\n");
     // We will be using the HREF inputbox, so text message
     SetTextfieldFocus(dialog.linkTextInput);
   } else {
-    dump("Setting focus to dialog.linkTextInput\n");
     SetTextfieldFocus(dialog.hrefInput);
 
     // We will not insert a new link at caret, so remove link text input field
@@ -223,6 +217,8 @@ dump("Selected element="+anchorElement+"\n");
     
   // This sets enable state on OK button
   ChangeText();
+
+  SetWindowLocation();
 }
 
 // Set dialog widgets with attribute data
@@ -273,8 +269,6 @@ function FillListboxes()
       //  (this may miss nearby anchors, but at least we don't insert another
       //   under the same heading)
       var child = heading.firstChild;
-//      if( child && child.name )
-//        dump(child.name+" = Child.name. Length="+child.name.length+"\n");
       if (child && child.nodeName == "A" && child.name && (child.name.length>0))
         continue;
 
@@ -475,7 +469,6 @@ function onOK()
             anchorNode.name = name;
             // Remember to use editorShell method so it is undoable!
             editorShell.InsertElement(anchorNode, headNode, 0);
-dump("Anchor node created and inserted under heading\n");
           }
         } else {
           dump("HREF is a heading but is not in the list!\n");
@@ -488,6 +481,7 @@ dump("Anchor node created and inserted under heading\n");
       // We already had a link, but empty HREF means remove it
       editorShell.RemoveTextProperty("a", "");
     }
+    SaveWindowLocation();
     return true;
   }
   return false;

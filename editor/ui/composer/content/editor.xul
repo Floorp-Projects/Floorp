@@ -42,6 +42,7 @@
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
         onclose="return EditorCanClose()"
+        onfocus="EditorOnFocus()"
         contenttitlesettting="true"
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
@@ -93,11 +94,6 @@
     <broadcaster id="Editor:Throbber" busy="false"/>
   </broadcasterset>
 
-  <popupset>
-    <popup id="BackColorPopup"/>
-    <popup id="TextColorPopup"/>
-  </popupset>
-	
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 

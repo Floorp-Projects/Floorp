@@ -31,14 +31,20 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    persist="screenX screenY"
     orient="vertical">
 
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
   <script language="Javascript" src="chrome://global/content/strres.js" />
-  <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
+
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <keyset id="keys">
+    <key keycode="VK_ENTER"  oncommand="doDefault()"/>
+    <key keycode="VK_RETURN" oncommand="doDefault()"/>
+    <key keycode="VK_ESCAPE" oncommand="onClose()"/>
+  </keyset>
   <broadcaster id="args" value=""/>
+
   <grid>
     <columns><column/><column style="width: 15em" flex="1"/><column style="min-width: 8em"/></columns>
     <rows>
@@ -92,7 +98,7 @@
           <!-- contents are appended by JS -->
         <box flex="1">
           <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="exit-dialog" id="cancel" flex="1" value="&closeButton.label;" onclick="Close()"/>
+          <button class="dialog" id="Close" flex="1"   value="&closeButton.label;"   oncommand="onClose()"/>
         </box>
       </row>
     </rows>

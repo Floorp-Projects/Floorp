@@ -36,7 +36,6 @@
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	 xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
-   persist="screenX screenY"
    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -45,6 +44,7 @@
   <!--- Element-specific methods -->
   <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
   
@@ -69,6 +69,7 @@
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
     <radiogroup id="alignmentGroup" orient="horizontal">
+      <spring class="spacer"/>
       <radio group="alignmentGroup" id="leftAlign" value="&leftRadio.value;" />
       <radio group="alignmentGroup" id="centerAlign" value="&centerRadio.value;" />
       <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;" />

@@ -30,24 +30,23 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 <!-- dialog containing a control requiring initial setup -->
 <!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/1999/xhtml"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/Ed?????.js">
-  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/Ed?????.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:broadcaster id="args" value=""/>
-  <xul:keyset id="keyset"/>
+  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
 
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEdit"/>
+  <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
-</xul:window>
+	<box id="okCancelButtons"/> 
+</window>

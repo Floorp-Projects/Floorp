@@ -212,7 +212,7 @@ function Startup()
       CellTab.setAttribute("disabled", "true");
   }
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Note: we must use TableElement, not globalTableElement for these,
   //  thus we should not put this in InitDialog.
@@ -232,6 +232,8 @@ function Startup()
     dialog.SelectionList.focus(); 
   else
     SetTextfieldFocus(dialog.TableRowsInput);
+
+  SetWindowLocation();
 }
 
 
@@ -255,8 +257,8 @@ function InitDialog()
   else // Default = left
     dialog.TableAlignList.selectedIndex = 0;
   
-  TableCaptionElement = globalTableElement.caption;
-dump("Caption Element = "+TableCaptionElement+"\n");
+  // Be sure to get caption from table in doc, not the copied "globalTableElement"
+  TableCaptionElement = TableElement.caption;
   var index = 0;
   if (TableCaptionElement)
   {
@@ -964,19 +966,12 @@ function ApplyTableAttributes()
       if (newAlign != "top")
         TableCaptionElement.setAttribute("align", newAlign);
       
-dump("Insert a table caption...\n");
       // Insert it into the table - caption is always inserted as first child
-      //  but check if we are inserting inside a <tbody>
-      var parent;
-      if (TableElement.firstChild.nodeName.toLowerCase == "tbody")
-        parent = TableElement.firstChild;
-      else
-         parent = TableElement;
-
-      editorShell.InsertElement(TableCaptionElement, parent, 0);
+      editorShell.InsertElement(TableCaptionElement, TableElement, 0);
+      selection.collapse(TableCaptionElement, 0);
 
       // Put selecton back where it was
-      ChangeSelection(RESET_SELECTION);
+      //ChangeSelection(RESET_SELECTION);
     }
   }
 
@@ -1226,5 +1221,9 @@ function Apply()
 function onOK()
 {
   // Do same as Apply and close window if ValidateData succeeded
-  return Apply();
+  var retVal = Apply();
+  if (retVal)
+    SaveWindowLocation();
+
+  return retVal;
 }

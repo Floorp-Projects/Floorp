@@ -52,6 +52,8 @@ EdPageProps.xul
 EdPageProps.js
 EdColorProps.xul
 EdColorProps.js
+EdColorPicker.xul
+EdColorPicker.js
 EdAECSSAttributes.js
 EdAEHTMLAttributes.js
 EdAEJSEAttributes.js

@@ -32,7 +32,8 @@ XPIDLSRCS	= \
 		nsIEditorShell.idl \
 		nsIEditorSpellCheck.idl \
 		nsIDocumentStateListener.idl \
-        nsIEditorService.idl \
+		nsIEditorService.idl \
+		nsIEditorController.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

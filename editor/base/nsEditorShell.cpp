@@ -784,7 +784,7 @@ nsEditorShell::GetWebShellWindow(nsIDOMWindow * *aWebShellWindow)
 // tell the appcore what type of editor to instantiate
 // this must be called before the editor has been instantiated,
 // otherwise, an error is returned.
-NS_METHOD
+NS_IMETHODIMP
 nsEditorShell::SetEditorType(const PRUnichar *editorType)
 {  
   if (mEditor)
@@ -810,6 +810,21 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     NS_WARNING("Editor type not recognized");
     return NS_ERROR_UNEXPECTED;
   }
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetEditorType(PRUnichar **_retval)
+{
+  *_retval = nsnull;
+
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+
+  if (editor)
+  {
+    *_retval = mEditorTypeString.ToNewUnicode();
+  }
+  return err;
 }
 
 
@@ -5150,6 +5165,7 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   
   nsresult rv = NS_OK;
 
+/*
 #if DEBUG_cmanske
   nsAutoString TagName;
   aElement->GetTagName(TagName);
@@ -5158,6 +5174,7 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   TagName.ToCString(szTagName, 64);
   printf("***** Element clicked on: %s, x=%d, y=%d\n", szTagName, x, y);
 #endif
+*/
   if (mDisplayMode == eDisplayModeAllTags) 
   {
     // Always select the element in AllTags mode
@@ -5174,7 +5191,8 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
     //  2.  we need to get the size of the element!
 
     rv = SelectElement(aElement);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_SUCCEEDED(rv))
+      *_retval = PR_TRUE;
   }
 
   // For double-click, edit element properties

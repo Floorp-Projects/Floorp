@@ -22,7 +22,6 @@
 
 nsIEditor.h
 nsEditorCID.h
-nsIEditorController.h
 nsIEditActionListener.h
 nsICiter.h
 nsIEditorIMESupport.h

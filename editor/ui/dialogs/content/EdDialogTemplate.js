@@ -31,7 +31,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -42,6 +42,7 @@ function Startup()
   
   // SET FOCUS TO FIRST CONTROL
   //SetTextfieldFocus(dialog.editBox);
+  SetWindowLocation();
 }
 
 function InitDialog() {
@@ -78,5 +79,6 @@ function onOK()
       dump("Exception occured in InsertElementAtSelection\n");
     }
   }
- return true; // do close the window
+  SaveWindowLocation();
+  return true; // do close the window
 }

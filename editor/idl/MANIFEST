@@ -24,3 +24,4 @@ nsIEditorShell.idl
 nsIEditorSpellCheck.idl
 nsIDocumentStateListener.idl
 nsIEditorService.idl
+nsIEditorController.idl

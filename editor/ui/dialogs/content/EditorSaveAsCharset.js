@@ -41,7 +41,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, null);
+  doSetOKCancel(onOK, onCancel);
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -72,6 +72,8 @@ function Startup()
   SetTextfieldFocus(dialog.TitleInput);
   LoadAvailableCharSets();
   initDone = true;
+
+  SetWindowLocation();
 }
 
 function InitDialog() {
@@ -94,6 +96,7 @@ function onOK()
       editorShell.SetDocumentCharacterSet(charset);
    }
    window.opener.ok = true;
+   SaveWindowLocation();
    return true;
  }
  return false; 
