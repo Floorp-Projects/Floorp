@@ -83,6 +83,7 @@
 #include "nsIImage.h"
 #include "nsMacNativeUnicodeConverter.h"
 #include "nsICharsetConverterManager.h"
+#include "nsStylClipboardUtils.h"
 
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
@@ -409,6 +410,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
 	        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
 	          theMapper.MapMimeTypeToMacOSType(kTextMime);
 	          ::AddDragItemFlavor ( mDragRef, itemIndex, 'TEXT', NULL, 0, flags );	        
+	          ::AddDragItemFlavor ( mDragRef, itemIndex, 'styl', NULL, 0, flags );	        
 	        }
 	      }
           
@@ -774,7 +776,8 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     // if someone was asking for text/plain, lookup unicode instead so we can convert it.
     PRBool needToDoConversionToPlainText = PR_FALSE;
     const char* actualFlavor = mimeFlavor.get();
-    if ( strcmp(mimeFlavor.get(),kTextMime) == 0 ) {
+    if ( strcmp(mimeFlavor.get(),kTextMime) == 0 ||
+         inFlavor == 'styl' ) {
       actualFlavor = kUnicodeMime;
       needToDoConversionToPlainText = PR_TRUE;
     }
@@ -818,6 +821,10 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
           PRInt32 plainTextLen = 0;
           nsresult rv =
           nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
+
+          ScriptCodeRun *scriptCodeRuns = nsnull;
+          PRInt32 scriptRunOutLen;
+
           // if characters are not mapped from Unicode then try native API to convert to 
           // available script
           if (rv == NS_ERROR_UENC_NOMAPPING) {
@@ -825,25 +832,55 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
               nsMemory::Free(plainTextData);
               plainTextData = nsnull;
             }
-            ScriptCodeRun *scriptCodeRuns = nsnull;
-            PRInt32 scriptRunOutLen;
             rv = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(castedUnicode, 
                                                                      *outDataSize / sizeof(PRUnichar),
                                                                      &plainTextData, 
                                                                      &plainTextLen,
                                                                      &scriptCodeRuns,
                                                                      &scriptRunOutLen);
-            if (scriptCodeRuns)
-              nsMemory::Free(scriptCodeRuns);
+          }
+          else if (NS_SUCCEEDED(rv)) {
+            // create a single run with the default system script
+            scriptCodeRuns = NS_REINTERPRET_CAST(ScriptCodeRun*,
+                                                 nsMemory::Alloc(sizeof(ScriptCodeRun)));
+            if (scriptCodeRuns) {
+              scriptCodeRuns[0].offset = 0;
+              scriptCodeRuns[0].script = (ScriptCode) ::GetScriptManagerVariable(smSysScript);
+              scriptRunOutLen = 1;
+            }
           }
           
           if ( plainTextData && *outData ) {
             nsMemory::Free(*outData);
-            *outData = plainTextData;
-            *outDataSize = plainTextLen;
+            *outData = nsnull;
+            *outDataSize = 0;
+            
+            if (inFlavor != 'styl') {
+              *outData = plainTextData;
+              *outDataSize = plainTextLen;
+            }
+            else {
+              nsMemory::Free(plainTextData);  // discard 'TEXT'
+              
+              char *stylData;
+              PRInt32 stylLen;
+              // create 'styl' from the script runs
+              if (scriptCodeRuns) {
+                rv = CreateStylFromScriptRuns(scriptCodeRuns,
+                                                   scriptRunOutLen,
+                                                   &stylData,
+                                                   &stylLen);
+                if (NS_SUCCEEDED(rv)) {
+                  *outData = stylData;
+                  *outDataSize = stylLen;
+                }
+              }
+            }
           }
           else
             retVal = cantGetFlavorErr;
+          if (scriptCodeRuns)
+            nsMemory::Free(scriptCodeRuns);
         }
       }
     }
