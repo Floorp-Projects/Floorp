@@ -24,7 +24,7 @@ class nsTreeFrame;
 class nsTreeCellFrame : public nsTableCellFrame
 {
 public:
-  friend nsresult NS_NewTreeCellFrame(nsIFrame*& aNewFrame, PRBool allowEvents);
+  friend nsresult NS_NewTreeCellFrame(nsIFrame*& aNewFrame);
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
@@ -46,8 +46,10 @@ public:
   void Select(nsIPresContext& presContext, PRBool isSelected, PRBool notifyForReflow = PR_TRUE);
   nsTableFrame* GetTreeFrame();
 
+  void SetAllowEvents(PRBool allowEvents) { mAllowEvents = allowEvents; };
+
 protected:
-  nsTreeCellFrame(PRBool allowEvents);
+  nsTreeCellFrame();
   virtual ~nsTreeCellFrame();
 
   nsresult HandleMouseDownEvent(nsIPresContext& aPresContext, 
