@@ -89,7 +89,7 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
     PtArg_t arg;
     
     PtSetArg( &arg, Pt_ARG_TEXT_STRING,
-              NS_LossyConvertUCS2toASCII(aText).get(), 0 );
+              NS_ConvertUCS2toUTF8(aText).get(), 0 );
     PtSetResources( mWidget, 1, &arg );
   }
 

@@ -179,7 +179,7 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
     PtArg_t arg;
     
     PtSetArg( &arg, Pt_ARG_TEXT_STRING,
-              NS_LossyConvertUCS2toASCII(aText).get(), 0 );
+              NS_ConvertUCS2toUTF8(aText).get(), 0 );
     if( PtSetResources( mWidget, 1, &arg ) == 0 )
       res = NS_OK;
   }

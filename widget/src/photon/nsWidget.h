@@ -203,11 +203,6 @@ protected:
   // native windows / widgets for this logical widget
   virtual void DestroyNative(void);
 
-  // this is set when a given widget has the focus.
-  PRBool       mHasFocus;	
-  // 
-  PRBool mIsDragDest;
-
   //////////////////////////////////////////////////////////////////
   //
   // Photon event support methods
