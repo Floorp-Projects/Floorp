@@ -177,6 +177,7 @@ nsEventStateManager::nsEventStateManager()
   mBrowseWithCaret = PR_FALSE;
   hHover = PR_FALSE;
   mLeftClickOnly = PR_TRUE;
+  mNormalLMouseEventInProcess = PR_FALSE;
 
   NS_INIT_REFCNT();
 
@@ -338,6 +339,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    mNormalLMouseEventInProcess = PR_TRUE;
     break;
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     mMClickCount = ((nsMouseEvent*)aEvent)->clickCount;
@@ -352,6 +354,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     KillClickHoldTimer();
 #endif
     StopTrackingDragGesture();
+    mNormalLMouseEventInProcess = PR_FALSE;
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
@@ -614,25 +617,32 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if(focusedWindow) {
         focusedWindow->Focus();
 
-        if (focusedElement) {
-          nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
-          nsCOMPtr<nsIDOMDocument> domDoc;
-          nsCOMPtr<nsIDocument> document;
-          focusedWindow->GetDocument(getter_AddRefs(domDoc));
-          if (domDoc) {
-            document = do_QueryInterface(domDoc);
-            nsCOMPtr<nsIPresShell> shell;
-            nsCOMPtr<nsIPresContext> context;
-            document->GetShellAt(0, getter_AddRefs(shell));
-            NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
-            if (shell) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        nsCOMPtr<nsIDocument> document;
+        focusedWindow->GetDocument(getter_AddRefs(domDoc));
+        if (domDoc) {
+          document = do_QueryInterface(domDoc);
+          nsCOMPtr<nsIPresShell> shell;
+          document->GetShellAt(0, getter_AddRefs(shell));
+          NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
+          if (shell) {
+            if (focusedElement) {
+              nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
+              nsCOMPtr<nsIPresContext> context;
               shell->GetPresContext(getter_AddRefs(context));
               focusContent->SetFocus(context);
+            }
+
+            //disable selection mousedown state on activation
+            nsCOMPtr<nsIFrameSelection> frameSel;
+            shell->GetFrameSelection(getter_AddRefs(frameSel));
+            if (frameSel) {
+              frameSel->SetMouseDownState(PR_FALSE);
             }
           }
         }  
       }
-
+      
       if (focusController) {
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
@@ -1465,6 +1475,24 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
+      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !mNormalLMouseEventInProcess) {
+        //Our state is out of whack.  We got a mouseup while still processing
+        //the mousedown.  Kill View-level mouse capture or it'll stay stuck
+        nsCOMPtr<nsIViewManager> viewMan;
+        if (aView) {
+          aView->GetViewManager(*getter_AddRefs(viewMan));
+          if (viewMan) {
+            nsIView* grabbingView;
+            viewMan->GetMouseEventGrabber(grabbingView);
+            if (grabbingView == aView) {
+              PRBool result;
+              viewMan->GrabMouseEvents(nsnull, result);
+            }
+          }
+        }
+        break;
+      }
+        
       if (mConsumeFocusEvents) {
         mConsumeFocusEvents = PR_FALSE;
         break;
@@ -3721,6 +3749,17 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
+{
+  *aOK = PR_TRUE;
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    if (!mNormalLMouseEventInProcess) {
+      *aOK = PR_FALSE;
+    }
+  }
+  return NS_OK;
+}
 
 //-------------------------------------------
 // Access Key Registration
