@@ -965,7 +965,7 @@ SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
     	return b0 ? pubk->u.dh.publicValue.len :
 	    pubk->u.dh.publicValue.len - 1;
     case fortezzaKey:
-	return MAX(pubk->u.fortezza.KEAKey.len, pubk->u.fortezza.DSSKey.len);
+	return PR_MAX(pubk->u.fortezza.KEAKey.len, pubk->u.fortezza.DSSKey.len);
     default:
 	break;
     }
