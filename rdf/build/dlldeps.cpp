@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsIRDFContainer.h"
 #include "nsRDFParserUtils.h"
 #include "nsRDFResource.h"
 #include "nsString.h"
