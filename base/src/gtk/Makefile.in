@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gmbasegtk
 
-MODULE		= raptor
+MODULE=base
 
 REQUIRES	= xpcom raptor
 

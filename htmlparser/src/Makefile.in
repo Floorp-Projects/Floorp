@@ -84,7 +84,7 @@ EXPORTS += $(EXTRA_EXPORTS)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE=htmlparser
 
 REQUIRES = xpcom netlib raptor
 

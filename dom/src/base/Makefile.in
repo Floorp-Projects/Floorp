@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = jsdombase_s
 
-MODULE = raptor
+MODULE=dom
 
 REQUIRES = xpcom raptor dom js netlib
 

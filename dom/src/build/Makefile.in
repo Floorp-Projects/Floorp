@@ -28,7 +28,7 @@ CFLAGS	+= -D_IMPL_NS_DOM
 
 LIBRARY_NAME = jsdom
 
-MODULE=raptor
+MODULE=dom
 
 REQUIRES=xpcom raptor
 

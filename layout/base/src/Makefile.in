@@ -51,7 +51,7 @@ CPPSRCS =				\
 	nsLayoutAtoms.cpp		\
 	$(NULL)
 
-MODULE = raptor
+MODULE=layout
 
 EXPORTS = \
 	nsDocument.h \
@@ -69,5 +69,8 @@ REQUIRES = xpcom raptor dom netlib js pref
 TARGETS = $(LIBRARY)
 
 MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk

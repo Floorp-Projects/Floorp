@@ -30,7 +30,7 @@ EXPORTS =		\
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-MODULE = raptor
+MODULE=base
 
 include $(topsrcdir)/config/config.mk
 

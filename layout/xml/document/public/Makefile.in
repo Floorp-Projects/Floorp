@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = raptor
+MODULE=layout
 
 EXPORTS =				\
 	nsIXMLContentSink.h		\

@@ -59,11 +59,14 @@ INCLUDES += \
 	-I$(srcdir)/../../style/src -I$(srcdir)/../../table/src \
 	-I$(srcdir)/../../../base/src -I$(srcdir)/../../content/src
 
-MODULE = raptor
+MODULE=layout
 
 REQUIRES = xpcom raptor dom netlib js pref
 
 MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 

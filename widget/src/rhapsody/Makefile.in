@@ -27,7 +27,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = widgetunix
 
-MODULE=raptor
+MODULE=widget
 
 REQUIRES=util img xpcom raptor netlib
 
