@@ -212,11 +212,6 @@ public:
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
 
   /**
-   * Return the URL of the current WebShell.
-   */
-  NS_IMETHOD GetURL(const PRUnichar** aURL) = 0;
-
-  /**
    * Set the URL of the current WebShell.
    */
   NS_IMETHOD SetURL(const PRUnichar* aURL) = 0;

@@ -38,7 +38,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyObjectManager.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsDOMError.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIEvaluateStringProxy.h"
@@ -229,15 +229,11 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (originalURI) {
       referringUri = originalURI;
     } else {
-      nsCOMPtr<nsIWebShell> webShell;
-      webShell = do_QueryInterface(globalOwner);
-      if (!webShell)
+      nsCOMPtr<nsIDocShell> docShell;
+      docShell = do_QueryInterface(globalOwner);
+      if (!docShell)
         return NS_ERROR_FAILURE;
-      const PRUnichar* url;
-      if (NS_FAILED(webShell->GetURL(&url)))
-        return NS_ERROR_FAILURE;
-      nsString urlStr(url);
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(referringUri), urlStr, nsnull)))
+      if (NS_FAILED(docShell->GetCurrentURI(getter_AddRefs(referringUri))))
         return NS_ERROR_FAILURE;
     }
     if (NS_FAILED(securityManager->GetCodebasePrincipal(referringUri, 
