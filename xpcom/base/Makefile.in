@@ -38,6 +38,10 @@ CPPSRCS		= \
 		nsWeakReference.cpp \
 		$(NULL)
 
+ifdef GC_LEAK_DETECTOR
+CSRCS += nsGarbageCollector.c
+endif
+
 EXPORTS		= \
 		nsAgg.h \
 		nsIAllocator.h \
