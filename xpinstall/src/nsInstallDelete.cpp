@@ -137,21 +137,36 @@ void nsInstallDelete::Abort()
 char* nsInstallDelete::toString()
 {
     char* buffer = new char[1024];
+    char* rsrcVal = nsnull;
     
-    if (buffer == nsnull)
+    if (buffer == nsnull || !mInstall)
         return nsnull;
 
     if (mDeleteStatus == DELETE_COMPONENT)
     {
         char* temp = mRegistryName.ToNewCString();
-        sprintf( buffer, nsInstallResources::GetDeleteComponentString(), temp);
+        rsrcVal = mInstall->GetResourcedString("DeleteComponent");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, temp);
+            nsCRT::free(rsrcVal);
+        }
         if (temp)
             delete [] temp;
     }
     else
     {
         if (mFinalFile)
-            sprintf( buffer, nsInstallResources::GetDeleteFileString(), mFinalFile->GetCString());
+        {
+            rsrcVal = mInstall->GetResourcedString("DeleteComponent");
+
+            if (rsrcVal)
+            {
+                sprintf( buffer, rsrcVal, mFinalFile->GetCString());
+                nsCRT::free(rsrcVal);
+            }
+        }
     }
 
     return buffer;

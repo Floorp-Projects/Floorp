@@ -95,14 +95,24 @@ void nsInstallUninstall::Abort()
 char* nsInstallUninstall::toString()
 {
     char* buffer = new char[1024];
-    
-    if (buffer == nsnull)
+    char* rsrcVal = nsnull;
+
+    if (buffer == nsnull || !mInstall)
         return buffer;
     
     char* temp = mUIName.ToNewCString();
     
-    sprintf( buffer, nsInstallResources::GetUninstallString(), temp);
-    
+    if (temp)
+    {
+        rsrcVal = mInstall->GetResourcedString("Uninstall");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, temp);
+            nsCRT::free(rsrcVal);
+        }
+    }
+
     if (temp)
         delete [] temp;
 

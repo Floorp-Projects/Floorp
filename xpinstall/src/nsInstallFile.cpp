@@ -269,23 +269,41 @@ void nsInstallFile::Abort()
 char* nsInstallFile::toString()
 {
     char* buffer = new char[1024];
-    
-    if (buffer == nsnull)
-        return nsnull;
+    char* rsrcVal = "";
 
+    if (buffer == nsnull || !mInstall)
+        return nsnull;
+    
     if (mFinalFile == nsnull)
     {
-        sprintf( buffer, nsInstallResources::GetInstallFileString(), nsnull);
+        rsrcVal = mInstall->GetResourcedString("InstallFile");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, nsnull);
+            nsCRT::free(rsrcVal);
+        }
     }
     else if (mReplaceFile)
     {
         // we are replacing this file.
+        rsrcVal = mInstall->GetResourcedString("ReplaceFile");
 
-        sprintf( buffer, nsInstallResources::GetReplaceFileString(), mFinalFile->GetCString());
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, mFinalFile->GetCString());
+            nsCRT::free(rsrcVal);
+        }
     }
     else
     {
-        sprintf( buffer, nsInstallResources::GetInstallFileString(), mFinalFile->GetCString());
+        rsrcVal = mInstall->GetResourcedString("InstallFile");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, mFinalFile->GetCString());
+            nsCRT::free(rsrcVal);
+        }
     }
 
     return buffer;

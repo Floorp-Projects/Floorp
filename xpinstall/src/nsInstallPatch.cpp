@@ -319,12 +319,21 @@ void nsInstallPatch::Abort()
 char* nsInstallPatch::toString()
 {
 	char* buffer = new char[1024];
-    
-    if (buffer == nsnull)
+    char* rsrcVal = nsnull;
+
+    if (buffer == nsnull || !mInstall)
         return buffer;
 
-    if (mTargetFile != nsnull) 
-        sprintf( buffer, nsInstallResources::GetPatchFileString(), mTargetFile->GetCString()); 
+    if (mTargetFile != nsnull)
+    {
+        rsrcVal = mInstall->GetResourcedString("Patch");
+
+        if (rsrcVal)
+        {
+            sprintf( buffer, rsrcVal, mTargetFile->GetCString()); 
+            nsCRT::free(rsrcVal);
+        }
+    }
 
 	return buffer;
 }
