@@ -153,17 +153,25 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 	mExtensions = new_str(aPluginInfo->fExtensions);
 	mVariants = aPluginInfo->fVariantCount;
 
-	mMimeTypeArray = new char*[mVariants];
-	mMimeDescriptionArray = new char*[mVariants];
-	mExtensionsArray = new char*[mVariants];
-
-  if(mMimeTypeArray && mMimeDescriptionArray && mExtensionsArray) 
+  mMimeTypeArray = new char*[mVariants];
+  if(aPluginInfo->fMimeTypeArray != nsnull)
   {
-		for (int i = 0; i < mVariants; i++) {
+		for (int i = 0; i < mVariants; i++)
 			mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
+  }
+
+  mMimeDescriptionArray = new char*[mVariants];
+  if(aPluginInfo->fMimeDescriptionArray != nsnull) 
+  {
+		for (int i = 0; i < mVariants; i++)
 			mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
+  }
+
+  mExtensionsArray = new char*[mVariants];
+  if(aPluginInfo->fExtensionArray != nsnull) 
+  {
+		for (int i = 0; i < mVariants; i++)
 			mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
-		}
 	}
 
 	mFileName = new_str(aPluginInfo->fFileName);
