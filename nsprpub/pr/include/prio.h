@@ -1750,9 +1750,15 @@ NSPR_API(PRFileMap *) PR_CreateFileMap(
     PRInt64 size,
     PRFileMapProtect prot);
 
+/*
+ * return the alignment (in bytes) of the offset argument to PR_MemMap
+ */
+NSPR_API(PRInt32) PR_GetMemMapAlignment(void);
+
 NSPR_API(void *) PR_MemMap(
     PRFileMap *fmap,
-    PROffset64 offset,  /* must be aligned and sized to whole pages */
+    PROffset64 offset,  /* must be aligned and sized according to the
+                         * return value of PR_GetMemMapAlignment() */
     PRUint32 len);
 
 NSPR_API(PRStatus) PR_MemUnmap(void *addr, PRUint32 len);

@@ -665,6 +665,14 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     }
     return PR_SUCCESS;
 }
+
+PRInt32 _MD_GetMemMapAlignment(void)
+{
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return info.dwAllocationGranularity;
+}
+
 #include "prlog.h"
 extern PRLogModuleInfo *_pr_shma_lm;
 void * _MD_MemMap(

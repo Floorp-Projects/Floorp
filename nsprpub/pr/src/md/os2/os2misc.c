@@ -495,6 +495,13 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     return PR_FAILURE;
 }
 
+PRInt32 _MD_GetMemMapAlignment(void)
+{
+    PR_ASSERT(!"Not implemented");
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+}
+
 void * _MD_MemMap(
     PRFileMap *fmap,
     PROffset64 offset,

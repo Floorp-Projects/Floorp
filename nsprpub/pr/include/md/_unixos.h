@@ -455,6 +455,8 @@ struct _MDFileMap {
 extern PRStatus _MD_CreateFileMap(struct PRFileMap *fmap, PRInt64 size);
 #define _MD_CREATE_FILE_MAP _MD_CreateFileMap
 
+#define _MD_GET_MEM_MAP_ALIGNMENT PR_GetPageSize()
+
 extern void * _MD_MemMap(struct PRFileMap *fmap, PRInt64 offset,
         PRUint32 len);
 #define _MD_MEM_MAP _MD_MemMap

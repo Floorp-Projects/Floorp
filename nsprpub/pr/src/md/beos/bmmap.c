@@ -19,6 +19,13 @@ _PR_MD_CREATE_FILE_MAP(PRFileMap *fmap, PRInt64 size)
     return PR_FAILURE;
 }
 
+PR_EXTERN(PRInt32)
+_PR_MD_GET_MEM_MAP_ALIGNMENT(void)
+{
+    PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
+    return -1;
+}
+
 PR_EXTERN(void *)
 _PR_MD_MEM_MAP(PRFileMap *fmap, PRInt64 offset, PRUint32 len)
 {
