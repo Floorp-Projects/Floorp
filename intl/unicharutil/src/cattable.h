@@ -1431,7 +1431,7 @@ static PRUint8 GetCat(PRUnichar u)
     //  Handle block which use index table mapping    
     //
     // Handle U+0000 to U+06FF
-    if((((PRUnichar)0x0000)<=u)&&(u<=((PRUnichar)0x06FF))) {
+    if( (u<=((PRUnichar)0x06FF))) {
         pat = gGenCatPat[gGenCatIdx1 [( u -(PRUnichar) 0x0000 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
