@@ -972,7 +972,8 @@ MailFolder::ReadSummaryFile (char* url)
                             sscanf(&buff[9], "%d", &messageOffset);
                             PR_snprintf(nurl, nurllen, "%s?%d", url, messageOffset); // XXX unsafe
                             nsAutoString purl(nurl);
-                            rv = AddMessage(purl, this, rFrom, rSubject, rDate, summOffset,
+                            // XXX This casting away the const is bad...
+                            rv = AddMessage((PRUnichar*)(const PRUnichar*)purl, this, rFrom, rSubject, rDate, summOffset,
                                             messageOffset, flags, 0);
                         }
                     }
@@ -989,7 +990,8 @@ MailFolder::ReadSummaryFile (char* url)
                 if (strncmp("From ", buff, 5) ==0)  {
                     if (rFrom) {
                         nsAutoString purl(nurl);
-                        rv = AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
+                        // XXX This casting away the const is bad...
+                        rv = AddMessage((PRUnichar*)(const PRUnichar*)purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
                         if (rv != NS_OK) goto done;
                     }
                     messageOffset = ftell(mf);
@@ -1017,7 +1019,8 @@ MailFolder::ReadSummaryFile (char* url)
             }
             if (rFrom){
                 nsAutoString purl(nurl);
-                rv = AddMessage(purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
+                // XXX THis casting away the const is bad...
+                rv = AddMessage((PRUnichar*)(const PRUnichar*)purl, this, rFrom, rSubject, rDate, messageOffset, flags, nsnull);
                 // fall through with rv
             }
             fflush(mSummaryFile);
