@@ -112,8 +112,13 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
       url: aContentURL,
       bWebPanel: true
     }
+    var features;
+    if (!/Mac/.test(win.navigator.platform))
+      features = "centerscreen,chrome,dialog,resizable,dependent";
+    else
+      features = "chrome,dialog,resizable,modal";
     win.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                   "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
+                   features, dialogArgs);
 }
 
 /* decorate prototype to provide ``class'' methods and property accessors */
