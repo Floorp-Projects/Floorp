@@ -8,7 +8,7 @@
     <em:id>{8e117890-a33f-424b-a2ea-deb272731365}</em:id>
 
     <!-- Our current version -->
-    <em:version>0.8.1</em:version>
+    <em:version>0.8+</em:version>
 
     <em:targetApplication>
       <Description>

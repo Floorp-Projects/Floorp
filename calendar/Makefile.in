@@ -123,7 +123,7 @@ xpi::
 	fi
 	cp $(srcdir)/install.js ./xpi
 	cp $(srcdir)/install.rdf ./xpi
-	cd xpi; find other_stuff chrome components install.js \
+	cd xpi; find other_stuff chrome components install.js install.rdf \
 	   \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
 	echo "Done."
