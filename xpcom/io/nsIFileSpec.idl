@@ -128,11 +128,11 @@ interface nsIFileSpec : nsISupports
 	boolean eof();
 	long read(inout string buffer, in long requestedCount);
 	void readLine(inout string line, in long bufferSize, out boolean wasTruncated);
-%{C++
-                        // Check eof() before each call.
-                        // CAUTION: false result only indicates line was truncated
-                        // to fit buffer, or an error occurred (OTHER THAN eof).
-%}	
+
+    /** Check eof() before each call.
+     * CAUTION: false result only indicates line was truncated
+     * to fit buffer, or an error occurred (OTHER THAN eof).
+     */
 	long write(in string data, in long requestedCount);
 	void flush();
 	
