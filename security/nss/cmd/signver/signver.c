@@ -188,8 +188,6 @@ int main(int argc, char **argv)
 	char *typeTag = 0;
 	PRBool displayAllCerts = PR_FALSE;
 	PRBool displayAllSigners = PR_FALSE;
-	PRFileInfo info;
-	PRInt32 nb;
 	SECStatus secstatus;
 
 	secuCommand signver;
