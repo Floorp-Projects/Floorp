@@ -191,7 +191,6 @@ NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgre
 //#######################################################################################
 
 
-// Cut/paste subset of nsIAppShellComponentImpl.h (just what we need).
 
 /* Define instance counter implementation stuff. */
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
