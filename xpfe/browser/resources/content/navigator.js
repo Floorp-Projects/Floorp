@@ -429,7 +429,8 @@ function Startup()
     }
 
     // Focus the content area unless we're loading a blank page
-    if (uriToLoad == "about:blank" && window.locationbar.visible)
+    var navBar = document.getElementById("nav-bar");
+    if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
     else
       setTimeout(WindowFocusTimerCallback, 0, _content);
