@@ -476,6 +476,7 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 */
 extern PRStatus _MD_gethostname(char *name, int namelen);
 #define _MD_GETHOSTNAME		_MD_gethostname
+#define _PR_GET_HOST_ADDR_AS_NAME
 
 /* 
 	XXX _MD_WRITEV, _MD_SHUTDOWN & _MD_GETPEERNAME not done yet!!!
