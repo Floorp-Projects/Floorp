@@ -877,7 +877,8 @@ EOF
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
-    chmod 01777, 'data', 'graphs';
+    chmod 0777, 'data';
+    chmod 01777, 'graphs';
 }
 
 
