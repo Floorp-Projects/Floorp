@@ -621,7 +621,26 @@ static nsresult main1(int argc, char* argv[])
 static
 void DumpHelp(char *appname)
 {
-	printf("%s: help info here\n", appname);
+	printf("Usage: %s [ options ... ]\n", appname);
+  printf("       where options include:\n");
+  printf("\n");
+  printf("  -addressbook     Start with AddressBook window.\n");
+  printf("  -chrome <url>    Open chrome url..\n");
+  printf("  -compose         Start with mail compose window.\n");
+  printf("  -edit            Start with editor.\n");
+  printf("  -height <value>  Set height of startup window to <value>.\n");
+  printf("  -h               Print this message.\n");
+  printf("  -help            Print this message.\n");
+  printf("  -mail            Start with mail window.\n");
+  printf("  -news            Start with news window.\n");
+  printf("  -pref            Start with pref window.\n");
+  printf("  -width <value>   Set width of startup window to <value>.\n");
+  printf("  -v               Print %s version.\n", appname);
+  printf("  -version         Print %s version.\n", appname);
+  printf("\n");
+  printf("Arguments which are not options are interpreted as either files or\n");
+  printf("URLs to be loaded.\n");
+  printf("\n");
 }
 
 static
