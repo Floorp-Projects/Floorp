@@ -13,33 +13,30 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+MODULES_LIBJAR_LCPPSRCS = \
+		nsJARInputStream.cpp \
+		nsZipArchive.cpp \
+		nsJAR.cpp \
+		nsJARFactory.cpp \
+		nsWildCard.cpp \
+		$(NULL)
 
-include $(DEPTH)/config/autoconf.mk
-include $(srcdir)/objs.mk
+MODULES_LIBJAR_LEXPORTS = \
+		zipfile.h \
+		zipstub.h \
+		$(NULL)
 
-MODULE		= zlib
-LIBRARY_NAME	= z
+MODULES_LIBJAR_LXPIDLSRCS = \
+		nsIZipReader.idl \
+		$(NULL)
 
-CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
+MODULES_LIBJAR_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LCPPSRCS))
 
-EXPORTS		= $(MODULES_ZLIB_SRC_LEXPORTS)
-
-# need a static lib for some components (pngcom, say)
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
-override NO_STATIC_LIB=
-endif
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
-
-include $(topsrcdir)/config/rules.mk
+MODULES_LIBJAR_XPIDLSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LXPIDLSRCS))
 
