@@ -217,7 +217,6 @@ protected:
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 protected:
 	PRBool		mHaveReadNameFromDB;
-	PRBool		mGettingMail;
 	PRBool		mInitialized;
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a
                                     //time
