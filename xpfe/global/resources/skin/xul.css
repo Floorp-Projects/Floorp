@@ -6,6 +6,8 @@
    CHANGES REVIEWED BY hyatt@netscape.com.
 **/
 
+@import url(chrome://global/content/content.css);
+
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
 @namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
@@ -291,7 +293,7 @@ radiogroup
   }
 
 button, button.left {
-  /* user-focus: normal; */
+  /*user-focus: normal;*/
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
@@ -395,3 +397,126 @@ colorpicker {
     {
       behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-icon");
     } 
+    
+/** 
+ * Scrollbar <content> styles
+ **/    
+ 
+slider 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton 
+  {
+    display               : inline;
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbar[value="hidden"] 
+  {
+    visibility            : hidden;
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+thumb 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+thumb[disabled="true"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton:active 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton[type="decrement"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton[type="decrement"][disabled="true"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton[type="increment"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbarbutton[type="increment"][disabled="true"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+slider[align="vertical"] thumb:active 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+slider 
+  {
+    user-focus            : ignore;
+    user-select           : none;
+  }
+
+/**
+ * Status Bar 
+ **/  
+statusbar 
+  { 
+    user-focus            : ignore;
+    behavior              : url("resource:/chrome/xulBindings.xml#statusbar");
+  }
+
+statusbarpanel
+  {
+    user-focus            : ignore;
+    behavior              : url("resource:/chrome/xulBindings.xml#statusbar-panel");
+  }
