@@ -55,7 +55,8 @@ nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
-  mFloaters = 0;
+  mLeftFloaters = 0;
+  mRightFloaters = 0;
   return NS_OK;
 }
 
@@ -108,7 +109,8 @@ nsBlockBandData::ComputeAvailSpaceRect()
   nsBandTrapezoid* trapezoid = mTrapezoids;
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
-  PRInt32 floaters = 0;
+  PRInt32 leftFloaters = 0;
+  PRInt32 rightFloaters = 0;
   if (mCount > 1) {
     // If there's more than one trapezoid that means there are floaters
     PRInt32 i;
@@ -128,10 +130,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
             f->GetStyleData(eStyleStruct_Display,
                             (const nsStyleStruct*&)display);
             if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-              floaters++;
+              leftFloaters++;
             }
             else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              floaters++;
+              rightFloaters++;
               if ((nsnull == rightTrapezoid) && (i > 0)) {
                 rightTrapezoid = &mTrapezoids[i - 1];
               }
@@ -141,10 +143,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
           trapezoid->mFrame->GetStyleData(eStyleStruct_Display,
                                     (const nsStyleStruct*&)display);
           if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-            floaters++;
+            leftFloaters++;
           }
           else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            floaters++;
+            rightFloaters++;
             if ((nsnull == rightTrapezoid) && (i > 0)) {
               rightTrapezoid = &mTrapezoids[i - 1];
             }
@@ -155,9 +157,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
   }
   else if (mTrapezoids[0].mState != nsBandTrapezoid::Available) {
     // We have a floater using up all the available space
-    floaters = 1;
+    leftFloaters = 1;
   }
-  mFloaters = floaters;
+  mLeftFloaters = leftFloaters;
+  mRightFloaters = rightFloaters;
 
   if (nsnull != rightTrapezoid) {
     trapezoid = rightTrapezoid;
@@ -229,53 +232,6 @@ nsBlockBandData::ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
   }
   return result;
 }
-
-// XXX doesn't work because of margins around floaters and because of
-// % margins we can't really re-compute them here (nor would we want
-// too...)
-#if 0
-/**
- * Get the frames YMost, in the space managers "root" coordinate
- * system. Because the floating frame may have been placed in a
- * parent/child frame, we map the coordinates into the space-managers
- * untranslated coordinate system.
- */
-nscoord
-nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
-{
-  nsIFrame* spaceFrame;
-  mSpaceManager->GetFrame(spaceFrame);
-
-  nsRect r;
-  nsPoint p;
-  aFrame->GetRect(r);
-  nscoord y = r.y;
-  nsIFrame* parent;
-  aFrame->GetParent(&parent);
-  PRBool done = PR_FALSE;
-  while (!done && (parent != spaceFrame)) {
-    // If parent has a prev-in-flow, check there for equality first
-    // before looking upward.
-    nsIFrame* parentPrevInFlow;
-    parent->GetPrevInFlow(&parentPrevInFlow);
-    while (nsnull != parentPrevInFlow) {
-      if (parentPrevInFlow == spaceFrame) {
-        done = PR_TRUE;
-        break;
-      }
-      parentPrevInFlow->GetPrevInFlow(&parentPrevInFlow);
-    }
-
-    if (!done) {
-      parent->GetOrigin(p);
-      y += p.y;
-      parent->GetParent(&parent);
-    }
-  }
-
-  return y + r.height;
-}
-#endif
 
 // XXX optimization? use mFloaters to avoid doing anything
 nscoord
