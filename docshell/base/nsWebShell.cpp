@@ -71,6 +71,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
+#include "nsIFrameReflow.h"
 
 #include "nsMultiMixedConv.h" // for 
 #include "nsIRegistry.h"
@@ -186,6 +187,7 @@ public:
   NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h);
   NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
+  NS_IMETHOD SizeToContent();
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
@@ -1352,6 +1354,62 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
     mContentViewer->SetBounds(rr);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SizeToContent()
+{
+  nsresult rv;
+
+  // get the presentation shell
+  nsCOMPtr<nsIContentViewer> cv;
+  GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    nsCOMPtr<nsIDocumentViewer> dv = do_QueryInterface(cv);
+    if (dv) {
+      nsCOMPtr<nsIPresContext> pcx;
+      dv->GetPresContext(*getter_AddRefs(pcx));
+      if (pcx) {
+        nsCOMPtr<nsIPresShell> pshell;
+        pcx->GetShell(getter_AddRefs(pshell));
+
+        // whew! so resize the presentation shell
+        if (pshell) {
+          nsRect  shellArea;
+          PRInt32 width, height;
+          float   pixelScale;
+
+          rv = pshell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+
+          // so how big is it?
+          pcx->GetVisibleArea(shellArea);
+          pcx->GetTwipsToPixels(&pixelScale);
+          width = PRInt32((float)shellArea.width*pixelScale);
+          height = PRInt32((float)shellArea.height*pixelScale);
+
+          // if we're the outermost webshell for this window, size the window
+          if (mContainer) {
+            nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(mContainer);
+            if (browser) {
+              nsCOMPtr<nsIWebShell> browserWebShell;
+              PRInt32 oldX, oldY, oldWidth, oldHeight,
+                      widthDelta, heightDelta;
+              nsRect  windowBounds;
+
+              GetBounds(oldX, oldY, oldWidth, oldHeight);
+              widthDelta = width - oldWidth;
+              heightDelta = height - oldHeight;
+              browser->GetWindowBounds(windowBounds);
+              browser->SizeWindowTo(windowBounds.width + widthDelta, 
+                                    windowBounds.height + heightDelta);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

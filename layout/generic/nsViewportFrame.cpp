@@ -533,7 +533,8 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
 
   // If we were flowed initially at both an unconstrained width and height, 
   // this is a hint that we should return our child's intrinsic size.
-  if (eReflowReason_Initial == aReflowState.reason &&
+  if ((eReflowReason_Initial == aReflowState.reason ||
+       eReflowReason_Resize == aReflowState.reason) &&
       aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE &&
       aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.width = kidRect.width;

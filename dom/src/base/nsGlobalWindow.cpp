@@ -1477,6 +1477,14 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
 }
 
 NS_IMETHODIMP
+GlobalWindowImpl::SizeToContent()
+{
+  if (mWebShell)
+    return mWebShell->SizeToContent();
+  return NS_ERROR_NOT_INITIALIZED;
+}
+
+NS_IMETHODIMP
 GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
   return NS_OK;
