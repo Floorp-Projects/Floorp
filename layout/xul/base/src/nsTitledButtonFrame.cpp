@@ -301,7 +301,11 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
 		  accesskey.ToUpperCase();
 		  tmpstring += accesskey;
 		  tmpstring += ")";
-		  mTitle += tmpstring;
+		  PRUint32 offset = mTitle.RFind("...");
+		  if ( offset != kNotFound)
+			mTitle.Insert(tmpstring,offset);
+		  else
+		  	mTitle += tmpstring;
 	  }
   }
 #endif
