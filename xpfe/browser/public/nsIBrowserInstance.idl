@@ -64,11 +64,6 @@ interface nsIBrowserInstance : nsISupports {
     void copy();
     void selectAll();
     
-    
-
-    // View.
-    attribute boolean isViewSource;
-    
     // Search.
     void find();
     void findNext();
