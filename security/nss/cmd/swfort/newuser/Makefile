@@ -51,7 +51,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-ctmp := $(strip $(shell $(MAKE) -C ../../../lib/fortcrypt --no-print-directory cilib_name))
+ctmp := $(shell $(MAKE) -C ../../../lib/fortcrypt --no-print-directory cilib_name)
 ifeq ($(ctmp), $(patsubst /%,/,$(ctmp)))
   CILIB := ../../../lib/fortcrypt/$(ctmp)
 else
