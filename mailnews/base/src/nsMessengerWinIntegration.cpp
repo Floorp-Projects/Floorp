@@ -78,7 +78,12 @@
 #define PROFILE_COMMANDLINE_ARG " -p "
 #define MAIL_COMMANDLINE_ARG " -mail"
 #define TIMER_INTERVAL_PREF "mail.windows_xp_integration.unread_count_interval"
+
+#ifdef MOZ_STATIC_BUILD
+#define IDI_MAILBIFF 32520
+#else
 #define IDI_MAILBIFF 101
+#endif
 
 #define NEW_MAIL_ALERT_ICON "chrome://messenger/skin/icons/new-mail-alert.png"
 #define SHOW_ALERT_PREF "mail.biff.show_alert"
@@ -344,7 +349,11 @@ NOTIFYICONDATAW nsMessengerWinIntegration::mWideBiffIconData = { sizeof(NOTIFYIC
                                                     0 };
 
 #ifdef MOZ_THUNDERBIRD
+#ifdef MOZ_STATIC_BUILD
+#define MAIL_DLL_NAME "thunderbird.exe"
+#else
 #define MAIL_DLL_NAME "mail.dll"
+#endif
 #else
 #define MAIL_DLL_NAME "msgbase.dll"
 #endif

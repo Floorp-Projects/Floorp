@@ -68,9 +68,30 @@ IDD_SPLASH DIALOGEX
 			0,0,0,0
 	END
 
-// Splash screen bitmap.
-//IDB_SPLASH BITMAP
-//	"splash.bmp"
+#ifdef MOZ_STATIC_BUILD
+
+// XXX This code is copied from resource.h and widget.rc.  It's a work-around
+// for the limitation that only one resource file can be used in an .exe.  We
+// should develop a method, for static builds only, to combine multiple .rc
+// files into a single .rc file, and then use that to build the single .res
+// file for the .exe.
+
+// We need this cursor for versions of Windows that don't support IDC_HAND,
+// namely Win95 and NT4.
+#define IDC_SELECTANCHOR 4100
+IDC_SELECTANCHOR CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\select.cur"
+
+#define IDC_ZOOMIN       4114
+IDC_ZOOMIN       CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_in.cur"
+
+#define IDC_ZOOMOUT      4115
+IDC_ZOOMOUT      CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
+
+// For some reason IDI_MAILBIFF needs to be larger than the value of IDI_APPLICATION for static builds
+#define IDI_MAILBIFF 32520
+IDI_MAILBIFF  ICON  "..\\..\\mailnews\\build\\newmail.ico"
+
+#endif
 
 STRINGTABLE DISCARDABLE
 BEGIN

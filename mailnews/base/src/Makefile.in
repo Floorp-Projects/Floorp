@@ -130,6 +130,11 @@ ifeq ($(OS_ARCH),WINNT)
 REQUIRES	+= appcomps \
 		   profile \
 		   $(NULL)
+
+ifdef BUILD_STATIC_LIBS
+DEFINES	+= -DMOZ_STATIC_BUILD
+endif
+
 CPPSRCS		+= nsMessengerWinIntegration.cpp 
 endif
 
