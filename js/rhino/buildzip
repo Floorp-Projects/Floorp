@@ -1,0 +1,28 @@
+OMJ=org/mozilla/javascript
+rm $OMJ/*.class $OMJ/tools/*.class $OMJ/tools/shell/*.class $OMJ/RegExp/*.class $OMJ/optimizer/*.class $OMJ/debug/*.class $OMJ/tools/debugger/*.class
+javac -deprecation -O $OMJ/*.java $OMJ/regexp/*.java $OMJ/tools/*.java $OMJ/tools/shell/*.java org/mozilla/classfile/*.java $OMJ/debug/*.java
+javac -deprecation -O $OMJ/optimizer/*.java $OMJ/tools/jsc/*.java $OMJ/tools/debugger/*.java
+
+# remove unit test class
+rm org/mozilla/javascript/TestScan.class
+
+jar fcm js.jar manifest $OMJ/*.class $OMJ/regexp/*.class $OMJ/resources/*.properties org/mozilla/classfile/*.class $OMJ/tools/*.class $OMJ/tools/resources/*.properties $OMJ/tools/shell/*.class $OMJ/optimizer/*.class $OMJ/tools/jsc/*.class $OMJ/debug/*.class $OMJ/tools/debugger/*.class
+
+rhino -e 'print(Date())' > buildInfo.txt
+cvs stat -R >> buildInfo.txt
+
+# This assumes JDK1.2 JavaDoc
+rm -rf doc
+mkdir doc
+DOCDIR=../../../mozilla-org/html/rhino
+APICLASSES=`grep '// API class' org/mozilla/javascript/*.java | sed 's/:.*//'`
+javadoc -overview $DOCDIR/api.html -author -version -windowtitle Rhino -d doc $APICLASSES
+javadoc -overview $DOCDIR/api.html -author -version -windowtitle Rhino -d ../../../mozilla-org/html/js/rhino  $APICLASSES
+
+cd ..
+rm rhino/rhino.zip
+zip rhino/rhino.zip rhino/buildInfo.txt rhino/js.jar rhino/$OMJ/*.java rhino/$OMJ/resources/*.properties rhino/$OMJ/regexp/*.java rhino/$OMJ/tools/*.java rhino/$OMJ/tools/resources/*.properties rhino/$OMJ/tools/shell/*.java rhino/org/mozilla/classfile/*.java rhino/examples/*.java rhino/examples/*.js rhino/$OMJ/optimizer/*.java rhino/$OMJ/tools/jsc/*.java rhino/$OMJ/debug/*.java rhino/$OMJ/tools/debugger/*.java
+zip -r rhino/rhino.zip rhino/doc
+cd rhino
+rm -rf doc
+rm buildInfo.txt
