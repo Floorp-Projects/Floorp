@@ -1266,6 +1266,88 @@ nsRenderingContextPS::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord 
 }
 
 
+#ifdef USE_IMG2
+
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
+
+/* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
+NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+{
+  nsPoint pt;
+  nsRect sr;
+
+  pt = *aDestPoint;
+  mTranMatrix->TransformCoord(&pt.x, &pt.y);
+
+  sr = *aSrcRect;
+#if 0
+  // need to do this if we fix the comments below
+  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+
+  sr.x = aSrcRect->x;
+  sr.y = aSrcRect->y;
+#endif
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
+
+  nsCOMPtr<gfxIImageFrame> iframe;
+  aImage->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img) return NS_ERROR_FAILURE;
+
+  // doesn't it seem like we should use more of the params here?  see comments in bug 76993
+  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
+  //           pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
+  mPSObj->colorimage(img,
+                     NS_PIXELS_TO_POINTS(pt.x),
+                     NS_PIXELS_TO_POINTS(pt.y), 
+                     NS_PIXELS_TO_POINTS(sr.width),
+                     NS_PIXELS_TO_POINTS(sr.height));
+
+  return NS_OK;
+}
+
+/* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
+NS_IMETHODIMP nsRenderingContextPS::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
+{
+  nsRect dr;
+  nsRect sr;
+
+  dr = *aDestRect;
+  mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+
+#if 0
+  // need to do this if we fix the comments below
+  sr = *aSrcRect;
+  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+
+  sr.x = aSrcRect->x;
+  sr.y = aSrcRect->y;
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
+#endif
+
+  nsCOMPtr<gfxIImageFrame> iframe;
+  aImage->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img) return NS_ERROR_FAILURE;
+
+  // doesn't it seem like we should use more of the params here?  see comments in bug 76993
+  // img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
+  mPSObj->colorimage(img,
+                     NS_PIXELS_TO_POINTS(dr.x),
+                     NS_PIXELS_TO_POINTS(dr.y), 
+                     NS_PIXELS_TO_POINTS(dr.width),
+                     NS_PIXELS_TO_POINTS(dr.height));
+
+  return NS_OK;
+}
+
+#endif
 
 #ifdef MOZ_MATHML
   /**
