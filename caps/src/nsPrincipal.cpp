@@ -113,7 +113,6 @@ deleteElement(void* aElement, void *aData)
 nsPrincipal::~nsPrincipal(void)
 {
   mAnnotations.EnumerateForwards(deleteElement, nsnull);
-  delete mCert;
 }
 
 NS_IMETHODIMP
