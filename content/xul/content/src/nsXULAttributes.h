@@ -130,14 +130,52 @@ public:
 
     PRInt32 GetNameSpaceID() const { return mNameSpaceID; }
     nsIAtom* GetName() const { return mName; }
-    void SetValueInternal(const nsString& aValue) { mValue = aValue; }
+    nsresult SetValueInternal(const nsString& aValue);
 
 protected:
-    PRInt32     mNameSpaceID;
-    nsIAtom*    mName;
-    nsString    mValue;
-    nsIContent* mContent;
-    void*       mScriptObject;
+    nsIContent* mContent;      // The content object that owns the attribute
+    void*       mScriptObject; // The attribute's script object, if reified
+    PRInt32     mNameSpaceID;  // The attribute namespace
+    nsIAtom*    mName;         // The attribute name
+    void*       mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
+                               // with the low-order bit tagging its type
+
+    static const PRInt32 kMaxAtomValueLength;
+
+    enum {
+        kTypeMask   = 0x1,
+        kStringType = 0x0,
+        kAtomType   = 0x1
+    };
+
+    PRBool IsStringValue() {
+        return (PRWord(mValue) & kTypeMask) == kStringType;
+    }
+
+    nsresult GetValueInternal(nsString& aResult) {
+        nsresult rv = NS_OK;
+        if (! mValue) {
+            aResult.Truncate();
+        }
+        else if (IsStringValue()) {
+            aResult.Assign((const PRUnichar*) mValue);
+        }
+        else {
+            nsIAtom* atom = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
+            rv = atom->ToString(aResult);
+        }
+        return rv;
+    }
+
+    void ReleaseValue() {
+        if (IsStringValue()) {
+            delete[] (PRUnichar*)(mValue);
+        }
+        else {
+            nsIAtom* atom = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
+            NS_RELEASE(atom);
+        }
+    }
 };
 
 
@@ -185,7 +223,7 @@ protected:
     nsIContent*            mContent;
     nsClassList*           mClassList;
     nsCOMPtr<nsIStyleRule> mStyleRule;
-    nsVoidArray            mAttributes;
+    nsAutoVoidArray        mAttributes;
     void*                  mScriptObject;
 };
 
