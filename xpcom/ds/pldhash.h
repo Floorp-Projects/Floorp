@@ -50,7 +50,7 @@ PR_BEGIN_EXTERN_C
 #define PL_DHASHMETER 1
 #endif
 
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__) && defined(__i386__) && (__GNUC__ >= 3)
 #define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
 #else
 #define PL_DHASH_FASTCALL
