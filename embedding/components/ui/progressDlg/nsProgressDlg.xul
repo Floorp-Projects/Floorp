@@ -57,6 +57,7 @@ Contributor(s):
     <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
     <data id="dialog.strings.unknownTime">&unknownTime;</data>
     <data id="dialog.strings.pausedMsg">&pausedMsg;</data>
+    <data id="dialog.strings.filesFolder">&filesFolder;</data>
 
     <grid flex="1">
       <columns>
