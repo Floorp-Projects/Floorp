@@ -1154,14 +1154,13 @@
                         "bm_newfolder", "bm_separator", "bm_properties"];
             break;
           case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy", "bm_delete", "bm_separator", "bm_rename", "bm_separator",
-                        "bm_fileBookmark", "bm_separator", "bm_separator", "bm_properties"];
+            commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator", "bm_copy"];
             break;
           case "http://home.netscape.com/NC-rdf#IEFavorite":
-            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy"];
+            commands = ["bm_open", "bm_openinnewwindow", "bm_separator", "bm_copy"];
             break;
           case "http://home.netscape.com/NC-rdf#FileSystemObject":
-            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy"];
+            commands = ["bm_open", "bm_openinnewwindow", "bm_separator", "bm_copy"];
             break;
           default: 
             var source = this.rdf.GetResource(aNodeID);

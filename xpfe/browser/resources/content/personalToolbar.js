@@ -54,9 +54,6 @@ BookmarksToolbar.prototype = {
   /////////////////////////////////////////////////////////////////////////////
   // Personal Toolbar Specific Stuff
   
-  openNewWindow: false,
-
-
   get db ()
   {
     return this.element.database;
@@ -370,10 +367,9 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_paste":
       case "cmd_bm_delete":
       case "cmd_bm_selectAll":
-        return true;
       case "cmd_bm_open":
       case "cmd_bm_openfolder":
-      case "cmd_bm_openfolderinnewwindow":
+      case "cmd_bm_openinnewwindow":
       case "cmd_bm_newbookmark":
       case "cmd_bm_newfolder":
       case "cmd_bm_newseparator":
@@ -410,10 +406,11 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_open":
         var seln = gBookmarksShell.getSelection();
         return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Bookmark";
-      case "cmd_openfolder":
-      case "cmd_openfolderinnewwindow":
+      case "cmd_bm_openfolder":
         seln = gBookmarksShell.getSelection();
         return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Folder";
+      case "cmd_bm_openinnewwindow":
+        return true;
       case "cmd_bm_find":
       case "cmd_bm_newbookmark":
       case "cmd_bm_newfolder":
@@ -464,7 +461,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_rename":
       case "cmd_bm_open":
       case "cmd_bm_openfolder":
-      case "cmd_bm_openfolderinnewwindow":
+      case "cmd_bm_openinnewwindow":
       case "cmd_bm_setnewbookmarkfolder":
       case "cmd_bm_setpersonaltoolbarfolder":
       case "cmd_bm_setnewsearchfolder":
