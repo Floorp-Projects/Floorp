@@ -3375,6 +3375,17 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
       {
         // need to make a blockquote to put things in if we haven't already,
         // or if this node doesn't go in blockquote we used earlier.
+        // One reason it might not go in prio blockquote is if we are now
+        // in a different table cell. 
+        if (curQuote)
+        {
+          PRBool bInDifTblElems;
+          res = InDifferentTableElements(curQuote, curNode, &bInDifTblElems);
+          if (NS_FAILED(res)) return res;
+          if (bInDifTblElems)
+            curQuote = nsnull;
+        }
+        
         if (!curQuote) 
         {
           res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
@@ -6948,6 +6959,7 @@ nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2
   if (!aNode1 || !aNode2 || !aResult) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMNode> tn1, tn2, node = aNode1, temp;
+  *aResult = PR_FALSE;
   
   while (node && !nsHTMLEditUtils::IsTableElement(node))
   {
