@@ -27,7 +27,8 @@
   mDecArray[4].mCID  = &kISO2022JPToUnicodeCID;
   mDecArray[5].mCID  = &kEUCJPToUnicodeCID;
   
-  mEncSize           = 1;
+  mEncSize           = 2;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToLatin1CID;
+  mEncArray[1].mCID  = &kUnicodeToSJISCID;
