@@ -25,7 +25,6 @@ MODULE = xpcom
 
 EXPORTS =                     \
         nsIComponentManager.h \
-        nsIFactory.h          \
         nsIGenericFactory.h   \
         nsIRegistry.h         \
         nsIServiceManager.h   \
