@@ -45,7 +45,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIFormControl.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"

@@ -19,12 +19,14 @@
 #include "pratom.h"
 #include "nsUUDll.h"
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsCaseConversionImp2.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
@@ -82,7 +84,7 @@ nsresult nsUnicharUtilFactory::CreateInstance(nsISupports *aDelegate,
   return res;
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -103,16 +105,24 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) {
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::RegisterComponent(kUnicharUtilCID, NULL, NULL, path,
-                                       PR_TRUE, PR_TRUE);
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->RegisterComponent(kUnicharUtilCID, NULL, NULL, path,
+                                    PR_TRUE, PR_TRUE);
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::UnregisterFactory(kUnicharUtilCID, path);
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->UnregisterFactory(kUnicharUtilCID, path);
 }

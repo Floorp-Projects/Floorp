@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_PARSER_IID      \
   {0x2ce606b0, 0xbee6,  0x11d1,  \

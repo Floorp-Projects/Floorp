@@ -248,7 +248,7 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     if (nsnull == mLookAndFeel)
     {
-      nsRepository::CreateInstance(kLookAndFeelCID, nsnull,
+      nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull,
                                    kILookAndFeelIID, (void **)&mLookAndFeel);
     }
 

@@ -26,7 +26,7 @@
 #include "nsIScrollbar.h"
 #include "nsGUIEvent.h"
 #include "nsIDeviceContext.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIRenderingContext.h"
 #include "nsTransform2D.h"
 #include "nsIScrollableView.h"
@@ -648,7 +648,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             nsIBlender  *blender = nsnull;
             nsresult rv;
 
-            rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
+            rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
 
             if (NS_OK == rv)
             {
@@ -1251,7 +1251,7 @@ nsresult nsView :: LoadWidget(const nsCID &aClassIID)
   nsresult rv;
 
   static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  rv = nsRepository::CreateInstance(aClassIID, nsnull, kIWidgetIID, (void**)&mWindow);
+  rv = nsComponentManager::CreateInstance(aClassIID, nsnull, kIWidgetIID, (void**)&mWindow);
 
   if (NS_OK == rv)
   {

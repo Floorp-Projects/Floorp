@@ -43,7 +43,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFObserver.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsVoidArray.h"
 #ifdef NS_DEBUG
 #include "prlog.h"
@@ -381,12 +381,15 @@ public:
             nsIRDFResource* subRes;
             nsIRDFResource* predRes;
             nsIRDFResource* valRes;
+            const char* dsName;
             const char* subject;
             const char* predicate;
             char* value;
             nsIRDFDataSource* ds;
 
             rv = GetDataSource(&ds);
+            if (NS_FAILED(rv)) return;
+            rv = ds->GetURI(&dsName);
             if (NS_FAILED(rv)) return;
             rv = GetSubject(&subRes);
             if (NS_FAILED(rv)) return;
@@ -406,8 +409,8 @@ public:
                 value = PR_smprintf("<nsIRDFNode 0x%x>", valueNode);
             }
             if (value == nsnull) return;
-            printf("RDF %s: datasource=0x%x\n  subject: %s\n     pred: %s\n    value: %s\n",
-                   msg, ds, subject, predicate, value);
+            printf("RDF %s: datasource=%s\n  subject: %s\n     pred: %s\n    value: %s\n",
+                   msg, dsName, subject, predicate, value);
             NS_RELEASE(predRes);
             NS_RELEASE(subRes);
             PR_smprintf_free(value);

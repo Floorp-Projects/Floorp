@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #define NS_IMPL_IDS
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
@@ -167,7 +167,7 @@ static void TestCollation(nsILocale *locale)
    cout << "Start nsICollation Test \n";
    cout << "==============================\n";
    
-   res = nsRepository::CreateInstance(kCollationFactoryCID,
+   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                                 NULL,
                                 kICollationFactoryIID,
                                 (void**) &f);
@@ -179,7 +179,7 @@ static void TestCollation(nsILocale *locale)
      f->Release();
    }
 
-   res = nsRepository::CreateInstance(kCollationFactoryCID,
+   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                                 NULL,
                                 kICollationFactoryIID,
                                 (void**) &f);
@@ -467,7 +467,7 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
   cout << "Start sort Test \n";
   cout << "==============================\n";
 
-  res = nsRepository::CreateInstance(kCollationFactoryCID,
+  res = nsComponentManager::CreateInstance(kCollationFactoryCID,
                               NULL,
                               kICollationFactoryIID,
                               (void**) &factoryInst);
@@ -582,7 +582,7 @@ static void TestDateTimeFormat(nsILocale *locale)
 
   nsIDateTimeFormat *t = NULL;
   nsresult res;
-  res = nsRepository::CreateInstance(kDateTimeFormatCID,
+  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                               NULL,
                               kIDateTimeFormatIID,
                               (void**) &t);
@@ -594,7 +594,7 @@ static void TestDateTimeFormat(nsILocale *locale)
     t->Release();
   }
 
-  res = nsRepository::CreateInstance(kDateTimeFormatCID,
+  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                               NULL,
                               kIDateTimeFormatIID,
                               (void**) &t);
@@ -684,7 +684,7 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 	nsILocaleFactory*	localeFactory;
   nsresult res;
 
-	res = nsRepository::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
+	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
   if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
 
   res = localeFactory->NewLocale(localeName, locale);
@@ -719,25 +719,25 @@ int main(int argc, char** argv) {
   nsresult res; 
 
 #if !XP_PC
-  res = nsRepository::RegisterComponent(kCollationFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kCollationFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterComponent(kCollationCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kCollationCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterComponent(kDateTimeFormatCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kDateTimeFormatCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterComponent(kUnicharUtilCID, NULL, NULL, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kUnicharUtilCID, NULL, NULL, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-	res = nsRepository::RegisterComponent(kLocaleFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+	res = nsComponentManager::RegisterComponent(kLocaleFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterComponent failed.");
 
 #endif
@@ -748,7 +748,7 @@ int main(int argc, char** argv) {
 #if 0
 	nsILocaleFactory*	localeFactory;
 
-	res = nsRepository::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
+	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
   if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
 
   res = localeFactory->GetSystemLocale(&locale);
@@ -820,11 +820,11 @@ int main(int argc, char** argv) {
   cout << "Finish All The Test Cases\n";
 
 #if !XP_PC
-  res = nsRepository::FreeLibraries();
+  res = nsComponentManager::FreeLibraries();
   if(NS_FAILED(res))
-    cout << "nsRepository failed\n";
+    cout << "nsComponentManager failed\n";
   else
-    cout << "nsRepository FreeLibraries Done\n";
+    cout << "nsComponentManager FreeLibraries Done\n";
 #endif
   
   return 0;

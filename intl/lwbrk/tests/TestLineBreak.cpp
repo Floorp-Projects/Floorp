@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include <iostream.h>
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsILineBreakerFactory.h"
@@ -373,7 +373,7 @@ PRBool TestWordBreaker()
 
 extern "C" void NS_SetupRegistry()
 {
-   nsRepository::RegisterComponent(kLWBrkCID,  NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
+   nsComponentManager::RegisterComponent(kLWBrkCID,  NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
 }
 
 void   SamplePrintWordWithBreak();
@@ -579,12 +579,12 @@ int main(int argc, char** argv) {
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
    nsresult res = NS_OK;
-   res = nsRepository::FreeLibraries();
+   res = nsComponentManager::FreeLibraries();
 
    if(NS_FAILED(res))
-      cout << "nsRepository failed\n";
+      cout << "nsComponentManager failed\n";
    else
-      cout << "nsRepository FreeLibraries Done\n";
+      cout << "nsComponentManager FreeLibraries Done\n";
    if(lbok && wbok)
       cout <<  "Line/Word Break Test\nOK\n";
    else

@@ -474,7 +474,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
 {
   nsIDeviceContextSpecFactory *factory = nsnull;
 
-  nsRepository::CreateInstance(kDeviceContextSpecFactoryCID, nsnull,
+  nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, nsnull,
                                kIDeviceContextSpecFactoryIID, (void **)&factory);
 
   if (nsnull != factory)
@@ -514,7 +514,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         {
           nsresult rv;
 
-          rv = nsRepository::CreateInstance(kViewManagerCID, 
+          rv = nsComponentManager::CreateInstance(kViewManagerCID, 
                                             nsnull, 
                                             kIViewManagerIID, 
                                             (void **)&vm);
@@ -527,7 +527,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
 
           // Create a child window of the parent that is our "root view/window"
           // Create a view
-          rv = nsRepository::CreateInstance(kViewCID, 
+          rv = nsComponentManager::CreateInstance(kViewCID, 
                                             nsnull, 
                                             kIViewIID, 
                                             (void **)&view);
@@ -610,7 +610,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 {
     nsresult rv;
 
-    rv = nsRepository::CreateInstance(kViewManagerCID, 
+    rv = nsComponentManager::CreateInstance(kViewManagerCID, 
                                       nsnull, 
                                       kIViewManagerIID, 
                                       (void **)&mViewManager);
@@ -629,7 +629,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
     // Create a child window of the parent that is our "root view/window"
     // Create a view
-    rv = nsRepository::CreateInstance(kViewCID, 
+    rv = nsComponentManager::CreateInstance(kViewCID, 
                                       nsnull, 
                                       kIViewIID, 
                                       (void **)&mView);

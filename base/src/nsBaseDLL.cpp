@@ -20,7 +20,10 @@
 #include "nscore.h"
 #include "nsIProperties.h"
 #include "nsProperties.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 PRInt32 gLockCount = 0;
 
@@ -29,28 +32,26 @@ NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
 
-  ret = nsRepository::RegisterComponent(kPropertiesCID, NULL, NULL,
-    path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  return ret;
+  rv = compMgr->RegisterComponent(kPropertiesCID, NULL, NULL,
+                                  path, PR_TRUE, PR_TRUE);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
 
-  ret = nsRepository::UnregisterFactory(kPropertiesCID, path);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  return ret;
+  rv = compMgr->UnregisterFactory(kPropertiesCID, path);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult

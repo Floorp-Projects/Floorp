@@ -19,7 +19,7 @@
 
 #include <stdio.h>        // For printf, etc.
 
-#include "nsRepository.h" // For nsRepository.
+#include "nsIComponentManager.h" // For nsComponentManager.
 #include "nsIAppRunner.h" // For nsIAppRunner.
 
 // Define Class IDs.
@@ -37,12 +37,12 @@ int main(int argc, char* argv[]) {
   nsresult rv;
 
   // Initialize XPCOM.
-  rv = nsRepository::Initialize( registryFile );
+  rv = nsComponentManager::Initialize( registryFile );
 
   if ( rv == NS_OK ) {
       // Attempt to create appRunner.
       nsIAppRunner *appRunner = 0;
-      rv = nsRepository::CreateInstance( kIAppRunnerIID,
+      rv = nsComponentManager::CreateInstance( kIAppRunnerIID,
                                          0,
                                          kAppRunnerCID,
                                          (void**)&appRunner );
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
           fprintf( stderr, "Error creating appRunner object, rv=%lX\n", (unsigned long)rv );
       }
   } else {
-      fprintf( stderr, "Error initilizing nsRepository, rv=%lX\n", (unsigned long)rv );
+      fprintf( stderr, "Error initilizing nsComponentManager, rv=%lX\n", (unsigned long)rv );
   }
 
   return rv;

@@ -23,7 +23,7 @@
 
 #include "nsJVMManager.h"
 #include "nsCJVMManagerFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
@@ -147,7 +147,7 @@ nsCJVMManagerFactory::nsCJVMManagerFactory(void)
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
          NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
-         nsRepository::RegisterFactory(kCJVMManagerCID, NULL, NULL,
+         nsComponentManager::RegisterFactory(kCJVMManagerCID, NULL, NULL,
                                      m_pNSIFactory, PR_FALSE);
       }
 #endif
@@ -161,7 +161,7 @@ nsCJVMManagerFactory::~nsCJVMManagerFactory()
     if(mRefCnt == 0)
     {
       NS_DEFINE_CID(kCJVMManagerCID, NS_CCAPSMANAGER_CID);
-      nsRepository::UnregisterFactory(kCJVMManagerCID, (nsIFactory *)m_pNSIFactory);
+      nsComponentManager::UnregisterFactory(kCJVMManagerCID, (nsIFactory *)m_pNSIFactory);
       
     }
 #endif

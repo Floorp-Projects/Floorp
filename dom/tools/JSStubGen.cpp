@@ -99,7 +99,7 @@ static const char *kIncludeDefaultsStr = "\n"
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kIncludeConstructorStr =
 "#include \"nsIScriptNameSpaceManager.h\"\n"
-"#include \"nsRepository.h\"\n"
+"#include \"nsComponentManager.h\"\n"
 "#include \"nsDOMCID.h\"\n";
 
 static PRIntn 
@@ -1269,7 +1269,7 @@ static const char *kConstructorBeginStr =
 "    return JS_FALSE;\n"
 "  }\n"
 "\n"
-"  result = nsRepository::CreateInstance(classID,\n"
+"  result = nsComponentManager::CreateInstance(classID,\n"
 "                                        nsnull,\n"
 "                                        kIDOM%sIID,\n"
 "                                        (void **)&nativeThis);\n"

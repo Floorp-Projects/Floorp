@@ -22,7 +22,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIWidget.h"
 
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
@@ -88,7 +88,7 @@ void nsMenuButton::CreatePopUpMenu()
   }
 
   // Create and place back button
-  nsresult rv = nsRepository::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
+  nsresult rv = nsComponentManager::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
                                              (void**)&mPopUpMenu);
   if (NS_OK == rv) {
     nsIWidget * menuParentWidget;
@@ -125,7 +125,7 @@ NS_METHOD nsMenuButton::AddMenuItem(const nsString& aMenuLabel, PRInt32 aCommand
   CreatePopUpMenu();
 
   nsIMenuItem * menuItem = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
   menuItem->Create(mPopUpMenu, aMenuLabel, aCommand);
   if (NS_OK == rv) {
     mPopUpMenu->AddItem(menuItem);

@@ -35,7 +35,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsString.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prprf.h"
@@ -553,7 +553,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
             NS_RELEASE(fact);
         }
 #else
-        rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
+        rv = nsComponentManager::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                           nsnull, nsIRDFResource::GetIID(),
                                           (void**)&result);
 #endif
@@ -592,7 +592,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
             NS_RELEASE(fact);
         }
 #else
-        rv = nsRepository::CreateInstance(progID, nsnull,
+        rv = nsComponentManager::CreateInstance(progID, nsnull,
                                           nsIRDFResource::GetIID(),
                                           (void**)&result);
 #endif
@@ -613,7 +613,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
                 NS_RELEASE(fact);
             }
 #else
-            rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
+            rv = nsComponentManager::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                               nsnull, nsIRDFResource::GetIID(),
                                               (void**)&result);
 #endif
@@ -908,7 +908,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         NS_RELEASE(fact);
     }
 #else
-    rv = nsRepository::CreateInstance(progID, nsnull,
+    rv = nsComponentManager::CreateInstance(progID, nsnull,
                                       nsIRDFDataSource::GetIID(),
                                       (void**)aDataSource);
 #endif

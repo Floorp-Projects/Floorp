@@ -24,7 +24,7 @@
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 #include "nsIDTDDebug.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
@@ -216,7 +216,7 @@ extern "C" NS_EXPORT int DebugRobot(
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    rv = nsRepository::CreateInstance(kCParserCID, 
+    rv = nsComponentManager::CreateInstance(kCParserCID, 
                                       nsnull, 
                                       kCParserIID, 
                                       (void **)&parser);

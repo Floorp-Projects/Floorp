@@ -20,7 +20,7 @@
 
 #include "nsToolbarCore.h"
 #include "nsIBrowserWindow.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManager.h"

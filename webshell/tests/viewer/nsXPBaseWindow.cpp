@@ -33,7 +33,7 @@
 #include "nsIWidget.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nsWidgetsCID.h"
@@ -213,10 +213,10 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   // Create top level window
   nsresult rv;
   if (aType == eXPBaseWindowType_window) {
-    rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+    rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   } else {
-    rv= nsRepository::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
+    rv= nsComponentManager::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   }
 
@@ -235,7 +235,7 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mWindow->GetBounds(r);
 
   // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                     kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {

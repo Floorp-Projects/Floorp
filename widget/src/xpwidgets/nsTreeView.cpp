@@ -18,7 +18,7 @@
 
 #include "nspr.h"
 #include "nsString.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"

@@ -22,7 +22,7 @@
 // FOr JS Execution
 #include "nsIScriptContextOwner.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsXULCommand.h"
 

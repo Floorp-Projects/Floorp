@@ -26,7 +26,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
 
-// XXX move to nsID.h or nsHashtable.h? (copied from nsRepository.cpp)
+// XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
 class ThreadKey: public nsHashKey {
 private:
     const PRThread* id;

@@ -40,6 +40,7 @@
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
 #include "plstr.h"
+#include "prlog.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...

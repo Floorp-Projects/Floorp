@@ -46,7 +46,7 @@
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIFormManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -334,7 +334,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
   if (rv == NS_OK)
-    rv = nsRepository::CreateInstance(kCParserCID, 
+    rv = nsComponentManager::CreateInstance(kCParserCID, 
                                       nsnull, 
                                       kCParserIID, 
                                       (void **)&mParser);
@@ -1244,7 +1244,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
         static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
         static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-        result = nsRepository::CreateInstance(kCParserCID, 
+        result = nsComponentManager::CreateInstance(kCParserCID, 
                                               nsnull, 
                                               kCParserIID, 
                                               (void **)&mParser);

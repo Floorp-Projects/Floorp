@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsCapsEnums.h"
 #include "nsCCapsManager.h"
 #include "nsICodebasePrincipal.h"

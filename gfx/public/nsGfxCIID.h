@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_IMAGE_CID \
 { 0x6049b260, 0xc1e6, 0x11d1, \

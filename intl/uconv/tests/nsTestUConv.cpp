@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
@@ -80,25 +81,25 @@ nsresult setupRegistry()
 {
   nsresult res;
 
-  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kCP1253ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kCP1253ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kISO88597ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kISO88597ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kSJIS2UnicodeCID, NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kSJIS2UnicodeCID, NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kISO2022JPToUnicodeCID, NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kISO2022JPToUnicodeCID, NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
-  res = nsRepository::RegisterComponent(kPlatformCharsetCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+  res = nsComponentManager::RegisterComponent(kPlatformCharsetCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   return NS_OK;

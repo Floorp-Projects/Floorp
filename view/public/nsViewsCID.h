@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_VIEW_MANAGER_CID \
 { 0xc95f1831, 0xc376, 0x11d1, \

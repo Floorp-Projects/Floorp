@@ -303,7 +303,7 @@ class NS_BASE nsFileSpec
                                       relativePath(inRelativePath);
                                     return *this + relativePath;
                                 }
-        void			        operator += (const char* inRelativePath);
+        void                    operator += (const char* inRelativePath);
                                     // Concatenate the relative path to this directory.
                                     // Used for constructing the filespec of a descendant.
                                     // This must be a directory for this to work.  This differs
@@ -312,7 +312,7 @@ class NS_BASE nsFileSpec
                                     // away its leaf information, whereas this one assumes
                                     // this is a directory, and the relative path starts
                                     // "below" this.
-        void			        operator += (const nsString& inRelativePath)
+        void                    operator += (const nsString& inRelativePath)
                                 {
                                     const nsAutoCString relativePath(inRelativePath);
                                     *this += relativePath;

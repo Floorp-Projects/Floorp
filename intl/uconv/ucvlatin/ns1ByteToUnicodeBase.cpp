@@ -19,7 +19,7 @@
 
 #include "pratom.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
 #include "nsICharsetConverterManager.h"
@@ -46,7 +46,7 @@ NS_IMETHODIMP ns1ByteToUnicodeBase::Convert(PRUnichar * aDest, PRInt32 aDestOffs
   if(nsnull == mUtil)
   {
      nsresult res = NS_OK;
-     res = nsRepository::CreateInstance(
+     res = nsComponentManager::CreateInstance(
              kCharsetConverterManagerCID, 
              NULL,
              kIUnicodeDecodeUtilIID,

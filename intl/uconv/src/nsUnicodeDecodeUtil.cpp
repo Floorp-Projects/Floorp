@@ -19,7 +19,7 @@
 
 #include "pratom.h"
 #include "nsUConvDll.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsUnicodeDecodeUtil.h"
 #include "nsIUnicodeDecoder.h"
 

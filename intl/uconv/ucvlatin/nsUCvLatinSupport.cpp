@@ -18,7 +18,7 @@
  */
 
 #include "pratom.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsUCvLatinSupport.h"
 #include "nsUCvLatinDll.h"
 
@@ -296,7 +296,7 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsRepository::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
+    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
         kIUnicodeEncodeHelperIID, (void**) & mHelper);
     
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;

@@ -29,7 +29,7 @@
 #include "nsIWidget.h"
 #include "nsIToolbarItemHolder.h"
 #include "nsImageButton.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 

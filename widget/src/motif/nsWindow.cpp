@@ -209,7 +209,7 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
     //res = !NS_OK;
-    res = nsRepository::CreateInstance(kDeviceContextCID,
+    res = nsComponentManager::CreateInstance(kDeviceContextCID,
                                        nsnull, 
                                        kDeviceContextIID, 
                                        (void **)&mContext);
@@ -398,7 +398,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
       static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
         mContext->Init(nsnull);
@@ -1076,7 +1076,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
+    res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
     
     if (NS_OK == res)
       ctx->Init(mContext, this);
@@ -1353,7 +1353,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, 
+    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
 					      (void **)&event.renderingContext))

@@ -24,7 +24,7 @@
 #include "nsIPluginInstance.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"
 #include "nsIWebShell.h"
@@ -345,7 +345,7 @@ PluginViewerImpl::MakeWindow(nsNativeWidget aParent,
                              const nsRect& aBounds)
 {
   nsresult rv =
-    nsRepository::CreateInstance(kChildWindowCID, nsnull, kIWidgetIID,
+    nsComponentManager::CreateInstance(kChildWindowCID, nsnull, kIWidgetIID,
                                  (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;

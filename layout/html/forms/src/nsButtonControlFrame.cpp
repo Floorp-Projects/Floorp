@@ -169,7 +169,7 @@ nsButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip,
 {
   float pad;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonVerticalInsidePadding,  pad);
    NS_RELEASE(lookAndFeel);
   }
@@ -189,7 +189,7 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 padQuirks;
   PRInt32 padQuirksOffset;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonHorizontalInsidePadding,  pad);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingNavQuirks,  padQuirks);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks,  padQuirksOffset);

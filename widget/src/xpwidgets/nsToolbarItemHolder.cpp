@@ -19,7 +19,7 @@
 #include "nsToolbarItemHolder.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIToolbarItem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

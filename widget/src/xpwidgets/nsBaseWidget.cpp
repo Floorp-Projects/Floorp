@@ -147,7 +147,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                static NS_DEFINE_IID(kToolkitIID, NS_ITOOLKIT_IID);
 
                nsresult res;
-               res = nsRepository::CreateInstance(kToolkitCID, nsnull, kToolkitIID, (void **)&mToolkit);
+               res = nsComponentManager::CreateInstance(kToolkitCID, nsnull, kToolkitIID, (void **)&mToolkit);
                if (NS_OK != res)
                   NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
                if (mToolkit)
@@ -174,7 +174,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
       static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-      res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
+      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&mContext);
 
       if (NS_OK == res)
         mContext->Init(nsnull);
@@ -379,7 +379,7 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
   static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-  res = nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
+  res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
 
   if (NS_OK == res)
     renderingCtx->Init(mContext, this);

@@ -530,7 +530,7 @@ NS_IMETHODIMP nsRenderingContextMotif :: GetClipRegion(nsIRegion **aRegion)
   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
   static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
-  nsresult rv = nsRepository::CreateInstance(kCRegionCID, 
+  nsresult rv = nsComponentManager::CreateInstance(kCRegionCID, 
 					     nsnull, 
 					     kIRegionIID, 
 					     (void **)aRegion);

@@ -27,7 +27,7 @@
 #include "nsFont.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 #include "prprf.h"
@@ -335,7 +335,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFil
   mNumImages = aNumImages;
 
   // Create widget
-  nsresult rv = nsRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWidget);
+  nsresult rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWidget);
   if (NS_OK != rv) {
     return rv;
   }

@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsITimer.h"
 #include "nsNetService.h"
 #include "nsNetStream.h"

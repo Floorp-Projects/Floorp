@@ -19,7 +19,8 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 
 #include "nsTransactionManagerCID.h"
 #include "nsTransactionManager.h"
@@ -27,6 +28,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 class nsTransactionManagerFactory : public nsIFactory
 {
@@ -113,7 +115,7 @@ nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -132,15 +134,25 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::RegisterComponent(kCTransactionManagerFactoryCID,
-                                       NULL, NULL, path,
-                                       PR_TRUE, PR_TRUE);
+  nsresult rv;
+
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->RegisterComponent(kCTransactionManagerFactoryCID,
+                                    NULL, NULL, path,
+                                    PR_TRUE, PR_TRUE);
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  return nsRepository::UnregisterFactory(kCTransactionManagerFactoryCID, path);
+  nsresult rv;
+
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return compMgr->UnregisterFactory(kCTransactionManagerFactoryCID, path);
 }
 

@@ -86,6 +86,7 @@
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "rdfutil.h"
+#include "prlog.h"
 
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
@@ -344,7 +345,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kStyleAtom     = NS_NewAtom("style");
         kContainerAtom = NS_NewAtom("container");
 
-        rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
+        rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                           nsnull,
                                           kINameSpaceManagerIID,
                                           (void**) &gNameSpaceManager);
@@ -1008,7 +1009,7 @@ RDFElementImpl::GetListenerManager(nsIEventListenerManager** aResult)
         *aResult = mListenerManager;
         return NS_OK;
     }
-    nsresult rv = nsRepository::CreateInstance(kEventListenerManagerCID,
+    nsresult rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
                                                nsnull,
                                                kIEventListenerManagerIID,
                                                (void**) aResult);
@@ -1022,7 +1023,7 @@ RDFElementImpl::GetListenerManager(nsIEventListenerManager** aResult)
 NS_IMETHODIMP
 RDFElementImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
 {
-    return nsRepository::CreateInstance(kEventListenerManagerCID,
+    return nsComponentManager::CreateInstance(kEventListenerManagerCID,
                                         nsnull,
                                         kIEventListenerManagerIID,
                                         (void**) aResult);

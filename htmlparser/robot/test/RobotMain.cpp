@@ -2,7 +2,7 @@
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
 #include "nsString.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
 #ifdef XP_PC
@@ -22,7 +22,7 @@ int main(int argc, char **argv)
   }
 
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-  nsRepository::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   return DebugRobot(gWorkList, nsnull);
 }

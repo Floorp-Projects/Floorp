@@ -112,7 +112,7 @@ nsViewManager :: ~nsViewManager()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-    nsresult rv = nsRepository::CreateInstance(kRenderingContextCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
                                        nsnull, 
                                        kIRenderingContextIID, 
                                        (void **)&rc);
@@ -231,10 +231,10 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
   mKeyGrabber = nsnull;
 
   //create regions
-  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTransRgn);
-  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mOpaqueRgn);
-  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTRgn);
-  nsRepository::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mRCRgn);
+  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTransRgn);
+  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mOpaqueRgn);
+  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTRgn);
+  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mRCRgn);
 
   if (nsnull != mTransRgn)
     mTransRgn->Init();
@@ -749,7 +749,7 @@ for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 
                     if (nsnull == mBlender)
                     {
-                      if (NS_OK == nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
+                      if (NS_OK == nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
                         mBlender->Init(mContext);
                     }
 
@@ -2003,7 +2003,7 @@ void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) 
     static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
     // The view doesn't have a dirty region so create one
-    nsresult rv = nsRepository::CreateInstance(kRegionCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
                                        nsnull, 
                                        kIRegionIID, 
                                        (void **)&dirtyRegion);

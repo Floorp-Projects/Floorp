@@ -17,7 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCharsetConverterManager.h"
 #include "nsIUnicodeEncodeHelper.h"
@@ -26,6 +27,9 @@
 #include "nsPlatformCharsetFactory.h"
 #include "nsICharsetAlias.h"
 #include "nsCharsetAliasFactory.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -38,12 +42,12 @@ extern "C" PRInt32 g_LockCount = 0;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -102,40 +106,44 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
   return NS_NOINTERFACE;
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
-  nsresult res;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  res = nsRepository::RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
 
-  res = nsRepository::RegisterComponent(kCharsetAliasCID, NULL, NULL, path, 
+  rv = compMgr->RegisterComponent(kCharsetAliasCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
 
-  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kCharsetConverterManagerCID, NULL, NULL,
       path, PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) return rv;
 
-  res = nsRepository::RegisterComponent(kPlatformCharsetCID, NULL, NULL, path, 
+  rv = compMgr->RegisterComponent(kPlatformCharsetCID, NULL, NULL, path, 
       PR_TRUE, PR_TRUE);
-  return res;
+  return rv;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
-  nsresult res;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  res = nsRepository::UnregisterFactory(kUnicodeEncodeHelperCID, path);
-  if(NS_FAILED(res)) return res;
+  rv = compMgr->UnregisterFactory(kUnicodeEncodeHelperCID, path);
+  if(NS_FAILED(rv)) return rv;
 
-  res = nsRepository::UnregisterFactory(kCharsetAliasCID, path);
-  if(NS_FAILED(res)) return res;
+  rv = compMgr->UnregisterFactory(kCharsetAliasCID, path);
+  if(NS_FAILED(rv)) return rv;
 
-  res = nsRepository::UnregisterFactory(kCharsetConverterManagerCID, path);
-  if(NS_FAILED(res)) return res;
+  rv = compMgr->UnregisterFactory(kCharsetConverterManagerCID, path);
+  if(NS_FAILED(rv)) return rv;
 
-  res = nsRepository::UnregisterFactory(kPlatformCharsetCID, path);
-  return res;
+  rv = compMgr->UnregisterFactory(kPlatformCharsetCID, path);
+  return rv;
 }

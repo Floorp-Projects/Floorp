@@ -20,7 +20,7 @@
 #include "nsEditGuiManager.h"
 #include "nsGuiManagerFactory.h"
 #include "nsIEditor.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
@@ -119,7 +119,7 @@ nsGuiManagerFactory::nsGuiManagerFactory(nsIFactory **aFactory)
 
 nsGuiManagerFactory::~nsGuiManagerFactory()
 {
-  nsRepository::UnregisterFactory(kIGuiManagerFactoryIID, (nsIFactory *)this); //we are out of ref counts anyway
+  nsComponentManager::UnregisterFactory(kIGuiManagerFactoryIID, (nsIFactory *)this); //we are out of ref counts anyway
 }
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)

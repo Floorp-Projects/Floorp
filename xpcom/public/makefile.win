@@ -19,35 +19,36 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..
 
-EXPORTS = \
-	nsCOMPtr.h		\
-	nsAgg.h			\
-	nsCom.h			\
-	nsDebug.h		\
-	nsError.h		\
-	nsHashtable.h		\
-	nsICollection.h		\
-	nsID.h			\
-	nsIFactory.h		\
-	nsIID.h			\
-	nsISupports.h		\
-	nsISupportsUtils.h	\
-	nsIPtr.h		\
-	nsIServiceManager.h	\
-	nsISupportsArray.h	\
-    nsProxyEvent.h       \
-	nsRepository.h		\
-	nsIEnumerator.h		\
-	nsTraceRefcnt.h		\
-	nsVector.h		\
-	plvector.h		\
-    nsXPComFactory.h        \
-    nsXPComCIID.h           \
-    nsIEventQueueService.h  \
-    nsIAllocator.h          \
-    nsIRegistry.h  \
-    nsIGenericFactory.h \
-	$(NULL)			
+EXPORTS =                      \
+        nsCOMPtr.h             \
+        nsAgg.h                \
+        nsCom.h                \
+        nsDebug.h              \
+        nsError.h              \
+        nsHashtable.h          \
+        nsICollection.h        \
+        nsID.h                 \
+        nsIFactory.h           \
+	nsIID.h                \
+        nsISupports.h          \
+	nsISupportsUtils.h     \
+        nsIPtr.h               \
+        nsIServiceManager.h    \
+        nsISupportsArray.h     \
+        nsIComponentManager.h  \
+        nsRepository.h         \
+        nsProxyEvent.h         \
+        nsIEnumerator.h        \
+        nsTraceRefcnt.h        \
+        nsVector.h             \
+        plvector.h             \
+        nsXPComFactory.h       \
+        nsXPComCIID.h          \
+        nsIEventQueueService.h \
+        nsIAllocator.h         \
+        nsIRegistry.h          \
+        nsIGenericFactory.h    \
+        $(NULL)			
 
 MODULE = xpcom 
 

@@ -26,7 +26,7 @@
 
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsIDeviceContext.h"
 

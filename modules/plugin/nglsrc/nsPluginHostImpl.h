@@ -27,6 +27,7 @@
 #include "prlink.h"
 #include "nsIFileUtilities.h"
 #include "nsPluginsDir.h"
+#include "nsIServiceManager.h"
 
 class ns4xPlugin;
 class nsFileSpec;

@@ -34,7 +34,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIStyleSet.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
@@ -279,7 +279,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  rv = nsRepository::CreateInstance(kCParserCID, 
+  rv = nsComponentManager::CreateInstance(kCParserCID, 
                                     nsnull, 
                                     kCParserIID, 
                                     (void **)&mParser);

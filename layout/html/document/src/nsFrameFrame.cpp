@@ -23,7 +23,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
@@ -647,7 +647,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsIContent* content;
   GetParentContent(content);
 
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "could not create web widget");
@@ -704,7 +704,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   // create, init, set the parent of the view
   nsIView* view;
-  rv = nsRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
+  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, kIViewIID,
                                         (void **)&view);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "Could not create view for nsHTMLFrame");

@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsILoggingSink.h"
@@ -44,8 +44,8 @@ static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 
 static void SetupRegistry()
 {
-  nsRepository::RegisterComponent(kParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kLoggingSinkCID, NULL, NULL, PARSER_DLL,PR_FALSE,PR_FALSE);
+  nsComponentManager::RegisterComponent(kParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kLoggingSinkCID, NULL, NULL, PARSER_DLL,PR_FALSE,PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -61,7 +61,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
 
 		// Create a parser
 		nsIParser* parser;
-		nsresult rv = nsRepository::CreateInstance(kParserCID,nsnull,kIParserIID,(void**)&parser);
+		nsresult rv = nsComponentManager::CreateInstance(kParserCID,nsnull,kIParserIID,(void**)&parser);
 		if (NS_OK != rv) {
 			cout << "Unable to create a parser (" << rv << ")" <<endl;
 			return -1;
@@ -69,7 +69,7 @@ nsresult GenerateBaselineFile(const char* aSourceFilename,const char* aBaselineF
 
 		// Create a sink
 		nsILoggingSink* sink;
-		rv = nsRepository::CreateInstance(kLoggingSinkCID,nsnull,kILoggingSinkIID,(void**)&sink);
+		rv = nsComponentManager::CreateInstance(kLoggingSinkCID,nsnull,kILoggingSinkIID,(void**)&sink);
 		if (NS_OK != rv) {
 			cout << "Unable to create a sink (" << rv << ")" <<endl;
 			return -1;

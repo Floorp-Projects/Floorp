@@ -23,7 +23,7 @@
 #include "plstr.h"
 #include "nsINetPlugin.h"
 #include "nsINetPluginInstance.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsNetConverterStream.h"
 
 
@@ -188,13 +188,13 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 		return NULL;
 	}
 
-	if (nsRepository::ProgIDToCLSID(mime_type, &classID) != NS_OK)
+	if (nsComponentManager::ProgIDToCLSID(mime_type, &classID) != NS_OK)
 	{
 		unregister_converter(mime_type, (void *)URL_s);
 		return NULL;
 	}
 
-	nsRepository::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
+	nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
 
 	if (plugin_inst == NULL)
 	{

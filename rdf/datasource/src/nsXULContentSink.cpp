@@ -570,7 +570,7 @@ XULContentSinkImpl::LoadStyleSheet(nsIURL* aURL,
 {
     nsresult rv;
     nsCOMPtr<nsICSSParser> parser;
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kCSSParserCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kCSSParserCID,
                                                     nsnull,
                                                     nsICSSParser::GetIID(),
                                                     (void**) getter_AddRefs(parser)))) {

@@ -38,13 +38,13 @@
 #include "nsIURL.h"
 #include "nsIFileWidget.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nsWidgetsCID.h"
 #include "nsViewerApp.h"
 #include "prprf.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
 #include "nsIXPBaseWindow.h"
@@ -457,7 +457,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
-  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  nsresult rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                        (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
@@ -472,7 +472,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
   // Create web shell
-  rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                     kIWebShellIID,
                                     (void**)&mWebShell);
   if (NS_OK != rv) {
@@ -765,7 +765,7 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Open HTML");
-  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
                                              nsnull,
                                              kIFileWidgetIID,
                                              (void**)&fileWidget);
@@ -1060,7 +1060,7 @@ void nsBrowserWindow::DoFind()
   nsString title("Find");
 
   nsXPBaseWindow * dialog = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
@@ -1130,7 +1130,7 @@ NS_CreateImageButton(nsISupports    *aParent,
   }
 
   // Create MenuButton
-  nsresult rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
+  nsresult rv = nsComponentManager::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
                        (void**)&aButton);
   if (NS_OK != rv) {
     return rv;
@@ -1196,7 +1196,7 @@ NS_CreateMenuButton(nsISupports    *aParent,
   }
 
   // Create MenuButton
-  nsresult rv = nsRepository::CreateInstance(kMenuButtonCID, nsnull, kIMenuButtonIID,
+  nsresult rv = nsComponentManager::CreateInstance(kMenuButtonCID, nsnull, kIMenuButtonIID,
                        (void**)&aButton);
   if (NS_OK != rv) {
     return rv;
@@ -1248,7 +1248,7 @@ nsBrowserWindow::AddToolbarItem(nsIToolbar    *aToolbar,
 
   // Create the generic toolbar holder for widget
   nsIToolbarItemHolder * toolbarItemHolder;
-  nsresult rv = nsRepository::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
+  nsresult rv = nsComponentManager::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
                       (void**)&toolbarItemHolder);
   if (NS_OK != rv) {
     return rv;
@@ -1290,7 +1290,7 @@ nsBrowserWindow::DoAppsDialog()
     nscolor textFGColor = NS_RGB(255, 255, 255);
 
     nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
@@ -1309,7 +1309,7 @@ nsBrowserWindow::DoAppsDialog()
     //
     nsRect rect(0, 0, (40*4)+8, 23+31);  
 
-    nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mAppsDialog);
+    nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mAppsDialog);
     nsIWidget* widget = nsnull;
     NS_CreateDialog(mWindow, mAppsDialog, rect, HandleGUIEvent, &font);
     if (NS_OK == mAppsDialog->QueryInterface(kIWidgetIID,(void**)&widget)) {
@@ -1374,7 +1374,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nscolor widgetBGColor = NS_RGB(192, 192, 192);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
     lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground,  textBGColor);
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
@@ -1396,7 +1396,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   //----------------------------------------------------
   // Create Toolbar Manager
   //----------------------------------------------------
-  rv = nsRepository::CreateInstance(kToolbarManagerCID, nsnull, kIToolbarManagerIID,
+  rv = nsComponentManager::CreateInstance(kToolbarManagerCID, nsnull, kIToolbarManagerIID,
                   (void**)&mToolbarMgr);
   if (NS_OK != rv) {
     return rv;
@@ -1417,7 +1417,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   //----------------------------------------------------
   // Create Button Toolbar
   //----------------------------------------------------
-  rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
+  rv = nsComponentManager::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mBtnToolbar);
   if (NS_OK != rv) {
     return rv;
@@ -1495,7 +1495,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
             THROBBER_WIDTH, THROBBER_HEIGHT);
-  rv = nsRepository::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
+  rv = nsComponentManager::CreateInstance(kThrobberCID, nsnull, kIThrobberIID,
                                     (void**)&mThrobber);
   if (NS_OK != rv) {
     return rv;
@@ -1520,7 +1520,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   //----------------------------------------------------
   // Create URL Toolbar
   //----------------------------------------------------
-  rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
+  rv = nsComponentManager::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                                     (void**)&mURLToolbar);
   if (NS_OK != rv) {
     return rv;
@@ -1545,7 +1545,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   //------
   // Create and place Bookmark button
   //------
-  rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
+  rv = nsComponentManager::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
                                     (void**)&mBookmarks);
   if (NS_OK != rv) {
     return rv;
@@ -1608,7 +1608,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Create and place URL Text Field
   r.SetRect(0, 0, 200, 24);
 
-  rv = nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
+  rv = nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                     (void**)&mLocation);
   if (NS_OK != rv) {
     return rv;
@@ -1659,7 +1659,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   // Load Personal Toolbar
   //----------------------------------------------
   nsIToolbar * personalToolbar;
-  rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
+  rv = nsComponentManager::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                                     (void**)&personalToolbar);
   if (NS_OK != rv) {
     return rv;
@@ -1744,7 +1744,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   nscolor widgetBGColor = NS_RGB(192, 192, 192);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
     NS_RELEASE(lookAndFeel);
@@ -1761,7 +1761,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   //----------------------------------------------------
   // Create StatusBar as a Toolbar
   //----------------------------------------------------
-  rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
+  rv = nsComponentManager::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mStatusBar);
   if (NS_OK != rv) {
     return rv;
@@ -1846,7 +1846,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   // Create Mini Tools Toolbar
   //----------------------------------------------------
   rrr.SetRect(0, 0, 150, 18); 
-  rv = nsRepository::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
+  rv = nsComponentManager::CreateInstance(kToolbarCID, nsnull, kIToolbarIID,
                   (void**)&mStatusAppBar);
   if (NS_OK != rv) {
     return rv;
@@ -2023,7 +2023,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nscoord txtHeight;
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
     NS_RELEASE(lookAndFeel);
   } else {
@@ -2727,7 +2727,7 @@ nsBrowserWindow::DoCopy()
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+      nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                            nsnull, 
                            kCParserIID, 
                            (void **)&parser);
@@ -2813,7 +2813,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
           if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, (void **)&domDoc)))
           { //returns an addreffed domdocument
             nsIEditor *editor;
-            if (NS_SUCCEEDED(nsRepository::CreateInstance(kEditorCID, nsnull, kIEditorIID, (void **)&editor)))
+            if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kEditorCID, nsnull, kIEditorIID, (void **)&editor)))
             {
               editor->Init(domDoc);
               AddEditor(editor); //new call to set the editor interface this will addref
@@ -3109,7 +3109,7 @@ static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
   nsString title("Save HTML");
-  nsresult rv = nsRepository::CreateInstance(kFileWidgetCID,
+  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
                        nsnull,
                        kIFileWidgetIID,
                        (void**)&fileWidget);
@@ -3177,7 +3177,7 @@ nsBrowserWindow::DoDebugSave()
     static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-    nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                          nsnull, 
                          kCParserIID, 
                          (void **)&parser);
@@ -3268,7 +3268,7 @@ typedef struct _menuBtns {
 nsIMenu * CreateMenu(nsIMenu * aMenu, const nsString &  aName, char aMneu)
 {
   nsIMenu * menu;
-  nsresult rv = nsRepository::CreateInstance(kMenuCID,
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
                        nsnull,
                        kIMenuIID,
                        (void**)&menu);
@@ -3284,7 +3284,7 @@ nsIMenu * CreateMenu(nsIMenu * aMenu, const nsString &  aName, char aMneu)
 nsIMenu * CreateMenu(nsIMenuBar * aMenuBar, const nsString &  aName, char aMneu)
 {
   nsIMenu * menu;
-  nsresult rv = nsRepository::CreateInstance(kMenuCID,
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
                        nsnull,
                        kIMenuIID,
                        (void**)&menu);
@@ -3302,7 +3302,7 @@ nsIMenuItem * CreateMenuItem(nsIMenu * aMenu, const nsString & aName, PRUint32 a
   nsIMenuItem * menuItem = nsnull;
 
   if (!aName.Equals("-")) {
-  nsresult rv = nsRepository::CreateInstance(kMenuItemCID,
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
                          nsnull,
                          kIMenuItemIID,
                          (void**)&menuItem);
@@ -3428,7 +3428,7 @@ nsresult
 nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
   nsIMenuBar * menuBar;
-  nsresult rv = nsRepository::CreateInstance(kMenuBarCID,
+  nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID,
                        nsnull,
                        kIMenuBarIID,
                        (void**)&menuBar);

@@ -38,10 +38,11 @@ EXPORTS		= \
 		  nsISupports.h \
 		  nsISupportsUtils.h \
 		  nsIPtr.h \
+		  nsIComponentManager.h \
+		  nsRepository.h \
 		  nsIServiceManager.h \
 		  nsISupportsArray.h \
 		  nsProxyEvent.h \
-		  nsRepository.h \
 		  nsIEnumerator.h \
 		  nsTraceRefcnt.h \
 		  nsVector.h \

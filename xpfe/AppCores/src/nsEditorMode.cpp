@@ -22,7 +22,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 static nsIHTMLEditor *gEditor;
@@ -69,7 +69,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   result = nsServiceManager::GetService(kHTMLEditorCID,
                                         kIHTMLEditorIID, &isup);
 */
-  result = nsRepository::CreateInstance(kHTMLEditorCID,
+  result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                         nsnull,
                                         kIHTMLEditorIID, (void **)&gEditor);
   if (NS_FAILED(result))

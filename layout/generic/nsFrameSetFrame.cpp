@@ -24,7 +24,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
@@ -42,7 +42,7 @@
 #include "nsHTMLParts.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
 #define RIGHT_VIS  0x0002
@@ -838,7 +838,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
     // create the view. a view is needed since it needs to be a mouse grabber
 
     nsIView* view;
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                    (void **)&view);
 	  nsCOMPtr<nsIPresShell> presShell;
     aPresContext.GetShell(getter_AddRefs(presShell));
@@ -1530,7 +1530,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
   nscolor sdwColor = NS_RGB(128,128,128);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);

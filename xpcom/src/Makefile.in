@@ -32,11 +32,12 @@ CPPSRCS		= \
 	nsDebug.cpp \
 	nsHashtable.cpp \
 	nsID.cpp \
+	nsComponentManager.cpp \
+	nsRepository.cpp \
 	nsServiceManager.cpp \
 	nsSupportsArray.cpp \
 	nsSupportsArrayEnumerator.cpp \
 	nsConjoiningEnumerator.cpp	\
-	nsRepository.cpp \
 	nsTraceRefcnt.cpp \
 	nsProxyEvent.cpp \
 	nsXPComFactory.cpp \

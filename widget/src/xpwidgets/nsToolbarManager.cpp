@@ -23,7 +23,7 @@
 #include "nsIRenderingContext.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsImageButton.h"
 
 

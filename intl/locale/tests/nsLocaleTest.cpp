@@ -19,7 +19,7 @@
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #include <windows.h>
@@ -62,7 +62,7 @@ factory_create_interface(void)
 	nsILocaleFactory*	localeFactory;
 	nsIFactory*			genericFactory;
 
-	result = nsRepository::CreateInstance(kLocaleFactoryCID,
+	result = nsComponentManager::CreateInstance(kLocaleFactoryCID,
 									NULL,
 									kILocaleFactoryIID,
 									(void**)&localeFactory);
@@ -71,7 +71,7 @@ factory_create_interface(void)
 
 	localeFactory->Release();
 
-	result = nsRepository::CreateInstance(kLocaleFactoryCID,
+	result = nsComponentManager::CreateInstance(kLocaleFactoryCID,
 									NULL,
 									kIFactoryIID,
 									(void**)&genericFactory);
@@ -89,7 +89,7 @@ factory_test_isupports(void)
 	nsISupports*		genericInterface1, *genericInterface2;
 	nsIFactory*			genericFactory1, *genericFactory2;
 
-	result = nsRepository::FindFactory(kLocaleFactoryCID,
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
 	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
@@ -146,7 +146,7 @@ factory_new_locale(void)
 	int	i;
 	nsString**			catagoryList, **valueList;
 
-	result = nsRepository::FindFactory(kLocaleFactoryCID,
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
 	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
@@ -222,7 +222,7 @@ factory_get_locale(void)
 	nsString*			catagory;
 	nsString*			value;
 
-	result = nsRepository::FindFactory(kLocaleFactoryCID,
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);
 	NS_ASSERTION(localeFactory!=NULL,"nsLocaleTest: factory_create_interface failed.");
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
@@ -290,7 +290,7 @@ win32factory_create_interface(void)
 	nsIFactory*			factory;
 	nsIWin32Locale*		win32Locale;
 
-	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
 									kIFactoryIID,
 									(void**)&factory);
@@ -299,7 +299,7 @@ win32factory_create_interface(void)
 
 	factory->Release();
 
-	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
 									kIWin32LocaleIID,
 									(void**)&win32Locale);
@@ -323,7 +323,7 @@ win32locale_test(void)
 	locale = new nsString("en-US");
 	loc_id = 0;
 
-	result = nsRepository::CreateInstance(kWin32LocaleFactoryCID,
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
 									kIWin32LocaleIID,
 									(void**)&win32Locale);
@@ -377,7 +377,7 @@ main(int argc, char** argv)
 	//
 	// register the Locale Factory
 	//
-	res = nsRepository::RegisterComponent(kLocaleFactoryCID,
+	res = nsComponentManager::RegisterComponent(kLocaleFactoryCID,
                                  NULL,
                                  NULL,
                                  LOCALE_DLL_NAME,
@@ -390,7 +390,7 @@ main(int argc, char** argv)
 	//
 	// register the Windows specific factory
 	//
-	res = nsRepository::RegisterComponent(kWin32LocaleFactoryCID,
+	res = nsComponentManager::RegisterComponent(kWin32LocaleFactoryCID,
 								NULL,
 								NULL,
 								LOCALE_DLL_NAME,

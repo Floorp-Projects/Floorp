@@ -22,7 +22,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "pratom.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManager.h"
@@ -71,7 +71,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 ///////////////////////////////////////
 

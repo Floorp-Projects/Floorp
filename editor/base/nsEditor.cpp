@@ -90,6 +90,8 @@ static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
 static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
+static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
+
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
 #else
@@ -128,12 +130,13 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
   return ns_editlock;
 }
 
+nsIComponentManager* gCompMgr = NULL;
 
 /*
 we must be good providers of factories ect. this is where to put ALL editor exports
 */
 //BEGIN EXPORTS
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServiceMgr, 
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr, 
                                            const nsCID & aClass, 
                                            const char *aClassName,
                                            const char *aProgID,
@@ -144,6 +147,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServiceMgr,
   }
 
   *aFactory = nsnull;
+
+  nsresult rv = aServMgr->QueryInterface(nsIComponentManager::IID(), (void**)&gCompMgr);
+  if (NS_FAILED(rv)) return rv;
 
   if (aClass.Equals(kEditorCID)) {
     return GetEditFactory(aFactory, aClass);
@@ -160,7 +166,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServiceMgr,
 
 
 extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
+NSCanUnload(nsISupports* aServMgr)
 {
   return nsEditor::gInstanceCount; //I have no idea. I am copying code here
 }
@@ -168,40 +174,33 @@ NSCanUnload(nsISupports* serviceMgr)
 
 
 extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult result = NS_ERROR_UNEXPECTED;
-  //this will register the editor classes with the xpcom dll.
-  result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL, path, 
-                                           PR_TRUE, PR_TRUE);
-  if (NS_SUCCEEDED(result))
-  {
-    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL, path, 
-                                             PR_TRUE, PR_TRUE);
-    if (NS_SUCCEEDED(result))
-    {
-      result = nsRepository::RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
-                                                PR_TRUE, PR_TRUE);
-    }
-  }
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kEditorCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kTextEditorCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
   return result;
 }
 
 extern "C" NS_EXPORT nsresult 
-NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult result = NS_ERROR_UNEXPECTED;
-  result = nsRepository::UnregisterFactory(kIEditFactoryIID, path);
-  
-
-  if (NS_SUCCEEDED(result))
-  {
-    result = nsRepository::UnregisterFactory(kITextEditFactoryIID, path);
-    if (NS_SUCCEEDED(result))
-    {
-      result = nsRepository::UnregisterFactory(kIHTMLEditFactoryIID, path);
-    }
-  }
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterFactory(kIEditFactoryIID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterFactory(kITextEditFactoryIID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterFactory(kIHTMLEditFactoryIID, path);
   return result;
 }
 
@@ -333,16 +332,16 @@ nsEditor::EnableUndo(PRBool aEnable)
   nsresult result=NS_OK;
 
 /** -- temp code until the txn mgr auto-registers -- **/
-  nsRepository::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
-                                TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
+  gCompMgr->RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
+                              TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 /** -- end temp code -- **/
   if (PR_TRUE==aEnable)
   {
     if (!mTxnMgr)
     {
-      result = nsRepository::CreateInstance(kCTransactionManagerFactoryCID,
-                                            nsnull,
-                                            kITransactionManagerIID, (void **)&txnMgr);
+      result = gCompMgr->CreateInstance(kCTransactionManagerFactoryCID,
+                                        nsnull,
+                                        kITransactionManagerIID, (void **)&txnMgr);
       if (NS_FAILED(result) || !txnMgr) {
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;

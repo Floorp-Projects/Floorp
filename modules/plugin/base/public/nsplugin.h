@@ -81,7 +81,7 @@
 
 #define NEW_PLUGIN_STREAM_API
 
-#include "nsRepository.h"       // for NSGetFactory
+#include "nsIComponentManager.h"       // for NSGetFactory
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -96,7 +96,7 @@
  * object is returned to the plugin manager, instances on the page are created 
  * by calling nsIPlugin::CreateInstance.
  */
-// (Declared in nsRepository.h)
+// (Declared in nsComponentManager.h)
 //extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 //                                           const nsCID &aClass,
 //                                           const char *aClassName,

@@ -425,7 +425,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID,
+    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
 					      nsnull,
 					      kRenderingContextIID,
 					      (void **)&event.renderingContext))

@@ -25,7 +25,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsEditorCID.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsITableCellLayout.h"   //For GetColIndexForCell
 

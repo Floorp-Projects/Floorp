@@ -21,7 +21,7 @@
 
 #include "pratom.h"
 #include "nsString.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterInfo.h"
 #include "nsIUnicodeEncoder.h"
@@ -264,7 +264,7 @@ nsCharsetConverterManager::GetICharsetConverterInfo(ConverterInfo * aArray,
   nsIFactory * factory;
   nsICharsetConverterInfo * info;
 
-  res=nsRepository::FindFactory(*(aArray[aIndex].mCID), &factory);
+  res=nsComponentManager::FindFactory(*(aArray[aIndex].mCID), &factory);
   if (NS_FAILED(res)) goto reduceArray;
 
   res=factory->QueryInterface(kICharsetConverterInfoIID, (void ** )&info);
@@ -300,7 +300,7 @@ nsresult nsCharsetConverterManager::GetCharsetConverter(
 
   *aResult = NULL;
   for (PRInt32 i=0; i<aSize; i++) if (str->EqualsIgnoreCase(*(aArray[i].mCharset))) {
-    res = nsRepository::CreateInstance(*(aArray[i].mCID),NULL,*aCID,aResult);
+    res = nsComponentManager::CreateInstance(*(aArray[i].mCID),NULL,*aCID,aResult);
     break;
   }
 

@@ -345,7 +345,7 @@ nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL,
     /*
      * Create the HTML document...
      */
-    rv = nsRepository::CreateInstance(kCHTMLDocumentCID,
+    rv = nsComponentManager::CreateInstance(kCHTMLDocumentCID,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
@@ -404,7 +404,7 @@ nsDocFactoryImpl::CreateXMLDocument(nsIURL* aURL,
     /*
      * Create the image document...
      */
-    rv = nsRepository::CreateInstance(kCXMLDocumentCID,
+    rv = nsComponentManager::CreateInstance(kCXMLDocumentCID,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
@@ -463,7 +463,7 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
     /*
      * Create the image document...
      */
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kCXULDocumentCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kCXULDocumentCID,
                                                     nsnull,
                                                     kIDocumentIID,
                                                     (void **)&doc)))
@@ -518,7 +518,7 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
     /*
      * Create the image document...
      */
-    rv = nsRepository::CreateInstance(kCImageDocumentCID,
+    rv = nsComponentManager::CreateInstance(kCImageDocumentCID,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);

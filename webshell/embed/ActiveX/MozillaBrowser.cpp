@@ -241,7 +241,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 #ifdef USE_NGPREF
 	// Load preferences
-	rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &m_pIPref);
+	rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &m_pIPref);
 	if (NS_OK != rv)
 	{
 		NG_ASSERT(0);
@@ -252,7 +252,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 #endif
 	
 	// Create the web shell object
-	rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
+	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
 									kIWebShellIID,
 									(void**)&m_pIWebShell);
 	if (NS_OK != rv)

@@ -36,7 +36,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsCSSRendering.h"
 #include "nsILookAndFeel.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 
 #define NS_DEFAULT_CHECKBOX_SIZE 12
@@ -155,7 +155,7 @@ nsCheckboxControlFrame::GetCheckboxSize(float aPixToTwip) const
 {
   nsILookAndFeel * lookAndFeel;
   PRInt32 checkboxSize = 0;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_CheckboxSize,  checkboxSize);
    NS_RELEASE(lookAndFeel);
   }

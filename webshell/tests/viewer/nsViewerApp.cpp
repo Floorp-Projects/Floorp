@@ -28,7 +28,7 @@
 #include "nsIAppShell.h"
 #include "nsIPref.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -179,10 +179,10 @@ nsViewerApp::SetupRegistry()
   // Register our browser window factory
   nsIFactory* bwf;
   NS_NewBrowserWindowFactory(&bwf);
-  nsRepository::RegisterFactory(kBrowserWindowCID, 0, 0, bwf, PR_FALSE);
+  nsComponentManager::RegisterFactory(kBrowserWindowCID, 0, 0, bwf, PR_FALSE);
 
   NS_NewXPBaseWindowFactory(&bwf);
-  nsRepository::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
+  nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
 
   return NS_OK;
 }
@@ -214,7 +214,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   }
 
   // Create widget application shell
-  rv = nsRepository::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID,
                                     (void**)&mAppShell);
   if (NS_OK != rv) {
     return rv;
@@ -223,7 +223,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   mAppShell->SetDispatchListener((nsDispatchListener*) this);
 
   // Load preferences
-  rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
+  rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID,
                                     (void **) &mPrefs);
   if (NS_OK != rv) {
     return rv;
@@ -289,7 +289,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   }
 #endif
 
-    rv = nsRepository::CreateInstance(kSilentDownloadCID, 
+    rv = nsComponentManager::CreateInstance(kSilentDownloadCID, 
                                       nsnull,
                                       kISilentDownloadIID,
                                       (void**) &silentDownload);
@@ -576,7 +576,7 @@ nsViewerApp::OpenWindow()
   // browser window. For the time being the reference is released by the
   // browser event handling code during processing of the NS_DESTROY event...
   nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   if (NS_FAILED(rv)) {
@@ -643,7 +643,7 @@ nsViewerApp::ViewSource(nsString& aURL)
   // browser window. For the time being the reference is released by the
   // browser event handling code during processing of the NS_DESTROY event...
   nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   if (NS_FAILED(rv)) {
@@ -663,7 +663,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 {
   // Create browser window
   nsBrowserWindow* bw = nsnull;
-  nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
+  nsresult rv = nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   if (NS_FAILED(rv)) {
@@ -874,7 +874,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsRect rect;
   rect.SetRect(0, 0, dialogWidth, 162);  
 
-  nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
+  nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
   if (nsnull == mRobotDialog)
   	return FALSE;
   
@@ -886,7 +886,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nscolor textFGColor = NS_RGB(255,255,255);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
      lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
@@ -898,7 +898,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   // Create Update CheckButton
   rect.SetRect(x, y, 150, 24);  
-  nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mUpdateChkBtn);
+  nsComponentManager::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mUpdateChkBtn);
   NS_CreateCheckButton(mRobotDialog, mUpdateChkBtn,rect,HandleRobotEvent,&font);
   mUpdateChkBtn->SetLabel("Update Display (Visual)");
   mUpdateChkBtn->SetState(PR_TRUE);
@@ -907,7 +907,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create Label
   w = 115;
   rect.SetRect(x, y+3, w, 24);  
-  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
   label->SetLabel("Verfication Directory:");
@@ -916,7 +916,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create TextField
   nsIWidget* widget = nsnull;
   rect.SetRect(x, y, 225, txtHeight);  
-  nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mVerDirTxt);
+  nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mVerDirTxt);
   NS_CreateTextWidget(mRobotDialog,mVerDirTxt,rect,HandleRobotEvent,&font);
   if (mVerDirTxt && NS_OK == mVerDirTxt->QueryInterface(kIWidgetIID,(void**)&widget))
   {
@@ -932,7 +932,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   x = 5;
   w = 55;
   rect.SetRect(x, y+4, w, 24);  
-  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
   label->SetLabel("Stop after:");
@@ -940,7 +940,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   // Create TextField
   rect.SetRect(x, y, 75, txtHeight);  
-  nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mStopAfterTxt);
+  nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mStopAfterTxt);
   NS_CreateTextWidget(mRobotDialog,mStopAfterTxt,rect,HandleRobotEvent,&font);
   if (mStopAfterTxt && NS_OK == mStopAfterTxt->QueryInterface(kIWidgetIID,(void**)&widget))
   {
@@ -952,7 +952,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 
   w = 75;
   rect.SetRect(x, y+4, w, 24);  
-  nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Left);
   label->SetLabel("(page loads)");
@@ -964,14 +964,14 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nscoord xx = (dialogWidth - (2*w)) / 3;
   // Create Find Start Button
   rect.SetRect(xx, y, w, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mStartBtn);
+  nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mStartBtn);
   NS_CreateButton(mRobotDialog,mStartBtn,rect,HandleRobotEvent,&font);
   mStartBtn->SetLabel("Start");
   
   xx += w + xx;
   // Create Cancel Button
   rect.SetRect(xx, y, w, 24);  
-  nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
+  nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
   NS_CreateButton(mRobotDialog,mCancelBtn,rect,HandleRobotEvent,&font);
   mCancelBtn->SetLabel("Cancel");
   
@@ -1229,7 +1229,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
   if (mSiteDialog == nsnull) {
     nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
        //lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
        //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
        //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
@@ -1252,7 +1252,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     rect.SetRect(0, 0, dialogWidth, 125);  
 
     nsIWidget* widget = nsnull;
-    nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
+    nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
     if (nsnull == mSiteDialog)
       return FALSE;
     
@@ -1270,7 +1270,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     // Create Label
     w = 50;
     rect.SetRect(x, y+3, w, 24);  
-    nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+    nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
     NS_CreateLabel(mSiteDialog,label,rect,HandleSiteEvent,&font);
     label->SetAlignment(eAlign_Right);
     label->SetLabel("Site:");
@@ -1278,7 +1278,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
     w = 250;
     rect.SetRect(x, y+3, w, 24);  
-    nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mSiteLabel);
+    nsComponentManager::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mSiteLabel);
     NS_CreateLabel(mSiteDialog,mSiteLabel,rect,HandleSiteEvent,&font);
     mSiteLabel->SetAlignment(eAlign_Left);
     mSiteLabel->SetLabel("");
@@ -1289,21 +1289,21 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     x = spacing;
     // Create Previous Button
     rect.SetRect(x, y, w, 24);  
-    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSitePrevBtn);
+    nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSitePrevBtn);
     NS_CreateButton(mSiteDialog,mSitePrevBtn,rect,HandleSiteEvent,&font);
     mSitePrevBtn->SetLabel("<< Previous");
     x += spacing + w;
 
     // Create Next Button
     rect.SetRect(x, y, w, 24);  
-    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteNextBtn);
+    nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteNextBtn);
     NS_CreateButton(mSiteDialog,mSiteNextBtn,rect,HandleSiteEvent,&font);
     mSiteNextBtn->SetLabel("Next >>");
     x += spacing + w;
   
     // Create Cancel Button
     rect.SetRect(x, y, w, 24);  
-    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteCancelBtn);
+    nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteCancelBtn);
     NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
     mSiteCancelBtn->SetLabel("Cancel");
   }

@@ -26,6 +26,7 @@
 #include "il_util.h"
 #include "nsVoidArray.h"
 #include "nsIFontMetrics.h"
+#include "nsHashtable.h"
 
 class nsFontCache
 {
@@ -180,7 +181,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
 
   aContext = nsnull;
-  rv = nsRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
   if (NS_OK == rv) {
     rv = InitRenderingContext(pContext, win);
@@ -203,7 +204,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
 
   aContext = nsnull;
-  rv = nsRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
   if (NS_OK == rv) {
     rv = InitRenderingContext(pContext, aWidget);
@@ -658,7 +659,7 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMet
   static NS_DEFINE_IID(kFontMetricsIID, NS_IFONT_METRICS_IID);
 
   nsIFontMetrics* fm;
-  nsresult        rv = nsRepository::CreateInstance(kFontMetricsCID, nsnull,
+  nsresult        rv = nsComponentManager::CreateInstance(kFontMetricsCID, nsnull,
                                                     kFontMetricsIID, (void **)&fm);
   if (NS_OK != rv) {
     aMetrics = nsnull;

@@ -291,7 +291,7 @@ nsIDeviceContext  *dx = nsnull;
     gSobits = (HBITMAP)::SelectObject(gSrcdc, gSrcbits);
     gDobits = (HBITMAP)::SelectObject(gDestdc, gDestbits);
 
-    rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
+    rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
     //gImageblender->Init(gSrcdc,gDestdc);
     gImageblender->Init(dx);
   }
@@ -1109,7 +1109,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
 
   nsRect rect(0, 0, aWidth, aHeight);  
 
-  nsresult rv = nsRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
+  nsresult rv = nsComponentManager::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
 
   if (NS_OK == rv) 
@@ -1118,9 +1118,9 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
     }
 
   // something for input
-  nsRepository::RegisterComponent(kCTextFieldCID, NULL, NULL, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCTextFieldCID, NULL, NULL, "raptorwidget.dll", PR_FALSE, PR_FALSE);
   rect.SetRect(25, 370, 40, 25);  
-  nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
+  nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
   
   nsIWidget* widget = nsnull;
   if (NS_OK == gBlendMessage->QueryInterface(kIWidgetIID,(void**)&widget))
@@ -1132,7 +1132,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
   gBlendMessage->SetText("50",size);
 
   rect.SetRect(70,370,40,25);
-  nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
+  nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
   if (NS_OK == gQualMessage->QueryInterface(kIWidgetIID,(void**)&widget))
   {
     widget->Create(gWindow, rect, nsnull, nsnull);
@@ -1155,9 +1155,9 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
 {
   gInstance = instance;
 
-  nsRepository::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCChildWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCChildWindowIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCScrollbarIID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
@@ -1165,11 +1165,11 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
   static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
 
-  nsRepository::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

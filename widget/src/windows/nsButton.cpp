@@ -26,7 +26,7 @@
 
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
@@ -197,7 +197,7 @@ NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
   nscolor sdwColor = NS_RGB(128,128,128);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);

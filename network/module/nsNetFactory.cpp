@@ -22,7 +22,7 @@
 #include "nsINetService.h"
 #include "nsNetService.h"
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 /* This implementation of the network service factory is presently
  * only taking advantage of the service retrieval benefit that the

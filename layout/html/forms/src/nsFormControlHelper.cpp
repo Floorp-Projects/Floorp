@@ -31,7 +31,7 @@
 #include "nsCoord.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsIFontMetrics.h"

@@ -66,7 +66,7 @@ class nsIFrame;
 
 #include "CreateElementTxn.h"
 
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -289,7 +289,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         nsCOMPtr<nsIContentIterator> iter;
-        result = nsRepository::CreateInstance(kCContentIteratorCID, nsnull,
+        result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                               kIContentIteratorIID, 
                                               getter_AddRefs(iter));
         if ((NS_SUCCEEDED(result)) && iter)
@@ -538,7 +538,7 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      rv = nsRepository::CreateInstance(kCParserCID, 
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                  nsnull, 
                                                  kCParserIID, 
                                                  (void **)&parser);
@@ -606,7 +606,7 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
       static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      rv = nsRepository::CreateInstance(kCParserCID, 
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
                                                  nsnull, 
                                                  kCParserIID, 
                                                  (void **)&parser);
@@ -834,7 +834,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
 
   // create style nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
-  result = nsRepository::CreateInstance(kCContentIteratorCID, nsnull,
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                         kIContentIteratorIID, getter_AddRefs(iter));
   if ((NS_SUCCEEDED(result)) && iter)
   {
