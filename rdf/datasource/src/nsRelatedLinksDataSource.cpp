@@ -302,7 +302,7 @@ RelatedLinksDataSource::GetTarget(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -318,7 +318,7 @@ RelatedLinksDataSource::GetTarget(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				*target = literal;
 				rv = NS_OK;
 			}
@@ -554,7 +554,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 							{
 								nsAutoString	theName(name);
 								nsCOMPtr<nsIRDFLiteral> nameLiteral;
-								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName, getter_AddRefs(nameLiteral))))
+								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName.GetUnicode(), getter_AddRefs(nameLiteral))))
 								{
 									mDataSource->Assert(newTopic, kNC_Name, nameLiteral, PR_TRUE);
 								}
@@ -618,7 +618,7 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 							{
 								nsAutoString		theName(name);
 								nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName, getter_AddRefs(nameLiteral))))
+								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(theName.GetUnicode(), getter_AddRefs(nameLiteral))))
 								{
 									mDataSource->Assert(relatedLinksChild, kNC_Name, nameLiteral, PR_TRUE);
 								}
@@ -705,7 +705,7 @@ RelatedLinksDataSource::GetTargets(nsIRDFResource *source,
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			array = new nsVoidArray();
 			if (array)
 			{
@@ -721,7 +721,7 @@ RelatedLinksDataSource::GetTargets(nsIRDFResource *source,
 			{
 				nsAutoString	url(uri);
 				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url, &literal);
+				gRDFService->GetLiteral(url.GetUnicode(), &literal);
 				array = new nsVoidArray();
 				if (array)
 				{
