@@ -234,6 +234,8 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
     NS_RELEASE(pseudoStyle);
 
     // Init the body frame
+    aFrame->SetGeometricParent(aWrapperFrame);
+    aFrame->SetContentParent(aWrapperFrame);
     aWrapperFrame->SetInitialChildList(aPresContext, nsnull, aFrame);
   }
 
