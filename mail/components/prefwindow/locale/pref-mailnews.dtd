@@ -6,7 +6,7 @@
 <!ENTITY useMessenger.accesskey           "U">
 <!ENTITY autounzip.label                  "Automatically expand zip files when saving attachments">
 <!ENTITY autounzip.accesskey              "A">
-<!ENTITY messengerStartPage.label         "Mail Start Page">
+<!ENTITY messengerStartPage.label         "&brandShortName; Start Page">
 <!ENTITY enableStartPage.label            "When &brandShortName; launches, show the Start Page in the message area">
 <!ENTITY enableStartPage.accesskey        "W">
 <!ENTITY location.label                   "Location:">
