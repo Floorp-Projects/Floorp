@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.18 2001/05/02 06:03:49 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.19 2001/05/02 17:51:16 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -54,6 +54,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsILocaleService.h"
 
+extern "C" {
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
@@ -61,6 +62,7 @@
 #include "nssb64.h"
 #include "secasn1.h"
 #include "secder.h"
+}
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
