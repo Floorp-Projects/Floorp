@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:26:46 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/22 15:01:58 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -81,6 +81,7 @@ if ( defined(@TinderConfig::DBImpl) ) {
             'TinderDB::Time',
             'TinderDB::VC_CVS',
             'TinderDB::Notice',
+            'TinderDB::BT_Generic',
             'TinderDB::Build',
            );
 }
@@ -410,7 +411,7 @@ the version control web query interface.
 
 The column which displays who checked in at what time in the build
 cyle.  This column must have an implementation which is specific to
-the version contol software in use.
+the version contol (VC) software in use.
 
 =back
 
@@ -421,6 +422,21 @@ the version contol software in use.
 
 The column displays all notices sent by users to the web interface.
 
+
+=back
+
+=over 4
+
+=item B<TinderDB::BT>
+
+The set of columns displays which bug tickets are moving forward and
+which tickets are moving backwards through their lifecycle.  The
+defintion of forward and backward is easily configurable and is based
+on the state that the bug has moved into. Bugs which are 'closed' or
+'verified' are moving forward, bugs which are 'reopened' or 'failed'
+are moving backwards.  This column should remain fairly generic for
+all bug tracking systems but may require different mail parsers of the
+bug tracking system uses an exotic mail notification format.
 
 =back
 
