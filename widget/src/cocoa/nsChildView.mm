@@ -829,9 +829,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
     // Set the bounds
     mBounds.x = aX;
     mBounds.y = aY;
-
-    // Recalculate the regions
-    //CalcWindowRegions();
+   
     NSRect r;
     ConvertGeckoToCocoaRect(mBounds, r);
     [mView setFrame:r];
@@ -983,9 +981,14 @@ static void blinkRgn(RgnHandle rgn)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 {
-  nsRect area = mBounds;
-  area.x = area.y = 0;
-  Invalidate(area, aIsSynchronous);
+  if (!mView || !mVisible)
+    return NS_OK;
+
+  if (aIsSynchronous)
+    [mView display];
+  else
+    [mView setNeedsDisplay];
+  
   return NS_OK;
 }
 
@@ -1171,7 +1174,7 @@ NS_IMETHODIMP nsChildView::Update()
 // UpdateWidget
 //
 // Dispatches the Paint event into Gecko. Usually called from our 
-// NSView in response to the display system noticing that something'
+// NSView in response to the display system noticing that something
 // needs repainting. We don't have to worry about painting our child views
 // because the display system will take care of that for us.
 //
@@ -1182,7 +1185,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
     return;
   
   ::SetPort(GetQuickDrawPort());
-
+        
   // initialize the paint event
   nsPaintEvent paintEvent;
   paintEvent.eventStructType      = NS_PAINT_EVENT;   // nsEvent
@@ -1192,6 +1195,12 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   paintEvent.renderingContext     = aContext;       // nsPaintEvent
   paintEvent.rect           = &aRect;
 
+  // offscreen drawing is pointless.
+  if (paintEvent.rect->x < 0)
+    paintEvent.rect->x = 0;
+  if (paintEvent.rect->y < 0)
+    paintEvent.rect->y = 0;
+    
   // draw the widget
   StartDraw(aContext);
   if ( OnPaint(paintEvent) ) {
@@ -1217,7 +1226,7 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
         return NS_OK;
 
     NSSize scrollVector = {aDx,aDy};
-     [mView scrollRect: [mView bounds] by:scrollVector];
+    [mView scrollRect: [mView bounds] by:scrollVector];
 
     // Scroll the children
     nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
@@ -1743,7 +1752,7 @@ nsChildView::GetQuickDrawPort ( )
 //  if ( mMouseEnterExitTag )
 //printf("(((((dtor removing tag %ld, (%d)))))\n", mMouseEnterExitTag, self);
     //[self removeTrackingRect:mMouseEnterExitTag];
-  
+
   [super dealloc];
 }
 
@@ -1817,7 +1826,8 @@ nsChildView::GetQuickDrawPort ( )
    // tell gecko to paint.
   nsRect r;
   ConvertCocoaToGeckoRect(aRect, r);
-  mGeckoChild->UpdateWidget(r, mGeckoChild->GetRenderingContext());
+  nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
+  mGeckoChild->UpdateWidget(r, rendContext);
 }
 
 
