@@ -1997,6 +1997,8 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   // If by chance we are inside a table, then give up and reflow
   // everything because we don't cache max-element-size information in
   // the lines.
+  // XXX Huh, that's not true anymore. We do cache the width component of
+  // the max-element-size...
   if (aState.mComputeMaxElementSize) {
     return PrepareResizeReflow(aState);
   }
