@@ -67,6 +67,7 @@
 
 extern MRJConsole* theConsole;
 extern short thePluginRefnum;
+extern FSSpec thePluginSpec;
 
 //
 //	This function allocates a block of CFM glue code which contains the instructions to call CFM routines
@@ -106,10 +107,12 @@ OSStatus MRJSession::open(const char* consolePath)
 {
     // Use vanilla JNI invocation API to fire up a fresh JVM.
 
-    std::string classPath = getClassPath();
+    string classPath = getClassPath();
+    string pluginHome = getPluginHome();
     JavaVMOption theOptions[] = {
     	{ (char*) classPath.c_str() },
-    	{ "vfprintf", NewMachOFunctionPointer(&java_vfprintf) }
+    	{ (char*) pluginHome.c_str() },
+    	// { "vfprintf", NewMachOFunctionPointer(&java_vfprintf) }
     };
 
     JavaVMInitArgs theInitArgs = {
@@ -349,9 +352,18 @@ static OSStatus ref2path(const FSRef& ref, char* path, UInt32 maxPathSize)
     return FSRefMakePath(&ref, (UInt8*)path, maxPathSize);
 }
 
-std::string MRJSession::getClassPath()
+static OSStatus spec2path(const FSSpec& spec, char* path, UInt32 maxPathSize)
 {
-    std::string classPath("-Djava.class.path=");
+    FSRef ref;
+    OSStatus status = FSpMakeFSRef(&spec, &ref);
+    if (status == noErr)
+        status = ref2path(ref, path, maxPathSize);
+    return status;
+}
+
+string MRJSession::getClassPath()
+{
+    string classPath("-Djava.class.path=");
     
     // keep appending paths make from FSSpecs.
     MRJClassPath::const_iterator i = mClassPath.begin();
@@ -370,4 +382,20 @@ std::string MRJSession::getClassPath()
     }
     
     return classPath;
+}
+
+string MRJSession::getPluginHome()
+{
+    string pluginHome("-Dnetscape.oji.plugin.home=");
+
+    char path[1024];
+    if (spec2path(thePluginSpec, path, sizeof(path)) == noErr) {
+        char* lastSlash = strrchr(path, '/');
+        if (lastSlash) {
+            *lastSlash = '\0';
+            pluginHome += path;
+        }
+    }
+    
+    return pluginHome;
 }
