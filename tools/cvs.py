@@ -20,15 +20,27 @@
 # Contributor(s): Stephen Lamm <slamm@netscape.com>
 # 
 
-# Version: $Id: cvs.py,v 1.1 2000/01/28 01:20:49 slamm%netscape.com Exp $
+# Version: $Id: cvs.py,v 1.2 2000/01/28 06:13:41 slamm%netscape.com Exp $
 
-#
-# cvs.py - Pull cvs tree with parallel threads.
-#
-#   In basic tests, no more than three threads for pulls.
-#
-#   I would like to make this behave more like cvs itself. Right now,
-#   most of the cvs parameters are hard-coded.
+# module cvs -- Add multithreading to the cvs client.
+
+"""A multithreading wrapper around the cvs client.
+
+Exports:
+    class CVS(module='<cvs_module>')
+        CVS.module_files -- Array of module files and directories.
+            Files that need to be grouped together are space separated
+            within the same array element. For example,
+               ['mozilla/xpcom','mozilla/js !mozilla/js/extra']
+    class ModuleFileQueue(): A queue of cvs module files and directories.
+    xargs() - Emulate xargs, but use threads to draw from common queue.
+    class XArgsThread() - Helper class for xargs()
+    parallel_cvs_co() - Use xargs and ModuleFileQueue to checkout. Time it too.
+  
+Three threads should be enough to get a decent pull time. In fact,
+any more threads than that will probably not help.
+
+"""
 
 import os
 import string
@@ -78,22 +90,22 @@ class CVS:
                 space_split = re.split(spc_pat, line)[1:]
                 members[module].extend(space_split)
          
-        members = self.flatten_module(members, self.module)
+        members = self._flatten_module(members, self.module)
         members.sort()
-        members = self.get_checkout_groups(members)
+        members = self._get_checkout_groups(members)
 
         return members
 
-    def flatten_module(self, members, module):
+    def _flatten_module(self, members, module):
         result = []
         for member in  members[module]:
             if members.has_key(member):
-                result.extend(self.flatten_module(members,member))
+                result.extend(self._flatten_module(members,member))
             else:
                 result.append(member)
         return result
    
-    def get_checkout_groups(self, members):
+    def _get_checkout_groups(self, members):
         import string
         ignore = []
         checkout_groups = []
@@ -122,12 +134,9 @@ class ModuleFileQueue(Queue.Queue):
             self.put(file)
 
 
-class XArgs(threading.Thread):
-    """Similar to shell's xargs.
+class XArgsThread(threading.Thread):
+    """An individual thread for the XArgs class"""
 
-    Requires a shell command and a queue for arguments.
-
-    """
     def __init__(self, shell_command, queue, **params):
         self.shell_command = shell_command
         self.queue         = queue
@@ -148,7 +157,7 @@ class XArgs(threading.Thread):
                 next_files = string.split(next_file_group)
                 files.extend(next_files)
             if self.error_event and self.error_event.isSet():
-                thread.exit()
+                sys.exit()
             if files:
                 if self.verbose:
                     print "%s: %s %s" % (self.getName(), self.shell_command,
@@ -164,42 +173,54 @@ class XArgs(threading.Thread):
                     if self.error_event: self.error_event.set()
                     sys.exit()           
 
+def xargs(command, queue, **params):
+    """Similar to shell's xargs.
 
-def parallel_cvs_co(co_cmd, modules):
-    """Checkout a cvs module using multiple threads."""
-    # Keep track of how long the pull takes.
-    start_time = time.time()
+    Requires a shell command and a queue for arguments.
+    """
+    num_threads = params.get('num_threads')
+    max_args    = params.get('max_args')
+    verbose     = params.get('verbose')
+    if not num_threads: num_threads = 1
+    if not max_args:    max_args = 10
 
-    # Create a Queue of the modules individual files and directories
-    module_queue = ModuleFileQueue(modules)
-
-    # Create an event to stop all the threads when one fails
-    cvs_error = threading.Event()
+    # Use an event to stop all the threads if one fails
+    error_event = threading.Event()
 
     # Create the threads
     threads = []
-    for ii in range(0,3):
-        thread = XArgs(co_cmd, module_queue,
-                       max_args=5, error_event=cvs_error, verbose=1)
+    for ii in range(0,num_threads):
+        thread = XArgsThread(command, queue, max_args=max_args,
+                             error_event=error_event, verbose=verbose)
         threads.append(thread)
         thread.start()
-
     # Wait until the threads finish
     while threading.activeCount() > 1:
         time.sleep(1)
         pass
+    for thread in threads:
+        if thread.status:
+            return thread.status
+    return 0
+
+
+def parallel_cvs_co(co_cmd, modules):
+    """Checkout a cvs module using multiple threads."""
+    start_time = time.time()      # Track the time to pull
+
+    # Create a Queue of the modules individual files and directories
+    module_queue = ModuleFileQueue(modules)
+
+    status = xargs(co_cmd, module_queue, num_threads=3, max_args=10,
+                   verbose=1)
 
     # Compute and print time spent
-    end_time = time.time()
-    total_time = end_time - start_time
+    total_time = time.time() - start_time
     total_time = time.strftime("%H:%M:%S", time.gmtime(total_time))
     print "Total time to pull: " + total_time
 
-    # Check for an error on exit
-    if cvs_error.isSet():
-        for thread in threads:
-            if thread.status:
-                sys.exit(thread.status)
+    if status:  # Did xargs return an error?
+        sys.exit(status)
 
 
 if __name__ == "__main__":
