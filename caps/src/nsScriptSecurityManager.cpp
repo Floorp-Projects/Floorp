@@ -490,6 +490,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         nsCRT::strcmp(scheme, "javascript")   == 0 ||
         nsCRT::strcmp(scheme, "ftp")          == 0 ||
         nsCRT::strcmp(scheme, "mailto")       == 0 ||
+        nsCRT::strcmp(scheme, "finger")       == 0 ||
         nsCRT::strcmp(scheme, "news")         == 0)
     {
         // everyone can access these schemes.
