@@ -70,8 +70,6 @@ class nsIToolkit;
   g.blue = 256 * NS_GET_B(n); \
   PR_END_MACRO
 
-#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-
 
 /**
  * Base of all GTK+ native widgets.
