@@ -65,6 +65,11 @@ CPPSRCS		= \
 		  nsModuleFactory.cpp \
 		  nsContentBlocker.cpp \
 		  $(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
 ifdef MOZ_MAIL_NEWS
 CPPSRCS		+= nsMailnewsContentBlocker.cpp
 DEFINES		+= -DMOZ_MAIL_NEWS
