@@ -3870,13 +3870,14 @@ nsImapProtocol::ShowProgress()
 			// lossy if localized string has non-8-bit chars, but we're 
 			// stuck with PR_smprintf for now.
 			nsCString cProgressString(progressString);
+			PR_FREEIF(progressString);
 			const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
 			char *printfString = PR_smprintf(cProgressString, (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
 			if (printfString)
 			{
 				nsString formattedString(printfString);
-				PR_FREEIF(progressString);
+				PR_FREEIF(printfString);
 				progressString = nsCRT::strdup(formattedString.GetUnicode());	
 
 			}

@@ -54,6 +54,7 @@
 #include "nsIPrompt.h"
 #include "nsINetSupportDialogService.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -3214,8 +3215,8 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
        
     nsCOMPtr<nsIRDFResource> messageNode(do_QueryInterface(message));
     if (!messageNode) return NS_ERROR_FAILURE;
-    char *uri;
-    messageNode->GetValue(&uri);
+    nsXPIDLCString uri;
+    messageNode->GetValue(getter_Copies(uri));
 
     if (!m_copyState->m_msgService)
     {
@@ -3251,10 +3252,9 @@ nsImapMailCopyState::~nsImapMailCopyState()
         nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(m_message));
         if (msgNode)
         {
-            char* uri;
-            msgNode->GetValue(&uri);
-            if (uri)
-                ReleaseMessageServiceFromURI(uri, m_msgService);
+            nsXPIDLCString uri;
+            msgNode->GetValue(getter_Copies(uri));
+            ReleaseMessageServiceFromURI(uri, m_msgService);
         }
     }
     if (m_tmpFileSpec)
