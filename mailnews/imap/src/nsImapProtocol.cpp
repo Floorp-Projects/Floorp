@@ -4439,6 +4439,11 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
   m_lastPercent = percent;
   m_lastProgressTime = nowMS;
 
+  // set our max progress as the content length on the mock channel
+  if (m_mockChannel)
+      m_mockChannel->SetContentLength(maxProgress);
+      
+
   if (m_imapMiscellaneousSink)
       m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
 }
@@ -7337,6 +7342,7 @@ nsImapMockChannel::nsImapMockChannel()
   mChannelClosed = PR_FALSE;
   mReadingFromCache = PR_FALSE;
   mTryingToReadPart = PR_FALSE;
+  mContentLength = -1;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
@@ -7936,15 +7942,15 @@ NS_IMETHODIMP nsImapMockChannel::SetContentCharset(const nsACString &aContentCha
 
 NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
 {
-  *aContentLength = -1;
+  *aContentLength = mContentLength;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMockChannel::SetContentLength(PRInt32 aContentLength)
 {
-    NS_NOTREACHED("nsImapMockChannel::SetContentLength");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mContentLength = aContentLength;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetOwner(nsISupports * *aPrincipal)

@@ -697,6 +697,8 @@ protected:
   PRBool mChannelClosed;
   PRBool mReadingFromCache;
   PRBool mTryingToReadPart;
+  PRInt32 mContentLength;
+
   // cache related helper methods
   nsresult OpenCacheEntry(); // makes a request to the cache service for a cache entry for a url
   PRBool ReadFromLocalCache(); // attempts to read the url out of our local (offline) cache....
