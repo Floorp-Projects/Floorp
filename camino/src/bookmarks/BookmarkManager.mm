@@ -529,7 +529,6 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:menuItem];
   }
   
-  id parent = [item parent];
   // if we're not in a smart collection (other than history)
   if (!outlineView ||
       ![target isKindOfClass:[BookmarkViewController class]] ||
@@ -633,7 +632,9 @@ static unsigned gFirstUserCollection = 0;
   [undoManager beginUndoGrouping];
   BOOL success = NO;
   NSString *extension =[pathToFile pathExtension];
-  if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
+  if ([extension isEqualToString:@""]) // we'll go out on a limb here
+    success = [self readOperaFile:pathToFile intoFolder:aFolder];
+  else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
     success = [self readHTMLFile:pathToFile intoFolder:aFolder];
   else if ([extension isEqualToString:@"xml"])
     success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
@@ -642,9 +643,13 @@ static unsigned gFirstUserCollection = 0;
   // we don't know the extension, or we failed to load.  we'll take another
   // crack at it trying everything we know.
   if (!success) {
-    success = [self readHTMLFile:pathToFile intoFolder:aFolder];
-    if (!success)
-      success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
+    success = [self readOperaFile:pathToFile intoFolder:aFolder];
+    if (!success) {
+      success = [self readHTMLFile:pathToFile intoFolder:aFolder];
+      if (!success) {
+        success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
+      }
+    }
   }
   [[undoManager prepareWithInvocationTarget:[self rootBookmarks]] deleteChild:aFolder];
   [undoManager endUndoGrouping];
@@ -652,12 +657,12 @@ static unsigned gFirstUserCollection = 0;
   return success;
 }
 
-// spits out html file as NSString with proper encoding. it's pretty shitty, frankly.
--(NSString *)decodedHTMLfile:(NSString *)pathToFile
+// spits out text file as NSString with "proper" encoding based on pretty shitty detection
+-(NSString *)decodedTextFile:(NSString *)pathToFile
 {
   NSData* fileAsData = [[NSData alloc] initWithContentsOfFile:pathToFile];
   if (!fileAsData) {
-    NSLog(@"decodedHTMLfile: file %@ cannot be read.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ cannot be read.",pathToFile);
     return nil;
   }
   // we're gonna assume for now it's ascii and hope for the best.
@@ -666,7 +671,7 @@ static unsigned gFirstUserCollection = 0;
   // know this for sure.  but we'll have to do 2 decodings.  big whoop.
   NSString *fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
   if (!fileString) {
-    NSLog(@"decodedHTMLfile: file %@ doesn't want to become a string.  Exiting.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ doesn't want to become a string.  Exiting.",pathToFile);
     [fileAsData release];
     return nil;
   }
@@ -677,12 +682,14 @@ static unsigned gFirstUserCollection = 0;
   NSString *xmacromanKey = @"content=\"text/html; charset=x-mac-roman";
   NSString *xmacsystemKey = @"CONTENT=\"text/html; charset=X-MAC-SYSTEM";
   NSString *shiftJisKey = @"CONTENT=\"text/html; charset=Shift_JIS";
+  NSString *operaUTF8Key = @"encoding = utf8";
 
   NSDictionary *encodingDict = [NSDictionary dictionaryWithObjectsAndKeys:
     [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],utfdash8Key,
     [NSNumber numberWithUnsignedInt:NSMacOSRomanStringEncoding],xmacromanKey,
     [NSNumber numberWithUnsignedInt:NSShiftJISStringEncoding],shiftJisKey,
     [NSNumber numberWithUnsignedInt:[NSString defaultCStringEncoding]],xmacsystemKey,
+    [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],operaUTF8Key,
     nil];
 
   NSEnumerator *keyEnumerator = [encodingDict keyEnumerator];
@@ -700,12 +707,12 @@ static unsigned gFirstUserCollection = 0;
   // if we're here, we don't have a clue as to the encoding.  we'll guess default
   [fileString release];
   if ((fileString = [[NSString alloc] initWithData:fileAsData encoding:[NSString defaultCStringEncoding]])) {
-    NSLog(@"decodedHTMLFile: file %@ encoding unknown.  Assume default and proceed.",pathToFile);
+    NSLog(@"decodedTextFile: file %@ encoding unknown.  Assume default and proceed.",pathToFile);
     [fileAsData release];
     return [fileString autorelease];
   }
   // we suck.  this is almost certainly wrong, but oh well.
-  NSLog(@"decodedHTMLFile: file %@ encoding unknown, and NOT default.  Use ASCII and proceed.",pathToFile);
+  NSLog(@"decodedTextFile: file %@ encoding unknown, and NOT default.  Use ASCII and proceed.",pathToFile);
   fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
   [fileAsData release];
   return [fileString autorelease];
@@ -715,7 +722,7 @@ static unsigned gFirstUserCollection = 0;
 -(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 {
   // get file as NSString
-  NSString* fileAsString = [self decodedHTMLfile:pathToFile];
+  NSString* fileAsString = [self decodedTextFile:pathToFile];
   if (!fileAsString) {
     NSLog(@"couldn't read file. bailing out");
     return NO;
@@ -956,6 +963,82 @@ static unsigned gFirstUserCollection = 0;
     return [aFolder readNativeDictionary:dict];
   else
     return [aFolder readSafariDictionary:dict];
+}
+
+-(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:aFolder
+{
+  // get file as NSString
+  NSString* fileAsString = [self decodedTextFile:pathToFile];
+  if (!fileAsString) {
+    NSLog(@"couldn't read file. bailing out");
+    return NO;
+  }
+  // Easily fooled check to see if it's an Opera Hotlist
+  NSRange aRange;
+  aRange = [fileAsString rangeOfString:@"Opera Hotlist" options:NSCaseInsensitiveSearch];
+  if (aRange.location == NSNotFound) {
+    NSLog(@"Bookmark file not recognized as Opera Hotlist.  Read fails.");
+    return NO;
+  }
+  
+  // Opera hotlists seem pretty easy to parse. Everything is on a line by itself.  
+  // So we'll split the string up into a giant array by newlines, and march through the array.
+  BookmarkFolder *currentArray = aFolder;
+  BookmarkItem *currentItem = nil;
+  
+  NSArray *arrayOfFileLines = [fileAsString componentsSeparatedByString:@"\n"];
+  NSEnumerator *enumerator = [arrayOfFileLines objectEnumerator];
+  NSString *aLine =nil;
+  
+  while ((aLine = [enumerator nextObject])) {
+    // See if we have a new folder.
+    if ([aLine hasPrefix:@"#FOLDER"]) {
+      currentItem = [currentArray addBookmarkFolder];
+      currentArray = (BookmarkFolder *)currentItem;
+    }
+    // Maybe it's a new URL!
+    else if ([aLine hasPrefix:@"#URL"]) {
+      currentItem = [currentArray addBookmark];
+    }
+    // Perhaps a separator? This isn't how I'd spell it, but
+    // then again, I'm not Norwagian, so what do I know.
+    else if ([aLine hasPrefix:@"#SEPERATOR"]) {
+      currentItem = [currentArray addBookmark];
+      [(Bookmark *)currentItem setIsSeparator:TRUE];
+      currentItem = nil;
+    }
+    // Or maybe this folder is being closed out.
+    else if ([aLine hasPrefix:@"-"] && currentArray != aFolder) {
+      currentArray = [currentArray parent];
+      currentItem = nil;
+    }
+    // Well, if we don't have a prefix, we'll look something else
+    else {
+      // We have to check for Name and Short Name at the same time...
+      aRange = [aLine rangeOfString:@"NAME="];
+      if (NSNotFound != aRange.location) {
+        NSRange sRange = [aLine rangeOfString:@"SHORT NAME="];
+        if (NSNotFound != sRange.location) {
+          [currentItem setKeyword:[aLine substringFromIndex:(sRange.location + sRange.length)]];
+        }
+        else {
+          [currentItem setTitle:[aLine substringFromIndex:(aRange.location + aRange.length)]];
+        }
+      }
+      // ... then URL ...
+      aRange = [aLine rangeOfString:@"URL="];
+      if (NSNotFound != aRange.location && [currentItem isKindOfClass:[Bookmark class]]) {
+        [(Bookmark *)currentItem setUrl:[aLine substringFromIndex:(aRange.location + aRange.length)]];
+      }
+      // ... followed by Description
+      aRange = [aLine rangeOfString:@"DESCRIPTION="];
+      if (NSNotFound != aRange.location) {
+        [currentItem setDescription:[aLine substringFromIndex:(aRange.location + aRange.length)]];
+      }
+    }
+  }
+  // That wasn't so bad
+  return YES;
 }
 
 //

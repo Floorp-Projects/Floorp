@@ -71,6 +71,7 @@
     [mBrowserListButton removeItemAtIndex:0];
   
   [self tryAddImportFromBrowser:@"iCab" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist.html"];
+  [self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/Bookmarks"];
   [self tryAddImportFromBrowser:@"Omniweb" withBookmarkPath:@"~/Library/Application Support/Omniweb/Bookmarks.html"];
   [self tryAddImportFromBrowser:@"Internet Explorer" withBookmarkPath:@"~/Library/Preferences/Explorer/Favorites.html"];
   [self tryAddImportFromBrowser:@"Safari" withBookmarkPath:@"~/Library/Safari/Bookmarks.plist"];

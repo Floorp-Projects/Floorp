@@ -102,10 +102,10 @@ enum {
 -(BOOL) readBookmarks;
 -(void) startImportBookmarks;
 -(BOOL) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
--(NSString *)decodedHTMLfile:(NSString *)pathToFile;
 -(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 -(BOOL)readCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 -(BOOL)readPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+-(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
 // Writing bookmark files
 -(void)writeHTMLFile:(NSString *)pathToFile;
