@@ -2051,9 +2051,8 @@ GetMapFor10646Font(XFontStruct* aFont)
 }
 
 PRBool
-nsFontGTK::IsEmptyFont(nsXFont* aXFont)
+nsFontGTK::IsEmptyFont(XFontStruct* xFont)
 {
-  XFontStruct* xFont = aXFont->GetXFontStruct();
 
   //
   // scan and see if we can find at least one glyph
@@ -2116,12 +2115,17 @@ nsFontGTK::LoadFont(void)
 
   if (gdkFont) {
     XFontStruct* xFont = mXFont->GetXFontStruct();
+    XFontStruct* xFont_with_per_char;
+    if (mAABaseSize==0)
+      xFont_with_per_char = xFont;
+    else
+      xFont_with_per_char = (XFontStruct *)GDK_FONT_XFONT(mFontHolder);
 
     mMaxAscent = xFont->ascent;
     mMaxDescent = xFont->descent;
 
     if (mCharSetInfo == &ISO106461) {
-      mCCMap = GetMapFor10646Font(xFont);
+      mCCMap = GetMapFor10646Font(xFont_with_per_char);
       if (!mCCMap) {
         mXFont->UnloadFont();
         mXFont = nsnull;
@@ -2145,7 +2149,7 @@ if ((mCharSetInfo == &JISX0201)
     || (mCharSetInfo == &CNS116437)
    ) {
 
-    if (IsEmptyFont(mXFont)) {
+    if (IsEmptyFont(xFont_with_per_char)) {
 #ifdef NS_FONT_DEBUG_LOAD_FONT
       if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
         printf("\n");

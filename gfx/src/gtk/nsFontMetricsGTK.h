@@ -82,7 +82,7 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void LoadFont(void);
-  PRBool IsEmptyFont(nsXFont*);
+  PRBool IsEmptyFont(XFontStruct*);
 
   inline int SupportsChar(PRUnichar aChar)
     { return mFont && CCMAP_HAS_CHAR(mCCMap, aChar); };
