@@ -183,16 +183,23 @@ nsAppleSingleDecoder::IsAppleSingleFile(FSSpec *inSpec)
 	// check for existence
 	FSSpec tmp;
 	err = FSMakeFSSpec(inSpec->vRefNum, inSpec->parID, inSpec->name, &tmp);
-	if (err == fnfErr)
+	if (err!=noErr)
+		return false;
+	
+	// open and read the magic number len bytes	
+	err = FSpOpenDF( inSpec, fsRdPerm, &inRefNum );
+	if (err!=noErr)
 		return false;
 		
-	MAC_ERR_CHECK(FSpOpenDF( inSpec, fsRdPerm, &inRefNum ));
-	MAC_ERR_CHECK(FSRead( inRefNum, &bytesRead, &magic ));
+	err = FSRead( inRefNum, &bytesRead, &magic );
+	if (err!=noErr)
+		return false;
 		
 	FSClose(inRefNum);
 	if (bytesRead != sizeof(magic))
 		return false;
-		
+
+	// check if bytes read match magic number	
 	bAppleSingle = (magic == 0x00051600);
 	return bAppleSingle;
 }
