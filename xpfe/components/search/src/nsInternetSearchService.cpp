@@ -66,6 +66,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsISearchService.h"
+#include "nsIBookmarksService.h"
 
 #ifdef	XP_MAC
 #include "Files.h"
@@ -99,6 +100,11 @@ static const char kURINC_LastSearchRoot[]             = "NC:LastSearchRoot";
 static const char kURINC_SearchCategoryRoot[]         = "NC:SearchCategoryRoot";
 static const char kURINC_SearchCategoryPrefix[]       = "NC:SearchCategory?category=";
 static const char kURINC_SearchCategoryEnginePrefix[] = "NC:SearchCategory?engine=";
+static const char kURINC_FilterSearchURLsRoot[]       = "NC:FilterSearchURLsRoot";
+static const char kURINC_FilterSearchSitesRoot[]      = "NC:FilterSearchSitesRoot";
+
+
+static const char kSearchCommand[]                    = "http://home.netscape.com/NC-rdf#command?";
 
 
 
@@ -246,10 +252,13 @@ static	PRBool				mEngineListBuilt;
 static	nsCOMPtr<nsILoadGroup>		mLoadGroup;
 
     // pseudo-constants
+	static nsIRDFResource		*kNC_SearchResult;
 	static nsIRDFResource		*kNC_SearchEngineRoot;
 	static nsIRDFResource		*kNC_LastSearchRoot;
 	static nsIRDFResource		*kNC_SearchCategoryRoot;
 	static nsIRDFResource		*kNC_SearchResultsSitesRoot;
+	static nsIRDFResource		*kNC_FilterSearchURLsRoot;
+	static nsIRDFResource		*kNC_FilterSearchSitesRoot;
 	static nsIRDFResource		*kNC_Ref;
 	static nsIRDFResource		*kNC_Child;
 	static nsIRDFResource		*kNC_Data;
@@ -273,6 +282,11 @@ static	nsCOMPtr<nsILoadGroup>		mLoadGroup;
 	static nsIRDFResource		*kNC_PriceSort;
 	static nsIRDFResource		*kNC_Availability;
 
+	static nsIRDFResource		*kNC_SearchCommand_AddToBookmarks;
+	static nsIRDFResource		*kNC_SearchCommand_FilterResult;
+	static nsIRDFResource		*kNC_SearchCommand_FilterSite;
+	static nsIRDFResource		*kNC_SearchCommand_ClearFilters;
+
 protected:
 	static nsIRDFDataSource		*mInner;
 
@@ -285,6 +299,7 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 	PRBool		isSearchURI(nsIRDFResource* aResource);
 	PRBool		isSearchCategoryURI(nsIRDFResource* aResource);
 	PRBool		isSearchCategoryEngineURI(nsIRDFResource* aResource);
+	PRBool		isSearchCommand(nsIRDFResource* aResource);
 	nsresult	resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
 	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
 	nsresult	FindData(nsIRDFResource *engine, nsString &data);
@@ -300,6 +315,13 @@ static	nsresult	GetData(nsString &data, const char *sectionToFind, const char *a
 	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const nsString &htmlPage, PRBool useAllHREFsFlag, PRUint32 &numResults);
 	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
 	nsresult	ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
+
+	char *		getSearchURI(nsIRDFResource *src);
+	nsresult	addToBookmarks(nsIRDFResource *src);
+	nsresult	filterResult(nsIRDFResource *src);
+	nsresult	filterSite(nsIRDFResource *src);
+	nsresult	clearFilters(void);
+	PRBool		isSearchResultFiltered(const nsString &href);
 
 			InternetSearchDataSource(void);
 	virtual		~InternetSearchDataSource(void);
@@ -332,10 +354,13 @@ nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 PRBool				InternetSearchDataSource::mEngineListBuilt;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchResult;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchEngineRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastSearchRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCategoryRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchResultsSitesRoot;
+nsIRDFResource			*InternetSearchDataSource::kNC_FilterSearchURLsRoot;
+nsIRDFResource			*InternetSearchDataSource::kNC_FilterSearchSitesRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_Ref;
 nsIRDFResource			*InternetSearchDataSource::kNC_Child;
 nsIRDFResource			*InternetSearchDataSource::kNC_Data;
@@ -359,6 +384,10 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Price;
 nsIRDFResource			*InternetSearchDataSource::kNC_PriceSort;
 nsIRDFResource			*InternetSearchDataSource::kNC_Availability;
 
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_AddToBookmarks;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterResult;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterSite;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
 
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
@@ -381,6 +410,9 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
 		gRDFService->GetResource(kURINC_LastSearchRoot,                  &kNC_LastSearchRoot);
 		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,          &kNC_SearchResultsSitesRoot);
+		gRDFService->GetResource(kURINC_FilterSearchURLsRoot,            &kNC_FilterSearchURLsRoot);
+		gRDFService->GetResource(kURINC_FilterSearchSitesRoot,           &kNC_FilterSearchSitesRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "SearchResult",        &kNC_SearchResult);
 		gRDFService->GetResource(NC_NAMESPACE_URI "SearchCategoryRoot",  &kNC_SearchCategoryRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI "ref",                 &kNC_Ref);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child",               &kNC_Child);
@@ -404,6 +436,11 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price",               &kNC_Price);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price?sort=true",     &kNC_PriceSort);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Availability",        &kNC_Availability);
+
+		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=addtobookmarks", &kNC_SearchCommand_AddToBookmarks);
+		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filterresult",   &kNC_SearchCommand_FilterResult);
+		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filtersite",     &kNC_SearchCommand_FilterSite);
+		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=clearfilters",   &kNC_SearchCommand_ClearFilters);
 	}
 }
 
@@ -413,10 +450,13 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 {
 	if (--gRefCnt == 0)
 	{
+		NS_IF_RELEASE(kNC_SearchResult);
 		NS_IF_RELEASE(kNC_SearchEngineRoot);
 		NS_IF_RELEASE(kNC_LastSearchRoot);
 		NS_IF_RELEASE(kNC_SearchCategoryRoot);
 		NS_IF_RELEASE(kNC_SearchResultsSitesRoot);
+		NS_IF_RELEASE(kNC_FilterSearchURLsRoot);
+		NS_IF_RELEASE(kNC_FilterSearchSitesRoot);
 		NS_IF_RELEASE(kNC_Ref);
 		NS_IF_RELEASE(kNC_Child);
 		NS_IF_RELEASE(kNC_Data);
@@ -439,6 +479,11 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Price);
 		NS_IF_RELEASE(kNC_PriceSort);
 		NS_IF_RELEASE(kNC_Availability);
+
+		NS_IF_RELEASE(kNC_SearchCommand_AddToBookmarks);
+		NS_IF_RELEASE(kNC_SearchCommand_FilterResult);
+		NS_IF_RELEASE(kNC_SearchCommand_FilterSite);
+		NS_IF_RELEASE(kNC_SearchCommand_ClearFilters);
 
 		NS_IF_RELEASE(mInner);
 
@@ -513,6 +558,24 @@ InternetSearchDataSource::isSearchCategoryEngineURI(nsIRDFResource *r)
 		isSearchCategoryEngineURIFlag = PR_TRUE;
 	}
 	return(isSearchCategoryEngineURIFlag);
+}
+
+
+
+PRBool
+InternetSearchDataSource::isSearchCommand(nsIRDFResource *r)
+{
+	PRBool		isSearchCommandFlag = PR_FALSE;
+	const char	*uri = nsnull;
+	
+	if (NS_SUCCEEDED(r->GetValueConst( &uri )) && (uri))
+	{
+		if (!strncmp(uri, kSearchCommand, sizeof(kSearchCommand) - 1))
+		{
+			isSearchCommandFlag = PR_TRUE;
+		}
+	}
+	return(isSearchCommandFlag);
 }
 
 
@@ -719,6 +782,31 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		*target = source;
 		NS_ADDREF(source);
 		return(NS_OK);
+	}
+
+	if (isSearchCommand(source) && (property == kNC_Name))
+	{
+		// XXX localize: put static strings into a string bundle
+		nsAutoString	name;
+		if (source == kNC_SearchCommand_AddToBookmarks)
+			name = "Add to bookmarks";
+		else if (source == kNC_SearchCommand_FilterResult)
+			name = "Filter out this URL from all search results";
+		else if (source == kNC_SearchCommand_FilterSite)
+			name = "Filter out this web site from all search results";
+		else if (source == kNC_SearchCommand_ClearFilters)
+			name = "Clear all search filters";
+
+		if (name.Length() > 0)
+		{
+			*target = nsnull;
+			nsCOMPtr<nsIRDFLiteral>	literal;
+			if (NS_FAILED(rv = gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal))))
+				return(rv);
+			*target = literal;
+			NS_IF_ADDREF(*target);
+			return(rv);
+		}
 	}
 
 	if (mInner)
@@ -1102,7 +1190,49 @@ NS_IMETHODIMP
 InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-	return(NS_NewEmptyEnumerator(commands));
+	nsCOMPtr<nsISupportsArray>	cmdArray;
+	nsresult			rv;
+	rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
+	if (NS_FAILED(rv))	return(rv);
+
+	PRBool				isSearchResult = PR_FALSE;
+	if (NS_SUCCEEDED(rv = mInner->HasAssertion(source, kRDF_type, kNC_SearchResult,
+		PR_TRUE, &isSearchResult)) && (isSearchResult == PR_TRUE))
+	{
+		nsCOMPtr<nsIRDFDataSource>	datasource;
+		if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
+		{
+			nsCOMPtr<nsIBookmarksService>	bookmarks = do_QueryInterface(datasource);
+			if (bookmarks)
+			{
+				char *uri = getSearchURI(source);
+				if (uri)
+				{
+					PRBool	isBookmarkedFlag = PR_FALSE;
+					if (NS_SUCCEEDED(rv = bookmarks->IsBookmarked(uri, &isBookmarkedFlag))
+						&& (isBookmarkedFlag == PR_FALSE))
+					{
+						cmdArray->AppendElement(kNC_SearchCommand_AddToBookmarks);
+					}
+					Recycle(uri);
+				}
+			}
+		}
+		cmdArray->AppendElement(kNC_SearchCommand_FilterResult);
+		cmdArray->AppendElement(kNC_SearchCommand_FilterSite);
+		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+	}
+	else if (isSearchURI(source) || (source == kNC_LastSearchRoot))
+	{
+		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+	}
+
+	nsISimpleEnumerator		*result = new nsArrayEnumerator(cmdArray);
+	if (!result)
+		return(NS_ERROR_OUT_OF_MEMORY);
+	NS_ADDREF(result);
+	*commands = result;
+	return(NS_OK);
 }
 
 
@@ -1118,12 +1248,434 @@ InternetSearchDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/*
 
 
 
+char *
+InternetSearchDataSource::getSearchURI(nsIRDFResource *src)
+{
+	char	*uri = nsnull;
+
+	if (src)
+	{
+		nsresult		rv;
+		nsCOMPtr<nsIRDFNode>	srcNode;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(src, kNC_URL, PR_TRUE, getter_AddRefs(srcNode))))
+		{
+			nsCOMPtr<nsIRDFLiteral>	urlLiteral = do_QueryInterface(srcNode);
+			if (urlLiteral)
+			{
+				const PRUnichar	*uriUni = nsnull;
+				urlLiteral->GetValueConst(&uriUni);
+				if (uriUni)
+				{
+					nsAutoString	uriString(uriUni);
+					uri = uriString.ToNewUTF8String();
+				}
+			}
+		}
+	}
+	return(uri);
+}
+
+
+
+nsresult
+InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
+{
+	if (!src)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)	return(NS_ERROR_UNEXPECTED);
+
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	nameNode;
+	// Note: nameLiteral needs to stay in scope for the life of "name"
+	nsCOMPtr<nsIRDFLiteral>	nameLiteral;
+	const PRUnichar		*name = nsnull;
+	if (NS_SUCCEEDED(rv = mInner->GetTarget(src, kNC_Name, PR_TRUE, getter_AddRefs(nameNode))))
+	{
+		nameLiteral = do_QueryInterface(nameNode);
+		if (nameLiteral)
+		{
+			nameLiteral->GetValueConst(&name);
+		}
+	}
+
+	nsCOMPtr<nsIRDFDataSource>	datasource;
+	if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
+	{
+		nsCOMPtr<nsIBookmarksService>	bookmarks = do_QueryInterface(datasource);
+		if (bookmarks)
+		{
+			char	*uri = getSearchURI(src);
+			if (uri)
+			{
+				rv = bookmarks->AddBookmark(uri, name );
+				Recycle(uri);
+			}
+		}
+	}
+
+	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
+{
+	if (!aResource)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)	return(NS_ERROR_UNEXPECTED);
+
+	// remove all anonymous resources which have this as a #URL
+	char	*uri = getSearchURI(aResource);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
+	nsAutoString	url(uri);
+	Recycle(uri);
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
+	if (NS_FAILED(rv = gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(urlLiteral)))
+		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
+
+	// add aResource into a list of nodes to filter out
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+	if (NS_FAILED(rv))	return(rv);
+
+	PRBool	alreadyFiltered = PR_FALSE;
+	if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral,
+		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
+	{
+		// already filtered, nothing to do
+		return(rv);
+	}
+
+	// filter this URL out
+	localstore->Assert(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral, PR_TRUE);
+
+	// flush localstore
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	if (remoteLocalStore)
+	{
+		remoteLocalStore->Flush();
+	}
+
+	nsCOMPtr<nsISimpleEnumerator>	anonArcs;
+	if (NS_SUCCEEDED(rv = mInner->GetSources(kNC_URL, urlLiteral, PR_TRUE,
+		getter_AddRefs(anonArcs))))
+	{
+		PRBool			hasMoreAnonArcs = PR_TRUE;
+		while (hasMoreAnonArcs == PR_TRUE)
+		{
+			if (NS_FAILED(anonArcs->HasMoreElements(&hasMoreAnonArcs)) ||
+				(hasMoreAnonArcs == PR_FALSE))	break;
+			nsCOMPtr<nsISupports>	anonArc;
+			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))
+				break;
+			nsCOMPtr<nsIRDFResource>	anonChild = do_QueryInterface(anonArc);
+			if (!anonChild)	continue;
+
+			PRBool	isSearchResult = PR_FALSE;
+			if (NS_FAILED(rv = mInner->HasAssertion(anonChild, kRDF_type, kNC_SearchResult,
+				PR_TRUE, &isSearchResult)) || (isSearchResult == PR_FALSE))
+				continue;
+
+			nsCOMPtr<nsIRDFResource>	anonParent;
+			if (NS_FAILED(rv = mInner->GetSource(kNC_Child, anonChild, PR_TRUE,
+				getter_AddRefs(anonParent))))	continue;
+			if (!anonParent)	continue;
+
+			mInner->Unassert(anonParent, kNC_Child, anonChild);
+		}
+	}
+
+	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
+{
+	if (!aResource)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)	return(NS_ERROR_UNEXPECTED);
+
+	char	*uri = getSearchURI(aResource);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
+	nsAutoString	host(uri);
+	Recycle(uri);
+
+	// determine site (host name)
+	PRInt32		slashOffset1 = host.Find("://");
+	if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
+	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+	if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
+	host.Truncate(slashOffset2 + 1);
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
+	if (NS_FAILED(rv = gRDFService->GetLiteral(host.GetUnicode(), getter_AddRefs(urlLiteral)))
+		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
+
+	// add aResource into a list of nodes to filter out
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+	if (NS_FAILED(rv))	return(rv);
+
+	PRBool	alreadyFiltered = PR_FALSE;
+	if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
+		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
+	{
+		// already filtered, nothing to do
+		return(rv);
+	}
+
+	// filter this site out
+	localstore->Assert(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral, PR_TRUE);
+
+	// flush localstore
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	if (remoteLocalStore)
+	{
+		remoteLocalStore->Flush();
+	}
+
+	// remove all anonymous resources which have this as a site
+
+	nsCOMPtr<nsISupportsArray>	array;
+	nsCOMPtr<nsIRDFResource>	aRes;
+	nsCOMPtr<nsISimpleEnumerator>	cursor;
+	PRBool				hasMore;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(array));
+	if (NS_FAILED(rv)) return rv;
+
+	if (NS_FAILED(rv = GetAllResources(getter_AddRefs(cursor))))	return(rv);
+	if (!cursor)	return(NS_ERROR_UNEXPECTED);
+
+	hasMore = PR_TRUE;
+	while (hasMore == PR_TRUE)
+	{
+		if (NS_FAILED(rv = cursor->HasMoreElements(&hasMore)))	return(rv);
+		if (hasMore == PR_FALSE)	break;
+		
+		nsCOMPtr<nsISupports>	isupports;
+		if (NS_FAILED(rv = cursor->GetNext(getter_AddRefs(isupports))))
+				return(rv);
+		if (!isupports)	return(NS_ERROR_UNEXPECTED);
+		aRes = do_QueryInterface(isupports);
+		if (!aRes)	return(NS_ERROR_UNEXPECTED);
+
+		if ((aRes == kNC_LastSearchRoot) || (isSearchURI(aRes)))
+		{
+			array->AppendElement(aRes);
+		}
+	}
+
+//crap
+
+	PRUint32	count;
+	if (NS_FAILED(rv = array->Count(&count)))	return(rv);
+	for (PRUint32 loop=0; loop<count; loop++)
+	{
+		nsCOMPtr<nsISupports>	element = array->ElementAt(loop);
+		if (!element)	break;
+		nsCOMPtr<nsIRDFResource>	aSearchRoot = do_QueryInterface(element);
+		if (!aSearchRoot)	break;
+
+		if (NS_SUCCEEDED(rv = mInner->GetTargets(aSearchRoot, kNC_Child,
+			PR_TRUE, getter_AddRefs(cursor))))
+		{
+			hasMore = PR_TRUE;
+			while (hasMore == PR_TRUE)
+			{
+				if (NS_FAILED(cursor->HasMoreElements(&hasMore)) ||
+					(hasMore == PR_FALSE))	break;
+
+				nsCOMPtr<nsISupports>		arc;
+				if (NS_FAILED(cursor->GetNext(getter_AddRefs(arc))))
+					break;
+				aRes = do_QueryInterface(arc);
+				if (!aRes)	break;
+
+				uri = getSearchURI(aRes);
+				if (!uri)	return(NS_ERROR_UNEXPECTED);
+				nsAutoString	site(uri);
+				Recycle(uri);
+
+				// determine site (host name)
+				PRInt32		slashOffset1 = site.Find("://");
+				if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
+				PRInt32 	slashOffset2 = site.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+				if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
+				site.Truncate(slashOffset2 + 1);
+
+				if (site.EqualsIgnoreCase(host))
+				{
+					mInner->Unassert(aSearchRoot, kNC_Child, aRes);
+				}
+			}
+		}
+	}
+
+	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::clearFilters(void)
+{
+	if (!mInner)	return(NS_ERROR_UNEXPECTED);
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+	if (NS_FAILED(rv))	return(rv);
+
+	nsCOMPtr<nsISimpleEnumerator>	arcs;
+	PRBool				hasMore = PR_TRUE;
+	nsCOMPtr<nsISupports>		arc;
+
+	// remove all filtered URLs
+	if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
+		PR_TRUE, getter_AddRefs(arcs))))
+	{
+		hasMore = PR_TRUE;
+		while (hasMore == PR_TRUE)
+		{
+			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+				break;
+			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+				break;
+
+			nsCOMPtr<nsIRDFLiteral>	filterURL = do_QueryInterface(arc);
+			if (!filterURL)	continue;
+			
+			localstore->Unassert(kNC_FilterSearchURLsRoot, kNC_Child, filterURL);
+		}
+	}
+
+	// remove all filtered sites
+	if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
+		PR_TRUE, getter_AddRefs(arcs))))
+	{
+		hasMore = PR_TRUE;
+		while (hasMore == PR_TRUE)
+		{
+			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+				break;
+			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+				break;
+
+			nsCOMPtr<nsIRDFLiteral>	filterSite = do_QueryInterface(arc);
+			if (!filterSite)	continue;
+			
+			localstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSite);
+		}
+	}
+
+	// flush localstore
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	if (remoteLocalStore)
+	{
+		remoteLocalStore->Flush();
+	}
+
+	return(NS_OK);
+}
+
+
+
+PRBool
+InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
+{
+	PRBool		filterStatus = PR_FALSE;
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+	if (NS_FAILED(rv))	return(filterStatus);
+
+	const PRUnichar	*hrefUni = hrefStr.GetUnicode();
+	if (!hrefUni)	return(filterStatus);
+
+	// check if this specific URL is to be filtered out
+	nsCOMPtr<nsIRDFLiteral>	hrefLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(hrefUni, getter_AddRefs(hrefLiteral))))
+	{
+		if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchURLsRoot,
+			kNC_Child, hrefLiteral, PR_TRUE, &filterStatus)))
+		{
+			if (filterStatus == PR_TRUE)
+			{
+				return(filterStatus);
+			}
+		}
+	}
+
+	// check if this specific Site is to be filtered out
+
+	// determine site (host name)
+	nsAutoString	host(hrefStr);
+	PRInt32		slashOffset1 = host.Find("://");
+	if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
+	PRInt32 	slashOffset2 = host.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+	if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
+	host.Truncate(slashOffset2 + 1);
+
+	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
+	if (NS_FAILED(rv = gRDFService->GetLiteral(host.GetUnicode(), getter_AddRefs(urlLiteral)))
+		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
+
+	rv = localstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
+		PR_TRUE, &filterStatus);
+
+	return(filterStatus);
+}
+
+
+
 NS_IMETHODIMP
 InternetSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                 nsIRDFResource*   aCommand,
                                 nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-	return(NS_ERROR_NOT_IMPLEMENTED);
+	nsresult		rv = NS_OK;
+	PRInt32			loop;
+	PRUint32		numSources;
+	if (NS_FAILED(rv = aSources->Count(&numSources)))	return(rv);
+	if (numSources < 1)
+	{
+		return(NS_ERROR_ILLEGAL_VALUE);
+	}
+
+	for (loop=((PRInt32)numSources)-1; loop>=0; loop--)
+	{
+		nsCOMPtr<nsISupports>	aSource = aSources->ElementAt(loop);
+		if (!aSource)	return(NS_ERROR_NULL_POINTER);
+		nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(aSource);
+		if (!src)	return(NS_ERROR_NO_INTERFACE);
+
+		if (aCommand == kNC_SearchCommand_AddToBookmarks)
+		{
+			if (NS_FAILED(rv = addToBookmarks(src)))
+				return(rv);
+		}
+		else if (aCommand == kNC_SearchCommand_FilterResult)
+		{
+			if (NS_FAILED(rv = filterResult(src)))
+				return(rv);
+		}
+		else if (aCommand == kNC_SearchCommand_FilterSite)
+		{
+			if (NS_FAILED(rv = filterSite(src)))
+				return(rv);
+		}
+		else if (aCommand == kNC_SearchCommand_ClearFilters)
+		{
+			if (NS_FAILED(rv = clearFilters()))
+				return(rv);
+		}
+	}
+	return(NS_OK);
 }
 
 
@@ -1789,7 +2341,7 @@ struct	encodings
 nsresult
 InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString &stringEncoding)
 {
-	// XXX we need to have a fully table of numeric --> string conversions
+	// XXX we need to have a full table of numeric --> string conversions
 
 	struct	encodings	encodingList[] =
 	{
@@ -2293,10 +2845,20 @@ InternetSearchDataSource::GetData(nsString &data, const char *sectionToFind, con
 			len = value.Length();
 			if ((len > 0) && (foundQuoteChar == PR_TRUE))
 			{
-				if (value[len-1] == quoteChar)
+				PRInt32 quoteEnd = value.FindChar(quoteChar, PR_TRUE);
+				if (quoteEnd >= 0)
 				{
-					value.SetLength(len-1);
+					value.Truncate(quoteEnd);
 				}
+			}
+			else
+			{
+				PRInt32 commentOffset = value.FindCharInSet("# \t", 0);
+				if (commentOffset >= 0)
+				{
+					value.Truncate(commentOffset);
+				}
+				value = value.Trim(" \t");
 			}
 			rv = NS_OK;
 			break;
@@ -2973,6 +3535,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			}
 		}
 
+		// if this result is to be filtered out, notice it now
+		if (isSearchResultFiltered(hrefStr) == PR_TRUE)
+			continue;
+
 		nsAutoString	site(hrefStr);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
@@ -3321,6 +3887,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		{
 			rv = mInner->Assert(res, kNC_PageRank, pageRankLiteral, PR_TRUE);
 		}
+
+		// set the type
+		rv = mInner->Assert(res, kRDF_type, kNC_SearchResult, PR_TRUE);
 
 #ifdef	OLDWAY
 		// Note: always add in parent-child relationship last!  (if it isn't already set)

@@ -36,6 +36,12 @@
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://search/content/search-panel.js" />
 
+<popupset>
+<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+	<menu />
+</popup>
+</popupset>
+
       <box align="vertical">
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
@@ -74,7 +80,7 @@
         </box>
         <spring style="height: 2px;"/>
 
-        <tree id="Tree" ref="NC:LastSearchRoot"
+        <tree id="Tree" ref="NC:LastSearchRoot" context="contextual"
           rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
           rdf:resource2="http://home.netscape.com/NC-rdf#Name"
           sortDirection="ascending" sortActive="true"
