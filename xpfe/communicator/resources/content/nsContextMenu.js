@@ -520,7 +520,8 @@ nsContextMenu.prototype = {
     // Show/hide one item (specified via name or the item element itself).
     showItem : function ( itemOrId, show ) {
         var item = itemOrId.constructor == String ? document.getElementById(itemOrId) : itemOrId;
-        item.hidden = !show;
+        if (item) 
+          item.hidden = !show;
     },
     // Set given attribute of specified context-menu item.  If the
     // value is null, then it removes the attribute (which works
