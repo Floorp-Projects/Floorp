@@ -1414,6 +1414,9 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
+    <menuitem label="&filtersApply.label;"
+              accesskey="&filtersApply.accesskey;"
+              oncommand="MsgApplyFilters(null);"/>
     <menuitem label="&importCmd.label;" 
               accesskey="&importCmd.accesskey;" 
               oncommand="toImport();"/>

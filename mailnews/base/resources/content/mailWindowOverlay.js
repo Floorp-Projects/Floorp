@@ -1216,6 +1216,38 @@ function MsgFilters(emailAddress)
     }
 }
 
+function MsgApplyFilters()
+{
+  var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
+
+  var preselectedFolder = GetFirstSelectedMsgFolder();
+  var selectedFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  selectedFolders.AppendElement(preselectedFolder);
+         
+  var curFilterList = preselectedFolder.getFilterList(msgWindow);
+  // create a new filter list and copy over the enabled filters to it.
+  // We do this instead of having the filter after the fact code ignore
+  // disabled filters because the Filter Dialog filter after the fact
+  // code would have to clone filters to allow disabled filters to run,
+  // and we don't support cloning filters currently.
+  var tempFilterList = filterService.getTempFilterList(preselectedFolder);
+  var numFilters = curFilterList.filterCount;
+  // make sure the temp filter list uses the same log stream
+  tempFilterList.logStream = curFilterList.logStream;
+  tempFilterList.loggingEnabled = curFilterList.loggingEnabled;
+  var newFilterIndex = 0;
+  for (var i = 0; i < numFilters; i++)
+  {
+    var curFilter = curFilterList.getFilterAt(i);
+    if (curFilter.enabled)
+    {
+      tempFilterList.insertFilterAt(newFilterIndex, curFilter);
+      newFilterIndex++;
+    }
+  }
+  filterService.applyFiltersToFolders(tempFilterList, selectedFolders, msgWindow);
+}
+
 function MsgViewAllHeaders()
 {
     gPrefs.setIntPref("mail.show_headers",2);

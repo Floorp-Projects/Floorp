@@ -107,6 +107,8 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.accesskey "J">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
+<!ENTITY filtersApply.label "Run Filters on Selected Folder">
+<!ENTITY filtersApply.accesskey "R">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
