@@ -2084,11 +2084,12 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
      nsresult rv = NS_OK;
      rv = aUri->GetSpec(&url);
      if (NS_SUCCEEDED(rv)) {
-       RAPTOR_STOPWATCH_TRACE(("*** Timing layout processes on url: '%s'\n", url));
+       RAPTOR_STOPWATCH_TRACE(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
        delete [] url;
      }
   }
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
   NS_RESET_AND_START_STOPWATCH(mTotalTime)
 #endif
 
@@ -3355,8 +3356,9 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIDocumentLoaderObserver * aWebShell)
 {
 #ifdef RAPTOR_PERF_METRICS
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
   NS_STOP_STOPWATCH(mTotalTime)
-  RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time: "));
+  RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time (webshell=%p): ", this));
   mTotalTime.Print();
   RAPTOR_STOPWATCH_TRACE(("\n"));
 #endif
