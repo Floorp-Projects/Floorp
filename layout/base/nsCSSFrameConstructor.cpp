@@ -9105,14 +9105,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     const nsStyleDisplay* display;
     childFrame->GetStyleData(eStyleStruct_Display,
                              (const nsStyleStruct*&)display);
-    if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+    nsIFrame* placeholderFrame = nsnull;
+    if (display->mDisplay == NS_STYLE_DISPLAY_POPUP)
       // Get the placeholder frame
-      nsIFrame* placeholderFrame;
       frameManager->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
-
+    if (placeholderFrame) {
       // Remove the mapping from the frame to its placeholder
       frameManager->SetPlaceholderFrameFor(childFrame, nsnull);
-
+    
       // Locate the root popup set and remove ourselves from the popup set's list
       // of popup frames.
       nsIFrame* rootFrame;
