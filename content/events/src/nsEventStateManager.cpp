@@ -140,10 +140,28 @@ nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
-PRInt8 nsEventStateManager::sTextfieldSelectModel = eTextfieldSelect_unset;
+// Tab focus model bit field:
+enum nsTabFocusModel {
+//eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
+  eTabFocus_formElementsMask = (1<<1),  // non-text form elements
+  eTabFocus_linksMask = (1<<2),         // links
+  eTabFocus_any = 1 + (1<<1) + (1<<2)   // everything that can be focused
+};
 
-PRUint32 nsEventStateManager::mInstanceCount = 0;
-PRInt32 nsEventStateManager::gGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
+enum nsTextfieldSelectModel {
+  eTextfieldSelect_unset = -1,
+  eTextfieldSelect_manual = 0,
+  eTextfieldSelect_auto = 1   // select textfields when focused with keyboard
+};
+
+// Tab focus policy (static, constant across the app):
+// Which types of elements are in the tab order?
+static PRInt8 sTextfieldSelectModel = eTextfieldSelect_unset;
+static PRBool sLeftClickOnly = PR_TRUE;
+static PRBool sKeyCausesActivation = PR_TRUE;
+static PRUint32 sESMInstanceCount = 0;
+static PRInt32 sGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
+static PRInt32 sTabFocusModel = eTabFocus_any;
 
 enum {
  MOUSE_SCROLL_N_LINES,
@@ -218,7 +236,6 @@ nsEventStateManager::nsEventStateManager()
   mCurrentTabIndex = 0;
   mAccessKeys = nsnull;
   mBrowseWithCaret = PR_FALSE;
-  mLeftClickOnly = PR_TRUE;
   mNormalLMouseEventInProcess = PR_FALSE;
   mTabbedThroughDocument = PR_FALSE;
 
@@ -226,7 +243,7 @@ nsEventStateManager::nsEventStateManager()
   mEventDownWidget = nsnull;
 #endif
   
-  ++mInstanceCount;
+  ++sESMInstanceCount;
 }
 
 NS_IMETHODIMP
@@ -243,19 +260,37 @@ nsEventStateManager::Init()
   rv = getPrefBranch();
 
   if (NS_SUCCEEDED(rv)) {
-    mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
-                             &mLeftClickOnly);
+    if (sESMInstanceCount == 1) {
+      mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
+                               &sLeftClickOnly);
 
-    // magic value of -1 means uninitialized
-    if (nsEventStateManager::gGeneralAccesskeyModifier == -1) {
       mPrefBranch->GetIntPref("ui.key.generalAccessKey",
-                              &nsEventStateManager::gGeneralAccesskeyModifier);
-    }
+                              &sGeneralAccesskeyModifier);
 
+      mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+    }
+    mPrefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
     mPrefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
+    mPrefBranch->AddObserver("accessibility.tabfocus", this, PR_TRUE);
+    mPrefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
+    mPrefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
+#if 0
+    mPrefBranch->AddObserver("mousewheel.withaltkey.action", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withaltkey.numlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withaltkey.sysnumlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withcontrolkey.action", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withcontrolkey.numlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withcontrolkey.sysnumlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withnokey.action", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withnokey.numlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withnokey.sysnumlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withshiftkey.action", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
+    mPrefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
+#endif
   }
 
-  if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
+  if (sTextfieldSelectModel == eTextfieldSelect_unset) {
     nsCOMPtr<nsILookAndFeel> lookNFeel(do_GetService(kLookAndFeelCID));
     PRInt32 selectTextfieldsOnKeyFocus = 0;
     lookNFeel->GetMetric(nsILookAndFeel::eMetric_SelectTextfieldsOnKeyFocus,
@@ -276,8 +311,8 @@ nsEventStateManager::~nsEventStateManager()
   }
 #endif
 
-  --mInstanceCount;
-  if(mInstanceCount == 0) {
+  --sESMInstanceCount;
+  if(sESMInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
   }
@@ -297,10 +332,9 @@ nsEventStateManager::~nsEventStateManager()
 
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv))
-      {
-        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      }
+    if (NS_SUCCEEDED(rv)) {
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
   }
   
 }
@@ -308,9 +342,28 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  mPrefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-  
-  mPrefBranch = nsnull;
+  if (mPrefBranch) {
+    mPrefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
+    mPrefBranch->RemoveObserver("accessibility.browsewithcaret", this);
+    mPrefBranch->RemoveObserver("accessibility.tabfocus", this);
+    mPrefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
+    mPrefBranch->RemoveObserver("ui.key.generalAccessKey", this);
+#if 0
+    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.action", this);
+    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.numlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.sysnumlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.action", this);
+    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.numlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.sysnumlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withaltkey.action", this);
+    mPrefBranch->RemoveObserver("mousewheel.withaltkey.numlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withaltkey.sysnumlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withnokey.action", this);
+    mPrefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
+    mPrefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
+#endif
+    mPrefBranch = nsnull;
+  }
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -340,9 +393,37 @@ nsEventStateManager::Observe(nsISupports *aSubject,
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     Shutdown();
   else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    if (someData && nsDependentString(someData).Equals(NS_LITERAL_STRING("accessibility.browsewithcaret"))) {
+    if (!someData)
+      return NS_OK;
+
+    nsDependentString data(someData);
+    if (data.Equals(NS_LITERAL_STRING("accessibility.accesskeycausesactivation"))) {
+      mPrefBranch->GetBoolPref("accessibility.accesskeycausesactivation", &sKeyCausesActivation);
+    } else if (data.Equals(NS_LITERAL_STRING("accessibility.browsewithcaret"))) {
       PRBool browseWithCaret;
       ResetBrowseWithCaret(&browseWithCaret);
+    } else if (data.Equals(NS_LITERAL_STRING("accessibility.tabfocus"))) {
+      mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+    } else if (data.Equals(NS_LITERAL_STRING("nglayout.events.dispatchLeftClickOnly"))) {
+      mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
+                               &sLeftClickOnly);
+    } else if (data.Equals(NS_LITERAL_STRING("ui.key.generalAccessKey"))) {
+      mPrefBranch->GetIntPref("ui.key.generalAccessKey",
+                              &sGeneralAccesskeyModifier);
+#if 0
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.action"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.numlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.sysnumlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.action"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.numlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.sysnumlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.action"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.numlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.sysnumlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.action"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.numlines"))) {
+    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.sysnumlines"))) {
+#endif
     }
   }
   
@@ -859,7 +940,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
 
       PRBool isSpecialAccessKeyDown = PR_FALSE;
-      switch (gGeneralAccesskeyModifier) {
+      switch (sGeneralAccesskeyModifier) {
         case nsIDOMKeyEvent::DOM_VK_CONTROL: isSpecialAccessKeyDown = keyEvent->isControl; break;
         case nsIDOMKeyEvent::DOM_VK_ALT: isSpecialAccessKeyDown = keyEvent->isAlt; break;
         case nsIDOMKeyEvent::DOM_VK_META: isSpecialAccessKeyDown = keyEvent->isMeta; break;
@@ -964,14 +1045,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         // So for now we'll settle for A) Set focus
         ChangeFocus(content, eEventFocusedByKey);
 
-        nsresult rv = getPrefBranch();
-        PRBool activate = PR_TRUE;
-
-        if (NS_SUCCEEDED(rv)) {
-          mPrefBranch->GetBoolPref("accessibility.accesskeycausesactivation", &activate);
-        }
-
-        if (activate) {
+        if (sKeyCausesActivation) {
           // B) Click on it if the users prefs indicate to do so.
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event(NS_MOUSE_LEFT_CLICK);
@@ -1142,7 +1216,7 @@ nsEventStateManager::KillClickHoldTimer()
 // This fires after the mouse has been down for a certain length of time. 
 //
 void
-nsEventStateManager::sClickHoldCallback(nsITimer *aTimer, void* aESM)
+sClickHoldCallback(nsITimer *aTimer, void* aESM)
 {
   nsEventStateManager* self = NS_STATIC_CAST(nsEventStateManager*, aESM);
   if ( self )
@@ -2834,11 +2908,11 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
       break;
     case NS_MOUSE_MIDDLE_BUTTON_UP:
       eventMsg = NS_MOUSE_MIDDLE_CLICK;
-      flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+      flags |= sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     case NS_MOUSE_RIGHT_BUTTON_UP:
       eventMsg = NS_MOUSE_RIGHT_CLICK;
-      flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+      flags |= sLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     }
 
@@ -3362,16 +3436,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
-      PRInt32 tabFocusModel = eTabFocus_any;
-      if (mPrefBranch) {
-        // This could be done via a pref observer, but because there are 
-        // no static pref callbacks we'd have to create a singleton object
-        // just to observe this pref. Since mPrefBranch is already cached, and
-        // GetIntPref() is fairly fast, that would probably be overkill.
-        // This only happens once per tab press.
-        mPrefBranch->GetIntPref("accessibility.tabfocus", &tabFocusModel);
-      }
-
       nsIAtom *tag = child->Tag();
       if (child->IsContentOfType(nsIContent::eHTML)) {
         if (tag == nsHTMLAtoms::input) {
@@ -3396,14 +3460,14 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                 break;
               default:
                 disabled =
-                  disabled || !(tabFocusModel & eTabFocus_formElementsMask);
+                  disabled || !(sTabFocusModel & eTabFocus_formElementsMask);
                 break;
             }
           }
         }
         else if (tag == nsHTMLAtoms::select) {
           // Select counts as form but not as text
-          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
             if (nextSelect) {
@@ -3425,7 +3489,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         }
         else if (tag == nsHTMLAtoms::a) {
           // it's a link
-          disabled = !(tabFocusModel & eTabFocus_linksMask);
+          disabled = !(sTabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
           if (!disabled) {
             if (nextAnchor)
@@ -3441,7 +3505,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         }
         else if (tag == nsHTMLAtoms::button) {
           // Button counts as a form element but not as text
-          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
             if (nextButton) {
@@ -3453,7 +3517,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         else if (tag == nsHTMLAtoms::img) {
           // Don't need to set disabled here, because if we
           // match an imagemap, we'll return from there.
-          if (tabFocusModel & eTabFocus_linksMask) {
+          if (sTabFocusModel & eTabFocus_linksMask) {
             nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
             nsAutoString usemap;
             if (nextImage) {
@@ -3510,7 +3574,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         }
         else if (tag == nsHTMLAtoms::object) {
           // OBJECT is treated as a form element.
-          disabled = !(tabFocusModel & eTabFocus_formElementsMask);
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
             if (nextObject) 
