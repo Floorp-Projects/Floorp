@@ -26,23 +26,23 @@ text.head {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-row(success)
+outlinerchildren:-moz-outliner-row(success)
 {
   background-color: green;
 }
 
-outlinerbody:-moz-outliner-row(fail)
+outlinerchildren:-moz-outliner-row(fail)
 {
   background-color: red;
 }
 
-outlinerbody:-moz-outliner-row(selected)
+outlinerchildren:-moz-outliner-row(selected)
 {
   border: 1px solid blue;
   background-color: white ;
 }
 
-outlinerbody:-moz-outliner-cell-text(selected)
+outlinerchildren:-moz-outliner-cell-text(selected)
 {
   color: black;  
 }

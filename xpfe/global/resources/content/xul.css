@@ -36,7 +36,8 @@ commands, commandset, command,
 broadcasterset, broadcaster, observes,
 keyset, key, 
 template, rule, conditions, action, 
-bindings, binding, content, member, triple {
+bindings, binding, content, member, triple,
+outlinerchildren, outlineritem, outlinerseparator, outlinerrow, outlinercell {
   display: none;
 }
 
@@ -60,7 +61,6 @@ menulist[editable] {
 
 outlinercol,
 outlinerrows,
-outlinerbody,
 radio {
   -moz-user-focus: none;
 }
@@ -482,28 +482,31 @@ treeitem[container="true"] > treerow > .treecell-indent {
 /******** outliner ******/
 
 outliner {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outliner");
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outliner");
 }
 
 outlinercols {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
 }
 
 outlinercol {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol");
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol");
 }
 
 outlinercol.outlinercol-image {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol-image");
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol-image");
 }
 
-outlinerbody {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerbody");
+outliner > outlinerchildren {
+  display: -moz-box;
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerbody");
+  -moz-user-focus: none;
   -moz-user-select: none;
+  -moz-box-flex: 1;
 }
 
 outlinerrows {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerrows");
+  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerrows");
 }
 
 outlinercolpicker {
@@ -517,6 +520,10 @@ outliner {
   min-height: 0px;
   width: 10px;
   height: 10px;
+}
+
+outliner[hidecolumnpicker="true"] > outlinercols > outlinercolpicker {
+  display: none;
 }
 
 outlinercol {

@@ -24,6 +24,6 @@
       <splitter class="tree-splitter"/>
       <outlinercol id="olcStyleValue" label="Value" flex="1"/>
     </outlinercols>
-    <outlinerbody id="olbStyles" flex="1"/>
+    <outlinerchildren id="olbStyles"/>
   </outliner>
 </page>

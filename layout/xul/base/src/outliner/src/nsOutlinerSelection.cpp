@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsOutlinerSelection.h"
+#include "nsIBoxObject.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerView.h"
 #include "nsString.h"
@@ -716,8 +717,9 @@ nsOutlinerSelection::FireOnSelectHandler()
   if (mSuppressed)
     return NS_OK;
 
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mOutliner);
   nsCOMPtr<nsIDOMElement> elt;
-  mOutliner->GetOutlinerBody(getter_AddRefs(elt));
+  boxObject->GetElement(getter_AddRefs(elt));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
   nsCOMPtr<nsIDocument> document;
@@ -747,14 +749,13 @@ nsOutlinerSelection::FireOnSelectHandler()
 
 PRBool nsOutlinerSelection::SingleSelection()
 {
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mOutliner);
   nsCOMPtr<nsIDOMElement> element;
-  mOutliner->GetOutlinerBody(getter_AddRefs(element));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
-  nsCOMPtr<nsIContent> parent;
-  content->GetParent(*getter_AddRefs(parent));
+  boxObject->GetElement(getter_AddRefs(element));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
   nsAutoString seltype;
-  parent->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
-  if (seltype.EqualsIgnoreCase("single"))
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
+  if (seltype.Equals(NS_LITERAL_STRING("single")))
     return PR_TRUE;
   return PR_FALSE;
 }

@@ -185,22 +185,17 @@ class nsOutlinerContentView : public nsIOutlinerView,
 
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
 
-    void GetSelectElement();
-
     inline nsresult SetOptionsSelected(PRInt32 aStart, PRInt32 aEnd,
                                        PRBool aSelect, PRBool aClear)
     {
       nsresult rv = NS_OK;
 
-      if (!mHasCheckedSelect)
-        GetSelectElement();
-
-      if (mSelectElement) {
-        mIgnoreOptionSelected = PR_TRUE;
-        rv = mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, aSelect,
-                                                       aClear, PR_FALSE, nsnull);
+      if (mRoot) {
+        nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(mRoot);
+        if (selectElement)
+          rv = selectElement->SetOptionsSelectedByIndex(aStart, aEnd, aSelect,
+                                                        aClear, PR_FALSE, nsnull);
       }
-
       return rv;
     }
 
@@ -208,14 +203,11 @@ class nsOutlinerContentView : public nsIOutlinerView,
     nsCOMPtr<nsIOutlinerBoxObject>      mBoxObject;
     nsCOMPtr<nsIOutlinerSelection>      mSelection;
     nsCOMPtr<nsIContent>                mRoot;
-    nsCOMPtr<nsISelectElement>          mSelectElement;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
     nsVoidArray                         mRows;
 
-    PRPackedBool                        mHasCheckedSelect;
     PRPackedBool                        mUpdateSelection;
-    PRPackedBool                        mIgnoreOptionSelected;
 };
 
 #endif // nsOutlinerContentView_h__

@@ -57,7 +57,7 @@ function HistoryInit()
     gHistoryBundle =    document.getElementById("historyBundle");
     gHistoryStatus =    document.getElementById("statusbar-display");
 
-    var outlinerController = new nsOutlinerController(gHistoryOutliner, document.getElementById('historyOutlinerBody'));
+    var outlinerController = new nsOutlinerController(gHistoryOutliner);
     var historyController = new nsHistoryController;
     gHistoryOutliner.controllers.appendController(historyController);
 
@@ -267,18 +267,18 @@ function setRoot(root)
 
 function GroupBy(groupingType)
 {
-    var outlinerBody = document.getElementById("historyOutlinerBody");
+    var outliner = document.getElementById("historyOutliner");
     switch(groupingType) {
     case "none":
-        outlinerBody.setAttribute("ref", "NC:HistoryRoot");
+        outliner.setAttribute("ref", "NC:HistoryRoot");
         break;
     case "site":
         // xxx for now
-        outlinerBody.setAttribute("ref", "NC:HistoryByDate");
+        outliner.setAttribute("ref", "NC:HistoryByDate");
         break;
     case "day":
     default:
-        outlinerBody.setAttribute("ref", "NC:HistoryByDate");
+        outliner.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
     gPrefService.setCharPref("browser.history.grouping", groupingType);

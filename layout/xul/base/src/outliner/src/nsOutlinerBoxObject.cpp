@@ -110,16 +110,18 @@ NS_IMETHODIMP nsOutlinerBoxObject::Init(nsIContent* aContent, nsIPresShell* aPre
 
 static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 {
+  *aResult = nsnull;
   ChildIterator iter, last;
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::outlinerbody) {
+    if (tag.get() == nsXULAtoms::outlinerchildren) {
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
-    } else {
+    }
+    else if (tag != nsXULAtoms::templateAtom) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;
@@ -329,6 +331,14 @@ NS_IMETHODIMP nsOutlinerBoxObject::InvalidateCell(PRInt32 aRow, const PRUnichar 
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->InvalidateCell(aRow, aColID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::InvalidatePrimaryCell(PRInt32 aIndex)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->InvalidatePrimaryCell(aIndex);
   return NS_OK;
 }
 

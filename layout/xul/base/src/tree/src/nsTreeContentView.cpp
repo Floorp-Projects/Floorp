@@ -43,6 +43,7 @@
 #include "nsXULAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMDocument.h"
+#include "nsIBoxObject.h"
 #include "nsOutlinerUtils.h"
 #include "nsOutlinerContentView.h"
 #include "nsChildIterator.h"
@@ -154,7 +155,7 @@ class Row
 
 nsOutlinerContentView::nsOutlinerContentView(void) :
   mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull),
-  mHasCheckedSelect(PR_FALSE), mUpdateSelection(PR_FALSE), mIgnoreOptionSelected(PR_FALSE)
+  mUpdateSelection(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
@@ -167,7 +168,7 @@ nsOutlinerContentView::nsOutlinerContentView(void) :
   mAllocator.Init("nsOutlinerContentView", kBucketSizes, kNumBuckets, kInitialSize);
 }
 
-nsOutlinerContentView::~nsOutlinerContentView (void)
+nsOutlinerContentView::~nsOutlinerContentView(void)
 {
   // Remove ourselfs from document's observers.
   if (mDocument)
@@ -470,7 +471,32 @@ NS_IMETHODIMP
 nsOutlinerContentView::SetOutliner(nsIOutlinerBoxObject* aOutliner)
 {
   mBoxObject = aOutliner;
-  
+
+  if (!mRoot) {
+    // Get our root element
+    nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
+    nsCOMPtr<nsIDOMElement> element;
+    boxObject->GetElement(getter_AddRefs(element));
+
+    mRoot = do_QueryInterface(element);
+
+    // Add ourselfs to document's observers.
+    nsCOMPtr<nsIDocument> document;
+    mRoot->GetDocument(*getter_AddRefs(document));
+    if (document) {
+      document->AddObserver(this);
+      mDocument = document;
+    }
+
+    nsCOMPtr<nsIDOMElement> bodyElement;
+    mBoxObject->GetOutlinerBody(getter_AddRefs(bodyElement));
+    if (bodyElement) {
+      nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
+      PRInt32 index = 0;
+      Serialize(bodyContent, -1, &index, mRows);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -550,42 +576,6 @@ nsOutlinerContentView::GetRoot(nsIDOMElement** aRoot)
     mRoot->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aRoot);
   else
     *aRoot = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::SetRoot(nsIDOMElement* aRoot)
-{
-  if (mRoot) {
-    // Remove ourselfs from document's observers.
-    if (mDocument) {
-      mDocument->RemoveObserver(this);
-      mDocument = nsnull;
-    }
-
-    ClearRows();
-  }
-
-  if (aRoot)
-    mRoot = do_QueryInterface(aRoot);
-
-  if (mRoot) {
-    // Add ourselfs to document's observers.
-    nsCOMPtr<nsIDocument> document;
-    mRoot->GetDocument(*getter_AddRefs(document));
-    if (document) {
-      document->AddObserver(this);
-      mDocument = document;
-    }
-
-    nsCOMPtr<nsIContent> child;
-    nsOutlinerUtils::GetImmediateChild(mRoot, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
-    if (child) {
-      PRInt32 index = 0;
-      Serialize(child, -1, &index, mRows);
-    }
-  }
 
   return NS_OK;
 }
@@ -720,8 +710,11 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
   aContent->GetTag(*getter_AddRefs(tag));
 
   if (tag == nsXULAtoms::outlinercol) {
-    if (aAttribute == nsXULAtoms::properties)
-      mBoxObject->Invalidate();
+    if (aAttribute == nsXULAtoms::properties) {
+      nsAutoString id;
+      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
+      mBoxObject->InvalidateColumn(id.get());
+    }
   }
   else if (tag == nsXULAtoms::outlineritem) {
     if (aAttribute == nsXULAtoms::open) {
@@ -785,14 +778,13 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
     }
   }
   else if (tag == nsHTMLAtoms::option) {
-    if (aAttribute == nsLayoutAtoms::optionSelectedPseudo && !mIgnoreOptionSelected) {
+    if (aAttribute == nsLayoutAtoms::optionSelectedPseudo) {
       PRInt32 index = FindContent(aContent);
-      if (index == -1)
-        return NS_OK;
-
-      NS_ASSERTION(mSelection, "Need to handle optionSelected change with no OutlinerSelection");
-      if (mSelection)
+      if (index >= 0) {
+        NS_ASSERTION(mSelection, "Need to handle optionSelected change with no OutlinerSelection");
+        if (mSelection)
           mSelection->ToggleSelect(index);
+      }
     }
   }
 
@@ -823,11 +815,13 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
   if (childTag == nsXULAtoms::outlineritem ||
       childTag == nsXULAtoms::outlinerseparator) {
     PRInt32 parentIndex = -1;
-    if (aContainer != mRoot) {
-      nsCOMPtr<nsIContent> parent;
-      aContainer->GetParent(*getter_AddRefs(parent));
+
+    nsCOMPtr<nsIContent> parent;
+    aContainer->GetParent(*getter_AddRefs(parent));
+    nsCOMPtr<nsIAtom> parentTag;
+    parent->GetTag(*getter_AddRefs(parentTag));
+    if (parentTag != nsXULAtoms::outliner)
       parentIndex = FindContent(parent);
-    }
 
     PRInt32 index = 0;
     GetIndexInSubtree(aContainer, aChild, &index);
@@ -1329,21 +1323,3 @@ nsOutlinerContentView::ParseProperties(nsIContent* aContent, Property** aPropert
 
   return NS_OK;
 }
-
-void
-nsOutlinerContentView::GetSelectElement()
-{
-  nsCOMPtr<nsIContent> parent = mRoot;
-  nsCOMPtr<nsIAtom> tag;
-  nsCOMPtr<nsIContent> temp;
-
-  while (parent && NS_SUCCEEDED(parent->GetTag(*getter_AddRefs(tag)))
-         && tag != nsXULAtoms::outliner && tag != nsHTMLAtoms::select) {
-    temp = parent;
-    temp->GetParent(*getter_AddRefs(parent));
-  }
-
-  if (parent && tag == nsHTMLAtoms::select)
-    mSelectElement = do_QueryInterface(parent);
-}
-

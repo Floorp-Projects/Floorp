@@ -5069,7 +5069,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         rv = NS_NewSpringFrame(aPresShell, &newFrame);
       }
-       else if (aTag == nsXULAtoms::outlinerbody) {
+       else if (aTag == nsXULAtoms::outlinerchildren) {
         isReplaced = PR_TRUE;
         rv = NS_NewOutlinerBodyFrame(aPresShell, &newFrame);
       }
@@ -5579,7 +5579,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
   // register tooltip support if needed
   nsAutoString value;
-  if (aTag == nsXULAtoms::outlinerbody || // outliners always need titletips
+  if (aTag == nsXULAtoms::outlinerchildren || // outliners always need titletips
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) !=
         NS_CONTENT_ATTR_NOT_THERE ||
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value) !=
@@ -7756,12 +7756,10 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerseparator ||
-        tag == nsXULAtoms::outlinerchildren ||
+    if (tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlineritem ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell ||
-        (UseXBLForms() && tag == nsHTMLAtoms::option))
+        (UseXBLForms() && tag == nsHTMLAtoms::select))
       return NS_OK;
 
     PRBool treeChildren = tag.get() == nsXULAtoms::treechildren;
@@ -8368,12 +8366,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerseparator ||
-        tag == nsXULAtoms::outlinerchildren ||
+    if (tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlineritem ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell ||
-        (UseXBLForms() && tag == nsHTMLAtoms::option))
+        (UseXBLForms() && tag == nsHTMLAtoms::select))
       return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
@@ -9287,12 +9283,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerseparator ||
-        tag == nsXULAtoms::outlinerchildren ||
+    if (tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlineritem ||
         tag == nsXULAtoms::outlinerrow ||
-        tag == nsXULAtoms::outlinercell ||
-        (UseXBLForms() && tag == nsHTMLAtoms::option))
+        (UseXBLForms() && tag == nsHTMLAtoms::select))
       return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;

@@ -40,22 +40,22 @@ outliner > .outliner-bodybox
   border: 1px solid transparent;
 }
 
-outlinerbody:-moz-outliner-cell-text(prefCol)
+outlinerchildren:-moz-outliner-cell-text(prefCol)
 {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-cell-text(user)
+outlinerchildren:-moz-outliner-cell-text(user)
 {
   color: blue;
 }
 
-outlinerbody:-moz-outliner-cell-text(default)
+outlinerchildren:-moz-outliner-cell-text(default)
 {
   color: green;
 }
 
-outlinerbody:-moz-outliner-cell-text(locked)
+outlinerchildren:-moz-outliner-cell-text(locked)
 {
   color: red;
 }

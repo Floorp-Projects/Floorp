@@ -110,6 +110,11 @@ JSObjectView.prototype =
   {
   },
 
+  isSorted: function()
+  {
+    return false;
+  },
+
   getParentIndex: function(aRowIndex)
   {
     return 1;

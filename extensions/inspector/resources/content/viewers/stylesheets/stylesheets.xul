@@ -22,6 +22,6 @@
       <splitter class="tree-splitter"/>
       <outlinercol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
     </outlinercols>
-    <outlinerbody id="olbStyleSheets" flex="1"/>
+    <outlinerchildren id="olbStyleSheets"/>
   </outliner>
 </page>

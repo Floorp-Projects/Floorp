@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsILocalStore.h"
+#include "nsIBoxObject.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerSelection.h"
 #include "nsIOutlinerView.h"
@@ -107,10 +108,10 @@ protected:
     Init();
 
     /**
-     * Collect sort variables from the <outlinercol>s
+     * Get sort variables from the active <outlinercol>
      */
     nsresult
-    GetSortVariables(VariableSet& aVariables);
+    EnsureSortVariables();
 
     virtual nsresult
     InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode);
@@ -644,10 +645,11 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
 
     if (! mRoot) {
         // Get our root element
-        nsCOMPtr<nsIDOMElement> body;
-        mBoxObject->GetOutlinerBody(getter_AddRefs(body));
+        nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
+        nsCOMPtr<nsIDOMElement> element;
+        boxObject->GetElement(getter_AddRefs(element));
 
-        mRoot = do_QueryInterface(body);
+        mRoot = do_QueryInterface(element);
 
         LoadDataSources();
 
@@ -699,6 +701,10 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
             return NS_ERROR_FAILURE;
 
         Rebuild();
+
+        EnsureSortVariables();
+        if (mSortVariable)
+          SortSubtree(mRows.GetRoot());
     }
 
     return NS_OK;
@@ -1189,56 +1195,44 @@ nsXULOutlinerBuilder::SynchronizeMatch(nsTemplateMatch* aMatch, const VariableSe
 //----------------------------------------------------------------------
 
 nsresult
-nsXULOutlinerBuilder::GetSortVariables(VariableSet& aVariables)
+nsXULOutlinerBuilder::EnsureSortVariables()
 {
-    // The <outlinercol>'s are siblings of the <outlinerbody>, which
-    // is what our mRoot is. Walk up one level to find the <outliner>,
-    // then grovel through *its* kids to find the <outlinercol>'s...
-    nsCOMPtr<nsIContent> outliner;
-    mRoot->GetParent(*getter_AddRefs(outliner));
+    // Grovel through <outlinercols> kids to find the <outlinercol>
+    // with the sort attributes.
+    nsCOMPtr<nsIContent> outlinercols;
+ 
+    nsXULContentUtils::FindChildByTag(mRoot, kNameSpaceID_XUL, nsXULAtoms::outlinercols, getter_AddRefs(outlinercols));
 
-    if (! outliner)
-        return NS_ERROR_FAILURE;
+    if (!outlinercols)
+        return NS_OK;
 
     PRInt32 count;
-    outliner->ChildCount(count);
-
-    for (PRInt32 i = count - 1; i >= 0; --i) {
+    outlinercols->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
         nsCOMPtr<nsIContent> child;
-        outliner->ChildAt(i, *getter_AddRefs(child));
-
-        if (! child)
-            continue;
-
-        // XXX probably need to get base tag here
+        outlinercols->ChildAt(i, *getter_AddRefs(child));
         nsCOMPtr<nsIAtom> tag;
         child->GetTag(*getter_AddRefs(tag));
+        if (tag == nsXULAtoms::outlinercol) {
+            nsAutoString sortActive;
+            child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, sortActive);
+            if (sortActive == NS_LITERAL_STRING("true")) {
+                nsAutoString sort;
+                child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
+                if (sort.Length()) {
+                    mSortVariable = mRules.LookupSymbol(sort.get(), PR_TRUE);
 
-        if (tag != nsXULAtoms::outlinercol)
-            continue;
-
-        nsAutoString sort;
-        child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
-        if (! sort.Length())
-            continue;
-
-        PRInt32 var = mRules.LookupSymbol(sort.get(), PR_TRUE);
-        aVariables.Add(var);
-
-        nsAutoString active;
-        child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, active);
-        if (active == NS_LITERAL_STRING("true")) {
-            nsAutoString dir;
-            child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
-
-            if (dir == NS_LITERAL_STRING("none"))
-                mSortDirection = eDirection_Natural;
-            else if (dir == NS_LITERAL_STRING("descending"))
-                mSortDirection = eDirection_Descending;
-            else
-                mSortDirection = eDirection_Ascending;
-
-            mSortVariable = var;
+                    nsAutoString sortDirection;
+                    child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection);
+                    if (sortDirection == NS_LITERAL_STRING("ascending"))
+                        mSortDirection = eDirection_Ascending;
+                    else if (sortDirection == NS_LITERAL_STRING("descending"))
+                        mSortDirection = eDirection_Descending;
+                    else
+                        mSortDirection = eDirection_Natural;
+                }
+                break;
+            }
         }
     }
 

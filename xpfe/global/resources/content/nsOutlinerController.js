@@ -53,7 +53,6 @@ const nsIRDFContainer = Components.interfaces.nsIRDFContainer;
 
 var gClipboard;
 var gOutliner;
-var gOutlinerBody;
 var gRDFC;
 var gRDF;
 
@@ -149,7 +148,7 @@ function nsOutlinerController_delete()
   if (!gRDFC)
     gRDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
 
-  var datasource = this.getOutlinerBody().database;
+  var datasource = this.getOutliner().database;
   var min = new Object(); 
   var max = new Object();
   var dirty = false;
@@ -168,7 +167,7 @@ function nsOutlinerController_delete()
       if (!IDRes)
         continue;
 
-      var root = this.getOutlinerBody().getAttribute('ref');
+      var root = this.getOutliner().getAttribute('ref');
       var parentIDRes = gRDF.GetResource(root);
       if (!parentIDRes)
         continue;
@@ -210,10 +209,9 @@ function nsOutlinerController_delete()
   return true;
 }
 
-function nsOutlinerController(outliner, outlinerBody)
+function nsOutlinerController(outliner)
 {
   this.outlinerId = outliner.id;
-  this.outlinerBodyId = outlinerBody.id;
   outliner.controllers.appendController(this);
 }
 
@@ -240,12 +238,6 @@ nsOutlinerController.prototype =
   getOutlinerSelection : function()
   {
     return this.getOutliner().outlinerBoxObject.view.selection;
-  },
-  getOutlinerBody : function()
-  {
-    if (!gOutlinerBody)
-      gOutlinerBody = document.getElementById(this.outlinerBodyId);
-    return gOutlinerBody;
   },
   SetTransferData : nsOutlinerController_SetTransferData,
 

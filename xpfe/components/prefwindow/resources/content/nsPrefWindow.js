@@ -80,7 +80,7 @@ nsPrefWindow.prototype =
               }
   
             if( window.arguments[1] )
-              this.closeBranches( window.arguments[1], window.arguments[2] );
+              this.openBranch( window.arguments[1], window.arguments[2] );
           },
                   
       onOK:
@@ -352,19 +352,14 @@ nsPrefWindow.prototype =
             this.wsm.dataManager.pageData[aPageTag].initialized=true;
           },
 
-    closeBranches:
+    openBranch:
       function ( aComponentName, aSelectItem )
         {
-          var panelChildren = document.getElementById( "panelChildren" );
           var panelTree = document.getElementById( "prefsTree" );
-          for( var i = 0; i < panelChildren.childNodes.length; i++ )
-            {
-              var currentItem = panelChildren.childNodes[i];
-              if( currentItem.id != aComponentName && currentItem.id != "appearance" )
-                currentItem.removeAttribute( "open" );
-            }
-          var openItem = document.getElementById( aSelectItem );
-          var index = panelTree.contentView.getIndexOfItem( openItem );
+          var selectItem = document.getElementById( aSelectItem );
+          var index = panelTree.contentView.getIndexOfItem( selectItem );
+          if ( !panelTree.view.isContainerOpen( index ) )
+            panelTree.view.toggleOpenState(index);
           panelTree.outlinerBoxObject.selection.select( index );
         }
 

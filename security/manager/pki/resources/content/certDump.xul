@@ -38,13 +38,14 @@
     </treecolgroup>
     <treechildren id="chainDump"/>
   </tree>
-  <outliner class="inset" id="prettyDumpOutliner" style="height:150px">
+  <outliner id="prettyDumpOutliner" class="inset" style="height:150px"
+            onselect="displaySelected();">
     <outlinercols>
       <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;"
                    ignoreincolumnpicker="true" class="header" primary="true"/>
       <splitter/>
     </outlinercols>
-    <outlinerbody flex="1" onselect="displaySelected();"/>
+    <outlinerchildren/>
   </outliner>
   <label class="header" value="&certmgr.fields.label;"/>
   <textbox class="inset" id="certDumpVal"  multiline="true" rows="8"
