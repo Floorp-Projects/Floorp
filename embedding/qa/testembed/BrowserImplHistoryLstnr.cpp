@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   David Epstein <chak@netscape.com> 
+ *   David Epstein <depstein@netscape.com> 
  *
  */
 
@@ -53,38 +53,48 @@ class CBrowserView;
 // CBrowserImpl::nsISHistoryListener methods
 //*****************************************************************************   
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryNewEntry(nsIURI *theURI)
+NS_IMETHODIMP CBrowserImpl::OnHistoryNewEntry(nsIURI *theUri)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryNewEntry()", 2);
 
+    CQaUtils::GetTheUri(theUri, 2);
+
 	return NS_OK;
 }
 
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGoBack(nsIURI *theURI, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGoBack(nsIURI *theUri, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGoBack()", 2);
 
+    CQaUtils::GetTheUri(theUri, 2);
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theURI, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theUri, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGoForward()", 2);
 
+	CQaUtils::GetTheUri(theUri, 2);
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theURI, PRUint32 reloadFlags, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryReload()", 2);
 
+	CQaUtils::GetTheUri(theUri, 2);
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theURI, PRBool *notify)
+NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theUri, PRBool *notify)
 {
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryGotoIndex()", 2);
+
+    CQaUtils::GetTheUri(theUri, 2);
 
 	return NS_OK;
 }
