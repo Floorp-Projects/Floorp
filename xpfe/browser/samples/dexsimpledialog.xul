@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window>
+<!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
 <!-- dialog containing a control requiring initial setup -->
 <xul:window
     xmlns:html="http://www.w3.org/TR/REC-html40"

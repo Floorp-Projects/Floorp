@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="xul.css" type="text/css"?>
 <!DOCTYPE window>
+<!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
 <!-- sample interface for bringing up a nonmodal dialog, including some
      JavaScript-testing animations -->
 <window
