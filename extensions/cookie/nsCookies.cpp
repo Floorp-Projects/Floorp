@@ -69,6 +69,13 @@
 #define cookie_lifetimeDaysPref "network.cookie.lifetime.days"
 #define cookie_p3pPref "network.cookie.p3p"
 
+// mac, windows, and unix use signed integers for time_t
+#if defined(XP_MAC) || defined(XP_WIN) || defined(XP_UNIX)
+#define MAX_EXPIRE (((unsigned) (~0) << 1) >> 1)
+#else
+#define MAX_EXPIRE 0
+#endif
+
 static const char *kCookiesFileName = "cookies.txt";
 
 MODULE_PRIVATE time_t 
@@ -1433,13 +1440,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
         break;
       }
     }
-    // Before downgrading we need to test for case of cookie being intentionally set to a
-    // time in the past (trick that servers use to delete cookies) and not turn that into
-    // a cookie that exires at end of current session.
-    if ((status != nsICookie::STATUS_DOWNGRADED) ||
-        ((unsigned)cookie_ParseDate(date) <= (unsigned)get_current_time())) {
-      expires = cookie_ParseDate(date);
-    }
+    expires = cookie_ParseDate(date);
     *ptr=origLast;
   }
   if (server_date) {
@@ -1454,7 +1455,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
       gmtCookieExpires = expires - sDate + get_current_time();
       // if overflow 
       if( gmtCookieExpires < get_current_time()) {
-        gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); // max int 
+        gmtCookieExpires = MAX_EXPIRE; // max int
       }
     }
   }
@@ -1466,15 +1467,10 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   if(ptr) {
     ptr += PL_strlen(MAXAGE);
     time_t delta = atoi(ptr);
-    if (delta >= 0) { // negative max-age is not allowed -- see rfc 2109
+    if (delta == 0) {
+      gmtCookieExpires = 1; // force cookie to expire immediately
+    } else if (delta > 0) { // negative max-age is not allowed -- see rfc 2109
       gmtCookieExpires = get_current_time() + delta;
-      // Before downgrading we need to test for case of cookie being intentionally set to a
-      // time in the past (trick that servers use to delete cookies) and not turn that into
-      // a cookie that exires at end of current session.
-      if ((status == nsICookie::STATUS_DOWNGRADED) &&
-          ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
-        gmtCookieExpires = 0;
-      }
     }
   }
 
@@ -1525,8 +1521,8 @@ COOKIE_Write() {
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
-      if (cookie_s->expires < cur_date) {
-        /* don't write entry if cookie has expired or has no expiration date */
+     if (cookie_s->expires < cur_date || cookie_s->status == nsICookie::STATUS_DOWNGRADED) {
+       /* don't write entry if cookie has expired, has no expiratio date, or has been downgraded */
         continue;
       }
 
@@ -1786,7 +1782,7 @@ COOKIE_Enumerate
   *host = cookie_FixQuoted(cookie->host);
   *path = cookie_FixQuoted(cookie->path);
   *isSecure = cookie->isSecure;
-  // *expires = cookie->expires; -- no good no mac, using next line instead
+  // *expires = cookie->expires; -- no good on mac, using next line instead
   LL_UI2L(*expires, cookie->expires);
   *status = cookie->status;
   *policy = cookie->policy;
@@ -1845,7 +1841,7 @@ cookie_ParseDate(char *date_string) {
     LL_DIV(r, prdate, u);
     LL_L2I(date, r);
     if (date < 0) {
-      date = 0;
+      date = MAX_EXPIRE;
     }
     // TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));    // TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
   } else {
