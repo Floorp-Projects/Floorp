@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.7 $ 
-# $Date: 2000/09/22 14:59:20 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/10/18 20:22:13 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -166,7 +166,9 @@ sub get_build_names  {
 
   eval {
     local $SIG{'__DIE__'} = sub { };
-    
+
+    use TinderDB::Build;
+
     my ($build_obj) = TinderDB::Build->new();
     
     $build_obj->loadtree_db($tree);
