@@ -347,8 +347,8 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
       GetView(aPresContext, &view);
     }
 
-    nsIWidget* widget;
-    view->GetWidget(widget);
+    nsCOMPtr<nsIWidget> widget;
+    view->GetWidget(*getter_AddRefs(widget));
 
     if (!widget)
       view->CreateWidget(kCChildCID);   
