@@ -144,6 +144,11 @@ private:
      friend class nsOutputStreamWrapper;
 
 
+     static nsresult NewOutputStreamWrapper(nsIOutputStream **       result,
+                                            nsCacheEntryDescriptor * descriptor,
+                                            nsIOutputStream *        output);
+
+
  private:
      /**
       * nsCacheEntryDescriptor data members
