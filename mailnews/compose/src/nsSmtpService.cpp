@@ -27,10 +27,12 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
 
 #include "nsSmtpUrl.h"
 #include "nsSmtpProtocol.h"
-#include "nsMsgBaseCID.h"
+
+static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 
 // foward declarations...
 
@@ -111,9 +113,10 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 	// ..for testing purposes....
 	
 	nsresult rv = NS_OK;
-	nsSmtpUrl * smtpUrl = new nsSmtpUrl(nsnull, nsnull);
+	nsCOMPtr <nsISmtpUrl> smtpUrl;
+	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, nsISmtpUrl::GetIID(), getter_AddRefs(smtpUrl));
 
-	if (smtpUrl)
+	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
 		// assemble a url spec...
 		char * recipients = aRecipients.ToNewCString();
@@ -125,13 +128,14 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 			delete [] hostName;
 		if (urlSpec)
 		{
-			smtpUrl->ParseURL(urlSpec);  // load the spec we were given...
+			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
+			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetUserEmailAddress(aSender);
-			smtpUrl->RegisterListener(aUrlListener);
+			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
-		rv = smtpUrl->QueryInterface(nsISmtpUrl::GetIID(), (void **) aUrl);
+		rv = smtpUrl->QueryInterface(nsIURL::GetIID(), (void **) aUrl);
 	 }
 
 	 return rv;
@@ -159,11 +163,11 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 		smtpUrl->GetPostMessageFile(&fileName);
 
 		// almost there...now create a nntp protocol instance to run the url in...
-		smtpProtocol = new nsSmtpProtocol(smtpUrl);
+		smtpProtocol = new nsSmtpProtocol(aUrl);
 		if (smtpProtocol == nsnull)
 			rv = NS_ERROR_OUT_OF_MEMORY;
 		else
-			smtpProtocol->LoadUrl(smtpUrl); // protocol will get destroyed when url is completed...
+			smtpProtocol->LoadUrl(aUrl); // protocol will get destroyed when url is completed...
 	}
 
 	return rv;
