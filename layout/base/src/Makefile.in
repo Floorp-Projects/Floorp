@@ -45,6 +45,7 @@ CPPSRCS =				\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
 	nsRange.cpp		\
+	nsRangeList.cpp		\
 	$(NULL)
 
 MODULE = raptor
