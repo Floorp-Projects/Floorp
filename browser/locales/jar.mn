@@ -1,8 +1,8 @@
 #filter substitution
 
 @AB_CD@.jar:
-*   locale/global/brand.dtd        (@AB_CD@/chrome/global/brand.dtd)
-+   locale/global/brand.properties (@AB_CD@/chrome/global/brand.properties)
+*   locale/@AB_CD@/global/brand.dtd        (@AB_CD@/chrome/global/brand.dtd)
++   locale/@AB_CD@/global/brand.properties (@AB_CD@/chrome/global/brand.properties)
 *   locale/browser/contents.rdf                    (generic/chrome/browser/contents.rdf)
     locale/browser/aboutDialog.dtd                 (@AB_CD@/chrome/browser/aboutDialog.dtd)
     locale/browser/credits.dtd                     (@AB_CD@/chrome/browser/credits.dtd)
@@ -51,25 +51,7 @@
     locale/browser/sidebar/sidebar.properties      (@AB_CD@/chrome/browser/sidebar/sidebar.properties)
     locale/browser-region/region.properties        (@AB_CD@/chrome/browser-region/region.properties)
 *   locale/browser-region/contents.rdf             (generic/chrome/browser-region/contents.rdf)
-*   locale/cookie/contents.rdf                     (generic/chrome/cookie/contents.rdf)
-    locale/cookie/cookieAcceptDialog.dtd           (@AB_CD@/chrome/cookie/cookieAcceptDialog.dtd)
-    locale/cookie/cookieAcceptDialog.properties    (@AB_CD@/chrome/cookie/cookieAcceptDialog.properties)
-#ifdef LOCALE_HAS_DOMI
-*   locale/inspector/contents.rdf               (generic/chrome/inspector/contents.rdf)
-    locale/inspector/inspector.dtd              (@AB_CD@/chrome/inspector/inspector.dtd)
-    locale/inspector/prefs.dtd                  (@AB_CD@/chrome/inspector/prefs.dtd)
-    locale/inspector/editing.dtd                (@AB_CD@/chrome/inspector/editing.dtd)
-    locale/inspector/tasksOverlay.dtd           (@AB_CD@/chrome/inspector/tasksOverlay.dtd)
-    locale/inspector/search/findFiles.dtd       (@AB_CD@/chrome/inspector/search/findFiles.dtd)
-    locale/inspector/search/junkImgs.dtd        (@AB_CD@/chrome/inspector/search/junkImgs.dtd)
-    locale/inspector/viewers/dom.dtd            (@AB_CD@/chrome/inspector/viewers/dom.dtd)
-    locale/inspector/viewers/domNode.dtd        (@AB_CD@/chrome/inspector/viewers/domNode.dtd)
-    locale/inspector/viewers/styleRules.dtd     (@AB_CD@/chrome/inspector/viewers/styleRules.dtd)
-    locale/inspector/viewers/stylesheets.dtd    (@AB_CD@/chrome/inspector/viewers/stylesheets.dtd)
-    locale/inspector/viewers/xblBindings.dtd    (@AB_CD@/chrome/inspector/viewers/xblBindings.dtd)
-    locale/inspector/viewers/boxModel.dtd       (@AB_CD@/chrome/inspector/viewers/boxModel.dtd)
-    locale/inspector/viewers/computedStyle.dtd  (@AB_CD@/chrome/inspector/viewers/computedStyle.dtd)
-    locale/inspector/viewers/jsObject.dtd       (@AB_CD@/chrome/inspector/viewers/jsObject.dtd)
-    locale/inspector/inspector.properties       (@AB_CD@/chrome/inspector/inspector.properties)
-#endif
+*   locale/@AB_CD@/cookie/contents.rdf                     (generic/chrome/cookie/contents.rdf)
+    locale/@AB_CD@/cookie/cookieAcceptDialog.dtd           (@AB_CD@/chrome/cookie/cookieAcceptDialog.dtd)
+    locale/@AB_CD@/cookie/cookieAcceptDialog.properties    (@AB_CD@/chrome/cookie/cookieAcceptDialog.properties)
 #includesubst @AB_CD@/extra-jar.mn
