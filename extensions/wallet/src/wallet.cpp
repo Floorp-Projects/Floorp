@@ -1728,7 +1728,7 @@ wallet_PostEdit() {
     if (!NS_FAILED(NS_NewURL(&url, walletEditor))) {
       res = netservice->GetCookieString(url, *nsCookie);
     }
-    NS_RELEASE(netservice);
+    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
 
     /* convert cookie to a C string */
     char *cookies = nsCookie->ToNewCString();
@@ -1832,7 +1832,7 @@ WLLT_PreEdit(nsIURL* url) {
     }
     res = netservice->SetCookieString(url, *cookie);
     delete cookie;
-    NS_RELEASE(netservice);
+    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
   }
 }
 

@@ -219,7 +219,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
       }
       delete[] cookies;
     }
-    NS_RELEASE(netservice);
+    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
   }
 }
 
