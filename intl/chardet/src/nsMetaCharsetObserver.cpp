@@ -241,8 +241,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         else if(0 == nsCRT::strcasecmp((const PRUnichar*)keys.ObjectAt(i), "content"))
               contentValue=(const PRUnichar*)values.ObjectAt(i);
       }
-      static nsAutoString contenttype("Content-Type");
-      static nsAutoString texthtml("text/html");
+      static nsAutoString contenttype = NS_ConvertToString("Content-Type");
+      static nsAutoString texthtml = NS_ConvertToString("text/html");
       if((nsnull != httpEquivValue) && 
          (nsnull != contentValue) && 
          ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.GetUnicode())) ||
@@ -317,7 +317,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
     if (NS_FAILED(res)) return res;
 
-    nsAutoString htmlTopic(kHTMLTextContentType);    
+    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);    
     return anObserverService->AddObserver(this, htmlTopic.GetUnicode());
 }
 //-------------------------------------------------------------------------
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_PROGID, &res);
     if (NS_FAILED(res)) return res;
      
-    nsAutoString htmlTopic(kHTMLTextContentType);
+    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
     return anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
 }
 //========================================================================== 
