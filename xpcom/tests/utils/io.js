@@ -297,10 +297,10 @@ write : function(buffer, perms){
     //dump("got outStream\n\n");
 
         
-    if( outStream.Write(buffer, buffSize) )
+    if( outStream.write(buffer, buffSize) )
         //dump("Write to file successful . . . \n\n");
 
-    outStream.Flush();
+    outStream.flush();
 
     }
 
@@ -345,7 +345,7 @@ read : function() {
 
     //dump(fileContents);
 
-    inStream.Close();
+    inStream.close();
         
     return fileContents;
 
@@ -539,7 +539,7 @@ leaf  : function (path) {
   return null;
   }
 
-  fileInst = new FilePath(path);
+  var fileInst = new FilePath(path);
 
   return fileInst.leafName;
 
