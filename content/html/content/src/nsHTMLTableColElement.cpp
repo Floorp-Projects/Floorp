@@ -247,17 +247,16 @@ nsHTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 
   static const MappedAttributeEntry* const col_map[] = {
     attributes,
+    span_attribute,
     sCommonAttributeMap,
   };
 
   static const MappedAttributeEntry* const colspan_map[] = {
     attributes,
-    span_attribute,
     sCommonAttributeMap,
   };
 
-  // we don't match "span" if we're a <col>
-  // XXXldb Should this be reflected in the mapping function?
+  // we only match "span" if we're a <col>
   if (mNodeInfo->Equals(nsHTMLAtoms::col))
     return FindAttributeDependence(aAttribute, col_map,
                                    NS_ARRAY_LENGTH(col_map));
