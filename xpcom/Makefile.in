@@ -26,7 +26,25 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= typelib glue base ds io components threads reflect proxy build tools
+DIRS		= \
+		typelib \
+		glue \
+		base \
+		ds \
+		io \
+		components \
+		threads \
+		reflect \
+		proxy \
+		build \
+		tools \
+		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_DEBUG
+DIRS		+= windbgdlg
+endif
+endif
 
 ifdef ENABLE_TESTS
 DIRS		+= \

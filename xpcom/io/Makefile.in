@@ -67,9 +67,13 @@ CPPSRCS		+= nsLocalFileOS2.cpp
 #CPPSRCS     += nsLocalFileMac.cpp
 #CSRCS       += macDirectoryCopy.c
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS		+= nsLocalFileWin.cpp
+else
 CPPSRCS		+= nsLocalFileUnix.cpp
-endif
+endif # windows
 #endif
+endif # OS2
 
 EXPORTS		= \
 		nsAppDirectoryServiceDefs.h \
@@ -97,9 +101,13 @@ else
 #ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 #EXPORTS     += nsLocalFileMac.h nsILocalFileMac.h
 #else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+EXPORTS		+= nsLocalFileWin.h
+else
 EXPORTS		+= nsLocalFileUnix.h
-endif
+endif # windows
 #endif
+endif # os2
 
 XPIDLSRCS	= \
 		nsIBinaryInputStream.idl \
@@ -139,5 +147,8 @@ DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
+endif
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 

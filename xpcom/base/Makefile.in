@@ -84,6 +84,13 @@ EXPORTS         += nsTraceMalloc.h
 DEFINES         += -DNS_TRACE_MALLOC
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_DEBUG
+CSRCS		+= pure_api.c
+EXPORTS		+= pure.h
+endif
+endif
+
 XPIDLSRCS	= \
 		nsrootidl.idl \
 		nsISupports.idl \
@@ -103,8 +110,6 @@ ifdef GC_LEAK_DETECTOR
 XPIDLSRCS       += nsILeakDetector.idl
 endif
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
@@ -117,4 +122,8 @@ DEFINES		+= -D_IMPL_NS_COM
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
+endif
+
+ifeq ($(OS_ARCH), WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

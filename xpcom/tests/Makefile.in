@@ -28,6 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 DIRS		= dynamic services
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= windows
+endif
+
 REQUIRES	= necko \
 		  string \
 		  uconv \
@@ -37,6 +41,7 @@ CPPSRCS		= \
 		FilesTest.cpp \
 		nsIFileEnumerator.cpp \
 		nsIFileTest.cpp \
+		PropertiesTest.cpp \
 		TestArray.cpp \
 		TestAtoms.cpp \
 		TestAutoLock.cpp \
@@ -55,6 +60,8 @@ CPPSRCS		= \
 		TestXPIDLString.cpp \
 		$(NULL)
 
+#CPPSRCS		+= TimerTest.cpp
+
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
@@ -67,9 +74,7 @@ CPPSRCS		+= \
 endif
 
 LIBS		+= \
-		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
-		$(TK_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
@@ -81,10 +86,14 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
-INCLUDES	+= \
+LOCAL_INCLUDES	= \
                 -I$(srcdir)/../ds \
 		-I$(srcdir)/services \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CXXFLAGS	+= -GX
+endif
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
