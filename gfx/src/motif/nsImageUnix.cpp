@@ -59,7 +59,7 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
   // create the memory for the image
   //ComputeMetrics();
-  mImageBits = new PRUint8[mSizeImage];
+  mImageBits = (PRUint8*) new PRUint8[mSizeImage];
 
   return NS_OK;
 }
