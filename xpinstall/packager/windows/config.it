@@ -453,13 +453,13 @@ Domain0=$Domain$
 Server Path0=$ServerPath$
 
 [Component7]
-Description Short=English-GB language pack
+Description Short=English-German language pack
 ;*** LOCALIZE ME BABY ***
-Description Long=English-GB language pack
-Archive=langengb.xpi
-$InstallSize$:langengb
+Description Long=English-German language pack
+Archive=langende.xpi
+$InstallSize$:langende
 $InstallSizeSystem$
-$InstallSizeArchive$:langengb.xpi
+$InstallSizeArchive$:langende.xpi
 ;Dependency0=
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.

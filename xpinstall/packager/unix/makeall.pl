@@ -70,7 +70,7 @@ MakeXpiFile("mail");
 MakeXpiFile("chatzilla");
 MakeXpiFile("talkback");
 MakeXpiFile("deflenus");
-MakeXpiFile("langengb");
+MakeXpiFile("langende");
 
 # Make the config.ini file
 MakeConfigFile();
