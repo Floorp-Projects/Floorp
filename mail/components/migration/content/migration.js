@@ -8,10 +8,14 @@ var MigrationWizard = {
   _selectedProfile: null,       // Selected Profile name to import from
   _wiz: null,
   _migrator: null,
+  _windowInitialized: false,
   _autoMigrate: null,
 
   init: function ()
   {
+    if (this._windowInitialized)
+      return;
+	  
     var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
@@ -30,6 +34,8 @@ var MigrationWizard = {
       var nothing = document.getElementById("nothing");
       nothing.hidden = false;      
     }
+	
+    this._windowInitialized = true;
   },
   
   uninit: function ()
@@ -45,6 +51,9 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
+    if (!this._windowInitialized)
+      this.init();
+	  
     document.documentElement.getButton("back").disabled = true;
     
     // Figure out what source apps are are available to import from:
@@ -63,12 +72,11 @@ var MigrationWizard = {
     
     var firstNonDisabled = null;
     for (var i = 0; i < group.childNodes.length; ++i) {
-      if (!group.childNodes[i].disabled) {
+	  if (!group.childNodes[i].hidden) {
         firstNonDisabled = group.childNodes[i];
         break;
       }
     }
-
     group.selectedItem = this._source == "" ? firstNonDisabled : document.getElementById(this._source);
   },
   
