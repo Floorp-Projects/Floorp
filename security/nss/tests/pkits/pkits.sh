@@ -132,6 +132,16 @@ log_banner()
   echo ""
 }
 
+break_table()
+{
+  html "</TABLE><P>"
+  html "<TABLE BORDER=1><TR><TH COLSPAN=3>$*</TH></TR>"
+  html "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" 
+  echo ""
+  echo "***************************************************************"
+  echo "$*"
+  echo "***************************************************************"
+}
 
 ################################ pkits #################################
 # local shell function for positive testcases, calls vfychain, writes 
@@ -269,6 +279,7 @@ certImport()
 ########################################################################
 pkits_SignatureVerification()
 {
+  echo ""
   echo "***************************************************************"
   echo "Section 4.1: Signature Verification"
   echo "***************************************************************"
@@ -312,9 +323,7 @@ pkits_SignatureVerification()
 
 pkits_ValidityPeriods()
 {
-  echo "***************************************************************"
-  echo "Section 4.2: Validity Periods"
-  echo "***************************************************************"
+  break_table "Section 4.2: Validity Periods"
 
   VFY_ACTION="Invalid CA notBefore Date Test1"; log_banner
   certImport BadnotBeforeDateCACert
@@ -363,9 +372,7 @@ pkits_ValidityPeriods()
 
 pkits_NameChaining()
 {
-  echo "***************************************************************"
-  echo "Section 4.3: Verifying NameChaining"
-  echo "***************************************************************"
+  break_table "Section 4.3: Verifying NameChaining"
 
   VFY_ACTION="Invalid Name Chaining EE Test1"; log_banner
   certImport GoodCACert
@@ -440,9 +447,7 @@ pkits_NameChaining()
 
 pkits_BasicCertRevocation()
 {
-  echo "***************************************************************"
-  echo "Section 4.4: Basic Certificate Revocation Tests"
-  echo "***************************************************************"
+  break_table "Section 4.4: Basic Certificate Revocation Tests"
 
   VFY_ACTION="Missing CRL Test1"; log_banner
   pkitsn $certs/InvalidMissingCRLTest1EE.crt \
@@ -559,9 +564,7 @@ pkits_BasicCertRevocation()
 
 pkits_PathVerificWithSelfIssuedCerts()
 {
-  echo "***************************************************************"
-  echo "Section 4.5: Verifying Paths with Self-Issued Certificates"
-  echo "***************************************************************"
+  break_table "Section 4.5: Verifying Paths with Self-Issued Certificates"
 
   VFY_ACTION="Valid Basic Self-Issued Old With New Test1"; log_banner
   certImport BasicSelfIssuedNewKeyCACert
@@ -615,9 +618,7 @@ pkits_PathVerificWithSelfIssuedCerts()
 
 pkits_BasicConstraints()
 {
-  echo "***************************************************************"
-  echo "Section 4.6: Verifying Basic Constraints"
-  echo "***************************************************************"
+  break_table "Section 4.6: Verifying Basic Constraints"
 
   VFY_ACTION="Invalid Missing basicConstraints Test1"; log_banner
   certImport MissingbasicConstraintsCACert
@@ -771,9 +772,7 @@ pkits_BasicConstraints()
 
 pkits_KeyUsage()
 {
-  echo "***************************************************************"
-  echo "Section 4.7: Key Usage"
-  echo "***************************************************************"
+  break_table "Section 4.7: Key Usage"
 
   VFY_ACTION="Invalid keyUsage Critical keyCertSign False Test1"; log_banner
   certImport keyUsageCriticalkeyCertSignFalseCACert
@@ -810,9 +809,7 @@ pkits_KeyUsage()
 
 pkits_NameConstraints()
 {
-  echo "***************************************************************"
-  echo "Section 4.13: Name Constraints"
-  echo "***************************************************************"
+  break_table "Section 4.13: Name Constraints"
 
   VFY_ACTION="Valid DN nameConstraints Test1"; log_banner
   certImport nameConstraintsDN1CACert
@@ -1045,9 +1042,7 @@ pkits_NameConstraints()
 
 pkits_PvtCertExtensions()
 {
-  echo "***************************************************************"
-  echo "Section 4.16: Private Certificate Extensions"
-  echo "***************************************************************"
+  break_table "Section 4.16: Private Certificate Extensions"
 
   VFY_ACTION="Valid Unknown Not Critical Certificate Extension Test1"; log_banner
   pkits $certs/ValidUnknownNotCriticalCertificateExtensionTest1EE.crt
