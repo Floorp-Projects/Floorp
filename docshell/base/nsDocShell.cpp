@@ -3925,9 +3925,11 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     // See the book I wrote above regarding why the focus controller is 
     // being used here.  -- hyatt
-    if (focusController)
+    if (focusController) {
+        focusController->SetFocusedElement(nsnull);
         focusController->SetSuppressFocus(PR_FALSE,
                                           "Win32-Only Link Traversal Issue");
+    }
 
     mContentViewer = aNewViewer;
 
