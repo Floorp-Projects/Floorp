@@ -46,12 +46,14 @@ import java.util.ResourceBundle;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import grendel.ui.XMLPageBuilder;
 import grendel.ui.PageModel;
 import grendel.ui.PageUI;
 
-public class UserPrefsEditor implements PropertyEditor {
+public class UserPrefsEditor 
+  implements PropertyEditor {
   UserPrefs fPrefs = new UserPrefs();
   PropertyChangeSupport fListeners = new PropertyChangeSupport(this);
 
@@ -83,32 +85,23 @@ public class UserPrefsEditor implements PropertyEditor {
 
   public UserPrefsEditor() {
     fModel = new UserPrefsModel();
-    // XMLNode root = null;
     URL url = getClass().getResource("PrefDialogs.xml");
-    try {
-      // root = xml.tree.TreeBuilder.build(url, getClass());
-      // XMLNode editHost = root.getChild("dialog", "id", "userPrefs");
-      XMLPageBuilder pb = new XMLPageBuilder("id", "userPrefs", fModel);
-      pb.setReference(getClass());
-      pb.buildFrom(url.openStream());
+    fPanel = new PageUI(url, "id", "userPrefs", fModel, getClass());
 
-      // fPanel = new PageUI(url, editHost, fModel);
-      fPanel = new PageUI(url, "id", "userPrefs", fModel, getClass());
+    ChangeAction ca = new ChangeAction();
+    JComponent c;
+    Prefs prefs = new Prefs();
+    UserPrefs user = prefs.getUserPrefs();
+    setValue(user);
 
-      ChangeAction ca = new ChangeAction();
-      Component c;
+    c = fPanel.getCtrlByName(kNameKey);
+    c.addPropertyChangeListener(ca);
 
-      c = fPanel.getCtrlByName(kNameKey);
-      ((JComponent)c).addPropertyChangeListener(ca);
+    c = fPanel.getCtrlByName(kOrganizationKey);
+    c.addPropertyChangeListener(ca);
 
-      c = fPanel.getCtrlByName(kOrganizationKey);
-      ((JComponent)c).addPropertyChangeListener(ca);
-
-      c = fPanel.getCtrlByName(kEmailAddressKey);
-      ((JComponent)c).addPropertyChangeListener(ca);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    c = fPanel.getCtrlByName(kEmailAddressKey);
+    c.addPropertyChangeListener(ca);
   }
 
   public String getAsText() {
@@ -128,7 +121,7 @@ public class UserPrefsEditor implements PropertyEditor {
   }
 
   public Object getValue() {
-    // fPanel.saveAll();
+    fPanel.saveAll();
 
     String name = (String) fValues.get(kNameKey);
     String org = (String) fValues.get(kOrganizationKey);
@@ -180,7 +173,6 @@ public class UserPrefsEditor implements PropertyEditor {
 
   class ChangeAction implements PropertyChangeListener {
     void event(EventObject aEvent) {
-      getValue();
       fListeners.firePropertyChange(null, null, fPrefs);
     }
 
@@ -192,7 +184,8 @@ public class UserPrefsEditor implements PropertyEditor {
   public static void main(String[] args) throws Exception {
     javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
     UserPrefsEditor d = new UserPrefsEditor();
-    frame.getContentPane().add(d.fPanel);
+    frame.getContentPane().add(d.getCustomEditor());
+    ((PageUI)d.getCustomEditor()).saveAll();
     frame.pack();
     frame.setVisible(true);
   }
