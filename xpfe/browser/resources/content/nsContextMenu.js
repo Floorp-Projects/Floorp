@@ -121,6 +121,10 @@ nsContextMenu.prototype = {
     
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
+
+        // Block image depends on whether an image was clicked on, and,
+        // whether the user pref is enabled.
+        this.showItem( "context-blockimage", this.onImage && this.isBlockingImages() );
     },
     initMiscItems : function () {
         // Add bookmark always OK.
@@ -304,37 +308,37 @@ nsContextMenu.prototype = {
         this.copyToClipboard( this.imageURL );
     },
     // Determine if "Block Image" is to appear in the menu.
-    checkForImageBlocker: function () {
-      pref = Components.classes['component://netscape/preferences'];
-      pref = pref.getService();
-      pref = pref.QueryInterface(Components.interfaces.nsIPref);
-      try {
-        if (pref.GetBoolPref("imageblocker.enabled")) {
-          var element = document.getElementById("context-blockimage");
-          if (this.imageURL) {
-            element.setAttribute("style","display: inline;" );
-            element.setAttribute("disabled","false" );
-          } else {
-            element.setAttribute("style","display: none;" );
-            element.setAttribute("disabled","true" );
-          }
+    // Return false unless "imageBlocker.enabled" pref is set.
+    isBlockingImages: function () {
+        var pref = this.getService( 'component://netscape/preferences', 'nsIPref' );
+        var result = false;
+        try {
+           result = pref.GetBoolPref( "imageBlocker.enabled" );
+        } catch(e) {
         }
-      } catch(e) {
-      }
+        return result;
     },
     // Block image from loading in the future.
     blockImage : function () {
-        cookieviewer = Components.classes["component://netscape/cookieviewer/cookieviewer-world"].createInstance();
-        cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
-        cookieviewer.BlockImage(this.imageURL);
-
-// here's how we would have liked to do this but there is no idl for cookies
-//      wallet = Components.classes['component://netscape/wallet'];
-//      wallet = wallet.getService();
-//      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
-//      wallet.WALLET_ChangePassword();
+        var cookieViewer = this.createInstance( "component://netscape/cookieviewer/cookieviewer-world",
+                                                "nsICookieViewer" );
+        cookieViewer.BlockImage(this.imageURL);
     },
-    // Utilities
+
+    ///////////////
+    // Utilities //
+    ///////////////
+
+    // Create instance of component given progId and iid (as string).
+    createInstance : function ( progId, iidName ) {
+        var iid = Components.interfaces[ iidName ];
+        return Components.classes[ progId ].createInstance( iid );
+    },
+    // Get service given progId and iid (as string).
+    getService : function ( progId, iidName ) {
+        var iid = Components.interfaces[ iidName ];
+        return Components.classes[ progId ].getService( iid );
+    },
     // Show/hide one item (specified via name or the item element itself).
     showItem : function ( itemOrId, show ) {
         var item = null;
@@ -417,18 +421,16 @@ nsContextMenu.prototype = {
     // Copy link/image url to clipboard.
     copyToClipboard : function ( text ) {
         // Get clipboard.
-        var clipboard = Components
-                          .classes["component://netscape/widget/clipboard"]
-                            .getService ( Components.interfaces.nsIClipboard );
+        var clipboard = this.getService( "component://netscape/widget/clipboard",
+                                         "nsIClipboard" );
         // Create tranferable that will transfer the text.
-        var transferable = Components
-                             .classes["component://netscape/widget/transferable"]
-                               .createInstance( Components.interfaces.nsITransferable );
+        var transferable = this.createInstance( "component://netscape/widget/transferable",
+                                                "nsITransferable" );
         if ( clipboard && transferable ) {
           transferable.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
-          var data = createInstance( "component://netscape/supports-wstring",
-                                      "nsISupportsWString" );
+          var data = this.createInstance( "component://netscape/supports-wstring",
+                                          "nsISupportsWString" );
           if ( data ) {
             data.data = text ;
             transferable.setTransferData( "text/unicode", data, text.length * 2 );
@@ -444,9 +446,8 @@ nsContextMenu.prototype = {
             url = window.content.location.href;
         }
         // Use stream xfer component to prompt for destination and save.
-        var xfer = Components
-                     .classes[ "component://netscape/appshell/component/xfer" ]
-                       .getService( Components.interfaces.nsIStreamTransfer );
+        var xfer = this.getService( "component://netscape/appshell/component/xfer",
+                                    "nsIStreamTransfer" );
         try {
             // When Necko lands, we need to receive the real nsIChannel and
             // do SelectFileAndTransferLocation!
