@@ -159,7 +159,8 @@ nsHelperAppDialog.prototype = {
         var dlgResult = picker.show();
 
         if ( dlgResult == nsIFilePicker.returnCancel ) {
-            throw Components.results.NS_ERROR_FAILURE;
+            // Null result means user cancelled.
+            return null;
         }
 
 
