@@ -123,6 +123,14 @@ CPPSRCS		+= \
 		nsListItemFrame.cpp \
 		nsListBoxLayout.cpp \
 		$(NULL)
+
+ifdef MOZ_ENABLE_CAIRO
+CPPSRCS		+= \
+		nsCanvasFrame.cpp \
+		nsCanvasBoxObject.cpp \
+		$(NULL)
+endif
+
 endif
 
 include $(topsrcdir)/config/config.mk
@@ -144,3 +152,8 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifdef MOZ_CAIRO
+CFLAGS		+= $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS)
+endif

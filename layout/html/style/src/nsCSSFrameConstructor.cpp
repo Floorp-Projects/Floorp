@@ -113,6 +113,9 @@
 #include "nsScrollPortFrame.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#ifdef MOZ_ENABLE_CAIRO
+#include "nsCanvasFrame.h"
+#endif
 
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
@@ -299,6 +302,11 @@ NS_NewListBoxScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+#ifdef MOZ_ENABLE_CAIRO
+nsresult
+NS_NewCanvasXULFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+#endif
 
 // grid
 nsresult
@@ -5310,6 +5318,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         processChildren = PR_TRUE;
         rv = NS_NewTreeColFrame(aPresShell, &newFrame);
       }
+#ifdef MOZ_ENABLE_CAIRO
+      else if (aTag == nsXULAtoms::canvas) {
+        isReplaced = PR_TRUE;
+        rv = NS_NewCanvasXULFrame(aPresShell, &newFrame);
+      }
+#endif
       // TEXT CONSTRUCTION
       else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
                aTag == nsXULAtoms::description) {

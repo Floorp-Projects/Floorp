@@ -177,6 +177,9 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULSortService.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
+#ifdef MOZ_ENABLE_CAIRO
+#include "nsICanvasRenderingContext2D.h"
+#endif
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -431,6 +434,10 @@ nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+#ifdef MOZ_ENABLE_CAIRO
+nsresult NS_NewCanvasBoxObject(nsIBoxObject** aResult);
+nsresult NS_NewCanvasRenderingContext2D(nsICanvasRenderingContext2D** aResult);
+#endif /* MOZ_ENABLE_CAIRO */
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
@@ -507,6 +514,10 @@ MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxO
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+#ifdef MOZ_ENABLE_CAIRO
+MAKE_CTOR(CreateNewCanvasBoxObject,     nsIBoxObject,           NS_NewCanvasBoxObject)
+MAKE_CTOR(CreateNewCanvasRenderingContext2D, nsICanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
+#endif
 #endif
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
@@ -871,6 +882,19 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_TREEBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-tree;1",
     CreateNewTreeBoxObject },
+
+#ifdef MOZ_ENABLE_CAIRO
+  { "XUL Canvas Box Object",
+    NS_CANVASBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-canvas;1",
+    CreateNewCanvasBoxObject },
+
+  { "Canvas 2D Rendering Context",
+    NS_CANVASRENDERINGCONTEXT2D_CID,
+    "@mozilla.org/layout/canvas-rendering-context?name=context-2d;1",
+    CreateNewCanvasRenderingContext2D },
+#endif /* MOZ_ENABLE_CAIRO */
+
 #endif
 
   { "AutoCopy Service",
