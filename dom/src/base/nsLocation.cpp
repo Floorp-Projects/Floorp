@@ -217,6 +217,12 @@ LocationImpl::GetURI(nsIURI** aURI)
   rv = webNav->GetCurrentURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // It is valid for docshell to return a null URI. Don't try to fixup
+  // if this happens.
+  if (!uri) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
