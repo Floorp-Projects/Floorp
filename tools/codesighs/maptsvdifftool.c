@@ -270,6 +270,29 @@ static int symbolCompare(const void* in1, const void* in2)
 }
 
 
+void trimWhite(char* inString)
+/*
+**  Remove any whitespace from the end of the string.
+*/
+{
+    int len = strlen(inString);
+
+    while(len)
+    {
+        len--;
+
+        if(isspace(*(inString + len)))
+        {
+            *(inString + len) = '\0';
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+
 int difftool(Options* inOptions)
 /*
 **  Read a diff file and spit out relevant information.
@@ -297,6 +320,8 @@ int difftool(Options* inOptions)
     */
     while(0 == retval && NULL != fgets(lineBuffer, sizeof(lineBuffer), inOptions->mInput))
     {
+        trimWhite(lineBuffer);
+
         if(('<' == lineBuffer[0] || '>' == lineBuffer[0]) && ' ' == lineBuffer[1])
         {
             int additive = 0;
@@ -308,7 +333,7 @@ int difftool(Options* inOptions)
             char module[0x100];
             char segment[0x40];
             char object[0x100];
-            char symbol[0x200];
+            char* symbol = NULL;
 
             /*
             **  Figure out if the line adds or subtracts from something.
@@ -323,18 +348,19 @@ int difftool(Options* inOptions)
             **  Scan the line for information.
             */
             scanRes = sscanf(theLine,
-                "%x\t%s\t%s\t%s\t%s\t%s\t%s",
-                &size,
+                "%x\t%s\t%s\t%s\t%s\t%s\t",
+                (unsigned*)&size,
                 segClass,
                 scope,
                 module,
                 segment,
-                object,
-                symbol);
+                object);
 
-            if(7 == scanRes)
+            if(6 == scanRes)
             {
                 SegmentClass segmentClass = DATA;
+
+                symbol = strrchr(theLine, '\t') + 1;
 
                 if(0 == strcmp(segClass, "CODE"))
                 {

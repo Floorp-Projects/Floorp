@@ -31,8 +31,9 @@ REQUIRES = $(NULL)
 
 SIMPLECSRCS += \
 		msmap2tsv.c \
+		nm2tsv.c \
 		codesighs.c \
-        maptsvdifftool.c \
+		maptsvdifftool.c \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(SIMPLECSRCS:.c=$(BIN_SUFFIX))

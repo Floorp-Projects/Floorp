@@ -10,8 +10,8 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is codesighs.c code, released
- * Oct 3, 2002.
+ * The Original Code is nm2tsv.c code, released
+ * Oct 10, 2002.
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *    Garrett Arch Blythe, 03-October-2002
+ *    Garrett Arch Blythe, 10-October-2002
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -39,6 +39,7 @@
 #include <time.h>
 #include <ctype.h>
 
+
 #define ERROR_REPORT(num, val, msg)   fprintf(stderr, "error(%d):\t\"%s\"\t%s\n", (num), (val), (msg));
 #define CLEANUP(ptr)    do { if(NULL != ptr) { free(ptr); ptr = NULL; } } while(0)
 
@@ -55,8 +56,6 @@ typedef struct __struct_Options
 **                  Default is stdout.
 **  mOutputName     Name of the file.
 **  mHelp           Wether or not help should be shown.
-**  mModules        Output module by module information.
-**  mTotalOnly      Only output one number, the total.
 */
 {
     const char* mProgramName;
@@ -65,8 +64,6 @@ typedef struct __struct_Options
     FILE* mOutput;
     char* mOutputName;
     int mHelp;
-    int mModules;
-    int mTotalOnly;
 }
 Options;
 
@@ -89,72 +86,24 @@ Switch;
 static Switch gInputSwitch = {"--input", "-i", 1, NULL, "Specify input file." DESC_NEWLINE "stdin is default."};
 static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file." DESC_NEWLINE "Appends if file exists." DESC_NEWLINE "stdout is default."};
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
-static Switch gModuleSwitch = {"--modules", "-m", 0, NULL, "Output individual module numbers as well."};
-static Switch gTotalSwitch = {"--totalonly", "-t", 0, NULL, "Output only one number." DESC_NEWLINE "The total overall size." DESC_NEWLINE "Overrides other output options."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
-        &gModuleSwitch,
-        &gTotalSwitch,
         &gHelpSwitch
 };
 
 
-typedef struct __struct_SizeStats
+char* scanWhite(char* inScan)
 /*
-**  Track totals.
-**
-**  mData       Size of data.
-**  mCode       Size of code.
+**  Scan for whitespace.
 */
 {
-    unsigned long mData;
-    unsigned long mCode;
-}
-SizeStats;
+    char* retval = inScan;
 
-
-typedef struct __struct_ModuleStats
-/*
-**  Track module level information.
-**
-**  mModule     Module name.
-**  mSize       Size of module.
-*/
-{
-    char* mModule;
-    SizeStats mSize;
-}
-ModuleStats;
-
-typedef enum __enum_SegmentClass
-{
-        CODE,
-        DATA
-}
-SegmentClass;
-
-
-static int moduleCompare(const void* in1, const void* in2)
-/*
-**  qsort helper function.
-*/
-{
-    int retval = 0;
-
-    const ModuleStats* one = (const ModuleStats*)in1;
-    const ModuleStats* two = (const ModuleStats*)in2;
-    unsigned long oneSize = one->mSize.mCode + one->mSize.mData;
-    unsigned long twoSize = two->mSize.mCode + two->mSize.mData;
-
-    if(oneSize < twoSize)
+    while('\0' != *retval && 0 == isspace(*retval))
     {
-        retval = 1;
-    }
-    else if(oneSize > twoSize)
-    {
-        retval = -1;
+        retval++;
     }
 
     return retval;
@@ -184,147 +133,130 @@ void trimWhite(char* inString)
 }
 
 
-int codesighs(Options* inOptions)
+int nm2tsv(Options* inOptions)
 /*
-**  Output a simplistic report based on our options.
+**  Read all input.
+**  Output tab seperated value data.
+**
+**  We expect our data to be in a particular format.
+**  nm --format=bsd --size-sort --print-file-name
 */
 {
     int retval = 0;
-    char lineBuffer[0x500];
-    int scanRes = 0;
-    unsigned long size;
-    char segClass[0x10];
-    char scope[0x10];
-    char module[0x100];
-    char segment[0x40];
-    char object[0x100];
-    char* symbol;
-    SizeStats overall;
-    ModuleStats* modules = NULL;
-    unsigned moduleCount = 0;
-
-    memset(&overall, 0, sizeof(overall));
+    char lineBuffer[0x400];
+    char* module = NULL;
+    char* size = NULL;
+    char* type = NULL;
+    char* symbol = NULL;
 
     /*
-    **  Read the file line by line, regardless of number of fields.
-    **  We assume tab seperated value formatting, at least 7 lead values:
-    **      size class scope module segment object symbol ....
+    **  Read in the nm file.
     */
     while(0 == retval && NULL != fgets(lineBuffer, sizeof(lineBuffer), inOptions->mInput))
     {
         trimWhite(lineBuffer);
 
-        scanRes = sscanf(lineBuffer,
-            "%x\t%s\t%s\t%s\t%s\t%s\t",
-            (unsigned*)&size,
-            segClass,
-            scope,
-            module,
-            segment,
-            object);
-
-        if(6 == scanRes)
+        /*
+        ** Find the various peices of information we'll be looking for.
+        */
+        size = strchr(lineBuffer, ':');
+        if(NULL != size)
         {
-            SegmentClass segmentClass = CODE;
+            *size = '\0';
+            size++;
 
-            symbol = strchr(lineBuffer, '\t') + 1;
-
-            if(0 == strcmp(segClass, "DATA"))
+            module = strrchr(lineBuffer, '/');
+            if(NULL == module)
             {
-                segmentClass = DATA;
-            }
-            else if(0 == strcmp(segClass, "CODE"))
-            {
-                segmentClass = CODE;
+                module = lineBuffer;
             }
             else
             {
-                retval = __LINE__;
-                ERROR_REPORT(retval, segClass, "Unable to determine segment class.");
+                *module = '\0';
+                module++;
             }
 
-            if(0 == retval)
+            type = scanWhite(size);
+            *type = '\0';
+            type++;
+
+            symbol = type + 1;
+            *symbol = '\0';
+            symbol++;
+
+            /*
+            **  Skip certain types.
+            */
+            switch(*type)
             {
-                /*
-                **  Update overall totals.
-                */
-                if(CODE == segmentClass)
-                {
-                    overall.mCode += size;
-                }
-                else if(DATA == segmentClass)
-                {
-                    overall.mData += size;
-                }
+                case '-':
+                    continue;
+                    break;
+                default:
+                    break;
+            }
 
-                /*
-                **  See what else we should be tracking.
-                */
-                if(0 == inOptions->mTotalOnly)
+            /*
+            **  Simply output the data with a little more interpretation.
+            **  First is size.
+            */
+            fprintf(inOptions->mOutput, "%s\t", size);
+
+            /*
+            **  Type, CODE or DATA
+            */
+            switch(toupper(*type))
+            {
+                case 'T': /* text (code) */
+                case 'V': /* weak object */
+                case 'W': /* weak symbol */
+                    fprintf(inOptions->mOutput, "CODE\t");
+                    break;
+                default:
+                    fprintf(inOptions->mOutput, "DATA\t");
+                    break;
+            }
+
+            /*
+            **  Scope, PUBLIC, STATIC, or UNDEF
+            */
+            if(islower(*type))
+            {
+                fprintf(inOptions->mOutput, "STATIC\t");
+            }
+            else
+            {
+                switch(*type)
                 {
-                    if(inOptions->mModules)
-                    {
-                        unsigned index = 0;
-                        
-                        /*
-                        **  Find the module to modify.
-                        */
-                        for(index = 0; index < moduleCount; index++)
-                        {
-                            if(0 == strcmp(modules[index].mModule, module))
-                            {
-                                break;
-                            }
-                        }
-                        
-                        /*
-                        **  If the index is the same as the count, we need to
-                        **      add a new module.
-                        */
-                        if(index == moduleCount)
-                        {
-                            void* moved = NULL;
-                            
-                            moved = realloc(modules, sizeof(ModuleStats) * (moduleCount + 1));
-                            if(NULL != moved)
-                            {
-                                modules = (ModuleStats*)moved;
-                                moduleCount++;
-                                
-                                memset(modules + index, 0, sizeof(ModuleStats));
-                                modules[index].mModule = strdup(module);
-                                if(NULL == modules[index].mModule)
-                                {
-                                    retval = __LINE__;
-                                    ERROR_REPORT(retval, module, "Unable to duplicate string.");
-                                }
-                            }
-                            else
-                            {
-                                retval = __LINE__;
-                                ERROR_REPORT(retval, inOptions->mProgramName, "Unable to allocate module memory.");
-                            }
-                        }
-                        
-                        if(0 == retval)
-                        {
-                            if(CODE == segmentClass)
-                            {
-                                modules[index].mSize.mCode += size;
-                            }
-                            else if(DATA == segmentClass)
-                            {
-                                modules[index].mSize.mData += size;
-                            }
-                        }
-                    }
+                    case '?':
+                        fprintf(inOptions->mOutput, "UNDEF\t");
+                        break;
+                    default:
+                        fprintf(inOptions->mOutput, "PUBLIC\t");
+                        break;
                 }
             }
+
+            /*
+            **  Module name, segment.
+            */
+            fprintf(inOptions->mOutput, "%s\t", module);
+            fprintf(inOptions->mOutput, "%c\t", toupper(*type));
+
+            /*
+            **  Origin
+            */
+            fprintf(inOptions->mOutput, "UNDEF:%s:%c\t", module, toupper(*type));
+
+            /*
+            **  Symbol is last.
+            */
+            fprintf(inOptions->mOutput, "%s\n", symbol);
         }
         else
         {
             retval = __LINE__;
-            ERROR_REPORT(retval, inOptions->mInputName, "Problem extracting values from file.");
+            ERROR_REPORT(retval, lineBuffer, "Malformed input line.");
         }
     }
 
@@ -332,58 +264,6 @@ int codesighs(Options* inOptions)
     {
         retval = __LINE__;
         ERROR_REPORT(retval, inOptions->mInputName, "Unable to read file.");
-    }
-
-    /*
-    **  If all went well, time to report.
-    */
-    if(0 == retval)
-    {
-        if(inOptions->mTotalOnly)
-        {
-            fprintf(inOptions->mOutput, "%u\n", (unsigned)(overall.mCode + overall.mData));
-        }
-        else
-        {
-            fprintf(inOptions->mOutput, "Overall Size\n");
-            fprintf(inOptions->mOutput, "\tTotal:\t%10u\n", (unsigned)(overall.mCode + overall.mData));
-            fprintf(inOptions->mOutput, "\tCode:\t%10u\n", (unsigned)overall.mCode);
-            fprintf(inOptions->mOutput, "\tData:\t%10u\n", (unsigned)overall.mData);
-        }
-
-        /*
-        **  Check options to see what else we should output.
-        */
-        if(inOptions->mModules && moduleCount)
-        {
-            unsigned loop = 0;
-
-            /*
-            **  Sort the modules by their size.
-            */
-            qsort(modules, (size_t)moduleCount, sizeof(ModuleStats), moduleCompare);
-
-            /*
-            **  Output each one.
-            **  Might as well clean up while we go too.
-            */
-            for(loop = 0; loop < moduleCount; loop++)
-            {
-                fprintf(inOptions->mOutput, "\n");
-                fprintf(inOptions->mOutput, "%s\n", modules[loop].mModule);
-                fprintf(inOptions->mOutput, "\tTotal:\t%10u\n", (unsigned)(modules[loop].mSize.mCode + modules[loop].mSize.mData));
-                fprintf(inOptions->mOutput, "\tCode:\t%10u\n", (unsigned)modules[loop].mSize.mCode);
-                fprintf(inOptions->mOutput, "\tData:\t%10u\n", (unsigned)modules[loop].mSize.mData);
-
-                CLEANUP(modules[loop].mModule);
-            }
-
-            /*
-            **  Done with modules.
-            */
-            CLEANUP(modules);
-            moduleCount = 0;
-        }
     }
 
     return retval;
@@ -532,14 +412,6 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             {
                 outOptions->mHelp = __LINE__;
             }
-            else if(current == &gModuleSwitch)
-            {
-                outOptions->mModules = __LINE__;
-            }
-            else if(current == &gTotalSwitch)
-            {
-                outOptions->mTotalOnly = __LINE__;
-            }
             else
             {
                 retval = __LINE__;
@@ -615,7 +487,7 @@ int main(int inArgc, char** inArgv)
     }
     else if(0 == retval)
     {
-        retval = codesighs(&options);
+        retval = nm2tsv(&options);
     }
 
     cleanOptions(&options);
