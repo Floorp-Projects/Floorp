@@ -24,12 +24,27 @@
 
 var gPrefsBundle;
 
-function validate() {
+function hostnameIsIllegal(hostname)
+{
+  // XXX TODO do a complete check.
+  // this only checks for illegal characters in the hostname
+  // but hostnames like "...." and "_" and ".111" will get by
+  // my test.  
+  var validChars = hostname.match(/[A-Za-z0-9._]/g);
+  if (!validChars || (validChars.length != hostname.length)) {
+    return true;
+  }
+
+  return false;
+}
+
+function validate() 
+{
   var servername = document.getElementById("hostname");
   var smtpserver = document.getElementById("smtphostname");
 
-  if ((servername && servername.value =="") ||
-      (smtpserver && smtpserver.value == "")) {
+  if ((servername && hostnameIsIllegal(servername.value)) ||
+      (smtpserver && hostnameIsIllegal(smtpserver.value))) {
     var alertText = gPrefsBundle.getString("enterValidHostname");
     window.alert(alertText);
     return false;

@@ -38,7 +38,7 @@ Rights Reserved.
   <box class="box-header" title="&serverTitle.label;"/>
 
   <separator/>
-  
+ 
   <box class="box-wizardcontent" orient="vertical" flex="1">
 
     <html>&newsServerNameDesc.label;</html>
