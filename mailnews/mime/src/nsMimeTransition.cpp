@@ -21,7 +21,9 @@
 #include "plstr.h"
 #include "nsCRT.h"
 #include "nsMimeTransition.h"
-#include "nsTextFragment.h"
+#ifndef XP_MAC
+	#include "nsTextFragment.h"
+#endif
 #include "msgCore.h"
 #include "mimebuf.h"
 
