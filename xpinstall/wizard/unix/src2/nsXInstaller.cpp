@@ -452,6 +452,8 @@ ErrorHandler(int aErr, const char* aErrMsg)
     gtk_widget_grab_default(okButton);
     gtk_widget_show_all(sErrDlg);
 
+    gtk_main();
+
     return aErr;
 }
 
@@ -465,6 +467,8 @@ ErrDlgOK(GtkWidget *aWidget, gpointer aData)
         gtk_widget_destroy(sErrDlg);
         sErrDlg = NULL;
     }
+
+    gtk_main_quit();
 
     if (IsErrFatal(err))
         exit(err);
