@@ -264,12 +264,8 @@ var pacUtils =
 "}\n" +
 
 "function localHostOrDomainIs(host, hostdom) {\n" +
-"    if (isPlainHostName(host)) {\n" +
-"        return (hostdom.search('/^' + host + '/') != -1);\n" +
-"    }\n" +
-"    else {\n" +
-"        return (host == hostdom); //TODO check \n" +
-"    }\n" +
+"    return (host == hostdom) ||\n" +
+"           (hostdom.lastIndexOf(host + '.', 0) == 0);\n" +
 "}\n" +
 
 "function shExpMatch(url, pattern) {\n" +
