@@ -31,7 +31,7 @@ nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
 	m_status(DLL_OK)
 {
 	m_lastModTime = LL_ZERO;
-	m_size = LL_ZERO;
+	m_size = 0;
 	
 	if (libFullPath == NULL)
 	{
@@ -46,8 +46,8 @@ nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
 		return;
 	}
 
-	PRFileInfo64 statinfo;
-	if (PR_GetFileInfo64(m_fullpath, &statinfo) != PR_SUCCESS)
+	PRFileInfo statinfo;
+	if (PR_GetFileInfo(m_fullpath, &statinfo) != PR_SUCCESS)
 	{
 		// The stat things works only if people pass in the full pathname.
 		// Even if our stat fails, we could be able to load it because of
@@ -71,7 +71,7 @@ nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
 }
 
 
-nsDll::nsDll(const char *libFullPath, PRTime lastModTime, PRUint64 fileSize)
+nsDll::nsDll(const char *libFullPath, PRTime lastModTime, PRUint32 fileSize)
 :  m_fullpath(NULL), m_instance(NULL), m_status(DLL_OK)
 {
 	m_lastModTime = lastModTime;
@@ -101,8 +101,15 @@ nsDll::~nsDll(void)
 	m_fullpath = NULL;
 }
 
+
 PRBool nsDll::Load(void)
 {
+#ifdef	XP_MAC
+	char		*macFileName = NULL;
+	OSErr		err;
+	int		loop;
+#endif
+
 	if (m_status != DLL_OK)
 	{
 		return (PR_FALSE);
@@ -112,7 +119,27 @@ PRBool nsDll::Load(void)
 		// Already loaded
 		return (PR_TRUE);
 	}
+#ifdef	XP_MAC
+	// err = ConvertUnixPathToMacPath(m_fullpath, &macFileName);
+	if ((macFileName = PL_strdup(m_fullpath)) != NULL)
+	{
+		if (macFileName[0] == '/')
+		{
+			for (loop=0; loop<PL_strlen(macFileName); loop++)
+			{
+				if (macFileName[loop] == '/')	macFileName[loop] = ':';
+			}
+			m_instance = PR_LoadLibrary(&macFileName[1]);		// skip over initial slash
+		}
+		else
+		{
+			m_instance = PR_LoadLibrary(macFileName);
+		}
+	}
+	
+#else
 	m_instance = PR_LoadLibrary(m_fullpath);
+#endif
 	return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 	
 }
