@@ -46,7 +46,7 @@ struct nsID iid = {
     {0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
 };
 
-XPTTypeDescriptor td_void = {0};
+XPTTypeDescriptor td_void = {0,0};
 
 int
 main(int argc, char **argv)
