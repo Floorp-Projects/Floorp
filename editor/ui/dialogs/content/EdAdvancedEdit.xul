@@ -167,7 +167,7 @@
                 oninput="onInputCSSAttributeName();"
                 onchange="onChangeCSSAttribute();"/>
           	  <textbox id="AddCSSAttributeValueInput" flex="1"
-                oninput="onInputCSSAttributeValue();"/>
+                oninput="onChangeCSSAttribute();"/>
             </row>
           </rows>
         </grid>

@@ -163,7 +163,7 @@ function onInputJSEAttributeValue()
     // Update value in the tree list
     // Since we have a non-editable menulist, 
     //   we MUST automatically add the event attribute if it doesn't exist
-    if (!UpdateExistingAttribute( name, value, "JSEAList" ))
+    if (!UpdateExistingAttribute( name, value, "JSEAList" ) && value)
       AddTreeItem( name, value, "JSEAList", JSEAttrs );
   }
 }

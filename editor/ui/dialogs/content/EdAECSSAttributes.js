@@ -56,7 +56,6 @@ function BuildCSSAttributeTable()
   ClearCSSInputWidgets();
 }
 
-// add or select attribute in the tree widget
 function onChangeCSSAttribute()
 {
   var name = TrimString(gDialog.AddCSSAttributeNameInput.value);
@@ -67,7 +66,7 @@ function onChangeCSSAttribute()
 
   // First try to update existing attribute
   // If not found, add new attribute
-  if ( !UpdateExistingAttribute( name, value, "CSSAList" ) )
+  if ( !UpdateExistingAttribute( name, value, "CSSAList" ) && value)
     AddTreeItem( name, value, "CSSAList", CSSAttrs );
 }
 
@@ -102,14 +101,6 @@ function onInputCSSAttributeName()
     newValue = existingValue;
 
   gDialog.AddCSSAttributeValueInput.value = newValue;
-}
-
-function onInputCSSAttributeValue()
-{
-  // Update value in the tree list
-  UpdateExistingAttribute( gDialog.AddCSSAttributeNameInput.value,
-                           gDialog.AddCSSAttributeValueInput.value,
-                           "CSSAList" );
 }
 
 function editCSSAttributeValue(targetCell)
