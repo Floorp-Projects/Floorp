@@ -39,6 +39,7 @@
 #include "nscore.h"
 #include "pratom.h"
 #include "prmem.h"
+#include "nsInt64.h"
 
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -1016,7 +1017,7 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 
 
 NS_IMETHODIMP
-nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint64 aProgress, PRUint64 aProgressMax)
 {
     nsresult rv = NS_OK;
 
@@ -1031,7 +1032,8 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint32 
             if (NS_FAILED(rv)) return rv;
         }
         mLastUpdate = now;
-        rv = mDlg->OnProgress( mNextItem-1, aProgress, mContentLength );
+        // XXX once channels support that, use 64-bit contentlength
+        rv = mDlg->OnProgress( mNextItem-1, aProgress, nsUint64(mContentLength) );
     }
 
     return rv;

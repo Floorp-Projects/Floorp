@@ -40,6 +40,7 @@
 #define __nsFtpState__h_
 
 #include "ftpCore.h"
+#include "nsInt64.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"
@@ -121,7 +122,7 @@ public:
                   nsIFTPEventSink *sink, 
                   nsICacheEntryDescriptor* cacheEntry,
                   nsIProxyInfo* proxyInfo,
-                  PRUint32 startPos,
+                  PRUint64 startPos,
                   const nsACString& entity);
 
     // use this to provide a stream to be written to the server.
@@ -240,7 +241,7 @@ private:
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     
-    PRUint32 mStartPos;
+    nsUint64 mStartPos;
     nsCString mSuppliedEntityID;
     nsCString mEntityID;
 };

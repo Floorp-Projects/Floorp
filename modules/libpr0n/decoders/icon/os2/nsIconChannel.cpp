@@ -52,6 +52,7 @@
 #include "nsIStringStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsInt64.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
@@ -413,7 +414,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     return rv;
 
   // Init our streampump
-  rv = mPump->Init(inStream, -1, -1, 0, 0, PR_FALSE);
+  rv = mPump->Init(inStream, nsInt64(-1), nsInt64(-1), 0, 0, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
 

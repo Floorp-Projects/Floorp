@@ -99,8 +99,8 @@ struct nsRequestInfo : public PLDHashEntryHdr
   }
 
   const void* mKey; // Must be first for the pldhash stubs to work
-  PRInt32 mCurrentProgress;
-  PRInt32 mMaxProgress;
+  nsInt64 mCurrentProgress;
+  nsInt64 mMaxProgress;
   PRBool mUploading;
 };
 
@@ -551,10 +551,9 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
     // this will allow a more accurate estimation of the max progress (in case
     // the old value was unknown ie. -1)
     //
-    nsRequestInfo *info;
-    info = GetRequestInfo(aRequest);
+    nsRequestInfo *info = GetRequestInfo(aRequest);
     if (info) {
-      PRInt32 oldMax = info->mMaxProgress;
+      nsInt64 oldMax = info->mMaxProgress;
 
       info->mMaxProgress = info->mCurrentProgress;
       //
@@ -562,7 +561,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
       // finished loading, then use this new data to try to calculate a
       // mMaxSelfProgress...
       //
-      if ((oldMax < 0) && (mMaxSelfProgress < 0)) {
+      if ((oldMax < nsInt64(0)) && (mMaxSelfProgress < nsInt64(0))) {
         mMaxSelfProgress = CalculateMaxProgress();
       }
 
@@ -574,7 +573,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
       // nsRequestInfo::mCurrentProgress are both 0, then the
       // STATE_TRANSFERRING notification has not been fired yet...
       //
-      if ((oldMax == 0) && (info->mCurrentProgress == 0)) {
+      if ((oldMax == LL_ZERO) && (info->mCurrentProgress == LL_ZERO)) {
         nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
 
         // Only fire a TRANSFERRING notification if the request is also a
@@ -836,17 +835,6 @@ void nsDocLoader::doStopDocumentLoad(nsIRequest *request,
 // The following section contains support for nsIWebProgress and related stuff
 ////////////////////////////////////////////////////////////////////////////////////
 
-// get web progress returns our web progress listener or if
-// we don't have one, it will look up the doc loader hierarchy
-// to see if one of our parent doc loaders has one.
-nsresult nsDocLoader::GetParentWebProgressListener(nsDocLoader * aDocLoader, nsIWebProgressListener ** aWebProgress)
-{
-  // if we got here, there is no web progress to return
-  *aWebProgress = nsnull;
-  
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocLoader::AddProgressListener(nsIWebProgressListener *aListener,
                                      PRUint32 aNotifyMask)
@@ -903,53 +891,49 @@ nsDocLoader::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
   return NS_OK;
 }
 
-PRInt32 nsDocLoader::GetMaxTotalProgress()
+PRInt64 nsDocLoader::GetMaxTotalProgress()
 {
-  PRInt32 count = 0;
-  PRInt32 individualProgress, newMaxTotal;
+  nsInt64 newMaxTotal = 0;
 
-  newMaxTotal = 0;
-
-  count = mChildList.Count();
+  PRInt32 count = mChildList.Count();
   nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIDocumentLoader> docloader;
   for (PRInt32 i=0; i < count; i++) 
   {
-    individualProgress = 0;
-    docloader = ChildAt(i);
+    nsInt64 individualProgress = 0;
+    nsIDocumentLoader* docloader = ChildAt(i);
     if (docloader)
     {
       // Cast is safe since all children are nsDocLoader too
-      individualProgress = ((nsDocLoader *) docloader.get())->GetMaxTotalProgress();
+      individualProgress = ((nsDocLoader *) docloader)->GetMaxTotalProgress();
     }
-    if (individualProgress < 0) // if one of the elements doesn't know it's size
-                                // then none of them do
+    if (individualProgress < nsInt64(0)) // if one of the elements doesn't know it's size
+                                         // then none of them do
     {
-       newMaxTotal = -1;
+       newMaxTotal = nsInt64(-1);
        break;
     }
     else
      newMaxTotal += individualProgress;
   }
 
-  PRInt32 progress = -1;
-  if (mMaxSelfProgress >= 0 && newMaxTotal >= 0)
+  nsInt64 progress = -1;
+  if (mMaxSelfProgress >= nsInt64(0) && newMaxTotal >= nsInt64(0))
     progress = newMaxTotal + mMaxSelfProgress;
   
   return progress;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// The following section contains support for nsIEventProgressSink which is used to 
+// The following section contains support for nsIProgressEventSink which is used to 
 // pass progress and status between the actual request and the doc loader. The doc loader
 // then turns around and makes the right web progress calls based on this information.
 ////////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt, 
-                                          PRUint32 aProgress, PRUint32 aProgressMax)
+                                      PRUint64 aProgress, PRUint64 aProgressMax)
 {
   nsRequestInfo *info;
-  PRInt32 progressDelta = 0;
+  nsInt64 progressDelta = 0;
 
   //
   // Update the RequestInfo entry with the new progress data
@@ -957,7 +941,7 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
   info = GetRequestInfo(aRequest);
   if (info) {
     // suppress sending STATE_TRANSFERRING if this is upload progress (see bug 240053)
-    if (!info->mUploading && (0 == info->mCurrentProgress) && (0 == info->mMaxProgress)) {
+    if (!info->mUploading && (nsInt64(0) == info->mCurrentProgress) && (nsInt64(0) == info->mMaxProgress)) {
       //
       // If we receive an OnProgress event from a toplevel channel that the URI Loader
       // has not yet targeted, then we must suppress the event.  This is necessary to
@@ -978,12 +962,12 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
       // so update mMaxSelfProgress...  Otherwise, set it to -1 to indicate
       // that the content-length is no longer known.
       //
-      if (aProgressMax != (PRUint32)-1) {
-        mMaxSelfProgress  += aProgressMax;
-        info->mMaxProgress = aProgressMax;
+      if (nsUint64(aProgressMax) != LL_MAXUINT) {
+        mMaxSelfProgress  += PRInt64(aProgressMax);
+        info->mMaxProgress = PRInt64(aProgressMax);
       } else {
-        mMaxSelfProgress   = -1;
-        info->mMaxProgress = -1;
+        mMaxSelfProgress   =  nsInt64(-1);
+        info->mMaxProgress =  nsInt64(-1);
       }
 
       // Send a STATE_TRANSFERRING notification for the request.
@@ -1005,10 +989,10 @@ NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt,
     }
 
     // Update the current progress count...
-    progressDelta = aProgress - info->mCurrentProgress;
+    progressDelta = nsInt64(PRInt64(aProgress)) - info->mCurrentProgress;
     mCurrentSelfProgress += progressDelta;
 
-    info->mCurrentProgress = aProgress;
+    info->mCurrentProgress = PRInt64(aProgress);
   } 
   //
   // The request is not part of the load group, so ignore its progress
@@ -1054,11 +1038,11 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
       // submission in mind, where an upload is performed followed by download
       // of possibly several documents.
       if (info->mUploading != uploading) {
-        mCurrentSelfProgress  = mMaxSelfProgress  = 0;
-        mCurrentTotalProgress = mMaxTotalProgress = 0;
+        mCurrentSelfProgress  = mMaxSelfProgress  = LL_ZERO;
+        mCurrentTotalProgress = mMaxTotalProgress = LL_ZERO;
         info->mUploading = uploading;
-        info->mCurrentProgress = 0;
-        info->mMaxProgress = 0;
+        info->mCurrentProgress = LL_ZERO;
+        info->mMaxProgress = LL_ZERO;
       }
     }
     
@@ -1077,8 +1061,8 @@ void nsDocLoader::ClearInternalProgress()
 {
   ClearRequestInfoHash();
 
-  mCurrentSelfProgress  = mMaxSelfProgress  = 0;
-  mCurrentTotalProgress = mMaxTotalProgress = 0;
+  mCurrentSelfProgress  = mMaxSelfProgress  = LL_ZERO;
+  mCurrentTotalProgress = mMaxTotalProgress = LL_ZERO;
 
   mProgressStateFlags = nsIWebProgressListener::STATE_STOP;
 }
@@ -1086,11 +1070,11 @@ void nsDocLoader::ClearInternalProgress()
 
 void nsDocLoader::FireOnProgressChange(nsDocLoader *aLoadInitiator,
                                        nsIRequest *request,
-                                       PRInt32 aProgress,
-                                       PRInt32 aProgressMax,
-                                       PRInt32 aProgressDelta,
-                                       PRInt32 aTotalProgress,
-                                       PRInt32 aMaxTotalProgress)
+                                       PRInt64 aProgress,
+                                       PRInt64 aProgressMax,
+                                       PRInt64 aProgressDelta,
+                                       PRInt64 aTotalProgress,
+                                       PRInt64 aMaxTotalProgress)
 {
   if (mIsLoadingDocument) {
     mCurrentTotalProgress += aProgressDelta;
@@ -1134,9 +1118,10 @@ void nsDocLoader::FireOnProgressChange(nsDocLoader *aLoadInitiator,
       continue;
     }
 
+    // XXX truncates 64-bit to 32-bit
     listener->OnProgressChange(aLoadInitiator,request,
-                               aProgress, aProgressMax,
-                               aTotalProgress, aMaxTotalProgress);
+                               PRInt32(aProgress), PRInt32(aProgressMax),
+                               PRInt32(aTotalProgress), PRInt32(aMaxTotalProgress));
   }
 
   mListenerInfoList.Compact();
@@ -1374,10 +1359,10 @@ CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                         PRUint32 number, void *arg)
 {
   const nsRequestInfo *info = NS_STATIC_CAST(const nsRequestInfo *, hdr);
-  PRInt32 *max = NS_STATIC_CAST(PRInt32 *, arg);
+  nsInt64 *max = NS_STATIC_CAST(nsInt64 *, arg);
 
   if (info->mMaxProgress < info->mCurrentProgress) {
-    *max = -1;
+    *max = nsInt64(-1);
 
     return PL_DHASH_STOP;
   }
@@ -1387,9 +1372,9 @@ CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-PRInt32 nsDocLoader::CalculateMaxProgress()
+PRInt64 nsDocLoader::CalculateMaxProgress()
 {
-  PRInt32 max = 0;
+  nsInt64 max = 0;
   PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, &max);
   return max;
 }

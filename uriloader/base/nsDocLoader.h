@@ -56,6 +56,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
+#include "nsInt64.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
 
@@ -146,11 +147,11 @@ protected:
 
     void FireOnProgressChange(nsDocLoader* aLoadInitiator,
                               nsIRequest *request,
-                              PRInt32 aProgress,
-                              PRInt32 aProgressMax,
-                              PRInt32 aProgressDelta,
-                              PRInt32 aTotalProgress,
-                              PRInt32 aMaxTotalProgress);
+                              PRInt64 aProgress,
+                              PRInt64 aProgressMax,
+                              PRInt64 aProgressDelta,
+                              PRInt64 aTotalProgress,
+                              PRInt64 aMaxTotalProgress);
 
     void FireOnStateChange(nsIWebProgress *aProgress,
                            nsIRequest* request,
@@ -170,11 +171,6 @@ protected:
     void doStartURLLoad(nsIRequest *request);
     void doStopURLLoad(nsIRequest *request, nsresult aStatus);
     void doStopDocumentLoad(nsIRequest *request, nsresult aStatus);
-
-    // get web progress returns our web progress listener or if
-    // we don't have one, it will look up the doc loader hierarchy
-    // to see if one of our parent doc loaders has one.
-    nsresult GetParentWebProgressListener(nsDocLoader * aDocLoader, nsIWebProgressListener ** aWebProgres);
 
 protected:
     // IMPORTANT: The ownership implicit in the following member
@@ -203,23 +199,23 @@ protected:
     // feedback interfaces that travis cooked up.
     PRInt32 mProgressStateFlags;
 
-    PRInt32 mCurrentSelfProgress;
-    PRInt32 mMaxSelfProgress;
+    nsInt64 mCurrentSelfProgress;
+    nsInt64 mMaxSelfProgress;
 
-    PRInt32 mCurrentTotalProgress;
-    PRInt32 mMaxTotalProgress;
+    nsInt64 mCurrentTotalProgress;
+    nsInt64 mMaxTotalProgress;
 
     PLDHashTable mRequestInfoHash;
 
 private:
     nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 
-    PRInt32 GetMaxTotalProgress();
+    PRInt64 GetMaxTotalProgress();
 
     nsresult AddRequestInfo(nsIRequest* aRequest);
     nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
     void ClearRequestInfoHash();
-    PRInt32 CalculateMaxProgress();
+    PRInt64 CalculateMaxProgress();
 ///    void DumpChannelInfo(void);
 
     // used to clear our internal progress state between loads...

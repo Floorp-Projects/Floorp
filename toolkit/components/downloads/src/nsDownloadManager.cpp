@@ -1537,11 +1537,13 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
 }
 
 NS_IMETHODIMP
-nsXPIProgressListener::OnProgress(PRUint32 aIndex, PRUint32 aValue, PRUint32 aMaxValue)
+nsXPIProgressListener::OnProgress(PRUint32 aIndex, PRUint64 aValue, PRUint64 aMaxValue)
 {
   nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
+  // XXX truncates 64-bit to 32 bit
   if (wpl) 
-    return wpl->OnProgressChange(nsnull, nsnull, 0, 0, aValue, aMaxValue);
+    return wpl->OnProgressChange(nsnull, nsnull, 0, 0, nsUint64(aValue),
+                                 nsUint64(aMaxValue));
   return NS_OK;
 }
 

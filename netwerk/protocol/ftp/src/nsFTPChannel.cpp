@@ -376,7 +376,7 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
 }
 
 nsresult 
-nsFTPChannel::SetupState(PRUint32 startPos, const nsACString& entityID)
+nsFTPChannel::SetupState(PRUint64 startPos, const nsACString& entityID)
 {
     nsCOMPtr<nsIPrompt> prompt;
     nsCOMPtr<nsIAuthPrompt> authPrompt;
@@ -565,7 +565,7 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
 
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
-                         PRUint32 aProgress, PRUint32 aProgressMax)
+                         PRUint64 aProgress, PRUint64 aProgressMax)
 {
     if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
         return NS_OK;

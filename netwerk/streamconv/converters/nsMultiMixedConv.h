@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 #include "nsIByteRangeRequest.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
@@ -123,18 +124,18 @@ protected:
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
     nsCString           mContentDisposition;
-    PRInt32             mContentLength;
+    nsUint64            mContentLength;
     
     char                *mBuffer;
     PRUint32            mBufLen;
-    PRUint32            mTotalSent;
+    nsUint64            mTotalSent;
     PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
 
     // The following members are for tracking the byte ranges in
     // multipart/mixed content which specified the 'Content-Range:'
     // header...
-    PRInt32             mByteRangeStart;
-    PRInt32             mByteRangeEnd;
+    nsInt64             mByteRangeStart;
+    nsInt64             mByteRangeEnd;
     PRBool              mIsByteRangeRequest;
 };
 

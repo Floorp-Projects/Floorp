@@ -214,15 +214,15 @@ nsInputStreamPump::SetLoadGroup(nsILoadGroup *aLoadGroup)
 
 NS_IMETHODIMP
 nsInputStreamPump::Init(nsIInputStream *stream,
-                        PRInt32 streamPos, PRInt32 streamLen,
+                        PRInt64 streamPos, PRInt64 streamLen,
                         PRUint32 segsize, PRUint32 segcount,
                         PRBool closeWhenDone)
 {
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
-    mStreamOffset = streamPos;
-    if (streamLen >= 0)
-        mStreamLength = streamLen;
+    mStreamOffset = PRUint64(streamPos);
+    if (nsInt64(streamLen) >= nsInt64(0))
+        mStreamLength = PRUint64(streamLen);
     mStream = stream;
     mSegSize = segsize;
     mSegCount = segcount;
@@ -271,7 +271,9 @@ nsInputStreamPump::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsITransport> transport;
-        rv = sts->CreateInputTransport(mStream, mStreamOffset, mStreamLength,
+        // Note: The casts to PRUint64 are needed to cast to PRInt64, as
+        // nsUint64 can't directly be cast to PRInt64
+        rv = sts->CreateInputTransport(mStream, PRUint64(mStreamOffset), PRUint64(mStreamLength),
                                        mCloseWhenDone, getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
 

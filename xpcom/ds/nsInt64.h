@@ -272,6 +272,11 @@ public:
         return LL_EQ(mValue, aObject2.mValue);
     }
 
+    inline PRBool
+    operator ==(T aValue) const {
+        return LL_EQ(mValue, aValue);
+    }
+
     /**
      * Determine if two 64-bit integers are not equal
      */
@@ -280,6 +285,10 @@ public:
         return LL_NE(mValue, aObject2.mValue);
     }
 
+    inline PRBool
+    operator !=(T aValue) const {
+        return LL_NE(mValue, aValue);
+    }
 
     /**
      * Perform a bitwise AND of two 64-bit integers
@@ -339,6 +348,15 @@ public:
         LL_XOR(mValue, mValue, aObject.mValue);
         return *this;
     }
+
+
+    /**
+     * Allow doing if (!some_nsInt64)
+     */
+    PRBool operator!() const {
+        return LL_IS_ZERO(mValue);
+    }
+    
 };
 
 typedef nsTInt64<PRInt64> nsInt64;

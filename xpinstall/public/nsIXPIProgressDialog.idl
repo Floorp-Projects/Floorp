@@ -42,7 +42,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(8cdf1192-8709-4428-ab97-c5b6ceecd7e9)]
+[scriptable, uuid(ce8f744e-d5a5-41b3-911f-0fee3008b64e)]
 interface nsIXPIProgressDialog : nsISupports
 {
     /**
@@ -78,5 +78,5 @@ interface nsIXPIProgressDialog : nsISupports
      * @param value     number of bytes downloaded
      * @param maxValue  the total size
      */
-    void onProgress( in unsigned long index, in unsigned long value, in unsigned long maxValue );
+    void onProgress( in unsigned long index, in unsigned long long value, in unsigned long long maxValue );
 };

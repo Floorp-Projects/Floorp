@@ -85,8 +85,8 @@ public:
     MyProgressEventSink() { }
 
     NS_IMETHOD OnProgress(nsIRequest *request, nsISupports *ctxt,
-                          PRUint32 progress, PRUint32 progressMax) {
-        PRINTF(("progress: %u/%u\n", progress, progressMax));
+                          PRUint64 progress, PRUint64 progressMax) {
+        PRINTF(("progress: %llu/%llu\n", progress, progressMax));
         return NS_OK;
     }
 

@@ -40,6 +40,7 @@
 #include "nsJARProtocolHandler.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsInt64.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -715,8 +716,10 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
     // simply report progress here instead of hooking ourselves up as a
     // nsITransportEventSink implementation.
+    // XXX do the 64-bit stuff for real
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-        mProgressSink->OnProgress(this, nsnull, offset + count, mContentLength);
+        mProgressSink->OnProgress(this, nsnull, nsUint64(offset + count),
+                                  nsUint64(mContentLength));
 
     return rv; // let the pump cancel on failure
 }

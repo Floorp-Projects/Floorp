@@ -718,11 +718,11 @@ nsGopherChannel::PushStreamConverters(nsIStreamListener *listener, nsIStreamList
 
 NS_IMETHODIMP
 nsGopherChannel::OnTransportStatus(nsITransport *trans, nsresult status,
-                                   PRUint32 progress, PRUint32 progressMax)
+                                   PRUint64 progress, PRUint64 progressMax)
 {
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
-        NS_ConvertUTF8toUCS2 host(mHost);
+        NS_ConvertUTF8toUTF16 host(mHost);
         mProgressSink->OnStatus(this, nsnull, status, host.get());
 
         if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||

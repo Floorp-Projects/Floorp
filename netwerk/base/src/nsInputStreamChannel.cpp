@@ -305,8 +305,11 @@ nsInputStreamChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     if (mContentLength == -1)
         mContentStream->Available((PRUint32 *) &mContentLength);
 
+    // XXX Once nsIChannel and nsIInputStream (in some future revision)
+    // support 64-bit content lengths, mContentLength should be made 64-bit
     nsresult rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mContentStream,
-                                        -1, mContentLength, 0, 0, PR_TRUE);
+                                        nsInt64(-1), nsInt64(mContentLength),
+                                        0, 0, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     rv = mPump->AsyncRead(this, nsnull);
@@ -384,8 +387,11 @@ nsInputStreamChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
     rv = mListener->OnDataAvailable(this, mListenerContext, stream, offset, count);
 
+    // XXX need real 64-bit math here! (probably needs new streamlistener and
+    // channel ifaces)
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-        mProgressSink->OnProgress(this, nsnull, offset + count, mContentLength);
+        mProgressSink->OnProgress(this, nsnull, nsUint64(offset + count),
+                                  nsUint64(mContentLength));
 
     return rv; // let the pump cancel on failure
 }

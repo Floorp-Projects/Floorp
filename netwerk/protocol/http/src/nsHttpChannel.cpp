@@ -1568,7 +1568,8 @@ nsHttpChannel::ReadFromCache()
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamPump(getter_AddRefs(mCachePump),
-                               stream, -1, -1, 0, 0, PR_TRUE);
+                               stream, nsInt64(-1), nsInt64(-1), 0, 0,
+                               PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     return mCachePump->AsyncRead(this, mListenerContext);
@@ -3857,11 +3858,11 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
 NS_IMETHODIMP
 nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
-                                 PRUint32 progress, PRUint32 progressMax)
+                                 PRUint64 progress, PRUint64 progressMax)
 {
     // block socket status event after Cancel or OnStopRequest has been called.
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
-        LOG(("sending status notification [this=%x status=%x progress=%u/%u]\n",
+        LOG(("sending status notification [this=%x status=%x progress=%llu/%llu]\n",
             this, status, progress, progressMax));
 
         NS_ConvertASCIItoUCS2 host(mConnectionInfo->Host());

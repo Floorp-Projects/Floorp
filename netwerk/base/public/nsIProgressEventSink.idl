@@ -61,7 +61,7 @@ interface nsIRequest;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(dd47ee00-18c2-11d3-9337-00104ba0fd40)]
+[scriptable, uuid(D974C99E-4148-4df9-8D98-DE834A2F6462)]
 interface nsIProgressEventSink : nsISupports
 {
     /**
@@ -78,12 +78,12 @@ interface nsIProgressEventSink : nsISupports
      *        number of bytes transfered thus far.
      * @param aProgressMax
      *        numeric value indicating maximum number of bytes that will be
-     *        transfered (or 0xFFFFFFFF if total is unknown).
+     *        transfered (or 0xFFFFFFFFFFFFFFFF if total is unknown).
      */
     void onProgress(in nsIRequest aRequest,
                     in nsISupports aContext,
-                    in unsigned long aProgress,
-                    in unsigned long aProgressMax);
+                    in unsigned long long aProgress,
+                    in unsigned long long aProgressMax);
 
     /**
      * Called to notify the event sink with a status message for the given
