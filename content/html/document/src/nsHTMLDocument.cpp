@@ -25,7 +25,7 @@
 #include "nsIStyleSet.h"
 #include "nsIDocumentObserver.h"
 #include "nsHTMLAtoms.h"
-#include "nsIPresShell.h"
+#include "nsIPresShell.h" 
 #include "nsIPresContext.h" 
 #include "nsIImageMap.h"
 #include "nsIHTMLContent.h"
@@ -425,7 +425,8 @@ nsrefcnt nsHTMLDocument::Release()
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(nsIURL *aURL, 
                                   nsIContentViewerContainer* aContainer,
-                                  nsIStreamListener **aDocListener)
+                                  nsIStreamListener **aDocListener,
+                                  const char* aCommand)
 {
   nsresult rv;
   nsIWebShell* webShell;
@@ -460,7 +461,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
                                     kCParserIID, 
                                     (void **)&mParser);
 
-  if (NS_OK == rv) {
+  if (NS_OK == rv) { 
     nsIHTMLContentSink* sink;
 
 #ifdef rickgdebug
@@ -493,7 +494,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         nsIDTD* theDTD=0;
         NS_NewNavHTMLDTD(&theDTD);
         mParser->RegisterDTD(theDTD);
-
+        mParser->SetCommand("");
         mParser->SetContentSink(sink);
         mParser->Parse(aURL);
       }

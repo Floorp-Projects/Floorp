@@ -324,7 +324,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+PRBool CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kHTMLTextContentType);
   return result;
 }

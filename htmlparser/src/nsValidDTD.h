@@ -89,7 +89,7 @@ class CValidDTD : public nsIDTD {
      * @param   
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion);
+    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion);
 
 
     /**

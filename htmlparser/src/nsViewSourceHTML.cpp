@@ -25,7 +25,7 @@
 
 
 #include "nsIDTDDebug.h"
-#include "nsWellFormedDTD.h"
+#include "nsViewSourceHTML.h"
 #include "nsCRT.h"
 #include "nsParser.h"
 #include "nsScanner.h"
@@ -48,7 +48,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
-static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID); 
+static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 
 
 //static const char* kNullURL = "Error: Null URL given";
@@ -56,7 +56,8 @@ static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID);
 //static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kXMLTextContentType = "text/xml";
+static const char* kHTMLTextContentType = "text/html";
+static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
 static CTokenRecycler gTokenRecycler;
@@ -72,7 +73,7 @@ static CTokenRecycler gTokenRecycler;
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
  */
-nsresult CWellFormedDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+nsresult CViewSourceHTML::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
@@ -85,7 +86,7 @@ nsresult CWellFormedDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (nsIDTD*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
-    *aInstancePtr = (CWellFormedDTD*)(this);                                        
+    *aInstancePtr = (CViewSourceHTML*)(this);                                        
   }                 
   else {
     *aInstancePtr=0;
@@ -103,9 +104,9 @@ nsresult CWellFormedDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult)
+NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult)
 {
-  CWellFormedDTD* it = new CWellFormedDTD();
+  CViewSourceHTML* it = new CViewSourceHTML();
 
   if (it == 0) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -115,11 +116,58 @@ NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult)
 }
 
 
-NS_IMPL_ADDREF(CWellFormedDTD)
-NS_IMPL_RELEASE(CWellFormedDTD)
+NS_IMPL_ADDREF(CViewSourceHTML)
+NS_IMPL_RELEASE(CViewSourceHTML)
 
 
 static CTokenDeallocator gTokenKiller;
+
+
+void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIContentSink& aSink) {
+  if(aEnable){
+    CStartToken theFont(eHTMLTag_font);  
+    nsCParserNode theFontNode(&theFont,0);
+    CAttributeToken theFontAttr("face",aFace);
+    theFontNode.AddAttribute(&theFontAttr);
+    CAttributeToken theSizeAttr("size",aSize);
+    theFontNode.AddAttribute(&theSizeAttr);
+    aSink.OpenContainer(theFontNode);
+  }
+  else {
+    CEndToken theFont(eHTMLTag_font);  
+    nsCParserNode theFontNode(&theFont,0);
+    aSink.CloseContainer(theFontNode);
+  }
+}
+
+void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
+  if(aEnable){
+    CStartToken theFont(eHTMLTag_font);  
+    nsCParserNode theFontNode(&theFont,0);
+    CAttributeToken theFontAttr("color",aColor);
+    theFontNode.AddAttribute(&theFontAttr);
+    aSink.OpenContainer(theFontNode);
+  }
+  else {
+    CEndToken theFont(eHTMLTag_font);  
+    nsCParserNode theFontNode(&theFont,0);
+    aSink.CloseContainer(theFontNode);
+  }
+}
+
+void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
+  if(aEnable){
+    CStartToken theToken(theTag);  
+    nsCParserNode theNode(&theToken,0);
+    aSink.OpenContainer(theNode);
+  }
+  else {
+    CEndToken theToken(theTag);  
+    nsCParserNode theNode(&theToken,0);
+    aSink.CloseContainer(theNode);
+  }
+}
+
 
 /**
  *  Default constructor
@@ -128,7 +176,7 @@ static CTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mTokenDeque(gTokenKiller) {
+CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
@@ -143,7 +191,7 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mTokenDeque(gTokenKiller) {
  *  @param   
  *  @return  
  */
-CWellFormedDTD::~CWellFormedDTD(){
+CViewSourceHTML::~CViewSourceHTML(){
   mParser=0; //just to prove we destructed...
 }
 
@@ -154,8 +202,8 @@ CWellFormedDTD::~CWellFormedDTD(){
  * @param 
  * @return
  */
-nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
-  return NS_NewWellFormed_DTD(aInstancePtrResult);
+nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewViewSourceHTML(aInstancePtrResult);
 }
 
 /**
@@ -167,8 +215,8 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kXMLTextContentType);
+PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
+  PRBool result=(aContentType.Equals(kHTMLTextContentType) && (aCommand.Equals(kViewSourceCommand)));
   return result;
 }
 
@@ -179,9 +227,9 @@ PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRIn
  * @param 
  * @return
  */
-eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
-  if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
+  if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
     result=eValidDetect;
   return result;
 }
@@ -192,7 +240,7 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
@@ -213,6 +261,10 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
       CStartToken theBodyToken(eHTMLTag_body);
       nsCParserNode theBodyNode(&theBodyToken,0);
       theSink->OpenBody(theBodyNode);
+
+      SetFont("courier","-1",PR_TRUE,*mSink);
+
+
     }
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
   }
@@ -226,7 +278,7 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
@@ -237,12 +289,16 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySi
     {
       nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
 
-        //now let's automatically open the body...
+        //now let's automatically close the pre...
+
+      SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      
+      //now let's automatically close the body...
       CEndToken theBodyToken(eHTMLTag_body);
       nsCParserNode theBodyNode(&theBodyToken,0);
       theSink->CloseBody(theBodyNode);
 
-        //now let's automatically open the html...
+       //now let's automatically close the html...
       CEndToken theHTMLToken(eHTMLTag_html);
       nsCParserNode theHTMLNode(&theBodyToken,0);
       theSink->CloseHTML(theBodyNode);
@@ -262,7 +318,7 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySi
  *  @param   
  *  @return 
  */
-void CWellFormedDTD::SetParser(nsIParser* aParser) {
+void CViewSourceHTML::SetParser(nsIParser* aParser) {
   mParser=(nsParser*)aParser;
 }
 
@@ -274,7 +330,7 @@ void CWellFormedDTD::SetParser(nsIParser* aParser) {
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  */
-nsIContentSink* CWellFormedDTD::SetContentSink(nsIContentSink* aSink) {
+nsIContentSink* CViewSourceHTML::SetContentSink(nsIContentSink* aSink) {
   nsIContentSink* old=mSink;
   mSink=aSink;
   return old;
@@ -289,7 +345,7 @@ static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTML
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+NS_IMETHODIMP CViewSourceHTML::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
 
@@ -330,7 +386,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
+NS_IMETHODIMP CViewSourceHTML::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
   aToken=gTokenRecycler.CreateTokenOfType(eToken_text,eHTMLTag_text,aString);
   if(aToken) {
@@ -357,7 +413,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeText(const nsString& aString,CScanner& aSca
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
+NS_IMETHODIMP CViewSourceHTML::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
   PRInt16 theAttrCount=0;
@@ -409,7 +465,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScann
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+NS_IMETHODIMP CViewSourceHTML::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
    PRUnichar  ch;
    nsresult result=aScanner.GetChar(ch);
 
@@ -442,7 +498,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,C
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+NS_IMETHODIMP CViewSourceHTML::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   aToken = gTokenRecycler.CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace,gEmpty);
   nsresult result=kNoError;
   if(aToken) {
@@ -461,7 +517,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScann
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+NS_IMETHODIMP CViewSourceHTML::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   aToken = gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
@@ -479,7 +535,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,
  *  @param  aToken is the newly created newline token that is parsing
  *  @return error code
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+NS_IMETHODIMP CViewSourceHTML::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   aToken=gTokenRecycler.CreateTokenOfType(eToken_newline,eHTMLTag_newline,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
@@ -499,7 +555,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,
  *  @param   aToken is the out arg holding our new token
  *  @return  error code (may return kInterrupted).
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+NS_IMETHODIMP CViewSourceHTML::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
   nsresult result=aScanner.GetChar(aChar);
 
@@ -557,7 +613,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CTok
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken){
+NS_IMETHODIMP CViewSourceHTML::ConsumeToken(CToken*& aToken){
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
@@ -623,7 +679,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken){
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillResumeParse(void){
+NS_IMETHODIMP CViewSourceHTML::WillResumeParse(void){
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillResume();
@@ -637,7 +693,7 @@ NS_IMETHODIMP CWellFormedDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(void){
+NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(void){
   nsresult result = NS_OK;
   if(mSink) {
     result = mSink->WillInterrupt();
@@ -652,7 +708,7 @@ NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(void){
  * @param 
  * @return
  */
-PRBool CWellFormedDTD::Verify(nsString& aURLRef){
+PRBool CViewSourceHTML::Verify(nsString& aURLRef){
   PRBool result=PR_TRUE;
   return result;
 }
@@ -664,7 +720,7 @@ PRBool CWellFormedDTD::Verify(nsString& aURLRef){
  * @param 
  * @return
  */
-void CWellFormedDTD::SetVerification(PRBool aEnabled){
+void CViewSourceHTML::SetVerification(PRBool aEnabled){
 }
 
 /**
@@ -676,7 +732,7 @@ void CWellFormedDTD::SetVerification(PRBool aEnabled){
  *  @param   aChild -- int tag of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool CWellFormedDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
+PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
   PRBool result=PR_TRUE;
   return result;
 }
@@ -689,8 +745,86 @@ PRBool CWellFormedDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool CWellFormedDTD::IsContainer(PRInt32 aTag) const{
+PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
   PRBool result=PR_TRUE;
+  return result;
+}
+
+
+/**
+ *  This method gets called to determine whether a given 
+ *  tag is itself a container
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken) {
+  static nsString     theString;
+  static nsAutoString theLTEntity("lt");
+  static nsAutoString theGTEntity("gt");
+  static const char*  theColors[]={"purple","red"};
+
+  PRBool result=PR_TRUE;
+
+  CEntityToken theStartEntityToken(theLTEntity);  
+  nsCParserNode theStartNode(&theStartEntityToken,aNode.GetSourceLineNumber());
+  aSink.AddLeaf(theStartNode);
+
+  SetStyle(eHTMLTag_b,PR_TRUE,aSink);
+  SetColor(theColors[eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
+
+  if(anEndToken)
+    theString="/";
+  else theString="";
+  theString.Append(aNode.GetText());
+  {
+    CTextToken theToken(theString);  
+    nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
+    aSink.AddLeaf(theNode);
+  }
+  SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+  SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+
+  PRInt32 theCount=aNode.GetAttributeCount();
+  if(0<theCount){
+    PRInt32 theIndex=0;
+    for(theIndex=0;theIndex<theCount;theIndex++){
+      
+       //begin by writing the key...
+      {
+        SetStyle(eHTMLTag_b,PR_TRUE,aSink);
+        theString=" ";
+        theString.Append(aNode.GetKeyAt(theIndex));
+        CTextToken theToken(theString);  
+        nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
+        aSink.AddLeaf(theNode);
+        SetStyle(eHTMLTag_b,PR_FALSE,aSink);
+      }
+
+      { //next write the equal sign...
+        theString="=";
+        CTextToken theToken(theString);  
+        nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
+        aSink.AddLeaf(theNode);
+      }
+
+       //begin by writing the value...
+      {
+        SetColor("blue",PR_TRUE,aSink);
+        theString=aNode.GetValueAt(theIndex);
+        CTextToken theToken(theString);  
+        nsCParserNode theNode(&theToken,aNode.GetSourceLineNumber());
+        aSink.AddLeaf(theNode);
+        SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+      }
+    }
+  }
+
+  CEntityToken theEndEntityToken(theGTEntity);  
+  nsCParserNode theEndNode(&theEndEntityToken,aNode.GetSourceLineNumber());
+  aSink.AddLeaf(theEndNode);
+
   return result;
 }
 
@@ -700,24 +834,48 @@ PRBool CWellFormedDTD::IsContainer(PRInt32 aTag) const{
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
+NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
+  PRBool          theEndTag=PR_TRUE;
 
   nsCParserNode theNode(theToken,mLineNumber);
   switch(theType) {
 
     case eToken_newline:
       mLineNumber++; //now fall through
-    case eToken_entity:
+      {
+        CStartToken theBRToken(eHTMLTag_br);
+        nsCParserNode theBRNode(&theBRToken,mLineNumber);
+        result=mSink->AddLeaf(theBRNode); 
+      }
+      break;
+
     case eToken_whitespace:
+      {
+        PRInt32 theLength=aToken->GetStringValueXXX().Length();
+        CEntityToken theEntity("nbsp");
+        nsCParserNode theEntityNode(&theEntity,mLineNumber);
+        int theIndex;
+        for(theIndex=0;theIndex<theLength;theIndex++)
+          result=mSink->AddLeaf(theEntityNode); 
+      }
+      break;
+
+    case eToken_entity:
     case eToken_text:
       result=mSink->AddLeaf(theNode); 
       break;
 
     case eToken_comment:
-      result=mSink->AddComment(theNode); 
+      {
+        SetColor("green",PR_TRUE,*mSink);
+        CTextToken theTextToken(aToken->GetStringValueXXX());
+        nsCParserNode theTextNode(&theTextToken,mLineNumber);
+        result=mSink->AddLeaf(theTextNode); 
+        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      }
       break;
     
     case eToken_instruction:
@@ -727,7 +885,7 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
     case eToken_start:
       {
         PRInt16 attrCount=aToken->GetAttributeCount();
-
+        theEndTag=PR_FALSE;
         if(0<attrCount){ //go collect the attributes...
           int attr=0;
           for(attr=0;attr<attrCount;attr++){
@@ -742,17 +900,11 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
             else return kInterrupted;
           }
         }
-        if(NS_OK==result){
-          result=mSink->OpenContainer(theNode); 
-          if(((CStartToken*)aToken)->IsEmpty()){
-            result=mSink->CloseContainer(theNode); 
-          }
-        }
       }
-      break;
+      //intentionally fall through...
 
     case eToken_end:
-      result=mSink->CloseContainer(theNode); 
+      EmitTag(theNode,*mSink,theEndTag);
       break;
 
     case eToken_style:
@@ -770,6 +922,6 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
  * @param 
  * @return
  */
-nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
+nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
   return &gTokenRecycler;
 }

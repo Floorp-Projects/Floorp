@@ -230,7 +230,7 @@ nsresult CRtfDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CRtfDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+PRBool CRtfDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kRTFTextContentType);
   return result;
 }

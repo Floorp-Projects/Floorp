@@ -158,7 +158,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
    	 *			being asked to parse).
      * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, PRInt32 aVersion);
+    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion);
 
    /**
     * This method gets called to determine if the DTD can determine the

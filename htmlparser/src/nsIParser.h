@@ -87,6 +87,17 @@ class nsIParser : public nsISupports {
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
     /**
+     *  Call this method once you've created a parser, and want to instruct it
+	   *  about the command which caused the parser to be constructed. For example,
+     *  this allows us to select a DTD which can do, say, view-source.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aContentSink -- ptr to content sink that will receive output
+     *  @return	 ptr to previously set contentsink (usually null)  
+     */
+    virtual void SetCommand(const char* aCommand)=0;
+
+    /**
      *  This internal method is used when the parser needs to determine the
 	   *  type of content it's being asked to parse.
      *  

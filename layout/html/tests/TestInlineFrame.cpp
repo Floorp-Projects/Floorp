@@ -41,7 +41,8 @@ public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
                                nsIWebShell* aShell,
-                               nsIStreamListener **aDocListener)
+                               nsIStreamListener **aDocListener,
+                               const char* aCommand)
   {
     return NS_OK;
   }

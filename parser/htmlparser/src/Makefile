@@ -42,7 +42,8 @@ CPPSRCS=					\
 	nsHTMLContentSinkStream.cpp		\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
-	nsXIFDTD.cpp				\
+	nsViewSourceHTML.cpp \
+  nsXIFDTD.cpp				\
 	prstrm.cpp				\
 	$(NULL)
 
