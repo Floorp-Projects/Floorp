@@ -23,6 +23,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -153,7 +154,7 @@
 <!ENTITY newtodo.duedate.warning   "La date de début est après la date de fin.">
 <!ENTITY newtodo.repeatstart.warning "La récurrence requiert une date de début.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Voulez-vous vraiment supprimer tous les événements sélectionnés ?" >
 <!ENTITY calendar.confirm.deleteevent "Voulez-vous vraiment supprimer l'événement intitulé : " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voulez-vous vraiment supprimer cet événement sans titre ?" >
 
@@ -188,7 +189,7 @@
 <!ENTITY calendar.weekview.accesskey           "s" >
 <!ENTITY calendar.flat.topbar.monthview        "1 mois par vue" >
 <!ENTITY calendar.monthview.accesskey          "m" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Multisemaine" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Vue multisemaine" >
 <!ENTITY calendar.multiweekview.accesskey      "u" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
@@ -281,10 +282,10 @@
 <!ENTITY calendar.subscribe.button.label           "Souscrire" >
 <!ENTITY calendar.publish.button.label             "Publier" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Actualiser localement" >
+<!ENTITY calendar.localreload.button.tooltip  "Actualiser tous les calendriers locaux" >
+<!ENTITY calendar.remotereload.button.label   "Actualiser" >
+<!ENTITY calendar.remotereload.button.tooltip   "Actualiser tous les calendriers locaux" >
 
 <!ENTITY calendar.dayview.button.label          "1 jour par vue" >
 <!ENTITY calendar.weekview.button.label         "1 semaine par vue" >
@@ -331,21 +332,21 @@
 <!ENTITY window.title            "Mozilla Calendar">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Personnaliser">
+<!ENTITY calendar.context.customize.label             "Personnaliser…">
 <!ENTITY calendar.context.customize.accesskey         "P">
-<!ENTITY calendar.menu.customize.label                "Personnaliser les barres d'outils">
+<!ENTITY calendar.menu.customize.label                "Personnaliser les barres d'outils…">
 <!ENTITY calendar.menu.customize.accesskey            "a">
 <!ENTITY calendar.maintoolbar.name                    "Barre d'outils principale">
 <!ENTITY calendar.maintoolbar.accesskey               "o">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "Nouvel événement">
+<!ENTITY calendar.context.newevent.label              "Nouvel événement…">
 <!ENTITY calendar.context.newevent.accesskey          "n">
-<!ENTITY calendar.context.newtodo.label               "Nouvelle tâche">
+<!ENTITY calendar.context.newtodo.label               "Nouvelle tâche…">
 <!ENTITY calendar.context.newtodo.accesskey           "o">
-<!ENTITY calendar.context.modifyevent.label           "Modifier l'événement sélectionné">
+<!ENTITY calendar.context.modifyevent.label           "Modifier l'événement sélectionné…">
 <!ENTITY calendar.context.modifyevent.accesskey       "m">
-<!ENTITY calendar.context.modifytask.label            "Modifier la tâche">
+<!ENTITY calendar.context.modifytask.label            "Modifier la tâche…">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
 <!ENTITY calendar.context.deleteevent.label           "Supprimer l'événement sélectionné">
 <!ENTITY calendar.context.deleteevent.accesskey       "u">
@@ -371,9 +372,9 @@
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Recharger">
 <!ENTITY calendar.context.reload.accesskey            "r">
-<!ENTITY calendar.context.emailevent.label            "Envoyer le(s) événement(s) sélectionné(s) par courriel">
+<!ENTITY calendar.context.emailevent.label            "Envoyer le(s) événement(s) sélectionné(s) par courriel…">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
-<!ENTITY calendar.context.emailtask.label             "Envoyer la tâche par courriel">
+<!ENTITY calendar.context.emailtask.label             "Envoyer la tâche par courriel…">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
 
 <!-- Task Context Menu -->
@@ -402,7 +403,7 @@
 <!ENTITY calendar.context.editserver.accesskey         "M">
 <!ENTITY calendar.context.deleteserver.label           "Supprimer le calendrier">
 <!ENTITY calendar.context.deleteserver.accesskey       "S">
-<!ENTITY calendar.context.reloadserver.label           "Rafraîchir les calendriers distants">
+<!ENTITY calendar.context.reloadserver.label           "Actualiser les calendriers distants">
 <!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publier le calendrier en entier">
 <!ENTITY calendar.context.publish.accesskey            "P">
@@ -427,17 +428,17 @@
 <!ENTITY calendar.server.dialog.title.new           "Nouveau fichier de calendrier">
 <!ENTITY calendar.server.dialog.title.open          "Ouvrez le fichier du calendrier">
 <!ENTITY calendar.server.dialog.title.edit          "Modifier le calendrier">
-<!ENTITY calendar.server.dialog.name.label          "Nom">
-<!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications ? Pour les calendriers distants, on ira chercher une nouvelle version avant chaque ajout, modification ou suppression d'un événement. Votre action sera effectuée, puis le nouveau fichier sera publié sur le serveur.">
-<!ENTITY calendar.server.dialog.location.label      "Adresse">
-<!ENTITY calendar.server.dialog.local.location.label "Adresse du fichier local">
+<!ENTITY calendar.server.dialog.name.label          "Nom du calendrier :">
+<!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications vers le calendrier distant ? Quand ceci est activé, une version à jour du calendrier est téléchargée avant toute modification que vous avez effectuée. Vos changements sont alors appliqués et le calendrier est renvoyé vers le serveur.">
+<!ENTITY calendar.server.dialog.location.label      "URL du serveur distant :">
+<!ENTITY calendar.server.dialog.local.location.label "Emplacement du fichier local :">
 <!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local…">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Vous avez la possibilité de préciser une adresse de fichier où le calendrier devra être créé.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Vous pouvez utiliser ceci pour indiquer où le fichier de calendrier sera créé sur votre ordinateur. Ceci est optionnel.">
 <!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication du calendrier à une adresse distante.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Couleur">
+<!ENTITY calendar.server.dialog.color.label "Couleur :">
 
 
 <!-- Calendar Publish Dialog -->

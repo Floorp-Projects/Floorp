@@ -61,17 +61,17 @@
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "e">
 
-<!ENTITY event.delete.event                     "Supprimer le(s) événement(s) sélectionné(s)">
+<!ENTITY event.delete.event                     "Supprimer les événements sélectionnés">
 <!ENTITY event.delete.event.accesskey           "s">
 
-<!ENTITY event.delete.tasks                     "Supprimer la ou les tâche(s)">
+<!ENTITY event.delete.tasks                     "Supprimer les tâches sélectionnées">
 <!ENTITY event.delete.tasks.accesskey           "t">
 
-<!ENTITY event.mail.event                       "Envoyer le(s) événement(s) par courriel…">
+<!ENTITY event.mail.event                       "Envoyer les événements par courriel…">
 <!ENTITY event.mail.event.key                   "M">
 <!ENTITY event.mail.event.accesskey             "m">
 
-<!ENTITY calendar.print.label                   "Imprimer le(s) calendrier(s) actif(s)…">
+<!ENTITY calendar.print.label                   "Imprimer les calendriers actif(s)…">
 <!ENTITY calendar.print.key                     "P">
 <!ENTITY calendar.print.accesskey               "r">
 
@@ -81,20 +81,20 @@
 <!ENTITY calendar.pagesetup.label               "Mise en page…">
 <!ENTITY calendar.pagesetup.accesskey           "p">
 
-<!ENTITY calendar.import.label                  "Importer depuis le fichier…">
+<!ENTITY calendar.import.label                  "Importer…">
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "i">
 
-<!ENTITY calendar.wizard.label                  "Lancer l'assistant">
+<!ENTITY calendar.wizard.label                  "Lancer l'assistant…">
 <!ENTITY calendar.wizard.accesskey              "a">
 
 <!ENTITY calendar.export.label                  "Exporter les événements sélectionnés…">
 <!ENTITY calendar.export.accesskey              "e">
 
-<!ENTITY calendar.subscribe.label               "Souscrire à un calendrier distant…">
+<!ENTITY calendar.subscribe.label               "S'abonner à un calendrier distant…">
 <!ENTITY calendar.subscribe.accesskey           "s">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Actualiser les calendriers distants">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
