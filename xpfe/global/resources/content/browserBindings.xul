@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
+
+<window id="browserBindings"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="browserKeySet">
+    <key id="key_home" keycode="VK_PAGEUP" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
+            controller.doCommand('cmd_scrollPageUp');"/>
+    <key id="key_home" keycode="VK_PAGEDOWN" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
+            controller.doCommand('cmd_scrollPageDown');"/>
+  </keyset>
+</window>
