@@ -250,7 +250,9 @@ private:
     static PRBool EnumFontCallback(const nsString &aFamily,
                                    PRBool aIsGeneric, void *aData);
 
-    void     DrawStringSlowly(const gchar *aText, PRUint32 aLength,
+    void     DrawStringSlowly(const gchar *aText,
+                              const PRUnichar *aOrigString,
+                              PRUint32 aLength,
                               GdkDrawable *aDrawable,
                               GdkGC *aGC, gint aX, gint aY,
                               PangoLayoutLine *aLine,

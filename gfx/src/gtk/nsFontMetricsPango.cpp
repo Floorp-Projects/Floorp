@@ -600,7 +600,7 @@ nsFontMetricsPango::DrawString(const char *aString, PRUint32 aLength,
     GdkGC *gc = aContext->GetGC();
 
     if (aSpacing && *aSpacing) {
-        DrawStringSlowly(aString, aLength, aSurface->GetDrawable(),
+        DrawStringSlowly(aString, NULL, aLength, aSurface->GetDrawable(),
                          gc, x, y, line, aSpacing);
     }
     else {
@@ -647,7 +647,7 @@ nsFontMetricsPango::DrawString(const PRUnichar* aString, PRUint32 aLength,
     GdkGC *gc = aContext->GetGC();
 
     if (aSpacing && *aSpacing) {
-        DrawStringSlowly(text, aLength, aSurface->GetDrawable(),
+        DrawStringSlowly(text, aString, aLength, aSurface->GetDrawable(),
                          gc, x, y, line, aSpacing);
     }
     else {
@@ -917,6 +917,7 @@ nsFontMetricsPango::EnumFontCallback(const nsString &aFamily,
 
 void
 nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
+                                     const PRUnichar *aOrigString,
                                      PRUint32 aLength,
                                      GdkDrawable *aDrawable,
                                      GdkGC *aGC, gint aX, gint aY,
@@ -931,8 +932,29 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
      * We walk the list of glyphs returned in each layout run,
      * matching up the glyphs with the characters in the source text.
      * We use the aSpacing argument to figure out where to place those
-     * glyphs.
+     * glyphs.  It's important to note that since the string we're
+     * working with is in UTF-8 while the spacing argument assumes
+     * that offset will be part of the UTF-16 string.  Logical
+     * attributes in pango are in byte offsets in the UTF-8 string, so
+     * we need to store the offsets based on the UTF-8 string.
      */
+    nscoord *spacing = new nscoord[strlen(aText)];
+
+    if (aOrigString) {
+        gint outpos = 0;
+        gunichar c;
+        gchar outbuf[6];
+        const PRUnichar *curpos = aOrigString;
+
+        for (guint i = 0; i < aLength; i++, curpos++) {
+            spacing[outpos] = aSpacing[i];
+            c = *curpos;
+            outpos += g_unichar_to_utf8(c, outbuf);
+        }
+    }
+    else {
+        memcpy(spacing, aSpacing, (sizeof(nscoord *) * aLength));
+    }
 
     gint curRun = 0;
 
@@ -950,8 +972,8 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
                        "some exciting rendering!");
         }
 
-        for (gint i; i < layoutRun->glyphs->num_glyphs; i++) {
-            gint thisOffset = (gint)(aSpacing[layoutRun->glyphs->log_clusters[i]] * app2dev * PANGO_SCALE);
+        for (gint i=0; i < layoutRun->glyphs->num_glyphs; i++) {
+            gint thisOffset = (gint)(spacing[layoutRun->glyphs->log_clusters[i]] * app2dev * PANGO_SCALE);
             layoutRun->glyphs->glyphs[i].geometry.width = thisOffset;
             tmpOffset += thisOffset;
         }
@@ -964,6 +986,7 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
         offset += tmpOffset;
     }
 
+    delete[] spacing;
 }
 
 /* static */
