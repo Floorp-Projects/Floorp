@@ -108,7 +108,7 @@ int main(int argc, const char** argv)
    {
      for(i =0; i < argc; i++)
      {
-       if(strcmp(argv[i], "-t") == 0)
+       if(strcmp(argv[i], "-f") == 0)
        {
              tocodeind = i+1;
              nsAutoString str(argv[tocodeind]);
@@ -120,7 +120,7 @@ int main(int argc, const char** argv)
 	     }
 
        }
-       if(strcmp(argv[i], "-f") == 0)
+       if(strcmp(argv[i], "-t") == 0)
        {
              fromcodeind = i+1;
              nsAutoString str(argv[fromcodeind]);
