@@ -30,6 +30,7 @@ function Startup()
 {
   const windowNode = document.getElementById("bookmark-window");
   const bookmarksView = document.getElementById("bookmarks-view");
+  const bookmarksFolder = document.getElementById("bookmark-folders-view");
 
   var titleString;
 
@@ -38,7 +39,9 @@ function Startup()
     var title;
     var uri = window.arguments[0];
     bookmarksView.tree.setAttribute("ref", uri);
+    bookmarksFolder.setAttribute("hidden","true")
     document.getElementById("bookmarks-search").setAttribute("hidden","true")
+    document.getElementById("bookmark-views-splitter").setAttribute("hidden","true")    
     if (uri.substring(0,5) == "find:") {
       title = BookmarksUtils.getLocaleString("search_results_title");
       // Update the windowtype so that future searches are directed 
@@ -53,8 +56,9 @@ function Startup()
   else {
     titleString = BookmarksUtils.getLocaleString("bookmarks_title", title);
     // always open the bookmark root folder
-    if (!bookmarksView.treeBoxObject.view.isContainerOpen(0))
-      bookmarksView.treeBoxObject.view.toggleOpenState(0);
+    if (!bookmarksFolder.treeBoxObject.view.isContainerOpen(0))
+      bookmarksFolder.treeBoxObject.view.toggleOpenState(0);
+    bookmarksFolder.treeBoxObject.view.selection.select(0);
   }
 
   bookmarksView.treeBoxObject.view.selection.select(0);
@@ -214,6 +218,11 @@ function onViewSelected(aEvent)
   var statusBar = document.getElementById("statusbar-text");
   var displayValue;
   var selection = aEvent.target.getTreeSelection();
+  var bookmarksView = document.getElementById("bookmarks-view");
+  
+  if (aEvent.target.id == "bookmark-folders-view" && selection)
+    bookmarksView.tree.setAttribute("ref",selection.item[0].Value);
+      
   if (statusBar && selection.length == 1) {
     //protocol broken since we have unique ID...
     //var protocol = selection.protocol[0];
