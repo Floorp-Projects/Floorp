@@ -1,0 +1,44 @@
+const int		T_IV
+char *			T_PV
+const char *		T_PV
+char **			T_charptrptr
+LDAP *			T_PTR
+LDAPMessage *		T_PTR
+LDAPMessage **		T_PTR
+BerElement *		T_PTR
+LDAPControl *		T_PTR
+LDAPVersion *		T_PTR
+struct berval 		T_berval
+struct berval **	T_bervalptrptr
+FriendlyMap *		T_PTR
+LDAPsortkey **		T_PTR
+LDAPVirtualList *	T_PTR
+LDAPURLDesc *		T_PTR
+LDAPControl **		T_PTR
+LDAPFiltDesc *		T_PTR
+LDAPFiltInfo *		T_PTR
+LDAPMemCache *		T_PTR
+LDAPMemCache **		T_PTR
+struct ldap_thread_fns *	T_PTR
+LDAPMod **		T_PTR
+LDAP_CMP_CALLBACK *	T_PTR
+LDAP_REBINDPROC_CALLBACK *	T_PTR
+struct timeval		T_timeval
+
+#########
+INPUT
+T_timeval
+	$var.tv_sec = atof((char *)SvPV($arg,na));
+	$var.tv_usec = 0
+T_berval
+	$var.bv_val = (char *)SvPV($arg,na);
+	$var.bv_len = na
+T_charptrptr
+        $var = (char **)avref2charptrptr($arg)
+T_bervalptrptr
+	$var = (struct berval **)avref2berptrptr($arg)
+OUTPUT
+T_charptrptr
+	$arg = charptrptr2avref($var);
+T_bervalptrptr
+	$arg = berptrptr2avref((struct berval **)$var);
