@@ -4136,7 +4136,7 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
   PRBool done = PR_FALSE;
 
   do {
-    res = GetNextNode(currentNode, PR_TRUE, getter_AddRefs(nextNode));
+    res = GetNextNode(currentNode, PR_TRUE, address_of(nextNode));
     if (NS_FAILED(res)) return res;
     if (!nextNode) break;
 
@@ -4381,10 +4381,10 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
 //                   one within the <body>
 //                       
 nsresult
-nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing)
 {
   if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = GetPriorNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  nsresult res = GetPriorNode(inNode, PR_TRUE, address_of(*outNode), bNoBlockCrossing);
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
@@ -4400,10 +4400,10 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode
 // GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
 //                       
 nsresult
-nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing)
 {
   if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = GetPriorNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  nsresult res = GetPriorNode(inParent, inOffset, PR_TRUE, address_of(*outNode), bNoBlockCrossing);
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
@@ -4420,10 +4420,10 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<
 //                   one within the <body>
 //                       
 nsresult
-nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing)
 {
   if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = GetNextNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  nsresult res = GetNextNode(inNode, PR_TRUE, address_of(*outNode), bNoBlockCrossing);
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
@@ -4439,10 +4439,10 @@ nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
 // GetNHTMLextNode: same as above but takes {parent,offset} instead of node
 //                       
 nsresult
-nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing)
 {
   if (!outNode) return NS_ERROR_NULL_POINTER;
-  nsresult res = GetNextNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  nsresult res = GetNextNode(inParent, inOffset, PR_TRUE, address_of(*outNode), bNoBlockCrossing);
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
@@ -4564,9 +4564,8 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   
   // find leftmost leaf
   nsCOMPtr<nsIDOMNode> child;
-  nsresult res = GetLeftmostChild(aNode, getter_AddRefs(child));
-  if (NS_FAILED(res)) return res;
-  
+  nsresult res = NS_OK;
+  child = GetLeftmostChild(aNode);  
   while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
@@ -4597,11 +4596,10 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   // init out parms
   *aOutLastLeaf = nsnull;
   
-  // find leftmost leaf
+  // find rightmost leaf
   nsCOMPtr<nsIDOMNode> child;
-  nsresult res = GetRightmostChild(aNode, getter_AddRefs(child));
-  if (NS_FAILED(res)) return res;
-  
+  nsresult res = NS_OK;
+  child = GetRightmostChild(aNode);  
   while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;

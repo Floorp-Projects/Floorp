@@ -1249,7 +1249,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
   // else if it's a container, get deep rightmost child
   else if (mHTMLEditor->IsContainer(*aPriorNode))
   {
-    res = mHTMLEditor->GetRightmostChild(*aPriorNode, getter_AddRefs(temp));
+    temp = mHTMLEditor->GetRightmostChild(*aPriorNode);
     if (temp)
       *aPriorNode = temp;
     return NS_OK;
@@ -1294,7 +1294,7 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
   // else if it's a container, get deep leftmost child
   else if (mHTMLEditor->IsContainer(*aNextNode))
   {
-    res = mHTMLEditor->GetLeftmostChild(*aNextNode, getter_AddRefs(temp));
+    temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
     if (temp)
       *aNextNode = temp;
     return NS_OK;
@@ -1347,7 +1347,7 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
   else if (mHTMLEditor->IsContainer(*aPriorNode))
   {
     nsCOMPtr<nsIDOMNode> temp;
-    res = mHTMLEditor->GetRightmostChild(*aPriorNode, getter_AddRefs(temp));
+    temp = mHTMLEditor->GetRightmostChild(*aPriorNode);
     if (temp)
       *aPriorNode = temp;
     return NS_OK;
@@ -1397,7 +1397,7 @@ nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
   else if (mHTMLEditor->IsContainer(*aNextNode))
   {
     nsCOMPtr<nsIDOMNode> temp;
-    res = mHTMLEditor->GetLeftmostChild(*aNextNode, getter_AddRefs(temp));
+    temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
     if (temp)
       *aNextNode = temp;
     return NS_OK;
