@@ -19,6 +19,8 @@
 #ifndef nspr_linux_defs_h___
 #define nspr_linux_defs_h___
 
+#include "prthread.h"
+
 /*
  * Internal configuration macros
  */
@@ -86,8 +88,10 @@ extern void _MD_CleanupBeforeExit(void);
 
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
+#define _MD_SP_TYPE long int
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 /* XXX not sure if this is correct, or maybe it should be 17? */
@@ -97,8 +101,10 @@ extern void _MD_CleanupBeforeExit(void);
 /* Intel based Linux */
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
+#define _MD_SP_TYPE int
 #else
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__sp
+#define _MD_SP_TYPE __ptr_t
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 #define PR_NUM_GCREGS   6
 
@@ -126,7 +132,7 @@ extern void _MD_CleanupBeforeExit(void);
     if (sigsetjmp(CONTEXT(_thread), 1)) {  \
         _main();  \
     }  \
-    _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 64); \
+    _MD_GET_SP(_thread) = (_MD_SP_TYPE) ((_sp) - 64); \
 }
 
 #endif /*__powerpc__*/
@@ -188,6 +194,8 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
+extern PRStatus _MD_InitializeThread(PRThread *thread);
+
 #define _MD_INIT_RUNNING_CPU(cpu)       _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD                 _MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
@@ -195,7 +203,23 @@ struct _MDCPU {
 #define _MD_RESUME_THREAD(thread)       _MD_resume_thread
 #define _MD_CLEAN_THREAD(_thread)
 
+extern PRStatus _MD_CREATE_THREAD(
+    PRThread *thread,
+    void (*start) (void *),
+    PRThreadPriority priority,
+    PRThreadScope scope,
+    PRThreadState state,
+    PRUint32 stackSize);
+extern void _MD_SET_PRIORITY(struct _MDThread *thread, PRUintn newPri);
+extern PRStatus _MD_WAIT(PRThread *, PRIntervalTime timeout);
+extern PRStatus _MD_WAKEUP_WAITER(PRThread *);
+extern void _MD_YIELD(void);
+
 #endif /* ! _PR_PTHREADS */
+
+extern void _MD_EarlyInit(void);
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT					_PR_UnixInit
@@ -242,5 +266,8 @@ struct pollfd {
 extern int poll(struct pollfd *, unsigned long, int);
 
 #endif /* _PR_NEED_FAKE_POLL */
+
+/* For writev() */
+#include <sys/uio.h>
 
 #endif /* nspr_linux_defs_h___ */
