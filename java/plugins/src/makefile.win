@@ -54,6 +54,8 @@ OBJS =  \
 	.\$(OBJDIR)\PlugletInstance.obj \
 	.\$(OBJDIR)\PlugletStreamListener.obj \
 	.\$(OBJDIR)\PlugletStreamInfo.obj \
+	.\$(OBJDIR)\PlugletInstancePeer.obj \
+	.\$(OBJDIR)\PlugletManager.obj \
 	.\$(OBJDIR)\PlugletInputStream.obj
 
 MAKE_OBJ_TYPE = DLL

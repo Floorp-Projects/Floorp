@@ -13,18 +13,23 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#ifndef __PlugletInputStream_h__
-#define __PlugletInputStream_h__
-#include "nsIInputStream.h"
+
+#ifndef __ByteRanges_h__
+#define __ByteRanges_h__
+#include "nsplugindefs.h"
+#include "nsISupports.h"
 #include "jni.h"
 
-class PlugletInputStream {
+class ByteRanges {
  public:
-    static jobject GetJObject(const nsIInputStream *stream);
+    static nsByteRange*  GetByteRanges(JNIEnv *env, jobject object);
+    static void FreeByteRanges(nsByteRange * ranges);
  private:
-    static void Initialize(void);
-    static void Destroy(void);
-    static jclass    clazz;
-    static jmethodID initMID;
+    static void Initialize(JNIEnv *env);
+    static jfieldID offsetFID;
+    static jfieldID lengthFID;
+    static jfieldID currentFID;
 };
-#endif /*  __PlugletInputStream_h__ */
+
+#endif /* __ByteRanges_h__ */
+

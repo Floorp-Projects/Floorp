@@ -17,22 +17,26 @@ package org.mozilla.pluglet.mozilla;
 import java.io.OutputStream;
 
 
-public interface PlugletInstancePeer {
-    public static final int NETSCAPE_WINDOW = 3;
+class PlugletInstancePeerImpl implements PlugletInstancePeer {
+    private long peer = 0;
+    private PlugletInstancePeerImpl(long peer) {
+	this.peer = peer;
+	nativeInitialize();
+    }
     /**
      * Returns the MIME type of the pluglet instance. 
      */
-    public String getMIMEType();
+    public native String getMIMEType();
     /**
      * Returns the mode of the pluglet instance, i.e. whether the pluglet 
      * is embedded in the html, or full page.
      */
-    public int getMode();
+    public native int getMode();
     /**
      * Returns the value of a variable associated with the pluglet manager.
      * @param variable the pluglet manager variable to get
      */
-     public String getValue(int variable);
+    public native String getValue(int variable);
     /**
      * This operation is called by the pluglet instance when it wishes to send a stream of data to the browser. It constructs a
      * new output stream to which the pluglet may send the data. When complete, the Close and Release methods should be
@@ -40,17 +44,18 @@ public interface PlugletInstancePeer {
      * @param type type MIME type of the stream to create
      * @param target the target window name to receive the data
      */
-    public OutputStream newStream(String type, String target);
+    public native OutputStream newStream(String type, String target);
     /** This operation causes status information to be displayed on the window associated with the pluglet instance.
      * @param message the status message to display
      */ 
-    public void showStatus(String message);
+    public native void showStatus(String message);
     /**
      * Set the desired size of the window in which the plugin instance lives.
      *
      * @param width - new window width
      * @param height - new window height
      */
-    public void setWindowSize(int width, int height);
-
-}
+    public native void setWindowSize(int width, int height);
+    private native void nativeFinalize();
+    private native void nativeInitialize();
+};

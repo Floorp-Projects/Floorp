@@ -17,6 +17,7 @@
 #include "Pluglet.h"
 #include "nsIServiceManager.h"
 #include "prenv.h"
+#include "PlugletManager.h"
 
 static NS_DEFINE_IID(kIPluginIID,NS_IPLUGIN_IID);
 static NS_DEFINE_CID(kPluginCID,NS_PLUGIN_CID);
@@ -25,6 +26,11 @@ static NS_DEFINE_IID(kIJVMManagerIID,NS_IJVMMANAGER_IID);
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+
+
+
 
 #define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
@@ -33,6 +39,9 @@ int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
 PRInt32 PlugletEngine::lockCount = 0;
 PlugletEngine * PlugletEngine::engine = NULL;
+nsIPluginManager *PlugletEngine::pluginManager = NULL;
+jobject PlugletEngine::plugletManager = NULL;
+
 NS_IMPL_ISUPPORTS(PlugletEngine,kIPluginIID);
 NS_METHOD PlugletEngine::Initialize(void) {
     //nb ???
@@ -90,20 +99,21 @@ PlugletEngine::PlugletEngine(nsISupports* aService) {
     NS_INIT_REFCNT();
     dir = new PlugletsDir();
     nsresult res = NS_OK;
-#if 0
+
     nsIServiceManager *sm;
     res = aService->QueryInterface(nsIServiceManager::GetIID(),(void**)&sm);
     if (NS_FAILED(res)) {
-	jvmManager = NULL;
 	return;
     }
+    res = sm->GetService(kPluginManagerCID,kIPluginManagerIID,(nsISupports**)&pluginManager);
+#if 0
     res = sm->GetService(kJVMManagerCID,kIJVMManagerIID,(nsISupports**)&jvmManager);
     //nb 
     if (NS_FAILED(res)) {
 	jvmManager = NULL;
     }
-    NS_RELEASE(sm);
 #endif 
+    NS_RELEASE(sm);
     engine = this;
     objectCount++;
 }
@@ -128,8 +138,6 @@ static void StartJVM() {
     vm_args.version = 0x00010001;
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
     /* Append USER_CLASSPATH to the default system class path */
-    //nb todo urgent
-	
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
 	printf("-- classpath %s\n",classpath);
@@ -159,8 +167,10 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
 }
 
 jobject PlugletEngine::GetPlugletManager(void) {
-    //nb todo urgent
-    return NULL;
+    if (!plugletManager) {
+	plugletManager = PlugletManager::GetJObject(pluginManager);
+    }
+    return plugletManager;
 }
 
 PlugletEngine * PlugletEngine::GetEngine(void) {

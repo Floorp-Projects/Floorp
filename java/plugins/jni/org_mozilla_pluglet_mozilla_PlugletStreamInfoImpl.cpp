@@ -15,7 +15,7 @@
  */
 #include "nsIPluginStreamInfo.h"
 #include "org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.h"
-
+#include "ByteRanges.h"
 
 static jfieldID peerFID = NULL;
 /*
@@ -117,8 +117,14 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl
  * Signature: (Lorg/mozilla/pluglet/mozilla/ByteRanges;)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl_requestRead
-    (JNIEnv *, jobject, jobject) {
-    /* nb let's do it */
+    (JNIEnv *env, jobject jthis, jobject object) {
+    nsIPluginStreamInfo * streamInfo = (nsIPluginStreamInfo*)env->GetLongField(jthis, peerFID);
+    if (!streamInfo) {
+	return;
+    }
+    nsByteRange* range = ByteRanges::GetByteRanges(env,object);
+    streamInfo->RequestRead(range);
+    ByteRanges::FreeByteRanges(range);
 }
 
 /*

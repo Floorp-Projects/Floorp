@@ -28,7 +28,12 @@ DEPTH= ..\..\..
 OBJS =  \
 	.\$(OBJDIR)\org_mozilla_util_Debug.obj \
 	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletStreamInfoImpl.obj \
-	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInputStream.obj
+	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInputStream.obj \
+	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletOutputStream.obj \
+	.\$(OBJDIR)\org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl.obj \
+	.\$(ONJDIR)\org_mozilla_pluglet_mozilla_PlugletManagerImpl.obj \
+	.\$(OBJDIR)\PlugletOutputStream.obj \
+	.\$(OBJDIR)\ByteRanges.obj
 
 MAKE_OBJ_TYPE = DLL
 

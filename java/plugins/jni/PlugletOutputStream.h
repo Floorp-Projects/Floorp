@@ -13,18 +13,20 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#ifndef __PlugletInputStream_h__
-#define __PlugletInputStream_h__
-#include "nsIInputStream.h"
+#ifndef __PlugletOutputStream_h__
+#define __PlugletOutputStream_h__
+#include "nsIOutputStream.h"
 #include "jni.h"
 
-class PlugletInputStream {
+class PlugletOutputStream {
  public:
-    static jobject GetJObject(const nsIInputStream *stream);
+    static jobject GetJObject(JNIEnv* env,const nsIOutputStream *stream);
  private:
-    static void Initialize(void);
-    static void Destroy(void);
+    static void Initialize(JNIEnv* env);
+    static void Destroy(JNIEnv *env);
     static jclass    clazz;
     static jmethodID initMID;
+
 };
-#endif /*  __PlugletInputStream_h__ */
+#endif /*  __PlugletOutputtStream_h__ */
+

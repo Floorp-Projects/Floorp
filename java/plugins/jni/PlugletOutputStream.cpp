@@ -13,18 +13,17 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#include "PlugletStreamInfo.h"
-#include "PlugletEngine.h"
 
-jclass    PlugletStreamInfo::clazz = NULL;
-jmethodID PlugletStreamInfo::initMID = NULL;
+#include "PlugletOutputStream.h"
 
-void PlugletStreamInfo::Initialize(void) {
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
-    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletStreamInfoImpl");
-    if (env->ExceptionOccurred()) {
+
+jclass    PlugletOutputStream::clazz = NULL;
+jmethodID PlugletOutputStream::initMID = NULL;
+
+void PlugletOutputStream::Initialize(JNIEnv *env) {
+    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletOutputStream");
+    if (!clazz) {
 	env->ExceptionDescribe();
-        clazz = NULL;
 	return;
     }
     clazz = (jclass) env->NewGlobalRef(clazz);
@@ -36,29 +35,28 @@ void PlugletStreamInfo::Initialize(void) {
     }
 }
 
-void PlugletStreamInfo::Destroy(void) {
-    //nb who gonna call it?
-    JNIEnv * env = PlugletEngine::GetJNIEnv();
-    if (clazz) {
+void PlugletOutputStream::Destroy(JNIEnv *env) {
+    //nb  who gonna cal it?
+    if(clazz) {
 	env->DeleteGlobalRef(clazz);
     }
 }
 
-jobject PlugletStreamInfo::GetJObject(const nsIPluginStreamInfo *streamInfo) {
+jobject PlugletOutputStream::GetJObject(JNIEnv *env, const nsIOutputStream *stream) {
     jobject res = NULL;
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!clazz) {
-	Initialize();
+	Initialize(env);
 	if (! clazz) {
 	    return NULL;
 	}
     }
-    res = env->NewObject(clazz,initMID,*(jlong*)(void*)&streamInfo);
-    if (env->ExceptionOccurred()) {
+    res = env->NewObject(clazz,initMID,(jlong)stream);
+    if (!res) {
 	env->ExceptionDescribe();
-	res = NULL;
     }
     return res;
 }
+
+
 
 

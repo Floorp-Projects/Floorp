@@ -16,6 +16,7 @@
 #include "PlugletInstance.h"
 #include "PlugletEngine.h"
 #include "PlugletStreamListener.h"
+#include "PlugletInstancePeer.h"
 
 jmethodID PlugletInstance::initializeMID = NULL;
 jmethodID PlugletInstance::startMID = NULL;
@@ -38,6 +39,7 @@ PlugletInstance::PlugletInstance(jobject object) {
 
 PlugletInstance::~PlugletInstance() {
     PlugletEngine::GetJNIEnv()->DeleteGlobalRef(jthis);
+    NS_RELEASE(peer);
 }
 
 NS_METHOD PlugletInstance::HandleEvent(nsPluginEvent* event, PRBool* handled) {
@@ -46,9 +48,9 @@ NS_METHOD PlugletInstance::HandleEvent(nsPluginEvent* event, PRBool* handled) {
 }
 
 NS_METHOD PlugletInstance::Initialize(nsIPluginInstancePeer* _peer) {
+    JNIEnv *env = PlugletEngine::GetJNIEnv();
     if (!printMID) {
 	//nb check for null after each and every JNI call
-	JNIEnv *env = PlugletEngine::GetJNIEnv();
 	jclass clazz = env->FindClass("org/mozilla/pluglet/PlugletInstance");
 	initializeMID = env->GetMethodID(clazz,"initialize","(Lorg/mozilla/pluglet/mozilla/PlugletInstancePeer;)V");
 	startMID = env->GetMethodID(clazz,"start","()V");
@@ -60,7 +62,11 @@ NS_METHOD PlugletInstance::Initialize(nsIPluginInstancePeer* _peer) {
     }
     peer = _peer;
     peer->AddRef();
-    //nb call java
+    jobject obj = PlugletInstancePeer::GetJObject(peer);
+    if (!obj) {
+	return NS_ERROR_FAILURE;
+    }
+    env->CallVoidMethod(jthis,initializeMID,obj);
     return NS_OK;
 }
 

@@ -14,47 +14,34 @@
  * Inc. All Rights Reserved. 
  */
 package org.mozilla.pluglet.mozilla;
-
 import java.io.*;
 
-class PlugletInputStream extends InputStream {
+class PlugletOutputStream extends OutputStream {
     private long peer;
     private byte buf[] = new byte[1];
-
-    private PlugletInputStream(long peer) {
+    private PlugletOutputStream(long peer) {
 	this.peer = peer;
 	nativeInitialize();
     }
-    public  int read() throws IOException {
-		return read(buf,0,1);
+    public void write(int b) throws IOException {
+	buf[0] = (byte)b;
+	write(buf,0,1);
     }
-    public int read(byte b[], int off, int len) throws IOException {
+    public void write(byte b[],	int off, int len) throws IOException {
 	if (b == null) {
             throw new NullPointerException();
         } else if ((off < 0) || (off > b.length) || (len < 0) ||
                    ((off + len) > b.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
-            return 0;
+            return;
         }
-	return nativeRead(b,off,len);
+	nativeWrite(b,off,len);
     }
-    public native int available();
+
+    public native void flush();
     public native void close();
-    public synchronized void mark(int readlimit) {
-    }
-    public synchronized void reset() throws IOException {
-    }
-    public boolean markSupported() {
-	return false;
-    }
-    protected void finalize() {
-        nativeFinalize();
-    }
+    private native void nativeWrite(byte b[],	int off, int len) throws IOException;
     private native void nativeFinalize();
     private native void nativeInitialize(); 
-    private native int nativeRead(byte b[], int off, int len) throws IOException;
 }
-
-
-

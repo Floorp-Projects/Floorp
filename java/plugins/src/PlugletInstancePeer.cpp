@@ -13,15 +13,16 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#include "PlugletStreamInfo.h"
+#include "nsISupports.h"
+#include "PlugletInstancePeer.h"
 #include "PlugletEngine.h"
 
-jclass    PlugletStreamInfo::clazz = NULL;
-jmethodID PlugletStreamInfo::initMID = NULL;
+jclass    PlugletInstancePeer::clazz = NULL;
+jmethodID PlugletInstancePeer::initMID = NULL;
 
-void PlugletStreamInfo::Initialize(void) {
+void PlugletInstancePeer::Initialize(void) {
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletStreamInfoImpl");
+    clazz = env->FindClass("org/mozilla/pluglet/mozilla/PlugletInstancePeerImpl");
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
         clazz = NULL;
@@ -29,22 +30,23 @@ void PlugletStreamInfo::Initialize(void) {
     }
     clazz = (jclass) env->NewGlobalRef(clazz);
     initMID =  env->GetMethodID(clazz,"<init>","(J)V");
-    if (!initMID) {
+    if (env->ExceptionOccurred()
+	|| !initMID) {
 	env->ExceptionDescribe();
         clazz = NULL;
 	return;
     }
 }
 
-void PlugletStreamInfo::Destroy(void) {
-    //nb who gonna call it?
+void PlugletInstancePeer::Destroy(void) {
+    //nb  who gonna cal it?
     JNIEnv * env = PlugletEngine::GetJNIEnv();
-    if (clazz) {
+    if(clazz) {
 	env->DeleteGlobalRef(clazz);
     }
 }
 
-jobject PlugletStreamInfo::GetJObject(const nsIPluginStreamInfo *streamInfo) {
+jobject PlugletInstancePeer::GetJObject(const nsIPluginInstancePeer *stream) {
     jobject res = NULL;
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     if(!clazz) {
@@ -53,12 +55,10 @@ jobject PlugletStreamInfo::GetJObject(const nsIPluginStreamInfo *streamInfo) {
 	    return NULL;
 	}
     }
-    res = env->NewObject(clazz,initMID,*(jlong*)(void*)&streamInfo);
+    res = env->NewObject(clazz,initMID,(jlong)stream);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
 	res = NULL;
     }
     return res;
 }
-
-

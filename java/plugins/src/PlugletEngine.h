@@ -18,6 +18,7 @@
 #include "nsplugin.h"
 #include "jni.h"
 #include "nsJVMManager.h"
+#include "nsIPluginManager.h"
 #include "PlugletsDir.h"
 
 class PlugletEngine : public nsIPlugin {
@@ -46,6 +47,8 @@ class PlugletEngine : public nsIPlugin {
     static PlugletsDir *dir;
     static PlugletEngine * engine;
     //nb static nsJVMManager * jvmManager;
+    static  nsIPluginManager *pluginManager;
+    static jobject plugletManager;
 };    
 
 #endif /* __PlugletEngine_h__ */

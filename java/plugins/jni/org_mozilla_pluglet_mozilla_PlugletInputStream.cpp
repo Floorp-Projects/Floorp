@@ -47,28 +47,32 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_close
 
 }
 
+
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletInputStream
- * Method:    read
- * Signature: ([BI)I
+ * Method:    nativeRead
+ * Signature: ([BII)I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_read
-    (JNIEnv *env, jobject jthis, jbyteArray b, jint len) {
+JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativeRead
+    (JNIEnv *env, jobject jthis, jbyteArray b, jint off, jint len) {
     PRUint32 retval = 0;
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     if (env->ExceptionOccurred()) {
 	return retval;
     }
-    jbyte * bufElems = env->GetByteArrayElements(b,NULL);
-    if (env->ExceptionOccurred()) {
+    jbyte * bufElems = (jbyte*) malloc(sizeof(jbyte)*len);
+    if (!bufElems) {
 	return retval;
+	//nb throw OutOfMemory
     }
     nsresult res;
     res = input->Read((char*)bufElems,(PRUint32)len,&retval);
     if (NS_FAILED(res)) {
+	free(bufElems);
 	return retval;
     }
-    env->ReleaseByteArrayElements(b,bufElems,0);
+    env->SetByteArrayRegion(b,off,len,bufElems);
+    free(bufElems);
     return retval;
 }
 
@@ -98,9 +102,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
 	if (!peerFID) {
 	    return;
 	}
-    }
-    if (env->ExceptionOccurred()) {
-	return;
     }
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);
     if (input) {

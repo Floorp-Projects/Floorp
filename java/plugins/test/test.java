@@ -55,6 +55,16 @@ class TestInstance implements PlugletInstance{
 
     public void initialize(PlugletInstancePeer peer) {
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
+	peer.showStatus("Hello world");
+	try {
+	    OutputStreamWriter out = new OutputStreamWriter(peer.newStream("text/plain","test"));
+	    String msg = "Hello, world";
+	    out.write(msg,0,msg.length());
+	    out.flush();
+	    out.close();
+	} catch (Exception e) {
+	    ;
+	}
     }
     /**
      * Called to instruct the pluglet instance to start. This will be called after
