@@ -1945,7 +1945,7 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     break;
 	}
 
-  nsMouseEvent event(eventType, sButtonMotionTarget);
+  nsMouseEvent event(eventType, this);
   InitMouseEvent(aGdkButtonEvent, event);
 
   if (sButtonMotionTarget) {
@@ -1954,7 +1954,9 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
     diffX = (gint) aGdkButtonEvent->x_root - sButtonMotionRootX;
     diffY = (gint) aGdkButtonEvent->y_root - sButtonMotionRootY;
-    
+
+    event.widget = sButtonMotionTarget;
+
     // see comments in nsWidget::OnMotionNotifySignal
     event.point.x = nscoord(sButtonMotionWidgetX + diffX);
     event.point.y = nscoord(sButtonMotionWidgetY + diffY);
