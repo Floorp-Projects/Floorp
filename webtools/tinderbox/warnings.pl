@@ -33,6 +33,12 @@ use FileHandle;
 
 $debug = 1 if $ARGV[0] eq '--debug';
 
+if ($debug) {
+  foreach my $key (sort keys %ENV) {
+    warn "debug> $key=$ENV{$key}\n";
+  }
+}
+
 $tree = 'SeaMonkey';
 # tinderbox/tbglobals.pl uses many shameful globals
 $form{tree} = $tree;
