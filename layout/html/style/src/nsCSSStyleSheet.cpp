@@ -42,6 +42,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
+#include "prlog.h"
 
 //#define DEBUG_REFS
 //#define DEBUG_RULES
@@ -537,13 +538,14 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  CSSStyleSheetImpl(nsIURL* aURL);
+  CSSStyleSheetImpl();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
   // basic style sheet data
+  NS_IMETHOD Init(nsIURL* aURL);
   NS_IMETHOD GetURL(nsIURL*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD SetTitle(const nsString& aTitle);
@@ -680,7 +682,7 @@ void CSSStyleSheetImpl::operator delete(void* ptr)
 static PRInt32 gInstanceCount;
 #endif
 
-CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
+CSSStyleSheetImpl::CSSStyleSheetImpl()
   : nsICSSStyleSheet(),
     mURL(nsnull), mTitle(), mMedia(nsnull),
     mFirstChild(nsnull), 
@@ -689,7 +691,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
     mRuleHash(nsnull)
 {
   NS_INIT_REFCNT();
-  mURL.SetAddRef(aURL);
   mParent = nsnull;
   mRuleCollection = nsnull;
   mImportsCollection = nsnull;
@@ -1149,6 +1150,21 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   }
   NS_IF_RELEASE(presMedium);
   return matchCount;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::Init(nsIURL* aURL)
+{
+  NS_PRECONDITION(aURL, "null ptr");
+  if (! aURL)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_ASSERTION(mURL == nsnull, "already initialized");
+  if (mURL)
+    return NS_ERROR_ALREADY_INITIALIZED;
+
+  mURL.SetAddRef(aURL);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1668,18 +1684,39 @@ CSSStyleSheetImpl::SetScriptObject(void* aScriptObject)
   return NS_OK;
 }
 
+
+// XXX for backwards compatibility and convenience
 NS_HTML nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURL* aURL)
+{
+  nsICSSStyleSheet* sheet;
+  nsresult rv;
+  if (NS_FAILED(rv = NS_NewCSSStyleSheet(&sheet)))
+    return rv;
+
+  if (NS_FAILED(rv = sheet->Init(aURL))) {
+    NS_RELEASE(sheet);
+    return rv;
+  }
+
+  *aInstancePtrResult = sheet;
+  return NS_OK;
+}
+
+NS_HTML nsresult
+  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  CSSStyleSheetImpl  *it = new CSSStyleSheetImpl(aURL);
+  CSSStyleSheetImpl  *it = new CSSStyleSheetImpl();
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kICSSStyleSheetIID, (void **) aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = it;
+  return NS_OK;
 }

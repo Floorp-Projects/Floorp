@@ -43,13 +43,14 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument);
+  HTMLCSSStyleSheetImpl();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
   // basic style sheet data
+  NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
   NS_IMETHOD GetURL(nsIURL*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
@@ -132,13 +133,12 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 
 
 
-HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl(nsIURL* aURL, nsIDocument* aDocument)
+HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
-    mURL(aURL),
-    mDocument(aDocument)
+    mURL(nsnull),
+    mDocument(nsnull)
 {
   NS_INIT_REFCNT();
-  NS_ADDREF(mURL);
 }
 
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
@@ -221,6 +221,22 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 {
   // no pseudo frame style...
   return 0;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
+{
+  NS_PRECONDITION(aURL && aDocument, "null ptr");
+  if (! aURL || ! aDocument)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mURL || mDocument)
+    return NS_ERROR_ALREADY_INITIALIZED;
+
+  mDocument = aDocument; // not refcounted!
+  mURL = aURL;
+  NS_ADDREF(mURL);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -311,20 +327,40 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
 }
 
+
+// XXX For backwards compatibility and convenience
 NS_HTML nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL,
                           nsIDocument* aDocument)
+{
+  nsresult rv;
+  nsIHTMLCSSStyleSheet* sheet;
+  if (NS_FAILED(rv = NS_NewHTMLCSSStyleSheet(&sheet)))
+    return rv;
+
+  if (NS_FAILED(rv = sheet->Init(aURL, aDocument))) {
+    NS_RELEASE(sheet);
+    return rv;
+  }
+
+  *aInstancePtrResult = sheet;
+  return NS_OK;
+}
+
+NS_HTML nsresult
+  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLCSSStyleSheetImpl*  it = new HTMLCSSStyleSheetImpl(aURL, aDocument);
+  HTMLCSSStyleSheetImpl*  it = new HTMLCSSStyleSheetImpl();
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIHTMLCSSStyleSheetIID, (void **) aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = it;
+  return NS_OK;
 }
-

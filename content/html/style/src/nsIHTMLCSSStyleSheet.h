@@ -27,11 +27,15 @@
 
 class nsIHTMLCSSStyleSheet : public nsIStyleSheet {
 public:
-  // no methods for now
+  NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument) = 0;
 };
 
+// XXX for convenience and backward compatibility
 extern NS_HTML nsresult
   NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURL* aURL,
                           nsIDocument* aDocument);
+
+extern NS_HTML nsresult
+  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsIHTMLCSSStyleSheet_h___ */
