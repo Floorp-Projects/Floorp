@@ -570,7 +570,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 #ifdef XP_UNIX
             window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
-            rv = pm->InstantiatePlugin(buf, fullURL, mInstanceOwner);
+            rv = pm->InstantiateEmbededPlugin(buf, src, mInstanceOwner);
             NS_IF_RELEASE(fullURL);
             NS_IF_RELEASE(baseURL);
 
