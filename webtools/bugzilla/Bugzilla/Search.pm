@@ -40,6 +40,7 @@ use Date::Format;
 use Date::Parse;
 
 # Create a new Search
+# Note that the param argument may be modified by Bugzilla::Search
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
@@ -55,7 +56,7 @@ sub new {
 sub init {
     my $self = shift;
     my $fieldsref = $self->{'fields'};
-    my $urlstr = $self->{'url'};
+    my $params = $self->{'params'};
 
     my $debug = 0;
         
@@ -64,9 +65,6 @@ sub init {
     my @wherepart;
     my @having = ("(cntuseringroups = cntbugingroups OR canseeanyway)");
     @fields = @$fieldsref if $fieldsref;
-    my %F;
-    my %M;
-    &::ParseUrlString($urlstr, \%F, \%M);
     my @specialchart;
     my @andlist;
 
@@ -96,8 +94,8 @@ sub init {
     }
 
     my $minvotes;
-    if (defined $F{'votes'}) {
-        my $c = trim($F{'votes'});
+    if (defined $params->param('votes')) {
+        my $c = trim($params->param('votes'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 $::vars->{'value'} = $c;
@@ -107,12 +105,12 @@ sub init {
         }
     }
 
-    if ($M{'bug_id'}) {
+    if ($params->param('bug_id')) {
         my $type = "anyexact";
-        if ($F{'bugidtype'} && $F{'bugidtype'} eq 'exclude') {
+        if ($params->param('bugidtype') && $params->param('bugidtype') eq 'exclude') {
             $type = "nowords";
         }
-        push(@specialchart, ["bug_id", $type, join(',', @{$M{'bug_id'}})]);
+        push(@specialchart, ["bug_id", $type, join(',', $params->param('bug_id'))]);
     }
 
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
@@ -120,33 +118,33 @@ sub init {
                         "assigned_to", "reporter", "component",
                         "target_milestone", "bug_group");
 
-    foreach my $field (keys %F) {
+    foreach my $field ($params->param()) {
         if (lsearch(\@legal_fields, $field) != -1) {
             push(@specialchart, [$field, "anyexact",
-                                 join(',', @{$M{$field}})]);
+                                 join(',', $params->param($field))]);
         }
     }
 
-    if ($F{'product'}) {
+    if ($params->param('product')) {
         push(@supptables, "products products_");
         push(@wherepart, "products_.id = bugs.product_id");
         push(@specialchart, ["products_.name", "anyexact",
-                             join(',',@{$M{'product'}})]);
+                             join(',',$params->param('product'))]);
     }
 
-    if ($F{'component'}) {
+    if ($params->param('component')) {
         push(@supptables, "components components_");
         push(@wherepart, "components_.id = bugs.component_id");
         push(@specialchart, ["components_.name", "anyexact",
-                             join(',',@{$M{'component'}})]);
+                             join(',',$params->param('component'))]);
     }
 
-    if ($F{'keywords'}) {
-        my $t = $F{'keywords_type'};
+    if ($params->param('keywords')) {
+        my $t = $params->param('keywords_type');
         if (!$t || $t eq "or") {
             $t = "anywords";
         }
-        push(@specialchart, ["keywords", $t, $F{'keywords'}]);
+        push(@specialchart, ["keywords", $t, $params->param('keywords')]);
     }
 
     if (lsearch($fieldsref, "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time") != -1) {
@@ -155,14 +153,14 @@ sub init {
     }
 
     foreach my $id ("1", "2") {
-        if (!defined ($F{"email$id"})) {
+        if (!defined ($params->param("email$id"))) {
             next;
         }
-        my $email = trim($F{"email$id"});
+        my $email = trim($params->param("email$id"));
         if ($email eq "") {
             next;
         }
-        my $type = $F{"emailtype$id"};
+        my $type = $params->param("emailtype$id");
         if ($type eq "exact") {
             $type = "anyexact";
             foreach my $name (split(',', $email)) {
@@ -175,11 +173,11 @@ sub init {
 
         my @clist;
         foreach my $field ("assigned_to", "reporter", "cc", "qa_contact") {
-            if ($F{"email$field$id"}) {
+            if ($params->param("email$field$id")) {
                 push(@clist, $field, $type, $email);
             }
         }
-        if ($F{"emaillongdesc$id"}) {
+        if ($params->param("emaillongdesc$id")) {
             my $table = "longdescs_";
             push(@supptables, "longdescs $table");
             push(@wherepart, "$table.bug_id = bugs.bug_id");
@@ -197,8 +195,8 @@ sub init {
     }
 
 
-    if (defined $F{'changedin'}) {
-        my $c = trim($F{'changedin'});
+    if (defined $params->param('changedin')) {
+        my $c = trim($params->param('changedin'));
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 $::vars->{'value'} = $c;
@@ -209,15 +207,15 @@ sub init {
         }
     }
 
-    my $ref = $M{'chfield'};
+    my @chfield = $params->param('chfield');
 
-    if (defined $ref) {
-        my $which = lsearch($ref, "[Bug creation]");
+    if (@chfield) {
+        my $which = lsearch(\@chfield, "[Bug creation]");
         if ($which >= 0) {
-            splice(@$ref, $which, 1);
+            splice(@chfield, $which, 1);
             push(@specialchart, ["creation_ts", "greaterthan",
-                                 SqlifyDate($F{'chfieldfrom'})]);
-            my $to = $F{'chfieldto'};
+                                 SqlifyDate($params->param('chfieldfrom'))]);
+            my $to = $params->param('chfieldto');
             if (defined $to) {
                 $to = trim($to);
                 if ($to ne "" && $to !~ /^now$/i) {
@@ -228,18 +226,18 @@ sub init {
         }
     }
 
-    if (defined $ref && 0 < @$ref) {
+    if (@chfield) {
         push(@supptables, "bugs_activity actcheck");
 
         my @list;
-        foreach my $f (@$ref) {
+        foreach my $f (@chfield) {
             push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
         }
         push(@wherepart, "actcheck.bug_id = bugs.bug_id");
         push(@wherepart, "(" . join(' OR ', @list) . ")");
         push(@wherepart, "actcheck.bug_when >= " .
-             &::SqlQuote(SqlifyDate($F{'chfieldfrom'})));
-        my $to = $F{'chfieldto'};
+             &::SqlQuote(SqlifyDate($params->param('chfieldfrom'))));
+        my $to = $params->param('chfieldto');
         if (defined $to) {
             $to = trim($to);
             if ($to ne "" && $to !~ /^now$/i) {
@@ -247,7 +245,7 @@ sub init {
                      &::SqlQuote(SqlifyDate($to)));
             }
         }
-        my $value = $F{'chfieldvalue'};
+        my $value = $params->param('chfieldvalue');
         if (defined $value) {
             $value = trim($value);
             if ($value ne "") {
@@ -259,12 +257,12 @@ sub init {
 
     foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                    "status_whiteboard") {
-        if (defined $F{$f}) {
-            my $s = trim($F{$f});
+        if (defined $params->param($f)) {
+            my $s = trim($params->param($f));
             if ($s ne "") {
                 my $n = $f;
                 my $q = &::SqlQuote($s);
-                my $type = $F{$f . "_type"};
+                my $type = $params->param($f . "_type");
                 push(@specialchart, [$f, $type, $s]);
             }
         }
@@ -516,7 +514,7 @@ sub init {
                  if ($t eq "anywords") {
                      $term = $haveawordterm;
                  } elsif ($t eq "allwords") {
-                     $ref = $funcsbykey{",$t"};
+                     my $ref = $funcsbykey{",$t"};
                      &$ref;
                      if ($term && $haveawordterm) {
                          $term = "(($term) AND $haveawordterm)";
@@ -533,7 +531,7 @@ sub init {
                 my $table = "dependson_" . $chartid;
                 push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
-                $ref = $funcsbykey{",$t"};
+                my $ref = $funcsbykey{",$t"};
                 &$ref;
                 push(@wherepart, "$table.blocked = bugs.bug_id");
          },
@@ -542,7 +540,7 @@ sub init {
                 my $table = "blocked_" . $chartid;
                 push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
-                $ref = $funcsbykey{",$t"};
+                my $ref = $funcsbykey{",$t"};
                 &$ref;
                 push(@wherepart, "$table.dependson = bugs.bug_id");
          },
@@ -672,9 +670,9 @@ sub init {
 
     # first we delete any sign of "Chart #-1" from the HTML form hash
     # since we want to guarantee the user didn't hide something here
-    my @badcharts = grep /^(field|type|value)-1-/, (keys %F);
+    my @badcharts = grep /^(field|type|value)-1-/, $params->param();
     foreach my $field (@badcharts) {
-        delete $F{$field};
+        $params->delete($field);
     }
 
     # now we take our special chart and stuff it into the form hash
@@ -683,11 +681,11 @@ sub init {
     foreach my $ref (@specialchart) {
         my $col = 0;
         while (@$ref) {
-            $F{"field$chart-$row-$col"} = shift(@$ref);
-            $F{"type$chart-$row-$col"} = shift(@$ref);
-            $F{"value$chart-$row-$col"} = shift(@$ref);
+            $params->param("field$chart-$row-$col", shift(@$ref));
+            $params->param("type$chart-$row-$col", shift(@$ref));
+            $params->param("value$chart-$row-$col", shift(@$ref));
             if ($debug) {
-                print qq{<p>$F{"field$chart-$row-$col"} | $F{"type$chart-$row-$col"} | $F{"value$chart-$row-$col"}*</p>\n};
+                print qq{<p>$params->param("field$chart-$row-$col") | $params->param("type$chart-$row-$col") | $params->param("value$chart-$row-$col")*</p>\n};
             }
             $col++;
 
@@ -786,19 +784,19 @@ sub init {
 
     $row = 0;
     for ($chart=-1 ;
-         $chart < 0 || exists $F{"field$chart-0-0"} ;
+         $chart < 0 || $params->param("field$chart-0-0") ;
          $chart++) {
         $chartid = $chart >= 0 ? $chart : "";
         for ($row = 0 ;
-             exists $F{"field$chart-$row-0"} ;
+             $params->param("field$chart-$row-0") ;
              $row++) {
             my @orlist;
             for (my $col = 0 ;
-                 exists $F{"field$chart-$row-$col"} ;
+                 $params->param("field$chart-$row-$col") ;
                  $col++) {
-                $f = $F{"field$chart-$row-$col"} || "noop";
-                $t = $F{"type$chart-$row-$col"} || "noop";
-                $v = $F{"value$chart-$row-$col"};
+                $f = $params->param("field$chart-$row-$col") || "noop";
+                $t = $params->param("type$chart-$row-$col") || "noop";
+                $v = $params->param("value$chart-$row-$col");
                 $v = "" if !defined $v;
                 $v = trim($v);
                 if ($f eq "noop" || $t eq "noop" || $v eq "") {
@@ -841,8 +839,8 @@ sub init {
                 }
                 else {
                     # This field and this type don't work together.
-                    $::vars->{'field'} = $F{"field$chart-$row-$col"};
-                    $::vars->{'type'} = $F{"type$chart-$row-$col"};
+                    $::vars->{'field'} = $params->param("field$chart-$row-$col");
+                    $::vars->{'type'} = $params->param("type$chart-$row-$col");
                     &::ThrowCodeError("field_type_mismatch");
                 }
             }

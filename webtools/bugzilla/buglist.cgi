@@ -33,7 +33,7 @@ use strict;
 
 use lib qw(.);
 
-use vars qw($template $vars);
+use vars qw($cgi $template $vars);
 
 use Bugzilla::Search;
 
@@ -229,13 +229,17 @@ if ($::FORM{'cmdtype'} eq "runnamed") {
     $::FORM{'remaction'} = "run";
 }
 
+# The params object to use for the actual query itsself
+# This will be modified, so make a copy
+my $params = new Bugzilla::CGI($cgi);
+
 # Take appropriate action based on user's request.
 if ($::FORM{'cmdtype'} eq "dorem") {  
     if ($::FORM{'remaction'} eq "run") {
-        $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
+        my $query = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
-        ProcessFormFields($::buffer);
-        $order = $::FORM{'order'} || $order;
+        $params = new Bugzilla::CGI($query);
+        $order = $params->param('order') || $order;
     }
     elsif ($::FORM{'remaction'} eq "load") {
         my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
@@ -391,14 +395,14 @@ DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT 
 # Determine the columns that will be displayed in the bug list via the 
 # columnlist CGI parameter, the user's preferences, or the default.
 my @displaycolumns = ();
-if (defined $::FORM{'columnlist'}) {
-    if ($::FORM{'columnlist'} eq "all") {
+if (defined $params->param('columnlist')) {
+    if ($params->param('columnlist') eq "all") {
         # If the value of the CGI parameter is "all", display all columns,
         # but remove the redundant "summaryfull" column.
         @displaycolumns = grep($_ ne 'summaryfull', keys(%$columns));
     }
     else {
-        @displaycolumns = split(/[ ,]+/, $::FORM{'columnlist'});
+        @displaycolumns = split(/[ ,]+/, $params->param('columnlist'));
     }
 }
 elsif (defined $::COOKIE{'COLUMNLIST'}) {
@@ -424,9 +428,10 @@ else {
 # number of votes and the votes column is not already on the list.
 
 # Some versions of perl will taint 'votes' if this is done as a single
-# statement, because $::FORM{'votes'} is tainted at this point
-$::FORM{'votes'} ||= "";
-if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
+# statement, because the votes param is tainted at this point
+my $votes = $params->param('votes');
+$votes ||= "";
+if (trim($votes) && !grep($_ eq 'votes', @displaycolumns)) {
     push(@displaycolumns, 'votes');
 }
 
@@ -479,7 +484,7 @@ my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
 
 # Generate the basic SQL query that will be used to generate the bug list.
 my $search = new Bugzilla::Search('fields' => \@selectnames, 
-                                  'url' => $::buffer);
+                                  'params' => $params);
 my $query = $search->getSQL();
 
 
@@ -489,7 +494,7 @@ my $query = $search->getSQL();
 
 # Add to the query some instructions for sorting the bug list.
 if ($::COOKIE{'LASTORDER'} && (!$order || $order =~ /^reuse/i)) {
-    $order = url_decode($::COOKIE{'LASTORDER'});
+    $order = $::COOKIE{'LASTORDER'};
     $order_from_cookie = 1;
 }
 

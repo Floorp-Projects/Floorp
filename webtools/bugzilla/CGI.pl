@@ -46,7 +46,6 @@ use Bugzilla::Config;
 
 sub CGI_pl_sillyness {
     my $zz;
-    $zz = %::MFORM;
     $zz = %::dontchange;
 }
 
@@ -81,151 +80,6 @@ sub url_decode {
     $todecode =~ tr/+/ /;       # pluses become spaces
     $todecode =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
     return $todecode;
-}
-
-# Quotify a string, suitable for putting into a URL.
-sub url_quote {
-    my($toencode) = (@_);
-    $toencode=~s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
-    return $toencode;
-}
-
-sub ParseUrlString {
-    my ($buffer, $f, $m) = (@_);
-    undef %$f;
-    undef %$m;
-
-    my %isnull;
-
-    # We must make sure that the CGI params remain tainted.
-    # This means that if for some reason you want to make this code
-    # use a regexp and $1, $2, ... (or use a helper function which does so)
-    # you must |use re 'taint'| _and_ make sure that you don't run into
-    # http://bugs.perl.org/perlbug.cgi?req=bug_id&bug_id=20020704.001
-    my @args = split('&', $buffer);
-    foreach my $arg (@args) {
-        my ($name, $value) = split('=', $arg, 2);
-        $value = '' if not defined $value;
-
-        $name = url_decode($name);
-        $value = url_decode($value);
-
-        if ($value ne "") {
-            if (defined $f->{$name}) {
-                $f->{$name} .= $value;
-                my $ref = $m->{$name};
-                push @$ref, $value;
-            } else {
-                $f->{$name} = $value;
-                $m->{$name} = [$value];
-            }
-        } else {
-            $isnull{$name} = 1;
-        }
-    }
-    if (%isnull) {
-        foreach my $name (keys(%isnull)) {
-            if (!defined $f->{$name}) {
-                $f->{$name} = "";
-                $m->{$name} = [];
-            }
-        }
-    }
-}
-
-sub ProcessFormFields {
-    my ($buffer) = (@_);
-    return ParseUrlString($buffer, \%::FORM, \%::MFORM);
-}
-
-sub ProcessMultipartFormFields {
-    my ($boundary) = @_;
-
-    # Initialize variables that store whether or not we are parsing a header,
-    # the name of the part we are parsing, and its value (which is incomplete
-    # until we finish parsing the part).
-    my $inheader = 1;
-    my $fieldname = "";
-    my $fieldvalue = "";
-
-    # Read the input stream line by line and parse it into a series of parts,
-    # each one containing a single form field and its value and each one
-    # separated from the next by the value of $boundary.
-    my $remaining = $ENV{"CONTENT_LENGTH"};
-    while ($remaining > 0 && ($_ = <STDIN>)) {
-        $remaining -= length($_);
-
-        # If the current input line is a boundary line, save the previous
-        # form value and reset the storage variables.
-        if ($_ =~ m/^-*\Q$boundary\E/) {
-            if ( $fieldname ) {
-                chomp($fieldvalue);
-                $fieldvalue =~ s/\r$//;
-                if ( defined $::FORM{$fieldname} ) {
-                    $::FORM{$fieldname} .= $fieldvalue;
-                    push @{$::MFORM{$fieldname}}, $fieldvalue;
-                } else {
-                    $::FORM{$fieldname} = $fieldvalue;
-                    $::MFORM{$fieldname} = [$fieldvalue];
-                }
-            }
-
-            $inheader = 1;
-            $fieldname = "";
-            $fieldvalue = "";
-
-        # If the current input line is a header line, look for a blank line
-        # (meaning the end of the headers), a Content-Disposition header
-        # (containing the field name and, for uploaded file parts, the file 
-        # name), or a Content-Type header (containing the content type for 
-        # file parts).
-        } elsif ( $inheader ) {
-            if (m/^\s*$/) {
-                $inheader = 0;
-            } elsif (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
-                $fieldname = $1;
-                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
-                    $::FILE{$fieldname}->{'filename'} = $1;
-                }
-            } elsif ( m|^Content-Type:\s*([^/]+/[^\s;]+)|i ) {
-                $::FILE{$fieldname}->{'contenttype'} = $1;
-            }
-
-        # If the current input line is neither a boundary line nor a header,
-        # it must be part of the field value, so append it to the value.
-        } else {
-          $fieldvalue .= $_;
-        }
-    }
-}
-
-sub CanonicaliseParams {
-    my ($buffer, $exclude) = (@_);
-    my %pieces;
-    
-    # Split the buffer up into key/value pairs, and store the non-empty ones
-    my @args = split('&', $buffer);
-        
-    foreach my $arg (@args) {
-        my ($name, $value) = split('=', $arg, 2);
-
-        if ($value) {
-            push(@{$pieces{$name}}, $value);
-        }
-    }
-
-    # Reconstruct the URL by concatenating the sorted param=value pairs
-    my @parameters;
-    foreach my $key (sort keys %pieces) {
-        # Leave this key out if it's in the exclude list
-        next if lsearch($exclude, $key) != -1; 
-        
-        foreach my $value (@{$pieces{$key}}) {
-            push(@parameters, "$key=$value");
-        }
-    }
-    
-    return join("&", @parameters);
 }
 
 # check and see if a given field exists, is non-empty, and is set to a 
@@ -1020,52 +874,31 @@ sub GetBugActivity {
     return(\@operations, $incomplete_data);
 }
 
-
 ############# Live code below here (that is, not subroutine defs) #############
 
-$| = 1;
+use Bugzilla::CGI();
 
-# Uncommenting this next line can help debugging.
-# print "Content-type: text/html\n\nHello mom\n";
+# XXX - mod_perl, this needs to move into all the scripts individually
+# Once we do that, look into setting DISABLE_UPLOADS, and overriding
+# on a per-script basis
+$::cgi = new Bugzilla::CGI();
 
-# foreach my $k (sort(keys %ENV)) {
-#     print "$k $ENV{$k}<br>\n";
-# }
+# Set up stuff for compatibility with the old CGI.pl code
+# This code will be removed as soon as possible, in favour of
+# using the CGI.pm stuff directly
 
-if (defined $ENV{"REQUEST_METHOD"}) {
-    if ($ENV{"REQUEST_METHOD"} eq "GET") {
-        if (defined $ENV{"QUERY_STRING"}) {
-            $::buffer = $ENV{"QUERY_STRING"};
-        } else {
-            $::buffer = "";
-        }
-        ProcessFormFields $::buffer;
-    } else {
-        if (exists($ENV{"CONTENT_TYPE"}) && $ENV{"CONTENT_TYPE"} =~
-            m@multipart/form-data; boundary=\s*([^; ]+)@) {
-            ProcessMultipartFormFields($1);
-            $::buffer = "";
-        } else {
-            read STDIN, $::buffer, $ENV{"CONTENT_LENGTH"} ||
-                die "Couldn't get form data";
-            ProcessFormFields $::buffer;
-        }
-    }
+# XXX - mod_perl - reset these between runs
+
+foreach my $name ($::cgi->param()) {
+    my @val = $::cgi->param($name);
+    $::FORM{$name} = join('', @val);
+    $::MFORM{$name} = \@val;
 }
 
-if (defined $ENV{"HTTP_COOKIE"}) {
-    # Don't trust anything which came in as a cookie
-    use re 'taint';
-    foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
-        $pair = trim($pair);
-        if ($pair =~ /^([^=]*)=(.*)$/) {
-            if (!exists($::COOKIE{$1})) {
-                $::COOKIE{$1} = $2;
-            }
-        } else {
-            $::COOKIE{$pair} = "";
-        }
-    }
+$::buffer = $::cgi->query_string();
+
+foreach my $name ($::cgi->cookie()) {
+    $::COOKIE{$name} = $::cgi->cookie($name);
 }
 
 1;

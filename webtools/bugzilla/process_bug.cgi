@@ -697,7 +697,11 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
         # with that value.
         DoComma();
         $::query .= "alias = ";
-        $::query .= ($alias eq "") ? "NULL" : SqlQuote($alias);
+        if ($alias eq "") {
+            $::query .= "NULL";
+        } else {
+            $::query .= SqlQuote($alias);
+        }
     }
 }
 

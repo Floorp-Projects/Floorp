@@ -1584,7 +1584,7 @@ $::template ||= Template->new(
         # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
         # filter should be used for a full URL that may have
         # characters that need encoding.
-        url_quote => \&url_quote ,
+        url_quote => \&Bugzilla::Util::url_quote,
         
         # In CSV, quotes are doubled, and any value containing a quote or a
         # comma is enclosed in quotes.

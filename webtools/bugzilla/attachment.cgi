@@ -33,15 +33,10 @@ use strict;
 use lib qw(.);
 
 use vars qw(
+  $cgi
   $template
   $vars
 );
-
-# Win32 specific hack to avoid a hang when creating/showing an attachment
-if ($^O eq 'MSWin32') {
-    binmode(STDIN);
-    binmode(STDOUT);
-}
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
@@ -89,12 +84,12 @@ elsif ($action eq "insert")
   ValidateBugID($::FORM{'bugid'});
   ValidateComment($::FORM{'comment'});
   validateFilename();
-  validateData();
-  validateDescription();
   validateIsPatch();
+  my $data = validateData();
+  validateDescription();
   validateContentType() unless $::FORM{'ispatch'};
   validateObsolete() if $::FORM{'obsolete'};
-  insert();
+  insert($data);
 }
 elsif ($action eq "edit") 
 { 
@@ -198,13 +193,14 @@ sub validateContentType
   }
   elsif ($::FORM{'contenttypemethod'} eq 'autodetect')
   {
+    my $contenttype = $cgi->uploadInfo($cgi->param('data'))->{'Content-Type'};
     # The user asked us to auto-detect the content type, so use the type
     # specified in the HTTP request headers.
-    if ( !$::FILE{'data'}->{'contenttype'} )
+    if ( !$contenttype )
     {
       ThrowUserError("missing_content_type");
     }
-    $::FORM{'contenttype'} = $::FILE{'data'}->{'contenttype'};
+    $::FORM{'contenttype'} = $contenttype;
   }
   elsif ($::FORM{'contenttypemethod'} eq 'list')
   {
@@ -247,29 +243,40 @@ sub validatePrivate
 
 sub validateData
 {
-  $::FORM{'data'}
+  my $maxsize = $::FORM{'ispatch'} ? Param('maxpatchsize') : Param('maxattachmentsize');
+  $maxsize *= 1024; # Convert from K
+
+  my $fh = $cgi->upload('data');
+  my $data;
+
+  # We could get away with reading only as much as required, except that then
+  # we wouldn't have a size to print to the error handler below.
+  {
+      # enable 'slurp' mode
+      local $/;
+      $data = <$fh>;
+  }
+
+  $data
     || ThrowUserError("zero_length_file");
 
-  my $len = length($::FORM{'data'});
-
-  my $maxpatchsize = Param('maxpatchsize');
-  my $maxattachmentsize = Param('maxattachmentsize');
-  
-  # Makes sure the attachment does not exceed either the "maxpatchsize" or 
-  # the "maxattachmentsize" parameter.
-  if ( $::FORM{'ispatch'} && $maxpatchsize && $len > $maxpatchsize*1024 )
-  {
-    $vars->{'filesize'} = sprintf("%.0f", $len/1024);
-    ThrowUserError("patch_too_large");
-  } elsif ( !$::FORM{'ispatch'} && $maxattachmentsize && $len > $maxattachmentsize*1024 ) {
-    $vars->{'filesize'} = sprintf("%.0f", $len/1024);
-    ThrowUserError("file_too_large");
+  # Make sure the attachment does not exceed the maximum permitted size
+  my $len = length($data);
+  if ($maxsize && $len > $maxsize) {
+      $vars->{'filesize'} = sprintf("%.0f", $len/1024);
+      if ( $::FORM{'ispatch'} ) {
+          ThrowUserError("patch_too_large");
+      } else {
+          ThrowUserError("file_too_large");
+      }
   }
+
+  return $data;
 }
 
 sub validateFilename
 {
-  defined $::FILE{'data'}
+  defined $cgi->upload('data')
     || ThrowUserError("file_not_specified");
 }
 
@@ -428,13 +435,15 @@ sub enter
 
 sub insert
 {
+  my ($data) = @_;
+
   # Insert a new attachment into the database.
 
   # Escape characters in strings that will be used in SQL statements.
-  my $filename = SqlQuote($::FILE{'data'}->{'filename'});
+  my $filename = SqlQuote($cgi->param('data'));
   my $description = SqlQuote($::FORM{'description'});
   my $contenttype = SqlQuote($::FORM{'contenttype'});
-  my $thedata = SqlQuote($::FORM{'data'});
+  my $thedata = SqlQuote($data);
   my $isprivate = $::FORM{'isprivate'} ? 1 : 0;
 
   # Insert the attachment into the database.

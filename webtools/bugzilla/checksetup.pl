@@ -179,6 +179,13 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
+  # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
+  # That breaks the standard version tests, so we need to manually correct
+  # the version
+  if ($pkg eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
+      $vnum = $1 . "." . $2;
+  }
+
   if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
@@ -201,8 +208,8 @@ my $modules = [
         version => '1.52' 
     }, 
     { 
-        name => 'CGI::Carp', 
-        version => '0' 
+        name => 'CGI', 
+        version => '2.88' 
     }, 
     {
         name => 'Data::Dumper', 

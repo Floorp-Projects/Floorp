@@ -47,6 +47,11 @@
   [% ELSIF error == "attachment_already_obsolete" %]
     Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
+
+  [% ELSIF error == "cgi_error" %]
+    [% title = "CGI Error" %]
+    Bugzilla has had trouble interpreting your CGI request;
+    [%+ Param('browserbugmessage') %]
     
   [% ELSIF error == "chart_data_not_generated" %]
     The tool which gathers bug counts has not been run yet.
@@ -236,7 +241,7 @@
   <pre>
 Variables:
   [% FOREACH key = variables.keys %]
-    [%+ key %]: [%+ variables.$key %]
+    [%+ key FILTER html %]: [%+ variables.$key FILTER html %]
   [% END %]
   </pre>
 [% END %]

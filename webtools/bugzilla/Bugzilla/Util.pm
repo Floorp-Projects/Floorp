@@ -27,7 +27,7 @@ package Bugzilla::Util;
 
 use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
-                             html_quote value_quote
+                             html_quote url_quote value_quote
                              lsearch max min
                              trim);
 
@@ -62,6 +62,13 @@ sub html_quote {
     $var =~ s/>/\&gt;/g;
     $var =~ s/\"/\&quot;/g;
     return $var;
+}
+
+# This orignally came from CGI.pm, by Lincoln D. Stein
+sub url_quote {
+    my ($toencode) = (@_);
+    $toencode =~ s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
+    return $toencode;
 }
 
 sub value_quote {
@@ -134,6 +141,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for quoting
   html_quote($var);
+  url_quote($var);
   value_quote($var);
 
   # Functions for searching
@@ -199,6 +207,10 @@ be done in the template where possible.
 
 Returns a value quoted for use in HTML, with &, E<lt>, E<gt>, and E<34> being
 replaced with their appropriate HTML entities.
+
+=item C<url_quote($val)>
+
+Quotes characters so that they may be included as part of a url.
 
 =item C<value_quote($val)>
 

@@ -26,7 +26,7 @@ use lib ".";
 
 require "CGI.pl";
 
-use vars qw($template $vars);
+use vars qw($cgi $template $vars);
 
 use Bugzilla::Search;
 
@@ -77,11 +77,13 @@ my @axis_fields = ($row_field, $col_field, $tbl_field);
 
 my @selectnames = map($columns{$_}, @axis_fields);
 
+# Clone the params, so that Bugzilla::Search can modify them
+my $params = new Bugzilla::CGI($cgi);
 my $search = new Bugzilla::Search('fields' => \@selectnames, 
-                                  'url' => $::buffer);
+                                  'params' => $params);
 my $query = $search->getSQL();
 
-SendSQL($query, $::userid);
+SendSQL($query);
 
 # We have a hash of hashes for the data itself, and a hash to hold the 
 # row/col/table names.
@@ -108,12 +110,14 @@ $vars->{'names'} = \%names;
 $vars->{'data'} = \%data;
 $vars->{'time'} = time();
 
-$::buffer =~ s/format=[^&]*&?//g;
+$cgi->delete('format');
 
 # Calculate the base query URL for the hyperlinked numbers
-$vars->{'buglistbase'} = CanonicaliseParams($::buffer, 
-                ["x_axis_field", "y_axis_field", "z_axis_field", @axis_fields]);
-$vars->{'buffer'} = $::buffer;
+$vars->{'querybase'} = $cgi->canonicalise_query("x_axis_field",
+                                                "y_axis_field",
+                                                "z_axis_field",
+                                                @axis_fields);
+$vars->{'query'} = $cgi->query_string();
 
 # Generate and return the result from the appropriate template.
 my $format = GetFormat("reports/report", $::FORM{'format'}, $::FORM{'ctype'});
