@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.5 $ $Date: 2002/01/31 17:08:32 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.6 $ $Date: 2002/02/05 23:55:42 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -182,7 +182,7 @@ add_certificate_entry
 {
     PRStatus nssrv;
     certificate_hash_entry *entry;
-    entry = nss_ZNEW(store->arena, certificate_hash_entry);
+    entry = nss_ZNEW(cert->object.arena, certificate_hash_entry);
     if (!entry) {
 	return PR_FAILURE;
     }
@@ -209,7 +209,7 @@ add_subject_entry
 	nssrv = nssList_AddUnique(subjectList, cert);
     } else {
 	/* Create a new subject list for the subject */
-	subjectList = nssList_Create(store->arena, PR_FALSE);
+	subjectList = nssList_Create(NULL, PR_FALSE);
 	if (!subjectList) {
 	    return PR_FAILURE;
 	}
@@ -290,9 +290,17 @@ remove_subject_entry
     if (subjectList) {
 	/* Remove the cert from the subject hash */
 	nssList_Remove(subjectList, cert);
+	nssHash_Remove(store->subject, &cert->subject);
 	if (nssList_Count(subjectList) == 0) {
-	    nssHash_Remove(store->subject, &cert->subject);
 	    nssList_Destroy(subjectList);
+	} else {
+	    /* The cert being released may have keyed the subject entry.
+	     * Since there are still subject certs around, get another and
+	     * rekey the entry just in case.
+	     */
+	    NSSCertificate *subjectCert;
+	    (void)nssList_GetArray(subjectList, (void **)&subjectCert, 1);
+	    nssHash_Add(store->subject, &subjectCert->subject, subjectList);
 	}
     }
 }
