@@ -62,6 +62,7 @@ public:
 
 	NS_IMETHOD GetFSSpec(FSSpec *fileSpec);
 	NS_IMETHOD GetResolvedFSSpec(FSSpec *fileSpec);
+	NS_IMETHOD GetTargetFSSpec(FSSpec *fileSpec);
 
 	NS_IMETHOD SetAppendedPath(const char *aPath);
 	NS_IMETHOD GetAppendedPath(char * *aPath);
@@ -85,8 +86,12 @@ private:
     nsCString	mResolvedPath;
     
     // The Mac data structure for a file system object
-    FSSpec		mSpec;			// This is the raw spec from InitWIthPath or InitWithFSSpec
+    FSSpec		mSpec;			// This is the raw spec from InitWithPath or InitWithFSSpec
     FSSpec		mResolvedSpec;	// This is the spec we've called ResolveAlias on
+    FSSpec		mTargetSpec;	// This is the spec we've called ResolveAlias on
+    
+    Boolean		mResolvedWasAlias;	// mResolvedSpec was for an alias
+    Boolean		mResolvedWasFolder;	// mResolvedSpec was for a directory
     
     // Is the mResolvedSpec member valid?  Only after we resolve the mSpec or mWorkingPath
     PRBool		mHaveValidSpec;

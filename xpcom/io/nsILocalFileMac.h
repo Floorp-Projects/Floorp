@@ -61,6 +61,7 @@ public:
 	// In case we need to get the FSSpecs at the heart of an nsLocalFileMac
 	NS_IMETHOD GetFSSpec(FSSpec *fileSpec) = 0;			// The one we were inited with
 	NS_IMETHOD GetResolvedFSSpec(FSSpec *fileSpec) = 0;	// The one we've resolved to
+	NS_IMETHOD GetTargetFSSpec(FSSpec *fileSpec) = 0;	// The one we're really really pointing to
 	
 	// Since we may have both an FSSpec and an appended path we need methods
 	// to get/set just the appended path
