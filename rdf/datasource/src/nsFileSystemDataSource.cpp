@@ -197,36 +197,30 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 PRBool
 FileSystemDataSource::isDirURI(nsIRDFResource* source)
 {
-    nsresult rv;
-    const char *uri = nsnull;
+    nsresult    rv;
+    const char  *uri = nsnull;
+
     rv = source->GetValueConst(&uri);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
-    nsCOMPtr<nsIURI> fileURI;
-    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
-	return(rv);
-    if (!fileURI) return PR_FALSE;
+    nsCOMPtr<nsIURI> aIURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+	    return(rv);
+    if (!aIURI) return(PR_FALSE);
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull);
-    if (NS_FAILED(rv))
-	return PR_FALSE;
-    if (!channel) return PR_FALSE;
-
-    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel);
-    if (!fileChannel) return PR_FALSE;
-
+    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
+    if (!fileURL)   return(PR_FALSE);
+    
     nsCOMPtr<nsIFile> aDir;
-    rv = fileChannel->GetFile(getter_AddRefs(aDir));
-    if (NS_FAILED(rv))
-	return PR_FALSE;
+    rv = fileURL->GetFile(getter_AddRefs(aDir));
+    if (NS_FAILED(rv))  return(PR_FALSE);
 
     PRBool isDirFlag = PR_FALSE;
 
     rv = aDir->IsDirectory(&isDirFlag);
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return(PR_FALSE);
 
-    return isDirFlag;
+    return(isDirFlag);
 }
 
 
@@ -1090,8 +1084,9 @@ nsresult
 FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 				PRBool onlyFirst, nsISimpleEnumerator** aResult)
 {
-	nsresult	rv;
-	nsCOMPtr<nsISupportsArray> nameArray;
+	nsresult	                rv;
+	nsCOMPtr<nsISupportsArray>  nameArray;
+
 	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if (NS_FAILED(rv)) return rv;
 
@@ -1100,21 +1095,15 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 	if (NS_FAILED(rv)) return(rv);
 	if (!parentURI)	return(NS_ERROR_UNEXPECTED);
 
-	nsCOMPtr<nsIURI>	fileURI;
-	if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), parentURI)))
-		return(rv);
-	if (!fileURI)	return(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIURI>    aIURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), parentURI)))
+        return(rv);
 
-	nsCOMPtr<nsIChannel>	channel;
-	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
-		return(rv);
-	if (!channel)	return(NS_ERROR_UNEXPECTED);
-
-	nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
-	if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
+    if (!fileURL)   return(PR_FALSE);
 
 	nsCOMPtr<nsIFile>	aDir;
-	if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aDir))))
+    if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aDir))))
 		return(rv);
 
 	nsCOMPtr<nsISimpleEnumerator>	dirContents;
@@ -1219,21 +1208,15 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	if (NS_FAILED(rv)) return(rv);
 	if (!uri)	return(NS_ERROR_UNEXPECTED);
 
-	nsCOMPtr<nsIURI>	fileURI;
-	if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
-		return(rv);
-	if (!fileURI)	return(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIURI>    aIURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+        return(rv);
 
-	nsCOMPtr<nsIChannel>	channel;
-	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
-		return(rv);
-	if (!channel)	return(NS_ERROR_UNEXPECTED);
-
-	nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
-	if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
+    if (!fileURL)   return(PR_FALSE);
 
 	nsCOMPtr<nsIFile>	aFile;
-	if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aFile))))
+    if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
 		return(rv);
 	if (!aFile)		return(NS_ERROR_UNEXPECTED);
 
