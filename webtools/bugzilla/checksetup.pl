@@ -1725,7 +1725,8 @@ $table{bug_group_map} =
 $table{quips} =
     'quipid mediumint not null auto_increment primary key,
      userid mediumint not null default 0, 
-     quip text not null';
+     quip text not null,
+     approved tinyint(1) not null default 1';
 
 $table{group_control_map} =
     'group_id mediumint not null,
