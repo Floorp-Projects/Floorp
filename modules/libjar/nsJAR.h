@@ -59,7 +59,7 @@ class nsJAR : public nsIJAR
   
   private:
 
-    nsZipArchive zip;
+    nsZipArchive mZip;
     // Need a pointer to the JARInputStream because nsJAR currently supports
     // only one input stream at a time. We need a reference to enforce this.
     // When multiple simultaneous input streams are implemented, this can go away.
