@@ -71,15 +71,6 @@ void nsRegionGTK::SetTo(const nsIRegion &aRegion)
   mRegion = nRegion;
 }
 
-void nsRegionGTK::SetTo(const nsRegionGTK *aRegion)
-{
-  SetRegionEmpty();
-  
-  GdkRegion *nRegion = ::gdk_regions_union(mRegion, aRegion->mRegion);
-  ::gdk_region_destroy(mRegion);
-  mRegion = nRegion;
-}
-
 void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   SetRegionEmpty();
@@ -126,11 +117,15 @@ void nsRegionGTK::Union(const nsIRegion &aRegion)
 
 void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  GdkRegion *tRegion = CreateRectRegion(aX, aY, aWidth, aHeight);
+  GdkRectangle grect;
 
-  GdkRegion *nRegion = ::gdk_regions_union(mRegion, tRegion);
+  grect.x = aX;
+  grect.y = aY;
+  grect.width = aWidth;
+  grect.height = aHeight;
+
+  GdkRegion *nRegion = ::gdk_regions_union_with_rect(mRegion, &grect);
   ::gdk_region_destroy(mRegion);
-  ::gdk_region_destroy(tRegion);
   mRegion = nRegion;
 }
 
