@@ -751,6 +751,35 @@ public:
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
 
+
+  /**
+   * Get a drawing surface used as a backbuffer.
+   * Depending on the platform this will either cause a backbuffer surface to be allocated
+   * or an existing cached backbuffer will be returned. If the backbuffer is being cached
+   * asking for aMaxSize which is different from a previous request may cause the platform
+   * to dump it's cached backbuffer and reallocate a backbuffer of a size which will allow aMaxSize 
+   * buffer to be allocated.
+   *
+   * @param aRequestedSize size of the backbuffer area requested
+   * @param aMaxSize maximum size that may be requested for the backbuffer
+   * @param aBackbuffer drawing surface used as the backbuffer
+   */
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer) = 0;
+
+  /**
+   * Release a drawing surface used as the backbuffer
+   * If the platform caches the backbuffer this call will destroy it.
+   */
+  NS_IMETHOD ReleaseBackbuffer(void) = 0;
+
+  /**
+   * Destroy the drawing surface used as the backbuffer. If the platform
+   * does not maintain a cached backbuffer this call will do nothing.
+   */
+  NS_IMETHOD DestroyCachedBackbuffer(void) = 0;
+
+
+
 #ifdef MOZ_MATHML
   /**
    * Returns bounding metrics (in app units) of an 8-bit character string

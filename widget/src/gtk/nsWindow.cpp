@@ -737,6 +737,10 @@ void
 nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                    nsIRegion *aClipRegion)
 {
+ //Don't dispatch paint event if widget's height or width is 0
+ if ((mBounds.width == 0) || (mBounds.height == 0)) {
+   return;
+ }
 
 #ifdef NS_DEBUG
   if (this == debugWidget) {

@@ -45,6 +45,10 @@
 
 const nsPoint *gPts;
 
+nsDrawingSurface nsRenderingContextImpl::gBackbuffer = nsnull;
+nsRect nsRenderingContextImpl::gBackbufferBounds = nsRect(0, 0, 0, 0);
+nsSize nsRenderingContextImpl::gLargestRequestedSize = nsSize(0, 0);
+
 // comparison routines for qsort 
 PRInt32 PR_CALLBACK compare_ind(const void *u,const void *v){return gPts[(PRInt32)*((PRInt32*)u)].y <= gPts[(PRInt32)*((PRInt32*)v)].y ? -1 : 1;}
 PRInt32 PR_CALLBACK compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
@@ -450,6 +454,173 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
     TileImage(aDS,aSrcRect,aWidth,aHeight);
   } 
 }
+
+NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+{
+  // Default implementation assumes the backbuffer will be cached.
+  // If the platform implementation does not require the backbuffer to
+  // be cached override this method and make the following call instead:
+  // AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE);
+  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_TRUE);
+}
+
+nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer, PRBool aCacheBackbuffer)
+{
+  nsRect newBounds;
+  nsresult rv = NS_OK;
+
+   if (! aCacheBackbuffer) {
+    newBounds = aRequestedSize;
+  } else {
+    GetDrawingSurfaceSize(aMaxSize, aRequestedSize, newBounds);
+  }
+
+  if ((nsnull == gBackbuffer)
+      || (gBackbufferBounds.width != newBounds.width)
+      || (gBackbufferBounds.height != newBounds.height))
+    {
+      if (gBackbuffer) {
+        //destroy existing DS
+        DestroyDrawingSurface(gBackbuffer);
+        gBackbuffer = nsnull;
+      }
+
+      rv = CreateDrawingSurface(&newBounds, 0, gBackbuffer);
+      //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
+      if (NS_SUCCEEDED(rv)) {
+        gBackbufferBounds = newBounds;
+        SelectOffScreenDrawingSurface(gBackbuffer);
+      } else {
+        gBackbufferBounds.SetRect(0,0,0,0);
+        gBackbuffer = nsnull;
+      }
+    } else {
+      SelectOffScreenDrawingSurface(gBackbuffer);
+
+      float p2t;
+      nsCOMPtr<nsIDeviceContext>  dx;
+      GetDeviceContext(*getter_AddRefs(dx));
+      dx->GetDevUnitsToAppUnits(p2t);
+      nsRect bounds = aRequestedSize;
+      bounds *= p2t;
+
+      PRBool clipEmpty;
+      SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
+    }
+
+  aBackbuffer = gBackbuffer;
+  return rv;
+}
+
+NS_IMETHODIMP nsRenderingContextImpl::ReleaseBackbuffer(void)
+{
+  // If the platform does not require the backbuffer to be cached
+  // override this method and call DestroyCachedBackbuffer
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextImpl::DestroyCachedBackbuffer(void)
+{
+  if (gBackbuffer) {
+    DestroyDrawingSurface(gBackbuffer);
+    gBackbuffer = nsnull;
+  }
+  return NS_OK;
+}
+
+PRBool nsRenderingContextImpl::RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
+{
+  if (aRect.width > aWidth)
+    return (PR_FALSE);
+
+  if (aRect.height > aHeight)
+    return (PR_FALSE);
+
+  return PR_TRUE;
+}
+
+PRBool nsRenderingContextImpl::BothRectsFitInside(const nsRect& aRect1, const nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const
+{
+  if (PR_FALSE == RectFitsInside(aRect1, aWidth, aHeight)) {
+    return PR_FALSE;
+  }
+
+  if (PR_FALSE == RectFitsInside(aRect2, aWidth, aHeight)) {
+    return PR_FALSE;
+  }
+
+  aNewSize.width = aWidth;
+  aNewSize.height = aHeight;
+
+  return PR_TRUE;
+}
+
+void nsRenderingContextImpl::GetDrawingSurfaceSize(const nsRect& aMaxBackbufferSize, const nsRect& aRequestedSize, nsRect& aNewSize) 
+{ 
+  CalculateDiscreteSurfaceSize(aMaxBackbufferSize, aRequestedSize, aNewSize);
+  aNewSize.MoveTo(aRequestedSize.x, aRequestedSize.y);
+}
+
+void nsRenderingContextImpl::CalculateDiscreteSurfaceSize(const nsRect& aMaxBackbufferSize, const nsRect& aRequestedSize, nsRect& aSurfaceSize) 
+{
+  // Get the height and width of the screen
+  PRInt32 height;
+  PRInt32 width;
+
+  nsCOMPtr<nsIDeviceContext>  dx;
+  GetDeviceContext(*getter_AddRefs(dx));
+  dx->GetDeviceSurfaceDimensions(width, height);
+
+  float devUnits;
+  dx->GetDevUnitsToAppUnits(devUnits);
+  PRInt32 screenHeight = NSToIntRound(float( height) / devUnits );
+  PRInt32 screenWidth = NSToIntRound(float( width) / devUnits );
+
+  // These tests must go from smallest rectangle to largest rectangle.
+
+  // 1/8 screen
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, screenWidth / 8, screenHeight / 8, aSurfaceSize)) {
+    return;
+  }
+
+  // 1/4 screen
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, screenWidth / 4, screenHeight / 4, aSurfaceSize)) {
+    return;
+  }
+
+  // 1/2 screen
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, screenWidth / 2, screenHeight / 2, aSurfaceSize)) {
+    return;
+  }
+
+  // 3/4 screen
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, (screenWidth * 3) / 4, (screenHeight * 3) / 4, aSurfaceSize)) {
+    return;
+  }
+
+  // 3/4 screen width full screen height
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, (screenWidth * 3) / 4, screenHeight, aSurfaceSize)) {
+    return;
+  }
+
+  // Full screen
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, screenWidth, screenHeight, aSurfaceSize)) {
+    return;
+  }
+
+  // Bigger than Full Screen use the largest request every made.
+  if (BothRectsFitInside(aRequestedSize, aMaxBackbufferSize, gLargestRequestedSize.width, gLargestRequestedSize.height, aSurfaceSize)) {
+    return;
+  } else {
+    gLargestRequestedSize.width = PR_MAX(aRequestedSize.width, aMaxBackbufferSize.width);
+    gLargestRequestedSize.height = PR_MAX(aRequestedSize.height, aMaxBackbufferSize.height);
+    aSurfaceSize.width = gLargestRequestedSize.width;
+    aSurfaceSize.height = gLargestRequestedSize.height;
+    //   printf("Expanding the largested requested size to %d %d\n", gLargestRequestedSize.width, gLargestRequestedSize.height);
+  }
+}
+
+
 
 #ifdef IBMBIDI
 /**

@@ -275,21 +275,15 @@ nsViewManager::PostInvalidateEvent()
 }
 
 PRInt32 nsViewManager::mVMCount = 0;
-nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
-nsRect nsViewManager::mDSBounds = nsRect(0, 0, 0, 0);
-
 nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 nsDrawingSurface nsViewManager::gOffScreen = nsnull;
 nsDrawingSurface nsViewManager::gBlack = nsnull;
 nsDrawingSurface nsViewManager::gWhite = nsnull;
 nsSize nsViewManager::gOffScreenSize = nsSize(0, 0);
-nsSize nsViewManager::gLargestRequestedSize = nsSize(0, 0);
-
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
 PRUint32 nsViewManager::gLastUserEventTime = 0;
-PRBool nsViewManager::gTransitoryBackbuffer = PR_FALSE;
 
 nsViewManager::nsViewManager()
 {
@@ -357,8 +351,8 @@ nsViewManager::~nsViewManager()
     // viewmanager is typically destroyed during XPCOM shutdown.
 
     if (gCleanupContext) {
-      if (nsnull != mDrawingSurface)
-        gCleanupContext->DestroyDrawingSurface(mDrawingSurface);
+
+      gCleanupContext->DestroyCachedBackbuffer();
 
       if (nsnull != gOffScreen)
         gCleanupContext->DestroyDrawingSurface(gOffScreen);
@@ -373,7 +367,6 @@ nsViewManager::~nsViewManager()
       NS_ASSERTION(PR_FALSE, "Cleanup of drawing surfaces + offscreen buffer failed");
     }
 
-    mDrawingSurface = nsnull;
     gOffScreen = nsnull;
     gWhite = nsnull;
     gBlack = nsnull;
@@ -486,11 +479,6 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
     }
 
     NS_ASSERTION(nsnull != mEventQueue, "event queue is null");
-  }
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    prefs->GetBoolPref("layout.transitory.backbuffer", &gTransitoryBackbuffer);
   }
   
   return rv;
@@ -664,13 +652,19 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   }
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-    {
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
-      widget->GetClientBounds(wrect);
-      wrect.x = wrect.y = 0;
-      ds = GetDrawingSurface(*localcx, wrect);
+  {
+    nsCOMPtr<nsIWidget> widget;
+    aView->GetWidget(*getter_AddRefs(widget));
+    widget->GetClientBounds(wrect);
+    wrect.x = wrect.y = 0;
+
+    nsRect maxWidgetSize;
+    GetMaxWidgetBounds(maxWidgetSize);
+    if NS_FAILED(localcx->GetBackbuffer(wrect, maxWidgetSize, ds)) {
+      //Failed to get backbuffer so turn off double buffering
+      aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
     }
+  }
 
   nsRect viewRect;
   aView->GetBounds(viewRect);
@@ -721,11 +715,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
     mRecursiveRefreshPending = PR_FALSE;
   }
 
-  if ((gTransitoryBackbuffer) && (mDrawingSurface)) {
-    //Destroy backbuffer drawing surface
-    localcx->DestroyDrawingSurface(mDrawingSurface);
-    mDrawingSurface = nsnull;
-  }
+  localcx->ReleaseBackbuffer();
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
@@ -1830,13 +1820,13 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     case NS_DISPLAYCHANGED:
 
-      // Reset the offscreens width and height
-      // so it will be reallocated the next time it needs to
-      // draw. It needs to be reallocated because it's depth
-      // has changed. @see bugzilla bug 6061
+      //Destroy the cached backbuffer to force a new backbuffer
+      //be constructed with the appropriate display depth.
+      //@see bugzilla bug 6061
       *aStatus = nsEventStatus_eConsumeDoDefault;
-      mDSBounds.width = 0;
-      mDSBounds.height = 0;
+      if (gCleanupContext) {
+        gCleanupContext->DestroyCachedBackbuffer();
+      }
       break;
 
 
@@ -2502,162 +2492,14 @@ void nsViewManager::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
   //   printf("WIDGET BOUNDS %d %d\n", aMaxWidgetBounds.width, aMaxWidgetBounds.height);
 }
 
-PRBool nsViewManager::RectFitsInside(nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
-{
-  if (aRect.width > aWidth)
-    return (PR_FALSE);
-
-  if (aRect.height > aHeight)
-    return (PR_FALSE);
-
-  return PR_TRUE;
-}
-
-PRBool nsViewManager::BothRectsFitInside(nsRect& aRect1, nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const
-{
-  if (PR_FALSE == RectFitsInside(aRect1, aWidth, aHeight)) {
-    return PR_FALSE;
-  }
-
-  if (PR_FALSE == RectFitsInside(aRect2, aWidth, aHeight)) {
-    return PR_FALSE;
-  }
-
-  aNewSize.width = aWidth;
-  aNewSize.height = aHeight;
-
-  return PR_TRUE;
-}
-
-
-void nsViewManager::CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const
-{
-  nsRect aMaxWidgetSize;
-  GetMaxWidgetBounds(aMaxWidgetSize);
- 
-  // Get the height and width of the screen
-  PRInt32 height;
-  PRInt32 width;
-  NS_ASSERTION(mContext != nsnull, "The device context is null");
-  mContext->GetDeviceSurfaceDimensions(width, height);
-
-  float devUnits;
-   mContext->GetDevUnitsToAppUnits(devUnits);
-  PRInt32 screenHeight = NSToIntRound(float( height) / devUnits );
-  PRInt32 screenWidth = NSToIntRound(float( width) / devUnits );
-
-  // These tests must go from smallest rectangle to largest rectangle.
-
-  // 1/8 screen
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 8, screenHeight / 8, aSurfaceSize)) {
-    return;
-  }
-
-  // 1/4 screen
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 4, screenHeight / 4, aSurfaceSize)) {
-    return;
-  }
-
-  // 1/2 screen
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 2, screenHeight / 2, aSurfaceSize)) {
-    return;
-  }
-
-  // 3/4 screen
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, (screenWidth * 3) / 4, (screenHeight * 3) / 4, aSurfaceSize)) {
-    return;
-  }
-
-  // 3/4 screen width full screen height
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, (screenWidth * 3) / 4, screenHeight, aSurfaceSize)) {
-    return;
-  }
-
-  // Full screen
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth, screenHeight, aSurfaceSize)) {
-    return;
-  }
-
-  // Bigger than Full Screen use the largest request every made.
-  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, gLargestRequestedSize.width, gLargestRequestedSize.height, aSurfaceSize)) {
-    return;
-  } else {
-    gLargestRequestedSize.width = PR_MAX(aRequestedSize.width, aMaxWidgetSize.width);
-    gLargestRequestedSize.height = PR_MAX(aRequestedSize.height, aMaxWidgetSize.height);
-    aSurfaceSize.width = gLargestRequestedSize.width;
-    aSurfaceSize.height = gLargestRequestedSize.height;
-    //   printf("Expanding the largested requested size to %d %d\n", gLargestRequestedSize.width, gLargestRequestedSize.height);
-  }
-}
-
-void nsViewManager::GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aNewSize) const
-{ 
-  CalculateDiscreteSurfaceSize(aRequestedSize, aNewSize);
-  aNewSize.MoveTo(aRequestedSize.x, aRequestedSize.y);
-}
-
 PRInt32 nsViewManager::GetViewManagerCount()
 {
   return mVMCount;
 }
 
-
 const nsVoidArray* nsViewManager::GetViewManagerArray() 
 {
   return gViewManagers;
-}
-
-
-nsDrawingSurface nsViewManager::GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds) 
-{
-  nsRect newBounds;
-
-  if (gTransitoryBackbuffer) {
-    newBounds = aBounds;
-  } else {
-    GetDrawingSurfaceSize(aBounds, newBounds);
-  }
-
-
-  if ((nsnull == mDrawingSurface)
-      || (mDSBounds.width != newBounds.width)
-      || (mDSBounds.height != newBounds.height))
-    {
-      if (mDrawingSurface) {
-        //destroy existing DS
-        aContext.DestroyDrawingSurface(mDrawingSurface);
-        mDrawingSurface = nsnull;
-      }
-
-      nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
-      //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
-      if (NS_SUCCEEDED(rv)) {
-        mDSBounds = newBounds;
-        aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
-      } else {
-        mDSBounds.SetRect(0,0,0,0);
-        mDrawingSurface = nsnull;
-      }
-    } else {
-      aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
-
-      float p2t;
-      mContext->GetDevUnitsToAppUnits(p2t);
-      nsRect bounds = aBounds;
-      bounds *= p2t;
-
-      PRBool clipEmpty;
-      aContext.SetClipRect(bounds, nsClipCombine_kReplace, clipEmpty);
-
-      // This is not be needed. Only the part of the offscreen that has been
-      // rendered to should be displayed so there no need to
-      // clear it out.
-      //nscolor col = NS_RGB(255,255,255);
-      //aContext.SetColor(col);
-      //aContext.FillRect(bounds);
-    }
-
-  return mDrawingSurface;
 }
 
 NS_IMETHODIMP nsViewManager::ShowQuality(PRBool aShow)

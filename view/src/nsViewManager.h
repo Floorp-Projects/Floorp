@@ -212,8 +212,6 @@ public:
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
-  nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
-
   NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect);
 
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
@@ -352,45 +350,6 @@ private:
    */
   void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
 
-  /**
-   * Determine if a rect's width and height will fit within a specified width and height
-   * @param aRect rectangle to test
-   * @param aWidth width to determine if the rectangle's width will fit within
-   * @param aHeight height to determine if the rectangles height will fit within
-   * @returns PR_TRUE if the rect width and height fits with aWidth, aHeight, PR_FALSE
-   * otherwise.
-   */
-  PRBool RectFitsInside(nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const;
-
-  /**
-   * Determine if two rectangles width and height will fit within a specified width and height
-   * @param aRect1 first rectangle to test
-   * @param aRect1 second rectangle to test
-   * @param aWidth width to determine if both rectangle's width will fit within
-   * @param aHeight height to determine if both rectangles height will fit within
-   * @returns PR_TRUE if the rect1's and rect2's width and height fits with aWidth,
-   * aHeight, PR_FALSE otherwise.
-   */
-  PRBool BothRectsFitInside(nsRect& aRect1, nsRect& aRect2, PRInt32 aWidth, PRInt32 aHeight, nsRect& aNewSize) const;
-  
-  /**
-   * Return an offscreen surface size from a set of discrete surface sizes.
-   * The smallest discrete surface size that can enclose both the Maximum widget 
-   * size (@see GetMaxWidgetBounds) and the requested size is returned.
-   *
-   * @param aRequestedSize Requested size for the offscreen.
-   * @param aSurfaceSize contains the surface size 
-   */
-  void CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSize) const;
-
-  /**
-   * Get the size of the offscreen drawing surface..
-   *
-   * @param aRequestedSize Desired size for the offscreen.
-   * @param aSurfaceSize   Offscreen adjusted to a discrete size which encloses aRequestedSize.
-   */
-  void GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const;
-
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
   nsView* GetMouseEventGrabber() const { return mMouseGrabber; }
@@ -423,8 +382,6 @@ private:
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
-  static nsDrawingSurface  mDrawingSurface; //single drawing surface
-  static nsRect            mDSBounds;       //for all VMs
 
   //blending buffers
   static nsDrawingSurface  gOffScreen;
@@ -435,12 +392,8 @@ private:
   //Rendering context used to cleanup the blending buffers
   static nsIRenderingContext* gCleanupContext;
 
-  // Largest requested offscreen size if larger than a full screen.
-  static nsSize            gLargestRequestedSize;
-
   //list of view managers
   static nsVoidArray       *gViewManagers;
-  static PRBool            gTransitoryBackbuffer;
 
   //compositor regions
   nsIRegion         *mOpaqueRgn;
