@@ -217,6 +217,9 @@ DBArcsInOutCursor::DBArcsInOutCursor(CompositeDataSourceImpl* db,
 	  mInCursor(0),
 	  mOutCursor(0)
 {
+	NS_INIT_REFCNT();
+    NS_ADDREF(mCompositeDataSourceImpl);
+
     if (arcsOutp) {
         mSource = (nsIRDFResource*) node;
     } else {
@@ -246,6 +249,9 @@ DBArcsInOutCursor::~DBArcsInOutCursor(void)
 
     NS_IF_RELEASE(mSource);
     NS_IF_RELEASE(mTarget);
+    NS_IF_RELEASE(mInCursor);
+    NS_IF_RELEASE(mOutCursor);
+    NS_RELEASE(mCompositeDataSourceImpl);
 }
 
 
@@ -261,7 +267,7 @@ DBArcsInOutCursor::QueryInterface(REFNSIID iid, void** result) {
         iid.Equals(kIRDFCursorIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
-        /* AddRef(); // not necessary */
+        NS_ADDREF(this);
         return NS_OK;
     }
     return NS_NOINTERFACE;
@@ -371,8 +377,12 @@ DBGetSTCursor::DBGetSTCursor(CompositeDataSourceImpl* db,
       mLabel(property),
       mTarget(nsnull),
       mCount(0),
-      mTruthValue(tv)
+      mTruthValue(tv),
+      mCurrentCursor(nsnull)
 {
+	NS_INIT_REFCNT();
+    NS_ADDREF(mCompositeDataSourceImpl);
+
     if (!inversep) {
         mSource = (nsIRDFResource*) u;
     } else {
@@ -394,9 +404,11 @@ DBGetSTCursor::DBGetSTCursor(CompositeDataSourceImpl* db,
 
 DBGetSTCursor::~DBGetSTCursor(void)
 {
+    NS_IF_RELEASE(mCurrentCursor);
     NS_IF_RELEASE(mLabel);
     NS_IF_RELEASE(mSource);
-    NS_IF_ADDREF(mTarget);
+    NS_IF_RELEASE(mTarget);
+    NS_RELEASE(mCompositeDataSourceImpl);
 }
 
 
@@ -413,7 +425,7 @@ DBGetSTCursor::QueryInterface(REFNSIID iid, void** result)
         iid.Equals(kIRDFCursorIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
-        /* AddRef(); // not necessary */
+        NS_ADDREF(this);
         return NS_OK;
     }
     return NS_NOINTERFACE;
@@ -442,6 +454,8 @@ DBGetSTCursor::Advance(void)
 
         ds = (nsIRDFDataSource*) mCompositeDataSourceImpl->mDataSources[mCount];
         ++mCount;
+
+        NS_RELEASE(mCurrentCursor);
 
         if (mSource)
             ds->GetTargets(mSource, mLabel, mTruthValue, &mCurrentCursor);
@@ -707,6 +721,7 @@ CompositeDataSourceImpl::HasAssertion(nsIRDFResource* source,
     }
 
     // If we get here, nobody had the assertion at all
+    *hasAssertion = PR_FALSE;
     return NS_OK;
 }
 
@@ -718,7 +733,7 @@ CompositeDataSourceImpl::AddObserver(nsIRDFObserver* obs)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // XXX ensure uniqueness
+    // XXX ensure uniqueness?
 
     mObservers->AppendElement(obs);
     return NS_OK;
@@ -769,7 +784,7 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetAllResources(nsIRDFResourceCursor** aCursor)
 {
-    NS_ASSERTION(PR_FALSE, "not implemented");
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -788,7 +803,7 @@ CompositeDataSourceImpl::IsCommandEnabled(const char* aCommand,
                                           nsIRDFResource* aCommandTarget,
                                           PRBool* aResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -796,7 +811,7 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::DoCommand(const char* aCommand,
                                    nsIRDFResource* aCommandTarget)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -810,6 +825,7 @@ CompositeDataSourceImpl::DoCommand(const char* aCommand,
 NS_IMETHODIMP
 CompositeDataSourceImpl::AddDataSource(nsIRDFDataSource* source)
 {
+    NS_ASSERTION(source != nsnull, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
@@ -824,6 +840,7 @@ CompositeDataSourceImpl::AddDataSource(nsIRDFDataSource* source)
 NS_IMETHODIMP
 CompositeDataSourceImpl::RemoveDataSource(nsIRDFDataSource* source)
 {
+    NS_ASSERTION(source != nsnull, "null ptr");
     if (! source)
         return NS_ERROR_NULL_POINTER;
 
