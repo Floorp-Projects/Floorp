@@ -30,21 +30,12 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-
-// Candice - Removed to allow it to build on Mac
-//#include <sys/types.h>
-//#include <sys/stat.h>
-
-#if defined(XP_MAC) && defined(CompareString)
-	#undef CompareString
-#endif
 #include "nsICollation.h"
 
 #include "nsCollationCID.h"
 #include "nsIPref.h"
 
-extern nsIMdbFactory *NS_NewIMdbFactory();
-
+extern "C" nsIMdbFactory* MakeMdbFactory(); 
 
 const int kAddressBookDBVersion = 1;
 
@@ -327,10 +318,7 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
 	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
-// Candice - Removed to allow it to build on Mac
-#if 0
 		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
-#endif
 	}
 	return gMDBFactory;
 }
@@ -495,8 +483,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 		if (NS_SUCCEEDED(ret))
 		{
 			nsIMdbThumb *thumb;
-// Candice - Removed to allow it to build on Mac
-//			struct stat st;
+			nsFileSpec dbPath(dbName);
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
 			if (!nativeFileName)
@@ -508,10 +495,9 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 #if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
-// Candice - Removed to allow it to build on Mac
-/*			if (stat(nativeFileName, &st)) 
+			if (!dbPath.Exists()) 
 				ret = NS_ERROR_FAILURE;  // check: use the right error code later
-			else*/
+			else
 			{
 				mdbOpenPolicy inOpenPolicy;
 				mdb_bool	canOpen;
