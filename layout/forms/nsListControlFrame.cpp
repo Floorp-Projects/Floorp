@@ -199,86 +199,6 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 //---------------------------------------------------------
-nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount) 
-{
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-
-  nsresult status = NS_OK;
-  nsIDOMNode * child;
-  aNode->GetFirstChild(&child);
-  while (child) {
-
-    // note: both optgroup and option elements can have DOM child
-    // option elements have text nodes as COM child, but they don't have too
-    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup;
-    child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptGroupElement),(void**) &optGroup);
-    if (optGroup) {
-      aCount++;
-
-      nsIFrame * frame;
-      nsCOMPtr<nsIContent> content(do_QueryInterface(child));
-      nsresult rvv = presShell->GetPrimaryFrameFor(content, &frame);
-      if (NS_FAILED(rvv) || nsnull == frame) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // check for children
-      PRBool hasChildren;
-      status = child->HasChildNodes(&hasChildren);
-      if (NS_FAILED(status)) {
-        NS_RELEASE(child);
-        return status;
-      }
-      if (hasChildren) {
-        status = CountAllChild(child, aCount);
-        if (NS_FAILED(status)) {
-          NS_RELEASE(child);
-          return status;
-        }
-      }
-    } else {
-      // don't query interface againa if it was an optgroup
-      nsCOMPtr<nsIDOMHTMLOptionElement> option;
-      child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),(void**) &option);
-      if (option) {
-        aCount++;
-        nsIFrame * frame;
-        nsCOMPtr<nsIContent> content(do_QueryInterface(child));
-        nsresult rvv = presShell->GetPrimaryFrameFor(content, &frame);
-        if (NS_FAILED(rvv) || nsnull == frame) {
-          return NS_ERROR_FAILURE;
-        }
-      } else {
-        // check for children
-        PRBool hasChildren;
-        status = child->HasChildNodes(&hasChildren);
-        if (NS_FAILED(status)) {
-          NS_RELEASE(child);
-          return status;
-        }
-        if (hasChildren) {
-          status = CountAllChild(child, aCount);
-          if (NS_FAILED(status)) {
-            NS_RELEASE(child);
-            return status;
-          }
-        }
-      }
-    }
-
-    nsIDOMNode * tmp = child;
-    status = child->GetNextSibling(&child);
-    if (NS_FAILED(status)) {
-      NS_RELEASE(tmp);
-      return status;
-    }
-    NS_RELEASE(tmp);
-  }
-  return status;
-}
-
-//---------------------------------------------------------
 // Reflow is overriden to constrain the listbox height to the number of rows and columns
 // specified. 
 
@@ -303,14 +223,14 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 #ifdef DEBUG_rodsXXX
   {
   nsresult rv = NS_ERROR_FAILURE; 
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (nsnull != options) {
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
     printf("--- Num of Items %d ---\n", numOptions);
     for (PRUint32 i=0;i<numOptions;i++) {
-      nsIDOMHTMLOptionElement* optionElement = GetOption(*options, i);
-      if (nsnull != optionElement) {
+      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, i));
+      if (optionElement) {
         nsAutoString text;
         rv = optionElement->GetLabel(text);
         if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
@@ -321,10 +241,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
             text = "No Value";
         }          
         printf("[%d] - %s\n", i, text.ToNewCString());
-        NS_RELEASE(optionElement);
       }
     }
-    NS_RELEASE(options);
   }
   }
 #endif // DEBUG_rodsXXX
@@ -426,9 +344,15 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = 0;
 
   // Add the list frame as a child of the form
-  if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+  if (eReflowReason_Initial == aReflowState.reason) {
+    if (mPresState) {
+      RestoreState(aPresContext, mPresState);
+      mPresState = do_QueryInterface(nsnull);
+    }
+    if (IsInDropDownMode() == PR_FALSE && !mFormFrame) {
+      nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+      nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+    }
   }
 
   //--Calculate a width just big enough for the scrollframe to shrink around the
@@ -575,15 +499,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     } else {
       PRInt32 numRows = 1;
       GetSizeAttribute(&numRows);
-      if (numRows == kNoSizeSpecified) {
-        nsIDOMNode* node;
-        nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIDOMNode),(void**) &node);
-        if (node && NS_SUCCEEDED(rv)) {
-          numRows = 0;
-          CountAllChild(node, numRows);
-          NS_RELEASE(node);
-        }
-      }
+      // because we are not a drop down 
+      // we will always have 2 or more rows
       visibleHeight = numRows * heightOfARow;
     }
   }
@@ -704,14 +621,13 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
 PRBool 
 nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
 {
-  nsIContent *content = nsnull;
-  aFrame->GetContent(&content);
   PRBool result = PR_FALSE;
-  if (nsnull != content) {
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  if (content) {
     result = IsOptionElement(content);
-    NS_RELEASE(content);
   }
-  return(result);
+  return result;
 }
 
 
@@ -812,25 +728,20 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
   // between the hit frame's content and the content of an option element
 
   // get the collection of option items
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (nsnull != options) {
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
 
     PRUint32 inx;
     for (inx = 0; inx < numOptions; inx++) {
-      nsIContent* option = nsnull;
-      option = GetOptionAsContent(options, inx);
-      if (nsnull != option) {
+      nsCOMPtr<nsIContent> option = getter_AddRefs(GetOptionAsContent(options, inx));
+      if (option) {
         if (option == aContent) {
-          NS_RELEASE(option);
-          NS_RELEASE(options);
           return inx;
         }
-        NS_RELEASE(option);
       }
     }
-    NS_RELEASE(options);
   }
   return kNothingSelected;
 }
@@ -842,14 +753,16 @@ nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent)
 PRInt32 
 nsListControlFrame::GetSelectedIndexFromFrame(nsIFrame *aHitFrame) 
 {
+  NS_ASSERTION(aHitFrame, "No frame for html <select> element\n");  
+
   PRInt32 indx = kNothingSelected;
   // Get the content of the frame that was selected
-  nsIContent* selectedContent = nsnull;
-  NS_ASSERTION(aHitFrame, "No frame for html <select> element\n");  
   if (aHitFrame) {
-    aHitFrame->GetContent(&selectedContent);
-    indx = GetSelectedIndexFromContent(selectedContent);
-    NS_RELEASE(selectedContent);
+    nsCOMPtr<nsIContent> selectedContent;
+    aHitFrame->GetContent(getter_AddRefs(selectedContent));
+    if (selectedContent) {
+      indx = GetSelectedIndexFromContent(selectedContent);
+    }
   }
   return indx;
 }
@@ -1317,16 +1230,15 @@ nsListControlFrame::GetSelect(nsIContent * aContent)
 
 //---------------------------------------------------------
 // Returns the nsIContent object in the collection 
-// for a given index
+// for a given index (AddRefs)
 //---------------------------------------------------------
 nsIContent* 
 nsListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection, PRInt32 aIndex) 
 {
-  nsIContent *             content       = nsnull;
-  nsIDOMHTMLOptionElement* optionElement = GetOption(*aCollection, aIndex);
-  if (nsnull != optionElement) {
+  nsIContent * content = nsnull;
+  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*aCollection, aIndex));
+  if (optionElement) {
     optionElement->QueryInterface(NS_GET_IID(nsIContent),(void**) &content);
-    NS_RELEASE(optionElement);
   }
  
   return content;
@@ -1341,33 +1253,31 @@ nsListControlFrame::GetOptionContent(PRInt32 aIndex)
   
 {
   nsIContent* content = nsnull;
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (nsnull != options) {
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  if (options) {
     content = GetOptionAsContent(options, aIndex);
-    NS_RELEASE(options);
   }
   return(content);
 }
 
 //---------------------------------------------------------
 // This returns the collection for nsIDOMHTMLSelectElement or
-// the nsIContent object is the select is null 
+// the nsIContent object is the select is null  (AddRefs)
 //---------------------------------------------------------
 nsIDOMHTMLCollection* 
 nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect)
 {
   nsIDOMHTMLCollection* options = nsnull;
   if (!aSelect) {
-    nsIDOMHTMLSelectElement* selectElement = GetSelect(aContent);
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
     if (selectElement) {
-      selectElement->GetOptions(&options);
-      NS_RELEASE(selectElement);
+      selectElement->GetOptions(&options);  // AddRefs
       return options;
     } else {
       return nsnull;
     }
   } else {
-    aSelect->GetOptions(&options);
+    aSelect->GetOptions(&options); // AddRefs
     return options;
   }
 }
@@ -1675,7 +1585,7 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     return PR_FALSE;
   }
 
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
   if (!options) {
     return PR_FALSE;
   }
@@ -1709,7 +1619,6 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     }
     status = PR_TRUE;
   } 
-  NS_RELEASE(options);
 
   return status;
 }
@@ -1758,32 +1667,38 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
 {
   aStr = "";
   nsresult rv = NS_ERROR_FAILURE; 
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
 
-  if (nsnull != options) {
+  if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
 
     if (numOptions == 0) {
       rv = NS_OK;
     } else {
-      nsIDOMHTMLOptionElement* optionElement = GetOption(*options, mSelectedIndex);
-      if (nsnull != optionElement) {
+      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, mSelectedIndex));
+      if (optionElement) {
         nsAutoString text;
         rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
-          if (NS_OK == optionElement->GetText(text)) {
-            aStr = text;
-            rv = NS_OK;
+        // the return value is always NS_OK from DOMElements
+        // it is meaningless to check for it
+        if (text.Length() > 0) { 
+          nsAutoString compressText = text;
+          compressText.CompressWhitespace(PR_TRUE, PR_TRUE);
+          if (compressText.Length() != 0) {
+            text = compressText;
           }
-        } else {
-          aStr = text;
-          rv = NS_OK;
+        }
+
+        if (0 == text.Length()) {
+          // the return value is always NS_OK from DOMElements
+          // it is meaningless to check for it
+          optionElement->GetText(text);
         }          
-        NS_RELEASE(optionElement);
+        aStr = text;
+        rv = NS_OK;
       }
     }
-    NS_RELEASE(options);
   }
 
   return rv;
@@ -1804,22 +1719,20 @@ nsListControlFrame::GetSelectedIndexFromDOM(PRInt32 * aIndex)
   // figure out which item is selected by looking at which
   // option are selected
   *aIndex = kNothingSelected;
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
   if (options) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
 
     PRUint32 inx;
     for (inx = 0; inx < numOptions && (*aIndex == kNothingSelected); inx++) {
-      nsIContent* content = GetOptionAsContent(options, inx);
+      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionAsContent(options, inx));
       if (nsnull != content) {
         if (IsContentSelected(content)) {
           *aIndex = (PRInt32)inx;
         }
-        NS_RELEASE(content);
       }
     }
-    NS_RELEASE(options);
   }
   return NS_ERROR_FAILURE;
 }
@@ -1844,14 +1757,13 @@ NS_IMETHODIMP
 nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions) 
 {
   if (mContent != nsnull) {
-    nsIDOMHTMLCollection* options = GetOptions(mContent);
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
     if (nsnull == options) {
       *aNumOptions = 0;
     } else {
       PRUint32 length = 0;
       options->GetLength(&length);
       *aNumOptions = (PRInt32)length;
-      NS_RELEASE(options);
     }
     return NS_OK;
   }
@@ -2136,20 +2048,18 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
   nsIDOMEvent* DOMEvent = nsnull;
   nsresult res = NS_NewDOMUIEvent(&DOMEvent, mPresContext, &event);
   if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
-    nsIDOMNode* node = nsnull;
-    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    nsCOMPtr<nsIDOMNode> node;
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)getter_AddRefs(node));
     if (NS_SUCCEEDED(res) && node) {
-      nsIPrivateDOMEvent* pDOMEvent = nsnull;
-      res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
+      nsCOMPtr<nsIPrivateDOMEvent> pDOMEvent;
+      res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)getter_AddRefs(pDOMEvent));
       if (NS_SUCCEEDED(res) && pDOMEvent) {
         res = pDOMEvent->SetTarget(node);
-	if (NS_SUCCEEDED(res)) {
+        if (NS_SUCCEEDED(res)) {
           // Have the content handle the event.
           res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, &status);
         }
-        NS_RELEASE(pDOMEvent);
       }
-      NS_RELEASE(node);
     }
     NS_RELEASE(DOMEvent);
   }
@@ -2187,21 +2097,45 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, co
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
+
   } else if (nsHTMLAtoms::selectedindex == aName) {
     PRInt32 error = 0;
     PRInt32 selectedIndex = aValue.ToInteger(&error, 10); // Get index from aValue
     if (error) {
       return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
     } else {
-       // Select the specified item in the list box. 
-      if (mSelectedIndex != selectedIndex) {
-        ToggleSelected(selectedIndex);// sets mSelectedIndex
-	// Should we send an event here?
-        if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-          mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+      // Start by getting the num of options
+      // to make sure the new index is within the bounds
+      PRInt32 numOptions = 0;
+      GetNumberOfOptions(&numOptions);
+      if (selectedIndex < 0 || selectedIndex >= numOptions) {
+        return NS_ERROR_FAILURE;
+      }
+      // Get the DOM interface for the select
+      // we will use this to see if it is a "multiple" select 
+      nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(mContent));
+      if (selectElement) {
+        // check to see if it is a mulitple select
+        PRBool multiple = PR_FALSE;
+        if (NS_FAILED(GetMultiple(&multiple, selectElement))) {
+          multiple = PR_FALSE;
+        }
+        // if it is a multiple, select the new item
+        if (multiple) {
+          SetOptionSelected(selectedIndex, PR_TRUE);
         } else {
-	        InitSelectionCache(-1);
-	      }
+          // if it is a single select, 
+          // check to see if it is the currect selection
+          // if it is, then do nothing
+          if (mSelectedIndex != selectedIndex) {
+            SetOptionSelected(selectedIndex, PR_TRUE);
+            if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+              mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+            //} else {
+	            //InitSelectionCache(-1);
+	          }
+          }
+        }
       }
     }
   }
@@ -2463,20 +2397,18 @@ nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
   nsresult rv = NS_ERROR_FAILURE;
   aIsDisabled = PR_FALSE;
 
-  nsIEventStateManager *stateManager;
-  rv = mPresContext->GetEventStateManager(&stateManager);
-  if (NS_OK == rv) {
-    nsIContent * content;
-    rv = stateManager->GetEventTargetContent(nsnull, &content);
-    if (NS_OK == rv && nsnull != content) {
+  nsCOMPtr<nsIEventStateManager> stateManager;
+  rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIContent> content;
+    rv = stateManager->GetEventTargetContent(nsnull, getter_AddRefs(content));
+    if (NS_SUCCEEDED(rv) && content) {
       if (IsOptionElement(content)) {
         aIsDisabled = nsFormFrame::GetDisabled(this, content);
       } else {
         rv = NS_ERROR_FAILURE; // return error when it is not an option
       }
-      NS_RELEASE(content);
     }
-    NS_RELEASE(stateManager);
   }
   return rv;
 }
@@ -2609,20 +2541,17 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   }
 
   nsresult rv = NS_ERROR_FAILURE;
-  nsIEventStateManager *stateManager;
-  if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
-    nsIContent * content;
-    stateManager->GetEventTargetContent(nsnull, &content);
+  nsCOMPtr<nsIEventStateManager> stateManager;
+  if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
+    nsCOMPtr<nsIContent> content;
+    stateManager->GetEventTargetContent(nsnull, getter_AddRefs(content));
 
-    nsIContent * optionContent = GetOptionFromContent(content);
-    NS_RELEASE(content);
-    if (nsnull != optionContent) {
+    nsCOMPtr<nsIContent> optionContent = getter_AddRefs(GetOptionFromContent(content));
+    if (optionContent) {
       aOldIndex = aCurIndex;
       aCurIndex = GetSelectedIndexFromContent(optionContent);
-      NS_RELEASE(optionContent);
       rv = NS_OK;
     }
-    NS_RELEASE(stateManager);
   }
   return rv;
 }
@@ -2680,10 +2609,9 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         }
       }
       // turn back on focus events
-      nsIEventStateManager *stateManager;
-      if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+      nsCOMPtr<nsIEventStateManager> stateManager;
+      if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
         stateManager->ConsumeFocusEvents(PR_TRUE);
-        NS_RELEASE(stateManager);
       }
     } else {
       mSelectedIndex    = curIndex;
@@ -2696,8 +2624,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
-      nsIEventStateManager *stateManager;
-      if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
+      nsCOMPtr<nsIEventStateManager> stateManager;
+      if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
         nsIFrame * frame;
         stateManager->GetEventTarget(&frame);
         nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
@@ -2709,7 +2637,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
           nsIFrame * parentFrame;
           frame->GetParent(&parentFrame);
           stateManager->GetEventTarget(&frame);
-          nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+          listFrame = do_QueryInterface(frame);
           if (listFrame) {
             if (!IsClickingInCombobox(aMouseEvent)) {
               return NS_OK;
@@ -2729,8 +2657,6 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         if (isDroppedDown) {
           CaptureMouseEvents(mPresContext, PR_FALSE);
         }
-
-        NS_RELEASE(stateManager);
       }
     }
   }
@@ -2860,9 +2786,9 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
     //printf("%c %d\n", code, code);
 
     nsresult rv = NS_ERROR_FAILURE; 
-    nsIDOMHTMLCollection* options = GetOptions(mContent);
+    nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
 
-    if (nsnull != options) {
+    if (options) {
       PRUint32 numOptions;
       options->GetLength(&numOptions);
 
@@ -2917,8 +2843,8 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
           PRInt32 startedAtIndex    = selectedIndex;
           PRBool  loopedAround  = PR_FALSE;
           while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
-            nsIDOMHTMLOptionElement* optionElement = GetOption(*options, selectedIndex);
-            if (nsnull != optionElement) {
+            nsCOMPtr<nsIDOMHTMLOptionElement>optionElement = getter_AddRefs(GetOption(*options, selectedIndex));
+            if (optionElement) {
               nsAutoString text;
               if (NS_OK == optionElement->GetText(text)) {
                 char * buf = text.ToNewCString();
@@ -2934,7 +2860,6 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
                   break;
                 }
               }
-              NS_RELEASE(optionElement);
             }
             selectedIndex++;
             if (selectedIndex == (PRInt32)numOptions) {
@@ -2945,7 +2870,6 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
           } // while
         }
       }
-      NS_RELEASE(options);
     }
   }
 

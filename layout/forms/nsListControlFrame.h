@@ -124,6 +124,7 @@ public:
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
+  NS_IMETHOD SetPresState(nsIPresState * aState) { mPresState = aState; return NS_OK;}
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -166,7 +167,6 @@ protected:
 
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
-  nsresult   CountAllChild(nsIDOMNode * aNode, PRInt32& aCount);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
 
@@ -244,6 +244,8 @@ protected:
   PRBool       mHasBeenInitialized;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
+
+  nsCOMPtr<nsIPresState> mPresState;        // Need cache state when list is null
 
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
