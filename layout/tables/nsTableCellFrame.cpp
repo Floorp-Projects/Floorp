@@ -410,6 +410,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 #endif
 
   nsresult rv = NS_OK;
+  // this should probably be cached somewhere
+  nsCompatibility compatMode;
+  aPresContext.GetCompatibilityMode(&compatMode);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -438,15 +441,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   nsMargin borderPadding;
-  GetCellBorder (borderPadding, tableFrame);
-  nsMargin padding;
-  spacing->GetPadding(padding);
-  borderPadding += padding;
-
-  nscoord topInset = borderPadding.top;
-  nscoord rightInset = borderPadding.right;
+  spacing->GetPadding(borderPadding);
+  nsMargin border;
+  GetCellBorder(border, tableFrame);
+  if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !GetContentEmpty()) {
+    borderPadding += border;
+  }
+  
+  nscoord topInset    = borderPadding.top;
+  nscoord rightInset  = borderPadding.right;
   nscoord bottomInset = borderPadding.bottom;
-  nscoord leftInset = borderPadding.left;
+  nscoord leftInset   = borderPadding.left;
 
   // reduce available space by insets, if we're in a constrained situation
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)
@@ -503,40 +508,59 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   DebugCheckChildSize(firstKid, kidSize, availSize);
 #endif
 
-  // Nav4 hack for 0 dimensioned cells.  
-  // Empty cells are assigned a width and height of 4px
+  // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
   // see testcase "cellHeights.html"
-  if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) 
-  {
-    if ((0==kidSize.width) && (0==kidSize.height))
+  if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
+    if ((0 == kidSize.width) || (0 == kidSize.height)) {
+    //if ((0 == kidSize.width) && (0 == kidSize.height)) { // XXX why was this &&
       SetContentEmpty(PR_TRUE);
-    else
+      // need to reduce the insets by border if the cell is empty
+      leftInset   -= border.left;
+      rightInset  -= border.right;
+      topInset    -= border.top;
+      bottomInset -= border.bottom;
+    }
+    else 
       SetContentEmpty(PR_FALSE);
   }
-  if (0==kidSize.width)
-  {
-    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) 
-    {
-      float p2t;
-      aPresContext.GetScaledPixelsToTwips(&p2t);
-      kidSize.width=NSIntPixelsToTwips(4, p2t);
-      if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-            pMaxElementSize->width=NSIntPixelsToTwips(4, p2t);
-      if (gsDebug) printf ("setting initial child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
+  if (0 == kidSize.width) {
+    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
+      const nsStylePosition* pos;
+      GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
+      if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
+          (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        PRInt32 pixWidth = (eCompatibility_Standard == compatMode) ? 1 : 3;
+        kidSize.width = NSIntPixelsToTwips(pixWidth, p2t);
+        if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->width))
+          pMaxElementSize->width = kidSize.width;
+        if (eCompatibility_NavQuirks == compatMode) {
+          if (gsDebug) printf ("setting initial child width from 0 to %d for nav4 compatibility\n", kidSize.width);
+        } 
+      }
     }
     else  // empty content has to be forced to the assigned width for resize or incremental reflow
       kidSize.width = kidReflowState.availableWidth;
   }
-  if (0==kidSize.height)
-  {
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
-    kidSize.height=NSIntPixelsToTwips(4, p2t);
-    if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-          pMaxElementSize->height=NSIntPixelsToTwips(4, p2t);
-    if (gsDebug) printf ("setting child height from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
+  if (0 == kidSize.height) {
+    const nsStylePosition* pos;
+    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
+    if ((pos->mHeight.GetUnit() != eStyleUnit_Coord) &&
+        (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
+      float p2t;
+      aPresContext.GetScaledPixelsToTwips(&p2t);
+      // Standard mode should probably be 0 pixels high instead of 1
+      PRInt32 pixHeight = (eCompatibility_Standard == compatMode) ? 1 : 2;
+      kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
+      if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->height))
+        pMaxElementSize->height = kidSize.height;
+      if (eCompatibility_NavQuirks == compatMode) {
+        if (gsDebug) printf ("setting child height from 0 to %d for nav4 compatibility\n", kidSize.height);
+      }
+    }
   }
-  // end Nav4 hack for 0 dimensioned cells
+  // end 0 dimensioned cells
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
@@ -558,12 +582,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     
   // Return our size and our result
 
-  // first, compute the height
-  // the height can be set w/o being restricted by aMaxSize.height
-  nscoord cellHeight = kidSize.height;
-  // NAV4 compatibility: only add insets if cell content was not 0 height
-  if (0!=kidSize.height)
-    cellHeight += topInset + bottomInset;
+  // first, compute the height which can be set w/o being restricted by aMaxSize.height
+  nscoord cellHeight = kidSize.height + topInset + bottomInset;
   if (PR_TRUE==gsDebugNT)
     printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
              this, cellHeight, kidSize.height, topInset, bottomInset);
