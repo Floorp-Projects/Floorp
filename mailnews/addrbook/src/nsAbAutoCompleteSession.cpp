@@ -33,6 +33,7 @@
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
 #include "nsIPref.h"
+#include "prmem.h"
 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);

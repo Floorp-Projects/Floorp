@@ -25,7 +25,6 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "nsRect.h"
 
 // a memory area that can be rendered to
 

@@ -55,6 +55,7 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "nsEscape.h"
+#include "xp_core.h"
 
 #include "prprf.h"
 

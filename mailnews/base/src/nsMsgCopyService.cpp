@@ -25,6 +25,7 @@
 #include "nsVoidArray.h"
 #include "nsMsgKeyArray.h"
 #include "nspr.h"
+#include "nsIFileSpec.h"
 
 // ******************** nsCopySource ******************
 // 

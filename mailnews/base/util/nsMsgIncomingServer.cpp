@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsEscape.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgDBCID.h"

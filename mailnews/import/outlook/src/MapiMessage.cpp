@@ -21,6 +21,7 @@
  */
  
 #include "nscore.h"
+#include <time.h>
 #include "nsString.h"
 #include "nsFileSpec.h"
 

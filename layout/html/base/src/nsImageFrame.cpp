@@ -65,6 +65,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsGUIEvent.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"

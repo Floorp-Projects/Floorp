@@ -51,6 +51,7 @@
 #include "nsIURI.h"
 #include "nsISmtpUrl.h"
 #include "nsIChannel.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);

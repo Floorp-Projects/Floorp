@@ -23,7 +23,6 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 #include "nsrootidl.idl"
-#include "nsIFileSpec.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"

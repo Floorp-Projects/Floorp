@@ -26,6 +26,7 @@
 #define __nsSmtpDataSource_h
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsMsgRDFUtils.h"

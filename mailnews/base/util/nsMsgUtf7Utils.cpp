@@ -24,6 +24,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager.h"
+#include "prmem.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 

@@ -21,7 +21,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
+
+interface nsIFileSpec;
 
 %{C++
 #define NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX \

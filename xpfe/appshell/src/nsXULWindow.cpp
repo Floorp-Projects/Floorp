@@ -55,6 +55,7 @@
 #include "nsIPref.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWindowWatcher.h"
+#include "nsIURI.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"

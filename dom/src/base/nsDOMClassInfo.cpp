@@ -41,6 +41,8 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 
 // Window scriptable helper includes

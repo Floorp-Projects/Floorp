@@ -36,6 +36,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFLiteral.h"
+#include "nsIServiceManager.h"
 
 #include "nsMsgUtf7Utils.h"
 #include "nsMsgUtils.h"

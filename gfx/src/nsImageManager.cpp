@@ -26,6 +26,7 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
+#include "nsIServiceManager.h"
 
 #include "libimg.h"
 

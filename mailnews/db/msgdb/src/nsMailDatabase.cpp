@@ -30,6 +30,9 @@
 #include "nsFileSpec.h"
 #include "nsMsgOfflineImapOperation.h"
 #include "nsMsgFolderFlags.h"
+#include "prlog.h"
+#include "prprf.h"
+#include "nsIFileSpec.h"
 
 const char *kOfflineOpsScope = "ns:msg:db:row:scope:ops:all";	// scope for all offine ops table
 const char *kOfflineOpsTableKind = "ns:msg:db:table:kind:ops";

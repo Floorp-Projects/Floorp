@@ -50,6 +50,7 @@
 // Needed to fetch scrollbar prefs for image documents that are iframes/frameset frames
 #include "nsIScrollable.h"
 #include "nsWeakReference.h"
+#include "nsRect.h"
 
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);

@@ -25,6 +25,8 @@
 #include "nsCOMPtr.h"
 #include <stdio.h>
 #include "nscore.h"
+#include "prprf.h"
+#include "nsEscape.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "comi18n.h"

@@ -26,6 +26,8 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
+#include "nsEscape.h"
+#include "nsIFileSpec.h"
 
 // stuff for temporary root folder hack
 #include "nsIMsgAccountManager.h"

@@ -23,6 +23,10 @@
 #include "nsrootidl.idl"
 #include "nsISupports.idl"
 
+%{C++
+#include "nsString.h"
+%}
+      
 [ptr] native nsCString(nsCString);
 /* [ptr] native nsString(nsString); */
 

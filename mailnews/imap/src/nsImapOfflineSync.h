@@ -29,6 +29,7 @@
 #include "nsIMsgOfflineImapOperation.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h"
+#include "nsIFileSpec.h"
 
 class nsImapOfflineSync : public nsIUrlListener, public nsIMsgCopyServiceListener {
 public:												// set to one folder to playback one folder only

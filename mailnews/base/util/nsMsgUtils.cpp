@@ -26,6 +26,7 @@
 #include "nsMsgUtils.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsEscape.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIImapUrl.h"
@@ -36,6 +37,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
+#include "prprf.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 

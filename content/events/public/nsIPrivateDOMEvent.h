@@ -23,7 +23,7 @@
 #ifndef nsIPrivateDOMEvent_h__
 #define nsIPrivateDOMEvent_h__
 
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsISupports.h"
 
 class nsIPresContext;

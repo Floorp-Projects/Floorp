@@ -24,6 +24,7 @@
 #define nsITreeFrame_h__
 
 #include "nsISupports.h"
+class nsIDOMElement;
 
 #define BLAH_IID_STR "06b8921c-1dd2-11b2-96f2-d5925c3d48ca"
 

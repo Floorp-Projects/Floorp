@@ -46,6 +46,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "plbase64.h"
 #include "nsIMimeStreamConverter.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);

@@ -53,6 +53,7 @@
 #include "nsXBLService.h"
 #include "nsIXBLInsertionPoint.h"
 #include "nsIXPConnect.h"
+#include "nsIScriptContext.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"

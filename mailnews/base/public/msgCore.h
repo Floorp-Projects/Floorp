@@ -27,20 +27,10 @@
 #define msgCore_h__
 
 #include "nscore.h"
-#include "xp_core.h"
-#include "nsCRT.h"
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
 
+#include "nsCRT.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-
-#include "nsCRT.h"
-#include "nsEscape.h"
-#include "nsFileSpec.h"
-
-#include "nsTime.h"
 
 class nsIMsgDBHdr;
 class nsIMsgFolder;

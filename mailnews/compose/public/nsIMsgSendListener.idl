@@ -21,7 +21,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
+
+interface nsIFileSpec;
 
 [scriptable, uuid(ED3D3227-2803-11D3-82B7-444553540002)]
 interface nsIMsgSendListener : nsISupports {

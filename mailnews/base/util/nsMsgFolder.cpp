@@ -32,6 +32,7 @@
 #include "nsAutoLock.h"
 #include "nsMemory.h"
 #include "nsIStringBundle.h"
+#include "nsEscape.h"
 
 #include "nsMsgFolder.h"
 #include "nsMsgFolderFlags.h"

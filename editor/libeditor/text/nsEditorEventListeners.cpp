@@ -31,6 +31,7 @@
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
 #include "nsISelection.h"
+#include "nsISelectionController.h"
 #include "nsIDOMCharacterData.h"
 #include "nsISupportsArray.h"
 #include "nsIStringStream.h"

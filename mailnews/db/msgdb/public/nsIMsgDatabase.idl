@@ -22,7 +22,6 @@
 
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
-#include "nsIFileSpec.idl"
 #include "nsIDBChangeAnnouncer.idl"
 #include "nsIMsgDBView.idl"
 
@@ -30,6 +29,7 @@
 #include "nsMsgKeyArray.h"
 %}
 
+interface nsIFileSpec;
 interface nsIDBChangeListener;
 interface nsIMsgDBHdr;
 interface nsISimpleEnumerator;

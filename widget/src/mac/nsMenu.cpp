@@ -36,6 +36,7 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsIPresContext.h"
+#include "nsGUIEvent.h"
 
 #include "nsString.h"
 #include "nsStringUtil.h"

@@ -24,6 +24,7 @@
 
 %{ C++
 #include "nsIPresContext.h"
+#include "nsEvent.h"
 %}
 
 [ptr] native nsIPresContext(nsIPresContext);

@@ -37,6 +37,7 @@
 #include "nsPoint.h"
 #include "nsSVGAtoms.h"
 #include "nsIDeviceContext.h"
+#include "nsGUIEvent.h"
 
 #include "nsIReflowCommand.h"
 extern nsresult

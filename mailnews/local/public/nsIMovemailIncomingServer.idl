@@ -22,7 +22,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 [scriptable, uuid(0dbfa510-1dd2-11b2-9f0e-849c5a241ab6)]
 interface nsIMovemailIncomingServer : nsISupports {

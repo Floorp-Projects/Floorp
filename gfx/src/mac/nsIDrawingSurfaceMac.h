@@ -25,6 +25,7 @@
 
 #include "nsIDrawingSurface.h"
 #include "nsIWidget.h"
+#include "nsIRenderingContext.h"
 #include <QDOffscreen.h>
 
 class GraphicsState;

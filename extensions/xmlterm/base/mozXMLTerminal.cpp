@@ -35,9 +35,12 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIObserver.h"
+#include "nsISelectionController.h"
 
 #include "nsIPresContext.h"
 #include "nsICaret.h"
+#include "nsRect.h"
+#include "nsIURI.h"
 
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"

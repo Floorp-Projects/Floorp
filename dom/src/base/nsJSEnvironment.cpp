@@ -52,6 +52,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
+#include "nsGUIEvent.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIThread.h"
 

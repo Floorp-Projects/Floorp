@@ -26,6 +26,7 @@
 #include "nsIPref.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsEscape.h"
 #include "nsNetUtil.h"
 
 #include "nsSmtpService.h"

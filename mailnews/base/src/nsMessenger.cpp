@@ -32,6 +32,7 @@
 #include "nsEscape.h"
 #include "nsXPIDLString.h"
 #include "nsTextFormatter.h"
+#include "nsIFileSpec.h"
 #ifdef XP_MAC
 #include "nsIAppleFileDecoder.h"
 #endif

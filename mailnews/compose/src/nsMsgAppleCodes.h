@@ -87,7 +87,7 @@ typedef struct myFInfo			/* the mac FInfo structure for the cross platform. */
 
 }	myFInfo;
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 /*
 **	string utils.
 */
@@ -111,7 +111,7 @@ int  ap_decode_file_infor(appledouble_decode_object* p_ap_decode_obj);
 int  ap_decode_process_header(appledouble_decode_object* p_ap_decode_obj, PRBool firstime);
 int  ap_decode_process_data(  appledouble_decode_object* p_ap_decode_obj, PRBool firstime);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
  
 #ifdef XP_MAC
 #if PRAGMA_STRUCT_ALIGN

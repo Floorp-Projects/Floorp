@@ -83,6 +83,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCompactor.h"
 #include "nsNetCID.h"
+#include "nsEscape.h"
 #include "nsLocalStringBundle.h"
 
 

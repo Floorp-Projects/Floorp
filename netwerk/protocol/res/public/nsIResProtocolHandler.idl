@@ -26,7 +26,6 @@ interface nsISimpleEnumerator;
 interface nsISupportsArray;
 
 %{C++
-#include "nsVoidArray.h"
 
 #define NS_RESPROTOCOLHANDLER_CID                    \
 { /* e64f152a-9f07-11d3-8cda-0060b0fc14a3 */         \

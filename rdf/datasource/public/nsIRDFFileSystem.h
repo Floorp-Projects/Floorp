@@ -25,9 +25,9 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "nsVoidArray.h"
 #include "nsIRDFNode.h"
 
+class nsVoidArray;
 
 
 #define NS_IRDFFILESYSTEMDATAOURCE_IID \

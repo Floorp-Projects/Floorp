@@ -28,6 +28,7 @@
 #include "prmem.h"
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
+#include "nsIServiceManager.h"
 
 #define image_behaviorPref "network.image.imageBehavior"
 #define image_warningPref "network.image.warnAboutImages"

@@ -34,7 +34,6 @@
 #include "nsIFrame.h"
 #include "nsIFocusTracker.h"   
 #include "nsISelection.h"
-#include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleContext.h"

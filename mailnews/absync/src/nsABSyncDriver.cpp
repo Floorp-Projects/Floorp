@@ -26,6 +26,7 @@
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "prmem.h"
+#include "nsString.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)
 //NS_IMPL_ISUPPORTS1(nsAbSyncDriver, nsIAbSyncDriver)

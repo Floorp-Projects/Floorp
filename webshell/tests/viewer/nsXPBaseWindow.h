@@ -33,6 +33,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIWidget.h"
 
 class nsViewerApp;
 class nsIPresShell;

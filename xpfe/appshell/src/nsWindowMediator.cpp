@@ -27,6 +27,7 @@
 #include "nsVoidArray.h"
 #include "rdf.h"
 #include "nsIBaseWindow.h"
+#include "nsIWidget.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"

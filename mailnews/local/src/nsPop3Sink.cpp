@@ -28,6 +28,7 @@
 #include "nscore.h"
 #include <stdio.h>
 #include <time.h>
+#include "nsIFileSpec.h"
 #include "nsParseMailbox.h"
 #include "nsIFolder.h"
 #include "nsIMsgIncomingServer.h"

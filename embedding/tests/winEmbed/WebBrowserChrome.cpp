@@ -21,6 +21,7 @@
 
 // Mozilla Includes
 #include "nsIGenericFactory.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"

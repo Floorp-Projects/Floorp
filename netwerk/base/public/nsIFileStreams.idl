@@ -22,7 +22,8 @@
 
 #include "nsIInputStream.idl"
 #include "nsIOutputStream.idl"
-#include "nsILocalFile.idl"
+
+interface nsIFile;
 
 [scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileInputStream : nsIInputStream
@@ -115,12 +116,9 @@ interface nsIBufferedOutputStream : nsIOutputStream
 ////////////////////////////////////////////////////////////////////////////////
 // move to nsNetUtil.h later...
 
-#include "nsILoadGroup.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIFileChannel.h"
-#include "nsILocalFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "prio.h"       // for read/write flags, permissions, etc.

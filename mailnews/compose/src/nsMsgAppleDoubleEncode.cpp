@@ -39,6 +39,7 @@
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
 #include "nsMimeTypes.h"
+#include "prmem.h"
 
 #ifdef XP_MAC
 

@@ -37,6 +37,7 @@
 #include "nsMsgSearchValue.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgWindow.h"
+#include "nsIFileSpec.h"
 
 static NS_DEFINE_CID(kValidityManagerCID, NS_MSGSEARCHVALIDITYMANAGER_CID);
 

@@ -49,6 +49,7 @@
 #include "nsIBaseWindow.h"
 
 #include "nsIDOMEventListener.h"
+#include "nsGUIEvent.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"

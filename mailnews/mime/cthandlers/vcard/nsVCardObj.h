@@ -115,6 +115,11 @@ they will use an appropriately defined local type |vwchar_t|.
         typedef wchar_t vwchar_t;
 #endif
 
+#include "nsFileSpec.h"
+#include "xp_core.h"
+
+class nsOutputFileStream;
+
 XP_BEGIN_PROTOS
 
 #define VC7bitProp				"7bit"

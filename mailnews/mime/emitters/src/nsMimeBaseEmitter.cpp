@@ -45,6 +45,7 @@
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
 #include "prlog.h"
+#include "prprf.h"
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 

@@ -23,7 +23,6 @@
 #include "nsrootidl.idl"
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
-#include "nsIFileSpec.idl"
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsISupportsArray.idl"
 
@@ -34,6 +33,7 @@ interface nsIMsgDBHdr;
 
 interface nsITransactionManager;
 interface nsIMsgWindow;
+interface nsIFileSpec;
 
 [scriptable, uuid(bce41600-28df-11d3-abf7-00805f8ac968)]
 interface nsIMsgCopyService : nsISupports {

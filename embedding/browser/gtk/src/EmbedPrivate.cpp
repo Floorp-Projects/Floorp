@@ -21,6 +21,7 @@
 
 #include <nsIDocShell.h>
 #include <nsIWebProgress.h>
+#include "nsIWidget.h"
 
 // for NS_APPSHELL_CID
 #include <nsWidgetsCID.h>

@@ -44,6 +44,7 @@
 #include "nsStyleConsts.h"
 #include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
+#include "nsGUIEvent.h"
 #include "nsIAccessibilityService.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks

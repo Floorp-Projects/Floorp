@@ -30,6 +30,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDragSession.h"
 #include "nsIWidget.h"
+#include "nsHashtable.h"
 
 #ifdef USE_IMG2
 #include "imgIDecoderObserver.h"

@@ -26,6 +26,7 @@
 #include "nsCacheService.h"
 #include "nsICacheService.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsIPref.h"

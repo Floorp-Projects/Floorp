@@ -24,7 +24,6 @@
 #include "nsReadableUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"

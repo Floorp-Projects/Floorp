@@ -29,6 +29,10 @@ interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 interface nsIWebBrowserChrome;
 
+%{C++
+#include "jspubtd.h"
+%}
+
 [ptr] native jsvalptr(jsval);
 
 [uuid(d535806e-afaf-47d1-8d89-783ad088c62a)]

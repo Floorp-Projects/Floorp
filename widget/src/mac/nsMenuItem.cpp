@@ -32,6 +32,7 @@
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
 #include "nsDynamicMDEF.h"
+#include "nsGUIEvent.h"
 
 #include "nsStringUtil.h"
 

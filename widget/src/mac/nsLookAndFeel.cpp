@@ -24,6 +24,7 @@
 #include "nsXPLookAndFeel.h"
 #include "nsCarbonHelpers.h"
 #include "nsIInternetConfigService.h"
+#include "nsIServiceManager.h"
 
  
 //-------------------------------------------------------------------------

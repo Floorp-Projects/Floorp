@@ -65,6 +65,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
+#include "nsGUIEvent.h"
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"

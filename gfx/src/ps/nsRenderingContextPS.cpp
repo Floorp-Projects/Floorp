@@ -27,6 +27,7 @@
 #include "nsDeviceContextPS.h"
 #include "nsPostScriptObj.h"  
 #include "nsIRegion.h"      
+#include "nsIImage.h"      
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 

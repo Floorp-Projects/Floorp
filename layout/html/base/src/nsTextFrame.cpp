@@ -69,6 +69,7 @@
 #include "nsIAccessible.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
+#include "nsGUIEvent.h"
 
 #ifdef IBMBIDI
 #include "nsBidiFrames.h"

@@ -24,6 +24,8 @@
 #include "nsMsgCompUtils.h"
 #include "nsIPref.h"
 #include "prmem.h"
+#include "nsEscape.h"
+#include "nsIFileSpec.h"
 #include "nsMsgSend.h"
 #include "nsIIOService.h"
 #include "nsIHttpProtocolHandler.h"

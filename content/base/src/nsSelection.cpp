@@ -40,6 +40,7 @@
 #include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsISupportsArray.h"
+#include "nsGUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"

@@ -37,6 +37,7 @@
 
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"

@@ -59,6 +59,7 @@
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "prproces.h"
+#include "nsISimpleEnumerator.h"
 
 // we need these for statfs()
 

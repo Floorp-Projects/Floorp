@@ -52,6 +52,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIMsgLocalMailFolder.h"
 #include "nsMsgUtils.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);

@@ -27,6 +27,8 @@
 #include "nsNewsSummarySpec.h"
 #include "nsMsgKeySet.h"
 #include "nsCOMPtr.h"
+#include "prlog.h"
+#include "nsIFileSpec.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_NEWS_DATABASE 1

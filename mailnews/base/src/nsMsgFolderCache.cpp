@@ -28,6 +28,7 @@
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
 #include "nsFileStream.h"
+#include "nsIFileSpec.h"
 
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"

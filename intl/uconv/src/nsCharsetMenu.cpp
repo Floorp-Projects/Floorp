@@ -40,6 +40,8 @@
 #include "nsIPref.h"
 #include "nsICurrentCharsetListener.h"
 #include "nsQuickSort.h"
+#include "nsIObserver.h"
+#include "nsVoidArray.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]

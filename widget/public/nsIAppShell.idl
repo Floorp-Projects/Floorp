@@ -32,7 +32,7 @@ native int(int);
 [ref] native voidPtrRef(void *);
 
 %{ C++
-#include "nsIEventQueue.h"
+class nsIEventQueue;
 
 /**
  * Flags for the getNativeData function.

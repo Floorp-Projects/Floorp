@@ -37,6 +37,7 @@
 #include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 #include "nsTime.h"
+#include "nsFileSpec.h"
 
 
 #include "nsIMsgFilterList.h"

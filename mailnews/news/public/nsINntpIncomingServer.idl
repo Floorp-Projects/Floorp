@@ -21,8 +21,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
+interface nsIFileSpec;
 interface nsIMsgNewsFolder;
 interface nsINNTPProtocol;
 interface nsIURI;

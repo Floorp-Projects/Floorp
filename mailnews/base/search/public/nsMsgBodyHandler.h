@@ -3,6 +3,7 @@
 #define __nsMsgBodyHandler_h
 
 #include "nsIMsgSearchScopeTerm.h"
+#include "nsIFileSpec.h"
 
 //---------------------------------------------------------------------------
 // MSG_BodyHandler: used to retrive lines from POP and IMAP offline messages.

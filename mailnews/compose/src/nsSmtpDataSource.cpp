@@ -24,6 +24,7 @@
 #include "nsXPIDLString.h"
 #include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
+#include "nsIServiceManager.h"
 
 #include "nsISmtpService.h"
 #include "nsISmtpServer.h"

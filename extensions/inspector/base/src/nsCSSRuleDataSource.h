@@ -37,6 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsHashtable.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"

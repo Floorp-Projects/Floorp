@@ -30,6 +30,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"

@@ -86,6 +86,7 @@
 #include "nsInternetCiter.h"
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"
+#include "nsGUIEvent.h"
 
 // netwerk
 #include "nsIURI.h"

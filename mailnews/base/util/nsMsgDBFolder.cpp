@@ -22,6 +22,7 @@
  */
 
 #include "msgCore.h"
+#include "xp_core.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"

@@ -4,8 +4,7 @@ interface nsIDOMDocument;
 
 
 %{ C++
-#include "nsIWidget.h"
-
+class nsIWidget;
 class nsIDeviceContext;
 struct nsRect;
 %}

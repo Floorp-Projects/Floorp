@@ -34,6 +34,7 @@
 #include "nsITextServicesDocument.h"
 #include "nsVoidArray.h"
 #include "nsTSDNotifier.h"
+#include "nsISelectionController.h"
 
 /** implementation of a text services object.
  *

@@ -23,6 +23,7 @@
 #define nsBlockReflowContext_h___
 
 #include "nsIFrame.h"
+#include "nsHTMLReflowState.h"
 
 class nsBlockFrame;
 class nsIFrame;

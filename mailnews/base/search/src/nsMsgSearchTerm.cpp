@@ -39,6 +39,7 @@
 #include "nsMsgI18N.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
+#include "nsTime.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil

@@ -34,6 +34,8 @@
 
 #include "mozIXMLTermShell.h"
 
+class nsISelectionController;
+
 /* {0eb82b20-43a2-11d3-8e76-006008948af5} */
 #define MOZIXMLTERMINAL_IID_STR "0eb82b20-43a2-11d3-8e76-006008948af5"
 #define MOZIXMLTERMINAL_IID \

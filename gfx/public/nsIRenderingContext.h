@@ -39,6 +39,7 @@ class nsIRegion;
 
 struct nsFont;
 struct nsPoint;
+struct nsPathPoint;
 struct nsRect;
 #ifdef MOZ_MATHML
 struct nsBoundingMetrics;
@@ -47,7 +48,6 @@ struct nsBoundingMetrics;
 
 #ifdef USE_IMG2
 /* gfx2 */
-#include "gfxtypes.h"
 class imgIContainer;
 #endif
 

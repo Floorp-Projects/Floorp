@@ -53,6 +53,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableView.h"
 #include "nsIFrameManager.h"
+#include "nsGUIEvent.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 

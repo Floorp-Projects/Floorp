@@ -26,6 +26,7 @@
 
 
 #include "prthread.h"
+#include "prprf.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"

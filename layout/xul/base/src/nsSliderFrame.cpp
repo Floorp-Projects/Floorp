@@ -67,6 +67,7 @@
 #include "nsSprocketLayout.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsGUIEvent.h"
 
 #define DEBUG_SLIDER PR_FALSE
 

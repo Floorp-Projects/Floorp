@@ -44,6 +44,8 @@
 #include "nsHankakuToZenkakuCID.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "prmem.h"
+#include "nsFileSpec.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);

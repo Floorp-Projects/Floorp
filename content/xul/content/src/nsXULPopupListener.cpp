@@ -31,6 +31,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
@@ -44,6 +45,7 @@
 #include "nsContentCID.h"
 
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"

@@ -21,6 +21,7 @@
  */
 
 #include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsDOMParser.h"

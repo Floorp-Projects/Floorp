@@ -39,6 +39,7 @@
 #include "nsIDOMEvent.h"
 #include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
+#include "nsGUIEvent.h"
 
 
 class nsHTMLButtonElement : public nsGenericHTMLContainerFormElement,

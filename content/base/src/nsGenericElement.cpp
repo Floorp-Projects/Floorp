@@ -42,6 +42,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsStyleConsts.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsString.h"

@@ -34,6 +34,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "prmem.h"
   
   // For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);

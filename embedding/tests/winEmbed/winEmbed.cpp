@@ -43,6 +43,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIProfileChangeStatus.h"
+#include "nsIURI.h"
 
 // Local header files
 #include "winEmbed.h"

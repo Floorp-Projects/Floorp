@@ -40,6 +40,7 @@
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIHTMLFragmentContentSink.h"
+#include "nsIEnumerator.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"

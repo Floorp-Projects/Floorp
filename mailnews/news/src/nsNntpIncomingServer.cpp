@@ -25,6 +25,7 @@
 
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
+#include "nsEscape.h"
 #include "nsIPref.h"
 #include "nsIMsgNewsFolder.h"
 #include "nsIFolder.h"
@@ -36,6 +37,7 @@
 #include "nsNNTPProtocol.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsInt64.h"
 #include "nsMsgUtils.h"
 
 #define INVALID_VERSION         0

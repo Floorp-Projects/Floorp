@@ -22,9 +22,11 @@
  */
  
 #include "nsISupports.idl"
-#include "nsIMIMEInfo.idl"
-#include "nsIEnumerator.idl"
-#include "nsIFile.idl"
+
+interface nsIMIMEInfo;
+interface nsIFile;
+interface nsISimpleEnumerator;
+
 %{C++
 #define NS_XMLMIMEDATASOURCE_CID                           \
 { /* {41654483-fa5b-11d3-a12b-a7aef7a2f2fc} */         \

@@ -31,6 +31,7 @@
 #include "mdb.h"
 #include "nsMsgKeyArray.h"
 #include "nsIDBFolderInfo.h"
+#include <time.h>
 
 class nsMsgDatabase;
 

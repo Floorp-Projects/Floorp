@@ -22,7 +22,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURL.idl"
+
+interface nsIURL;
 
 [scriptable, uuid(B148EED1-236D-11d3-B35C-00A0CC3C1CDE)]
 interface nsISound : nsISupports

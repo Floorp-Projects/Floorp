@@ -35,6 +35,7 @@
 #include "nsIRDFResource.h"
 #include "nsRDFCID.h"
 #include "nsIMsgNewsFolder.h"
+#include "nsIFileSpec.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 

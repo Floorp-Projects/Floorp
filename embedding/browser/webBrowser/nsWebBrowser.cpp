@@ -46,6 +46,8 @@
 #include "nsIPresShell.h"
 #include "nsIGlobalHistory.h"
 #include "nsIDocShellHistory.h"
+#include "nsIURIContentListener.h"
+#include "nsGUIEvent.h"
 
 // for painting the background window
 #include "nsIDeviceContext.h"

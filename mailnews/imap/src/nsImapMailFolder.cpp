@@ -23,6 +23,7 @@
 
 #include "msgCore.h"
 
+#include "xp_core.h"
 #include "nsMsgImapCID.h"
 #include "nsImapMailFolder.h"
 #include "nsIEnumerator.h"

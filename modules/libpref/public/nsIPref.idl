@@ -20,13 +20,14 @@
  * Contributor(s): 
  */
 
+#include "nsISupports.idl"
+
+interface nsILocalFile;
+interface nsIObserver;
+interface nsIFileSpec;
+
 #include "nsIPrefService.idl"
-#include "nsIFile.idl"
-#include "nsIFileSpec.idl"
-#include "nsILocalFile.idl"
-#include "nsIObserver.idl"
 #include "nsIPrefBranch.idl"
-#include "nsIPrefBranchInternal.idl"
 
 /*
  * This entire interface is depricated and should not be used.

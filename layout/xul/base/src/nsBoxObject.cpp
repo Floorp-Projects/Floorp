@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIView.h"
+#include "nsIWidget.h"
 #include "nsIDOMXULElement.h"
 
 // Static IIDs/CIDs. Try to minimize these.

@@ -27,6 +27,7 @@
 
 class nsIImageMap;
 class nsString;
+class nsIDOMNodeList;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLMapElement;

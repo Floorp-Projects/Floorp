@@ -23,6 +23,7 @@
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
 #include "nsCookie.h"
 #include "nsPermission.h"
 #include "nsCookieManager.h"

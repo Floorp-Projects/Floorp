@@ -24,6 +24,7 @@
 #include "nsFileSpecWithUIImpl.h"
 
 #include "nsWidgetsCID.h"
+#include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"

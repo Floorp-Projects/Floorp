@@ -43,7 +43,7 @@ nsMsgThread::nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table)
 
 	if (table && db)
 	{
-		table->GetMetaRow(db->GetEnv(), nil, nil, &m_metaRow);
+		table->GetMetaRow(db->GetEnv(), nsnull, nsnull, &m_metaRow);
 		InitCachedValues();
 	}
 }

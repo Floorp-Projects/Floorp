@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 interface nsIFileSpec;
 

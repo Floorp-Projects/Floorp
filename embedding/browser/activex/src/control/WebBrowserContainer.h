@@ -28,6 +28,7 @@
 #include "nsIContextMenuListener.h"
 #include "nsICommandHandler.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIURIContentListener.h"
 #include "nsWeakReference.h"
 
 

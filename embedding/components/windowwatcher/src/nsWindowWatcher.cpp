@@ -42,6 +42,7 @@
 #include "nsIDOMScreen.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIScriptContext.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIGenericFactory.h"

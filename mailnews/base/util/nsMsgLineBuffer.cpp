@@ -22,6 +22,7 @@
 
 #include "msgCore.h"
 #include "prlog.h"
+#include "prmem.h"
 #include "nsMsgLineBuffer.h"
 
 #include "nsIInputStream.h" // used by nsMsgLineStreamBuffer

@@ -37,6 +37,9 @@
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
 #include "xp_file.h"
+#include "prprf.h"
+#include "nsTime.h"
+#include "nsIFileSpec.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"

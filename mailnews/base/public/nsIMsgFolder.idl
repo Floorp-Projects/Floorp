@@ -24,7 +24,6 @@
 #include "nsIFolder.idl"
 #include "nsIMsgThread.idl"
 #include "nsIMsgIncomingServer.idl"
-#include "nsIFileSpec.idl"
 #include "nsISupportsArray.idl"
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsIUrlListener.idl"
@@ -45,6 +44,9 @@ interface nsIMsgFilterList;
 interface nsIMsgFolderCacheElement;
 interface nsAutoString;
 interface nsITransport;
+interface nsIFileSpec;
+interface nsIOutputStream;
+interface nsIInputStream;
 
 typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.

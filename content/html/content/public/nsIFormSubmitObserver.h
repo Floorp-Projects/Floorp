@@ -32,10 +32,10 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIURI.h"
 
-class nsString;
+class nsIContent;
+class nsIDOMWindowInternal;
+class nsIURI;
 
 // {a6cf9106-15b3-11d2-932e-00805f8add32}
 #define NS_IFORMSUBMITOBSERVER_IID      \

@@ -30,6 +30,7 @@
 #include "nsIRDFService.h"
 #include "nsSubscribeDataSource.h"
 #include "nsIRDFResource.h"
+#include "nsString.h"
 
 typedef struct _subscribeTreeNode {
   char *name;

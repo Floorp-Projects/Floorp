@@ -28,6 +28,7 @@
 #include "nsWeakReference.h"
 #include "nsMsgCompFields.h"
 #include "nsIOutputStream.h"
+#include "nsIDocumentStateListener.h"
 #include "nsIMsgQuote.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"

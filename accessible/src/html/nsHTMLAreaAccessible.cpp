@@ -24,11 +24,13 @@
 #include "nsGenericAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #include "nsAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsGUIEvent.h"
 
 
 // --- area -----

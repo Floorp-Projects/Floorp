@@ -23,6 +23,7 @@
 #include "msgCore.h"
 #include "mimei.h"
 #include "prmem.h"
+#include "prlog.h"
 #include "plstr.h"
 #include "mimebuf.h"
 #include "mimemoz2.h"

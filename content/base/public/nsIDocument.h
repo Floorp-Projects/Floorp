@@ -24,8 +24,9 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsAWritableString.h"
+#include "nsString.h"
 
 class nsIAtom;
 class nsIArena;

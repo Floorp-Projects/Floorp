@@ -40,6 +40,7 @@
 #include "nsWeakReference.h"
 #include "nsIMsgFilterList.h"
 #include "nsIUrlListener.h"
+#include "nsIFileSpec.h"
 
  /* 
   * MsgFolder

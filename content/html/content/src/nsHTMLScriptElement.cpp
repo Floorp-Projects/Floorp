@@ -33,6 +33,7 @@
 #include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIScriptElement.h"
+#include "nsGUIEvent.h"
 
 class nsHTMLScriptElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLScriptElement,

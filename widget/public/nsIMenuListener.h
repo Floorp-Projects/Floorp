@@ -23,8 +23,10 @@
 #ifndef nsIMenuListener_h__
 #define nsIMenuListener_h__
 
-#include "nsGUIEvent.h"
 #include "nsISupports.h"
+#include "nsEvent.h"
+
+class nsIWidget;
 
 // {f2e79602-1700-11d5-bb6f-90f240fe493c}
 #define NS_IMENULISTENER_IID      \

@@ -32,6 +32,8 @@
 #include "nsMsgSearchBoolExpression.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "prprf.h"
+
 // This stuff lives in the base class because the IMAP search syntax 
 // is used by the Dredd SEARCH command as well as IMAP itself
 

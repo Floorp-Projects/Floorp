@@ -47,6 +47,7 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
+#include "prmem.h"
 #include "plbase64.h"
 #include "nsEscape.h"
 #include "nsMsgUtils.h"

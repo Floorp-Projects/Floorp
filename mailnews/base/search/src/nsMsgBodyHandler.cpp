@@ -27,6 +27,7 @@
 #include "nsMsgSearchTerm.h"
 #include "nsFileStream.h"
 #include "nsIFileStream.h"
+#include "nsIFileSpec.h"
 
 nsMsgBodyHandler::nsMsgBodyHandler (nsIMsgSearchScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase * db)
 {

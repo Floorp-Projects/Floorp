@@ -31,6 +31,7 @@
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsILocalFile.h"
 
 #ifdef XP_MAC
 extern "C" void GC_gcollect(void);

@@ -37,6 +37,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
+#include "prinrval.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 

@@ -28,6 +28,7 @@
 #include "nsIMsgFilterList.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsIFileSpec.h"
 
 const PRInt16 kFileVersion = 8;
 const PRInt16 k60Beta1Version = 7;

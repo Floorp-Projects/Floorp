@@ -46,6 +46,8 @@
 #include "plstr.h"
 #include "prenv.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
+#include "nsGUIEvent.h"
 
 // Needed for Dialog GUI
 #include "nsICheckButton.h"

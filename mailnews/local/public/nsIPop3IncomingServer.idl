@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 [scriptable, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
 interface nsIPop3IncomingServer : nsISupports {

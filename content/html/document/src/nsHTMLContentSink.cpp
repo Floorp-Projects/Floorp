@@ -118,6 +118,7 @@
 #include "nsDOMError.h"
 #include "nsIScrollable.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIScriptContext.h"
 #include "nsStyleLinkElement.h"
 
 #include "nsReadableUtils.h"

@@ -27,6 +27,7 @@
 #include "nsSmtpUrl.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 

@@ -42,6 +42,7 @@
 #include "nsNetUtil.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID,
                      NS_STREAMCONVERTERSERVICE_CID);

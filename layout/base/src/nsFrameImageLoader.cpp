@@ -24,6 +24,7 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIFrame.h"
+#include "nsIImage.h"
 #include "nsIURL.h"
 #include "nsIImageGroup.h"
 #include "nsIImageRequest.h"

@@ -37,6 +37,7 @@
 #include "nsIClipboard.h"
 
 #include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
 
 #include "nsComposerCommands.h"
 

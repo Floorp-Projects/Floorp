@@ -31,6 +31,7 @@
 #include "nsAccessProxy.h"
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
+#include "nsIServiceManager.h"
 #include "prprf.h"
 #include "nsCRT.h"
 

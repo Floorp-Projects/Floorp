@@ -25,7 +25,7 @@
 
 #include "nscore.h"
 #include "msgCore.h"
-
+class nsFileSpec;
 
 #ifndef kMAX_CSNAME
 #define kMAX_CSNAME 64

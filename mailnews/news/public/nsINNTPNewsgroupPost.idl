@@ -26,7 +26,8 @@
 */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
+
+interface nsIFileSpec;
 
 [scriptable, uuid(c4164a20-bc74-11d2-b7f2-00805f05ffa5)]
 interface nsINNTPNewsgroupPost : nsISupports {

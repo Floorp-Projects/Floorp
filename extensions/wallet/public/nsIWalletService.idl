@@ -26,7 +26,6 @@
 
 %{ C++
 #include "nsString.h"
-#include "nsIPresShell.h"
 
 // {738CFD52-ABCF-11d2-AB4B-0080C787AD96}
 #define NS_WALLETSERVICE_CID \

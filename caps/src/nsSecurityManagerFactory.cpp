@@ -34,6 +34,7 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
 ///////////////////////
 // nsSecurityNameSet //

@@ -30,6 +30,7 @@
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 #include "nsLayoutCID.h"
+#include "nsISelectionController.h"
 
 // #define DEBUG_IMETXN
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);

@@ -29,6 +29,7 @@
 #include "plstr.h"
 #include "msgCore.h"
 #include "prlog.h"
+#include "prprf.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"

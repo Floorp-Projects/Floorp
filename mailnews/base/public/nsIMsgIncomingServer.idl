@@ -21,9 +21,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 #include "MailNewsTypes2.idl"
 
+interface nsIFileSpec;
 interface nsIFolder;
 interface nsIMsgFolderCache;
 interface nsIMsgWindow;

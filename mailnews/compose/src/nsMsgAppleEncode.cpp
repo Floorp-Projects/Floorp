@@ -30,6 +30,7 @@
 #include "nscore.h"
 #include "msgCore.h"
 #include "nsMimeTypes.h"
+#include "prprf.h"
 
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
@@ -41,14 +42,14 @@
 /*
 **	Local Functions prototypes.
 */
-PRIVATE int output64chunk( appledouble_encode_object* p_ap_encode_obj, 
+static int output64chunk( appledouble_encode_object* p_ap_encode_obj, 
 				int c1, int c2, int c3, int pads);
 				
-PRIVATE int to64(appledouble_encode_object* p_ap_encode_obj, 
+static int to64(appledouble_encode_object* p_ap_encode_obj, 
 				char	*p, 
 				int 	in_size);
  
-PRIVATE int finish64(appledouble_encode_object* p_ap_encode_obj);
+static int finish64(appledouble_encode_object* p_ap_encode_obj);
 
 
 #define BUFF_LEFT(p)	((p)->s_outbuff - (p)->pos_outbuff)	
@@ -394,7 +395,7 @@ static char *default_type = APPLICATION_OCTET_STREAM;
  * Determins the format of the file "inputf".  The name
  * of the file format (or NULL on error) is returned.
  */
-PRIVATE char *magic_look(char *inbuff, int numread)
+static char *magic_look(char *inbuff, int numread)
 {
     int i, j;
 
@@ -547,7 +548,7 @@ static char basis_64[] =
 **	convert the stream in the inbuff to 64 format and put it in the out buff.
 **  To make the life easier, the caller will responcable of the cheking of the outbuff's bundary.
 */
-PRIVATE int 
+static int 
 to64(appledouble_encode_object* p_ap_encode_obj, 
 	char	*p, 
 	int 	in_size) 
@@ -648,7 +649,7 @@ to64(appledouble_encode_object* p_ap_encode_obj,
 /*
 ** clear the left base64 encodes.
 */
-PRIVATE int 
+static int 
 finish64(appledouble_encode_object* p_ap_encode_obj)
 {
 	int status;
@@ -678,7 +679,7 @@ finish64(appledouble_encode_object* p_ap_encode_obj)
 	return status;
 }
 
-PRIVATE int output64chunk(
+static int output64chunk(
 	appledouble_encode_object* p_ap_encode_obj, 
 	int c1, int c2, int c3, int pads)
 {

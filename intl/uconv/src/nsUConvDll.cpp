@@ -24,7 +24,6 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager.h"
-#include "nsCharsetConverterManager.h"
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"

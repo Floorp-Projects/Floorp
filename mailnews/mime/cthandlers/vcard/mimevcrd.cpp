@@ -45,9 +45,8 @@
 #include "nsIPref.h"
 #include "nsVCardStringResources.h"
 
-#include "nsVCard.h"
-#include "nsVCardObj.h"
 #include "nsCRT.h"
+#include "prprf.h"
 
 // String bundles...
 #ifndef XP_MAC

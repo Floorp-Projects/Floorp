@@ -54,6 +54,7 @@
 #include "nsDOMError.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEditor.h"
+#include "nsGUIEvent.h"
 
 #include "nsIPresState.h"
 #include "nsIDOMEvent.h"

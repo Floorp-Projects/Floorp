@@ -36,6 +36,7 @@
 #include "nsIStringBundle.h"
 #include "nsIFilePicker.h"
 #include "nsIPref.h"
+#include "nsILocalFile.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 

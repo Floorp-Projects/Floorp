@@ -34,6 +34,7 @@
 #include "nsVoidArray.h"
 #include "nsIStringBundle.h"
 #include "nsIDocShell.h"
+#include "nsIFileSpec.h"
 
 //
 // Basic Sync Logic

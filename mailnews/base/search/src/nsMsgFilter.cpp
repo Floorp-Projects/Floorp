@@ -37,6 +37,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgSearchValue.h"
 #include "nsReadableUtils.h"
+#include "nsEscape.h"
 
 static const char *kImapPrefix = "//imap:";
 

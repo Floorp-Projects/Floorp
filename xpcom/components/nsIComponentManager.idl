@@ -18,9 +18,9 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
-#include "nsIEnumerator.idl"
 
 interface nsIFile;
+interface nsIEnumerator;
 
 /* should this be in nsroot.idl? */
 native nsCID(nsCID);

@@ -25,7 +25,7 @@
 
 #include "nsISupports.h"
 #include "nsIDOMNode.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsIWebShell.h"
 #include "nsIContent.h"
 

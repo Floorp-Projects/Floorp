@@ -58,6 +58,7 @@
 #include "nsSpaceManager.h"
 #include "prenv.h"
 #include "plstr.h"
+#include "nsGUIEvent.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"

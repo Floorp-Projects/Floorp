@@ -19,6 +19,11 @@
 #ifndef nsComponentManagerUtils_h__
 #define nsComponentManagerUtils_h__
 
+/*
+ * Do not include this file directly.  Instead,
+ * |#include "nsIComponentManager.h"|.
+ */
+
 #ifndef nsCOMPtr_h__
 #include "nsCOMPtr.h"
 #endif

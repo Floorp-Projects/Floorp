@@ -30,13 +30,13 @@
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIImageGroup.h"
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsIImageRequest.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
+#include "nsIImage.h"
 #include "prprf.h"
 
 // CIDs

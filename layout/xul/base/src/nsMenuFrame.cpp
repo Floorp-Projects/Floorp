@@ -67,7 +67,8 @@
 #include "nsIScrollableView.h"
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
- 
+#include "nsGUIEvent.h"
+
 #define NS_MENU_POPUP_LIST_INDEX   0
 
 #ifdef XP_PC

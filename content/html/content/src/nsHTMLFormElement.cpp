@@ -45,6 +45,7 @@
 #include "nsContentUtils.h"
 #include "nsHashtable.h"
 #include "nsContentList.h"
+#include "nsGUIEvent.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 

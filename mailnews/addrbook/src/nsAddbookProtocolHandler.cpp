@@ -42,6 +42,7 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "prmem.h"
 
 extern const char *kWorkAddressBook;
 

@@ -31,6 +31,7 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMemory.h"
 #include "nsXPIDLString.h"
+#include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID); 

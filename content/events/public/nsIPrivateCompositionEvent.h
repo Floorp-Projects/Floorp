@@ -23,7 +23,7 @@
 #ifndef nsIPrivateCompositionEvent_h__
 #define nsIPrivateCompositionEvent_h__
 
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsISupports.h"
 
 // {ECF6BEF1-5F0C-11d3-9EB3-0060089FE59B}

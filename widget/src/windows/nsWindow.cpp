@@ -55,6 +55,7 @@
 #include <commctrl.h>
 #include "prtime.h"
 #include "nsIRenderingContextWin.h"
+#include "nsIImage.h"
 
 #include "nsIAccessible.h"
 #include "Accessible.h"

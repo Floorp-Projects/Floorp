@@ -37,6 +37,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIViewManager.h"
+#include "nsGUIEvent.h"
 
 //
 // NS_NewTitleBarFrame

@@ -27,6 +27,7 @@
 #include "nsINNTPNewsgroupPost.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
+#include "prmem.h"
 
 
 #define HEADER_FROM				0

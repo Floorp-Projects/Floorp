@@ -35,6 +35,9 @@
 #include "nsFileSpec.h"
 #include "nsIPrompt.h"
 
+class nsIDOMWindowInternal;
+class nsIDOMNode;
+
 XP_BEGIN_PROTOS
 
 #define HEADER_VERSION "#2c"

@@ -24,6 +24,7 @@
 #include "mimemult.h"
 #include "mimemoz2.h"
 
+#include "prlog.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prio.h"

@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIEditorShell.h"
+#include "nsIComponentManager.h"
 
 class nsEditorBoxObject : public nsIEditorBoxObject, public nsBoxObject
 {

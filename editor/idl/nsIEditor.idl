@@ -21,17 +21,21 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsISelection.idl"
-#include "nsISelectionController.idl"
-#include "nsIFile.idl"
-#include "nsIAtom.idl"
-#include "nsIOutputStream.idl"
-#include "nsIDocumentStateListener.idl"
-#include "nsITransactionManager.idl"
-#include "nsIEditorObserver.idl"
-#include "nsIEditActionListener.idl"
+
+interface nsIFile;
+interface nsIAtom;
+interface nsISelection;
+interface nsISelectionController;
+interface nsIDocumentStateListener;
+interface nsIOutputStream;
+interface nsITransactionManager;
+interface nsITransaction;
+interface nsIEditorObserver;
+interface nsIEditActionListener;
 
 %{C++
+
+#include "nsAWritableString.h"
 
 //class nsIDOMDocument;
 //class nsIDOMElement;

@@ -25,6 +25,7 @@
 #include "nsIFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIWeakReference.h"
+#include "nsISelectionController.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
 

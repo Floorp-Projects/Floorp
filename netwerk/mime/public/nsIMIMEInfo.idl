@@ -29,8 +29,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
 
+interface nsIURI;
 interface nsIFile;
 
 typedef long nsMIMEInfoHandleAction;

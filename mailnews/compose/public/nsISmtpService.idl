@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 interface nsISmtpServer;
 interface nsIURI;
@@ -29,6 +28,7 @@ interface nsIUrlListener;
 interface nsISupportsArray;
 interface nsIMsgIdentity;
 interface nsIInterfaceRequestor;
+interface nsIFileSpec;
 interface nsIMsgStatusFeedback;
 
 [scriptable, uuid(FBAF0F10-CA9B-11d2-8063-006008128C4E)]

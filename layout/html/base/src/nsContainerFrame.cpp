@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
+#include "nsIWidget.h"
 
 #ifdef NS_DEBUG
 #undef NOISY

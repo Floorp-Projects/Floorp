@@ -34,10 +34,17 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIXPConnect.idl"
-#include "nsIClassInfo.idl"
 
-[ptr] native JSContext(JSContext);
+%{ C++
+#include "jspubtd.h"
+%}
+
+interface nsIClassInfo;
+interface nsIXPCNativeCallContext;
+
+[ptr] native JSContextPtr(JSContext);
+[ptr] native JSObjectPtr(JSObject);
+      native JSVal(jsval);
 
 [uuid(31431440-f1ce-11d2-985a-006008962422)]
 interface nsIXPCSecurityManager : nsISupports

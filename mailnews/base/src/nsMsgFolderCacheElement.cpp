@@ -22,6 +22,7 @@
 
 #include "msgCore.h"
 #include "nsMsgFolderCacheElement.h"
+#include "prmem.h"
 
 nsMsgFolderCacheElement::nsMsgFolderCacheElement()
 {

@@ -67,6 +67,10 @@
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
 #include "nsIPrintContext.h"
+#include "nsIWidget.h"
+#include "nsGUIEvent.h"
+#include "nsIRenderingContext.h"
+#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 
 // headers for plugin scriptability

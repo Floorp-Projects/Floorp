@@ -64,12 +64,14 @@
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPrintContext.h"
+#include "nsIWidget.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMWindow.h"
+#include "nsIRenderingContext.h"
 
 // For Accessibility 
 #include "nsIAccessibilityService.h"

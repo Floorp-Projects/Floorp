@@ -22,6 +22,8 @@
  
 #include "nsMacMIMEDataSource.h"
 #include "nsString.h"
+#include "nsIComponentManager.h"
+#include "nsIMIMEInfo.h"
 
 #include <MacTypes.h>
 

@@ -26,6 +26,7 @@
 #include "nsIAbSyncDriver.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
 
 class nsAbSyncDriver : public nsIAbSyncDriver
 {

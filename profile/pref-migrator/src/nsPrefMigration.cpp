@@ -32,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsIWindowMediator.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
 #include "nsIFileSpec.h"

@@ -58,6 +58,7 @@
 #include "nsVoidArray.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
+#include "nsGUIEvent.h"
 #include "nsIAccessibilityService.h"
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"

@@ -27,6 +27,7 @@
 #include "ProxyJNI.h"
 #include "lcglue.h"
 #include "nscore.h"
+#include "nsIScriptContext.h"
 #include "nsISecurityContext.h"
 #include "nsCSecurityContext.h"
 #include "nsCRT.h"

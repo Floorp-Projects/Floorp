@@ -19,11 +19,11 @@
  *
  * Contributor(s): 
  */
-#include "plstr.h"
 #include "mimethtm.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prprf.h"
 #include "msgCore.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"

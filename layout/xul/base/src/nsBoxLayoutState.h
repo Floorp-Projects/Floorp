@@ -34,6 +34,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsHTMLReflowState.h"
 
 class nsReflowState;
 class nsCalculatedBoxInfo;

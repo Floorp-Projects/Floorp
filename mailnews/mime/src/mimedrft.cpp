@@ -38,10 +38,13 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
 #include "prio.h"
 #include "nsIPref.h"
 #include "msgCore.h"
 #include "nsCRT.h"
+#include "nsEscape.h"
+#include "nsIFileSpec.h"
 #include "nsIMsgSend.h"
 #include "nsFileStream.h"
 #include "nsMimeStringResources.h"

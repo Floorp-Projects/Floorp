@@ -31,6 +31,8 @@
 #include "nsIMsgSend.h"
 #include "nsIMimeConverter.h"
 
+class nsOutputFileStream;
+
 // SHERRY - Need to get these out of here eventually
 
 #ifdef XP_UNIX

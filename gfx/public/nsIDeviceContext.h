@@ -27,8 +27,8 @@
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
+#include "nsIRenderingContext.h"
 
-class nsIRenderingContext;
 class nsIView;
 class nsIFontMetrics;
 class nsIWidget;

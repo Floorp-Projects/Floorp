@@ -25,15 +25,18 @@
 #include <stdio.h>
 #include "nslayout.h"
 #include "nsISupports.h"
-#include "nsSize.h"
-#include "nsGUIEvent.h"
-#include "nsStyleConsts.h"
+#include "nsEvent.h"
 #include "nsStyleStruct.h"
-#include "nsStyleCoord.h"
-#include "nsHTMLReflowState.h"
+#include "nsSize.h"
+#include "nsMargin.h"
+#include "nsRect.h"
 #ifdef MOZ_MATHML
 #include "nsIRenderingContext.h" //to get struct nsBoundingMetrics
 #endif
+
+struct nsGUIEvent;
+struct nsHTMLReflowState;
+class nsIReflowCommand;
 
 /**
  * New rules of reflow:

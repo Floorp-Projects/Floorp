@@ -29,7 +29,6 @@
 #include "nsIAtom.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsVoidArray.h"
 
 #define NS_ICHARSETCONVERTERMANAGER_IID \
   {0x3c1c0161, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}

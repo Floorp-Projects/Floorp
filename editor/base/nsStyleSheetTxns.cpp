@@ -28,6 +28,7 @@
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
+#include "nsISelectionController.h"
 
 
 #include "nsStyleSheetTxns.h"

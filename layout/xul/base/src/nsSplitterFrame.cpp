@@ -59,6 +59,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsINodeInfo.h"
 #include "nsIAnonymousContent.h"
+#include "nsGUIEvent.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kAnonymousElementCID, NS_ANONYMOUSCONTENT_CID);

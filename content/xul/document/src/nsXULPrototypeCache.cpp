@@ -40,6 +40,7 @@
 #include "nsIDocument.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {

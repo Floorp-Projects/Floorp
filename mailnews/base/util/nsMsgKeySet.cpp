@@ -26,6 +26,7 @@
 #include "MailNewsTypes.h"
 #include "nsMsgKeySet.h"
 #include "prprf.h"
+#include "prmem.h"
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
 #define DEBUG_MSGKEYSET 1

@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 
 %{ C++
@@ -33,6 +32,7 @@ interface nsIPrompt;
 interface nsIAuthPrompt;
 interface nsISmtpServer;
 interface nsIInterfaceRequestor;
+interface nsIFileSpec;
 
 [scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
 interface nsISmtpUrl : nsISupports {

@@ -32,6 +32,7 @@
 #include "nsRDFCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

@@ -44,6 +44,7 @@
 
 #include "nsILocalFile.h"
 #include "nsFileStream.h"
+#include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIPref.h"

@@ -27,6 +27,7 @@
 
 #include "plstr.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
 

@@ -28,6 +28,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISupportsUtils.h"
 #include "nsXPIDLString.h"
+#include "nsISimpleEnumerator.h"
 
 // Static Variables
 

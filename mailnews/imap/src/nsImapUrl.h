@@ -36,6 +36,7 @@
 
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
+#include "nsIFileSpec.h"
 
 class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {

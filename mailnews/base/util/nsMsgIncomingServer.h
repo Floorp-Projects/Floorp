@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsIMsgDatabase.h"
+#include "nsIFileSpec.h"
 
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;

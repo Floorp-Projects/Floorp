@@ -50,6 +50,7 @@ class nsIURI;
 class nsIFormControlFrame;
 class nsIForm;
 class nsIPresState;
+struct nsRect;
 
 extern void GetGenericHTMLElementIIDs(nsVoidArray& aArray);
 

@@ -24,9 +24,9 @@
 
 
 %{ C++
-#include "nsIDeviceContext.h"
-#include "nsIWebShell.h"
-#include "nsIDOMWindow.h"
+class nsIDeviceContext;
+class nsIWebShell;
+class nsIDOMWindow;
 %}
 
 [ptr] native nsIDeviceContext(nsIDeviceContext);

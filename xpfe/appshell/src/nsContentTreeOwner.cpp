@@ -26,6 +26,7 @@
 
 // Helper Classes
 #include "nsIGenericFactory.h"
+#include "nsIServiceManager.h"
 
 // Interfaces needed to be included
 #include "nsIDOMNode.h"

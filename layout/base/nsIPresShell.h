@@ -40,12 +40,8 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsISelection.h"
 #include "nsIReflowCommand.h"
-#include "nsGUIEvent.h"
-
-#include "nsISelectionController.h" //for the selection enums.
-
+#include "nsEvent.h"
 
 class nsIContent;
 class nsIContentIterator;
@@ -68,6 +64,7 @@ class nsILayoutHistoryState;
 class nsIArena;
 class nsIReflowCallback;
 class nsISupportsArray;
+class nsIDOMNode;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \

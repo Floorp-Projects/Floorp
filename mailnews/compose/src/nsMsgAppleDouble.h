@@ -195,7 +195,7 @@ typedef struct _appledouble_decode_object
 **	The protypes.
 */
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 int ap_encode_init(appledouble_encode_object *p_ap_encode_obj, 
 					char* fname,
@@ -221,6 +221,6 @@ int ap_decode_next(appledouble_decode_object* p_ap_decode_obj,
 int ap_decode_end(appledouble_decode_object* p_ap_decode_obj, 
 				 	PRBool is_aborting);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif

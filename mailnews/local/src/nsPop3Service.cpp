@@ -44,6 +44,8 @@
 #include "nsRDFCID.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "prprf.h"
+#include "nsEscape.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 

@@ -40,7 +40,7 @@
 #include "nsIImage.h"
 
 #include "prthread.h"
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -52,6 +52,7 @@ struct  nsRect;
 struct  nsFont;
 class   nsIEventListener;
 class   nsIRollupListener;
+struct  nsGUIEvent;
 %}
 
 [ptr] native nsGUIEvent(nsGUIEvent);

@@ -25,6 +25,7 @@
 #include "nsImapMailDatabase.h"
 #include "nsDBFolderInfo.h"
 #include "nsLocalFolderSummarySpec.h"
+#include "nsIFileSpec.h"
 
 nsImapMailDatabase::nsImapMailDatabase()
 {

@@ -26,6 +26,7 @@
 #define nsImageXlib_h__
 
 #include "nsIImage.h"
+#include "nsPoint.h"
 #include "nsGCCache.h"
 
 #include "X11/Xlib.h"

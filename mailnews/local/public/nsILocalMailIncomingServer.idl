@@ -21,12 +21,12 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
 
 interface nsIURI;
 interface nsIMsgWindow;
 interface nsIUrlListener;
 interface nsIMsgFolder;
+interface nsIFileSpec;
 
 [scriptable, uuid(ee87cc60-1dd1-11b2-b25a-ff87320f212d)]
 interface nsILocalMailIncomingServer : nsISupports {

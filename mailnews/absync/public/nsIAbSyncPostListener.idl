@@ -22,7 +22,6 @@
 
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
-#include "nsIFileSpec.idl"
 
 %{C++
 %}
