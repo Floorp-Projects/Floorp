@@ -38,9 +38,10 @@ Description Long=Navigator and Mail & News
 C0=Component0
 C1=Component1
 C2=Component2
-C3=Component4
+C3=Component3
 C4=Component5
 C5=Component6
+C6=Component7
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
@@ -54,6 +55,7 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
+C7=Component7
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -62,9 +64,10 @@ Description Short=Navigator
 Description Long=Navigator only
 C0=Component0
 C1=Component1 
-C2=Component4
-C3=COmponent5
-C4=Component6
+C2=Component3 
+C3=Component5
+C4=COmponent6
+C5=Component7
 
 [Setup Type3]
 ; *** LOCALIZE ME BABY ***
@@ -78,6 +81,7 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
+C7=Component7
 
 
 ;-------------------------------------------------------------------------
@@ -116,6 +120,15 @@ Attributes=SELECTED
 URL0=$URLPath$
 
 [Component3]
+Description Short=Personal Security Manager
+; *** LOCALIZE ME BABY ***
+Description Long=Personal Security Manager (PSM) for crypto operations
+Archive=psm.xpi
+$InstallSize$:psm
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component4]
 Description Short=Chatzilla
 ; *** LOCALIZE ME BABY ***
 Description Long=Chatzilla IRC client
@@ -124,7 +137,7 @@ $InstallSize$:chatzilla
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component4]
+[Component5]
 Description Short=Quality Feedback Agent
 ; *** LOCALIZE ME BABY ***
 Description Long=Tool for reporting software crashes to Netscape
@@ -133,7 +146,7 @@ $InstallSize$:talkback
 Attributes=SELECTED
 URL0=$URLPath$
 
-[Component5]
+[Component6]
 Description Short=English US Profile Defaults
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Profile Defaults
@@ -142,7 +155,7 @@ $InstallSize$:deflenus
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
-[Component6]
+[Component7]
 Description Short=English US Language Pack
 ; *** LOCALIZE ME BABY ***
 Description Long=English US Language Pack

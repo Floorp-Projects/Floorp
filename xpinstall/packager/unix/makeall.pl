@@ -66,6 +66,7 @@ if(!(-e "$inDistPath"))
 # Make all xpi files
 MakeXpiFile("xpcom");
 MakeXpiFile("browser");
+MakeXpiFile("psm");
 MakeXpiFile("mail");
 MakeXpiFile("chatzilla");
 MakeXpiFile("talkback");
