@@ -330,19 +330,13 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     nsCOMPtr<nsIWebShell> chromeShell;
     mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
     if (chromeShell) {
-      // Convert the chrome shell to a DOM window.
-      nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
-      if (contextOwner) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
-          nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
-          if (chromeWindow) {
-            nsCOMPtr<nsIDOMDocument> chromeDoc;
-            chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
-            nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
-            mChromeDocument = realDoc.get(); // Don't addref it
-          }
-        }
+      nsCOMPtr<nsIDOMWindow> chromeWindow;
+      WebShellToDOMWindow(chromeShell, getter_AddRefs(chromeWindow));
+      if (chromeWindow) {
+        nsCOMPtr<nsIDOMDocument> chromeDoc;
+        chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
+        nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
+        mChromeDocument = realDoc.get(); // Don't addref it
       }
     }
   }
@@ -591,20 +585,12 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
   
   *aParent = nsnull;
   if (nsnull != mWebShell) {
-    nsIWebShell *mParentWebShell;
-    mWebShell->GetParent(mParentWebShell);
+    nsIWebShell *parentWebShell;
+    mWebShell->GetParent(parentWebShell);
     
-    if (nsnull != mParentWebShell) {
-      nsIScriptContextOwner *mParentContextOwner;
-      if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mParentContextOwner)) {
-        nsIScriptGlobalObject *mParentGlobalObject;
-        if (NS_OK == mParentContextOwner->GetScriptGlobalObject(&mParentGlobalObject)) {
-          ret = mParentGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aParent);
-          NS_RELEASE(mParentGlobalObject);
-        }
-        NS_RELEASE(mParentContextOwner);
-      }
-    NS_RELEASE(mParentWebShell);
+    if (nsnull != parentWebShell) {
+      ret = WebShellToDOMWindow(parentWebShell, aParent);
+      NS_RELEASE(parentWebShell);
     } 
     else {
       *aParent = this;
@@ -636,25 +622,33 @@ GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 
   *aTop = nsnull;
   if (nsnull != mWebShell) {
-    nsIWebShell *mRootWebShell;
-    mWebShell->GetRootWebShell(mRootWebShell);
-    
-    
-    if (nsnull != mRootWebShell) {
-      nsIScriptContextOwner *mRootContextOwner;
-      if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mRootContextOwner)) {
-        nsIScriptGlobalObject *mRootGlobalObject;
-        if (NS_OK == mRootContextOwner->GetScriptGlobalObject(&mRootGlobalObject)) {
-          ret = mRootGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aTop);
-          NS_RELEASE(mRootGlobalObject);
-        }
-        NS_RELEASE(mRootContextOwner);
-      }
-      NS_RELEASE(mRootWebShell);
+    nsIWebShell *rootWebShell;
+    mWebShell->GetRootWebShell(rootWebShell);
+    if (nsnull != rootWebShell) {
+      WebShellToDOMWindow(rootWebShell, aTop);
+      NS_RELEASE(rootWebShell);
     }
   }
 
   return ret;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
+{
+  nsresult rv;
+
+  *aContent = nsnull;
+
+  nsCOMPtr<nsIBrowserWindow> browser;
+  rv = GetBrowserWindowInterface(*getter_AddRefs(browser));
+  if (NS_SUCCEEDED(rv) && browser) {
+    nsCOMPtr<nsIWebShell> contentShell;
+    rv = browser->GetContentWebShell(getter_AddRefs(contentShell));
+    if (NS_SUCCEEDED(rv) && contentShell)
+      rv = WebShellToDOMWindow(contentShell, aContent);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2058,6 +2052,27 @@ GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDO
     NS_RELEASE(newContextOwner);
   }
   return res;
+}
+
+// simple utility conversion routine
+nsresult
+GlobalWindowImpl::WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow)
+{
+  nsresult rv;
+
+  NS_ASSERTION(aWebShell, "null in param to WebShellToDOMWindow");
+  NS_ASSERTION(aDOMWindow, "null out param to WebShellToDOMWindow");
+
+  *aDOMWindow = nsnull;
+
+  nsCOMPtr<nsIScriptContextOwner> owner = do_QueryInterface(aWebShell, &rv);
+  if (owner) {
+    nsCOMPtr<nsIScriptGlobalObject> scriptobj;
+    rv = owner->GetScriptGlobalObject(getter_AddRefs(scriptobj));
+    if (NS_SUCCEEDED(rv) && scriptobj)
+      rv = scriptobj->QueryInterface(nsIDOMWindow::GetIID(), (void **) aDOMWindow);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -808,20 +808,32 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
       nsWebShellType parentType;
       outerShell->GetWebShellType(parentType);
       nsIAtom* typeAtom = NS_NewAtom("type");
-	    nsAutoString value;
-	    content->GetAttribute(kNameSpaceID_None, typeAtom, value);
-	    if (value.EqualsIgnoreCase("content")) {
-		    // The web shell's type is content.
-		    mWebShell->SetWebShellType(nsWebShellContent);
-        nsCOMPtr<nsIWebShellContainer> shellAsContainer;
-				shellAsContainer = do_QueryInterface(mWebShell);
-				shellAsContainer->ContentShellAdded(mWebShell, content);
+      nsAutoString value, valuePiece;
+      PRBool isContent;
+
+      isContent = PR_FALSE;
+      if (NS_SUCCEEDED(content->GetAttribute(kNameSpaceID_None, typeAtom, value))) {
+
+        // we accept "content" and "content-xxx" values.
+        // at time of writing, we expect "xxx" to be "primary", but
+        // someday it might be an integer expressing priority
+        value.Left(valuePiece, 7);
+        if (valuePiece.EqualsIgnoreCase("content") &&
+           (value.Length() == 7 ||
+              value.Mid(valuePiece, 7, 1) == 1 && valuePiece.Equals("-")))
+            isContent = PR_TRUE;
       }
-      else {
+      if (isContent) {
+        // The web shell's type is content.
+        mWebShell->SetWebShellType(nsWebShellContent);
+        nsCOMPtr<nsIWebShellContainer> shellAsContainer;
+        shellAsContainer = do_QueryInterface(mWebShell);
+        shellAsContainer->ContentShellAdded(mWebShell, content);
+      } else {
         // Inherit our type from our parent webshell.  If it is
-		    // chrome, we'll be chrome.  If it is content, we'll be
-		    // content.
-		    mWebShell->SetWebShellType(parentType);
+        // chrome, we'll be chrome.  If it is content, we'll be
+        // content.
+        mWebShell->SetWebShellType(parentType);
       }
 
       // Make sure all shells have links back to the nearest enclosing chrome
@@ -832,8 +844,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
       outerShell->GetWebShellType(chromeShellType);
       if (chromeShellType == nsWebShellChrome)
         chromeShell = dont_QueryInterface(outerShell);
-      else outerShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
-      
+      else
+        outerShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
+
       mWebShell->SetContainingChromeShell(chromeShell);
       
 #endif // INCLUDE_XUL 

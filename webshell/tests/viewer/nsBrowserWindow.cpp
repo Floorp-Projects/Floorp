@@ -1607,6 +1607,14 @@ nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserWindow::GetContentWebShell(nsIWebShell **aResult)
+{
+  *aResult = mWebShell;
+  NS_IF_ADDREF(mWebShell);
+  return NS_OK;
+}
+
 //----------------------------------------
 
 NS_IMETHODIMP

@@ -79,27 +79,28 @@ enum Window_slots {
   WINDOW_HISTORY = -6,
   WINDOW_PARENT = -7,
   WINDOW_TOP = -8,
-  WINDOW_MENUBAR = -9,
-  WINDOW_TOOLBAR = -10,
-  WINDOW_LOCATIONBAR = -11,
-  WINDOW_PERSONALBAR = -12,
-  WINDOW_STATUSBAR = -13,
-  WINDOW_SCROLLBARS = -14,
-  WINDOW_DIRECTORIES = -15,
-  WINDOW_CLOSED = -16,
-  WINDOW_FRAMES = -17,
-  WINDOW_OPENER = -18,
-  WINDOW_STATUS = -19,
-  WINDOW_DEFAULTSTATUS = -20,
-  WINDOW_NAME = -21,
-  WINDOW_INNERWIDTH = -22,
-  WINDOW_INNERHEIGHT = -23,
-  WINDOW_OUTERWIDTH = -24,
-  WINDOW_OUTERHEIGHT = -25,
-  WINDOW_SCREENX = -26,
-  WINDOW_SCREENY = -27,
-  WINDOW_PAGEXOFFSET = -28,
-  WINDOW_PAGEYOFFSET = -29
+  WINDOW_CONTENT = -9,
+  WINDOW_MENUBAR = -10,
+  WINDOW_TOOLBAR = -11,
+  WINDOW_LOCATIONBAR = -12,
+  WINDOW_PERSONALBAR = -13,
+  WINDOW_STATUSBAR = -14,
+  WINDOW_SCROLLBARS = -15,
+  WINDOW_DIRECTORIES = -16,
+  WINDOW_CLOSED = -17,
+  WINDOW_FRAMES = -18,
+  WINDOW_OPENER = -19,
+  WINDOW_STATUS = -20,
+  WINDOW_DEFAULTSTATUS = -21,
+  WINDOW_NAME = -22,
+  WINDOW_INNERWIDTH = -23,
+  WINDOW_INNERHEIGHT = -24,
+  WINDOW_OUTERWIDTH = -25,
+  WINDOW_OUTERHEIGHT = -26,
+  WINDOW_SCREENX = -27,
+  WINDOW_SCREENY = -28,
+  WINDOW_PAGEXOFFSET = -29,
+  WINDOW_PAGEYOFFSET = -30
 };
 
 /***********************************************************************/
@@ -252,6 +253,23 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetTop(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_CONTENT:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.content", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetContent(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -2537,6 +2555,7 @@ static JSPropertySpec WindowProperties[] =
   {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"content",    WINDOW_CONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},

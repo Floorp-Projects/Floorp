@@ -95,6 +95,7 @@ public:
   NS_IMETHOD IsMenuBarVisible(PRBool *aVisible) = 0;
 
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
+  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult) = 0;
 
   // XXX minimize, maximize
   // XXX event control: enable/disable window close box, stick to glass, modal

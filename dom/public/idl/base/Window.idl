@@ -9,6 +9,7 @@
         readonly attribute  History history;
         readonly attribute  Window parent;
         readonly attribute  Window top;
+        readonly attribute  Window content;
         readonly attribute  BarProp menubar;
         readonly attribute  BarProp toolbar;
         readonly attribute  BarProp locationbar;
@@ -56,11 +57,11 @@
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
 
-		void createPopup(in Element element, in Element popupContent,
-					     in long xPos, in long yPos, 
-						 in DOMString popupType, in DOMString anchorAlignment,
-						 in DOMString popupAlignment);
-						  
+        void createPopup(in Element element, in Element popupContent,
+                         in long xPos, in long yPos, 
+                         in DOMString popupType, in DOMString anchorAlignment,
+                         in DOMString popupAlignment);
+
         Window open(/* ... */);
         Window openDialog(/* ... */);
       };
