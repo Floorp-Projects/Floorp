@@ -32,6 +32,74 @@ class nsIURL;
 class nsString;
 class nsIWebShell;
 
+// Factory methods for creating html content objects
+extern nsresult NS_NewHTMLAnchor(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLApplet(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLArea(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLBR(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLBase(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLBaseFont(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLBody(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLButton(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLDList(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLDel(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLDiv(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLEmbed(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLFont(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLForm(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLFrame(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLFrameSet(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLHR(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLHead(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLHeading(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLHtml(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLImage(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLInput(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLIns(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLIsIndex(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLLI(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLLabel(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLLayer(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLLegend(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLLink(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLMap(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLMenu(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLMeta(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLMod(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLOList(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLObject(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLOptGroup(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLOption(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLParagraph(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLParam(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLPre(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLQuote(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLScript(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLSelect(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLSpacer(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLStyle(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTableCaption(nsIHTMLContent** aResult,nsIAtom* aTag);
+extern nsresult NS_NewHTMLTableCell(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTableCol(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTable(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTableRow(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTableSection(nsIHTMLContent** aResult,nsIAtom* aTag);
+extern nsresult NS_NewHTMLTbody(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTextArea(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTfoot(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLThead(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLTitle(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLUList(nsIHTMLContent** aResult, nsIAtom* aTag);
+extern nsresult NS_NewHTMLWBR(nsIHTMLContent** aResult, nsIAtom* aTag);
+
+extern nsresult NS_NewHTMLComment(nsIHTMLContent** aResult, nsIAtom* aTag,
+                                  const nsString& aComment);
+
+// Factory methods for creating html layout objects
+
+// Everything below this line is obsolete...
+//----------------------------------------------------------------------
 // XXX naming consistency puhleeze!
 
 // XXX passing aWebShell into this is wrong
@@ -53,10 +121,6 @@ extern nsresult NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
 extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
                  nsIDocument* aDocument);
-extern nsresult
-  NS_NewHTMLComment(nsIHTMLContent** aInstancePtrResult,
-                    nsIAtom* aTag,
-                    const nsString& aComment);
 
 // Head parts
 extern nsresult
@@ -156,10 +220,6 @@ NS_NewTableCaptionPart(nsIHTMLContent** aInstancePtrResult,
                        nsIAtom* aTag);
 
 extern nsresult
-NS_NewHTMLApplet(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag);
-
-extern nsresult
 NS_NewHTMLEmbed(nsIHTMLContent** aInstancePtrResult,
                 nsIAtom* aTag);
 
@@ -183,8 +243,9 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aChildFrame = nsnull);
 
 extern nsresult
-NS_NewObjectFrame(nsIFrame*& aFrameResult, nsIContent* aContent,
-                  nsIFrame* aParentFrame);
+NS_NewObjectFrame(nsIContent* aContent,
+                  nsIFrame* aParentFrame,
+                  nsIFrame*& aFrameResult);
 
 extern nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
@@ -197,10 +258,5 @@ NS_NewHTMLFrame(nsIHTMLContent** aInstancePtrResult,
 extern nsresult
 NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
                    nsIAtom* aTag, nsIWebShell* aWebShell);
-
-// New content objects
-nsresult NS_NewHTMLAnchor(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
-nsresult NS_NewHTMLBR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
-nsresult NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 #endif /* nsHTMLParts_h___ */
