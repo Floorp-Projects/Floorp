@@ -41,16 +41,17 @@
 #define __NSXFORMSMDGENGINE__
 
 #include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsVoidArray.h"
 #include "nsClassHashtable.h"
+#include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsVoidArray.h"
+
 #include "nsIDOMNode.h"
+
 #include "nsXFormsTypes.h"
 #include "nsXFormsMDGSet.h"
 
 class nsIDOMXPathExpression;
-class nsXFormsMDG;
 
 /**
  * Flags, etc.
@@ -128,10 +129,10 @@ public:
   ModelItemPropName mType;
   
   /** (XPath) Context size for this node */
-  int mContextSize;
+  PRInt32 mContextSize;
   
   /** (XPath) Position for this node */
-  int mContextPosition;
+  PRInt32 mContextPosition;
   
   /** Does expression use dynamic functions */
   PRBool mDynFunc;
@@ -174,6 +175,7 @@ public:
   void MarkDirty();
 };
 
+
 /**
  * The Multi Dependency Graph (MDG) Engine.
  * 
@@ -186,7 +188,8 @@ public:
  * nodes are owned by the mNodeToMDG hash table, which maps from a nsIDOMNode to
  * the first node in a single-linked list (mNext) of nodes for the same nsIDOMNode.
  */
-class nsXFormsMDGEngine {
+class nsXFormsMDGEngine
+{
 protected:
   /**
    * Maps from nsIDOMNode to nsXFormsMDGNode(s)
@@ -236,6 +239,15 @@ protected:
    * Used by AndFlags() to boolean AND all flags with aMask.
    */
   static PLDHashOperator PR_CALLBACK AndFlag(nsISupports *aKey, PRUint16& aFlag, void* aMask);
+
+  /**
+   * Inserts a new text child for aContextNode.
+   * 
+   * @param aContextNode     The node to create a child for
+   * @param aNodeValue       The value of the new node
+   * @param aBeforeNode      If non-null, insert new node before this node
+   */
+  nsresult CreateNewChild(nsIDOMNode* aContextNode, const nsAString& aNodeValue, nsIDOMNode* aBeforeNode = nsnull);
 
   /**
    * Retrieve a node from the graph.
@@ -315,7 +327,7 @@ protected:
    * @param aNode            The context node
    * @param aSet             Set of the nodes influenced by operation
    */
-  nsresult ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDispatchFlag, PRUint16 aInheritanceFlag, nsXFormsMDGNode* aNode, nsXFormsMDGSet& aSet);
+  nsresult ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDispatchFlag, PRUint16 aInheritanceFlag, nsXFormsMDGNode* aNode, nsXFormsMDGSet* aSet);
 
   /**
    * Attaches inheritance to all children of a given node
@@ -325,61 +337,8 @@ protected:
    * @param aState           The state of the flag
    * @param aStateFlag       The flag
    */
-  nsresult AttachInheritance(nsXFormsMDGSet& aSet, nsIDOMNode* aSrc, PRBool aState, PRUint16 aStateFlag);
+  nsresult AttachInheritance(nsXFormsMDGSet* aSet, nsIDOMNode* aSrc, PRBool aState, PRUint16 aStateFlag);
 
-  /** A pointer to the owner, used to access Get- and SetNodeValue() */
-  nsXFormsMDG* mOwner;
-  
-public:
-  /**
-   * Constructor
-   * 
-   * @param aOwner           Pointer to the owner
-   */
-  nsXFormsMDGEngine(nsXFormsMDG* aOwner);
-  
-  /**
-   * Destructor
-   */
-  ~nsXFormsMDGEngine();
-  
-  /**
-   * Initializes the hash tables. Needs to be called before class is used!
-   */
-  nsresult Init();
-  
-  /**
-   * Inserts a MIP into the graph
-   */
-  nsresult Insert(nsIDOMNode* aContextNode, nsIDOMXPathExpression* aExpression,
-                  const nsXFormsMDGSet* aDependencies,
-                  PRBool aDynFunc,
-                  PRInt32 aContextPos, PRInt32 aContextSize,
-                  ModelItemPropName aType = eModel_calculate,
-                  ModelItemPropName aDeptype = eModel_calculate);
-  
-  /**
-   * Rebuilds the MDG. 
-   * 
-   * Does this by doing a topological sort of all nodes in mNodeToMDG, and storing
-   * the result in mGraph.
-   * 
-   * @note This has to be called before Calculate().
-   */
-  nsresult Rebuild();
-  
-  /**
-   * Removes all node information from engine
-   */
-  void Clear();
-  
-  /**
-   * Perform a calculation on all dirty nodes
-   * 
-   * @param aValueChanged    The nodes which were changed by operation.
-   */
-  nsresult Calculate(nsXFormsMDGSet& aValueChanged);
-  
   /**
    * Invalidate the information, ie. mark all nodes as dirty.
    */
@@ -411,20 +370,103 @@ public:
    * @return                 The flag value
    */
   PRBool Test(nsIDOMNode* aDomNode, PRUint16 aFlag);
+
+public:
+  /**
+   * Constructor
+   */
+  nsXFormsMDGEngine();
   
   /**
-   * Clear dispatch flags for all nodes
-   * 
-   * @return                 Did operation succeed?
+   * Destructor
    */
-  PRBool ClearDispatchFlags();
+  ~nsXFormsMDGEngine();
   
   /**
-   * Make a node as changed, ie. include in next Calculate
-   * 
-   * @param aDomNode         The node
+   * Initializes the internal structures. Needs to be called before class is used!
    */
-  nsresult MarkNode(nsIDOMNode* aDomNode);
+  nsresult Init();
+
+  /**
+   * Insert new MIP (Model Item Property) into graph.
+   * 
+   * @param aType            The type of MIP
+   * @param aExpression      The XPath expression
+   * @param aDependencies    Set of nodes expression depends on
+   * @param aDynFunc         True if expression uses dynamic functions
+   * @param aContextNode     The context node for aExpression
+   * @param aContextPos      The context positions of aExpression
+   * @param aContextSize     The context size for aExpression
+   */
+  /* void addMIP (in long aType, in nsIDOMXPathExpression aExpression, in nsXFormsMDGSet aDependencies, in boolean aDynFunc, in nsIDOMNode aContextNode, in long aContextPos, in long aContextSize); */
+  nsresult AddMIP(PRInt32 aType, nsIDOMXPathExpression *aExpression, nsXFormsMDGSet *aDependencies, PRBool aDynFunc, nsIDOMNode *aContextNode, PRInt32 aContextPos, PRInt32 aContextSize);
+
+  /**
+   * Recalculate the MDG.
+   * 
+   * @param aChangedNodes    Returns the nodes that was changed during recalculation.
+   */
+  nsresult Recalculate(nsXFormsMDGSet **aChangedNodes);
+
+  /**
+   * Rebuilds the MDG.
+   */
+  nsresult Rebuild();
+
+  /**
+   * Clears all information in the MDG.
+   */
+  nsresult Clear();
+
+  /**
+   * Clears all Dispatch flags.
+   */
+  nsresult ClearDispatchFlags();
+
+  /**
+   * Mark a node as changed.
+   * 
+   * @param aContextNode     The node to be marked.
+   */
+  nsresult MarkNodeAsChanged(nsIDOMNode *aContextNode);
+
+  /**
+   * Set the value of a node. (used by nsXFormsMDG)
+
+   * @param aContextNode     The node to set the value for
+   * @param aNodeValue       The value
+   * @param aMarkNode        Whether to mark node as changed
+   * @param aNodeChanged     Was node changed?
+   */
+  nsresult SetNodeValue(nsIDOMNode *aContextNode, const nsAString & aNodeValue, PRBool aMarkNode, PRBool *aNodeChanged);
+
+  /**
+   * Get the value of a node. (used by nsXFormsMDG)
+
+   * @param aContextNode     The node to get the value for
+   * @param aNodeValue       The value of the node
+   */
+  nsresult GetNodeValue(nsIDOMNode *aContextNode, nsAString & aNodeValue);
+
+  PRBool IsConstraint(nsIDOMNode *aContextNode);
+
+  PRBool IsValid(nsIDOMNode *aContextNode);
+
+  PRBool ShouldDispatchValid(nsIDOMNode *aContextNode);
+
+  PRBool IsReadonly(nsIDOMNode *aContextNode);
+
+  PRBool ShouldDispatchReadonly(nsIDOMNode *aContextNode);
+
+  PRBool IsRelevant(nsIDOMNode *aContextNode);
+
+  PRBool ShouldDispatchRelevant(nsIDOMNode *aContextNode);
+
+  PRBool IsRequired(nsIDOMNode *aContextNode);
+
+  PRBool ShouldDispatchRequired(nsIDOMNode *aContextNode);
+
+  PRBool ShouldDispatchValueChanged(nsIDOMNode *aContextNode);
 };
 
 #endif

@@ -361,10 +361,12 @@ nsXFormsModelElement::Recalculate()
   printf("nsXFormsModelElement::Recalculate()\n");
 #endif
   
-  nsXFormsMDGSet changedNodes;
+  nsAutoPtr<nsXFormsMDGSet> changedNodes(new nsXFormsMDGSet());
   // TODO: Handle changed nodes. That is, dispatch events, etc.
-  
-  return mMDG.Recalculate(changedNodes);
+
+  nsXFormsMDGSet* ptr = changedNodes.get();
+
+  return mMDG.Recalculate(&ptr);
 }
 
 NS_IMETHODIMP

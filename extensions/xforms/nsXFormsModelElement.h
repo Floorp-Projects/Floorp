@@ -47,7 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
-#include "nsXFormsMDG.h"
+#include "nsXFormsMDGEngine.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -55,6 +55,7 @@
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMXPathEvaluator;
+class nsIDOMXPathResult;
 class nsXFormsControl;
 
 /**
@@ -124,7 +125,7 @@ private:
   PRInt32 mSchemaTotal;
   PRInt32 mPendingInstanceCount;
   
-  nsXFormsMDG mMDG;
+  nsXFormsMDGEngine mMDG;
 };
 
 NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aResult);
