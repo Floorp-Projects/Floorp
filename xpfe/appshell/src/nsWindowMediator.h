@@ -23,7 +23,9 @@
 #ifndef __nsWindowMediator_h
 #define __nsWindowMediator_h
 
+#include "nsCOMPtr.h"
 #include "nsIWindowMediator.h"
+#include "nsIWindowWatcher.h"
 #include "nsXPIDLString.h"
 
 class nsWindowEnumerator;
@@ -171,6 +173,7 @@ private:
   nsresult AddWindowToRDF( nsWindowInfo* ioWindowInfo );
   PRInt32 AddEnumerator( nsWindowEnumerator* inEnumerator );
   PRInt32 RemoveEnumerator( nsWindowEnumerator* inEnumerator);
+  nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
 
   NS_IMETHOD UnregisterWindow( nsWindowInfo *inInfo );
 
@@ -179,6 +182,7 @@ private:
                *mTopmostWindow;
   PRInt32       mTimeStamp;
   PRLock       *mListLock;
+  nsCOMPtr<nsIWindowWatcher> mWatcher;
 
   // pseudo-constants for RDF
   static nsIRDFResource* kNC_WindowMediatorRoot;

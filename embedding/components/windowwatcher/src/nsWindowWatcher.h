@@ -67,6 +67,7 @@ private:
   PRBool AddEnumerator(nsWindowEnumerator* inEnumerator);
   PRBool RemoveEnumerator(nsWindowEnumerator* inEnumerator);
 
+  WindowInfo *FindWindowInfo(nsIDOMWindow *aWindow);
   nsresult RemoveWindow(WindowInfo *inInfo);
 
   nsresult FindItemWithName(const PRUnichar *aName,

@@ -19,10 +19,15 @@
  * Contributor(s):
  */
 
+/* Private "control" methods on the Window Watcher. These are annoying
+   bookkeeping methods, not part of the public (embedding) interface.
+*/
+
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
+interface nsIWebBrowserChrome;
 
 [ptr] native jsvalptr(jsval);
 
@@ -32,8 +37,13 @@ interface nsPIWindowWatcher : nsISupports
 {
   /** A window has been created. Add it to our list.
       @param aWindow the window to add
+      @param aChrome the corresponding chrome window. The DOM window
+                     and chrome will be mapped together, and the corresponding
+                     chrome can be retrieved using the (not private)
+                     method getChromeForWindow. If null, any extant mapping
+                     will be cleared.
   */
-  void addWindow(in nsIDOMWindow aWindow);
+  void addWindow(in nsIDOMWindow aWindow, in nsIWebBrowserChrome aChrome);
 
   /** A window has been closed. Remove it from our list.
       @param aWindow the window to remove
