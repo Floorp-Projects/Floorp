@@ -3862,7 +3862,7 @@ BOOL CheckLegacy(HWND hDlg)
 {
   char      szSection[MAX_BUF];
   char      szFilename[MAX_BUF];
-  LPSTR     szMessage[3];
+  LPSTR     szMessage[4];
   char      szIndex[MAX_BUF];
   char      szVersionNew[MAX_BUF];
   char      szDecryptedFilePath[MAX_BUF];
@@ -3914,6 +3914,11 @@ BOOL CheckLegacy(HWND hDlg)
         bRv = TRUE;
         break;
       }
+      if((szMessage[3] = NS_GlobalAlloc(MAX_BUF)) == NULL)
+      {
+        bRv = TRUE;
+        break;
+      }
 
       lstrcpy(szMessage[0], sgProduct.szPath);
       if(*sgProduct.szSubPath != '\0')
@@ -3924,7 +3929,8 @@ BOOL CheckLegacy(HWND hDlg)
 
       GetPrivateProfileString(szSection, "Message0", "", szMessage[1], MAX_BUF, szFileIniConfig);
       GetPrivateProfileString(szSection, "Message1", "", szMessage[2], MAX_BUF, szFileIniConfig);
-      if((*szMessage[1] == '\0') && (*szMessage[2] == '\0'))
+      GetPrivateProfileString(szSection, "Message2", "", szMessage[3], MAX_BUF, szFileIniConfig);
+      if((*szMessage[1] == '\0') && (*szMessage[2] == '\0') && (*szMessage[3] == '\0'))
         /* no message string input. so just continue with the next check */
         continue;
 
