@@ -26,7 +26,7 @@ function onInit()
 {
     // init values here
     initServerSettings();
-    if(serverType == "nntp") {
+    if(gServerType == "nntp") {
         initRetentionSettings();
         initDownloadSettings();
     }
