@@ -213,8 +213,10 @@ bin/plugins/libnullplugin.so
 bin/res/entityTables/*
 bin/defaults/wallet/FieldSchema.tbl
 bin/defaults/wallet/SchemaConcat.tbl
-bin/defaults/wallet/URLFieldSchema.tbl
 bin/defaults/wallet/DistinguishedSchema.tbl
+bin/defaults/wallet/SchemaStrings.tbl
+bin/defaults/wallet/PositionalSchema.tbl
+bin/defaults/wallet/StateSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
 bin/res/acceptlanguage.properties
