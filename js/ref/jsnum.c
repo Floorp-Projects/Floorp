@@ -117,7 +117,7 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     while (JS_ISSPACE(*chars) && *chars != 0)
         chars++;
 
-    if ((negative = (*chars == '-')) || *chars == '+')
+    if ((negative = (*chars == '-')) != 0 || *chars == '+')
         chars++;
 
     if (argc > 1) {

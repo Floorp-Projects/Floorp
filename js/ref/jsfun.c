@@ -1025,7 +1025,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		propname = ATOM_BYTES(sym_atom(sprop->symbols));
                 propid = sprop->id;
 		if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, &propid) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 	    }
@@ -1035,7 +1035,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	    i = fun->nvars + fun->nargs;
 	    while (i--) {
 		if (!JS_XDRUint32(xdr, &type) ||
-                    !JS_XDRUint32(xdr, &propid) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 		PR_ASSERT(type == JSXDR_FUNARG || type == JSXDR_FUNVAR);
