@@ -258,14 +258,12 @@ public:
       *rv = servMgr->GetService(mCID, aIID, &mService);
       NS_RELEASE(servMgr);
     }
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
   }
 
   nsService(nsISupports* aServMgr, const char* aProgID, const nsIID& aIID, nsresult *rv)
     : mService(0)
   {
     *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get CLSID.");
     if (NS_FAILED(*rv)) return;
   
     nsIServiceManager* servMgr;
@@ -274,21 +272,18 @@ public:
       *rv = servMgr->GetService(mCID, aIID, &mService);
       NS_RELEASE(servMgr);
     }
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
   }
 
   nsService(const nsCID& aClass, const nsIID& aIID, nsresult *rv)
     : mCID(aClass), mService(0) {
     *rv = nsServiceManager::GetService(aClass, aIID,
                                        (nsISupports**)&mService);
-    NS_ASSERTION(NS_SUCCEEDED(*rv), "Couldn't get service.");
   }
 
   ~nsService() {
     if (mService) {       // mService could be null if the constructor fails
       nsresult rv = NS_OK;
       rv = nsServiceManager::ReleaseService(mCID, mService);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't release service.");
     }
   }
 
