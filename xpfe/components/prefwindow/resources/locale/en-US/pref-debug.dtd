@@ -17,4 +17,8 @@
 <!ENTITY debugWindow.label "debug window">
 <!ENTITY debugXULBox.label "debug XUL boxes">
 
-
+<!-- Accelerator Key -->
+<!ENTITY accelerators.label  "Keyboard accelerators">
+<!ENTITY acceleratorsBlurb.label  "A value of zero disables a modifier key.">
+<!ENTITY acceleratorKey.label  "Accelerator key:">
+<!ENTITY menuAccessKey.label   "Menu access key:">
