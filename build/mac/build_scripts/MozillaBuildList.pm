@@ -24,7 +24,14 @@ use MozJar;
 use MacCVS;
 
 @ISA        = qw(Exporter);
-@EXPORT     = qw(ConfigureBuildSystem Checkout RunBuild BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects BuildOneProject);
+@EXPORT     = qw(   ConfigureBuildSystem
+                    Checkout
+                    RunBuild
+                    BuildDist
+                    BuildProjects
+                    BuildCommonProjects
+                    BuildLayoutProjects
+                    BuildOneProject);
 
 
 # NGLayoutBuildList builds the nglayout project
@@ -2012,16 +2019,21 @@ sub Checkout()
 #//--------------------------------------------------------------------------------------------------
 #// RunBuild
 #//--------------------------------------------------------------------------------------------------
-sub RunBuild($$)
+sub RunBuild($$$)
 {
-    my($do_pull, $do_build) = @_;
+    my($do_pull, $do_build, $build_prefs) = @_;
     
     SetupBuildLog($main::USE_TIMESTAMPED_LOGS);
     
     StopForErrors();
     #DontStopForErrors();
+
+    # if we are pulling, we probably want to do a full build, so clear the build progress
+    if ($do_pull) {
+        ClearBuildProgress();    
+    }
     
-    SetupBuildParams(\%main::pull, \%main::build, \%main::options, \%main::optiondefines, "Mozilla debug build prefs");
+    SetupBuildParams(\%main::pull, \%main::build, \%main::options, \%main::optiondefines, $build_prefs);
     
     ConfigureBuildSystem();
     
@@ -2031,15 +2043,12 @@ sub RunBuild($$)
     
     unless ($do_build) { return; }
     
-    if (!$main::DEBUG)
-    {
-        my(@gen_files) = (
-            ":mozilla:xpfe:appshell:public:nsBuildID.h",
-            ":mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd"
-        );
-        SetBuildNumber(":mozilla:config:build_number", ":mozilla:config:aboutime.pl", \@gen_files);
-    }
-    
+    my(@gen_files) = (
+        ":mozilla:config:nsBuildID.h",
+        ":mozilla:xpfe:global:build.dtd"
+    );
+    SetBuildNumber(":mozilla:config:build_number", \@gen_files);
+        
     chdir($main::MOZ_SRC);
     BuildDist();
     
