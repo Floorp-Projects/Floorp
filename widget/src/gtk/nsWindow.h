@@ -30,10 +30,8 @@
 
 #include "nsString.h"
 
-#ifdef USE_SUPERWIN
 #include "gtkmozarea.h"
 #include "gdksuperwin.h"
-#endif // USE_SUPERWIN 
 
 class nsFont;
 class nsIAppShell;
@@ -73,7 +71,6 @@ public:
   NS_IMETHOD           BeginResizingChildren(void);
   NS_IMETHOD           EndResizingChildren(void);
 
-#ifdef USE_SUPERWIN
   NS_IMETHOD           GetAbsoluteBounds(nsRect &aRect);
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
@@ -98,7 +95,6 @@ public:
   virtual void         InstallFocusInSignal(GtkWidget * aWidget);
   virtual void         InstallFocusOutSignal(GtkWidget * aWidget);
   void                 HandleGDKEvent(GdkEvent *event);
-#endif /* USE_SUPERWIN */
 
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
