@@ -73,8 +73,8 @@ class nsSlidingSubstring
     friend class nsSlidingSharedBufferList;
 
     public:
-      nsSlidingSubstring( nsSharedBufferList* aBufferList, const nsSharedBufferList::Position& aStart, const nsSharedBufferList::Position& aEnd );
-      nsSlidingSubstring( nsSharedBufferList* aBufferList );
+      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList, const nsSharedBufferList::Position& aStart, const nsSharedBufferList::Position& aEnd );
+      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList );
      ~nsSlidingSubstring();
 
       // need to take care of
@@ -84,11 +84,11 @@ class nsSlidingSubstring
       virtual PRUint32 Length() const { return mLength; }
 
     protected:
-      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
+      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
       
     protected:
       nsSharedBufferList::Position  mStart, mEnd;
-      nsSharedBufferList&           mBufferList;
+      nsSlidingSharedBufferList&    mBufferList;
       PRUint32                      mLength;
   };
 
