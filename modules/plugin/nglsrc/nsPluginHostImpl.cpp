@@ -21,7 +21,6 @@
 #include "prio.h"
 #include "prmem.h"
 #include "ns4xPlugin.h"
-#include "nsMalloc.h"
 #include "nsPluginInstancePeer.h"
 
 #ifdef NEW_PLUGIN_STREAM_API
@@ -73,7 +72,6 @@ static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 #endif
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
-static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
@@ -1096,8 +1094,6 @@ printf("killing plugin host\n");
     delete mPlugins;
     mPlugins = temp;
   }
-
-  NS_IF_RELEASE(mMalloc);
 }
 
 NS_IMPL_ADDREF(nsPluginHostImpl)
@@ -1136,13 +1132,6 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
   {
     *aInstancePtrResult = (void *)((nsIFactory *)this);
     AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIMallocIID))
-  {
-    *aInstancePtrResult = mMalloc;
-    NS_IF_ADDREF(mMalloc);
     return NS_OK;
   }
 
@@ -1504,20 +1493,7 @@ printf("plugin manager2 processnextevent called\n");
 
 NS_IMETHODIMP nsPluginHostImpl :: Init(void)
 {
-  nsresult    rv = NS_OK;
-
-  nsISupports *object;
-
-  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&object);
-
-  //it should be possible to kill this now... MMP
-  if (NS_OK == rv)
-  {
-    rv = object->QueryInterface(kIMallocIID, (void **)&mMalloc);
-    NS_RELEASE(object);
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginHostImpl :: Destroy(void)
