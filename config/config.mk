@@ -131,11 +131,11 @@ endif
 # platform to be built in the same tree.
 #
 ifneq (,$(filter FreeBSD HP-UX IRIX Linux NetBSD OpenBSD OSF1 SunOS,$(OS_ARCH)))
-OS_VERS		:= $(suffix $(OS_RELEASE))
 OS_RELEASE	:= $(basename $(OS_RELEASE))
 
 # Allow the user to ignore the OS_VERSION, which is usually irrelevant.
-ifndef MOZILLA_CONFIG_IGNORE_OS_VERSION
+ifdef WANT_MOZILLA_CONFIG_OS_VERSION
+OS_VERS		:= $(suffix $(OS_RELEASE))
 OS_VERSION	:= $(shell echo $(OS_VERS) | sed 's/-.*//')
 endif
 
