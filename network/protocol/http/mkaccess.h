@@ -83,6 +83,7 @@ net_http_password_data_interp(
 
 PUBLIC void NET_DeleteCookie(char* cookieURL);
 PUBLIC void NET_DisplayCookieInfoAsHTML(MWContext * context);
+PUBLIC void NET_CookieViewerReturn();
 
 
 /*============================================================================================
