@@ -52,7 +52,7 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 #define XPCOM_GLUE_FLUSH_HEAP
 #endif
 
-#define XPCOM_GLUE_NO_DYNAMIC_LOADING
+//#define XPCOM_GLUE_NO_DYNAMIC_LOADING
 
 // seawood tells me there isn't a better way...
 #ifdef XP_PC
