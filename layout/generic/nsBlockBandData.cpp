@@ -236,45 +236,45 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
 nscoord
 nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
-  // Update band information based on target Y before clearing.
-  nscoord oldY = aY;
-  GetAvailableSpace(aY);
+  for (;;) {
+    // Update band information based on target Y before clearing.
+    nscoord oldY = aY;
+    GetAvailableSpace(aY);
 
-  // Compute aY in space-manager "root" coordinates.
-  nscoord finalY = oldY;
-  nscoord aYS = aY + mSpaceManagerY;
+    // Compute aYS as aY in space-manager "root" coordinates.
+    nscoord aYS = aY + mSpaceManagerY;
 
-  // Calculate the largest trapezoid YMost for the appropriate
-  // floaters in this band.
-  nscoord yMost = aYS;
-  PRInt32 i;
-  for (i = 0; i < count; i++) {
-    nsBandTrapezoid* trapezoid = &mData[i];
-    if (nsBandTrapezoid::Available != trapezoid->state) {
-      if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-        PRInt32 fn, numFrames = trapezoid->frames->Count();
-        NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
-        for (fn = 0; fn < numFrames; fn++) {
-          nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
-          if (ShouldClearFrame(frame, aBreakType)) {
-            nscoord ym = GetFrameYMost(frame);
-            if (ym > yMost) yMost = ym;
+    // Find the largest frame YMost for the appropriate floaters in
+    // this band.
+    nscoord yMost = aYS;
+    PRInt32 i;
+    for (i = 0; i < count; i++) {
+      nsBandTrapezoid* trapezoid = &mData[i];
+      if (nsBandTrapezoid::Available != trapezoid->state) {
+        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+          PRInt32 fn, numFrames = trapezoid->frames->Count();
+          NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+          for (fn = 0; fn < numFrames; fn++) {
+            nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
+            if (ShouldClearFrame(frame, aBreakType)) {
+              nscoord ym = GetFrameYMost(frame);
+              if (ym > yMost) yMost = ym;
+            }
           }
         }
-      }
-      else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
-        nscoord ym = GetFrameYMost(trapezoid->frame);
-        if (ym > yMost) yMost = ym;
+        else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
+          nscoord ym = GetFrameYMost(trapezoid->frame);
+          if (ym > yMost) yMost = ym;
+        }
       }
     }
-  }
 
-  // If yMost is unchanged (aYS) then there were no appropriate
-  // floaters in the band. In that case we restore mY to its
-  // original value.
-  if (yMost != aYS) {
-    finalY = aY + (yMost - aYS);
+    // If yMost is unchanged (aYS) then there were no appropriate
+    // floaters in the band. Time to stop clearing.
+    if (yMost == aYS) {
+      break;
+    }
+    aY = aY + (yMost - aYS);
   }
-
-  return finalY;
+  return aY;
 }
