@@ -7,6 +7,7 @@ help.jar:
 *       content/help/helpContextOverlay.xul             (content/helpContextOverlay.xul)
 *       content/help/customizeToolbar.xul               (content/customizeToolbar.xul)
 *       content/help/toolbarCustomization.js            (content/toolbarCustomization.js)
+*       content/help/platformClasses.css                (content/platformClasses.css)
         locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
         locale/en-US/help/help.properties               (locale/en-US/help.properties)
         locale/en-US/help/help.dtd                      (locale/en-US/help.dtd)

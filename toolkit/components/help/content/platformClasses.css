@@ -13,13 +13,12 @@
  *
  * The Original Code is Mozilla Help CSS
  *
- * The Initial Developer of the Original Code is
- * R.J. Keller
+ * The Initial Developer of the Original Code is R.J. Keller.
  * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *      Jeff Walden <Jswalden86@netzero.net>
+ *      Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,78 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url('chrome://help/content/platformClasses.css');
-
-body {
-	margin: 2ex;
-	color: black;
-	font-family: sans-serif;
-	font-size: 0.75em;
-	max-width: 120ex;
-}
-
-:link:hover { color: red; }
-
-a[href^="http://"]:after { content: url('chrome://help/skin/Weblink.png'); }
-
-h1 { font-size: 2em; }
-h2 { border-top: 1px solid black; font-size: 1.75em; }
-h3 { color: #009; font-size: 1em; margin-bottom: 0px; margin-top: 35px; }
-
-dt { font-weight: bold; }
-
-p {
-	text-indent: 15px;
-}
-
-.contentsBox, 
-.contentsBox > ul,
-li {
-	text-indent: 0px;
-}
-
-.contentsBox > ul,
-.contentsBox ul > ul{
-	margin: 0 0 0 0;
-	list-style-type: none;
-}
-
-.contentsBox {
-	margin-top: 12px;
-	background-color: #cccccc;
-	border: 1px solid black;
-	width: 300px;
-	padding: 1em;
-}
-
-.makeLeftMargin {
-	margin-left: 25px;
-}
-
-.menuPath {
-  background: #c4d0f4; /* bluish color */
-  color: inherit;
-  padding-left:  1px; /* else bgcolor ends at last char - no space */
-  padding-right: 1px;
-}
-
-table {
-	background-color: #eeeeee;    /* really light grey */
-}
-
-td {
-	border: 1px solid #999999;    /* grey */
-	vertical-align: top;
-}
-
-th {
-	background-color: #99ccff;    /* light aqua */
-	font-weight: bold;
-}
-
-.noTableBorder,
-.noTableBorder td,
-.noTableBorder th {
-	background-color: transparent;
-	border: 0px solid transparent;
-}
+#ifdef XP_WIN
+.noWin, .mac, .unix { display: none; } 
+#else
+#ifdef XP_MACOSX
+.noMac, .win, .unix { display: none; }
+#else
+#ifdef XP_OS2
+.noWin, .mac, .unix { display: none; }
+#else
+.noUnix, .win, .mac { display: none; }
+#endif
+#endif
+#endif

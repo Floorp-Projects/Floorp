@@ -20,7 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -44,10 +44,10 @@
 	list-style-image: url("chrome://help/skin/Toolbar.png");
 }
 
-#help-zoom-large-button,
-#help-zoom-small-button,
-#help-sidebar-button {
-	list-style-image: url("chrome://help/skin/Toolbar.png");
+.browserButton {
+  -moz-box-orient: vertical;
+  min-width: 0px;
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
 toolbarbutton:not([disabled="true"]):hover,
@@ -57,13 +57,16 @@ menubutton:not([disabled="true"]):hover:active {
 	color: ButtonText !important;
 }
 
-#help-back-button { -moz-image-region: rect(0px 144px 24px 120px); }
-#help-back-button[buttonover="true"] { -moz-image-region: rect(24px 144px 48px 120px); }
-#help-back-button[disabled="true"] { -moz-image-region: rect(48px 144px 72px 120px); }
+/* Set the minimum sidebar width so the help contents aren't squeezed together.*/
+#helpsidebar-box { width: 200px; }
 
-#help-forward-button { -moz-image-region: rect(0px 168px 24px 144px); }
-#help-forward-button[buttonover="true"] { -moz-image-region: rect(24px 168px 48px 144px); }
-#help-forward-button[disabled="true"] { -moz-image-region: rect(48px 168px 72px 144px); }
+#help-back-button { -moz-image-region: rect(0px 24px 24px 0px); }
+#help-back-button[buttonover="true"] { -moz-image-region: rect(24px 24px 48px 0px); }
+#help-back-button[disabled="true"] { -moz-image-region: rect(48px 24px 72px 0px); }
+
+#help-forward-button { -moz-image-region: rect(0px 48px 24px 24px); }
+#help-forward-button[buttonover="true"] { -moz-image-region: rect(24px 48px 48px 24px); }
+#help-forward-button[disabled="true"] { -moz-image-region: rect(48px 48px 72px 24px); }
 
 #help-find-button { -moz-image-region: rect(0px 192px 24px 168px); }
 #help-find-button:hover { -moz-image-region: rect(0px 192px 24px 168px); }
@@ -74,8 +77,8 @@ menubutton:not([disabled="true"]):hover:active {
 #help-home-button { -moz-image-region: rect(0px 120px 24px 96px); }
 #help-home-button:hover { -moz-image-region: rect(24px 120px 48px 96px); }
 
-#help-print-button { -moz-image-region: rect(0px 96px 24px 72px); }
-#help-print-button:hover { -moz-image-region: rect(24px 96px 48px 72px); }
+#help-print-button { -moz-image-region: rect(0px 216px 24px 192px); }
+#help-print-button:hover { -moz-image-region: rect(24px 216px 48px 192px); }
 
 #help-zoom-large-button { -moz-image-region: rect(0px 24px 24px 0px); }
 #help-zoom-large-button:hover { -moz-image-region: rect(24px 24px 48px 0px); }
@@ -88,16 +91,14 @@ menubutton:not([disabled="true"]):hover:active {
 
 /** Toolbar Customization stuff **/
 toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text 
+toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text, 
 toolbar[mode="icons"] > toolbarbutton[type="menu-button"] > .toolbarbutton-icon,
 toolbar[mode="text"] > toolbarbutton[type="menu-button"] > .toolbarbutton-text {
 	display: -moz-box;
 }
 
-toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-text,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="icons"] > toolbarbutton > toolbarbutton > .toolbarbutton-text {
+toolbar[mode="icons"] .toolbarbutton-text,
+toolbar[mode="text"] .toolbarbutton-icon {
 	display: none;
 }
 

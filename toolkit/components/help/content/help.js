@@ -203,9 +203,9 @@ function loadHelpRDF() {
                 // Cache Additional Datasources to Augment Search Datasources.
                 if (panelID == "search") {
                     emptySearchText = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_TEXT, "No search items found.");
+                        NC_EMPTY_SEARCH_TEXT, null) || "No search items found.";
                     emptySearchLink = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_LINK, "about:blank");
+                        NC_EMPTY_SEARCH_LINK, null) || "about:blank";
                     searchDatasources = datasources;
                     // Don't try to display them yet!
                     datasources = "rdf:null";
@@ -459,6 +459,7 @@ nsHelpStatusHandler.prototype = {
     },
     onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
         aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {},
     onSecurityChange : function(aWebProgress, aRequest, state) {},
     onLocationChange : function(aWebProgress, aRequest, aLocation) {
         UpdateBackForwardButtons();
@@ -539,7 +540,6 @@ function showPanel(panelId) {
     document.getElementById("help-toc-btn").removeAttribute("selected");
     //add the selected style to the correct panel.
     theButton.setAttribute("selected", "true");
-    document.commandDispatcher.advanceFocusIntoSubtree(theButton);
 }
 
 function findParentNode(node, parentNode)
@@ -564,13 +564,15 @@ function findParentNode(node, parentNode)
 }
 
 function onselect_loadURI(tree) {
-    var row = tree.currentIndex;
-    if (row >= 0) {
-        var resource = tree.view.getResourceAtIndex(row);
+    try {
+        var resource = tree.view.getResourceAtIndex(tree.currentIndex);
 	var link = tree.database.GetTarget(resource, NC_LINK, true);
-        if (link instanceof Components.interfaces.nsIRDFLiteral && link.Value)
+	if (link) {
+            link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
             loadURI(link.Value);
-    }
+        }
+    } catch (e) {
+    }// when switching between tabs a spurious row number is returned.
 }
 
 # doFind - Searches the help files for what is located in findText and outputs into
@@ -745,8 +747,23 @@ function loadCompositeDS(datasources) {
 function getAttribute(datasource, resource, attributeResourceName,
         defaultValue) {
     var literal = datasource.GetTarget(resource, attributeResourceName, true);
-    return literal instanceof Components.interfaces.nsIRDFLiteral ?
-           literal.Value : defaultValue;
+    if (!literal) {
+        return defaultValue;
+    }
+    return getLiteralValue(literal, defaultValue);
+}
+
+function getLiteralValue(literal, defaultValue) {
+    if (literal) {
+        literal = literal.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (literal) {
+            return literal.Value;
+        }
+    }
+    if (defaultValue) {
+        return defaultValue;
+    }
+    return null;
 }
 
 # Write debug string to javascript console.
@@ -789,5 +806,30 @@ function toggleSidebar()
 
       separator.setAttribute("hidden","true");
     }
+}
+
+// Shows the panel relative to the currently selected panel.
+// Takes a boolean parameter - if true it will show the next panel, 
+// otherwise it will show the previous panel.
+function showRelativePanel(goForward) {
+  var selectedIndex = -1;
+  var sidebarBox = document.getElementById("helpsidebar-box");
+  var sidebarButtons = new Array();
+  for (var i = 0; i < sidebarBox.childNodes.length; i++) {
+    var btn = sidebarBox.childNodes[i];
+    if (btn.nodeName == "toolbarbutton") {
+      if (btn.getAttribute("selected") == "true")
+        selectedIndex = sidebarButtons.length;
+      sidebarButtons.push(btn);
+    }
+  }
+  if (selectedIndex == -1)
+    return;
+  selectedIndex += goForward ? 1 : -1;
+  if (selectedIndex >= sidebarButtons.length)
+    selectedIndex = 0;
+  else if (selectedIndex < 0)
+    selectedIndex = sidebarButtons.length - 1;
+  sidebarButtons[selectedIndex].doCommand();
 }
 

@@ -26,6 +26,7 @@
         <rdf:li> <rdf:Description nc:name="encryption" nc:link="glossary.xhtml#encryption"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Extensible Stylesheet Language Transformation (XSLT)" nc:link="glossary.xhtml#XSLT"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Extensible Markup Language (XML)" nc:link="glossary.xhtml#XML"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="feed" nc:link="glossary.xhtml#feed"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="File Transfer Protocol (FTP)" nc:link="glossary.xhtml#File_Transfer_Protocol"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.xhtml#FIPS_PUBS_140-1"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.xhtml#foreign_cookie"/> </rdf:li>
@@ -41,6 +42,7 @@
         <rdf:li> <rdf:Description nc:name="JavaScript" nc:link="glossary.xhtml#JavaScript"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="key" nc:link="glossary.xhtml#key"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="glossary.xhtml#LDAP_glossary"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="live bookmark" nc:link="glossary.xhtml#live_bookmark"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Location Bar" nc:link="glossary.xhtml#location_bar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master password" nc:link="glossary.xhtml#master_password"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Navigation Toolbar" nc:link="glossary.xhtml#navigation_toolbar"/> </rdf:li>
@@ -55,6 +57,7 @@
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.xhtml#private_key"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="proxy" nc:link="glossary.xhtml#proxy"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="search engine" nc:link="glossary.xhtml#search_engine"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="secure site" nc:link="glossary.xhtml#secure_site"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.xhtml#Secure_Sockets_Layer"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="server" nc:link="glossary.xhtml#server"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="SSL" nc:link="glossary.xhtml#SSL"/> </rdf:li>
