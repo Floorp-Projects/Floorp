@@ -85,6 +85,24 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+	// notify the children that we're gone
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+	if (children)
+	{
+		children->First();
+		do
+		{
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			{
+				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				NS_RELEASE(child);
+
+				childWindow->mParent = nsnull;
+    	}
+		} while (NS_SUCCEEDED(children->Next()));			
+	}
+
 	mDestructorCalled = PR_TRUE;
 
 	//Destroy();
