@@ -17,11 +17,11 @@ packages\core.jar:
         navigator\content\tooltip.js                   (resources\content\tooltip.js) 
         navigator\content\nsContextMenu.js             (resources\content\nsContextMenu.js) 
 
-locales.jar:
-	    en-US\navigator\locale\openLocation.dtd             (resources\locale\en-US\openLocation.dtd) 
-        en-US\navigator\locale\openLocation.properties      (resources\locale\en-US\openLocation.properties) 
-        en-US\navigator\locale\viewSource.dtd               (resources\locale\en-US\viewSource.dtd) 
-        en-US\navigator\locale\navigator.dtd                (resources\locale\en-US\navigator.dtd) 
-        en-US\navigator\locale\NetSupportConfirmCheckYN.dtd (resources\locale\en-US\NetSupportConfirmCheckYN.dtd) 
-        en-US\navigator\locale\navigator.properties         (resources\locale\en-US\navigator.properties) 
+locales\en-US.jar:
+	    navigator\locale\openLocation.dtd             (resources\locale\en-US\openLocation.dtd) 
+        navigator\locale\openLocation.properties      (resources\locale\en-US\openLocation.properties) 
+        navigator\locale\viewSource.dtd               (resources\locale\en-US\viewSource.dtd) 
+        navigator\locale\navigator.dtd                (resources\locale\en-US\navigator.dtd) 
+        navigator\locale\NetSupportConfirmCheckYN.dtd (resources\locale\en-US\NetSupportConfirmCheckYN.dtd) 
+        navigator\locale\navigator.properties         (resources\locale\en-US\navigator.properties) 
 
