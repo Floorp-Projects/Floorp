@@ -748,8 +748,8 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 					}
 					else
 					{
-					        nsIContent	*cell1 = nsnull;
-						if (NS_SUCCEEDED(rv = GetTreeCell(sortInfo, node1, sortInfo->colIndex, &cell1)))
+					        nsCOMPtr<nsIContent>	cell1;
+						if (NS_SUCCEEDED(rv = GetTreeCell(sortInfo, node1, sortInfo->colIndex, getter_AddRefs(cell1))))
 						{
 							if (cell1)
 							{
@@ -962,13 +962,13 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			nsIRDFResource **flatArray, PRInt32 numElements, PRInt32 elementSize)
 {
 	nsresult	rv;
-	nsIContent	*treeNode;
 	nsString	sortResource, sortDirection;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
 
-	if (NS_FAILED(rv = FindTreeElement(container, &treeNode)))	return(rv);
+	nsCOMPtr<nsIContent>	treeNode;
+	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))	return(rv);
 
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
@@ -1009,13 +1009,13 @@ NS_IMETHODIMP
 XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 {
 	nsresult	rv;
-	nsIContent	*treeNode;
 	nsString	sortResource, sortDirection;
 	_sortStruct	sortInfo;
 
 	// get sorting info (property to sort on, direction to sort, etc)
 
-	if (NS_FAILED(rv = FindTreeElement(container, &treeNode)))	return(rv);
+	nsCOMPtr<nsIContent>	treeNode;
+	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))	return(rv);
 
 	// get composite db for tree
 	nsIDOMXULTreeElement	*domXulTree;
@@ -1178,23 +1178,24 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
 {
 	PRInt32		colIndex, treeBodyIndex;
-	nsIContent	*contentNode, *treeNode, *treeBody, *treeParent;
 	nsresult	rv;
 	_sortStruct	sortInfo;
 
 	// get tree node
-	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, (void**)&contentNode)))	return(rv);
-	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
+	nsCOMPtr<nsIContent>	contentNode = do_QueryInterface(node);
+	if (!contentNode)	return(NS_ERROR_FAILURE);
+	nsCOMPtr<nsIContent>	treeNode;
+	if (NS_FAILED(rv = FindTreeElement(contentNode, getter_AddRefs(treeNode))))	return(rv);
 
 	// get composite db for tree
-	nsIDOMXULTreeElement	*domXulTree;
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
-	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
+	nsCOMPtr<nsIDOMXULTreeElement>	domXulTree = do_QueryInterface(treeNode);
+	if (!domXulTree)	return(NS_ERROR_FAILURE);
+	nsCOMPtr<nsIRDFCompositeDataSource> cds;
+	if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 	{
-		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(&sortInfo.db)))
-		{
-		}
+		sortInfo.db = cds;
 	}
 
 	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
@@ -1227,13 +1228,15 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	// reflows...
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
 	sortInfo.colIndex = colIndex;
-	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, &treeBody)))	return(rv);
+	nsCOMPtr<nsIContent>	treeBody;
+	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, getter_AddRefs(treeBody))))	return(rv);
 	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, &sortInfo, 0)))
 	{
 	}
 
     // Now remove the treebody and re-insert it to force the frames to be rebuilt.
-	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
+    	nsCOMPtr<nsIContent>	treeParent;
+	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
 
