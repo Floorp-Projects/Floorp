@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= plugin
 XPIDL_MODULE	= layout
 LIBRARY_NAME	= gkplugin
-SHORT_LIBNAME	= ngplugin
 IS_COMPONENT    = 1
 REQUIRES	= xpcom java pref js necko gtkxtbin webshell caps intl dom locale layout widget cookie mime oji exthandler appshell htmlparser view docshell webbrwsr
 
