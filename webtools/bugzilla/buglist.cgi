@@ -1228,13 +1228,13 @@ while (@row = FetchSQLData()) {
         }
         my $customstyle = "";
         if ($severity) {
-            if ($severity eq "enhan") {
+            if ($severity eq "enh") {
                 $customstyle = "style='font-style:italic ! important'";
             }
-            if ($severity eq "block") {
+            if ($severity eq "blo") {
                 $customstyle = "style='color:red ! important; font-weight:bold ! important'";
             }
-            if ($severity eq "criti") {
+            if ($severity eq "cri") {
                 $customstyle = "style='color:red; ! important'";
             }
         }
