@@ -59,7 +59,6 @@ DIRS = \
   modules\libpref		\
   intl                          \
   caps                          \
-  lib\xp			\
 !if !defined(NECKO)
   lib\libpwcac			\
   network			\
