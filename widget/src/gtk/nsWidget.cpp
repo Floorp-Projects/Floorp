@@ -123,6 +123,7 @@ ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
                                   nsMouseEvent* outCMEvent)
 {
   *(nsInputEvent *)outCMEvent = *(nsInputEvent *)inKeyEvent;
+  outCMEvent->eventStructType = NS_MOUSE_EVENT;
   outCMEvent->message = NS_CONTEXTMENU_KEY;
   outCMEvent->isShift = outCMEvent->isControl = PR_FALSE;
   outCMEvent->isAlt = outCMEvent->isMeta = PR_FALSE;
