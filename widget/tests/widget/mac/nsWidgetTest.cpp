@@ -1125,11 +1125,11 @@ nsresult WidgetTest(int *argc, char **argv)
     // register widget classes
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
     
 #ifdef NOTNOW       
-    NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1185,6 +1185,34 @@ nsresult WidgetTest(int *argc, char **argv)
     window->Show(PR_TRUE);
     window->SetBackgroundColor(NS_RGB(196, 196, 196));
 
+
+    int x = 5;
+    int y = 10;
+    rect.SetRect(x, y, 100, 100);  
+
+    //
+    // create a button
+    //
+    nsIButton *button;
+    rect.SetRect(x, y, 60, 25);  
+    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
+    button->Create(window, rect, HandleEvent, NULL);
+    nsString label("Slider");
+    button->SetLabel(label);
+
+    nsAutoString strBuf;
+    button->GetLabel(strBuf);
+    button->Show(PR_TRUE);
+
+    movingWidget = button;
+    y += rect.height + 5;
+
+    x = 5;
+    x = createTestButton(window, kHideBtn, x, y, 75, ButtonTestHandleEvent) + 5;
+    x = createTestButton(window, kShowBtn, x, y, 75, ButtonTestHandleEvent);
+    x = 5;
+    y += rect.height + 5;
+
 #ifdef NOTNOW
 
     //
@@ -1234,29 +1262,6 @@ nsresult WidgetTest(int *argc, char **argv)
 
     y += rect.height + 5;
 
-   
-    //
-    // create a button
-    //
-    nsIButton *button;
-    rect.SetRect(x, y, 60, 25);  
-    NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-    button->Create(window, rect, HandleEvent, NULL);
-    nsString label("Slider");
-    button->SetLabel(label);
-
-    nsAutoString strBuf;
-    button->GetLabel(strBuf);
-    button->Show(PR_TRUE);
-
-    movingWidget = button;
-    y += rect.height + 5;
-
-    x = 5;
-    x = createTestButton(window, kHideBtn, x, y, 75, ButtonTestHandleEvent) + 5;
-    x = createTestButton(window, kShowBtn, x, y, 75, ButtonTestHandleEvent);
-    x = 5;
-    y += rect.height + 5;
 
     // Create browse button
     x = createTestButton(window, kBrowseBtn, x,   y, 75, HandleFileButtonEvent);
