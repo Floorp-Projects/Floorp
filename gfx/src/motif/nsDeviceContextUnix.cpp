@@ -99,7 +99,7 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
 
   mSurface = new nsDrawingSurfaceUnix();
 
-  mSurface->display =  XtDisplay((Widget)win->GetNativeData(NS_NATIVE_WIDGET));
+  mSurface->display =  (Display *)win->GetNativeData(NS_NATIVE_DISPLAY);
   mSurface->drawable = (Drawable)win->GetNativeData(NS_NATIVE_WINDOW);
   mSurface->gc       = (GC)win->GetNativeData(NS_NATIVE_GRAPHIC);
 

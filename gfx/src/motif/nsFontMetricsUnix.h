@@ -26,7 +26,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 
-#include "Xm/Xm.h"
+#include "X11/Xlib.h"
 
 class nsFontMetricsUnix : public nsIFontMetrics
 {
