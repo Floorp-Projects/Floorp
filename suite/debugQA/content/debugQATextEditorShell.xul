@@ -78,35 +78,6 @@
  
     <menu id="insertMenu"/>
 
-    <menu value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
-    <menupopup>
-      <menu id="fontFaceMenu"/>
-      <menu id="fontSizeMenu"/>
-      <menu id="fontStyleMenu"/>
-      <menu id="fontColorMenu"/>
-      <menu id="backgroundColorMenu"/>
-  
-      <menuitem id="removeAllStylesMenuitem"/>
-      <menuitem id="removeLinksMenuitem"/>
-      <menuseparator />
-      
-      <menu id="headingMenu"/>
-      <menu id="paragraphMenu"/>
-      <menuseparator />
-      <menu id="stylesheetMenu"/>
-    </menupopup>
-    </menu>
-
-    <menu value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
-      <menupopup>
-        <menu id="tableInsertMenu"/>
-        <menu id="tableDeleteMenu"/>
-        <menuseparator />
-        <menuitem id="tableJoinCellsMenuitem"/>
-        <menuitem id="tablePropertiesMenuitem"/>
-      </menupopup>
-    </menu>
-
     <!-- tasks menu filled from tasksOverlay -->
     <menu accesskey="t" id="tasksMenu"/>
 
