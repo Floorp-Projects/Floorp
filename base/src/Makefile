@@ -53,8 +53,10 @@ EXPORTS =                       \
     nsITimerCallback.h          \
     nsIUnicharBuffer.h          \
     nsIUnicharInputStream.h     \
+    nsInt64.h                   \
     nsRBTree.h                  \
     nsString.h                  \
+    nsTime.h			\
     nsVoidArray.h               \
     nsUnitConversion.h          \
     $(NULL)

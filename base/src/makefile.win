@@ -58,7 +58,8 @@ EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
     nsITimerCallback.h nsIUnicharBuffer.h nsRBTree.h \
     nsIUnicharInputStream.h nsString.h nsVoidArray.h \
     nsUnitConversion.h \
-    nsIBaseStream.h nsIInputStream.h nsIOutputStream.h
+    nsIBaseStream.h nsIInputStream.h nsIOutputStream.h \
+    nsInt64.h nsTime.h
 
 MODULE=raptor 
 
