@@ -952,16 +952,27 @@ nsCString& nsCString::Append(char aChar) {
  * @return
  */
 nsCString& nsCString::Append(PRInt32 aInteger,PRInt32 aRadix) {
-  char* fmt = "%d";
-  if (8 == aRadix) {
-    fmt = "%o";
-  } else if (16 == aRadix) {
-    fmt = "%x";
+  char buf[128]={0,0};
+  char* buffer=buf;
+
+  ldiv_t r;                                 /* result of val / base  */
+  if (aRadix> 36 || aRadix< 2)  {          /* no conversion if wrong base */
+    return *this;
   }
-  char buf[40];
-  // *** XX UNCOMMENT THIS LINE
-  //PR_snprintf(buf, sizeof(buf), fmt, aInteger);
-  sprintf(buf,fmt,aInteger);
+
+  if (aInteger < 0)
+    *buffer++ = '-';
+  r = ldiv (labs(aInteger), aRadix);
+
+  /* output digits of val/base first */
+  if (r.quot > 0)
+    buffer = ltoa ( r.quot, buf, aRadix);
+
+  /* output last digit */
+  int len=strlen(buffer);
+  buf[len] = "0123456789abcdefghijklmnopqrstuvwxyz"[(int)r.rem];
+  buf[len+1] =0;
+  
   return Append(buf);
 }
 
