@@ -24,6 +24,8 @@ include <$(DEPTH)\config\rules.mak>
 install::
 	$(MAKE_INSTALL) progress.dtd   $(DIST)\bin\chrome\xpinstall\locale\en-US
 	$(MAKE_INSTALL) xpistatus.dtd  $(DIST)\bin\chrome\xpinstall\locale\en-US
+	$(MAKE_INSTALL) xpinstall.properties $(DIST)\bin\chrome\xpinstall\locale\en-US
+	
 
 clobber::
   rm -f $(DIST)\bin\chrome\xpinstall\locale\en-US\*.*
