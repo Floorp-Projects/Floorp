@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xul-overlay href="chrome://global/content/platformDialogOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/dialogOverlay.dtd">
 

@@ -1740,26 +1740,8 @@ html|input[type=radio][disabled] {
 
 /********** checkbox **********/
 
-checkbox, foopy {
+checkbox {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
-}
-
-checkbox > .internal-box > text,
-radio > .internal-box > text {
-  border: 1px solid red;
-}
-
-radio:focus > .internal-box > text,
-checkbox:focus > .internal-box > text {
-  border: 1px dotted black;
-}
-
-checkbox > .internal-box > image {
-  border: 1px outset #CCCCCC;
-}
-
-checkbox:hover > .internal-box > image {
-  border: 1px solid black;
 }
 
 checkbox[checked="true"] {
@@ -1770,18 +1752,12 @@ radio {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
 }
 
-
-radio > .internal-box > image {
-  border: 1px outset #CCCCCC;
-  -moz-border-radius: 6px;
-}
-
-radio:hover > .internal-box > image {
-  border: 1px solid black;
-}
-
 radio[checked="true"] {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
+}
+
+radiogroup {
+  border: 1px solid black;
 }
 
 html|input[type=checkbox] {
@@ -2099,53 +2075,38 @@ toolbarseparator.line {
   background-color: #99CCCC;
 }
 
-/* push button */
-button {
-  border: 1px solid #CCCCCC;
-  margin: 2px;
-  background-color: inherit;
-  background-image: inherit;
+/* NEW WIDGET LANDING: <separator> */
+separator, separator[orient="horizontal"] {
+  height: 1.5em;
 }
 
-button > .internal-box > image, 
-button.left > .internal-box > image, 
-button.right > .internal-box > text {
-  padding-right: 5px;
+separator[orient="vertical"] {
+  width: 1.5em;
 }
 
-button.top > .internal-box > image,
-button.bottom > .internal-box > text {
-  padding-bottom: 3px;
+separator.thin, separator.thin[orient="horizontal"] {
+  height: 0.5em;
 }
 
-
-button:hover {
-  border: 1px solid #000000;
-  color: #003366;
-  text-decoration: underline;
-}
- 
-button:active {
-  border: 1px solid #000000;
-  text-decoration: none;
+separator.thin[orient="vertical"] {
+  width: 0.5em;
 }
 
-button > .internal-box {
-  vertical-align: middle;
-  border: 1px outset #CCCCCC;
-  padding: 2px;
+separator.groove,
+separator.groove[orient="horizontal"] {
+  border-top: 2px groove #CCCCCC;
+  height: 0px;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
 }
 
-button:hover > .internal-box {
-  padding: 2px;
+separator[type="groove"][orient="vertical"] {
+  border-left: 2px groove #CCCCCC;
+  margin-left: 0.75em;
+  margin-right: 0.75em;
 }
 
-button:hover:active > .internal-box {
-  border: 1px inset #CCCCCC;
-  padding: 3px 1px 1px 3px;
-}
-
-button:active > .internal-box {
-  border: 1px inset #CCCCCC;
-  padding: 3px 1px 1px 3px;
+html {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
 }

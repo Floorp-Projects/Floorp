@@ -19,22 +19,11 @@
 	<html:script language="javascript" src="chrome://global/content/wizardManager.js" />
 	<html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
 
-  <toolbar class="decorated header" align="horizontal">
-    <titledbutton id="profileIcon" class="button28"/>
-    <box align="vertical">
-      <spring flex="100%"/>
-      <html:div class="headertext">&newprofile.title;</html:div>
-      <spring flex="100%"/>
-    </box>
-    <spring flex="100%"/>
-  </toolbar>
+  <box type="largeheader" id="header" value="&profileWizard.title;"/>
   <box id="contentarea" flex="100%">
   	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content"  id="content" scrolling="auto" flex="100%"/>
   </box>
 	<box id="wizardButtons"/>
-  <toolbar class="standard title">
-    <html:div class="dimmed-highcontrast">&window.title.label;</html:div>
-    <spring flex="100%"/>
-    <html:div id="progress" class="dimmed-highcontrast"/>
-  </toolbar>
+  <box type="status" id="status" value="&window.title.label;" progress=""/>
+
 </window>

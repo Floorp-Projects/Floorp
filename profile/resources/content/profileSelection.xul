@@ -22,7 +22,7 @@
   Contributor(s): 
 
   Contributors:
-    Code:     Ben Goodger (28/10/99)
+    Code:     Ben Goodger <ben@netscape.com>
     UI Ideas: Matthew Thomas, Ben Gregory
   
 -->
@@ -48,100 +48,52 @@
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
   </keyset>
 
-  <toolbar class="decorated header" align="horizontal">
-    <titledbutton id="profileIcon" class="button28"/>
-    <box align="vertical">
-      <spring flex="100%"/>
-      <html:div class="headertext" id="caption">&windowtitle.label;</html:div>
-      <spring flex="100%"/>
-    </box>
-    <spring flex="100%"/>
-  </toolbar>
+  <box type="largeheader" id="header" value="&windowtitle.label;"/>
+  
   <box id="contentarea" align="horizontal" flex="100%">
-    <spring style="width: 7px;"/>
+    <separator class="thin" orient="vertical"/>
 
     <!-- instructions -->
     <deck id="prattle">
       <box align="vertical" id="selection">
-        <html:div class="label" style="width: 200px;">&introgeneral.label;</html:div>
-        <!-- sspitzer roaming not supported yet 10-28-199
-          <html:div class="label">&introroaming.label;</html:div>
-        -->
+        <html>&introgeneral.label;</html>
       </box>
       <box align="vertical" id="manager">
-        <html:div class="label" style="width: 200px;">&pmTextA.label;</html:div>
+        <html class="label" style="width: 200px;">&pmTextA.label;</html>
         <spring flex="30%"/>
-        <box align="horizontal" flex="100%">
-          <spring flex="100%"/>
-          <box align="vertical">
-            <titledbutton id="delbutton" class="dialog push padded" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
-            <titledbutton id="renbutton" class="dialog push padded" value="&renameButton.label;" onclick="RenameProfile();"/>
-            <titledbutton id="newbutton" class="dialog push padded" value="&newButton.label;" onclick="CreateProfileWizard();"/>
-          </box>
-          <spring flex="100%"/>
+        <box orient="vertical" autostretch="never" id="managebuttons">
+          <titledbutton id="newbutton" class="dialog push padded" value="&newButton.label;" onclick="CreateProfileWizard();"/>
+          <titledbutton id="renbutton" class="dialog push padded" value="&renameButton.label;" onclick="RenameProfile();"/>
+          <titledbutton id="delbutton" class="dialog push padded" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
         </box>
-        
-        <html:div class="label" style="width: 200px; display: none;">
-          <titledbutton class="unMigratedProfile plain"/>
-          &pmTextB.label;
-        </html:div>
+        <html class="label" style="display: none;">&pmTextB.label;</html>
       </box>
     </deck>  
       
-    <spring style="width: 7px;"/>
-    <box align="vertical" flex="100%">
-        <spring style="height: 1px;"/>
-        <tree 
-              id="profiles" class="inset" style="height: 175px; width: 220px;" flex="100%"
-              onclick="HandleClickEvent( event );"
-              onkeypress="HandleKeyEvent( event );">
-          <treehead>
-            <treerow>
-              <treecell value="&availprofiles.label;"/>
-            </treerow>
-          </treehead>
-          <treechildren id="profilekids">
-          <!-- sspitzer roaming not supported yet 10-28-199
-            <treeitem id="roamingitem">
-              <treerow>
-                <treecell id="roamingcell" value="Roaming Access Profile"/>
-              </treerow>
-            </treeitem>
-          -->
-          </treechildren>
-        </tree>    
-        <!-- sspitzer workoffline not supported yet 10-28-199
-        <html:table>
-          <html:tr>
-            <html:td valign="middle"><html:input type="checkbox" id="offline"/></html:td>
-            <html:td valign="middle">
-              <html:label for="offline" style="padding-top: 3px;">&workoffline.label;</html:label>
-            </html:td>
-          </html:tr>
-        </html:table>
-        -->
-      <spring style="height: 3px"/>
-      <box id="managementbox" align="vertical" style="display: none;"/>
-    </box>
-    <spring style="width: 7px;"/>
+    <separator class="thin" orient="vertical"/>
+    
+    <tree id="profiles" class="inset" flex="1"
+          onclick="HandleClickEvent( event );"
+          onkeypress="HandleKeyEvent( event );">
+      <treecol/>
+      <treehead>
+        <treerow>
+          <treecell value="&availprofiles.label;"/>
+        </treerow>
+      </treehead>
+      <treechildren id="profilekids"/>
+    </tree>    
+    <separator class="thin" orient="vertical"/>
   </box>
   <box class="selection" align="horizontal">
-    <spring style="width: 5px;"/>
+    <separator class="thin"  orient="vertical"/>
     <titledbutton class="dialog push padded" id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
-    <spring flex="100%"/>
-
+    <spring flex="1"/>
     <box id="okCancelButtons"/>
-    <!-- older, but nonetheless prettier buttons.
-    <titledbutton class="dialog push padded" id="exit" value="&exit.label;" onclick="onExit();"/>
-    <spring style="width: 5px;"/>
-    <titledbutton class="dialog push padded" id="start" value="&start.label;" onclick="onStart();"/>
-    -->
-    <spring style="width: 5px;"/>
+    <separator class="thin" orient="vertical"/>
   </box>
-  <spring style="height: 4px;"/>
-  <toolbar class="standard title">
-    <html:div class="dimmed-highcontrast">&profilemanager.label;</html:div>
-    <spring flex="100%"/>
-    <html:div id="progress"/>
-  </toolbar>
+  
+  <separator class="thin" />
+  
+  <box type="status" value="&profilemanager.label;" progress=""/>
 </window>
