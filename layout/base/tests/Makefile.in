@@ -35,7 +35,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 LIBS		+= \
 			$(DIST)/lib/libraptorlayout_s.a \
 			-lraptorgfx \
-			-lmozjs \
+			$(MOZ_JS_LIBS) \
 			$(XPCOM_LIBS) \
 			$(NSPR_LIBS) \
 			$(TK_LIBS) \

@@ -39,7 +39,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

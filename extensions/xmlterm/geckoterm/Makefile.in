@@ -70,7 +70,7 @@ GTK_GLUE		= -lgtksuperwin
 
 XP_DIST_LIBS		= \
 			-lraptorgfx \
-			-lmozjs \
+			$(MOZ_JS_LIBS) \
 			$(XPCOM_LIBS) \
 			$(JSJ_LIB) \
 			$(NULL)
