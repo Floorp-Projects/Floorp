@@ -352,7 +352,7 @@ extern nsresult NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame
 extern nsresult NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
 extern nsresult NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-extern nsresult NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewLabelFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aStateFlags);
 extern nsresult NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
