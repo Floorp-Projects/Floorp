@@ -117,13 +117,13 @@ sub InstallDefaultsFiles()
     my($default_profile_dir) = "$defaults_dir"."Profile:";
     mkdir($default_profile_dir, 0);
 
-    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir", 0);
+    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir", 1);
 
     # make a dup in en-US
     my($default_profile_dir_en_US) = "$default_profile_dir"."en-US:";
     mkdir($default_profile_dir_en_US, 0);
 
-    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir_en_US", 0);
+    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir_en_US", 1);
     }
     
     # Default _pref_ directory stuff
