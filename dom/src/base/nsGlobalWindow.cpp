@@ -5881,12 +5881,14 @@ NavigatorImpl::GetAppCodeName(nsAString& aAppCodeName)
 NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
 {
-  const nsAdoptingCString& override = 
-    nsContentUtils::GetCharPref("general.appversion.override");
+  if (!GlobalWindowImpl::IsCallerChrome()) {
+    const nsAdoptingCString& override = 
+      nsContentUtils::GetCharPref("general.appversion.override");
 
-  if (override) {
-    CopyASCIItoUTF16(override, aAppVersion);
-    return NS_OK;
+    if (override) {
+      CopyUTF8toUTF16(override, aAppVersion);
+      return NS_OK;
+    }
   }
 
   nsresult rv;
@@ -5923,11 +5925,14 @@ NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsAString& aAppName)
 {
-  const nsAdoptingCString& override =
-    nsContentUtils::GetCharPref("general.appname.override");
-  if (override) {
-    CopyASCIItoUTF16(override, aAppName);
-    return NS_OK;
+  if (!GlobalWindowImpl::IsCallerChrome()) {
+    const nsAdoptingCString& override =
+      nsContentUtils::GetCharPref("general.appname.override");
+
+    if (override) {
+      CopyUTF8toUTF16(override, aAppName);
+      return NS_OK;
+    }
   }
 
   aAppName.AssignLiteral("Netscape");
@@ -5952,11 +5957,14 @@ NavigatorImpl::GetLanguage(nsAString& aLanguage)
 NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsAString& aPlatform)
 {
-  const nsAdoptingCString& override =
-    nsContentUtils::GetCharPref("general.platform.override");
-  if (override) {
-    CopyASCIItoUTF16(override, aPlatform);
-    return NS_OK;
+  if (!GlobalWindowImpl::IsCallerChrome()) {
+    const nsAdoptingCString& override =
+      nsContentUtils::GetCharPref("general.platform.override");
+
+    if (override) {
+      CopyUTF8toUTF16(override, aPlatform);
+      return NS_OK;
+    }
   }
 
   nsresult rv;
