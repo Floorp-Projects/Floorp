@@ -503,6 +503,8 @@ nsWebShell::nsWebShell()
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 	mWebShellType = nsWebShellContent;
+  // XXX we should get such mDefaultCharacterSet from pref laster...
+  mDefaultCharacterSet = "ISO-8859-1";
 }
 
 nsWebShell::~nsWebShell()
