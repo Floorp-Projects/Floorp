@@ -40,6 +40,11 @@ function MsgNewMessage()
 	NewMessage();
 } 
 
+function MsgGetMessage() 
+{
+	GetNewMail();
+}
+
 function MsgDeleteMessage()
 {
 	dump("\nMsgDeleteMessage from XUL\n");
@@ -56,12 +61,10 @@ function MsgDeleteMessage()
 	}
 
 }
-
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
 function MsgSaveAsTemplate() {}
-function MsgGetMessage() {}
 function MsgSendUnsentMsg() {}
 function MsgUpdateMsgCount() {}
 function MsgSubscribe() {}
