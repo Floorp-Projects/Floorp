@@ -33,28 +33,10 @@
 #define IS_EMPTY_ANNOTATION 0 
 #define IS_PRIVATE_ANNOTATION 1 
 
-/* Non-standard uint fields. */
-typedef struct uint4 {
-    PRUint8 bitfield;
-} uint4;
-
-typedef uint4 uint5;
-typedef uint4 uint6;
-typedef uint4 uint7;
-
 typedef struct uint128 {
     PRUint64 hi;
     PRUint64 lo;
 } uint128;
-
-#define GET_UINT4(record) ((record)->bitfield & PR_BITMASK(4)) 
-#define SET_UINT4(record, val) ((record)->bitfield = ((record)->bitfield &~ PR_BITMASK(4)) | (val)) 
-#define GET_UINT5(record) ((record)->bitfield & PR_BITMASK(5)) 
-#define SET_UINT5(record, val) ((record)->bitfield = ((record)->bitfield &~ PR_BITMASK(5)) | (val)) 
-#define GET_UINT6(record) ((record)->bitfield & PR_BITMASK(6)) 
-#define SET_UINT6(record, val) ((record)->bitfield = ((record)->bitfield &~ PR_BITMASK(6)) | (val))
-#define GET_UINT7(record) ((record)->bitfield & PR_BITMASK(7)) 
-#define SET_UINT7(record, val) ((record)->bitfield = ((record)->bitfield &~ PR_BITMASK(7)) | (val))
 
 /*
  * Identifier records are used to represent variable-length, 
@@ -70,21 +52,23 @@ typedef struct Identifier {
  */
 typedef struct String { 
     PRUint16 length; 
-    char   *bytes; 
+    char     *bytes; 
 } String;
 
 /* Forward references. */
 typedef struct InterfaceDirectoryEntry InterfaceDirectoryEntry;
 
 /*
- * The first byte of all these TypeDescriptor variants has the identical 
- * layout.
+ * The first byte of all TypeDescriptor variants has an identical layout.
+ *
+ * compound_record is made up of the following 4 bitfields:
+ *   boolean is_pointer        1
+ *   boolean is_unique_pointer 1
+ *   boolean is_reference      1 
+ *   uint5 tag                 5 
  */
 typedef struct TypeDescriptorPrefix { 
-    gboolean is_pointer; 
-    gboolean is_unique_pointer;
-    gboolean is_reference; 
-    uint5    tag; 
+    PRUint8 compound_record;
 } TypeDescriptorPrefix;
 
 /*
@@ -123,30 +107,38 @@ typedef struct InterfaceIsTypeDescriptor {
  */
 typedef union TypeDescriptor { 
     SimpleTypeDescriptor      simple_type; 
-    InterfaceTypeDescriptor interface_type;
+    InterfaceTypeDescriptor   interface_type;
     InterfaceIsTypeDescriptor interface_is_type; 
 } TypeDescriptor;
 
 /*
  * A ParamDescriptor is a variable-size record used to describe either a 
  * single argument to a method or a method's result.
+ *
+ * compound_record is made up of the following 4 bitfields:
+ *   boolean in     1
+ *   boolean out    1
+ *   booleam retval 1
+ *   uint6 reserved 5 
  */
 typedef struct ParamDescriptor {
-    gboolean       in, out;
-    uint6          reserved;
+    PRUint8        compound_record;
     TypeDescriptor type;
 } ParamDescriptor;
 
 /*
  * A MethodDescriptor is a variable-size record used to describe a single 
  * interface method. 
+ *
+ * compound_record is made up of the following 5 bitfields:
+ *   boolean is_getter      1
+ *   boolean is_setter      1
+ *   boolean is_varargs     1
+ *   boolean is_constructor 1
+ *   uint4 reserved         4 
  */
 typedef struct MethodDescriptor {
-    gboolean        is_getter;
-    gboolean        is_setter;
-    gboolean        is_varargs;
-    gboolean        is_constructor;
-    uint4           reserved;
+    PRUint8         compound_record;
     Identifier      *name;
     PRUint8         num_args;
     ParamDescriptor *params;
@@ -196,15 +188,17 @@ struct InterfaceDirectoryEntry {
  * the date it was generated, etc.  The information is stored with very 
  * loose format requirements so as to allow virtually any private data 
  * to be stored in the typelib. 
+ *
+ * compound_record is made up of the following 2 bitfields:
+ *   boolean is_last 1
+ *   uint7 tag       7 
  */
 typedef struct EmptyAnnotation { 
-    gboolean is_last;
-    uint7     tag;
+    PRUint8         compound_record;
 } EmptyAnnotation;
 
 typedef struct PrivateAnnotation {
-    gboolean is_last;
-    uint7    tag;
+    PRUint8         compound_record;
     String   creator;
     String   private_data;
 } PrivateAnnotation;
