@@ -54,13 +54,8 @@ JS_BEGIN_EXTERN_C
 #define GCX_DOUBLE              2               /* jsdouble */
 #define GCX_MUTABLE_STRING      3               /* JSString that's mutable --
                                                    single-threaded only! */
-#define GCX_PRIVATE             4               /* private (unscanned) data */
-#define GCX_NAMESPACE           5               /* JSXMLNamespace */
-#define GCX_QNAME               6               /* JSXMLQName */
-#define GCX_XML                 7               /* JSXML */
-#define GCX_EXTERNAL_STRING     8               /* JSString w/ external chars */
-
-#define GCX_NTYPES_LOG2         4               /* type index bits */
+#define GCX_EXTERNAL_STRING     4               /* JSString w/ external chars */
+#define GCX_NTYPES_LOG2         3               /* type index bits */
 #define GCX_NTYPES              JS_BIT(GCX_NTYPES_LOG2)
 
 /* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
@@ -124,21 +119,8 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name);
 extern JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp);
 
-/*
- * The private JSGCThing struct, which describes a gcFreeList element.
- */
-struct JSGCThing {
-    JSGCThing   *next;
-    uint8       *flagp;
-};
-
-#define GC_NBYTES_MAX           (10 * sizeof(JSGCThing))
-#define GC_NUM_FREELISTS        (GC_NBYTES_MAX / sizeof(JSGCThing))
-#define GC_FREELIST_NBYTES(i)   (((i) + 1) * sizeof(JSGCThing))
-#define GC_FREELIST_INDEX(n)    (((n) / sizeof(JSGCThing)) - 1)
-
 extern void *
-js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes);
+js_AllocGCThing(JSContext *cx, uintN flags);
 
 extern JSBool
 js_LockGCThing(JSContext *cx, void *thing);
@@ -197,7 +179,7 @@ struct GCMarkNode {
  * Flags to modify how a GC marks and sweeps:
  *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
  *                      compiler, or by an API function that calls js_Atomize,
- *                      when the GC is called from js_NewGCThing, due to a
+ *                      when the GC is called from js_AllocGCThing, due to a
  *                      malloc failure or the runtime GC-thing limit.
  *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
  *                      JSRuntime, when it is imperative that rt->gcPoke gets
@@ -223,10 +205,8 @@ js_GC(JSContext *cx, uintN gcflags);
 
 typedef struct JSGCStats {
     uint32  alloc;      /* number of allocation attempts */
-    uint32  freelen[GC_NUM_FREELISTS];
-                        /* gcFreeList lengths */
-    uint32  recycle[GC_NUM_FREELISTS];
-                        /* number of things recycled through gcFreeList */
+    uint32  freelen;    /* gcFreeList length */
+    uint32  recycle;    /* number of things recycled through gcFreeList */
     uint32  retry;      /* allocation attempt retries after running the GC */
     uint32  retryhalt;  /* allocation retries halted by the branch callback */
     uint32  fail;       /* allocation failures */
