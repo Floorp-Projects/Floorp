@@ -13,14 +13,14 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-THEME_ROOT_DEPTH = .
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,8 +28,33 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS  = communicator global navigator editor messenger 
-DIRS += chatzilla
+SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/chatzilla/skin/images
+
+EXPORT_RESOURCE_SAMPLES = \
+	blue_rock.gif \
+	face-angry.gif \
+	face-cry.gif \
+	face-dunno.gif \
+	face-frown.gif \
+	face-screw.gif \
+	face-smile.gif \
+	face-surprise.gif \
+	face-tongue.gif \
+	face-wink.gif \
+	is-op.gif \
+	is-voice.gif \
+	isnt-op.gif \
+	isnt-voice.gif \
+	view-activity.gif \
+	view-current.gif \
+	view-normal.gif \
+	xtal.jpg \
+    $(NULL) 
 
 include $(topsrcdir)/config/rules.mk
+
+GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

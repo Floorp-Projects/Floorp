@@ -22,7 +22,7 @@
 DEPTH=..\..
 THEME_ROOT_DEPTH = .
 
-DIRS= communicator editor global messenger navigator
+DIRS= communicator editor global messenger navigator chatzilla
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
