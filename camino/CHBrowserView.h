@@ -104,7 +104,6 @@ enum {
   nsIWebBrowser* _webBrowser;
   nsCocoaBrowserListener* _listener;
   NSWindow* mWindow;
-  nsIEventSink* mEventSink;
   
   nsIDragHelperService* mDragHelper;
 }
@@ -159,6 +158,11 @@ enum {
 - (nsIWebBrowser*)getWebBrowser;
 - (nsCocoaBrowserListener*)getCocoaBrowserListener;
 - (void)setWebBrowser:(nsIWebBrowser*)browser;
+
+  // given a point in window coordinates, find the Gecko event sink of the ChildView the
+  // point is over.
+- (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind;
+
 @end
 
 #endif // __nsCocoaBrowserView_h__

@@ -39,6 +39,7 @@
 #import "ProgressDlgController.h"
 #import "FindDlgController.h"
 #import "nsCocoaBrowserService.h"
+#import "mozView.h"
 
 // Embedding includes
 #include "nsCWebBrowser.h"
@@ -965,13 +966,6 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
                             frame.size.width, frame.size.height);
         baseWin->Create();
         
-        nsCOMPtr<nsIWidget> topLevel;
-        baseWin->GetMainWidget(getter_AddRefs(topLevel));
-        nsCOMPtr<nsIEventSink> sink = do_QueryInterface(topLevel);
-        mEventSink = sink.get();
-        NS_IF_ADDREF(mEventSink);
-        NS_ASSERTION(mEventSink, "Couldn't get event sink!");
-
   // register the view as a drop site for text, files, and urls. 
         [self registerForDraggedTypes:
                 [NSArray arrayWithObjects:NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
@@ -991,7 +985,6 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
   
   NS_RELEASE(_listener);
   NS_IF_RELEASE(_webBrowser);
-  NS_IF_RELEASE(mEventSink);
   
   nsCocoaBrowserService::BrowserClosed();
   
@@ -1429,6 +1422,27 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
 }
 
 
+//
+// -findEventSink:forPoint:inWindow:
+//
+// Given a point in window coordinates, find the Gecko event sink of the ChildView
+// the point is over. This involves first converting the point to this view's
+// coordinate system and using hitTest: to get the subview. Then we get
+// that view's widget and QI it to an event sink
+//
+- (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind
+{
+  NSPoint localPoint = [self convertPoint:inPoint fromView:[inWind contentView]];
+  NSView<mozView>* hitView = [self hitTest:localPoint];
+  if ( [hitView conformsToProtocol:@protocol(mozView)]) {
+    nsCOMPtr<nsIEventSink> sink (do_QueryInterface([hitView widget]));
+    *outSink = sink.get();
+    NS_IF_ADDREF(*outSink);
+  }
+  else printf("couldn't find a view\n");
+}
+
+
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
   nsCOMPtr<nsIDragHelperService> helper(do_GetService("@mozilla.org/widget/draghelperservice;1"));
@@ -1436,16 +1450,27 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
   NS_IF_ADDREF(mDragHelper);
   NS_ASSERTION ( mDragHelper, "Couldn't get a drag service, we're in biiig trouble" );
   
-  if ( mDragHelper )
-    mDragHelper->Enter ( [sender draggingSequenceNumber], mEventSink );
+  if ( mDragHelper ) {
+    nsCOMPtr<nsIEventSink> sink;
+    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
+            inWindow:[sender draggingDestinationWindow]];
+    NS_ASSERTION(sink, "Couldn't get event sink for view");
 
+    mDragHelper->Enter ( [sender draggingSequenceNumber], sink );
+  }
+  
   return NSDragOperationCopy;
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
   if ( mDragHelper ) {
-    mDragHelper->Leave ( [sender draggingSequenceNumber], mEventSink );
+    nsCOMPtr<nsIEventSink> sink;
+    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
+            inWindow:[sender draggingDestinationWindow]];
+    NS_ASSERTION(sink, "Couldn't get event sink for view");
+
+    mDragHelper->Leave ( [sender draggingSequenceNumber], sink );
     NS_RELEASE(mDragHelper);     
   }
 }
@@ -1453,9 +1478,15 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
 - (unsigned int)draggingUpdated:(id <NSDraggingInfo>)sender
 {
   PRBool dropAllowed = PR_FALSE;
-  if ( mDragHelper )
-    mDragHelper->Tracking ( [sender draggingSequenceNumber], mEventSink, &dropAllowed );
-
+  if ( mDragHelper ) {
+    nsCOMPtr<nsIEventSink> sink;
+    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
+            inWindow:[sender draggingDestinationWindow]];
+    NS_ASSERTION(sink, "Couldn't get event sink for view");
+    
+    mDragHelper->Tracking ( [sender draggingSequenceNumber], sink, &dropAllowed );
+  }
+  
   NSLog(@"Drop allowed is %d", dropAllowed);
   return dropAllowed ? NSDragOperationCopy : NSDragOperationNone;
 }
@@ -1470,9 +1501,15 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
   NSLog(@"Drag DROP!");
   
   PRBool dragAccepted = PR_FALSE;
-  if ( mDragHelper )
-    mDragHelper->Drop ( [sender draggingSequenceNumber], mEventSink, &dragAccepted );
+  if ( mDragHelper ) {
+    nsCOMPtr<nsIEventSink> sink;
+    [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
+            inWindow:[sender draggingDestinationWindow]];
+    NS_ASSERTION(sink, "Couldn't get event sink for view");
 
+    mDragHelper->Drop ( [sender draggingSequenceNumber], sink, &dragAccepted );
+  }
+  
   return dragAccepted;
 }	
 
