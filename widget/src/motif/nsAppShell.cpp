@@ -20,7 +20,7 @@
 #include "nsIAppShell.h"
 #include <stdlib.h>
 
-extern XtAppContext gAppContext;
+XtAppContext gAppContext;
 
 //XtAppContext nsAppShell::gAppContext = NULL;
 
