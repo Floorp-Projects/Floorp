@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.225 $ ';
+$::UtilsVersion = '$Revision: 1.226 $ ';
 
 package TinderUtils;
 
@@ -312,13 +312,13 @@ sub SetupEnv {
     }
 
     $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
-        . "$ENV{LIBPATH}";
+        . ($ENV{LIBPATH} || "");
     # BeOS requires that components/ be in the library search path per bug 51655
     $ENV{LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
 	. "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin/components:"
-        . "$ENV{LIBRARY_PATH}";
+        . ($ENV{LIBRARY_PATH} || "");
     $ENV{ADDON_PATH} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin:"
-        . "$ENV{ADDON_PATH}";
+        . ($ENV{ADDON_PATH} || "");
     $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/$Settings::DistBin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName"
@@ -723,7 +723,7 @@ sub BuildIt {
         print "Opening $logfile\n";
         open LOG, ">$logfile"
             or die "Cannot open logfile, $logfile: $?\n";
-        print_log "current dir is -- " . ($ENV{HOST}||$ENV{HOSTNAME}) . ":$build_dir\n";
+        print_log "current dir is -- " . ::hostname() . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
 
         # Print user comment if there is one.
