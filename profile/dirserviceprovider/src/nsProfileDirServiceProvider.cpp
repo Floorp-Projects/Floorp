@@ -37,9 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsProfileDirServiceProvider.h"
+#include "nsProfileStringTypes.h"
 #include "nsProfileLock.h"
-#include "nsIAtom.h"
-#include "nsStaticAtom.h"
 #include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -67,25 +66,6 @@
 #define IMAP_MAIL_DIR_50_NAME        NS_LITERAL_CSTRING("ImapMail")
 #define NEWS_DIR_50_NAME             NS_LITERAL_CSTRING("News")
 #define MSG_FOLDER_CACHE_DIR_50_NAME NS_LITERAL_CSTRING("panacea.dat")
-
-// Static Variables
-
-nsIAtom*   nsProfileDirServiceProvider::sApp_PrefsDirectory50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_PreferencesFile50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_UserProfileDirectory50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_UserChromeDirectory;
-nsIAtom*   nsProfileDirServiceProvider::sApp_LocalStore50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_History50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_UsersPanels50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_UsersMimeTypes50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_BookmarksFile50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_DownloadsFile50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_SearchFile50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_MailDirectory50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_ImapMailDirectory50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_NewsDirectory50;
-nsIAtom*   nsProfileDirServiceProvider::sApp_MessengerFolderCache50;
-
 
 //*****************************************************************************
 // nsProfileDirServiceProvider::nsProfileDirServiceProvider
@@ -241,27 +221,24 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
 
   nsCOMPtr<nsIFile>  localFile;
   nsresult rv = NS_ERROR_FAILURE;
-      
-  nsIAtom* inAtom = NS_NewAtom(prop);
-  NS_ENSURE_TRUE(inAtom, NS_ERROR_OUT_OF_MEMORY);
-  
-  if (inAtom == sApp_PrefsDirectory50) {
+
+  if (strcmp(prop, NS_APP_PREFS_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
   }
-  else if (inAtom == sApp_PreferencesFile50) {
+  else if (strcmp(prop, NS_APP_PREFS_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(PREFS_FILE_50_NAME);
   }
-  else if (inAtom == sApp_UserProfileDirectory50) {
+  else if (strcmp(prop, NS_APP_USER_PROFILE_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
   }
-  else if (inAtom == sApp_UserChromeDirectory) {
+  else if (strcmp(prop, NS_APP_USER_CHROME_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(USER_CHROME_DIR_50_NAME);
   }
-  else if (inAtom == sApp_LocalStore50) {
+  else if (strcmp(prop, NS_APP_LOCALSTORE_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendNative(LOCAL_STORE_FILE_50_NAME);
@@ -272,12 +249,12 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
       }
     }
   }
-  else if (inAtom == sApp_History50) {
+  else if (strcmp(prop, NS_APP_HISTORY_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(HISTORY_FILE_50_NAME);
   }
-  else if (inAtom == sApp_UsersPanels50) {
+  else if (strcmp(prop, NS_APP_USER_PANELS_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendNative(PANELS_FILE_50_NAME);
@@ -285,7 +262,7 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
         rv = EnsureProfileFileExists(localFile, domainDir);
     }
   }
-  else if (inAtom == sApp_UsersMimeTypes50) {
+  else if (strcmp(prop, NS_APP_USER_MIMETYPES_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendNative(MIME_TYPES_FILE_50_NAME);
@@ -293,17 +270,17 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
         rv = EnsureProfileFileExists(localFile, domainDir);
     }
   }
-  else if (inAtom == sApp_BookmarksFile50) {
+  else if (strcmp(prop, NS_APP_BOOKMARKS_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(BOOKMARKS_FILE_50_NAME);
   }
-  else if (inAtom == sApp_DownloadsFile50) {
+  else if (strcmp(prop, NS_APP_DOWNLOADS_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(DOWNLOADS_FILE_50_NAME);
   }
-  else if (inAtom == sApp_SearchFile50) {
+  else if (strcmp(prop, NS_APP_SEARCH_50_FILE) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
       rv = localFile->AppendNative(SEARCH_FILE_50_NAME);
@@ -311,28 +288,26 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
         rv = EnsureProfileFileExists(localFile, domainDir);
     }
   }
-  else if (inAtom == sApp_MailDirectory50) {
+  else if (strcmp(prop, NS_APP_MAIL_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(MAIL_DIR_50_NAME);
   }
-  else if (inAtom == sApp_ImapMailDirectory50) {
+  else if (strcmp(prop, NS_APP_IMAP_MAIL_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(IMAP_MAIL_DIR_50_NAME);
   }
-  else if (inAtom == sApp_NewsDirectory50) {
+  else if (strcmp(prop, NS_APP_NEWS_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(NEWS_DIR_50_NAME);
   }
-  else if (inAtom == sApp_MessengerFolderCache50) {
+  else if (strcmp(prop, NS_APP_MESSENGER_FOLDER_CACHE_50_DIR) == 0) {
     rv = domainDir->Clone(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(MSG_FOLDER_CACHE_DIR_50_NAME);
   }
-  
-  NS_RELEASE(inAtom);
   
   if (localFile && NS_SUCCEEDED(rv))
     return CallQueryInterface(localFile, _retval);
@@ -365,28 +340,6 @@ nsProfileDirServiceProvider::Initialize()
   }
 #endif
 
-  static const nsStaticAtom provider_atoms[] = {
-    { NS_APP_PREFS_50_DIR,           &sApp_PrefsDirectory50 },
-    { NS_APP_PREFS_50_FILE,          &sApp_PreferencesFile50 },
-    { NS_APP_USER_PROFILE_50_DIR,    &sApp_UserProfileDirectory50 },
-    { NS_APP_USER_CHROME_DIR,        &sApp_UserChromeDirectory },
-    { NS_APP_LOCALSTORE_50_FILE,     &sApp_LocalStore50 },
-    { NS_APP_HISTORY_50_FILE,        &sApp_History50 },
-    { NS_APP_USER_PANELS_50_FILE,    &sApp_UsersPanels50 },
-    { NS_APP_USER_MIMETYPES_50_FILE, &sApp_UsersMimeTypes50 },
-    { NS_APP_BOOKMARKS_50_FILE,      &sApp_BookmarksFile50 },
-    { NS_APP_DOWNLOADS_50_FILE,      &sApp_DownloadsFile50 },
-    { NS_APP_SEARCH_50_FILE,         &sApp_SearchFile50 },
-    { NS_APP_MAIL_50_DIR,            &sApp_MailDirectory50 },
-    { NS_APP_IMAP_MAIL_50_DIR,       &sApp_ImapMailDirectory50 },
-    { NS_APP_NEWS_50_DIR,            &sApp_NewsDirectory50 },
-    { NS_APP_MESSENGER_FOLDER_CACHE_50_DIR, &sApp_MessengerFolderCache50 },
-    { NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, nsnull },
-  };
-
-  // Register our directory atoms
-  NS_RegisterStaticAtoms(provider_atoms, NS_ARRAY_LENGTH(provider_atoms));
-        
   return NS_OK;
 }
 
@@ -446,7 +399,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
       return NS_ERROR_FILE_NOT_DIRECTORY;
   }
 
-  if (!mNonSharedDirName.IsEmpty())
+  if (mNonSharedDirName.Length())
     rv = InitNonSharedProfileDir();
 
   return rv;
@@ -458,7 +411,7 @@ nsProfileDirServiceProvider::InitNonSharedProfileDir()
   nsresult rv;
 
   NS_ENSURE_STATE(mProfileDir);
-  NS_ENSURE_STATE(!mNonSharedDirName.IsEmpty());
+  NS_ENSURE_STATE(mNonSharedDirName.Length());
 
   nsCOMPtr<nsIFile> localDir;
   rv = mProfileDir->Clone(getter_AddRefs(localDir));
@@ -518,7 +471,7 @@ nsProfileDirServiceProvider::EnsureProfileFileExists(nsIFile *aFile, nsIFile *de
   if (NS_FAILED(rv))
     return rv;
   
-  return defaultsFile->CopyTo(destDir, nsString());
+  return defaultsFile->CopyTo(destDir, EmptyString());
 }
 
 nsresult
