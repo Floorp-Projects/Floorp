@@ -79,11 +79,11 @@ nsXULTreeSliceFrame::Release(void)
 //
 NS_INTERFACE_MAP_BEGIN(nsXULTreeSliceFrame)
   NS_INTERFACE_MAP_ENTRY(nsIXULTreeSlice)
-NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
+NS_INTERFACE_MAP_END_INHERITING(nsGridRowLeafFrame)
 
 // Constructor
 nsXULTreeSliceFrame::nsXULTreeSliceFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
+:nsGridRowLeafFrame(aPresShell, aIsRoot, aLayoutManager) 
 {}
 
 // Destructor
@@ -94,7 +94,7 @@ nsXULTreeSliceFrame::~nsXULTreeSliceFrame()
 nsresult
 nsXULTreeSliceFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
+  nsresult rv = nsGridRowLeafFrame::GetPrefSize(aState, aSize);
   if (NS_FAILED(rv)) return rv;
 
   aSize.height = PR_MAX(mRect.height, aSize.height);
