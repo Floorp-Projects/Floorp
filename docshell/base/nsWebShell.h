@@ -8,6 +8,8 @@
 #include "nsIClipboardCommands.h"
 #include "nsDocShell.h"
 
+class nsIController;
+
 typedef enum {
    eCharsetReloadInit,
    eCharsetReloadRequested,
@@ -122,6 +124,11 @@ public:
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData();
+  
+    // helpers for executing commands
+  virtual nsresult GetControllerForCommand ( nsAReadableString & inCommand, nsIController** outController ) ;
+  virtual nsresult IsCommandEnabled ( nsAReadableString & inCommand, PRBool* outEnabled ) ;
+  virtual nsresult DoCommand ( nsAReadableString & inCommand ) ;
 
   nsIEventQueue* mThreadEventQueue;
 
