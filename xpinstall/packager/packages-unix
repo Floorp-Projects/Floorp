@@ -208,7 +208,6 @@ bin/components/xpcom_ds.xpt
 bin/components/xpcom_io.xpt
 bin/components/xpcom_obsolete.xpt
 bin/components/xpconnect.xpt
-bin/components/chrome.xpt
 bin/components/docshell.xpt
 bin/components/jsurl.xpt
 bin/components/layout_base.xpt
