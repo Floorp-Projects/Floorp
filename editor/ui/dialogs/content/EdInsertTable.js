@@ -89,7 +89,7 @@ function InitDialog()
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menu combobox list
-  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "widthInput","widthPixelOrPercentMenulist", gPercent);
+  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width", "widthPixelOrPercentMenulist", gPercent);
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
 
