@@ -89,8 +89,8 @@ extern SECMODModule *SECMOD_LoadUserModule(char *moduleSpec,SECMODModule *parent
 
 SECStatus SECMOD_UnloadUserModule(SECMODModule *mod);
 
-SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
-								char *nss);
+SECMODModule * SECMOD_CreateModule(const char *lib, const char *name,
+					const char *param, const char *nss);
 extern SECStatus SECMOD_Shutdown(void);
 void nss_DumpModuleLog(void);
 
@@ -101,7 +101,14 @@ SECStatus SECMOD_FreeModuleSpecList(SECMODModule *module,char **moduleSpecList);
 
  
 /* protoypes */
-extern SECMODModuleList *SECMOD_GetDefaultModuleList(void);
+/* Get a list of active PKCS #11 modules */
+extern SECMODModuleList *SECMOD_GetDefaultModuleList(void); 
+/* Get a list of defined but not loaded PKCS #11 modules */
+extern SECMODModuleList *SECMOD_GetDeadModuleList(void);
+/* Get a list of Modules which define PKCS #11 modules to load */
+extern SECMODModuleList *SECMOD_GetDBModuleList(void);
+
+/* lock to protect all three module lists above */
 extern SECMODListLock *SECMOD_GetDefaultModuleListLock(void);
 
 extern SECStatus SECMOD_UpdateModule(SECMODModule *module);
@@ -115,14 +122,14 @@ extern void SECMOD_GetWriteLock(SECMODListLock *);
 extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 
 /* Operate on modules by name */
-extern SECMODModule *SECMOD_FindModule(char *name);
-extern SECStatus SECMOD_DeleteModule(char *name, int *type);
-extern SECStatus SECMOD_DeleteInternalModule(char *name);
+extern SECMODModule *SECMOD_FindModule(const char *name);
+extern SECStatus SECMOD_DeleteModule(const char *name, int *type);
+extern SECStatus SECMOD_DeleteInternalModule(const char *name);
 extern PRBool SECMOD_CanDeleteInternalModule(void);
-extern SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
+extern SECStatus SECMOD_AddNewModule(const char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags);
-extern SECStatus SECMOD_AddNewModuleEx(char* moduleName, char* dllPath,
+extern SECStatus SECMOD_AddNewModuleEx(const char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags,
                               char* modparms,
@@ -134,7 +141,7 @@ extern SECMODModule *SECMOD_ReferenceModule(SECMODModule *module);
 extern void SECMOD_DestroyModule(SECMODModule *module);
 extern PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID module,
 							unsigned long slotID);
-extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
+extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,const char *name);
 
 /* Funtion reports true if at least one of the modules */
 /* of modType has been installed */
