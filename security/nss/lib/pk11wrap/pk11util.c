@@ -44,6 +44,7 @@
 #include "pk11func.h"
 #include "pki3hack.h"
 #include "secerr.h"
+#include "dev.h"
 
 /* these are for displaying error messages */
 
@@ -1096,6 +1097,11 @@ SECMOD_WaitForAnyTokenEvent(SECMODModule *mod, unsigned long flags,
 	/* possibly a new slot that was added? */
 	SECMOD_UpdateSlotList(mod);
 	slot = SECMOD_FindSlotByID(mod, id);
+    }
+    /* if we are in the delay period for the "isPresent" call, reset
+     * the delay since we know things have probably changed... */
+    if (slot && slot->nssToken && slot->nssToken->slot) {
+	nssSlot_ResetDelay(slot->nssToken->slot);
     }
     return slot;
 

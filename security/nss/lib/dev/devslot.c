@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.20 $ $Date: 2005/01/20 02:25:47 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.21 $ $Date: 2005/03/07 21:20:38 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -240,6 +240,14 @@ nssSlot_GetTokenName (
 )
 {
     return nssToken_GetName(slot->token);
+}
+
+NSS_IMPLEMENT void
+nssSlot_ResetDelay (
+  NSSSlot *slot
+)
+{
+    slot->lastTokenPing = 0;
 }
 
 static PRBool
