@@ -433,6 +433,15 @@ MoveChildrenTo(nsIPresContext* aPresContext,
                nsIFrame* aNewParent,
                nsIFrame* aFrameList)
 {
+  // when reparenting a frame, it would seem to be critical to also reparent any views associated with the frame
+  // I haven't found a case where this is required yet, but if we ever see a bug where the frame and
+  // view models are out of synch, particularly after a "special" block-in-inline situation is encountered,
+  // the following 3 lines of code would fix it.
+  /*
+  nsIFrame *oldParent;
+  aFrameList->GetParent(&oldParent);
+  nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, aFrameList, oldParent, aNewParent);
+  */
   while (aFrameList) {
     aFrameList->SetParent(aNewParent);
     aFrameList->GetNextSibling(&aFrameList);
@@ -2402,12 +2411,10 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
     // XXX can this go away?
     if (nsLayoutAtoms::tableFrame != parentFrameType.get()) {
       // trees allow row groups to contain row groups, so don't create pseudo frames
-      if (nsLayoutAtoms::tableRowGroupFrame == parentFrameType.get()) { // need pseudo table parent
         rv = GetPseudoTableFrame(aPresShell, aPresContext, aTableCreator, aState, aParentFrameIn);
         if (NS_FAILED(rv)) return rv;
         pseudoParentFrame = pseudoFrames.mTableInner.mFrame;
-      }
-    }
+     }
   }
   else if (nsLayoutAtoms::tableRowFrame == aChildFrameType) { // row child
     if (nsLayoutAtoms::tableRowGroupFrame != parentFrameType.get()) { // need pseudo row group parent
@@ -8072,7 +8079,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
   if (nsnull != parentFrame) {
-
     // If the frame we are manipulating is a special frame then do
     // something different instead of just appending newly created
     // frames. Note that only the first-in-flow is marked so we check
@@ -12333,14 +12339,16 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       aParentFrame, aStyleContext, nsnull, aNewFrame);
 
-  if (aIsPositioned) {
+  nsFrameConstructorSaveState absoluteSaveState;  // definition cannot be inside next block
+                                                  // because the object's destructor is significant
+                                                  // this is part of the fix for bug 42372
+  if (aIsPositioned) {                            
     // Relatively positioned frames need a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
                                              aStyleContext, nsnull, PR_FALSE);
 
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
-    nsFrameConstructorSaveState absoluteSaveState;
     aState.PushAbsoluteContainingBlock(aNewFrame, absoluteSaveState);
   }
 

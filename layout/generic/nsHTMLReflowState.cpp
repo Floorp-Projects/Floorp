@@ -2240,8 +2240,14 @@ nsHTMLReflowState::ComputeVerticalValue(nscoord aContainingBlockHeight,
     // a height that's shrink wrapping to its content. In that case they should
     // treat the specified value like 'auto'
     NS_ASSERTION(NS_AUTOHEIGHT != aContainingBlockHeight, "unexpected containing block height");
-    float pct = aCoord.GetPercentValue();
-    aResult = NSToCoordFloor(aContainingBlockHeight * pct);
+    if (NS_AUTOHEIGHT!=aContainingBlockHeight)
+    {
+      float pct = aCoord.GetPercentValue();
+      aResult = NSToCoordFloor(aContainingBlockHeight * pct);
+    }
+    else {  // safest thing to do for an undefined height is to make it 0
+      aResult = 0;
+    }
 
   } else if (eStyleUnit_Coord == aUnit) {
     aResult = aCoord.GetCoordValue();
