@@ -86,7 +86,6 @@
 #include "winable.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIAccessibleCaret.h"
 #include "nsIAccessNode.h"
 #ifndef WM_GETOBJECT
 #define WM_GETOBJECT 0x03d
@@ -4388,11 +4387,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
             nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mRootAccessible));
             if (accDoc) { 
-              nsCOMPtr<nsIAccessibleCaret> accessibleCaret;
+              nsCOMPtr<nsIAccessible> accessibleCaret;
               accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
-              nsCOMPtr<nsIAccessible> xpAccessible(do_QueryInterface(accessibleCaret));
-              if (xpAccessible) {
-                xpAccessible->GetNativeInterface((void**)&msaaAccessible);
+              if (accessibleCaret) {
+                accessibleCaret->GetNativeInterface((void**)&msaaAccessible);
               }
             }
           }

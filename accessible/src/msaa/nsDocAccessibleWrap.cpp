@@ -38,7 +38,7 @@
 
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
-#include "nsIAccessibleEventReceiver.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   // Remove this until we can figure out which focus events are coming at
   // the same time as native window focus events, although
   // perhaps 2 duplicate focus events on the window isn't really a problem
-  if (aEvent == EVENT_FOCUS) {
+  if (aEvent == nsIAccessibleEvent::EVENT_FOCUS) {
     // Don't fire accessible focus event for documents, 
     // Microsoft Windows will generate those from native window focus events
     nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(aAccessible));
@@ -185,15 +185,15 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   else 
     childID = GetChildIDFor(aAccessible); // get the id for the accessible
 
-  if (role == ROLE_SYSTEM_PANE && aEvent == EVENT_STATE_CHANGE) {
+  if (role == ROLE_SYSTEM_PANE && aEvent == nsIAccessibleEvent::EVENT_STATE_CHANGE) {
     // Something on the document has changed
     // Clear out the cache in this subtree
   }
 
   HWND hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
-  if (gmGetGUIThreadInfo && (aEvent == EVENT_FOCUS || 
-      aEvent == EVENT_MENUPOPUPSTART ||
-      aEvent == EVENT_MENUPOPUPEND)) {
+  if (gmGetGUIThreadInfo && (aEvent == nsIAccessibleEvent::EVENT_FOCUS || 
+      aEvent == nsIAccessibleEvent::EVENT_MENUPOPUPSTART ||
+      aEvent == nsIAccessibleEvent::EVENT_MENUPOPUPEND)) {
     GUITHREADINFO guiInfo;
     guiInfo.cbSize = sizeof(GUITHREADINFO);
     if (gmGetGUIThreadInfo(NULL, &guiInfo)) {

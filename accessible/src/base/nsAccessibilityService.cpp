@@ -319,11 +319,6 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
     *aRootAcc = new nsRootAccessibleWrap(rootNode, weakShell);
   }
 
-  nsCOMPtr<nsIAccessibleEventReceiver> eventReceiver = 
-    do_QueryInterface(*aRootAcc);
-  NS_ASSERTION(eventReceiver, "Doc accessible does not receive events");
-  eventReceiver->AddEventListeners();
-
   nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
   privateAccessNode->Init();
 

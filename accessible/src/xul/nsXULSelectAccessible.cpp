@@ -43,6 +43,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIServiceManager.h"
+#include "nsArray.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -103,23 +104,24 @@ NS_IMETHODIMP nsXULSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8
 
   nsCOMPtr<nsIDOMXULSelectControlElement> xulSelect(do_QueryInterface(mDOMNode));
   if (xulSelect) {
+    nsresult rv = NS_OK;
     PRInt32 selIndex;
     xulSelect->GetSelectedIndex(&selIndex);
     if (selIndex == aIndex)
       *aSelState = PR_TRUE;
     if (eSelection_Add == aMethod && !(*aSelState))
-      xulSelect->SetSelectedIndex(aIndex);
+      rv = xulSelect->SetSelectedIndex(aIndex);
     else if (eSelection_Remove == aMethod && (*aSelState)) {
-      xulSelect->SetSelectedIndex(-1);
+      rv = xulSelect->SetSelectedIndex(-1);
     }
-    return NS_OK;
+    return rv;
   }
 
   return NS_ERROR_FAILURE;
 }
 
 // Interface methods
-NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsISupportsArray **_retval)
+NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **_retval)
 {
   *_retval = nsnull;
 
@@ -127,8 +129,8 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsISupportsArray **
   if (!accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupportsArray> selectedAccessibles;
-  NS_NewISupportsArray(getter_AddRefs(selectedAccessibles));
+  nsCOMPtr<nsIMutableArray> selectedAccessibles;
+  NS_NewArray(getter_AddRefs(selectedAccessibles));
   if (!selectedAccessibles)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -144,13 +146,13 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsISupportsArray **
       nsCOMPtr<nsIDOMNode> tempDOMNode (do_QueryInterface(tempNode));
       accService->GetAccessibleInWeakShell(tempDOMNode, mWeakShell, getter_AddRefs(tempAccessible));
       if (tempAccessible)
-        selectedAccessibles->AppendElement(tempAccessible);
+        selectedAccessibles->AppendElement(tempAccessible, PR_FALSE);
     }
   }
 
   PRUint32 uLength = 0;
-  selectedAccessibles->Count(&uLength); 
-  if (uLength != 0) { // length of nsISupportsArray containing selected options
+  selectedAccessibles->GetLength(&uLength); 
+  if (uLength != 0) { // length of nsIArray containing selected options
     *_retval = selectedAccessibles;
     NS_ADDREF(*_retval);
   }

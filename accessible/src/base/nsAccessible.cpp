@@ -972,9 +972,7 @@ NS_IMETHODIMP nsAccessible::AccTakeFocus()
   if (!content) {
     return NS_ERROR_FAILURE;
   }
-  content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
-  
-  return NS_OK;
+  return content->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
 }
 
 NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent)
@@ -1415,26 +1413,26 @@ NS_IMETHODIMP nsAccessible::GetAccHelp(nsAString& _retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIAccessible accNavigateRight (); */
-NS_IMETHODIMP nsAccessible::AccNavigateRight(nsIAccessible **_retval)
+/* nsIAccessible accGetFromRight(); */
+NS_IMETHODIMP nsAccessible::AccGetFromRight(nsIAccessible **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIAccessible accNavigateLeft (); */
-NS_IMETHODIMP nsAccessible::AccNavigateLeft(nsIAccessible **_retval)
+/* nsIAccessible accGetFromLeft(); */
+NS_IMETHODIMP nsAccessible::AccGetFromLeft(nsIAccessible **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIAccessible accNavigateUp (); */
-NS_IMETHODIMP nsAccessible::AccNavigateUp(nsIAccessible **_retval)
+/* nsIAccessible accGetFromAbove(); */
+NS_IMETHODIMP nsAccessible::AccGetFromAbove(nsIAccessible **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIAccessible accNavigateDown (); */
-NS_IMETHODIMP nsAccessible::AccNavigateDown(nsIAccessible **_retval)
+/* nsIAccessible accGetFromBelow(); */
+NS_IMETHODIMP nsAccessible::AccGetFromBelow(nsIAccessible **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -72,7 +72,6 @@
 #include "nsAccessibilityService.h"
 #include "nsISelectionPrivate.h"
 #include "nsICaret.h"
-#include "nsIAccessibleCaret.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsAccessibleEventData.h"
 #include "nsIDOMDocument.h"
@@ -158,7 +157,7 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
   NS_IF_ADDREF(*aChromeTarget);
 }
 
-NS_IMETHODIMP nsRootAccessible::AddEventListeners()
+nsresult nsRootAccessible::AddEventListeners()
 {
   // use AddEventListener from the nsIDOMEventTarget interface
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
@@ -193,8 +192,6 @@ NS_IMETHODIMP nsRootAccessible::AddEventListeners()
     
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-
-    AddContentDocListeners();
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
@@ -209,10 +206,10 @@ NS_IMETHODIMP nsRootAccessible::AddEventListeners()
   if (!mCaretAccessible)
     mCaretAccessible = new nsCaretAccessible(mDOMNode, mWeakShell, this);
 
-  return NS_OK;
+  return nsDocAccessible::AddEventListeners();
 }
 
-NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
+nsresult nsRootAccessible::RemoveEventListeners()
 {
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) { 
@@ -233,7 +230,6 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
   }
-  RemoveContentDocListeners();
 
   if (mCaretAccessible) {
     mCaretAccessible->RemoveSelectionListener();
@@ -242,12 +238,12 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
 
   mAccService = nsnull;
 
-  return NS_OK;
+  return nsDocAccessible::RemoveEventListeners();
 }
 
-NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
+NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessible)
 {
-  *aCaretAccessible = mCaretAccessible;
+  *aCaretAccessible = (nsCOMPtr<nsIAccessible>)do_QueryInterface(mCaretAccessible);
   NS_IF_ADDREF(*aCaretAccessible);
   return NS_OK;
 }
@@ -256,7 +252,7 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
 {
   if (focusAccessible && focusNode && gLastFocusedNode != focusNode) {
     nsCOMPtr<nsPIAccessible> privateFocusAcc(do_QueryInterface(focusAccessible));
-    privateFocusAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, focusAccessible, nsnull);
+    privateFocusAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
     PRUint32 role = ROLE_NOTHING;
     focusAccessible->GetAccRole(&role);
@@ -365,7 +361,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   if (treeItemAccessible && (eventType.EqualsIgnoreCase("DOMMenuItemActive") ||
       eventType.EqualsIgnoreCase("select"))) {
     privAcc = do_QueryInterface(treeItemAccessible);
-    privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, 
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                               treeItemAccessible, nsnull);
     return NS_OK;
   }
@@ -397,7 +393,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode);
   }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
-    privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, 
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                               accessible, nsnull);
   }
   else if (eventType.EqualsIgnoreCase("RadioStateChange") ) {
@@ -405,19 +401,19 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (targetNode &&
         NS_SUCCEEDED(mAccService->GetAccessibleInShell(targetNode, eventShell,
                                                        getter_AddRefs(accessible)))) {
-      privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, 
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                                 accessible, nsnull);
       FireAccessibleFocusEvent(accessible, targetNode);
     }
     else { // for the html radio buttons -- apparently the focus code just works. :-)
-      privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, 
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                                 accessible, nsnull);
     }
   }
   else if (eventType.EqualsIgnoreCase("DOMMenuBarActive")) 
-    privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_MENUSTART, accessible, nsnull);
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
   else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_MENUEND, accessible, nsnull);
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
     GetAccFocused(getter_AddRefs(accessible));
     if (accessible) {
       accessible->AccGetDOMNode(getter_AddRefs(targetNode));
@@ -428,9 +424,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // Menu popup events
     PRUint32 menuEvent = 0;
     if (eventType.EqualsIgnoreCase("popupshowing"))
-      menuEvent = nsIAccessibleEventReceiver::EVENT_MENUPOPUPSTART;
+      menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
     else if (eventType.EqualsIgnoreCase("popuphiding"))
-      menuEvent = nsIAccessibleEventReceiver::EVENT_MENUPOPUPEND;
+      menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
     if (menuEvent) {
       PRUint32 role = ROLE_NOTHING;
       accessible->GetAccRole(&role);
@@ -444,7 +440,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
-      privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, 
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
     }
     else if (anchorElement) {
@@ -452,7 +448,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       if (hyperText) {
         PRInt32 selectedLink;
         hyperText->GetSelectedLinkIndex(&selectedLink);
-        privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
       }
     }
     else if (optionTargetNode && // use focused option
@@ -466,7 +462,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (treeBox && treeIndex >= 0) // it's a XUL <tree>
       // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
       privAcc = do_QueryInterface(treeItemAccessible);
-      privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_FOCUS, 
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
   }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
@@ -474,7 +470,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     accessible->GetAccState(&stateData.state);
     stateData.enable = (stateData.state & STATE_CHECKED) != 0;
     stateData.state = STATE_CHECKED;
-    privAcc->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_STATE_CHANGE, accessible, &stateData);
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
     if (eventType.EqualsIgnoreCase("RadioStateChange")) {
       FireAccessibleFocusEvent(accessible, targetNode);
     }

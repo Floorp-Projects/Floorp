@@ -22,6 +22,7 @@
  * Original Author: Eric D Vaughan (evaughan@netscape.com)
  * Contributor(s): Aaron Leventhal (aaronl@netscape.com)
  *                 John Gaunt (jgaunt@netscape.com)
+ *                 Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,58 +42,201 @@
 #include "nsIDOMNode.idl"
 #include "domstubs.idl"
 
+/**
+ * A cross-platform interface that supports platform-specific 
+ * accessibility APIs like MSAA and ATK. Contains the sum of what's needed
+ * to support IAccessible as well as ATK's generic accessibility objects.
+ * Can also be used by in-process accessibility clients to get information
+ * about objects in the accessible tree. The accessible tree is a subset of 
+ * nodes in the DOM tree -- such as documents, focusable elements and text.
+ * Mozilla creates the implementations of nsIAccessible on demand.
+ * See http://www.mozilla.org/projects/ui/accessibility for more information.
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(B26FBE47-9A5F-42a1-822B-082461AE4D6D)]
 interface nsIAccessible : nsISupports
 {
+  /**
+   * Parent node in accessible tree.
+   */
   readonly attribute nsIAccessible accParent;
+
+  /**
+   * Next sibling in accessible tree
+   */
   readonly attribute nsIAccessible accNextSibling;
+
+  /**
+   * Previous sibling in accessible tree
+   */
   readonly attribute nsIAccessible accPreviousSibling;
+
+  /**
+   * First child in accessible tree
+   */
   readonly attribute nsIAccessible accFirstChild;
+
+  /**
+   * Last child in accessible tree
+   */
   readonly attribute nsIAccessible accLastChild;
 
+  /**
+   * Number of accessible children
+   */
   readonly attribute long accChildCount;
+
+  /**
+   * Accessible name -- the main text equivalent for this node
+   */
   attribute AString accName;
+
+  /**
+   * Accessible value -- a number or a secondary text equivalent for this node
+   */
   readonly attribute AString accValue;
 
+  /**
+   * Accessible description -- long text associated with this node
+   */
   readonly attribute AString accDescription;
+
+  /**
+   * Provides localized string of accesskey name, such as Alt+D.
+   * The modifier may be affected by user and platform preferences.
+   * Usually alt+letter, or just the letter alone for menu items. 
+   */
   readonly attribute AString accKeyboardShortcut;
+
+  /**
+   * First child in accessible tree
+   */
   readonly attribute AString accKeybinding;
 
+  /**
+   * Enumerated accessible role. The values depend on platform because of variations.
+   * See the ROLE_* constants defined later in this file.
+   */
   readonly attribute unsigned long accRole;
+
+  /**
+   * Accessible states -- bit field which describes boolean properties of node. 
+   * See the STATE_* constants defined later in this file.
+   */
   readonly attribute unsigned long accState;
+
+  /**
+   * Extended accessible states -- second bit field describing node
+   */
   readonly attribute unsigned long accExtState;
 
+  /**
+   * Help text associated with node
+   */
   readonly attribute AString accHelp;
+
+  /**
+   * Focused accessible child of node
+   */
   readonly attribute nsIAccessible accFocused;
 
+  /**
+   * Accessible child which contains the coordinate at x,y
+   */
   nsIAccessible accGetAt(in long x, in long y);
-  nsIAccessible getChildAt(in long aChildIndex); // zero-based index
 
-  nsIAccessible accNavigateRight();
-  nsIAccessible accNavigateLeft();
-  nsIAccessible accNavigateUp();
-  nsIAccessible accNavigateDown();
+  /**
+   * Nth accessible child using zero-based index
+   */
+  nsIAccessible getChildAt(in long aChildIndex);
+
+  /**
+   * Accessible node geometrically to the right of this one
+   */
+  nsIAccessible accGetFromRight();
+
+  /**
+   * Accessible node geometrically to the left of this one
+   */
+  nsIAccessible accGetFromLeft();
+
+  /**
+   * Accessible node geometrically above this one
+   */
+  nsIAccessible accGetFromAbove();
+
+  /**
+   * Accessible node geometrically below this one
+   */
+  nsIAccessible accGetFromBelow();
 
   void accGetBounds(out long x, 
                     out long y, 
                     out long width, 
                     out long height);
 
+  /**
+   * Add this accessible to the current selection
+   */
   void accAddSelection();
+
+  /**
+   * Remove this accessible from the current selection
+   */
   void accRemoveSelection();
+
+  /**
+   * Extend the current selection from its current accessible anchor node
+   * to this accessible
+   */
   void accExtendSelection();
+
+  /**
+   * Select this accessible node only
+   */
   void accTakeSelection();
+
+  /**
+   * Focus this accessible node,
+   * The state STATE_FOCUSABLE indicates whether this node is normally focusable.
+   * It is the callers responsibility to determine whether this node is focusable.
+   * accTakeFocus on a node that is not normally focusable (such as a table),
+   * will still set focus on that node, although normally that will not be visually 
+   * indicated in most style sheets.
+   */
   void accTakeFocus();
 
+  /**
+   * The number of accessible actions associated with this accessible
+   */
   readonly attribute PRUint8 accNumActions;
-  AString getAccActionName(in PRUint8 index);
-  void accDoAction(in PRUint8 index);   // Action number 0 is the default action
 
+  /**
+   * The name of the accessible action at the given zero-based index
+   */
+  AString getAccActionName(in PRUint8 index);
+
+  /**
+   * Perform the accessible action at the given zero-based index
+   * Action number 0 is the default action
+   */
+  void accDoAction(in PRUint8 index);   
+
+  /**
+   * Get the DOM node described by this accessible node
+   */
   nsIDOMNode accGetDOMNode();
 
+  /**
+   * Get a pointer to accessibility interface for this node, which is specific 
+   * to the OS/accessibility toolkit we're running on.
+   */
   [noscript] void getNativeInterface(out voidPtr aOutAccessible);
 
- // MSAA State flags - used for bitfield. More than 1 allowed.
+  /**
+   * MSAA State flags - used for bitfield. More than 1 allowed.
+   */
   const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?
   const unsigned long  STATE_SELECTED           = 0x00000002;
   const unsigned long  STATE_FOCUSED            = 0x00000004;
@@ -125,9 +269,11 @@ interface nsIAccessible : nsISupports
   const unsigned long  STATE_PROTECTED          = 0x20000000;  // Maps to Gnome's *Role* ATK_ROLE_PASSWD_TEXT, nothing for Java?
   const unsigned long  STATE_HASPOPUP           = 0x40000000;  // New in MSAA 2.0
 
-// Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-// This is only the states that there isn't already a mapping for in MSAA
-// See www.accessmozilla.org/article.php?sid=11 for information on the mappings between accessibility API states
+/**
+ * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+ * This is only the states that there isn't already a mapping for in MSAA
+ * See www.accessmozilla.org/article.php?sid=11 for information on the mappings between accessibility API states
+ */
   const unsigned long  STATE_INVALID            = 0x00200000;  // No explanation given    
   const unsigned long  STATE_ACTIVE             = 0x00400000;  // This window is currently the active window    
   const unsigned long  STATE_EXPANDABLE         = 0x00800000;  // An item that can be expanded, such as a tree item with children    
@@ -144,32 +290,32 @@ interface nsIAccessible : nsISupports
 %{C++
 #ifdef MOZ_ACCESSIBILITY_ATK
 
-/*******************************************************************************
-The following nsIAccessible roles are traslated to ATK_ROLE_UNKNOWN
-
-  ROLE_TITLEBAR, ROLE_SOUND, ROLE_CURSOR, ROLE_CARET, ROLE_BORDER,
-  ROLE_GROUPING, ROLE_EQUATION, ROLE_COLUMN, ROLE_ROW, ROLE_LINK,
-  ROLE_WHITESPACE, ROLE_CLOCK,
-  ROLE_IPADDRESS
-
-  ROLE_GRIP
-    The object represents a special mouse pointer, which allows a user to
-    manipulate user interface elements such as windows.
-
-  ROLE_HELPBALLOON
-    The object displays a Help topic in the form of a ToolTip or Help balloon.
-
-  ROLE_PROPERTYPAGE
-    The object represents a property sheet.
-
-  ROLE_INDICATOR
-    The object represents an indicator, such as a pointer graphic pointing to
-    the currrent item.
-
-  ROLE_HOTKEYFIELD
-    The object represents a hot-key field that allow the user to enter a
-    sequence of keystroke.
-
+/**
+ * The following nsIAccessible roles are translated to ATK_ROLE_UNKNOWN
+ * 
+ *  ROLE_TITLEBAR, ROLE_SOUND, ROLE_CURSOR, ROLE_CARET, ROLE_BORDER,
+ *  ROLE_GROUPING, ROLE_EQUATION, ROLE_COLUMN, ROLE_ROW, ROLE_LINK,
+ *  ROLE_WHITESPACE, ROLE_CLOCK,
+ *  ROLE_IPADDRESS
+ *
+ *  ROLE_GRIP
+ *    The object represents a special mouse pointer, which allows a user to
+ *    manipulate user interface elements such as windows.
+ *
+ *  ROLE_HELPBALLOON
+ *    The object displays a Help topic in the form of a ToolTip or Help balloon.
+ *
+ *  ROLE_PROPERTYPAGE
+ *    The object represents a property sheet.
+ *
+ *  ROLE_INDICATOR
+ *    The object represents an indicator, such as a pointer graphic pointing to
+ *    the current item.
+ *
+ *  ROLE_HOTKEYFIELD
+ *    The object represents a hot-key field that allow the user to enter a
+ *    sequence of keystroke.
+ */
 
 The following ATK roles have no corresponding nsIAccessible roles. Perhaps
 there are not these types of widget/control in Mozilla, so don't need these

@@ -39,6 +39,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleWin32Object.h"
+#include "nsArray.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -423,23 +424,21 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 
   if (select) {  // do we have an nsIAccessibleSelectable?
     // we have an accessible that can have children selected
-    nsCOMPtr<nsISupportsArray> selectedOptions;
+    nsCOMPtr<nsIArray> selectedOptions;
     // gets the selected options as nsIAccessibles.
     select->GetSelectedChildren(getter_AddRefs(selectedOptions));
     if (selectedOptions) { // false if the select has no children or none are selected
       PRUint32 length;
-      selectedOptions->Count(&length);
+      selectedOptions->GetLength(&length);
       CComVariant* optionArray = new CComVariant[length]; // needs to be a CComVariant to go into the EnumeratorType object
 
       // 1) Populate an array to store in the enumeration
       for (PRUint32 i = 0 ; i < length ; i++) {
-        nsCOMPtr<nsISupports> tempOption;
-        selectedOptions->GetElementAt(i,getter_AddRefs(tempOption)); // this expects an nsISupports
-        if (tempOption) {
-          nsCOMPtr<nsIAccessible> tempAccess(do_QueryInterface(tempOption));
-          if ( tempAccess ) {
-            optionArray[i] = NativeAccessible(tempAccess);
-          }
+        nsCOMPtr<nsIAccessible> tempAccess;
+        selectedOptions->QueryElementAt(i, NS_GET_IID(nsIAccessible), 
+                                        getter_AddRefs(tempAccess));
+        if (tempAccess) {
+          optionArray[i] = NativeAccessible(tempAccess);
         }
       }
 
@@ -541,7 +540,7 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
 
   switch(navDir) {
     case NAVDIR_DOWN: 
-      xpAccessibleStart->AccNavigateDown(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->AccGetFromBelow(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
       xpAccessibleStart->GetAccFirstChild(getter_AddRefs(xpAccessibleResult));
@@ -550,7 +549,7 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
       xpAccessibleStart->GetAccLastChild(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_LEFT:
-      xpAccessibleStart->AccNavigateLeft(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->AccGetFromLeft(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_NEXT:
       xpAccessibleStart->GetAccNextSibling(getter_AddRefs(xpAccessibleResult));
@@ -559,10 +558,10 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
       xpAccessibleStart->GetAccPreviousSibling(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_RIGHT:
-      xpAccessibleStart->AccNavigateRight(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->AccGetFromRight(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_UP:
-      xpAccessibleStart->AccNavigateUp(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->AccGetFromAbove(getter_AddRefs(xpAccessibleResult));
       break;
   }
 

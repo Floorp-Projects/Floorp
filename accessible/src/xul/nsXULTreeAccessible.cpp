@@ -41,6 +41,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsITreeSelection.h"
 #include "nsXULTreeAccessible.h"
+#include "nsArray.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibleTable.h"
@@ -197,7 +198,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
 }
 
 // Ask treeselection to get all selected children
-NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsISupportsArray **_retval)
+NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsIArray **_retval)
 {
   *_retval = nsnull;
 
@@ -207,8 +208,8 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsISupportsArray **_retva
   mTree->GetSelection(getter_AddRefs(selection));
   if (!selection)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISupportsArray> selectedAccessibles;
-  NS_NewISupportsArray(getter_AddRefs(selectedAccessibles));
+  nsCOMPtr<nsIMutableArray> selectedAccessibles;
+  NS_NewArray(getter_AddRefs(selectedAccessibles));
   if (!selectedAccessibles)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -222,12 +223,12 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsISupportsArray **_retva
       tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, rowIndex);
       if (!tempAccess)
         return NS_ERROR_OUT_OF_MEMORY;
-      selectedAccessibles->AppendElement(tempAccess);
+      selectedAccessibles->AppendElement(tempAccess, PR_FALSE);
     }
   }
 
   PRUint32 length;
-  selectedAccessibles->Count(&length);
+  selectedAccessibles->GetLength(&length);
   if (length != 0) {
     *_retval = selectedAccessibles;
     NS_IF_ADDREF(*_retval);
@@ -260,7 +261,7 @@ NS_IMETHODIMP nsXULTreeAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMeth
     selection->IsSelected(aIndex, aSelState);
     if ((!(*aSelState) && eSelection_Add == aMethod) || 
         ((*aSelState) && eSelection_Remove == aMethod))
-      selection->ToggleSelect(aIndex);
+      return selection->ToggleSelect(aIndex);
   }
 
   return NS_OK;

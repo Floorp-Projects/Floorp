@@ -50,6 +50,7 @@
 #include "nsIListControlFrame.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
+#include "nsArray.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -113,7 +114,7 @@ void nsHTMLSelectableAccessible::iterator::CalcSelectionCount(PRInt32 *aSelectio
 }
 
 void nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIAccessibilityService *aAccService, 
-                                                                   nsISupportsArray *aSelectedAccessibles, 
+                                                                   nsIMutableArray *aSelectedAccessibles, 
                                                                    nsIPresContext *aContext)
 {
   PRBool isSelected = PR_FALSE;
@@ -128,7 +129,7 @@ void nsHTMLSelectableAccessible::iterator::AddAccessibleIfSelected(nsIAccessibil
   }
 
   if (tempAccess)
-    aSelectedAccessibles->AppendElement(tempAccess);
+    aSelectedAccessibles->AppendElement(NS_STATIC_CAST(nsISupports*, tempAccess), PR_FALSE);
 }
 
 PRBool nsHTMLSelectableAccessible::iterator::GetAccessibleIfSelected(PRInt32 aIndex, 
@@ -190,15 +191,16 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint
     return NS_ERROR_FAILURE;
 
   tempOption->GetSelected(aSelState);
+  nsresult rv = NS_OK;
   if (eSelection_Add == aMethod && !(*aSelState))
-    tempOption->SetSelected(PR_TRUE);
+    rv = tempOption->SetSelected(PR_TRUE);
   else if (eSelection_Remove == aMethod && (*aSelState))
-    tempOption->SetSelected(PR_FALSE);
-  return NS_OK;
+    rv = tempOption->SetSelected(PR_FALSE);
+  return rv;
 }
 
 // Interface methods
-NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsISupportsArray **_retval)
+NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsIArray **_retval)
 {
   *_retval = nsnull;
 
@@ -206,8 +208,8 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsISupportsArray *
   if (!accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupportsArray> selectedAccessibles;
-  NS_NewISupportsArray(getter_AddRefs(selectedAccessibles));
+  nsCOMPtr<nsIMutableArray> selectedAccessibles;
+  NS_NewArray(getter_AddRefs(selectedAccessibles));
   if (!selectedAccessibles)
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -220,8 +222,8 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsISupportsArray *
     iter.AddAccessibleIfSelected(accService, selectedAccessibles, context);
 
   PRUint32 uLength = 0;
-  selectedAccessibles->Count(&uLength); 
-  if (uLength != 0) { // length of nsISupportsArray containing selected options
+  selectedAccessibles->GetLength(&uLength); 
+  if (uLength != 0) { // length of nsIArray containing selected options
     *_retval = selectedAccessibles;
     NS_ADDREF(*_retval);
   }

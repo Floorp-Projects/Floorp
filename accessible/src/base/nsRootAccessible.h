@@ -42,12 +42,12 @@
 #include "nsDocAccessibleWrap.h"
 #include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
-#include "nsIAccessibleEventReceiver.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMXULListener.h"
+#include "nsIAccessibleCaret.h"
 
 class nsIAccessibleEventListener;
 
@@ -59,7 +59,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                          public nsIDOMXULListener
 {
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEEVENTRECEIVER
 
   public:
     nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
@@ -94,7 +93,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
 
     // nsIAccessibleDocument
-    NS_IMETHOD GetCaretAccessible(nsIAccessibleCaret **aAccessibleCaret);
+    NS_IMETHOD GetCaretAccessible(nsIAccessible **aAccessibleCaret);
 
     // nsIAccessNode
     NS_IMETHOD Shutdown();
@@ -102,6 +101,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void ShutdownAll();
 
   protected:
+    nsresult AddEventListeners();
+    nsresult RemoveEventListeners();
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
     void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);

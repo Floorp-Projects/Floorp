@@ -42,7 +42,6 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
-#include "nsIAccessibleEventReceiver.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIEditor.h"
@@ -60,7 +59,6 @@ const PRUint32 kDefaultCacheSize = 256;
 class nsDocAccessible : public nsBlockAccessible,
                         public nsIAccessibleDocument,
                         public nsPIAccessibleDocument,
-                        public nsIAccessibleEventReceiver,
                         public nsIWebProgressListener,
                         public nsIObserver,
                         public nsIDOMMutationListener,
@@ -72,7 +70,6 @@ class nsDocAccessible : public nsBlockAccessible,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSPIACCESSIBLEDOCUMENT
-  NS_DECL_NSIACCESSIBLEEVENTRECEIVER
   NS_DECL_NSIOBSERVER
 
   public:
@@ -109,8 +106,8 @@ class nsDocAccessible : public nsBlockAccessible,
   protected:
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
-    void AddContentDocListeners();
-    void RemoveContentDocListeners();
+    virtual nsresult AddEventListeners();
+    virtual nsresult RemoveEventListeners();
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
     void FireDocLoadFinished();
