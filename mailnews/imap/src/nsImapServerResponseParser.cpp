@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+
 #include "msgCore.h"  // for pre-compiled headers
 #include "net.h" /* should be defined into msgCore.h? - need MESSAGE_RFC822 */
 

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+
+
 #include "msgCore.h"  // for pre-compiled headers
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
