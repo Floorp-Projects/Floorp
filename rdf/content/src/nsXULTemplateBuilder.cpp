@@ -149,6 +149,7 @@ nsIRDFDataSource* RDFGenericBuilderImpl::mLocalstore;
 PRBool		RDFGenericBuilderImpl::persistLock;
 nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
+nsIHTMLElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
 
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Title;
 nsIRDFResource* RDFGenericBuilderImpl::kNC_child;
@@ -255,6 +256,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
         nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
         NS_RELEASE(gNameSpaceManager);
+        NS_IF_RELEASE(gHTMLElementFactory);
     }
 }
 
@@ -262,7 +264,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 nsresult
 RDFGenericBuilderImpl::Init()
 {
-    if (gRefCnt == 0) {
+    if (gRefCnt++ == 0) {
         kContainerAtom                  = NS_NewAtom("container");
         kLazyContentAtom                = NS_NewAtom("lazycontent");
         kIsContainerAtom                = NS_NewAtom("iscontainer");
@@ -354,8 +356,12 @@ RDFGenericBuilderImpl::Init()
                                           (nsISupports**) &XULSortService);
         if (NS_FAILED(rv)) return rv;
 
+        rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
+                                                nsnull,
+                                                kIHTMLElementFactoryIID,
+                                                (void**) &gHTMLElementFactory);
+        if (NS_FAILED(rv)) return rv;
     }
-    ++gRefCnt;
 
 #ifdef PR_LOGGING
     if (! gLog)
@@ -430,13 +436,15 @@ RDFGenericBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
         // Now set the database on the element, so that script writers can
         // access it.
         nsCOMPtr<nsIDOMXULElement> element( do_QueryInterface(mRoot) );
-        NS_ASSERTION(element != nsnull, "not a XULElement");
-        if (! element)
-            return NS_ERROR_UNEXPECTED;
-
-        nsresult rv;
-        rv = element->SetDatabase(aDataBase);
-        if (NS_FAILED(rv)) return rv;
+        if (element) {
+            nsresult rv;
+            rv = element->SetDatabase(aDataBase);
+            if (NS_FAILED(rv)) return rv;
+        }
+        else {
+            // Hmm. This must be an HTML element. Maybe try to set it
+            // as a JS property "by hand"?
+        }
     }
 
     return NS_OK;
@@ -512,20 +520,35 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
                                      nsIContent** aResult)
 {
     nsresult rv;
-
     nsCOMPtr<nsIContent> result;
-    rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new RDFElement");
-    if (NS_FAILED(rv)) return rv;
 
-    const char		*uri;
-    rv = aResource->GetValueConst(&uri);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
-    if (NS_FAILED(rv)) return rv;
+    if (aNameSpaceID == kNameSpaceID_HTML) {
+        nsCOMPtr<nsIHTMLContent> element;
+        /*const*/ PRUnichar *tagName;
+        aTag->GetUnicode(&tagName);
 
-    rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
-    if (NS_FAILED(rv)) return rv;
+        rv = gHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
+        if (NS_FAILED(rv)) return rv;
+
+        result = do_QueryInterface(element);
+        if (! result)
+            return NS_ERROR_UNEXPECTED;
+    }
+    else {
+        rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (aResource) {
+        const char		*uri;
+        rv = aResource->GetValueConst(&uri);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, (const char*) uri, PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
     rv = result->SetDocument(doc, PR_FALSE);
@@ -1780,17 +1803,16 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
 		// check whether this item is the resource element 
 		PRBool isResourceElement = PR_FALSE;
-		if (nameSpaceID == kNameSpaceID_XUL) {
-			nsAutoString idValue;
-			rv = tmplKid->GetAttribute(kNameSpaceID_None,
-                                       kURIAtom,
-                                       idValue);
-            if (NS_FAILED(rv)) return rv;
 
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (idValue.EqualsIgnoreCase("..."))) {
-                isResourceElement = PR_TRUE;
-                aIsUnique = PR_FALSE;
-			}
+        nsAutoString idValue;
+        rv = tmplKid->GetAttribute(kNameSpaceID_None,
+                                   kURIAtom,
+                                   idValue);
+        if (NS_FAILED(rv)) return rv;
+
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (idValue.EqualsIgnoreCase("..."))) {
+            isResourceElement = PR_TRUE;
+            aIsUnique = PR_FALSE;
 		}
 
 		nsCOMPtr<nsIAtom> tag;
@@ -1865,43 +1887,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
         }
         else {
-            // It's just a vanilla element that we're creating here.
-            if (nameSpaceID == kNameSpaceID_HTML) {
-                nsCOMPtr<nsIHTMLElementFactory> factory;
-
-                rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
-                                                        nsnull,
-                                                        kIHTMLElementFactoryIID,
-                                                        getter_AddRefs(factory));
-                if (NS_FAILED(rv)) return rv;
-
-                nsCOMPtr<nsIHTMLContent> element;
-                //nsAutoString tagName(tag->GetUnicode());
-                PRUnichar *unicodeString;
-                tag->GetUnicode(&unicodeString);
-
-                rv = factory->CreateInstanceByTag(unicodeString, getter_AddRefs(element));
-                if (NS_FAILED(rv)) return rv;
-
-                realKid = do_QueryInterface(element);
-                if (! realKid)
-                    return NS_ERROR_UNEXPECTED;
-
-                // XXX To do
-                // Make sure our ID is set. Unlike XUL elements, we want to make sure
-                // that our ID is relative if possible.
-            }
-            else {
-                rv = NS_NewRDFElement(nameSpaceID, tag,	getter_AddRefs(realKid));
-                if (NS_FAILED(rv)) return rv;
-			}
-
-            // Set the realKid's document
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-            if (! doc)
-                return NS_ERROR_UNEXPECTED;
-
-            rv = realKid->SetDocument(doc, PR_FALSE);
+            // It's just a generic element. Create it!
+            rv = CreateElement(nameSpaceID, tag, nsnull, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
         }
 
@@ -1982,19 +1969,27 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
             }
 
-		// get any persistant attributes
-		if ((!aIsUnique) && (isResourceElement))
-		{
-			GetPersistentAttributes(realKid);
-		}
+            // get any persistant attributes
+            if ((!aIsUnique) && (isResourceElement)) {
+                GetPersistentAttributes(realKid);
+            }
 
-            // If item says its "open", then recurve now and build up its children
+#if 0
+            // If item says its "open", then recurse now and build up its children
             nsAutoString openState;
             rv = realKid->GetAttribute(kNameSpaceID_None, kOpenAtom, openState);
             if (NS_FAILED(rv)) return rv;
 
             if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (openState.EqualsIgnoreCase("true"))) {
                 rv = OpenWidgetItem(realKid);
+                if (NS_FAILED(rv)) return rv;
+            }
+#endif
+
+            if (nameSpaceID == kNameSpaceID_HTML) {
+                // If we just built HTML, then we have to recurse "by
+                // hand" because HTML won't build itself up lazily.
+                rv = BuildContentFromTemplate(tmplKid, realKid, aIsUnique, aChild, -1, aNotify);
                 if (NS_FAILED(rv)) return rv;
             }
         }
@@ -2437,13 +2432,12 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
         // we need to construct a new child element.
         nsCOMPtr<nsIContent> element;
 
-        if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
-            return rv;
+        rv = CreateElement(nameSpaceID, tag, nsnull, getter_AddRefs(element));
+        if (NS_FAILED(rv)) return rv;
 
-        if (NS_FAILED(rv = parent->AppendChildTo(element, PR_TRUE))) 
-          // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
-
-            return rv;
+        // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
+        rv = parent->AppendChildTo(element, PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
 
         *result = element;
         NS_ADDREF(*result);
@@ -2694,7 +2688,7 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     }
 
     if (nameSpaceID != kNameSpaceID_XUL)
-        return PR_FALSE;
+        return PR_TRUE;
 
     if (aElement == mRoot.get())
       return PR_TRUE;

@@ -322,7 +322,8 @@ public:
                              nsIRDFNode* aValue);
 
     nsresult CreateTemplateBuilder(nsIContent* aElement,
-                                   const nsString& aDataSources);
+                                   const nsString& aDataSources,
+                                   nsIRDFContentModelBuilder** aResult);
 
     nsresult
     GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult);
@@ -2350,6 +2351,26 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
         return rv;
     }
 
+    // Check for a 'datasources' tag, in which case we'll create a
+    // template builder.
+    {
+        nsAutoString dataSources;
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+            element->GetAttribute(kNameSpaceID_None,
+                                  kDataSourcesAtom,
+                                  dataSources)) {
+
+            nsCOMPtr<nsIRDFContentModelBuilder> builder;
+            rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
+
+            // Force construction of template content _now_.
+            rv = builder->CreateContents(element);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+    
+    // ...and finally, return the result.
     if (NS_FAILED(rv = element->QueryInterface(kIContentIID, (void**) aResult))) {
         NS_ERROR("unable to get nsIContent interface");
         return rv;
@@ -2523,7 +2544,8 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
                                   kDataSourcesAtom,
                                   dataSources)) {
 
-            rv = CreateTemplateBuilder(element, dataSources);
+            nsCOMPtr<nsIRDFContentModelBuilder> builder;
+            rv = CreateTemplateBuilder(element, dataSources, getter_AddRefs(builder));
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
         }
     }
@@ -2801,7 +2823,8 @@ RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
 
 nsresult
 RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
-                                         const nsString& aDataSources)
+                                         const nsString& aDataSources,
+                                         nsIRDFContentModelBuilder** aResult)
 {
     nsresult rv;
 
@@ -2920,6 +2943,8 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         return rv;
     }
 
+    *aResult = builder;
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 
