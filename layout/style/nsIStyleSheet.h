@@ -41,7 +41,7 @@ public:
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
   NS_IMETHOD GetType(nsString& aType) const = 0;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsString& aMedium) const = 0;
+  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const = 0;
 
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const = 0;
   NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
