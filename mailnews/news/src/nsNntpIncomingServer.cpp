@@ -140,12 +140,21 @@ NS_IMETHODIMP
 nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 {
   nsresult rv;
+  if (mNewsrcFilePath)
+  {
+    *aNewsrcFilePath = mNewsrcFilePath;
+    NS_IF_ADDREF(*aNewsrcFilePath);
+    return NS_OK;
+  }
+
   rv = GetFileValue("newsrc.file", aNewsrcFilePath);
-  if (NS_SUCCEEDED(rv) && *aNewsrcFilePath) return rv;
+  if (NS_SUCCEEDED(rv) && *aNewsrcFilePath) 
+  {
+    mNewsrcFilePath = *aNewsrcFilePath;
+    return rv;
+  }
 
-  nsCOMPtr<nsIFileSpec> path;
-
-  rv = GetNewsrcRootPath(getter_AddRefs(path));
+  rv = GetNewsrcRootPath(getter_AddRefs(mNewsrcFilePath));
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString hostname;
@@ -153,18 +162,18 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
   if (NS_FAILED(rv)) return rv;
 
   // set the leaf name to "dummy", and then call MakeUnique with a suggested leaf name
-  rv = path->AppendRelativeUnixPath("dummy");
+  rv = mNewsrcFilePath->AppendRelativeUnixPath("dummy");
   if (NS_FAILED(rv)) return rv;
   nsCAutoString newsrcFileName(NEWSRC_FILE_PREFIX);
   newsrcFileName.Append(hostname);
   newsrcFileName.Append(NEWSRC_FILE_SUFFIX);
-  rv = path->MakeUniqueWithSuggestedName((const char *)newsrcFileName);
+  rv = mNewsrcFilePath->MakeUniqueWithSuggestedName((const char *)newsrcFileName);
   if (NS_FAILED(rv)) return rv;
 
-  rv = SetNewsrcFilePath(path);
+  rv = SetNewsrcFilePath(mNewsrcFilePath);
   if (NS_FAILED(rv)) return rv;
 
-  *aNewsrcFilePath = path;
+  *aNewsrcFilePath = mNewsrcFilePath;
   NS_ADDREF(*aNewsrcFilePath);
 
   return NS_OK;

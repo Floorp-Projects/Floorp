@@ -140,6 +140,7 @@ private:
     nsresult ClearInner();
     
     nsIOFileStream *mHostInfoStream;
+    nsCOMPtr<nsIFileSpec> mNewsrcFilePath;
 };
 
 #endif
