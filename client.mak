@@ -66,9 +66,6 @@ CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
 
-# rules.mak include config.mak
-include <$(DEPTH)\config\config.mak>
-
 ## The master target
 ############################################################
 
@@ -89,14 +86,17 @@ pull_seamonkey:
 
 ############################################################
 
+# nmake has to be hardcoded, or we have to depend on mozilla/config
+# being pulled already to figure out what $(NMAKE) should be.
+
 clobber_all:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	$(NMAKE) -f makefile.win clobber_all 
+	nmake -f makefile.win clobber_all 
 
 depend:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	$(NMAKE) -f makefile.win depend 
+	nmake -f makefile.win depend 
 
 build_all:
 	@cd $(MOZ_SRC)\mozilla\.
-	$(NMAKE) -f makefile.win all
+	nmake -f makefile.win all
