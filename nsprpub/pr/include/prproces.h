@@ -43,6 +43,15 @@ PR_EXTERN(void) PR_ProcessAttrSetStdioRedirect(
     PRFileDesc *redirectFd
 );
 
+/*
+ * OBSOLETE -- use PR_ProcessAttrSetStdioRedirect instead.
+ */
+PR_EXTERN(void) PR_SetStdioRedirect(
+    PRProcessAttr *attr,
+    PRSpecialFD stdioFd,
+    PRFileDesc *redirectFd
+);
+
 PR_EXTERN(PRStatus) PR_ProcessAttrSetCurrentDirectory(
     PRProcessAttr *attr,
     const char *dir
