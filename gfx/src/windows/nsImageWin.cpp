@@ -26,6 +26,10 @@
 #include "nsRenderingContextWin.h"
 
 
+#define MAX_BUFFER_WIDTH        128
+#define MAX_BUFFER_HEIGHT       128
+
+
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
@@ -737,16 +741,17 @@ nsImageWin::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
 nsRect              destRect,srcRect,tvrect;
 HDC                 TheHDC,offDC,maskDC;
-PRInt32             x,y,width,height,canRaster;
+PRInt32             x,y,width,height,canRaster,TileBufferWidth,TileBufferHeight;
 HBITMAP             maskBits,tileBits,oldBits,oldMaskBits; 
 
-  // find out if the surface is a printer, if it is use the draw(does things with DIBS, only good way 
-  // for a printer
+
+  // The slower tiling will need to be used for the following cases:
+  // 1.) Printers 2.) When in 256 color mode 3.) when the tile is larger than the buffer
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
   // we have to use the old way.. for 256 color mode and printing.. slow, but will always work.
-  if((256 == mNumPaletteColors) || (canRaster == DT_RASPRINTER)){ 
+  if ((canRaster==DT_RASPRINTER) || (256==mNumPaletteColors) || (aWidth>MAX_BUFFER_WIDTH) || (aHeight>MAX_BUFFER_HEIGHT)){
     for(y=aY0;y<aY1;y+=aHeight){
       for(x=aX0;x<aX1;x+=aWidth){
         this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
@@ -768,8 +773,22 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
   if(NULL ==offDC){
     return (PR_FALSE);
   }
-  tileBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
-  if(NULL ==tileBits){
+
+  if(aWidth < tvrect.width ){
+    TileBufferWidth = MAX_BUFFER_WIDTH;
+  } else {
+    TileBufferWidth = aWidth;
+  }
+
+  if(aHeight < tvrect.height){
+    TileBufferHeight = MAX_BUFFER_HEIGHT;
+  } else {
+    TileBufferHeight = aHeight;
+  }
+
+  tileBits = ::CreateCompatibleBitmap(TheHDC, TileBufferWidth,TileBufferHeight);
+
+  if(NULL == tileBits){
     ::DeleteObject(offDC);
     return (PR_FALSE);
   }
@@ -785,7 +804,7 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
       ::DeleteObject(offDC);
       return (PR_FALSE);
     }
-    maskBits = ::CreateCompatibleBitmap(TheHDC, tvrect.width, tvrect.height);
+    maskBits = ::CreateCompatibleBitmap(TheHDC, TileBufferWidth, TileBufferHeight);
     if(NULL ==maskBits){
       ::SelectObject(offDC,oldBits);
       ::DeleteObject(tileBits);
@@ -803,7 +822,7 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
 
     ::BitBlt(maskDC,0,0,aWidth,aHeight,maskDC,0,0,SRCCOPY);
     srcRect.SetRect(0,0,aWidth,aHeight);
-    BuildTile(maskDC,srcRect,tvrect.width,tvrect.height,SRCCOPY);
+    BuildTile(maskDC,srcRect,TileBufferWidth/2,TileBufferHeight/2,SRCCOPY);
   }
 
   // put the initial tile of background image into the offscreen
@@ -815,8 +834,7 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
   }
 
   srcRect.SetRect(0,0,aWidth,aHeight);
-  BuildTile(offDC,srcRect,tvrect.width,tvrect.height,SRCCOPY);
-
+  BuildTile(offDC,srcRect,TileBufferWidth/2,TileBufferHeight/2,SRCCOPY);
 
   // now duplicate our tile into the background
   destRect = srcRect;
@@ -824,16 +842,16 @@ HBITMAP             maskBits,tileBits,oldBits,oldMaskBits;
   height = destRect.height;
 
   if ( 1!=mAlphaDepth ) {
-    for(y=aY0;y<aY1;y+=tvrect.height){
-      for(x=aX0;x<aX1;x+=tvrect.width){
+    for(y=aY0;y<aY1;y+=srcRect.height){
+      for(x=aX0;x<aX1;x+=srcRect.width){
         destRect.x = x;
         destRect.y = y;
         ::BitBlt(TheHDC,x,y,width,height,offDC,0,0,SRCCOPY);
       }
     } 
   } else {
-    for(y=aY0;y<aY1;y+=tvrect.height){
-      for(x=aX0;x<aX1;x+=tvrect.width){
+    for(y=aY0;y<aY1;y+=srcRect.height){
+      for(x=aX0;x<aX1;x+=srcRect.width){
         destRect.x = x;
         destRect.y = y;
         ::BitBlt(TheHDC,x,y,width,height,maskDC,0,0,SRCAND);
@@ -1190,27 +1208,25 @@ nsImageWin::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
 
 /** ---------------------------------------------------
  *  A bit blitter to tile images to the background recursively
- *	@update 4/13/99 dwc
- *  @param aRC -- Rendering Context to render to
- *  @param aDS -- Target drawing surface for the rendering context
- *  @param aSrcRect -- Rectangle we are build with the image
- *  @param aHeight -- height of the tile
- *  @param aWidth -- width of the tile
+ *	@update 9/9/2000 dwc
+ *  @param aTheHDC -- HDC to render to
+ *  @param aSrcRect -- the size of the tile we are building
+ *  @param aWidth -- max width allowed for the  HDC
+ *  @param aHeight -- max height allowed for the HDC
  */
 void
 nsImageWin::BuildTile(HDC TheHDC,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32  aCopyMode)
 {
 nsRect  destRect;
   
-  if( aSrcRect.width < aWidth) {
+  if( aSrcRect.width < aWidth ) {
     // width is less than double so double our source bitmap width
     destRect = aSrcRect;
     destRect.x += aSrcRect.width;
     ::BitBlt(TheHDC,destRect.x,destRect.y,destRect.width,destRect.height,TheHDC,aSrcRect.x,aSrcRect.y,aCopyMode);
-
     aSrcRect.width*=2;
     this->BuildTile(TheHDC,aSrcRect,aWidth,aHeight,aCopyMode);
-  } else if (aSrcRect.height < aHeight) {
+  }else if (aSrcRect.height < aHeight) {
     // height is less than double so double our source bitmap height
     destRect = aSrcRect;
     destRect.y += aSrcRect.height;
