@@ -1,4 +1,3 @@
 nsILocalStore.h
 nsIRDFFileSystem.h
-nsIRDFFTP.h
 

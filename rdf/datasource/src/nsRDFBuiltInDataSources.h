@@ -40,9 +40,5 @@ class nsIRDFDataSource;
 // in nsFileSystemDataSource.cpp
 nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
 
-// in nsFTPDataSource.cpp
-nsresult NS_NewRDFFTPDataSource(nsIRDFDataSource** result);
-
 #endif // nsBuiltinDataSources_h__
-
 
