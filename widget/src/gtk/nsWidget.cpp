@@ -149,27 +149,28 @@ void nsWidget::RemoveChild(nsIWidget* aChild)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
+  fprintf(stderr,"nsWidget::Show() called\n");
     if (bState) {
-	if (mWidget) {
-	    gtk_widget_show(mWidget);
-	} else {
+      if (mWidget) {
+        gtk_widget_show(mWidget);
+      } else {
 #ifdef DEBUG_shaver
-	    g_print("showing a NULL-be-widgeted widget @ %p\n", this);
+        g_print("showing a NULL-be-widgeted widget @ %p\n", this);
 #endif
-	    return NS_ERROR_NULL_POINTER;
-	}
+        return NS_ERROR_NULL_POINTER;
+      }
     } else {
-	if (mWidget) {
-	    gtk_widget_hide(mWidget);
-	} else {
+    if (mWidget) {
+      gtk_widget_hide(mWidget);
+    } else {
 #ifdef DEBUG_shaver
-	    g_print("hiding a NULL-be-widgeted widget @ %p\n", this);
+    g_print("hiding a NULL-be-widgeted widget @ %p\n", this);
 #endif
-	    return NS_ERROR_NULL_POINTER;
-	}
+    return NS_ERROR_NULL_POINTER;
     }
-    mShown = bState;
-    return NS_OK;
+  }
+  mShown = bState;
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::IsVisible(PRBool &aState)

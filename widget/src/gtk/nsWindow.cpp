@@ -184,6 +184,17 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 #endif
   }
 
+  mWidget = gtk_layout_new(FALSE, FALSE);
+  gtk_widget_set_events (mWidget,
+                         GDK_BUTTON_PRESS_MASK |
+                         GDK_BUTTON_RELEASE_MASK |
+                         GDK_POINTER_MOTION_MASK |
+                         GDK_EXPOSURE_MASK |
+                         GDK_ENTER_NOTIFY_MASK |
+                         GDK_LEAVE_NOTIFY_MASK |
+                         GDK_KEY_PRESS_MASK |
+                         GDK_KEY_RELEASE_MASK);
+
   if (!parentWidget) {
 #ifdef DEBUG_shaver
     fprintf(stderr, "StandardCreateWindow: creating toplevel\n");
@@ -194,17 +205,16 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
 
-    mWidget = gtk_layout_new(FALSE, FALSE);
     gtk_widget_show (mWidget);
     gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
   } else {
 #ifdef DEBUG_shaver
     fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea\n");
 #endif
-    mainWindow = mWidget = gtk_layout_new(FALSE, FALSE);
+    mainWindow = mWidget;
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   }
-
+                         
   gtk_widget_set_usize(mainWindow, aRect.width, aRect.height);
 
   if (aParent) {
@@ -569,6 +579,38 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
   }
 
   return ctx;
+}
+
+//-------------------------------------------------------------------------
+//
+// Return some native data according to aDataType
+//
+//-------------------------------------------------------------------------
+void *nsWindow::GetNativeData(PRUint32 aDataType)
+{
+    switch(aDataType) {
+      case NS_NATIVE_WINDOW:
+	return (void *)GTK_LAYOUT (mWidget)->bin_window;
+      case NS_NATIVE_DISPLAY:
+	return (void *)GDK_DISPLAY();
+      case NS_NATIVE_WIDGET:
+	return (void *)mWidget;
+      case NS_NATIVE_GRAPHIC:
+        {
+	      void *res;
+	      if (mGC) {
+		      res = mGC;
+	      } else {
+		  NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
+		  res = (void *)mToolkit->GetSharedGC();
+	      }
+	      NS_ASSERTION(res, "unable to return NS_NATIVE_GRAPHIC");
+	      return res;
+	  }
+      default:
+	break;
+    }
+    return nsnull;
 }
 
 //-------------------------------------------------------------------------

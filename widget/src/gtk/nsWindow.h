@@ -71,6 +71,7 @@ public:
 
     virtual void            AddChild(nsIWidget* aChild);
     virtual void            RemoveChild(nsIWidget* aChild);
+    virtual void*           GetNativeData(PRUint32 aDataType);
 
     NS_IMETHOD              Show  (PRBool bState);
 
