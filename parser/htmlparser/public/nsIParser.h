@@ -356,6 +356,7 @@ const PRUnichar  kLeftSquareBracket  = '[';
 const PRUnichar  kRightSquareBracket = ']';
 const PRUnichar kNullCh           = '\0';
 
+// XXXbz these type defines should really just go away....
 #define kHTMLTextContentType  "text/html"
 #define kXMLTextContentType   "text/xml"
 #define kXMLApplicationContentType "application/xml"

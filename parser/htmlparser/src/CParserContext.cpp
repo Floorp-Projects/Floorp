@@ -154,16 +154,16 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 
   mDocType=ePlainText;
 
-  if(mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType)))
+  if(mMimeType.EqualsLiteral(kHTMLTextContentType))
     mDocType=eHTML_Strict;
-  else if (mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType))          ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))   ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType))          ||
+  else if (mMimeType.EqualsLiteral(kXMLTextContentType)          ||
+           mMimeType.EqualsLiteral(kXMLApplicationContentType)   ||
+           mMimeType.EqualsLiteral(kXHTMLApplicationContentType) ||
+           mMimeType.EqualsLiteral(kXULTextContentType)          ||
 #ifdef MOZ_SVG
-           mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType))          ||
+           mMimeType.EqualsLiteral(kSVGTextContentType)          ||
 #endif
-           mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)))
+           mMimeType.EqualsLiteral(kRDFTextContentType))
     mDocType=eXML;
 }
 

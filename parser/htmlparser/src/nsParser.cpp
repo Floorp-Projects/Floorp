@@ -1104,14 +1104,15 @@ void DetermineParseMode(const nsString& aBuffer,
 static
 nsresult
 FindSuitableDTD(CParserContext& aParserContext,
-                const nsString& aBuffer,
                 PRBool* aReturn)
 {
   *aReturn = PR_FALSE;
   //Let's start by trying the defaultDTD, if one exists...
-  if(aParserContext.mDTD)
-    if(aParserContext.mDTD->CanParse(aParserContext,aBuffer,0))
+  if(aParserContext.mDTD) {
+    eAutoDetectResult canParse = aParserContext.mDTD->CanParse(aParserContext);
+    if(canParse != eUnknownDetect && canParse != eInvalidDetect)
       return PR_TRUE;
+  }
 
   CSharedParserObjects* sharedObjects;
   nsresult rv = GetSharedObjects(&sharedObjects);
@@ -1131,7 +1132,7 @@ FindSuitableDTD(CParserContext& aParserContext,
       // 36233, 36754, 36491, 36323. Basically, we should avoid calling DTD's
       // WillBuildModel() multiple times, i.e., we shouldn't leave auto-detect-status
       // unknown.
-      eAutoDetectResult theResult = theDTD->CanParse(aParserContext,aBuffer,0);
+      eAutoDetectResult theResult = theDTD->CanParse(aParserContext);
       if (eValidDetect == theResult){
         aParserContext.mAutoDetectStatus = eValidDetect;
         theBestDTD = theDTD;
@@ -1206,16 +1207,18 @@ nsParser::WillBuildModel(nsString& aFilename)
   if (eUnknownDetect != mParserContext->mAutoDetectStatus)
     return NS_OK;
 
-  nsAutoString theBuffer;
-  // XXXVidur Make a copy and only check in the first 1k
-  mParserContext->mScanner->Peek(theBuffer, 1024);
-
   if (eDTDMode_unknown == mParserContext->mDTDMode ||
-      eDTDMode_autodetect == mParserContext->mDTDMode)
+      eDTDMode_autodetect == mParserContext->mDTDMode) {
+    
+    nsAutoString theBuffer;
+    // XXXVidur Make a copy and only check in the first 1k
+    mParserContext->mScanner->Peek(theBuffer, 1024);    
     DetermineParseMode(theBuffer, mParserContext->mDTDMode,
                        mParserContext->mDocType, mParserContext->mMimeType);
+  }
+  
   PRBool found;
-  nsresult rv = FindSuitableDTD(*mParserContext,theBuffer, &found);
+  nsresult rv = FindSuitableDTD(*mParserContext, &found);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!found)

@@ -411,32 +411,18 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 NS_IMETHODIMP_(eAutoDetectResult)
-CViewSourceHTML::CanParse(CParserContext& aParserContext,
-                          const nsString& aBuffer, PRInt32 aVersion)
+CViewSourceHTML::CanParse(CParserContext& aParserContext)
 {
-  eAutoDetectResult result=eUnknownDetect;
+  if (eViewSource == aParserContext.mParserCommand) {
+    if (aParserContext.mDocType == ePlainText) {
+      return eValidDetect;
+    }
 
-  if(eViewSource==aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType))) {
-      result=eValidDetect;
-    }
-    if(aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType)) ||
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
-#ifdef MOZ_SVG
-       aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType)) ||
-#endif
-       aParserContext.mMimeType.Equals(kSGMLTextContentType)) {
-      result=ePrimaryDetect;
-    }
+    // We claim to parse XML... now _that_ is funny.
+    return ePrimaryDetect;
   }
-  return result;
+  
+  return eUnknownDetect;
 }
 
 

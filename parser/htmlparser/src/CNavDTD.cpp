@@ -295,72 +295,33 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult)
 
 /**
  * This method is called to determine if the given DTD can parse
- * a document in a given source-type. 
+ * a document in a given source-type.
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
- * @update  gess 02/24/00
- * @param   
- * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
- */ 
+ * @param aParserContext -- the context for this document (knows
+ *           the content type, document type, parser command, etc).
+ * @return eUnknownDetect if you don't know how to parse it,
+ *         eValidDetect if you do, but someone may have a better idea,
+ *         ePrimaryDetect if you think you know best
+ */
 NS_IMETHODIMP_(eAutoDetectResult)
-CNavDTD::CanParse(CParserContext& aParserContext,
-                  const nsString& aBuffer, PRInt32 aVersion)
+CNavDTD::CanParse(CParserContext& aParserContext)
 {
-  eAutoDetectResult result=eUnknownDetect;
-
-  if(aParserContext.mParserCommand != eViewSource) {
-    if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
-      result=ePrimaryDetect;
-    }
-    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType))) {
-      result=ePrimaryDetect;
-    } 
-    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType))) {
-      result=ePrimaryDetect;
-    } 
-    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType))) {
-      result=ePrimaryDetect;
-    } 
-    else if(PR_TRUE==aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
-      result=ePrimaryDetect;
-    }
-    // do this for XML-based content-types so that we don't fall back
-    // to BufferContainsHTML() for known content types
-    // see bug 132681
-    // this will be cleaned up after moz 1.0 -alecf
-    else if (aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
-             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
-             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
-#ifdef MOZ_SVG
-             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType)) ||
-#endif
-             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))) {
-      result=eUnknownDetect;
-    }
-    else {
-      //otherwise, look into the buffer to see if you recognize anything...
-      PRBool theBufHasXML=PR_FALSE;
-      if(BufferContainsHTML(aBuffer,theBufHasXML)){
-        result = eValidDetect ;
-        if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
-          if(!theBufHasXML) {
-            switch(aParserContext.mDTDMode) {
-              case eDTDMode_full_standards:
-              case eDTDMode_almost_standards:
-                result=eValidDetect;
-                break;
-              default:
-                result=ePrimaryDetect;
-                break;
-            }
-          }
-          else result=eValidDetect;
-        }
-      }
-    } 
+  NS_ASSERTION(!aParserContext.mMimeType.IsEmpty(),
+               "How'd we get here with an unknown type?");
+  
+  if (aParserContext.mParserCommand != eViewSource &&
+      aParserContext.mDocType != eXML) {
+    // This means that we're
+    // 1) Looking at a type the parser claimed to know how to handle (so XML
+    //    or HTML or a plaintext type)
+    // 2) Not looking at XML
+    //
+    // Therefore, we want to handle this data with this DTD
+    return ePrimaryDetect;
   }
-  return result;
+
+  return eUnknownDetect;
 }
 
 /**

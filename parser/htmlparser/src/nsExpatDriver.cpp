@@ -979,31 +979,16 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
 }
 
 NS_IMETHODIMP_(eAutoDetectResult)
-nsExpatDriver::CanParse(CParserContext& aParserContext,
-                        const nsString& aBuffer,
-                        PRInt32 aVersion)
+nsExpatDriver::CanParse(CParserContext& aParserContext)
 {
-  if (aParserContext.mParserCommand == eViewSource) {
-    return eUnknownDetect;
-  }
-
-  if (aParserContext.mMimeType.Equals(kXMLTextContentType)         ||
-      aParserContext.mMimeType.Equals(kXMLApplicationContentType)  ||
-      aParserContext.mMimeType.Equals(kXHTMLApplicationContentType)||
-      aParserContext.mMimeType.Equals(kRDFTextContentType)         ||
-#ifdef MOZ_SVG
-      aParserContext.mMimeType.Equals(kSVGTextContentType)         ||
-#endif
-      aParserContext.mMimeType.Equals(kXULTextContentType)) {
-
+  NS_ASSERTION(!aParserContext.mMimeType.IsEmpty(),
+               "How'd we get here with an unknown type?");
+  
+  if (eViewSource != aParserContext.mParserCommand &&
+      aParserContext.mDocType == eXML) {
+    // The parser context already looked at the MIME type for us
+  
     return ePrimaryDetect;
-  }
-
-  if (aParserContext.mMimeType.IsEmpty() &&
-      aBuffer.Find("<?xml ") != kNotFound) {
-    aParserContext.SetMimeType(NS_LITERAL_CSTRING(kXMLTextContentType));
-
-    return eValidDetect;
   }
 
   return eUnknownDetect;
