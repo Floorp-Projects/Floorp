@@ -115,7 +115,6 @@ sub cmdLogin {
     my($app) = @_;
     my $user = $app->getObject('user');
     if (defined($user)) {
-        $self->warn(4, 'tried to log in but was already logged in');
         $app->noCommand();
     } else {
         $self->requireLogin($app);
