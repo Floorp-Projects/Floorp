@@ -85,6 +85,10 @@
 #include "nsIBrowserHistory.h"
 #include "nsIPermissionManager.h"
 #include "nsIWebPageDescriptor.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIFocusController.h"
 
 #include <QuickTime/QuickTime.h>
 
@@ -244,6 +248,7 @@ static NSArray* sToolbarDefaults = nil;
 - (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
 -(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 -(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+- (BOOL)isPageTextFieldFocused;
 @end
 
 @implementation BrowserWindowController
@@ -1292,8 +1297,8 @@ static NSArray* sToolbarDefaults = nil;
     NSString *searchString = [aSender stringValue];
     
     const char *aURLSpec = [currentURL lossyCString];
-    NSString *aDomain;
-    nsIURI *aURI;
+    NSString *aDomain = @"";
+    nsIURI *aURI = nil;
 
     // If we have an about: type URL, remove " site:%d" from the search string
     // This is a fix to deal with Google's Search this Site feature
@@ -1682,9 +1687,53 @@ static NSArray* sToolbarDefaults = nil;
   [self forward:sender];
 }
 
+//
+// isPageTextFieldFocused
+//
+// Determine if a text field in the content area has focus. Returns YES if the
+// focus is in a <input type="text"> or <textarea>
+//
+- (BOOL)isPageTextFieldFocused
+{
+  #define ENSURE_TRUE(x) if (!x) return NO;
+  BOOL isFocused = NO;
+  
+  nsCOMPtr<nsIWebBrowser> webBrizzle = dont_AddRef([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
+  ENSURE_TRUE(webBrizzle);
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  webBrizzle->GetContentDOMWindow(getter_AddRefs(domWindow));
+  nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(domWindow);
+  ENSURE_TRUE(privateWindow);
+  nsCOMPtr<nsIFocusController> controller;
+  privateWindow->GetRootFocusController(getter_AddRefs(controller));
+  ENSURE_TRUE(controller);
+  nsCOMPtr<nsIDOMElement> focusedItem;
+  controller->GetFocusedElement(getter_AddRefs(focusedItem));
+  
+  // we got it, now check if it's what we care about
+  nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(focusedItem);
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(focusedItem);
+  if (input) {
+    nsAutoString type;
+    input->GetType(type);
+    if (type == NS_LITERAL_STRING("text"))
+      isFocused = YES;
+  }
+  else if (textArea)
+    isFocused = YES;
+  
+  return isFocused;
+}
+
 // map delete key to Back
 - (void)deleteBackward:(id)sender
 {
+  // there are times when backspaces can seep through from IME gone wrong. As a 
+  // workaround until we can get them all fixed, ignore backspace when the
+  // focused widget is a text field (<input type="text"> or <textarea>
+  if ([self isPageTextFieldFocused])
+    return;
+  
   if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     [self forward:sender];
   else
