@@ -160,6 +160,7 @@ protected:
   
   void LoadMenuItem ( nsIMenu* pParentMenu, nsIContent* menuitemContent);  
   void LoadSubMenu( nsIMenu * pParentMenu, nsIContent* menuitemContent);  
+  void LoadSeparator ( nsIContent* menuitemContent );
   nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                                     void* unused, void* aWebShell);
   
