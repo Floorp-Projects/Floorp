@@ -95,9 +95,9 @@ public:
   virtual void SetDocument(nsIDocument *aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -362,48 +362,34 @@ nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
   }
 }
 
-NS_IMETHODIMP
-nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsHTMLValue& aResult)
+PRBool
+nsHTMLIFrameElement::ParseAttribute(nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::marginwidth) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::marginheight) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::marginheight) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::width) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::height) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::frameborder) {
-    if (ParseFrameborderValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::frameborder) {
+    return ParseFrameborderValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::scrolling) {
-    if (ParseScrollingValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::scrolling) {
+    return ParseScrollingValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::align) {
+    return ParseAlignValue(aValue, aResult);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

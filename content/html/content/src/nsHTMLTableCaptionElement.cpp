@@ -67,9 +67,9 @@ public:
   // nsIDOMHTMLTableCaptionElement
   NS_DECL_NSIDOMHTMLTABLECAPTIONELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -165,17 +165,16 @@ static const nsHTMLValue::EnumTable kCaptionAlignTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue&    aResult)
+PRBool
+nsHTMLTableCaptionElement::ParseAttribute(nsIAtom* aAttribute,
+                                          const nsAString& aValue,
+                                          nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (aResult.ParseEnumValue(aValue, kCaptionAlignTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kCaptionAlignTable);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

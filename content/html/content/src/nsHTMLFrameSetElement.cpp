@@ -84,9 +84,9 @@ public:
   NS_IMETHOD GetRowSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
   NS_IMETHOD GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -334,28 +334,22 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
 }
 
 
-NS_IMETHODIMP
-nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsAString& aValue,
-                                         nsHTMLValue& aResult)
+PRBool
+nsHTMLFrameSetElement::ParseAttribute(nsIAtom* aAttribute,
+                                      const nsAString& aValue,
+                                      nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLElement::GetOwnerDocument())) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
   } 
-  else if (aAttribute == nsHTMLAtoms::frameborder) {
-    if (nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::frameborder) {
+    return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);
   } 
-  else if (aAttribute == nsHTMLAtoms::border) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0, 100)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::border) {
+    return aResult.ParseIntWithBounds(aValue, 0, 100);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

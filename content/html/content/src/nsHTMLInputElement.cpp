@@ -177,9 +177,9 @@ public:
   virtual void SetFocus(nsIPresContext* aPresContext);
   virtual void RemoveFocus(nsIPresContext* aPresContext);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -1694,79 +1694,58 @@ static const nsHTMLValue::EnumTable kInputTypeTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
+PRBool
+nsHTMLInputElement::ParseAttribute(nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    // XXX ARG!! This is major evilness. StringToAttribute
+    // XXX ARG!! This is major evilness. ParseAttribute
     // shouldn't set members. Override SetAttr instead
-    const nsHTMLValue::EnumTable *table = kInputTypeTable;
-    nsAutoString valueStr(aValue);
-    while (nsnull != table->tag) { 
-      if (valueStr.EqualsIgnoreCase(table->tag)) {
-        // If the type is being changed to file, set the element value
-        // to the empty string. This is for security.
-        if (table->value == NS_FORM_INPUT_FILE) {
-          SetValue(EmptyString());
-        }
-        aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
-        mType = table->value;  // set the type of this input
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-      table++;
+    if (!aResult.ParseEnumValue(aValue, kInputTypeTable)) {
+      mType = NS_FORM_INPUT_TEXT;
+      return PR_FALSE;
     }
-    // Unknown type.  We treat this as "text", but we set it as a string, not
-    // as an HTMLValue.
-    mType = NS_FORM_INPUT_TEXT;
-  }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
+
+    mType = aResult.GetEnumValue();
+    if (mType == NS_FORM_INPUT_FILE) {
+      // If the type is being changed to file, set the element value
+      // to the empty string. This is for security.
+      SetValue(EmptyString());
     }
+
+    return PR_TRUE;
   }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::width) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::maxlength) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::height) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::size) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::maxlength) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::size) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::border) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::tabindex) {
+    return aResult.ParseIntWithBounds(aValue, 0, 32767);
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::border) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else {
+  if (aAttribute == nsHTMLAtoms::align) {
+    return ParseAlignValue(aValue, aResult);
+  }
+  if (ParseImageAttribute(aAttribute, aValue, aResult)) {
     // We have to call |ParseImageAttribute| unconditionally since we
     // don't know if we're going to have a type="image" attribute yet,
     // (or could have it set dynamically in the future).  See bug
     // 214077.
-    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return PR_TRUE;
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

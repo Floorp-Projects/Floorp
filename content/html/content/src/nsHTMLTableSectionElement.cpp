@@ -73,9 +73,9 @@ public:
   // nsIDOMHTMLTableSectionElement
   NS_DECL_NSIDOMHTMLTABLESECTIONELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -282,46 +282,31 @@ nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
   return RemoveChild(row, getter_AddRefs(retChild));
 }
 
-NS_IMETHODIMP
-nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
-                                             const nsAString& aValue,
-                                             nsHTMLValue& aResult)
+PRBool
+nsHTMLTableSectionElement::ParseAttribute(nsIAtom* aAttribute,
+                                          const nsAString& aValue,
+                                          nsAttrValue& aResult)
 {
   /* ignore these attributes, stored simply as strings
      ch
    */
-  /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::charoff) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    /* attributes that resolve to integers or percents */
-
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::height) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    /* other attributes */
-
-    if (ParseTableCellHAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::align) {
+    return ParseTableCellHAlignValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::bgcolor) {
+    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
   }
-  else if (aAttribute == nsHTMLAtoms::valign) {
-    if (ParseTableVAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::valign) {
+    return ParseTableVAlignValue(aValue, aResult);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

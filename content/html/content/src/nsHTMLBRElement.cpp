@@ -67,9 +67,9 @@ public:
   // nsIDOMHTMLBRElement
   NS_DECL_NSIDOMHTMLBRELEMENT    
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -162,17 +162,16 @@ static const nsHTMLValue::EnumTable kClearTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLBRElement::StringToAttribute(nsIAtom* aAttribute,
-                                   const nsAString& aValue,
-                                   nsHTMLValue& aResult)
+PRBool
+nsHTMLBRElement::ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::clear) {
-    if (aResult.ParseEnumValue(aValue, kClearTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kClearTable);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

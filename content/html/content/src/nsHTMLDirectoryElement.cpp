@@ -72,9 +72,9 @@ public:
   // nsIDOMHTMLDirectoryElement
   NS_DECL_NSIDOMHTMLDIRECTORYELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -161,22 +161,19 @@ nsHTMLDirectoryElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_BOOL_ATTR(nsHTMLDirectoryElement, Compact, compact)
 
 
-NS_IMETHODIMP
-nsHTMLDirectoryElement::StringToAttribute(nsIAtom* aAttribute,
-                                          const nsAString& aValue,
-                                          nsHTMLValue& aResult)
+PRBool
+nsHTMLDirectoryElement::ParseAttribute(nsIAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (aResult.ParseEnumValue(aValue, kListTypeTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kListTypeTable);
   }
-  else if (aAttribute == nsHTMLAtoms::start) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::start) {
+    return aResult.ParseIntWithBounds(aValue, 1);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

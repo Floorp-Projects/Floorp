@@ -79,9 +79,9 @@ public:
   NS_IMETHOD SaveState();
   NS_IMETHOD RestoreState(nsIPresState* aState);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -238,26 +238,22 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
   return CallQueryInterface(sub_doc, aContentDocument);
 }
 
-NS_IMETHODIMP
-nsHTMLObjectElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsHTMLValue& aResult)
+PRBool
+nsHTMLObjectElement::ParseAttribute(nsIAtom* aAttribute,
+                                    const nsAString& aValue,
+                                    nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return ParseAlignValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::tabindex) {
+    return aResult.ParseIntWithBounds(aValue, 0, 32767);
   }
-  else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+    return PR_TRUE;
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

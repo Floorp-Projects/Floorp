@@ -235,14 +235,13 @@ public:
    *
    * @param aAttribute to attribute to convert
    * @param aValue the string value to convert
-   * @param aResult the HTMLValue [OUT]
-   * @return NS_CONTENT_ATTR_HAS_VALUE if the string was successfully converted
-   *         NS_CONTENT_ATTR_NOT_THERE if the string could not be converted
+   * @param aResult the nsAttrValue [OUT]
+   * @return PR_TRUE if the parsing was successful, PR_FALSE otherwise
    * @see nsGenericHTMLElement::SetAttr
    */
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -295,17 +294,6 @@ public:
   //----------------------------------------
 
   /**
-   * Parse common attributes (currently dir and lang, may be more)
-   *
-   * @param aAttribute the attr to parse
-   * @param aValue the value to parse
-   * @param aResult the resulting HTMLValue
-   * @return whether the value was parsed
-   */
-  static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
-                                     const nsAString& aValue, 
-                                     nsHTMLValue& aResult);
-  /**
    * Parse an alignment attribute (top/middle/bottom/baseline)
    *
    * @param aString the string to parse
@@ -313,7 +301,7 @@ public:
    * @return whether the value was parsed
    */
   static PRBool ParseAlignValue(const nsAString& aString,
-                                nsHTMLValue& aResult);
+                                nsAttrValue& aResult);
 
   /**
    * Parse a div align string to value (left/right/center/middle/justify)
@@ -323,7 +311,7 @@ public:
    * @return whether the value was parsed
    */
   PRBool ParseDivAlignValue(const nsAString& aString,
-                            nsHTMLValue& aResult) const;
+                            nsAttrValue& aResult) const;
   /**
    * Convert a div align value to string
    *
@@ -342,7 +330,7 @@ public:
    * @return whether the value was parsed
    */
   PRBool ParseTableHAlignValue(const nsAString& aString,
-                               nsHTMLValue& aResult) const;
+                               nsAttrValue& aResult) const;
   /**
    * Convert a table halign value to string
    *
@@ -361,7 +349,7 @@ public:
    * @return whether the value was parsed
    */
   PRBool ParseTableCellHAlignValue(const nsAString& aString,
-                                   nsHTMLValue& aResult) const;
+                                   nsAttrValue& aResult) const;
   /**
    * Convert a table cell halign value to string
    *
@@ -381,7 +369,7 @@ public:
    * @return whether the value was parsed
    */
   static PRBool ParseTableVAlignValue(const nsAString& aString,
-                                      nsHTMLValue& aResult);
+                                      nsAttrValue& aResult);
   /**
    * Convert a table valign value to string
    *
@@ -423,7 +411,7 @@ public:
    */
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsAString& aString,
-                                    nsHTMLValue& aResult);
+                                    nsAttrValue& aResult);
   /**
    * Convert a frameborder string to value (yes/no/1/0)
    *
@@ -432,7 +420,7 @@ public:
    * @return whether the value was parsed
    */
   static PRBool ParseFrameborderValue(const nsAString& aString,
-                                      nsHTMLValue& aResult);
+                                      nsAttrValue& aResult);
   /**
    * Convert a frameborder value to string
    *
@@ -451,7 +439,7 @@ public:
    * @return whether the value was parsed
    */
   static PRBool ParseScrollingValue(const nsAString& aString,
-                                    nsHTMLValue& aResult);
+                                    nsAttrValue& aResult);
   /**
    * Convert a scrolling value to string
    *
@@ -479,18 +467,6 @@ public:
                                   PRBool aCaseSensitive,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult);
-
-  /**
-   * Parse a class attr value into a nsAttrValue. If there is only one class
-   * the resulting type will be an atom. If there are more then one the result
-   * will be an atom-array.
-   * Note: this function is used by other classes than nsGenericHTMLElement
-   *
-   * @param aStr   The attributes string-value to parse.
-   * @param aValue The resulting nsAttrValue [OUT]
-   */
-  static nsresult ParseClassAttribute(const nsAString& aStr,
-                                      nsAttrValue& aValue);
 
   /*
    * Attribute Mapping Helpers

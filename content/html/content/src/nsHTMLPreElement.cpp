@@ -72,12 +72,9 @@ public:
   NS_IMETHOD GetWidth(PRInt32* aWidth);
   NS_IMETHOD SetWidth(PRInt32 aWidth);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
@@ -161,35 +158,19 @@ nsHTMLPreElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 
-NS_IMETHODIMP
-nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsHTMLValue& aResult)
+PRBool
+nsHTMLPreElement::ParseAttribute(nsIAtom* aAttribute,
+                                 const nsAString& aValue,
+                                 nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::cols) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::tabstop) {
-    nsAutoString val(aValue);
-
-    PRInt32 ec, tabstop = val.ToInteger(&ec);
-
-    if (tabstop <= 0) {
-      tabstop = 8;
-    }
-
-    aResult.SetIntValue(tabstop, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  if (aAttribute == nsHTMLAtoms::width) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 static void
@@ -240,19 +221,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
-NS_IMETHODIMP
-nsHTMLPreElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                         PRInt32 aModType,
-                                         nsChangeHint& aHint) const
-{
-  nsresult rv =
-    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
-  if (aAttribute == nsHTMLAtoms::tabstop) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
-  }
-  return rv;
 }
 
 NS_IMETHODIMP_(PRBool)

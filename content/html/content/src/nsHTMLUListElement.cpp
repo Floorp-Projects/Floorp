@@ -70,9 +70,9 @@ public:
   // nsIDOMHTMLUListElement
   NS_DECL_NSIDOMHTMLULISTELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -160,28 +160,20 @@ NS_IMPL_BOOL_ATTR(nsHTMLUListElement, Compact, compact)
 NS_IMPL_STRING_ATTR(nsHTMLUListElement, Type, type)
 
 
-NS_IMETHODIMP
-nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
+PRBool
+nsHTMLUListElement::ParseAttribute(nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (aResult.ParseEnumValue(aValue, kListTypeTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-
-    if (aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kListTypeTable) ||
+           aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
   }
-
   if (aAttribute == nsHTMLAtoms::start) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
-      return NS_CONTENT_ATTR_HAS_VALUE; 
-    }
+    return aResult.ParseIntWithBounds(aValue, 1);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

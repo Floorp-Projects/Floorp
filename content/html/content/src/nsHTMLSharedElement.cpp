@@ -93,9 +93,9 @@ public:
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -224,37 +224,32 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Target, target)
 
 // spacer element code
 
-NS_IMETHODIMP
-nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
-                                           const nsAString& aValue,
-                                           nsHTMLValue& aResult)
+PRBool
+nsHTMLSharedLeafElement::ParseAttribute(nsIAtom* aAttribute,
+                                        const nsAString& aValue,
+                                        nsAttrValue& aResult)
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
     if (aAttribute == nsHTMLAtoms::align) {
-      if (ParseAlignValue(aValue, aResult)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    } else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
+      return ParseAlignValue(aValue, aResult);
+    }
+    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+      return PR_TRUE;
     }
   } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::size) {
-      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    } else if (aAttribute == nsHTMLAtoms::align) {
-      if (ParseAlignValue(aValue, aResult)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    } else if ((aAttribute == nsHTMLAtoms::width) ||
-               (aAttribute == nsHTMLAtoms::height)) {
-      if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::width ||
+        aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
   }
 
-  return nsGenericHTMLElement::StringToAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

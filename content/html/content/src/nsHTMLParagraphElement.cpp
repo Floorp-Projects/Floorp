@@ -70,9 +70,9 @@ public:
   // nsIDOMHTMLParagraphElement
   NS_DECL_NSIDOMHTMLPARAGRAPHELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -160,17 +160,16 @@ nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align)
 
 
-NS_IMETHODIMP
-nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,
-                                          const nsAString& aValue,
-                                          nsHTMLValue& aResult)
+PRBool
+nsHTMLParagraphElement::ParseAttribute(nsIAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseDivAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return ParseDivAlignValue(aValue, aResult);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

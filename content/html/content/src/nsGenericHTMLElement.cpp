@@ -289,25 +289,21 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericContainerElement* aDst,
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the HTMLValue instead.
-      nsHTMLValue val;
-      rv = GetHTMLAttribute(nsHTMLAtoms::style, val);
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          val.GetUnit() == eHTMLUnit_CSSStyleRule) {
-        nsICSSStyleRule* rule = val.GetCSSStyleRuleValue();
+      const nsAttrValue* styleVal =
+        mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+      if (styleVal && styleVal->Type() == nsAttrValue::eCSSStyleRule) {
+        nsCOMPtr<nsICSSRule> ruleClone;
+        rv = styleVal->GetCSSStyleRuleValue()->
+          Clone(*getter_AddRefs(ruleClone));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (rule) {
-          nsCOMPtr<nsICSSRule> ruleClone;
-          rv = rule->Clone(*getter_AddRefs(ruleClone));
-          NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+        NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
 
-          nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-          NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
+        rv = aDst->SetInlineStyleRule(styleRule, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-          rv = aDst->SetInlineStyleRule(styleRule, PR_FALSE);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          continue;
-        }
+        continue;
       }
     }
 
@@ -1541,79 +1537,6 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32* aID) const
   *aID = kNameSpaceID_XHTML;
 }
 
-// static
-nsresult
-nsGenericHTMLElement::ParseClassAttribute(const nsAString& aStr, nsAttrValue& aValue)
-{
-  nsAString::const_iterator iter, end;
-  aStr.BeginReading(iter);
-  aStr.EndReading(end);
-
-  // skip initial whitespace
-  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-    ++iter;
-  }
-
-  if (iter == end) {
-    aValue.Reset();
-
-    return NS_OK;
-  }
-
-  nsAString::const_iterator start(iter);
-
-  // get first, and often only, atom
-  do {
-    ++iter;
-  } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
-
-  nsCOMPtr<nsIAtom> classAtom = do_GetAtom(Substring(start, iter));
-  NS_ENSURE_TRUE(classAtom, NS_ERROR_OUT_OF_MEMORY);
-
-  // skip whitespace
-  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-    ++iter;
-  }
-
-  if (iter == end) {
-    // we only found one classname so don't bother storing a list
-    aValue.SetTo(classAtom);
-
-    return NS_OK;
-  }
-
-  nsAutoPtr<nsCOMArray<nsIAtom> > array(new nsCOMArray<nsIAtom>);
-  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
-  
-  if (!array->AppendObject(classAtom)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // parse the rest of the classnames
-  do {
-    start = iter;
-
-    do {
-      ++iter;
-    } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
-
-    classAtom = do_GetAtom(Substring(start, iter));
-
-    if (!array->AppendObject(classAtom)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // skip whitespace
-    while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-      ++iter;
-    }
-  } while (iter != end);
-
-  aValue.SetTo(nsHTMLValue(array.forget()));
-
-  return NS_OK;
-}
-
 nsresult
 nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                               nsIAtom* aPrefix, const nsAString& aValue,
@@ -1655,28 +1578,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
   // Parse into a nsAttrValue
   nsAttrValue attrValue;
   if (aNamespaceID == kNameSpaceID_None) {
-    nsHTMLValue htmlValue;
-    if ((StringToAttribute(aAttribute, aValue, htmlValue) !=
-         NS_CONTENT_ATTR_NOT_THERE) ||
-        ParseCommonAttribute(aAttribute, aValue, htmlValue)) {
-      // string value was mapped to nsHTMLValue, set it that way
-      attrValue.SetTo(htmlValue);
-    }
-    else if (aAttribute == nsHTMLAtoms::style) {
-      ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
-                          aValue, attrValue);
-    }
-    else if (aAttribute == nsHTMLAtoms::id) {
-      nsCOMPtr<nsIAtom> idAtom = do_GetAtom(aValue);
-      NS_ENSURE_TRUE(idAtom, NS_ERROR_OUT_OF_MEMORY);
-
-      attrValue.SetTo(idAtom);
-    }
-    else if (aAttribute == nsHTMLAtoms::kClass) {
-      rv = ParseClassAttribute(aValue, attrValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
+    if (!ParseAttribute(aAttribute, aValue, attrValue)) {
       attrValue.SetTo(aValue);
     }
 
@@ -1859,11 +1761,11 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
   }
 
   // Use subclass to convert enums to string.
-  if (attrValue->GetType() == nsAttrValue::eHTMLValue &&
-      attrValue->GetHTMLValue()->GetUnit() == eHTMLUnit_Enumerated) {
-
+  if (attrValue->Type() == nsAttrValue::eEnum) {
     if (aNameSpaceID != kNameSpaceID_None ||
-        AttributeToString(aAttribute, *attrValue->GetHTMLValue(), aResult) !=
+        AttributeToString(aAttribute, nsHTMLValue(attrValue->GetEnumValue(),
+                                                  eHTMLUnit_Enumerated),
+                          aResult) !=
         NS_CONTENT_ATTR_HAS_VALUE) {
       NS_NOTREACHED("no enum to string conversion found");
 
@@ -1888,25 +1790,7 @@ nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  switch (val->GetType()) {
-    case nsAttrValue::eHTMLValue:
-    {
-      aValue = *val->GetHTMLValue();
-      break;
-    }
-    case nsAttrValue::eString:
-    {
-      aValue.SetStringValue(val->GetStringValue());
-      break;
-    }
-    default:
-    {
-      nsAutoString str;
-      val->ToString(str);
-      aValue.SetStringValue(str);
-      break;
-    }
-  }
+  val->ToHTMLValue(aValue);
 
   return NS_CONTENT_ATTR_HAS_VALUE;
 }
@@ -1917,9 +1801,12 @@ nsGenericHTMLElement::GetID(nsIAtom** aResult) const
   *aResult = nsnull;
 
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::id);
-  NS_ASSERTION(!attrVal || attrVal->GetType() == nsAttrValue::eAtom,
-               "attribute parsed as something other then atom");
-  if (attrVal && attrVal->GetType() == nsAttrValue::eAtom) {
+  NS_ASSERTION(!attrVal ||
+               attrVal->Type() == nsAttrValue::eAtom ||
+               (attrVal->Type() == nsAttrValue::eString &&
+                attrVal->GetStringValue().IsEmpty()),
+               "unexpected attribute type");
+  if (attrVal && attrVal->Type() == nsAttrValue::eAtom) {
     NS_ADDREF(*aResult = attrVal->GetAtomValue());
   }
 
@@ -1933,15 +1820,12 @@ nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
   
   const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
   if (val) {
-    const nsHTMLValue* htmlVal;
-    if (val->GetType() == nsAttrValue::eAtom) {
+    if (val->Type() == nsAttrValue::eAtom) {
       // NOTE atom is not addrefed
       aArray.AppendElement(val->GetAtomValue());
     }
-    else if (val->GetType() == nsAttrValue::eHTMLValue &&
-             (htmlVal = val->GetHTMLValue())->GetUnit() ==
-             eHTMLUnit_AtomArray) {
-      nsCOMArray<nsIAtom>* array = htmlVal->AtomArrayValue();
+    else if (val->Type() == nsAttrValue::eAtomArray) {
+      nsCOMArray<nsIAtom>* array = val->GetAtomArrayValue();
       PRInt32 i, count = array->Count();
       for (i = 0; i < count; ++i) {
         // NOTE atom is not addrefed
@@ -1970,8 +1854,7 @@ nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
   const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
   if (val) {
-    const nsHTMLValue* htmlVal;
-    if (val->GetType() == nsAttrValue::eAtom) {
+    if (val->Type() == nsAttrValue::eAtom) {
       if (aCaseSensitive) {
         return aClass == val->GetAtomValue();
       }
@@ -1982,10 +1865,8 @@ nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 
       return nsCRT::strcasecmp(class1, class2) == 0;
     }
-    if (val->GetType() == nsAttrValue::eHTMLValue &&
-        (htmlVal = val->GetHTMLValue())->GetUnit() ==
-        eHTMLUnit_AtomArray) {
-      nsCOMArray<nsIAtom>* array = htmlVal->AtomArrayValue();
+    if (val->Type() == nsAttrValue::eAtomArray) {
+      nsCOMArray<nsIAtom>* array = val->GetAtomArrayValue();
       if (aCaseSensitive) {
         return array->IndexOf(aClass) >= 0;
       }
@@ -2021,17 +1902,14 @@ nsGenericHTMLElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
   
   if (attrVal) {
-    if (attrVal->GetType() != nsAttrValue::eHTMLValue ||
-        attrVal->GetHTMLValue()->GetUnit() != eHTMLUnit_CSSStyleRule) {
+    if (attrVal->Type() != nsAttrValue::eCSSStyleRule) {
       ReparseStyleAttribute();
       attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
       // hopefully value.GetUnit() is now eHTMLUnit_CSSStyleRule
     }
 
-    if (attrVal->GetType() == nsAttrValue::eHTMLValue &&
-        attrVal->GetHTMLValue()->GetUnit() == eHTMLUnit_CSSStyleRule) {
-      NS_IF_ADDREF(*aStyleRule =
-                   attrVal->GetHTMLValue()->GetCSSStyleRuleValue());
+    if (attrVal->Type() == nsAttrValue::eCSSStyleRule) {
+      NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
     }
   }
 
@@ -2064,9 +1942,7 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
     }
   }
 
-  // MSVC won't let me do: nsAttrValue attrValue(nsHTMLValue(aStyleRule));
-  nsAttrValue attrValue;
-  attrValue.SetTo(nsHTMLValue(aStyleRule));
+  nsAttrValue attrValue(aStyleRule);
 
   return SetAttrAndNotify(kNameSpaceID_None, nsHTMLAtoms::style, nsnull, oldValueStr,
                           attrValue, modification, hasListeners, aNotify);
@@ -2252,12 +2128,31 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::StringToAttribute(nsIAtom* aAttribute,
-                                        const nsAString& aValue,
-                                        nsHTMLValue& aResult)
+PRBool
+nsGenericHTMLElement::ParseAttribute(nsIAtom* aAttribute,
+                                     const nsAString& aValue,
+                                     nsAttrValue& aResult)
 {
-  return NS_CONTENT_ATTR_NOT_THERE;
+  if (aAttribute == nsHTMLAtoms::dir) {
+    return aResult.ParseEnumValue(aValue, kDirTable);
+  }
+  if (aAttribute == nsHTMLAtoms::style) {
+    ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
+                        aValue, aResult);
+    return PR_TRUE;
+  }
+  if (aAttribute == nsHTMLAtoms::id && !aValue.IsEmpty()) {
+    aResult.ParseAtom(aValue);
+
+    return PR_TRUE;
+  }
+  if (aAttribute == nsHTMLAtoms::kClass) {
+    aResult.ParseAtomArray(aValue);
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 PRBool
@@ -2278,7 +2173,7 @@ MapBdoAttributesInto(const nsMappedAttributes* aAttributes,
                      nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_TextReset &&
-    aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
+      aData->mTextData->mUnicodeBidi.GetUnit() == eCSSUnit_Null) {
     aData->mTextData->mUnicodeBidi.SetIntValue(NS_STYLE_UNICODE_BIDI_OVERRIDE, eCSSUnit_Enumerated);
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
@@ -2535,23 +2430,8 @@ static const nsHTMLValue::EnumTable kTableVAlignTable[] = {
 };
 
 PRBool
-nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute,
-                                           const nsAString& aValue,
-                                           nsHTMLValue& aResult)
-{
-  if (nsHTMLAtoms::dir == aAttribute) {
-    return aResult.ParseEnumValue(aValue, kDirTable);
-  }
-  else if (nsHTMLAtoms::lang == aAttribute) {
-    aResult.SetStringValue(aValue);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
-                                      nsHTMLValue& aResult)
+                                      nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kAlignTable);
 }
@@ -2583,7 +2463,7 @@ static const nsHTMLValue::EnumTable kCompatTableHAlignTable[] = {
 
 PRBool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
-                                            nsHTMLValue& aResult) const
+                                            nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
     return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
@@ -2632,7 +2512,7 @@ static const nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
 
 PRBool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
-                                                nsHTMLValue& aResult) const
+                                                nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(mDocument)) {
     return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
@@ -2654,7 +2534,7 @@ nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
 
 PRBool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
-                                            nsHTMLValue& aResult)
+                                            nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kTableVAlignTable);
 }
@@ -2682,7 +2562,7 @@ nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
 
 PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
-                                         nsHTMLValue& aResult) const
+                                         nsAttrValue& aResult) const
 {
   return aResult.ParseEnumValue(aString, kDivAlignTable);
 }
@@ -2697,23 +2577,23 @@ nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
 PRBool
 nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
                                           const nsAString& aString,
-                                          nsHTMLValue& aResult)
+                                          nsAttrValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
-    return aResult.ParseSpecialIntValue(aString, eHTMLUnit_Integer, PR_TRUE, PR_FALSE);
+    return aResult.ParseSpecialIntValue(aString, PR_TRUE, PR_FALSE);
   }
   else if ((aAttribute == nsHTMLAtoms::hspace) ||
            (aAttribute == nsHTMLAtoms::vspace) ||
            (aAttribute == nsHTMLAtoms::border)) {
-    return aResult.ParseIntWithBounds(aString, eHTMLUnit_Integer, 0);
+    return aResult.ParseIntWithBounds(aString, 0);
   }
   return PR_FALSE;
 }
 
 PRBool
 nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
-                                            nsHTMLValue& aResult)
+                                            nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kFrameborderTable);
 }
@@ -2727,7 +2607,7 @@ nsGenericHTMLElement::FrameborderValueToString(const nsHTMLValue& aValue,
 
 PRBool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
-                                          nsHTMLValue& aResult)
+                                          nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kScrollingTable);
 }
@@ -2744,9 +2624,7 @@ nsGenericHTMLElement::ReparseStyleAttribute()
 {
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
   
-  if (oldVal &&
-      (oldVal->GetType() != nsAttrValue::eHTMLValue ||
-       oldVal->GetHTMLValue()->GetUnit() != eHTMLUnit_CSSStyleRule)) {
+  if (oldVal && oldVal->Type() != nsAttrValue::eCSSStyleRule) {
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
@@ -2810,7 +2688,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
         }
 
         if (rule) {
-          aResult.SetTo(nsHTMLValue(rule));
+          aResult.SetTo(rule);
 
           return;
         }
@@ -3262,9 +3140,8 @@ void
 nsGenericHTMLElement::GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aResult)
 {
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
-  if (attrVal && attrVal->GetType() == nsAttrValue::eHTMLValue &&
-      attrVal->GetHTMLValue()->GetUnit() == eHTMLUnit_Integer) {
-    *aResult = attrVal->GetHTMLValue()->GetIntValue();
+  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
+    *aResult = attrVal->GetIntegerValue();
   }
   else {
     *aResult = aDefault;

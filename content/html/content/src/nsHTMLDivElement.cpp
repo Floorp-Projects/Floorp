@@ -70,9 +70,9 @@ public:
   // nsIDOMHTMLDivElement
   NS_DECL_NSIDOMHTMLDIVELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -160,33 +160,25 @@ nsHTMLDivElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align)
 
 
-NS_IMETHODIMP
-nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsAString& aValue,
-                                    nsHTMLValue& aResult)
+PRBool
+nsHTMLDivElement::ParseAttribute(nsIAtom* aAttribute,
+                                 const nsAString& aValue,
+                                 nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseDivAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return ParseDivAlignValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::cols) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::cols) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::gutter) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::gutter) {
+    return aResult.ParseIntWithBounds(aValue, 1);
   }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::width) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

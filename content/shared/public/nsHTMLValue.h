@@ -190,18 +190,8 @@ class nsHTMLValue {
 public:
   nsHTMLValue();
   nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
-  nsHTMLValue(float aValue);
-  nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
-  nsHTMLValue(nsICSSStyleRule* aValue);
-  nsHTMLValue(nscolor aValue);
-  nsHTMLValue(nsCOMArray<nsIAtom>* aArray);
-  nsHTMLValue(const nsHTMLValue& aCopy);
   ~nsHTMLValue(void);
 
-  nsHTMLValue&  operator=(const nsHTMLValue& aCopy);
-  PRBool        operator==(const nsHTMLValue& aOther) const;
-  PRBool        operator!=(const nsHTMLValue& aOther) const;
-  PRUint32      HashValue(void) const;
 
   /**
    * Get the unit of this HTMLValue
@@ -212,9 +202,7 @@ public:
   PRInt32      GetIntValue(void) const;
   float        GetPercentValue(void) const;
   nsAString&   GetStringValue(nsAString& aBuffer) const;
-  nsICSSStyleRule* GetCSSStyleRuleValue(void) const;
   PRBool       GetColorValue(nscolor& aColor) const;
-  nsCOMArray<nsIAtom>* AtomArrayValue() const;
 
   PRBool       IsEmptyString() const;
 
@@ -226,14 +214,8 @@ public:
   void  SetPercentValue(float aValue);
   void  SetStringValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   void  SetCSSStyleRuleValue(nsICSSStyleRule* aValue);
+  void  SetAtomArrayValue(nsCOMArray<nsIAtom>* aValue);
   void  SetColorValue(nscolor aValue);
-
-  /**
-   * Get this HTML value as a string (depends on the type)
-   * @param aResult the resulting string
-   * @return whether the value was successfully turned to a string
-   */
-  PRBool ToString(nsAString& aResult) const;
 
   /**
    * Structure for a mapping from int (enum) values to strings.  When you use
@@ -249,26 +231,13 @@ public:
     /** The string the value maps to */
     const char* tag;
     /** The enum value that maps to this string */
-    PRInt32 value;
+    PRInt16 value;
   };
 
   /**
    * Parse and output this HTMLValue in a variety of ways
    */
   // Attribute parsing utilities
-
-  /**
-   * Map a string to its enum value and return result as HTMLValue
-   * (case-insensitive matching)
-   *
-   * @param aValue the string to find the value for
-   * @param aTable the enumeration to map with
-   * @param aResult the enum mapping [OUT]
-   * @return whether the enum value was found or not
-   */
-  PRBool ParseEnumValue(const nsAString& aValue,
-                        const EnumTable* aTable,
-                        PRBool aCaseSensitive = PR_FALSE);
 
   /**
    * Map an enum HTMLValue to its string
@@ -280,57 +249,6 @@ public:
    */
   PRBool EnumValueToString(const EnumTable* aTable,
                            nsAString& aResult) const;
-
-  /**
-   * Parse a string value into an int HTMLValue.
-   *
-   * @param aString the string to parse
-   * @param aDefaultUnit the unit to use
-   * @return whether the value could be parsed
-   */
-  PRBool ParseIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit) {
-    return ParseIntWithBounds(aString, aDefaultUnit, PR_INT32_MIN, PR_INT32_MAX);
-  }
-
-  /**
-   * Parse a string value into an int HTMLValue with minimum
-   * value and maximum value (can optionally parse percent (n%) and
-   * proportional (n*).  This method explicitly sets a lower bound of zero on
-   * the element, whether it be proportional or percent or raw integer.
-   *
-   * @param aString the string to parse
-   * @param aDefaultUnit the unit to use
-   * @param aCanBePercent true if it can be a percent value (%)
-   * @param aCanBeProportional true if it can be a proportional value (*)
-   * @return whether the value could be parsed
-   */
-  PRBool ParseSpecialIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit,
-                              PRBool aCanBePercent,
-                              PRBool aCanBeProportional);
-
-  /**
-   * Parse a string value into an int HTMLValue with minimum
-   * value and maximum value
-   *
-   * @param aString the string to parse
-   * @param aMin the minimum value (if value is less it will be bumped up)
-   * @param aMax the maximum value (if value is greater it will be chopped down)
-   * @param aValueUnit the unit to use
-   * @return whether the value could be parsed
-   */
-  PRBool ParseIntWithBounds(const nsAString& aString, nsHTMLUnit aValueUnit,
-                            PRInt32 aMin, PRInt32 aMax = PR_INT32_MAX);
-
-  /**
-   * Parse a string into a color HTMLValue (with hexes or color names)
-   *
-   * @param aString the string to parse
-   * @param aDocument the document (to find out whether we're in quirks mode)
-   * @param aResult the resulting HTMLValue [OUT]
-   * @return whether the value could be parsed
-   */
-  PRBool ParseColor(const nsAString& aString, nsIDocument* aDocument);
-
 
 protected:
   /**
@@ -360,12 +278,6 @@ protected:
 
 private:
   /**
-   * Copy into this HTMLValue from aCopy.  Please be aware that if this is an
-   * existing HTMLValue and you do not call Reset(), this will leak.
-   * @param aCopy the value to copy
-   */
-  void InitializeFrom(const nsHTMLValue& aCopy);
-  /**
    * Helper to set string value (checks for embedded nulls or length); verifies
    * that aUnit is a string type as well.
    * @param aValue the value to set
@@ -385,6 +297,11 @@ private:
    * @return the unit class
    */
   PRUint32 GetUnitClass() const { return mUnit & HTMLUNIT_CLASS_MASK; }
+
+  nsHTMLValue(const nsHTMLValue& aCopy);              // NOT TO BE IMPLEMENTED
+  PRBool operator==(const nsHTMLValue& aOther) const; // NOT TO BE IMPLEMENTED
+  nsHTMLValue& operator=(const nsHTMLValue& aCopy);   // NOT TO BE IMPLEMENTED
+  PRBool operator!=(const nsHTMLValue& aOther) const; // NOT TO BE IMPLEMENTED
 };
 
 inline nsDependentSubstring nsHTMLValue::GetDependentString() const
@@ -440,15 +357,6 @@ inline nsAString& nsHTMLValue::GetStringValue(nsAString& aBuffer) const
   return aBuffer;
 }
 
-inline nsICSSStyleRule* nsHTMLValue::GetCSSStyleRuleValue(void) const
-{
-  NS_ASSERTION(mUnit == eHTMLUnit_CSSStyleRule, "not an CSSStyleRule value");
-  if (mUnit == eHTMLUnit_CSSStyleRule) {
-    return mValue.mCSSStyleRule;
-  }
-  return nsnull;
-}
-
 inline PRBool nsHTMLValue::GetColorValue(nscolor& aColor) const 
 {
   NS_ASSERTION((mUnit == eHTMLUnit_Color) || (mUnit == eHTMLUnit_String),
@@ -462,18 +370,6 @@ inline PRBool nsHTMLValue::GetColorValue(nscolor& aColor) const
     return NS_ColorNameToRGB(GetDependentString(), &aColor);
   }
   return PR_FALSE;
-}
-
-inline nsCOMArray<nsIAtom>*
-nsHTMLValue::AtomArrayValue() const
-{
-  NS_ASSERTION(mUnit == eHTMLUnit_AtomArray, "not an atom array");
-  return mValue.mAtomArray;
-}
-
-inline PRBool nsHTMLValue::operator!=(const nsHTMLValue& aOther) const
-{
-  return PRBool(! ((*this) == aOther));
 }
 
 inline PRBool nsHTMLValue::IsEmptyString() const

@@ -83,9 +83,9 @@ public:
   // nsIDOMHTMLTableElement
   NS_DECL_NSIDOMHTMLTABLEELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -941,97 +941,63 @@ static const nsHTMLValue::EnumTable kLayoutTable[] = {
 };
 
 
-NS_IMETHODIMP
-nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
+PRBool
+nsHTMLTableElement::ParseAttribute(nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   /* ignore summary, just a string */
-  /* attributes that resolve to integer, with min=0 */
   if (aAttribute == nsHTMLAtoms::cellspacing ||
       aAttribute == nsHTMLAtoms::cellpadding) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
-  else if (aAttribute == nsHTMLAtoms::cols) {
-    /* attributes that are either empty, or integers, with min=0 */
-
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::cols) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
-  else if (aAttribute == nsHTMLAtoms::border) {
-    /* attributes that are either empty, or integer */
-
-    PRInt32 min = (aValue.IsEmpty()) ? 1 : 0;
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, min)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-    else { 
+  if (aAttribute == nsHTMLAtoms::border) {
+    if (!aResult.ParseIntWithBounds(aValue, 0)) {
       // XXX this should really be NavQuirks only to allow non numeric value
-      aResult.SetIntValue(1, eHTMLUnit_Integer);
-      return NS_CONTENT_ATTR_HAS_VALUE;
+      aResult.SetTo(1, nsAttrValue::eInteger);
     }
-  }
-  else if (aAttribute == nsHTMLAtoms::height) {
-    /* attributes that resolve to integers or percents */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return PR_TRUE;
   }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    /* attributes that resolve to integers or percents or proportions */
-
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
+  if (aAttribute == nsHTMLAtoms::height) {
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+  }
+  if (aAttribute == nsHTMLAtoms::width) {
+    if (aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE)) {
       // treat 0 width as auto
-      nsHTMLUnit unit = aResult.GetUnit();
-      if ((eHTMLUnit_Integer == unit) && (0 == aResult.GetIntValue())) {
-        return NS_CONTENT_ATTR_NOT_THERE;
+      nsAttrValue::ValueType type = aResult.Type();
+      if ((type == nsAttrValue::eInteger && aResult.GetIntegerValue() == 0) ||
+          (type == nsAttrValue::ePercent && aResult.GetPercentValue() == 0.0f)) {
+        return PR_FALSE;
       }
-      else if ((eHTMLUnit_Percent == unit) && (0.0f == aResult.GetPercentValue())) {
-        return NS_CONTENT_ATTR_NOT_THERE;
-      }
-      return NS_CONTENT_ATTR_HAS_VALUE;
     }
+    return PR_TRUE;
   }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    /* other attributes */
-
-    if (ParseTableHAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::align) {
+    return ParseTableHAlignValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::bgcolor ||
+  if (aAttribute == nsHTMLAtoms::bgcolor ||
            aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
   }
-  else if (aAttribute == nsHTMLAtoms::frame) {
-    if (aResult.ParseEnumValue(aValue, kFrameTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::frame) {
+    return aResult.ParseEnumValue(aValue, kFrameTable);
   }
-  else if (aAttribute == nsHTMLAtoms::layout) {
-    if (aResult.ParseEnumValue(aValue, kLayoutTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::layout) {
+    return aResult.ParseEnumValue(aValue, kLayoutTable);
   }
-  else if (aAttribute == nsHTMLAtoms::rules) {
-    if (aResult.ParseEnumValue(aValue, kRulesTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::rules) {
+    return aResult.ParseEnumValue(aValue, kRulesTable);
   }
-  else if (aAttribute == nsHTMLAtoms::hspace ||
+  if (aAttribute == nsHTMLAtoms::hspace ||
            aAttribute == nsHTMLAtoms::vspace) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

@@ -164,9 +164,9 @@ public:
                                   nsIFormControl* aRadio);
 
   // nsIContent
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -623,22 +623,19 @@ static const nsHTMLValue::EnumTable kFormEnctypeTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLFormElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAString& aValue,
-                                     nsHTMLValue& aResult)
+PRBool
+nsHTMLFormElement::ParseAttribute(nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::method) {
-    if (aResult.ParseEnumValue(aValue, kFormMethodTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kFormMethodTable);
   }
-  else if (aAttribute == nsHTMLAtoms::enctype) {
-    if (aResult.ParseEnumValue(aValue, kFormEnctypeTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::enctype) {
+    return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

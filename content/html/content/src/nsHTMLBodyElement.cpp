@@ -111,9 +111,9 @@ public:
   // nsIDOMHTMLBodyElement
   NS_DECL_NSIDOMHTMLBODYELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -388,10 +388,10 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
                                                                     \
     if (presContext) {                                              \
       attrColor = presContext->Default##default_();                 \
-      nsHTMLValue(attrColor).ToString(aColor);                      \
+      NS_RGBToHex(attrColor, aColor);                               \
     }                                                               \
   } else if (NS_ColorNameToRGB(color, &attrColor)) {                \
-    nsHTMLValue(attrColor).ToString(aColor);                        \
+    NS_RGBToHex(attrColor, aColor);                                 \
   } else {                                                          \
     aColor.Assign(color);                                           \
   }                                                                 \
@@ -439,14 +439,14 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 
       if (frame) {
         bgcolor = frame->GetStyleBackground()->mBackgroundColor;
-        nsHTMLValue(bgcolor).ToString(aBgColor);
+        NS_RGBToHex(bgcolor, aBgColor);
       }
     }
   }
   else if (NS_ColorNameToRGB(attr, &bgcolor)) {
     // If we have a color name which we can convert to an nscolor,
     // then we should use the hex value instead of the color name.
-    nsHTMLValue(bgcolor).ToString(aBgColor);
+    NS_RGBToHex(bgcolor, aBgColor);
   }
   else {
     // Otherwise, just assign whatever the attribute value is.
@@ -462,33 +462,28 @@ nsHTMLBodyElement::SetBgColor(const nsAString& aBgColor)
   return SetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
 }
 
-NS_IMETHODIMP
-nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAString& aValue,
-                                     nsHTMLValue& aResult)
+PRBool
+nsHTMLBodyElement::ParseAttribute(nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult)
 {
-  if ((aAttribute == nsHTMLAtoms::bgcolor) ||
-      (aAttribute == nsHTMLAtoms::text) ||
-      (aAttribute == nsHTMLAtoms::link) ||
-      (aAttribute == nsHTMLAtoms::alink) ||
-      (aAttribute == nsHTMLAtoms::vlink)) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLElement::GetOwnerDocument())) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::bgcolor ||
+      aAttribute == nsHTMLAtoms::text ||
+      aAttribute == nsHTMLAtoms::link ||
+      aAttribute == nsHTMLAtoms::alink ||
+      aAttribute == nsHTMLAtoms::vlink) {
+    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
   }
-  else if ((aAttribute == nsHTMLAtoms::marginwidth) ||
-           (aAttribute == nsHTMLAtoms::marginheight) ||
-           (aAttribute == nsHTMLAtoms::topmargin) ||
-           (aAttribute == nsHTMLAtoms::bottommargin) ||
-           (aAttribute == nsHTMLAtoms::leftmargin) ||
-           (aAttribute == nsHTMLAtoms::rightmargin)) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+  if (aAttribute == nsHTMLAtoms::marginwidth ||
+      aAttribute == nsHTMLAtoms::marginheight ||
+      aAttribute == nsHTMLAtoms::topmargin ||
+      aAttribute == nsHTMLAtoms::bottommargin ||
+      aAttribute == nsHTMLAtoms::leftmargin ||
+      aAttribute == nsHTMLAtoms::rightmargin) {
+    return aResult.ParseIntWithBounds(aValue, 0);
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 void

@@ -67,9 +67,9 @@ public:
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -181,27 +181,22 @@ nsHTMLValue::EnumTable kOldListTypeTable[] = {
   { 0 }
 };
 
-NS_IMETHODIMP
-nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
+PRBool
+nsHTMLOListElement::ParseAttribute(nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (aResult.ParseEnumValue(aValue, kListTypeTable)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-
-    if (aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseEnumValue(aValue, kListTypeTable) ||
+           aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
   }
-  else if (aAttribute == nsHTMLAtoms::start) {
-    if (aResult.ParseIntValue(aValue, eHTMLUnit_Integer)) {
+  if (aAttribute == nsHTMLAtoms::start) {
+    if (aResult.ParseIntValue(aValue)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP

@@ -116,9 +116,9 @@ public:
                         PRUint32 argc, jsval *argv);
 
   // nsIContent
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
@@ -475,26 +475,24 @@ nsHTMLImageElement::SetWidth(PRInt32 aWidth)
                                        val, PR_TRUE);
 }
 
-NS_IMETHODIMP
-nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
+PRBool
+nsHTMLImageElement::ParseAttribute(nsIAtom* aAttribute,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseAlignValue(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return ParseAlignValue(aValue, aResult);
   }
-  else if (aAttribute == nsHTMLAtoms::src) {
+  if (aAttribute == nsHTMLAtoms::src) {
     static const char* kWhitespace = " \n\r\t\b";
-    aResult.SetStringValue(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    aResult.SetTo(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
+    return PR_TRUE;
   }
-  else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+    return PR_TRUE;
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
