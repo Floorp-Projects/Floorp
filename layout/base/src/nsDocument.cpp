@@ -3036,12 +3036,36 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
         converter->AddMarkupDeclaration(docTypeStr);
     }
 
-    nsIDOMElement* root = nsnull;
-    result=GetDocumentElement(&root);
+    nsCOMPtr<nsIDOMElement> rootElement;
+    if (aSelection)
+    {
+      PRInt32 rangeCount;
+      if (NS_SUCCEEDED(aSelection->GetRangeCount(&rangeCount)) && rangeCount == 1) //getter_AddRefs(node));
+      {
+        nsCOMPtr<nsIDOMNode> anchor;
+        nsCOMPtr<nsIDOMNode> focus;
+        if (NS_SUCCEEDED(aSelection->GetAnchorNode(getter_AddRefs(anchor))))
+        {
+          if (NS_SUCCEEDED(aSelection->GetFocusNode(getter_AddRefs(focus))))
+          {
+            if (focus.get() == anchor.get())
+              rootElement = do_QueryInterface(focus);//set root to top of selection
+            if (!rootElement)//maybe its a text node since both are the same. both parents are the same. pick one
+            {
+              nsCOMPtr<nsIDOMNode> parent;
+              anchor->GetParentNode(getter_AddRefs(parent));
+              rootElement = do_QueryInterface(parent);//set root to top of selection
+            }
+          }
+        }
+      }
+    }
+    if (!rootElement)
+      result=GetDocumentElement(getter_AddRefs(rootElement));
     if (NS_SUCCEEDED(result))
     {  
   #if 1
-      result=ToXIF(converter,root);
+      result=ToXIF(converter,rootElement);
   #else
      if(NS_SUCCEEDED(rv)) {
         // Make a content iterator over the selection:
@@ -3076,7 +3100,6 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
         }
      }
     #endif
-        NS_RELEASE(root);
      }
   converter->AddEndTag(NS_ConvertToString("section_body"), PR_TRUE, PR_TRUE);
   converter->AddEndTag(NS_ConvertToString("section"), PR_TRUE, PR_TRUE);
