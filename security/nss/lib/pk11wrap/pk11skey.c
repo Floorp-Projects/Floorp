@@ -3007,6 +3007,8 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
 		return SECFailure;
 	}
 	id = PK11_ImportPublicKey(slot,key,PR_FALSE);
+    } else {
+	PK11_ReferenceSlot(slot);
     }
 
     session = pk11_GetNewSession(slot,&owner);
@@ -3016,6 +3018,7 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
 	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
 	PORT_SetError( PK11_MapError(crv) );
+	PK11_FreeSlot(slot);
 	return SECFailure;
     }
     len = dsig->len;
@@ -3026,8 +3029,10 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
     dsig->len = len;
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
+	PK11_FreeSlot(slot);
 	return SECFailure;
     }
+    PK11_FreeSlot(slot);
     return SECSuccess;
 }
 
