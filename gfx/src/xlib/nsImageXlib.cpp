@@ -463,15 +463,15 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
   Pixmap pixmap = 0;
 
   if (mAlphaDepth==1) {
-    PRUint32 scaledRowBytes = (aDWidth+7)>>3;   // round to next byte
-    PRUint8 *scaledAlpha = (PRUint8 *)nsMemory::Alloc(aDHeight*scaledRowBytes);
+    PRUint32 scaledRowBytes = (origDWidth+7)>>3;   // round to next byte
+    PRUint8 *scaledAlpha = (PRUint8 *)nsMemory::Alloc(origDHeight*scaledRowBytes);
     
     // code below attempts to draw the image without the mask if mask
     // creation fails for some reason.  thus no easy-out "return"
     if (scaledAlpha) {
-      memset(scaledAlpha, 0, aDHeight*scaledRowBytes);
+      memset(scaledAlpha, 0, origDHeight*scaledRowBytes);
       RectStretch(mWidth, mHeight, origDWidth, origDHeight,
-                  aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1,
+                  0, 0, aDWidth - 1, aDHeight - 1,
                   mAlphaBits, mAlphaRowBytes, scaledAlpha, scaledRowBytes, 1);
 
       pixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
@@ -533,7 +533,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
   PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
   if (scaledRGB && gc) {
     RectStretch(mWidth, mHeight, origDWidth, origDHeight,
-                aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1,
+                0, 0, aDWidth - 1, aDHeight - 1,
                 mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
 
     Drawable drawable; drawing->GetDrawable(drawable);
