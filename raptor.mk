@@ -175,3 +175,34 @@ pull_raptor:
 	$(CVSCO_RAPTOR) mozilla/view; \
 	$(CVSCO_RAPTOR) mozilla/webshell; \
 	$(CVSCO_RAPTOR) mozilla/widget
+
+pull_doc:
+	cd $(MOZ_SRC)/.; \
+	$(CVSCO_RAPTOR) README/raptor; \
+	$(CVSCO_RAPTOR) mozilla/LICENSE; \
+	$(CVSCO_RAPTOR) mozilla/LEGAL
+
+######################################################################
+#
+# Build tarball
+
+DATE_CMD=date
+DATE=$(shell $(DATE_CMD) +%Y%m%d)
+
+TAR = tar
+GZIP = gzip
+
+TARBALL = $(MOZ_SRC)/unix-$(DATE).tar
+
+TARFILES = mozilla README/raptor
+
+tarball: pull_all pull_doc clobber clobber_all real_tar
+
+real_tar:
+	@echo Making $(TARBALL)
+	cd $(MOZ_SRC)/.; \
+	rm -f $(TARBALL) $(TARBALL).gz; \
+	$(TAR) cf $(TARBALL) $(TARFILES)
+	@echo Making gzip of $(TARBALL); \
+	cd $(MOZ_SRC)/.; \
+	$(GZIP) -9 -q $(TARBALL)
