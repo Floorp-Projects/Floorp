@@ -80,6 +80,10 @@ var gOpenLabel;
 var gOpenLabelAccesskey;
 var gSaveLabel;
 var gSaveLabelAccesskey;
+var gDetachLabel;
+var gDeleteLabel;
+var gDetachLabelAccesskey;
+var gDeleteLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
@@ -292,7 +296,7 @@ const MsgHdrViewObserver =
 var messageHeaderSink = {
     onStartHeaders: function()
     {
-      mSaveHdr = null;
+      this.mSaveHdr = null;
       // clear out any pending collected address timers...
       if (gCollectAddressTimer)
       {
@@ -418,8 +422,12 @@ var messageHeaderSink = {
       // presentation level change....don't show vcards as external attachments in the UI.
       // libmime already renders them inline.
 
-      if (!mSaveHdr)
-        mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
+      try
+      {
+        if (!mSaveHdr)
+          this.mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
+      }
+      catch (ex) {}
       if (contentType == "text/x-vcard")
       {
         var inlineAttachments = pref.getBoolPref("mail.inline_attachments");
@@ -444,7 +452,7 @@ var messageHeaderSink = {
 
         try {
           // convert the uri into a hdr
-          mSaveHdr.markHasAttachments(true);
+          this.mSaveHdr.markHasAttachments(true);
         }
         catch (ex) {
           dump("ex = " + ex + "\n");
@@ -460,13 +468,18 @@ var messageHeaderSink = {
     onEndMsgDownload: function(url)
     {
       // if we don't have any attachments, turn off the attachments flag
-      if (!mSaveHdr)
+      if (!this.mSaveHdr)
       {
         var messageUrl = url.QueryInterface(Components.interfaces.nsIMsgMessageUrl);
-        mSaveHdr = messenger.messageServiceFromURI(messageUrl.uri).messageURIToMsgHdr(messageUrl.uri);
+        try
+        {
+          this.mSaveHdr = messenger.messageServiceFromURI(messageUrl.uri).messageURIToMsgHdr(messageUrl.uri);
+        }
+        catch (ex) {}
+
       }
-      if (!currentAttachments.length && mSaveHdr)
-        mSaveHdr.markHasAttachments(false);
+      if (!currentAttachments.length && this.mSaveHdr)
+        this.mSaveHdr.markHasAttachments(false);
       OnMsgParsed(url);
     },
 
@@ -1121,8 +1134,16 @@ function onShowAttachmentContextMenu()
   var selectedAttachments = attachmentList.selectedItems;
   var openMenu = document.getElementById('context-openAttachment');
   var saveMenu = document.getElementById('context-saveAttachment');
+  var detachMenu = document.getElementById('context-detachAttachment');
+  var deleteMenu = document.getElementById('context-deleteAttachment');
+
+  var canDetach = false;
   if (selectedAttachments.length > 0)
   {
+    var attachment = selectedAttachments[0].attachment
+    canDetach = attachment.contentType != 'text/x-moz-deleted' &&
+        !(/news-message:/.test(attachment.messageUri)) && 
+        (!(/imap-message/.test(attachment.messageUri)) || CheckOnline());
     openMenu.removeAttribute('disabled');
     saveMenu.removeAttribute('disabled');
   }
@@ -1130,6 +1151,17 @@ function onShowAttachmentContextMenu()
   {
     openMenu.setAttribute('disabled', true);
     saveMenu.setAttribute('disabled', true);
+  }
+
+  if (canDetach)
+  {
+    detachMenu.removeAttribute('disabled');
+    deleteMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    detachMenu.setAttribute('disabled', true);
+    deleteMenu.setAttribute('disabled', true);
   }
 }
 
@@ -1292,6 +1324,7 @@ function GetNumberOfAttachmentsForDisplayedMessage()
 // private method used to build up a menu list of attachments
 function addAttachmentToPopup(popup, attachment, attachmentIndex) 
 { 
+  dump("in addAttachmentToPopup\n");
   if (popup)
   { 
     var item = document.createElement('menu');
@@ -1337,9 +1370,17 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       if (!gDeleteLabelAccesskey)
         gDeleteLabelAccesskey = gMessengerBundle.getString("deleteLabelAccesskey");
 
+      // we should also check if an attachment has been detached...
+      // but that uses X-Mozilla-External-Attachment-URL, which
+      // we'd need to check for somehow.
+
+      var canDetach = !(/news-message:/.test(attachment.uri)) && 
+          (!(/imap-message/.test(attachment.uri)) || CheckOnline());
       menuitementry.setAttribute('label', gOpenLabel); 
       menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
+      if (attachment.contentType == 'text/x-moz-deleted')
+        menuitementry.setAttribute('disabled', true); 
 
       var menuseparator = document.createElement('menuseparator');
       openpopup.appendChild(menuseparator);
@@ -1349,16 +1390,19 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.setAttribute('oncommand', 'saveAttachment(this.attachment)'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
-      if (attachment.contentType == 'text/x-moz-deleted')
+      if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
         menuitementry.setAttribute('disabled', true); 
       menuitementry = openpopup.appendChild(menuitementry);
+
+      var menuseparator = document.createElement('menuseparator');
+      openpopup.appendChild(menuseparator);
 
       menuitementry = document.createElement('menuitem');
       menuitementry.attachment = attachment;
       menuitementry.setAttribute('oncommand', 'this.attachment.detachAttachment()'); 
       menuitementry.setAttribute('label', gDetachLabel); 
       menuitementry.setAttribute('accesskey', gDetachLabelAccesskey); 
-      if (attachment.contentType == 'text/x-moz-deleted')
+      if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
         menuitementry.setAttribute('disabled', true); 
       menuitementry = openpopup.appendChild(menuitementry);
 
@@ -1367,7 +1411,7 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
       menuitementry.setAttribute('label', gDeleteLabel); 
       menuitementry.setAttribute('accesskey', gDeleteLabelAccesskey); 
-      if (attachment.contentType == 'text/x-moz-deleted')
+      if (attachment.contentType == 'text/x-moz-deleted' || !canDetach)
         menuitementry.setAttribute('disabled', true); 
       menuitementry = openpopup.appendChild(menuitementry);
     }  // if we created a menu item for this attachment...
