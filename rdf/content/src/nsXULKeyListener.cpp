@@ -6,8 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WA
- RRANTY OF ANY KIND, either express or
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -1085,7 +1084,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
 
     // We've got a file.  Check our key binding file cache.
     nsIURIKey key(uri);
-    document = NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable->Get(&key));
+    document = dont_AddRef(NS_STATIC_CAST(nsIDOMXULDocument*, mKeyBindingTable->Get(&key)));
     
     if (!document) {
       LoadKeyBindingDocument(uri, getter_AddRefs(document));
@@ -1112,6 +1111,13 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
                                                    nsIDOMXULDocument::GetIID(),
                                                    getter_AddRefs(doc));
 
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(doc, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  xulDoc->SetIsKeybindingDocument(PR_TRUE);
+
   // Now we have to synchronously load the key binding file.
   // Create a XUL content sink, a parser, and kick off a load for
   // the overlay.
@@ -1132,7 +1138,6 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
   proto->SetDocumentPrincipal(principal);
 
   // Set master and current prototype
-  nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(doc);
   xulDoc->SetMasterPrototype(proto);
   xulDoc->SetCurrentPrototype(proto);
 

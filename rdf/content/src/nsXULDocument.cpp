@@ -309,6 +309,7 @@ nsXULDocument::nsXULDocument(void)
       mNextSrcLoadWaiter(nsnull),
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
+      mIsKeyBindingDoc(PR_FALSE),
       mIsPopup(PR_FALSE),
       mResolutionPhase(nsForwardReference::eStart),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
@@ -599,6 +600,13 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
         return rv;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetIsKeybindingDocument(PRBool aIsKeyBindingDoc)
+{
+    mIsKeyBindingDoc = aIsKeyBindingDoc;
     return NS_OK;
 }
 
@@ -3175,18 +3183,20 @@ nsXULDocument::Init()
                                             getter_AddRefs(mNameSpaceManager));
     if (NS_FAILED(rv)) return rv;
 
-    // Create our focus tracker and hook it up.
-    rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
-    if (NS_FAILED(rv)) return rv;
+    if (!mIsKeyBindingDoc) {
+        // Create our focus tracker and hook it up.
+        rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIDOMEventListener> CommandDispatcher =
-        do_QueryInterface(mCommandDispatcher);
+        nsCOMPtr<nsIDOMEventListener> CommandDispatcher =
+            do_QueryInterface(mCommandDispatcher);
 
-    if (CommandDispatcher) {
-      // Take the focus tracker and add it as an event listener for focus and blur events.
-        AddEventListener("focus", CommandDispatcher, PR_TRUE);
-        AddEventListener("blur", CommandDispatcher, PR_TRUE);
+        if (CommandDispatcher) {
+            // Take the focus tracker and add it as an event listener for focus and blur events.
+            AddEventListener("focus", CommandDispatcher, PR_TRUE);
+            AddEventListener("blur", CommandDispatcher, PR_TRUE);
+        }
     }
 
     // Get the local store. Yeah, I know. I wish GetService() used a
@@ -4934,7 +4944,8 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
         // We also need to pay special attention to the keyset tag to set up a listener
         if ((aPrototype->mNameSpaceID == kNameSpaceID_XUL) &&
-            (aPrototype->mTag.get() == kKeysetAtom)) {
+            (aPrototype->mTag.get() == kKeysetAtom) &&
+            ! mIsKeyBindingDoc) {
             // Create our nsXULKeyListener and hook it up.
             nsCOMPtr<nsIXULKeyListener> keyListener;
             rv = nsComponentManager::CreateInstance(kXULKeyListenerCID,

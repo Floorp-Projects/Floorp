@@ -289,6 +289,7 @@ public:
     NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
     NS_IMETHOD SetDocumentURL(nsIURI* anURL);
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
+    NS_IMETHOD SetIsKeybindingDocument(PRBool aIsKeyBindingDoc);
     
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
@@ -507,6 +508,7 @@ protected:
     nsVoidArray                mStyleSheets;
     nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER]
     PRBool                     mDisplaySelection;
+    PRBool                     mIsKeyBindingDoc;
     nsVoidArray                mPresShells;
     nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]
     nsCOMPtr<nsINameSpaceManager>     mNameSpaceManager;  // [OWNER]
