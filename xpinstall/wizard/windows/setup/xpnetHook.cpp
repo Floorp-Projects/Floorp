@@ -55,13 +55,16 @@ char                    gszCurrentDownloadFileDescription[MAX_BUF_TINY];
 char                    gszUrl[MAX_BUF];
 char                    *gszConfigIniFile;
 BOOL                    gbDlgDownloadMinimized;
+BOOL                    gbDlgDownloadJustMinimized;
 BOOL                    gbUrlChanged;
 BOOL                    gbCancelDownload;
-BOOL                    gbDownloadRetry;
+BOOL                    gbShowDownloadRetryMsg;
 int                     giIndex;
 int                     giTotalArchivesToDownload;
 
-static void UpdateGaugeFileProgressBar(unsigned value);
+double GetPercentSoFar(void);
+
+static void UpdateGaugeFileProgressBar(double value);
        int  ProgressCB(int aBytesSoFar, int aTotalFinalSize);
        void InitDownloadDlg(void);
        void DeInitDownloadDlg();
@@ -77,13 +80,47 @@ struct ExtractFilesDlgInfo
 	HWND	hWndDlg;
 	int		nMaxFileBars;	    // maximum number of bars that can be displayed
 	int		nMaxArchiveBars;	// maximum number of bars that can be displayed
-	int		nFileBars;		    // current number of bars to display
+	int   nFileBars;	      // current number of bars to display
 	int		nArchiveBars;		  // current number of bars to display
 } dlgInfo;
 
 
 #ifdef SSU_TEST
-void TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOutPath, DWORD dwOutPathBufSize)
+
+void ParseURLServerAndPath(char *szInURL, char *szOutServer, DWORD dwOutServerBufSize, char *szOutPath, DWORD dwOutPathBufSize)
+{
+  DWORD dwOutServerLen;
+  char  cDelimiter   = '/';
+  char  *ptrChar     = NULL;
+  char  *ptrLastChar = NULL;
+
+  lstrcpy(szOutServer, szInURL);
+  ZeroMemory(szOutPath, dwOutPathBufSize);
+  dwOutServerLen = lstrlen(szOutServer);
+  ptrLastChar    = CharPrev(szOutServer, &szOutServer[dwOutServerLen]);
+  ptrChar        = CharNext(szOutServer);
+
+  iFoundDelimiter = 0;
+  ptrChar = szOutput;
+  while(!bDone)
+  {
+    if(*ptrChar == cDelimiter)
+      ++iFoundDelimiter;
+
+    if(iFoundDelimiter == 3)
+    {
+      lstrcpy(szOutPath, CharNext(prtChar));
+      *CharNext(ptrChar) = '\0';
+      bDone = TRUE;
+    }
+    else if(ptrChar == ptrLastChar)
+      bDone = TRUE;
+    else
+      ptrChar = CharNext(ptrChar);
+  }
+}
+
+void TruncateURLString(HWND hWnd, LPSTR szInURL, DWORD dwInURLBufSize, LPSTR szOutString, DWORD dwOutStringBufSize)
 {
   HDC           hdcWnd;
   LOGFONT       logFont;
@@ -91,16 +128,31 @@ void TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOu
   HFONT         hfontOld;
   RECT          rWndRect;
   SIZE          sizeString;
-  BOOL          bChopped;
+  BOOL          bDone;
+  char          szFilename[MAX_BUF];
+  char          szURLServerPart[MAX_BUF];
+  char          szURLPath[MAX_BUF];
+  char          *ptrCharPrev1;
+  char          *ptrCharPrev2;
+  char          *ptrCharPrev3;
+  char          *ptrCharPrev4;
+  char          cCharPrev2;
+  char          cCharPrev3;
+  char          cCharPrev4;
 
-  ZeroMemory(szOutPath, dwOutPathBufSize);
-  if(dwInPathBufSize > dwOutPathBufSize)
+  ZeroMemory(szOutString, dwOutStringBufSize);
+  if(dwInURLBufSize > dwOutStringBufSize)
     return;
 
-  if(lstrlen(szInPath) == 0)
+  if(lstrlen(szInURL) == 0)
     return;
 
-  lstrcpy(szOutPath, szInPath);
+  ParsePath(szInURL, szFilename, sizeof(szFilename), TRUE, PP_FILENAME_ONLY);
+  ParsePath(szInURL, szURLwithoutFilename, sizeof(szURLwithoutFilename), TRUE, PP_PATH_ONLY);
+  ParseURLServerAndPath(szURLwithoutFilename, szURLServerPart, sizeof(szURLServerPart), szURLPath, sizeof(szURLPath));
+  
+
+  lstrcpy(szOutString, szInURL);
   hdcWnd = GetWindowDC(hWnd);
   GetClientRect(hWnd, &rWndRect);
   SystemParametersInfo(SPI_GETICONTITLELOGFONT,
@@ -113,23 +165,40 @@ void TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOu
   if(hfontTmp)
     hfontOld = (HFONT)SelectObject(hdcWnd, hfontTmp);
 
-  bChopped = FALSE;
-  GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
-  while(sizeString.cx > rWndRect.right)
+  /* make this its own function so that we can call it for szURLServerPath, szURLPath, and szFilename */
+  /** From here **/
+  GetTextExtentPoint32(hdcWnd, szOutString, lstrlen(szOutString), &sizeString);
+  if(sizeString.cx > rWndRect.right)
   {
-    szOutPath[lstrlen(szOutPath) - 1] = '\0';
-    GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
-    bChopped = TRUE;
-  }
+    bDone = FALSE;
+    while(!bDone)
+    {
+      ptrCharPrev1 = CharPrev(szOutString, &szOutString[lstrlen(szOutString)]);
+      ptrCharPrev2 = CharPrev(szOutString, ptrCharPrev1);
+      ptrCharPrev3 = CharPrev(szOutString, ptrCharPrev2);
+      ptrCharPrev4 = CharPrev(szOutString, ptrCharPrev3);
+      cCharPrev2 = *ptrCharPrev2;
+      cCharPrev3 = *ptrCharPrev3;
+      cCharPrev4 = *ptrCharPrev4;
 
-  if(bChopped)
-  {
-    DWORD dwLen = lstrlen(szOutPath);
+      *ptrCharPrev1 = '\0';
+      *ptrCharPrev2 = '.';
+      *ptrCharPrev3 = '.';
+      *ptrCharPrev4 = '.';
 
-    szOutPath[dwLen - 1] = '.';
-    szOutPath[dwLen - 2] = '.';
-    szOutPath[dwLen - 3] = '.';
+
+      GetTextExtentPoint32(hdcWnd, szOutString, lstrlen(szOutString), &sizeString);
+      if(sizeString.cx > rWndRect.right)
+      {
+        *ptrCharPrev2 = cCharPrev2;
+        *ptrCharPrev3 = cCharPrev3;
+        *ptrCharPrev4 = cCharPrev4;
+      }
+      else
+        bDone = TRUE;
+    }
   }
+  /** To here **/
 
   SelectObject(hdcWnd, hfontOld);
   DeleteObject(hfontTmp);
@@ -142,21 +211,21 @@ void SetStatusStatus(void)
   char szStatusStatusLine[MAX_BUF_MEDIUM];
   char szCurrentStatusInfo[MAX_BUF_MEDIUM];
 
-  if(!gbDownloadRetry)
+  if(!gbShowDownloadRetryMsg)
   {
-    GetPrivateProfileString("Strings", "Status Download", "", szStatusStatusLine, sizeof(szStatusStatusLine), gszConfigIniFile);
+    GetPrivateProfileString("Strings", "Status Download", "", szStatusStatusLine, sizeof(szStatusStatusLine), szFileIniConfig);
     if(*szStatusStatusLine != '\0')
-      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload);
+      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
     else
-      wsprintf(szCurrentStatusInfo, "Downloading file %d of %d", (giIndex + 1), giTotalArchivesToDownload);
+      wsprintf(szCurrentStatusInfo, "Downloading file %d of %d (%uKB of %uKB total - %d%%)", (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
   }
   else
   {
-    GetPrivateProfileString("Strings", "Status Retry", "", szStatusStatusLine, sizeof(szStatusStatusLine), gszConfigIniFile);
+    GetPrivateProfileString("Strings", "Status Retry", "", szStatusStatusLine, sizeof(szStatusStatusLine), szFileIniConfig);
     if(*szStatusStatusLine != '\0')
-      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload);
+      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
     else
-      wsprintf(szCurrentStatusInfo, "Redownloading file %d of %d", (giIndex + 1), giTotalArchivesToDownload);
+      wsprintf(szCurrentStatusInfo, "Redownloading file %d of %d (%uKB of %uKB total - %d%%)", (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
   }
 
   /* Set the download dialog title */
@@ -190,9 +259,9 @@ void SetStatusUrl(void)
   }
 }
 
-DWORD GetPercentSoFar(void)
+double GetPercentSoFar(void)
 {
-  return((unsigned)(((double)(glAbsoluteBytesSoFar/1024)/(double)glTotalKb)*(double)100) + 1);
+  return((double)(((double)(glAbsoluteBytesSoFar / 1024) / (double)glTotalKb) * (double)100));
 }
 
 void SetMinimizedDownloadTitle(DWORD dwPercentSoFar)
@@ -201,7 +270,7 @@ void SetMinimizedDownloadTitle(DWORD dwPercentSoFar)
   char szDownloadTitle[MAX_BUF_MEDIUM];
   char gszCurrentDownloadInfo[MAX_BUF_MEDIUM];
 
-  GetPrivateProfileString("Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle), gszConfigIniFile);
+  GetPrivateProfileString("Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle), szFileIniConfig);
 
   if(*szDownloadTitle != '\0')
     wsprintf(gszCurrentDownloadInfo, szDownloadTitle, dwPercentSoFar, gszCurrentDownloadFilename);
@@ -209,8 +278,15 @@ void SetMinimizedDownloadTitle(DWORD dwPercentSoFar)
     wsprintf(gszCurrentDownloadInfo, "%d%% for all files", dwPercentSoFar);
 
   /* check and save the current percent so far to minimize flickering */
-  if(dwLastPercentSoFar != dwPercentSoFar)
+  if((dwLastPercentSoFar != dwPercentSoFar) || gbDlgDownloadJustMinimized)
   {
+    /* When the dialog is has just been minimized, the title is not set
+     * until the percentage changes, which when downloading via modem,
+     * could take several seconds.  This variable allows us to tell when
+     * the dialog had *just* been minimized regardless if the percentage
+     * had changed or not. */
+    gbDlgDownloadJustMinimized = FALSE;
+
     /* Set the download dialog title */
     SetWindowText(dlgInfo.hWndDlg, gszCurrentDownloadInfo);
     dwLastPercentSoFar = dwPercentSoFar;
@@ -269,7 +345,7 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), gszConfigIniFile);
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -334,7 +410,7 @@ int DownloadViaFTP(char *szUrl)
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), gszConfigIniFile);
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -359,7 +435,7 @@ int DownloadViaFTP(char *szUrl)
   return(rv);
 }
 
-int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bRetry)
+int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bShowRetryMsg, BOOL bIgnoreNetworkError)
 {
   char      szIndex[MAX_ITOA];
   char      szSection[MAX_INI_SK];
@@ -381,8 +457,9 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
   glAbsoluteBytesSoFar      = 0;
   gbUrlChanged              = TRUE;
   gbDlgDownloadMinimized    = FALSE;
+  gbDlgDownloadJustMinimized = FALSE;
   gbCancelDownload          = FALSE;
-  gbDownloadRetry           = bRetry;
+  gbShowDownloadRetryMsg    = bShowRetryMsg;
   gszConfigIniFile          = szInputIniFile;
 
   GetTotalArchivesToDownload(&giTotalArchivesToDownload, &dwTotalEstDownloadSize);
@@ -403,7 +480,7 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
     GetPrivateProfileString(szSection, "desc", "", gszCurrentDownloadFileDescription, sizeof(gszCurrentDownloadFileDescription), gszConfigIniFile);
 
     if(gbDlgDownloadMinimized)
-      SetMinimizedDownloadTitle(GetPercentSoFar());
+      SetMinimizedDownloadTitle((int)GetPercentSoFar());
     else
     {
       SetStatusUrl();
@@ -449,7 +526,7 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
       /* break out of for() loop */
       break;
 
-    if((rv != nsFTPConn::OK) && (iFileDownloadRetries >= MAX_FILE_DOWNLOAD_RETRIES))
+    if((rv != nsFTPConn::OK) && (iFileDownloadRetries >= MAX_FILE_DOWNLOAD_RETRIES) && !bIgnoreNetworkError)
     {
       /* too many retries from failed downloads */
       char szMsg[MAX_BUF];
@@ -457,6 +534,12 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
       GetPrivateProfileString("Strings", "Error Too Many Network Errors", "", szMsg, sizeof(szMsg), szFileIniConfig);
       if(*szMsg != '\0')
         PrintError(szMsg, ERROR_CODE_HIDE);
+
+      /* Set return value and break out of for() loop.
+       * We don't want to continue if there were too
+       * many network errors on any file. */
+      rv = WIZ_TOO_MANY_NETWORK_ERRORS;
+      break;
     }
   }
 
@@ -468,7 +551,7 @@ int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer
 int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {
   long lBytesDiffSoFar;
-  DWORD dwPercentSoFar;
+  double dPercentSoFar;
   int  iRv = nsFTPConn::OK;
 
   if(sgProduct.dwMode != SILENT)
@@ -487,11 +570,12 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
     glLastBytesSoFar = aBytesSoFar;
     glAbsoluteBytesSoFar += lBytesDiffSoFar;
 
-    dwPercentSoFar = GetPercentSoFar();
+    dPercentSoFar = GetPercentSoFar();
     if(gbDlgDownloadMinimized)
-      SetMinimizedDownloadTitle(dwPercentSoFar);
-    else
-      UpdateGaugeFileProgressBar(dwPercentSoFar);
+      SetMinimizedDownloadTitle((int)dPercentSoFar);
+
+    UpdateGaugeFileProgressBar(dPercentSoFar);
+    SetStatusStatus();
 
     if(gbCancelDownload)
       iRv = nsFTPConn::E_USER_CANCEL;
@@ -527,7 +611,7 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, FALSE);
 			CenterWindow(hWndDlg);
-      if(gbDownloadRetry)
+      if(gbShowDownloadRetryMsg)
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
@@ -538,8 +622,9 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       switch(wParam)
       {
         case SIZE_MINIMIZED:
-          SetMinimizedDownloadTitle(GetPercentSoFar());
+          SetMinimizedDownloadTitle((int)GetPercentSoFar());
           gbDlgDownloadMinimized = TRUE;
+          gbDlgDownloadJustMinimized = TRUE;
           break;
 
         case SIZE_RESTORED:
@@ -571,14 +656,14 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 // This routine will update the File Gauge progress bar to the specified percentage
 // (value between 0 and 100)
 static void
-UpdateGaugeFileProgressBar(unsigned value)
+UpdateGaugeFileProgressBar(double value)
 {
 	int	nBars;
 
   if(sgProduct.dwMode != SILENT)
   {
     // Figure out how many bars should be displayed
-    nBars = dlgInfo.nMaxFileBars * value / 100;
+    nBars = (int)(dlgInfo.nMaxFileBars * value / 100);
 
     // Only paint if we need to display more bars
     if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
@@ -654,9 +739,9 @@ DrawProgressBar(HWND hWnd, int nBars)
   {
   	// Draw the bars
     hBrush = CreateSolidBrush(RGB(0, 0, 128));
-	  rect.left     = rect.top = BAR_MARGIN;
-	  rect.bottom  -= BAR_MARGIN;
-	  rect.right    = rect.left + BAR_WIDTH;
+	  rect.left     = rect.top = BAR_LIBXPNET_MARGIN;
+	  rect.bottom  -= BAR_LIBXPNET_MARGIN;
+	  rect.right    = rect.left + BAR_LIBXPNET_WIDTH;
 
 	  for(i = 0; i < nBars; i++)
     {
@@ -665,7 +750,7 @@ DrawProgressBar(HWND hWnd, int nBars)
 		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
 			  FillRect(hDC, &rect, hBrush);
 
-      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
+      OffsetRect(&rect, BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING, 0);
 	  }
   }
 
@@ -684,8 +769,8 @@ SizeToFitGauge(HWND hWnd, int nMaxBars)
 	GetWindowRect(hWnd, &rect);
 
 	// Size the width to fit
-	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_MARGIN +
-		nMaxBars * BAR_WIDTH + (nMaxBars - 1) * BAR_SPACING;
+	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_LIBXPNET_MARGIN +
+		nMaxBars * BAR_LIBXPNET_WIDTH + (nMaxBars - 1) * BAR_LIBXPNET_SPACING;
 
 	SetWindowPos(hWnd, NULL, -1, -1, cx, rect.bottom - rect.top,
 		SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -709,7 +794,7 @@ GaugeDownloadWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// Figure out the maximum number of bars that can be displayed
 			GetClientRect(hWnd, &rect);
 			dlgInfo.nFileBars = 0;
-			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_MARGIN + BAR_SPACING) / (BAR_WIDTH + BAR_SPACING);
+			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_LIBXPNET_MARGIN + BAR_LIBXPNET_SPACING) / (BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING);
 
 			// Size the gauge to exactly fit the maximum number of bars
 			SizeToFitGauge(hWnd, dlgInfo.nMaxFileBars);

@@ -695,7 +695,7 @@ Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one
 ;*** LOCALIZE ME BABY ***
 Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  You can restart Setup to continue where it left off.
 ;*** LOCALIZE ME BABY ***
-Error Too Many Network Errors=Too network errors.  Please retry again later.  You can restart Setup to continue where it left off.
+Error Too Many Network Errors=Too many network errors.  Please retry again later.  You can restart Setup to continue where it left off.
 ;*** LOCALIZE ME BABY ***
 Message Verifying Archives=Verifying integrity of archives, please wait...
 ;*** LOCALIZE ME BABY ***
@@ -703,9 +703,9 @@ Error Undefined=Error undefined
 ;*** LOCALIZE ME BABY ***
 Error Out Of Memory=Out of memory!
 ;*** LOCALIZE ME BABY ***
-Status Download=Downloading file %d of %d
+Status Download=Downloading file %d of %d (%uKB of %uKB total - %d%%)
 ;*** LOCALIZE ME BABY ***
-Status Retry=Redownloading file %d of %d
+Status Retry=Redownloading file %d of %d (%uKB of %uKB total - %d%%)
 ;*** LOCALIZE ME BABY ***
 Dialog Download Title Minimized=%d%% for all files
 ;*** LOCALIZE ME BABY ***

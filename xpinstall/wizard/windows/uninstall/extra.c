@@ -1100,6 +1100,11 @@ HRESULT GetUninstallLogPath()
   lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
   GetWinReg(HKEY_LOCAL_MACHINE, szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, sizeof(szLogFolder));
 
+  /* if the DisplayName was not found in the windows registry,
+   * use the description from read in from config.ini file */
+  if(*ugUninstall.szDescription == '\0')
+    lstrcpy(ugUninstall.szDescription, ugUninstall.szUninstallKeyDescription);
+
   if(FileExists(szLogFolder) == FALSE)
   {
     if(NS_LoadString(hInst, IDS_ERROR_UNINSTALL_LOG_FOLDER, szEUninstallLogFolder, MAX_BUF) == WIZ_OK)

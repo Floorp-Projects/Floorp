@@ -262,10 +262,12 @@ if(verifyDiskSpace(fProgram, srDest))
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
+    logComment("Installing: "    + fProgram + "xpcom.log");
     logComment("Create Folder: " + fProgram + "components");
     logComment("Installing: "    + fProgram + "components\\xpti.dat");
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
     logComment("Create Folder: " + fProgram + "chrome");
+    logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\all-locales.rdf");
     logComment("Installing: "    + fProgram + "chrome\\all-packages.rdf");
     logComment("Installing: "    + fProgram + "chrome\\all-skins.rdf");
