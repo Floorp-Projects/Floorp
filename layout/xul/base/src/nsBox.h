@@ -172,7 +172,7 @@ private:
   //nscoord mY;
 };
 
-#ifdef DEBUG
+#ifdef DEBUG_LAYOUT
 #define NS_BOX_ASSERTION(box,expr,str) \
   if (!(expr)) { \
        box->DumpBox(stdout); \
