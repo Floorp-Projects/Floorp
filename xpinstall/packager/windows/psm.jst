@@ -1,8 +1,14 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "psmglue.dll");
+}
+
 // main
 var srDest;
 var err;
 var fProgram;
-var target;
 
 $Ren8dot3List$
 
@@ -27,16 +33,11 @@ if(verifyDiskSpace(fProgram, srDest))
                      true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
 
-  target = getFolder("Components", "psmglue.dll");
-  if (File.exists(target) > 0)
-  {
-      var rmErr = File.remove(target);
-      logComment("File.remove of " + target + " returned: " + rmErr);
-  }
-
   // check return value
   if(err == SUCCESS)
   {
+    upgradeCleanup();
+
     var pki = getFolder("Chrome", "pippki.jar");
     var nss = getFolder("Chrome", "pipnss.jar");
     registerChrome(CONTENT | DELAYED_CHROME, pki, "content/pippki/");

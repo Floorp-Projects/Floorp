@@ -284,11 +284,12 @@ function updateWinReg()
 
 function upgradeCleanup()
 {
-  // uncomment these function calls after beta1
-  // deleteThisFile("Program",    "oji.dll");
-  // deleteThisFile("Program",    "jsdom.dll");
-  // deleteThisFile("Program",    "defaults/pref/psm-glue.js");
-  // deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Program",    "oji.dll");
+  deleteThisFile("Program",    "jsdom.dll");
+  deleteThisFile("Program",    "defaults/pref/psm-glue.js");
+  deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
   deleteThisFile("Components", "gkhtml.dll");
   deleteThisFile("Components", "mozucth.dll");
 }
