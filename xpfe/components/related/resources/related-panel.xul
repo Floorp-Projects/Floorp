@@ -22,13 +22,6 @@
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/related-panel.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY tree.header.name.label "Name">
-<!ENTITY tree.header.url.label  "URL">
-]>
-
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -74,12 +67,6 @@
     </template>
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-
-    <treehead>
-      <treerow>
-        <treecell>&tree.header.name.label;</treecell>
-      </treerow>
-    </treehead>
 
     <treechildren>
       <treeitem id="NC:RelatedLinks">
