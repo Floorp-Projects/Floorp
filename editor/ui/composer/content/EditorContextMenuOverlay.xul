@@ -21,9 +21,6 @@
    - Contributor(s):
   -->
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <overlay id="ComposerContextMenuOverlay"

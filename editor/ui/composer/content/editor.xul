@@ -29,10 +29,10 @@
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/EditorContextMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
@@ -214,7 +214,7 @@
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebar-parent" flex="1">
   <!-- From sidebarOverlay.xul -->
-  <box id="sidebar-box" class="chromeclass-extrachrome"/>
+  <box id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
 
   <box id="appcontent" orient="vertical" flex="1">
