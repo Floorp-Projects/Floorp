@@ -766,7 +766,12 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* 
       GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
       LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
     }
-    
+    else {
+      // We got nothin'.  Bail.
+      *aResult = nsnull;
+      return NS_OK;
+    }
+
     if (realContent)
       *aResult = realContent;
     else
