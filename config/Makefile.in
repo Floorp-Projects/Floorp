@@ -23,6 +23,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+INTERNAL_TOOLS	= 1
+
 HSRCS		= pathsub.h
 CSRCS		= nsinstall.c pathsub.c
 
