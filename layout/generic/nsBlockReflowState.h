@@ -4874,7 +4874,17 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
   aCombinedRect = metrics.mCombinedArea;
+  // Set the rect, make sure the view is properly sized and positioned,
+  // and tell the frame we're done reflowing it
   floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
+  nsIView*  view;
+  floater->GetView(aState.mPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, floater, view,
+                                               &metrics.mCombinedArea,
+                                               NS_FRAME_NO_MOVE_VIEW);
+  }
+  floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Stash away the max-element-size for later
   aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
@@ -5218,7 +5228,16 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
     x += aFloaterCache->mOffsets.left;
     y += aFloaterCache->mOffsets.top;
   }
+
+  // Position the floater and make sure and views are properly positioned
+  nsIView*  view;
   floater->MoveTo(mPresContext, x, y);
+  floater->GetView(mPresContext, &view);
+  if (view) {
+    nsContainerFrame::PositionFrameView(mPresContext, floater, view);
+  } else {
+    nsContainerFrame::PositionChildViews(mPresContext, floater);
+  }
 
   // Update the floater combined area state
   nsRect combinedArea = aFloaterCache->mCombinedArea;
