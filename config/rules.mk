@@ -718,10 +718,14 @@ $(DEF_FILE): $(DEF_OBJS)
 	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$(DEF_FILE)"
 	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$(DEF_FILE)"        
 	@cmd /C "echo EXPORTS >>$(DEF_FILE)"
-ifeq ($(XPCOM_SWITCH),1)
+ifeq ($(IS_COMPONENT),1)
+ifeq ($(HAS_EXTRAEXPORTS),1)
 	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
 else
-	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR| grep -v " getc" | grep -v " putc" | grep -v __ctime >> $(DEF_FILE)
+	@cmd /C "echo    NSGetModule>>$(DEF_FILE)"
+endif
+else
+	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
 endif
 	$(ADD_TO_DEF_FILE)
 $(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
