@@ -1,10 +1,11 @@
 window { 
  display: block; 
+ background-color:black;
 } 
 
 tree { 
  display: table; 
- background-color: #eeeeee; 
+ background-color: #000000; 
  border: none; 
  border-spacing: 0px; 
  border-collapse: collapse; 
@@ -25,6 +26,9 @@ treebody {
 
 treecell { 
  display: table-cell; 
+ color: white;
+ font-family: Verdana;
+ font-size: 10pt;
 } 
 
 treecell[selectedcell] { 
@@ -34,4 +38,9 @@ treecell[selectedcell] {
 treehead treeitem treecell { 
  background-color: #a0a0a0; 
  border: thin black solid; 
+ color: black;
 } 
+
+treecell[selected] {
+	background-color: #000080;
+}
