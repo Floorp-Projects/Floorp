@@ -134,8 +134,6 @@ CalendarEventSelection.prototype.isSelectedEvent = function ( Event )
 *
 *   Respond to adding a category.
 *
-* PARAMETERS
-*      NewCategory     - new category that was added
 */
 
 CalendarEventSelection.prototype.onSelectionChanged = function ( )

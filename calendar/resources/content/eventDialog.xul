@@ -47,7 +47,6 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
-
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE window 
 [
@@ -230,7 +229,6 @@
                         <vbox>
 									<hbox id="invite-box" align="center">
 										 <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
-										 <spacer id="invite-spacer" />
 										 <textbox id="invite-email-field" size="39" disabled="true"/>
 									</hbox>
                         </vbox>
@@ -256,7 +254,6 @@
                                
                           
                           <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
-                            <spacer class="repeat-left-spacer" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Tue" id="advanced-repeat-week-2" value="2" checked="false" />
@@ -268,7 +265,6 @@
                                
                           
                           <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
-                              <spacer class="repeat-left-spacer" />
                               <vbox align="center">
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
                                     <radio disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
@@ -289,19 +285,44 @@
                                         <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
                                         <spacer id="until-spacer"/>
                                         <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
-                                        <image id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                        <image class="date-picker-image" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                                      </hbox>
                                      <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
                                   </vbox>
                               </hbox>
                             </radiogroup>
                           </hbox>
-                         
-                        
+                          
+                          <hbox align="center">
+                            <spacer class="repeat-left-spacer" />
+                            <groupbox>
+                              <caption label="&newevent.exceptions.caption;"/>
+                              <grid>
+                                 <columns>
+                                    <column flex="1"/>
+                                    <column/>
+                                 </columns>
+                                 <rows>
+                                    <row>
+                                       <hbox align="center">
+                                          <textbox id="exception-dates-text" disable-controller="repeat" readonly="true" value="" onmousedown="prepareDatePicker('exception-dates-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                          <image class="date-picker-image" disable-controller="repeat" id="exception-dates-button" onmousedown="prepareDatePicker('exception-dates-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                       </hbox>   
+                                       <button id="exception-add-button" label="&newevent.addexceptions.label;" disable-controller="repeat" oncommand="addException()"/>
+                                    </row>
+                                    <row>
+                                       <listbox id="exception-dates-listbox" disable-controller="repeat" rows="4"/>
+                                       <vbox>
+                                          <button label="&newevent.deleteexceptions.label;" disable-controller="repeat" oncommand="removeSelectedExceptionDate()"/>
+                                       </vbox>
+                                    </row>
+                                 </rows>
+                              </grid>
+                            </groupbox>
+                          </hbox>
                         </vbox>
                     </row> 
-						  <!-- Repeat -->   
-                
+						  <!-- /Repeat -->   
                 </rows>        
             </grid>
             

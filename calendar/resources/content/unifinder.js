@@ -221,8 +221,6 @@ function unifinderDoubleClickEvent( id )
    {
       // go to day view, of the day of the event, select the event
       
-      //gCalendarWindow.dayView.clickEventBox( calendarEvent );
-
       editEvent( calendarEvent );
 
    }
@@ -236,7 +234,7 @@ function unifinderDoubleClickEvent( id )
 function unifinderClickEvent( CallingListBox )
 {
    var ListBox = CallingListBox;
-   dump( "\non unifinder click event" );
+   
    var ArrayOfEvents = new Array();
    
    for( i = 0; i < ListBox.selectedItems.length; i++ )
@@ -248,16 +246,12 @@ function unifinderClickEvent( CallingListBox )
    
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
 
-   if( ListBox.selectedItems.length > 0 && ListBox.selectedItems.length < 2 )
+   if( ListBox.selectedItems.length == 1 )
    {
-      var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
-      if ( !eventBox )
-      {
-         var eventStartDate = new Date( calendarEvent.start.getTime() );
-         
-         gCalendarWindow.currentView.goToDay( eventStartDate, true);
-         
-      }
+      //start date is either the next or last occurence, or the start date of the event
+      var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+      
+      gCalendarWindow.currentView.goToDay( eventStartDate, true);
    } 
 }
 
@@ -368,7 +362,14 @@ function unifinderSearchKeyPress( searchTextItem, event )
       var FieldsToSearch = new Array( "title", "description", "location" );
       gSearchEventTable = gEventSource.search( searchText, FieldsToSearch );
    }
-    
+   
+   if( document.getElementById( "unifinder-clear-results-button" ) )
+   {
+      if( searchText.length <= 0 )
+         document.getElementById( "unifinder-clear-results-button" ).setAttribute( "disabled", "true" );
+      else
+         document.getElementById( "unifinder-clear-results-button" ).removeAttribute( "disabled" );
+   }
    refreshSearchTree( gSearchEventTable );
 }
 
@@ -388,6 +389,15 @@ function unifinderShowFutureEventsOnly( event )
    gSearchEventTable = gEventSource.getCurrentEvents();
 
    refreshSearchTree( gSearchEventTable );
+
+   // get the current time
+   var now = new Date();
+   
+   var tomorrow = new Date( now.getFullYear(), now.getMonth(), ( now.getDate() + 1 ) );
+   
+   var milliSecsTillTomorrow = tomorrow.getTime() - now.getTime();
+   
+   setTimeout( "refreshEventTree( gSearchEventTable )", milliSecsTillTomorrow );
 }
 
 /**
@@ -397,6 +407,7 @@ function unifinderShowFutureEventsOnly( event )
 function refreshEventTree( eventArray, childrenName, Categories )
 {
    // get the old tree children item and remove it
+   
    var oldTreeChildren = document.getElementById( childrenName );
    
    while( oldTreeChildren.hasChildNodes() )
@@ -459,7 +470,7 @@ function refreshEventTree( eventArray, childrenName, Categories )
       
       text1.setAttribute( "value" , calendarEvent.title );
       
-      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
       var eventEndDate = new Date( calendarEvent.end.getTime() );
       var startDate = formatUnifinderEventDate( eventStartDate );
       var startTime = formatUnifinderEventTime( eventStartDate );
@@ -495,4 +506,45 @@ function refreshEventTree( eventArray, childrenName, Categories )
       if( gCalendarWindow.EventSelection.isSelectedEvent( calendarEvent ) )
          oldTreeChildren.addItemToSelection( treeItem );
    }  
+}
+
+
+function unifinderClearSearchCommand()
+{
+   document.getElementById( "unifinder-search-field" ).value = "";
+
+   gSearchEventTable = gEventSource.getCurrentEvents();
+
+   refreshSearchTree( gSearchEventTable );
+}
+
+
+function getNextOrPreviousRecurrence( calendarEvent )
+{
+   if( calendarEvent.recur )
+   {
+      var now = new Date();
+
+      var result = new Object();
+
+      var isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+
+      if( isValid )
+      {
+         var eventStartDate = new Date( result.value );
+      }
+      else
+      {
+         isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
+         
+         var eventStartDate = new Date( result.value );
+      }
+   }
+   
+   if( !isValid || !calendarEvent.recur )
+   {
+      var eventStartDate = new Date( calendarEvent.start.getTime() );
+   }
+      
+   return eventStartDate;
 }

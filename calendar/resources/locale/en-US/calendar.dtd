@@ -74,6 +74,9 @@
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
+<!ENTITY newevent.exceptions.caption "Exceptions">
+<!ENTITY newevent.addexceptions.label "Add Exception">
+<!ENTITY newevent.deleteexceptions.label "Delete Exception">
 
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
 <!ENTITY newevent.repeatdate.tooltip    "Choose a date to end on" >
@@ -110,6 +113,9 @@
 <!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
 
+<!ENTITY calendar.unifinder.withalarms.label      "With Alarms" >
+<!ENTITY calendar.unifinder.todayandfuture.label  "Today And Future" >
+
 <!ENTITY calendar.gototoday.button.tooltip        "Go to today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choose date to go to" >
 
@@ -131,9 +137,9 @@
 <!ENTITY calendar.gototoday.button.label        "Today" >
 <!ENTITY calendar.choosedate.button.label       "Choose Date" >
 
-<!ENTITY calendar.dayview.button.label          "Day" >
-<!ENTITY calendar.weekview.button.label         "Week" >
-<!ENTITY calendar.monthview.button.label        "Month" >
+<!ENTITY calendar.dayview.button.label          "Day View" >
+<!ENTITY calendar.weekview.button.label         "Week View" >
+<!ENTITY calendar.monthview.button.label        "Month View" >
 
 <!ENTITY calendar.menu.options.modify        "Edit" >
 <!ENTITY calendar.menu.options.remove        "Delete" >
@@ -143,20 +149,6 @@
 
 <!ENTITY calendar.search.options.searchfor			"Event contains:">
 
-<!ENTITY calendar.portlet.outliner.titlecol "Title" >
-<!ENTITY calendar.portlet.outliner.datecol  "Date" >
-<!ENTITY calendar.portlet.outliner.timecol  "Time" >
-
-<!ENTITY calendar.portlet.bottom.addevent     "Add New Event" >
-<!ENTITY calendar.portlet.bottom.viewcalendar "View Calendar" >
-
-<!ENTITY calendar.portlet.title.nexteventsStart "Your next" >
-<!ENTITY calendar.portlet.title.nexteventsEnd   "events" >
-<!ENTITY calendar.portlet.title.nexteventEnd    "event" >
-<!ENTITY calendar.portlet.title.noEventsText    "No Events" >
-<!ENTITY calendar.portlet.title.today           "Today's Events" >
-<!ENTITY calendar.portlet.title.week           "Week's Events" >
- 
 <!-- Month View Entities -->
 <!ENTITY calendar.monthview.column.1.name "SUN">
 <!ENTITY calendar.monthview.column.2.name "MON">

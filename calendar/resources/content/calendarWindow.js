@@ -127,9 +127,6 @@ function CalendarWindow( calendarDataSource )
             }
             else
             {
-                var eventStartDate = new Date( calendarEvent.start.getTime() );
-                calendarWindow.setSelectedDate( eventStartDate );
-                
                 if( calendarWindow.currentView == calendarWindow.monthView )
                 {
                    calendarWindow.currentView.hiliteSelectedDate( );

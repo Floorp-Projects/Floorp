@@ -242,22 +242,23 @@
  *   Repeat end date button
  *-------------------------------------------------------------------*/
 
-#repeat-end-date-button 
+.date-picker-image 
   {
+    height                  : 24px;
     margin-left             : 3px;
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
   }
-#repeat-end-date-button[disabled="true"],
-#repeat-end-date-button[disabled="true"]:hover,
-#repeat-end-date-button[disabled="true"]:hover:active
+.date-picker-image[disabled="true"],
+.date-picker-image[disabled="true"]:hover,
+.date-picker-image[disabled="true"]:hover:active
   {
    list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
   }
-#repeat-end-date-button:hover
+.date-picker-image:hover
   {
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.png");
   }
-#repeat-end-date-button:hover:active
+.date-picker-image:hover:active
   {
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.png");
   }

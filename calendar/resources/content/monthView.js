@@ -180,10 +180,10 @@ function MonthView( calendarWindow )
          
          // set on click of day boxes
          
-         dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( this )" );
+         dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( event )" );
          
          //set the double click of day boxes
-         dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.monthView.doubleClickDay( this )" );
+         dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.monthView.doubleClickDay( event )" );
 
          // array index
          
@@ -712,8 +712,13 @@ MonthView.prototype.adjustNewMonth = function( newMonth )
 *   Called when a day box item is single clicked
 */
 
-MonthView.prototype.clickDay = function( dayBoxItem )
+MonthView.prototype.clickDay = function( event )
 {
+   if( event.button > 0 )
+      return;
+  
+   var dayBoxItem = event.currentTarget;
+   
    if( dayBoxItem.dayNumber != null )
    {
       // turn off showingLastDay - see notes in MonthView class
@@ -728,8 +733,13 @@ MonthView.prototype.clickDay = function( dayBoxItem )
    }
 }
 
-MonthView.prototype.doubleClickDay = function( dayBoxItem )
+MonthView.prototype.doubleClickDay = function( event )
 {
+   if( event.button > 0 )
+      return;
+  
+   var dayBoxItem = event.currentTarget;
+
    if ( dayBoxItem.dayNumber != null ) 
    {
       // change the selected date and redraw it

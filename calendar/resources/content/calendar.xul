@@ -46,7 +46,6 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
-
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
@@ -186,10 +185,11 @@
                <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
             </box>
             <box align="center">
-               <checkbox label="With Alarms" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
-               <checkbox label="Today And Future" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )"/>
+               <checkbox label="&calendar.unifinder.withalarms.label;" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
+               <checkbox label="&calendar.unifinder.todayandfuture.label;" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )"/>
             </box>
-            <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
+            <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
+               class="unifinder-tree-class" flex="1" ondragover="return( false );"/>
          </vbox>
        
    		<splitter collapse="before" persist="state hidden collapsed"

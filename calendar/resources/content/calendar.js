@@ -185,8 +185,6 @@ function calendarFinish()
 {
    finishCalendarUnifinder( gEventSource );
    
-   //finishCalendarEmail( gEventSource );
-
    gCalendarWindow.close( );
 }
 
@@ -482,9 +480,15 @@ function editNewEvent( calendarEvent )
 * notified of the change through their respective observers
 */
 
-function addEventDialogResponse( calendarEvent )
+function addEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
 {
    gICalLib.addEvent( calendarEvent );
+
+   for( i = 0; i < ArrayOfExceptionDates.length; i++ )
+   {
+      calendarEvent.addException( ArrayOfExceptionDates[i] );
+   }
+   gICalLib.modifyEvent( calendarEvent );
 }
 
 
@@ -515,10 +519,18 @@ function editEvent( calendarEvent )
 * notified of the change through their respective observers
 */
 
-function modifyEventDialogResponse( calendarEvent )
+function modifyEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
 {
-   gICalLib.modifyEvent( calendarEvent );
+   calendarEvent.removeAllExceptions();
+
+   //remove all the old exceptions
    
+   for( i = 0; i < ArrayOfExceptionDates.length; i++ )
+   {
+      calendarEvent.addException( ArrayOfExceptionDates[i] );
+   }
+
+   gICalLib.modifyEvent( calendarEvent );
 }
 
 

@@ -56,6 +56,7 @@
    args.onOk = <function>;          // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
     
+   calendar.openDialog("caNewEvent", "chrome://calendar/content/calendarEventDialog.xul", true, args );
 *
 *  Invoke this dialog to edit an existing event as follows:
 *
@@ -138,15 +139,30 @@ function loadCalendarEventDialog()
    setTimeFieldValue( "end-time-text", endDate );
    gTimeDifference = gEvent.end.getTime() - gEvent.start.getTime(); //the time difference in ms
    
+   var today = new Date();
+
    if ( gEvent.recurForever ) 
    {
-      var today = new Date();
       gEvent.recurEnd.setTime( endDate );
    }
 
    var recurEndDate = new Date( gEvent.recurEnd.getTime() );
    
    setDateFieldValue( "repeat-end-date-text", recurEndDate );
+
+   //do the stuff for exceptions
+   var ArrayOfExceptions = gEvent.getExceptions();
+
+   while( ArrayOfExceptions.hasMoreElements() )
+   {
+      ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
+      
+      var ExceptionDate = new Date( ExceptionTime );
+
+      addException( ExceptionDate );
+   }
+
+   setDateFieldValue( "exception-dates-text", today );
 
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
@@ -202,6 +218,8 @@ function loadCalendarEventDialog()
    updateAlarmItemEnabled();
    updateInviteItemEnabled();
       
+   updateAddExceptionButton();
+
    //updateAlarmEmailItemEnabled();
 
    /*
@@ -318,10 +336,25 @@ function onOKCommand()
       }
    }
 
+   var ArrayOfExceptionDates = new Array();
+   
+   var listbox = document.getElementById( "exception-dates-listbox" );
+
+   for( i = 0; i < listbox.childNodes.length; i++ )
+   {
+      dump( "\n exception added for "+listbox.childNodes[i].value );
+
+      var dateObj = new Date( );
+
+      dateObj.setTime( listbox.childNodes[i].value );
+
+      ArrayOfExceptionDates[ ArrayOfExceptionDates.length ] = dateObj;
+   }
+
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gEvent );
+   gOnOkFunction( gEvent, ArrayOfExceptionDates );
       
    // tell standard dialog stuff to close the dialog
    return true;
@@ -432,6 +465,8 @@ function onDatePick( datepopup )
    updateAdvancedWeekRepeat();
       
    updateAdvancedRepeatDayOfMonth();
+
+   updateAddExceptionButton();
 
    updateOKButton();
 }
@@ -1029,6 +1064,71 @@ function updateAdvancedRepeatDayOfMonth()
    document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
 
    document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( getWeekNumberOfMonth() )+" "+getDayOfWeek( dayNumber )+" of the month" );
+}
+
+/*
+** function to enable or disable the add exception button
+*/
+function updateAddExceptionButton()
+{
+   //get the date from the picker
+   var datePickerValue = getDateTimeFieldValue( "exception-dates-text" );
+   
+   if( isAlreadyException( datePickerValue ) )
+   {
+      document.getElementById( "exception-add-button" ).setAttribute( "disabled", "true" );
+   }
+   else
+   {
+      document.getElementById( "exception-add-button" ).removeAttribute( "disabled" );
+   }
+}
+
+
+
+function removeSelectedExceptionDate()
+{
+   var Listbox = document.getElementById( "exception-dates-listbox" );
+
+   var SelectedItem = Listbox.selectedItem;
+
+   Listbox.removeChild( SelectedItem );
+}
+
+function addException( dateToAdd )
+{
+   if( !dateToAdd )
+   {
+      //get the date from the date and time box.
+      //returns a date object
+      var dateToAdd = getDateTimeFieldValue( "exception-dates-text" );
+   }
+   
+   if( isAlreadyException( dateToAdd ) )
+      return;
+
+   var DateLabel = getDayOfWeek( dateToAdd ) + " " + formatDate( dateToAdd );
+
+   //add a row to the listbox
+   document.getElementById( "exception-dates-listbox" ).appendItem( DateLabel, dateToAdd.getTime() );
+}
+
+function isAlreadyException( dateObj )
+{
+   //check to make sure that the date is not already added.
+   var listbox = document.getElementById( "exception-dates-listbox" );
+
+   for( i = 0; i < listbox.childNodes.length; i++ )
+   {
+      var dateToMatch = new Date(  );
+      
+      dateToMatch.setTime( listbox.childNodes[i].value );
+      
+      dump( "\n\nCOMPARE-> "+dateToMatch +" "+dateObj.getTime() );
+      if( dateToMatch.getMonth() == dateObj.getMonth() && dateToMatch.getFullYear() == dateObj.getFullYear() && dateToMatch.getDate() == dateObj.getDate() )
+         return true;
+   }
+   return false;
 }
 
 function getDayExtension( dayNumber )
