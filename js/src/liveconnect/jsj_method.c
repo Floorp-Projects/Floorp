@@ -1693,6 +1693,13 @@ jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
     JS_ASSERT(class_descriptor);
     if (!class_descriptor)
         return JS_FALSE;
+
+    /* XXX, workaround for bug 200016, all classes in sun.plugin package should not 
+       be accessible in liveconnect.
+       Ideally, this checking should be done in JPI side, but it's not going to happen 
+       until Sun JRE 1.5.1 */
+    if (strstr(class_descriptor->name, "sun.plugin.") == class_descriptor->name)
+        return JS_FALSE;
   
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_env = jsj_EnterJava(cx, &jEnv);
